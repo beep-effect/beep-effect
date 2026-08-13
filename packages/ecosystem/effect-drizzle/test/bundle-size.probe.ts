@@ -122,7 +122,11 @@ const program = gen(function* () {
   return yield* reportComparison(artifact.rawBytes, baselineRawBytes);
 });
 
-const main = scoped(buildLayer(bunServicesLayer).pipe(flatMap((context) => program.pipe(provide(context)))));
+const main = bunServicesLayer.pipe(
+  buildLayer,
+  flatMap((context) => program.pipe(provide(context))),
+  scoped
+);
 
 if (import.meta.main) {
   BunRuntime.runMain(main);

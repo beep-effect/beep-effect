@@ -486,6 +486,53 @@ export interface DmsMirrorShape {
 export class DmsMirror extends Context.Service<DmsMirror, DmsMirrorShape>()($I`DmsMirror`) {}
 
 /**
+ * Why a DMS mirror adapter reports the provider as disconnected.
+ *
+ * **Details**
+ *
+ * `credentials-missing` means the application never configured provider
+ * credentials, so no connection was attempted — the operator fixes it by
+ * supplying credentials and restarting. `probe-failed` means credentials are
+ * configured but the connectivity probe could not reach the provider or
+ * resolve the mirror root — expired token, network failure, or a missing
+ * mirror-root folder. Status surfaces must not tell the operator to set
+ * credentials that are already set.
+ *
+ * **Example** (Guard probe-failed reason)
+ *
+ * ```ts
+ * import { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/aggregates/Sync/server"
+ *
+ * console.log(DmsMirrorDisconnectReason.is["probe-failed"]("probe-failed")) // true
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export const DmsMirrorDisconnectReason = LiteralKit(["credentials-missing", "probe-failed"]).pipe(
+  $I.annoteSchema("DmsMirrorDisconnectReason", {
+    description: "Why a DMS mirror adapter reports the provider as disconnected.",
+  })
+);
+
+/**
+ * Runtime type for {@link DmsMirrorDisconnectReason}.
+ *
+ * **Example** (Type disconnect reason string)
+ *
+ * ```ts
+ * import type { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/aggregates/Sync/server"
+ *
+ * const reason: DmsMirrorDisconnectReason = "credentials-missing"
+ * console.log(reason)
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export type DmsMirrorDisconnectReason = typeof DmsMirrorDisconnectReason.Type;
+
+/**
  * Connectivity probe result for one DMS mirror adapter.
  *
  * **Details**
@@ -497,6 +544,11 @@ export class DmsMirror extends Context.Service<DmsMirror, DmsMirrorShape>()($I`D
  * normalize root-level parent references (an item directly under the mirror
  * root stores `none` for its parent while the provider event carries the root
  * id).
+ *
+ * `disconnectReason` distinguishes the two honest disconnected states: it is
+ * `none` while `connected` is `true`, and carries a
+ * {@link DmsMirrorDisconnectReason} when the adapter knows why the provider is
+ * unreachable.
  *
  * **Example** (Make connected probe result)
  *
@@ -515,6 +567,9 @@ export class DmsMirrorProbe extends S.Class<DmsMirrorProbe>($I`DmsMirrorProbe`)(
   {
     connected: S.Boolean.annotateKey({
       description: "Whether the mirror adapter can reach the provider.",
+    }),
+    disconnectReason: S.Option(DmsMirrorDisconnectReason).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Why the provider is disconnected; none while the probe reports connected.",
     }),
     provider: DmsProvider.annotateKey({
       description: "DMS provider the probe describes.",
@@ -537,9 +592,12 @@ export class DmsMirrorProbe extends S.Class<DmsMirrorProbe>($I`DmsMirrorProbe`)(
  * ```ts
  * import { DmsMirrorProbe, type DmsMirrorAvailabilityShape } from "@beep/documents-use-cases/aggregates/Sync/server"
  * import { Effect } from "effect"
+ * import * as O from "effect/Option"
  *
  * const availability: DmsMirrorAvailabilityShape = {
- *   probe: Effect.succeed(DmsMirrorProbe.make({ connected: false, provider: "box" }))
+ *   probe: Effect.succeed(
+ *     DmsMirrorProbe.make({ connected: false, disconnectReason: O.some("probe-failed"), provider: "box" })
+ *   )
  * }
  * console.log(Effect.runSync(availability.probe).connected)
  * ```
