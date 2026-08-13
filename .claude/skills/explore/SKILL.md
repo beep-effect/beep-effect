@@ -92,8 +92,10 @@ the goal (`goals/<slug>/research/SOURCES.md`), reproducing the source corpus for
 implementation and linking the exploration's ledger as primary, and register it
 in the goal manifest `researchReports[]` + `currentSourceOfTruth[]` with
 `provenance.exploration` wired to the exploration's `links.goals`; flip
-exploration status — `graduated`, or keep
-`active` if candidates remain.
+exploration status to `graduated` once every promised-now goal exists —
+gated/queued candidates do NOT hold the packet open; they stay in `MAP.md`
+as re-entry points, and a fired gate reopens the packet at `decompose`
+(ratified 2026-08-13; see `explorations/README.md` Graduation Contract).
 
 ## Guardrails
 

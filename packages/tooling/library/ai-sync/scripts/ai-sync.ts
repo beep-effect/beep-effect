@@ -6,7 +6,7 @@ import { Console, Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import { checkGeneratedArtifacts, checkStrictDrift } from "../src/drift.ts";
 import { AiSyncHttpLayer, generateAiSyncArtifacts } from "../src/generator.ts";
-import { defaultRepoRoot, validateCurrentCheckoutDogfood, validateRepoConfig } from "../src/validation.ts";
+import { defaultRepoRoot, validateCurrentCheckoutDogfoodConfigs, validateRepoConfig } from "../src/validation.ts";
 
 const runtimeLayer = Layer.mergeAll(NodeServices.layer, AiSyncHttpLayer);
 
@@ -43,8 +43,12 @@ const program = Match.value(command).pipe(
   Match.when("refresh", () => generateAiSyncArtifacts().pipe(Effect.as(0))),
   Match.when("check", () =>
     checkGeneratedArtifacts().pipe(
-      Effect.flatMap(() => validateCurrentCheckoutDogfood()),
-      Effect.tap((result) => Console.log(`Validated ${result.relativePath} with ${result.schemaId}.`)),
+      Effect.flatMap(() => validateCurrentCheckoutDogfoodConfigs()),
+      Effect.tap((results) =>
+        Effect.forEach(results, (result) =>
+          Console.log(`Validated ${result.relativePath} with ${result.schemaId} and repo safety policy.`)
+        )
+      ),
       Effect.as(0)
     )
   ),
