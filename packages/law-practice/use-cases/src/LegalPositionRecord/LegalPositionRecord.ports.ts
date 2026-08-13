@@ -16,7 +16,7 @@ import {
   LegalPositionRelator,
   PowerExercise,
 } from "@beep/law-practice-domain";
-import { EffectSchema, Fn, LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { EffectSchema, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -99,7 +99,7 @@ export type LegalPositionRecordOperation = typeof LegalPositionRecordOperation.T
  * @category errors
  * @since 0.0.0
  */
-export class LegalPositionRecordRepositoryUnavailable extends TaggedErrorClass<LegalPositionRecordRepositoryUnavailable>(
+export class LegalPositionRecordRepositoryUnavailable extends S.TaggedError<LegalPositionRecordRepositoryUnavailable>(
   $I`LegalPositionRecordRepositoryUnavailable`
 )(
   "LegalPositionRecordRepositoryUnavailable",

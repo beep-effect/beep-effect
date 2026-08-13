@@ -6,7 +6,6 @@
  */
 
 import { $DrizzleId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { A } from "@beep/utils";
 import * as Struct from "@beep/utils/Struct";
@@ -50,7 +49,7 @@ import type {
 
 const $I = $DrizzleId.create("EntityTable.models");
 
-class EntityTableInvariantError extends TaggedErrorClass<EntityTableInvariantError>($I`EntityTableInvariantError`)(
+class EntityTableInvariantError extends S.TaggedError<EntityTableInvariantError>($I`EntityTableInvariantError`)(
   "EntityTableInvariantError",
   {
     message: S.String,

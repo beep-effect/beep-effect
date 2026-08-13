@@ -960,9 +960,6 @@
       "@beep/schema/String": [
         "./packages/foundation/modeling/schema/src/String.ts"
       ],
-      "@beep/schema/TaggedErrorClass": [
-        "./packages/foundation/modeling/schema/src/TaggedErrorClass/index.ts"
-      ],
       "@beep/schema/Thunk": [
         "./packages/foundation/modeling/schema/src/Thunk.ts"
       ],

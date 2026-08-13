@@ -6,7 +6,7 @@
  */
 
 import { $UsptoId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -99,7 +99,7 @@ class UsptoErrorOptions extends S.Class<UsptoErrorOptions>($I`UsptoErrorOptions`
  * @category errors
  * @since 0.0.0
  */
-export class UsptoError extends TaggedErrorClass<UsptoError>($I`UsptoError`)(
+export class UsptoError extends S.TaggedError<UsptoError>($I`UsptoError`)(
   "UsptoError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(

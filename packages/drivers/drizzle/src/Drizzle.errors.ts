@@ -6,7 +6,7 @@
  */
 
 import { $DrizzleId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -306,7 +306,7 @@ const extractNativeQueryContext = (cause: unknown, seen: ReadonlyArray<object> =
  * @category errors
  * @since 0.0.0
  */
-export class DrizzleError extends TaggedErrorClass<DrizzleError>($I`DrizzleError`)(
+export class DrizzleError extends S.TaggedError<DrizzleError>($I`DrizzleError`)(
   "DrizzleError",
   {
     operation: DrizzleOperation.annotateKey({

@@ -8,7 +8,7 @@
 
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.errors");
@@ -54,7 +54,7 @@ export const WORKER_ACTION_UNAVAILABLE_REASON = "Worker service is unavailable."
  * @category errors
  * @since 0.0.0
  */
-export class WorkerNotFound extends TaggedErrorClass<WorkerNotFound>($I`WorkerNotFound`)(
+export class WorkerNotFound extends S.TaggedError<WorkerNotFound>($I`WorkerNotFound`)(
   "WorkerNotFound",
   {
     workerId: DomainWorker.WorkerId,
@@ -86,7 +86,7 @@ export class WorkerNotFound extends TaggedErrorClass<WorkerNotFound>($I`WorkerNo
  * @category errors
  * @since 0.0.0
  */
-export class WorkerConflict extends TaggedErrorClass<WorkerConflict>($I`WorkerConflict`)(
+export class WorkerConflict extends S.TaggedError<WorkerConflict>($I`WorkerConflict`)(
   "WorkerConflict",
   {
     workerId: DomainWorker.WorkerId.annotateKey({
@@ -118,7 +118,7 @@ export class WorkerConflict extends TaggedErrorClass<WorkerConflict>($I`WorkerCo
  * @category errors
  * @since 0.0.0
  */
-export class WorkerActionFailed extends TaggedErrorClass<WorkerActionFailed>($I`WorkerActionFailed`)(
+export class WorkerActionFailed extends S.TaggedError<WorkerActionFailed>($I`WorkerActionFailed`)(
   "WorkerActionFailed",
   {
     reason: S.NonEmptyString.annotateKey({

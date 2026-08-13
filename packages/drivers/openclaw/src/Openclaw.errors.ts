@@ -11,7 +11,7 @@
  */
 
 import { $OpenclawId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OpenclawDiagnosticText, OpenclawExitCode } from "./Openclaw.models.ts";
 
@@ -57,9 +57,7 @@ const commandContextFields = {
  * @category errors
  * @since 0.0.0
  */
-export class OpenclawCommandSpawnError extends TaggedErrorClass<OpenclawCommandSpawnError>(
-  $I`OpenclawCommandSpawnError`
-)(
+export class OpenclawCommandSpawnError extends S.TaggedError<OpenclawCommandSpawnError>($I`OpenclawCommandSpawnError`)(
   "OpenclawCommandSpawnError",
   {
     ...commandContextFields,
@@ -107,7 +105,7 @@ export class OpenclawCommandSpawnError extends TaggedErrorClass<OpenclawCommandS
  * @category errors
  * @since 0.0.0
  */
-export class OpenclawCommandExitError extends TaggedErrorClass<OpenclawCommandExitError>($I`OpenclawCommandExitError`)(
+export class OpenclawCommandExitError extends S.TaggedError<OpenclawCommandExitError>($I`OpenclawCommandExitError`)(
   "OpenclawCommandExitError",
   {
     ...commandContextFields,
@@ -152,7 +150,7 @@ export class OpenclawCommandExitError extends TaggedErrorClass<OpenclawCommandEx
  * @category errors
  * @since 0.0.0
  */
-export class OpenclawCommandTimeoutError extends TaggedErrorClass<OpenclawCommandTimeoutError>(
+export class OpenclawCommandTimeoutError extends S.TaggedError<OpenclawCommandTimeoutError>(
   $I`OpenclawCommandTimeoutError`
 )(
   "OpenclawCommandTimeoutError",
@@ -196,7 +194,7 @@ export class OpenclawCommandTimeoutError extends TaggedErrorClass<OpenclawComman
  * @category errors
  * @since 0.0.0
  */
-export class OpenclawOutputParseError extends TaggedErrorClass<OpenclawOutputParseError>($I`OpenclawOutputParseError`)(
+export class OpenclawOutputParseError extends S.TaggedError<OpenclawOutputParseError>($I`OpenclawOutputParseError`)(
   "OpenclawOutputParseError",
   {
     ...commandContextFields,

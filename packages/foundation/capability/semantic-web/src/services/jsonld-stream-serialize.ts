@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { JsonLdContext } from "../jsonld.ts";
@@ -167,7 +167,7 @@ export type JsonLdStreamSerializeErrorReason = typeof JsonLdStreamSerializeError
  * @category errors
  * @since 0.0.0
  */
-export class JsonLdStreamSerializeError extends TaggedErrorClass<JsonLdStreamSerializeError>(
+export class JsonLdStreamSerializeError extends S.TaggedError<JsonLdStreamSerializeError>(
   $I`JsonLdStreamSerializeError`
 )(
   "JsonLdStreamSerializeError",

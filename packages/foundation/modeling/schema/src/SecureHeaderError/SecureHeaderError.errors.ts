@@ -8,7 +8,6 @@ import { Tuple } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { SecureHeader } from "../SecureHeader/index.ts";
-import { TaggedErrorClass } from "../TaggedErrorClass/index.ts";
 
 const $I = $SchemaId.create("SecureHeaderError");
 const commonFields = {
@@ -32,7 +31,7 @@ const commonFields = {
  * @category errors
  * @since 0.0.0
  */
-export class CspError extends TaggedErrorClass<CspError>($I.make("CspError"))(
+export class CspError extends S.TaggedError<CspError>($I.make("CspError"))(
   SecureHeader.Enum.CONTENT_SECURITY_POLICY,
   commonFields,
   $I.annote("CspError", { description: "A CSP error." })
@@ -54,9 +53,7 @@ export class CspError extends TaggedErrorClass<CspError>($I.make("CspError"))(
  * @category errors
  * @since 0.0.0
  */
-export class ForceHttpsRedirectError extends TaggedErrorClass<ForceHttpsRedirectError>(
-  $I.make("ForceHttpsRedirectError")
-)(
+export class ForceHttpsRedirectError extends S.TaggedError<ForceHttpsRedirectError>($I.make("ForceHttpsRedirectError"))(
   SecureHeader.Enum.FORCE_HTTPS_REDIRECT,
   commonFields,
   $I.annote("ForceHttpsRedirectError", { description: "A force HTTPS redirect error." })
@@ -78,7 +75,7 @@ export class ForceHttpsRedirectError extends TaggedErrorClass<ForceHttpsRedirect
  * @category errors
  * @since 0.0.0
  */
-export class XssProtectionError extends TaggedErrorClass<XssProtectionError>($I.make("XssProtectionError"))(
+export class XssProtectionError extends S.TaggedError<XssProtectionError>($I.make("XssProtectionError"))(
   SecureHeader.Enum.XSS_PROTECTION,
   commonFields,
   $I.annote("XssProtectionError", { description: "An XSS protection error." })
@@ -100,7 +97,7 @@ export class XssProtectionError extends TaggedErrorClass<XssProtectionError>($I.
  * @category errors
  * @since 0.0.0
  */
-export class ReferrerPolicyError extends TaggedErrorClass<ReferrerPolicyError>($I.make("ReferrerPolicyError"))(
+export class ReferrerPolicyError extends S.TaggedError<ReferrerPolicyError>($I.make("ReferrerPolicyError"))(
   SecureHeader.Enum.REFERRER_POLICY,
   commonFields,
   $I.annote("ReferrerPolicyError", { description: "A referrer policy error." })
@@ -122,7 +119,7 @@ export class ReferrerPolicyError extends TaggedErrorClass<ReferrerPolicyError>($
  * @category errors
  * @since 0.0.0
  */
-export class NoSniffError extends TaggedErrorClass<NoSniffError>($I.make("NoSniffError"))(
+export class NoSniffError extends S.TaggedError<NoSniffError>($I.make("NoSniffError"))(
   SecureHeader.Enum.NO_SNIFF,
   commonFields,
   $I.annote("NoSniffError", { description: "A no sniff error." })
@@ -144,7 +141,7 @@ export class NoSniffError extends TaggedErrorClass<NoSniffError>($I.make("NoSnif
  * @category errors
  * @since 0.0.0
  */
-export class NoOpenError extends TaggedErrorClass<NoOpenError>($I.make("NoOpenError"))(
+export class NoOpenError extends S.TaggedError<NoOpenError>($I.make("NoOpenError"))(
   SecureHeader.Enum.NO_OPEN,
   commonFields,
   $I.annote("NoOpenError", { description: "A no open error." })
@@ -166,7 +163,7 @@ export class NoOpenError extends TaggedErrorClass<NoOpenError>($I.make("NoOpenEr
  * @category errors
  * @since 0.0.0
  */
-export class FrameGuardError extends TaggedErrorClass<FrameGuardError>($I.make("FrameGuardError"))(
+export class FrameGuardError extends S.TaggedError<FrameGuardError>($I.make("FrameGuardError"))(
   SecureHeader.Enum.FRAME_GUARD,
   commonFields,
   $I.annote("FrameGuardError", { description: "A frame guard error." })
@@ -188,7 +185,7 @@ export class FrameGuardError extends TaggedErrorClass<FrameGuardError>($I.make("
  * @category errors
  * @since 0.0.0
  */
-export class ExpectCtError extends TaggedErrorClass<ExpectCtError>($I.make("ExpectCtError"))(
+export class ExpectCtError extends S.TaggedError<ExpectCtError>($I.make("ExpectCtError"))(
   SecureHeader.Enum.EXPECT_CT,
   commonFields,
   $I.annote("ExpectCtError", { description: "An Expect-CT error." })
@@ -210,7 +207,7 @@ export class ExpectCtError extends TaggedErrorClass<ExpectCtError>($I.make("Expe
  * @category errors
  * @since 0.0.0
  */
-export class PermissionsPolicyError extends TaggedErrorClass<PermissionsPolicyError>($I.make("PermissionsPolicyError"))(
+export class PermissionsPolicyError extends S.TaggedError<PermissionsPolicyError>($I.make("PermissionsPolicyError"))(
   SecureHeader.Enum.PERMISSIONS_POLICY,
   commonFields,
   $I.annote("PermissionsPolicyError", { description: "A permissions policy error." })
@@ -232,7 +229,7 @@ export class PermissionsPolicyError extends TaggedErrorClass<PermissionsPolicyEr
  * @category errors
  * @since 0.0.0
  */
-export class CrossOriginOpenerPolicyError extends TaggedErrorClass<CrossOriginOpenerPolicyError>(
+export class CrossOriginOpenerPolicyError extends S.TaggedError<CrossOriginOpenerPolicyError>(
   $I.make("CrossOriginOpenerPolicyError")
 )(
   SecureHeader.Enum.CROSS_ORIGIN_OPENER_POLICY,
@@ -256,7 +253,7 @@ export class CrossOriginOpenerPolicyError extends TaggedErrorClass<CrossOriginOp
  * @category errors
  * @since 0.0.0
  */
-export class CrossOriginEmbedderPolicyError extends TaggedErrorClass<CrossOriginEmbedderPolicyError>(
+export class CrossOriginEmbedderPolicyError extends S.TaggedError<CrossOriginEmbedderPolicyError>(
   $I.make("CrossOriginEmbedderPolicyError")
 )(
   SecureHeader.Enum.CROSS_ORIGIN_EMBEDDER_POLICY,
@@ -280,7 +277,7 @@ export class CrossOriginEmbedderPolicyError extends TaggedErrorClass<CrossOrigin
  * @category errors
  * @since 0.0.0
  */
-export class CrossOriginResourcePolicyError extends TaggedErrorClass<CrossOriginResourcePolicyError>(
+export class CrossOriginResourcePolicyError extends S.TaggedError<CrossOriginResourcePolicyError>(
   $I.make("CrossOriginResourcePolicyError")
 )(
   SecureHeader.Enum.CROSS_ORIGIN_RESOURCE_POLICY,
@@ -304,7 +301,7 @@ export class CrossOriginResourcePolicyError extends TaggedErrorClass<CrossOrigin
  * @category errors
  * @since 0.0.0
  */
-export class PermittedCrossDomainPoliciesError extends TaggedErrorClass<PermittedCrossDomainPoliciesError>(
+export class PermittedCrossDomainPoliciesError extends S.TaggedError<PermittedCrossDomainPoliciesError>(
   $I.make("PermittedCrossDomainPoliciesError")
 )(
   SecureHeader.Enum.PERMITTED_CROSS_DOMAIN_POLICIES,
@@ -328,7 +325,7 @@ export class PermittedCrossDomainPoliciesError extends TaggedErrorClass<Permitte
  * @category errors
  * @since 0.0.0
  */
-export class CoreError extends TaggedErrorClass<CoreError>($I.make("CoreError"))(
+export class CoreError extends S.TaggedError<CoreError>($I.make("CoreError"))(
   SecureHeader.Enum.CORE,
   commonFields,
   $I.annote("CoreError", { description: "A core error." })

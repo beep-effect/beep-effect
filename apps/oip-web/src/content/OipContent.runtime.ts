@@ -7,7 +7,7 @@
 
 import { $OipWebId } from "@beep/identity/packages";
 import { Sanity, SanityConfigInput, SanityQueryRequest } from "@beep/sanity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
@@ -41,7 +41,7 @@ type OipContentLoadErrorOptions = {
   readonly status?: number;
 };
 
-class OipContentLoadError extends TaggedErrorClass<OipContentLoadError>($I`OipContentLoadError`)(
+class OipContentLoadError extends S.TaggedError<OipContentLoadError>($I`OipContentLoadError`)(
   "OipContentLoadError",
   {
     provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),

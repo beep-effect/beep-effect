@@ -37,7 +37,6 @@ const PROMOTED_CONCEPT_ROOT_SHIMS = [
   "MappedLiteralKit",
   "Model",
   "Record",
-  "TaggedErrorClass",
   "Timestamp",
   "VariantSchema",
 ] as const;

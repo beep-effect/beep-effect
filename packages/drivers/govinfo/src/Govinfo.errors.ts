@@ -6,7 +6,7 @@
  */
 
 import { $GovinfoId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -147,7 +147,7 @@ export class GovinfoErrorOptions extends S.Class<GovinfoErrorOptions>($I`Govinfo
  * @category errors
  * @since 0.0.0
  */
-export class GovinfoError extends TaggedErrorClass<GovinfoError>($I`GovinfoError`)(
+export class GovinfoError extends S.TaggedError<GovinfoError>($I`GovinfoError`)(
   "GovinfoError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(

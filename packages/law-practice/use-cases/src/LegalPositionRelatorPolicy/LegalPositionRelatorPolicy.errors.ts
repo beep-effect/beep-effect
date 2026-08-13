@@ -6,7 +6,6 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeUseCasesId.create("LegalPositionRelatorPolicy/LegalPositionRelatorPolicy.errors");
@@ -53,7 +52,7 @@ const $I = $LawPracticeUseCasesId.create("LegalPositionRelatorPolicy/LegalPositi
  * @category errors
  * @since 0.0.0
  */
-export class LegalPositionRelatorAdmissionError extends TaggedErrorClass<LegalPositionRelatorAdmissionError>(
+export class LegalPositionRelatorAdmissionError extends S.TaggedError<LegalPositionRelatorAdmissionError>(
   $I`LegalPositionRelatorAdmissionError`
 )(
   "LegalPositionRelatorAdmissionError",

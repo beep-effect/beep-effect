@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { AbsoluteIRI } from "../iri.ts";
@@ -98,7 +98,7 @@ export type JsonLdDocumentErrorReason = typeof JsonLdDocumentErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class JsonLdDocumentError extends TaggedErrorClass<JsonLdDocumentError>($I`JsonLdDocumentError`)(
+export class JsonLdDocumentError extends S.TaggedError<JsonLdDocumentError>($I`JsonLdDocumentError`)(
   "JsonLdDocumentError",
   {
     reason: JsonLdDocumentErrorReason,

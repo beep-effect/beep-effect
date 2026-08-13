@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
@@ -208,7 +208,7 @@ const validateRawArchivePath = (
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsRetentionError extends TaggedErrorClass<AiMetricsRetentionError>($I`AiMetricsRetentionError`)(
+export class AiMetricsRetentionError extends S.TaggedError<AiMetricsRetentionError>($I`AiMetricsRetentionError`)(
   "AiMetricsRetentionError",
   {
     cause: S.Defect({ includeStack: true }),

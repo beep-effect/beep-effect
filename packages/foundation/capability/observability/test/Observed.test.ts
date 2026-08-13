@@ -1,12 +1,11 @@
 import { ObservedCause, ObservedExit } from "@beep/observability";
-import { TaggedErrorClass } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { Cause, Exit } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
-class TestObservedError extends TaggedErrorClass<TestObservedError>()("TestObservedError", {
+class TestObservedError extends S.TaggedError<TestObservedError>()("TestObservedError", {
   message: S.String,
 }) {}
 

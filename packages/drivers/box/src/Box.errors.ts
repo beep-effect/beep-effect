@@ -6,7 +6,7 @@
  */
 
 import { $BoxId } from "@beep/identity";
-import { JsonObject, LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { JsonObject, LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { pipe, Result } from "effect";
 import * as P from "effect/Predicate";
@@ -200,7 +200,7 @@ class BoxErrorOptionsInput extends S.Class<BoxErrorOptionsInput>($I`BoxErrorOpti
  * @category errors
  * @since 0.0.0
  */
-export class BoxError extends TaggedErrorClass<BoxError>($I`BoxError`)(
+export class BoxError extends S.TaggedError<BoxError>($I`BoxError`)(
   "BoxError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),

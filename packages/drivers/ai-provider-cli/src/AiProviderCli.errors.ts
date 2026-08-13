@@ -6,7 +6,7 @@
  */
 
 import { $AiProviderCliId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { AiProviderCliExitCode, AiProviderCliProvider } from "./AiProviderCli.models.ts";
 
@@ -42,7 +42,7 @@ const $I = $AiProviderCliId.create("AiProviderCli.errors");
  * @category errors
  * @since 0.0.0
  */
-export class AiProviderCliError extends TaggedErrorClass<AiProviderCliError>($I`AiProviderCliError`)(
+export class AiProviderCliError extends S.TaggedError<AiProviderCliError>($I`AiProviderCliError`)(
   "AiProviderCliError",
   {
     command: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({

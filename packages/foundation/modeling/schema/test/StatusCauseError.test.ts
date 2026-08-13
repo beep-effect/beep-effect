@@ -1,13 +1,9 @@
 import { makeStatusCauseError, StatusCauseFields, statusCauseInput } from "@beep/schema/StatusCauseError";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { describe, expect, it } from "@effect/vitest";
 import { Option as O, pipe } from "effect";
 import * as S from "effect/Schema";
 
-class BeepStatusError extends TaggedErrorClass<BeepStatusError>("BeepStatusError")(
-  "BeepStatusError",
-  StatusCauseFields
-) {}
+class BeepStatusError extends S.TaggedError<BeepStatusError>()("BeepStatusError", StatusCauseFields) {}
 
 describe("StatusCauseError", () => {
   it("reuses the shared field schema for tagged errors", () => {

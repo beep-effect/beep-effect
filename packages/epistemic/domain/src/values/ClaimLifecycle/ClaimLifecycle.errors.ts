@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ClaimLifecycle } from "./ClaimLifecycle.model.ts";
 
@@ -28,7 +28,7 @@ const $I = $EpistemicDomainId.create("values/ClaimLifecycle/ClaimLifecycle.error
  * @category errors
  * @since 0.0.0
  */
-export class ClaimInvalidTransition extends TaggedErrorClass<ClaimInvalidTransition>($I`ClaimInvalidTransition`)(
+export class ClaimInvalidTransition extends S.TaggedError<ClaimInvalidTransition>($I`ClaimInvalidTransition`)(
   "ClaimInvalidTransition",
   {
     from: ClaimLifecycle,

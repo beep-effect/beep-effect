@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { Dataset } from "../rdf.ts";
@@ -327,7 +327,7 @@ export type JsonLdStreamParseErrorReason = typeof JsonLdStreamParseErrorReason.T
  * @category errors
  * @since 0.0.0
  */
-export class JsonLdStreamParseError extends TaggedErrorClass<JsonLdStreamParseError>($I`JsonLdStreamParseError`)(
+export class JsonLdStreamParseError extends S.TaggedError<JsonLdStreamParseError>($I`JsonLdStreamParseError`)(
   "JsonLdStreamParseError",
   {
     reason: JsonLdStreamParseErrorReason,

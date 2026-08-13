@@ -18,7 +18,6 @@ import {
   AiMetricsScorecardError,
   AiMetricsSourceDiscoveryError,
 } from "@beep/repo-ai-metrics";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Effect, Runtime } from "effect";
 import * as S from "effect/Schema";
@@ -69,7 +68,7 @@ export class AiMetricsCommandError extends S.TaggedError<AiMetricsCommandError>(
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsStatusExit extends TaggedErrorClass<AiMetricsStatusExit>($I`AiMetricsStatusExit`)(
+export class AiMetricsStatusExit extends S.TaggedError<AiMetricsStatusExit>($I`AiMetricsStatusExit`)(
   "AiMetricsStatusExit",
   {
     message: S.String,

@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as Duration from "effect/Duration";
 import * as S from "effect/Schema";
 import {
@@ -89,7 +89,7 @@ const makeImageTimeoutError = (
   input: S.Schema.Type<S.TaggedStruct<"ImageTimeoutError", typeof ImageTimeoutErrorFields>>
 ): ImageTimeoutError => ImageTimeoutError.make(input as never);
 
-const ImageTimeoutErrorBase = TaggedErrorClass<ImageTimeoutError>($I`ImageTimeoutError`)(
+const ImageTimeoutErrorBase = S.TaggedError<ImageTimeoutError>($I`ImageTimeoutError`)(
   "ImageTimeoutError",
   ImageTimeoutErrorFields,
   {

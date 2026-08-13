@@ -7,7 +7,6 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { A } from "@beep/utils";
 import { HashMap, HashSet, Match, pipe } from "effect";
 import * as O from "effect/Option";
@@ -327,7 +326,7 @@ const LiteralKitTaggedUnionLiteralErrorFields = {
  * @category errors
  * @since 0.0.0
  */
-export class LiteralNotInSetError extends TaggedErrorClass<LiteralNotInSetError>($I.make("LiteralNotInSetError"))(
+export class LiteralNotInSetError extends S.TaggedError<LiteralNotInSetError>($I.make("LiteralNotInSetError"))(
   "LiteralNotInSetError",
   LiteralNotInSetErrorFields,
   $I.annote("LiteralNotInSetError", {
@@ -356,7 +355,7 @@ export class LiteralNotInSetError extends TaggedErrorClass<LiteralNotInSetError>
  * @category errors
  * @since 0.0.0
  */
-export class LiteralKitKeyCollisionError extends TaggedErrorClass<LiteralKitKeyCollisionError>(
+export class LiteralKitKeyCollisionError extends S.TaggedError<LiteralKitKeyCollisionError>(
   $I.make("LiteralKitKeyCollisionError")
 )(
   "LiteralKitKeyCollisionError",
@@ -389,7 +388,7 @@ type SeenLiteralKeys = HashMap.HashMap<string, SchemaAST.LiteralValue>;
  * @category errors
  * @since 0.0.0
  */
-export class LiteralKitEnumMappingDuplicateLiteralError extends TaggedErrorClass<LiteralKitEnumMappingDuplicateLiteralError>(
+export class LiteralKitEnumMappingDuplicateLiteralError extends S.TaggedError<LiteralKitEnumMappingDuplicateLiteralError>(
   $I.make("LiteralKitEnumMappingDuplicateLiteralError")
 )(
   "LiteralKitEnumMappingDuplicateLiteralError",
@@ -421,7 +420,7 @@ export class LiteralKitEnumMappingDuplicateLiteralError extends TaggedErrorClass
  * @category errors
  * @since 0.0.0
  */
-export class LiteralKitEnumMappingCoverageError extends TaggedErrorClass<LiteralKitEnumMappingCoverageError>(
+export class LiteralKitEnumMappingCoverageError extends S.TaggedError<LiteralKitEnumMappingCoverageError>(
   $I.make("LiteralKitEnumMappingCoverageError")
 )(
   "LiteralKitEnumMappingCoverageError",
@@ -450,7 +449,7 @@ export class LiteralKitEnumMappingCoverageError extends TaggedErrorClass<Literal
  * @category errors
  * @since 0.0.0
  */
-export class LiteralKitTaggedUnionLiteralError extends TaggedErrorClass<LiteralKitTaggedUnionLiteralError>(
+export class LiteralKitTaggedUnionLiteralError extends S.TaggedError<LiteralKitTaggedUnionLiteralError>(
   $I.make("LiteralKitTaggedUnionLiteralError")
 )(
   "LiteralKitTaggedUnionLiteralError",

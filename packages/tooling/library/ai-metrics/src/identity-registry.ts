@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Duration, Effect, FileSystem, MutableHashMap, Order, Path, pipe, Random, Schedule } from "effect";
@@ -303,7 +303,7 @@ export class AiMetricsIdentityRegistryUpsertInput extends S.Class<AiMetricsIdent
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsIdentityRegistryError extends TaggedErrorClass<AiMetricsIdentityRegistryError>(
+export class AiMetricsIdentityRegistryError extends S.TaggedError<AiMetricsIdentityRegistryError>(
   $I`AiMetricsIdentityRegistryError`
 )(
   "AiMetricsIdentityRegistryError",

@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { GlobError, layer as GlobLayer, Glob as GlobService } from "@beep/utils/Glob";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Match } from "effect";
@@ -87,13 +86,10 @@ const restoreBunGlob = (bunRef: typeof Bun, originalGlob: typeof Bun.Glob) => {
   Reflect.set(bunRef, "Glob", originalGlob);
 };
 
-class BunGlobMutationError extends TaggedErrorClass<BunGlobMutationError>("BunGlobMutationError")(
-  "BunGlobMutationError",
-  {
-    action: S.String,
-    cause: S.Defect({ includeStack: true }),
-  }
-) {}
+class BunGlobMutationError extends S.TaggedError<BunGlobMutationError>()("BunGlobMutationError", {
+  action: S.String,
+  cause: S.Defect({ includeStack: true }),
+}) {}
 
 const toGlobMutationError =
   (action: string) =>

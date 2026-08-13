@@ -11,7 +11,6 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgToolkit } from "@beep/law-practice-server";
-import { TaggedErrorClass } from "@beep/schema";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, FileSystem, flow, Layer, Path } from "effect";
@@ -99,7 +98,7 @@ class SmokeCallResponse extends S.Class<SmokeCallResponse>($I`SmokeCallResponse`
   $I.annote("SmokeCallResponse", { description: "Tool-call JSON-RPC response from the compiled MCP host." })
 ) {}
 
-class SmokeFailure extends TaggedErrorClass<SmokeFailure>($I`SmokeFailure`)(
+class SmokeFailure extends S.TaggedError<SmokeFailure>($I`SmokeFailure`)(
   "SmokeFailure",
   {
     cause: S.optionalKey(S.Defect({ includeStack: true })),

@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Milliseconds, OptionalMilliseconds } from "./Base.ts";
@@ -32,7 +32,7 @@ const makeCircuitOpenError = (
   input: S.Schema.Type<S.TaggedStruct<"CircuitOpenError", typeof CircuitOpenErrorFields>>
 ): CircuitOpenError => CircuitOpenError.make(input as never);
 
-const CircuitOpenErrorBase = TaggedErrorClass<CircuitOpenError>($I`CircuitOpenError`)(
+const CircuitOpenErrorBase = S.TaggedError<CircuitOpenError>($I`CircuitOpenError`)(
   "CircuitOpenError",
   CircuitOpenErrorFields,
   {
@@ -145,7 +145,7 @@ const makeRateLimitError = (
   input: S.Schema.Type<S.TaggedStruct<"RateLimitError", typeof RateLimitErrorFields>>
 ): RateLimitError => RateLimitError.make(input as never);
 
-const RateLimitErrorBase = TaggedErrorClass<RateLimitError>($I`RateLimitError`)(
+const RateLimitErrorBase = S.TaggedError<RateLimitError>($I`RateLimitError`)(
   "RateLimitError",
   RateLimitErrorFields,
   {

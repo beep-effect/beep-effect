@@ -12,7 +12,6 @@ import {
   PosInt,
   SafeObject as SafeObjectSchema,
   SchemaUtils,
-  TaggedErrorClass,
 } from "@beep/schema";
 import {A, O, P, pipe, R, Str, Struct, thunkNull} from "@beep/utils";
 import {
@@ -344,7 +343,7 @@ export const ToolRuntimeErrorKind = LiteralKit([
 export type ToolRuntimeErrorKind = typeof ToolRuntimeErrorKind.Type;
 
 /** Typed Toolkit adapter failure. */
-export class ToolRuntimeError extends TaggedErrorClass<ToolRuntimeError>($I`ToolRuntimeError`)(
+export class ToolRuntimeError extends S.TaggedError<ToolRuntimeError>($I`ToolRuntimeError`)(
   "ToolRuntimeError",
   {
     kind: ToolRuntimeErrorKind,

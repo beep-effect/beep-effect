@@ -6,7 +6,7 @@
  */
 
 import { $EcfrId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -113,7 +113,7 @@ export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOpti
  * @category errors
  * @since 0.0.0
  */
-export class EcfrError extends TaggedErrorClass<EcfrError>($I`EcfrError`)(
+export class EcfrError extends S.TaggedError<EcfrError>($I`EcfrError`)(
   "EcfrError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(

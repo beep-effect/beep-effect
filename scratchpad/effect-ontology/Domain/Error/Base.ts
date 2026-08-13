@@ -11,7 +11,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI, URI } from "@beep/rdf";
-import { FilePath, NonNegativeInt, SchemaUtils, TaggedErrorClass, URLStr } from "@beep/schema";
+import { FilePath, NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
 import type { Cause } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -682,7 +682,7 @@ type OntologyErrorCodecStatics<Self> = {
  * Builds a schema-backed ontology error class with schema-derived capabilities.
  *
  * @remarks
- * `TaggedErrorClass` supplies the upstream tagged-error class semantics; this
+ * `S.TaggedError` supplies the upstream tagged-error class semantics; this
  * helper keeps identity scoping and the structural self type consistent
  * across the experimental error families.
  *
@@ -722,7 +722,7 @@ export const makeOntologyErrorClass = {
     OntologyErrorCodecStatics<OntologyTaggedError<Tag, Fields>> => {
     type Self = OntologyTaggedError<Tag, Fields>;
     const makeInstance = (input: S.Schema.Type<S.TaggedStruct<Tag, Fields>>): Self => ErrorClass.make(input as never);
-    const ErrorClass = TaggedErrorClass<Self>(identifier)<Tag, Fields>(tag, fields, {
+    const ErrorClass = S.TaggedError<Self>(identifier)<Tag, Fields>(tag, fields, {
       ...annotations,
       toArbitrary:
         ([from]) =>

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { HttpStatus2XX, HttpStatus4XX, HttpStatus5XX } from "@beep/schema/HttpStatus";
 import * as S from "effect/Schema";
 import { HttpApiSchema } from "effect/unstable/httpapi";
@@ -111,7 +111,7 @@ export class Success extends SearchResponse.extend<Success>($I`Success`)(
  * @category errors
  * @since 0.0.0
  */
-export class FailureBadRequest extends TaggedErrorClass<FailureBadRequest>($I`FailureBadRequest`)(
+export class FailureBadRequest extends S.TaggedError<FailureBadRequest>($I`FailureBadRequest`)(
   "FailureBadRequest",
   {
     cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
@@ -141,7 +141,7 @@ export class FailureBadRequest extends TaggedErrorClass<FailureBadRequest>($I`Fa
  * @category errors
  * @since 0.0.0
  */
-export class FailureNotFound extends TaggedErrorClass<FailureNotFound>($I`FailureNotFound`)(
+export class FailureNotFound extends S.TaggedError<FailureNotFound>($I`FailureNotFound`)(
   "FailureNotFound",
   {
     cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
@@ -171,7 +171,7 @@ export class FailureNotFound extends TaggedErrorClass<FailureNotFound>($I`Failur
  * @category errors
  * @since 0.0.0
  */
-export class FailureInternalServerError extends TaggedErrorClass<FailureInternalServerError>(
+export class FailureInternalServerError extends S.TaggedError<FailureInternalServerError>(
   $I`FailureInternalServerError`
 )(
   "FailureInternalServerError",

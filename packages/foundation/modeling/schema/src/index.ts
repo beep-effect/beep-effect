@@ -473,11 +473,6 @@ export * from "./String.ts";
  * @since 0.0.0
  * @category validation
  */
-export * from "./TaggedErrorClass/index.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
 export * from "./TerritoryCode.ts";
 /**
  * @since 0.0.0

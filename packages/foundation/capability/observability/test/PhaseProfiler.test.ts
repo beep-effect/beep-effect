@@ -1,6 +1,6 @@
 /** @effect-diagnostics strictEffectProvide:skip-file */
 import { PhaseProfile, profilePhase } from "@beep/observability";
-import { NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { Effect, Equal, Logger, Metric, References } from "effect";
 import * as O from "effect/Option";
@@ -8,7 +8,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
-class TestPhaseError extends TaggedErrorClass<TestPhaseError>()("TestPhaseError", {
+class TestPhaseError extends S.TaggedError<TestPhaseError>()("TestPhaseError", {
   message: S.String,
 }) {}
 

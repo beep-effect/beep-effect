@@ -6,7 +6,6 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 
@@ -26,7 +25,7 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
  * @category errors
  * @since 0.0.0
  */
-export class ProfessionalRuntimeValidationError extends TaggedErrorClass<ProfessionalRuntimeValidationError>(
+export class ProfessionalRuntimeValidationError extends S.TaggedError<ProfessionalRuntimeValidationError>(
   $I`ProfessionalRuntimeValidationError`
 )(
   "ProfessionalRuntimeValidationError",

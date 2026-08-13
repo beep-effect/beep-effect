@@ -6,7 +6,7 @@
  */
 
 import { $OnepasswordCliId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -93,7 +93,7 @@ export class OnePasswordCliErrorOptions extends S.Class<OnePasswordCliErrorOptio
  * @category errors
  * @since 0.0.0
  */
-export class OnePasswordCliError extends TaggedErrorClass<OnePasswordCliError>($I`OnePasswordCliError`)(
+export class OnePasswordCliError extends S.TaggedError<OnePasswordCliError>($I`OnePasswordCliError`)(
   "OnePasswordCliError",
   {
     cause: S.OptionFromOptionalKey(OnePasswordCliDefect).pipe(SchemaUtils.withNoneDefault).annotateKey({

@@ -10,7 +10,6 @@
 
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { PracticeKgToolkit } from "@beep/law-practice-server";
-import { TaggedErrorClass } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -79,7 +78,7 @@ const TargetSpecs = {
   },
 } as const satisfies Record<Exclude<PackageTarget, "all">, Record<string, string>>;
 
-class PackageFailure extends TaggedErrorClass<PackageFailure>($I`PackageFailure`)(
+class PackageFailure extends S.TaggedError<PackageFailure>($I`PackageFailure`)(
   "PackageFailure",
   {
     cause: S.optionalKey(S.Defect({ includeStack: true })),

@@ -12,7 +12,7 @@
  */
 
 import { $DuckdbId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -159,7 +159,7 @@ export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknow
  * @category errors
  * @since 0.0.0
  */
-export class DuckDbError extends TaggedErrorClass<DuckDbError>($I`DuckDbError`)(
+export class DuckDbError extends S.TaggedError<DuckDbError>($I`DuckDbError`)(
   "DuckDbError",
   {
     cause: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({

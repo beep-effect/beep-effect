@@ -6,7 +6,7 @@
  */
 
 import { $AcpId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -30,7 +30,7 @@ const $I = $AcpId.create("errors");
  * @category errors
  * @since 0.0.0
  */
-export class AcpSpawnError extends TaggedErrorClass<AcpSpawnError>($I`AcpSpawnError`)(
+export class AcpSpawnError extends S.TaggedError<AcpSpawnError>($I`AcpSpawnError`)(
   "AcpSpawnError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
@@ -70,7 +70,7 @@ export class AcpSpawnError extends TaggedErrorClass<AcpSpawnError>($I`AcpSpawnEr
  * @category errors
  * @since 0.0.0
  */
-export class AcpProcessExitedError extends TaggedErrorClass<AcpProcessExitedError>($I`AcpProcessExitedError`)(
+export class AcpProcessExitedError extends S.TaggedError<AcpProcessExitedError>($I`AcpProcessExitedError`)(
   "AcpProcessExitedError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
@@ -111,7 +111,7 @@ export class AcpProcessExitedError extends TaggedErrorClass<AcpProcessExitedErro
  * @category errors
  * @since 0.0.0
  */
-export class AcpProtocolParseError extends TaggedErrorClass<AcpProtocolParseError>($I`AcpProtocolParseError`)(
+export class AcpProtocolParseError extends S.TaggedError<AcpProtocolParseError>($I`AcpProtocolParseError`)(
   "AcpProtocolParseError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
@@ -159,7 +159,7 @@ export class AcpProtocolParseError extends TaggedErrorClass<AcpProtocolParseErro
  * @category errors
  * @since 0.0.0
  */
-export class AcpTransportError extends TaggedErrorClass<AcpTransportError>($I`AcpTransportError`)(
+export class AcpTransportError extends S.TaggedError<AcpTransportError>($I`AcpTransportError`)(
   "AcpTransportError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
@@ -191,7 +191,7 @@ export class AcpTransportError extends TaggedErrorClass<AcpTransportError>($I`Ac
  * @category errors
  * @since 0.0.0
  */
-export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpRequestError`)(
+export class AcpRequestError extends S.TaggedError<AcpRequestError>($I`AcpRequestError`)(
   "AcpRequestError",
   {
     code: AcpSchema.ErrorCode.annotateKey({

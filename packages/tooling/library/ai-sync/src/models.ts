@@ -6,7 +6,7 @@
  */
 
 import { $AiSyncId } from "@beep/identity/packages";
-import { Fn, LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -792,7 +792,7 @@ export class AiSyncValidationResult extends S.Class<AiSyncValidationResult>($I`A
  * @category errors
  * @since 0.0.0
  */
-export class AiSyncError extends TaggedErrorClass<AiSyncError>($I`AiSyncError`)(
+export class AiSyncError extends S.TaggedError<AiSyncError>($I`AiSyncError`)(
   "AiSyncError",
   {
     message: S.String,

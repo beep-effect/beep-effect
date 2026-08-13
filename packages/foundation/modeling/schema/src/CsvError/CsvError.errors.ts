@@ -9,7 +9,6 @@ import { $SchemaId } from "@beep/identity";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { TaggedErrorClass } from "../TaggedErrorClass/index.ts";
 
 const $I = $SchemaId.create("CsvError");
 const CsvErrorFields = {
@@ -31,7 +30,7 @@ const CsvErrorFields = {
  * @category validation
  * @since 0.0.0
  */
-export class CsvError extends TaggedErrorClass<CsvError>($I`CsvError`)(
+export class CsvError extends S.TaggedError<CsvError>($I`CsvError`)(
   "CsvError",
   CsvErrorFields,
   $I.annote("CsvError", {

@@ -6,7 +6,7 @@
  */
 
 import { $PhoenixId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Result } from "effect";
@@ -158,7 +158,7 @@ class PhoenixErrorOperationOptionsInput extends S.Class<PhoenixErrorOperationOpt
  * @category errors
  * @since 0.0.0
  */
-export class PhoenixError extends TaggedErrorClass<PhoenixError>($I`PhoenixError`)(
+export class PhoenixError extends S.TaggedError<PhoenixError>($I`PhoenixError`)(
   "PhoenixError",
   {
     cause: S.optionalKey(S.String).annotateKey({

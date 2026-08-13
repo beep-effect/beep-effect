@@ -6,7 +6,7 @@
  */
 
 import { $PostgresId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, pipe, Result } from "effect";
 import * as S from "effect/Schema";
@@ -355,7 +355,7 @@ const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
  * @category errors
  * @since 0.0.0
  */
-export class PostgresError extends TaggedErrorClass<PostgresError>($I`PostgresError`)(
+export class PostgresError extends S.TaggedError<PostgresError>($I`PostgresError`)(
   "PostgresError",
   {
     operation: S.String.annotateKey({ description: "Driver operation being performed when the failure occurred." }),

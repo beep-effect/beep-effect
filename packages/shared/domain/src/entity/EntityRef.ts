@@ -6,7 +6,6 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Result } from "effect";
 import { dual, pipe } from "effect/Function";
 import * as S from "effect/Schema";
@@ -15,7 +14,7 @@ import * as EntityId from "./EntityId.ts";
 const $I = $SharedDomainId.create("entity/EntityRef");
 const entityTypePattern = /^[A-Z][A-Za-z0-9]*$/u;
 
-class EntityRefInvariantError extends TaggedErrorClass<EntityRefInvariantError>($I`EntityRefInvariantError`)(
+class EntityRefInvariantError extends S.TaggedError<EntityRefInvariantError>($I`EntityRefInvariantError`)(
   "EntityRefInvariantError",
   {
     actualEntityType: S.String,

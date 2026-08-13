@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as Duration from "effect/Duration";
 import * as S from "effect/Schema";
 import {
@@ -84,7 +84,7 @@ const makeJinaRateLimitError = (
   input: S.Schema.Type<S.TaggedStruct<"JinaRateLimitError", typeof JinaRateLimitErrorFields>>
 ): JinaRateLimitError => JinaRateLimitError.make(input as never);
 
-const JinaRateLimitErrorBase = TaggedErrorClass<JinaRateLimitError>($I`JinaRateLimitError`)(
+const JinaRateLimitErrorBase = S.TaggedError<JinaRateLimitError>($I`JinaRateLimitError`)(
   "JinaRateLimitError",
   JinaRateLimitErrorFields,
   {

@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -71,9 +71,7 @@ export const KNOWLEDGE_HISTORY_REMEDIATION =
  * @category errors
  * @since 0.0.0
  */
-export class KnowledgeOperationalError extends TaggedErrorClass<KnowledgeOperationalError>(
-  $I`KnowledgeOperationalError`
-)(
+export class KnowledgeOperationalError extends S.TaggedError<KnowledgeOperationalError>($I`KnowledgeOperationalError`)(
   "KnowledgeOperationalError",
   {
     message: S.String,
@@ -169,7 +167,7 @@ export class KnowledgeOperationalError extends TaggedErrorClass<KnowledgeOperati
  * @category errors
  * @since 0.0.0
  */
-export class KnowledgeProbeBootError extends TaggedErrorClass<KnowledgeProbeBootError>($I`KnowledgeProbeBootError`)(
+export class KnowledgeProbeBootError extends S.TaggedError<KnowledgeProbeBootError>($I`KnowledgeProbeBootError`)(
   "KnowledgeProbeBootError",
   {
     message: S.String,
@@ -205,7 +203,7 @@ export class KnowledgeProbeBootError extends TaggedErrorClass<KnowledgeProbeBoot
  * @category errors
  * @since 0.0.0
  */
-export class KnowledgeIntroducedFindingsError extends TaggedErrorClass<KnowledgeIntroducedFindingsError>(
+export class KnowledgeIntroducedFindingsError extends S.TaggedError<KnowledgeIntroducedFindingsError>(
   $I`KnowledgeIntroducedFindingsError`
 )(
   "KnowledgeIntroducedFindingsError",

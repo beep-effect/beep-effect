@@ -15,7 +15,6 @@ import { BuffEncoding } from "../BufferEncoding.ts";
 import { NonNegativeInt } from "../Int.ts";
 import { RegExpFromStr } from "../RegExp.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
-import { TaggedErrorClass } from "../TaggedErrorClass/index.ts";
 import { HeaderArray, HeaderTransformFunction } from "./ParserOptions.types.ts";
 import type * as AST from "effect/SchemaAST";
 
@@ -88,7 +87,7 @@ export type HeaderValueInput = typeof HeaderValueInput.Type;
  * @category validation
  * @since 0.0.0
  */
-export class ParserOptionsError extends TaggedErrorClass<ParserOptionsError>($I.make("ParserOptionsError"))(
+export class ParserOptionsError extends S.TaggedError<ParserOptionsError>($I.make("ParserOptionsError"))(
   "ParserOptionsError",
   ParserOptionsErrorFields,
   $I.annote("ParserOptionsError", {

@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Context, Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -325,7 +325,7 @@ export class ProvenanceSummary extends S.Class<ProvenanceSummary>($I`ProvenanceS
  * @category errors
  * @since 0.0.0
  */
-export class ProvenanceServiceError extends TaggedErrorClass<ProvenanceServiceError>($I`ProvenanceServiceError`)(
+export class ProvenanceServiceError extends S.TaggedError<ProvenanceServiceError>($I`ProvenanceServiceError`)(
   "ProvenanceServiceError",
   {
     reason: ProvenanceServiceErrorReason,

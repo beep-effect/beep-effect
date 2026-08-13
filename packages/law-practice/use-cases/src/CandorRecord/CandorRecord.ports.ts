@@ -10,7 +10,7 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { CandorDisposition, IdsSubmissionFact, PatentCitationEvent } from "@beep/law-practice-domain";
-import { EffectSchema, Fn, LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { EffectSchema, Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -89,7 +89,7 @@ export type CandorRecordOperation = typeof CandorRecordOperation.Type;
  * @category errors
  * @since 0.0.0
  */
-export class CandorRecordRepositoryUnavailable extends TaggedErrorClass<CandorRecordRepositoryUnavailable>(
+export class CandorRecordRepositoryUnavailable extends S.TaggedError<CandorRecordRepositoryUnavailable>(
   $I`CandorRecordRepositoryUnavailable`
 )(
   "CandorRecordRepositoryUnavailable",

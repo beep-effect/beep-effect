@@ -6,7 +6,7 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ArtifactId, OperationId } from "../Artifact/Artifact.schema.ts";
 import { FileFormatFamily } from "../Strategy/Strategy.schema.ts";
@@ -76,7 +76,7 @@ export type FileProcessingOperationErrorReason = typeof FileProcessingOperationE
  * @category errors
  * @since 0.0.0
  */
-export class FileProcessingOperationError extends TaggedErrorClass<FileProcessingOperationError>(
+export class FileProcessingOperationError extends S.TaggedError<FileProcessingOperationError>(
   $I`FileProcessingOperationError`
 )(
   "FileProcessingOperationError",

@@ -6,7 +6,7 @@
  */
 
 import { $PgliteId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -40,7 +40,7 @@ const getErrorMessage = (value: unknown): O.Option<string> =>
  * @category errors
  * @since 0.0.0
  */
-export class PgliteError extends TaggedErrorClass<PgliteError>($I`PgliteError`)(
+export class PgliteError extends S.TaggedError<PgliteError>($I`PgliteError`)(
   "PgliteError",
   {
     operation: S.NonEmptyString.annotateKey({
