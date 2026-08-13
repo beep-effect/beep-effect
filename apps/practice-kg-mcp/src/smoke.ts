@@ -10,14 +10,13 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgToolkit } from "@beep/law-practice-server";
-import { BunRuntime } from "@effect/platform-bun";
-import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, FileSystem, flow, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { runEntrypoint } from "./entrypoint.ts";
 import { makePracticeKgBuildLayer } from "./runtime/Layer.ts";
 
 const $I = $PracticeKgMcpId.create("smoke");
@@ -301,8 +300,4 @@ const program = Effect.scoped(
     yield* runCompiledHost(executable, bundleOut, root);
   })
 );
-const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))));
-
-if (import.meta.main) {
-  BunRuntime.runMain(main);
-}
+runEntrypoint({ isMain: import.meta.main, program });

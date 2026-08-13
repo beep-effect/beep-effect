@@ -9,11 +9,10 @@
 
 import { AnthropicLanguageModelLive } from "@beep/anthropic";
 import { LawPracticeServerLive, PracticeKgClaimsOptions, runPracticeKgClaimsBatch } from "@beep/law-practice-server";
-import { BunRuntime } from "@effect/platform-bun";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
-import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, Layer, Path } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
+import { runEntrypoint } from "./entrypoint.ts";
 import { makePracticeKgPgliteLayer } from "./runtime/index.ts";
 
 const inputs = Flag.directory("inputs", { mustExist: true });
@@ -39,8 +38,4 @@ const claimsCommand = Command.make(
 );
 
 const program = Command.run(claimsCommand, { version: "0.0.0" });
-const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))));
-
-if (import.meta.main) {
-  BunRuntime.runMain(main);
-}
+runEntrypoint({ isMain: import.meta.main, program });

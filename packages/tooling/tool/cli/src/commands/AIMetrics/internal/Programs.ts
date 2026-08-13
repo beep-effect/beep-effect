@@ -63,6 +63,7 @@ import {
   generateAiMetricsWeeklyReport,
   hashPublicTextSha256,
   listAiMetricsBenchmarkCases,
+  listAiMetricsDirectoryFileInfo,
   listAiMetricsRetentionInventory,
   locateLatestAiMetricsMirrorBundle,
   makeAiMetricsConfigSnapshot,
@@ -106,6 +107,7 @@ import {
   FileSystem,
   flow,
   Layer,
+  Match,
   Order,
   Path,
   pipe,
@@ -2579,37 +2581,24 @@ const isAllowedMirrorBundleFile = (relativePath: string): boolean =>
   (Str.startsWith("parquet/")(relativePath) && Str.endsWith(".parquet")(relativePath));
 
 const listMirrorBundleFiles = Effect.fn("AIMetrics.listMirrorBundleFiles")(function* (bundleDir: string) {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const walk = Effect.fnUntraced(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<string>, AiMetricsCommandError, FileSystem.FileSystem | Path.Path> {
-    const stat = yield* fs
-      .stat(currentPath)
-      .pipe(
-        Effect.mapError((cause) =>
-          AiMetricsCommandError.make({ cause, message: "Failed to inspect AI metrics mirror bundle file inventory." })
-        )
-      );
-    if (stat.type === "File") {
-      return [pipe(path.relative(bundleDir, currentPath), Str.replace(/\\/gu, "/"))];
-    }
-    if (stat.type !== "Directory") {
-      return A.empty<string>();
-    }
-
-    const entries = yield* fs
-      .readDirectory(currentPath)
-      .pipe(
-        Effect.mapError((cause) =>
-          AiMetricsCommandError.make({ cause, message: "Failed to read AI metrics mirror bundle file inventory." })
-        )
-      );
-    const nested = yield* Effect.forEach(entries, (entry) => walk(path.join(currentPath, entry)), { concurrency: 8 });
-    return A.flatten(nested);
-  });
-
-  return pipe(yield* walk(bundleDir), A.sort(Order.String));
+  const files = yield* listAiMetricsDirectoryFileInfo(bundleDir).pipe(
+    Effect.mapError((error) =>
+      AiMetricsCommandError.make({
+        cause: error.cause,
+        message: Match.value(error.operation).pipe(
+          Match.when("inspect", () => "Failed to inspect AI metrics mirror bundle file inventory."),
+          Match.when("read", () => "Failed to read AI metrics mirror bundle file inventory."),
+          Match.exhaustive
+        ),
+      })
+    )
+  );
+  return pipe(
+    files,
+    A.map(([absolutePath]) => pipe(path.relative(bundleDir, absolutePath), Str.replace(/\\/gu, "/"))),
+    A.sort(Order.String)
+  );
 });
 
 const validateLocalMirrorBundle = Effect.fn("AIMetrics.validateLocalMirrorBundle")(function* ({

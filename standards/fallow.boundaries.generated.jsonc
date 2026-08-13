@@ -2612,6 +2612,7 @@
           "@beep/pglite",
           "@beep/practice-kg-mcp",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2622,6 +2623,7 @@
           "@beep/pglite",
           "@beep/practice-kg-mcp",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },

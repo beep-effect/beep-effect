@@ -10,15 +10,14 @@
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { PracticeKgToolkit } from "@beep/law-practice-server";
 import * as OptionUtils from "@beep/utils/Option";
-import { BunRuntime } from "@effect/platform-bun";
-import * as BunServices from "@effect/platform-bun/BunServices";
-import { Effect, Encoding, FileSystem, Layer, Match, Path } from "effect";
+import { Effect, Encoding, FileSystem, Match, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
+import { runEntrypoint } from "./entrypoint.ts";
 
 const $I = $PracticeKgMcpId.create("package");
 
@@ -346,8 +345,4 @@ const program = Command.make(
     yield* Effect.forEach(targets, (targetName) => packageTarget(targetName, output), { discard: true });
   })
 ).pipe(Command.run({ version: "0.0.0" }));
-const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))));
-
-if (import.meta.main) {
-  BunRuntime.runMain(main);
-}
+runEntrypoint({ isMain: import.meta.main, program });

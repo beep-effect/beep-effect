@@ -10,7 +10,7 @@ import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
+import { Clock, Effect, FileSystem, flow, Match, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -26,6 +26,7 @@ import {
   writeAiMetricsDerivedStorage,
 } from "./derived-storage.ts";
 import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "./duckdb.ts";
+import { listAiMetricsDirectoryFileInfo } from "./file-inventory.ts";
 import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
 import { AiMetricsDeployTarget, AiMetricsTranscriptSource, ConfigSnapshot } from "./models.ts";
@@ -658,34 +659,29 @@ const listDirectoryFiles = Effect.fn("AiMetrics.retention.listDirectoryFiles")(f
     return A.empty<PathPlanItem>();
   }
 
-  const walk = Effect.fnUntraced(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<PathPlanItem>, AiMetricsRetentionError, FileSystem.FileSystem | Path.Path> {
-    const stat = yield* fs
-      .stat(currentPath)
-      .pipe(Effect.mapError((cause) => retentionFailure("Failed to inspect an AI metrics retained file.", cause)));
-    if (stat.type === "File") {
-      return [
-        {
-          absolutePath: currentPath,
-          modifiedAtEpochMillis: optionalModifiedAtMillis(stat),
-          relativePath: relativeToDataRoot(dataRoot, currentPath),
-        },
-      ];
-    }
-
-    if (stat.type !== "Directory") {
-      return A.empty<PathPlanItem>();
-    }
-
-    const entries = yield* fs
-      .readDirectory(currentPath)
-      .pipe(Effect.mapError((cause) => retentionFailure("Failed to read AI metrics retained directory.", cause)));
-    const nested = yield* Effect.forEach(entries, (entry) => walk(path.join(currentPath, entry)), { concurrency: 8 });
-    return A.flatten(nested);
-  });
-
-  return pipe(yield* walk(root), A.sort(Order.mapInput(Order.String, (item: PathPlanItem) => item.relativePath)));
+  const files = yield* listAiMetricsDirectoryFileInfo(root).pipe(
+    Effect.mapError((error) =>
+      retentionFailure(
+        Match.value(error.operation).pipe(
+          Match.when("inspect", () => "Failed to inspect an AI metrics retained file."),
+          Match.when("read", () => "Failed to read AI metrics retained directory."),
+          Match.exhaustive
+        ),
+        error.cause
+      )
+    )
+  );
+  return pipe(
+    files,
+    A.map(
+      ([absolutePath, info]): PathPlanItem => ({
+        absolutePath,
+        modifiedAtEpochMillis: optionalModifiedAtMillis(info),
+        relativePath: relativeToDataRoot(dataRoot, absolutePath),
+      })
+    ),
+    A.sort(Order.mapInput(Order.String, (item: PathPlanItem) => item.relativePath))
+  );
 });
 
 const readRetentionPlan = Effect.fn("AiMetrics.retention.readPlan")(function* (input: AiMetricsRetentionSelector) {
