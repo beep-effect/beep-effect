@@ -50,6 +50,7 @@ export class BubbleBox extends S.Class<BubbleBox>($I`BubbleBox`)(
 ) {}
 
 /** Measure a chat bubble from a font snapshot, propagating unmeasured text as `None`. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const bubbleBox = (
   metrics: FontMetrics,
   message: ChatMessage,

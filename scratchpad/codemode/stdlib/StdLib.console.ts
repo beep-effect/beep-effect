@@ -25,6 +25,7 @@ export { ConsoleMethod };
 const MAX_CONSOLE_DEPTH = 32;
 const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const formatConsoleMessage = (name: ConsoleMethod, args: Array<unknown>): string => {
   if (ConsoleMethod.is.dir(name)) return A.isArrayEmpty(args) ? "undefined" : formatConsoleArgument(args[0]);
   if (ConsoleMethod.is.table(name)) return formatConsoleTable(args[0], args[1]);

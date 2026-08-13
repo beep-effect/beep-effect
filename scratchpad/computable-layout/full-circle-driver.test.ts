@@ -84,7 +84,7 @@ describe("full circle against @beep/pretext: driver metrics → content minimum 
     const geometry = project(workspaceRoot, { container, options: GeometryOptions.make({ gap: 4 }) });
     const proseBox = geometry.groups.find((group) => GroupId.equals(group.groupId, proseGroup))?.box;
     expect(
-      O.getOrThrow(lineCount(metrics, TextLayoutInput.make({ maxWidth: proseBox!.width, text: sentence })))
+      lineCount(metrics, TextLayoutInput.make({ maxWidth: proseBox!.width, text: sentence })).pipe(O.getOrThrow)
     ).toBeGreaterThan(1);
   });
 });

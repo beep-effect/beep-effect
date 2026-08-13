@@ -107,7 +107,7 @@ relevance: direct · partial · recommend: port · P1
 The canonical CourtListener auth shape: `Authorization: Token <COURTLISTENER_API_TOKEN>` (NOT Bearer), base URL `…/api/rest/v4`, User-Agent, 30s timeout; token optional (unauthenticated allowed at lower rate). Port directly into the empty `@beep/courtlistener` skeleton as `CourtListener.config.ts` (Redacted apiKey) + `CourtListener.service.ts` over Effect `HttpClient`, mirroring the `@beep/uspto` layout.
 - source: `us-legal-tools/packages/courtlistener-sdk/src/api/client.ts:8-22`
 - source: `doc-haus/dochaus/tool/case-law.ts:45-58`
-- beep-target: `packages/drivers/courtlistener/src/{CourtListener.config.ts,CourtListener.service.ts}`
+- beep-target: `@beep/courtlistener/src/{CourtListener.config.ts,CourtListener.service.ts}`
 ```ts
 headers: { 'User-Agent': '...', ...(token && { Authorization: `Token ${token}` }) }
 baseURL: 'https://www.courtlistener.com/api/rest/v4'
@@ -117,7 +117,7 @@ baseURL: 'https://www.courtlistener.com/api/rest/v4'
 relevance: direct · partial · recommend: port · P1
 Wraps CourtListener v4 with a citation regex parser ({volume,reporter,page}), local cached-index lookup, then live citation-lookup/search API fallback with a `bulk+api` source tag. Port the `parseCitationParts` regex + cache-then-API architecture into `@beep/courtlistener`'s service as the citation-resolution method feeding `PriorArtReference`/provenance.
 - source: `mike/backend/src/lib/courtlistener.ts:457-467`
-- beep-target: `packages/drivers/courtlistener/src/CourtListener.service.ts` (citation parse + cache fallback)
+- beep-target: `@beep/courtlistener/src/CourtListener.service.ts` (citation parse + cache fallback)
 ```ts
 const match = value.trim().match(/\b(\d{1,4})\s+([A-Za-z][A-Za-z0-9.\s]*?)\s+(\d{1,7})\b/);
 return { volume: match[1], reporter: match[2].replace(/\s+/g," ").trim(), page: match[3] };
@@ -296,7 +296,7 @@ view.citation_list = citation_objs; return len(citation_objs)
 relevance: adjacent · partial · recommend: reference · P3
 `seals.json` maps 365 CourtListener court IDs (ca9, akb, acca, …) to canonical court names — a ready static enrichment table for resolving court identifiers in citations/provenance without an API round-trip. Ship as a reference dataset in `@beep/courtlistener`.
 - source: `seal-rookery/seal_rookery/seals/seals.json:1-12`
-- beep-target: `packages/drivers/courtlistener` court-ID enrichment table
+- beep-target: `@beep/courtlistener` court-ID enrichment table
 ```json
 "acca": { "name": "United States Army Court of Criminal Appeals", "has_seal": true }
 ```
@@ -1251,7 +1251,7 @@ relevance: direct · gapStatus: gap · recommend: adopt · P2
 A ready-made 2,809-court entity schema (id, name_abbreviation, citation_string, jurisdiction, system federal/state/tribal, type trial/appellate, parent hierarchy, dates, regex name-variants — with CourtListener IDs) plus a citation reporter-type taxonomy (FEDERAL/STATE/SPECIALTY/NEUTRAL/WEST/LEXIS/JOURNAL with volume/reporter/page). beep's law-practice slice has NO court, jurisdiction, or reporter model and `@beep/courtlistener` is a bare skeleton. Adopt as seed data: an `effect/Schema` court/reporter vocabulary for grounding court refs in `OfficeAction`/`Matter` provenance and as the lookup table for the courtlistener driver. The reporter-type enum is a logic-rule classification (not NLP).
 - source: `courts-db/courts_db/data/courts.json:1`
 - source: `courtlistener/cl/search/models.py:2883`
-- beep-target: `packages/law-practice/domain/` (new Court/CitationReporter value vocab) + `packages/drivers/courtlistener/` court-id lookup
+- beep-target: `packages/law-practice/domain/` (new Court/CitationReporter value vocab) + `@beep/courtlistener/` court-id lookup
 ```json
 { "id":"alacirct", "jurisdiction":"A.L.", "level":"gjc", "name":"Alabama Circuit Courts",
   "system":"state", "type":"trial", "regex":["Alabama Circuit Courts"], "dates":[{"start":null,"end":null}] }
@@ -2168,7 +2168,7 @@ Relevance column = direct/adjacent/serendipitous nugget counts. Verdict ∈ adop
 | `doctor` | T1 | Python 3.12, Django 6 + gunicorn/… | BSD-2-Clause | 7/3/2 | **port** | Layout-aware PDF text extraction with margin crop +… | packages/foundation/capability/file-processin… |
 | `mike` | T1 | TypeScript (Node 20+); backend = … | AGPL-3.0-only ⚠️ | 8/5/0 | **port** | Ground-before-cite case-law research protocol (syst… | @beep/agents prompt templates; epistemic Cand… |
 | `patents-mcp-server` | T1 | TypeScript (ESM, Node 22), FastMC… | MIT | 8/5/1 | **port** | Conditional MCP tool registration keyed on availabl… | @beep/nlp-mcp + per-driver MCP servers: condi… |
-| `us-legal-tools` | T1 | TypeScript 5.8, Bun 1.2 + Turbore… | MIT | 6/4/2 | **port** | CourtListener token-auth axios mutator | packages/drivers/courtlistener/src/{CourtList… |
+| `us-legal-tools` | T1 | TypeScript 5.8, Bun 1.2 + Turbore… | MIT | 6/4/2 | **port** | CourtListener token-auth axios mutator | @beep/courtlistener/src/{CourtList… |
 | `uspto_pfw_mcp` | T1 | Python 3.10+; MCP (FastMCP), http… | MIT | 7/6/1 | **port** | Lucene query-term escaping with documented safe/uns… | packages/drivers/uspto/src/Uspto.search.ts (L… |
 | `patent-search-mcp-server` | T2 | TypeScript, MCP SDK, fetch REST c… | MIT | 4/3/0 | **adopt** | MCP tool definition convention: paired const tool +… | @beep/nlp-mcp tool conventions: readOnly/idem… |
 | `mcp-uspto` | T2 | TypeScript (ESM, Node >=18), @mod… | MIT | 4/2/0 | **port** | Per-API token-bucket rate limiter with multi-tier a… | shared packages/drivers rate-limit utility (p… |
@@ -2185,7 +2185,7 @@ Relevance column = direct/adjacent/serendipitous nugget counts. Verdict ∈ adop
 | `screenpipe` | T3 | Rust (capture/core crates), TypeS… | LicenseRef-Screenpipe-Commercial | 1/1/1 | **study** | MCP tool descriptions with explicit USE WHEN / DO N… | @beep/nlp-mcp/@beep/m365-mcp tool conventions… |
 | `stenoai` | T3 | Python (CLI backend: click, pydan… | MIT | 0/2/0 | **study** | Overlapping map-reduce chunking sized to model cont… | @beep/langextract long-document chunking; @be… |
 | `judge-pics` | T3 | Python; requests, fuzzywuzzy (fuz… | BSD-2-Clause | 0/2/0 | **reference** | Fuzzy name-to-entity resolution with confidence thr… | @beep/nlp + @beep/langextract entity resoluti… |
-| `seal-rookery` | T3 | Python (enum/pathlib stdlib); pac… | unknown ⚠️ | 0/1/1 | **reference** | CourtListener court-ID to full court-name taxonomy | packages/drivers/courtlistener court-ID enric… |
+| `seal-rookery` | T3 | Python (enum/pathlib stdlib); pac… | unknown ⚠️ | 0/1/1 | **reference** | CourtListener court-ID to full court-name taxonomy | @beep/courtlistener court-ID enric… |
 
 ### Repo profiles
 
@@ -2307,7 +2307,7 @@ Relevance column = direct/adjacent/serendipitous nugget counts. Verdict ∈ adop
 - **Size / maturity:** ~33.5k LOC across ~572 TS files (most Orval-generated); 8 workspace packages (5 API SDK/MCP packages + shared orval-config, scalar-ui docs server, tsconfig). Kind: SDK + MCP-server monorepo. · Active; last commit 2025-08-06. Published npm packages, CI (validate/release workflows), changesets versioning.
 - **Nuggets:** 12 (direct 6 / adjacent 4 / serendipitous 2) · gap 3 / partial 9 / dup 0
 - **Top gold:**
-  - *CourtListener token-auth axios mutator* — **port**/P1 → `packages/drivers/courtlistener/src/{CourtListener.config.ts…`  ·  src: `us-legal-tools/packages/courtlistener-sdk/src/api/client.ts:8-22`  ·  _data-ingestion_
+  - *CourtListener token-auth axios mutator* — **port**/P1 → `@beep/courtlistener/src/{CourtListener.config.ts…`  ·  src: `us-legal-tools/packages/courtlistener-sdk/src/api/client.ts:8-22`  ·  _data-ingestion_
   - *Zod tool-schema with rich .describe() metadata for LLM tool calls* — **adopt**/P1 → `effect/Schema field annotations for MCP tool input contract…`  ·  src: `us-legal-tools/packages/courtlistener-sdk/src/mcp/tool-schemas.zod.ts:15-21`  ·  _mcp-design_
   - *Citation result schema (normalized_citations) for span grounding* — **port**/P1 → `@beep/courtlistener citation-lookup result schema; @beep/la…`  ·  src: `us-legal-tools/packages/courtlistener-sdk/src/mcp/http-schemas/citationResult.ts:8-12`  ·  _provenance-evidence_
 
@@ -2509,6 +2509,6 @@ Relevance column = direct/adjacent/serendipitous nugget counts. Verdict ∈ adop
 - **Size / maturity:** ~279 files (mostly image assets), tiny Python lib (~1 module + seals.json index of 365 courts). · Last commit 2025-05-28
 - **Nuggets:** 2 (direct 0 / adjacent 1 / serendipitous 1) · gap 1 / partial 1 / dup 0
 - **Top gold:**
-  - *CourtListener court-ID to full court-name taxonomy* — **reference**/P3 → `packages/drivers/courtlistener court-ID enrichment table`  ·  src: `seal-rookery/seal_rookery/seals/seals.json:1-12`  ·  _data-ingestion_
+  - *CourtListener court-ID to full court-name taxonomy* — **reference**/P3 → `@beep/courtlistener court-ID enrichment table`  ·  src: `seal-rookery/seal_rookery/seals/seals.json:1-12`  ·  _data-ingestion_
   - *Court seal image URL resolver pattern* — **reference**/P3 → `apps/professional-desktop portal UI (optional court-seal di…`  ·  src: `seal-rookery/seal_rookery/search.py:31-47`  ·  _desktop-portal_
 - **⚠️ Licensing:** license UNKNOWN — clarify before reusing code

@@ -1,6 +1,6 @@
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
-import { acceptsEscapedLocal, escapeLocal, isSafeLocal, prefixedNameOrIri, unescapeLocal } from "../identity/PnLocal.ts";
+import { acceptsEscapedLocal, escapeLocal, isSafeLocal, prefixedNameOrIri, unescapeLocal } from "@beep/identity";
 
 const escapableLocalCharacters = ["_", "~", ".", "-", "!", "$", "&", "'", "(", ")", "*", "+", ",", ";", "=", "/", "?", "#", "@", "%"];
 
@@ -31,7 +31,10 @@ describe("PnLocal", () => {
 
   it("falls back to full IRI when a local cannot be emitted unescaped", () => {
     expect(
-      prefixedNameOrIri("beep", "Ontology.models/HttpUrl", "https://ns.beep.sh/ontology/Ontology.models/HttpUrl")
+      prefixedNameOrIri("Ontology.models/HttpUrl", {
+        prefix: "beep",
+        fullIri: "https://ns.beep.sh/ontology/Ontology.models/HttpUrl",
+      })
     ).toBe("<https://ns.beep.sh/ontology/Ontology.models/HttpUrl>");
   });
 });

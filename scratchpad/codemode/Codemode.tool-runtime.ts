@@ -379,6 +379,7 @@ const isoFromEpochMillis = (millis: number): string | null =>
  *
  * Checkpoint mode preserves guest objects; boundary mode JSON-normalizes them.
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const copyIn = (value: unknown, label: string, preserveCodeModeValues = false): unknown =>
   copyBounded(value, label, 0, HashSet.empty(), preserveCodeModeValues);
 
@@ -496,6 +497,7 @@ const copyBounded = (
 };
 
 /** Copies a guest value out through JSON-compatible boundary semantics. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const copyOut = (value: unknown, mode: CopyOutMode): unknown => {
   if (P.isUndefined(value) && CopyOutMode.is.nullify(mode)) return null;
   if (P.isNumber(value) && !Number.isFinite(value)) return null;
@@ -840,6 +842,7 @@ export type ToolRuntime<R = never> = {
 };
 
 /** Creates execution-local state around a Toolkit with installed handlers. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const make = <R>(
   toolkit: Toolkit.Any,
   handlers: AnyWithHandler,
