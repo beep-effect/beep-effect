@@ -105,3 +105,8 @@ ecosystem = "npm"
 vulnerability.ignore = true
 effectiveUntil = 2026-09-15T00:00:00Z
 reason = "OSV URL-version false positive for root dev-only inspeffct 1.1.0's transitive effect snapshot. This exact effect-smol commit has package version 4.0.0-beta.93 and creates a scheduler dispatcher per fiber, matching the upstream isolation fix. The exact name, ecosystem, and URL version keep every other Effect artifact and version visible to OSV. Re-verified 2026-08-10: inspeffct latest on npm is still 1.1.0 and its published dependencies still pin effect (plus @effect/sql-sqlite-bun and @effect/sql-sqlite-node) to this pkg.pr.new snapshot, so no bump can clear it; extended to align with the sibling ignore expiries. Revisit when inspeffct publishes a semver Effect dependency or OSV classifies URL-pinned versions correctly."
+
+[[IgnoredVulns]]
+id = "GHSA-2v37-7h3g-55p8"
+ignoreUntil = 2026-09-15T00:00:00Z
+reason = "nanoid 3.3.17 customAlphabet/customRandom size-0 infinite loop (CVE-2026-67213), fixed only in 5.1.6+ with no fixed 3.x release to bump to. The 3.x copy is pinned solely by postcss@8.5.23 (nanoid ^3.3.16), a build-time tool calling nanoid with fixed sizes over local inputs, so the attacker-controlled size-0 precondition is absent; the workspace's direct nanoid is 5.1.16 (clean). Newly published advisory, not introduced by the current PR (identical bun.lock nanoid entries on main). Revisit when postcss adopts nanoid 5 or a fixed 3.x release appears."
