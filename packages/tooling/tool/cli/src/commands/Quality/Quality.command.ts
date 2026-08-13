@@ -322,6 +322,8 @@ const effectTsgoReadmeParser = new XMLParser({
  * isEffectDiagnosticsDirectiveForTesting("// @effect-diagnostics strictEffectProvide:skip-file") // true
  * ```
  *
+ * @param line - Source line to test for a diagnostics directive comment.
+ * @returns Whether the line is an active Effect diagnostics directive.
  * @category testing
  * @since 0.0.0
  */
