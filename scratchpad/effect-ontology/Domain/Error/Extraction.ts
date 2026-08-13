@@ -435,7 +435,7 @@ const AnyExtractionErrorDefinition = S.Union([
 export const AnyExtractionError = AnyExtractionErrorDefinition.pipe(
   $I.annoteSchema("AnyExtractionError", {
     description: "Exhaustive tagged union of extraction and row-validation failures.",
-    toArbitrary: () => S.toArbitrary(AnyExtractionErrorDefinition),
+  toArbitrary: () => S.toArbitrary(AnyExtractionErrorDefinition),
   })
 );
 
