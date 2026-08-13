@@ -580,6 +580,22 @@
       "reason": "Real-engine orchestration regression coverage; schema-derived property laws belong to the schema-owning ontology use-cases package."
     },
     {
+      "file": "packages/shared/domain/src/entity/Principal.ts",
+      "symbol": "PrincipalSchema",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/shared-domain",
+      "reason": "Not a data model: a named surface interface extending the annotated Principal schema's own type, exported so declaration emit references the name instead of serializing the derived tagged union structurally at every consumer position (typecheck-cost mitigation, goals/ci-fleet-endgame research/ci-graph-check-baseline.md)."
+    },
+    {
+      "file": "packages/shared/domain/src/entity/SourceKind.ts",
+      "symbol": "SourceKindSchema",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/shared-domain",
+      "reason": "Not a data model: a named surface interface extending the annotated SourceKind schema's own type, exported so declaration emit references the name instead of serializing the literal-kit statics structurally at every consumer position (typecheck-cost mitigation, goals/ci-fleet-endgame research/ci-graph-check-baseline.md)."
+    },
+    {
       "file": "packages/tooling/library/qa-capture/src/Collector.service.ts",
       "symbol": "CollectorRunning",
       "kind": "exported-interface",

@@ -82,7 +82,6 @@ export { isEntityIdLike };
 /**
  * Static EntityId metadata consumed by PostgreSQL derivation.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -97,7 +96,6 @@ type IsAny<T> = 0 extends 1 & T ? true : false;
 /**
  * Select-side schema type of an input; variant fields contribute `select`.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -128,10 +126,9 @@ type DeriveFromEncoded<E> =
                       : never;
 
 /**
- * The column spec a bare Input derives, or `never` when derivation is
+ * The column spec a bare input derives, or `never` when derivation is
  * ambiguous and explicit metadata is required.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -147,7 +144,6 @@ type Derived<I extends Field.Input> =
 /**
  * Column descriptor an input resolves to: explicit metadata wins, then derivation.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */

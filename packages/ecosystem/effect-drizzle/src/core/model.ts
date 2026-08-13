@@ -45,9 +45,8 @@ export class ModelInvariantError extends TaggedError<ModelInvariantError>("@beep
 ) {}
 
 /**
- * Internal structural model bound shared by dialect projectors.
+ * Structural model bound exposed by repository and dialect projector inference.
  *
- * @internal
  * @category errors
  * @since 0.0.0
  */

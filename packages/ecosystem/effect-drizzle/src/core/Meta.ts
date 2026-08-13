@@ -38,9 +38,8 @@ export const assertNoSqlParameters = (params: ReadonlyArray<unknown>, context: s
 };
 
 /**
- * Minimal column identity required by the dialect-neutral field wrapper.
+ * Minimal column identity carried through public field inference.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -53,7 +52,6 @@ export interface ColumnSpec {
 /**
  * Supported array depth carried by field metadata.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -62,7 +60,6 @@ export type ArrayDimension = 0 | 1 | 2 | 3 | 4 | 5;
 /**
  * Identity-generation intent shared by integer-capable dialects.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -71,7 +68,6 @@ export type IdentityMode = "always" | "byDefault" | false;
 /**
  * Foreign-key referential actions understood by Drizzle.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -89,7 +85,6 @@ const isFkAction = (value: unknown): value is FkAction =>
 /**
  * Foreign-key target resolved from identity statics or supplied explicitly.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -122,7 +117,6 @@ export const isReferences = (value: unknown): value is References =>
 /**
  * Server-default descriptor union.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -145,7 +139,6 @@ export const Default = /* @__PURE__ */ taggedEnum<Default>();
 /**
  * Typed SQL-expression default descriptor.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -156,7 +149,6 @@ export type DefaultSqlExpr<Carrier> = Omit<Extract<Default, { readonly _tag: "sq
 /**
  * Literal-value default descriptor.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -167,7 +159,6 @@ export type DefaultValue<Encoded> = Omit<Extract<Default, { readonly _tag: "valu
 /**
  * Current-time default descriptor.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -176,7 +167,6 @@ export type DefaultNow = Extract<Default, { readonly _tag: "now" }>;
 /**
  * Explicit raw-SQL default descriptor.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -185,7 +175,6 @@ export type UnsafeDefaultSql = Extract<Default, { readonly _tag: "unsafeSql" }>;
 /**
  * Generated-column descriptor union.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -207,7 +196,6 @@ export const Generated = /* @__PURE__ */ taggedEnum<Generated>();
 /**
  * Typed generated SQL-expression descriptor.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -218,7 +206,6 @@ export type GeneratedSqlExpr<Carrier> = Omit<Extract<Generated, { readonly _tag:
 /**
  * Explicit raw-SQL generated descriptor.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -227,16 +214,14 @@ export type UnsafeGeneratedSql = Extract<Generated, { readonly _tag: "unsafeSql"
 /**
  * Identity-always generated descriptor.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
 export type GeneratedIdentityAlways = Extract<Generated, { readonly _tag: "identityAlways" }>;
 
 /**
- * Literal-preserving SQL intent carried by every field.
+ * Literal-preserving SQL intent exposed by inferred field metadata.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -255,9 +240,8 @@ export interface Meta<C extends ColumnSpec = ColumnSpec> {
 }
 
 /**
- * Exact initial metadata type for a bare schema field.
+ * Exact initial metadata type inferred for a bare schema field.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -299,7 +283,6 @@ export const empty: Empty = {
 /**
  * Partial metadata update produced by a field combinator.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */
@@ -308,7 +291,6 @@ export type Patch = { readonly [K in keyof Meta]?: Meta[K] };
 /**
  * Literal-preserving metadata merge type.
  *
- * @internal
  * @category models
  * @since 0.0.0
  */

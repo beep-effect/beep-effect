@@ -10,8 +10,7 @@ import { VariantSchema } from "effect/unstable/schema";
 
 const variantTuple = <const Values extends readonly [string, ...string[]]>(...values: Values): Values => values;
 
-/** Ordered internal variant list used to configure the shared factory. */
-/** @internal */
+/** Ordered variant list retained in public declaration inference. */
 const variants = variantTuple("select", "insert", "update", "json", "jsonCreate", "jsonUpdate");
 
 /**
@@ -37,8 +36,7 @@ const variants = variantTuple("select", "insert", "update", "json", "jsonCreate"
 export type Variant = (typeof variants)[number];
 
 /**
- * Guards each supported model projection name for internal dialect wiring.
- * @internal
+ * Guards each supported model projection name for dialect-aware consumers.
  * @category guards
  * @since 0.0.0
  */

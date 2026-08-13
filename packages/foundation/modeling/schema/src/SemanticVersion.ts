@@ -27,6 +27,35 @@ const SemanticVersionSegment = S.String.check(
   })
 );
 
+const SemanticVersionWithStatics = S.TemplateLiteral([
+  SemanticVersionSegment,
+  ".",
+  SemanticVersionSegment,
+  ".",
+  SemanticVersionSegment,
+]).pipe(
+  SchemaUtils.withStatics((schema) => ({
+    decodeUnknownOption: (u: unknown) => S.decodeUnknownOption(schema)(u),
+  })),
+  $I.annoteSchema("SemanticVersion", {
+    description: "A semantic version string in the format x.y.z",
+  })
+);
+
+type SemanticVersionSchemaBase = typeof SemanticVersionWithStatics;
+
+/**
+ * Named schema surface for {@link SemanticVersion}.
+ *
+ * Declaration emit references this interface by name instead of serializing
+ * the template-literal schema and its statics structurally at every consumer
+ * position.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export interface SemanticVersionSchema extends SemanticVersionSchemaBase {}
+
 /**
  * Validates Semantic Versioning strings in `MAJOR.MINOR.PATCH` form.
  *
@@ -59,20 +88,7 @@ const SemanticVersionSegment = S.String.check(
  * @category validation
  * @since 0.0.0
  */
-export const SemanticVersion = S.TemplateLiteral([
-  SemanticVersionSegment,
-  ".",
-  SemanticVersionSegment,
-  ".",
-  SemanticVersionSegment,
-]).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    decodeUnknownOption: (u: unknown) => S.decodeUnknownOption(schema)(u),
-  })),
-  $I.annoteSchema("SemanticVersion", {
-    description: "A semantic version string in the format x.y.z",
-  })
-);
+export const SemanticVersion: SemanticVersionSchema = SemanticVersionWithStatics;
 
 /**
  * Decoded semantic-version string produced by {@link SemanticVersion}.

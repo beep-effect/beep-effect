@@ -126,13 +126,16 @@ describe("ecosystem import boundaries", () => {
       );
       const runtimeSections = ["dependencies", "peerDependencies", "optionalDependencies"];
       const runtimeKeys: Array<string> = [];
+      const runtimeValues: Array<unknown> = [];
       for (const section of runtimeSections) {
         if (section in manifest) {
           const dependencies = yield* decodeRecord(manifest[section]);
           runtimeKeys.push(...Object.keys(dependencies));
+          runtimeValues.push(...Object.values(dependencies));
         }
       }
       expect(runtimeKeys.filter((key) => key.startsWith("@beep/"))).toEqual([]);
+      expect(runtimeValues.filter((value) => typeof value === "string" && value.startsWith("npm:@beep/"))).toEqual([]);
       expect(
         Object.keys(manifest).filter((key) => ["bundleddependencies", "bundledependencies"].includes(key.toLowerCase()))
       ).toEqual([]);

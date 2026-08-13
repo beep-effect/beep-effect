@@ -1,0 +1,5 @@
+package	variant	status	max_rss_k	wall_s	exit_code	tsgo_version
+@beep/law-practice-server	baseline	ok	29435524	37.21	0	7.0.2+effect-tsgo.0.24.3
+@beep/practice-kg-mcp	baseline	ok	34220064	38.30	0	7.0.2+effect-tsgo.0.24.3
+@beep/ontology-client	baseline	ok	5815752	14.41	0	7.0.2+effect-tsgo.0.24.3
+@beep/agents-client	baseline	ok	5502696	13.42	0	7.0.2+effect-tsgo.0.24.3

@@ -386,3 +386,36 @@
   measured per-lane profiles, not blanket "heavy goes to the fleet";
   attribution of the AL2023 anomaly belongs to the heavy-lane session with a
   reproducible harness (same commit, side-by-side AL2023 vs Ubuntu VM).
+
+## tsgo has no cost-attribution instrumentation — heavy-lane RSS work runs blind
+
+- **Work:** P2 build-mode OOM handoff — attributing epistemic-server's 23 GiB
+  and professional-desktop's 19 GiB check peaks (2026-08-11).
+- **What happened:** `--extendedDiagnostics` gives program-level totals only;
+  there is no `--generateTrace`, no pprof flag in `--help`, and no per-file or
+  per-symbol breakdown. Attribution required hand-rolled bisection: per-entry
+  probe tsconfigs, per-file probes, and reference-set surgery, each a cold
+  multi-GiB compile. A compiler-side trace would have answered in one run what
+  took ~15 probe compiles.
+- **Proposal:** upstream ask on `@effect/tsgo` (or typescript-go): expose the
+  Go runtime's pprof (`--pprofDir`) or a `--generateTrace` equivalent. Until
+  then, the probe-tsconfig bisection recipe in
+  `research/ci-graph-check-baseline.md` is the working substitute.
+
+## Declaration-mode checking costs ~6x source-mode for schema-heavy surfaces
+
+- **Work:** same attribution session.
+- **What happened:** checking `@beep/epistemic-server` against its
+  dependencies' emitted `.d.ts` (project-reference redirection) creates 10.6M
+  types / 37M symbols / 23-25 GiB; the identical program with dependencies
+  resolved to *source* creates 2.1M types / 4.3 GiB and completes full
+  diagnostics in a fraction of the wall. Naming exported schema consts
+  (`PrincipalSchema` et al.) shrank dependent d.ts 27-65% but moved neither
+  Types nor RSS — the explosion is structural d.ts types defeating the
+  checker's instantiation cache at expression-check sites, additively per
+  consuming file.
+- **Proposal:** candidate minimal-repro upstream report for effect-tsgo. The
+  in-repo mitigation shipped in this PR: reference-tip packages check via a
+  flat `tsconfig.check.json` (source mode) and skip declaration consumption
+  entirely; the deeper fix (declaration emit that preserves type identity)
+  is upstream work.

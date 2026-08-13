@@ -1505,7 +1505,9 @@ const collectEcosystemMemberProfileDiagnostics = (
 ): ReadonlyArray<string> => {
   const plugin = findEffectLanguageServicePlugin(config);
   if (O.isNone(plugin)) {
-    return A.empty();
+    return isDirectEcosystemMemberTsconfig(file)
+      ? A.of(`ecosystem member tsconfig ${file} is missing the @effect/language-service family profile`)
+      : A.empty();
   }
   if (!isDirectEcosystemMemberTsconfig(file)) {
     return A.of(

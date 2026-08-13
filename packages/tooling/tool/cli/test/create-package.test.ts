@@ -113,6 +113,24 @@ const EcosystemPackageMetadata = S.Struct({
   bundleDependencies: S.optionalKey(S.Unknown),
   devDependencies: S.Record(S.String, S.String),
 });
+const EcosystemEffectPlugin = S.Struct({
+  name: S.Literal("@effect/language-service"),
+  diagnosticSeverity: S.Struct({
+    missedPipeableOpportunity: S.Literal("off"),
+    missingPipeableSignature: S.Literal("off"),
+  }),
+});
+const EcosystemProductionTsconfig = S.Struct({
+  compilerOptions: S.Struct({
+    stripInternal: S.Literal(true),
+    plugins: S.Tuple([EcosystemEffectPlugin]),
+  }),
+});
+const EcosystemTestTsconfig = S.Struct({
+  compilerOptions: S.Struct({
+    plugins: S.Tuple([EcosystemEffectPlugin]),
+  }),
+});
 
 const decodeRootPackage = S.decodeUnknownSync(RootPackage);
 const decodeTsconfigReferences = S.decodeUnknownSync(TsconfigReferences);
@@ -125,6 +143,8 @@ const decodeFoundationPackageMetadata = S.decodeUnknownSync(FoundationPackageMet
 const decodeToolingPackageMetadata = S.decodeUnknownSync(ToolingPackageMetadata);
 const decodeDriverPackageMetadata = S.decodeUnknownSync(DriverPackageMetadata);
 const decodeEcosystemPackageMetadata = S.decodeUnknownSync(EcosystemPackageMetadata);
+const decodeEcosystemProductionTsconfig = S.decodeUnknownSync(EcosystemProductionTsconfig);
+const decodeEcosystemTestTsconfig = S.decodeUnknownSync(EcosystemTestTsconfig);
 const StoriesTsconfigArbitrary = S.toArbitrary(StoriesTsconfig)(fc);
 const StoriesDirectoryTsconfigArbitrary = S.toArbitrary(StoriesDirectoryTsconfig)(fc);
 const ExpectedGeneratedQualityScripts = {
@@ -1070,6 +1090,23 @@ describe("create-package", { concurrent: false }, () => {
               expect(generatedPackage.devDependencies.effect).toBe("catalog:");
               expect(generatedPackage.scripts).toMatchObject(ExpectedGeneratedQualityScripts);
               expect(generatedPackage.scripts.docgen).toBe("bun run ../../../packages/tooling/tool/docgen/src/bin.ts");
+
+              const ecosystemPackageDir = path.join(rootDir, "packages", "ecosystem", "portable-effect");
+              const productionTsconfig = decodeEcosystemProductionTsconfig(
+                yield* readJsoncFile(path.join(ecosystemPackageDir, "tsconfig.json"))
+              );
+              const testTsconfig = decodeEcosystemTestTsconfig(
+                yield* readJsoncFile(path.join(ecosystemPackageDir, "tsconfig.test.json"))
+              );
+              expect(productionTsconfig.compilerOptions.stripInternal).toBe(true);
+              expect(productionTsconfig.compilerOptions.plugins[0].diagnosticSeverity).toEqual({
+                missedPipeableOpportunity: "off",
+                missingPipeableSignature: "off",
+              });
+              expect(testTsconfig.compilerOptions.plugins[0].diagnosticSeverity).toEqual({
+                missedPipeableOpportunity: "off",
+                missingPipeableSignature: "off",
+              });
 
               const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
               expect(syncpackConfig).toContain(`"packages/ecosystem/*/package.json"`);

@@ -1,19 +1,46 @@
 # @beep/effect-drizzle
 
-Define a domain once with `effect/Schema`, then derive Drizzle tables, relational metadata, and optimistic repositories from it.
+Define your domain once as an Effect Schema. Derive the Drizzle tables, the DDL, the relations, and the repositories from it.
 
-> Experimental ecosystem package. `@beep/effect-drizzle` has graduated from the scratchpad, but
-> remains private until Effect v4 is stable and Drizzle 1.0 is final; it is not published yet.
+> I have a dream that one day a domain entity can stand as an opaque
+> [@EffectTS\_](https://x.com/EffectTS_) Schema, rich enough to describe itself, encoded enough to
+> persist itself, and precise enough for [@DrizzleORM](https://x.com/DrizzleORM) to derive its
+> table. No mapping layer. No drift. One source of truth.
+>
+> I have a dream!
 
-## Why
+It has been realized.
 
-Applications that use Effect and Drizzle often maintain parallel maps of the same domain: an Effect schema for decoding and application behavior, then a Drizzle table for persistence. The two definitions can drift in nullability, defaults, generated values, lengths, enum members, and write semantics.
+> **Status**: experimental. `@beep/effect-drizzle` stays private (unpublished) until Effect v4 is
+> stable and Drizzle 1.0 is final. Until then it lives — fully built, tested, and consumable — in
+> the open [beep-effect](https://github.com/beep-effect/beep-effect) monorepo, and feedback is
+> very welcome through issues and discussions there.
 
-`@beep/effect-drizzle` treats the Effect schema as the richer source of domain truth. It derives from the schema's **encoded side**, because that is the representation sent to SQL, and corroborates inferred storage with explicit dialect intent when the schema alone is ambiguous. The result is still a real Drizzle table; existing Drizzle tooling can consume it for queries and DDL workflows.
+## The problem
+
+If you use Effect and Drizzle together today, you probably maintain two parallel descriptions of
+every entity: an Effect schema for decoding, validation, and application behavior — and a Drizzle
+table for persistence. Every nullable flag, default, generated column, length bound, enum member,
+and write rule exists twice. Parallel definitions drift, and drift ships.
+
+## The idea
+
+`@beep/effect-drizzle` treats the Effect schema as the single, richer source of truth. It derives
+SQL storage from the schema's **encoded side** — the representation that actually travels to the
+database — and asks for explicit dialect intent only where the schema alone is ambiguous. What
+comes out is a *real* Drizzle table: your existing Drizzle tooling, migrations, and query builder
+consume it unchanged.
+
+- **No mapping layer.** Fields carry their SQL metadata as part of the schema pipeline.
+- **No drift.** Nullability, defaults, identity, generated columns, lengths, enums, and
+  optimistic-locking semantics all flow from one definition — and invalid combinations fail at
+  the field where you wrote them, at compile time.
+- **One source of truth.** The schema describes the entity, persists the entity, and projects the
+  table.
 
 ## Quickstart
 
-Create a PostgreSQL kit when several models share audit columns or table constraints. Use the PostgreSQL subpath for table helpers needed while configuring the kit:
+Create a kit once — usually where several models share audit columns or table constraints:
 
 ```ts
 import { getTableName, sql } from "drizzle-orm"
@@ -30,28 +57,21 @@ const db = make({
     rowVersion: Int.pipe(pg.integer(), pg.default(1), pg.version())
   }),
   defaultExtras: (columns) => [
-    Table.check(
-      sql<boolean>`${columns.rowVersion} > 0`,
-      "row_version_positive"
-    )
+    Table.check(sql<boolean>`${columns.rowVersion} > 0`, "row_version_positive")
   ]
 })
 ```
 
-Define models by piping SQL intent through Effect schemas. Bare schemas are derived when their encoded representation is unambiguous:
+Then define models by piping SQL intent through ordinary Effect schemas. Bare schemas derive
+their columns automatically whenever the encoded representation is unambiguous:
 
 ```ts
 const { Entity, Model, pg, schema, toPgTable, Repository } = db
 
 class Account extends Entity<Account>("Account")({
   id: Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
-  email: String.check(isMaxLength(320)).pipe(
-    pg.varchar(320),
-    pg.unique()
-  ),
-  status: Literals(["active", "disabled"]).pipe(
-    pg.enum("account_status")
-  ),
+  email: String.check(isMaxLength(320)).pipe(pg.varchar(320), pg.unique()),
+  status: Literals(["active", "disabled"]).pipe(pg.enum("account_status")),
   displayName: String,
   settings: Struct({ theme: String }),
   nickname: NullOr(String)
@@ -64,33 +84,34 @@ class Membership extends Model<Membership>("Membership")(
     role: Literals(["owner", "member"]).pipe(pg.enum())
   },
   (columns) => [
-    Table.compositePrimaryKey("membership_pk", [
-      columns.accountId,
-      columns.organizationId
-    ])
+    Table.compositePrimaryKey("membership_pk", [columns.accountId, columns.organizationId])
   ]
 ) {}
 
 const accountTable = toPgTable(Account)
-const database = schema({
-  account: Account,
-  membership: Membership
-})
+const database = schema({ account: Account, membership: Membership })
 
 Account.sql.tableName // => "account"
 getTableName(accountTable) // => "account"
 getTableName(database.tables.account) // => "account"
 
-const AccountRepository = Repository(Account, {
-  spanPrefix: "Account",
-  idColumn: "id"
-})
+const AccountRepository = Repository(Account, { spanPrefix: "Account", idColumn: "id" })
 ```
 
-`AccountRepository` is an Effect that requires `SqlClient.SqlClient`. Its `update` operation compares the declared `pg.version()` field and increments it atomically; a stale or missing row fails with `VersionConflictError`.
+`Account` is an opaque Effect schema class — decode with it, construct with it, hand it to
+anything that speaks `effect/Schema`. It also carries `sql` statics, projects a genuine
+`pgTable`, participates in RQBv2 `defineRelations`, and derives an Effect SQL repository.
+`AccountRepository.update` compares the declared `pg.version()` field and increments it
+atomically; a stale or missing row fails with `VersionConflictError`.
 
-SQLite uses the same kit shape and domain schemas, but exposes only SQLite capabilities. Its
-db-assigned key is an `INTEGER PRIMARY KEY AUTOINCREMENT`, timestamps use ISO text, and literal
+Insert and update variants keep Effect's write strategies honest: generated columns disappear
+from inputs, defaulted fields become optional on insert, row locators stay available for updates,
+and optimistic version fields are required exactly where they must be.
+
+### SQLite
+
+The same kit shape and the same domain schemas, exposing only what SQLite can honor —
+db-assigned keys are `INTEGER PRIMARY KEY AUTOINCREMENT`, timestamps are ISO text, and literal
 enums become table-local `CHECK` constraints:
 
 ```ts
@@ -120,14 +141,15 @@ const localAccountTable = toSqliteTable(LocalAccount)
 const localDatabase = schema({ local_account: LocalAccount })
 ```
 
-The SQLite namespace intentionally has no `array` export. SQLite models reject PostgreSQL column
-descriptors (and PostgreSQL models reject SQLite descriptors) at the offending field.
-
-Use `Entity` for kit defaults and `Model` when a table must opt out. Insert and update variants retain Effect's write strategies: generated columns disappear, insert defaults are optional or constructed as declared, row locators remain available for updates, and optimistic version fields remain required.
+The SQLite namespace deliberately has no `array` export, and each dialect rejects the other's
+column descriptors at the offending field. There is no portable intermediate SQL representation —
+dialect precision *is* the value proposition.
 
 ## What the type system rejects
 
-The public combinators preserve literal metadata, so invalid combinations fail where they are authored rather than after a migration reaches a database. The test fixture proves at least these families:
+The combinators preserve literal metadata end to end, so invalid combinations fail where they are
+authored — not after a migration reaches a database. The type-test suite pins exact
+`~effect-drizzle.error` diagnostics for (at least) these families:
 
 - a schema whose encoded carrier cannot inhabit its requested SQL column;
 - an underivable or ambiguous schema without an explicit column combinator;
@@ -143,32 +165,52 @@ The public combinators preserve literal metadata, so invalid combinations fail w
 - overriding a kit's invariant default columns;
 - optimistic repositories for models without exactly one version field.
 
-Runtime checks mirror the same laws at author-input seams, including deliberately hand-built field metadata and extras callback results.
+Runtime checks mirror the same laws at author-input seams, including deliberately hand-built
+field metadata and extras callback results.
 
-## SQL-expression and database boundaries
+## Honest boundaries
 
 Typed `defaultExpr`, generated columns, checks, and partial-index predicates prove their encoded
-carrier and must render with zero parameters. They do not parse SQL or certify dialect semantics.
-PostgreSQL still decides immutability, generated-column chaining, and CHECK/index grammar; SQLite
-still decides constant-expression and determinism rules. The live suites retain negative DDL probes
-for these deferred boundaries.
+carrier and must render with zero parameters — but this library does not parse SQL or certify
+dialect semantics. PostgreSQL still owns immutability, generated-column chaining, and CHECK/index
+grammar; SQLite still owns constant-expression and determinism rules. The live suites keep
+negative DDL probes on these deferred boundaries so they stay visible.
 
 Literal defaults are stricter: model construction validates the complete encoded schema and the
-dialect's supported literal representation. Use `unsafeDefaultSql` only when a trusted SQL spelling
-is intentionally required. PostgreSQL multidimensional arrays are schema-checked for rectangular
-shape, and SQLite NUMERIC intentionally supports only finite-number and signed-64-bit bigint modes;
-use TEXT for representation-preserving decimal strings.
+dialect's supported literal representation. `unsafeDefaultSql` exists for the cases where a
+trusted SQL spelling is genuinely required. PostgreSQL multidimensional arrays are schema-checked
+for rectangular shape; SQLite NUMERIC supports only finite-number and signed-64-bit bigint modes
+(use TEXT for representation-preserving decimal strings).
 
 ## Design principles
 
-- **Schema truth at boundaries.** User data, field variants, decoding, and errors remain schema-first. Internal compiler descriptors are lightweight tagged data and readonly records.
-- **Encoded-side derivation.** SQL storage follows the encoded representation, then explicit combinators corroborate intent when multiple SQL mappings are plausible.
-- **Dialect as a kit.** PostgreSQL and SQLite behavior live behind `make({ dialect: "pg" | "sqlite" })` and sibling `./pg` and `./sqlite` subpaths. There is no portable intermediate SQL representation.
-- **Derivation first, explicit intent when needed.** Strings, numbers, booleans, nullable values, and structured JSON can derive naturally; length, enum, identity, array, generated, and reference semantics stay visible in pipelines.
-- **Zero runtime type assertions.** Implementation boundaries use overloads, schema decoding, guards, and tagged constructors rather than assertion syntax.
+- **Schema truth at boundaries.** User data, field variants, decoding, and errors are
+  schema-first. Internal compiler descriptors are lightweight tagged data.
+- **Encoded-side derivation.** SQL storage follows the encoded representation; explicit
+  combinators corroborate intent only when several SQL mappings are plausible.
+- **Dialect as a kit.** PostgreSQL and SQLite live behind `make({ dialect })` and the sibling
+  `./pg` and `./sqlite` subpaths.
+- **Derivation first, explicit intent when needed.** Strings, numbers, booleans, nullable values,
+  and structured JSON derive naturally; length, enum, identity, array, generated, and reference
+  semantics stay visible in the pipeline.
+- **Zero runtime type assertions.** Implementation boundaries use overloads, schema decoding,
+  guards, and tagged constructors — never assertion syntax.
 
-## Status and compatibility
+## Status, compatibility, and feedback
 
-This design is experimental. PostgreSQL and SQLite are implemented against Effect v4 beta and Drizzle ORM 1.0 release-candidate versions. Both dialects project real Drizzle tables, assemble RQBv2 relations, and run through Effect SQL repositories in the live suites.
+PostgreSQL and SQLite are implemented against Effect v4 beta and Drizzle ORM 1.0
+release-candidate versions (pinned exactly as peers while upstream is prerelease). Both dialects
+project real Drizzle tables, assemble RQBv2 relations, and run through Effect SQL repositories in
+live database suites; the published declarations are guarded by a dedicated multi-TypeScript
+type-test lane.
 
-Known open boundaries are SQL-expression semantic analysis, PostgreSQL enum arrays, preservation of literal relation names through the complete relation API, and a symbol-name mismatch between the independently pinned Drizzle ORM and drizzle-kit SQLite RC hashes. The SQLite live suite carries a test-only compatibility preload for that tooling mismatch; it does not patch installed packages. Those boundaries are not presented as finished features.
+Known open boundaries — stated as boundaries, not features: SQL-expression semantic analysis,
+PostgreSQL enum arrays, preservation of literal relation names through the complete relation API,
+and a symbol-name mismatch between the independently pinned Drizzle ORM and drizzle-kit SQLite RC
+hashes (the SQLite live suite carries a test-only compatibility preload; installed packages are
+never patched).
+
+Until npm publication, the package is developed in the open inside
+[beep-effect](https://github.com/beep-effect/beep-effect) at
+`packages/ecosystem/effect-drizzle`. If the dream resonates — a domain entity that describes
+itself, persists itself, and derives its table — come kick the tires and tell us where it leaks.

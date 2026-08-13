@@ -41,7 +41,7 @@ const withFixtureRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
 const runFullCheck = runEcosystemPolarityCheck(EcosystemPolarityOptions.make({}));
 
 describe("ecosystem polarity lint", () => {
-  it("finds import, export, dynamic import, and literal require @beep source edges", () =>
+  it("finds static and interpolated @beep source edges", () =>
     Effect.runPromise(
       withFixtureRepo(
         Effect.gen(function* () {
@@ -54,6 +54,8 @@ describe("ecosystem polarity lint", () => {
                   'export * from "@beep/exported";',
                   'export const dynamic = import("@beep/dynamic");',
                   'export const required = require("@beep/required");',
+                  "export const interpolatedDynamic = import(`@beep/${member}`);",
+                  "export const interpolatedRequired = require(`@beep/${member}`);",
                 ],
                 "\n"
               ),
@@ -66,6 +68,8 @@ describe("ecosystem polarity lint", () => {
             "@beep/exported",
             "@beep/dynamic",
             "@beep/required",
+            "@beep/",
+            "@beep/",
           ]);
         })
       ).pipe(provideScopedLayer(NodeTestLayer))
@@ -76,14 +80,24 @@ describe("ecosystem polarity lint", () => {
       withFixtureRepo(
         Effect.gen(function* () {
           yield* writeMember({
-            peerDependencies: { "@beep/internal": "workspace:^", effect: "4.0.0" },
+            peerDependencies: {
+              "@beep/internal": "workspace:^",
+              effect: "4.0.0",
+              portable: "npm:@beep/internal-alias@^1.0.0",
+            },
             bundledDependencies: [],
           });
 
           const summary = yield* runFullCheck;
           expect(A.map(summary.violations, (violation) => violation.kind)).toEqual([
             "runtime-dependency",
+            "runtime-dependency",
             "bundled-dependencies",
+          ]);
+          expect(A.map(summary.violations, (violation) => violation.detail)).toEqual([
+            "peerDependencies.@beep/internal",
+            "peerDependencies.portable -> npm:@beep/internal-alias@^1.0.0",
+            "bundledDependencies",
           ]);
         })
       ).pipe(provideScopedLayer(NodeTestLayer))
