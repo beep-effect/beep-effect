@@ -112,7 +112,7 @@
     },
     {
       "id": "outer-3-after-cutover-disproven",
-      "decision": "With the engine swap disproven at P2, the operator unlocked outer step concurrency 2->3 (2026-08-13). The closeout PR's own hosted Lint Policy run is the memory-admission evidence; an OOM/exit-137 there reverts the constant before merge.",
+      "decision": "With the engine swap disproven at P2, the operator unlocked outer step concurrency 2->3 (2026-08-13). The closeout PR's own hosted Lint Policy run is the memory-admission evidence; an OOM/exit-137 there reverts the constant before merge. OUTCOME: admission passed \u2014 job 94503214889, 9m24s, success, no memory incident; the constant stands.",
       "rationale": "Post-P1 the lane is sum-bound (~1124s total work): at outer 2 the floor is ~9.5 min regardless of the long pole. Outer 3 models ~8.3 min. The original lock assumed cutover would deliver the raise safely; cutover is dead, and the worst LPT co-resident trio (deprecated shards ~12-16 GiB, docgen, semantic-delta) fits the 64 GiB runner."
     },
     {
@@ -158,7 +158,7 @@
       "id": "P4",
       "name": "Close",
       "status": "complete",
-      "exit": "Closeout PR: outer step concurrency 2->3 (operator unlock 2026-08-13, superseding the outer-2-until-cutover lock now that cutover is disproven), lifecycle flip, and reflection history/reflections/2026-08-13-claude.md land together; backlog levers recorded (P2b re-spike precondition, docgen ownership move)."
+      "exit": "Closeout PR #683: outer step concurrency 2->3 (operator unlock 2026-08-13, superseding the outer-2-until-cutover lock now that cutover is disproven), lifecycle flip, and reflection history/reflections/2026-08-13-claude.md land together; backlog levers recorded (P2b re-spike precondition, docgen ownership move). Hosted admission OBSERVED on PR #683 itself: Lint Policy job 94503214889 SUCCESS in 9m24s wall (15:43:40->15:53:04Z), no OOM/exit-137. Per-step contention at outer 3 (deprecated-apis 488s, docgen 325s, semantic-delta 118s, schema-first 85s) is absorbed by the third lane; the OOM-revert clause was not needed."
     }
   ],
   "verificationCommands": [
@@ -175,5 +175,5 @@
     "Any change would make hosted and local `beep ci lane lint-policy` run different commands: stop; the parity invariant binds.",
     "Preserve unrelated user/worktree changes; never stage or commit files outside this packet and the named target surfaces."
   ],
-  "statusNote": "Closed 2026-08-13. Delivered: hosted Lint Policy ~20 min -> 10m32s (P1, PR #678) -> outer-3 raise in the closeout PR (modelled ~8.3 min; hosted number on that PR's own run). Engine swap disproven with a gate-driven NO-GO spike; shards remain the endgame. Open backlog: P2b re-spike precondition, docgen ownership move (next lever if the lane creeps), PR changed-scope (deferred by decision, design in research/04)."
+  "statusNote": "Closed 2026-08-13. Delivered: hosted Lint Policy ~20 min -> 10m32s (P1, PR #678) -> 9m24s OBSERVED at outer concurrency 3 (closeout PR #683, job 94503214889) \u2014 single digits at full scope. Engine swap disproven with a gate-driven NO-GO spike (artifacts preserved in research/p2-artifacts/); shards remain the endgame. Open backlog: P2b re-spike precondition, docgen ownership move (next lever if the lane creeps), PR changed-scope (deferred by decision, design in research/04)."
 }

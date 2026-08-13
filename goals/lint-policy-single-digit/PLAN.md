@@ -9,10 +9,10 @@ Status: `completed-retained` — all phases resolved 2026-08-13 (P3 superseded b
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Baseline & Packet Bootstrap | complete | Capture the hosted timing profile and lock the lever combination. | Baseline block in `ops/manifest.json`; five exploration reports under `research/`; grill decisions recorded as `keyDecisions`. |
-| P1 Phase-1 CLI speedup PR | complete | Inner 4-way deprecated-apis shards + per-shard caches, LPT step ordering, empty-set step omission; outer concurrency stays 2. | SPEC P1 acceptance criteria met; PR yeeted to mergeable; hosted Lint Policy <= 9 min observed. |
-| P2 Spike: oxlint-tsgolint behind gates | complete | Prove or refute the engine swap on a branch without touching main's gate. | Three gates measured (<=150s cold scan; parity corpus; shadow week via temp standalone workflow); verdict in `history/`. |
+| P1 Phase-1 CLI speedup PR | complete | Inner 4-way deprecated-apis shards + per-shard caches, LPT step ordering, empty-set step omission; outer concurrency stays 2. | SHIPPED (PR #678): deprecated-apis 975s -> 435s; hosted Lint Policy 10m39s / 10m32s (jobs 94454948670, 94464070199) vs ~20 min baseline. The <= 9 min acceptance was MISSED — the lane became sum-bound at outer 2 — and was resolved by the closeout outer 2->3 unlock, not by this phase. |
+| P2 Spike: oxlint-tsgolint behind gates | complete | Prove or refute the engine swap on a branch without touching main's gate. | NO-GO by early stop (`history/p2-spike-2026-08-13.md`): engagement, focused parity, and workstation timing (58.7s) passed, but program coverage FAILED (all 23 allowDefaultProject files unmatched) and existing-source parity FAILED (13 oxlint-only findings). The shadow-week workflow was intentionally never created; the hosted <=150s gate was never measured. |
 | P3 Cutover PR (conditional) | superseded | Swap to one `oxlint --type-aware` invocation, raise outer concurrency to 4, delete shard runner + shadow workflow. | Only on all-gates-pass: hosted lane <= 5 min observed. On gate failure: flip to `superseded`, shards stay endgame. |
-| P4 Close | complete | Flip lifecycle and record the closeout reflection in the same PR as the final work. | Reflection at `history/reflections/<date>-<agent>.md`; backlog levers (docgen move, scoping revisit) recorded as open. |
+| P4 Close | complete | Flip lifecycle and record the closeout reflection in the same PR as the final work. | Reflection at `history/reflections/2026-08-13-claude.md`; backlog levers recorded. Hosted admission for the outer 2->3 raise OBSERVED on this PR: Lint Policy job 94503214889 SUCCESS, 9m24s wall, no OOM — single digits at full scope. |
 
 ## Execution notes
 
