@@ -10,7 +10,7 @@ import { DmsProvider } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Context } from "effect";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import {
   SyncConflictRepositoryNotFound,
@@ -30,7 +30,6 @@ import {
 import { DmsMirrorDisconnectReason } from "./DmsMirror.ts";
 import { DmsMirrorUnavailable, VaultScanFailed } from "./Sync.errors.ts";
 import type * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
-import type { Effect } from "effect";
 
 const $I = $DocumentsUseCasesId.create("aggregates/Sync/VaultSyncEngine");
 
@@ -70,9 +69,14 @@ export class VaultSyncStatus extends S.Class<VaultSyncStatus>($I`VaultSyncStatus
     connected: S.Boolean.annotateKey({
       description: "Whether the DMS mirror adapter can reach the provider.",
     }),
-    disconnectReason: S.OptionFromNullOr(DmsMirrorDisconnectReason).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Why the provider is disconnected; none while the mirror probe reports connected.",
-    }),
+    // The encoded key is optional with a null decoding default: an older
+    // sidecar that predates the field must still produce a decodable status
+    // (missing key -> none), not an unavailable panel.
+    disconnectReason: S.OptionFromNullOr(DmsMirrorDisconnectReason)
+      .pipe(S.withDecodingDefaultKey(Effect.succeed(null)), SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Why the provider is disconnected; none while the mirror probe reports connected.",
+      }),
     currentItems: NonNegativeInt.annotateKey({
       description: "Number of tracked items in the current reconciliation state.",
     }),

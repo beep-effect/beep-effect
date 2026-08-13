@@ -192,6 +192,12 @@ describe("@beep/professional-desktop schema parity", () => {
       };
       const activeStatus = yield* decodeVaultSyncStatus(activeStatusWire);
       expect(yield* encodeVaultSyncStatus(activeStatus)).toStrictEqual(activeStatusWire);
+
+      // An older sidecar omits disconnectReason entirely; the status must
+      // still decode (missing key -> none) instead of going unavailable.
+      const { disconnectReason: _dropped, ...legacyStatusWire } = bootstrapStatusWire;
+      const legacyStatus = yield* decodeVaultSyncStatus(legacyStatusWire);
+      expect(O.isNone(legacyStatus.disconnectReason)).toBe(true);
     })
   );
 

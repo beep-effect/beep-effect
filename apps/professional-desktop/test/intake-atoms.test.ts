@@ -251,8 +251,13 @@ describe("workspace vault runtime action", { concurrent: false }, () => {
 
       yield* runSubmitManualVaultPath(registry, selectedPath);
 
+      // The rejected path is retained so the reopened form does not force the
+      // operator to retype it.
       expect(registry.get(documentIntakeStateAtoms(workspaceId)).vaultSelection).toStrictEqual(
-        VaultSelectionState.cases.manual.make({ message: O.some("The selected vault is not writable.") })
+        VaultSelectionState.cases.manual.make({
+          draftPath: O.some(selectedPath),
+          message: O.some("The selected vault is not writable."),
+        })
       );
       registry.dispose();
     })

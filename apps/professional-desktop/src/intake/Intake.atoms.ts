@@ -227,6 +227,9 @@ class VaultSelectionChoosing extends S.Class<VaultSelectionChoosing>($I`VaultSel
 class VaultSelectionManual extends S.Class<VaultSelectionManual>($I`VaultSelectionManual`)(
   {
     kind: S.tag("manual"),
+    // A rejected path is retained so the reopened form does not force the
+    // operator to retype it (the saving state unmounts the form in between).
+    draftPath: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     message: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("VaultSelectionManual", {
@@ -781,7 +784,7 @@ export const submitManualVaultPathAtoms = Atom.family((workspaceId: WorkspaceIde
         return;
       }
       yield* saveWorkspaceVaultPath(workspaceId, client, ctx, trimmed, (message) =>
-        VaultSelectionState.cases.manual.make({ message: O.some(message) })
+        VaultSelectionState.cases.manual.make({ draftPath: O.some(trimmed), message: O.some(message) })
       );
     }),
     { concurrent: true }

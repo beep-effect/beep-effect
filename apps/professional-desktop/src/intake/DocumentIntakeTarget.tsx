@@ -63,10 +63,12 @@ const intakeResultRow = (entry: IntakeResultEntry): JSX.Element =>
 // empty or unusable path keeps the form open with inline guidance, and Cancel
 // returns to the onboarding card instead of stranding the operator.
 const ManualVaultPathForm = ({
+  draftPath,
   message,
   onCancel,
   onSubmit,
 }: {
+  readonly draftPath: O.Option<string>;
   readonly message: O.Option<string>;
   readonly onCancel: () => void;
   readonly onSubmit: (path: string) => void;
@@ -87,6 +89,7 @@ const ManualVaultPathForm = ({
       id="vault-manual-path"
       name="vault-path"
       type="text"
+      defaultValue={O.getOrElse(draftPath, () => "")}
       placeholder="/home/you/Documents/beep-vault"
       className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
       data-testid="vault-manual-path"
@@ -158,8 +161,9 @@ const VaultOnboarding = ({
             status={O.some("Opening folder picker")}
           />
         ),
-        manual: ({ message }) => (
+        manual: ({ draftPath, message }) => (
           <ManualVaultPathForm
+            draftPath={draftPath}
             message={message}
             onCancel={actions.cancelManualVaultPath}
             onSubmit={actions.submitManualVaultPath}
