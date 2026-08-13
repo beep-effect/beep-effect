@@ -466,7 +466,7 @@
       "version": "0.0.2",
       "dependencies": {
         "@beep/architecture-lab-domain": "workspace:^",
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
@@ -2280,9 +2280,11 @@
       "name": "@beep/shared-domain",
       "version": "0.0.2",
       "dependencies": {
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
+        "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {

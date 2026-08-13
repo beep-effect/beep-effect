@@ -228,8 +228,11 @@ export type ValidateEncoded<I extends Input, Allowed, Msg extends string> = [Exc
  * @category validation
  * @since 0.0.0
  */
-export type ValidateNonNullable<I extends Input, Msg extends string> =
-  null extends EncodedOf<I> ? SqlTypeError<Msg> : unknown;
+export type ValidateNonNullable<I extends Input, Msg extends string> = [EncodedOf<I>] extends [
+  NonNullable<EncodedOf<I>>,
+]
+  ? unknown
+  : SqlTypeError<Msg>;
 
 type ArrayCarrier<Carrier, Dimensions extends 1 | 2 | 3 | 4 | 5> = Dimensions extends 1
   ? ReadonlyArray<Carrier>

@@ -101,6 +101,11 @@ describe("@beep/agents-domain", () => {
     expect(constructed).toBeInstanceOf(Skill);
     expect(constructed.entityType).toBe("AgentsSkill");
     expect(constructed.fixtureKey).toBe("skill.review");
+    expect(Skill.sql.tableName).toBe("agents_skill");
+    expect(Object.keys(Skill.insert.fields)).not.toContain("id");
+    expect(Object.keys(Skill.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(Skill.update.fields)).toContain("id");
+    expect(Object.keys(Skill.update.fields)).toContain("rowVersion");
     expect(Result.getOrThrow(S.encodeResult(Skill)(decoded))).toStrictEqual(encoded);
   });
 

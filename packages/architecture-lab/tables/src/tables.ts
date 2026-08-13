@@ -24,7 +24,7 @@ type DbSchemaShape = {
  * import { getTableName } from "drizzle-orm"
  *
  * const workItemTableName = getTableName(DbSchema.workItem)
- * const workerTableName = DbSchema.worker.definition.tableName
+ * const workerTableName = getTableName(DbSchema.worker)
  * if (workItemTableName !== "architecture_lab_work_item" || workerTableName !== "architecture_lab_worker") {
  *   throw new Error("unexpected architecture lab schema")
  * }

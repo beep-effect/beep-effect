@@ -7,6 +7,7 @@ import * as BaseEntity from "@beep/shared-domain/entity/BaseEntity";
 import * as EntityId from "@beep/shared-domain/entity/EntityId";
 import * as EntityRef from "@beep/shared-domain/entity/EntityRef";
 import * as Principal from "@beep/shared-domain/entity/Principal";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as primitives from "@beep/shared-domain/entity/primitives";
 import * as SourceKind from "@beep/shared-domain/entity/SourceKind";
@@ -18,12 +19,14 @@ import { cast } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { makeEffect } from "effect/SchemaParser";
 import { FastCheck as fc } from "effect/testing";
 
 const $I = $SharedDomainId.create("entity/test/EntityKernel");
 const makeSharedId = EntityId.factory("shared", $I);
 const DocumentId = makeSharedId("document");
 const DocumentPublicId = PublicEntityId.factory(DocumentId);
+const ProductDocumentEntity = ProductEntity.make(DocumentId);
 const CustomDocumentId = makeSharedId("document", {
   brand: "CustomDocumentId",
   description: "Custom document id.",
@@ -77,6 +80,17 @@ class Document extends BaseEntity.BaseEntity.Class<Document>($I`Document`)(
   $I.annote("Document", {
     description: "Document entity.",
   })
+) {}
+
+class ProductDocument extends ProductDocumentEntity.Entity<ProductDocument>(ProductDocumentEntity.tableName)(
+  {
+    note: S.String.pipe(ProductDocumentEntity.pg.text()),
+    ...ProductDocumentEntity.identityFields,
+  },
+  $I.annote("ProductDocument", {
+    description: "Product-entity kit test model.",
+  }),
+  ProductDocumentEntity.entityExtras
 ) {}
 
 const documentInput = {
@@ -219,6 +233,56 @@ describe("BaseEntity", () => {
     expect(Object.keys(Document.jsonCreate.fields)).not.toContain("createdAt");
     expect(Object.keys(Document.jsonCreate.fields)).not.toContain("publicId");
     expect(Object.keys(Document.jsonCreate.fields)).toContain("note");
+  });
+});
+
+describe("ProductEntity", () => {
+  it("preserves the six legacy variant memberships", () => {
+    expect(Object.keys(ProductDocument.fields)).toContain("id");
+    expect(Object.keys(ProductDocument.insert.fields)).toEqual(
+      expect.arrayContaining([
+        "createdAt",
+        "createdByPrincipal",
+        "entityType",
+        "note",
+        "orgId",
+        "publicId",
+        "schemaVersion",
+        "source",
+        "updatedAt",
+        "updatedByPrincipal",
+      ])
+    );
+    expect(Object.keys(ProductDocument.insert.fields)).not.toContain("id");
+    expect(Object.keys(ProductDocument.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(ProductDocument.update.fields)).toEqual(
+      expect.arrayContaining(["id", "note", "rowVersion", "updatedAt"])
+    );
+    expect(Object.keys(ProductDocument.update.fields)).not.toContain("createdAt");
+    expect(Object.keys(ProductDocument.update.fields)).not.toContain("publicId");
+    expect(Object.keys(ProductDocument.json.fields)).toEqual(expect.arrayContaining(["id", "publicId", "rowVersion"]));
+    expect(Object.keys(ProductDocument.jsonCreate.fields)).toEqual(["note"]);
+    expect(Object.keys(ProductDocument.jsonUpdate.fields)).toEqual(["note"]);
+  });
+
+  it("applies insert-time audit defaults without inventing row identity", () => {
+    const inserted = Effect.runSync(
+      makeEffect(ProductDocument.insert)({
+        createdByPrincipal: systemPrincipal,
+        entityType: DocumentId.entityType,
+        note: "hello",
+        orgId: 1,
+        publicId: "shared_document_a123",
+        schemaVersion: "0.0.0",
+        source: "Application",
+        updatedByPrincipal: systemPrincipal,
+      })
+    );
+
+    expect(inserted.createdAt).toBeDefined();
+    expect(inserted.updatedAt).toBeDefined();
+    expect("id" in inserted).toBe(false);
+    expect("rowVersion" in inserted).toBe(false);
   });
 });
 

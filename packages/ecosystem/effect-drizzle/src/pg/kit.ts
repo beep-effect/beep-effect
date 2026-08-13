@@ -92,7 +92,8 @@ type ValidateMergedFields<
  * **Details**
  *
  * Default fields precede own fields, and default extras precede model extras.
- * All model statics and variants observe the merged field record.
+ * All model statics and variants observe the merged field record. Pass
+ * annotations second and entity-local extras third when a model needs both.
  *
  * **Gotchas**
  *
@@ -117,7 +118,8 @@ export type EntityFactory<Defaults extends FieldsInput> = <Self = never, const I
     ValidateDerivedSqlName<Identifier, "kit Entity identifier derives an invalid PostgreSQL table name">
 ) => <const Own extends FieldsInput>(
   ownFields: Own & ValidateCollision<Defaults, Own> & ValidateMergedFields<Defaults, Own>,
-  annotationsOrExtras?: Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>
+  annotationsOrExtras?: Annotations.Annotations | Table.Callback<Merged<Defaults, Own>>,
+  extras?: Table.Callback<Merged<Defaults, Own>>
 ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, Merged<Defaults, Own>>;
 
 /**
@@ -190,7 +192,11 @@ export function make(config: {
   const defaultKeys = Object.keys(defaults);
   const Entity =
     (identifier: string) =>
-    (ownFields: FieldsInput, annotationsOrExtras?: Annotations.Annotations | Table.Callback<FieldsInput>): object => {
+    (
+      ownFields: FieldsInput,
+      annotationsOrExtras?: Annotations.Annotations | Table.Callback<FieldsInput>,
+      declaredExtras?: Table.Callback<FieldsInput>
+    ): object => {
       const collision = findFirst(Object.keys(ownFields), (key) => contains(defaultKeys, key));
       if (isSome(collision)) {
         throw ModelInvariantError.make({
@@ -199,7 +205,7 @@ export function make(config: {
         });
       }
       const fields = mergeFields(defaults, ownFields);
-      const modelExtras = isFunction(annotationsOrExtras) ? annotationsOrExtras : undefined;
+      const modelExtras = isFunction(annotationsOrExtras) ? annotationsOrExtras : declaredExtras;
       const annotations = isFunction(annotationsOrExtras) ? undefined : annotationsOrExtras;
       const extras: Table.Callback<typeof fields> = (columns) => [
         ...match(fromUndefinedOr(config.defaultExtras), {

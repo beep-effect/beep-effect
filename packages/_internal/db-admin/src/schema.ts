@@ -16,6 +16,7 @@
  * @since 0.0.0
  */
 
+import { workerTable } from "@beep/architecture-lab-tables/entities/Worker";
 import { DbSchema as ArchitectureLabDbSchema } from "@beep/architecture-lab-tables/tables";
 import { DbSchema as DocumentsDbSchema } from "@beep/documents-tables/tables";
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
@@ -78,7 +79,7 @@ export const architectureLabWorkItemTable: typeof ArchitectureLabDbSchema.workIt
  * @category configuration
  * @since 0.0.0
  */
-export const architectureLabWorkerTable: typeof ArchitectureLabDbSchema.worker = ArchitectureLabDbSchema.worker;
+export const architectureLabWorkerTable: typeof workerTable = workerTable;
 
 /**
  * Workspace workspace table (drizzle-kit generate surface).

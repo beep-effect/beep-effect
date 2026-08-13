@@ -76,6 +76,18 @@ export class AuditedRecord extends auditKit.Entity<AuditedRecord>("AuditedRecord
   (columns) => [Table.check(sql<boolean>`${columns.name} <> ''`, "audited_record_name_non_empty")]
 ) {}
 
+export class NamedUniqueRecord extends Model<NamedUniqueRecord>("NamedUniqueRecord")(
+  {
+    email: String.pipe(pg.text()),
+  },
+  {
+    description: "Fixture proving annotations and table extras can be supplied together.",
+  },
+  (columns) => [Table.uniqueIndex("named_unique_record_email_unique_idx", [columns.email])]
+) {}
+
+export const namedUniqueRecordTable = toPgTable(NamedUniqueRecord);
+
 class AuditedEvent extends auditKit.Entity<AuditedEvent>("AuditedEvent")({
   label: String,
   status: RecordStatus.pipe(pg.enum("record_status")),

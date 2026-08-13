@@ -66,6 +66,13 @@ export * as EntityRef from "./EntityRef.ts";
  */
 export * as Principal from "./Principal.ts";
 /**
+ * Effect-drizzle product entity kit.
+ *
+ * @category factories
+ * @since 0.0.0
+ */
+export * as ProductEntity from "./ProductEntity.ts";
+/**
  * URL-safe public entity identifier constructor namespace.
  *
  * **Example** (Access PublicEntityId factory)

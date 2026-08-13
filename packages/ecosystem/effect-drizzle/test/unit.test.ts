@@ -123,6 +123,7 @@ import {
   effectDrizzleSchema,
   exactKeyResolutionSchema,
   mechanicalTable,
+  namedUniqueRecordTable,
   Organization,
   OrganizationId,
   pgBoundedInteger,
@@ -379,6 +380,16 @@ describe("kit write strategies", () => {
       "audited_record_row_version_positive",
       "audited_record_name_non_empty",
     ]);
+  });
+});
+
+describe("named unique indexes", () => {
+  it("emits a unique index while retaining model annotations", () => {
+    const config = getTableConfig(namedUniqueRecordTable);
+    const emitted = first(config.indexes, "named unique index");
+
+    expect(emitted.config.name).toBe("named_unique_record_email_unique_idx");
+    expect(emitted.config.unique).toBe(true);
   });
 });
 

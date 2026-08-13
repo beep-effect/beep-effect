@@ -42,6 +42,7 @@
     "./entity/EntityRef": "./src/entity/EntityRef.ts",
     "./entity/PublicEntityId": "./src/entity/PublicEntityId.ts",
     "./entity/Principal": "./src/entity/Principal.ts",
+    "./entity/ProductEntity": "./src/entity/ProductEntity.ts",
     "./entity/SourceKind": "./src/entity/SourceKind.ts",
     "./entity/primitives": "./src/entity/primitives.ts",
     "./identity": "./src/identity.ts",
@@ -84,6 +85,7 @@
       "./entity/EntityRef": "./dist/entity/EntityRef.js",
       "./entity/PublicEntityId": "./dist/entity/PublicEntityId.js",
       "./entity/Principal": "./dist/entity/Principal.js",
+      "./entity/ProductEntity": "./dist/entity/ProductEntity.js",
       "./entity/SourceKind": "./dist/entity/SourceKind.js",
       "./entity/primitives": "./dist/entity/primitives.js",
       "./identity": "./dist/identity.js",
@@ -104,9 +106,11 @@
     }
   },
   "dependencies": {
+    "@beep/effect-drizzle": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
+    "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
