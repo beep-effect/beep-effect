@@ -118,10 +118,13 @@ const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
 const ROOT_LINT_STEP_CONCURRENCY = 3;
 // Lint-policy steps are independent read-only tools (oxlint, eslint-jsdoc, law
 // checks, madge...). Running them grouped-concurrent
-// converts the lane from sum-of-steps to max-of-steps; keep it at the same
-// hosted-stable cap below full root lint so policy-only checks do not overload
-// constrained runners when multiple memory-heavy tools overlap.
-const LINT_POLICY_STEP_CONCURRENCY = 2;
+// converts the lane from sum-of-steps to max-of-steps. After the P1 shard
+// parallelism landed (PR #678) the lane became sum-bound at 2 (~1124s total
+// work / 2 ≈ 9.5 min hosted); 3 puts the floor back under the deprecated-apis
+// long pole (~435s) on the 64 GiB heavy runner. The worst LPT co-resident trio
+// (deprecated shards ~12-16 GiB, docgen, semantic-delta) fits; evidence:
+// goals/lint-policy-single-digit (P1 hosted profile + closeout).
+const LINT_POLICY_STEP_CONCURRENCY = 3;
 
 type QualityTaskEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
 

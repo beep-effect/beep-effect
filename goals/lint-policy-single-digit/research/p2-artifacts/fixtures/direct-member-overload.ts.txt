@@ -1,0 +1,10 @@
+import { deprecatedCall, MemberApi, overloadSpecific } from "./api.ts";
+
+export const directCall = deprecatedCall();
+
+const memberApi = new MemberApi();
+
+export const memberAccess = memberApi.deprecatedMember;
+export const computedMemberAccess = memberApi["computedMember"];
+export const currentOverload = overloadSpecific("current");
+export const deprecatedOverload = overloadSpecific(1);
