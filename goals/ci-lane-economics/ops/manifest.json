@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/ci-lane-economics",
   "lifecycle": "active",
-  "statusNote": "Split from ci-fleet-endgame P5 on 2026-08-13; P0 cache-warm lane census is the entry point.",
+  "statusNote": "P0 and P1 are complete; P2 executes the signed zero-expansion placement decision and lane-shape changes.",
   "mission": "No required CI job waits 20 minutes (p95, not median): re-measure every lane cache-warm, then place each on the cheapest runner that meets the bar.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -35,7 +35,10 @@
     "goals/ci-lane-economics/GOAL.md",
     "goals/ci-fleet-endgame/research/runner-endgame-decision-record.md"
   ],
-  "researchReports": [],
+  "researchReports": [
+    "research/cache-warm-lane-census.md",
+    "research/placement-decision.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -49,17 +52,17 @@
     {
       "id": "P0",
       "name": "Cache-warm lane census",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Placement decisions",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Execute moves",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
