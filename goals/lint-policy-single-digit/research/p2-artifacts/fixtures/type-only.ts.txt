@@ -1,0 +1,3 @@
+import type { DeprecatedShape } from "./api.ts";
+
+export type DeprecatedShapeAlias = DeprecatedShape;

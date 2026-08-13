@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -35,11 +35,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 — Phase-1 CLI speedup PR: inner 4-way deprecated-apis shards with per-shard caches,
-LPT step ordering, empty-set step omission; outer concurrency stays 2.
+Closed 2026-08-13. Delivered ~20 min -> 10m32s (P1, PR #678) plus the closeout outer-3 raise; oxlint-tsgolint cutover disproven (P2 NO-GO). Backlog: P2b re-spike precondition, docgen ownership move, deferred PR changed-scope.
 
 ## Latest Evidence
 
-Baseline: hosted run `31683014887` (PR #673, 2026-08-13) — job ~20 min,
-`lint:deprecated-apis` 975s of the 1124s lane at step concurrency 2. Full per-step table:
-[`research/00-evidence-brief.md`](./research/00-evidence-brief.md).
+P1 hosted: deprecated-apis 975s -> 435s, job 10m39s/10m32s (PR #678). P2 spike verdict:
+[`history/p2-spike-2026-08-13.md`](./history/p2-spike-2026-08-13.md). Closeout reflection:
+[`history/reflections/2026-08-13-claude.md`](./history/reflections/2026-08-13-claude.md).
+Baseline table: [`research/00-evidence-brief.md`](./research/00-evidence-brief.md).
