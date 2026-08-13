@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/beep-effect.iml" filepath="$PROJECT_DIR$/.idea/beep-effect.iml" />
+      <module fileurl="file://$PROJECT_DIR$/beep-effect.iml" filepath="$PROJECT_DIR$/beep-effect.iml" />
     </modules>
   </component>
 </project>

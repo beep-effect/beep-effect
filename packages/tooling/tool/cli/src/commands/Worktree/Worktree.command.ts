@@ -43,13 +43,19 @@ const WORKTREES_ROOT_SUFFIX = "-worktrees";
  * import { WORKTREE_LOCAL_FILE_ENTRIES } from "@beep/repo-cli/commands/Worktree"
  *
  * console.log(WORKTREE_LOCAL_FILE_ENTRIES.includes(".env")) // true
- * console.log(WORKTREE_LOCAL_FILE_ENTRIES.length) // 3
+ * console.log(WORKTREE_LOCAL_FILE_ENTRIES.length) // 5
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const WORKTREE_LOCAL_FILE_ENTRIES = [".env", ".claude/settings.local.json", "CLAUDE.local.md"] as const;
+export const WORKTREE_LOCAL_FILE_ENTRIES = [
+  ".env",
+  ".claude/settings.local.json",
+  "CLAUDE.local.md",
+  ".idea/compiler.xml",
+  ".idea/effect.intellij.xml",
+] as const;
 
 /**
  * Default branch name created for a new worktree when `--branch` is omitted.

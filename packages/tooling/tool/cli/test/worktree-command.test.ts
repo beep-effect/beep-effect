@@ -92,7 +92,13 @@ describe("worktree argument builders", () => {
   });
 
   it("copies a fixed set of local-only files", () => {
-    expect(WORKTREE_LOCAL_FILE_ENTRIES).toEqual([".env", ".claude/settings.local.json", "CLAUDE.local.md"]);
+    expect(WORKTREE_LOCAL_FILE_ENTRIES).toEqual([
+      ".env",
+      ".claude/settings.local.json",
+      "CLAUDE.local.md",
+      ".idea/compiler.xml",
+      ".idea/effect.intellij.xml",
+    ]);
   });
 });
 

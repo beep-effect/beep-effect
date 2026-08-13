@@ -1,9 +1,9 @@
 # Whitelist: everything in .idea/ is machine-local unless explicitly tracked below.
 # New shared project settings must be un-ignored here deliberately.
+# The module file lives at the repository root (beep-effect.iml), outside this
+# directory, so $MODULE_DIR$ unambiguously resolves to the repo root.
 /*
 !/.gitignore
-!/beep-effect.iml
-!/compiler.xml
 !/inspectionProfiles/
 /inspectionProfiles/*
 !/inspectionProfiles/Project_Default.xml
