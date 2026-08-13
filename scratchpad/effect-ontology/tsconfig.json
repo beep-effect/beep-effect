@@ -1,12 +1,11 @@
 {
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "extends": "../tsconfig.json",
-  "include": ["Domain/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"],
+  "$schema": "https://raw.githubusercontent.com/Effect-TS/tsgo/refs/heads/main/schema.json",
+  "extends": "../../tsconfig.base.json",
+  "include": ["./**/*.ts"],
   "exclude": ["docs", "node_modules"],
   "compilerOptions": {
-    "rootDir": ".",
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "types": ["node", "bun"],
+    "rootDir": "../..",
     "noEmit": true,
     "declaration": false,
     "declarationMap": false,

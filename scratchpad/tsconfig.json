@@ -14,6 +14,12 @@
   },
   "references": [
     {
+      "path": "../packages/drivers/drizzle/tsconfig.json"
+    },
+    {
+      "path": "../packages/drivers/postgres/tsconfig.json"
+    },
+    {
       "path": "../packages/drivers/pretext/tsconfig.json"
     },
     {

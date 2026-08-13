@@ -9,7 +9,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { MimeType, NonNegativeInt, NonNegNum, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyName, OntologyVersion } from "../Identity.ts";
@@ -126,7 +126,10 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
   $I.annote("BatchManifest", {
     description: "Versioned ontology-scoped batch manifest with non-empty documents and a complete validation policy.",
   })
-) {}
+) {
+
+  static readonly decodeOptionString = S.decodeOption(S.fromJsonString(BatchManifest))
+}
 
 /**
  * Input to extraction of one document.

@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { MimeType, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyName, OntologyVersion } from "../Identity.ts";
@@ -192,6 +192,8 @@ export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
 
   /** Derived runtime guard for validated batch requests. */
   static readonly is = S.is(BatchRequest);
+
+  static readonly decodeUnknownOption = S.decodeUnknownOption(BatchRequest)
 }
 
 export {

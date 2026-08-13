@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { Effect, flow, pipe } from "effect";
 import * as A from "effect/Array";
@@ -169,12 +169,12 @@ const makeOntologyEmbeddingsArbitrary = (fc: typeof FastCheck) => {
 
   return fc
     .record({
-      ontologyUri: S.toArbitrary(GcsUri),
-      version: S.toArbitrary(ContentHash),
+      ontologyUri: S.toArbitrary(GcsUri)(fc),
+      version: S.toArbitrary(ContentHash)(fc),
       model: fc.constantFrom("nomic-embed-text-v1.5", "text-embedding-3-small"),
-      createdAt: S.toArbitrary(S.DateTimeUtcFromString),
-      classes: fc.array(S.toArbitrary(ElementEmbedding), { maxLength: 16 }),
-      properties: fc.array(S.toArbitrary(ElementEmbedding), { maxLength: 16 }),
+      createdAt: S.toArbitrary(S.DateTimeUtcFromString)(fc),
+      classes: fc.array(S.toArbitrary(ElementEmbedding)(fc), { maxLength: 16 }),
+      properties: fc.array(S.toArbitrary(ElementEmbedding)(fc), { maxLength: 16 }),
     })
     .map(({ ontologyUri, version, model, createdAt, classes, properties }) =>
       OntologyEmbeddingsFieldsModel.make({
@@ -204,7 +204,7 @@ const OntologyEmbeddingsDefinition = OntologyEmbeddingsFieldsModel.check(
 );
 
 const computeOntologyVersion = Effect.fn("OntologyEmbeddings.computeVersion")(function* (ontologyContent: string) {
-  return yield* S.decodeUnknownEffect(Sha256HexFromBytes)(utf8Encoder.encode(ontologyContent));
+  return yield* S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(ontologyContent));
 });
 
 const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
@@ -291,7 +291,7 @@ const OntologyEmbeddingsJsonDefinition = OntologyEmbeddings.pipe(S.fromJsonStrin
 export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
   $I.annoteSchema("OntologyEmbeddingsJson", {
     description: "JSON string codec for versioned ontology-embedding artifacts.",
-    toArbitrary: () => () => S.toArbitrary(OntologyEmbeddingsJsonDefinition),
+    toArbitrary: () => S.toArbitrary(OntologyEmbeddingsJsonDefinition),
   })
 );
 

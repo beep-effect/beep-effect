@@ -8,7 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
 import {
   ErrorMessage,
@@ -34,7 +34,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Llm");
  * @category errors
  * @since 0.0.0
  */
-export const LlmError = makeOntologyErrorClass(
+export const LlmError = makeOntologyErrorClass.make(
   $I`LlmError`,
   "LlmError",
   {
@@ -84,7 +84,7 @@ export type LlmError = typeof LlmError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const LlmTimeout = makeOntologyErrorClass(
+export const LlmTimeout = makeOntologyErrorClass.make(
   $I`LlmTimeout`,
   "LlmTimeout",
   {
@@ -133,7 +133,7 @@ export type LlmTimeout = typeof LlmTimeout.Type;
  * @category errors
  * @since 0.0.0
  */
-export const LlmRateLimit = makeOntologyErrorClass(
+export const LlmRateLimit = makeOntologyErrorClass.make(
   $I`LlmRateLimit`,
   "LlmRateLimit",
   {
@@ -186,7 +186,7 @@ export type LlmRateLimit = typeof LlmRateLimit.Type;
  * @category errors
  * @since 0.0.0
  */
-export const LlmInvalidResponse = makeOntologyErrorClass(
+export const LlmInvalidResponse = makeOntologyErrorClass.make(
   $I`LlmInvalidResponse`,
   "LlmInvalidResponse",
   {
@@ -242,7 +242,7 @@ const AnyLlmErrorDefinition = S.Union([LlmError, LlmTimeout, LlmRateLimit, LlmIn
 export const AnyLlmError = AnyLlmErrorDefinition.pipe(
   $I.annoteSchema("AnyLlmError", {
     description: "Exhaustive tagged union of LLM operation failures.",
-    toArbitrary: () => () => S.toArbitrary(AnyLlmErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyLlmErrorDefinition),
   })
 );
 

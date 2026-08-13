@@ -60,7 +60,8 @@ const defaultContext: HookContext.Interface = {
  * Build a `HookContext.Interface` with sensible defaults, overridable
  * via the `overrides` argument.
  *
- * @example
+ * **Example** (Override the working directory)
+ *
  * ```ts
  * import { Testing } from "effect-claudecode"
  *
@@ -96,7 +97,8 @@ const defaultEnvelopeFields = {
 /**
  * Build a `HookEnvelope` with sensible defaults, overridable via `overrides`.
  *
- * @example
+ * **Example** (Construct a mock envelope)
+ *
  * ```ts
  * import { Testing } from "effect-claudecode"
  *
@@ -118,16 +120,18 @@ export const makeMockEnvelope = (overrides?: Partial<HookEnvelope>): HookEnvelop
  * Build a `Layer<Stdio.Stdio>` whose stdin emits the given JSON string once
  * and whose stdout/stderr push into the given arrays.
  *
- * @example
+ * **Example** (Capture mock stdout)
+ *
  * ```ts
  * import { Testing } from "effect-claudecode"
+ * import * as Layer from "effect/Layer"
  *
  * const stdout: Array<string> = []
  * const layer = Testing.makeMockStdioLayer({
  *   stdinJson: "{}",
  *   stdoutBuffer: stdout
  * })
- * console.log(layer)
+ * console.log(Layer.isLayer(layer)) // true
  * ```
  *
  * @category testing
@@ -219,7 +223,8 @@ type HookInputEnvelope = Pick<HookEnvelope, "session_id" | "transcript_path" | "
 /**
  * Result of running a hook against a mock stdin.
  *
- * @example
+ * **Example** (Describe a successful hook result)
+ *
  * ```ts
  * import type { Testing } from "effect-claudecode"
  *
@@ -262,7 +267,8 @@ export interface RunHookResult {
  * `Stdio.layerTest` instead of the real `process.stdin`/`process.stdout`.
  * No fiber is forked; no process.exit is called.
  *
- * @example
+ * **Example** (Run a hook against mock stdin)
+ *
  * ```ts
  * import { Hook, Testing } from "effect-claudecode"
  * import * as Effect from "effect/Effect"
@@ -274,9 +280,10 @@ export interface RunHookResult {
  *   hook,
  *   Testing.fixtures.PreToolUse()
  * )
- * console.log(program)
+ * Effect.runPromise(program).then((result) => console.log(result.exitCode)) // 0
  * ```
  *
+ * @effects Runs the hook with isolated in-memory stdio and captures its encoded output without touching process stdio.
  * @category testing
  * @since 0.0.0
  */
@@ -348,7 +355,8 @@ const makeFixture =
  * Defaults carry only the minimum fields required by the event
  * schema; callers override only what matters for the test.
  *
- * @example
+ * **Example** (Build a tool-use fixture)
+ *
  * ```ts
  * import { Testing } from "effect-claudecode"
  *
@@ -562,11 +570,13 @@ const assertDefined = <A>(value: A | undefined, label: string): A => {
  * Assert that `output` is a PreToolUse `allow` decision. If `reason`
  * is provided, it must match `permissionDecisionReason`.
  *
- * @example
+ * **Example** (Assert an allow decision)
+ *
  * ```ts
  * import { Hook, Testing } from "effect-claudecode"
  *
  * Testing.expectAllowDecision(Hook.PreToolUse.allow())
+ * console.log("allow decision accepted")
  * ```
  *
  * @category assertions
@@ -586,11 +596,13 @@ export const expectAllowDecision = (output: unknown, reason?: string): void => {
  * Assert that `output` is a PreToolUse `deny` decision. If `reason`
  * is provided, it must match `permissionDecisionReason`.
  *
- * @example
+ * **Example** (Assert a deny decision)
+ *
  * ```ts
  * import { Hook, Testing } from "effect-claudecode"
  *
  * Testing.expectDenyDecision(Hook.PreToolUse.deny("blocked"), "blocked")
+ * console.log("deny decision accepted")
  * ```
  *
  * @category assertions
@@ -610,11 +622,13 @@ export const expectDenyDecision = (output: unknown, reason?: string): void => {
  * Assert that `output` is a PreToolUse `ask` decision. If `reason`
  * is provided, it must match `permissionDecisionReason`.
  *
- * @example
+ * **Example** (Assert an ask decision)
+ *
  * ```ts
  * import { Hook, Testing } from "effect-claudecode"
  *
  * Testing.expectAskDecision(Hook.PreToolUse.ask("review"), "review")
+ * console.log("ask decision accepted")
  * ```
  *
  * @category assertions
@@ -640,7 +654,8 @@ export const expectAskDecision = (output: unknown, reason?: string): void => {
  * that block with a controlled exit (TaskCreated, TaskCompleted,
  * TeammateIdle, WorktreeCreate) should assert on `exitCode` and `stderr`.
  *
- * @example
+ * **Example** (Assert a block decision)
+ *
  * ```ts
  * import { Hook, Testing } from "effect-claudecode"
  *
@@ -648,6 +663,7 @@ export const expectAskDecision = (output: unknown, reason?: string): void => {
  *   Hook.UserPromptSubmit.block("blocked"),
  *   "blocked"
  * )
+ * console.log("block decision accepted")
  * ```
  *
  * @category assertions
@@ -666,7 +682,8 @@ export const expectBlockDecision = (output: unknown, reason?: string): void => {
  * `hookSpecificOutput`. When `context` is provided, the string must
  * match exactly.
  *
- * @example
+ * **Example** (Assert additional context)
+ *
  * ```ts
  * import { Hook, Testing } from "effect-claudecode"
  *
@@ -674,6 +691,7 @@ export const expectBlockDecision = (output: unknown, reason?: string): void => {
  *   Hook.UserPromptSubmit.addContext("context"),
  *   "context"
  * )
+ * console.log("additional context accepted")
  * ```
  *
  * @category assertions
@@ -692,11 +710,13 @@ export const expectAddContext = (output: unknown, context?: string): void => {
 /**
  * Operations that the mock file system can intercept.
  *
- * @example
+ * **Example** (Select an intercepted operation)
+ *
  * ```ts
  * import { Testing } from "effect-claudecode"
  *
  * const operation = Testing.MockFileSystemOperation.Enum.readFile
+ * console.log(operation) // "readFile"
  * ```
  *
  * @category schemas
@@ -721,7 +741,8 @@ export const MockFileSystemOperation = LiteralKit([
 /**
  * Types derived from {@link MockFileSystemOperation}.
  *
- * @example
+ * **Example** (Constrain an operation name)
+ *
  * ```ts
  * import type { Testing } from "effect-claudecode"
  *
@@ -736,7 +757,8 @@ export type MockFileSystemOperation = typeof MockFileSystemOperation.Type;
 /**
  * Options for the in-memory file system harness.
  *
- * @example
+ * **Example** (Configure an injected failure)
+ *
  * ```ts
  * import type { Testing } from "effect-claudecode"
  *
@@ -755,7 +777,8 @@ export interface MockFileSystemOptions {
 /**
  * Deterministic snapshot of the mock file system state.
  *
- * @example
+ * **Example** (Name a snapshot)
+ *
  * ```ts
  * import type { Testing } from "effect-claudecode"
  *
@@ -773,7 +796,8 @@ export interface MockFileSystemSnapshot {
 /**
  * Stateful in-memory file system harness used by tests.
  *
- * @example
+ * **Example** (Name the file-system harness)
+ *
  * ```ts
  * import type { Testing } from "effect-claudecode"
  *
@@ -939,7 +963,8 @@ const recursiveDirectoryEntries = (
  * `Plugin.load`, `Settings.load`, frontmatter parsing, transcript reads, and
  * install/sync flows against one consistent in-memory project tree.
  *
- * @example
+ * **Example** (Inspect an in-memory file)
+ *
  * ```ts
  * import { Testing } from "effect-claudecode"
  *
@@ -1149,7 +1174,8 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
  * String expectations must match exactly. `RegExp` expectations must match the
  * full file content via `expect(...).toMatch(...)`.
  *
- * @example
+ * **Example** (Assert an exact plugin tree)
+ *
  * ```ts
  * import { Testing } from "effect-claudecode"
  *
@@ -1159,6 +1185,7 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
  * Testing.expectPluginTree(fileSystem, {
  *   "/plugin/.claude-plugin/plugin.json": "{}"
  * })
+ * console.log("plugin tree accepted")
  * ```
  *
  * @category assertions
@@ -1189,14 +1216,19 @@ export const expectPluginTree = (
  * Write a plugin definition into an in-memory file system harness and return
  * the harness for further assertions or round-trip loading.
  *
- * @example
- * ```ts
- * import { Testing } from "effect-claudecode"
+ * **Example** (Write a plugin in memory)
  *
- * const write = Testing.writePluginToMemory
- * console.log(write)
+ * ```ts
+ * import { Plugin, Testing } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ *
+ * const definition = Plugin.define({ manifest: { name: "review-tools" } })
+ * Effect.runPromise(Testing.writePluginToMemory(definition)).then(
+ *   (fileSystem) => console.log(fileSystem.exists("/plugin/.claude-plugin/plugin.json"))
+ * )
  * ```
  *
+ * @effects Materializes the plugin in an isolated in-memory file system and may fail with `PluginWriteError`.
  * @category testing
  * @since 0.0.0
  */
@@ -1218,7 +1250,8 @@ export const writePluginToMemory = (
 /**
  * Result of writing a plugin to an in-memory file system and loading it back.
  *
- * @example
+ * **Example** (Name a round-trip result)
+ *
  * ```ts
  * import type { Testing } from "effect-claudecode"
  *
@@ -1237,14 +1270,19 @@ export interface PluginRoundTripResult {
  * Round-trip a plugin definition through `Plugin.write` and `Plugin.load`
  * without touching disk.
  *
- * @example
- * ```ts
- * import { Testing } from "effect-claudecode"
+ * **Example** (Round-trip a plugin in memory)
  *
- * const roundTrip = Testing.roundTripPlugin
- * console.log(roundTrip)
+ * ```ts
+ * import { Plugin, Testing } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
+ *
+ * const definition = Plugin.define({ manifest: { name: "review-tools" } })
+ * Effect.runPromise(Testing.roundTripPlugin(definition)).then(
+ *   ({ loaded }) => console.log(loaded.manifest.name)
+ * )
  * ```
  *
+ * @effects Writes then reloads the plugin in an isolated in-memory file system; may fail with plugin write or load errors.
  * @category testing
  * @since 0.0.0
  */

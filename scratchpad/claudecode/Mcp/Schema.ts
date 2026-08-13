@@ -15,7 +15,8 @@ const $I = $ScratchpadId.create("claudecode/Mcp/Schema");
 /**
  * OAuth metadata for current remote MCP transports.
  *
- * @example
+ * **Example** (Create mcp oauth)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *
@@ -41,14 +42,6 @@ export class McpOAuth extends S.Class<McpOAuth>($I`McpOAuth`)(
 /**
  * Companion types for {@link McpOAuth}.
  *
- * @example
- * ```ts
- * import type { Mcp } from "effect-claudecode"
- *
- * const input = {} satisfies Mcp.McpOAuth.Encoded
- * console.log(input)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -73,7 +66,8 @@ export declare namespace McpOAuth {
 /**
  * Stdio MCP server configuration.
  *
- * @example
+ * **Example** (Create stdio mcp server)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *
@@ -101,14 +95,6 @@ export class StdioMcpServer extends S.Class<StdioMcpServer>($I`StdioMcpServer`)(
 /**
  * Companion types for {@link StdioMcpServer}.
  *
- * @example
- * ```ts
- * import type { Mcp } from "effect-claudecode"
- *
- * const input = { command: "bunx" } satisfies Mcp.StdioMcpServer.Encoded
- * console.log(input.command)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -133,7 +119,8 @@ export declare namespace StdioMcpServer {
 /**
  * Accepted HTTP transport discriminator.
  *
- * @example
+ * **Example** (Inspect http mcp transport)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *
@@ -152,14 +139,6 @@ export const HttpMcpTransport = LiteralKit(["http", "streamable-http"]).pipe(
 /**
  * Runtime type for {@link HttpMcpTransport}.
  *
- * @example
- * ```ts
- * import type { Mcp } from "effect-claudecode"
- *
- * const transport: Mcp.HttpMcpTransport = "http"
- * console.log(transport)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -176,7 +155,8 @@ const remoteFields = {
 /**
  * Streamable HTTP MCP server configuration.
  *
- * @example
+ * **Example** (Create http mcp server)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *
@@ -200,17 +180,6 @@ export class HttpMcpServer extends S.Class<HttpMcpServer>($I`HttpMcpServer`)(
 
 /**
  * Companion types for {@link HttpMcpServer}.
- *
- * @example
- * ```ts
- * import type { Mcp } from "effect-claudecode"
- *
- * const input = {
- *   type: "http",
- *   url: "https://example.test/mcp"
- * } satisfies Mcp.HttpMcpServer.Encoded
- * console.log(input.url)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -236,7 +205,8 @@ export declare namespace HttpMcpServer {
 /**
  * WebSocket MCP server configuration.
  *
- * @example
+ * **Example** (Create ws mcp server)
+ *
  * ```ts
  * import { Mcp } from "effect-claudecode"
  *
@@ -259,17 +229,6 @@ export class WsMcpServer extends S.Class<WsMcpServer>($I`WsMcpServer`)(
 
 /**
  * Companion types for {@link WsMcpServer}.
- *
- * @example
- * ```ts
- * import type { Mcp } from "effect-claudecode"
- *
- * const input = {
- *   type: "ws",
- *   url: "wss://example.test/mcp"
- * } satisfies Mcp.WsMcpServer.Encoded
- * console.log(input.url)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -295,7 +254,8 @@ export declare namespace WsMcpServer {
 /**
  * MCP server configuration accepted by Claude Code.
  *
- * @example
+ * **Example** (Inspect mcp server config)
+ *
  * ```ts
  * import * as S from "effect/Schema"
  * import { Mcp } from "effect-claudecode"
@@ -314,13 +274,6 @@ export const McpServerConfig = S.Union([StdioMcpServer, HttpMcpServer, WsMcpServ
 
 /**
  * Runtime type for {@link McpServerConfig}.
- *
- * @example
- * ```ts
- * import type { Mcp } from "effect-claudecode"
- *
- * type Server = Mcp.McpServerConfig
- * ```
  *
  * @category type-level
  * @since 0.0.0

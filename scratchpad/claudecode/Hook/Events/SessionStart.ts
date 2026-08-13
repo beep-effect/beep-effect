@@ -34,7 +34,8 @@ const WatchPaths = S.String.pipe(
 /**
  * Schema for `Source`.
  *
- * @example
+ * **Example** (Inspect the Source schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -54,7 +55,8 @@ export const Source = LiteralKit(["startup", "resume", "clear", "compact"]).pipe
 /**
  * Type-level model for `Source`.
  *
- * @example
+ * **Example** (Use Source as a type)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -70,7 +72,8 @@ export type Source = typeof Source.Type;
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -102,7 +105,8 @@ export class Input extends S.Class<Input>($I`SessionStartInput`)(
 /**
  * Schema for `HookSpecificOutput`.
  *
- * @example
+ * **Example** (Inspect the HookSpecificOutput schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -130,7 +134,8 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`SessionSt
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -162,7 +167,8 @@ export class Output extends S.Class<Output>($I`SessionStartOutput`)(
 /**
  * Constructor for `passthrough`.
  *
- * @example
+ * **Example** (Use passthrough)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -179,15 +185,16 @@ export const passthrough = (): Output => Output.make();
  * Inject additional context at the start of the session. Claude will
  * see this as a system message. The canonical use-case for SessionStart.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Inspect the documented API)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.SessionStart.addContext)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const addContext = (additionalContext: string): Output =>
   Output.make({
@@ -202,7 +209,8 @@ export const addContext = (additionalContext: string): Output =>
 /**
  * Constructor for `startWithMessage`.
  *
- * @example
+ * **Example** (Use startWithMessage)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -226,7 +234,8 @@ export const startWithMessage = (initialUserMessage: string): Output =>
 /**
  * Constructor for `renameSession`.
  *
- * @example
+ * **Example** (Use renameSession)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -250,7 +259,8 @@ export const renameSession = (sessionTitle: string): Output =>
 /**
  * Constructor for `watchPaths`.
  *
- * @example
+ * **Example** (Use watchPaths)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -275,7 +285,8 @@ export const watchPaths = (paths: ReadonlyArray<string>, options?: { readonly re
 /**
  * Constructor for `reloadSkills`.
  *
- * @example
+ * **Example** (Use reloadSkills)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -303,7 +314,8 @@ export const reloadSkills = (): Output =>
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -326,15 +338,16 @@ export const define = <E, R>(config: {
 /**
  * Build a SessionStart hook that only handles matching `source` values.
  *
- * @category constructors
- * @since 0.0.0
+ * **Example** (Build SessionStart hook that only handles matching `source` values)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * console.log(Hook.SessionStart.onMatcher)
  * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const onMatcher = <E, R>(config: {
   readonly matcher: string | RegExp;
@@ -356,12 +369,6 @@ export const onMatcher = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.SessionStart.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -386,12 +393,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.SessionStart.HookSpecificOutput.Encoded
- * ```
  */
 export declare namespace HookSpecificOutput {
   /**
@@ -416,12 +417,6 @@ export declare namespace HookSpecificOutput {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.SessionStart.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

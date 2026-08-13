@@ -21,7 +21,8 @@ const $I = $ScratchpadId.create("claudecode/Hook/Events/UserPromptExpansion");
 /**
  * Schema for `ExpansionType`.
  *
- * @example
+ * **Example** (Inspect the ExpansionType schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -41,7 +42,8 @@ export const ExpansionType = LiteralKit(["slash_command", "mcp_prompt"]).pipe(
 /**
  * Type-level model for `ExpansionType`.
  *
- * @example
+ * **Example** (Use ExpansionType as a type)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -57,7 +59,8 @@ export type ExpansionType = typeof ExpansionType.Type;
 /**
  * Schema for `Input`.
  *
- * @example
+ * **Example** (Inspect the Input schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -86,7 +89,8 @@ export class Input extends S.Class<Input>($I`UserPromptExpansionInput`)(
 /**
  * Schema for `HookSpecificOutput`.
  *
- * @example
+ * **Example** (Inspect the HookSpecificOutput schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -110,7 +114,8 @@ export class HookSpecificOutput extends S.Class<HookSpecificOutput>($I`UserPromp
 /**
  * Schema for `Output`.
  *
- * @example
+ * **Example** (Inspect the Output schema)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -140,7 +145,8 @@ export class Output extends S.Class<Output>($I`UserPromptExpansionOutput`)(
 /**
  * Constructor for `allow`.
  *
- * @example
+ * **Example** (Use allow)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -156,7 +162,8 @@ export const allow = (): Output => Output.make();
 /**
  * Constructor for `block`.
  *
- * @example
+ * **Example** (Use block)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -172,7 +179,8 @@ export const block = (reason: string): Output => Output.make({ decision: O.some(
 /**
  * Constructor for `addContext`.
  *
- * @example
+ * **Example** (Use addContext)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -196,7 +204,8 @@ export const addContext = (additionalContext: string): Output =>
 /**
  * Constructor for `define`.
  *
- * @example
+ * **Example** (Use define)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -219,7 +228,8 @@ export const define = <E, R>(config: {
 /**
  * Constructor for `onMatcher`.
  *
- * @example
+ * **Example** (Use onMatcher)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -250,12 +260,6 @@ export const onMatcher = <E, R>(config: {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.UserPromptExpansion.Input.Encoded
- * ```
  */
 export declare namespace Input {
   /**
@@ -280,12 +284,6 @@ export declare namespace Input {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.UserPromptExpansion.HookSpecificOutput.Encoded
- * ```
  */
 export declare namespace HookSpecificOutput {
   /**
@@ -310,12 +308,6 @@ export declare namespace HookSpecificOutput {
  * @category type-level
  * @since 0.0.0
  *
- * @example
- * ```ts
- * import { Hook } from "effect-claudecode"
- *
- * type Wire = Hook.UserPromptExpansion.Output.Encoded
- * ```
  */
 export declare namespace Output {
   /**

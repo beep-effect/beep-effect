@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, URLStr } from "@beep/schema";
 import { Match } from "effect";
 import * as A from "effect/Array";
@@ -299,7 +299,7 @@ const BatchIngestResultDefinition = S.TaggedUnion({
 export const BatchIngestResult = BatchIngestResultDefinition.pipe(
   $I.annoteSchema("BatchIngestResult", {
     description: "Tagged per-link ingestion result with status-specific nested success data or a required error.",
-    toArbitrary: () => () => S.toArbitrary(BatchIngestResultDefinition),
+    toArbitrary: () => S.toArbitrary(BatchIngestResultDefinition),
   })
 );
 
@@ -389,7 +389,7 @@ const BatchIngestResponseDefinition = BatchIngestResponseFields.check(
       arbitrary: {
         candidate: {
           make: (fc) =>
-            fc.array(S.toArbitrary(BatchIngestResult), { maxLength: 32 }).map((results) => ({
+            fc.array(S.toArbitrary(BatchIngestResult)(fc), { maxLength: 32 }).map((results) => ({
               results,
               summary: summarizeBatchResults(results),
             })),
@@ -416,7 +416,7 @@ const BatchIngestResponseDefinition = BatchIngestResponseFields.check(
  */
 export const BatchIngestResponse = BatchIngestResponseDefinition.annotate({
   toArbitrary: () => (fc) =>
-    fc.array(S.toArbitrary(BatchIngestResult), { maxLength: 32 }).map((results) => ({
+    fc.array(S.toArbitrary(BatchIngestResult)(fc), { maxLength: 32 }).map((results) => ({
       results,
       summary: summarizeBatchResults(results),
     })),

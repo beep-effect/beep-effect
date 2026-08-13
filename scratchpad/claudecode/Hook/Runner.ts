@@ -46,16 +46,17 @@ const $I = $ScratchpadId.create("claudecode/Hook/Runner");
  * Raw stdout, stderr, and exit-code control for hooks whose protocol is not
  * represented by a JSON output schema.
  *
- * @category models
- * @since 0.0.0
+ * **Example** (Inspect a blocking process output)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * const output = Hook.TaskCompleted.block("Task is not ready")
  * console.log(output.exitCode)
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export class HookProcessOutput extends S.TaggedClass<HookProcessOutput>($I`HookProcessOutput`)(
   "HookProcessOutput",
@@ -72,7 +73,8 @@ export class HookProcessOutput extends S.TaggedClass<HookProcessOutput>($I`HookP
 /**
  * Constructor for `processOutput`.
  *
- * @example
+ * **Example** (Construct process output)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -98,7 +100,8 @@ export const processOutput = (options: {
 /**
  * Constructor for `stderrExit`.
  *
- * @example
+ * **Example** (Write an error and exit)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -115,7 +118,8 @@ export const stderrExit = (stderr: string, exitCode = 2): HookProcessOutput => p
 /**
  * Constructor for `rawStdout`.
  *
- * @example
+ * **Example** (Write raw stdout)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -136,7 +140,8 @@ type HookInputEnvelope = Pick<HookEnvelope, "session_id" | "transcript_path" | "
 /**
  * Type-level model for `HookDefinition`.
  *
- * @example
+ * **Example** (Describe a session-start hook)
+ *
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
@@ -166,15 +171,16 @@ export interface HookDefinition<In extends HookInputEnvelope, Out, E, R> {
  * The error and service parameters capture the union shared by entries
  * while each event factory preserves its own narrow input and output.
  *
- * @category models
- * @since 0.0.0
+ * **Example** (Describe a dispatch map)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * type Hooks = Hook.DispatchMap<never, Hook.Context.Service>
  * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export type DispatchMap<E, R> = Readonly<Record<string, HookDefinition<HookInputEnvelope, unknown, E, R>>>;
 
@@ -311,15 +317,22 @@ const runHookFromParsed = Effect.fn("Hook.runHookFromParsed")(function* <In exte
  * Pure Effect form of the runner, exposed primarily for testing.
  * Production code should use `runMain`.
  *
- * @category workflows
- * @since 0.0.0
+ * **Example** (Construct a single-hook program)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.runHookProgram)
+ * const hook = Hook.PreToolUse.define({
+ *   handler: () => Effect.succeed(Hook.PreToolUse.allow())
+ * })
+ * const program = Hook.runHookProgram(hook)
+ * console.log(program)
  * ```
+ *
+ * @effects Requires `Stdio.Stdio`, reads stdin, invokes the handler, and writes its encoded response to stdout.
+ * @category workflows
+ * @since 0.0.0
  */
 export const runHookProgram = Effect.fn("Hook.runHookProgram")(function* <In extends HookInputEnvelope, Out, E, R>(
   hook: HookDefinition<In, Out, E, R>
@@ -337,15 +350,23 @@ export const runHookProgram = Effect.fn("Hook.runHookProgram")(function* <In ext
  * and dispatches to the matching handler in the map. If no handler is
  * registered for the event, the program succeeds with no output.
  *
- * @category workflows
- * @since 0.0.0
+ * **Example** (Construct a dispatch program)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Effect from "effect/Effect"
  *
- * console.log(Hook.runDispatchProgram)
+ * const program = Hook.runDispatchProgram({
+ *   PreToolUse: Hook.PreToolUse.define({
+ *     handler: () => Effect.succeed(Hook.PreToolUse.allow())
+ *   })
+ * })
+ * console.log(program)
  * ```
+ *
+ * @effects Requires `Stdio.Stdio`, reads stdin, dispatches the selected handler, and writes its encoded response.
+ * @category workflows
+ * @since 0.0.0
  */
 export const runDispatchProgram = Effect.fn("Hook.runDispatchProgram")(function* <E, R>(
   hooks: DispatchMap<E, R>
@@ -393,15 +414,17 @@ export const runDispatchProgram = Effect.fn("Hook.runDispatchProgram")(function*
  * - `1` non-blocking runner error (stdin read, handler crash, encode, write)
  * - `130` fiber interruption (SIGINT-style)
  *
- * @category workflows
- * @since 0.0.0
+ * **Example** (Map a successful exit)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
+ * import * as Exit from "effect/Exit"
  *
- * console.log(Hook.hookTeardown)
+ * Hook.hookTeardown(Exit.succeed(undefined), (code) => console.log(code)) // 0
  * ```
+ *
+ * @category workflows
+ * @since 0.0.0
  */
 export const hookTeardown: Runtime.Teardown = <E, A>(exit: Exit.Exit<E, A>, onExit: (code: number) => void) => {
   if (Exit.isSuccess(exit)) return onExit(0);
@@ -420,19 +443,23 @@ export const hookTeardown: Runtime.Teardown = <E, A>(exit: Exit.Exit<E, A>, onEx
  * Run a single-event hook definition as the main program of the current
  * process.
  *
- * @category workflows
- * @since 0.0.0
- * @example
+ * **Example** (Run one hook process)
+ *
  * ```ts
- * import * as Effect from 'effect/Effect'
- * import { Hook } from 'effect-claudecode'
+ * import * as Effect from "effect/Effect"
+ * import { Hook } from "effect-claudecode"
  *
  * const hook = Hook.PreToolUse.define({
- *   handler: (input) => Effect.succeed(Hook.PreToolUse.allow())
+ *   handler: () => Effect.succeed(Hook.PreToolUse.allow())
  * })
  *
+ * console.log(hook.event) // "PreToolUse"
  * Hook.runMain(hook)
  * ```
+ *
+ * @effects Reads process stdin, writes the hook response to stdout, and exits according to {@link hookTeardown}.
+ * @category workflows
+ * @since 0.0.0
  */
 export const runMain = <In extends HookInputEnvelope, Out, E>(
   hook: HookDefinition<In, Out, E, HookContext.Service>
@@ -450,22 +477,27 @@ export const runMain = <In extends HookInputEnvelope, Out, E>(
  * process. The map's keys are hook event names and values are
  * `HookDefinition`s produced by each event's `define()` factory.
  *
- * @category workflows
- * @since 0.0.0
- * @example
- * ```ts
- * import * as Effect from 'effect/Effect'
- * import { Hook } from 'effect-claudecode'
+ * **Example** (Dispatch multiple hook events)
  *
- * Hook.dispatch({
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { Hook } from "effect-claudecode"
+ *
+ * const hooks = {
  *   PreToolUse: Hook.PreToolUse.define({
  *     handler: () => Effect.succeed(Hook.PreToolUse.allow())
  *   }),
  *   PostToolUse: Hook.PostToolUse.define({
  *     handler: () => Effect.succeed(Hook.PostToolUse.passthrough())
  *   })
- * })
+ * }
+ * console.log(Object.keys(hooks))
+ * Hook.dispatch(hooks)
  * ```
+ *
+ * @effects Reads process stdin, dispatches one handler, writes stdout, and exits according to {@link hookTeardown}.
+ * @category workflows
+ * @since 0.0.0
  */
 export const dispatch = <E>(hooks: DispatchMap<E, HookContext.Service>): void =>
   platformRunMain(
@@ -479,16 +511,17 @@ export const dispatch = <E>(hooks: DispatchMap<E, HookContext.Service>): void =>
 /**
  * Decoded and wire-encoded companion types for {@link HookProcessOutput}.
  *
- * @category type-level
- * @since 0.0.0
+ * **Example** (Inspect the companion output type)
  *
- * @example
  * ```ts
  * import { Hook } from "effect-claudecode"
  *
  * const output = Hook.TaskCompleted.block("Task is not ready")
  * console.log(output.exitCode)
  * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export declare namespace HookProcessOutput {
   /**

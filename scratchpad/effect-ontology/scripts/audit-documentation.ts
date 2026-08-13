@@ -1,22 +1,27 @@
 /**
  * Audits public JSDoc and local check metadata across the Domain tree.
  *
- * @remarks
- * Exported declarations require examples, categories, and versions. Public
- * schema-backed class behavior additionally requires examples, parameter
- * descriptions, and return descriptions, including behavior exposed through
- * private implementation classes. Every locally constructed schema check must
- * carry a user-facing `message`.
+ * **Details**
  *
- * @example
- * ```sh
- * bun run --cwd scratchpad audit:effect-ontology-docs
+ * Owning declarations require categories and versions, while value-level
+ * declarations additionally require examples. Public schema-backed class
+ * behavior requires examples, parameter descriptions, and return descriptions,
+ * including behavior exposed through private implementation classes. Every
+ * locally constructed schema check must carry a user-facing `message`.
+ *
+ * **Example** (Run the documentation audit)
+ *
+ * ```ts
+ * const command = "bun run --cwd scratchpad audit:effect-ontology-docs"
+ * console.log(command)
  * ```
  *
- * @category tooling
+ * @category tools
  * @since 0.0.0
  */
 import { Effect } from "effect";
+import * as HashSet from "effect/HashSet";
+import * as S from "effect/Schema";
 import * as ts from "typescript";
 
 interface Finding {
@@ -25,16 +30,18 @@ interface Finding {
   readonly missing: ReadonlyArray<string>;
 }
 
-const requiredExportTags = ["example", "category", "since"] as const;
-const checkFactories = new Set([
+const requiredDeclarationTags = ["category", "since"] as const;
+const requiredValueDeclarationTags = ["example", ...requiredDeclarationTags] as const;
+const canonicalExample = /\*\*Example\*\*\s*\([^\r\n)]+\)/;
+const checkFactories = HashSet.make(
   "isBetween",
   "isGreaterThan",
   "isGreaterThanOrEqualTo",
   "isInt",
   "isLessThanOrEqualTo",
   "isPattern",
-  "makeFilter",
-]);
+  "makeFilter"
+);
 const domainRoot = new URL("../Domain/", import.meta.url);
 const domainModules = new Bun.Glob("**/*.ts");
 const findings: Array<Finding> = [];
@@ -45,17 +52,36 @@ let auditedChecks = 0;
 const hasModifier = (node: ts.Node, kind: ts.SyntaxKind): boolean =>
   ts.canHaveModifiers(node) && ts.getModifiers(node)?.some((modifier) => modifier.kind === kind) === true;
 
-const tagNames = (node: ts.Node): ReadonlySet<string> => new Set(ts.getJSDocTags(node).map((tag) => tag.tagName.text));
+const tagNames = (node: ts.Node): HashSet.HashSet<string> =>
+  HashSet.fromIterable(ts.getJSDocTags(node).map((tag) => tag.tagName.text));
 
-const auditDeclarationTags = (file: string, symbol: string, node: ts.Node, fallback?: ts.Node): void => {
+const hasExample = (node: ts.Node, sourceFile: ts.SourceFile): boolean =>
+  HashSet.has(tagNames(node), "example") || canonicalExample.test(node.getFullText(sourceFile));
+
+const auditDeclarationTags = (
+  file: string,
+  symbol: string,
+  node: ts.Node,
+  sourceFile: ts.SourceFile,
+  requireExample: boolean
+): void => {
   auditedDeclarations += 1;
-  const declarationTagNames = new Set([...tagNames(node), ...(fallback === undefined ? [] : tagNames(fallback))]);
-  const missing = requiredExportTags.filter((tag) => !declarationTagNames.has(tag));
+  const declarationTagNames = tagNames(node);
+  const requiredTags = requireExample ? requiredValueDeclarationTags : requiredDeclarationTags;
+  const missing = requiredTags.filter((tag) =>
+    tag === "example" ? !hasExample(node, sourceFile) : !HashSet.has(declarationTagNames, tag)
+  );
 
   if (missing.length > 0) {
     findings.push({ file, symbol, missing });
   }
 };
+
+const isValueLevelDeclaration = (statement: ts.Statement): boolean =>
+  ts.isVariableStatement(statement) ||
+  ts.isFunctionDeclaration(statement) ||
+  ts.isClassDeclaration(statement) ||
+  ts.isEnumDeclaration(statement);
 
 const declarationNames = (statement: ts.Statement, sourceFile: ts.SourceFile): ReadonlyArray<string> => {
   if (ts.isVariableStatement(statement)) {
@@ -89,24 +115,12 @@ for await (const relativePath of domainModules.scan({
 
   for (const statement of sourceFile.statements) {
     if (ts.isExportDeclaration(statement)) {
-      if (statement.exportClause !== undefined && ts.isNamedExports(statement.exportClause)) {
-        for (const element of statement.exportClause.elements) {
-          auditDeclarationTags(relativePath, element.name.text, element, statement);
-        }
-      } else {
-        const symbol =
-          statement.exportClause !== undefined && ts.isNamespaceExport(statement.exportClause)
-            ? statement.exportClause.name.text
-            : (statement.moduleSpecifier?.getText(sourceFile) ?? "export");
-        auditDeclarationTags(relativePath, symbol, statement);
-      }
-
       continue;
     }
 
     if (hasModifier(statement, ts.SyntaxKind.ExportKeyword) && !ts.isExportAssignment(statement)) {
       for (const symbol of declarationNames(statement, sourceFile)) {
-        auditDeclarationTags(relativePath, symbol, statement);
+        auditDeclarationTags(relativePath, symbol, statement, sourceFile, isValueLevelDeclaration(statement));
       }
     }
 
@@ -128,8 +142,8 @@ for await (const relativePath of domainModules.scan({
       auditedMethods += 1;
       const memberTags = tagNames(member);
       const missing = [
-        ...(memberTags.has("example") ? [] : ["example"]),
-        ...(memberTags.has("returns") || memberTags.has("return") ? [] : ["returns"]),
+        ...(hasExample(member, sourceFile) ? [] : ["example"]),
+        ...(HashSet.has(memberTags, "returns") || HashSet.has(memberTags, "return") ? [] : ["returns"]),
         ...(ts.isMethodDeclaration(member) &&
         member.parameters.some((parameter) => ts.getJSDocParameterTags(parameter).length === 0)
           ? ["param"]
@@ -151,7 +165,7 @@ for await (const relativePath of domainModules.scan({
       ts.isCallExpression(node) &&
       ts.isPropertyAccessExpression(node.expression) &&
       node.expression.expression.getText(sourceFile) === "S" &&
-      checkFactories.has(node.expression.name.text)
+      HashSet.has(checkFactories, node.expression.name.text)
     ) {
       auditedChecks += 1;
       const carriesMessage = node.arguments.some(
@@ -176,7 +190,8 @@ for await (const relativePath of domainModules.scan({
 }
 
 if (findings.length > 0) {
-  throw new Error(`Documentation audit failed:\n${JSON.stringify(findings, null, 2)}`);
+  const encodeFindings = S.encodeSync(S.fromJsonString(S.Array(S.Unknown)));
+  throw new Error(`Documentation audit failed:\n${encodeFindings(findings)}`);
 }
 
 Effect.runSync(

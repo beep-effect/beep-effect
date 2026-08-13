@@ -31,11 +31,9 @@ describe("effect-ontology SHACL schemas", () => {
     ];
 
     for (const schema of schemas) {
-      const arbitrary = S.toArbitrary(schema, { report: true });
-
-      expect(arbitrary.report.warnings).toEqual([]);
+      const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(
-        fc.property(arbitrary.value, (value) => {
+        fc.property(arbitrary, (value) => {
           expect(S.is(schema)(value)).toBe(true);
         }),
         { numRuns: 32 }
@@ -44,7 +42,7 @@ describe("effect-ontology SHACL schemas", () => {
   });
 
   it("enforces SHACL conformance as an exact function of result emptiness", () => {
-    const emptyReport = S.decodeUnknownResult(ShaclValidationReport)({
+    const emptyReport = S.decodeResult(ShaclValidationReport)({
       conforms: true,
       validatedAt: "2026-07-25T12:00:00.000Z",
       dataGraphTripleCount: 42,

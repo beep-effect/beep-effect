@@ -10,7 +10,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity/packages";
+import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { pipe } from "effect";
 import * as Result from "effect/Result";
@@ -27,7 +27,7 @@ const annotateStoragePath =
   <Schema extends S.Schema<string>>(schema: Schema) =>
     schema
       .annotate({
-        toArbitrary: () => () => S.toArbitrary(schema),
+        toArbitrary: () => S.toArbitrary(schema),
       })
       .pipe(
         $I.annoteSchema(name, {
@@ -42,7 +42,7 @@ const annotateParser =
 
     return schema
       .annotate({
-        toArbitrary: () => () => S.toArbitrary(schema),
+        toArbitrary: () => S.toArbitrary(schema),
       })
       .pipe(
         $I.annoteSchema(name, {
