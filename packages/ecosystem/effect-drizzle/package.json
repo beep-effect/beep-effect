@@ -59,8 +59,8 @@
     }
   },
   "peerDependencies": {
-    "drizzle-orm": "1.0.0-rc.4-fb12281",
-    "effect": "4.0.0-beta.106"
+    "drizzle-orm": "1.0.0-rc.5-ab785fc",
+    "effect": "4.0.0-rc.108"
   },
   "devDependencies": {
     "@beep/pglite": "workspace:^",
