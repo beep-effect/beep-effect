@@ -3,18 +3,20 @@
   "exploration": {
     "slug": "computable-workspace-geometry",
     "title": "Computable Workspace Geometry — pretext × dock kernel × blocks",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
-    "openQuestions": [
-      "Thread-virtualization: editor-stack ownership re-confirmation when the packet opens (the 2026-07-14 gate release covered the professional-desktop shell surfaces for dock-substrate-landing; the thread renderer surface is distinct)."
-    ],
+    "openQuestions": [],
     "sources": ["RESEARCH.md"],
     "links": {
-      "goals": ["goals/pretext-driver", "goals/dock-substrate-landing"],
+      "goals": [
+        "goals/pretext-driver",
+        "goals/dock-substrate-landing",
+        "goals/thread-virtualization"
+      ],
       "docs": ["docs/product/workspace-substrate.md"],
       "supersededBy": null
     },
     "created": "2026-07-12",
-    "updated": "2026-07-14"
+    "updated": "2026-08-13"
   }
 }

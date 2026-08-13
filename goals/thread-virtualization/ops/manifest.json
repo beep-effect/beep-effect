@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "thread-virtualization",
+    "title": "Thread Virtualization",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/thread-virtualization",
+  "lifecycle": "active",
+  "mission": "Deliver exact-height virtualization for the editor-stack thread renderer by consuming the @beep/pretext root surface plus a capture pass in the client.",
+  "statusNote": "Editor-stack ownership was confirmed clear by the operator on 2026-08-13. The 2026-07-14 beep-effect6 gate release covered only the desktop shell; this confirmation covers the thread renderer surface.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/computable-workspace-geometry",
+    "graduated": "2026-08-13",
+    "note": "Goal 2 from the exploration MAP. The 2026-07-14 review routed kernel residue to scratchpad/dockview/WHAT-IS-LEFT.md; on 2026-07-16 that retired scratchpad file was migrated into goals/dock-substrate-landing/README.md Residuals."
+  },
+  "dependencies": ["goals/pretext-driver"],
+  "blockedBy": [],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/thread-virtualization/README.md",
+    "goals/thread-virtualization/SPEC.md",
+    "goals/thread-virtualization/PLAN.md",
+    "goals/thread-virtualization/GOAL.md",
+    "goals/thread-virtualization/research/SOURCES.md",
+    "explorations/computable-workspace-geometry/MAP.md",
+    "goals/dock-substrate-landing/README.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/thread-virtualization/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Research", "status": "pending" },
+    { "id": "P1", "name": "Implement", "status": "pending" },
+    { "id": "P2", "name": "Verify", "status": "pending" },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/thread-virtualization/GOAL.md)\" -le 4000",
+    "jq . goals/thread-virtualization/ops/manifest.json",
+    "rg -n \"thread-virtualization|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/thread-virtualization",
+    "git diff --check -- goals/thread-virtualization",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The live thread-renderer ownership boundary changes or conflicts with another lane.",
+    "The @beep/pretext root surface cannot provide the required exact-height contract.",
+    "The implementation would absorb dock-kernel residue or unrelated editor work.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
+  ]
+}
