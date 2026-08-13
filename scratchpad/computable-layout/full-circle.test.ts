@@ -18,7 +18,7 @@ import {
   TabsNode,
   TextPanelView,
 } from "@beep/dock";
-import fixture from "./fixture.json";
+import fixture from "./fixture.json" with { type: "json" };
 import { layoutLineCount, naturalWidth } from "./layout.ts";
 
 const metrics = { words: fixture.words, spaceWidth: fixture.spaceWidth };

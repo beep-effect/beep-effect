@@ -241,7 +241,7 @@ describe("CommandFrontmatter", () => {
     Effect.gen(function* () {
       const cmd = yield* decodeCommand({});
       expect(cmd.description).toEqual(O.none());
-      expect(cmd["allowed-tools"]).toEqual(O.none());
+      expect(cmd.allowedTools).toEqual(O.none());
       expect(yield* encodeCommand(cmd)).toEqual({});
     })
   );
@@ -278,11 +278,11 @@ describe("CommandFrontmatter", () => {
         description: O.some("Commit staged changes"),
         when_to_use: O.some("Use for git commits"),
         arguments: O.some("message scope"),
-        "argument-hint": O.some("<message>"),
-        "allowed-tools": O.some(["Bash"]),
-        "disallowed-tools": O.some("WebFetch"),
-        "disable-model-invocation": O.some(false),
-        "user-invocable": O.some(true),
+        argumentHint: O.some("<message>"),
+        allowedTools: O.some(["Bash"]),
+        disallowedTools: O.some("WebFetch"),
+        disableModelInvocation: O.some(false),
+        userInvocable: O.some(true),
         context: O.some("fork"),
         agent: O.some("reviewer"),
         effort: O.some("xhigh"),
@@ -339,8 +339,8 @@ describe("OutputStyleFrontmatter", () => {
       });
       expect(style).toMatchObject({
         name: O.some("coding-style"),
-        "keep-coding-instructions": O.some(true),
-        "force-for-plugin": O.some(true),
+        keepCodingInstructions: O.some(true),
+        forceForPlugin: O.some(true),
       });
     })
   );

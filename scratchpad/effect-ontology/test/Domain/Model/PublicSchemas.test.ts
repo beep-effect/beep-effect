@@ -8,7 +8,7 @@ import * as Model from "../../../Domain/Model/index.ts";
 const publicModelSchemas = A.filter(R.values(Model), S.isSchema);
 
 describe("effect-ontology model schemas", () => {
-  it("derives warning-free, schema-valid arbitrary values for every public model schema", () => {
+  it("derives schema-valid arbitrary values for every public model schema", () => {
     for (const schema of publicModelSchemas) {
       const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(

@@ -91,7 +91,7 @@ export class CircuitOpenError extends CircuitOpenErrorBase {
 
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(this);
 
-  static readonly is = S.is(CircuitOpenError)
+  static readonly is = S.is(CircuitOpenError);
 }
 
 /**

@@ -27,6 +27,7 @@ const DirectMathMethod = LiteralKit(
 );
 type DirectMathMethod = Exclude<MathMethod, "random" | "sumPrecise">;
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, node: AstNode): number => {
   // Validate only the arguments the method consumes; like JS, extras are ignored
   // (so built-ins work as callbacks receiving (element, index, array)).
@@ -82,6 +83,7 @@ export const invokeMathMethod = (name: DirectMathMethod, args: Array<unknown>, n
   });
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeMathSumPrecise = <R>(
   runner: SyncIteratorRunner<R>,
   source: unknown,

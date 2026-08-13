@@ -907,6 +907,7 @@ const errorBodySummary = (value: unknown): string => {
  * @category execution
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invoke = (
   plan: Plan,
   input: unknown

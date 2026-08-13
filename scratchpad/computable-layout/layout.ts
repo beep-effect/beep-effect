@@ -14,6 +14,7 @@ export type WordMetrics = {
 // line — pretext's "shrinkwrap" (missing from the web platform), and exactly
 // the pure input a dock constraint solver needs ("this panel's title wants
 // 142px") without ever asking the DOM.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const naturalWidth = (sentence: string, metrics: WordMetrics): number => {
   let total = 0;
   let first = true;
@@ -26,6 +27,7 @@ export const naturalWidth = (sentence: string, metrics: WordMetrics): number => 
   return total;
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const layoutLineCount = (
   sentence: string,
   metrics: WordMetrics,
