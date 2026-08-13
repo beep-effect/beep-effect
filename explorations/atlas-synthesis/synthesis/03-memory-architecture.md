@@ -143,8 +143,8 @@ aspirational):
 | Verifier concept | In-repo substrate | Path (verified) |
 | --- | --- | --- |
 | SHACL shape validation | `shacl-validation` service + `shacl-engine` adapter | `packages/foundation/capability/semantic-web/src/services/shacl-validation.ts`, `.../adapters/shacl-engine.ts` |
-| Provenance (W3C PROV-O) | `provenance` service, `prov.ts` | `.../src/services/provenance.ts`, `.../src/prov.ts` |
-| RDF / IRI / JSON-LD substrate | `rdf.ts`, `iri.ts`, `jsonld.ts`, JSON-LD services | `.../src/rdf.ts`, `.../src/iri.ts`, `.../src/services/jsonld-*.ts` |
+| Provenance (W3C PROV-O) | RDF vocabulary constants | `packages/foundation/modeling/rdf/src/Vocab/Prov.ts` |
+| RDF / IRI / JSON-LD substrate | `rdf.ts`, `iri.ts`, `jsonld.ts` compatibility surfaces | `.../src/rdf.ts`, `.../src/iri.ts`, `.../src/jsonld.ts` |
 | SPARQL query | `sparql-query` service | `.../src/services/sparql-query.ts` |
 | Evidence / annotation | `evidence.ts`, `web-annotation` adapter | `.../src/evidence.ts`, `.../adapters/web-annotation.ts` |
 

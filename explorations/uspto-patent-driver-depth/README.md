@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -17,9 +17,10 @@ keep legal interpretation and reliability orchestration in their owning goals.
 
 ## Next Open Question
 
-**Queued gates:** `uspto-search-structured` waits for live applications-endpoint
-proof; EPO OPS and Google Patents BigQuery wait for named consumers; SerpApi and
-the ppubs experiment remain parked pending explicit pull/approval.
+None while graduated. `uspto-search-structured`, EPO OPS, Google Patents
+BigQuery, the SerpApi lane, and the approval-gated `uspto-ppubs-experiment`
+remain MAP re-entry points; a fired gate reopens
+this packet at `decompose`.
 
 ## Sources & provenance
 
@@ -42,6 +43,9 @@ sources = port-with-attribution), the external research citations, and the
 
 ## Trail
 
+- 2026-08-13: holding-pen convention ratified; the packet flipped to
+  `graduated`. Its spike-gated and consumer-pulled MAP lanes remain re-entry
+  points, and a fired gate reopens this packet at `decompose`.
 - 2026-07-14: shape gate signed off as drafted; graduated
   [`goals/uspto-prosecution-read`](../../goals/uspto-prosecution-read/README.md)
   and
