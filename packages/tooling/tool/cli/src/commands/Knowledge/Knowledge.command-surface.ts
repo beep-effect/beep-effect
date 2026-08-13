@@ -7,8 +7,9 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Effect, FileSystem, HashSet, Order, Path, pipe } from "effect";
+import { Effect, FileSystem, HashMap, HashSet, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -23,6 +24,7 @@ import {
 } from "ts-morph";
 import { KnowledgeOperationalError } from "./Knowledge.errors.ts";
 import type {
+  ArrayLiteralExpression,
   ArrowFunction,
   CallExpression,
   Expression,
@@ -64,7 +66,8 @@ const decodeStaticCommandNodeJson = S.decodeUnknownEffect(StaticCommandNodeJson)
 const staticCommandNodeEquivalent = S.toEquivalence(StaticCommandNode);
 const isKnowledgeOperationalError = S.is(KnowledgeOperationalError);
 
-type LiteralBindings = ReadonlyMap<string, string>;
+type LiteralBindings = HashMap.HashMap<string, string>;
+type StaticTraversal = HashSet.HashSet<string>;
 
 const failStatic = (category: string): never => {
   throw KnowledgeOperationalError.make({
@@ -128,7 +131,7 @@ const boundString = (input: MorphNode, bindings: LiteralBindings): O.Option<stri
   }
   const node = definitions[0]!;
   const parameter = Node.isParameterDeclaration(node) ? node : node.getFirstAncestorByKind(SyntaxKind.Parameter);
-  return parameter === undefined ? O.none() : O.fromUndefinedOr(bindings.get(parameterKey(parameter)));
+  return parameter === undefined ? O.none() : HashMap.get(bindings, parameterKey(parameter));
 };
 
 const bindingDeclarations = (identifier: Identifier): ReadonlyArray<MorphNode> =>
@@ -149,18 +152,48 @@ const isNamedImport = (identifier: Identifier, importedName: string, moduleSpeci
   if (!Str.equivalence(identifier.getText(), importedName)) {
     return false;
   }
-  const node = exactlyOneBindingDeclaration(identifier);
+  return namedImportMemberMatches(exactlyOneBindingDeclaration(identifier), identifier, importedName, moduleSpecifier);
+};
+
+const namedImportMemberMatches = (
+  node: MorphNode,
+  target: Identifier,
+  importedName: string,
+  moduleSpecifier: string
+): boolean => {
   if (!Node.isImportSpecifier(node)) {
     return false;
   }
   const sourceName = node.getNameNode().getText();
   const localName = node.getAliasNode()?.getText() ?? sourceName;
   return (
-    Str.equivalence(localName, identifier.getText()) &&
+    Str.equivalence(localName, target.getText()) &&
     Str.equivalence(sourceName, importedName) &&
     Str.equivalence(node.getImportDeclaration().getModuleSpecifierValue(), moduleSpecifier)
   );
 };
+
+const namespaceImportMemberMatches = (node: MorphNode, target: Identifier, moduleSpecifier: string): boolean => {
+  if (!Node.isNamespaceImport(node)) {
+    return false;
+  }
+  const importDeclaration = node.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
+  return (
+    importDeclaration !== undefined &&
+    Str.equivalence(node.getName(), target.getText()) &&
+    Str.equivalence(importDeclaration.getModuleSpecifierValue(), moduleSpecifier)
+  );
+};
+
+const importedMemberTarget = (expression: Expression, memberName: string, bindingName: string): O.Option<Identifier> =>
+  pipe(
+    expression,
+    O.liftPredicate(Node.isPropertyAccessExpression),
+    O.filter((property) => Str.equivalence(property.getName(), memberName)),
+    O.map((property) => property.getExpression()),
+    O.filter(Node.isIdentifier),
+    O.filter((target) => Str.equivalence(target.getText(), bindingName))
+  );
 
 const isImportedBindingMember = (
   expression: Expression,
@@ -168,32 +201,17 @@ const isImportedBindingMember = (
   memberName: string,
   moduleSpecifier: string,
   importedName = bindingName
-): boolean => {
-  if (!Node.isPropertyAccessExpression(expression) || !Str.equivalence(expression.getName(), memberName)) {
-    return false;
-  }
-  const target = expression.getExpression();
-  if (!Node.isIdentifier(target) || !Str.equivalence(target.getText(), bindingName)) {
-    return false;
-  }
-  const node = exactlyOneBindingDeclaration(target);
-  if (Node.isNamespaceImport(node)) {
-    const importDeclaration = node.getFirstAncestorByKind(SyntaxKind.ImportDeclaration);
-    return (
-      importDeclaration !== undefined &&
-      Str.equivalence(node.getName(), target.getText()) &&
-      Str.equivalence(importDeclaration.getModuleSpecifierValue(), moduleSpecifier)
-    );
-  }
-  const sourceName = Node.isImportSpecifier(node) ? node.getNameNode().getText() : "";
-  const localName = Node.isImportSpecifier(node) ? (node.getAliasNode()?.getText() ?? sourceName) : "";
-  return (
-    Node.isImportSpecifier(node) &&
-    Str.equivalence(localName, target.getText()) &&
-    Str.equivalence(sourceName, importedName) &&
-    Str.equivalence(node.getImportDeclaration().getModuleSpecifierValue(), moduleSpecifier)
+): boolean =>
+  pipe(
+    importedMemberTarget(expression, memberName, bindingName),
+    O.exists((target) => {
+      const node = exactlyOneBindingDeclaration(target);
+      return (
+        namespaceImportMemberMatches(node, target, moduleSpecifier) ||
+        namedImportMemberMatches(node, target, importedName, moduleSpecifier)
+      );
+    })
   );
-};
 
 const isCommandMember = (expression: Expression, memberName: string): boolean =>
   isImportedBindingMember(expression, "Command", memberName, "effect/unstable/cli");
@@ -208,57 +226,73 @@ const staticNode = (
   children: ReadonlyArray<StaticCommandNode> = A.empty()
 ): StaticCommandNode => StaticCommandNode.make({ name, alias, children });
 
+const addUniqueSpelling = (spellings: HashSet.HashSet<string>, spelling: string): HashSet.HashSet<string> =>
+  Str.isEmpty(spelling) || HashSet.has(spellings, spelling)
+    ? failStatic("sibling commands contain an empty or colliding name or alias")
+    : HashSet.add(spellings, spelling);
+
+const childSpellings = (child: StaticCommandNode): ReadonlyArray<string> =>
+  A.appendAll(A.make(child.name), O.toArray(O.fromNullOr(child.alias)));
+
 const validatedChildren = (children: ReadonlyArray<StaticCommandNode>): ReadonlyArray<StaticCommandNode> => {
-  let spellings = HashSet.empty<string>();
-  for (const child of children) {
-    if (Str.isEmpty(child.name) || HashSet.has(spellings, child.name)) {
-      return failStatic("sibling commands contain an empty or duplicate name");
-    }
-    spellings = HashSet.add(spellings, child.name);
-    if (child.alias !== null) {
-      if (Str.isEmpty(child.alias) || HashSet.has(spellings, child.alias)) {
-        return failStatic("sibling commands contain an empty or colliding alias");
-      }
-      spellings = HashSet.add(spellings, child.alias);
+  A.reduce(children, HashSet.empty<string>(), (spellings, child) =>
+    A.reduce(childSpellings(child), spellings, addUniqueSpelling)
+  );
+  return children;
+};
+
+const arrayElementExpressions = (
+  expression: ArrayLiteralExpression,
+  bindings: LiteralBindings,
+  seen: StaticTraversal
+): ReadonlyArray<Expression> => {
+  let values = A.empty<Expression>();
+  for (const element of expression.getElements()) {
+    if (Node.isOmittedExpression(element)) {
+      failStatic("a command list contains an omitted member");
+    } else if (Node.isSpreadElement(element)) {
+      values = A.appendAll(values, listExpressions(element.getExpression(), bindings, seen));
+    } else if (Node.isExpression(element)) {
+      values = A.append(values, element);
+    } else {
+      failStatic("a command list contains an unsupported member");
     }
   }
-  return children;
+  return values;
+};
+
+const arrayMakeExpressions = (expression: CallExpression): ReadonlyArray<Expression> => {
+  const arguments_ = expression.getArguments();
+  return A.every(arguments_, Node.isExpression)
+    ? arguments_
+    : failStatic("an effect Array command list contains a non-expression member");
+};
+
+const identifierListExpressions = (
+  expression: Identifier,
+  bindings: LiteralBindings,
+  seen: StaticTraversal
+): ReadonlyArray<Expression> => {
+  const key = `${expression.getSourceFile().getFilePath()}:${expression.getStart()}`;
+  return HashSet.has(seen, key)
+    ? failStatic("the command list declarations contain a cycle")
+    : listExpressions(variableInitializer(expression), bindings, HashSet.add(seen, key));
 };
 
 const listExpressions = (
   input: Expression,
   bindings: LiteralBindings,
-  seen: ReadonlySet<string>
+  seen: StaticTraversal
 ): ReadonlyArray<Expression> => {
   const expression = unwrapExpression(input);
   if (Node.isArrayLiteralExpression(expression)) {
-    let values = A.empty<Expression>();
-    for (const element of expression.getElements()) {
-      if (Node.isOmittedExpression(element)) {
-        failStatic("a command list contains an omitted member");
-      } else if (Node.isSpreadElement(element)) {
-        values = A.appendAll(values, listExpressions(element.getExpression(), bindings, seen));
-      } else if (Node.isExpression(element)) {
-        values = A.append(values, element);
-      } else {
-        failStatic("a command list contains an unsupported member");
-      }
-    }
-    return values;
+    return arrayElementExpressions(expression, bindings, seen);
   }
   if (Node.isCallExpression(expression) && isArrayMake(expression.getExpression())) {
-    const arguments_ = expression.getArguments();
-    if (!A.every(arguments_, Node.isExpression)) {
-      return failStatic("an effect Array command list contains a non-expression member");
-    }
-    return arguments_;
+    return arrayMakeExpressions(expression);
   }
   if (Node.isIdentifier(expression)) {
-    const key = `${expression.getSourceFile().getFilePath()}:${expression.getStart()}`;
-    if (seen.has(key)) {
-      return failStatic("the command list declarations contain a cycle");
-    }
-    return listExpressions(variableInitializer(expression), bindings, new Set([...seen, key]));
+    return identifierListExpressions(expression, bindings, seen);
   }
   return failStatic("a command list uses an unsupported expression");
 };
@@ -303,7 +337,7 @@ const directFunctionReturn = (functionLike: FunctionDeclaration | ArrowFunction 
 const commandChildren = (
   call: CallExpression,
   bindings: LiteralBindings,
-  seen: ReadonlySet<string>
+  seen: StaticTraversal
 ): ReadonlyArray<StaticCommandNode> => {
   const argument = call.getArguments()[0];
   if (argument === undefined || !Node.isExpression(argument)) {
@@ -315,7 +349,7 @@ const commandChildren = (
   return A.map(listExpressions(argument, bindings, seen), (child) => evaluateCommandExpression(child, bindings, seen));
 };
 
-const surfaceNeutralCommandTransforms = new Set([
+const SurfaceNeutralCommandTransform = LiteralKit([
   "provide",
   "withDescription",
   "withShortDescription",
@@ -323,42 +357,67 @@ const surfaceNeutralCommandTransforms = new Set([
   "withHandler",
   "withAnnotations",
   "withUnlisted",
-]);
+]).pipe(
+  $I.annoteSchema("SurfaceNeutralCommandTransform", {
+    description: "Effect CLI transforms proven not to change command names, aliases, or descendants.",
+  })
+);
+
+const commandTransformCall = (transform: Expression): CallExpression =>
+  Node.isCallExpression(transform) ? transform : failStatic("a command transform is not a call expression");
+
+const commandTransformMember = (call: CallExpression): string => {
+  const callee = call.getExpression();
+  if (!Node.isPropertyAccessExpression(callee) || !Node.isIdentifier(callee.getExpression())) {
+    return failStatic("a command transform uses an unsupported expression");
+  }
+  const memberName = callee.getName();
+  return isCommandMember(callee, memberName)
+    ? memberName
+    : failStatic("a command transform lacks Effect CLI provenance");
+};
+
+const applySubcommandsTransform = (
+  node: StaticCommandNode,
+  call: CallExpression,
+  bindings: LiteralBindings,
+  seen: StaticTraversal
+): StaticCommandNode =>
+  StaticCommandNode.make({
+    ...node,
+    children: validatedChildren(commandChildren(call, bindings, seen)),
+  });
+
+const applyAliasTransform = (
+  node: StaticCommandNode,
+  call: CallExpression,
+  bindings: LiteralBindings
+): StaticCommandNode => {
+  const argument = call.getArguments()[0];
+  if (argument === undefined || A.length(call.getArguments()) !== 1) {
+    return failStatic("Command.withAlias lacks exactly one string argument");
+  }
+  const alias = O.getOrElse(boundString(argument, bindings), () =>
+    failStatic("Command.withAlias is not a bound string literal")
+  );
+  return StaticCommandNode.make({ ...node, alias });
+};
 
 const applyCommandTransform = (
   node: StaticCommandNode,
   transform: Expression,
   bindings: LiteralBindings,
-  seen: ReadonlySet<string>
+  seen: StaticTraversal
 ): StaticCommandNode => {
-  if (!Node.isCallExpression(transform)) {
-    return failStatic("a command transform is not a call expression");
-  }
-  const callee = transform.getExpression();
-  if (!Node.isPropertyAccessExpression(callee) || !Node.isIdentifier(callee.getExpression())) {
-    return failStatic("a command transform uses an unsupported expression");
-  }
-  const memberName = callee.getName();
-  if (!isCommandMember(callee, memberName)) {
-    return failStatic("a command transform lacks Effect CLI provenance");
-  }
+  const call = commandTransformCall(transform);
+  const memberName = commandTransformMember(call);
   if (Str.equivalence(memberName, "withSubcommands")) {
-    return StaticCommandNode.make({
-      ...node,
-      children: validatedChildren(commandChildren(transform, bindings, seen)),
-    });
+    return applySubcommandsTransform(node, call, bindings, seen);
   }
   if (Str.equivalence(memberName, "withAlias")) {
-    const argument = transform.getArguments()[0];
-    if (argument === undefined || A.length(transform.getArguments()) !== 1) {
-      return failStatic("Command.withAlias lacks exactly one string argument");
-    }
-    const alias = O.getOrElse(boundString(argument, bindings), () =>
-      failStatic("Command.withAlias is not a bound string literal")
-    );
-    return StaticCommandNode.make({ ...node, alias });
+    return applyAliasTransform(node, call, bindings);
   }
-  return surfaceNeutralCommandTransforms.has(memberName)
+  return S.is(SurfaceNeutralCommandTransform)(memberName)
     ? node
     : failStatic("an unsupported Effect CLI command transform changes the command declaration");
 };
@@ -366,11 +425,11 @@ const applyCommandTransform = (
 const evaluateCommandFactory = (
   call: CallExpression,
   bindings: LiteralBindings,
-  seen: ReadonlySet<string>
+  seen: StaticTraversal
 ): StaticCommandNode => {
   const functionLike = functionDeclarationForCall(call);
   const factoryKey = `${functionLike.getSourceFile().getFilePath()}:${functionLike.getStart()}`;
-  if (seen.has(factoryKey)) {
+  if (HashSet.has(seen, factoryKey)) {
     return failStatic("the command factory declarations contain a cycle");
   }
   const parameters = functionLike.getParameters();
@@ -378,21 +437,21 @@ const evaluateCommandFactory = (
   if (A.length(parameters) !== A.length(arguments_)) {
     return failStatic("command factory arguments do not exactly match its parameters");
   }
-  const nextBindings = new Map(bindings);
+  let nextBindings = bindings;
   for (let index = 0; index < A.length(parameters); index += 1) {
     const argument = arguments_[index]!;
     const value = O.getOrElse(boundString(argument, bindings), () =>
       failStatic("command factory arguments are not bound string literals")
     );
-    nextBindings.set(parameterKey(parameters[index]!), value);
+    nextBindings = HashMap.set(nextBindings, parameterKey(parameters[index]!), value);
   }
-  return evaluateCommandExpression(directFunctionReturn(functionLike), nextBindings, new Set([...seen, factoryKey]));
+  return evaluateCommandExpression(directFunctionReturn(functionLike), nextBindings, HashSet.add(seen, factoryKey));
 };
 
 const evaluatePipeCall = (
   call: CallExpression,
   bindings: LiteralBindings,
-  seen: ReadonlySet<string>
+  seen: StaticTraversal
 ): StaticCommandNode => {
   const arguments_ = call.getArguments();
   const first = arguments_[0];
@@ -412,7 +471,7 @@ const evaluatePipeCall = (
 const evaluateMethodPipeCall = (
   call: CallExpression,
   bindings: LiteralBindings,
-  seen: ReadonlySet<string>
+  seen: StaticTraversal
 ): StaticCommandNode => {
   const callee = call.getExpression();
   if (!Node.isPropertyAccessExpression(callee) || !Str.equivalence(callee.getName(), "pipe")) {
@@ -428,47 +487,64 @@ const evaluateMethodPipeCall = (
   return node;
 };
 
+const evaluateCommandIdentifier = (
+  expression: Identifier,
+  bindings: LiteralBindings,
+  seen: StaticTraversal
+): StaticCommandNode => {
+  const key = `${expression.getSourceFile().getFilePath()}:${expression.getStart()}`;
+  return HashSet.has(seen, key)
+    ? failStatic("the command declarations contain a cycle")
+    : evaluateCommandExpression(variableInitializer(expression), bindings, HashSet.add(seen, key));
+};
+
+const evaluateCommandMake = (call: CallExpression, bindings: LiteralBindings): StaticCommandNode => {
+  const nameArgument = call.getArguments()[0];
+  if (nameArgument === undefined) {
+    return failStatic("Command.make lacks a command name");
+  }
+  const name = O.getOrElse(boundString(nameArgument, bindings), () =>
+    failStatic("Command.make name is not a bound string literal")
+  );
+  return staticNode(name);
+};
+
+const isTrustedPipe = (callee: Identifier): boolean =>
+  isNamedImport(callee, "pipe", "effect") || isNamedImport(callee, "pipe", "@beep/utils");
+
+const evaluateCommandCall = (
+  call: CallExpression,
+  bindings: LiteralBindings,
+  seen: StaticTraversal
+): StaticCommandNode => {
+  const callee = call.getExpression();
+  if (isCommandMember(callee, "make")) {
+    return evaluateCommandMake(call, bindings);
+  }
+  if (Node.isIdentifier(callee) && isTrustedPipe(callee)) {
+    return evaluatePipeCall(call, bindings, seen);
+  }
+  if (Node.isPropertyAccessExpression(callee) && Str.equivalence(callee.getName(), "pipe")) {
+    return evaluateMethodPipeCall(call, bindings, seen);
+  }
+  return Node.isIdentifier(callee)
+    ? evaluateCommandFactory(call, bindings, seen)
+    : failStatic("a command declaration uses an unsupported call");
+};
+
 const evaluateCommandExpression = (
   input: Expression,
-  bindings: LiteralBindings = new Map(),
-  seen: ReadonlySet<string> = new Set()
+  bindings: LiteralBindings = HashMap.empty(),
+  seen: StaticTraversal = HashSet.empty()
 ): StaticCommandNode => {
   const expression = unwrapExpression(input);
   requireInsideStaticCommandCorpus(expression);
   if (Node.isIdentifier(expression)) {
-    const key = `${expression.getSourceFile().getFilePath()}:${expression.getStart()}`;
-    if (seen.has(key)) {
-      return failStatic("the command declarations contain a cycle");
-    }
-    return evaluateCommandExpression(variableInitializer(expression), bindings, new Set([...seen, key]));
+    return evaluateCommandIdentifier(expression, bindings, seen);
   }
-  if (!Node.isCallExpression(expression)) {
-    return failStatic("a command declaration uses an unsupported expression");
-  }
-  const callee = expression.getExpression();
-  if (isCommandMember(callee, "make")) {
-    const nameArgument = expression.getArguments()[0];
-    if (nameArgument === undefined) {
-      return failStatic("Command.make lacks a command name");
-    }
-    const name = O.getOrElse(boundString(nameArgument, bindings), () =>
-      failStatic("Command.make name is not a bound string literal")
-    );
-    return staticNode(name);
-  }
-  if (
-    Node.isIdentifier(callee) &&
-    (isNamedImport(callee, "pipe", "effect") || isNamedImport(callee, "pipe", "@beep/utils"))
-  ) {
-    return evaluatePipeCall(expression, bindings, seen);
-  }
-  if (Node.isPropertyAccessExpression(callee) && Str.equivalence(callee.getName(), "pipe")) {
-    return evaluateMethodPipeCall(expression, bindings, seen);
-  }
-  if (Node.isIdentifier(callee)) {
-    return evaluateCommandFactory(expression, bindings, seen);
-  }
-  return failStatic("a command declaration uses an unsupported call");
+  return Node.isCallExpression(expression)
+    ? evaluateCommandCall(expression, bindings, seen)
+    : failStatic("a command declaration uses an unsupported expression");
 };
 
 const commandSourceFiles = Effect.fn("Knowledge.commandSourceFiles")(function* (checkoutRoot: string) {

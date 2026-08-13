@@ -986,6 +986,125 @@ describe("knowledge semantic-delta current-checkout probes", () => {
     ).pipe(provideScopedLayer(testLayer))
   );
 
+  it.effect("preserves ordered list expansion and last-wins aliases across trusted import forms", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-ordered-surface-" });
+        const rootModule = path.join(tempRoot, ROOT_MODULE_PATH);
+        yield* fs.makeDirectory(path.dirname(rootModule), { recursive: true });
+        yield* fs.writeFileString(
+          rootModule,
+          [
+            'import { A } from "@beep/utils"',
+            'import * as Command from "effect/unstable/cli"',
+            'const first = Command.make("first").pipe(Command.withAlias("f"), Command.withAlias("final"))',
+            'const second = Command.make("second")',
+            "const leading = [first]",
+            "const trailing = A.make(second)",
+            'export const rootCommand = Command.make("beep-cli").pipe(',
+            "  Command.withSubcommands([...leading, ...trailing]),",
+            ")",
+            "",
+          ].join("\n")
+        );
+
+        const tree = yield* KnowledgeCommandSurface.buildStaticCommandTree(tempRoot);
+
+        assert.deepEqual(KnowledgeCommandSurface.resolveStaticCommand(tree, ["final"]), ["resolved", ["first"]]);
+        assert.deepEqual(KnowledgeCommandSurface.resolveStaticCommand(tree, ["f"]), ["unknown", ["f"]]);
+        assert.deepEqual(KnowledgeCommandSurface.resolveStaticCommand(tree, ["second"]), ["resolved", ["second"]]);
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("fails closed for hostile command-surface syntax and ambiguous sibling spellings", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-hostile-surface-table-" });
+        const cases = [
+          {
+            name: "shadowed-command",
+            source: [
+              "const Command = { make: (name: string) => ({ name }) }",
+              'export const rootCommand = Command.make("beep-cli")',
+            ],
+          },
+          {
+            name: "shadowed-array",
+            source: [
+              'import { Command } from "effect/unstable/cli"',
+              "const A = { make: (...values: unknown[]) => values }",
+              'const child = Command.make("child")',
+              'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands(A.make(child)))',
+            ],
+          },
+          {
+            name: "unknown-transform",
+            source: [
+              'import { Command } from "effect/unstable/cli"',
+              'export const rootCommand = Command.make("beep-cli").pipe(Command.withSharedFlags([]))',
+            ],
+          },
+          {
+            name: "omitted-list",
+            source: [
+              'import { Command } from "effect/unstable/cli"',
+              'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([,]))',
+            ],
+          },
+          {
+            name: "dynamic-list",
+            source: [
+              'import { Command } from "effect/unstable/cli"',
+              'const commands = true ? [Command.make("first")] : [Command.make("second")]',
+              'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands(commands))',
+            ],
+          },
+          {
+            name: "name-alias-collision",
+            source: [
+              'import { Command } from "effect/unstable/cli"',
+              'const first = Command.make("first").pipe(Command.withAlias("shared"))',
+              'const second = Command.make("shared")',
+              'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([first, second]))',
+            ],
+          },
+          {
+            name: "duplicate-alias",
+            source: [
+              'import { Command } from "effect/unstable/cli"',
+              'const first = Command.make("first").pipe(Command.withAlias("shared"))',
+              'const second = Command.make("second").pipe(Command.withAlias("shared"))',
+              'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([first, second]))',
+            ],
+          },
+          {
+            name: "multiple-return-factory",
+            source: [
+              'import { Command } from "effect/unstable/cli"',
+              'const makeCommand = (name: string) => { if (name) return Command.make(name); return Command.make("other") }',
+              'export const rootCommand = makeCommand("beep-cli")',
+            ],
+          },
+        ];
+        for (const fixture of cases) {
+          const fixtureRoot = path.join(tempRoot, fixture.name);
+          const rootModule = path.join(fixtureRoot, ROOT_MODULE_PATH);
+          yield* fs.makeDirectory(path.dirname(rootModule), { recursive: true });
+          yield* fs.writeFileString(rootModule, [...fixture.source, ""].join("\n"));
+
+          const error = yield* Effect.flip(KnowledgeCommandSurface.buildStaticCommandTree(fixtureRoot));
+          assert.strictEqual(error._tag, "KnowledgeOperationalError", fixture.name);
+          assert.include(error.message, "Failed to statically derive command surface provenance", fixture.name);
+        }
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
   it.effect("fails promptly on recursive command factories and recursive command lists", () =>
     Effect.scoped(
       Effect.gen(function* () {
