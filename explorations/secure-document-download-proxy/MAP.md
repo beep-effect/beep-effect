@@ -9,8 +9,9 @@
 | GATED | `secure-document-viewer-integration` | Render delivered documents without weakening cache, session, revocation, or navigation rules. | Packaged-webview HTTP proof and a named product consumer. | Existing desktop UI is reusable; secure viewer/session integration is **NET-NEW**. |
 | GATED | `secure-document-additional-origins` | Add separately authorized docketing/documents/time-tracking origins through provider-owned drivers. | Two real consumer pulls and guarded-fetch harness for every live remote origin. | Drivers may be reused; every origin adapter and consumer policy remains **NET-NEW** until named. |
 
-The exploration stays `active` at stage `graduate` because the three gated
-candidates remain intentionally unscaffolded.
+The exploration is `graduated`; the three intentionally unscaffolded candidates
+remain re-entry points. A satisfied gate reopens this packet at `decompose`
+rather than spawning a goal directly.
 
 ## Cross-References and Ownership Fences
 

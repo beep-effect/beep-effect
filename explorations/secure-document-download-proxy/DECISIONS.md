@@ -184,3 +184,13 @@ Keep acceptance fixture-backed. Live USPTO fetch proof remains blocked until
 the guarded-fetch DNS-rebinding/redirect harness from
 `explorations/ingestion-security-secret-governance` proves pinned connect-time
 address enforcement.
+
+## 2026-08-13 — Holding-pen convention — RATIFIED
+
+**Answer:** Graduate the packet now that `secure-document-delivery` exists.
+Keep the Box-origin, viewer-integration, and additional-origins candidates in
+`MAP.md` as re-entry points. A fired gate reopens this packet at `decompose`;
+it does not spawn a goal directly.
+
+**Rationale:** The three gated integrations preserve future routing without
+holding the completed delivery exploration open.
