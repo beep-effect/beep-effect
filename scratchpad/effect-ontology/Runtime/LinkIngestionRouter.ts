@@ -8,7 +8,7 @@
  */
 
 import { NonNegativeInt } from "@beep/schema/Int";
-import { Cause, Data, DateTime, Effect, Option, Random, Schedule, Schema } from "effect";
+import { Cause, Data, DateTime, Effect, HashSet, Option, Random, Schedule, Schema } from "effect";
 import * as P from "effect/Predicate";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { BatchId, ContentHash, DocumentId, GcsBucket, GcsUri, Namespace } from "../Domain/Identity.ts";
@@ -70,10 +70,16 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       const storage = yield* StorageService;
       const ingestion = yield* LinkIngestionService;
       const orchestrator = yield* WorkflowOrchestrator;
-      const links = yield* ingestion.getByIds(request.value.linkIds);
-      if (links.length === 0) {
+      const requestedIds = request.value.linkIds;
+      const links = yield* ingestion.getByIds(requestedIds);
+      const foundIds = HashSet.fromIterable(links.map((link) => link.id));
+      const missingIds = requestedIds.filter((id) => !HashSet.has(foundIds, id));
+      if (missingIds.length > 0) {
         return yield* HttpServerResponse.json(
-          { error: "VALIDATION_ERROR", message: "No valid link IDs provided" },
+          {
+            error: "VALIDATION_ERROR",
+            message: `Unknown or missing link IDs: ${missingIds.join(", ")}`,
+          },
           { status: 400 }
         );
       }

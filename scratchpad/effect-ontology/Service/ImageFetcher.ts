@@ -10,7 +10,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
-import { Context, Duration, Effect, Layer, Schedule } from "effect";
+import { Context, Duration, Effect, Layer, Schedule, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -37,6 +37,23 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageFetcher");
  * Default fetch timeout in milliseconds
  */
 const DEFAULT_TIMEOUT_MS = 30_000;
+
+const isBlockedImageHost = (hostname: string): boolean => {
+  const host = hostname.toLowerCase();
+  if (host === "localhost" || host === "0.0.0.0" || host === "::1" || host.endsWith(".local")) {
+    return true;
+  }
+  if (
+    /^(10\.|127\.|192\.168\.|169\.254\.)/.test(host) ||
+    /^172\.(1[6-9]|2\d|3[01])\./.test(host) ||
+    host.startsWith("fc") ||
+    host.startsWith("fd") ||
+    host.startsWith("fe80:")
+  ) {
+    return true;
+  }
+  return false;
+};
 
 /**
  * Default maximum image size in bytes (10 MB)
@@ -216,6 +233,22 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
         const maxSizeBytes = options.maxSizeBytes ?? DEFAULT_MAX_SIZE_BYTES;
         const allowedTypes = options.allowedTypes ?? ALLOWED_CONTENT_TYPES;
 
+        const parsedUrl = yield* Effect.try({
+          try: () => new URL(candidate.sourceUrl),
+          catch: (cause) =>
+            ImageFetchError.fromUnknown({
+              message: "Invalid image URL",
+              url: candidate.sourceUrl,
+              cause: O.some(cause),
+            }),
+        });
+        if (isBlockedImageHost(parsedUrl.hostname)) {
+          return yield* ImageFetchError.fromUnknown({
+            message: "Refusing to fetch image from a private or link-local network address",
+            url: candidate.sourceUrl,
+          });
+        }
+
         const request = HttpClientRequest.get(candidate.sourceUrl).pipe(
           HttpClientRequest.setHeaders({
             Accept: "image/*",
@@ -296,18 +329,39 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           }
         }
 
-        // Read response body
-        const arrayBuffer = yield* response.arrayBuffer.pipe(
+        const chunks = yield* Stream.runFoldEffect(
+          response.stream,
+          (): Array<Uint8Array> => [],
+          (acc, chunk) => {
+            const nextSize = acc.reduce((size, part) => size + part.length, 0) + chunk.length;
+            if (nextSize > maxSizeBytes) {
+              return Effect.fail(
+                ImageTooLargeError.fromUnknown({
+                  url: candidate.sourceUrl,
+                  sizeBytes: NonNegativeInt.make(nextSize),
+                  maxBytes: NonNegativeInt.make(maxSizeBytes),
+                })
+              );
+            }
+            return Effect.succeed(A.append(acc, chunk));
+          }
+        ).pipe(
           Effect.mapError((error) =>
-            ImageFetchError.fromUnknown({
-              message: `Failed to read image body: ${error}`,
-              url: candidate.sourceUrl,
-              cause: O.some(error),
-            })
+            ImageTooLargeError.is(error)
+              ? error
+              : ImageFetchError.fromUnknown({
+                  message: `Failed to read image body: ${error}`,
+                  url: candidate.sourceUrl,
+                  cause: O.some(error),
+                })
           )
         );
-
-        const bytes = new Uint8Array(arrayBuffer);
+        const bytes = new Uint8Array(chunks.reduce((size, part) => size + part.length, 0));
+        let offset = 0;
+        for (const chunk of chunks) {
+          bytes.set(chunk, offset);
+          offset += chunk.length;
+        }
 
         // Validate actual size
         if (bytes.length > maxSizeBytes) {

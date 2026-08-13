@@ -102,8 +102,19 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
       /**
        * Get canonical entity by IRI
        */
-      const getCanonicalEntityByIri = Effect.fn("getCanonicalEntityByIri")(function* (iri: string) {
-        const [result] = yield* drizzle.select().from(canonicalEntities).where(eq(canonicalEntities.iri, iri)).limit(1);
+      const getCanonicalEntityByIri = Effect.fn("getCanonicalEntityByIri")(function* (
+        iri: string,
+        ontologyId?: string
+      ) {
+        const conditions = [eq(canonicalEntities.iri, iri)];
+        if (P.isNotUndefined(ontologyId)) {
+          conditions.push(eq(canonicalEntities.ontologyId, ontologyId));
+        }
+        const [result] = yield* drizzle
+          .select()
+          .from(canonicalEntities)
+          .where(and(...conditions))
+          .limit(1);
         return Option.fromNullishOr(result);
       });
 

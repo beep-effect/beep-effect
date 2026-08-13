@@ -109,7 +109,7 @@ export const articles = pgTable(
   "articles",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    uri: text("uri").unique().notNull(),
+    uri: text("uri").notNull(),
     ontologyId: text("ontology_id").notNull(),
     sourceName: text("source_name"),
     headline: text("headline"),
@@ -121,6 +121,7 @@ export const articles = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
   (table) => [
+    uniqueIndex("articles_ontology_uri_unique").on(table.ontologyId, table.uri),
     index("idx_articles_uri").on(table.uri),
     index("idx_articles_source").on(table.sourceName),
     index("idx_articles_published").on(table.publishedAt),
@@ -301,7 +302,7 @@ export const canonicalEntities = pgTable(
     ontologyId: text("ontology_id").notNull().default("default"),
 
     // Identity
-    iri: text("iri").unique().notNull(),
+    iri: text("iri").notNull(),
     canonicalMention: text("canonical_mention").notNull(),
 
     // Types (denormalized for fast filtering)
@@ -321,6 +322,7 @@ export const canonicalEntities = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
   },
   (table) => [
+    uniqueIndex("canonical_entities_ontology_iri_unique").on(table.ontologyId, table.iri),
     index("idx_canonical_entities_iri").on(table.iri),
     index("idx_canonical_entities_ontology_id").on(table.ontologyId),
     index("idx_canonical_entities_ontology_iri").on(table.ontologyId, table.iri),

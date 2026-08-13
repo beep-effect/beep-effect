@@ -433,17 +433,14 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
      */
     const list = Effect.fn("list")(function* (filter: IngestedLinkFilter = {}) {
       let query = drizzle.select().from(ingestedLinks);
-      if (P.isNotUndefined(filter.ontologyId)) {
-        query = query.where(eq(ingestedLinks.ontologyId, filter.ontologyId)) as typeof query;
-      }
-      if (P.isNotUndefined(filter.status)) {
-        query = query.where(eq(ingestedLinks.status, filter.status)) as typeof query;
-      }
-      if (P.isNotUndefined(filter.sourceType)) {
-        query = query.where(eq(ingestedLinks.sourceType, filter.sourceType)) as typeof query;
-      }
-      if (P.isNotUndefined(filter.organization)) {
-        query = query.where(eq(ingestedLinks.organization, filter.organization)) as typeof query;
+      const conditions = [
+        ...(P.isNotUndefined(filter.ontologyId) ? [eq(ingestedLinks.ontologyId, filter.ontologyId)] : []),
+        ...(P.isNotUndefined(filter.status) ? [eq(ingestedLinks.status, filter.status)] : []),
+        ...(P.isNotUndefined(filter.sourceType) ? [eq(ingestedLinks.sourceType, filter.sourceType)] : []),
+        ...(P.isNotUndefined(filter.organization) ? [eq(ingestedLinks.organization, filter.organization)] : []),
+      ];
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as typeof query;
       }
       if (P.isNotUndefined(filter.limit)) {
         query = query.limit(filter.limit) as typeof query;

@@ -296,7 +296,7 @@ const main = Effect.scoped(
   Effect.gen(function* () {
     const shutdownContext = yield* Layer.build(ShutdownService.Default);
     return yield* server.pipe(Effect.provide(shutdownContext));
-  }).pipe(Effect.catchCause(Effect.logError))
+  }).pipe(Effect.tapCause(Effect.logError))
 );
 
 BunRuntime.runMain(main);

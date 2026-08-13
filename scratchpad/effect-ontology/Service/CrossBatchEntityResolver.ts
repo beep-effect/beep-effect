@@ -265,7 +265,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
 
           // Insert alias for this mention
           // Note: We need to look up the canonical entity ID from IRI
-          const canonicalOpt = yield* registry.getCanonicalEntityByIri(merged.canonicalIri);
+          const canonicalOpt = yield* registry.getCanonicalEntityByIri(merged.canonicalIri, ontologyId);
           if (Option.isSome(canonicalOpt)) {
             const canonical = canonicalOpt.value;
             // We don't have the original entity mention here - this needs refactoring
@@ -295,7 +295,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
           // Insert blocking tokens
           const tokens = tokenize(entity.mention);
           // Need to get the ID of the just-inserted entity
-          const insertedOpt = yield* registry.getCanonicalEntityByIri(iri);
+          const insertedOpt = yield* registry.getCanonicalEntityByIri(iri, ontologyId);
           if (Option.isSome(insertedOpt)) {
             yield* registry.insertBlockingTokens(ontologyId, insertedOpt.value.id, tokens);
           }

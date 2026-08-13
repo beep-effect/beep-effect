@@ -593,4 +593,14 @@ ALTER TABLE ingested_links DROP CONSTRAINT IF EXISTS ingested_links_status_check
 ALTER TABLE ingested_links ADD CONSTRAINT ingested_links_status_check
   CHECK (status IN ('pending', 'enriched', 'processing', 'processed', 'failed', 'skipped'));`,
   },
+  {
+    version: 10,
+    name: "010_ontology_scoped_uniques",
+    sql: `-- Scope article URI and canonical-entity IRI uniqueness by ontology.
+ALTER TABLE articles DROP CONSTRAINT IF EXISTS articles_uri_key;
+ALTER TABLE articles ADD CONSTRAINT articles_ontology_uri_unique UNIQUE (ontology_id, uri);
+
+ALTER TABLE canonical_entities DROP CONSTRAINT IF EXISTS canonical_entities_iri_key;
+ALTER TABLE canonical_entities ADD CONSTRAINT canonical_entities_ontology_iri_unique UNIQUE (ontology_id, iri);`,
+  },
 ];

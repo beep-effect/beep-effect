@@ -25,7 +25,13 @@ const PUBLIC_PATHS = ["/", "/health", "/health/live", "/health/ready", "/health/
 /**
  * Check if a path is public (exempt from auth)
  */
-const isPublicPath = (path: string): boolean => A.contains(PUBLIC_PATHS, path) || Str.startsWith("/health/")(path);
+const isEventStreamPath = (path: string): boolean => {
+  const pathname = Option.getOrElse(A.head(Str.split(path, "?")), () => path);
+  return Str.includes("/events/stream")(pathname);
+};
+
+const isPublicPath = (path: string): boolean =>
+  A.contains(PUBLIC_PATHS, path) || Str.startsWith("/health/")(path) || isEventStreamPath(path);
 
 /**
  * Parse API keys from comma-separated string

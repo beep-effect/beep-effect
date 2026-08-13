@@ -116,6 +116,10 @@ export class EventBroadcastHub extends Context.Service<EventBroadcastHub, EventB
 /**
  * Configuration for Cloud Pub/Sub event subscription
  */
+class PubSubSubscriptionError extends Schema.TaggedError<PubSubSubscriptionError>()("PubSubSubscriptionError", {
+  message: Schema.String,
+}) {}
+
 export const EventBroadcastConfig = Config.all({
   projectId: Config.string("PUBSUB_PROJECT_ID").pipe(Config.withDefault("")),
   eventsTopicId: Config.string("PUBSUB_EVENTS_TOPIC").pipe(Config.withDefault("ontology-events")),
@@ -199,8 +203,19 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
     });
   });
 
-  // Subscribe to Cloud Pub/Sub and distribute to local WebSocket clients
-  const subscription = pubsub.subscription(config.eventsSubscriptionId);
+  // One subscription per replica so every instance receives every event.
+  const nowMillis = yield* Clock.currentTimeMillis;
+  const instanceSubscriptionId = `${config.eventsSubscriptionId}-${process.pid}-${nowMillis.toString(36)}`;
+  const subscription = yield* Effect.tryPromise({
+    try: () =>
+      pubsub.topic(config.eventsTopicId).createSubscription(instanceSubscriptionId, {
+        expirationPolicy: { ttl: { seconds: 86_400 } },
+      }),
+    catch: (cause) => PubSubSubscriptionError.make({ message: String(cause) }),
+  }).pipe(
+    Effect.map(([created]) => created),
+    Effect.orElseSucceed(() => pubsub.subscription(instanceSubscriptionId))
+  );
 
   subscription.on("message", (message) => {
     const data = decodePubSubEventPayload(message.data.toString());
@@ -234,7 +249,7 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
 
   yield* Effect.logInfo("EventBroadcastHub started (Cloud Pub/Sub mode)", {
     projectId: config.projectId,
-    subscriptionId: config.eventsSubscriptionId,
+    subscriptionId: instanceSubscriptionId,
   });
 
   // Cleanup on shutdown

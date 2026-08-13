@@ -60,7 +60,6 @@ import { HealthCheckService } from "./HealthCheck.ts";
 import { makeAuthMiddleware, makeLoggingMiddleware, makeShutdownMiddleware } from "./HttpMiddleware.ts";
 import { ImageRouter } from "./ImageRouter.ts";
 import { InferenceRouter } from "./InferenceRouter.ts";
-import { JobPushRouter } from "./JobPushHandler.ts";
 import { LinkIngestionRouter } from "./LinkIngestionRouter.ts";
 
 type BatchWorkflowPayloadType = BatchWorkflowPayload;
@@ -293,7 +292,20 @@ export const TimelineRouter = HttpRouter.addAll([
         })
       );
 
-      const validClaims = A.getSomes(claimsWithArticles);
+      const validClaims = A.filter(A.getSomes(claimsWithArticles), (claim) => {
+        const claimedAt = DateTime.toEpochMillis(claim.transactionTime.assertedAt);
+        if (O.isSome(queryParams.asOf) && claimedAt > DateTime.toEpochMillis(queryParams.asOf.value)) {
+          return false;
+        }
+        if (O.isSome(queryParams.range)) {
+          const from = DateTime.toEpochMillis(queryParams.range.value.from);
+          const to = DateTime.toEpochMillis(queryParams.range.value.to);
+          if (claimedAt < from || claimedAt > to) {
+            return false;
+          }
+        }
+        return true;
+      });
 
       // Get corrections (simplified - would need correction repository)
       const correctionsList: Array<CorrectionSummary> = [];
@@ -468,7 +480,6 @@ export const SearchRouter = HttpRouter.addAll([
           const claims = yield* claimRepo.getClaims({
             ...(O.isSome(request.rank) ? { rank: request.rank.value } : {}),
             includeDeprecated: false,
-            limit: 1000,
           });
 
           const queryLower = Str.toLowerCase(request.query);
@@ -698,11 +709,10 @@ export const SearchRouter = HttpRouter.addAll([
           const limit = request.limit;
           const offset = request.offset;
 
-          const sourceName = O.flatMap(request.sources, A.head);
+          const sourceSet = O.map(request.sources, HashSet.fromIterable);
 
           // Get articles with filters
           const articles = yield* articleRepo.getArticles({
-            ...(O.isSome(sourceName) ? { sourceName: sourceName.value } : {}),
             ...(O.isSome(request.dateRange)
               ? {
                   publishedAfter: DateTime.toDateUtc(request.dateRange.value.from),
@@ -712,13 +722,20 @@ export const SearchRouter = HttpRouter.addAll([
           });
 
           const queryLower = O.map(request.query, Str.toLowerCase);
-          const filtered = O.match(queryLower, {
+          const textFiltered = O.match(queryLower, {
             onNone: () => articles,
             onSome: (query) =>
               A.filter(articles, (article) =>
                 O.exists(O.fromNullishOr(article.headline), (headline) =>
                   Str.includes(query)(Str.toLowerCase(headline))
                 )
+              ),
+          });
+          const filtered = O.match(sourceSet, {
+            onNone: () => textFiltered,
+            onSome: (sources) =>
+              A.filter(textFiltered, (article) =>
+                HashSet.has(sources, P.isNotNull(article.sourceName) ? article.sourceName : "")
               ),
           });
           const hasMore = filtered.length > offset + limit;
@@ -741,9 +758,7 @@ export const SearchRouter = HttpRouter.addAll([
             })
           );
 
-          const total = yield* articleRepo.countArticles({
-            ...(O.isSome(sourceName) ? { sourceName: sourceName.value } : {}),
-          });
+          const total = NonNegativeInt.make(filtered.length);
 
           return yield* HttpServerResponse.schemaJson(ArticleSearchResponse)({
             articles: results,
@@ -886,7 +901,6 @@ export const ApiRouter = Layer.mergeAll(
   OntologyRouter,
   InferenceRouter,
   LinkIngestionRouter,
-  JobPushRouter,
   EventBroadcastRouter,
   AssetRouter,
   ImageRouter,
@@ -899,7 +913,6 @@ export const ApiRouterWithoutRepositories = Layer.mergeAll(
   OntologyRouter,
   InferenceRouter,
   LinkIngestionRouter,
-  JobPushRouter,
   EventBroadcastRouter,
   AssetRouter,
   ImageRouter,

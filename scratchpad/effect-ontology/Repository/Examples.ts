@@ -327,22 +327,19 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
         const result = yield* sql`
           SELECT
             COUNT(*)::int as total,
-            COUNT(CASE WHEN is_negative THEN 1 END)::int as negative_count,
+            COUNT(*) FILTER (WHERE is_negative)::int as negative_count,
             AVG(success_rate) as avg_success_rate,
-            jsonb_object_agg(
-              example_type,
-              type_count
+            (
+              SELECT jsonb_object_agg(example_type, type_count)
+              FROM (
+                SELECT example_type, COUNT(*)::int as type_count
+                FROM llm_examples
+                WHERE ontology_id = ${ontologyId} AND is_active = true
+                GROUP BY example_type
+              ) by_type_rows
             ) as by_type
-          FROM (
-            SELECT
-              example_type,
-              COUNT(*)::int as type_count,
-              is_negative,
-              success_rate
-            FROM llm_examples
-            WHERE ontology_id = ${ontologyId} AND is_active = true
-            GROUP BY example_type, is_negative, success_rate
-          ) sub
+          FROM llm_examples
+          WHERE ontology_id = ${ontologyId} AND is_active = true
         `;
         const row = result[0] as {
           total: number;

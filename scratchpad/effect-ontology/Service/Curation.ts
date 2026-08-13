@@ -281,7 +281,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       now: DateTime.Utc
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
       // Find canonical entity by IRI
-      const canonicalOpt = yield* entityRegistry.getCanonicalEntityByIri(action.canonicalEntity);
+      const canonicalOpt = yield* entityRegistry.getCanonicalEntityByIri(action.canonicalEntity, action.ontologyId);
       if (O.isNone(canonicalOpt)) {
         yield* Effect.logWarning("Canonical entity not found for alias", {
           iri: action.canonicalEntity,
