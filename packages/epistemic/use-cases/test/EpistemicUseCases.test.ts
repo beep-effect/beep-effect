@@ -1,9 +1,16 @@
-import { CandidateClaim, ClaimGateResult, ClaimLifecycle, ClaimProjectionView } from "@beep/epistemic-domain";
+import { CandidateClaim, ClaimGateResult, ClaimLifecycle, ClaimProjectionView, Evidence } from "@beep/epistemic-domain";
+import * as ClaimGateUC from "@beep/epistemic-use-cases/ClaimGate";
 import * as ClaimLifecycleUC from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { ClaimProjection, projectClaims } from "@beep/epistemic-use-cases/ClaimProjection";
+import { makeNamedNode } from "@beep/semantic-web/rdf";
+import {
+  ShaclValidationResult,
+  ShaclValidationService,
+  ShaclValidationViolation,
+} from "@beep/semantic-web/services/shacl-validation";
 import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -19,11 +26,82 @@ const makeCandidate = (id: number, fixtureKey: string, lifecycle: string): Candi
     snapshot: {},
   });
 
+const evidence: Evidence = S.decodeUnknownSync(Evidence)({
+  ...baseEntityFixtureInput("EpistemicEvidence", 10),
+  artifactFixtureKey: "artifact.office-action",
+  spanFixtureKey: "span.claim-1",
+  span: { startChar: 0, endChar: 14, quote: "a claimed fact", confidence: 0.92 },
+});
+
 const candidate = makeCandidate(1, "claim.patentability", "candidate");
 const alreadyAdmitted = makeCandidate(4, "claim.alreadyAdmitted", "admitted");
 const admittedVerdict = S.decodeSync(ClaimGateResult)({ verdict: "admitted" });
 
+// Stubbed port: conforms exactly when the projected dataset carries evidence
+// quads beyond the claim's type quad, mirroring the bounded engine's minCount
+// semantics. Integration over the real bounded validator lives in
+// @beep/epistemic-server's BoundedShaclValidator tests.
+const StubShaclValidation = Layer.succeed(
+  ShaclValidationService,
+  ShaclValidationService.of({
+    validate: Effect.fn((request) =>
+      Effect.succeed(
+        request.dataset.quads.length > 1
+          ? ShaclValidationResult.make({ conforms: true, violations: [], truncated: false })
+          : ShaclValidationResult.make({
+              conforms: false,
+              truncated: false,
+              violations: [
+                ShaclValidationViolation.make({
+                  focusNode: "https://beep.dev/epistemic/claim/claim.patentability",
+                  path: makeNamedNode("https://beep.dev/epistemic/hasEvidenceQuote"),
+                  message: "Expected at least 1 evidence quote.",
+                  severity: "violation",
+                }),
+              ],
+            })
+      )
+    ),
+  })
+);
+
 describe("@beep/epistemic-use-cases", () => {
+  // Boots only the stubbed SHACL port — no other slice, no live capability.
+  it.layer(StubShaclValidation)("claim gate over the stubbed SHACL port", (it) => {
+    it.effect(
+      "admits a well-formed claim and advances candidate -> shape_valid",
+      Effect.fnUntraced(function* () {
+        const shacl = yield* ShaclValidationService;
+        const gate = ClaimGateUC.makeClaimGate(shacl);
+
+        const verdict = yield* gate.evaluate(candidate, [evidence]);
+        expect(verdict.verdict).toBe("admitted");
+
+        const advanced = yield* ClaimLifecycleUC.makeClaimTransition().advance(candidate, verdict);
+        expect(advanced.lifecycle).toBe("shape_valid");
+        expect(advanced.fixtureKey).toBe(candidate.fixtureKey);
+      })
+    );
+
+    it.effect(
+      "rejects a claim with no evidence span and does not advance",
+      Effect.fnUntraced(function* () {
+        const shacl = yield* ShaclValidationService;
+        const gate = ClaimGateUC.makeClaimGate(shacl);
+
+        const verdict = yield* gate.evaluate(candidate, []);
+        expect(verdict.verdict).toBe("rejected");
+        if (ClaimGateResult.guards.rejected(verdict)) {
+          expect(verdict.violations.length).toBeGreaterThan(0);
+          expect(verdict.violations[0].severity).toBe("violation");
+        }
+
+        const blocked = yield* ClaimLifecycleUC.makeClaimTransition().advance(candidate, verdict);
+        expect(blocked.lifecycle).toBe("candidate");
+      })
+    );
+  });
+
   it.effect(
     "fails an illegal advance from a non-candidate state with ClaimInvalidTransition",
     Effect.fnUntraced(function* () {
