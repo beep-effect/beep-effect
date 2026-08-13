@@ -4,10 +4,10 @@ Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
-Outcome: `packages/foundation/modeling/skill-contract` exists (schemas-only),
-the `qa-inventory/v1` judge gate runs as a `SkillContract` instance with
-behavior parity, and the contract's SKILL.md projection renders via `@beep/md`
-behind a re-extraction equality gate.
+Outcome: `@beep/skill-contract` exists as a new schemas-only package under
+`packages/foundation/modeling/`, the `qa-inventory/v1` judge gate runs as a
+`SkillContract` instance with behavior parity, and the contract's SKILL.md
+projection renders via `@beep/md` behind a re-extraction equality gate.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
@@ -24,7 +24,8 @@ packet prose when they conflict.
 
 Scope:
 
-- In: `packages/foundation/modeling/skill-contract/**` (new);
+- In: the new `@beep/skill-contract` package directory it creates under
+  `packages/foundation/modeling/`;
   `packages/tooling/tool/cli/src/commands/Qa/**` (judge-gate retrofit only);
   packet files under `goals/skill-contract-kernel/`.
 - Out: bounded-recovery service implementation; DSSE signing; yeet lanes;

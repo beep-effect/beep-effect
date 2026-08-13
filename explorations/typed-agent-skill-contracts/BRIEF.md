@@ -32,10 +32,10 @@ provisional order, per DECISIONS §spine track) are separate goal packets, not t
 
 ## Solution sketch
 
-A new **`packages/foundation/modeling/skill-contract`** package (`@beep/skill-contract`,
-schemas-only; sibling to `@beep/provenance` — home and name locked in DECISIONS §kernel home /
-§kernel name after doctrine review; `foundation/capability` fails its ≥2-importer gate at
-birth) holding four schema families:
+A new **`@beep/skill-contract`** package (schemas-only, to be created under
+`packages/foundation/modeling/`; sibling to `@beep/provenance` — home and name locked in
+DECISIONS §kernel home / §kernel name after doctrine review; `foundation/capability` fails its
+≥2-importer gate at birth) holding four schema families:
 
 1. **`SkillContract` root** — the aggregate binding a skill's promise: identity (`$I`),
    input/output schema references, the gate registry, recovery policy, and receipt types.

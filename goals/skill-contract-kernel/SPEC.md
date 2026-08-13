@@ -2,8 +2,8 @@
 
 ## Objective
 
-A new schemas-only foundation package, `packages/foundation/modeling/skill-contract`
-(`@beep/skill-contract`), defines the typed agent-work contract kernel — `SkillContract` root,
+A new schemas-only foundation package, `@beep/skill-contract` (to be created under
+`packages/foundation/modeling/`), defines the typed agent-work contract kernel — `SkillContract` root,
 fail-closed `Gate` registry with audit-record verdict values, the four-rung evidence-ladder
 ADT with its terminal union, and in-toto-aligned unsigned receipts — and two proofs make it
 real: the `qa-inventory/v1` judge gate runs as a `SkillContract` instance with behavior
@@ -42,8 +42,8 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- `packages/foundation/modeling/skill-contract/**` — new package (schemas, opaque
-  constructors, projection, tests, README with consumer list).
+- The new `@beep/skill-contract` package directory under `packages/foundation/modeling/`
+  (schemas, opaque constructors, projection, tests, README with consumer list).
 - `packages/tooling/tool/cli/src/commands/Qa/**` — judge-gate retrofit (JudgeCheck rules as
   typed gates; behavior parity required).
 - `goals/skill-contract-kernel/**` — packet upkeep.
@@ -79,9 +79,9 @@ Seeded from the brief's rabbit holes and the grill round
 
 ## Acceptance Criteria
 
-- [ ] `@beep/skill-contract` exists at `packages/foundation/modeling/skill-contract` with the
-      four schema families (`SkillContract`, `Gate`+verdicts, ladder ADT, receipts), package
-      README naming consumers, and passing package tests.
+- [ ] `@beep/skill-contract` exists as a new package under `packages/foundation/modeling/`
+      with the four schema families (`SkillContract`, `Gate`+verdicts, ladder ADT, receipts),
+      package README naming consumers, and passing package tests.
 - [ ] The `qa-inventory/v1` judge gate is expressed as a `SkillContract` instance; existing
       judge behavior is preserved (parity tests green; `beep qa judge-lint` semantics
       unchanged).

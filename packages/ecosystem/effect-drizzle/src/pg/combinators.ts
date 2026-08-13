@@ -479,7 +479,6 @@ export const unsafeCustom =
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function numeric(): <I extends Field.Input>(
   input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">
 ) => Field.Patched<I, { readonly column: PgColumn.Numeric<undefined, undefined> }>;
@@ -1089,7 +1088,6 @@ const everyArrayElement = (value: unknown, depth: number, accepts: (value: unkno
  * @category combinators
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function array<const Element extends Field.Input>(
   element: Element & Field.ValidateArrayElement<Element>
 ): <I extends Field.Input>(
