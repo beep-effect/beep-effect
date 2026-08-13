@@ -14,7 +14,11 @@ import {
   knowledgeSemanticDeltaFailure,
   resolveKnowledgeProbePolicy,
 } from "@beep/repo-cli/commands/Knowledge";
-import { makeKnowledgeArchiveOracle, renderKnowledgeSemanticDeltaHumanReport } from "@beep/repo-cli/test/Knowledge";
+import {
+  KnowledgeCommandSurface,
+  makeKnowledgeArchiveOracle,
+  renderKnowledgeSemanticDeltaHumanReport,
+} from "@beep/repo-cli/test/Knowledge";
 import { findRepoRoot } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -37,12 +41,31 @@ import type {
 
 const textEncoder = new TextEncoder();
 const DEFAULT_INDEX = "# Goals Index\n";
+const DEFAULT_COMMAND_TREE = JSON.stringify({
+  name: "beep-cli",
+  alias: null,
+  children: [
+    {
+      name: "goals",
+      alias: null,
+      children: [{ name: "doctor", alias: null, children: [] }],
+    },
+  ],
+});
+const COMMAND_TREE_WITHOUT_DOCTOR = JSON.stringify({
+  name: "beep-cli",
+  alias: null,
+  children: [{ name: "goals", alias: null, children: [] }],
+});
 const testLayer = KnowledgeServiceLive.pipe(
   Layer.provideMerge(NodeServices.layer),
   Layer.provideMerge(NodeCrypto.layer)
 );
 
 type OracleOptions = {
+  readonly commandTree?: string;
+  readonly commandProbe?: typeof probeCommand;
+  readonly currentCommandTree?: string;
   readonly indexExpected?: string;
   readonly indexArchived?: string;
   readonly modes?: Readonly<Record<string, string>>;
@@ -68,6 +91,13 @@ const probeCommand = (words: ReadonlyArray<string>) => {
     : KnowledgeCommandUnknown.make({ canonicalPath: ["goals", second.value] });
 };
 
+const probeCommandWithoutDoctor = (words: ReadonlyArray<string>) => {
+  const second = A.get(words, 1);
+  return O.isSome(second) && Str.Equivalence(second.value, "doctor")
+    ? KnowledgeCommandUnknown.make({ canonicalPath: ["goals", "doctor"] })
+    : probeCommand(words);
+};
+
 const makeOracle = (
   sourceFiles: Readonly<Record<string, string>>,
   options: OracleOptions = {}
@@ -81,6 +111,10 @@ const makeOracle = (
     })
   );
   return {
+    commandTree: KnowledgeCommandSurface.decodeCurrentCommandTree(options.commandTree ?? DEFAULT_COMMAND_TREE),
+    currentCommandTree: KnowledgeCommandSurface.decodeCurrentCommandTree(
+      options.currentCommandTree ?? DEFAULT_COMMAND_TREE
+    ),
     trackedEntries: entries,
     readBytes: (repoPath) =>
       O.match(R.get(files, repoPath), {
@@ -88,7 +122,7 @@ const makeOracle = (
           Effect.fail(KnowledgeOperationalError.make({ message: `Fixture is missing tracked bytes for ${repoPath}.` })),
         onSome: (text) => Effect.succeed(textEncoder.encode(text)),
       }),
-    probeCommands: (commands) => Effect.succeed(A.map(commands, probeCommand)),
+    probeCommands: (commands) => Effect.succeed(A.map(commands, options.commandProbe ?? probeCommand)),
     indexBytes: Effect.succeed(
       KnowledgeIndexBytes.make({
         expected: textEncoder.encode(options.indexExpected ?? DEFAULT_INDEX),
@@ -305,6 +339,89 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
       expect(introducedIds(report)).toEqual([
         yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctro"),
       ]);
+    })
+  );
+
+  it.effect("an unchanged documented command removed from the current surface is introduced", () =>
+    Effect.gen(function* () {
+      const guide = { "docs/guide.md": "Run `bun run beep goals doctor`.\n" };
+      const report = yield* scan(
+        fixture(guide, guide, {
+          head: {
+            commandTree: COMMAND_TREE_WITHOUT_DOCTOR,
+            currentCommandTree: COMMAND_TREE_WITHOUT_DOCTOR,
+            commandProbe: probeCommandWithoutDoctor,
+          },
+        })
+      );
+
+      assert.deepEqual(introducedIds(report), [
+        yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctor"),
+      ]);
+      assert.deepEqual(report.resolved, []);
+      assert.deepEqual(report.unchanged, []);
+    })
+  );
+
+  it.effect("a pre-existing documented typo remains unchanged when a real command is removed", () =>
+    Effect.gen(function* () {
+      const guide = { "docs/guide.md": "Run `bun run beep goals doctro`.\n" };
+      const report = yield* scan(
+        fixture(guide, guide, {
+          head: {
+            commandTree: COMMAND_TREE_WITHOUT_DOCTOR,
+            currentCommandTree: COMMAND_TREE_WITHOUT_DOCTOR,
+            commandProbe: probeCommandWithoutDoctor,
+          },
+        })
+      );
+
+      assert.deepEqual(report.introduced, []);
+      assert.deepEqual(unchangedIds(report), [
+        yield* expectedId("unknown-beep-command", "base:docs/guide.md", "beep-command:goals doctro"),
+      ]);
+    })
+  );
+
+  it.effect("coordinated command and documentation retirement does not invent a HEAD finding", () =>
+    Effect.gen(function* () {
+      const report = yield* scan(
+        fixture(
+          { "docs/guide.md": "Run `bun run beep goals doctor`.\n" },
+          { "docs/guide.md": "The retired command is no longer documented.\n" },
+          {
+            head: {
+              commandTree: COMMAND_TREE_WITHOUT_DOCTOR,
+              currentCommandTree: COMMAND_TREE_WITHOUT_DOCTOR,
+              commandProbe: probeCommandWithoutDoctor,
+            },
+          }
+        )
+      );
+
+      assert.deepEqual(report.introduced, []);
+      assert.deepEqual(report.resolved, []);
+      assert.deepEqual(report.unchanged, []);
+    })
+  );
+
+  it.effect("fails operationally when the HEAD static tree diverges from the current live tree", () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        scan(
+          fixture(
+            { "docs/guide.md": "Nothing cited.\n" },
+            { "docs/guide.md": "Nothing cited.\n" },
+            { head: { commandTree: COMMAND_TREE_WITHOUT_DOCTOR } }
+          )
+        )
+      );
+
+      assert.strictEqual(error._tag, "KnowledgeOperationalError");
+      assert.strictEqual(
+        error.message,
+        "Static command surface provenance does not match the current-checkout command tree."
+      );
     })
   );
 
@@ -811,6 +928,158 @@ describe("knowledge semantic-delta current-checkout probes", () => {
     return { archiveRoot, currentCheckoutRoot, oracle, scratchRoot } as const;
   });
 
+  it.effect("derives the current command surface statically with exact live structural parity", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const currentCheckoutRoot = yield* findRepoRoot();
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-command-surface-" });
+        const scratchRoot = path.join(tempRoot, "scratch");
+        const bunExecutable = yield* processSpawner
+          .string(ChildProcess.make("which", ["bun"], { extendEnv: true }))
+          .pipe(Effect.map(Str.trim));
+        const oracle = yield* makeKnowledgeArchiveOracle(
+          currentCheckoutRoot,
+          currentCheckoutRoot,
+          scratchRoot,
+          [],
+          bunExecutable
+        );
+        const [staticTree, liveTree] = yield* Effect.all([oracle.commandTree, oracle.currentCommandTree]);
+
+        assert.isTrue(KnowledgeCommandSurface.staticCommandNodeEquivalent(staticTree, liveTree));
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("fails closed without leaking hostile archive source through parser diagnostics", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-hostile-surface-" });
+        const rootModule = path.join(tempRoot, ROOT_MODULE_PATH);
+        const markerPath = path.join(tempRoot, "archive-surface-module-executed");
+        yield* fs.makeDirectory(path.dirname(rootModule), { recursive: true });
+        yield* fs.writeFileString(
+          rootModule,
+          [
+            'import { Command } from "effect/unstable/cli"',
+            `await Bun.write(${JSON.stringify(markerPath)}, "executed")`,
+            "const chooseArchiveCode = true",
+            'export const rootCommand = chooseArchiveCode ? Command.make("safe") : Command.make("evil\\u001B[31m\\u202E")',
+            "",
+          ].join("\n")
+        );
+
+        const error = yield* Effect.flip(KnowledgeCommandSurface.buildStaticCommandTree(tempRoot));
+
+        assert.strictEqual(error._tag, "KnowledgeOperationalError");
+        assert.include(error.message, "Failed to statically derive command surface provenance");
+        assert.notInclude(error.message, tempRoot);
+        assert.notInclude(error.message, "\u001B");
+        assert.notInclude(error.message, "\u202E");
+        assert.isFalse(yield* fs.exists(markerPath));
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("fails promptly on recursive command factories and recursive command lists", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-recursive-surface-" });
+        const factoryRoot = path.join(tempRoot, "factory", ROOT_MODULE_PATH);
+        const listRoot = path.join(tempRoot, "list", ROOT_MODULE_PATH);
+        yield* fs.makeDirectory(path.dirname(factoryRoot), { recursive: true });
+        yield* fs.makeDirectory(path.dirname(listRoot), { recursive: true });
+        yield* fs.writeFileString(
+          factoryRoot,
+          [
+            'import { Command } from "effect/unstable/cli"',
+            "const recursive = (name: string) => recursive(name)",
+            'export const rootCommand = recursive("beep-cli")',
+            "",
+          ].join("\n")
+        );
+        yield* fs.writeFileString(
+          listRoot,
+          [
+            'import { Command } from "effect/unstable/cli"',
+            "const commands = [...commands]",
+            'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands(commands))',
+            "",
+          ].join("\n")
+        );
+
+        const [factoryError, listError] = yield* Effect.all([
+          Effect.flip(KnowledgeCommandSurface.buildStaticCommandTree(path.join(tempRoot, "factory"))),
+          Effect.flip(KnowledgeCommandSurface.buildStaticCommandTree(path.join(tempRoot, "list"))),
+        ]);
+
+        assert.strictEqual(factoryError._tag, "KnowledgeOperationalError");
+        assert.include(factoryError.message, "factory declarations contain a cycle");
+        assert.strictEqual(listError._tag, "KnowledgeOperationalError");
+        assert.include(listError.message, "list declarations contain a cycle");
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("uses a scratch-owned empty env file instead of an archive-local dotenv file", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const processSpawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const repoRoot = yield* findRepoRoot();
+        const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-hostile-dotenv-" });
+        const currentCheckoutRoot = path.join(tempRoot, "current-checkout");
+        const archiveRoot = path.join(tempRoot, "archive-data");
+        const scratchRoot = path.join(tempRoot, "scratch");
+        const rootModule = path.join(currentCheckoutRoot, ROOT_MODULE_PATH);
+        const markerPath = path.join(tempRoot, "archive-dotenv-executed");
+        yield* fs.makeDirectory(path.dirname(rootModule), { recursive: true });
+        yield* fs.makeDirectory(archiveRoot, { recursive: true });
+        yield* fs.symlink(path.join(repoRoot, "node_modules"), path.join(currentCheckoutRoot, "node_modules"));
+        yield* fs.writeFileString(
+          rootModule,
+          [
+            'import { Command } from "effect/unstable/cli"',
+            `if (process.env.ARCHIVE_DOTENV_SENTINEL === "loaded") await Bun.write(${JSON.stringify(markerPath)}, "executed")`,
+            'const doctor = Command.make("doctor")',
+            'const goals = Command.make("goals").pipe(Command.withSubcommands([doctor]))',
+            'export const rootCommand = Command.make("beep-cli").pipe(Command.withSubcommands([goals]))',
+            "",
+          ].join("\n")
+        );
+        yield* fs.writeFileString(path.join(archiveRoot, ".env"), "ARCHIVE_DOTENV_SENTINEL=loaded\n");
+        const bunExecutable = yield* processSpawner
+          .string(ChildProcess.make("which", ["bun"], { extendEnv: true }))
+          .pipe(Effect.map(Str.trim));
+        const oracle = yield* makeKnowledgeArchiveOracle(
+          currentCheckoutRoot,
+          archiveRoot,
+          scratchRoot,
+          [],
+          bunExecutable
+        );
+
+        const tree = yield* oracle.currentCommandTree;
+        assert.deepEqual(KnowledgeCommandSurface.resolveStaticCommand(tree, ["goals", "doctor"]), [
+          "resolved",
+          ["goals", "doctor"],
+        ]);
+        assert.strictEqual(yield* fs.readFileString(path.join(scratchRoot, "empty.env")), "");
+        assert.isFalse(yield* fs.exists(markerPath));
+        assert.isFalse(yield* fs.exists(path.join(archiveRoot, "command-tree-probe.ts")));
+        assert.isFalse(yield* fs.exists(path.join(archiveRoot, "empty.env")));
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
   it.effect("treats archived command modules and runtime configuration as data, never code", () =>
     Effect.scoped(
       Effect.gen(function* () {
@@ -1119,6 +1388,22 @@ describe("knowledge semantic-delta base probe boot failure", () => {
 
       assert.strictEqual(report.probePolicy, "skipped-base-boot-failure");
       assert.deepEqual(report.introduced, []);
+    })
+  );
+
+  it.effect("an unsupported base command surface fails closed before runtime boot degradation", () =>
+    Effect.gen(function* () {
+      const base = {
+        ...unbootableProbeOracle(CLEAN_BASE),
+        commandTree: KnowledgeCommandSurface.decodeCurrentCommandTree("not-json"),
+      };
+      const error = yield* Effect.flip(
+        scan({ base, head: makeOracle(CLEAN_BASE), probePolicy: "enabled", renames: [] })
+      );
+
+      assert.strictEqual(error._tag, "KnowledgeOperationalError");
+      assert.include(error.message, "malformed output");
+      assert.notInclude(error.message, "DEFAULT_AI_METRICS_DATA_ROOT");
     })
   );
 
