@@ -136,7 +136,7 @@ const decodeSettingsSource = (
   content: string
 ): Effect.Effect<SettingsRaw, SettingsParseError | SettingsDecodeError> =>
   Effect.gen(function* () {
-    const parsed = yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(content).pipe(
+    const parsed = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(content).pipe(
       Effect.mapError((cause) => SettingsParseError.make({ path, cause }))
     );
     const raw = yield* S.decodeUnknownEffect(SettingsRaw)(parsed).pipe(
@@ -170,7 +170,7 @@ const mergeSettingsRaw = (base: SettingsRaw, override: SettingsRaw): SettingsRaw
   R.union(base, override, mergeSettingsValue);
 
 const materializeSettings = (raw: SettingsRaw): Effect.Effect<SettingsFile, SettingsDecodeError> =>
-  S.decodeUnknownEffect(SettingsFile)(raw).pipe(
+  S.decodeEffect(SettingsFile)(raw).pipe(
     Effect.mapError((cause) => SettingsDecodeError.make({ path: "<merged settings>", cause })),
     Effect.map((settings) =>
       SettingsFile.make({
@@ -366,6 +366,7 @@ const loadWithOptions = Effect.fn("Settings.load")(function* (cwd: string, optio
  * @category configuration
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const load = (
   cwd: string,
   options?: LoadOptions.Encoded

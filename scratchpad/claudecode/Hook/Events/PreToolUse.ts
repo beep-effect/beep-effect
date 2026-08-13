@@ -290,6 +290,7 @@ export const defer = (reason?: string): Output =>
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const allowWithUpdatedInput = (updatedInput: Readonly<Record<string, unknown>>, reason?: string): Output =>
   Output.make({
     hookSpecificOutput: O.some(

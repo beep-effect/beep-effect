@@ -75,6 +75,7 @@ export const matchValue = (pattern: string | RegExp): ((name: string) => boolean
  * @category predicates
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const testValue = (pattern: string | RegExp, name: string): boolean => matchValue(pattern)(name);
 
 /**
@@ -173,4 +174,5 @@ export const matchFileName = (pattern: string | RegExp): ((name: string) => bool
  * @category predicates
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const testTool = testValue;

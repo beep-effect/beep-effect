@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/gov-legal-data-driver-delivery",
   "lifecycle": "completed-retained",
-  "statusNote": "Terminal as descoped: P0 research specs and P1 @beep/ecfr 15-operation delivery are complete; P2-P5 are won't-do-until-product-pull deferrals with per-driver restart points in committed research.",
+  "statusNote": "Terminal as descoped: P0 research specs and P1 @beep/ecfr 15-operation delivery are complete; P2-P5 are won't-do-until-product-pull deferrals. Empty federal-register/dol/courtlistener scaffolds were deleted 2026-08-13; resume recreates each package via goals/honest-repo-signal/research/FOLLOW-UPS.md.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

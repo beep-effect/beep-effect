@@ -29,6 +29,7 @@ export const numberConstants = LiteralKit([
   "NEGATIVE_INFINITY",
 ]);
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeNumberMethod = (value: number, name: NumberMethod, args: Array<unknown>, node: AstNode): unknown => {
   const optNum = (index: number): number | undefined => {
     const arg = args[index];
@@ -55,6 +56,7 @@ export const invokeNumberMethod = (value: number, name: NumberMethod, args: Arra
   return boundedData(result, `Number.${name} result`);
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeNumberStatic = (name: NumberStatic, args: Array<unknown>, node: AstNode): unknown => {
   const value = args[0];
   return numberStatics.$match(name, {

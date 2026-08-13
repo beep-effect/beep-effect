@@ -35,7 +35,7 @@ describe("Testing.fixtures", () => {
         tool_name: "Bash",
         tool_input: { command: "ls" },
       });
-      const input = yield* S.decodeUnknownEffect(S.fromJsonString(Events.PreToolUse.Input))(json);
+      const input = yield* S.decodeEffect(S.fromJsonString(Events.PreToolUse.Input))(json);
       expect(input).toMatchObject({
         hook_event_name: "PreToolUse",
         tool_name: "Bash",
@@ -49,7 +49,7 @@ describe("Testing.fixtures", () => {
       const json = Testing.fixtures.UserPromptSubmit({
         prompt: "Hello, Claude",
       });
-      const input = yield* S.decodeUnknownEffect(S.fromJsonString(Events.UserPromptSubmit.Input))(json);
+      const input = yield* S.decodeEffect(S.fromJsonString(Events.UserPromptSubmit.Input))(json);
       expect(input.prompt).toBe("Hello, Claude");
     })
   );
@@ -60,7 +60,7 @@ describe("Testing.fixtures", () => {
         source: "resume",
         model: "claude-opus-4-6",
       });
-      const input = yield* S.decodeUnknownEffect(S.fromJsonString(Events.SessionStart.Input))(json);
+      const input = yield* S.decodeEffect(S.fromJsonString(Events.SessionStart.Input))(json);
       expect(input).toMatchObject({
         source: "resume",
         model: O.some("claude-opus-4-6"),
@@ -71,7 +71,7 @@ describe("Testing.fixtures", () => {
   it.effect("envelope fields are filled in with defaults", () =>
     Effect.gen(function* () {
       const json = Testing.fixtures.CwdChanged();
-      const input = yield* S.decodeUnknownEffect(S.fromJsonString(Events.CwdChanged.Input))(json);
+      const input = yield* S.decodeEffect(S.fromJsonString(Events.CwdChanged.Input))(json);
       expect(input).toMatchObject({
         session_id: "test-session",
         transcript_path: "/tmp/transcript.jsonl",
@@ -87,7 +87,7 @@ describe("Testing.fixtures", () => {
         file_path: "/other/path.ts",
         event: "unlink",
       });
-      const input = yield* S.decodeUnknownEffect(S.fromJsonString(Events.FileChanged.Input))(json);
+      const input = yield* S.decodeEffect(S.fromJsonString(Events.FileChanged.Input))(json);
       expect(input).toMatchObject({
         file_path: "/other/path.ts",
         event: "unlink",

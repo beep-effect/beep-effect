@@ -38,8 +38,10 @@ export const urlWritableProperties = LiteralKit(
   urlProperties.omitOptions(["origin"])
 )
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const uriArgument = (value: unknown, label: string): string => coerceToString(boundedData(value, label))
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeUriFunction = (
   ref: UriFunction,
   args: Array<unknown>,
@@ -73,9 +75,11 @@ export const invokeUriFunction = (
   )
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const urlArgument = (value: unknown, label: string): string =>
   CodeModeURL.is(value) ? value.url.href : uriArgument(value, label)
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeURLStatic = (name: UrlStatic, args: Array<unknown>, node: AstNode): unknown => {
   if (A.isArrayEmpty(args)) throw InterpreterRuntimeError.new(`URL.${name} requires a URL argument.`, node).as("TypeError")
   const input = urlArgument(args[0], `URL.${name} input`)
@@ -88,5 +92,6 @@ export const invokeURLStatic = (name: UrlStatic, args: Array<unknown>, node: Ast
   }
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeURLMethod = (value: CodeModeURL, _name: UrlMethod, _node: AstNode): string =>
   value.url.href;

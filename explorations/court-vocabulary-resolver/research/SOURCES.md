@@ -201,7 +201,7 @@ RESEARCH.md In-Repo Capability Inventory). Verified via `ls`/`rg` 2026-06-29.
 | `@beep/rdf` SKOS vocab terms | `packages/foundation/modeling/rdf/src/Vocab/Skos.ts` | reuse; **NET-NEW** `SKOS_NOTATION` predicate + LiteralKit→Concept emitter |
 | `@beep/semantic-web` RDF/JSON-LD emission | `packages/foundation/capability/semantic-web/src/` | reuse |
 | `@beep/law-practice-domain` IP entities | `packages/law-practice/domain/src/entities/` | extend — **NET-NEW** Court/Jurisdiction/Reporter value vocab |
-| `@beep/courtlistener` driver | `packages/drivers/courtlistener/src/` | extend — bare stub (`VERSION` only); court-ID lookup table lands here, API client is a different packet |
+| `@beep/courtlistener` driver | deleted 2026-08-13 | **recreate** via `goals/honest-repo-signal/research/FOLLOW-UPS.md` if a product pull needs the HTTP driver; court vocab stays in this packet / `@beep/data` |
 | `goals/ip-law-knowledge-graph` abstract Court/Jurisdiction NodeKind | `goals/ip-law-knowledge-graph/history/outputs/p1-schema-design.md` | reference — owns TBox nodes; this packet supplies the ABox/value layer |
 
 **Net-new (this packet owns), from bundle `netNew`:** courts-db canonical court
