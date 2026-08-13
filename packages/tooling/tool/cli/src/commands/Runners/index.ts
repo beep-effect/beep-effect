@@ -26,6 +26,12 @@ export { RunnersCommandError } from "./Runners.errors.ts";
  * @since 0.0.0
  */
 export {
+  AwsConsoleOutputResponse,
+  AwsCreateImageResponse,
+  AwsDescribeImagesResponse,
+  AwsGetParameterResponse,
+  AwsRunInstancesResponse,
+  AwsTag,
   BakeCheckReport,
   BakeCheckReportJson,
   BakeConfig,
@@ -52,3 +58,10 @@ export {
   runAwsForTesting,
   writeBakeReportForTesting,
 } from "./Runners.service.ts";
+/**
+ * Public runner service type exports.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type { RunnersServiceShape } from "./Runners.service.ts";

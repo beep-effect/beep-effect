@@ -49,6 +49,21 @@ const encodeTags = S.encodeUnknownEffect(S.fromJsonString(S.Array(AwsTag)));
 /**
  * Local repository inputs that form the immutable bake key.
  *
+ * **Example** (Construct local bake inputs)
+ *
+ * ```ts
+ * import { BakeLocalInputs } from "@beep/repo-cli/commands/Runners"
+ * import { Sha256Hex } from "@beep/schema"
+ *
+ * const inputs = BakeLocalInputs.make({
+ *   repoRoot: "/work/beep-effect",
+ *   lockfileSha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ *   bunVersion: "1.2.20",
+ *   gitRevision: "0123456789abcdef0123456789abcdef01234567",
+ * })
+ * console.log(inputs.bunVersion)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -67,7 +82,16 @@ export class BakeLocalInputs extends S.Class<BakeLocalInputs>($I`BakeLocalInputs
 /**
  * Service contract for runner AMI planning, checking, and baking.
  *
- * @category services
+ * **Example** (Select a service operation)
+ *
+ * ```ts
+ * import type { RunnersServiceShape } from "@beep/repo-cli/commands/Runners"
+ *
+ * const operationName = <K extends keyof RunnersServiceShape>(name: K): K => name
+ * console.log(operationName("plan"))
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export interface RunnersServiceShape {
@@ -465,6 +489,14 @@ const makeRunnersService = Effect.fn("RunnersService.make")(function* () {
 /**
  * Live runner bake service backed by platform files, crypto, and child processes.
  *
+ * **Example** (Inspect the live service layer)
+ *
+ * ```ts
+ * import { RunnersServiceLive } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof RunnersServiceLive)
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -472,6 +504,14 @@ export const RunnersServiceLive = Layer.effect(RunnersService, makeRunnersServic
 
 /**
  * Test-only report writer that exercises the production schema codec path.
+ *
+ * **Example** (Inspect the test report writer)
+ *
+ * ```ts
+ * import { writeBakeReportForTesting } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof writeBakeReportForTesting)
+ * ```
  *
  * @category testing
  * @since 0.0.0
@@ -481,6 +521,14 @@ export const writeBakeReportForTesting = writeBakeReport;
 /**
  * Test-only bake script renderer used to prove immutable launch content.
  *
+ * **Example** (Inspect the test script renderer)
+ *
+ * ```ts
+ * import { makeBakeScriptForTesting } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof makeBakeScriptForTesting)
+ * ```
+ *
  * @category testing
  * @since 0.0.0
  */
@@ -488,6 +536,14 @@ export const makeBakeScriptForTesting = makeBakeScript;
 
 /**
  * Test-only AWS command runner for injected-spawner argv assertions.
+ *
+ * **Example** (Inspect the test AWS runner)
+ *
+ * ```ts
+ * import { runAwsForTesting } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof runAwsForTesting)
+ * ```
  *
  * @category testing
  * @since 0.0.0

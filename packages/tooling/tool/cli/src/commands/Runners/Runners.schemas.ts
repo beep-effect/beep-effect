@@ -16,6 +16,14 @@ const $I = $RepoCliId.create("commands/Runners/Runners.schemas");
 /**
  * Public AL2023 parameter shared with the CI fleet controller.
  *
+ * **Example** (Inspect the public base AMI parameter)
+ *
+ * ```ts
+ * import { DEFAULT_RUNNER_BASE_AMI_PARAMETER } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(DEFAULT_RUNNER_BASE_AMI_PARAMETER)
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -25,6 +33,14 @@ export const DEFAULT_RUNNER_BASE_AMI_PARAMETER =
 /**
  * SSM parameter through which the controller publishes the active runner image.
  *
+ * **Example** (Inspect the runner AMI pin parameter)
+ *
+ * ```ts
+ * import { RUNNER_AMI_PIN_PARAMETER } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(RUNNER_AMI_PIN_PARAMETER)
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -32,6 +48,14 @@ export const RUNNER_AMI_PIN_PARAMETER = "/beep-ci/controller/runner-ami-id";
 
 /**
  * Execution modes accepted by `runners bake`.
+ *
+ * **Example** (Check a bake mode)
+ *
+ * ```ts
+ * import { BakeMode } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(BakeMode.is.plan("plan")) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -43,7 +67,16 @@ export const BakeMode = LiteralKit(["bake", "check", "plan"]).pipe(
 /**
  * Runtime type for {@link BakeMode}.
  *
- * @category models
+ * **Example** (Use a bake mode type)
+ *
+ * ```ts
+ * import type { BakeMode } from "@beep/repo-cli/commands/Runners"
+ *
+ * const mode: BakeMode = "plan"
+ * console.log(mode)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export type BakeMode = typeof BakeMode.Type;
@@ -141,6 +174,14 @@ export class BakeReport extends S.Class<BakeReport>($I`BakeReport`)(
 /**
  * JSON-string codec used by both the report writer and report readers.
  *
+ * **Example** (Inspect the bake report codec)
+ *
+ * ```ts
+ * import { BakeReportJson } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof BakeReportJson.encode)
+ * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -148,6 +189,15 @@ export const BakeReportJson = JsonStringCodec(BakeReport);
 
 /**
  * One subprocess invocation shown by `bake --plan`.
+ *
+ * **Example** (Construct a bake plan step)
+ *
+ * ```ts
+ * import { BakePlanStep } from "@beep/repo-cli/commands/Runners"
+ *
+ * const step = BakePlanStep.make({ name: "resolve-base-ami", argv: ["aws", "ssm", "get-parameter"] })
+ * console.log(step.name)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -198,6 +248,14 @@ export class BakePlan extends S.Class<BakePlan>($I`BakePlan`)(
 /**
  * JSON-string codec for `bake --plan --json`.
  *
+ * **Example** (Inspect the bake plan codec)
+ *
+ * ```ts
+ * import { BakePlanJson } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof BakePlanJson.encode)
+ * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -205,6 +263,27 @@ export const BakePlanJson = JsonStringCodec(BakePlan);
 
 /**
  * Result of comparing the active AMI tags with the repository staleness key.
+ *
+ * **Example** (Construct a bake freshness report)
+ *
+ * ```ts
+ * import { BakeCheckReport } from "@beep/repo-cli/commands/Runners"
+ * import { Sha256Hex } from "@beep/schema"
+ * import * as O from "effect/Option"
+ *
+ * const digest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+ * const report = BakeCheckReport.make({
+ *   amiId: "ami-0123456789abcdef0",
+ *   expectedLockfileSha256: digest,
+ *   actualLockfileSha256: O.some(digest),
+ *   expectedBunVersion: "1.2.20",
+ *   actualBunVersion: O.some("1.2.20"),
+ *   lockfileMatches: true,
+ *   bunVersionMatches: true,
+ *   fresh: true,
+ * })
+ * console.log(report.fresh)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -226,6 +305,14 @@ export class BakeCheckReport extends S.Class<BakeCheckReport>($I`BakeCheckReport
 /**
  * JSON-string codec for `bake --check --json`.
  *
+ * **Example** (Inspect the bake check codec)
+ *
+ * ```ts
+ * import { BakeCheckReportJson } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof BakeCheckReportJson.encode)
+ * ```
+ *
  * @category codecs
  * @since 0.0.0
  */
@@ -233,6 +320,15 @@ export const BakeCheckReportJson = JsonStringCodec(BakeCheckReport);
 
 /**
  * Internal wire shape returned by `aws ssm get-parameter`.
+ *
+ * **Example** (Construct an SSM response)
+ *
+ * ```ts
+ * import { AwsGetParameterResponse } from "@beep/repo-cli/commands/Runners"
+ *
+ * const response = AwsGetParameterResponse.make({ Parameter: { Value: "ami-0123456789abcdef0" } })
+ * console.log(response.Parameter.Value)
+ * ```
  *
  * @internal
  * @category models
@@ -246,6 +342,15 @@ export class AwsGetParameterResponse extends S.Class<AwsGetParameterResponse>($I
 /**
  * Internal wire shape returned by `aws ec2 run-instances`.
  *
+ * **Example** (Construct a run-instances response)
+ *
+ * ```ts
+ * import { AwsRunInstancesResponse } from "@beep/repo-cli/commands/Runners"
+ *
+ * const response = AwsRunInstancesResponse.make({ Instances: [{ InstanceId: "i-0123456789abcdef0" }] })
+ * console.log(response.Instances[0]?.InstanceId)
+ * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
@@ -257,6 +362,15 @@ export class AwsRunInstancesResponse extends S.Class<AwsRunInstancesResponse>($I
 
 /**
  * Internal wire shape returned by `aws ec2 create-image`.
+ *
+ * **Example** (Construct a create-image response)
+ *
+ * ```ts
+ * import { AwsCreateImageResponse } from "@beep/repo-cli/commands/Runners"
+ *
+ * const response = AwsCreateImageResponse.make({ ImageId: "ami-0123456789abcdef0" })
+ * console.log(response.ImageId)
+ * ```
  *
  * @internal
  * @category models
@@ -270,6 +384,15 @@ export class AwsCreateImageResponse extends S.Class<AwsCreateImageResponse>($I`A
 /**
  * Internal AWS resource tag wire shape.
  *
+ * **Example** (Construct an AWS tag)
+ *
+ * ```ts
+ * import { AwsTag } from "@beep/repo-cli/commands/Runners"
+ *
+ * const tag = AwsTag.make({ Key: "beep-ci", Value: "runner" })
+ * console.log(tag.Value)
+ * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
@@ -282,6 +405,17 @@ export class AwsTag extends S.Class<AwsTag>($I`AwsTag`)(
 /**
  * Internal wire shape returned by `aws ec2 describe-images`.
  *
+ * **Example** (Construct a describe-images response)
+ *
+ * ```ts
+ * import { AwsDescribeImagesResponse, AwsTag } from "@beep/repo-cli/commands/Runners"
+ *
+ * const response = AwsDescribeImagesResponse.make({
+ *   Images: [{ Tags: [AwsTag.make({ Key: "beep-ci", Value: "runner" })] }],
+ * })
+ * console.log(response.Images.length)
+ * ```
+ *
  * @internal
  * @category models
  * @since 0.0.0
@@ -293,6 +427,16 @@ export class AwsDescribeImagesResponse extends S.Class<AwsDescribeImagesResponse
 
 /**
  * Internal wire shape returned by `aws ec2 get-console-output`.
+ *
+ * **Example** (Construct a console-output response)
+ *
+ * ```ts
+ * import { AwsConsoleOutputResponse } from "@beep/repo-cli/commands/Runners"
+ * import * as O from "effect/Option"
+ *
+ * const response = AwsConsoleOutputResponse.make({ Output: O.some("BEEP_RUNNERS_BAKE_COMPLETE") })
+ * console.log(O.isSome(response.Output))
+ * ```
  *
  * @internal
  * @category models

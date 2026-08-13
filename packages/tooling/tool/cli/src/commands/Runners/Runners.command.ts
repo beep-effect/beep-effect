@@ -22,6 +22,15 @@ const DEFAULT_REGION = "us-east-1";
 /**
  * Resolve mutually exclusive bake mode flags.
  *
+ * **Example** (Resolve the default bake mode)
+ *
+ * ```ts
+ * import { resolveBakeMode } from "@beep/repo-cli/commands/Runners"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(resolveBakeMode(false, false))) // true
+ * ```
+ *
  * @category parsing
  * @since 0.0.0
  */
@@ -190,6 +199,14 @@ const bakeCommand = Command.make(
 
 /**
  * Runner infrastructure command group.
+ *
+ * **Example** (Inspect the runners command)
+ *
+ * ```ts
+ * import { runnersCommand } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof runnersCommand)
+ * ```
  *
  * @category use-cases
  * @since 0.0.0
