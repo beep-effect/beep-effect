@@ -27,6 +27,8 @@ Property Laws ~22.4m on hosted.
 
 ## Exit criteria
 
-No required job's p50 exceeds 20 minutes across a representative week of PR
-and push waves, with per-lane placement decisions recorded and cost within
-the standing budget gates.
+No required job exceeds 20 minutes at p95 (attempt-one successful runs)
+across a representative week of PR and push waves — the charter says no one
+waits, so the tail is the gate, not the median. Per-lane placement decisions
+recorded; cost within the standing budget gates; rerun/flake rates tracked
+separately via the attribution rules rather than laundered into percentiles.
