@@ -3,12 +3,17 @@
   "exploration": {
     "slug": "document-structure-ontologies",
     "title": "Document-Structure & Metadata Ontologies over the AST Family",
-    "status": "active",
-    "stage": "decompose",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": [
+        "goals/patent-document-schema",
+        "goals/document-ast-pattern-classification",
+        "goals/spar-document-annotation-wire",
+        "goals/folio-lynx-taxonomy-browse"
+      ],
       "docs": [],
       "related": [
         "explorations/lynx-lkg-ontology-grounding",

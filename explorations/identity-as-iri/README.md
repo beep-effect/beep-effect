@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -19,16 +19,10 @@ kit for deterministic agent metadata retrieval.
 
 ## Next Open Question
 
-`identity-iri-fold` is graduated at
-[`goals/identity-iri-fold`](../../goals/identity-iri-fold/README.md), with its
-`identity-iri-core` dependency satisfied by the completed-retained PR #289.
-The fold merged as PR #536 (2026-08-01; `goals/identity-iri-fold` is
-completed-retained), so the fibered trigger has fired. Ratified 2026-08-13
-(see DECISIONS.md): `identity-iri-fibered` graduates as one goal with the full
-MAP scope, blockedBy the semantic-web PR2+PR3 cleanups (discrete case only;
-SHACL projection targets the post-move contract layer; store layers land as
-test/dev Layers). Next action: scaffold the future `identity-iri-fibered` goal (not yet created) in the
-ceremony PR, then flip this packet to `graduated`.
+None. [`identity-iri-fibered`](../../goals/identity-iri-fibered/README.md)
+now carries the full ratified MAP row and records the semantic-web PR2+PR3
+cleanup blockers as text because they have no goal packets. A future candidate
+reopens this exploration at `decompose`.
 
 ## Read This First
 
@@ -42,6 +36,10 @@ ceremony PR, then flip this packet to `graduated`.
 8. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-08-13 (ceremony): scaffolded `identity-iri-fibered` with the full MAP
+  scope, discrete-case/post-move/test-dev constraints, and textual PR2+PR3
+  blockedBy notes; cross-linked manifests and graduated the exploration.
 
 - 2026-08-13: recorded that the fold merged via PR #536 and the fibered
   trigger fired; fibered ratified as one goal blockedBy the semantic-web

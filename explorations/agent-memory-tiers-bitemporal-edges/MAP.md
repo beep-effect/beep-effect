@@ -14,7 +14,7 @@ replacement, two-axis `asOf(validAt, knownAt)`, and restart/migration proof.
 | --- | --- | --- | --- | --- |
 | **GRADUATED 2026-07-14** | [`epistemic-bitemporal-edge-core`](../../goals/epistemic-bitemporal-edge-core/README.md) | Ship the Postgres bitemporal edge authority, durable claim/edge disposition, atomic supersession, and two-axis as-of reads. This is explicitly **THE `@beep/epistemic-tables` bitemporal port milestone**. Landing it fires the doctrine trigger to retire the write-frozen operator-level Graphiti deployment; it does not make product tables an operator-memory backend. | Existing epistemic, provenance, identity, Drizzle/Postgres, and db-admin bricks | P0 storage/concurrency/provenance spike; NET-NEW edge entity, temporal/logical identity model, `ClaimDisposition`, tables/indexes, repository, as-of contract, and migration |
 | **GRADUATED 2026-07-25** | [`epistemic-contradiction-triage`](../../goals/epistemic-contradiction-triage/README.md) | Add evidence-backed, confidence-bearing, reviewable `CONTRADICTS` candidates and an approval path that may resolve as atomic `SUPERSEDES` without detection mutating authority. | `epistemic-bitemporal-edge-core` | P0 fixture spike for identity/anchor matching, symmetric edges, duplicate suppression, unresolved behavior, and candidate-to-approved transition |
-| 3 (optional) | `epistemic-memory-retention-projections` | Shape and implement rebuildable retention/tier projections over accepted authority records, with calibration evidence. | Core; shaped independently before graduation | Agentmemory attribution lands here only if this goal adopts its algorithm; no mutation of authoritative facts |
+| **GRADUATED 2026-08-13** | [`epistemic-memory-retention-projections`](../../goals/epistemic-memory-retention-projections/README.md) | Ship rebuildable retention/tier projections over accepted authority records, with mechanism now and policy-as-data inert behind calibration evidence. | `epistemic-bitemporal-edge-core` | Repo-native algorithm; agentmemory cite-only; standalone operator tier/memory-pressure report with as-of/disposition views and delete/rebuild proof; RRF integration follows only when its owning goal wakes |
 
 ## Sequencing
 
@@ -24,9 +24,9 @@ replacement, two-axis `asOf(validAt, knownAt)`, and restart/migration proof.
 2. **Contradiction triage second.** It is gated behind the finalized core so
    candidate matching and approval fixtures target real endpoint, identity,
    evidence, and supersession contracts. Detection remains non-authoritative.
-3. **Retention projections optionally later.** Shape this independently after
-   observed use can justify tiers, decay, thresholds, and attribution. It is
-   not required for the core or contradiction capability.
+3. **Retention projections third.** The optional lane was spun and graduated
+   2026-08-13. Mechanism ships now, while tier/decay/threshold values remain
+   inert behind calibration evidence. RRF integration remains a follow-on.
 
 ## Cross-Reference Boundaries
 
