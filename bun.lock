@@ -272,6 +272,8 @@
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
         "effect": "catalog:",
@@ -294,6 +296,7 @@
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
         "@electric-sql/pglite": "catalog:",
         "@types/node": "catalog:",
@@ -2294,6 +2297,7 @@
       "devDependencies": {
         "@beep/shacl": "workspace:^",
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "esbuild": "catalog:",

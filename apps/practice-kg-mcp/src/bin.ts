@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-// @effect-diagnostics strictEffectProvide:skip-file
 
 /**
  * Stdio entrypoint for the portable practice knowledge-graph MCP host.
@@ -44,8 +43,9 @@ const serverCommand = Command.make(
   })
 );
 
-const program = Command.run(serverCommand, { version: "0.0.0" }).pipe(Effect.provide(BunServices.layer));
+const program = Command.run(serverCommand, { version: "0.0.0" });
+const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))));
 
 if (import.meta.main) {
-  BunRuntime.runMain(program);
+  BunRuntime.runMain(main);
 }

@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-// @effect-diagnostics strictEffectProvide:skip-file
 
 /**
  * Offline compiled-binary smoke for the practice KG MCP host.
@@ -120,7 +119,8 @@ const substituteManifestTokens = (exeDir: string, bundleOut: string) =>
   );
 
 const makeCatalog = Effect.fn("PracticeKgSmoke.makeCatalog")(function* (databasePath: string) {
-  yield* Effect.gen(function* () {
+  const catalogLayer = DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }));
+  const populateCatalog = Effect.gen(function* () {
     const db = yield* DuckDb;
     yield* db.run(`
       CREATE TABLE corpus_source_files (
@@ -146,7 +146,8 @@ const makeCatalog = Effect.fn("PracticeKgSmoke.makeCatalog")(function* (database
       "INSERT INTO corpus_organized VALUES ($1, 'smoke', 'fixture.txt', 'docket', 'fixture-client', '20001US01', '20001', 'dockets/20001/20001US01/fixture.txt', 'fixture.txt')",
       [FixtureDigest]
     );
-  }).pipe(Effect.provide(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))), Effect.scoped);
+  });
+  yield* Effect.scoped(Layer.build(Layer.effectDiscard(populateCatalog).pipe(Layer.provide(catalogLayer))));
 });
 
 const makeFixtureBundle = Effect.fn("PracticeKgSmoke.makeFixtureBundle")(function* (root: string) {
@@ -166,21 +167,17 @@ const makeFixtureBundle = Effect.fn("PracticeKgSmoke.makeFixtureBundle")(functio
     `{"artifactId":"artifact-smoke","digest":"${FixtureDigest}","engine":"tika","format":"text","operationId":"operation:smoke","relativePath":"text/operation:smoke.txt","sizeBytes":13,"status":"succeeded"}\n`
   );
   yield* fs.writeFileString(path.join(textRoot, "operation:smoke.txt"), "smoke fixture");
-  yield* Effect.scoped(
-    Layer.build(makePracticeKgBuildLayer(path.join(bundleOut, "kg.pglite"))).pipe(
-      Effect.flatMap((context) =>
-        buildPracticeKgBundle(
-          PracticeKgOptions.make({
-            bundleOut,
-            corpusRoot,
-            includeRefresh: false,
-            overwrite: false,
-            skipEmails: true,
-          })
-        ).pipe(Effect.provide(context))
-      )
-    )
+  const buildLayer = makePracticeKgBuildLayer(path.join(bundleOut, "kg.pglite"));
+  const buildBundle = buildPracticeKgBundle(
+    PracticeKgOptions.make({
+      bundleOut,
+      corpusRoot,
+      includeRefresh: false,
+      overwrite: false,
+      skipEmails: true,
+    })
   );
+  yield* Effect.scoped(Layer.build(Layer.effectDiscard(buildBundle).pipe(Layer.provide(buildLayer))));
   return bundleOut;
 });
 
@@ -303,8 +300,9 @@ const program = Effect.scoped(
     }
     yield* runCompiledHost(executable, bundleOut, root);
   })
-).pipe(Effect.provide(BunServices.layer));
+);
+const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))));
 
 if (import.meta.main) {
-  BunRuntime.runMain(program);
+  BunRuntime.runMain(main);
 }

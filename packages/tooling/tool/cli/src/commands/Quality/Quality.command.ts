@@ -10,7 +10,7 @@ import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as OptionUtils from "@beep/utils/Option";
-import { Console, DateTime, Effect, FileSystem, flow, Inspectable, Layer, Order, Path, pipe } from "effect";
+import { Console, DateTime, Effect, Equal, FileSystem, flow, Inspectable, Layer, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -288,11 +288,14 @@ const moduleTagScannedRoots = [".patterns", "apps", "packages", "tooling"] as co
 const moduleTagScannedExtensions = [".hbs", ".md", ".ts", ".tsx"] as const;
 const effectDiagnosticsDirectiveScannedRoots = ["apps", "packages", "tooling", "infra"] as const;
 const effectDiagnosticsDirectiveScannedExtensions = [".cts", ".mts", ".ts", ".tsx"] as const;
-const effectDiagnosticsDirectiveIgnoredDirectoryNames = ["node_modules", "dist", "coverage", "tmp", "scripts"] as const;
+const effectDiagnosticsDirectiveIgnoredDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
 const effectTsgoDiagnosticsTableStartMarker = "<!-- diagnostics-table:start -->";
 const effectTsgoDiagnosticsTableEndMarker = "<!-- diagnostics-table:end -->";
 const effectDiagnosticsDirectivePrefix = "@effect-diagnostics";
-const effectDiagnosticsOffDirectivePattern = new RegExp(`${effectDiagnosticsDirectivePrefix}[^\\n]*:${"off"}\\b`, "u");
+const effectDiagnosticsDirectivePattern = new RegExp(
+  `^\\s*(?:/\\*\\*?|//)\\s*${effectDiagnosticsDirectivePrefix}(?:-next-line)?\\b`,
+  "u"
+);
 const effectTsgoDiagnosticPattern = /\b(?:error|warning) TS\d+: .* effect\([^)]+\)/u;
 const EcosystemEffectDiagnosticOffRule = LiteralKit(["missedPipeableOpportunity", "missingPipeableSignature"]);
 const isEcosystemEffectDiagnosticOffRule = S.is(EcosystemEffectDiagnosticOffRule);
@@ -300,10 +303,28 @@ const TsconfigFileName = S.String.check(S.isPattern(/^tsconfig(?:\..+)?\.json$/u
 const isTsconfigFileName = S.is(TsconfigFileName);
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));
+const decodeAliasPathsOption = S.decodeUnknownOption(S.Record(S.String, S.Array(S.String)));
 const effectTsgoReadmeParser = new XMLParser({
   ignoreAttributes: false,
   trimValues: true,
 });
+
+/**
+ * Detect an active Effect diagnostics directive comment.
+ *
+ * **Example** (Recognize a file suppression)
+ *
+ * ```ts
+ * import { isEffectDiagnosticsDirectiveForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * isEffectDiagnosticsDirectiveForTesting("// @effect-diagnostics strictEffectProvide:skip-file") // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const isEffectDiagnosticsDirectiveForTesting = (line: string): boolean =>
+  effectDiagnosticsDirectivePattern.test(line);
 
 class EffectTsgoRuleCell extends S.Class<EffectTsgoRuleCell>($I`EffectTsgoRuleCell`)(
   {
@@ -1581,6 +1602,8 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const readmePath = path.join(repoRoot, "node_modules", "@effect", "tsgo", "README.md");
   const tsconfigPath = path.join(repoRoot, "tsconfig.base.json");
+  const rootTsconfigPath = path.join(repoRoot, "tsconfig.json");
+  const generatedVitestAliasesPath = path.join(repoRoot, "vitest.aliases.generated.json");
   const readmeText = yield* fs
     .readFileString(readmePath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${readmePath}.`));
@@ -1602,6 +1625,23 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     disallowComments: false,
   });
 
+  const rootTsconfigText = yield* fs
+    .readFileString(rootTsconfigPath)
+    .pipe(QualityScriptCommandError.mapError(`Failed to read ${rootTsconfigPath}.`));
+  const rootTsconfigParseErrors: Array<ParseError> = [];
+  const rootTsconfig = parse(rootTsconfigText, rootTsconfigParseErrors, {
+    allowTrailingComma: true,
+    disallowComments: false,
+  });
+  const generatedVitestAliasesText = yield* fs
+    .readFileString(generatedVitestAliasesPath)
+    .pipe(QualityScriptCommandError.mapError(`Failed to read ${generatedVitestAliasesPath}.`));
+  const generatedVitestAliasesParseErrors: Array<ParseError> = [];
+  const generatedVitestAliases = parse(generatedVitestAliasesText, generatedVitestAliasesParseErrors, {
+    allowTrailingComma: false,
+    disallowComments: true,
+  });
+
   if (A.isReadonlyArrayNonEmpty(parseErrors)) {
     yield* Console.error("[check:tsgo-rules] failed to parse tsconfig.base.json");
     yield* Console.error(
@@ -1612,6 +1652,16 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     );
     return yield* QualityScriptCommandError.make({
       message: "tsconfig.base.json is not valid JSONC.",
+      exitCode: 1,
+    });
+  }
+
+  if (
+    A.isReadonlyArrayNonEmpty(rootTsconfigParseErrors) ||
+    A.isReadonlyArrayNonEmpty(generatedVitestAliasesParseErrors)
+  ) {
+    return yield* QualityScriptCommandError.make({
+      message: "Root tsconfig or generated Vitest aliases are not valid JSONC.",
       exitCode: 1,
     });
   }
@@ -1628,6 +1678,21 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     unknownRecordProperty(plugin.value, "diagnosticSeverity"),
     O.flatMap(decodeUnknownRecordOption)
   );
+  const rootTsconfigAliasPaths = pipe(
+    unknownRecordProperty(rootTsconfig, "compilerOptions"),
+    O.flatMap(decodeUnknownRecordOption),
+    O.flatMap((compilerOptions) => unknownRecordProperty(compilerOptions, "paths")),
+    O.flatMap(decodeAliasPathsOption)
+  );
+  const generatedAliasPaths = decodeAliasPathsOption(generatedVitestAliases);
+  const generatedAliasDiagnostics =
+    O.isSome(rootTsconfigAliasPaths) &&
+    O.isSome(generatedAliasPaths) &&
+    Equal.equals(rootTsconfigAliasPaths.value, generatedAliasPaths.value)
+      ? A.empty<string>()
+      : A.of(
+          "vitest.aliases.generated.json differs from tsconfig.json compilerOptions.paths; regenerate the alias data"
+        );
   if (O.isNone(diagnosticSeverity)) {
     return yield* QualityScriptCommandError.make({
       message: "tsconfig.base.json is missing the root @effect/language-service diagnosticSeverity map.",
@@ -1681,7 +1746,10 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
       collectFiles(
         path.join(repoRoot, root),
         (_normalized, name) => A.contains(effectDiagnosticsDirectiveScannedExtensions, path.extname(name)),
-        (_normalized, name) => A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name)
+        (normalized, name) =>
+          A.contains(effectDiagnosticsDirectiveIgnoredDirectoryNames, name) ||
+          name === ".storybook" ||
+          Str.includes("/apps/storybook/")(normalized)
       ),
     { concurrency: 1 }
   ).pipe(Effect.map(A.flatten));
@@ -1694,7 +1762,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
       return pipe(
         Str.split(text, "\n"),
         A.flatMap((line, index) =>
-          effectDiagnosticsOffDirectivePattern.test(line)
+          effectDiagnosticsDirectivePattern.test(line)
             ? A.of(`${normalizePath(path.relative(repoRoot, filePath))}:${index + 1}`)
             : A.empty<string>()
         )
@@ -1708,6 +1776,7 @@ export const runTsgoRulesCheck = Effect.fn("QualityScriptCommands.runTsgoRulesCh
     ...renderTsgoRuleDiagnostics("rules not configured as error", nonErrorSeverities),
     ...renderTsgoRuleDiagnostics("diagnosticSeverity entries set to off", disabledSeverityEntries),
     ...renderTsgoRuleDiagnostics("invalid package Effect language-service profiles", pluginProfileDiagnostics),
+    ...renderTsgoRuleDiagnostics("generated Vitest alias drift", generatedAliasDiagnostics),
     ...renderTsgoRuleDiagnostics("disabled Effect diagnostic directives", disabledDirectives),
   ];
 
