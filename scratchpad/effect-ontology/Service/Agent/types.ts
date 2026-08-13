@@ -12,6 +12,7 @@
 import { SchemaUtils } from "@beep/schema";
 import { Data, Duration, Schema } from "effect";
 import * as A from "effect/Array";
+import type * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import type { Agent, AgentId as AgentIdType, AgentType } from "../../Domain/Model/Agent.ts";
 import { CheckpointConfig, PipelineState, TerminationCondition } from "../../Domain/Model/Agent.ts";
@@ -550,7 +551,7 @@ export interface RegisteredAgent<I = unknown, O = unknown, E = unknown, R = neve
  * @since 2.0.0
  * @category Types
  */
-export type AgentRegistry = ReadonlyMap<AgentIdType, RegisteredAgent>;
+export type AgentRegistry = HashMap.HashMap<AgentIdType, RegisteredAgent>;
 
 // =============================================================================
 // Execution Context

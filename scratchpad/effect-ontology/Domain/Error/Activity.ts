@@ -15,6 +15,7 @@ import { dual, O, P } from "@beep/utils";
 import * as Inspectable from "effect/Inspectable";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
+import { dual4 } from "../../Utils/Dual.ts";
 import { ErrorMessage, Milliseconds, OptionalErrorMessage } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Activity");
@@ -449,8 +450,9 @@ export const toActivityError = ActivityError.fromUnknown;
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const serviceError = ActivityError.serviceFailure;
+export const serviceError = dual4((service: string, operation: string, input: unknown, retryable: boolean) =>
+  ActivityError.serviceFailure(service, operation, input, retryable)
+);
 
 /**
  * Constructs a journal-safe missing-resource activity failure.

@@ -39,7 +39,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Jina");
  * @category errors
  * @since 0.0.0
  */
-export const JinaApiError = makeOntologyErrorClass(
+export const JinaApiError = makeOntologyErrorClass.make(
   $I`JinaApiError`,
   "JinaApiError",
   {
@@ -150,7 +150,7 @@ export class JinaRateLimitError extends JinaRateLimitErrorBase {
  * @category errors
  * @since 0.0.0
  */
-export const JinaParseError = makeOntologyErrorClass(
+export const JinaParseError = makeOntologyErrorClass.make(
   $I`JinaParseError`,
   "JinaParseError",
   {
@@ -197,7 +197,7 @@ export type JinaParseError = typeof JinaParseError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const JinaTimeoutError = makeOntologyErrorClass(
+export const JinaTimeoutError = makeOntologyErrorClass.make(
   $I`JinaTimeoutError`,
   "JinaTimeoutError",
   {

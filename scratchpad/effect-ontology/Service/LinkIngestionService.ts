@@ -29,11 +29,12 @@ import { createHash } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { Cache, Context, Data, Duration, Effect, Layer, Option } from "effect";
+import { Cache, Context, Duration, Effect, Layer, Option } from "effect";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import type { EnrichedContent } from "../Domain/Model/EnrichedContent.ts";
 import type { IngestedLinkInsertRow, IngestedLinkRow } from "../Repository/schema.ts";
 import { ingestedLinks } from "../Repository/schema.ts";
@@ -53,12 +54,17 @@ const $I = $ScratchpadId.create("effect-ontology/Service/LinkIngestionService");
 /**
  * Error: Failed to ingest URL
  */
-export class LinkIngestionError extends Data.TaggedError("LinkIngestionError")<{
-  readonly message: string;
-  readonly url?: string;
-  readonly phase: "fetch" | "store" | "enrich" | "persist";
-  readonly cause?: unknown;
-}> {}
+export class LinkIngestionError extends S.TaggedError<LinkIngestionError>($I`LinkIngestionError`)(
+  "LinkIngestionError",
+  {
+    message: S.String,
+    url: S.optionalKey(S.String),
+    phase: S.Literals(["fetch", "store", "enrich", "persist"]),
+    cause: S.optionalKey(S.Defect()),
+  }
+) {
+  static readonly is = S.is(LinkIngestionError);
+}
 
 // =============================================================================
 // Types
@@ -204,14 +210,13 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
 
       // 1. Fetch content via Jina
       const jinaResponse = yield* jina.fetchUrl(url).pipe(
-        Effect.mapError(
-          (error) =>
-            new LinkIngestionError({
-              message: `Failed to fetch URL: ${error.message}`,
-              url,
-              phase: "fetch",
-              cause: error,
-            })
+        Effect.mapError((error) =>
+          LinkIngestionError.make({
+            message: `Failed to fetch URL: ${error.message}`,
+            url,
+            phase: "fetch",
+            cause: error,
+          })
         )
       );
 
@@ -238,14 +243,13 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       // 4. Store content
       const storagePath = buildStoragePath(contentHash);
       yield* storage.set(storagePath, content.content).pipe(
-        Effect.mapError(
-          (error) =>
-            new LinkIngestionError({
-              message: `Failed to store content: ${error}`,
-              url,
-              phase: "store",
-              cause: error,
-            })
+        Effect.mapError((error) =>
+          LinkIngestionError.make({
+            message: `Failed to store content: ${error}`,
+            url,
+            phase: "store",
+            cause: error,
+          })
         )
       );
 
@@ -351,14 +355,13 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         .values(insertRow)
         .returning()
         .pipe(
-          Effect.mapError(
-            (error) =>
-              new LinkIngestionError({
-                message: `Failed to persist link: ${error}`,
-                url,
-                phase: "persist",
-                cause: error,
-              })
+          Effect.mapError((error) =>
+            LinkIngestionError.make({
+              message: `Failed to persist link: ${error}`,
+              url,
+              phase: "persist",
+              cause: error,
+            })
           )
         );
 
@@ -408,13 +411,12 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
      */
     const getByContentHash = (ontologyId: string, hash: string) =>
       Cache.get(contentHashCache, `${ontologyId}:${hash}`).pipe(
-        Effect.mapError(
-          (cause) =>
-            new LinkIngestionError({
-              message: "Failed to query the content hash cache",
-              phase: "persist",
-              cause,
-            })
+        Effect.mapError((cause) =>
+          LinkIngestionError.make({
+            message: "Failed to query the content hash cache",
+            phase: "persist",
+            cause,
+          })
         )
       );
 
@@ -538,13 +540,12 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       Effect.gen(function* () {
         // 1. Get link by ID
         const linkOpt = yield* getById(id).pipe(
-          Effect.mapError(
-            (cause) =>
-              new LinkIngestionError({
-                message: `Failed to query link ${id}`,
-                phase: "persist",
-                cause,
-              })
+          Effect.mapError((cause) =>
+            LinkIngestionError.make({
+              message: `Failed to query link ${id}`,
+              phase: "persist",
+              cause,
+            })
           )
         );
         if (Option.isNone(linkOpt)) {
@@ -555,19 +556,18 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         // 2. Get content from storage
         const sourceUrl = link.sourceUri ?? undefined;
         const contentOpt = yield* getContent(link).pipe(
-          Effect.mapError(
-            (error) =>
-              new LinkIngestionError({
-                message: `Failed to retrieve content: ${error}`,
-                ...(P.isNotUndefined(sourceUrl) ? { url: sourceUrl } : {}),
-                phase: "fetch",
-                cause: error,
-              })
+          Effect.mapError((error) =>
+            LinkIngestionError.make({
+              message: `Failed to retrieve content: ${error}`,
+              ...(P.isNotUndefined(sourceUrl) ? { url: sourceUrl } : {}),
+              phase: "fetch",
+              cause: error,
+            })
           )
         );
 
         if (Option.isNone(contentOpt)) {
-          return yield* new LinkIngestionError({
+          return yield* LinkIngestionError.make({
             message: `Content not found in storage at ${link.storageUri}`,
             ...(P.isNotUndefined(sourceUrl) ? { url: sourceUrl } : {}),
             phase: "fetch",
@@ -579,14 +579,13 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         // 3. Run enrichment
         const enrichment = P.isUndefined(sourceUrl) ? enricher.enrich(content) : enricher.enrich(content, sourceUrl);
         const enrichedContent = yield* enrichment.pipe(
-          Effect.mapError(
-            (error) =>
-              new LinkIngestionError({
-                message: `Enrichment failed: ${error.message}`,
-                ...(P.isNotUndefined(sourceUrl) ? { url: sourceUrl } : {}),
-                phase: "enrich",
-                cause: error,
-              })
+          Effect.mapError((error) =>
+            LinkIngestionError.make({
+              message: `Enrichment failed: ${error.message}`,
+              ...(P.isNotUndefined(sourceUrl) ? { url: sourceUrl } : {}),
+              phase: "enrich",
+              cause: error,
+            })
           )
         );
 
@@ -615,14 +614,13 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
           .where(eq(ingestedLinks.id, id))
           .returning()
           .pipe(
-            Effect.mapError(
-              (error) =>
-                new LinkIngestionError({
-                  message: `Failed to update link: ${error}`,
-                  ...(P.isNotUndefined(sourceUrl) ? { url: sourceUrl } : {}),
-                  phase: "persist",
-                  cause: error,
-                })
+            Effect.mapError((error) =>
+              LinkIngestionError.make({
+                message: `Failed to update link: ${error}`,
+                ...(P.isNotUndefined(sourceUrl) ? { url: sourceUrl } : {}),
+                phase: "persist",
+                cause: error,
+              })
             )
           );
 
@@ -669,13 +667,12 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
           .where(condition)
           .returning({ id: ingestedLinks.id })
           .pipe(
-            Effect.mapError(
-              (error) =>
-                new LinkIngestionError({
-                  message: `Failed to cleanup stale links: ${error}`,
-                  phase: "persist",
-                  cause: error,
-                })
+            Effect.mapError((error) =>
+              LinkIngestionError.make({
+                message: `Failed to cleanup stale links: ${error}`,
+                phase: "persist",
+                cause: error,
+              })
             )
           );
 
@@ -715,7 +712,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
   static readonly Disabled: Layer.Layer<LinkIngestionService> = Layer.succeed(LinkIngestionService, {
     ingestUrl: Effect.fn("LinkIngestionService.ingestUrl")(() =>
       Effect.fail(
-        new LinkIngestionError({
+        LinkIngestionError.make({
           message: "LinkIngestionService requires PostgreSQL. Configure POSTGRES_HOST.",
           phase: "fetch",
         })
@@ -723,7 +720,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
     ),
     ingestUrls: Effect.fn("LinkIngestionService.ingestUrls")(() =>
       Effect.fail(
-        new LinkIngestionError({
+        LinkIngestionError.make({
           message: "LinkIngestionService requires PostgreSQL. Configure POSTGRES_HOST.",
           phase: "fetch",
         })
@@ -741,7 +738,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
     getContent: Effect.fn("LinkIngestionService.getContent")(() => Effect.succeed(Option.none())),
     reEnrich: Effect.fn("LinkIngestionService.reEnrich")(() =>
       Effect.fail(
-        new LinkIngestionError({
+        LinkIngestionError.make({
           message: "LinkIngestionService requires PostgreSQL. Configure POSTGRES_HOST.",
           phase: "enrich",
         })
@@ -749,7 +746,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
     ),
     cleanupStaleLinks: Effect.fn("LinkIngestionService.cleanupStaleLinks")(() =>
       Effect.fail(
-        new LinkIngestionError({
+        LinkIngestionError.make({
           message: "LinkIngestionService requires PostgreSQL. Configure POSTGRES_HOST.",
           phase: "persist",
         })

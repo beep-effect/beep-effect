@@ -12,6 +12,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { dual2 } from "../Utils/Dual.ts";
 import type { ExtractionRule, RuleCategory } from "./ExtractionRule.ts";
 import type { RuleSet } from "./RuleSet.ts";
 
@@ -147,12 +148,13 @@ const ruleForField = (ruleSet: RuleSet, fieldPath: string): O.Option<ExtractionR
  * @category getters
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const getFieldDescription = (ruleSet: RuleSet, fieldPath: string): O.Option<string> =>
-  pipe(
-    ruleForField(ruleSet, fieldPath),
-    O.map((rule) => rule.schemaDescription)
-  );
+export const getFieldDescription = dual2(
+  (ruleSet: RuleSet, fieldPath: string): O.Option<string> =>
+    pipe(
+      ruleForField(ruleSet, fieldPath),
+      O.map((rule) => rule.schemaDescription)
+    )
+);
 
 /**
  * Looks up the validation feedback template associated with an extraction field.
@@ -173,12 +175,13 @@ export const getFieldDescription = (ruleSet: RuleSet, fieldPath: string): O.Opti
  * @category getters
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const getFieldValidationTemplate = (ruleSet: RuleSet, fieldPath: string): O.Option<string> =>
-  pipe(
-    ruleForField(ruleSet, fieldPath),
-    O.map((rule) => rule.validationTemplate)
-  );
+export const getFieldValidationTemplate = dual2(
+  (ruleSet: RuleSet, fieldPath: string): O.Option<string> =>
+    pipe(
+      ruleForField(ruleSet, fieldPath),
+      O.map((rule) => rule.validationTemplate)
+    )
+);
 
 /**
  * Complete identity, title, and description metadata generated for a schema.
@@ -267,9 +270,9 @@ export const generateSchemaAnnotations = (ruleSet: RuleSet): GeneratedSchemaAnno
  * @category filtering
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const findRulesByCategory = (ruleSet: RuleSet, category: RuleCategory): ReadonlyArray<ExtractionRule> =>
-  ruleSet.getRulesByCategory(category);
+export const findRulesByCategory = dual2(
+  (ruleSet: RuleSet, category: RuleCategory): ReadonlyArray<ExtractionRule> => ruleSet.getRulesByCategory(category)
+);
 
 /**
  * Finds a rule by its stable identifier.
@@ -290,6 +293,7 @@ export const findRulesByCategory = (ruleSet: RuleSet, category: RuleCategory): R
  * @category getters
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const findRuleById = (ruleSet: RuleSet, ruleId: string): O.Option<ExtractionRule> =>
-  A.findFirst(ruleSet.allRules, (rule) => rule.id === ruleId);
+export const findRuleById = dual2(
+  (ruleSet: RuleSet, ruleId: string): O.Option<ExtractionRule> =>
+    A.findFirst(ruleSet.allRules, (rule) => rule.id === ruleId)
+);

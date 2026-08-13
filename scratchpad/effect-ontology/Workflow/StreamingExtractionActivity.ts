@@ -40,6 +40,7 @@ import { ExtractionWorkflow } from "../Service/ExtractionWorkflow.ts";
 import { RdfBuilder } from "../Service/Rdf.ts";
 import { StorageService } from "../Service/Storage.ts";
 import { claimsDataToQuads, knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
+import { dual3 } from "../Utils/Dual.ts";
 import { makeProvenanceUri } from "../Utils/Provenance.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/StreamingExtractionActivity");
@@ -168,48 +169,49 @@ const extractOntologyName = (uri: string): OntologyName => {
  * @param ontologyContentHash - Pre-computed hash of ontology CONTENT (not URI)
  * @returns RunConfig for StreamingExtraction
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const buildRunConfig = (
-  input: ExtractionActivityInput,
-  llmConfig: {
-    model: string;
-    temperature: number;
-    maxTokens: number;
-    timeoutMs: number;
-  },
-  ontologyContentHash: ContentHash
-): RunConfig => {
-  // Build OntologyRef from the ontology URI
-  // Use content hash for cache invalidation when ontology changes
-  const ontologyRef = OntologyRef.make({
-    namespace: input.targetNamespace as Namespace,
-    name: extractOntologyName(input.ontologyUri),
-    contentHash: ontologyContentHash,
-  });
+export const buildRunConfig = dual3(
+  (
+    input: ExtractionActivityInput,
+    llmConfig: {
+      model: string;
+      temperature: number;
+      maxTokens: number;
+      timeoutMs: number;
+    },
+    ontologyContentHash: ContentHash
+  ): RunConfig => {
+    // Build OntologyRef from the ontology URI
+    // Use content hash for cache invalidation when ontology changes
+    const ontologyRef = OntologyRef.make({
+      namespace: input.targetNamespace as Namespace,
+      name: extractOntologyName(input.ontologyUri),
+      contentHash: ontologyContentHash,
+    });
 
-  // Build ChunkingConfig - use preprocessing hints if available, otherwise defaults
-  const chunkingConfig = ChunkingConfig.make({
-    maxChunkSize: 500, // Default chunk size (TODO: get from preprocessing hints)
-    preserveSentences: true,
-    overlapTokens: 50,
-  });
+    // Build ChunkingConfig - use preprocessing hints if available, otherwise defaults
+    const chunkingConfig = ChunkingConfig.make({
+      maxChunkSize: 500, // Default chunk size (TODO: get from preprocessing hints)
+      preserveSentences: true,
+      overlapTokens: 50,
+    });
 
-  // Build LlmConfig from service config
-  const llmConfigSchema = LlmConfig.make({
-    model: llmConfig.model,
-    temperature: llmConfig.temperature,
-    maxTokens: llmConfig.maxTokens,
-    timeout: Duration.millis(llmConfig.timeoutMs),
-  });
+    // Build LlmConfig from service config
+    const llmConfigSchema = LlmConfig.make({
+      model: llmConfig.model,
+      temperature: llmConfig.temperature,
+      maxTokens: llmConfig.maxTokens,
+      timeout: Duration.millis(llmConfig.timeoutMs),
+    });
 
-  return RunConfig.make({
-    ontology: ontologyRef,
-    chunking: chunkingConfig,
-    llm: llmConfigSchema,
-    concurrency: 5, // Default concurrency
-    enableGrounding: true, // Always enable grounding for quality
-  });
-};
+    return RunConfig.make({
+      ontology: ontologyRef,
+      chunking: chunkingConfig,
+      llm: llmConfigSchema,
+      concurrency: 5, // Default concurrency
+      enableGrounding: true, // Always enable grounding for quality
+    });
+  }
+);
 
 /**
  * Enrich extracted entities with document-level metadata
@@ -221,22 +223,19 @@ export const buildRunConfig = (
  * @param extractedAt - Timestamp of extraction
  * @returns Enriched entities with document metadata
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const enrichEntityMetadata = (
-  entities: ReadonlyArray<Entity>,
-  input: ExtractionActivityInput,
-  extractedAt: DateTime.Utc
-): ReadonlyArray<Entity> =>
-  entities.map((entity) =>
-    Entity.make({
-      ...entity,
-      documentId: O.some(input.documentId),
-      sourceUri: O.some(input.sourceUri),
-      extractedAt: O.some(extractedAt),
-      // Inherit eventTime from document metadata (if available)
-      eventTime: input.eventTime ?? entity.eventTime,
-    })
-  );
+export const enrichEntityMetadata = dual3(
+  (entities: ReadonlyArray<Entity>, input: ExtractionActivityInput, extractedAt: DateTime.Utc): ReadonlyArray<Entity> =>
+    entities.map((entity) =>
+      Entity.make({
+        ...entity,
+        documentId: O.some(input.documentId),
+        sourceUri: O.some(input.sourceUri),
+        extractedAt: O.some(extractedAt),
+        // Inherit eventTime from document metadata (if available)
+        eventTime: input.eventTime ?? entity.eventTime,
+      })
+    )
+);
 
 // -----------------------------------------------------------------------------
 // Streaming Extraction Activity
@@ -367,7 +366,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       });
 
       // 6. Generate provenance URI and create claims
-      const provenanceUri = makeProvenanceUri(input.batchId as BatchId, input.documentId);
+      const provenanceUri = makeProvenanceUri(input.batchId as BatchId, input.documentId, undefined);
 
       // Serialize with named graph for provenance tracking
       const store = yield* rdf.createStore;

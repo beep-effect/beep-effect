@@ -12,6 +12,8 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Chunk, Clock, Data, Effect, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
@@ -26,10 +28,12 @@ import {
   EntityFoundEvent,
   ExtractionCompleteEvent,
   ExtractionFailedEvent,
+  ExtractionFailedRetryStrategy,
   ExtractionStartedEvent,
   RecoverableErrorEvent,
   RelationFoundEvent,
 } from "../Contract/ProgressStreaming.ts";
+import { dual2 } from "../Utils/Dual.ts";
 
 // =============================================================================
 // Types
@@ -68,17 +72,15 @@ export interface ProgressBuilderState {
 /**
  * Create a new progress builder state
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const makeProgressBuilder = (
-  runId: ExtractionRunId,
-  totalChunks: number
-): Effect.Effect<Ref.Ref<ProgressBuilderState>> =>
-  Ref.make<ProgressBuilderState>({
-    runId,
-    totalChunks,
-    processedChunks: 0,
-    currentPhaseProgress: 0,
-  });
+export const makeProgressBuilder = dual2(
+  (runId: ExtractionRunId, totalChunks: number): Effect.Effect<Ref.Ref<ProgressBuilderState>> =>
+    Ref.make<ProgressBuilderState>({
+      runId,
+      totalChunks,
+      processedChunks: 0,
+      currentPhaseProgress: 0,
+    })
+);
 
 /**
  * Calculate overall progress percentage
@@ -91,16 +93,30 @@ const calculateOverallProgress = (state: ProgressBuilderState, phaseProgress: nu
 /**
  * Create ExtractionStartedEvent
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const createExtractionStarted = (
-  ref: Ref.Ref<ProgressBuilderState>,
-  textMetadata: {
+export const createExtractionStarted: {
+  (
+    ref: Ref.Ref<ProgressBuilderState>,
+    textMetadata: {
+      characterCount: number;
+      estimatedAvgChunkSize: number;
+      contentType?: string;
+    }
+  ): Effect.Effect<ExtractionStartedEvent>;
+  (textMetadata: {
     characterCount: number;
     estimatedAvgChunkSize: number;
     contentType?: string;
-  }
-): Effect.Effect<ExtractionStartedEvent> =>
-  Effect.gen(function* () {
+  }): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionStartedEvent>;
+} = dual(
+  2,
+  Effect.fn(function* (
+    ref: Ref.Ref<ProgressBuilderState>,
+    textMetadata: {
+      characterCount: number;
+      estimatedAvgChunkSize: number;
+      contentType?: string;
+    }
+  ): Effect.fn.Return<ExtractionStartedEvent> {
     const state = yield* Ref.get(ref);
     return ExtractionStartedEvent.make({
       _tag: "extraction_started",
@@ -115,19 +131,32 @@ export const createExtractionStarted = (
         contentType: O.fromUndefinedOr(textMetadata.contentType),
       },
     });
-  });
+  })
+);
 
 /**
  * Create ChunkingProgressEvent
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const createChunkingProgress = (
-  ref: Ref.Ref<ProgressBuilderState>,
-  chunksCompleted: number,
-  chunksProcessing: number,
-  avgChunkSize: number
-): Effect.Effect<ChunkingProgressEvent> =>
-  Effect.gen(function* () {
+export const createChunkingProgress: {
+  (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunksCompleted: number,
+    chunksProcessing: number,
+    avgChunkSize: number
+  ): Effect.Effect<ChunkingProgressEvent>;
+  (
+    chunksCompleted: number,
+    chunksProcessing: number,
+    avgChunkSize: number
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkingProgressEvent>;
+} = dual(
+  4,
+  Effect.fn(function* (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunksCompleted: number,
+    chunksProcessing: number,
+    avgChunkSize: number
+  ): Effect.fn.Return<ChunkingProgressEvent> {
     const state = yield* Ref.get(ref);
     return ChunkingProgressEvent.make({
       _tag: "chunking_progress",
@@ -139,19 +168,32 @@ export const createChunkingProgress = (
       chunksProcessing: NonNegativeInt.make(chunksProcessing),
       avgChunkSize: PosInt.make(avgChunkSize),
     });
-  });
+  })
+);
 
 /**
  * Create ChunkProcessingStartedEvent
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const createChunkProcessingStarted = (
-  ref: Ref.Ref<ProgressBuilderState>,
-  chunkIndex: number,
-  chunkTextLength: number,
-  textPreview: string
-): Effect.Effect<ChunkProcessingStartedEvent> =>
-  Effect.gen(function* () {
+export const createChunkProcessingStarted: {
+  (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunkIndex: number,
+    chunkTextLength: number,
+    textPreview: string
+  ): Effect.Effect<ChunkProcessingStartedEvent>;
+  (
+    chunkIndex: number,
+    chunkTextLength: number,
+    textPreview: string
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingStartedEvent>;
+} = dual(
+  4,
+  Effect.fn(function* (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunkIndex: number,
+    chunkTextLength: number,
+    textPreview: string
+  ): Effect.fn.Return<ChunkProcessingStartedEvent> {
     const state = yield* Ref.get(ref);
     return ChunkProcessingStartedEvent.make({
       _tag: "chunk_processing_started",
@@ -163,21 +205,38 @@ export const createChunkProcessingStarted = (
       chunkTextLength: PosInt.make(chunkTextLength),
       textPreview,
     });
-  });
+  })
+);
 
 /**
  * Create EntityFoundEvent
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const createEntityFound = (
-  ref: Ref.Ref<ProgressBuilderState>,
-  chunkIndex: number,
-  entityId: string,
-  mention: string,
-  types: ReadonlyArray<string>,
-  confidence?: number
-): Effect.Effect<EntityFoundEvent> =>
-  Effect.gen(function* () {
+export const createEntityFound: {
+  (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunkIndex: number,
+    entityId: string,
+    mention: string,
+    types: ReadonlyArray<string>,
+    confidence?: number
+  ): Effect.Effect<EntityFoundEvent>;
+  (
+    chunkIndex: number,
+    entityId: string,
+    mention: string,
+    types: ReadonlyArray<string>,
+    confidence?: number
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<EntityFoundEvent>;
+} = dual(
+  5,
+  Effect.fn(function* (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunkIndex: number,
+    entityId: string,
+    mention: string,
+    types: ReadonlyArray<string>,
+    confidence?: number
+  ): Effect.fn.Return<EntityFoundEvent> {
     const state = yield* Ref.get(ref);
     return EntityFoundEvent.make({
       _tag: "entity_found",
@@ -191,22 +250,41 @@ export const createEntityFound = (
       types: A.fromIterable(types),
       confidence: O.fromUndefinedOr(confidence),
     });
-  });
+  })
+);
 
 /**
  * Create RelationFoundEvent
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const createRelationFound = (
-  ref: Ref.Ref<ProgressBuilderState>,
-  chunkIndex: number,
-  subjectId: string,
-  predicate: string,
-  object: string | number | boolean,
-  isEntityReference: boolean,
-  confidence?: number
-): Effect.Effect<RelationFoundEvent> =>
-  Effect.gen(function* () {
+export const createRelationFound: {
+  (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunkIndex: number,
+    subjectId: string,
+    predicate: string,
+    object: string | number | boolean,
+    isEntityReference: boolean,
+    confidence?: number
+  ): Effect.Effect<RelationFoundEvent>;
+  (
+    chunkIndex: number,
+    subjectId: string,
+    predicate: string,
+    object: string | number | boolean,
+    isEntityReference: boolean,
+    confidence?: number
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<RelationFoundEvent>;
+} = dual(
+  6,
+  Effect.fn(function* (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunkIndex: number,
+    subjectId: string,
+    predicate: string,
+    object: string | number | boolean,
+    isEntityReference: boolean,
+    confidence?: number
+  ): Effect.fn.Return<RelationFoundEvent> {
     const state = yield* Ref.get(ref);
     return RelationFoundEvent.make({
       _tag: "relation_found",
@@ -221,21 +299,38 @@ export const createRelationFound = (
       isEntityReference,
       confidence: O.fromUndefinedOr(confidence),
     });
-  });
+  })
+);
 
 /**
  * Create ChunkProcessingCompleteEvent
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const createChunkProcessingComplete = (
-  ref: Ref.Ref<ProgressBuilderState>,
-  chunkIndex: number,
-  entityCount: number,
-  relationCount: number,
-  durationMs: number,
-  errors?: Array<{ phase: string; message: string }>
-): Effect.Effect<ChunkProcessingCompleteEvent> =>
-  Effect.gen(function* () {
+export const createChunkProcessingComplete: {
+  (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunkIndex: number,
+    entityCount: number,
+    relationCount: number,
+    durationMs: number,
+    errors?: Array<{ readonly phase: string; readonly message: string }>
+  ): Effect.Effect<ChunkProcessingCompleteEvent>;
+  (
+    chunkIndex: number,
+    entityCount: number,
+    relationCount: number,
+    durationMs: number,
+    errors?: Array<{ readonly phase: string; readonly message: string }>
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingCompleteEvent>;
+} = dual(
+  6,
+  Effect.fn(function* (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunkIndex: number,
+    entityCount: number,
+    relationCount: number,
+    durationMs: number,
+    errors?: Array<{ readonly phase: string; readonly message: string }>
+  ): Effect.fn.Return<ChunkProcessingCompleteEvent> {
     const state = yield* Ref.get(ref);
     return ChunkProcessingCompleteEvent.make({
       _tag: "chunk_processing_complete",
@@ -249,22 +344,41 @@ export const createChunkProcessingComplete = (
       durationMs: PosInt.make(durationMs),
       errors: O.fromUndefinedOr(errors),
     });
-  });
+  })
+);
 
 /**
  * Create ExtractionCompleteEvent
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const createExtractionComplete = (
-  ref: Ref.Ref<ProgressBuilderState>,
-  totalEntities: number,
-  totalRelations: number,
-  uniqueEntityTypes: number,
-  totalDurationMs: number,
-  successfulChunks: number,
-  failedChunks: number
-): Effect.Effect<ExtractionCompleteEvent> =>
-  Effect.gen(function* () {
+export const createExtractionComplete: {
+  (
+    ref: Ref.Ref<ProgressBuilderState>,
+    totalEntities: number,
+    totalRelations: number,
+    uniqueEntityTypes: number,
+    totalDurationMs: number,
+    successfulChunks: number,
+    failedChunks: number
+  ): Effect.Effect<ExtractionCompleteEvent>;
+  (
+    totalEntities: number,
+    totalRelations: number,
+    uniqueEntityTypes: number,
+    totalDurationMs: number,
+    successfulChunks: number,
+    failedChunks: number
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionCompleteEvent>;
+} = dual(
+  7,
+  Effect.fn(function* (
+    ref: Ref.Ref<ProgressBuilderState>,
+    totalEntities: number,
+    totalRelations: number,
+    uniqueEntityTypes: number,
+    totalDurationMs: number,
+    successfulChunks: number,
+    failedChunks: number
+  ): Effect.fn.Return<ExtractionCompleteEvent> {
     const state = yield* Ref.get(ref);
     return ExtractionCompleteEvent.make({
       _tag: "extraction_complete",
@@ -279,32 +393,48 @@ export const createExtractionComplete = (
       successfulChunks: NonNegativeInt.make(successfulChunks),
       failedChunks: NonNegativeInt.make(failedChunks),
     });
-  });
+  })
+);
+
+type CreateExtractionFailedOptions = {
+  readonly isTemporary?: boolean;
+  readonly retryAfterMs?: number;
+  readonly partialResults?: {
+    readonly entityCount: number;
+    readonly relationCount: number;
+    readonly processedChunks: number;
+  };
+  readonly lastSuccessfulChunkIndex?: number;
+};
 
 /**
  * Create ExtractionFailedEvent
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const createExtractionFailed = (
-  ref: Ref.Ref<ProgressBuilderState>,
-  errorType: string,
-  errorMessage: string,
-  isRecoverable: boolean,
-  options?: {
-    isTemporary?: boolean;
-    retryAfterMs?: number;
-    partialResults?: {
-      entityCount: number;
-      relationCount: number;
-      processedChunks: number;
-    };
-    lastSuccessfulChunkIndex?: number;
-  }
-): Effect.Effect<ExtractionFailedEvent> =>
-  Effect.gen(function* () {
+export const createExtractionFailed: {
+  (
+    ref: Ref.Ref<ProgressBuilderState>,
+    errorType: string,
+    errorMessage: string,
+    isRecoverable: boolean,
+    options?: CreateExtractionFailedOptions
+  ): Effect.Effect<ExtractionFailedEvent>;
+  (
+    errorType: string,
+    errorMessage: string,
+    isRecoverable: boolean,
+    options?: CreateExtractionFailedOptions
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionFailedEvent>;
+} = dual(
+  5,
+  Effect.fn(function* (
+    ref: Ref.Ref<ProgressBuilderState>,
+    errorType: string,
+    errorMessage: string,
+    isRecoverable: boolean,
+    options?: CreateExtractionFailedOptions
+  ): Effect.fn.Return<ExtractionFailedEvent> {
     const state = yield* Ref.get(ref);
     return ExtractionFailedEvent.make({
-      _tag: "extraction_failed",
       eventId: uuidv4(),
       runId: state.runId,
       timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
@@ -313,7 +443,7 @@ export const createExtractionFailed = (
       errorMessage,
       isRecoverable,
       retryStrategy: P.isNotUndefined(options?.isTemporary)
-        ? O.some({
+        ? ExtractionFailedRetryStrategy.cases.exponential_backoff.makeOption({
             type: "exponential_backoff" as const,
             delayMs: O.fromUndefinedOr(options.retryAfterMs).pipe(O.map(PosInt.make)),
             maxAttempts: O.some(PosInt.make(3)),
@@ -326,28 +456,42 @@ export const createExtractionFailed = (
           processedChunks: NonNegativeInt.make(results.processedChunks),
         }))
       ),
-      lastSuccessfulChunkIndex: O.fromUndefinedOr(options?.lastSuccessfulChunkIndex).pipe(
-        O.map(NonNegativeInt.make)
-      ),
+      lastSuccessfulChunkIndex: O.fromUndefinedOr(options?.lastSuccessfulChunkIndex).pipe(O.map(NonNegativeInt.make)),
     });
-  });
+  })
+);
 
 /**
  * Create RecoverableErrorEvent
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const createRecoverableError = (
-  ref: Ref.Ref<ProgressBuilderState>,
-  chunkIndex: number,
-  errorType: string,
-  errorMessage: string,
-  phase: string,
-  recoveryAction: string
-): Effect.Effect<RecoverableErrorEvent> =>
-  Effect.gen(function* () {
+export const createRecoverableError: {
+  (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunkIndex: number,
+    errorType: string,
+    errorMessage: string,
+    phase: string,
+    recoveryAction: string
+  ): Effect.Effect<RecoverableErrorEvent>;
+  (
+    chunkIndex: number,
+    errorType: string,
+    errorMessage: string,
+    phase: string,
+    recoveryAction: string
+  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<RecoverableErrorEvent>;
+} = dual(
+  6,
+  Effect.fn(function* (
+    ref: Ref.Ref<ProgressBuilderState>,
+    chunkIndex: number,
+    errorType: string,
+    errorMessage: string,
+    phase: string,
+    recoveryAction: string
+  ): Effect.fn.Return<RecoverableErrorEvent> {
     const state = yield* Ref.get(ref);
     return RecoverableErrorEvent.make({
-      _tag: "error_recoverable",
       eventId: uuidv4(),
       runId: state.runId,
       timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
@@ -358,7 +502,8 @@ export const createRecoverableError = (
       phase,
       recoveryAction,
     });
-  });
+  })
+);
 
 /**
  * Increment processed chunks
@@ -372,12 +517,13 @@ export const markChunkProcessed = (ref: Ref.Ref<ProgressBuilderState>): Effect.E
 /**
  * Set phase progress
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const setPhaseProgress = (ref: Ref.Ref<ProgressBuilderState>, progress: number): Effect.Effect<void> =>
-  Ref.update(ref, (state) => ({
-    ...state,
-    currentPhaseProgress: Math.min(100, Math.max(0, progress)),
-  }));
+export const setPhaseProgress = dual2(
+  (ref: Ref.Ref<ProgressBuilderState>, progress: number): Effect.Effect<void> =>
+    Ref.update(ref, (state) => ({
+      ...state,
+      currentPhaseProgress: Math.min(100, Math.max(0, progress)),
+    }))
+);
 
 // =============================================================================
 // Backpressure Handler (Functional)
@@ -412,9 +558,9 @@ const shouldIncludeEvent = Effect.fn("ProgressStreaming.shouldIncludeEvent")(fun
   sampleRate: number
 ) {
   const tag = event._tag;
-  const detailedEventTags = new Set(["entity_found", "relation_found"]);
+  const detailedEventTags = HashSet.make("entity_found", "relation_found");
 
-  if (!detailedEventTags.has(tag)) {
+  if (!HashSet.has(detailedEventTags, tag)) {
     return true;
   }
 
@@ -427,12 +573,20 @@ const shouldIncludeEvent = Effect.fn("ProgressStreaming.shouldIncludeEvent")(fun
  * Returns O.some with warning event if backpressure warning needed,
  * O.none otherwise
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const enqueueEvent = (
-  ref: Ref.Ref<BackpressureState>,
-  event: ProgressEvent
-): Effect.Effect<O.Option<BackpressureWarningEvent>, ProgressStreamingError> =>
-  Effect.gen(function* () {
+export const enqueueEvent: {
+  (
+    ref: Ref.Ref<BackpressureState>,
+    event: ProgressEvent
+  ): Effect.Effect<O.Option<BackpressureWarningEvent>, ProgressStreamingError>;
+  (
+    event: ProgressEvent
+  ): (ref: Ref.Ref<BackpressureState>) => Effect.Effect<O.Option<BackpressureWarningEvent>, ProgressStreamingError>;
+} = dual(
+  2,
+  Effect.fn(function* (
+    ref: Ref.Ref<BackpressureState>,
+    event: ProgressEvent
+  ): Effect.fn.Return<O.Option<BackpressureWarningEvent>, ProgressStreamingError> {
     const state = yield* Ref.get(ref);
 
     // Check sampling
@@ -510,7 +664,8 @@ export const enqueueEvent = (
       eventQueue: newQueue,
     }));
     return O.none();
-  });
+  })
+);
 
 /**
  * Dequeue next event
@@ -538,55 +693,52 @@ export const getQueueSize = (ref: Ref.Ref<BackpressureState>): Effect.Effect<num
  * Default concurrency for stream merging
  * Using bounded concurrency to prevent resource exhaustion
  */
-const DEFAULT_STREAM_CONCURRENCY = 16;
-
 /**
  * Combine multiple progress streams with backpressure handling
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const combineProgressStreams = (
-  streams: ReadonlyArray<Stream.Stream<ProgressEvent, Error>>,
-  concurrency: number = DEFAULT_STREAM_CONCURRENCY
-): Stream.Stream<ProgressEvent, Error> => {
-  if (streams.length === 0) {
-    return Stream.empty;
-  }
+export const combineProgressStreams = dual2(
+  (
+    streams: ReadonlyArray<Stream.Stream<ProgressEvent, Error>>,
+    concurrency: number
+  ): Stream.Stream<ProgressEvent, Error> => {
+    if (streams.length === 0) {
+      return Stream.empty;
+    }
 
-  if (streams.length === 1) {
-    return streams[0];
-  }
+    if (streams.length === 1) {
+      return streams[0];
+    }
 
-  // Merge all streams with bounded concurrency
-  return Stream.mergeAll(streams, { concurrency });
-};
+    // Merge all streams with bounded concurrency
+    return Stream.mergeAll(streams, { concurrency });
+  }
+);
 
 /**
  * Apply backpressure to a stream
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const withBackpressure = (
-  stream: Stream.Stream<ProgressEvent, Error>,
-  config: BackpressureConfig = DefaultBackpressureConfig
-): Stream.Stream<ProgressEvent, Error> =>
-  Stream.unwrap(
-    Effect.gen(function* () {
-      const handlerRef = yield* makeBackpressureHandler(config);
+export const withBackpressure = dual2(
+  (stream: Stream.Stream<ProgressEvent, Error>, config: BackpressureConfig): Stream.Stream<ProgressEvent, Error> =>
+    Stream.unwrap(
+      Effect.gen(function* () {
+        const handlerRef = yield* makeBackpressureHandler(config);
 
-      return stream.pipe(
-        Stream.mapEffect((event) =>
-          Effect.gen(function* () {
-            const warning = yield* enqueueEvent(handlerRef, event);
-            if (O.isSome(warning)) {
-              // Emit warning followed by original event
-              return Chunk.make(warning.value as ProgressEvent, event);
-            }
-            return Chunk.make(event);
-          })
-        ),
-        Stream.flattenIterable
-      );
-    })
-  );
+        return stream.pipe(
+          Stream.mapEffect(
+            Effect.fn(function* (event) {
+              const warning = yield* enqueueEvent(handlerRef, event);
+              if (O.isSome(warning)) {
+                // Emit warning followed by original event
+                return Chunk.make(warning.value as ProgressEvent, event);
+              }
+              return Chunk.make(event);
+            })
+          ),
+          Stream.flattenIterable
+        );
+      })
+    )
+);
 
 // =============================================================================
 // Resumable Extraction State
@@ -614,11 +766,10 @@ export interface ResumableExtractionState {
 /**
  * Extract resumable state from ExtractionFailedEvent
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const extractResumableState = (
-  runId: ExtractionRunId,
-  event: ExtractionFailedEvent
-): O.Option<ResumableExtractionState> => {
+export const extractResumableState: {
+  (runId: ExtractionRunId, event: ExtractionFailedEvent): O.Option<ResumableExtractionState>;
+  (event: ExtractionFailedEvent): (runId: ExtractionRunId) => O.Option<ResumableExtractionState>;
+} = dual(2, (runId: ExtractionRunId, event: ExtractionFailedEvent): O.Option<ResumableExtractionState> => {
   if (O.isNone(event.lastSuccessfulChunkIndex) || O.isNone(event.partialResults)) {
     return O.none();
   }
@@ -636,10 +787,8 @@ export const extractResumableState = (
       message: event.errorMessage,
       isRecoverable: event.isRecoverable,
       ...O.getOrUndefined(
-        O.flatMap(event.retryStrategy, (strategy) =>
-          O.map(strategy.delayMs, (retryAfterMs) => ({ retryAfterMs }))
-        )
+        O.flatMap(event.retryStrategy, (strategy) => O.map(strategy.delayMs, (retryAfterMs) => ({ retryAfterMs })))
       ),
     },
   });
-};
+});

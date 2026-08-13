@@ -11,6 +11,8 @@
  */
 
 import { Effect, Fiber, Queue, Stream } from "effect";
+import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as P from "effect/Predicate";
 import type { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 
@@ -53,7 +55,7 @@ export const DEFAULT_BACKPRESSURE_CONFIG: BackpressureConfig = {
  *
  * These tags align with ProgressEventTag in Contract/ProgressStreaming.ts
  */
-const CRITICAL_EVENT_TAGS = new Set([
+const CRITICAL_EVENT_TAGS = HashSet.make(
   // Core lifecycle events
   "extraction_started",
   "extraction_complete",
@@ -72,13 +74,13 @@ const CRITICAL_EVENT_TAGS = new Set([
   "error_recoverable",
   "error_fatal",
   "backpressure_warning",
-  "rate_limited",
-]);
+  "rate_limited"
+);
 
 /**
  * Check if an event is critical and should never be sampled
  */
-const isCriticalEvent = (event: ExtractionProgressEvent): boolean => CRITICAL_EVENT_TAGS.has(event._tag);
+const isCriticalEvent = (event: ExtractionProgressEvent): boolean => HashSet.has(CRITICAL_EVENT_TAGS, event._tag);
 
 // =============================================================================
 // Backpressure Stream Operator
@@ -105,65 +107,75 @@ const isCriticalEvent = (event: ExtractionProgressEvent): boolean => CRITICAL_EV
  * })
  * ```
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const withBackpressure = <E>(
-  source: Stream.Stream<ExtractionProgressEvent, E>,
-  config: BackpressureConfig = DEFAULT_BACKPRESSURE_CONFIG
-): Stream.Stream<ExtractionProgressEvent, E> =>
-  Stream.unwrap(
-    Effect.gen(function* () {
-      // Create bounded queue for backpressure
-      const queue = yield* Queue.bounded<ExtractionProgressEvent>(config.maxQueuedEvents);
+export const withBackpressure: {
+  <E>(
+    config: BackpressureConfig
+  ): (source: Stream.Stream<ExtractionProgressEvent, E>) => Stream.Stream<ExtractionProgressEvent, E>;
+  <E>(
+    source: Stream.Stream<ExtractionProgressEvent, E>,
+    config: BackpressureConfig
+  ): Stream.Stream<ExtractionProgressEvent, E>;
+} = dual(
+  2,
+  <E>(
+    source: Stream.Stream<ExtractionProgressEvent, E>,
+    config: BackpressureConfig
+  ): Stream.Stream<ExtractionProgressEvent, E> =>
+    Stream.unwrap(
+      Effect.gen(function* () {
+        // Create bounded queue for backpressure
+        const queue = yield* Queue.bounded<ExtractionProgressEvent>(config.maxQueuedEvents);
 
-      // Track sampling state
-      let sampleCounter = 0;
+        // Track sampling state
+        let sampleCounter = 0;
 
-      // Producer: read from source and apply sampling
-      const producer = source.pipe(
-        Stream.tap((event) =>
-          Effect.gen(function* () {
-            const size = yield* Queue.size(queue);
-            const loadFactor = size / config.maxQueuedEvents;
+        // Producer: read from source and apply sampling
+        const producer = source.pipe(
+          Stream.tap(
+            Effect.fnUntraced(function* (event) {
+              const size = yield* Queue.size(queue);
+              const loadFactor = size / config.maxQueuedEvents;
 
-            // Critical events always pass
-            if (isCriticalEvent(event)) {
-              // If queue is full, drop oldest to make room for critical event
-              if (size >= config.maxQueuedEvents) {
-                yield* Queue.take(queue); // Drop oldest
-              }
-              yield* Queue.offer(queue, event);
-              return;
-            }
-
-            // Apply sampling when queue is getting full
-            if (loadFactor > config.samplingThreshold) {
-              sampleCounter++;
-              const sampleEvery = Math.floor(1 / config.samplingRate);
-              if (sampleCounter % sampleEvery !== 0) {
-                // Drop this non-critical event
+              // Critical events always pass
+              if (isCriticalEvent(event)) {
+                // If queue is full, drop oldest to make room for critical event
+                if (size >= config.maxQueuedEvents) {
+                  yield* Queue.take(queue); // Drop oldest
+                }
+                yield* Queue.offer(queue, event);
                 return;
               }
-            }
 
-            // Try to enqueue, drop if full
-            yield* Queue.offer(queue, event);
-          })
-        ),
-        Stream.runDrain,
-        // Ensure queue is shutdown when producer completes
-        Effect.ensuring(Queue.shutdown(queue))
-      );
+              // Apply sampling when queue is getting full
+              if (loadFactor > config.samplingThreshold) {
+                sampleCounter++;
+                const sampleEvery = Math.floor(1 / config.samplingRate);
+                if (sampleCounter % sampleEvery !== 0) {
+                  // Drop this non-critical event
+                  return;
+                }
+              }
 
-      // Fork producer to run in background
-      const fiber = yield* Effect.forkScoped(producer);
+              // Try to enqueue, drop if full
+              yield* Queue.offer(queue, event);
+            })
+          ),
+          Stream.runDrain,
+          // Ensure queue is shutdown when producer completes
+          Effect.ensuring(Queue.shutdown(queue))
+        );
 
-      // Consumer: drain from queue
-      return Stream.fromQueue(queue).pipe(
-        // Ensure we wait for producer on completion
-        Stream.ensuring(Fiber.join(fiber).pipe(Effect.ignore))
-      );
-    })
-  );
+        // Fork producer to run in background
+        const fiber = yield* Effect.forkScoped(producer);
+
+        // Consumer: drain from queue
+        return Stream.fromQueue(queue).pipe(
+          // Ensure we wait for producer on completion
+          Stream.ensuring(Fiber.join(fiber).pipe(Effect.ignore))
+        );
+      })
+    )
+);
 
 // =============================================================================
 // Metrics
@@ -190,88 +202,100 @@ export interface BackpressureMetrics {
 /**
  * Create a metered backpressure handler that tracks metrics
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const withBackpressureMetered = <E>(
-  source: Stream.Stream<ExtractionProgressEvent, E>,
-  config: BackpressureConfig = DEFAULT_BACKPRESSURE_CONFIG,
-  onMetrics?: (metrics: BackpressureMetrics) => Effect.Effect<void>
-): Stream.Stream<ExtractionProgressEvent, E> =>
-  Stream.unwrap(
-    Effect.gen(function* () {
-      const queue = yield* Queue.bounded<ExtractionProgressEvent>(config.maxQueuedEvents);
+export const withBackpressureMetered: {
+  <E>(
+    config: BackpressureConfig,
+    onMetrics: ((metrics: BackpressureMetrics) => Effect.Effect<void>) | undefined
+  ): (source: Stream.Stream<ExtractionProgressEvent, E>) => Stream.Stream<ExtractionProgressEvent, E>;
+  <E>(
+    source: Stream.Stream<ExtractionProgressEvent, E>,
+    config: BackpressureConfig,
+    onMetrics: ((metrics: BackpressureMetrics) => Effect.Effect<void>) | undefined
+  ): Stream.Stream<ExtractionProgressEvent, E>;
+} = dual(
+  3,
+  <E>(
+    source: Stream.Stream<ExtractionProgressEvent, E>,
+    config: BackpressureConfig,
+    onMetrics: ((metrics: BackpressureMetrics) => Effect.Effect<void>) | undefined
+  ): Stream.Stream<ExtractionProgressEvent, E> =>
+    Stream.unwrap(
+      Effect.gen(function* () {
+        const queue = yield* Queue.bounded<ExtractionProgressEvent>(config.maxQueuedEvents);
 
-      // Metrics tracking
-      let eventsReceived = 0;
-      let eventsDelivered = 0;
-      let eventsDropped = 0;
-      let peakQueueSize = 0;
-      let samplingTriggered = 0;
-      let sampleCounter = 0;
+        // Metrics tracking
+        let eventsReceived = 0;
+        let eventsDelivered = 0;
+        let eventsDropped = 0;
+        let peakQueueSize = 0;
+        let samplingTriggered = 0;
+        let sampleCounter = 0;
 
-      const getMetrics = (): BackpressureMetrics => ({
-        eventsReceived,
-        eventsDelivered,
-        eventsDropped,
-        currentQueueSize: 0, // Will be updated
-        peakQueueSize,
-        samplingTriggered,
-      });
+        const getMetrics = (): BackpressureMetrics => ({
+          eventsReceived,
+          eventsDelivered,
+          eventsDropped,
+          currentQueueSize: 0, // Will be updated
+          peakQueueSize,
+          samplingTriggered,
+        });
 
-      const producer = source.pipe(
-        Stream.tap((event) =>
-          Effect.gen(function* () {
-            eventsReceived++;
-            const size = yield* Queue.size(queue);
-            peakQueueSize = Math.max(peakQueueSize, size);
+        const producer = source.pipe(
+          Stream.tap(
+            Effect.fnUntraced(function* (event) {
+              eventsReceived++;
+              const size = yield* Queue.size(queue);
+              peakQueueSize = Math.max(peakQueueSize, size);
 
-            const loadFactor = size / config.maxQueuedEvents;
+              const loadFactor = size / config.maxQueuedEvents;
 
-            if (isCriticalEvent(event)) {
-              if (size >= config.maxQueuedEvents) {
-                yield* Queue.take(queue);
-                eventsDropped++;
-              }
-              yield* Queue.offer(queue, event);
-              eventsDelivered++;
-              return;
-            }
-
-            if (loadFactor > config.samplingThreshold) {
-              if (sampleCounter === 0) samplingTriggered++;
-              sampleCounter++;
-              const sampleEvery = Math.floor(1 / config.samplingRate);
-              if (sampleCounter % sampleEvery !== 0) {
-                eventsDropped++;
+              if (isCriticalEvent(event)) {
+                if (size >= config.maxQueuedEvents) {
+                  yield* Queue.take(queue);
+                  eventsDropped++;
+                }
+                yield* Queue.offer(queue, event);
+                eventsDelivered++;
                 return;
               }
-            }
 
-            const offered = yield* Queue.offer(queue, event).pipe(
-              Effect.map(() => true),
-              Effect.orElseSucceed(() => false)
-            );
+              if (loadFactor > config.samplingThreshold) {
+                if (sampleCounter === 0) samplingTriggered++;
+                sampleCounter++;
+                const sampleEvery = Math.floor(1 / config.samplingRate);
+                if (sampleCounter % sampleEvery !== 0) {
+                  eventsDropped++;
+                  return;
+                }
+              }
 
-            if (offered) {
-              eventsDelivered++;
-            } else {
-              eventsDropped++;
-            }
+              const offered = yield* Queue.offer(queue, event).pipe(
+                Effect.map(() => true),
+                Effect.orElseSucceed(() => false)
+              );
 
-            // Emit metrics periodically
-            if (P.isNotUndefined(onMetrics) && eventsReceived % 100 === 0) {
-              yield* onMetrics({
-                ...getMetrics(),
-                currentQueueSize: size,
-              });
-            }
-          })
-        ),
-        Stream.runDrain,
-        Effect.ensuring(Queue.shutdown(queue))
-      );
+              if (offered) {
+                eventsDelivered++;
+              } else {
+                eventsDropped++;
+              }
 
-      const fiber = yield* Effect.forkScoped(producer);
+              // Emit metrics periodically
+              if (P.isNotUndefined(onMetrics) && eventsReceived % 100 === 0) {
+                yield* onMetrics({
+                  ...getMetrics(),
+                  currentQueueSize: size,
+                });
+              }
+            })
+          ),
+          Stream.runDrain,
+          Effect.ensuring(Queue.shutdown(queue))
+        );
 
-      return Stream.fromQueue(queue).pipe(Stream.ensuring(Fiber.join(fiber).pipe(Effect.ignore)));
-    })
-  );
+        const fiber = yield* Effect.forkScoped(producer);
+
+        return Stream.fromQueue(queue).pipe(Stream.ensuring(Fiber.join(fiber).pipe(Effect.ignore)));
+      })
+    )
+);

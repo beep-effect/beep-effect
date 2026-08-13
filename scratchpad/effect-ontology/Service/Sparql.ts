@@ -10,6 +10,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { Context, Data, Effect, Layer } from "effect";
+import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as oxigraph from "oxigraph";
@@ -34,7 +36,7 @@ export type SparqlValue =
 /**
  * A single row of bindings from a SELECT query
  */
-export type SparqlBindings = ReadonlyMap<string, SparqlValue>;
+export type SparqlBindings = HashMap.HashMap<string, SparqlValue>;
 
 /**
  * A quad in SPARQL CONSTRUCT/DESCRIBE results
@@ -159,7 +161,7 @@ const oxQuadToResult = (quad: oxigraph.Quad): SparqlQuad => ({
  *
  *   if (result._tag === "SelectResult") {
  *     for (const binding of result.bindings) {
- *       console.log(binding.get("name"))
+ *       console.log(HashMap.get(binding, "name"))
  *     }
  *   }
  * })
@@ -177,7 +179,7 @@ export interface SparqlServiceMethods {
     store: RdfStore,
     query: string,
     variables: ReadonlyArray<string>
-  ) => Effect.Effect<ReadonlyArray<ReadonlyMap<string, string>>, SparqlExecutionError | SparqlLoadError>;
+  ) => Effect.Effect<ReadonlyArray<HashMap.HashMap<string, string>>, SparqlExecutionError | SparqlLoadError>;
   readonly executeAsk: (
     store: RdfStore,
     query: string
@@ -236,7 +238,7 @@ export class SparqlService extends Context.Service<SparqlService, SparqlServiceM
 
         // 4. Process result based on query type
         // Oxigraph returns different types based on query:
-        // - SELECT: iterable of Map<string, Term>
+        // - SELECT: iterable rows of string-to-term entries
         // - ASK: boolean
         // - CONSTRUCT/DESCRIBE: iterable of Quad
 
@@ -245,7 +247,7 @@ export class SparqlService extends Context.Service<SparqlService, SparqlServiceM
           return new AskResult({ value: result });
         }
 
-        // Check if it's SELECT (Map) or CONSTRUCT (Quad)
+        // Check if it's SELECT bindings or CONSTRUCT quads
         const resultArray = Array.from(result as Iterable<unknown>);
 
         if (resultArray.length === 0) {
@@ -267,21 +269,18 @@ export class SparqlService extends Context.Service<SparqlService, SparqlServiceM
           return new ConstructResult({ quads: [] });
         }
 
-        const first = resultArray[0];
-
-        if (first instanceof Map) {
+        if (query.trim().toUpperCase().startsWith("SELECT")) {
           // SELECT query result
           const bindings = resultArray.map((row) => {
-            const map = row as Map<string, oxigraph.Term>;
-            const resultMap = new Map<string, SparqlValue>();
-            for (const [key, value] of map) {
-              resultMap.set(key, oxTermToSparqlValue(value));
-            }
-            return resultMap as SparqlBindings;
+            const entries = row as Iterable<readonly [string, oxigraph.Term]>;
+            return HashMap.fromIterable(
+              A.map(A.fromIterable(entries), ([key, value]) => [key, oxTermToSparqlValue(value)] as const)
+            );
           });
 
           // Extract variable names from first binding
-          const variables = bindings.length > 0 ? Array.from(bindings[0].keys()) : [];
+          const variables =
+            bindings.length > 0 ? O.getOrThrow(A.head(bindings)).pipe(HashMap.keys, A.fromIterable) : [];
 
           return new SelectResult({ variables, bindings });
         }
@@ -318,7 +317,7 @@ export class SparqlService extends Context.Service<SparqlService, SparqlServiceM
         store: RdfStore,
         query: string,
         variables: ReadonlyArray<string>
-      ): Effect.Effect<ReadonlyArray<ReadonlyMap<string, string>>, SparqlExecutionError | SparqlLoadError> =>
+      ): Effect.Effect<ReadonlyArray<HashMap.HashMap<string, string>>, SparqlExecutionError | SparqlLoadError> =>
         Effect.gen(function* () {
           const result = yield* execute(store, query);
 
@@ -330,11 +329,11 @@ export class SparqlService extends Context.Service<SparqlService, SparqlServiceM
           }
 
           return result.bindings.map((binding: SparqlBindings) => {
-            const extracted = new Map<string, string>();
+            let extracted = HashMap.empty<string, string>();
             for (const v of variables) {
-              const value = binding.get(v);
-              if (P.isNotUndefined(value)) {
-                extracted.set(v, value.value);
+              const value = HashMap.get(binding, v);
+              if (O.isSome(value)) {
+                extracted = HashMap.set(extracted, v, value.value.value);
               }
             }
             return extracted;

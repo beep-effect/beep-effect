@@ -11,6 +11,8 @@
 import { $ScratchpadId } from "@beep/identity";
 import type { Scope } from "effect";
 import { Chunk, Context, Duration, Effect, Layer } from "effect";
+import * as A from "effect/Array";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -18,8 +20,8 @@ import * as N3 from "n3";
 import { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Error/Rdf.ts";
 import type { Entity, Relation } from "../Domain/Model/Entity.ts";
 import { CLAIMS, CORE, DCTERMS, EXTR, OWL, PROV, RDF, XSD } from "../Domain/Rdf/Constants.ts";
-import type { BlankNode as BlankNodeType, IRI, RdfTerm } from "../Domain/Rdf/Types.ts";
-import { Literal, Quad } from "../Domain/Rdf/Types.ts";
+import type { BlankNode as BlankNodeType, RdfTerm } from "../Domain/Rdf/Types.ts";
+import { IRI, Literal, Quad } from "../Domain/Rdf/Types.ts";
 import { createN3Builders, entityToQuads, relationToQuad } from "../Utils/Rdf.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 
@@ -965,7 +967,9 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
           });
 
           // Add all quads from store
-          n3Store.forEach((q) => writer.addQuad(q));
+          n3Store.forEach((q) => {
+            writer.addQuad(q);
+          });
 
           writer.end((error, result) => {
             if (P.isTruthy(error)) {
@@ -1013,7 +1017,9 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
           });
 
           // Add all quads from store (including graph information)
-          n3Store.forEach((q) => writer.addQuad(q));
+          n3Store.forEach((q) => {
+            writer.addQuad(q);
+          });
 
           writer.end((error, result) => {
             if (P.isTruthy(error)) {
@@ -1052,16 +1058,16 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
         Effect.try({
           try: () => {
             const n3Store = store._store;
-            const graphs = new Set<string>();
+            const graphs = MutableHashSet.empty<string>();
 
             // Iterate all quads and collect unique graph IRIs
             n3Store.forEach((quad) => {
               if (quad.graph.termType === "NamedNode") {
-                graphs.add(quad.graph.value);
+                MutableHashSet.add(graphs, quad.graph.value);
               }
             });
 
-            return Array.from(graphs) as Array<IRI>;
+            return A.map(A.fromIterable(graphs), (graph) => IRI.make(graph));
           },
           catch: (error) =>
             RdfError.make({

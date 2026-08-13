@@ -10,6 +10,8 @@
 import { Console, Data, Effect, FileSystem } from "effect";
 import * as Str from "effect/String";
 import { Command, Flag as Options } from "effect/unstable/cli";
+import * as Struct from "@beep/utils/Struct";
+import * as A from "effect/Array";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { Reasoner, ReasoningConfig } from "../../Service/Reasoner.ts";
 import { computeQuadDelta, summarizeDelta } from "../../Utils/QuadDelta.ts";
@@ -111,9 +113,9 @@ export const inferenceCommand = Command.make(
       yield* Console.log(`  Duration:          ${reasoningResult.durationMs}ms`);
 
       // Show predicate breakdown if there are inferences
-      if (Object.keys(summary.predicateBreakdown).length > 0) {
+      if (!A.isReadonlyArrayEmpty(Struct.keys(summary.predicateBreakdown))) {
         yield* Console.log(`\nBy predicate:`);
-        for (const [pred, count] of Object.entries(summary.predicateBreakdown)) {
+        for (const [pred, count] of Struct.entries(summary.predicateBreakdown)) {
           yield* Console.log(`  ${pred}: ${count}`);
         }
       }

@@ -81,11 +81,11 @@ export class SimilarityScorer extends Context.Service<SimilarityScorer>()($I`Sim
           embeddingSimilarity = nomic.cosineSimilarity(embA, embB);
         }
 
-        const score = computeEntitySimilarity(a, b, relations, config, embeddingSimilarity);
+        const score = computeEntitySimilarity(a, b, relations, config, embeddingSimilarity, undefined);
 
         const method = detectResolutionMethod(a, b, relations);
 
-        const shouldMergeResult = shouldConsiderMerge(a, b, relations, config, embeddingSimilarity);
+        const shouldMergeResult = shouldConsiderMerge(a, b, relations, config, embeddingSimilarity, undefined);
 
         return {
           score,

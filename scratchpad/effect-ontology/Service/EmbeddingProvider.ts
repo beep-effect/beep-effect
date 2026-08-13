@@ -11,6 +11,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import type { Effect } from "effect";
 import { Context } from "effect";
+import { dual } from "effect/Function";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingProvider");
@@ -130,8 +131,10 @@ export class EmbeddingProvider extends Context.Service<EmbeddingProvider, Embedd
  * @since 2.0.0
  * @category Utilities
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const cosineSimilarity = (a: Embedding, b: Embedding): number => {
+export const cosineSimilarity: {
+  (b: Embedding): (a: Embedding) => number;
+  (a: Embedding, b: Embedding): number;
+} = dual(2, (a: Embedding, b: Embedding): number => {
   if (a.length !== b.length || a.length === 0) return 0;
 
   let dot = 0;
@@ -146,4 +149,4 @@ export const cosineSimilarity = (a: Embedding, b: Embedding): number => {
 
   if (normA === 0 || normB === 0) return 0;
   return dot / (Math.sqrt(normA) * Math.sqrt(normB));
-};
+});

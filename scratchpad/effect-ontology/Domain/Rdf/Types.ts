@@ -32,7 +32,10 @@ export const IRI = CanonicalIRI.pipe(
   $I.annoteSchema("IRI", {
     description: "Canonical RFC 3987 IRI represented as a branded string.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withCodecStatics,
+  SchemaUtils.withStatics((schema) => ({
+    decodeResult: S.decodeResult(schema)
+  }))
 );
 
 /**

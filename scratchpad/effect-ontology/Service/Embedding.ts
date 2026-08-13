@@ -17,7 +17,7 @@ import { EmbeddingCache } from "./EmbeddingCache.ts";
 import type { Embedding, EmbeddingTaskType, ProviderMetadata } from "./EmbeddingProvider.ts";
 import { cosineSimilarity as cosineSim, EmbeddingProvider } from "./EmbeddingProvider.ts";
 import { EmbedTextRequest } from "./EmbeddingRequest.ts";
-import { makeEmbeddingResolver } from "./EmbeddingResolver.ts";
+import { DEFAULT_MAX_BATCH_SIZE, makeEmbeddingResolver } from "./EmbeddingResolver.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Embedding");
 
@@ -108,7 +108,7 @@ export const EmbeddingServiceLive: Layer.Layer<
     const metrics = yield* MetricsService;
 
     const { metadata } = provider;
-    const resolver = makeEmbeddingResolver(provider);
+    const resolver = makeEmbeddingResolver(provider, DEFAULT_MAX_BATCH_SIZE);
 
     /**
      * Embed with cache-through pattern and Request API batching

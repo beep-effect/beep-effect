@@ -9,7 +9,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, DateTime, Effect, Layer, MutableHashSet, Option, Schema } from "effect";
+import { Context, DateTime, Effect, Layer, MutableHashSet } from "effect";
+import * as S from "effect/Schema";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError, SystemError } from "effect/PlatformError";
@@ -43,7 +44,7 @@ export interface ImageBlobStoreService {
   /**
    * Retrieve image bytes by hash
    */
-  readonly getBytes: (hash: string) => Effect.Effect<Option.Option<Uint8Array>, KeyValueStoreError>;
+  readonly getBytes: (hash: string) => Effect.Effect<O.Option<Uint8Array>, KeyValueStoreError>;
 
   /**
    * Check if image bytes exist
@@ -53,14 +54,14 @@ export interface ImageBlobStoreService {
   /**
    * Store image metadata JSON
    */
-  readonly putMetadata: (asset: ImageAsset) => Effect.Effect<void, KeyValueStoreError | Schema.SchemaError>;
+  readonly putMetadata: (asset: ImageAsset) => Effect.Effect<void, KeyValueStoreError | S.SchemaError>;
 
   /**
    * Retrieve image metadata by hash
    */
   readonly getMetadata: (
     hash: string
-  ) => Effect.Effect<Option.Option<ImageAsset>, KeyValueStoreError | Schema.SchemaError>;
+  ) => Effect.Effect<O.Option<ImageAsset>, KeyValueStoreError | S.SchemaError>;
 
   /**
    * Store both bytes and metadata atomically
@@ -70,7 +71,7 @@ export interface ImageBlobStoreService {
     bytes: Uint8Array,
     contentType: string,
     sourceUrl?: string
-  ) => Effect.Effect<ImageAsset, KeyValueStoreError | Schema.SchemaError>;
+  ) => Effect.Effect<ImageAsset, KeyValueStoreError | S.SchemaError>;
 
   /**
    * Delete image bytes and metadata
@@ -89,7 +90,7 @@ export interface ImageBlobStoreService {
   readonly getSignedUrl: (
     hash: string,
     expiresInSeconds?: number
-  ) => Effect.Effect<Option.Option<string>, SystemError | PlatformError>;
+  ) => Effect.Effect<O.Option<string>, SystemError | PlatformError>;
 
   /**
    * Whether this storage backend supports signed URLs
@@ -140,10 +141,10 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
 
         getMetadata: Effect.fn(function* (hash: string) {
           const content = yield* storage.get(PathLayout.image.metadata(imagePathHash(hash)));
-          if (content === undefined) return Option.none();
+          if (content === undefined) return O.none();
 
           const asset = yield* ImageAsset.decodeJsonStringEffect(content);
-          return Option.some(asset);
+          return O.some(asset);
         }),
 
         putBytesWithMetadata: Effect.fn(function* (
@@ -167,7 +168,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
           });
 
           // Store metadata
-          const json = yield* Schema.encodeEffect(Schema.fromJsonString(ImageAsset, { space: 2 }))(asset);
+          const json = yield* ImageAsset.encodeJsonStringEffect(asset);
           yield* storage.set(PathLayout.image.metadata(pathHash), json);
 
           return asset;
@@ -188,7 +189,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
           const hashes = MutableHashSet.empty<string>();
           for (const path of paths) {
             const match = Str.match(/^assets\/images\/([^/]+)\//)(path);
-            if (Option.isSome(match) && match.value[1] !== undefined) {
+            if (O.isSome(match) && match.value[1] !== undefined) {
               MutableHashSet.add(hashes, match.value[1]);
             }
           }

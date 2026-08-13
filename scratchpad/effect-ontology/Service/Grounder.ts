@@ -12,6 +12,8 @@
 
 import {$ScratchpadId} from "@beep/identity";
 import {Context, Effect, Layer, Schema, Stream} from "effect";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import {LanguageModel} from "effect/unstable/ai";
 import type {Entity, Relation} from "../Domain/Model/Entity.ts";
@@ -460,14 +462,14 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             grounded: boolean;
             confidence: number;
           };
-          const resultsMap = new Map(
-            (response.value.results as ReadonlyArray<GrounderResult>).map((r: GrounderResult) => [r.index, r])
+          const resultsMap = HashMap.fromIterable(
+            (response.value.results as ReadonlyArray<GrounderResult>).map((r: GrounderResult) => [r.index, r] as const)
           );
           return inputs.map((input, index) => {
-            const result = resultsMap.get(index);
+            const result = HashMap.get(resultsMap, index);
             return {
-              grounded: result?.grounded ?? false,
-              confidence: result?.confidence ?? 0,
+              grounded: O.match(result, {onNone: () => false, onSome: (value) => value.grounded}),
+              confidence: O.match(result, {onNone: () => 0, onSome: (value) => value.confidence}),
               relation: input.relation,
             };
           });
@@ -534,14 +536,16 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                     grounded: boolean;
                     confidence: number;
                   };
-                  const resultsMap = new Map(
-                    (response.value.results as ReadonlyArray<GrounderResult>).map((r: GrounderResult) => [r.index, r])
+                  const resultsMap = HashMap.fromIterable(
+                    (response.value.results as ReadonlyArray<GrounderResult>).map(
+                      (r: GrounderResult) => [r.index, r] as const
+                    )
                   );
                   return batchArray.map((input, index) => {
-                    const result = resultsMap.get(index);
+                    const result = HashMap.get(resultsMap, index);
                     return {
-                      grounded: result?.grounded ?? false,
-                      confidence: result?.confidence ?? 0,
+                      grounded: O.match(result, {onNone: () => false, onSome: (value) => value.grounded}),
+                      confidence: O.match(result, {onNone: () => 0, onSome: (value) => value.confidence}),
                       relation: input.relation,
                     };
                   });
@@ -680,15 +684,15 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             typeMatch: boolean;
             confidence: number;
           };
-          const resultsMap = new Map(
-            (response.value.results as ReadonlyArray<EntityResult>).map((r: EntityResult) => [r.index, r])
+          const resultsMap = HashMap.fromIterable(
+            (response.value.results as ReadonlyArray<EntityResult>).map((r: EntityResult) => [r.index, r] as const)
           );
           return entities.map((entity, index) => {
-            const result = resultsMap.get(index);
+            const result = HashMap.get(resultsMap, index);
             return {
-              grounded: result?.grounded ?? false,
-              typeMatch: result?.typeMatch ?? false,
-              confidence: result?.confidence ?? 0,
+              grounded: O.match(result, {onNone: () => false, onSome: (value) => value.grounded}),
+              typeMatch: O.match(result, {onNone: () => false, onSome: (value) => value.typeMatch}),
+              confidence: O.match(result, {onNone: () => 0, onSome: (value) => value.confidence}),
               entity,
             };
           });

@@ -1,3 +1,5 @@
+import { dual2 } from "./Dual.ts";
+
 /**
  * Text Processing Utilities
  *
@@ -64,8 +66,7 @@ export const splitCamelCase = (text: string): string =>
  * @since 2.0.0
  * @category Text
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const generateNGrams = (tokens: ReadonlyArray<string>, n: number = 2): ReadonlyArray<string> => {
+export const generateNGrams = dual2((tokens: ReadonlyArray<string>, n: number): ReadonlyArray<string> => {
   if (tokens.length < n) {
     return [];
   }
@@ -75,7 +76,7 @@ export const generateNGrams = (tokens: ReadonlyArray<string>, n: number = 2): Re
     ngrams.push(tokens.slice(i, i + n).join(" "));
   }
   return ngrams;
-};
+});
 
 // =============================================================================
 // Search Enhancement
@@ -93,15 +94,14 @@ export const generateNGrams = (tokens: ReadonlyArray<string>, n: number = 2): Re
  *
  * @example
  * ```typescript
- * enhanceTextForSearch("birthPlace location")
+ * enhanceTextForSearch("birthPlace location", 2)
  * // => "birthPlace location birth place location birth place place location"
  * ```
  *
  * @since 2.0.0
  * @category Text
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const enhanceTextForSearch = (text: string, ngramSize: number = 2): string => {
+export const enhanceTextForSearch = dual2((text: string, ngramSize: number): string => {
   // Split camelCase in the original text
   const camelCaseSplit = splitCamelCase(text);
 
@@ -123,4 +123,4 @@ export const enhanceTextForSearch = (text: string, ngramSize: number = 2): strin
   }
 
   return parts.join(" ");
-};
+});

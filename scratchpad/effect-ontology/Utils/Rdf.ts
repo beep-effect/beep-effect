@@ -12,6 +12,7 @@ import type * as N3 from "n3";
 import type { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import type { IRI as IriValue } from "../Domain/Model/shared.ts";
 import { IRI } from "../Domain/Model/shared.ts";
+import { dual2, dual4 } from "./Dual.ts";
 
 /** Validated N3 term constructors used by the RDF service boundary. */
 export interface N3TermBuilders {
@@ -36,9 +37,9 @@ export type RdfPrefixes = Readonly<Record<string, string>>;
  * @returns The validated combined IRI.
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const buildIri = (baseNamespace: string, localName: string): IriValue =>
-  IRI.fromUnknown(`${baseNamespace}${localName}`);
+export const buildIri = dual2(
+  (baseNamespace: string, localName: string): IriValue => IRI.fromUnknown(`${baseNamespace}${localName}`)
+);
 
 /**
  * Wrap N3 constructors with schema validation for named nodes.
@@ -48,12 +49,13 @@ export const buildIri = (baseNamespace: string, localName: string): IriValue =>
  * @returns Validating N3 term constructors.
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const createN3Builders = (dataFactory: typeof N3.DataFactory, validateIris = true): N3TermBuilders => ({
-  namedNode: (iri) => dataFactory.namedNode(validateIris ? IRI.fromUnknown(iri) : iri),
-  literal: dataFactory.literal,
-  quad: dataFactory.quad,
-});
+export const createN3Builders = dual2(
+  (dataFactory: typeof N3.DataFactory, validateIris: boolean): N3TermBuilders => ({
+    namedNode: (iri) => dataFactory.namedNode(validateIris ? IRI.fromUnknown(iri) : iri),
+    literal: dataFactory.literal,
+    quad: dataFactory.quad,
+  })
+);
 
 const valueToLiteral = (
   value: string | number | boolean,
@@ -84,26 +86,22 @@ const typeQuad = (subject: N3.NamedNode, typeIri: string, prefixes: RdfPrefixes,
  * @returns RDF quads representing the entity.
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const entityToQuads = (
-  entity: Entity,
-  baseNamespace: string,
-  prefixes: RdfPrefixes,
-  builders: N3TermBuilders
-): ReadonlyArray<N3.Quad> => {
-  const subject = builders.namedNode(buildIri(baseNamespace, entity.id));
-  const typeQuads = A.map(entity.types, (typeIri) => typeQuad(subject, typeIri, prefixes, builders));
-  const labelQuad = builders.quad(
-    subject,
-    builders.namedNode(`${prefixes.rdfs}label`),
-    builders.literal(entity.mention)
-  );
-  const attributeQuads = A.map(Rec.toEntries(entity.attributes), ([predicate, value]) => {
-    const predicateIri = IRI.is(predicate) ? predicate : `${prefixes.schema ?? baseNamespace}${predicate}`;
-    return builders.quad(subject, builders.namedNode(predicateIri), valueToLiteral(value, prefixes, builders));
-  });
-  return A.append(A.appendAll(typeQuads, attributeQuads), labelQuad);
-};
+export const entityToQuads = dual4(
+  (entity: Entity, baseNamespace: string, prefixes: RdfPrefixes, builders: N3TermBuilders): ReadonlyArray<N3.Quad> => {
+    const subject = builders.namedNode(buildIri(baseNamespace, entity.id));
+    const typeQuads = A.map(entity.types, (typeIri) => typeQuad(subject, typeIri, prefixes, builders));
+    const labelQuad = builders.quad(
+      subject,
+      builders.namedNode(`${prefixes.rdfs}label`),
+      builders.literal(entity.mention)
+    );
+    const attributeQuads = A.map(Rec.toEntries(entity.attributes), ([predicate, value]) => {
+      const predicateIri = IRI.is(predicate) ? predicate : `${prefixes.schema ?? baseNamespace}${predicate}`;
+      return builders.quad(subject, builders.namedNode(predicateIri), valueToLiteral(value, prefixes, builders));
+    });
+    return A.append(A.appendAll(typeQuads, attributeQuads), labelQuad);
+  }
+);
 
 const relationObjectToTerm = (
   object: RelationObject,
@@ -130,15 +128,11 @@ const relationObjectToTerm = (
  * @returns The RDF quad representing the relation.
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const relationToQuad = (
-  relation: Relation,
-  baseNamespace: string,
-  prefixes: RdfPrefixes,
-  builders: N3TermBuilders
-): N3.Quad =>
-  builders.quad(
-    builders.namedNode(buildIri(baseNamespace, relation.subjectId)),
-    builders.namedNode(relation.predicate),
-    relationObjectToTerm(relation.object, baseNamespace, prefixes, builders)
-  );
+export const relationToQuad = dual4(
+  (relation: Relation, baseNamespace: string, prefixes: RdfPrefixes, builders: N3TermBuilders): N3.Quad =>
+    builders.quad(
+      builders.namedNode(buildIri(baseNamespace, relation.subjectId)),
+      builders.namedNode(relation.predicate),
+      relationObjectToTerm(relation.object, baseNamespace, prefixes, builders)
+    )
+);

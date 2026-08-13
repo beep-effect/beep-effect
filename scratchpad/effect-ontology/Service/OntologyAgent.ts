@@ -14,6 +14,7 @@ import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Chunk, Context, Data, DateTime, Duration, Effect, Layer, Match, MutableHashMap } from "effect";
 import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
@@ -849,7 +850,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             Match.tag("SelectResult", (result) =>
               // SELECT query - convert bindings to triples
               result.bindings.flatMap((binding: SparqlBindings) => {
-                const entries = Array.from(binding.entries());
+                const entries = binding.pipe(HashMap.entries, A.fromIterable);
                 if (entries.length === 0) return [];
 
                 // Create a pseudo-triple from the binding variables
@@ -908,7 +909,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
               // Use actual SPARQL bindings for SELECT queries
               result.bindings.slice(0, 10).map((binding: SparqlBindings) => {
                 const bindingObj: Record<string, string> = {};
-                for (const [key, value] of binding.entries()) {
+                for (const [key, value] of HashMap.entries(binding)) {
                   bindingObj[key] = value.type === "uri" ? extractLocalName(value.value) : value.value;
                 }
                 return QueryBinding.make({ bindings: bindingObj });

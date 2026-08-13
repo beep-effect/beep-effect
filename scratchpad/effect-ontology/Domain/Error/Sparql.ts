@@ -28,7 +28,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Sparql");
  * @category errors
  * @since 0.0.0
  */
-export const SparqlExecutionError = makeOntologyErrorClass(
+export const SparqlExecutionError = makeOntologyErrorClass.make(
   $I`SparqlExecutionError`,
   "SparqlExecutionError",
   {
@@ -77,7 +77,7 @@ export type SparqlExecutionError = typeof SparqlExecutionError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const SparqlLoadError = makeOntologyErrorClass(
+export const SparqlLoadError = makeOntologyErrorClass.make(
   $I`SparqlLoadError`,
   "SparqlLoadError",
   {

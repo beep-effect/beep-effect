@@ -34,7 +34,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Llm");
  * @category errors
  * @since 0.0.0
  */
-export const LlmError = makeOntologyErrorClass(
+export const LlmError = makeOntologyErrorClass.make(
   $I`LlmError`,
   "LlmError",
   {
@@ -84,7 +84,7 @@ export type LlmError = typeof LlmError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const LlmTimeout = makeOntologyErrorClass(
+export const LlmTimeout = makeOntologyErrorClass.make(
   $I`LlmTimeout`,
   "LlmTimeout",
   {
@@ -133,7 +133,7 @@ export type LlmTimeout = typeof LlmTimeout.Type;
  * @category errors
  * @since 0.0.0
  */
-export const LlmRateLimit = makeOntologyErrorClass(
+export const LlmRateLimit = makeOntologyErrorClass.make(
   $I`LlmRateLimit`,
   "LlmRateLimit",
   {
@@ -186,7 +186,7 @@ export type LlmRateLimit = typeof LlmRateLimit.Type;
  * @category errors
  * @since 0.0.0
  */
-export const LlmInvalidResponse = makeOntologyErrorClass(
+export const LlmInvalidResponse = makeOntologyErrorClass.make(
   $I`LlmInvalidResponse`,
   "LlmInvalidResponse",
   {

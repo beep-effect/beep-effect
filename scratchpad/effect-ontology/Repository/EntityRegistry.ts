@@ -18,6 +18,7 @@ const $I = $ScratchpadId.create("effect-ontology/Repository/EntityRegistry");
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, eq, inArray } from "drizzle-orm";
 import { Effect, Option } from "effect";
+import * as HashSet from "effect/HashSet";
 import type { SqlError } from "effect/unstable/sql";
 import { SqlClient } from "effect/unstable/sql";
 import type {
@@ -462,7 +463,7 @@ function formatVector(vector: ReadonlyArray<number>): string {
  * - Filter stop words and short tokens
  */
 function tokenize(mention: string): Array<string> {
-  const stopWords = new Set([
+  const stopWords = HashSet.make(
     "the",
     "a",
     "an",
@@ -516,11 +517,11 @@ function tokenize(mention: string): Array<string> {
     "llc",
     "ltd",
     "co",
-    "company",
-  ]);
+    "company"
+  );
 
   return mention
     .toLowerCase()
     .split(/[\s\-_.,;:!?'"()[]{}]+/)
-    .filter((token) => token.length > 2 && !stopWords.has(token));
+    .filter((token) => token.length > 2 && !HashSet.has(stopWords, token));
 }

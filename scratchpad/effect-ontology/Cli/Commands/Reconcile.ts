@@ -9,6 +9,9 @@
  */
 
 import { Chunk, Console, Effect, FileSystem, Option, Schema } from "effect";
+import * as A from "effect/Array";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import { Command, Flag as Options } from "effect/unstable/cli";
 import type { IRI, Literal } from "../../Domain/Rdf/Types.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
@@ -58,10 +61,10 @@ const stringSimilarity = (a: string, b: string): number => {
   if (aLower.length === 0 || bLower.length === 0) return 0.0;
 
   // Simple Jaccard similarity on character n-grams
-  const ngrams = (s: string, n: number = 2): Set<string> => {
-    const result = new Set<string>();
+  const ngrams = (s: string, n: number = 2): MutableHashSet.MutableHashSet<string> => {
+    const result = MutableHashSet.empty<string>();
     for (let i = 0; i <= s.length - n; i++) {
-      result.add(s.substring(i, i + n));
+      MutableHashSet.add(result, s.substring(i, i + n));
     }
     return result;
   };
@@ -71,10 +74,10 @@ const stringSimilarity = (a: string, b: string): number => {
 
   let intersection = 0;
   for (const gram of aGrams) {
-    if (bGrams.has(gram)) intersection++;
+    if (MutableHashSet.has(bGrams, gram)) intersection++;
   }
 
-  const union = aGrams.size + bGrams.size - intersection;
+  const union = MutableHashSet.size(aGrams) + MutableHashSet.size(bGrams) - intersection;
   return union === 0 ? 0 : intersection / union;
 };
 
@@ -129,15 +132,17 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     const typeQuads = yield* rdf.queryStore(store, {
       predicate: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" as IRI,
     });
-    const entityTypes = new Map<string, Set<string>>();
+    const entityTypes = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
     for (const quad of typeQuads) {
       const iri = quad.subject;
       if (!iri.startsWith("_:")) {
-        if (!entityTypes.has(iri)) {
-          entityTypes.set(iri, new Set());
-        }
+        const types = Option.getOrElse(MutableHashMap.get(entityTypes, iri), () => {
+          const created = MutableHashSet.empty<string>();
+          MutableHashMap.set(entityTypes, iri, created);
+          return created;
+        });
         const typeIri = typeof quad.object === "string" ? quad.object : (quad.object as Literal).value;
-        entityTypes.get(iri)!.add(typeIri);
+        MutableHashSet.add(types, typeIri);
       }
     }
     const rdfsLabelQuads = yield* rdf.queryStore(store, {
@@ -146,25 +151,25 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     const schemaNameQuads = yield* rdf.queryStore(store, {
       predicate: "http://schema.org/name" as IRI,
     });
-    const entityLabels = new Map<string, string>();
+    const entityLabels = MutableHashMap.empty<string, string>();
     for (const quad of Chunk.toArray(rdfsLabelQuads).concat(Chunk.toArray(schemaNameQuads))) {
       const subject = quad.subject;
-      if (!subject.startsWith("_:") && !entityLabels.has(subject)) {
+      if (!subject.startsWith("_:") && !MutableHashMap.has(entityLabels, subject)) {
         const label = typeof quad.object === "string" ? quad.object : (quad.object as Literal).value;
-        entityLabels.set(subject, label);
+        MutableHashMap.set(entityLabels, subject, label);
       }
     }
     for (const [iri, types] of entityTypes) {
-      const label = entityLabels.get(iri) ?? iri.split(/[#/]/).pop() ?? iri;
+      const label = Option.getOrElse(MutableHashMap.get(entityLabels, iri), () => iri.split(/[#/]/).pop() ?? iri);
       allEntities.push({
         iri,
-        types: Array.from(types),
+        types: A.fromIterable(types),
         label,
         sourceDoc: doc.documentId,
       });
     }
     if (verbose) {
-      yield* Console.log(`  ${doc.documentId}: ${entityTypes.size} entities`);
+      yield* Console.log(`  ${doc.documentId}: ${MutableHashMap.size(entityTypes)} entities`);
     }
   }
   yield* Console.log(`\nTotal entities found: ${allEntities.length}`);
@@ -193,16 +198,18 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     }
   }
   duplicatePairs.sort((a, b) => b.similarity - a.similarity);
-  const uniqueInDuplicates = new Set<string>();
+  const uniqueInDuplicates = MutableHashSet.empty<string>();
   for (const pair of duplicatePairs) {
-    uniqueInDuplicates.add(pair.entity1.iri);
-    uniqueInDuplicates.add(pair.entity2.iri);
+    MutableHashSet.add(uniqueInDuplicates, pair.entity1.iri);
+    MutableHashSet.add(uniqueInDuplicates, pair.entity2.iri);
   }
   yield* Console.log("\n--- Resolution Statistics ---");
   yield* Console.log(`Total entities: ${allEntities.length}`);
   yield* Console.log(`Potential duplicate pairs: ${duplicatePairs.length}`);
-  yield* Console.log(`Entities involved in duplicates: ${uniqueInDuplicates.size}`);
-  yield* Console.log(`Estimated unique entities: ${allEntities.length - Math.floor(uniqueInDuplicates.size / 2)}`);
+  yield* Console.log(`Entities involved in duplicates: ${MutableHashSet.size(uniqueInDuplicates)}`);
+  yield* Console.log(
+    `Estimated unique entities: ${allEntities.length - Math.floor(MutableHashSet.size(uniqueInDuplicates) / 2)}`
+  );
   if (duplicatePairs.length > 0) {
     yield* Console.log("\n--- Top Potential Duplicates ---");
     const topPairs = duplicatePairs.slice(0, 10);
@@ -223,23 +230,31 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
       yield* Console.log(`  ... and ${duplicatePairs.length - 10} more pairs`);
     }
   }
-  const typeDistribution = new Map<string, number>();
+  const typeDistribution = MutableHashMap.empty<string, number>();
   for (const entity of allEntities) {
     for (const type of entity.types) {
       const shortType = type.split(/[#/]/).pop() ?? type;
-      typeDistribution.set(shortType, (typeDistribution.get(shortType) ?? 0) + 1);
+      MutableHashMap.set(
+        typeDistribution,
+        shortType,
+        Option.getOrElse(MutableHashMap.get(typeDistribution, shortType), () => 0) + 1
+      );
     }
   }
   yield* Console.log("\n--- Entity Type Distribution ---");
-  const sortedTypes = Array.from(typeDistribution.entries())
+  const sortedTypes = A.fromIterable(typeDistribution)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10);
   for (const [type, count] of sortedTypes) {
     yield* Console.log(`  ${type}: ${count}`);
   }
-  const docDistribution = new Map<string, number>();
+  const docDistribution = MutableHashMap.empty<string, number>();
   for (const entity of allEntities) {
-    docDistribution.set(entity.sourceDoc, (docDistribution.get(entity.sourceDoc) ?? 0) + 1);
+    MutableHashMap.set(
+      docDistribution,
+      entity.sourceDoc,
+      Option.getOrElse(MutableHashMap.get(docDistribution, entity.sourceDoc), () => 0) + 1
+    );
   }
   yield* Console.log("\n--- Entities per Document ---");
   for (const [doc, count] of docDistribution) {

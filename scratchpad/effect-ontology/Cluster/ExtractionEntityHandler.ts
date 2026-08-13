@@ -10,6 +10,7 @@
 
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Chunk, DateTime, Deferred, Duration, Effect, HashMap, Option, Random, Ref, Stream } from "effect";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type { Entity as ClusterEntity } from "effect/unstable/cluster";
@@ -40,7 +41,7 @@ interface ExtractionStats {
   readonly verifiedRelations: number;
   readonly successfulChunks: number;
   readonly failedChunks: number;
-  readonly entityTypes: ReadonlySet<string>;
+  readonly entityTypes: HashSet.HashSet<string>;
   readonly tokensUsed: number;
 }
 
@@ -50,7 +51,7 @@ const emptyStats: ExtractionStats = {
   verifiedRelations: 0,
   successfulChunks: 0,
   failedChunks: 0,
-  entityTypes: new Set(),
+  entityTypes: HashSet.empty(),
   tokensUsed: 0,
 };
 
@@ -246,7 +247,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
             : relationArray.map((relation) => ({ relation, grounded: true, confidence: 1 }));
 
           const entityArray = Chunk.toReadonlyArray(entities);
-          const entityTypes = new Set(entityArray.flatMap((entity) => entity.types));
+          const entityTypes = HashSet.fromIterable(entityArray.flatMap((entity) => entity.types));
           yield* tokenBudget.recordUsage("entity_extraction", estimatedTokens);
           yield* Ref.update(statsRef, (stats) => ({
             totalEntities: stats.totalEntities + entityArray.length,
@@ -254,7 +255,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
             verifiedRelations: stats.verifiedRelations + verifiedRelations.length,
             successfulChunks: stats.successfulChunks + 1,
             failedChunks: stats.failedChunks,
-            entityTypes: new Set([...stats.entityTypes, ...entityTypes]),
+            entityTypes: HashSet.union(stats.entityTypes, entityTypes),
             tokensUsed: stats.tokensUsed + estimatedTokens,
           }));
           yield* rateLimiter.release(estimatedTokens, true);
@@ -287,7 +288,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       const completion = yield* makeEvent(runId, "extraction_complete", 100, {
         totalEntities: stats.totalEntities,
         totalRelations: stats.verifiedRelations,
-        uniqueEntityTypes: stats.entityTypes.size,
+        uniqueEntityTypes: HashSet.size(stats.entityTypes),
         totalDurationMs: totalDuration,
         successfulChunks: stats.successfulChunks,
         failedChunks: stats.failedChunks,

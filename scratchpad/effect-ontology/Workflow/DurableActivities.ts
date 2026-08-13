@@ -20,6 +20,9 @@ import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Chunk, DateTime, Duration, Effect, Schedule } from "effect";
 import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -143,18 +146,27 @@ const requireContent = (opt: O.Option<string>, key: string) =>
   });
 
 const summarizeViolations = (violations: ReadonlyArray<ShaclViolation>) => {
-  const grouped = new Map<ShaclViolation["severity"], { count: number; sampleMessages: Array<string> }>();
+  const grouped = MutableHashMap.empty<
+    ShaclViolation["severity"],
+    { count: number; sampleMessages: Array<string> }
+  >();
 
   for (const violation of violations) {
-    const entry = grouped.get(violation.severity) ?? { count: 0, sampleMessages: [] };
+    const entry = O.getOrElse(
+      MutableHashMap.get(grouped, violation.severity),
+      (): { count: number; sampleMessages: Array<string> } => ({
+        count: 0,
+        sampleMessages: [],
+      })
+    );
     entry.count += 1;
     if (entry.sampleMessages.length < 3 && P.isTruthy(violation.message)) {
       entry.sampleMessages.push(violation.message);
     }
-    grouped.set(violation.severity, entry);
+    MutableHashMap.set(grouped, violation.severity, entry);
   }
 
-  return A.map(A.fromIterable(grouped.entries()), ([severity, info]) =>
+  return A.map(A.fromIterable(grouped), ([severity, info]) =>
     ValidationActivityViolationSummary.make({
       severity,
       count: NonNegativeInt.make(info.count),
@@ -195,8 +207,8 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
   const rdf = yield* RdfBuilder;
   const typeQuads = yield* rdf.queryStore(store, { predicate: RDF.type });
   const labelQuads = yield* rdf.queryStore(store, { predicate: RDFS.label });
-  const entityTypes = new Map<string, Array<string>>();
-  const entityIris = new Set<string>();
+  const entityTypes = MutableHashMap.empty<string, Array<string>>();
+  const entityIris = MutableHashSet.empty<string>();
   for (const quad of typeQuads) {
     const subjectIri = quad.subject as string;
     if (subjectIri.startsWith("_:")) continue;
@@ -205,15 +217,15 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
     if (typeIri.includes("owl#") || typeIri.includes("rdf-schema#")) continue;
     if (subjectIri.startsWith(CLAIMS.namespace)) continue;
     if (typeIri.startsWith(CLAIMS.namespace)) continue;
-    entityIris.add(subjectIri);
-    const types = entityTypes.get(subjectIri) ?? [];
+    MutableHashSet.add(entityIris, subjectIri);
+    const types = O.getOrElse(MutableHashMap.get(entityTypes, subjectIri), (): Array<string> => []);
     types.push(typeIri);
-    entityTypes.set(subjectIri, types);
+    MutableHashMap.set(entityTypes, subjectIri, types);
   }
-  const entityLabels = new Map<string, string>();
+  const entityLabels = MutableHashMap.empty<string, string>();
   for (const quad of labelQuads) {
     const subjectIri = quad.subject as string;
-    if (entityIris.has(subjectIri)) {
+    if (MutableHashSet.has(entityIris, subjectIri)) {
       const label =
         typeof quad.object === "string"
           ? quad.object
@@ -222,15 +234,15 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
                 value: string;
               }
             ).value;
-      entityLabels.set(subjectIri, label);
+      MutableHashMap.set(entityLabels, subjectIri, label);
     }
   }
   const entities: Array<Entity> = [];
   for (const iri of entityIris) {
-    const types = entityTypes.get(iri) ?? [];
+    const types = O.getOrElse(MutableHashMap.get(entityTypes, iri), () => []);
     if (!A.isReadonlyArrayNonEmpty(types)) continue;
     const localName = extractLocalNameFromIri(iri);
-    const mention = entityLabels.get(iri) ?? localName;
+    const mention = O.getOrElse(MutableHashMap.get(entityLabels, iri), () => localName);
     entities.push(
       Entity.make({
         id: EntityId.make(localName),
@@ -240,21 +252,21 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
       })
     );
   }
-  const entityIdSet = new Set(entities.map((e) => e.id));
+  const entityIdSet = MutableHashSet.fromIterable(entities.map((e) => e.id));
   const allQuads = yield* rdf.queryStore(store, {});
   const relations: Array<Relation> = [];
   for (const quad of allQuads) {
     const subjectIri = quad.subject as string;
     const subjectLocalName = extractLocalNameFromIri(subjectIri);
     const subjectId = EntityId.make(subjectLocalName);
-    if (!entityIdSet.has(subjectId)) continue;
+    if (!MutableHashSet.has(entityIdSet, subjectId)) continue;
     const predicate = quad.predicate as string;
     if (predicate === RDF.type || predicate === RDFS.label) continue;
     const objectValue = quad.object;
     if (typeof objectValue === "string" && !objectValue.startsWith("_:")) {
       const objectLocalName = extractLocalNameFromIri(objectValue);
       const objectId = EntityId.make(objectLocalName);
-      if (entityIdSet.has(objectId)) {
+      if (MutableHashSet.has(entityIdSet, objectId)) {
         relations.push(
           Relation.make({
             subjectId,
@@ -404,10 +416,10 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
       });
 
       // Deduplicate entities by canonical ID (keep first occurrence)
-      const seenIds = new Set<string>();
+      const seenIds = MutableHashSet.empty<string>();
       const uniqueEntities = rewrittenEntities.filter((entity) => {
-        if (seenIds.has(entity.id)) return false;
-        seenIds.add(entity.id);
+        if (MutableHashSet.has(seenIds, entity.id)) return false;
+        MutableHashSet.add(seenIds, entity.id);
         return true;
       });
 
@@ -911,7 +923,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
       });
 
       // Build metadata lookup
-      const metadataMap = new Map<
+      const metadataMap = MutableHashMap.empty<
         string,
         {
           documentId: string;
@@ -922,7 +934,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
       >();
 
       for (const meta of O.getOrElse(input.documentMetadata, () => [])) {
-        metadataMap.set(meta.sourceUri, meta);
+        MutableHashMap.set(metadataMap, meta.sourceUri, meta);
       }
 
       let totalClaimsPersisted = 0;
@@ -943,7 +955,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
 
           // Get metadata for this document
           // Try to find metadata by matching graph URI path to sourceUri
-          let docMeta = metadataMap.get(graphUri);
+          let docMeta = O.getOrUndefined(MutableHashMap.get(metadataMap, graphUri));
           if (P.isUndefined(docMeta)) {
             // Fall back to extracting document ID from path
             const pathMatch = graphPath.match(/documents\/([^/]+)\//);
@@ -1835,21 +1847,21 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
 
           // Map results back to pairs
           type ComparisonResult = { index: number; sameEntity: boolean; confidence: number };
-          const resultsMap = new Map(
+          const resultsMap = HashMap.fromIterable(
             (result.value.results as ReadonlyArray<ComparisonResult>).map((r) => [r.index, r])
           );
 
           batch.forEach((pair, idx) => {
-            const llmResult = resultsMap.get(idx);
+            const llmResult = HashMap.get(resultsMap, idx);
             const verifiedPair: VerifiedPair = {
               entityA: pair.entityA,
               entityB: pair.entityB,
-              sameEntity: llmResult?.sameEntity ?? false,
-              confidence: llmResult?.confidence ?? 0,
+              sameEntity: O.match(llmResult, { onNone: () => false, onSome: (value) => value.sameEntity }),
+              confidence: O.match(llmResult, { onNone: () => 0, onSome: (value) => value.confidence }),
               originalSimilarity: pair.similarity,
             };
 
-            if (P.isNotUndefined(llmResult?.sameEntity)) {
+            if (O.isSome(llmResult)) {
               verified.push(verifiedPair);
             } else {
               rejected.push(verifiedPair);
@@ -2107,7 +2119,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         failedCount = previews.length;
       } else {
         // Batch LLM classification
-        const classifications = new Map<number, typeof DocumentClassificationResponse.Type>();
+        const classifications = MutableHashMap.empty<number, typeof DocumentClassificationResponse.Type>();
 
         // Process in batches (use configurable batch size)
         const batchSize = options.classificationBatchSize;
@@ -2159,27 +2171,35 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
 
           // Store classifications by index
           for (const item of result.value.classifications) {
-            classifications.set(item.index, item.classification);
+            MutableHashMap.set(classifications, item.index, item.classification);
           }
         }
 
         // 4. Build DocumentMetadata for each document
         documentMetadata = previews.map((p) => {
-          const classification = classifications.get(p.index);
+          const classification = MutableHashMap.get(classifications, p.index);
 
-          if (P.isNotUndefined(classification)) {
+          if (O.isSome(classification)) {
             classifiedCount++;
             const tokens = DocumentMetadata.estimateTokens(p.sizeBytes);
 
-            const complexityScore = UnitInterval.make(classification.complexityScore);
+            const complexityScore = UnitInterval.make(classification.value.complexityScore);
             const strategy =
               options.chunkingStrategyOverride ??
               (options.adaptiveChunking
-                ? ChunkingStrategy.recommend(classification.documentType, classification.entityDensity, complexityScore)
+                ? ChunkingStrategy.recommend(
+                    classification.value.documentType,
+                    classification.value.entityDensity,
+                    complexityScore
+                  )
                 : ChunkingStrategy.Enum.standard);
             const chunkParameters = ChunkingStrategy.parameters(strategy);
 
-            const priority = DocumentMetadata.computePriority(complexityScore, tokens, classification.entityDensity);
+            const priority = DocumentMetadata.computePriority(
+              complexityScore,
+              tokens,
+              classification.value.entityDensity
+            );
 
             return DocumentMetadata.make({
               documentId: p.documentId,
@@ -2190,13 +2210,13 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
               publishedAt: O.none(),
               ingestedAt: preprocessedAt,
               preprocessedAt,
-              title: classification.title,
-              language: LanguageCode.make(O.getOrElse(classification.language, () => "en")),
+              title: classification.value.title,
+              language: LanguageCode.make(O.getOrElse(classification.value.language, () => "en")),
               estimatedTokens: tokens,
-              documentType: classification.documentType,
-              domainTags: classification.domainTags,
+              documentType: classification.value.documentType,
+              domainTags: classification.value.domainTags,
               complexityScore,
-              entityDensityHint: classification.entityDensity,
+              entityDensityHint: classification.value.entityDensity,
               chunkingStrategy: strategy,
               suggestedChunkSize: chunkParameters.chunkSize,
               suggestedOverlap: chunkParameters.overlapSentences,

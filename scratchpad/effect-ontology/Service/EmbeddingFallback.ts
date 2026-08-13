@@ -9,22 +9,31 @@
  * @module Service/EmbeddingFallback
  */
 
-import { Effect, Layer, Option, Redacted, Ref } from "effect";
+import {Effect, Layer, Option, Redacted, Ref} from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import { FetchHttpClient, HttpClient } from "effect/unstable/http";
-import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
-import { EmbeddingError } from "../Domain/Error/Embedding.ts";
-import { CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
-import { ConfigService } from "./Config.ts";
-import type { EmbeddingCircuitBreakerService, EmbeddingProviderId } from "./EmbeddingCircuitBreaker.ts";
-import { EmbeddingCircuitBreaker } from "./EmbeddingCircuitBreaker.ts";
-import type { Embedding, EmbeddingProviderMethods, EmbeddingRequest } from "./EmbeddingProvider.ts";
-import { cosineSimilarity, EmbeddingProvider } from "./EmbeddingProvider.ts";
-import { EmbeddingRateLimiter, EmbeddingRateLimiterVoyage } from "./EmbeddingRateLimiter.ts";
-import { NomicNlpService } from "./NomicNlp.ts";
-import { makeVoyageProvider } from "./VoyageEmbeddingProvider.ts";
+import {FetchHttpClient, HttpClient} from "effect/unstable/http";
+import type {AnyEmbeddingError} from "../Domain/Error/Embedding.ts";
+import {EmbeddingError} from "../Domain/Error/Embedding.ts";
+import {CircuitOpenError} from "../Runtime/CircuitBreaker.ts";
+import {ConfigService} from "./Config.ts";
+import type {
+  EmbeddingCircuitBreakerService,
+  EmbeddingProviderId
+} from "./EmbeddingCircuitBreaker.ts";
+import {EmbeddingCircuitBreaker} from "./EmbeddingCircuitBreaker.ts";
+import type {
+  Embedding,
+  EmbeddingProviderMethods,
+  EmbeddingRequest
+} from "./EmbeddingProvider.ts";
+import {cosineSimilarity, EmbeddingProvider} from "./EmbeddingProvider.ts";
+import {
+  EmbeddingRateLimiter,
+  EmbeddingRateLimiterVoyage
+} from "./EmbeddingRateLimiter.ts";
+import {NomicNlpService} from "./NomicNlp.ts";
+import {makeVoyageProvider} from "./VoyageEmbeddingProvider.ts";
 
 // =============================================================================
 // Types
@@ -134,13 +143,13 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
 
     const voyageProvider: EmbeddingProviderMethods | null = P.isNotNull(voyageApiKeyStr)
       ? yield* makeVoyageProvider({
-          apiKey: voyageApiKeyStr,
-          model: config.embedding.voyageModel ?? "voyage-3.5-lite",
-          timeoutMs: config.embedding.timeoutMs ?? 30_000,
-        }).pipe(
-          Effect.provideService(HttpClient.HttpClient, httpClient),
-          Effect.provideService(EmbeddingRateLimiter, rateLimiter)
-        )
+        apiKey: voyageApiKeyStr,
+        model: config.embedding.voyageModel ?? "voyage-3.5-lite",
+        timeoutMs: config.embedding.timeoutMs ?? 30_000,
+      }).pipe(
+        Effect.provideService(HttpClient.HttpClient, httpClient),
+        Effect.provideService(EmbeddingRateLimiter, rateLimiter)
+      )
       : null;
 
     // Create Nomic provider (wraps NomicNlpService)
@@ -163,7 +172,7 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
                 })
               )
             ),
-          { concurrency: 1 }
+          {concurrency: 1}
         ),
       cosineSimilarity,
     };
@@ -182,7 +191,7 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
      * Get error reason string from an error
      */
     const getErrorReason = (error: AnyEmbeddingError): string =>
-      S.is(CircuitOpenError)(error) ? "circuit_open" : S.is(EmbeddingError)(error) ? error._tag : "unknown";
+      CircuitOpenError.is(error) ? "circuit_open" : EmbeddingError.is(error) ? error._tag : "unknown";
 
     /**
      * Execute request with fallback logic
@@ -208,7 +217,7 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
             Effect.tap(() =>
               Effect.logWarning(
                 `Embedding provider fallback triggered: ${primaryProvider.metadata.providerId} -> nomic`,
-                { reason, requestCount: requests.length }
+                {reason, requestCount: requests.length}
               )
             ),
             Effect.flatMap(() =>

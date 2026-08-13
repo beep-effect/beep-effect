@@ -28,7 +28,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Rdf");
  * @category errors
  * @since 0.0.0
  */
-export const RdfError = makeOntologyErrorClass(
+export const RdfError = makeOntologyErrorClass.make(
   $I`RdfError`,
   "RdfError",
   {
@@ -72,7 +72,7 @@ export type RdfError = typeof RdfError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const SerializationFailed = makeOntologyErrorClass(
+export const SerializationFailed = makeOntologyErrorClass.make(
   $I`SerializationFailed`,
   "SerializationFailed",
   {
@@ -121,7 +121,7 @@ export type SerializationFailed = typeof SerializationFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ParsingFailed = makeOntologyErrorClass(
+export const ParsingFailed = makeOntologyErrorClass.make(
   $I`ParsingFailed`,
   "ParsingFailed",
   {

@@ -406,7 +406,7 @@ export const BatchState = BatchStateDefinition.pipe(
     stageDisplayName,
     progressPercent,
     getError,
-    isTerminal: (state: BatchStateValue): boolean => BatchStateDefinition.isAnyOf(["Complete", "Failed"])(state),
+    isTerminal: BatchStateDefinition.isAnyOf(["Complete", "Failed"]),
     isTerminalStage: (stage: BatchStage): boolean => A.contains(terminalStages, stage),
     isValidTransition,
     validateTransition,

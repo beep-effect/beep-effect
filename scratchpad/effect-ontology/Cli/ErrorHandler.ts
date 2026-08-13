@@ -48,8 +48,8 @@ const formatCause = (cause: Cause.Cause<unknown>): string | null => {
  */
 export const withErrorHandler = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
   effect.pipe(
-    Effect.tapCause((cause) =>
-      Effect.gen(function* () {
+    Effect.tapCause(
+      Effect.fn(function* (cause) {
         const formatted = formatCause(cause);
         if (P.isNotNull(formatted)) {
           yield* Console.error(`\n${formatted}\n`);

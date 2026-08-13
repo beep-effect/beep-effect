@@ -10,6 +10,9 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { Chunk, Context, Effect, Layer } from "effect";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { OntologyService } from "./Ontology.ts";
@@ -36,11 +39,11 @@ export class InheritanceService extends Context.Service<InheritanceService>()($I
     const getAncestors = Effect.fn("getAncestors")(function* (classIri: string) {
       const context = yield* getContext;
       const hierarchy = context.hierarchy;
-      const visited = new Set<string>();
+      const visited = MutableHashSet.empty<string>();
       const ancestors: Array<string> = [];
       const visit = (iri: string) => {
-        if (visited.has(iri)) return;
-        visited.add(iri);
+        if (MutableHashSet.has(visited, iri)) return;
+        MutableHashSet.add(visited, iri);
         const parents = hierarchy[iri] || [];
         for (const parent of parents) {
           visit(parent);
@@ -62,30 +65,30 @@ export class InheritanceService extends Context.Service<InheritanceService>()($I
     const getEffectiveProperties = Effect.fn("getEffectiveProperties")(function* (classIri: string) {
       const context = yield* getContext;
       const ancestors = yield* getAncestors(classIri);
-      const propertyMap = new Map<string, PropertyDefinition>();
+      const propertyMap = MutableHashMap.empty<string, PropertyDefinition>();
       for (const p of context.properties) {
-        propertyMap.set(p.id, p);
+        MutableHashMap.set(propertyMap, p.id, p);
       }
-      const effectivePropertyIds = new Set<string>();
+      const effectivePropertyIds = MutableHashSet.empty<string>();
       const ownClass = context.classes.find((c) => c.id === classIri);
       if (P.isNotUndefined(ownClass)) {
         for (const p of ownClass.properties) {
-          effectivePropertyIds.add(p);
+          MutableHashSet.add(effectivePropertyIds, p);
         }
       }
       for (const ancestorIri of ancestors) {
         const ancestorClass = context.classes.find((c) => c.id === ancestorIri);
         if (P.isNotUndefined(ancestorClass)) {
           for (const p of ancestorClass.properties) {
-            effectivePropertyIds.add(p);
+            MutableHashSet.add(effectivePropertyIds, p);
           }
         }
       }
       const effectiveProperties: Array<PropertyDefinition> = [];
       for (const pid of effectivePropertyIds) {
-        const def = propertyMap.get(pid);
-        if (P.isNotUndefined(def)) {
-          effectiveProperties.push(def);
+        const def = MutableHashMap.get(propertyMap, pid);
+        if (O.isSome(def)) {
+          effectiveProperties.push(def.value);
         }
       }
       return Chunk.fromIterable(effectiveProperties);

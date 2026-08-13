@@ -10,6 +10,7 @@
 
 import { Effect, Random } from "effect";
 import * as Clock from "effect/Clock";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -28,7 +29,7 @@ import { computeQuadDelta, summarizeDelta } from "../Utils/QuadDelta.ts";
 // Job Storage (in-memory for now, production would use Redis/Postgres)
 // =============================================================================
 
-const jobStore = new Map<string, InferenceRunResponse>();
+const jobStore = MutableHashMap.empty<string, InferenceRunResponse>();
 
 const generateJobId = Random.nextInt.pipe(Effect.map((value) => `infer-${Math.abs(value).toString(16)}`));
 
@@ -142,7 +143,7 @@ export const InferenceRouter = HttpRouter.addAll([
             });
 
             // Store for later retrieval
-            jobStore.set(jobId, response);
+            MutableHashMap.set(jobStore, jobId, response);
 
             yield* Effect.logInfo("Inference complete", {
               jobId,
@@ -163,7 +164,7 @@ export const InferenceRouter = HttpRouter.addAll([
                 error: O.some("message" in error ? error.message : String(error)),
               });
 
-              jobStore.set(jobId, response);
+              MutableHashMap.set(jobStore, jobId, response);
 
               return yield* HttpServerResponse.schemaJson(InferenceRunResponse)(response);
             })
@@ -185,9 +186,9 @@ export const InferenceRouter = HttpRouter.addAll([
         );
       }
 
-      const result = jobStore.get(id);
+      const result = MutableHashMap.get(jobStore, id);
 
-      if (P.isUndefined(result)) {
+      if (O.isNone(result)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -200,8 +201,8 @@ export const InferenceRouter = HttpRouter.addAll([
       return yield* HttpServerResponse.schemaJson(InferenceStatusResponse)(
         InferenceStatusResponse.make({
           jobId: id,
-          status: result.status,
-          result: O.some(result),
+          status: result.value.status,
+          result,
         })
       );
     })

@@ -29,7 +29,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Workflow");
  * @category errors
  * @since 0.0.0
  */
-export const WorkflowError = makeOntologyErrorClass(
+export const WorkflowError = makeOntologyErrorClass.make(
   $I`WorkflowError`,
   "WorkflowError",
   {
@@ -79,7 +79,7 @@ export type WorkflowError = typeof WorkflowError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const WorkflowNotFoundError = makeOntologyErrorClass(
+export const WorkflowNotFoundError = makeOntologyErrorClass.make(
   $I`WorkflowNotFoundError`,
   "WorkflowNotFoundError",
   {
@@ -135,7 +135,7 @@ export type WorkflowNotFoundError = typeof WorkflowNotFoundError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const WorkflowSuspendedError = makeOntologyErrorClass(
+export const WorkflowSuspendedError = makeOntologyErrorClass.make(
   $I`WorkflowSuspendedError`,
   "WorkflowSuspendedError",
   {

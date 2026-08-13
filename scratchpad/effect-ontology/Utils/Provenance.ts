@@ -11,6 +11,7 @@
 import { Schema } from "effect";
 import * as P from "effect/Predicate";
 import type { BatchId, DocumentId } from "../Domain/Identity.ts";
+import { dual3 } from "./Dual.ts";
 
 // =============================================================================
 // Provenance URI Schema
@@ -51,7 +52,7 @@ export type ProvenanceUri = typeof ProvenanceUri.Type;
  * @example
  * ```typescript
  * // Document-level provenance
- * makeProvenanceUri("batch-1234567890ab", "doc-abcdef123456")
+ * makeProvenanceUri("batch-1234567890ab", "doc-abcdef123456", undefined)
  * // => "urn:provenance:batch/batch-1234567890ab/doc/doc-abcdef123456"
  *
  * // Chunk-level provenance
@@ -61,12 +62,13 @@ export type ProvenanceUri = typeof ProvenanceUri.Type;
  *
  * @since 2.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const makeProvenanceUri = (batchId: BatchId, documentId: DocumentId, chunkIndex?: number): ProvenanceUri => {
-  const base = `urn:provenance:batch/${batchId}/doc/${documentId}`;
-  const uri = chunkIndex !== undefined ? `${base}/chunk/${chunkIndex}` : base;
-  return uri as ProvenanceUri;
-};
+export const makeProvenanceUri = dual3(
+  (batchId: BatchId, documentId: DocumentId, chunkIndex: number | undefined): ProvenanceUri => {
+    const base = `urn:provenance:batch/${batchId}/doc/${documentId}`;
+    const uri = chunkIndex !== undefined ? `${base}/chunk/${chunkIndex}` : base;
+    return uri as ProvenanceUri;
+  }
+);
 
 /**
  * Parse a provenance URI to extract its components

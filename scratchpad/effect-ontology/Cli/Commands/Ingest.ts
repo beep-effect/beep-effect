@@ -7,19 +7,22 @@
  * @module Cli/Commands/Ingest
  */
 
-import { NonNegativeInt } from "@beep/schema/Int";
+import {NonNegativeInt} from "@beep/schema/Int";
 import * as Clock from "effect/Clock";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
+import * as A from "effect/Array";
+import { pipe } from "effect/Function";
+import * as Str from "effect/String";
 import * as S from "effect/Schema";
-import { Console, DateTime, Effect, FileSystem, Path } from "effect";
-import { Argument as Args, Command, Flag as Options } from "effect/unstable/cli";
-import type { ManifestDocument } from "../../Domain/Schema/Batch.ts";
-import { BatchManifest } from "../../Domain/Schema/Batch.ts";
-import { OntologyName } from "../../Domain/Identity.ts";
-import { StorageService } from "../../Service/Storage.ts";
-import { withErrorHandler } from "../ErrorHandler.ts";
+import {Console, DateTime, Effect, FileSystem, Path} from "effect";
+import {Argument as Args, Command, Flag as Options} from "effect/unstable/cli";
+import type {ManifestDocument} from "../../Domain/Schema/Batch.ts";
+import {BatchManifest} from "../../Domain/Schema/Batch.ts";
+import {OntologyName} from "../../Domain/Identity.ts";
+import {StorageService} from "../../Service/Storage.ts";
+import {withErrorHandler} from "../ErrorHandler.ts";
 
 // =============================================================================
 // Command Options
@@ -83,10 +86,14 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   yield* Console.log(`Batch ID: ${effectiveBatchId}`);
   const entries = yield* fs.readDirectory(dir);
   const supportedExtensions = [".txt", ".md", ".json", ".html", ".htm"];
-  const files = entries.filter((entry) => supportedExtensions.some((ext) => entry.toLowerCase().endsWith(ext)));
-  if (files.length === 0) {
+  const files = A.filter(entries, (entry) => A.some(supportedExtensions, (ext) => pipe(
+    entry,
+    Str.toLowerCase,
+    Str.endsWith(ext)
+  )));
+  if (A.isReadonlyArrayEmpty(files)) {
     yield* Console.error(`No supported files found in ${dir}`);
-    yield* Console.log(`Supported extensions: ${supportedExtensions.join(", ")}`);
+    yield* Console.log(`Supported extensions: ${A.join(supportedExtensions, ", ")}`);
     return;
   }
   yield* Console.log(`Found ${files.length} files to ingest`);
@@ -131,7 +138,7 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
     documents: [firstDocument, ...documents.slice(1)],
     createdAt: DateTime.nowUnsafe(),
   });
-  const manifestJson = yield* S.encodeEffect(S.fromJsonString(BatchManifest, { space: 2 }))(manifest);
+  const manifestJson = yield* S.encodeEffect(S.fromJsonString(BatchManifest, {space: 2}))(manifest);
   if (O.isSome(output)) {
     yield* fs.writeFileString(output.value, manifestJson);
     yield* Console.log(`Manifest written to: ${output.value}`);
@@ -157,6 +164,6 @@ export const ingestCommand = Command.make(
     batchId: batchIdOption,
     prefix: prefixOption,
   },
-  ({ batchId, dir, namespace, ontology, ontologyId, output, prefix }) =>
+  ({batchId, dir, namespace, ontology, ontologyId, output, prefix}) =>
     withErrorHandler(ingestHandler(dir, ontology, ontologyId, namespace, output, batchId, prefix))
 ).pipe(Command.withDescription("Upload local files to storage and generate batch manifest"));

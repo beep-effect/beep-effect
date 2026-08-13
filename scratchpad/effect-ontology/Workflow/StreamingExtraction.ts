@@ -26,6 +26,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import {ExtractionError} from "../Domain/Error/Extraction.ts";
 import {LlmRateLimit, LlmTimeout} from "../Domain/Error/Llm.ts";
 import {ChunkId} from "../Domain/Identity.ts";
@@ -335,13 +337,13 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                     relations: [],
                   });
                 }
-                const typeSet = new Set<string>();
+                const typeSet = MutableHashSet.empty<string>();
                 for (const entity of entityArray) {
                   for (const type of entity.types) {
-                    typeSet.add(type);
+                    MutableHashSet.add(typeSet, type);
                   }
                 }
-                const typeArray = Array.from(typeSet);
+                const typeArray = A.fromIterable(typeSet);
                 const properties = yield* ontology.getPropertiesFor(typeArray).pipe(
                   Effect.withLogSpan(`chunk-${chunk.index}-property-scoping`),
                   Effect.tap((properties) =>
@@ -534,7 +536,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                 stage: "streaming-extraction",
                 totalEntities: graph.entities.length,
                 totalRelations: graph.relations.length,
-                uniqueEntityTypes: Array.from(new Set(graph.entities.flatMap((e) => e.types))).length,
+                uniqueEntityTypes: HashSet.size(HashSet.fromIterable(graph.entities.flatMap((e) => e.types))),
               }),
               Effect.annotateCurrentSpan(LlmAttributes.ENTITY_COUNT, graph.entities.length),
               Effect.annotateCurrentSpan(LlmAttributes.RELATION_COUNT, graph.relations.length),

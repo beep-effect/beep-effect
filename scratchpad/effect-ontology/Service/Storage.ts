@@ -2,6 +2,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { Storage } from "@google-cloud/storage";
 import { Context, Data, Effect, FileSystem, Layer, Path } from "effect";
 import * as Clock from "effect/Clock";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import { SystemError } from "effect/PlatformError";
@@ -404,51 +405,51 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
 // --- In-Memory Implementation ---
 
 const makeMemoryStore = Effect.sync(() => {
-  const store = new Map<string, string | Uint8Array>();
-  const generations = new Map<string, number>();
+  const store = MutableHashMap.empty<string, string | Uint8Array>();
+  const generations = MutableHashMap.empty<string, number>();
 
-  const getGeneration = (key: string): string => String(generations.get(key) ?? 0);
+  const getGeneration = (key: string): string => String(O.getOrElse(MutableHashMap.get(generations, key), () => 0));
   const incrementGeneration = (key: string): void => {
-    const current = generations.get(key) ?? 0;
-    generations.set(key, current + 1);
+    const current = O.getOrElse(MutableHashMap.get(generations, key), () => 0);
+    MutableHashMap.set(generations, key, current + 1);
   };
 
   const kv = KeyValueStore.make({
     get: (key) =>
       Effect.sync(() => {
-        const val = store.get(key);
+        const val = O.getOrUndefined(MutableHashMap.get(store, key));
         if (P.isUndefined(val)) return undefined;
         return typeof val === "string" ? val : new TextDecoder().decode(val);
       }),
     getUint8Array: (key) =>
       Effect.sync(() => {
-        const val = store.get(key);
+        const val = O.getOrUndefined(MutableHashMap.get(store, key));
         if (P.isUndefined(val)) return undefined;
         return typeof val === "string" ? new TextEncoder().encode(val) : val;
       }),
     set: (key, value) =>
       Effect.sync(() => {
-        store.set(key, value);
+        MutableHashMap.set(store, key, value);
         incrementGeneration(key);
       }),
     remove: (key) =>
       Effect.sync(() => {
-        store.delete(key);
-        generations.delete(key);
+        MutableHashMap.remove(store, key);
+        MutableHashMap.remove(generations, key);
       }),
     clear: Effect.sync(() => {
-      store.clear();
-      generations.clear();
+      MutableHashMap.clear(store);
+      MutableHashMap.clear(generations);
     }),
-    size: Effect.sync(() => store.size),
+    size: Effect.sync(() => MutableHashMap.size(store)),
   });
 
   return {
     ...kv,
-    list: (prefix) => Effect.sync(() => Array.from(store.keys()).filter((k) => k.startsWith(prefix))),
+    list: (prefix) => Effect.sync(() => Array.from(MutableHashMap.keys(store)).filter((k) => k.startsWith(prefix))),
     getWithGeneration: (key) =>
       Effect.sync(() => {
-        const val = store.get(key);
+        const val = O.getOrUndefined(MutableHashMap.get(store, key));
         if (P.isUndefined(val)) return O.none();
         const content = typeof val === "string" ? val : new TextDecoder().decode(val);
         return O.some({ content, generation: getGeneration(key) });
@@ -456,12 +457,12 @@ const makeMemoryStore = Effect.sync(() => {
     setIfGenerationMatch: (key, value, expectedGeneration) =>
       Effect.suspend(() => {
         const currentGeneration = getGeneration(key);
-        if (store.has(key) && currentGeneration !== expectedGeneration) {
+        if (MutableHashMap.has(store, key) && currentGeneration !== expectedGeneration) {
           return Effect.fail(
             new GenerationMismatchError({ key, expectedGeneration, actualGeneration: currentGeneration })
           );
         }
-        store.set(key, value);
+        MutableHashMap.set(store, key, value);
         incrementGeneration(key);
         return Effect.void;
       }),

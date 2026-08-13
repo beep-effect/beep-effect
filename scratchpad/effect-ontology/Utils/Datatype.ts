@@ -11,6 +11,7 @@
 import * as P from "effect/Predicate";
 import { XSD } from "../Domain/Rdf/Constants.ts";
 import type { IRI } from "../Domain/Rdf/Types.ts";
+import { dual2 } from "./Dual.ts";
 
 /**
  * Result of datatype normalization
@@ -85,19 +86,18 @@ const SCIENTIFIC_PATTERN = /^-?\d+(?:\.\d+)?[eE][+-]?\d+$/;
  *
  * @example
  * ```typescript
- * normalizeDatatype("2024-12-16")       // { value: "2024-12-16", datatype: XSD.date }
- * normalizeDatatype("42")               // { value: "42", datatype: XSD.integer }
- * normalizeDatatype("3.14159")          // { value: "3.14159", datatype: XSD.decimal }
- * normalizeDatatype("true")             // { value: "true", datatype: XSD.boolean }
- * normalizeDatatype("Hello World")      // { value: "Hello World", datatype: XSD.string }
- * normalizeDatatype("1.5e10")           // { value: "1.5e10", datatype: XSD.double }
+ * normalizeDatatype("2024-12-16", undefined) // { value: "2024-12-16", datatype: XSD.date }
+ * normalizeDatatype("42", undefined)         // { value: "42", datatype: XSD.integer }
+ * normalizeDatatype("3.14159", undefined)    // { value: "3.14159", datatype: XSD.decimal }
+ * normalizeDatatype("true", undefined)       // { value: "true", datatype: XSD.boolean }
+ * normalizeDatatype("Hello World", undefined) // { value: "Hello World", datatype: XSD.string }
+ * normalizeDatatype("1.5e10", undefined)     // { value: "1.5e10", datatype: XSD.double }
  * ```
  *
  * @since 2.0.0
  * @category Normalization
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const normalizeDatatype = (value: string, expectedType?: IRI): NormalizedValue => {
+export const normalizeDatatype = dual2((value: string, expectedType: IRI | undefined): NormalizedValue => {
   // If expected type provided, use it with minimal validation
   if (P.isNotUndefined(expectedType)) {
     return { value, datatype: expectedType };
@@ -142,7 +142,7 @@ export const normalizeDatatype = (value: string, expectedType?: IRI): Normalized
 
   // Default to string
   return { value: trimmed, datatype: XSD.string };
-};
+});
 
 /**
  * Check if a value is likely a date

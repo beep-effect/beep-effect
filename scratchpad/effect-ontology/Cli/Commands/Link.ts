@@ -7,9 +7,10 @@
  * @module Cli/Commands/Link
  */
 
-import { Console, Effect, FileSystem, Option, Schema } from "effect";
+import { Console, Effect, FileSystem } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as A from "effect/Array";
 import { Command, Flag as Options } from "effect/unstable/cli";
 import { IriSchema } from "../../Domain/Rdf/Types.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
@@ -67,19 +68,19 @@ const dryRunOption = Options.boolean("dry-run").pipe(
 const linkHandler = Effect.fn("linkHandler")(function* (
   entityIri: string,
   wikidataId: string,
-  graph: Option.Option<string>,
-  output: Option.Option<string>,
-  search: Option.Option<string>,
+  graph: O.Option<string>,
+  output: O.Option<string>,
+  search: O.Option<string>,
   limit: number,
   dryRun: boolean
 ) {
   const wikidata = yield* WikidataClient;
   const rdf = yield* RdfBuilder;
-  if (Option.isSome(search)) {
+  if (O.isSome(search)) {
     yield* Console.log(`Searching Wikidata for: "${search.value}"`);
     yield* Console.log("");
     const candidates = yield* wikidata.searchEntities(search.value, { limit });
-    if (candidates.length === 0) {
+    if (A.isReadonlyArrayEmpty(candidates)) {
       yield* Console.log("No candidates found.");
       return;
     }
@@ -104,7 +105,7 @@ To create a link, run:`);
     yield* Console.log("Q-IDs should match the pattern: Q followed by digits (e.g., Q42)");
     return;
   }
-  const entityIriResult = Schema.decodeResult(IriSchema)(entityIri);
+  const entityIriResult = IriSchema.decodeResult(entityIri);
   if (entityIriResult._tag === "Failure") {
     yield* Console.error(`Invalid entity IRI: ${entityIri}`);
     return;
@@ -132,7 +133,7 @@ To create a link, run:`);
 
 <${entityIri}> owl:sameAs <${wikidataEntity.conceptUri}> .
 `;
-  if (Option.isSome(graph)) {
+  if (O.isSome(graph)) {
     const fs = yield* FileSystem.FileSystem;
     const graphContent = yield* fs.readFileString(graph.value);
     const store = yield* rdf.parseTurtle(graphContent);
@@ -140,7 +141,7 @@ To create a link, run:`);
       [entityIri]: wikidataEntity.conceptUri,
     });
     const updatedGraph = yield* rdf.toTurtle(store);
-    if (Option.isSome(output)) {
+    if (O.isSome(output)) {
       yield* fs.writeFileString(output.value, updatedGraph);
       yield* Console.log(`Updated graph written to: ${output.value}`);
     } else {
@@ -148,7 +149,7 @@ To create a link, run:`);
       yield* Console.log(updatedGraph);
     }
   } else {
-    if (Option.isSome(output)) {
+    if (O.isSome(output)) {
       const fs = yield* FileSystem.FileSystem;
       yield* fs.writeFileString(output.value, sameAsTriple.trim());
       yield* Console.log(`Link written to: ${output.value}`);

@@ -8,6 +8,7 @@
  */
 
 import * as P from "effect/Predicate";
+import { dual3 } from "../Utils/Dual.ts";
 
 /** Pricing per 1M tokens (as of Dec 2025) */
 const PRICING: Record<string, { input: number; output: number }> = {
@@ -54,12 +55,11 @@ export const getPricing = (model: string): { input: number; output: number } | u
  * @since 2.0.0
  * @category pricing
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const calculateCost = (model: string, inputTokens: number, outputTokens: number): number => {
+export const calculateCost = dual3((model: string, inputTokens: number, outputTokens: number): number => {
   const pricing = PRICING[model];
   if (P.not(P.isTruthy)(pricing)) return 0;
 
   const inputCost = (inputTokens / 1_000_000) * pricing.input;
   const outputCost = (outputTokens / 1_000_000) * pricing.output;
   return inputCost + outputCost;
-};
+});

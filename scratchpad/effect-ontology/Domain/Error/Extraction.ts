@@ -93,16 +93,16 @@ const extractionFields = {
  * @category errors
  * @since 0.0.0
  */
-export const ExtractionError = makeOntologyErrorClass(
-  $I`ExtractionError`,
-  "ExtractionError",
-  extractionFields,
-  $I.annote("ExtractionError", {
-    description: "General extraction-process failure.",
-  })
-).pipe(
-  SchemaUtils.withStatics((schema) =>({is: S.is(schema)}) )
-);
+export const ExtractionError = makeOntologyErrorClass
+  .make(
+    $I`ExtractionError`,
+    "ExtractionError",
+    extractionFields,
+    $I.annote("ExtractionError", {
+      description: "General extraction-process failure.",
+    })
+  )
+  .pipe(SchemaUtils.withStatics((schema) => ({ is: S.is(schema) })));
 
 /** Runtime value decoded by {@link ExtractionError}.
  * @example
@@ -129,7 +129,7 @@ export type ExtractionError = typeof ExtractionError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const MentionExtractionFailed = makeOntologyErrorClass(
+export const MentionExtractionFailed = makeOntologyErrorClass.make(
   $I`MentionExtractionFailed`,
   "MentionExtractionFailed",
   extractionFields,
@@ -163,7 +163,7 @@ export type MentionExtractionFailed = typeof MentionExtractionFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const EntityExtractionFailed = makeOntologyErrorClass(
+export const EntityExtractionFailed = makeOntologyErrorClass.make(
   $I`EntityExtractionFailed`,
   "EntityExtractionFailed",
   extractionFields,
@@ -197,7 +197,7 @@ export type EntityExtractionFailed = typeof EntityExtractionFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const RelationExtractionFailed = makeOntologyErrorClass(
+export const RelationExtractionFailed = makeOntologyErrorClass.make(
   $I`RelationExtractionFailed`,
   "RelationExtractionFailed",
   {
@@ -236,7 +236,7 @@ export type RelationExtractionFailed = typeof RelationExtractionFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const SchemaGenerationFailed = makeOntologyErrorClass(
+export const SchemaGenerationFailed = makeOntologyErrorClass.make(
   $I`SchemaGenerationFailed`,
   "SchemaGenerationFailed",
   {
@@ -277,7 +277,7 @@ export type SchemaGenerationFailed = typeof SchemaGenerationFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ValidationFailed = makeOntologyErrorClass(
+export const ValidationFailed = makeOntologyErrorClass.make(
   $I`ValidationFailed`,
   "ValidationFailed",
   {
@@ -327,7 +327,7 @@ export type ValidationFailed = typeof ValidationFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const EntityValidationFailed = makeOntologyErrorClass(
+export const EntityValidationFailed = makeOntologyErrorClass.make(
   $I`EntityValidationFailed`,
   "EntityValidationFailed",
   {
@@ -377,7 +377,7 @@ export type EntityValidationFailed = typeof EntityValidationFailed.Type;
  * @category errors
  * @since 0.0.0
  */
-export const RelationValidationFailed = makeOntologyErrorClass(
+export const RelationValidationFailed = makeOntologyErrorClass.make(
   $I`RelationValidationFailed`,
   "RelationValidationFailed",
   {

@@ -22,6 +22,7 @@ import type * as S from "effect/Schema";
 import { Prompt } from "effect/unstable/ai";
 import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
 import type { ImageForPrompt, ImageRef } from "../Domain/Model/Image.ts";
+import { dual2 } from "../Utils/Dual.ts";
 import { ImageBlobStore } from "./ImageBlobStore.ts";
 import { StorageServiceLive } from "./Storage.ts";
 
@@ -277,18 +278,16 @@ export const imagesToPromptParts = (images: ReadonlyArray<ImageForPrompt>): Read
  * @since 2.0.0
  * @category Utilities
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const buildMultimodalContent = (
-  text: string,
-  images?: ReadonlyArray<ImageForPrompt>
-): ReadonlyArray<Prompt.UserMessagePart> => {
-  const parts: Array<Prompt.UserMessagePart> = [Prompt.makePart("text", { text })];
+export const buildMultimodalContent = dual2(
+  (text: string, images: ReadonlyArray<ImageForPrompt> | undefined): ReadonlyArray<Prompt.UserMessagePart> => {
+    const parts: Array<Prompt.UserMessagePart> = [Prompt.makePart("text", { text })];
 
-  if (P.isNotUndefined(images) && images.length > 0) {
-    for (const part of imagesToPromptParts(images)) {
-      parts.push(part);
+    if (P.isNotUndefined(images) && images.length > 0) {
+      for (const part of imagesToPromptParts(images)) {
+        parts.push(part);
+      }
     }
-  }
 
-  return parts;
-};
+    return parts;
+  }
+);

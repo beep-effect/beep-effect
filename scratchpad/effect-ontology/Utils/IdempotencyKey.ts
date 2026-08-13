@@ -17,6 +17,7 @@ import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { dual4 } from "./Dual.ts";
 import { sha256Sync, sha256SyncFull } from "./Hash.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Utils/IdempotencyKey");
@@ -141,21 +142,17 @@ export const computeOntologyVersion = (ontologyContent: string): string => sha25
  * // Returns: "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
  * ```
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const computeIdempotencyKey = (
-  text: string,
-  ontologyId: string,
-  ontologyVersion: string,
-  params = ExtractionParams.make({})
-): IdempotencyKey => {
-  const normalized = normalizeText(text);
-  const paramsHash = hashParams(params);
+export const computeIdempotencyKey = dual4(
+  (text: string, ontologyId: string, ontologyVersion: string, params: ExtractionParams): IdempotencyKey => {
+    const normalized = normalizeText(text);
+    const paramsHash = hashParams(params);
 
-  const input = `${normalized}|${ontologyId}|${ontologyVersion}|${paramsHash}`;
-  const hash = sha256SyncFull(input);
+    const input = `${normalized}|${ontologyId}|${ontologyVersion}|${paramsHash}`;
+    const hash = sha256SyncFull(input);
 
-  return hash as IdempotencyKey;
-};
+    return hash as IdempotencyKey;
+  }
+);
 
 /**
  * Compute idempotency key as Effect
@@ -168,13 +165,15 @@ export const computeIdempotencyKey = (
  * @param params - Extraction parameters
  * @returns Effect yielding IdempotencyKey
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const computeIdempotencyKeyEffect = (
-  text: string,
-  ontologyId: string,
-  ontologyVersion: string,
-  params = ExtractionParams.make({})
-): Effect.Effect<IdempotencyKey> => Effect.sync(() => computeIdempotencyKey(text, ontologyId, ontologyVersion, params));
+export const computeIdempotencyKeyEffect = dual4(
+  (
+    text: string,
+    ontologyId: string,
+    ontologyVersion: string,
+    params: ExtractionParams
+  ): Effect.Effect<IdempotencyKey> =>
+    Effect.sync(() => computeIdempotencyKey(text, ontologyId, ontologyVersion, params))
+);
 
 // =============================================================================
 // Validation
@@ -194,8 +193,7 @@ export const isValidIdempotencyKey = (value: string): value is IdempotencyKey =>
  * @param value - String to parse
  * @returns Effect yielding IdempotencyKey or failing with ParseError
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const parseIdempotencyKey = S.decodeEffect(IdempotencyKey);
+export const parseIdempotencyKey = (input: unknown) => S.decodeUnknownEffect(IdempotencyKey)(input);
 
 // =============================================================================
 // Short Key (for display/logging)

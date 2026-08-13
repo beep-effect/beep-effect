@@ -126,7 +126,10 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
   $I.annote("BatchManifest", {
     description: "Versioned ontology-scoped batch manifest with non-empty documents and a complete validation policy.",
   })
-) {}
+) {
+
+  static readonly decodeOptionString = S.decodeOption(S.fromJsonString(BatchManifest))
+}
 
 /**
  * Input to extraction of one document.

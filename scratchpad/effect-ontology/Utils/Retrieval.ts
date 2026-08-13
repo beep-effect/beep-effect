@@ -10,12 +10,14 @@
  */
 import { pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Str from "effect/String";
+import { dual2, dual3 } from "./Dual.ts";
 
 const byRrfScoreDescending = Order.mapInput(
   Order.flip(Order.Number),
@@ -34,9 +36,9 @@ const byRrfScoreDescending = Order.mapInput(
  * @since 0.0.0
  * @category Retrieval
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const rrfScore = (ranks: ReadonlyArray<number>, k: number = 60): number =>
-  A.reduce(ranks, 0, (sum, rank) => sum + 1 / (k + rank));
+export const rrfScore = dual2((ranks: ReadonlyArray<number>, k: number): number =>
+  A.reduce(ranks, 0, (sum, rank) => sum + 1 / (k + rank))
+);
 
 /**
  * Combine multiple ranked lists using Reciprocal Rank Fusion
@@ -51,11 +53,15 @@ export const rrfScore = (ranks: ReadonlyArray<number>, k: number = 60): number =
  * @since 0.0.0
  * @category Retrieval
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const rrfFusion = <T extends { id: string }>(
-  rankedLists: ReadonlyArray<ReadonlyArray<T>>,
-  k: number = 60
-): ReadonlyArray<T & { rrfScore: number }> => {
+export const rrfFusion: {
+  <T extends { id: string }>(
+    k: number
+  ): (rankedLists: ReadonlyArray<ReadonlyArray<T>>) => ReadonlyArray<T & { rrfScore: number }>;
+  <T extends { id: string }>(
+    rankedLists: ReadonlyArray<ReadonlyArray<T>>,
+    k: number
+  ): ReadonlyArray<T & { rrfScore: number }>;
+} = dual(2, <T extends { id: string }>(rankedLists: ReadonlyArray<ReadonlyArray<T>>, k: number) => {
   const itemMap = MutableHashMap.empty<string, { item: T; ranks: Array<number> }>();
 
   A.forEach(rankedLists, (list) =>
@@ -79,7 +85,7 @@ export const rrfFusion = <T extends { id: string }>(
     A.map(({ item, ranks }) => ({ ...item, rrfScore: rrfScore(ranks, k) })),
     A.sort(byRrfScoreDescending)
   );
-};
+});
 
 /**
  * Expanded term with weight
@@ -170,103 +176,100 @@ interface OntologyContext {
  * @since 0.0.0
  * @category Retrieval
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const expandQueryWithOntology = (
-  query: string,
-  ontology: OntologyContext,
-  options?: QueryExpansionOptions
-): ReadonlyArray<ExpandedTerm> => {
-  const opts = { ...defaultExpansionOptions, ...options };
+export const expandQueryWithOntology = dual3(
+  (query: string, ontology: OntologyContext, options: QueryExpansionOptions): ReadonlyArray<ExpandedTerm> => {
+    const opts = { ...defaultExpansionOptions, ...options };
 
-  // Normalize query for matching
-  const queryLower = pipe(query, Str.toLowerCase, Str.trim);
-  if (Str.isEmpty(queryLower)) return A.empty();
+    // Normalize query for matching
+    const queryLower = pipe(query, Str.toLowerCase, Str.trim);
+    if (Str.isEmpty(queryLower)) return A.empty();
 
-  // Add original term
-  let results: ReadonlyArray<ExpandedTerm> = A.of({
-    term: query,
-    weight: opts.originalWeight,
-    source: "original",
-  });
-  const seenTerms = MutableHashSet.make(queryLower);
+    // Add original term
+    let results: ReadonlyArray<ExpandedTerm> = A.of({
+      term: query,
+      weight: opts.originalWeight,
+      source: "original",
+    });
+    const seenTerms = MutableHashSet.make(queryLower);
 
-  // Helper to add unique terms
-  const addTerm = (term: string, weight: number, source: ExpandedTerm["source"]) => {
-    const termLower = pipe(term, Str.toLowerCase, Str.trim);
-    if (Str.isNonEmpty(termLower) && !MutableHashSet.has(seenTerms, termLower)) {
-      MutableHashSet.add(seenTerms, termLower);
-      results = A.append(results, { term: termLower, weight, source });
-    }
-  };
-
-  // Search classes for matches
-  HashMap.forEach(ontology.classes, (cls) => {
-    const labelLower = pipe(
-      O.fromUndefinedOr(cls.label),
-      O.map(Str.toLowerCase),
-      O.getOrElse(() => "")
-    );
-
-    // Check if query matches class label
-    if (Str.includes(queryLower)(labelLower) || Str.includes(labelLower)(queryLower)) {
-      // Add altLabels as synonyms
-      if (opts.includeAltLabels) {
-        pipe(
-          O.fromUndefinedOr(cls.altLabels),
-          O.getOrElse(() => A.empty<string>()),
-          A.forEach((alt) => {
-            addTerm(alt, opts.synonymWeight, "altLabel");
-          })
-        );
+    // Helper to add unique terms
+    const addTerm = (term: string, weight: number, source: ExpandedTerm["source"]) => {
+      const termLower = pipe(term, Str.toLowerCase, Str.trim);
+      if (Str.isNonEmpty(termLower) && !MutableHashSet.has(seenTerms, termLower)) {
+        MutableHashSet.add(seenTerms, termLower);
+        results = A.append(results, { term: termLower, weight, source });
       }
+    };
 
-      // Add broader classes
-      if (opts.includeBroader) {
-        pipe(
-          O.fromUndefinedOr(cls.broader),
-          O.getOrElse(() => A.empty<string>()),
-          A.forEach((broader) => {
-            addTerm(broader, opts.hierarchyWeight, "broader");
-          })
-        );
+    // Search classes for matches
+    HashMap.forEach(ontology.classes, (cls) => {
+      const labelLower = pipe(
+        O.fromUndefinedOr(cls.label),
+        O.map(Str.toLowerCase),
+        O.getOrElse(() => "")
+      );
+
+      // Check if query matches class label
+      if (Str.includes(queryLower)(labelLower) || Str.includes(labelLower)(queryLower)) {
+        // Add altLabels as synonyms
+        if (opts.includeAltLabels) {
+          pipe(
+            O.fromUndefinedOr(cls.altLabels),
+            O.getOrElse(() => A.empty<string>()),
+            A.forEach((alt) => {
+              addTerm(alt, opts.synonymWeight, "altLabel");
+            })
+          );
+        }
+
+        // Add broader classes
+        if (opts.includeBroader) {
+          pipe(
+            O.fromUndefinedOr(cls.broader),
+            O.getOrElse(() => A.empty<string>()),
+            A.forEach((broader) => {
+              addTerm(broader, opts.hierarchyWeight, "broader");
+            })
+          );
+        }
+
+        // Add narrower classes
+        if (opts.includeNarrower) {
+          pipe(
+            O.fromUndefinedOr(cls.narrower),
+            O.getOrElse(() => A.empty<string>()),
+            A.forEach((narrower) => {
+              addTerm(narrower, opts.hierarchyWeight, "narrower");
+            })
+          );
+        }
       }
+    });
 
-      // Add narrower classes
-      if (opts.includeNarrower) {
-        pipe(
-          O.fromUndefinedOr(cls.narrower),
-          O.getOrElse(() => A.empty<string>()),
-          A.forEach((narrower) => {
-            addTerm(narrower, opts.hierarchyWeight, "narrower");
-          })
-        );
+    // Search properties for matches
+    HashMap.forEach(ontology.properties, (property) => {
+      const labelLower = pipe(
+        O.fromUndefinedOr(property.label),
+        O.map(Str.toLowerCase),
+        O.getOrElse(() => "")
+      );
+
+      if (Str.includes(queryLower)(labelLower) || Str.includes(labelLower)(queryLower)) {
+        if (opts.includeAltLabels) {
+          pipe(
+            O.fromUndefinedOr(property.altLabels),
+            O.getOrElse(() => A.empty<string>()),
+            A.forEach((alt) => {
+              addTerm(alt, opts.synonymWeight, "altLabel");
+            })
+          );
+        }
       }
-    }
-  });
+    });
 
-  // Search properties for matches
-  HashMap.forEach(ontology.properties, (property) => {
-    const labelLower = pipe(
-      O.fromUndefinedOr(property.label),
-      O.map(Str.toLowerCase),
-      O.getOrElse(() => "")
-    );
-
-    if (Str.includes(queryLower)(labelLower) || Str.includes(labelLower)(queryLower)) {
-      if (opts.includeAltLabels) {
-        pipe(
-          O.fromUndefinedOr(property.altLabels),
-          O.getOrElse(() => A.empty<string>()),
-          A.forEach((alt) => {
-            addTerm(alt, opts.synonymWeight, "altLabel");
-          })
-        );
-      }
-    }
-  });
-
-  return results;
-};
+    return results;
+  }
+);
 
 /**
  * Build an expanded query string from expanded terms
@@ -294,8 +297,7 @@ export const expandQueryWithOntology = (
  * @since 0.0.0
  * @category Retrieval
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const buildExpandedQuery = (terms: ReadonlyArray<ExpandedTerm>, useBoosting: boolean = false): string => {
+export const buildExpandedQuery = dual2((terms: ReadonlyArray<ExpandedTerm>, useBoosting: boolean): string => {
   if (useBoosting) {
     return pipe(
       terms,
@@ -308,4 +310,4 @@ export const buildExpandedQuery = (terms: ReadonlyArray<ExpandedTerm>, useBoosti
     A.map((term) => term.term),
     A.join(" ")
   );
-};
+});

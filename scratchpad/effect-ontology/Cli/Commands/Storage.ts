@@ -7,7 +7,10 @@
  * @module Cli/Commands/Storage
  */
 
-import { Console, Effect, Option, Schema } from "effect";
+import { Console, Effect } from "effect";
+import * as O from "effect/Option";
+import * as A from "effect/Array";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as P from "effect/Predicate";
 import { Argument as Args, Command, Flag as Options } from "effect/unstable/cli";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
@@ -25,9 +28,9 @@ const listPrefix = Args.string("prefix").pipe(
   Args.withDescription("Path prefix to list (default: root)")
 );
 
-const listHandler = Effect.fn("listHandler")(function* (prefix: Option.Option<string>) {
+const listHandler = Effect.fn("listHandler")(function* (prefix: O.Option<string>) {
   const storage = yield* StorageService;
-  const effectivePrefix = Option.getOrElse(prefix, () => "");
+  const effectivePrefix = O.getOrElse(prefix, () => "");
   yield* Console.log(`Listing: ${effectivePrefix || "(root)"}`);
   yield* Console.log("");
   const items = yield* storage.list(effectivePrefix);
@@ -35,18 +38,18 @@ const listHandler = Effect.fn("listHandler")(function* (prefix: Option.Option<st
     yield* Console.log("(empty)");
     return;
   }
-  const dirs = new Set<string>();
+  const dirs = MutableHashSet.empty<string>();
   const files: Array<string> = [];
   for (const item of items) {
     const relativePath = P.isTruthy(effectivePrefix) ? item.replace(effectivePrefix, "").replace(/^\//, "") : item;
     const parts = relativePath.split("/");
     if (parts.length > 1) {
-      dirs.add(`${parts[0]}/`);
+      MutableHashSet.add(dirs, `${parts[0]}/`);
     } else {
       files.push(item);
     }
   }
-  for (const dir of Array.from(dirs).sort()) {
+  for (const dir of A.fromIterable(dirs).sort()) {
     yield* Console.log(`  📁 ${dir}`);
   }
   for (const file of files.sort()) {
@@ -54,7 +57,7 @@ const listHandler = Effect.fn("listHandler")(function* (prefix: Option.Option<st
     yield* Console.log(`  📄 ${name}`);
   }
   yield* Console.log("");
-  yield* Console.log(`Total: ${dirs.size} directories, ${files.length} files`);
+  yield* Console.log(`Total: ${MutableHashSet.size(dirs)} directories, ${files.length} files`);
 });
 
 const listCommand = Command.make("ls", { prefix: listPrefix }, ({ prefix }) =>
@@ -106,8 +109,8 @@ const batchesHandler = Effect.fn("batchesHandler")(function* () {
   for (const manifestPath of manifestPaths) {
     const contentOpt = yield* storage.get(manifestPath);
     if (contentOpt !== undefined) {
-      const manifest = Schema.decodeOption(Schema.fromJsonString(BatchManifest))(contentOpt);
-      yield* Option.match(manifest, {
+      const manifest = BatchManifest.decodeOptionString(contentOpt);
+      yield* O.match(manifest, {
         onNone: () => Console.log(`📦 ${manifestPath} (invalid manifest)`).pipe(Effect.andThen(Console.log(""))),
         onSome: (value) =>
           Console.log(`📦 ${value.batchId}`).pipe(
@@ -142,14 +145,14 @@ const infoHandler = Effect.fn("infoHandler")(function* () {
   yield* Console.log("");
   yield* Console.log("Top-level directories:");
   const items = yield* storage.list("");
-  const dirs = new Set<string>();
+  const dirs = MutableHashSet.empty<string>();
   for (const item of items) {
     const parts = item.split("/");
     if (parts.length > 1) {
-      dirs.add(parts[0]);
+      MutableHashSet.add(dirs, parts[0]);
     }
   }
-  for (const dir of Array.from(dirs).sort()) {
+  for (const dir of A.fromIterable(dirs).sort()) {
     yield* Console.log(`  📁 ${dir}/`);
   }
 });

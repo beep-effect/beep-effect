@@ -3,6 +3,9 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Cause, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
@@ -401,7 +404,7 @@ export const TimelineRouter = HttpRouter.addAll([
       const claimsWithRank = yield* Effect.forEach(claims, (claim) => claimRowToClaimWithRank(claim, article));
 
       // Count unique entities (subjects)
-      const uniqueSubjects = new Set(A.map(claims, (claim) => claim.subjectIri));
+      const uniqueSubjects = HashSet.fromIterable(A.map(claims, (claim) => claim.subjectIri));
 
       // TODO: Count conflicts when ConflictRepository is implemented
       const conflictCount = 0;
@@ -409,7 +412,7 @@ export const TimelineRouter = HttpRouter.addAll([
       return yield* HttpServerResponse.schemaJson(ArticleDetailResponse)({
         article: yield* articleRowToArticleSummary(article),
         claims: claimsWithRank,
-        entityCount: NonNegativeInt.make(uniqueSubjects.size),
+        entityCount: NonNegativeInt.make(HashSet.size(uniqueSubjects)),
         conflictCount: NonNegativeInt.make(conflictCount),
       });
     })
@@ -529,35 +532,41 @@ export const SearchRouter = HttpRouter.addAll([
 
           // Group by subject and filter by query
           const queryLower = Str.toLowerCase(request.query);
-          const subjectMap = new Map<string, { iri: string; claimCount: number; types: Set<string> }>();
+          const subjectMap = MutableHashMap.empty<
+            string,
+            { iri: string; claimCount: number; types: MutableHashSet.MutableHashSet<string> }
+          >();
 
           for (const claim of claims) {
-            if (!subjectMap.has(claim.subjectIri)) {
-              subjectMap.set(claim.subjectIri, {
+            const entry = O.getOrElse(MutableHashMap.get(subjectMap, claim.subjectIri), () => {
+              const created = {
                 iri: claim.subjectIri,
                 claimCount: 0,
-                types: new Set(),
-              });
-            }
-            const entry = subjectMap.get(claim.subjectIri)!;
+                types: MutableHashSet.empty<string>(),
+              };
+              MutableHashMap.set(subjectMap, claim.subjectIri, created);
+              return created;
+            });
             entry.claimCount++;
             // Check for rdf:type predicate to collect types
             if (Str.endsWith("#type")(claim.predicateIri) || Str.endsWith("/type")(claim.predicateIri)) {
-              entry.types.add(claim.objectValue);
+              MutableHashSet.add(entry.types, claim.objectValue);
             }
           }
 
           // Filter by query (match on IRI or label would be better with a label index)
           const entityCandidates = A.take(
-            A.filter(Array.from(subjectMap.values()), (entity) =>
-              Str.includes(queryLower)(Str.toLowerCase(entity.iri))
+            subjectMap.pipe(
+              MutableHashMap.values,
+              A.fromIterable,
+              A.filter((entity) => Str.includes(queryLower)(Str.toLowerCase(entity.iri)))
             ),
             limit
           );
           const entities = yield* Effect.forEach(entityCandidates, (entity) =>
             Effect.gen(function* () {
               const iri = yield* S.decodeEffect(IRI)(entity.iri);
-              const types = yield* Effect.forEach(Array.from(entity.types), (type) => S.decodeEffect(IRI)(type));
+              const types = yield* Effect.forEach(A.fromIterable(entity.types), (type) => S.decodeEffect(IRI)(type));
               const label = O.filter(A.last(Str.split(/[#/]/)(entity.iri)), Str.isNonEmpty);
               return EntitySearchResult.make({
                 iri,
@@ -609,15 +618,18 @@ export const SearchRouter = HttpRouter.addAll([
       });
 
       const prefixLower = Str.toLowerCase(queryParams.prefix);
-      const seen = new Set<string>();
+      const seen = MutableHashSet.empty<string>();
       const suggestionIris: Array<{ label: string; iri: string }> = [];
 
       for (const claim of claims) {
         if (suggestionIris.length >= limit) break;
 
         const localName = O.getOrElse(A.last(Str.split(/[#/]/)(claim.subjectIri)), () => "");
-        if (Str.startsWith(prefixLower)(Str.toLowerCase(localName)) && !seen.has(claim.subjectIri)) {
-          seen.add(claim.subjectIri);
+        if (
+          Str.startsWith(prefixLower)(Str.toLowerCase(localName)) &&
+          !MutableHashSet.has(seen, claim.subjectIri)
+        ) {
+          MutableHashSet.add(seen, claim.subjectIri);
           suggestionIris.push({
             label: localName,
             iri: claim.subjectIri,

@@ -10,6 +10,7 @@
 
 import { Prompt } from "effect/unstable/ai";
 import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
+import { dual2, dual3 } from "../Utils/Dual.ts";
 
 /**
  * Create a Prompt with cache control for Anthropic
@@ -33,16 +34,17 @@ import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
  *
  * @since 2.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const makeCachedPrompt = (systemMessage: string, userMessage: string, _enableCaching: boolean): Prompt.Prompt =>
-  Prompt.fromMessages([
-    Prompt.makeMessage("system", {
-      content: systemMessage,
-    }),
-    Prompt.makeMessage("user", {
-      content: [Prompt.makePart("text", { text: userMessage })],
-    }),
-  ]);
+export const makeCachedPrompt = dual3(
+  (systemMessage: string, userMessage: string, _enableCaching: boolean): Prompt.Prompt =>
+    Prompt.fromMessages([
+      Prompt.makeMessage("system", {
+        content: systemMessage,
+      }),
+      Prompt.makeMessage("user", {
+        content: [Prompt.makePart("text", { text: userMessage })],
+      }),
+    ])
+);
 
 /**
  * Create a Prompt from StructuredPrompt
@@ -55,6 +57,7 @@ export const makeCachedPrompt = (systemMessage: string, userMessage: string, _en
  *
  * @since 2.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const makeCachedPromptFromStructured = (structured: StructuredPrompt, enableCaching: boolean): Prompt.Prompt =>
-  makeCachedPrompt(structured.systemMessage, structured.userMessage, enableCaching);
+export const makeCachedPromptFromStructured = dual2(
+  (structured: StructuredPrompt, enableCaching: boolean): Prompt.Prompt =>
+    makeCachedPrompt(structured.systemMessage, structured.userMessage, enableCaching)
+);

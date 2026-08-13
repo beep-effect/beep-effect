@@ -404,10 +404,10 @@ export const CliExtractionLayer = Layer.mergeAll(ExtractionWorkflowBundle, RdfBu
  *
  * @example
  * ```typescript
- * const configMap = new Map([
+ * const configMap = HashMap.make(
  *   ["ONTOLOGY_PATH", "/path/to/ontology.ttl"],
  *   ["ONTOLOGY_EXTERNAL_VOCABS_PATH", ""]  // Empty = skip loading
- * ])
+ * )
  * const customProvider = ConfigProvider.fromMap(configMap).pipe(
  *   ConfigProvider.orElse(() => ConfigProvider.fromEnv())
  * )

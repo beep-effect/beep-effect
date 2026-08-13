@@ -59,8 +59,7 @@ export const vectorN = (dimension: number) =>
  * @since 2.0.0
  * @category Custom Types
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const vector768 = vectorN(768);
+const vector768 = vectorN(768);
 
 /**
  * Custom type for pgvector embedding columns (512-dimensional).
@@ -69,8 +68,6 @@ export const vector768 = vectorN(768);
  * @since 2.0.0
  * @category Custom Types
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const vector512 = vectorN(512);
 
 /**
  * Custom type for pgvector embedding columns (1024-dimensional).
@@ -79,8 +76,6 @@ export const vector512 = vectorN(512);
  * @since 2.0.0
  * @category Custom Types
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const vector1024 = vectorN(1024);
 
 /**
  * Custom type for pgvector embedding columns (256-dimensional).
@@ -89,8 +84,6 @@ export const vector1024 = vectorN(1024);
  * @since 2.0.0
  * @category Custom Types
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const vector256 = vectorN(256);
 
 // =============================================================================
 // Enums

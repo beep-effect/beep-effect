@@ -8,6 +8,7 @@
 import { $SchemaId } from "@beep/identity/packages";
 import { Crypto, Effect, Encoding, SchemaGetter, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Sha256");
 
@@ -117,6 +118,9 @@ export const Sha256HexFromBytes = S.Uint8Array.pipe(
     decode: SchemaGetter.transformOrFail(computeSha256Hex),
     encode: SchemaGetter.forbidden(() => "Encoding Sha256Hex back to original bytes is not supported"),
   }),
+  SchemaUtils.withStatics((schema) => ({
+    decodeEffect: S.decodeEffect(schema),
+  })),
   $I.annoteSchema("Sha256HexFromBytes", {
     description: "A one-way schema that hashes bytes into a canonical lowercase SHA-256 hex digest.",
   })

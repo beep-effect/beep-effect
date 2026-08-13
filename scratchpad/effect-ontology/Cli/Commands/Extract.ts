@@ -81,51 +81,51 @@ const readInputText = Effect.fn("Extract.readInputText")(function* (
   textOpt: O.Option<string>,
   fileOpt: O.Option<string>
 ) {
-    const fs = yield* FileSystem.FileSystem;
+  const fs = yield* FileSystem.FileSystem;
 
-    // Priority: --text > --file > stdin
-    if (O.isSome(textOpt)) {
-      return textOpt.value;
-    }
+  // Priority: --text > --file > stdin
+  if (O.isSome(textOpt)) {
+    return textOpt.value;
+  }
 
-    if (O.isSome(fileOpt)) {
-      return yield* fs.readFileString(fileOpt.value);
-    }
+  if (O.isSome(fileOpt)) {
+    return yield* fs.readFileString(fileOpt.value);
+  }
 
-    // Read from stdin
-    const { stdin } = yield* Effect.tryPromise({
-      try: () => import("node:process"),
-      catch: (cause) => new ExtractInputError({ message: "Failed to access stdin", cause }),
+  // Read from stdin
+  const { stdin } = yield* Effect.tryPromise({
+    try: () => import("node:process"),
+    catch: (cause) => new ExtractInputError({ message: "Failed to access stdin", cause }),
+  });
+  if (stdin.isTTY) {
+    return yield* new ExtractInputError({
+      message: "No input provided. Use --text, --file, or pipe input via stdin.",
     });
-    if (stdin.isTTY) {
-      return yield* new ExtractInputError({
-        message: "No input provided. Use --text, --file, or pipe input via stdin.",
-      });
-    }
+  }
 
-    const input = yield* Effect.callback<string, ExtractInputError>((resume) => {
-        const chunks: Buffer[] = [];
-        const onData = (chunk: Buffer | string) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-        const onEnd = () => resume(Effect.succeed(Buffer.concat(chunks).toString("utf-8")));
-        const onError = (cause: unknown) =>
-          resume(Effect.fail(new ExtractInputError({ message: "Failed to read stdin", cause })));
-        stdin.on("data", onData);
-        stdin.once("end", onEnd);
-        stdin.once("error", onError);
-        return Effect.sync(() => {
-          stdin.off("data", onData);
-          stdin.off("end", onEnd);
-          stdin.off("error", onError);
-        });
+  const input = yield* Effect.callback<string, ExtractInputError>((resume) => {
+    const chunks: Buffer[] = [];
+    const onData = (chunk: Buffer | string) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const onEnd = () => resume(Effect.succeed(Buffer.concat(chunks).toString("utf-8")));
+    const onError = (cause: unknown) =>
+      resume(Effect.fail(new ExtractInputError({ message: "Failed to read stdin", cause })));
+    stdin.on("data", onData);
+    stdin.once("end", onEnd);
+    stdin.once("error", onError);
+    return Effect.sync(() => {
+      stdin.off("data", onData);
+      stdin.off("end", onEnd);
+      stdin.off("error", onError);
     });
+  });
 
-    if (P.not(P.isTruthy)(input.trim())) {
-      return yield* new ExtractInputError({
-        message: "No input provided. Use --text, --file, or pipe input via stdin.",
-      });
-    }
+  if (P.not(P.isTruthy)(input.trim())) {
+    return yield* new ExtractInputError({
+      message: "No input provided. Use --text, --file, or pipe input via stdin.",
+    });
+  }
 
-    return input;
+  return input;
 });
 
 /**
@@ -248,10 +248,12 @@ export const extractCommand = Command.make(
   },
   ({ concurrency, file, format, noExternalVocabs, ontology, text }) =>
     withErrorHandler(
-      extractHandler(ontology, text, file, noExternalVocabs, format, concurrency).pipe(
-        Effect.scoped,
-        // @effect-diagnostics-next-line strictEffectProvide:off
-        Effect.provide(makeExtractLayer(ontology, noExternalVocabs))
+      makeExtractLayer(ontology, noExternalVocabs).pipe(
+        Layer.build,
+        Effect.flatMap((context) =>
+          extractHandler(ontology, text, file, noExternalVocabs, format, concurrency).pipe(Effect.provide(context))
+        ),
+        Effect.scoped
       )
     )
 ).pipe(Command.withDescription("Extract knowledge graph from text using ontology-guided LLM prompting"));

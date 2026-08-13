@@ -8,13 +8,15 @@
  * @module Service/EntityIndex
  */
 
-import * as Clock from "effect/Clock";
 import { Context, Effect, HashMap, HashSet, Layer, Option, Ref, Schema } from "effect";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
 import * as P from "effect/Predicate";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
-import { Entity, type KnowledgeGraph } from "../Domain/Model/Entity.ts";
-import { EmbeddingService, EmbeddingServiceDefault, type EmbeddingServiceMethods } from "./Embedding.ts";
+import type { KnowledgeGraph } from "../Domain/Model/Entity.ts";
+import { Entity } from "../Domain/Model/Entity.ts";
+import type { EmbeddingServiceMethods } from "./Embedding.ts";
+import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts";
 import type { Embedding } from "./EmbeddingCache.ts";
 
 // =============================================================================
@@ -23,9 +25,10 @@ import type { Embedding } from "./EmbeddingCache.ts";
 const $I = $ScratchpadId.create("effect-ontology/Service/EntityIndex");
 
 import { $ScratchpadId } from "@beep/identity";
-
+import { dual2, dual3 } from "../Utils/Dual.ts";
 import { ConfigService } from "./Config.ts";
-import { StorageService, type StorageServiceMethods } from "./Storage.ts";
+import type { StorageServiceMethods } from "./Storage.ts";
+import { StorageService } from "./Storage.ts";
 
 /**
  * Scored entity result from similarity search
@@ -59,7 +62,7 @@ interface IndexState {
   readonly entities: HashMap.HashMap<string, Entity>;
   /** Embedding storage: id -> embedding vector */
   readonly embeddings: HashMap.HashMap<string, Embedding>;
-  /** Type index: typeIri -> Set<entityId> */
+  /** Type index: typeIri -> HashSet<entityId> */
   readonly typeIndex: HashMap.HashMap<string, HashSet.HashSet<string>>;
 }
 
@@ -132,8 +135,7 @@ export interface EntityIndexService {
 /**
  * Cosine similarity between two vectors
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const cosineSimilarity = (a: Embedding, b: Embedding): number => {
+export const cosineSimilarity = dual2((a: Embedding, b: Embedding): number => {
   if (a.length !== b.length) return 0;
 
   let dotProduct = 0;
@@ -148,7 +150,7 @@ export const cosineSimilarity = (a: Embedding, b: Embedding): number => {
 
   const denominator = Math.sqrt(normA) * Math.sqrt(normB);
   return denominator === 0 ? 0 : dotProduct / denominator;
-};
+});
 
 const addToTypeIndex = (
   typeIndex: HashMap.HashMap<string, HashSet.HashSet<string>>,
@@ -377,106 +379,107 @@ export class PersistentEntityIndex extends Context.Service<PersistentEntityIndex
  * @since 2.0.0
  * @category Layers
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const makePersistentEntityIndex = (
-  storage: StorageServiceMethods,
-  embedding: EmbeddingServiceMethods,
-  indexPath: string
-): Effect.Effect<PersistentEntityIndexService> =>
-  Effect.gen(function* () {
-    // In-memory state
-    const stateRef = yield* Ref.make<IndexState>(emptyState);
-    const lastPersistedRef = yield* Ref.make<Option.Option<number>>(Option.none());
+export const makePersistentEntityIndex = dual3(
+  (
+    storage: StorageServiceMethods,
+    embedding: EmbeddingServiceMethods,
+    indexPath: string
+  ): Effect.Effect<PersistentEntityIndexService> =>
+    Effect.gen(function* () {
+      // In-memory state
+      const stateRef = yield* Ref.make<IndexState>(emptyState);
+      const lastPersistedRef = yield* Ref.make<Option.Option<number>>(Option.none());
 
-    const base = makeEntityIndexMethods(embedding, stateRef);
+      const base = makeEntityIndexMethods(embedding, stateRef);
 
-    const serialize = Effect.gen(function* () {
-      const state = yield* Ref.get(stateRef);
-      const entities: Array<SerializedEntityIndex["entities"][number]> = [];
-      for (const [id, entity] of state.entities) {
-        const vector = HashMap.get(state.embeddings, id);
-        if (Option.isSome(vector)) {
-          entities.push({
-            id: entity.id,
-            mention: entity.mention,
-            types: entity.types,
-            attributes: entity.attributes,
-            embedding: vector.value,
-          });
+      const serialize = Effect.gen(function* () {
+        const state = yield* Ref.get(stateRef);
+        const entities: Array<SerializedEntityIndex["entities"][number]> = [];
+        for (const [id, entity] of state.entities) {
+          const vector = HashMap.get(state.embeddings, id);
+          if (Option.isSome(vector)) {
+            entities.push({
+              id: entity.id,
+              mention: entity.mention,
+              types: entity.types,
+              attributes: entity.attributes,
+              embedding: vector.value,
+            });
+          }
         }
-      }
-      return { version: 1 as const, indexedAt: yield* Clock.currentTimeMillis, entities };
-    });
+        return { version: 1 as const, indexedAt: yield* Clock.currentTimeMillis, entities };
+      });
 
-    const deserialize = Effect.fn("PersistentEntityIndex.deserialize")(function* (data: SerializedEntityIndex) {
-      let entities = HashMap.empty<string, Entity>();
-      let embeddings = HashMap.empty<string, Embedding>();
-      let typeIndex = HashMap.empty<string, HashSet.HashSet<string>>();
-      for (const entry of data.entities) {
-        const entity = Entity.decodeOption(entry);
-        if (Option.isNone(entity)) continue;
-        entities = HashMap.set(entities, entity.value.id, entity.value);
-        embeddings = HashMap.set(embeddings, entity.value.id, entry.embedding);
-        typeIndex = addToTypeIndex(typeIndex, entity.value);
-      }
-      yield* Ref.set(stateRef, { entities, embeddings, typeIndex });
-      return HashMap.size(entities);
-    });
+      const deserialize = Effect.fn("PersistentEntityIndex.deserialize")(function* (data: SerializedEntityIndex) {
+        let entities = HashMap.empty<string, Entity>();
+        let embeddings = HashMap.empty<string, Embedding>();
+        let typeIndex = HashMap.empty<string, HashSet.HashSet<string>>();
+        for (const entry of data.entities) {
+          const entity = Entity.decodeOption(entry);
+          if (Option.isNone(entity)) continue;
+          entities = HashMap.set(entities, entity.value.id, entity.value);
+          embeddings = HashMap.set(embeddings, entity.value.id, entry.embedding);
+          typeIndex = addToTypeIndex(typeIndex, entity.value);
+        }
+        yield* Ref.set(stateRef, { entities, embeddings, typeIndex });
+        return HashMap.size(entities);
+      });
 
-    const persist = Effect.gen(function* () {
-      const serialized = yield* serialize;
-      const blobPath = `${indexPath}/current.json`;
-      const content = yield* encodeSerializedEntityIndex(serialized).pipe(Effect.orDie);
-      yield* storage.set(blobPath, content).pipe(
-        Effect.tap(() =>
-          Clock.currentTimeMillis.pipe(Effect.flatMap((now) => Ref.set(lastPersistedRef, Option.some(now))))
-        ),
-        Effect.tap(() =>
-          Effect.logInfo("EntityIndex persisted", { path: blobPath, entityCount: serialized.entities.length })
-        ),
-        Effect.catch((error) => Effect.logWarning("Failed to persist EntityIndex", { error: String(error) }))
-      );
-    });
+      const persist = Effect.gen(function* () {
+        const serialized = yield* serialize;
+        const blobPath = `${indexPath}/current.json`;
+        const content = yield* encodeSerializedEntityIndex(serialized).pipe(Effect.orDie);
+        yield* storage.set(blobPath, content).pipe(
+          Effect.tap(() =>
+            Clock.currentTimeMillis.pipe(Effect.flatMap((now) => Ref.set(lastPersistedRef, Option.some(now))))
+          ),
+          Effect.tap(() =>
+            Effect.logInfo("EntityIndex persisted", { path: blobPath, entityCount: serialized.entities.length })
+          ),
+          Effect.catch((error) => Effect.logWarning("Failed to persist EntityIndex", { error: String(error) }))
+        );
+      });
 
-    const load = Effect.gen(function* () {
-      const blobPath = `${indexPath}/current.json`;
-      const content = yield* storage.get(blobPath).pipe(Effect.orElseSucceed(() => undefined));
-      if (P.isUndefined(content)) return 0;
-      const decoded = decodeSerializedEntityIndex(content);
-      if (Option.isNone(decoded)) {
-        yield* Effect.logWarning("Failed to decode persisted EntityIndex", { path: blobPath });
-        return 0;
-      }
-      const loaded = yield* deserialize(decoded.value);
-      yield* Effect.logInfo("EntityIndex loaded", { path: blobPath, entityCount: loaded });
-      return loaded;
-    });
+      const load = Effect.gen(function* () {
+        const blobPath = `${indexPath}/current.json`;
+        const content = yield* storage.get(blobPath).pipe(Effect.orElseSucceed(() => undefined));
+        if (P.isUndefined(content)) return 0;
+        const decoded = decodeSerializedEntityIndex(content);
+        if (Option.isNone(decoded)) {
+          yield* Effect.logWarning("Failed to decode persisted EntityIndex", { path: blobPath });
+          return 0;
+        }
+        const loaded = yield* deserialize(decoded.value);
+        yield* Effect.logInfo("EntityIndex loaded", { path: blobPath, entityCount: loaded });
+        return loaded;
+      });
 
-    const stats = Effect.gen(function* () {
-      const state = yield* Ref.get(stateRef);
-      const lastPersistedAt = yield* Ref.get(lastPersistedRef);
-      return {
-        entityCount: HashMap.size(state.entities),
-        typeCount: HashMap.size(state.typeIndex),
-        lastPersistedAt,
+      const stats = Effect.gen(function* () {
+        const state = yield* Ref.get(stateRef);
+        const lastPersistedAt = yield* Ref.get(lastPersistedRef);
+        return {
+          entityCount: HashMap.size(state.entities),
+          typeCount: HashMap.size(state.typeIndex),
+          lastPersistedAt,
+        };
+      });
+
+      const service: PersistentEntityIndexService = {
+        ...base,
+        index: Effect.fn("PersistentEntityIndex.index")(function* (graph: KnowledgeGraph) {
+          const count = yield* base.index(graph);
+          yield* Effect.forkDetach(persist);
+          return count;
+        }),
+        serialize,
+        deserialize,
+        persist,
+        load,
+        stats,
       };
-    });
-
-    const service: PersistentEntityIndexService = {
-      ...base,
-      index: Effect.fn("PersistentEntityIndex.index")(function* (graph: KnowledgeGraph) {
-        const count = yield* base.index(graph);
-        yield* Effect.forkDetach(persist);
-        return count;
-      }),
-      serialize,
-      deserialize,
-      persist,
-      load,
-      stats,
-    };
-    return service;
-  });
+      return service;
+    })
+);
 
 /**
  * Layer that provides PersistentEntityIndex when EMBEDDING_ENTITY_INDEX_PATH is configured.

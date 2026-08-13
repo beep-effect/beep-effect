@@ -41,7 +41,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Image");
  * @category errors
  * @since 0.0.0
  */
-export const ImageFetchError = makeOntologyErrorClass(
+export const ImageFetchError = makeOntologyErrorClass.make(
   $I`ImageFetchError`,
   "ImageFetchError",
   {
@@ -148,7 +148,7 @@ export class ImageTimeoutError extends ImageTimeoutErrorBase {
     return Duration.millis(this.timeoutMs);
   }
 
-  static readonly is = S.is(this)
+  static readonly is = S.is(this);
 }
 
 /**
@@ -170,7 +170,7 @@ export class ImageTimeoutError extends ImageTimeoutErrorBase {
  * @category errors
  * @since 0.0.0
  */
-export const ImageTooLargeError = makeOntologyErrorClass(
+export const ImageTooLargeError = makeOntologyErrorClass.make(
   $I`ImageTooLargeError`,
   "ImageTooLargeError",
   {
@@ -222,7 +222,7 @@ export type ImageTooLargeError = typeof ImageTooLargeError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ImageInvalidTypeError = makeOntologyErrorClass(
+export const ImageInvalidTypeError = makeOntologyErrorClass.make(
   $I`ImageInvalidTypeError`,
   "ImageInvalidTypeError",
   {

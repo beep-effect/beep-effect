@@ -18,6 +18,7 @@ import * as S from "effect/Schema";
 import type * as SchemaError from "effect/SchemaError";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
+import { dual2 } from "../Utils/Dual.ts";
 import type { ExtractionRule, RuleCategory } from "./ExtractionRule.ts";
 import type { RuleSet } from "./RuleSet.ts";
 
@@ -153,8 +154,7 @@ const firstRuleInCategory = (ruleSet: RuleSet, category: RuleCategory): O.Option
  * @category getters
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const findMatchingRule = (violation: Violation, ruleSet: RuleSet): O.Option<ExtractionRule> => {
+export const findMatchingRule = dual2((violation: Violation, ruleSet: RuleSet): O.Option<ExtractionRule> => {
   const path = Str.toLowerCase(violation.path);
   const message = Str.toLowerCase(violation.message);
   const pathRule = pipe(
@@ -170,7 +170,7 @@ export const findMatchingRule = (violation: Violation, ruleSet: RuleSet): O.Opti
     O.flatMap((matcher) => firstRuleInCategory(ruleSet, matcher.category))
   );
   return O.orElse(pathRule, () => messageRule);
-};
+});
 
 /**
  * Replaces named placeholders with safely rendered values while leaving unknown
@@ -190,14 +190,14 @@ export const findMatchingRule = (violation: Violation, ruleSet: RuleSet): O.Opti
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const interpolate = (template: string, values: Readonly<Record<string, unknown>>): string =>
+export const interpolate = dual2((template: string, values: Readonly<Record<string, unknown>>): string =>
   pipe(
     R.toEntries(values),
     A.reduce(template, (message, [key, value]) =>
       pipe(message, Str.replaceAll(`{${key}}`, Inspectable.toStringUnknown(value, 0)))
     )
-  );
+  )
+);
 
 /**
  * Produces concise rule-aware feedback for an Effect v4 schema failure.
@@ -220,8 +220,7 @@ export const interpolate = (template: string, values: Readonly<Record<string, un
  * @category error-handling
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const generateFeedback = (error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
+export const generateFeedback = dual2((error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
   pipe(
     extractViolations(error),
     A.match({
@@ -241,7 +240,8 @@ export const generateFeedback = (error: SchemaError.SchemaError, ruleSet: RuleSe
           A.join("\n")
         ),
     })
-  );
+  )
+);
 
 const buildRuleReminders = (error: SchemaError.SchemaError, ruleSet: RuleSet): PromptDoc => {
   const matchedRuleIds = pipe(
@@ -291,8 +291,7 @@ const buildRuleReminders = (error: SchemaError.SchemaError, ruleSet: RuleSet): P
  * @category error-handling
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const generateTreeFeedback = (error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
+export const generateTreeFeedback = dual2((error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
   Doc.render(
     Doc.vsep([
       Doc.text("Validation Errors:"),
@@ -300,7 +299,8 @@ export const generateTreeFeedback = (error: SchemaError.SchemaError, ruleSet: Ru
       Doc.text(formatIssue(error.issue)),
       buildRuleReminders(error, ruleSet),
     ])
-  );
+  )
+);
 
 /**
  * Builds the corrective instruction sent with a retry after schema validation
@@ -324,8 +324,7 @@ export const generateTreeFeedback = (error: SchemaError.SchemaError, ruleSet: Ru
  * @category formatting
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const generateImprovementPrompt = (error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
+export const generateImprovementPrompt = dual2((error: SchemaError.SchemaError, ruleSet: RuleSet): string =>
   Doc.render(
     Doc.vsep([
       Doc.text("Your previous output had validation errors:"),
@@ -338,7 +337,8 @@ export const generateImprovementPrompt = (error: SchemaError.SchemaError, ruleSe
       Doc.empty,
       Doc.text("Generate a corrected output that fixes all validation errors."),
     ])
-  );
+  )
+);
 
 const retryablePatterns = [/casing/i, /format/i, /invalid.*value/i, /expected.*got/i, /must be/i, /should be/i];
 const structuralPatterns = [/missing.*required/i, /unknown.*property/i, /undefined/i];

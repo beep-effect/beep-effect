@@ -179,8 +179,8 @@ const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: 
   for (const link of links) {
     yield* Console.log(`  Processing: ${link.id}`);
     const result = yield* ingestion.reEnrich(link.id).pipe(
-      Effect.catch((error) =>
-        Effect.gen(function* () {
+      Effect.catch(
+        Effect.fn(function* (error)  {
           yield* Console.log(`    Failed: ${error.message}`);
           return O.none();
         })

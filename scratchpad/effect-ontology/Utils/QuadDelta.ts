@@ -9,9 +9,13 @@
  */
 
 import { Effect } from "effect";
+import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import type * as N3 from "n3";
 import type { RdfStore } from "../Service/Rdf.ts";
-import * as A from "effect/Array";
+import { dual2 } from "./Dual.ts";
 
 /**
  * Serializes a quad to a canonical string form for comparison.
@@ -68,34 +72,35 @@ export interface QuadDelta {
  * @since 2.0.0
  * @category Functions
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const computeQuadDelta = (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta> =>
-  Effect.sync(() => {
-    const originalQuads = original._store.getQuads(null, null, null, null);
-    const enrichedQuads = enriched._store.getQuads(null, null, null, null);
+export const computeQuadDelta = dual2(
+  (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta> =>
+    Effect.sync(() => {
+      const originalQuads = original._store.getQuads(null, null, null, null);
+      const enrichedQuads = enriched._store.getQuads(null, null, null, null);
 
-    // Build set of serialized original quads for O(1) lookup
-    const originalSet = new Set<string>();
-    for (const quad of originalQuads) {
-      originalSet.add(serializeQuad(quad));
-    }
-
-    // Find quads in enriched that aren't in original
-    const newQuads: Array<N3.Quad> = [];
-    for (const quad of enrichedQuads) {
-      const serialized = serializeQuad(quad);
-      if (!originalSet.has(serialized)) {
-        newQuads.push(quad);
+      // Build set of serialized original quads for O(1) lookup
+      const originalSet = MutableHashSet.empty<string>();
+      for (const quad of originalQuads) {
+        MutableHashSet.add(originalSet, serializeQuad(quad));
       }
-    }
 
-    return {
-      newQuads,
-      originalCount: originalQuads.length,
-      enrichedCount: enrichedQuads.length,
-      deltaCount: newQuads.length,
-    };
-  });
+      // Find quads in enriched that aren't in original
+      const newQuads: Array<N3.Quad> = [];
+      for (const quad of enrichedQuads) {
+        const serialized = serializeQuad(quad);
+        if (!MutableHashSet.has(originalSet, serialized)) {
+          newQuads.push(quad);
+        }
+      }
+
+      return {
+        newQuads,
+        originalCount: originalQuads.length,
+        enrichedCount: enrichedQuads.length,
+        deltaCount: newQuads.length,
+      };
+    })
+);
 
 /**
  * Groups delta quads by the predicate that produced them.
@@ -106,14 +111,13 @@ export const computeQuadDelta = (original: RdfStore, enriched: RdfStore): Effect
  * @since 2.0.0
  * @category Functions
  */
-export const groupDeltaByPredicate = (delta: QuadDelta): Map<string, ReadonlyArray<N3.Quad>> => {
-  const grouped = new Map<string, Array<N3.Quad>>();
+export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string, ReadonlyArray<N3.Quad>> => {
+  let grouped = HashMap.empty<string, ReadonlyArray<N3.Quad>>();
 
   for (const quad of delta.newQuads) {
     const predicate = quad.predicate.value;
-    const existing = grouped.get(predicate) ?? [];
-    existing.push(quad);
-    grouped.set(predicate, existing);
+    const existing = O.getOrElse(HashMap.get(grouped, predicate), () => []);
+    grouped = HashMap.set(grouped, predicate, [...existing, quad]);
   }
 
   return grouped;

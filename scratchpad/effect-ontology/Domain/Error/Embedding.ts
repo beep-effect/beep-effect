@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import {
   ErrorMessage,
@@ -37,24 +37,30 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Embedding");
  * @category errors
  * @since 0.0.0
  */
-export const EmbeddingError = makeOntologyErrorClass(
-  $I`EmbeddingError`,
-  "EmbeddingError",
-  {
-    message: ErrorMessage.annotateKey({
-      description: "Human-readable embedding diagnostic.",
-    }),
-    provider: S.NonEmptyString.annotateKey({
-      description: "Embedding provider that failed.",
-    }),
-    cause: OptionalErrorCause.annotateKey({
-      description: "Optional provider defect.",
-    }),
-  },
-  $I.annote("EmbeddingError", {
-    description: "General embedding-provider failure.",
-  })
-);
+export const EmbeddingError = makeOntologyErrorClass
+  .make(
+    $I`EmbeddingError`,
+    "EmbeddingError",
+    {
+      message: ErrorMessage.annotateKey({
+        description: "Human-readable embedding diagnostic.",
+      }),
+      provider: S.NonEmptyString.annotateKey({
+        description: "Embedding provider that failed.",
+      }),
+      cause: OptionalErrorCause.annotateKey({
+        description: "Optional provider defect.",
+      }),
+    },
+    $I.annote("EmbeddingError", {
+      description: "General embedding-provider failure.",
+    })
+  )
+  .pipe(
+    SchemaUtils.withStatics((schema) => ({
+      is: S.is(schema),
+    }))
+  );
 
 /** Runtime value decoded by {@link EmbeddingError}.
  * @example
@@ -81,7 +87,7 @@ export type EmbeddingError = typeof EmbeddingError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const EmbeddingRateLimitError = makeOntologyErrorClass(
+export const EmbeddingRateLimitError = makeOntologyErrorClass.make(
   $I`EmbeddingRateLimitError`,
   "EmbeddingRateLimitError",
   {
@@ -130,7 +136,7 @@ export type EmbeddingRateLimitError = typeof EmbeddingRateLimitError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const EmbeddingTimeoutError = makeOntologyErrorClass(
+export const EmbeddingTimeoutError = makeOntologyErrorClass.make(
   $I`EmbeddingTimeoutError`,
   "EmbeddingTimeoutError",
   {
@@ -180,7 +186,7 @@ export type EmbeddingTimeoutError = typeof EmbeddingTimeoutError.Type;
  * @category errors
  * @since 0.0.0
  */
-export const EmbeddingInvalidResponseError = makeOntologyErrorClass(
+export const EmbeddingInvalidResponseError = makeOntologyErrorClass.make(
   $I`EmbeddingInvalidResponseError`,
   "EmbeddingInvalidResponseError",
   {
@@ -229,7 +235,7 @@ export type EmbeddingInvalidResponseError = typeof EmbeddingInvalidResponseError
  * @category errors
  * @since 0.0.0
  */
-export const EmbeddingDimensionMismatchError = makeOntologyErrorClass(
+export const EmbeddingDimensionMismatchError = makeOntologyErrorClass.make(
   $I`EmbeddingDimensionMismatchError`,
   "EmbeddingDimensionMismatchError",
   {
@@ -278,7 +284,7 @@ export type EmbeddingDimensionMismatchError = typeof EmbeddingDimensionMismatchE
  * @category errors
  * @since 0.0.0
  */
-export const EmbeddingTokenLimitError = makeOntologyErrorClass(
+export const EmbeddingTokenLimitError = makeOntologyErrorClass.make(
   $I`EmbeddingTokenLimitError`,
   "EmbeddingTokenLimitError",
   {

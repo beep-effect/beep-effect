@@ -14,6 +14,8 @@ import { Context, Layer } from "effect";
 const $I = $ScratchpadId.create("effect-ontology/Telemetry/Metrics");
 
 import { Effect, Ref } from "effect";
+import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 
 /**
  * Extraction metrics input
@@ -68,7 +70,7 @@ interface MetricsState {
     entitySum: number;
     relationSum: number;
   };
-  llmCalls: Map<
+  llmCalls: HashMap.HashMap<
     string,
     {
       total: number;
@@ -96,7 +98,7 @@ const initialState: MetricsState = {
     entitySum: 0,
     relationSum: 0,
   },
-  llmCalls: new Map(),
+  llmCalls: HashMap.empty(),
   embeddingCache: {
     hits: 0,
     misses: 0,
@@ -115,7 +117,7 @@ export class MetricsService extends Context.Service<MetricsService>()($I`Metrics
   make: Effect.gen(function* () {
     const stateRef = yield* Ref.make<MetricsState>({
       ...initialState,
-      llmCalls: new Map(),
+      llmCalls: HashMap.empty(),
     });
 
     return {
@@ -141,17 +143,16 @@ export class MetricsService extends Context.Service<MetricsService>()($I`Metrics
       recordLlmCall: (metrics: LlmCallMetrics): Effect.Effect<void> =>
         Ref.update(stateRef, (state) => {
           const key = `${metrics.provider}:${metrics.model}`;
-          const existing = state.llmCalls.get(key) ?? {
+          const existing = O.getOrElse(HashMap.get(state.llmCalls, key), () => ({
             total: 0,
             successful: 0,
             failed: 0,
             durationSum: 0,
             tokensInSum: 0,
             tokensOutSum: 0,
-          };
+          }));
 
-          const updated = new Map(state.llmCalls);
-          updated.set(key, {
+          const updated = HashMap.set(state.llmCalls, key, {
             total: existing.total + 1,
             successful: existing.successful + (metrics.success ? 1 : 0),
             failed: existing.failed + (metrics.success ? 0 : 1),
@@ -297,7 +298,7 @@ export class MetricsService extends Context.Service<MetricsService>()($I`Metrics
        */
       reset: Ref.set(stateRef, {
         ...initialState,
-        llmCalls: new Map(),
+        llmCalls: HashMap.empty(),
         embeddingCache: {
           hits: 0,
           misses: 0,

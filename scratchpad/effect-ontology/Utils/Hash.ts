@@ -9,6 +9,7 @@
  */
 
 import { Effect } from "effect";
+import { dual2, dual3 } from "./Dual.ts";
 
 /**
  * Convert Uint8Array to hex string
@@ -47,9 +48,9 @@ export const sha256 = (input: string): Effect.Effect<string> =>
  * @since 2.0.0
  * @category Hash
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const hashEmbeddingKey = (text: string, taskType: string): Effect.Effect<string> =>
-  sha256(`${text}::${taskType}`);
+export const hashEmbeddingKey = dual2(
+  (text: string, taskType: string): Effect.Effect<string> => sha256(`${text}::${taskType}`)
+);
 
 /**
  * Synchronous SHA-256 hash of a string (full length)
@@ -106,8 +107,9 @@ export const sha256Sync = (input: string): string => sha256SyncFull(input).slice
  * @since 2.0.0
  * @category Hash
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const hashEmbeddingKeySync = (text: string, taskType: string): string => sha256SyncFull(`${text}::${taskType}`);
+export const hashEmbeddingKeySync = dual2((text: string, taskType: string): string =>
+  sha256SyncFull(`${text}::${taskType}`)
+);
 
 /**
  * Provider metadata for versioned cache keys
@@ -139,13 +141,10 @@ export interface EmbeddingKeyMetadata {
  * @since 2.0.0
  * @category Hash
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const hashVersionedEmbeddingKey = (
-  text: string,
-  taskType: string,
-  metadata: EmbeddingKeyMetadata
-): Effect.Effect<string> =>
-  sha256(`${metadata.providerId}::${metadata.modelId}::${metadata.dimension}::${taskType}::${text}`);
+export const hashVersionedEmbeddingKey = dual3(
+  (text: string, taskType: string, metadata: EmbeddingKeyMetadata): Effect.Effect<string> =>
+    sha256(`${metadata.providerId}::${metadata.modelId}::${metadata.dimension}::${taskType}::${text}`)
+);
 
 /**
  * Synchronous version of hashVersionedEmbeddingKey for pure contexts
@@ -158,9 +157,10 @@ export const hashVersionedEmbeddingKey = (
  * @since 2.0.0
  * @category Hash
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const hashVersionedEmbeddingKeySync = (text: string, taskType: string, metadata: EmbeddingKeyMetadata): string =>
-  sha256SyncFull(`${metadata.providerId}::${metadata.modelId}::${metadata.dimension}::${taskType}::${text}`);
+export const hashVersionedEmbeddingKeySync = dual3(
+  (text: string, taskType: string, metadata: EmbeddingKeyMetadata): string =>
+    sha256SyncFull(`${metadata.providerId}::${metadata.modelId}::${metadata.dimension}::${taskType}::${text}`)
+);
 
 /**
  * Compute SHA-256 hash of bytes using WebCrypto API

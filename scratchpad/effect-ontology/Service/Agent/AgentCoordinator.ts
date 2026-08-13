@@ -133,7 +133,7 @@ export interface ExecutionOptions {
 export interface ExecutionResult {
   readonly state: PipelineState;
   readonly events: ReadonlyArray<AgentEvent>;
-  readonly outputs: ReadonlyMap<AgentIdType, unknown>;
+  readonly outputs: HashMap.HashMap<AgentIdType, unknown>;
 }
 
 // =============================================================================
@@ -366,7 +366,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
           status: PipelineStatus.cases.Running.make({})
         });
         const eventsRef = yield* Ref.make<Array<AgentEvent>>([]);
-        const outputsMap = new Map<AgentIdType, unknown>();
+        let outputsMap = HashMap.empty<AgentIdType, unknown>();
 
         // Get all agents upfront
         const agents: Array<RegisteredAgent> = [];
@@ -440,7 +440,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
               currentAgentId: O.none(),
             });
 
-            outputsMap.set(agentId, result.output);
+            outputsMap = HashMap.set(outputsMap, agentId, result.output);
             currentInput = result.output;
           }
         }
@@ -488,7 +488,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
           iterationCount: NonNegativeInt.make(0),
         });
         const eventsRef = yield* Ref.make<Array<AgentEvent>>([]);
-        const outputsMap = new Map<AgentIdType, unknown>();
+        let outputsMap = HashMap.empty<AgentIdType, unknown>();
 
         // Get all agents upfront
         const agents: Array<RegisteredAgent> = [];
@@ -561,7 +561,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
             );
 
             if (result.output !== null) {
-              outputsMap.set(agentId, result.output);
+              outputsMap = HashMap.set(outputsMap, agentId, result.output);
 
               // Check termination conditions
               if (termination.stopOnConformance) {
@@ -696,14 +696,14 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
         );
 
         // Build outputs map
-        const outputsMap = new Map<AgentIdType, unknown>();
+        let outputsMap = HashMap.empty<AgentIdType, unknown>();
         const completedAgentIds: Array<AgentIdType> = [];
         const intermediateResults: Array<IntermediateResult> = [];
         const completedAt = yield* DateTime.now;
 
         for (const r of results) {
           if (r.success && r.output !== null) {
-            outputsMap.set(r.agentId, r.output);
+            outputsMap = HashMap.set(outputsMap, r.agentId, r.output);
             completedAgentIds.push(r.agentId);
             intermediateResults.push(
               IntermediateResult.make({
@@ -793,7 +793,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
           iterationCount: NonNegativeInt.make(0),
         });
         const eventsRef = yield* Ref.make<Array<AgentEvent>>([]);
-        const outputsMap = new Map<AgentIdType, unknown>();
+        let outputsMap = HashMap.empty<AgentIdType, unknown>();
 
         // Get all agents upfront
         const agents: Array<RegisteredAgent> = [];
@@ -840,7 +840,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
               )
             );
 
-            outputsMap.set(agentId, result.output);
+            outputsMap = HashMap.set(outputsMap, agentId, result.output);
             currentInput = result.output;
 
             // Update state for condition check

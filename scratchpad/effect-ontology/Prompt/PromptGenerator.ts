@@ -20,6 +20,7 @@ import * as Prompt from "effect/unstable/ai/Prompt";
 import { Entity } from "../Domain/Model/Entity.ts";
 import { ImageForPrompt } from "../Domain/Model/Image.ts";
 import { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
+import { dual2, dual3, dual4 } from "../Utils/Dual.ts";
 import type { RuleSet } from "./RuleSet.ts";
 import { makeEntityRuleSet, makeMentionRuleSet, makeRelationRuleSet } from "./RuleSet.ts";
 
@@ -856,48 +857,45 @@ const buildNegativeExamplesSection = (examples: ReadonlyArray<ScoredExample>): P
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const generateStructuredPrompt = (
-  text: string,
-  ruleSet: RuleSet,
-  ctx: OntologyPromptContext
-): StructuredPrompt => {
-  // Build system message sections (cacheable)
-  const systemSections: Array<PromptDoc> = [
-    buildTaskSection(ruleSet.stage),
-    Doc.empty,
-    // Critical rules FIRST so they aren't lost in context
-    buildRulesSection(ruleSet),
-  ];
+export const generateStructuredPrompt = dual3(
+  (text: string, ruleSet: RuleSet, ctx: OntologyPromptContext): StructuredPrompt => {
+    // Build system message sections (cacheable)
+    const systemSections: Array<PromptDoc> = [
+      buildTaskSection(ruleSet.stage),
+      Doc.empty,
+      // Critical rules FIRST so they aren't lost in context
+      buildRulesSection(ruleSet),
+    ];
 
-  // Stage-specific sections
-  if (ruleSet.stage === "entity") {
-    // Add DUL hierarchy section for Object vs Event distinction
-    systemSections.push(Doc.empty, buildDulHierarchySection(ctx));
-    // Add namespace prefix section for entity extraction (explains local name usage)
-    systemSections.push(Doc.empty, buildNamespacePrefixSection(ctx));
-    systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
-    systemSections.push(Doc.empty, buildOntologySection(ctx));
-  } else if (ruleSet.stage === "relation") {
-    systemSections.push(Doc.empty, buildEntitiesSection(ctx));
-    systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
-    systemSections.push(Doc.empty, buildPropertiesSection(ctx));
+    // Stage-specific sections
+    if (ruleSet.stage === "entity") {
+      // Add DUL hierarchy section for Object vs Event distinction
+      systemSections.push(Doc.empty, buildDulHierarchySection(ctx));
+      // Add namespace prefix section for entity extraction (explains local name usage)
+      systemSections.push(Doc.empty, buildNamespacePrefixSection(ctx));
+      systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
+      systemSections.push(Doc.empty, buildOntologySection(ctx));
+    } else if (ruleSet.stage === "relation") {
+      systemSections.push(Doc.empty, buildEntitiesSection(ctx));
+      systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
+      systemSections.push(Doc.empty, buildPropertiesSection(ctx));
+    }
+
+    // Common sections - Output Format closes the instructions
+    systemSections.push(Doc.empty, buildOutputFormatSection(ruleSet.stage));
+
+    // Build user message (variable content)
+    const userSections = buildInputTextSection(text);
+
+    const systemDoc = Doc.vsep(systemSections);
+    const userDoc = userSections;
+
+    return StructuredPrompt.make({
+      systemMessage: Doc.render(systemDoc, { style: "pretty", options: { lineWidth: 120 } }),
+      userMessage: Doc.render(userDoc, { style: "pretty", options: { lineWidth: 120 } }),
+    });
   }
-
-  // Common sections - Output Format closes the instructions
-  systemSections.push(Doc.empty, buildOutputFormatSection(ruleSet.stage));
-
-  // Build user message (variable content)
-  const userSections = buildInputTextSection(text);
-
-  const systemDoc = Doc.vsep(systemSections);
-  const userDoc = userSections;
-
-  return StructuredPrompt.make({
-    systemMessage: Doc.render(systemDoc, { style: "pretty", options: { lineWidth: 120 } }),
-    userMessage: Doc.render(userDoc, { style: "pretty", options: { lineWidth: 120 } }),
-  });
-};
+);
 
 /**
  * Generate structured prompt with few-shot examples
@@ -932,69 +930,70 @@ export const generateStructuredPrompt = (
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const generateStructuredPromptWithExamples = (
-  text: string,
-  ruleSet: RuleSet,
-  ctx: OntologyPromptContext,
-  examples: ReadonlyArray<ScoredExample>
-): StructuredPromptWithExamples => {
-  // Build base system message sections (cacheable)
-  const systemSections: Array<PromptDoc> = [
-    buildTaskSection(ruleSet.stage),
-    Doc.empty,
-    // Critical rules FIRST so they aren't lost in context
-    buildRulesSection(ruleSet),
-  ];
-
-  // Stage-specific sections
-  if (ruleSet.stage === "entity") {
-    // Add DUL hierarchy section for Object vs Event distinction
-    systemSections.push(Doc.empty, buildDulHierarchySection(ctx));
-    systemSections.push(Doc.empty, buildNamespacePrefixSection(ctx));
-    systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
-    systemSections.push(Doc.empty, buildOntologySection(ctx));
-  } else if (ruleSet.stage === "relation") {
-    systemSections.push(Doc.empty, buildEntitiesSection(ctx));
-    systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
-    systemSections.push(Doc.empty, buildPropertiesSection(ctx));
-  }
-
-  // Add negative examples as warnings in system message
-  const negativeSection = buildNegativeExamplesSection(examples);
-  const hasNegatives = A.some(examples, (example) => example.isNegative);
-  if (hasNegatives) {
-    systemSections.push(Doc.empty, negativeSection);
-  }
-
-  // Common sections - Output Format closes the instructions
-  systemSections.push(Doc.empty, buildOutputFormatSection(ruleSet.stage));
-
-  // Hint about examples if we have any positive ones
-  const positiveCount = A.length(A.filter(examples, (example) => !example.isNegative));
-  if (positiveCount > 0) {
-    systemSections.push(
+export const generateStructuredPromptWithExamples = dual4(
+  (
+    text: string,
+    ruleSet: RuleSet,
+    ctx: OntologyPromptContext,
+    examples: ReadonlyArray<ScoredExample>
+  ): StructuredPromptWithExamples => {
+    // Build base system message sections (cacheable)
+    const systemSections: Array<PromptDoc> = [
+      buildTaskSection(ruleSet.stage),
       Doc.empty,
-      Doc.text("=== EXAMPLES ==="),
-      Doc.text(`${positiveCount} example(s) follow. Study them carefully before processing the input.`)
-    );
+      // Critical rules FIRST so they aren't lost in context
+      buildRulesSection(ruleSet),
+    ];
+
+    // Stage-specific sections
+    if (ruleSet.stage === "entity") {
+      // Add DUL hierarchy section for Object vs Event distinction
+      systemSections.push(Doc.empty, buildDulHierarchySection(ctx));
+      systemSections.push(Doc.empty, buildNamespacePrefixSection(ctx));
+      systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
+      systemSections.push(Doc.empty, buildOntologySection(ctx));
+    } else if (ruleSet.stage === "relation") {
+      systemSections.push(Doc.empty, buildEntitiesSection(ctx));
+      systemSections.push(Doc.empty, buildQuickReferenceSection(ruleSet));
+      systemSections.push(Doc.empty, buildPropertiesSection(ctx));
+    }
+
+    // Add negative examples as warnings in system message
+    const negativeSection = buildNegativeExamplesSection(examples);
+    const hasNegatives = A.some(examples, (example) => example.isNegative);
+    if (hasNegatives) {
+      systemSections.push(Doc.empty, negativeSection);
+    }
+
+    // Common sections - Output Format closes the instructions
+    systemSections.push(Doc.empty, buildOutputFormatSection(ruleSet.stage));
+
+    // Hint about examples if we have any positive ones
+    const positiveCount = A.length(A.filter(examples, (example) => !example.isNegative));
+    if (positiveCount > 0) {
+      systemSections.push(
+        Doc.empty,
+        Doc.text("=== EXAMPLES ==="),
+        Doc.text(`${positiveCount} example(s) follow. Study them carefully before processing the input.`)
+      );
+    }
+
+    // Build example messages from positive examples
+    const exampleMessages = buildExampleMessages(examples);
+
+    // Build user message (variable content)
+    const userDoc = buildInputTextSection(text);
+
+    const systemDoc = Doc.vsep(systemSections);
+
+    return StructuredPromptWithExamples.make({
+      systemMessage: Doc.render(systemDoc, { style: "pretty", options: { lineWidth: 120 } }),
+      userMessage: Doc.render(userDoc, { style: "pretty", options: { lineWidth: 120 } }),
+      exampleMessages,
+      hasNegativeExamples: hasNegatives,
+    });
   }
-
-  // Build example messages from positive examples
-  const exampleMessages = buildExampleMessages(examples);
-
-  // Build user message (variable content)
-  const userDoc = buildInputTextSection(text);
-
-  const systemDoc = Doc.vsep(systemSections);
-
-  return StructuredPromptWithExamples.make({
-    systemMessage: Doc.render(systemDoc, { style: "pretty", options: { lineWidth: 120 } }),
-    userMessage: Doc.render(userDoc, { style: "pretty", options: { lineWidth: 120 } }),
-    exampleMessages,
-    hasNegativeExamples: hasNegatives,
-  });
-};
+);
 
 /**
  * Generate complete extraction prompt
@@ -1020,11 +1019,10 @@ export const generateStructuredPromptWithExamples = (
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const generatePrompt = (text: string, ruleSet: RuleSet, ctx: OntologyPromptContext): string => {
+export const generatePrompt = dual3((text: string, ruleSet: RuleSet, ctx: OntologyPromptContext): string => {
   const structured = generateStructuredPrompt(text, ruleSet, ctx);
   return `${structured.systemMessage}\n\n${structured.userMessage}`;
-};
+});
 
 /**
  * Generate structured entity extraction prompt
@@ -1045,24 +1043,25 @@ export const generatePrompt = (text: string, ruleSet: RuleSet, ctx: OntologyProm
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const generateStructuredEntityPrompt = (
-  text: string,
-  classes: ReadonlyArray<ClassDefinition>,
-  datatypeProperties: ReadonlyArray<PropertyDefinition>
-): StructuredPrompt => {
-  const ruleSet = makeEntityRuleSet(classes, datatypeProperties);
+export const generateStructuredEntityPrompt = dual3(
+  (
+    text: string,
+    classes: ReadonlyArray<ClassDefinition>,
+    datatypeProperties: ReadonlyArray<PropertyDefinition>
+  ): StructuredPrompt => {
+    const ruleSet = makeEntityRuleSet(classes, datatypeProperties);
 
-  return generateStructuredPrompt(
-    text,
-    ruleSet,
-    OntologyPromptContext.make({
-      classes,
-      objectProperties: [],
-      datatypeProperties,
-    })
-  );
-};
+    return generateStructuredPrompt(
+      text,
+      ruleSet,
+      OntologyPromptContext.make({
+        classes,
+        objectProperties: [],
+        datatypeProperties,
+      })
+    );
+  }
+);
 
 /**
  * Generate entity extraction prompt
@@ -1085,15 +1084,16 @@ export const generateStructuredEntityPrompt = (
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const generateEntityPrompt = (
-  text: string,
-  classes: ReadonlyArray<ClassDefinition>,
-  datatypeProperties: ReadonlyArray<PropertyDefinition>
-): string => {
-  const structured = generateStructuredEntityPrompt(text, classes, datatypeProperties);
-  return `${structured.systemMessage}\n\n${structured.userMessage}`;
-};
+export const generateEntityPrompt = dual3(
+  (
+    text: string,
+    classes: ReadonlyArray<ClassDefinition>,
+    datatypeProperties: ReadonlyArray<PropertyDefinition>
+  ): string => {
+    const structured = generateStructuredEntityPrompt(text, classes, datatypeProperties);
+    return `${structured.systemMessage}\n\n${structured.userMessage}`;
+  }
+);
 
 /**
  * Generate structured relation extraction prompt
@@ -1114,30 +1114,27 @@ export const generateEntityPrompt = (
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const generateStructuredRelationPrompt = (
-  text: string,
-  entities: ReadonlyArray<Entity>,
-  properties: ReadonlyArray<PropertyDefinition>
-): StructuredPrompt => {
-  const entityIds = A.map(entities, (entity) => entity.id);
-  const ruleSet = makeRelationRuleSet(entityIds, properties);
+export const generateStructuredRelationPrompt = dual3(
+  (text: string, entities: ReadonlyArray<Entity>, properties: ReadonlyArray<PropertyDefinition>): StructuredPrompt => {
+    const entityIds = A.map(entities, (entity) => entity.id);
+    const ruleSet = makeRelationRuleSet(entityIds, properties);
 
-  const objectProperties = A.filter(properties, (property) => property.rangeType === "object");
-  const datatypeProperties = A.filter(properties, (property) => property.rangeType === "datatype");
+    const objectProperties = A.filter(properties, (property) => property.rangeType === "object");
+    const datatypeProperties = A.filter(properties, (property) => property.rangeType === "datatype");
 
-  return generateStructuredPrompt(
-    text,
-    ruleSet,
-    OntologyPromptContext.make({
-      classes: [],
-      objectProperties,
-      datatypeProperties,
-      entityIds: O.some(entityIds),
-      entities: O.some(entities),
-    })
-  );
-};
+    return generateStructuredPrompt(
+      text,
+      ruleSet,
+      OntologyPromptContext.make({
+        classes: [],
+        objectProperties,
+        datatypeProperties,
+        entityIds: O.some(entityIds),
+        entities: O.some(entities),
+      })
+    );
+  }
+);
 
 /**
  * Generate relation extraction prompt
@@ -1160,15 +1157,12 @@ export const generateStructuredRelationPrompt = (
  * @category constructors
  * @since 0.0.0
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const generateRelationPrompt = (
-  text: string,
-  entities: ReadonlyArray<Entity>,
-  properties: ReadonlyArray<PropertyDefinition>
-): string => {
-  const structured = generateStructuredRelationPrompt(text, entities, properties);
-  return `${structured.systemMessage}\n\n${structured.userMessage}`;
-};
+export const generateRelationPrompt = dual3(
+  (text: string, entities: ReadonlyArray<Entity>, properties: ReadonlyArray<PropertyDefinition>): string => {
+    const structured = generateStructuredRelationPrompt(text, entities, properties);
+    return `${structured.systemMessage}\n\n${structured.userMessage}`;
+  }
+);
 
 /**
  * Generate structured mention extraction prompt
@@ -1298,45 +1292,46 @@ export const imagesToPromptParts = (images: ReadonlyArray<ImageForPrompt>): Read
  * @since 0.0.0
  * @category constructors
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const buildMultimodalUserContent = (
-  text: string,
-  images?: ReadonlyArray<ImageForPrompt>,
-  imageIntro?: string
-): ReadonlyArray<Prompt.UserMessagePart> => {
-  const parts: Array<Prompt.UserMessagePart> = [Prompt.makePart("text", { text })];
+export const buildMultimodalUserContent = dual3(
+  (
+    text: string,
+    images: ReadonlyArray<ImageForPrompt> | undefined,
+    imageIntro: string | undefined
+  ): ReadonlyArray<Prompt.UserMessagePart> => {
+    const parts: Array<Prompt.UserMessagePart> = [Prompt.makePart("text", { text })];
 
-  if (P.isNotUndefined(images) && images.length > 0) {
-    // Add intro text for images if provided
-    if (P.isNotUndefined(imageIntro)) {
-      parts.push(Prompt.makePart("text", { text: `\n\n${imageIntro}` }));
-    }
+    if (P.isNotUndefined(images) && images.length > 0) {
+      // Add intro text for images if provided
+      if (P.isNotUndefined(imageIntro)) {
+        parts.push(Prompt.makePart("text", { text: `\n\n${imageIntro}` }));
+      }
 
-    // Add image parts with context annotations
-    for (const img of images) {
-      // Build context string from available metadata
-      const contextParts = A.getSomes([img.alt, img.caption, img.context]);
-      const position = O.getOrElse(img.position, () => 0);
-      if (contextParts.length > 0) {
+      // Add image parts with context annotations
+      for (const img of images) {
+        // Build context string from available metadata
+        const contextParts = A.getSomes([img.alt, img.caption, img.context]);
+        const position = O.getOrElse(img.position, () => 0);
+        if (contextParts.length > 0) {
+          parts.push(
+            Prompt.makePart("text", {
+              text: `\n[Image ${position}: ${A.join(contextParts, " - ")}]`,
+            })
+          );
+        }
+
         parts.push(
-          Prompt.makePart("text", {
-            text: `\n[Image ${position}: ${A.join(contextParts, " - ")}]`,
+          Prompt.makePart("file", {
+            mediaType: img.mediaType,
+            data: img.base64,
+            fileName: `image-${position}.${getImageExtension(img.mediaType)}`,
           })
         );
       }
-
-      parts.push(
-        Prompt.makePart("file", {
-          mediaType: img.mediaType,
-          data: img.base64,
-          fileName: `image-${position}.${getImageExtension(img.mediaType)}`,
-        })
-      );
     }
-  }
 
-  return parts;
-};
+    return parts;
+  }
+);
 
 /**
  * Build a complete multimodal Prompt object
@@ -1363,24 +1358,25 @@ export const buildMultimodalUserContent = (
  * @since 0.0.0
  * @category constructors
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const buildMultimodalPrompt = (
-  systemMessage: string,
-  userText: string,
-  images?: ReadonlyArray<ImageForPrompt>,
-  imageIntro?: string
-): Prompt.Prompt => {
-  const userParts = buildMultimodalUserContent(userText, images, imageIntro);
+export const buildMultimodalPrompt = dual4(
+  (
+    systemMessage: string,
+    userText: string,
+    images: ReadonlyArray<ImageForPrompt> | undefined,
+    imageIntro: string | undefined
+  ): Prompt.Prompt => {
+    const userParts = buildMultimodalUserContent(userText, images, imageIntro);
 
-  return Prompt.fromMessages([
-    Prompt.makeMessage("system", {
-      content: systemMessage,
-    }),
-    Prompt.makeMessage("user", {
-      content: userParts,
-    }),
-  ]);
-};
+    return Prompt.fromMessages([
+      Prompt.makeMessage("system", {
+        content: systemMessage,
+      }),
+      Prompt.makeMessage("user", {
+        content: userParts,
+      }),
+    ]);
+  }
+);
 
 /**
  * Build multimodal prompt from StructuredPrompt and context
@@ -1405,20 +1401,21 @@ export const buildMultimodalPrompt = (
  * @since 0.0.0
  * @category constructors
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const buildPromptFromStructured = (structured: StructuredPrompt, ctx?: OntologyPromptContext): Prompt.Prompt => {
-  const images = pipe(
-    O.fromNullishOr(ctx),
-    O.flatMap((context) => context.imageContexts),
-    O.getOrUndefined
-  );
-  return buildMultimodalPrompt(
-    structured.systemMessage,
-    structured.userMessage,
-    images,
-    Bool.match(images !== undefined && A.isReadonlyArrayNonEmpty(images), {
-      onFalse: () => undefined,
-      onTrue: () => "Relevant images from the document:",
-    })
-  );
-};
+export const buildPromptFromStructured = dual2(
+  (structured: StructuredPrompt, ctx: OntologyPromptContext | undefined): Prompt.Prompt => {
+    const images = pipe(
+      O.fromNullishOr(ctx),
+      O.flatMap((context) => context.imageContexts),
+      O.getOrUndefined
+    );
+    return buildMultimodalPrompt(
+      structured.systemMessage,
+      structured.userMessage,
+      images,
+      Bool.match(images !== undefined && A.isReadonlyArrayNonEmpty(images), {
+        onFalse: () => undefined,
+        onTrue: () => "Relevant images from the document:",
+      })
+    );
+  }
+);

@@ -10,6 +10,7 @@
 
 import { Effect, Exit, Request, RequestResolver } from "effect";
 import * as A from "effect/Array";
+import { dual2 } from "../Utils/Dual.ts";
 import type { EmbeddingProviderMethods, EmbeddingTaskType } from "./EmbeddingProvider.ts";
 import type { EmbedTextRequest } from "./EmbeddingRequest.ts";
 
@@ -39,16 +40,14 @@ export const DEFAULT_MAX_BATCH_SIZE = 128;
  * @since 2.0.0
  * @category Constructors
  */
-// @effect-diagnostics-next-line missingPipeableSignature:off
-export const makeEmbeddingResolver = (
-  provider: EmbeddingProviderMethods,
-  maxBatchSize: number = DEFAULT_MAX_BATCH_SIZE
-): RequestResolver.RequestResolver<EmbedTextRequest> =>
-  RequestResolver.makeGrouped<EmbedTextRequest, EmbeddingTaskType>({
-    key: (entry) => entry.request.taskType,
-    resolver: (entries) =>
-      Effect.forEach(A.chunksOf(entries, maxBatchSize), (chunk) => processChunk(provider, chunk), { discard: true }),
-  }).pipe(RequestResolver.batchN(maxBatchSize));
+export const makeEmbeddingResolver = dual2(
+  (provider: EmbeddingProviderMethods, maxBatchSize: number): RequestResolver.RequestResolver<EmbedTextRequest> =>
+    RequestResolver.makeGrouped<EmbedTextRequest, EmbeddingTaskType>({
+      key: (entry) => entry.request.taskType,
+      resolver: (entries) =>
+        Effect.forEach(A.chunksOf(entries, maxBatchSize), (chunk) => processChunk(provider, chunk), { discard: true }),
+    }).pipe(RequestResolver.batchN(maxBatchSize))
+);
 
 /**
  * Process a single chunk of embedding requests

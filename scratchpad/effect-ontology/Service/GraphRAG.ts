@@ -16,7 +16,12 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { Context, Data, Effect, Layer, Schema } from "effect";
+import * as A from "effect/Array";
 import type { TimeoutError } from "effect/Cause";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type { AiError, LanguageModel } from "effect/unstable/ai";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
@@ -414,14 +419,14 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
      */
     const buildScoredNodes = (
       subgraph: Subgraph,
-      seedScores: Map<string, number>,
-      seedRanks: Map<string, number>
+      seedScores: HashMap.HashMap<string, number>,
+      seedRanks: HashMap.HashMap<string, number>
     ): ReadonlyArray<ScoredNode> => {
       const scored: Array<ScoredNode> = [];
 
       for (const entity of subgraph.nodes) {
         const isSeed = subgraph.centerNodes.includes(entity.id);
-        const embeddingScore = seedScores.get(entity.id) ?? 0;
+        const embeddingScore = O.getOrElse(HashMap.get(seedScores, entity.id), () => 0);
 
         // Compute hop distance (0 for seeds, estimate for others)
         let hopDistance = 0;
@@ -435,7 +440,7 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
         // 1. Embedding similarity rank
         // 2. Hop distance (closer = better rank)
         // 3. Type relevance (could be added)
-        const embeddingRank = seedRanks.get(entity.id) ?? subgraph.nodes.length;
+        const embeddingRank = O.getOrElse(HashMap.get(seedRanks, entity.id), () => subgraph.nodes.length);
         const hopRank = hopDistance + 1; // 1-indexed
 
         const rrfScore = computeRRFScore([embeddingRank, hopRank]);
@@ -483,17 +488,17 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
     /**
      * Format relations section of context
      */
-    const formatRelations = (edges: ReadonlyArray<Relation>, entityMap: Map<string, Entity>): string => {
+    const formatRelations = (edges: ReadonlyArray<Relation>, entityMap: HashMap.HashMap<string, Entity>): string => {
       const lines: Array<string> = [];
 
       for (const rel of edges) {
-        const subject = entityMap.get(rel.subjectId);
-        const subjectName = subject?.mention ?? rel.subjectId;
+        const subject = HashMap.get(entityMap, rel.subjectId);
+        const subjectName = O.match(subject, { onNone: () => rel.subjectId, onSome: (value) => value.mention });
         const predLabel = predicateLabel(rel.predicate);
 
         if (rel.isEntityReference && typeof rel.object === "string") {
-          const object = entityMap.get(rel.object);
-          const objectName = object?.mention ?? rel.object;
+          const object = HashMap.get(entityMap, rel.object);
+          const objectName = O.match(object, { onNone: () => rel.object, onSome: (value) => value.mention });
           lines.push(`- ${subjectName} → ${predLabel} → ${objectName}`);
         } else {
           lines.push(`- ${subjectName} → ${predLabel} → "${String(rel.object)}"`);
@@ -515,7 +520,7 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
       const includeAttributes = options.includeAttributes ?? true;
       const includeRelations = options.includeRelations ?? true;
 
-      const entityMap = new Map(subgraph.nodes.map((e) => [e.id, e]));
+      const entityMap = HashMap.fromIterable<string, Entity>(subgraph.nodes.map((e) => [e.id, e] as const));
 
       // Build context sections
       const sections: Array<string> = [];
@@ -588,12 +593,8 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
           },
         };
       }
-      const seedScores = new Map<string, number>();
-      const seedRanks = new Map<string, number>();
-      similar.forEach((s, idx) => {
-        seedScores.set(s.entity.id, s.score);
-        seedRanks.set(s.entity.id, idx + 1);
-      });
+      const seedScores = HashMap.fromIterable(similar.map((s) => [s.entity.id, s.score] as const));
+      const seedRanks = HashMap.fromIterable(similar.map((s, idx) => [s.entity.id, idx + 1] as const));
       const seedIds = similar.map((s) => s.entity.id);
       const subgraph = yield* subgraphExtractor.extract(graph, seedIds, hops, {
         maxNodes,
@@ -699,25 +700,27 @@ ${query}
       options: ExplainOptions = {}
     ) {
       const { subgraph } = answer.retrieval;
-      const entityMap = new Map<string, Entity>(subgraph.nodes.map((entity) => [entity.id, entity]));
-      const cited = new Set(answer.citations);
+      const entityMap = HashMap.fromIterable<string, Entity>(
+        subgraph.nodes.map((entity) => [entity.id, entity] as const)
+      );
+      const cited = HashSet.fromIterable(answer.citations);
       const relevantEdges: Array<{ from: Entity; relation: Relation; to: Entity }> = [];
 
       for (const relation of subgraph.edges) {
-        const from = entityMap.get(relation.subjectId);
+        const from = HashMap.get(entityMap, relation.subjectId);
         const toId = relation.isEntityReference ? String(relation.object) : undefined;
-        const to = P.isNotUndefined(toId) ? entityMap.get(toId) : undefined;
-        if (P.isNotUndefined(from) && P.isNotUndefined(toId) && P.isNotUndefined(to)) {
-          if (cited.has(relation.subjectId) || cited.has(toId)) {
-            relevantEdges.push({ from, relation, to });
+        const to = P.isNotUndefined(toId) ? HashMap.get(entityMap, toId) : O.none<Entity>();
+        if (O.isSome(from) && P.isNotUndefined(toId) && O.isSome(to)) {
+          if (HashSet.has(cited, relation.subjectId) || HashSet.has(cited, toId)) {
+            relevantEdges.push({ from: from.value, relation, to: to.value });
           }
         }
       }
 
-      const involvedEntities = new Set<string>(answer.citations);
+      const involvedEntities = MutableHashSet.fromIterable(answer.citations);
       for (const edge of relevantEdges) {
-        involvedEntities.add(edge.from.id);
-        involvedEntities.add(edge.to.id);
+        MutableHashSet.add(involvedEntities, edge.from.id);
+        MutableHashSet.add(involvedEntities, edge.to.id);
       }
       const steps: Array<ReasoningStep> = relevantEdges.map((edge) => ({
         ...edge,
@@ -768,7 +771,7 @@ ${stepsDescription}`,
           explanation: response.value.explanation,
           confidence: answer.confidence,
           query: answer.retrieval.query,
-          involvedEntities: Array.from(involvedEntities),
+          involvedEntities: A.fromIterable(involvedEntities),
         };
       }
 
@@ -780,7 +783,7 @@ ${stepsDescription}`,
         explanation: answer.reasoning,
         confidence: answer.confidence,
         query: answer.retrieval.query,
-        involvedEntities: Array.from(involvedEntities),
+        involvedEntities: A.fromIterable(involvedEntities),
       };
     });
 

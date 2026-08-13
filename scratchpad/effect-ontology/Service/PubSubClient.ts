@@ -13,7 +13,7 @@ import type { Topic } from "@google-cloud/pubsub";
 import { PubSub } from "@google-cloud/pubsub";
 import { Config, Context, DateTime, Effect, Layer, Stream } from "effect";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
 import * as EventJournal from "effect/unstable/eventlog/EventJournal";
 import { PubSubError } from "../Domain/Error/EventBus.ts";
@@ -168,15 +168,13 @@ export const PubSubClientLive = Layer.effect(
     });
 
     // Cache topic references
-    const topicCache = new Map<string, Topic>();
-    const getTopic = (topicId: string): Topic => {
-      let topic = topicCache.get(topicId);
-      if (P.isUndefined(topic)) {
-        topic = pubsub.topic(topicId);
-        topicCache.set(topicId, topic);
-      }
-      return topic;
-    };
+    const topicCache = MutableHashMap.empty<string, Topic>();
+    const getTopic = (topicId: string): Topic =>
+      O.getOrElse(MutableHashMap.get(topicCache, topicId), () => {
+        const topic = pubsub.topic(topicId);
+        MutableHashMap.set(topicCache, topicId, topic);
+        return topic;
+      });
 
     const publish: PubSubClientMethods["publish"] = Effect.fn("publish")(function* (topicId, data, attributes) {
       const topic = getTopic(topicId);

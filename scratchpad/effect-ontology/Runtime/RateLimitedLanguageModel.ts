@@ -20,8 +20,10 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type * as S from "effect/Schema";
 import type { NoExcessProperties } from "effect/Types";
-import { AiError, LanguageModel, Response } from "effect/unstable/ai";
+import type { Response } from "effect/unstable/ai";
+import { AiError, LanguageModel } from "effect/unstable/ai";
 import type * as Tool from "effect/unstable/ai/Tool";
+import type * as Toolkit from "effect/unstable/ai/Toolkit";
 import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
 import { ConfigService } from "../Service/Config.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
@@ -237,18 +239,27 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
       LanguageModel.ExtractServices<Options>
     >;
     function generateText<
-      Options extends { readonly toolkit: LanguageModel.ToolkitOption<any> } &
-        NoExcessProperties<LanguageModel.GenerateTextOptions<any>, Options>,
+      Options extends { readonly toolkit: LanguageModel.ToolkitOption<any> } & NoExcessProperties<
+        LanguageModel.GenerateTextOptions<any>,
+        Options
+      >,
     >(
       options: Options &
-        LanguageModel.GenerateTextOptions<LanguageModel.ExtractTools<Options>> & { readonly toolkit: Options["toolkit"] }
+        LanguageModel.GenerateTextOptions<LanguageModel.ExtractTools<Options>> & {
+          readonly toolkit: Options["toolkit"];
+        }
     ): Effect.Effect<
       LanguageModel.GenerateTextResponse<LanguageModel.ExtractTools<Options>>,
       LanguageModel.ExtractError<Options>,
       LanguageModel.ExtractServices<Options>
     >;
-    function generateText(options: LanguageModel.GenerateTextOptions<Record<string, Tool.Any>>) {
-      if (P.isUndefined(options.toolkit)) {
+    function generateText<Tools extends Record<string, Tool.Any>, E, R>(
+      options: Omit<LanguageModel.GenerateTextOptions<Tools>, "toolkit"> & {
+        readonly toolkit?: LanguageModel.ToolkitInput<Tools, E, R>;
+      }
+    ) {
+      const toolkit = options.toolkit;
+      if (P.isUndefined(toolkit)) {
         const withoutToolkit = {
           prompt: options.prompt,
           ...(P.isNotUndefined(options.concurrency) ? { concurrency: options.concurrency } : {}),
@@ -257,23 +268,35 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
             : {}),
           ...(P.isString(options.toolChoice) ? { toolChoice: options.toolChoice } : {}),
         } satisfies GenerateTextOptionsWithoutToolkit;
-        return withRateLimit(
-          "generateText",
-          baseLlm.generateText<GenerateTextOptionsWithoutToolkit>(withoutToolkit)
-        );
+        return withRateLimit("generateText", baseLlm.generateText<GenerateTextOptionsWithoutToolkit>(withoutToolkit));
       }
-      const withToolkit = { ...options, toolkit: options.toolkit };
-      // The v4 public overload defaults arbitrary toolkit requirements to `any`.
-      return withRateLimit(
-        "generateText",
-        // @effect-diagnostics-next-line anyUnknownInErrorContext:off
-        baseLlm.generateText<Record<string, Tool.Any>, typeof withToolkit>(withToolkit)
-      );
+      const toolkitInput: LanguageModel.ToolkitInput<Tools, E, R> = toolkit;
+      const generateWithToolkit = (resolvedToolkit: Toolkit.WithHandler<Tools>) => {
+        const withToolkit = { ...options, toolkit: resolvedToolkit };
+        return baseLlm.generateText<Tools, typeof withToolkit>(withToolkit);
+      };
+      const isToolkitWithHandler = (
+        input: LanguageModel.ToolkitInput<Tools, E, R>
+      ): input is Toolkit.WithHandler<Tools> => P.not(Effect.isEffect)(input);
+      if (isToolkitWithHandler(toolkitInput)) {
+        return withRateLimit("generateText", generateWithToolkit(toolkitInput));
+      }
+      const isToolkitEffect = (
+        input: LanguageModel.ToolkitInput<Tools, E, R>
+      ): input is Effect.Effect<Toolkit.WithHandler<Tools>, E, R> => Effect.isEffect(input);
+      if (isToolkitEffect(toolkitInput)) {
+        return withRateLimit("generateText", toolkitInput.pipe(Effect.flatMap(generateWithToolkit)));
+      }
+      return Effect.die("Invalid language model toolkit input");
     }
 
     function streamText<Options extends NoExcessProperties<GenerateTextOptionsWithoutToolkit, Options>>(
       options: Options & GenerateTextOptionsWithoutToolkit
-    ): Stream.Stream<Response.StreamPart<{}>, LanguageModel.ExtractError<Options>, LanguageModel.ExtractServices<Options>>;
+    ): Stream.Stream<
+      Response.StreamPart<{}>,
+      LanguageModel.ExtractError<Options>,
+      LanguageModel.ExtractServices<Options>
+    >;
     function streamText<
       Tools extends Record<string, Tool.Any>,
       Options extends NoExcessProperties<
@@ -289,11 +312,15 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
       LanguageModel.ExtractServices<Options>
     >;
     function streamText<
-      Options extends { readonly toolkit: LanguageModel.ToolkitOption<any> } &
-        NoExcessProperties<LanguageModel.GenerateTextOptions<any>, Options>,
+      Options extends { readonly toolkit: LanguageModel.ToolkitOption<any> } & NoExcessProperties<
+        LanguageModel.GenerateTextOptions<any>,
+        Options
+      >,
     >(
       options: Options &
-        LanguageModel.GenerateTextOptions<LanguageModel.ExtractTools<Options>> & { readonly toolkit: Options["toolkit"] }
+        LanguageModel.GenerateTextOptions<LanguageModel.ExtractTools<Options>> & {
+          readonly toolkit: Options["toolkit"];
+        }
     ): Stream.Stream<
       Response.StreamPart<LanguageModel.ExtractTools<Options>>,
       LanguageModel.ExtractError<Options>,
@@ -320,9 +347,7 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
       return Stream.unwrap(
         withRateLimit(
           "streamText",
-          Effect.sync(() =>
-            baseLlm.streamText<Record<string, Tool.Any>, typeof withToolkit>(withToolkit)
-          )
+          Effect.sync(() => baseLlm.streamText<Record<string, Tool.Any>, typeof withToolkit>(withToolkit))
         )
       );
     }

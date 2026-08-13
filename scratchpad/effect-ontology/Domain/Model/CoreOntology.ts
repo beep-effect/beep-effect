@@ -182,7 +182,7 @@ const canonicalEntityIdPattern = /^(?:entity-[a-f0-9]{12}|[a-z][a-z0-9_]*)$/;
 const eventIdPattern = /^event-[a-f0-9]{12}$/;
 
 const digestText = Effect.fn("CoreOntology.digestText")(function* (text: string) {
-  return yield* S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(text));
+  return yield* Sha256HexFromBytes.decodeEffect(utf8Encoder.encode(text));
 });
 
 /**

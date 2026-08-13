@@ -20,6 +20,7 @@
  * @since 0.0.0
  */
 import { Effect } from "effect";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as ts from "typescript";
 
@@ -32,15 +33,15 @@ interface Finding {
 const requiredDeclarationTags = ["category", "since"] as const;
 const requiredValueDeclarationTags = ["example", ...requiredDeclarationTags] as const;
 const canonicalExample = /\*\*Example\*\*\s*\([^\r\n)]+\)/;
-const checkFactories = new Set([
+const checkFactories = HashSet.make(
   "isBetween",
   "isGreaterThan",
   "isGreaterThanOrEqualTo",
   "isInt",
   "isLessThanOrEqualTo",
   "isPattern",
-  "makeFilter",
-]);
+  "makeFilter"
+);
 const domainRoot = new URL("../Domain/", import.meta.url);
 const domainModules = new Bun.Glob("**/*.ts");
 const findings: Array<Finding> = [];
@@ -51,10 +52,11 @@ let auditedChecks = 0;
 const hasModifier = (node: ts.Node, kind: ts.SyntaxKind): boolean =>
   ts.canHaveModifiers(node) && ts.getModifiers(node)?.some((modifier) => modifier.kind === kind) === true;
 
-const tagNames = (node: ts.Node): ReadonlySet<string> => new Set(ts.getJSDocTags(node).map((tag) => tag.tagName.text));
+const tagNames = (node: ts.Node): HashSet.HashSet<string> =>
+  HashSet.fromIterable(ts.getJSDocTags(node).map((tag) => tag.tagName.text));
 
 const hasExample = (node: ts.Node, sourceFile: ts.SourceFile): boolean =>
-  tagNames(node).has("example") || canonicalExample.test(node.getFullText(sourceFile));
+  HashSet.has(tagNames(node), "example") || canonicalExample.test(node.getFullText(sourceFile));
 
 const auditDeclarationTags = (
   file: string,
@@ -67,7 +69,7 @@ const auditDeclarationTags = (
   const declarationTagNames = tagNames(node);
   const requiredTags = requireExample ? requiredValueDeclarationTags : requiredDeclarationTags;
   const missing = requiredTags.filter((tag) =>
-    tag === "example" ? !hasExample(node, sourceFile) : !declarationTagNames.has(tag)
+    tag === "example" ? !hasExample(node, sourceFile) : !HashSet.has(declarationTagNames, tag)
   );
 
   if (missing.length > 0) {
@@ -141,7 +143,7 @@ for await (const relativePath of domainModules.scan({
       const memberTags = tagNames(member);
       const missing = [
         ...(hasExample(member, sourceFile) ? [] : ["example"]),
-        ...(memberTags.has("returns") || memberTags.has("return") ? [] : ["returns"]),
+        ...(HashSet.has(memberTags, "returns") || HashSet.has(memberTags, "return") ? [] : ["returns"]),
         ...(ts.isMethodDeclaration(member) &&
         member.parameters.some((parameter) => ts.getJSDocParameterTags(parameter).length === 0)
           ? ["param"]
@@ -163,7 +165,7 @@ for await (const relativePath of domainModules.scan({
       ts.isCallExpression(node) &&
       ts.isPropertyAccessExpression(node.expression) &&
       node.expression.expression.getText(sourceFile) === "S" &&
-      checkFactories.has(node.expression.name.text)
+      HashSet.has(checkFactories, node.expression.name.text)
     ) {
       auditedChecks += 1;
       const carriesMessage = node.arguments.some(
