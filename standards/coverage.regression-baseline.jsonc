@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-13T20:06:18.319Z",
-  "git_sha": "f629fd81e240ca5547d0e7346daa70bd0313bb1d",
+  "generated_at": "2026-08-13T21:03:53.137Z",
+  "git_sha": "dc5ee3ab94fd2e23bb04a40b86f5fcb8e82655dd",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
@@ -18972,12 +18972,12 @@
       "path": "apps/professional-desktop",
       "lines": 71.51,
       "statements": 70.24,
-      "branches": 63.69,
+      "branches": 64.28,
       "functions": 60.47,
       "uncovered": {
         "lines": 674,
         "statements": 752,
-        "branches": 183,
+        "branches": 180,
         "functions": 453
       },
       "files": {
@@ -19056,12 +19056,12 @@
         "apps/professional-desktop/src/chat/ui/ChatApp.tsx": {
           "lines": 65.21,
           "statements": 62.5,
-          "branches": 50,
+          "branches": 75,
           "functions": 35.71,
           "uncovered": {
             "lines": 8,
             "statements": 9,
-            "branches": 2,
+            "branches": 1,
             "functions": 9
           }
         },
@@ -19128,12 +19128,12 @@
         "apps/professional-desktop/src/chat/ui/Sidebar.tsx": {
           "lines": 68.18,
           "statements": 62.5,
-          "branches": 38.46,
+          "branches": 53.84,
           "functions": 30,
           "uncovered": {
             "lines": 7,
             "statements": 9,
-            "branches": 8,
+            "branches": 6,
             "functions": 7
           }
         },
@@ -20248,15 +20248,15 @@
     },
     "@beep/repo-ai-metrics": {
       "path": "packages/tooling/library/ai-metrics",
-      "lines": 88.11,
-      "statements": 88.21,
-      "branches": 75.59,
-      "functions": 73.93,
+      "lines": 88.13,
+      "statements": 88.24,
+      "branches": 75.65,
+      "functions": 74.08,
       "uncovered": {
-        "lines": 292,
-        "statements": 297,
-        "branches": 155,
-        "functions": 239
+        "lines": 293,
+        "statements": 298,
+        "branches": 157,
+        "functions": 240
       },
       "files": {
         "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts": {
@@ -20368,10 +20368,10 @@
           }
         },
         "packages/tooling/library/ai-metrics/src/identity-registry.ts": {
-          "lines": 96.66,
-          "statements": 96.8,
-          "branches": 83.78,
-          "functions": 96.07,
+          "lines": 96.75,
+          "statements": 96.9,
+          "branches": 85.36,
+          "functions": 96.42,
           "uncovered": {
             "lines": 6,
             "statements": 6,
@@ -20476,15 +20476,15 @@
           }
         },
         "packages/tooling/library/ai-metrics/src/otlp.ts": {
-          "lines": 93.7,
-          "statements": 94.2,
-          "branches": 75,
-          "functions": 90,
+          "lines": 93.33,
+          "statements": 93.83,
+          "branches": 73.07,
+          "functions": 89.06,
           "uncovered": {
-            "lines": 8,
-            "statements": 8,
-            "branches": 5,
-            "functions": 6
+            "lines": 9,
+            "statements": 9,
+            "branches": 7,
+            "functions": 7
           }
         },
         "packages/tooling/library/ai-metrics/src/privacy.ts": {
