@@ -25,13 +25,15 @@ import {
   UnknownNativeSchemaCell,
   V1_SCHEMA_COVERAGE,
   V1_TRANSFORM_EVIDENCE,
+  validateDogfoodConfigs,
   validateRepoConfig,
+  validateRepoSafetyPolicy,
 } from "@beep/ai-sync";
 import { renderGeneratedSchemas } from "@beep/ai-sync/generator";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { expect, layer } from "@effect/vitest";
-import { Effect, Exit, FileSystem, Path } from "effect";
+import { assert, expect, layer } from "@effect/vitest";
+import { Effect, Exit, FileSystem, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
@@ -42,6 +44,7 @@ import type { Layer } from "effect";
 
 const emptyHash = AiSyncContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const previousHash = AiSyncContentHash.make("0000000000000000000000000000000000000000000000000000000000000000");
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   fc.assert(
@@ -269,6 +272,149 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
           const invalid = yield* Effect.exit(validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" }));
           expect(Exit.isFailure(invalid)).toBe(true);
           expect(String(invalid)).toContain('["skills"]["include_instructions"]');
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "separates native config compatibility from checked-in repository safety policy",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const codexPath = path.join(tmpDir, ".codex/config.toml");
+          const claudePath = path.join(tmpDir, ".claude/settings.json");
+
+          yield* writeText(codexPath, 'approval_policy = "never"\nsandbox_mode = "danger-full-access"\n');
+          assert.strictEqual(
+            (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" })).schemaId,
+            "codex-config"
+          );
+
+          const unsafeCodex = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+          );
+          assert.include(unsafeCodex.message, 'approval_policy must be "on-request"');
+          assert.include(unsafeCodex.message, 'sandbox_mode must be "workspace-write"');
+
+          yield* writeText(codexPath, "");
+          const implicitCodex = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+          );
+          assert.include(implicitCodex.message, 'approval_policy must be explicitly set to "on-request"');
+          assert.include(implicitCodex.message, 'sandbox_mode must be explicitly set to "workspace-write"');
+
+          yield* writeText(codexPath, 'approval_policy = "on-failure"\nsandbox_mode = "workspace-write"\n');
+          const driftedCodexApproval = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+          );
+          assert.include(driftedCodexApproval.message, 'approval_policy must be "on-request"');
+
+          yield* writeText(claudePath, '{"enabledMcpjsonServers":["codegraph"]}');
+          const implicitClaudeMode = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+          );
+          assert.include(implicitClaudeMode.message, 'permissions.defaultMode must be explicitly set to "default"');
+
+          yield* Effect.forEach(
+            [
+              "Bash(gh:*)",
+              "Bash(gh *)",
+              "Bash(gh*)",
+              "Bash(*gh*)",
+              "Bash(*)",
+              "Bash",
+              "Bash(codex exec:*)",
+              "Bash(codex:*)",
+              "Bash(/usr/bin/gh:*)",
+              "Bash(env gh:*)",
+              "Bash(GH_PAGER=cat gh:*)",
+              "Bash(command codex exec:*)",
+              "Bash(bash:*)",
+              "Bash(timeout:*)",
+            ],
+            Effect.fn(function* (permission) {
+              yield* writeText(
+                claudePath,
+                yield* encodeJson({ permissions: { allow: [permission] }, enabledMcpjsonServers: ["codegraph"] })
+              );
+              assert.strictEqual(
+                (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
+                "claude-settings"
+              );
+
+              const unsafeClaude = yield* Effect.flip(
+                validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+              );
+              assert.include(unsafeClaude.message, permission);
+            }),
+            { discard: true }
+          );
+
+          yield* Effect.forEach(
+            ["acceptEdits", "plan", "auto", "dontAsk", "bypassPermissions"],
+            Effect.fn(function* (defaultMode) {
+              yield* writeText(
+                claudePath,
+                yield* encodeJson({ permissions: { allow: ["Bash(gh pr view:*)"], defaultMode } })
+              );
+              assert.strictEqual(
+                (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
+                "claude-settings"
+              );
+
+              const unsafeClaudeMode = yield* Effect.flip(
+                validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+              );
+              assert.include(unsafeClaudeMode.message, `permissions.defaultMode must be "default"`);
+            }),
+            { discard: true }
+          );
+
+          yield* writeText(codexPath, 'approval_policy = "on-request"\nsandbox_mode = "workspace-write"\n');
+          yield* writeText(
+            claudePath,
+            '{"permissions":{"defaultMode":"default","allow":["Bash(gh pr view:*)","Bash(gh pr checks:*)","Bash(gh run view:*)"]}}'
+          );
+
+          const safeResults = yield* validateDogfoodConfigs(tmpDir);
+          assert.deepEqual(
+            A.map(safeResults, (result) => result.relativePath),
+            [".codex/config.toml", ".claude/settings.json"]
+          );
+        })
+      );
+    })
+  );
+
+  it.effect(
+    "reads each mandatory config exactly once during combined validation",
+    Effect.fn(function* () {
+      yield* withTempDirectory(
+        Effect.fn(function* (tmpDir) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const codexPath = path.join(tmpDir, ".codex/config.toml");
+          const claudePath = path.join(tmpDir, ".claude/settings.json");
+          yield* writeText(codexPath, 'approval_policy = "on-request"\nsandbox_mode = "workspace-write"\n');
+          yield* writeText(claudePath, '{"permissions":{"defaultMode":"default","allow":["Bash(gh pr view:*)"]}}');
+
+          const readPaths = yield* Ref.make(A.empty<string>());
+          const countingFs: FileSystem.FileSystem = {
+            ...fs,
+            readFileString: (filePath, encoding) =>
+              Ref.update(readPaths, A.append(filePath)).pipe(Effect.andThen(fs.readFileString(filePath, encoding))),
+          };
+          const results = yield* validateDogfoodConfigs(tmpDir).pipe(
+            Effect.provideService(FileSystem.FileSystem, countingFs)
+          );
+
+          assert.deepEqual(yield* Ref.get(readPaths), [codexPath, claudePath]);
+          assert.deepEqual(
+            A.map(results, (result) => result.relativePath),
+            [".codex/config.toml", ".claude/settings.json"]
+          );
         })
       );
     })

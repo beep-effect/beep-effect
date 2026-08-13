@@ -200,9 +200,11 @@ Still useful to know:
 
 - Tracked `.claude/settings.json` and `.mcp.json` come along automatically in
   any worktree.
-- The tracked Claude permissions allow `gh` (including GraphQL/API writes) and
-  local/remote branch deletion. Force pushes, admin merges, and repository
-  deletion remain denied; authorization and target checks still apply.
+- The tracked Claude permissions auto-approve only named read-only `gh pr` and
+  `gh run` commands from the GitHub CLI. The repository workflow also retains
+  intentional `git push` and `beep yeet publish` grants. Direct `gh` mutations,
+  unrestricted `gh api`, `codex exec`, force pushes, admin merges, and
+  repository deletion require a separate approval or remain denied.
 - Gitignored files like `.claude/settings.local.json`, `CLAUDE.local.md`, and
   `.env` do not.
 - If you ever choose Claude-managed worktrees for throwaway tasks, `.worktreeinclude` can copy selected ignored files, but that is not part of the default `beep-effect` setup.
@@ -227,11 +229,10 @@ Also good:
 codex -C /home/elpresidank/YeeBois/projects/beep-effect-worktrees/playground
 ```
 
-The trusted project `.codex/config.toml` uses `approval_policy = "never"` and
-`sandbox_mode = "danger-full-access"` so GitHub network calls and `.git` branch
-cleanup are not blocked by the local sandbox. This grants capability, not
-blanket authorization: agents still resolve exact targets and honor repository
-protections before destructive operations.
+The project `.codex/config.toml` uses `approval_policy = "on-request"` and
+`sandbox_mode = "workspace-write"`. Ordinary repository work stays inside the
+checkout; GitHub network calls, writes outside the workspace, and privileged
+`.git` operations cross an explicit approval boundary.
 
 Why:
 
