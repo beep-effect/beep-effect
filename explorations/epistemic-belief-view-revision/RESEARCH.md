@@ -14,17 +14,23 @@ Provenance ledger: [`research/SOURCES.md`](./research/SOURCES.md).
 
 ## What the research says
 
-The core already provides the exact authority seam a view needs: immutable
-versions, time-independent logical identity, two half-open temporal axes, and
-atomic supersession. A view should be a pure consumer of an authority cut at
+The core provides the authority semantics a view needs: immutable versions,
+time-independent logical identity, two half-open temporal axes, and atomic
+supersession. It does not yet provide the complete query seam. The live
+`EdgeAuthorityRepositoryShape` exposes only `readAsOf` and `readLatest` for one
+exact `LogicalEdgeKey`, so it cannot enumerate the competing evidence-scoped
+lineages in a `BeliefContentionKey` group. This packet's goal must add a scoped
+cross-lineage query and its supporting index as a NET-NEW capability. A view
+should remain a pure consumer of the resulting authority cut at
 `(validAt, knownAt)`, never another way to close or mutate a lineage.
 
-The important newly grounded gap is grouping. `LogicalEdgeIdentity` includes
-`evidenceScope`, so competing evidence-scoped assertions are distinct authority
-lineages. Selecting only within a `LogicalEdgeKey` cannot answer the product
-question. Research therefore proposes a projection-owned, versioned
-`BeliefContentionKey` that groups complete authority identities without
-redefining them. Its dimensions remain an align decision.
+The grouping and retrieval gap is therefore load-bearing.
+`LogicalEdgeIdentity` includes `evidenceScope`, so competing evidence-scoped
+assertions are distinct authority lineages. Selecting only within a
+`LogicalEdgeKey` cannot answer the product question. Research proposes a
+projection-owned, versioned `BeliefContentionKey` that groups complete authority
+identities without redefining them, plus the NET-NEW query/index needed to
+retrieve each group. Its dimensions remain an align decision.
 
 The proposed shared verdict-family names are:
 
@@ -47,9 +53,10 @@ A view request names principal, scope, `(validAt, knownAt)`, and a policy
 revision. The deterministic engine groups candidates, then emits one selected
 edge version or a typed abstention per contention set. A revision key is a
 content digest over the request, policy revision, authority cut, and canonically
-ordered results; a parent key supplies causal ancestry. Any semantic input
-change creates a new revision. Old revisions rebuild at their original
-`knownAt`; later knowledge creates a new revision rather than rewriting one.
+ordered results. Materialization-dependent ancestry lives in a separate lineage
+record that references revision keys. Any semantic input change creates a new
+revision. Old revisions rebuild at their original `knownAt`; later knowledge
+creates a new revision rather than rewriting one.
 
 Materialized revisions are prunable projections. Edge/evidence authority,
 human dispositions, contradiction resolutions, policy revisions, and human
@@ -83,4 +90,3 @@ contracts and duplicates none of them.
 3. What is the minimal selection-policy and abstention vocabulary?
 4. Should first delivery materialize prunable revisions or compute them on
    demand behind the same content-addressed replay contract?
-

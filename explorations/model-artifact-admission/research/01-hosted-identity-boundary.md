@@ -10,18 +10,21 @@ admission subject is a content-addressed `ModelArrangementRevision` whose
 controlled components are digest-bound and whose hosted component is an
 attestation envelope.
 
-The hosted envelope should carry:
+The hosted identity envelope should carry only stable provider-attested
+identity:
 
-- provider and service surface/base endpoint;
-- account/project/deployment and region when they affect routing;
-- requested model identifier;
-- provider-resolved model identifier or deployment revision when returned;
-- provider response fingerprint/backend revision when available;
-- observed time and provider request/response receipt identifiers;
+- provider, service, and deployment identity;
+- requested model identifier and the resolved pinned model identifier when the
+  provider returns one;
+- alias-resolution class;
 - an identity-assurance tag: `provider-pinned`, `provider-resolved-alias`,
   `alias-only`, or `opaque-deployment`.
 
-The arrangement digest seals that envelope plus every controlled digest. It is
+The arrangement digest seals only that stable identity envelope plus every
+controlled-component digest. Provider backend fingerprints or revisions,
+observation timestamps, and request/response receipt identifiers are
+non-identity execution observations. They are recorded as evidence that
+references the arrangement identity, never as fields digested into it. This is
 an honest digest of beep's admission subject; it is **not** represented as a
 digest of unavailable hosted weights.
 
@@ -43,7 +46,8 @@ OpenAI's `system_fingerprint` describes the combination of model weights,
 infrastructure, and other server configuration, but is a monitoring signal and
 does not guarantee exact determinism
 ([OpenAI, reproducible outputs](https://cookbook.openai.com/examples/reproducible_outputs_with_the_seed_parameter)).
-It belongs in execution evidence, not in the controlled-artifact digest.
+It belongs in execution evidence that references the arrangement identity,
+not in the arrangement digest.
 
 ## Live repo grounding
 
@@ -71,10 +75,12 @@ serve as admission identity by itself.
 
 - Moving a mutable alias to a new resolved ID is an identity change and creates
   a new arrangement revision requiring requalification.
+- Backend-fingerprint churn does not force requalification, and observation
+  timestamps or per-request receipt identifiers do not mint arrangement
+  revisions; those observations remain linked execution evidence.
 - If no resolution/attestation is available, admission may be scoped and
   short-lived at `alias-only` strength, but cannot claim exact-model replay.
 - Rollback is permitted only to a previously admitted arrangement whose hosted
   identity can still be requested or resolved to the same attested identity.
 - Provider-side unobservable changes are residual risk recorded in the
   disposition, not hidden behind false precision.
-

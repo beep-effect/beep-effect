@@ -42,15 +42,16 @@ Each `ModelArrangementQualification` should contain:
    cost, and latency as separate measures with denominators;
 7. deterministic invariant-check results and evaluator/tool versions;
 8. residual risks, unavailable evidence, expiry/recheck trigger, and rollback
-   target;
-9. a scoped human `ModelArrangementDisposition` with principal, time, rationale,
-   evidence refs, and status.
+   target.
 
-Proposed disposition statuses are `admitted`, `restricted`, `rejected`,
-`expired`, and `superseded`. `restricted` must carry explicit eligible roles,
-modalities, data classes, and operational constraints. No scalar trust score is
-part of the verdict. Admission makes an arrangement eligible for a scope; it
-does not authorize a tool action or release an output.
+Qualification evidence and human disposition are distinct immutable records.
+A scoped `ModelArrangementDisposition` is recorded only after qualification is
+complete and references that completed qualification; the qualification never
+embeds its own disposition. Proposed disposition statuses are `admitted`,
+`restricted`, `rejected`, `expired`, and `superseded`. `restricted` must carry
+explicit eligible roles, modalities, data classes, and operational constraints.
+No scalar trust score is part of the verdict. Admission makes an arrangement
+eligible for a scope; it does not authorize a tool action or release an output.
 
 ## Full versus bounded-delta requalification
 
@@ -89,4 +90,3 @@ requested reviewer actions, and a reviewer principal
 Model admission should be an upstream eligibility reference. It must not
 replace candidate review, and its status must not be accepted where an
 `ExecutionVerdict` or release disposition is required.
-

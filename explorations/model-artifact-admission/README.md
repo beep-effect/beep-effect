@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `align`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,10 +19,10 @@ decoding configuration, and artifact digest.
 
 ## Next Open Question
 
-What minimum hosted identity-assurance level is required for each admitted role
-and data class, and which component changes or sentinel regressions force full
-requalification rather than a bounded delta suite? Align must also ratify the
-`ModelArrangementDisposition` status/restriction/expiry vocabulary.
+Align pending: ratify the minimum hosted identity-assurance level for each
+admitted role and data class, the full-versus-bounded-delta requalification
+matrix, and the `ModelArrangementDisposition` status, restriction, expiry, and
+supersession vocabulary.
 
 ## Read This First
 
@@ -38,7 +38,7 @@ requalification rather than a bounded delta suite? Align must also ratify the
   model arrangement). Capture landed with corpus evidence (VLM adaptation
   drift, prompt-tuning backdoors, non-transferable optimized prompts), the
   repo composition map, and three capture questions.
-- 2026-08-13: full research push completed — answered the hosted identity
+- 2026-08-13: research complete -> align — answered the hosted identity
   boundary without fabricating a weights digest, proposed qualification
   evidence and full/delta rules, and grounded disposition/lineage composition
-  in the shipped epistemic core. `ATLAS.md` sync is deferred to the campaign PR.
+  in the shipped epistemic core. ATLAS synced in this PR.

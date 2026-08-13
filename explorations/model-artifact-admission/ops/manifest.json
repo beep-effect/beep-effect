@@ -4,7 +4,7 @@
     "slug": "model-artifact-admission",
     "title": "Model Artifact Admission",
     "status": "active",
-    "stage": "research",
+    "stage": "align",
     "openQuestions": [
       "What minimum hosted identity-assurance level is required for each admitted role and data class?",
       "Which exact component changes and sentinel regressions require full requalification rather than a bounded delta suite?",

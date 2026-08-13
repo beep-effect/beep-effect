@@ -13,7 +13,7 @@ Date: 2026-08-13
 | Learning To See But Forgetting To Follow | https://aclanthology.org/2024.safety4convai-1.5/ | 2026-08-13 | Matched VLM/backbone safety drift. |
 | LMSanitator | https://arxiv.org/abs/2308.13904 | 2026-08-13 | Backdoor/scanner evidence limits. |
 | Prompt Engineering a Prompt Engineer | https://arxiv.org/abs/2311.05661 | 2026-08-13 | Model/task-specific prompt optimization. |
-| Securing with Dual-LLM Architecture: ChatTEDU | https://doi.org/10.1109/ACCESS.2025.3623268 | 2026-08-13 | Role separation and inherited evaluation caveat. |
+| Securing with Dual-LLM Architecture: ChatTEDU | https://doi.org/10.1109/ACCESS.2025.3623268; https://avesis.tedu.edu.tr/publication/details/a38d51b3-8aeb-4ea5-9e89-d72ae53dbf73/securing-with-dual-llm-architecture-chattedu-an-open-access-chatbots-defense | 2026-08-13 | DOI and AVESIS publication record; role separation and inherited evaluation caveat. |
 
 No upstream code repository was mined or proposed for porting. All external
 sources are reference-only; repository-license disposition is not applicable.
@@ -41,4 +41,3 @@ sources are reference-only; repository-license disposition is not applicable.
 - [`01-hosted-identity-boundary.md`](./01-hosted-identity-boundary.md)
 - [`02-admission-evidence-and-change-policy.md`](./02-admission-evidence-and-change-policy.md)
 - [`03-epistemic-lineage-and-drift.md`](./03-epistemic-lineage-and-drift.md)
-

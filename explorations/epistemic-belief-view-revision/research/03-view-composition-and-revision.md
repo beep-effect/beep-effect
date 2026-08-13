@@ -31,20 +31,26 @@ Research proposes the following fat-marker contract for align:
    `SelectedBelief { edgeVersionId, reasons }` or
    `BeliefAbstention { candidateIds, reason }` per contention set.
 5. Candidates and results are canonically sorted. The view revision key is a
-   digest of the schema version, request, policy revision, authority-cut digest,
-   and ordered selections/abstentions.
+   digest only of the request, policy revision, authority-cut digest, and
+   ordered selections/abstentions.
 
-No wall-clock materialization timestamp belongs in that digest. Otherwise
-dropping and replaying a projection cannot produce byte-identical output.
+No wall-clock materialization timestamp or materialization-dependent parentage
+belongs in that digest or in the content-addressed revision object. Otherwise
+the same revision key could identify byte-different objects depending on which
+revision happened to materialize first, and dropping then replaying a
+projection could not produce byte-identical output.
 
 ## Revision semantics
 
 A new content-addressed `BeliefViewRevision` is produced when any semantic
 input changes: the authority cut, a typed assessment/disposition visible at
 `knownAt`, the selection-policy revision, principal/scope, or requested time
-pair. It carries `parentRevisionKey` when a previous revision exists for the
-same view series. The parent records causal comparison; it does not authorize
-copy-forward of a prior winner.
+pair. It carries no `parentRevisionKey`. A separate immutable
+`BeliefViewMaterializationLineage` record references the materialized revision
+key and, when one exists for that materialization series, its parent revision
+key. That record captures causal comparison without changing the bytes or
+identity of either revision and does not authorize copy-forward of a prior
+winner.
 
 Every candidate is re-evaluated under the named policy revision. A prior
 selection may remain selected, change to another lineage, or become an
@@ -79,10 +85,11 @@ select among open ones.
 - **Prohibited secret-bearing inputs:** raw credentials or secret prompt
   material must never enter a view or its digest.
 
-The view's causal ancestry is therefore deterministic projection data, not a
-second authority ledger. If product requirements later demand a human-signed
-adoption of a view, that adoption is a separate retention-bearing disposition
-referencing the view revision key.
+The view's causal ancestry is therefore separate materialization/lineage data,
+not part of the content-addressed revision and not a second authority ledger.
+If product requirements later demand a human-signed adoption of a view, that
+adoption is a separate retention-bearing disposition referencing the view
+revision key.
 
 ## Align decisions still required
 
@@ -91,4 +98,3 @@ referencing the view revision key.
 - Decide the minimal policy vocabulary and abstention reasons.
 - Decide whether view materialization is stored at all or initially computed
   on demand; both must obey the same replay contract.
-

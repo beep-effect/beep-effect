@@ -17,15 +17,20 @@ Provenance ledger: [`research/SOURCES.md`](./research/SOURCES.md).
 Do not identify a hosted model with an unavailable weight digest. Identify the
 whole executable arrangement with a content-addressed revision whose controlled
 components are digest-bound and whose hosted component is the strongest
-provider-attested envelope available: provider/service/endpoint,
-account/project/deployment/region where relevant, requested and resolved model
-IDs, provider backend fingerprint/revision when available, observation and
-receipt identifiers, and an explicit assurance strength.
+stable provider-attested identity envelope available: provider, service, and
+deployment identity; requested and resolved pinned model IDs; alias-resolution
+class; and explicit assurance level.
 
-The arrangement key is a digest of that honest envelope. `provider-pinned` is
-strongest; resolved aliases can bind to the resolved ID; alias-only and opaque
-deployments require narrower, expiring admission and cannot promise exact-model
-replay. Alias movement or attestation change creates a new arrangement revision.
+The arrangement key digests only that stable identity envelope plus the
+controlled-component digests. Provider backend fingerprints/revisions,
+observation timestamps, and request/response receipt identifiers are
+non-identity execution observations: evidence records them by reference to the
+arrangement identity, never inside its digest. `provider-pinned` is strongest;
+resolved aliases can bind to the resolved ID; alias-only and opaque deployments
+require narrower, expiring admission and cannot promise exact-model replay.
+Alias movement to a different resolved identity creates a new arrangement
+revision. Fingerprint churn does not force requalification, and per-request
+fields do not mint revisions.
 
 ## Admission evidence answer
 
@@ -85,4 +90,3 @@ the epistemic core own model vocabulary.
 3. Ratify `ModelArrangementDisposition` names, restrictions, expiry, and
    supersession semantics without conflating admission, authorization, or
    release.
-
