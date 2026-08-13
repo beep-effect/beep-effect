@@ -4,13 +4,13 @@
     "slug": "typed-agent-skill-contracts",
     "title": "Typed Agent Skill Contracts",
     "status": "active",
-    "stage": "shape",
+    "stage": "graduate",
     "openQuestions": [
-      "Brief review: does BRIEF.md match the operator's picture? Two flags inside it: the appetite bound (one cycle = kernel + one retrofit) and the kernel package name (working name @beep/skill-contract)."
+      "Next wave: when kg-ingestion-contracts (or another MAP.md candidate) is picked up, run its own shape pass before graduating it — the exploration remains the home of waves 2-6."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/skill-contract-kernel"],
       "docs": [],
       "supersededBy": null
     },

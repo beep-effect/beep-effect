@@ -24,26 +24,32 @@ promises). The composition is the open ground.
 
 ## Appetite
 
-One focused cycle for the spine: the kernel package plus exactly one existing-consumer
-retrofit as proof of composition. Later waves (KG ingestion+eval, query/browser ops, memory
-routing, fleet protocol surface — in that provisional order, per DECISIONS §spine track) are
-separate goal packets, not this appetite. **[FLAGGED FOR REVIEW: is one cycle the right bound,
-and does "kernel + one retrofit" fit it?]**
+One focused cycle for the spine: the kernel package, the qa judge-gate retrofit, and the
+SKILL.md render-as-encode projection (DECISIONS 2026-08-13, grill-with-docs round). The
+bounded-recovery *service* is out of the cycle — only its receipt/budget schemas ship. Later
+waves (KG ingestion+eval, query/browser ops, memory routing, fleet protocol surface — in that
+provisional order, per DECISIONS §spine track) are separate goal packets, not this appetite.
 
 ## Solution sketch
 
-A new foundation capability package — working name `@beep/skill-contract`
-**[FLAGGED FOR REVIEW: naming]** — holding four schema families and one service:
+A new **`packages/foundation/modeling/skill-contract`** package (`@beep/skill-contract`,
+schemas-only; sibling to `@beep/provenance` — home and name locked in DECISIONS §kernel home /
+§kernel name after doctrine review; `foundation/capability` fails its ≥2-importer gate at
+birth) holding four schema families:
 
 1. **`SkillContract` root** — the aggregate binding a skill's promise: identity (`$I`),
    input/output schema references, the gate registry, recovery policy, and receipt types.
-   The human-facing `SKILL.md` projection is rendered *from* it (md-render-as-encode), never
-   hand-maintained beside it.
+   The human-facing `SKILL.md` projection is rendered *from* it (md-render-as-encode via
+   `@beep/md`, in wave-1 scope per DECISIONS §SKILL.md projection), never hand-maintained
+   beside it, and gated by re-extraction equality.
 2. **`Gate` registry** — per gate: id (LiteralKit domain), severity, applicability, typed
    evidence requirement, remediation owner. Evaluation semantics ported from ACS with
    attribution: fail-closed (unknown/invalid/missing → denial), audit-record fields bound to
    every verdict. Completion is unrepresentable while an applicable blocking gate lacks its
    evidence — the `qa-inventory/v1` required-count check generalized to construction-time.
+   Verdicts are **values** (a `Denied` verdict with its audit record), following the
+   `TierGateVerdict`/`ClaimGateResult` precedent; `TaggedErrorClass` errors are reserved for
+   real boundary failures (evidence decode failure, invariant violation).
 3. **Evidence-ladder ADT** — `Accepted → Persisted → Delivered → SemanticallyApplied` with
    terminal union `LiveVerified | DeployableBlocked | FailedWithPartialEffects`; transitions
    are monotonic and each rung demands its evidence type. The ladder is the completion algebra;
@@ -52,18 +58,21 @@ A new foundation capability package — working name `@beep/skill-contract`
    `EvidenceReceipt` (digest-bound subject, versioned `predicateType`, typed predicate),
    `FailureReceipt` (attempts, budgets consumed, partial effects, terminal reason), and a
    SLSA-VSA-shaped `GateSummary` ("all blocking gates passed", referencing exact policy and
-   input digests). DSSE signing is a later wave; export is a projection.
-5. **Bounded recovery service** — a `Context.Service` whose budgets (attempt count, per-try
-   timeout, retry count, wall time) are schema data and whose every attempt emits a receipt;
-   aborting yields a structured no-result receipt instead of synthesized text.
+   input digests). DSSE signing is a later wave; export is a projection. The bounded-recovery
+   *service* that would consume the budget/attempt schemas is deferred to its first real
+   consumer (KG or ops wave) — schemas ship now, engine later (DECISIONS §bounded-recovery).
 
 Substrate discipline: build on `LiteralKit`/`$I`/`withKeyDefaults`; extend Effect AI's
 `Tool`/`Toolkit` rather than compete; reuse `VerifiedTextAnchor`'s receipt-vs-capability split
-(opaque constructor = the only path to a "verified" value).
+(opaque constructor = the only path to a "verified" value). Dependency ceiling: modeling may
+import only `foundation/primitive` + `foundation/modeling` — all kernel deps (`@beep/schema`,
+`@beep/identity`, `@beep/provenance`, `@beep/md`) comply.
 
-First consumer retrofit (pick at decompose): express the `qa-inventory/v1` judge gate **or**
-a yeet verdict lane as a `SkillContract` instance, proving the kernel composes with a live
-workflow rather than existing beside it.
+First consumer retrofit (locked at grill): express the `qa-inventory/v1` judge gate as a
+`SkillContract` instance — its findings/evidence-refs/required-count invariant maps onto the
+Gate + EvidenceReceipt families, and `JudgeCheck`'s artifact/witness cross-checks become typed
+gate evidence — proving the kernel composes with a live workflow rather than existing beside
+it. The wave-1 projection proof renders that contract's own SKILL.md.
 
 ## Rabbit holes
 

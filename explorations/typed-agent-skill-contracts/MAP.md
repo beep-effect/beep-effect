@@ -1,0 +1,68 @@
+# Typed Agent Skill Contracts — Map
+
+<!--
+Stage 4. Candidate goal packets, sequencing with rationale, the first vertical
+slice, inherited risks, and the capability check. Sources: BRIEF.md,
+DECISIONS.md, research/inventory/ verdict tables.
+-->
+
+## Candidate goal packets
+
+| # | Slug | Mission | Depends on | Status |
+|---|------|---------|-----------|--------|
+| 1 | `skill-contract-kernel` | Build `@beep/skill-contract` (foundation/modeling, schemas-only), retrofit the `qa-inventory/v1` judge gate as its first live consumer, and render + re-extraction-gate its SKILL.md projection via `@beep/md`. | — | **GRADUATED 2026-08-13** → [`goals/skill-contract-kernel/`](../../goals/skill-contract-kernel/) |
+| 2 | `kg-ingestion-contracts` | Typed source→KG ingestion pipeline: frozen `IngestionManifest`, phase-typed state machine with compensations, canonical-IRI policy service with evidence-bearing decisions, claim-level span ledger emitting PROV-O; Barrister-style gold-path CI gates. | 1 (receipts, ladder) | candidate |
+| 3 | `ops-evidence-ladder` | Evidence-ladder retrofit onto yeet verdict/monitor lanes; first real implementation of the bounded-recovery service against the kernel's budget/attempt schemas. | 1 | candidate |
+| 4 | `browser-lease-capabilities` | Fresh-ref epochs, exclusive tab leases with fencing, capability-scoped default-off browser action set, human-handoff protocol state for the beep qa loop. | 1 (gates) | candidate |
+| 5 | `memory-routing-manifest` | Intent→context routing manifest as schema-validated data (extending `@beep/ai-sync`), plus the transcript-audit gate proving memory reads preceded first response; SKILL.md projections for `.claude/skills` become kernel-backed here. | 1 (contract root, projection) | candidate |
+| 6 | `fleet-protocol-contracts` | A2A/ActivityPub typed protocol clients with discovery-before-invocation phase typing; credential-chain state machine; shared OAuth/PKCE service. | 1 (evidence types) | candidate |
+
+## Sequencing rationale
+
+DECISIONS §spine track: the kernel is the dependency of every other wave, the ACS/in-toto
+research findings land in it, and it has immediate in-repo consumers. Waves 2–6 are ordered by
+product pull (KG work feeds the legal/patent bet), retrofit concreteness (yeet, qa), then
+greenfield surface (protocols last — least consumer pull until kernel evidence types exist).
+Waves 2–6 graduate only after their own shape passes the definition-of-ready; the exploration
+packet stays `active` as their home.
+
+## First vertical slice (inside goal 1)
+
+Define `Gate` + `EvidenceReceipt` schemas only; express **one** existing `JudgeCheck` rule
+(cited-artifact-exists) as a typed gate returning a fail-closed verdict value; prove behavior
+parity with the existing check in tests. Only then widen to the full `SkillContract` root,
+ladder ADT, remaining receipt families, and the SKILL.md projection. If the slice fights the
+substrate (e.g. opaque-constructor ergonomics), the fight surfaces before the surface is wide.
+
+## Capability check
+
+Per the graduation contract: every major component cites an existing repo capability or is
+explicitly NET-NEW. Verdicts from [`research/inventory/`](./research/inventory/) (full
+`file:line` tables inside):
+
+| Component | Verdict | Source |
+|-----------|---------|--------|
+| Literal domains, derived guards, tagged unions (`LiteralKit`) | EXISTS | `@beep/schema` — [contract-kernel-evidence.md §1](./research/inventory/contract-kernel-evidence.md) |
+| Identity/annotation composers (`$I`) | EXISTS | `@beep/identity` — same §1 |
+| Schema defaults (`withKeyDefaults`) | EXISTS | `@beep/schema` — same §1 |
+| Receipt-vs-capability split (opaque constructor) | EXISTS | `@beep/provenance` `VerifiedTextAnchor` — same §5 |
+| Verdict-as-value precedent | EXISTS | `@beep/mcp-kit` `TierGateVerdict`, `@beep/epistemic-use-cases` `ClaimGateResult` — same §5, [protocol-query-memory.md §2](./research/inventory/protocol-query-memory.md) |
+| Retrofit target schemas + evidence cross-checks | EXISTS | `@beep/repo-cli` `Inventory.schemas.ts`, `JudgeCheck.ts` — contract-kernel-evidence.md §4 |
+| Markdown document model for the projection | EXISTS | `@beep/md` (render-as-encode; parked idea now activated) |
+| `SkillContract` aggregate root | NET-NEW | contract-kernel-evidence.md verdict table, port 1 |
+| Evidence-ladder ADT + terminal union | NET-NEW | same, port 2 |
+| In-toto-aligned receipt family (`EvidenceReceipt`/`FailureReceipt`/`GateSummary`) | NET-NEW (vocabulary from in-toto/SLSA) | same, ports 1/4; [workflow-evidence-frameworks.md §6](./research/landscape/workflow-evidence-frameworks.md) |
+| Fail-closed gate evaluation + audit records | NET-NEW (vocabulary from ACS) | [skill-contract-formats.md §9](./research/landscape/skill-contract-formats.md) |
+| Bounded-recovery service | NET-NEW, **deferred** (schemas only in wave 1) | DECISIONS §bounded-recovery |
+
+## Inherited risks
+
+- **Retrofit parity**: the qa judge gate is live tooling; the retrofit must prove behavioral
+  parity, not adjacent behavior (first-slice test requirement above).
+- **Projection without its real consumers**: the SKILL.md projection ships before
+  `.claude/skills` files consume it (operator accepted; DECISIONS §SKILL.md projection) — the
+  re-extraction gate must be real, or the projection is decoration.
+- **Spec churn upstream**: ACS is 0.3.1-beta; vocabulary is ported, not depended on. in-toto
+  alignment is shape-only (unsigned), so drift risk is low.
+- **Naming adjacency**: agents slice owns a persisted `Skill` entity; kernel symbols must stay
+  distinct (`SkillContract`, not `Skill`).

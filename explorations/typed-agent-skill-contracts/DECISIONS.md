@@ -59,3 +59,106 @@ not a migration.
 signing drags key management and signer identity into a first slice where no consumer requires
 signatures. Rejected: full in-toto from day one (key discipline too early); lean native shape
 (re-derives what in-toto standardized, makes export a migration).
+
+## 2026-08-13 — kernel home (grill-with-docs)
+
+**Question:** Where does the contract kernel live, and does the bounded-recovery service ship
+inside it? The brief drafted "a new foundation capability package" — doctrine pushes back.
+
+**Answer:** `packages/foundation/modeling/<name>`, **schemas-only**: SkillContract/Gate/
+ladder/receipt schema families plus pure opaque-constructor gate evaluation, sibling to
+`@beep/provenance`. The effectful bounded-recovery `Context.Service` is OUT of the spine
+package — it lands with its first consumer and may promote to `foundation/capability` only
+once the ≥2-importer gate is genuinely met.
+
+**Rationale:** `foundation/capability` carries a hard negative gate (≥2 named consumers
+currently importing, per `standards/architecture/07-non-slice-families.md`) that a new package
+fails at birth — and both retrofit candidates (qa judge gate, yeet lane) live in the same
+importer (`@beep/repo-cli`). `foundation/modeling` is the canonical home for reusable schema
+substrate with no consumer gate, and `@beep/provenance` (schemas + opaque verifier consumed by
+the epistemic slice) is the exact shape precedent. Rejected: foundation/capability as drafted
+(gate violation needing a doctrine waiver); agents slice domain (its `Skill` is a thin
+persisted product entity — the kernel is cross-cutting substrate, not one slice's product
+language); tooling/library (07 forbids routing reusable runtime substrate through tooling).
+
+## 2026-08-13 — kernel name (grill-with-docs)
+
+**Question:** Package name under `packages/foundation/modeling/`?
+
+**Answer:** `@beep/skill-contract` (the brief's working name, confirmed).
+
+**Rationale:** Precise about what it models; hyphenated modeling/foundation names have
+precedent (`api-transport`, `pandoc-ast`, `mcp-kit`). The agents slice's persisted `Skill`
+entity is a distinct symbol with distinct meaning — nominal, not real, collision. Rejected:
+`@beep/agent-contract` (collides harder with the agents slice name; less precise about the
+flagship `SkillContract` aggregate), `@beep/work-contract` (compresses nothing).
+
+## 2026-08-13 — bounded-recovery service dropped from wave 1 (grill-with-docs)
+
+**Question:** Does the bounded-recovery service survive in wave 1 at all, now that it's out of
+the kernel package?
+
+**Answer:** Dropped from wave 1 entirely. Its *receipt and budget schemas* (`FailureReceipt`,
+budget shapes, attempt receipts) still land in the kernel package, so the service — when a
+real consumer arrives in the KG or ops wave — implements against already-locked types.
+
+**Rationale:** The qa judge-gate retrofit has no retry loop; the natural consumers
+(uriburner-style KG loops, yeet monitor) are later waves. Building the engine now is a
+speculative abstraction with no caller. Rejected: slice/tool-local implementation in wave 1
+(keeps the brief's sketch intact but ships an engine nothing needs this cycle).
+
+## 2026-08-13 — first retrofit consumer (grill-with-docs)
+
+**Question:** Which existing workflow is the wave-1 retrofit proving the kernel composes?
+
+**Answer:** The `qa-inventory/v1` judge gate: its findings/evidence-refs/required-count
+invariant maps directly onto the Gate + EvidenceReceipt families, and `JudgeCheck`'s
+artifact/witness cross-checks become typed gate evidence.
+
+**Rationale:** Smallest already-schema-validated surface with the clearest before/after story.
+Rejected: a yeet verdict lane (higher long-term leverage but churn-heavy mid CI-hardening; the
+ladder gets validated against yeet in the ops wave); both (retrofit sprawl, violates the
+brief's rabbit-hole guard).
+
+## 2026-08-13 — verdicts are values; kernel deps (derived from doctrine, not asked)
+
+`standards/architecture/09-errors-across-boundaries.md` + uniform repo precedent
+(`TierGateVerdict`, `ClaimGateResult`, qa judge checks) settle the kernel's failure model:
+gate outcomes are **values** — fail-closed is a `Denied` verdict value carrying its audit
+record — and `TaggedErrorClass` errors are reserved for real boundary failures (evidence
+decode failure, invariant violation). No new error kind crosses any boundary.
+Family dependency rules (ARCHITECTURE.md §Family And Kind Dependency Rules): modeling may
+depend only on `primitive`+`modeling`, so the kernel's deps (`@beep/schema`, `@beep/identity`,
+`@beep/provenance`, `@beep/md`) are legal; tooling may import any foundation kind (qa retrofit
+legal); slice `domain` may import modeling (future slice consumers legal). No architecture
+DECISIONS.md entry needed — every choice complies with existing doctrine.
+
+## 2026-08-13 — SKILL.md projection in wave 1, via @beep/md (grill-with-docs)
+
+**Question:** Is the SKILL.md render-as-encode projection in wave-1 scope, given the qa
+retrofit doesn't consume it?
+
+**Answer:** IN wave 1 (operator overrode the defer recommendation), built on `@beep/md` —
+render a SKILL.md projection from a `SkillContract` instance as an `S.encode` of the
+`@beep/md` document model, gated by re-extraction equality (decode the rendered artifact back
+and prove it matches the contract).
+
+**Rationale:** It is the packet's authoritative-artifact re-extraction thesis (pattern 3) made
+concrete in the spine — the operator values the thesis demonstration over the tightest
+appetite. The defer option (no wave-1 caller) was rejected knowingly; the projection's
+real consumers (.claude/skills SKILL.md files) arrive in the memory-routing wave, and the
+wave-1 proof renders the qa judge-gate contract's own projection.
+
+## 2026-08-13 — graduation shape (grill-with-docs)
+
+**Question:** What graduates into `goals/` in this PR — just the spine goal, or later-wave
+goals too?
+
+**Answer:** One spine goal: `goals/skill-contract-kernel/` (kernel package + qa retrofit +
+SKILL.md projection), graduated in the same PR as the exploration updates (operator request).
+`MAP.md` names the later-wave candidates ungraduated; the exploration keeps `status=active`
+as their home per the graduation contract's "keep active if candidates remain".
+
+**Rationale:** Goals should be born ready to work; the four later waves have no briefs yet —
+scaffolding them now would create empty shells violating the per-candidate definition-of-
+ready. Rejected: graduating all five waves (names the program but ships four unready shells).
