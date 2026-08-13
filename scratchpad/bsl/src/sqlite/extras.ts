@@ -344,6 +344,7 @@ export type Callback<F extends { readonly [key: string]: Field.Input }> = (
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const compositeUnique = <const Name extends string, const Columns extends CompositeColumns>(
   name: Name & ValidateSqlName<Name, "Table.compositeUnique name must be a lowercase SQL identifier">,
   columns: Columns & ValidateDistinctColumns<Columns>,
@@ -370,6 +371,7 @@ export const compositeUnique = <const Name extends string, const Columns extends
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const compositePrimaryKey = <const Name extends string, const Columns extends CompositeColumns>(
   name: Name & ValidateSqlName<Name, "Table.compositePrimaryKey name must be a lowercase SQL identifier">,
   columns: Columns & ValidateDistinctColumns<Columns> & ValidatePrimaryKeyColumns<Columns>,
@@ -399,6 +401,7 @@ export const compositePrimaryKey = <const Name extends string, const Columns ext
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const index = <const Name extends string, const Columns extends NonEmptyColumns>(
   name: Name & ValidateSqlName<Name, "Table.index name must be a lowercase SQL identifier">,
   columns: Columns & ValidateDistinctColumns<Columns>,
@@ -463,6 +466,7 @@ export const check: {
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const unsafeCheckSql = <const Name extends string>(
   name: Name & ValidateSqlName<Name, "Table.unsafeCheckSql name must be a lowercase SQL identifier">,
   value: string,
@@ -495,6 +499,7 @@ const validateColumns = (node: Node): void => {
 
 /** Validate a model's complete declared extra set before Drizzle emission. */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const validateNodes = (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void => {
   const names = nodes.map((node) => node.name);
   if (new Set(names).size !== names.length) {

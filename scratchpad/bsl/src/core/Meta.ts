@@ -24,6 +24,7 @@ export class SqlExpressionError extends TaggedError<SqlExpressionError>(
 
 /** Reject parameters in CHECK, partial-index, generated, and default expressions. */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const assertNoSqlParameters = (
   params: ReadonlyArray<unknown>,
   context: string,
@@ -217,6 +218,7 @@ export type Merge<M extends Meta, P extends Patch> = {
 
 /** Merge a literal-preserving patch into existing metadata. */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function merge<const M extends Meta, const P extends Patch>(
   meta: M,
   patch: P,

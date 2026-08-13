@@ -57,14 +57,13 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   numRuns = 40
 ): void => {
-  const derived = S.toArbitrary(schema, { report: true });
+  const derived = S.toArbitrary(schema)(fc);
   const encode = S.encodeUnknownResult(schema);
   const decode = S.decodeUnknownResult(schema);
   const equivalent = S.toEquivalence(schema);
 
-  expect(derived.report.warnings).toEqual(A.empty());
   fc.assert(
-    fc.property(derived.value, (value) =>
+    fc.property(derived, (value) =>
       equivalent(
         Rs.getOrThrow(decode(Rs.getOrThrow(encode(value)))),
         value

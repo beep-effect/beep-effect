@@ -594,7 +594,7 @@ const ClaimConflictDefinition = S.TaggedUnion({
 export const ClaimConflict = ClaimConflictDefinition.pipe(
   $I.annoteSchema("ClaimConflict", {
     description: "Tagged claim conflict with status-specific nested resolution data.",
-    toArbitrary: () => () => S.toArbitrary(ClaimConflictDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(ClaimConflictDefinition)(fc),
   })
 );
 

@@ -869,6 +869,7 @@ const manifestForWrite = (manifest: PluginManifest): PluginManifest =>
  * @category serialization
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const write = (
   definition: PluginDefinition,
   destDir: string

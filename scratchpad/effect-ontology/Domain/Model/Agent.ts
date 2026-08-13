@@ -410,7 +410,7 @@ export const PipelineStatus = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("PipelineStatus", {
     description: "Canonical discriminated lifecycle state for an agent pipeline.",
-    toArbitrary: () => () =>
+    toArbitrary: () => (fc) =>
       S.toArbitrary(
         S.TaggedUnion({
           Pending: {},
@@ -419,7 +419,7 @@ export const PipelineStatus = S.TaggedUnion({
           Completed: { completedAt: S.DateTimeUtcFromString },
           Failed: { failedAt: S.DateTimeUtcFromString, error: S.NonEmptyString },
         })
-      ),
+      )(fc),
   })
 );
 
@@ -1017,7 +1017,7 @@ const AgentEventDefinition = S.TaggedUnion({
 export const AgentEvent = AgentEventDefinition.pipe(
   $I.annoteSchema("AgentEvent", {
     description: "Agent-execution and pipeline-checkpoint lifecycle event union.",
-    toArbitrary: () => () => S.toArbitrary(AgentEventDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(AgentEventDefinition)(fc),
   })
 );
 

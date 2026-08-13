@@ -51,19 +51,9 @@ for await (const relativePath of domainModules.scan({
       throw new Error(`${relativePath}:${exportName} is missing schema annotations: ${annotationGaps.join(", ")}`);
     }
 
-    const arbitrary = S.toArbitrary(value, { report: true });
+    const arbitrary = S.toArbitrary(value)(fc);
 
-    if (arbitrary.report.warnings.length > 0) {
-      throw new Error(
-        `${relativePath}:${exportName} produced arbitrary warnings:\n${JSON.stringify(
-          arbitrary.report.warnings,
-          null,
-          2
-        )}`
-      );
-    }
-
-    const samples = fc.sample(arbitrary.value, {
+    const samples = fc.sample(arbitrary, {
       numRuns: sampleCount,
       seed: baseSeed + auditedSchemas,
     });

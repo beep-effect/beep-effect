@@ -214,7 +214,7 @@ const CircuitErrorDefinition = S.Union([CircuitOpenError, RateLimitError]).pipe(
 export const CircuitError = CircuitErrorDefinition.pipe(
   $I.annoteSchema("CircuitError", {
     description: "Exhaustive tagged union of circuit-open and rate-limit failures.",
-    toArbitrary: () => () => S.toArbitrary(CircuitErrorDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(CircuitErrorDefinition)(fc),
   })
 );
 

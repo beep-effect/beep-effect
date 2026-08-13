@@ -907,6 +907,7 @@ export type ResolveName<C extends Spec, Key extends string> =
   C extends Enum<"", infer Value> ? Enum<Key, Value> : C;
 
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function resolveName<C extends Spec, const Key extends string>(
   spec: C,
   key: Key,
@@ -928,6 +929,7 @@ export type StorageIdent<C extends Spec, Dimensions extends ArrayDimension> = Di
   : `array<${IdentOf<C>},${Dimensions}>`;
 
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function storageIdent<C extends Spec, D extends ArrayDimension>(
   spec: C,
   dimensions: D,
@@ -1055,6 +1057,7 @@ export const carrierTag = (spec: Spec): CarrierTag => {
 };
 
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const carrier = (spec: Spec, dimensions: ArrayDimension): Carrier => ({
   tag: carrierTag(spec),
   dimensions,

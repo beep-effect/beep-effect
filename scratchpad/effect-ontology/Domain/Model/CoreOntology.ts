@@ -600,7 +600,7 @@ class EventIntervalFieldsModel extends S.Class<EventIntervalFieldsModel>($I`Even
 ) {}
 
 const makeEventIntervalArbitrary = (fc: typeof FastCheck) =>
-  S.toArbitrary(S.DateTimeUtcFromString).chain((start) =>
+  S.toArbitrary(S.DateTimeUtcFromString)(fc).chain((start) =>
     fc.boolean().map((hasEnd) =>
       EventIntervalFieldsModel.make({
         start,
@@ -704,7 +704,7 @@ const EventTimeDefinition = S.TaggedUnion({
 export const EventTime = EventTimeDefinition.pipe(
   $I.annoteSchema("EventTime", {
     description: "Unspecified, instant, or interval temporal grounding for a tracked event.",
-    toArbitrary: () => () => S.toArbitrary(EventTimeDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(EventTimeDefinition)(fc),
   })
 );
 

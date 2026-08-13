@@ -72,6 +72,7 @@ export const matchValue = (pattern: string | RegExp): ((name: string) => boolean
  * console.log(Hook.testTool("Bash", "Bash"))
  * ```
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const testValue = (pattern: string | RegExp, name: string): boolean => matchValue(pattern)(name);
 
 /**
@@ -158,4 +159,5 @@ export const matchFileName = (pattern: string | RegExp): ((name: string) => bool
  * console.log(Hook.testTool)
  * ```
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const testTool = testValue;

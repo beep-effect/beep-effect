@@ -169,12 +169,12 @@ const makeOntologyEmbeddingsArbitrary = (fc: typeof FastCheck) => {
 
   return fc
     .record({
-      ontologyUri: S.toArbitrary(GcsUri),
-      version: S.toArbitrary(ContentHash),
+      ontologyUri: S.toArbitrary(GcsUri)(fc),
+      version: S.toArbitrary(ContentHash)(fc),
       model: fc.constantFrom("nomic-embed-text-v1.5", "text-embedding-3-small"),
-      createdAt: S.toArbitrary(S.DateTimeUtcFromString),
-      classes: fc.array(S.toArbitrary(ElementEmbedding), { maxLength: 16 }),
-      properties: fc.array(S.toArbitrary(ElementEmbedding), { maxLength: 16 }),
+      createdAt: S.toArbitrary(S.DateTimeUtcFromString)(fc),
+      classes: fc.array(S.toArbitrary(ElementEmbedding)(fc), { maxLength: 16 }),
+      properties: fc.array(S.toArbitrary(ElementEmbedding)(fc), { maxLength: 16 }),
     })
     .map(({ ontologyUri, version, model, createdAt, classes, properties }) =>
       OntologyEmbeddingsFieldsModel.make({
@@ -291,7 +291,7 @@ const OntologyEmbeddingsJsonDefinition = OntologyEmbeddings.pipe(S.fromJsonStrin
 export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
   $I.annoteSchema("OntologyEmbeddingsJson", {
     description: "JSON string codec for versioned ontology-embedding artifacts.",
-    toArbitrary: () => () => S.toArbitrary(OntologyEmbeddingsJsonDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(OntologyEmbeddingsJsonDefinition)(fc),
   })
 );
 

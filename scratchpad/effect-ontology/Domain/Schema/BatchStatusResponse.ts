@@ -84,7 +84,7 @@ const BatchStatusResponseDefinition = S.TaggedUnion({
 export const BatchStatusResponse = BatchStatusResponseDefinition.pipe(
   $I.annoteSchema("BatchStatusResponse", {
     description: "Discriminated batch query response with variant-owned state, suspension, or missing data.",
-    toArbitrary: () => () => S.toArbitrary(BatchStatusResponseDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(BatchStatusResponseDefinition)(fc),
   })
 );
 

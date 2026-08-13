@@ -6,9 +6,10 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { YamlTextToUnknown } from "@beep/schema";
-import { Str } from "@beep/utils";
+import { Str, thunk0 } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -126,7 +127,7 @@ const splitFrontmatter = (source: string): O.Option<SplitFrontmatter> => {
 
   return Str.match(closingDelimiter)(afterOpen).pipe(
     O.map((match) => {
-      const index = O.getOrElse(O.fromUndefinedOr(match.index), () => 0);
+      const index = O.getOrElse(O.fromUndefinedOr(match.index), thunk0);
       return {
         yaml: Str.slice(0, index)(afterOpen),
         body: Str.slice(index + Str.length(match[0]))(afterOpen),
@@ -137,8 +138,14 @@ const splitFrontmatter = (source: string): O.Option<SplitFrontmatter> => {
 
 const decodeYamlText = S.decodeUnknownEffect(YamlTextToUnknown);
 
-const decodeYaml = (path: string, yaml: string): Effect.Effect<unknown, FrontmatterParseError> =>
-  decodeYamlText(yaml).pipe(Effect.mapError((cause) => FrontmatterParseError.make({ path, cause })));
+const decodeYaml: {
+  (path: string, yaml: string): Effect.Effect<unknown, FrontmatterParseError>;
+  (yaml: string): (path: string) => Effect.Effect<unknown, FrontmatterParseError>;
+} = dual(
+  2,
+  (path: string, yaml: string): Effect.Effect<unknown, FrontmatterParseError> =>
+    decodeYamlText(yaml).pipe(Effect.mapError((cause) => FrontmatterParseError.make({ path, cause })))
+);
 
 const decodeFrontmatter = <Schema extends S.Top>(
   path: string,

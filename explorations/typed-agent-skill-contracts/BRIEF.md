@@ -1,0 +1,89 @@
+# Typed Agent Skill Contracts — Brief
+
+<!--
+Stage 3. Shape Up pitch at fat-marker fidelity: concrete enough to decompose,
+rough enough to leave design latitude. Sources: CAPTURE.md, RESEARCH.md
+(2026-08-13 sections), DECISIONS.md. Exit: the operator confirms it matches
+the picture in their head.
+-->
+
+## Problem
+
+Agent work across beep's fleet — skills, QA judging, yeet closeout, KG pipelines, protocol
+clients — is governed by prose contracts plus workflow-specific validators. The OpenLink corpus
+is the cautionary tale at scale: a year of production-discovered contract shapes (65-gate
+delivery contracts, evidence ladders, bounded-recovery receipts) held together by regex and
+drifting prose, with generators violating their own contracts. beep is materially better off —
+it already has typed receipts in silos (`QualityIssue`, `qa-inventory/v1`,
+`VerifiedTextAnchor`, `ClaimGate`, `TierGate`) — but there is no shared contract kernel:
+completion claims are self-reported, evidence shapes don't compose across workflows, and every
+new surface re-derives its gates ad hoc. Research confirmed no external framework closes this
+loop either: ACS gates policy acceptability (not deliverables), A2A/MCP type transport
+lifecycles (`COMPLETED` is a server assertion), in-toto types evidence (but not skill
+promises). The composition is the open ground.
+
+## Appetite
+
+One focused cycle for the spine: the kernel package plus exactly one existing-consumer
+retrofit as proof of composition. Later waves (KG ingestion+eval, query/browser ops, memory
+routing, fleet protocol surface — in that provisional order, per DECISIONS §spine track) are
+separate goal packets, not this appetite. **[FLAGGED FOR REVIEW: is one cycle the right bound,
+and does "kernel + one retrofit" fit it?]**
+
+## Solution sketch
+
+A new foundation capability package — working name `@beep/skill-contract`
+**[FLAGGED FOR REVIEW: naming]** — holding four schema families and one service:
+
+1. **`SkillContract` root** — the aggregate binding a skill's promise: identity (`$I`),
+   input/output schema references, the gate registry, recovery policy, and receipt types.
+   The human-facing `SKILL.md` projection is rendered *from* it (md-render-as-encode), never
+   hand-maintained beside it.
+2. **`Gate` registry** — per gate: id (LiteralKit domain), severity, applicability, typed
+   evidence requirement, remediation owner. Evaluation semantics ported from ACS with
+   attribution: fail-closed (unknown/invalid/missing → denial), audit-record fields bound to
+   every verdict. Completion is unrepresentable while an applicable blocking gate lacks its
+   evidence — the `qa-inventory/v1` required-count check generalized to construction-time.
+3. **Evidence-ladder ADT** — `Accepted → Persisted → Delivered → SemanticallyApplied` with
+   terminal union `LiveVerified | DeployableBlocked | FailedWithPartialEffects`; transitions
+   are monotonic and each rung demands its evidence type. The ladder is the completion algebra;
+   transport-level "completed" (A2A/MCP/Temporal) maps to a low rung, never the top.
+4. **Receipts, in-toto-aligned and unsigned** (per DECISIONS §receipt shape) —
+   `EvidenceReceipt` (digest-bound subject, versioned `predicateType`, typed predicate),
+   `FailureReceipt` (attempts, budgets consumed, partial effects, terminal reason), and a
+   SLSA-VSA-shaped `GateSummary` ("all blocking gates passed", referencing exact policy and
+   input digests). DSSE signing is a later wave; export is a projection.
+5. **Bounded recovery service** — a `Context.Service` whose budgets (attempt count, per-try
+   timeout, retry count, wall time) are schema data and whose every attempt emits a receipt;
+   aborting yields a structured no-result receipt instead of synthesized text.
+
+Substrate discipline: build on `LiteralKit`/`$I`/`withKeyDefaults`; extend Effect AI's
+`Tool`/`Toolkit` rather than compete; reuse `VerifiedTextAnchor`'s receipt-vs-capability split
+(opaque constructor = the only path to a "verified" value).
+
+First consumer retrofit (pick at decompose): express the `qa-inventory/v1` judge gate **or**
+a yeet verdict lane as a `SkillContract` instance, proving the kernel composes with a live
+workflow rather than existing beside it.
+
+## Rabbit holes
+
+- **Signing/key management** — explicitly deferred; do not let DSSE sneak into the spine.
+- **A generic statechart engine** — steal XState vocabulary and testing ideas only; phase
+  typing is Effect schemas/services, not a runtime interpreter.
+- **Retrofit sprawl** — one consumer in the first slice; resist "while we're here" migrations
+  of every yeet lane and QA check.
+- **The ACS adapter** — vocabulary now, adapter later (DECISIONS §ACS posture); building the
+  adapter belongs to a later wave.
+- **Gates that claim semantic truth generically** — gates check typed evidence; semantic
+  validators are per-domain plugins. A receipt proves an assertion was made and bound to
+  bytes, not that it is true — re-extraction from authoritative artifacts is the only
+  generic truth mechanism this packet endorses (pattern 3).
+
+## No-gos
+
+- No porting OpenLink implementations (regex validators, shell harnesses, secret handling) —
+  contract *shapes* only, with attribution (SOURCES §2).
+- No new envelope/attestation format competing with in-toto — align, then project.
+- No protocol clients (A2A/ActivityPub) or credential-chain work in the spine.
+- No SLSA build-provenance claims where no build occurred — packet-specific predicates only.
+- No regex/substring gate evaluators — every gate decodes typed evidence or fails closed.

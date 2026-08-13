@@ -261,6 +261,7 @@ export const renameSession = (sessionTitle: string): Output =>
  *
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const watchPaths = (paths: ReadonlyArray<string>, options?: { readonly reloadSkills?: boolean }): Output =>
   Output.make({
     hookSpecificOutput: O.some(

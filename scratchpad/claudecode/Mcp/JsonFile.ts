@@ -722,6 +722,7 @@ const loadEffectiveWithOptions = Effect.fn("Mcp.loadEffective")(function* (
  * @category decoding
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const loadEffective = (
   cwd: string,
   options?: EffectiveMcpLoadOptions

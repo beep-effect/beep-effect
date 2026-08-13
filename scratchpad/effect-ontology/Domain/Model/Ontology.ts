@@ -280,7 +280,8 @@ class OntologyRefModel extends S.Class<OntologyRefModel>($I`OntologyRef`)(
  * @since 0.0.0
  */
 export const OntologyRef = OntologyRefModel.annotate({
-  toArbitrary: () => () => S.toArbitrary(S.Struct(OntologyRefFields)).map((fields) => OntologyRefModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(OntologyRefFields))(fc).map((fields) => OntologyRefModel.make(fields)),
 }).pipe(
   $I.annoteSchema("OntologyRef", {
     description: "Content-addressed reference to one immutable ontology version.",
@@ -397,8 +398,8 @@ class ClassDefinitionModel extends S.Class<ClassDefinitionModel>($I`ClassDefinit
  * @since 0.0.0
  */
 export const ClassDefinition = ClassDefinitionModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(ClassDefinitionFields)).map((fields) => ClassDefinitionModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(ClassDefinitionFields))(fc).map((fields) => ClassDefinitionModel.make(fields)),
 }).pipe(
   $I.annoteSchema("ClassDefinition", {
     description: "OWL or RDFS class metadata normalized for lookup and semantic search.",
@@ -562,8 +563,8 @@ class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel>($I`Proper
  * @since 0.0.0
  */
 export const PropertyDefinition = PropertyDefinitionModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(PropertyDefinitionFields)).map((fields) => PropertyDefinitionModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(PropertyDefinitionFields))(fc).map((fields) => PropertyDefinitionModel.make(fields)),
 }).pipe(
   $I.annoteSchema("PropertyDefinition", {
     description: "RDF or OWL property metadata normalized for validation and semantic search.",
@@ -966,8 +967,8 @@ class OntologyContextModel extends S.Class<OntologyContextModel>($I`OntologyCont
  * @since 0.0.0
  */
 export const OntologyContext = OntologyContextModel.annotate({
-  toArbitrary: () => () =>
-    S.toArbitrary(S.Struct(OntologyContextFields)).map((fields) => OntologyContextModel.make(fields)),
+  toArbitrary: () => (fc) =>
+    S.toArbitrary(S.Struct(OntologyContextFields))(fc).map((fields) => OntologyContextModel.make(fields)),
 }).pipe(
   $I.annoteSchema("OntologyContext", {
     description: "Immutable ontology snapshot with cycle-safe class and property hierarchy traversal.",

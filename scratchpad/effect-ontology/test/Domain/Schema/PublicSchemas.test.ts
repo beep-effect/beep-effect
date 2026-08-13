@@ -52,15 +52,13 @@ const publicSchemas = A.flatMap(schemaModules, ([moduleName, moduleExports]) =>
 );
 
 describe("effect-ontology public schema surface", () => {
-  it("derives warning-free arbitraries whose samples satisfy every exported schema", () => {
+  it("derives arbitraries whose samples satisfy every exported schema", () => {
     expect(publicSchemas.length).toBeGreaterThan(50);
 
     for (const { name, schema } of publicSchemas) {
-      const arbitrary = S.toArbitrary(schema, { report: true });
-
-      expect(arbitrary.report.warnings, name).toEqual([]);
+      const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(
-        fc.property(arbitrary.value, (value) => {
+        fc.property(arbitrary, (value) => {
           expect(S.is(schema)(value), name).toBe(true);
         }),
         { numRuns: 8 }

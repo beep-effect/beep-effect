@@ -110,6 +110,7 @@ export const processOutput = (options: {
  *
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const stderrExit = (stderr: string, exitCode = 2): HookProcessOutput => processOutput({ stderr, exitCode });
 
 /**
@@ -403,6 +404,7 @@ export const runDispatchProgram = Effect.fn("Hook.runDispatchProgram")(function*
  * console.log(Hook.hookTeardown)
  * ```
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const hookTeardown: Runtime.Teardown = <E, A>(exit: Exit.Exit<E, A>, onExit: (code: number) => void) => {
   if (Exit.isSuccess(exit)) return onExit(0);
   if (Cause.hasInterruptsOnly(exit.cause)) return onExit(130);

@@ -228,8 +228,8 @@ const ResolutionGraph = DirectedGraph({ node: ERNode, edge: EREdge }).pipe(
   $I.annoteSchema("ResolutionGraph", {
     description: "Immutable directed graph of entity-resolution nodes and edges.",
     toArbitrary: () => (fc) => {
-      const node = S.toArbitrary(ERNode);
-      const edge = S.toArbitrary(EREdge);
+      const node = S.toArbitrary(ERNode)(fc);
+      const edge = S.toArbitrary(EREdge)(fc);
 
       return fc.oneof(
         fc.constant(Graph.directed<ERNode, EREdge>()),

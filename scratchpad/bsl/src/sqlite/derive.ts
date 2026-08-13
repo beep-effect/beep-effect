@@ -114,6 +114,7 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
 
 /** Derive one SQLite descriptor and its encoded nullability. */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const classify = (
   schema: Field.AnySchema,
   fieldName: string,

@@ -349,6 +349,7 @@ const validateRepositoryModel = (model: AnyModel, idColumn: string): void => {
  * @category factories
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const makeRepository = <const M extends RepositoryModel, const Id extends IdKey<M>>(
   model: M & ValidateVersionModel<M> & ValidateColumnNames<M>,
   options: {

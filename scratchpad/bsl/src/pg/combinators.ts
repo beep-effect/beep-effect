@@ -492,6 +492,7 @@ export const unsafeCustom =
  * @category combinators
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function numeric(): <I extends Field.Input>(
   input: I & Field.ValidateEncoded<I, string, "pg.numeric requires a string-encoded schema">,
 ) => Field.Patched<I, { readonly column: PgColumn.Numeric<undefined, undefined> }>;
@@ -1124,6 +1125,7 @@ const everyArrayElement = (
  * @category combinators
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function array<const Element extends Field.Input>(
   element: Element & Field.ValidateArrayElement<Element>,
 ): <I extends Field.Input>(
@@ -1761,6 +1763,7 @@ type ValidateReferenceActions<I extends Field.Input, Options> =
           : Field.SqlTypeError<"SET DEFAULT references require a declared database default">
       : Field.SqlTypeError<"SET NULL references require a nullable encoded schema">;
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const references =
   <const Id extends EntityIdLike, const Options extends ReferenceOptions | undefined = undefined>(
     id: Id,

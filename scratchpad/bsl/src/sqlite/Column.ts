@@ -437,6 +437,7 @@ export type ArrayCarrier<Carrier, Dimensions extends ArrayDimension> =
   Dimensions extends 0 ? Carrier : never;
 
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function storageIdent<C extends Spec, Dimensions extends ArrayDimension>(
   spec: C,
   dimensions: Dimensions,
@@ -454,6 +455,7 @@ export interface Carrier {
   readonly dimensions: 0;
 }
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const carrier = (spec: Spec, dimensions: ArrayDimension): Carrier => {
   if (dimensions !== 0) return invariant("SQLite carriers cannot carry array dimensions.");
   return { tag: carrierTag(spec), dimensions };

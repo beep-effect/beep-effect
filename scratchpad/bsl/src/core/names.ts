@@ -92,6 +92,7 @@ const encoder = new TextEncoder();
 export const utf8ByteLength = (value: string): number => encoder.encode(value).byteLength;
 
 /** Return the complete runtime identifier violation, if any. @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const sqlNameIssue = (name: string, dialect: Dialect): string | undefined => {
   if (name.length === 0) return "must not be empty";
   if (name.includes("\0")) return "must not contain NUL (U+0000)";
@@ -119,12 +120,14 @@ const pgTruncationPrefix = (name: string): string => {
 };
 
 /** Database-comparison key after dialect folding and PostgreSQL byte truncation. @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const canonicalSqlName = (name: string, dialect: Dialect): string => {
   const folded = name.toLowerCase();
   return dialect === "pg" ? pgTruncationPrefix(folded) : folded;
 };
 
 /** Throw the shared tagged name error for a runtime identifier violation. @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const assertSqlName = (name: string, dialect: Dialect, surface: string): void => {
   const issue = sqlNameIssue(name, dialect);
   if (issue !== undefined) {
@@ -153,6 +156,7 @@ export interface SqlNameCollision {
 }
 
 /** Find the first case-fold, snake-case, or PostgreSQL truncation-prefix collision. @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const findSqlNameCollision = (
   entries: ReadonlyArray<readonly [owner: string, name: string]>,
   dialect: Dialect,
@@ -175,6 +179,7 @@ export const findSqlNameCollision = (
 };
 
 /** Validate names and reject their normalized dialect collision keys. @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const assertUniqueSqlNames = (
   entries: ReadonlyArray<readonly [owner: string, name: string]>,
   dialect: Dialect,

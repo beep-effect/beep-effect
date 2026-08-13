@@ -27,7 +27,7 @@ const annotateStoragePath =
   <Schema extends S.Schema<string>>(schema: Schema) =>
     schema
       .annotate({
-        toArbitrary: () => () => S.toArbitrary(schema),
+        toArbitrary: () => (fc) => S.toArbitrary(schema)(fc),
       })
       .pipe(
         $I.annoteSchema(name, {
@@ -42,7 +42,7 @@ const annotateParser =
 
     return schema
       .annotate({
-        toArbitrary: () => () => S.toArbitrary(schema),
+        toArbitrary: () => (fc) => S.toArbitrary(schema)(fc),
       })
       .pipe(
         $I.annoteSchema(name, {

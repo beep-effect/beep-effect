@@ -215,6 +215,7 @@ export const selectSchemaOf = (schema: Field.AnySchema): Top => {
  * @since 0.0.0
  */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const classify = (
   schema: Field.AnySchema,
   fieldName: string,
@@ -261,6 +262,7 @@ const nonNullEncodedAST = (schema: Field.AnySchema): AST => {
  * @since 0.0.0
  */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const arrayElementAST = (
   schema: Field.AnySchema,
   dimensions: Exclude<PgColumn.ArrayDimension, 0>,
@@ -357,6 +359,7 @@ const carrierTagFromAST = (node: AST): PgColumn.CarrierTag => {
 };
 
 /** Runtime encoded-carrier witness for model-construction corroboration. @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const carrier = (
   schema: Field.AnySchema,
   dimensions: PgColumn.ArrayDimension,

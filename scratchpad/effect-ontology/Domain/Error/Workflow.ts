@@ -191,7 +191,7 @@ const AnyWorkflowErrorDefinition = S.Union([WorkflowError, WorkflowNotFoundError
 export const AnyWorkflowError = AnyWorkflowErrorDefinition.pipe(
   $I.annoteSchema("AnyWorkflowError", {
     description: "Exhaustive tagged union of workflow execution failures.",
-    toArbitrary: () => () => S.toArbitrary(AnyWorkflowErrorDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(AnyWorkflowErrorDefinition)(fc),
   })
 );
 

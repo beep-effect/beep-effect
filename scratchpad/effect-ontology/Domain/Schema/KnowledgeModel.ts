@@ -16,8 +16,8 @@ import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import type { FastCheck } from "effect/testing";
 import { ContentHash, GcsUri } from "../Identity.ts";
-import { Confidence } from "../Model";
-import { AbsoluteIRI, NamedNode, ObjectTerm } from "../Rdf";
+import { Confidence } from "../Model/index.ts";
+import { AbsoluteIRI, NamedNode, ObjectTerm } from "../Rdf/index.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/KnowledgeModel");
 
@@ -353,7 +353,7 @@ const EvidenceSourceDefinition = S.TaggedUnion({
 const EvidenceSource = EvidenceSourceDefinition.pipe(
   $I.annoteSchema("EvidenceSource", {
     description: "Tagged evidence source containing either a GCS URI or an absolute resource IRI.",
-    toArbitrary: () => () => S.toArbitrary(EvidenceSourceDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(EvidenceSourceDefinition)(fc),
   })
 );
 
@@ -424,7 +424,7 @@ export class Evidence extends S.Class<Evidence>($I`Evidence`)(
  * @since 0.0.0
  */
 export const RdfObject = ObjectTerm.annotate({
-  toArbitrary: () => () => S.toArbitrary(ObjectTerm),
+  toArbitrary: () => (fc) => S.toArbitrary(ObjectTerm)(fc),
 }).pipe(
   $I.annoteSchema("RdfObject", {
     description: "Canonical RDF/JS named-node, blank-node, or literal object term.",

@@ -117,7 +117,7 @@ const runPush = tryPromise({
       ],
       {
         cwd: repositoryRoot,
-        env: { ...Bun.env, NODE_OPTIONS: nodeOptions },
+        env: { ...globalThis.process.env, NODE_OPTIONS: nodeOptions },
         stdout: "pipe",
         stderr: "pipe",
       },
@@ -401,12 +401,12 @@ describe.serial("@beep/effect-drizzle live SQLite gauntlet", () => {
         const missing = yield* option(repository.findById(inserted.id));
 
         expect(inserted.id).toBeGreaterThan(0);
-        expect(formatIso(inserted.createdAt)).toBe(formatIso(request.createdAt));
-        expect(formatIso(inserted.updatedAt)).toBe(formatIso(request.updatedAt));
+        expect(inserted.createdAt.pipe(formatIso)).toBe(request.createdAt.pipe(formatIso));
+        expect(inserted.updatedAt.pipe(formatIso)).toBe(request.updatedAt.pipe(formatIso));
         expect(found.id).toBe(inserted.id);
         expect(inserted.nickname.pipe(isNone)).toBe(true);
         expect(updated.nickname.pipe(getOrUndefined)).toBe("round-seven");
-        expect(formatIso(updated.updatedAt)).toBe(formatIso(update.updatedAt));
+        expect(updated.updatedAt.pipe(formatIso)).toBe(update.updatedAt.pipe(formatIso));
         expect(missing.pipe(isNone)).toBe(true);
       }),
     ));

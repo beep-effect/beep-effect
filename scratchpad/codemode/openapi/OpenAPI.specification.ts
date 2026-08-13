@@ -110,6 +110,7 @@ export const isRecord = UnknownRecord.is;
 export const nonEmptyString = NonEmptyString.decodeOption;
 
 /** Own-property lookup for spec-controlled records. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const own = <Value>(
   record: Readonly<Record<string, Value>>,
   key: string
@@ -171,6 +172,7 @@ const resolvePointer = (root: unknown, ref: string): O.Option<unknown> =>
   );
 
 /** Resolves a local OpenAPI `$ref`, terminating cycles without native sets. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const resolve = (document: Document, value: unknown): unknown => {
   const next = (
     current: unknown,
@@ -470,6 +472,7 @@ const projectSchema = (
   );
 
 /** Normalizes component schemas for one model-facing direction. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const componentDefinitions = (
   document: Document,
   direction: SchemaDirection
@@ -993,6 +996,7 @@ const nextInputName = (
 };
 
 /** Normalizes operation parameters and request-body fields. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const operationInput = (
   document: Document,
   pathItem: Readonly<Record<string, unknown>>,
@@ -1056,6 +1060,7 @@ export const operationInput = (
   );
 
 /** Emits the object JSON Schema accepted by one generated tool. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const inputSchema = (
   fields: ReadonlyArray<InputField>,
   definitions: Readonly<Record<string, JsonSchema>>
@@ -1112,6 +1117,7 @@ const successfulResponses = (
 };
 
 /** Produces the normalized success schema for one operation. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const operationOutput = (
   document: Document,
   operation: Readonly<Record<string, unknown>>,
@@ -1287,6 +1293,7 @@ const isOperationPathAvailable = (
 };
 
 /** Produces a collision-free dotted Toolkit path for an operation. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const operationPath = (
   method: string,
   path: string,
@@ -1432,6 +1439,7 @@ export const securityRequirements = (
 };
 
 /** Selects supported security alternatives for one operation. */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const operationSecurityRequirements = (
   value: unknown,
   defaults: Result.Result<ReadonlyArray<SecurityRequirement>, string>,

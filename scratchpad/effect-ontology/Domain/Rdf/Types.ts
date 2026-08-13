@@ -398,7 +398,12 @@ export type DefaultGraph = typeof DefaultGraph.Type;
 
 const TermFromSelf = S.declare((input: unknown): input is CanonicalTerm => CanonicalTerm.is(input)).annotate({
   toArbitrary: () => (fc) =>
-    fc.oneof(S.toArbitrary(NamedNode), S.toArbitrary(BlankNode), S.toArbitrary(Literal), S.toArbitrary(DefaultGraph)),
+    fc.oneof(
+      S.toArbitrary(NamedNode)(fc),
+      S.toArbitrary(BlankNode)(fc),
+      S.toArbitrary(Literal)(fc),
+      S.toArbitrary(DefaultGraph)(fc)
+    ),
 });
 
 /**
@@ -453,7 +458,7 @@ export const Term = CanonicalTerm.pipe(
 export type Term = typeof Term.Type;
 
 const SubjectFromSelf = S.declare((input: unknown): input is CanonicalSubject => CanonicalSubject.is(input)).annotate({
-  toArbitrary: () => (fc) => fc.oneof(S.toArbitrary(NamedNode), S.toArbitrary(BlankNode)),
+  toArbitrary: () => (fc) => fc.oneof(S.toArbitrary(NamedNode)(fc), S.toArbitrary(BlankNode)(fc)),
 });
 
 /**
@@ -504,7 +509,8 @@ export type Subject = typeof Subject.Type;
 const ObjectTermFromSelf = S.declare((input: unknown): input is CanonicalObjectTerm =>
   CanonicalObjectTerm.is(input)
 ).annotate({
-  toArbitrary: () => (fc) => fc.oneof(S.toArbitrary(NamedNode), S.toArbitrary(BlankNode), S.toArbitrary(Literal)),
+  toArbitrary: () => (fc) =>
+    fc.oneof(S.toArbitrary(NamedNode)(fc), S.toArbitrary(BlankNode)(fc), S.toArbitrary(Literal)(fc)),
 });
 
 /**
@@ -559,7 +565,8 @@ export type ObjectTerm = typeof ObjectTerm.Type;
 const GraphTermFromSelf = S.declare((input: unknown): input is CanonicalGraphTerm =>
   CanonicalGraphTerm.is(input)
 ).annotate({
-  toArbitrary: () => (fc) => fc.oneof(S.toArbitrary(NamedNode), S.toArbitrary(BlankNode), S.toArbitrary(DefaultGraph)),
+  toArbitrary: () => (fc) =>
+    fc.oneof(S.toArbitrary(NamedNode)(fc), S.toArbitrary(BlankNode)(fc), S.toArbitrary(DefaultGraph)(fc)),
 });
 
 /**
@@ -614,7 +621,12 @@ export type GraphTerm = typeof GraphTerm.Type;
 const QuadFromSelf = S.declare((input: unknown): input is CanonicalQuad => S.is(CanonicalQuad)(input)).annotate({
   toArbitrary: () => (fc) =>
     fc
-      .tuple(S.toArbitrary(Subject), S.toArbitrary(NamedNode), S.toArbitrary(ObjectTerm), S.toArbitrary(GraphTerm))
+      .tuple(
+        S.toArbitrary(Subject)(fc),
+        S.toArbitrary(NamedNode)(fc),
+        S.toArbitrary(ObjectTerm)(fc),
+        S.toArbitrary(GraphTerm)(fc)
+      )
       .map(([subject, predicate, object, graph]) => CanonicalQuad.make({ subject, predicate, object, graph })),
 });
 
@@ -668,7 +680,7 @@ export type Quad = typeof Quad.Type;
 const DatasetFromSelf = S.declare((input: unknown): input is CanonicalDataset =>
   S.is(CanonicalDataset)(input)
 ).annotate({
-  toArbitrary: () => (fc) => fc.array(S.toArbitrary(Quad), { maxLength: 8 }).map(makeDataset),
+  toArbitrary: () => (fc) => fc.array(S.toArbitrary(Quad)(fc), { maxLength: 8 }).map(makeDataset),
 });
 
 /**
@@ -868,7 +880,7 @@ class TripleModel extends S.Class<TripleModel>($I`Triple`)(
  * @since 0.0.0
  */
 export const Triple = TripleModel.annotate({
-  toArbitrary: () => () => S.toArbitrary(S.Struct(TripleFields)).map((fields) => TripleModel.make(fields)),
+  toArbitrary: () => (fc) => S.toArbitrary(S.Struct(TripleFields))(fc).map((fields) => TripleModel.make(fields)),
 }).pipe(
   $I.annoteSchema("Triple", {
     description: "Graph-free RDF statement backed by canonical RDF/JS term schemas.",

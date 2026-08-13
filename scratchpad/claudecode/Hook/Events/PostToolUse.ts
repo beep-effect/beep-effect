@@ -185,6 +185,7 @@ export const addContext = (additionalContext: string): Output =>
  * console.log(Hook.PostToolUse.replaceOutput)
  * ```
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const replaceOutput = (updatedToolOutput: unknown, additionalContext?: string): Output =>
   Output.make({
     hookSpecificOutput: O.some(
@@ -210,6 +211,7 @@ export const replaceOutput = (updatedToolOutput: unknown, additionalContext?: st
  *
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const replaceMcpOutput = (updatedMCPToolOutput: unknown, additionalContext?: string): Output =>
   Output.make({
     hookSpecificOutput: O.some(

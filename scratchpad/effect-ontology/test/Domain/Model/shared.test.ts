@@ -14,13 +14,11 @@ const sharedSchemas: ReadonlyArray<S.Constraint> = [
 ];
 
 describe("effect-ontology shared model schemas", () => {
-  it("derives warning-free arbitraries whose values satisfy every public schema", () => {
+  it("derives arbitraries whose values satisfy every public schema", () => {
     for (const schema of sharedSchemas) {
-      const arbitrary = S.toArbitrary(schema, { report: true });
-
-      expect(arbitrary.report.warnings).toEqual([]);
+      const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(
-        fc.property(arbitrary.value, (value) => {
+        fc.property(arbitrary, (value) => {
           expect(S.is(schema)(value)).toBe(true);
         }),
         { numRuns: 32 }

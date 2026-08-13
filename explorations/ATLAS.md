@@ -57,11 +57,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   `lynx-lkg-ontology-grounding`, `full-document-editor` (md-canonical
   D1–D27 binds layering).
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
-  research-stage. Next open question: which candidate contract bricks already
-  exist in-repo, and which are net-new? See the packet's
-  [`RESEARCH.md`](./typed-agent-skill-contracts/RESEARCH.md),
-  [`SOURCES.md`](./typed-agent-skill-contracts/research/SOURCES.md), and
-  [`SYNTHESIS.md`](./typed-agent-skill-contracts/research/mining/SYNTHESIS.md).
+  shape-stage (research + align closed 2026-08-13: spine = contract kernel +
+  evidence ladder; ACS vocabulary now, adapter later; in-toto-aligned
+  receipts). Next open question: brief review — appetite bound and kernel
+  package name. See the packet's
+  [`BRIEF.md`](./typed-agent-skill-contracts/BRIEF.md),
+  [`DECISIONS.md`](./typed-agent-skill-contracts/DECISIONS.md), and
+  [`RESEARCH.md`](./typed-agent-skill-contracts/RESEARCH.md).
 - [`harvey-lab-firm-knowledge`](./harvey-lab-firm-knowledge/README.md) —
   research-stage: mine Harvey + Engram's open-sourced synthetic law firm
   (Calderwood & Harkness — 266 matters, ~9.3k Office files, ~100M tokens, 250

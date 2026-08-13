@@ -60,7 +60,7 @@ const SubmitJobSourceDefinition = S.TaggedUnion({
 export const SubmitJobSource = SubmitJobSourceDefinition.pipe(
   $I.annoteSchema("SubmitJobSource", {
     description: "Discriminated inline-text or remote-HTTPS content source for an extraction job.",
-    toArbitrary: () => () => S.toArbitrary(SubmitJobSourceDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(SubmitJobSourceDefinition)(fc),
   })
 );
 
@@ -347,7 +347,7 @@ const JobStatusResponseDefinition = S.Union([
 export const JobStatusResponse = JobStatusResponseDefinition.pipe(
   $I.annoteSchema("JobStatusResponse", {
     description: "Lifecycle-discriminated extraction response with state-specific terminal data.",
-    toArbitrary: () => () => S.toArbitrary(JobStatusResponseDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(JobStatusResponseDefinition)(fc),
   })
 );
 

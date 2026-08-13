@@ -1,5 +1,6 @@
 /** Attach typed static helpers without a runtime type assertion. */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function assignStatics<Self extends object, Statics extends object>(
   self: Self,
   statics: Statics,
@@ -11,6 +12,7 @@ export function assignStatics(self: object, statics: object): object {
 
 /** Compute and attach typed statics to a value. */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const withStatics = <Self extends object, Statics extends object>(
   self: Self,
   make: (self: Self) => Statics,

@@ -64,6 +64,7 @@ export const plural = (value: string): string => `${camelCase(value)}s`;
 
 /** Derive the reverse relation name for one edge. */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const reverseRelationName = (edge: Edge, edges: ReadonlyArray<Edge>): string => {
   const ambiguous =
     edges.filter(
@@ -102,6 +103,7 @@ export type AssemblyFailure = (
 ) => never;
 
 /** Reject duplicate physical table names before dialect projection. @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const validatePhysicalTableNames = (
   models: RelationModels,
   dialect: Dialect,
@@ -133,6 +135,7 @@ export interface SchemaName {
 }
 
 /** Validate one dialect's complete schema-global object namespace. @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const validateSchemaNames = (
   names: ReadonlyArray<SchemaName>,
   dialect: Dialect,
@@ -210,6 +213,7 @@ const invokeRelationFactory = (
  * @since 0.0.0
  */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const makeRelationsConfig = <Tables extends Schema>(
   models: RelationModels,
   _tables: Tables,

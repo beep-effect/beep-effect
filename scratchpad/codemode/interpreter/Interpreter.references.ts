@@ -105,6 +105,7 @@ export const containsOpaqueReference = (value: unknown): boolean => {
 }
 
 // Reject cycles before mutation so later boundary walks remain safe.
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const rejectCircularInsertion = (container: object, value: unknown, label: string, node: AstNode): void => {
   const pending: Array<Iterator<unknown>> = [[value].values()]
   const seen = MutableHashSet.empty<object>()

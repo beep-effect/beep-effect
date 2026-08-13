@@ -64,6 +64,7 @@ const fail = (fieldName: string, astTag: string, message: string): never => {
 };
 
 /** Recursively unwrap encoded unions and suspensions for shared runtime checks. @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const flattenEncoded = (
   node: AST,
   fieldName: string,
@@ -82,6 +83,7 @@ export const flattenEncoded = (
 
 /** Derive one dialect column and nullability from a field's encoded AST. */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const classify = <Column extends Meta.ColumnSpec>(
   schema: Field.AnySchema,
   fieldName: string,

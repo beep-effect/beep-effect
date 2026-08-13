@@ -90,7 +90,7 @@ const DocumentStatusDefinition = S.TaggedUnion({
 export const DocumentStatus = DocumentStatusDefinition.pipe(
   $I.annoteSchema("DocumentStatus", {
     description: "Canonical discriminated lifecycle state for one document in a batch.",
-    toArbitrary: () => () => S.toArbitrary(DocumentStatusDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(DocumentStatusDefinition)(fc),
   })
 );
 
@@ -407,7 +407,7 @@ const validateTransition = (from: BatchStage, to: BatchStage): O.Option<string> 
 export const BatchState = BatchStateDefinition.pipe(
   $I.annoteSchema("BatchState", {
     description: "Discriminated batch-ingestion lifecycle with legal stage-specific payloads.",
-    toArbitrary: () => () => S.toArbitrary(BatchStateDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(BatchStateDefinition)(fc),
   }),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics(() => ({

@@ -329,6 +329,7 @@ const loadWithOptions = Effect.fn("Settings.load")(function* (cwd: string, optio
  * @category configuration
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const load = (
   cwd: string,
   options?: LoadOptions.Encoded

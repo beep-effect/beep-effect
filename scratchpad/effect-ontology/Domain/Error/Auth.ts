@@ -297,7 +297,7 @@ const AuthErrorDefinition = S.Union([
 export const AuthError = AuthErrorDefinition.pipe(
   $I.annoteSchema("AuthError", {
     description: "Exhaustive tagged union of ontology transport authentication failures.",
-    toArbitrary: () => () => S.toArbitrary(AuthErrorDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(AuthErrorDefinition)(fc),
   })
 );
 

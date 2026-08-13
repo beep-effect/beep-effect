@@ -413,6 +413,7 @@ export const passthrough = (): Output => Output.make();
  *
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const deny = (message: string, options?: { readonly interrupt?: boolean }): Output =>
   Output.make({
     hookSpecificOutput: O.some(

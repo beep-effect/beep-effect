@@ -245,7 +245,7 @@ export type LegacyContentHashPrefix = typeof LegacyContentHashPrefix.Type;
  * @since 0.0.0
  */
 export const ContentHash = Sha256Hex.annotate({
-  toArbitrary: () => () => S.toArbitrary(Sha256Hex),
+  toArbitrary: () => (fc) => S.toArbitrary(Sha256Hex)(fc),
 }).pipe(
   S.brand("ContentHash"),
   $I.annoteSchema("ContentHash", {
@@ -302,7 +302,7 @@ export type ContentHash = typeof ContentHash.Type;
  * @since 0.0.0
  */
 export const IdempotencyKey = Sha256Hex.annotate({
-  toArbitrary: () => () => S.toArbitrary(Sha256Hex),
+  toArbitrary: () => (fc) => S.toArbitrary(Sha256Hex)(fc),
 }).pipe(
   S.brand("IdempotencyKey"),
   $I.annoteSchema("IdempotencyKey", {
@@ -448,7 +448,7 @@ const GcsUriEncoded = S.TemplateLiteral(["gs://", GcsBucket, "/", GcsObjectName]
 const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => S.is(GcsUriEncoded)(input)).annotate({
   toArbitrary: () => (fc) =>
     fc
-      .tuple(S.toArbitrary(GcsBucket), S.toArbitrary(GcsObjectName))
+      .tuple(S.toArbitrary(GcsBucket)(fc), S.toArbitrary(GcsObjectName)(fc))
       .map(([bucket, objectName]): BrandedGcsUri => `gs://${bucket}/${objectName}` as BrandedGcsUri),
 });
 
@@ -759,7 +759,7 @@ export const OntologyVersion = S.TemplateLiteral([Namespace, "/", OntologyName, 
   S.annotate({
     toArbitrary: () => (fc) =>
       fc
-        .tuple(S.toArbitrary(Namespace), S.toArbitrary(OntologyName), S.toArbitrary(ContentHash))
+        .tuple(S.toArbitrary(Namespace)(fc), S.toArbitrary(OntologyName)(fc), S.toArbitrary(ContentHash)(fc))
         .map(([namespace, name, hash]): `${string}/${string}@${string}` => `${namespace}/${name}@${hash}`),
   }),
   S.brand("OntologyVersion"),
@@ -929,7 +929,7 @@ export type ChunkId = typeof ChunkId.Type;
  * @since 0.0.0
  */
 export const ExtractionRunId = DocumentId.annotate({
-  toArbitrary: () => () => S.toArbitrary(DocumentId),
+  toArbitrary: () => (fc) => S.toArbitrary(DocumentId)(fc),
 }).pipe(
   $I.annoteSchema("ExtractionRunId", {
     description: "Document identifier reused as the correlation identifier for its extraction run.",

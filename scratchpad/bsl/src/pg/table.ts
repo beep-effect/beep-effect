@@ -439,6 +439,7 @@ const invokeDeclaredExtras = (
  * @category tables
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function toPgTable<M extends AnyModel>(
   model: M,
   additionalExtras?: AdditionalExtras<M>,

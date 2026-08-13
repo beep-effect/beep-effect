@@ -9,13 +9,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import {$ScratchpadId} from "@beep/identity/packages";
-import {SchemaUtils} from "@beep/schema";
+import { $ScratchpadId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
+import { dual, O, P } from "@beep/utils";
 import * as Inspectable from "effect/Inspectable";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
-import {dual, O, P} from "@beep/utils";
-import {ErrorMessage, Milliseconds, OptionalErrorMessage} from "./Base.ts";
+import { ErrorMessage, Milliseconds, OptionalErrorMessage } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Activity");
 
@@ -100,7 +100,7 @@ const ActivityTimeoutErrorDefinition = ActivityErrorCases.cases.ActivityTimeout;
  * @since 0.0.0
  */
 export const ActivityTimeoutError = ActivityTimeoutErrorDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(ActivityTimeoutErrorDefinition),
+  toArbitrary: () => (fc) => S.toArbitrary(ActivityTimeoutErrorDefinition)(fc),
 }).pipe(
   $I.annoteSchema("ActivityTimeoutError", {
     description: "Serializable timeout at a named workflow activity stage.",
@@ -149,7 +149,7 @@ const ActivityServiceErrorDefinition = ActivityErrorCases.cases.ActivityServiceF
  * @since 0.0.0
  */
 export const ActivityServiceError = ActivityServiceErrorDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(ActivityServiceErrorDefinition),
+  toArbitrary: () => (fc) => S.toArbitrary(ActivityServiceErrorDefinition)(fc),
 }).pipe(
   $I.annoteSchema("ActivityServiceError", {
     description: "Serializable service-operation failure raised by a workflow activity.",
@@ -197,7 +197,7 @@ const ActivityNotFoundErrorDefinition = ActivityErrorCases.cases.ActivityNotFoun
  * @since 0.0.0
  */
 export const ActivityNotFoundError = ActivityNotFoundErrorDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(ActivityNotFoundErrorDefinition),
+  toArbitrary: () => (fc) => S.toArbitrary(ActivityNotFoundErrorDefinition)(fc),
 }).pipe(
   $I.annoteSchema("ActivityNotFoundError", {
     description: "Serializable missing-resource failure raised by a workflow activity.",
@@ -244,7 +244,7 @@ const ActivityValidationErrorDefinition = ActivityErrorCases.cases.ActivityValid
  * @since 0.0.0
  */
 export const ActivityValidationError = ActivityValidationErrorDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(ActivityValidationErrorDefinition),
+  toArbitrary: () => (fc) => S.toArbitrary(ActivityValidationErrorDefinition)(fc),
 }).pipe(
   $I.annoteSchema("ActivityValidationError", {
     description: "Serializable activity-input validation failure.",
@@ -287,7 +287,7 @@ const ActivityGenericErrorDefinition = ActivityErrorCases.cases.ActivityGeneric;
  * @since 0.0.0
  */
 export const ActivityGenericError = ActivityGenericErrorDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(ActivityGenericErrorDefinition),
+  toArbitrary: () => (fc) => S.toArbitrary(ActivityGenericErrorDefinition)(fc),
 }).pipe(
   $I.annoteSchema("ActivityGenericError", {
     description: "Serializable fallback for an otherwise unclassified activity failure.",
@@ -310,16 +310,15 @@ export const ActivityGenericError = ActivityGenericErrorDefinition.annotate({
  */
 export type ActivityGenericError = typeof ActivityGenericError.Type;
 
-const messageFromUnknown =
-  Match.type<unknown>().pipe(
-    Match.when(P.isError, (error) =>
-      Match.value(error.message).pipe(
-        Match.when(ErrorMessage.is, (message) => message),
-        Match.orElse(() => ErrorMessage.make(Inspectable.toStringUnknown(error, 0)))
-      )
-    ),
-    Match.orElse((value) => ErrorMessage.make(Inspectable.toStringUnknown(value, 0)))
-  );
+const messageFromUnknown = Match.type<unknown>().pipe(
+  Match.when(P.isError, (error) =>
+    Match.value(error.message).pipe(
+      Match.when(ErrorMessage.is, (message) => message),
+      Match.orElse(() => ErrorMessage.make(Inspectable.toStringUnknown(error, 0)))
+    )
+  ),
+  Match.orElse((value) => ErrorMessage.make(Inspectable.toStringUnknown(value, 0)))
+);
 
 const causeFromUnknown = Match.type<unknown>().pipe(
   Match.withReturnType<O.Option<ErrorMessage>>(),
@@ -347,14 +346,16 @@ const makeServiceFailure = (
   });
 
 const makeNotFound: {
-  (resourceType: string, resourceId: string): ActivityNotFoundError,
-  (resourceId: string): (resourceType: string) => ActivityNotFoundError
-} = dual(2, (resourceType: string, resourceId: string): ActivityNotFoundError =>
-  ActivityNotFoundError.make({
-    resourceType,
-    resourceId,
-    message: `${resourceType} not found: ${resourceId}`,
-  })
+  (resourceType: string, resourceId: string): ActivityNotFoundError;
+  (resourceId: string): (resourceType: string) => ActivityNotFoundError;
+} = dual(
+  2,
+  (resourceType: string, resourceId: string): ActivityNotFoundError =>
+    ActivityNotFoundError.make({
+      resourceType,
+      resourceId,
+      message: `${resourceType} not found: ${resourceId}`,
+    })
 );
 
 const ActivityErrorDefinition = S.Union([
@@ -386,7 +387,7 @@ const ActivityErrorDefinition = S.Union([
 export const ActivityError = ActivityErrorDefinition.pipe(
   $I.annoteSchema("ActivityError", {
     description: "Exhaustive journal-safe tagged union of workflow activity failures.",
-    toArbitrary: () => () => S.toArbitrary(ActivityErrorDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(ActivityErrorDefinition)(fc),
   }),
   SchemaUtils.withStatics(() => ({
     fromUnknown: makeGeneric,
@@ -448,6 +449,7 @@ export const toActivityError = ActivityError.fromUnknown;
  * @category constructors
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Constructor parameters are peers; none is pipeable data.
 export const serviceError = ActivityError.serviceFailure;
 
 /**

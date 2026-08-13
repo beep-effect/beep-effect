@@ -375,14 +375,14 @@ describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
         yield* repository.delete(inserted.id);
         const missing = yield* option(repository.findById(inserted.id));
         expect(inserted.id).toBeGreaterThan(0);
-        expect(formatIso(inserted.createdAt)).toBe(formatIso(insert.createdAt));
-        expect(formatIso(inserted.updatedAt)).toBe(formatIso(insert.updatedAt));
+        expect(inserted.createdAt.pipe(formatIso)).toBe(insert.createdAt.pipe(formatIso));
+        expect(inserted.updatedAt.pipe(formatIso)).toBe(insert.updatedAt.pipe(formatIso));
         expect(found.id).toBe(inserted.id);
         expect(inserted.nickname.pipe(isNone)).toBe(true);
         expect(updated.id).toBe(inserted.id);
         expect(updated.name).toBe("Native Repository Updated");
         expect(updated.nickname.pipe(getOrUndefined)).toBe("round-four");
-        expect(formatIso(updated.updatedAt)).toBe(formatIso(update.updatedAt));
+        expect(updated.updatedAt.pipe(formatIso)).toBe(update.updatedAt.pipe(formatIso));
         expect(missing.pipe(isNone)).toBe(true);
       }),
     ));
@@ -420,7 +420,7 @@ describe.serial("@beep/effect-drizzle live PGlite gauntlet", () => {
         expect(snapshot.rowVersion).toBe(1);
         expect(winner.rowVersion).toBe(2);
         expect(winner.name).toBe("First Writer");
-        expect(formatIso(winner.updatedAt)).toBe(formatIso(firstRequest.updatedAt));
+        expect(winner.updatedAt.pipe(formatIso)).toBe(firstRequest.updatedAt.pipe(formatIso));
         expect(current.rowVersion).toBe(2);
         expect(current.name).toBe("First Writer");
         if (!isVersionConflict(conflict)) {

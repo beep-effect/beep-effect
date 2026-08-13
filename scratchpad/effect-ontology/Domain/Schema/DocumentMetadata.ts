@@ -488,7 +488,7 @@ export type LanguageCode = typeof LanguageCode.Type;
  * @since 0.0.0
  */
 export const ComplexityScore = UnitInterval.annotate({
-  toArbitrary: () => () => S.toArbitrary(UnitInterval),
+  toArbitrary: () => (fc) => S.toArbitrary(UnitInterval)(fc),
 }).pipe(
   $I.annoteSchema("ComplexityScore", {
     description: "Finite normalized document-complexity score.",

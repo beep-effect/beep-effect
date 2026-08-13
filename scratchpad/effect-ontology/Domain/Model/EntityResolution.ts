@@ -185,7 +185,7 @@ const ERNodeDefinition = S.Union([MentionRecord, ResolvedEntity]).pipe(S.toTagge
 export const ERNode = ERNodeDefinition.pipe(
   $I.annoteSchema("ERNode", {
     description: "Mention-record or canonical-entity node in the two-tier resolution graph.",
-    toArbitrary: () => () => S.toArbitrary(ERNodeDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(ERNodeDefinition)(fc),
   })
 );
 
@@ -302,7 +302,7 @@ const EREdgeDefinition = S.Union([ResolutionEdge, RelationEdge]).pipe(S.toTagged
 export const EREdge = EREdgeDefinition.pipe(
   $I.annoteSchema("EREdge", {
     description: "Resolution or ontology-relation edge in the two-tier entity-resolution graph.",
-    toArbitrary: () => () => S.toArbitrary(EREdgeDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(EREdgeDefinition)(fc),
   })
 );
 

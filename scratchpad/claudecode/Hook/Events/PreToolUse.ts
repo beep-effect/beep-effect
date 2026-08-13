@@ -279,6 +279,7 @@ export const defer = (reason?: string): Output =>
  * console.log(Hook.PreToolUse.allowWithUpdatedInput)
  * ```
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const allowWithUpdatedInput = (updatedInput: Readonly<Record<string, unknown>>, reason?: string): Output =>
   Output.make({
     hookSpecificOutput: O.some(

@@ -552,7 +552,7 @@ const KnownVocabularyFromSelf = S.declare((input: unknown): input is KnownVocabu
         fc.constantFrom("rdf", "rdfs", "owl", "prov", "schema"),
         fc.string({ minLength: 1 }),
         fc.string({ minLength: 1 }),
-        S.toArbitrary(IRI)
+        S.toArbitrary(IRI)(fc)
       )
       .map(([prefix, name, publisher, specUrl]) =>
         KnownVocabularyModel.make({
@@ -649,7 +649,7 @@ const KnownVocabularyRegistryFromSelf = S.declare(
   (input: unknown): input is typeof KnownVocabularyRegistryDefinition.Type =>
     S.is(KnownVocabularyRegistryDefinition)(input)
 ).annotate({
-  toArbitrary: () => (fc) => fc.dictionary(S.toArbitrary(IRI), S.toArbitrary(KnownVocabulary)),
+  toArbitrary: () => (fc) => fc.dictionary(S.toArbitrary(IRI)(fc), S.toArbitrary(KnownVocabulary)(fc)),
 });
 
 /**

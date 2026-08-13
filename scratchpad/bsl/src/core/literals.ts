@@ -68,6 +68,7 @@ const stringLiteralsFromAST = (
  * @since 0.0.0
  */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const stringLiteralValues = (
   schema: Field.AnySchema,
   selectSchemaOf: (schema: Field.AnySchema) => { readonly ast: AST },

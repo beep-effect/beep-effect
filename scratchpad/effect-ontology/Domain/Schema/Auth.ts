@@ -13,7 +13,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Auth");
 const TicketTokenDefinition = S.NonEmptyString.pipe(S.Redacted);
 
 const TicketToken = TicketTokenDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(TicketTokenDefinition),
+  toArbitrary: () => (fc) => S.toArbitrary(TicketTokenDefinition)(fc),
 }).pipe(
   $I.annoteSchema("TicketToken", {
     description: "Non-empty, redacted bearer credential used once to authenticate a WebSocket connection.",
@@ -23,7 +23,7 @@ const TicketToken = TicketTokenDefinition.annotate({
 const ApiKeyDefinition = S.NonEmptyString.pipe(S.Redacted);
 
 const ApiKey = ApiKeyDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(ApiKeyDefinition),
+  toArbitrary: () => (fc) => S.toArbitrary(ApiKeyDefinition)(fc),
 }).pipe(
   $I.annoteSchema("ApiKey", {
     description: "Non-empty API credential retained in redacted form inside a ticket record.",

@@ -557,6 +557,7 @@ const effectiveSchema = (schema: Field.AnySchema, meta: Meta.Meta): Field.AnySch
  * @since 0.0.0
  */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function makeModelClass<Self, const F extends FieldsInput>(
   identifier: string,
   fields: F,

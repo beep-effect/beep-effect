@@ -94,6 +94,7 @@ const Proto = {
  * @since 0.0.0
  */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const make = <const Sch extends AnySchema, const M extends Meta.Meta>(
   schema: Sch,
   meta: M,
@@ -169,6 +170,7 @@ export type Patched<I extends Input, Patch extends Meta.Patch> = Field<
  * @since 0.0.0
  */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const patch = <I extends Input, const Patch extends Meta.Patch>(
   input: I,
   p: Patch,

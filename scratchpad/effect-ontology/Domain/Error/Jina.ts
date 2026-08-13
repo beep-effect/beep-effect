@@ -248,7 +248,7 @@ const JinaErrorDefinition = S.Union([JinaApiError, JinaRateLimitError, JinaParse
 export const JinaError = JinaErrorDefinition.pipe(
   $I.annoteSchema("JinaError", {
     description: "Exhaustive tagged union of Jina Reader failures.",
-    toArbitrary: () => () => S.toArbitrary(JinaErrorDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(JinaErrorDefinition)(fc),
   })
 );
 

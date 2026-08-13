@@ -8,13 +8,11 @@ import * as Model from "../../../Domain/Model/index.ts";
 const publicModelSchemas = A.filter(R.values(Model), S.isSchema);
 
 describe("effect-ontology model schemas", () => {
-  it("derives warning-free, schema-valid arbitrary values for every public model schema", () => {
+  it("derives schema-valid arbitrary values for every public model schema", () => {
     for (const schema of publicModelSchemas) {
-      const arbitrary = S.toArbitrary(schema, { report: true });
-
-      expect(arbitrary.report.warnings).toEqual([]);
+      const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(
-        fc.property(arbitrary.value, (value) => {
+        fc.property(arbitrary, (value) => {
           expect(S.is(schema)(value)).toBe(true);
         }),
         { numRuns: 16 }

@@ -137,7 +137,7 @@ const BackgroundJobDefinition = S.TaggedUnion({
 export const EmbeddingJob = BackgroundJobDefinition.cases.EmbeddingJob.pipe(
   $I.annoteSchema("EmbeddingJob", {
     description: "Persisted background job that re-embeds a canonical entity.",
-    toArbitrary: () => () => S.toArbitrary(BackgroundJobDefinition.cases.EmbeddingJob),
+    toArbitrary: () => (fc) => S.toArbitrary(BackgroundJobDefinition.cases.EmbeddingJob)(fc),
   })
 );
 
@@ -157,7 +157,7 @@ export const EmbeddingJob = BackgroundJobDefinition.cases.EmbeddingJob.pipe(
 export const PromptCacheJob = BackgroundJobDefinition.cases.PromptCacheJob.pipe(
   $I.annoteSchema("PromptCacheJob", {
     description: "Persisted background job that updates one prompt-cache example.",
-    toArbitrary: () => () => S.toArbitrary(BackgroundJobDefinition.cases.PromptCacheJob),
+    toArbitrary: () => (fc) => S.toArbitrary(BackgroundJobDefinition.cases.PromptCacheJob)(fc),
   })
 );
 
@@ -177,7 +177,7 @@ export const PromptCacheJob = BackgroundJobDefinition.cases.PromptCacheJob.pipe(
 export const SimilarityRecomputeJob = BackgroundJobDefinition.cases.SimilarityRecomputeJob.pipe(
   $I.annoteSchema("SimilarityRecomputeJob", {
     description: "Persisted background job that recomputes similarity for one entity.",
-    toArbitrary: () => () => S.toArbitrary(BackgroundJobDefinition.cases.SimilarityRecomputeJob),
+    toArbitrary: () => (fc) => S.toArbitrary(BackgroundJobDefinition.cases.SimilarityRecomputeJob)(fc),
   })
 );
 
@@ -197,7 +197,7 @@ export const SimilarityRecomputeJob = BackgroundJobDefinition.cases.SimilarityRe
 export const BlockingTokenJob = BackgroundJobDefinition.cases.BlockingTokenJob.pipe(
   $I.annoteSchema("BlockingTokenJob", {
     description: "Persisted background job that rebuilds blocking tokens for one entity.",
-    toArbitrary: () => () => S.toArbitrary(BackgroundJobDefinition.cases.BlockingTokenJob),
+    toArbitrary: () => (fc) => S.toArbitrary(BackgroundJobDefinition.cases.BlockingTokenJob)(fc),
   })
 );
 
@@ -218,7 +218,7 @@ export const BlockingTokenJob = BackgroundJobDefinition.cases.BlockingTokenJob.p
 export const WebhookJob = BackgroundJobDefinition.cases.WebhookJob.pipe(
   $I.annoteSchema("WebhookJob", {
     description: "Persisted background job that delivers a JSON payload to an HTTPS webhook.",
-    toArbitrary: () => () => S.toArbitrary(BackgroundJobDefinition.cases.WebhookJob),
+    toArbitrary: () => (fc) => S.toArbitrary(BackgroundJobDefinition.cases.WebhookJob)(fc),
   })
 );
 
@@ -238,7 +238,7 @@ export const WebhookJob = BackgroundJobDefinition.cases.WebhookJob.pipe(
 export const BackgroundJobSchema = BackgroundJobDefinition.pipe(
   $I.annoteSchema("BackgroundJob", {
     description: "Tagged persisted background-job union for embedding, caching, similarity, blocking, and webhooks.",
-    toArbitrary: () => () => S.toArbitrary(BackgroundJobDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(BackgroundJobDefinition)(fc),
   })
 );
 
@@ -299,7 +299,7 @@ const JobMetadataDefinition = S.Struct({
  * @since 0.0.0
  */
 export const JobMetadataSchema = JobMetadataDefinition.annotate({
-  toArbitrary: () => () => S.toArbitrary(JobMetadataDefinition),
+  toArbitrary: () => (fc) => S.toArbitrary(JobMetadataDefinition)(fc),
 }).pipe(
   $I.annoteSchema("JobMetadata", {
     description: "Retry metadata with a schema-owned zero-attempt default and Option-normalized failure details.",

@@ -131,7 +131,7 @@ const SparqlErrorDefinition = S.Union([SparqlExecutionError, SparqlLoadError]).p
 export const SparqlError = SparqlErrorDefinition.pipe(
   $I.annoteSchema("SparqlError", {
     description: "Exhaustive tagged union of SPARQL failures.",
-    toArbitrary: () => () => S.toArbitrary(SparqlErrorDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(SparqlErrorDefinition)(fc),
   })
 );
 

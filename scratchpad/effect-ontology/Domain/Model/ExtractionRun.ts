@@ -242,7 +242,7 @@ export const RunStatus = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("RunStatus", {
     description: "Discriminated extraction-run lifecycle with variant-specific timing and failure data.",
-    toArbitrary: () => () =>
+    toArbitrary: () => (fc) =>
       S.toArbitrary(
         S.TaggedUnion({
           Pending: {},
@@ -250,7 +250,7 @@ export const RunStatus = S.TaggedUnion({
           Complete: { completedAt: S.DateTimeUtcFromString },
           Failed: { failedAt: S.DateTimeUtcFromString, error: AuditError },
         })
-      ),
+      )(fc),
   })
 );
 

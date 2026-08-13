@@ -266,7 +266,7 @@ const ShaclErrorDefinition = S.Union([
 export const ShaclError = ShaclErrorDefinition.pipe(
   $I.annoteSchema("ShaclError", {
     description: "Exhaustive tagged union of SHACL validation lifecycle failures.",
-    toArbitrary: () => () => S.toArbitrary(ShaclErrorDefinition),
+    toArbitrary: () => (fc) => S.toArbitrary(ShaclErrorDefinition)(fc),
   })
 );
 

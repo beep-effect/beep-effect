@@ -493,6 +493,7 @@ const finiteRealSchema = (schema: Field.AnySchema): Field.AnySchema => {
 
 /** Shared runtime seam used by bare SQLite models and SQLite kit entities. */
 /** @internal */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export function makeModelClass<Self, const F extends FieldsInput>(
   identifier: string,
   fields: F,

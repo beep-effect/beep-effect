@@ -15,8 +15,8 @@ import type { FastCheck } from "effect/testing";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/OutputType");
 
-const OutputTypeDefinition = LiteralKit(
-  [
+const OutputTypeDefinition = LiteralKit({
+  literals: [
     "knowledge-graph",
     "entity-resolution-graph",
     "rdf-turtle",
@@ -26,7 +26,7 @@ const OutputTypeDefinition = LiteralKit(
     "entities",
     "relations",
   ],
-  [
+  enumMapping: [
     ["knowledge-graph", "knowledgeGraph"],
     ["entity-resolution-graph", "entityResolutionGraph"],
     ["rdf-turtle", "rdfTurtle"],
@@ -35,8 +35,8 @@ const OutputTypeDefinition = LiteralKit(
     ["metadata", "metadata"],
     ["entities", "entities"],
     ["relations", "relations"],
-  ]
-)
+  ],
+})
   .annotate({
     toArbitrary: () => (fc: typeof FastCheck) =>
       fc.constantFrom(
@@ -73,8 +73,8 @@ type OutputTypeValue = typeof OutputTypeDefinition.Type;
  * @category value-objects
  * @since 0.0.0
  */
-export const OutputFilename = LiteralKit(
-  [
+export const OutputFilename = LiteralKit({
+  literals: [
     "knowledge-graph.json",
     "entity-resolution-graph.json",
     "graph.ttl",
@@ -84,7 +84,7 @@ export const OutputFilename = LiteralKit(
     "entities.json",
     "relations.json",
   ],
-  [
+  enumMapping: [
     ["knowledge-graph.json", "knowledgeGraph"],
     ["entity-resolution-graph.json", "entityResolutionGraph"],
     ["graph.ttl", "graphTurtle"],
@@ -93,8 +93,8 @@ export const OutputFilename = LiteralKit(
     ["metadata.json", "metadata"],
     ["entities.json", "entities"],
     ["relations.json", "relations"],
-  ]
-)
+  ],
+})
   .annotate({
     toArbitrary: () => (fc: typeof FastCheck) =>
       fc.constantFrom(

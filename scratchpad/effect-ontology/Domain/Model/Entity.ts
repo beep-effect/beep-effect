@@ -247,7 +247,7 @@ export const RelationObject = S.TaggedUnion({
 }).pipe(
   $I.annoteSchema("RelationObject", {
     description: "Explicit entity-reference or literal value used in a knowledge-graph relation.",
-    toArbitrary: () => () =>
+    toArbitrary: () => (fc) =>
       S.toArbitrary(
         S.TaggedUnion({
           EntityReference: { value: EntityId },
@@ -255,7 +255,7 @@ export const RelationObject = S.TaggedUnion({
           Number: { value: S.Finite },
           Boolean: { value: S.Boolean },
         })
-      ),
+      )(fc),
   })
 );
 

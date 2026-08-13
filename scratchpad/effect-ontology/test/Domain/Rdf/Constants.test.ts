@@ -18,7 +18,7 @@ import { IRI } from "../../../Domain/Rdf/Types.ts";
 describe("effect-ontology RDF vocabulary constants", () => {
   it("derives arbitraries whose values satisfy vocabulary metadata schemas", () => {
     for (const schema of [KnownVocabulary, KnownVocabularyRegistry]) {
-      const arbitrary = S.toArbitrary(schema);
+      const arbitrary = S.toArbitrary(schema)(fc);
 
       fc.assert(
         fc.property(arbitrary, (value) => {

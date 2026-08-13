@@ -825,6 +825,7 @@ type ValidateReferenceActions<I extends Field.Input, Options> =
           : Field.SqlTypeError<"SET DEFAULT references require a declared database default">
       : Field.SqlTypeError<"SET NULL references require a nullable encoded schema">;
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const references = <
   const Id extends EntityIdLike,
   const Options extends ReferenceOptions | undefined = undefined,

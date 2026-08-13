@@ -280,6 +280,7 @@ export interface RunHookResult {
  * @category testing
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const runHookWithMockStdin = <In extends HookInputEnvelope, Out, E, R>(
   hook: HookDefinition<In, Out, E, R>,
   stdinJson: string
@@ -572,6 +573,7 @@ const assertDefined = <A>(value: A | undefined, label: string): A => {
  * @category assertions
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const expectAllowDecision = (output: unknown, reason?: string): void => {
   const expected: Record<string, unknown> = {
     permissionDecision: "allow",
@@ -596,6 +598,7 @@ export const expectAllowDecision = (output: unknown, reason?: string): void => {
  * @category assertions
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const expectDenyDecision = (output: unknown, reason?: string): void => {
   const expected: Record<string, unknown> = {
     permissionDecision: "deny",
@@ -620,6 +623,7 @@ export const expectDenyDecision = (output: unknown, reason?: string): void => {
  * @category assertions
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const expectAskDecision = (output: unknown, reason?: string): void => {
   const expected: Record<string, unknown> = {
     permissionDecision: "ask",
@@ -653,6 +657,7 @@ export const expectAskDecision = (output: unknown, reason?: string): void => {
  * @category assertions
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const expectBlockDecision = (output: unknown, reason?: string): void => {
   const expected: Record<string, unknown> = { decision: "block" };
   if (reason !== undefined) {
@@ -679,6 +684,7 @@ export const expectBlockDecision = (output: unknown, reason?: string): void => {
  * @category assertions
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const expectAddContext = (output: unknown, context?: string): void => {
   const expected: Record<string, unknown> =
     context === undefined ? { additionalContext: AnyString } : { additionalContext: context };
@@ -952,6 +958,7 @@ const recursiveDirectoryEntries = (
  * @category testing
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSystemOptions): MockFileSystem => {
   const fileMap = toFileMap(files);
   const directories = ensureInitialDirectories(fileMap);
@@ -1164,6 +1171,7 @@ export const makeMockFileSystem = (files?: MockFileEntries, options?: MockFileSy
  * @category assertions
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const expectPluginTree = (
   input: MockFileSystem | MockFileSystemSnapshot,
   expected: Readonly<Record<string, string | RegExp>>
@@ -1200,6 +1208,7 @@ export const expectPluginTree = (
  * @category testing
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const writePluginToMemory = (
   definition: Plugin.PluginDefinition,
   destDir = "/plugin",
@@ -1248,6 +1257,7 @@ export interface PluginRoundTripResult {
  * @category testing
  * @since 0.0.0
  */
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const roundTripPlugin = (
   definition: Plugin.PluginDefinition,
   destDir = "/plugin",
