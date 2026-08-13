@@ -18,7 +18,7 @@ import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext } from "./ArtifactPaths.ts";
-import { PrCloseoutReport } from "./Closeout.ts";
+import { PrCloseoutReportJson } from "./Closeout.ts";
 import {
   collectYeetGateStaleness,
   GateStale,
@@ -38,6 +38,7 @@ import {
 } from "./Verdict.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
+import type { PrCloseoutReport } from "./Closeout.ts";
 import type { GateStalenessVerdict } from "./GateStaleness.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Status");
@@ -429,7 +430,7 @@ class GhStatusCheck extends S.Class<GhStatusCheck>($I`GhStatusCheck`)(
 ) {}
 
 const decodeYeetVerdict = S.decodeUnknownEffect(S.fromJsonString(YeetVerdict));
-const decodePrCloseoutReport = S.decodeUnknownEffect(S.fromJsonString(PrCloseoutReport));
+const decodePrCloseoutReport = PrCloseoutReportJson.decode;
 const decodeGhStatusPullRequest = S.decodeUnknownEffect(S.fromJsonString(GhStatusPullRequest));
 const decodeGhStatusReviewThreads = S.decodeUnknownEffect(S.fromJsonString(GhStatusReviewThreadsDocument));
 const decodeGhStatusWorkflowRuns = S.decodeUnknownEffect(S.fromJsonString(S.Array(GhStatusWorkflowRun)));
