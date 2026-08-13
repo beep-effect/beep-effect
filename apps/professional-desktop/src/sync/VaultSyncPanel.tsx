@@ -40,7 +40,7 @@ const ConnectionBadge = ({ connected }: { readonly connected: boolean }): JSX.El
     className={
       connected
         ? "rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs text-primary"
-        : "rounded-sm bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-600"
+        : "rounded-sm bg-amber-500/10 px-1.5 py-0.5 text-xs text-amber-600 dark:text-amber-300"
     }
     data-testid="vault-sync-connection"
   >
@@ -107,9 +107,12 @@ const DisconnectedNote = ({
   readonly reason: O.Option<DmsMirrorDisconnectReason>;
   readonly waiting: boolean;
 }): JSX.Element => {
+  // Dark mode needs the brighter amber text tier and an explicit high-contrast
+  // button treatment: amber-600 on the tinted alert surface fell below
+  // readable contrast on the near-black theme (QA round 104, R104-02).
   const probeFailedNote = (
     <div
-      className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600"
+      className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600 dark:border-amber-400/50 dark:text-amber-200"
       data-testid="vault-sync-setup-note"
     >
       <p>
@@ -120,7 +123,7 @@ const DisconnectedNote = ({
         type="button"
         size="sm"
         variant="outline"
-        className="mt-2"
+        className="mt-2 dark:border-amber-300/60 dark:text-amber-100 dark:hover:bg-amber-500/20"
         onClick={onRetry}
         disabled={waiting}
         data-testid="vault-sync-reconnect"
@@ -137,7 +140,7 @@ const DisconnectedNote = ({
       DmsMirrorDisconnectReason.$match(value, {
         "credentials-missing": () => (
           <p
-            className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600"
+            className="mt-2 rounded-sm border border-amber-500/40 bg-amber-500/10 p-2 text-xs text-amber-600 dark:border-amber-400/50 dark:text-amber-200"
             data-testid="vault-sync-setup-note"
           >
             Set CLOUD_BOX_TOKEN and restart the app to connect Box. OAuth setup ships when the Box test tenant is
