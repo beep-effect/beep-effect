@@ -1,0 +1,49 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript"],
+  "options": {
+    "typeAware": true
+  },
+  "categories": {
+    "correctness": "off",
+    "suspicious": "off",
+    "perf": "off",
+    "style": "off",
+    "pedantic": "off",
+    "restriction": "off",
+    "nursery": "off"
+  },
+  "ignorePatterns": [
+    ".next/**",
+    "**/.next/**",
+    ".repos/**",
+    ".sst/**",
+    "coverage/**",
+    "**/coverage/**",
+    "dist/**",
+    "**/dist/**",
+    "**/docs/**",
+    "node_modules/**",
+    "**/node_modules/**",
+    "apps/*/src/app/sw.ts",
+    "**/.turbo/**",
+    "**/.cache/**",
+    "**/generated/**",
+    "**/vendor/**",
+    "**/*.gen.*",
+    "**/*.d.ts",
+    "**/typetests/**/*.tst.ts"
+  ],
+  "overrides": [
+    {
+      "files": [
+        "apps/**/*.{ts,tsx}",
+        "packages/**/*.{ts,tsx}",
+        "infra/**/*.ts"
+      ],
+      "rules": {
+        "typescript/no-deprecated": "error"
+      }
+    }
+  ]
+}

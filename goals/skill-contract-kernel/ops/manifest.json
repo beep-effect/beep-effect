@@ -1,0 +1,94 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "skill-contract-kernel",
+    "title": "Skill Contract Kernel",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/skill-contract-kernel",
+  "lifecycle": "active",
+  "mission": "Ship @beep/skill-contract (schemas-only contract kernel: SkillContract, fail-closed gates, evidence ladder, in-toto-aligned receipts), proven by the qa judge-gate retrofit and a re-extraction-gated SKILL.md projection.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/typed-agent-skill-contracts",
+    "graduated": "2026-08-13"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/skill-contract-kernel/README.md",
+    "goals/skill-contract-kernel/SPEC.md",
+    "goals/skill-contract-kernel/PLAN.md",
+    "goals/skill-contract-kernel/GOAL.md",
+    "goals/skill-contract-kernel/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/typed-agent-skill-contracts/research/SOURCES.md",
+    "../../explorations/typed-agent-skill-contracts/research/inventory/contract-kernel-evidence.md",
+    "../../explorations/typed-agent-skill-contracts/research/inventory/protocol-query-memory.md",
+    "../../explorations/typed-agent-skill-contracts/research/landscape/skill-contract-formats.md",
+    "../../explorations/typed-agent-skill-contracts/research/landscape/workflow-evidence-frameworks.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/skill-contract-kernel/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/skill-contract-kernel/GOAL.md)\" -le 4000",
+    "jq . goals/skill-contract-kernel/ops/manifest.json",
+    "rg -n \"skill-contract-kernel|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/skill-contract-kernel",
+    "git diff --check -- goals/skill-contract-kernel",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Retrofit parity cannot be reached without changing observable judge behavior.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

@@ -177,3 +177,42 @@ single dirty checkout as the sole copy) and no review benefit. Rejected:
 waiting for align (leaves finished, reviewed work unlanded against an
 explicit operator directive) and bundling a rushed align session into the
 same PR (align is Benjamin's judgment session, not a wrap-up task).
+
+## 2026-08-13 — Align closed: six-question contract
+
+**Q1a — event union:** Ship the full drafting event union now. Arms without
+live emitters are marked `provisional-until-first-emitter`.
+
+**Q1b — fallback:** The watermark-lag fallback fires if and only if the
+projection rebuild watermark lags the episode head.
+
+**Q1c — rebuild proof:** The delete-and-rebuild drill asserts byte-identical
+projection rows and identical retrieval answers. The answer annex reports no
+fallback when none occurred.
+
+**Q2 — answer annex:** All seven policy fields ship in rung 1: temporal,
+membership, language, retrieval, rejected-candidate, fallback, and
+incompleteness.
+
+**Q3 — support set and artifacts:** `ClaimLimitationSupportSet` adopts the
+research shape: per-§112(d)-closure sets, with N closures for
+multiple-dependent claims; anchors are evidence and never verdict inputs;
+attorney disposition is the sole verdict-bearing record. Unresolved support is
+a `LiteralKit` state family distinguishing the §132 objection track from the
+§112(a) rejection track. New matter is diffed against the as-filed record,
+including omission. Durable artifacts are auditable work products, never
+quality proxies.
+
+**Q4 — routing:** Routing is fixed with human override. Learned routing is
+gated on the Q5 benchmark.
+
+**Q5 — benchmark:** Defer the benchmark. Record the public-USPTO
+prosecution-history path over `uspto-prosecution-read` data as the upgrade
+path.
+
+**Q6 — refusal:** Compose promotion refusal law-side on the candor-derived
+fail-closed predicate precedent, `CandorGateVerdict.isBlocked`. Do not change
+the runtime vocabulary.
+
+**Decision:** Align is closed; all six manifest questions are resolved and the
+packet advances to shape.

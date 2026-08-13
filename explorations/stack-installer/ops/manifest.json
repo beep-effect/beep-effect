@@ -3,10 +3,10 @@
   "exploration": {
     "slug": "stack-installer",
     "title": "Stack Installer Proof and UX",
-    "status": "active",
+    "status": "parked",
     "stage": "capture",
     "openQuestions": [
-      "Which future operator workflow has enough product pull to justify reusing the approval-first repair and fresh-machine evidence pattern?"
+      "Resume when a workflow with product pull adopts the approval-first repair and fresh-machine evidence pattern."
     ],
     "sources": [],
     "links": {
@@ -15,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-07-14",
-    "updated": "2026-07-14"
+    "updated": "2026-08-13"
   }
 }
