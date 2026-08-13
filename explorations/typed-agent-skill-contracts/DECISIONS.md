@@ -20,6 +20,12 @@ legal/patent KG work), query/browser ops (most concrete retrofit target in `beep
 routing, fleet protocol surface last (fully greenfield, least consumer pull until the kernel
 defines the evidence types protocols would carry).
 
+*2026-08-13 addendum (PR #694 review):* at decompose the five tracks mapped onto **six** goal
+candidates — the contract-kernel track spawns both the spine goal and a later
+`ops-evidence-ladder` retrofit goal (the yeet ladder retrofit plus the deferred
+bounded-recovery service). `MAP.md` §Track → candidate mapping is the authoritative wave list;
+this ordering statement is unchanged otherwise.
+
 **Rationale:** The operator declined to prune; the answer is a sequencing statement, not a
 single-cycle scope — decompose maps all tracks as candidate goal packets, the first slice
 builds only the kernel. Kernel-first was the recommendation because every other track depends
@@ -142,6 +148,11 @@ retrofit doesn't consume it?
 render a SKILL.md projection from a `SkillContract` instance as an `S.encode` of the
 `@beep/md` document model, gated by re-extraction equality (decode the rendered artifact back
 and prove it matches the contract).
+
+*2026-08-13 addendum (PR #694 review):* `@beep/md`'s `DocumentToMarkdown` is one-way
+(`encodeUnsupported` reverse), so "decode the rendered artifact back" is scoped in the goal
+SPEC to the available inverses: deterministic re-render byte-equality plus frontmatter-block
+schema decode; a Markdown→AST inverse parser is an explicit non-goal.
 
 **Rationale:** It is the packet's authoritative-artifact re-extraction thesis (pattern 3) made
 concrete in the spine — the operator values the thesis demonstration over the tightest

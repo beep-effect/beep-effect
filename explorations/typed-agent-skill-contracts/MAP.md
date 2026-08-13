@@ -26,6 +26,12 @@ greenfield surface (protocols last — least consumer pull until kernel evidence
 Waves 2–6 graduate only after their own shape passes the definition-of-ready; the exploration
 packet stays `active` as their home.
 
+**Track → candidate mapping** (the locked decision names five *tracks*; this map yields six
+*goal candidates* because the contract-kernel track spawns a second, consumer-retrofit goal):
+contract kernel → #1 (spine) **and** #3 (its evidence-ladder/recovery retrofit onto yeet);
+KG ingestion+eval → #2; query/browser ops → #4; memory routing → #5; fleet protocol surface →
+#6. DECISIONS §spine track carries the same mapping note.
+
 ## First vertical slice (inside goal 1)
 
 Define `Gate` + `EvidenceReceipt` schemas only; express **one** existing `JudgeCheck` rule

@@ -7,9 +7,13 @@ A new schemas-only foundation package, `@beep/skill-contract` (to be created und
 fail-closed `Gate` registry with audit-record verdict values, the four-rung evidence-ladder
 ADT with its terminal union, and in-toto-aligned unsigned receipts — and two proofs make it
 real: the `qa-inventory/v1` judge gate runs as a `SkillContract` instance with behavior
-parity, and that contract's SKILL.md projection is rendered via `@beep/md` (`S.encode`) and
-gated by re-extraction equality (decode the rendered artifact back; prove it equals the
-contract's projection model).
+parity, and that contract's SKILL.md projection is rendered via `@beep/md`
+(`DocumentToMarkdown`) and gated by re-extraction. `DocumentToMarkdown` is deliberately
+one-way (its reverse direction is `encodeUnsupported`), so the re-extraction gate is scoped to
+what is honestly available: (a) deterministic re-render byte-equality — re-render the
+projection from the contract and prove it byte-equals the committed artifact — and (b) an
+embedded machine-readable frontmatter block that schema-decodes back to the contract's
+projection model and proves equality. A full Markdown→AST inverse parser is a non-goal.
 
 ## Non-Goals
 
@@ -25,6 +29,9 @@ Seeded from the exploration brief's no-gos
 - No bounded-recovery service implementation (its budget/attempt/receipt schemas ship; the
   engine waits for its first real consumer in a later wave).
 - No second retrofit consumer (yeet lanes are the ops wave); no `.claude/skills` migration.
+- No Markdown→AST inverse parser: `@beep/md`'s `DocumentToMarkdown` is one-way by design, and
+  this goal does not add a parser to invert it. The projection's re-extraction gate uses
+  byte-stable re-render plus frontmatter decode (see Objective and Acceptance).
 
 ## Source Hierarchy
 
@@ -85,8 +92,10 @@ Seeded from the brief's rabbit holes and the grill round
 - [ ] The `qa-inventory/v1` judge gate is expressed as a `SkillContract` instance; existing
       judge behavior is preserved (parity tests green; `beep qa judge-lint` semantics
       unchanged).
-- [ ] The contract's SKILL.md projection renders through `@beep/md` and a re-extraction gate
-      proves rendered-artifact ↔ contract equality in tests.
+- [ ] The contract's SKILL.md projection renders through `@beep/md` `DocumentToMarkdown`, and
+      the re-extraction gate proves BOTH (a) re-render byte-equality against the committed
+      artifact and (b) frontmatter-block schema decode equality against the contract's
+      projection model, in tests. (No Markdown→AST inverse parser — see Non-Goals.)
 - [ ] Completion-unrepresentability is demonstrated: a test shows a contract with an
       applicable blocking gate lacking evidence cannot construct a completed/terminal value.
 - [ ] Architecture gates pass (family metadata, import boundaries, docgen, lint, typecheck).

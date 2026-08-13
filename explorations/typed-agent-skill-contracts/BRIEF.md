@@ -27,8 +27,9 @@ promises). The composition is the open ground.
 One focused cycle for the spine: the kernel package, the qa judge-gate retrofit, and the
 SKILL.md render-as-encode projection (DECISIONS 2026-08-13, grill-with-docs round). The
 bounded-recovery *service* is out of the cycle — only its receipt/budget schemas ship. Later
-waves (KG ingestion+eval, query/browser ops, memory routing, fleet protocol surface — in that
-provisional order, per DECISIONS §spine track) are separate goal packets, not this appetite.
+waves (per DECISIONS §spine track and its decompose addendum: the five tracks map onto the six
+goal candidates in `MAP.md` §Track → candidate mapping) are separate goal packets, not this
+appetite.
 
 ## Solution sketch
 
