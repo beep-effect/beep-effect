@@ -25,7 +25,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish -> monitor).",
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet: `bun run beep yeet repair`, `bun run beep yeet verify`, `bun run beep yeet publish --pr --message \"...\"`, `bun run beep yeet monitor`.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [

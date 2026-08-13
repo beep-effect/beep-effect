@@ -22,8 +22,13 @@ kit for deterministic agent metadata retrieval.
 `identity-iri-fold` is graduated at
 [`goals/identity-iri-fold`](../../goals/identity-iri-fold/README.md), with its
 `identity-iri-core` dependency satisfied by the completed-retained PR #289.
-The next open question is held: `identity-iri-fibered` stays behind the fold
-until the fold/projection surface and FOLIO migration contracts land.
+The fold merged as PR #536 (2026-08-01; `goals/identity-iri-fold` is
+completed-retained), so the fibered trigger has fired. Ratified 2026-08-13
+(see DECISIONS.md): `identity-iri-fibered` graduates as one goal with the full
+MAP scope, blockedBy the semantic-web PR2+PR3 cleanups (discrete case only;
+SHACL projection targets the post-move contract layer; store layers land as
+test/dev Layers). Next action: scaffold `goals/identity-iri-fibered` in the
+ceremony PR, then flip this packet to `graduated`.
 
 ## Read This First
 
@@ -38,6 +43,9 @@ until the fold/projection surface and FOLIO migration contracts land.
 
 ## Trail
 
+- 2026-08-13: recorded that the fold merged via PR #536 and the fibered
+  trigger fired; fibered ratified as one goal blockedBy the semantic-web
+  PR2+PR3 cleanups; scaffold queued for the ceremony PR.
 - 2026-07-31: pre-execution grill closed three branches ahead of the fold
   build — fold packaging superseded to a split surface (`$I.key`/`$I.class`
   composer methods in `@beep/identity`; `Ontology.fold` + projections in
