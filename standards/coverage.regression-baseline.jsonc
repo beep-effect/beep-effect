@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-13T17:50:12.456Z",
-  "git_sha": "b61f96a46dd0e9d05d42f9769a96e371b1e9332f",
+  "generated_at": "2026-08-13T18:38:32.277Z",
+  "git_sha": "450e6f7c6c11c3996ec8ae2996ed6afa483ea7ec",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
@@ -18971,14 +18971,14 @@
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
       "lines": 71.51,
-      "statements": 70.24,
+      "statements": 70.28,
       "branches": 63.69,
-      "functions": 60.47,
+      "functions": 60.55,
       "uncovered": {
         "lines": 674,
-        "statements": 752,
+        "statements": 751,
         "branches": 183,
-        "functions": 453
+        "functions": 452
       },
       "files": {
         "apps/professional-desktop/src/App.tsx": {
@@ -19187,14 +19187,14 @@
         },
         "apps/professional-desktop/src/chat/ui/YouTubeWatchOpener.tsx": {
           "lines": 96.55,
-          "statements": 90.62,
+          "statements": 93.75,
           "branches": 75,
-          "functions": 87.5,
+          "functions": 93.75,
           "uncovered": {
             "lines": 1,
-            "statements": 3,
+            "statements": 2,
             "branches": 1,
-            "functions": 2
+            "functions": 1
           }
         },
         "apps/professional-desktop/src/chat/ui/editor-state.atoms.ts": {
@@ -20551,14 +20551,14 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 69.7,
-      "statements": 69.42,
+      "lines": 69.71,
+      "statements": 69.43,
       "branches": 55.65,
-      "functions": 61.64,
+      "functions": 61.65,
       "uncovered": {
-        "lines": 8206,
-        "statements": 8619,
-        "branches": 4474,
+        "lines": 8205,
+        "statements": 8618,
+        "branches": 4475,
         "functions": 3020
       },
       "files": {
@@ -20995,14 +20995,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts": {
-          "lines": 58.98,
-          "statements": 58.28,
-          "branches": 62.5,
-          "functions": 57.14,
+          "lines": 59.44,
+          "statements": 58.73,
+          "branches": 62,
+          "functions": 57.64,
           "uncovered": {
             "lines": 73,
             "statements": 78,
-            "branches": 18,
+            "branches": 19,
             "functions": 36
           }
         },
@@ -24499,13 +24499,13 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts": {
-          "lines": 22.05,
-          "statements": 20.43,
+          "lines": 23.47,
+          "statements": 21.77,
           "branches": 25.45,
-          "functions": 9.18,
+          "functions": 10.1,
           "uncovered": {
-            "lines": 265,
-            "statements": 292,
+            "lines": 264,
+            "statements": 291,
             "branches": 123,
             "functions": 89
           }
