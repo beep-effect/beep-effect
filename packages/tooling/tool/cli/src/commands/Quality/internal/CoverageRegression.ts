@@ -179,6 +179,22 @@ export class CoverageUncoveredCounts extends S.Class<CoverageUncoveredCounts>($I
 /**
  * Coverage percentages and uncovered counts for one repository file.
  *
+ * **Example** (Record a fully covered file)
+ *
+ * ```ts
+ * import { CoverageFileBaseline, CoverageUncoveredCounts } from "@beep/repo-cli/test/Quality"
+ *
+ * const file = CoverageFileBaseline.make({
+ *   branches: 100,
+ *   functions: 100,
+ *   lines: 100,
+ *   statements: 100,
+ *   uncovered: CoverageUncoveredCounts.make({ branches: 0, functions: 0, lines: 0, statements: 0 }),
+ * })
+ *
+ * console.log(file.lines) // 100
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -774,6 +790,30 @@ const readCoverageSummary = Effect.fn("CoverageRegression.readCoverageSummary")(
  * This test seam exercises the same JSON boundary and repo-relative file-path
  * normalization used by snapshot collection without requiring a workspace
  * discovery fixture.
+ *
+ * **Example** (Decode one file summary)
+ *
+ * ```ts
+ * import { coveragePackageBaselineFromSummaryForTesting } from "@beep/repo-cli/test/Quality"
+ * import * as NodePath from "@effect/platform-node/NodePath"
+ * import { Effect } from "effect"
+ *
+ * const covered = { covered: 1, pct: 100, skipped: 0, total: 1 }
+ * const summaryText = JSON.stringify({
+ *   total: { branches: covered, functions: covered, lines: covered, statements: covered },
+ *   "src/index.ts": { branches: covered, functions: covered, lines: covered, statements: covered },
+ * })
+ * const program = coveragePackageBaselineFromSummaryForTesting(
+ *   "/repo",
+ *   "/repo/packages/example",
+ *   summaryText
+ * ).pipe(
+ *   Effect.provide(NodePath.layer),
+ *   Effect.map((baseline) => baseline.files["packages/example/src/index.ts"]?.lines)
+ * )
+ *
+ * Effect.runPromise(program).then(console.log) // 100
+ * ```
  *
  * @param repoRoot - Absolute repository root.
  * @param packageRoot - Absolute workspace package root used for relative summary keys.
@@ -1513,6 +1553,25 @@ const renderCoverageFailure = (failure: CoverageComparisonFailure): string =>
 
 /**
  * Render coverage comparison failures with bounded, control-free paths.
+ *
+ * **Example** (Render a baseline drop)
+ *
+ * ```ts
+ * import { CoverageComparisonFailure, renderCoverageFailuresForTesting } from "@beep/repo-cli/test/Quality"
+ * import * as S from "effect/Schema"
+ *
+ * const failure = S.decodeUnknownSync(CoverageComparisonFailure)({
+ *   _tag: "baseline-drop",
+ *   actual: 90,
+ *   baseline: 95,
+ *   filePath: "packages/example/src/index.ts",
+ *   metric: "lines",
+ *   packageName: "@beep/example",
+ *   packagePath: "packages/example",
+ * })
+ *
+ * console.log(renderCoverageFailuresForTesting([failure])[0])
+ * ```
  *
  * @param failures - Typed coverage comparison failures.
  * @returns Operator-facing diagnostic lines.
