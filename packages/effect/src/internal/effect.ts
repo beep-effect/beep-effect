@@ -4658,6 +4658,15 @@ export const forEach: {
     return eff ? as(eff, out as any) : succeed(out as any)
   }))
 
+/** @internal */
+export const head = <A, E, R>(
+  self: Effect.Effect<Iterable<A>, E, R>
+): Effect.Effect<A, E | Cause.NoSuchElementError, R> =>
+  flatMap(self, (elements) => {
+    const result = elements[Symbol.iterator]().next()
+    return result.done ? fail(new NoSuchElementError()) : succeed(result.value)
+  })
+
 const forEachSequential = <A, B, E, R>(
   iterable: Iterable<A>,
   f: (a: A, index: number) => Effect.Effect<B, E, R>,
@@ -5712,7 +5721,9 @@ export const makeSpanUnsafe = <XA, XE>(
 
     const links = options?.links !== undefined ?
       [...linksFromEnv, ...options.links] :
-      linksFromEnv.slice()
+      linksFromEnv.length === 0
+      ? []
+      : linksFromEnv.slice()
 
     span = tracer.span({
       name,
@@ -5728,12 +5739,12 @@ export const makeSpanUnsafe = <XA, XE>(
           : !isLogLevelGreaterThan(fiber.getRef(Tracer.MinimumTraceLevel), level))
     })
 
-    for (const [key, value] of Object.entries(annotationsFromEnv)) {
-      span.attribute(key, value)
+    for (const key in annotationsFromEnv) {
+      span.attribute(key, annotationsFromEnv[key])
     }
     if (options?.attributes !== undefined) {
-      for (const [key, value] of Object.entries(options.attributes)) {
-        span.attribute(key, value)
+      for (const key in options.attributes) {
+        span.attribute(key, options.attributes[key])
       }
     }
   }
