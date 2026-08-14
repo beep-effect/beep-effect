@@ -51,8 +51,9 @@ const PatentCitationEventEntity = ProductEntity.make(LawPractice.PatentCitationE
  * `verifyTextAnchor`; receipt existence proves only that a verification once
  * happened.
  *
- * Only an `AiDiscovered` event participates in the candor gate's quantified
- * set. Examiner-observed events are recorded alongside and never gate.
+ * Every recorded event participates in the candor gate's quantified set.
+ * Discovery provenance remains durable evidence of how the occurrence entered
+ * the system; it does not decide whether a human disposition is required.
  *
  * **Example** (Inspect the recorded observation surface)
  *

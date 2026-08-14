@@ -26,12 +26,6 @@ import type { CandorFilingScope, UncoveredReason } from "./CandorPolicy.values.t
 
 const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.service");
 
-/**
- * Whether one event's discovery provenance puts it in the gate's quantified
- * set. Examiner-observed occurrences are recorded and never gate.
- */
-const isAiDiscovered = (event: PatentCitationEvent): boolean => event.discovery.kind === "AiDiscovered";
-
 const IdentifiedPatentReference = PatentReference.pipe(
   S.check(
     S.makeFilter((reference) => O.isSome(reference.number), {
@@ -47,6 +41,8 @@ const IdentifiedPatentReference = PatentReference.pipe(
 );
 const isIdentifiedPatentReference = S.is(IdentifiedPatentReference);
 const samePatentReference = S.toEquivalence(PatentReference);
+const CitationLineageKey = S.Struct({ reference: PatentReference, sourceRef: S.String });
+const encodeCitationLineageKey = S.encodeSync(S.fromJsonString(CitationLineageKey));
 const sameIdentifiedPatentReference = (head: PatentReference, candidate: PatentReference): boolean =>
   isIdentifiedPatentReference(head) && samePatentReference(head, candidate);
 
@@ -186,46 +182,30 @@ const dispositionReason = (
 };
 
 /**
- * Evaluate one source group, returning the uncovered AI-discovered events it
- * contributes.
+ * Evaluate one source group, returning every recorded event it leaves
+ * uncovered.
  *
  * Currency is derived from declared supersession alone. A group with exactly
- * one head is answered by that head's coverage, and every AI-discovered event
- * in the group shares that answer — which is why superseding an observation
+ * one head is answered by that head's coverage, and every recorded event in
+ * the group shares that answer — which is why superseding an observation
  * never releases the gate and disposing the newer observation releases the
  * whole group at once. A group without exactly one head is ambiguous, and
  * ambiguity blocks.
  *
- * **Gotchas**
- *
- * The head's coverage is read WITHOUT regard to its discovery kind, so when an
- * examiner-observed observation supersedes an AI-discovered one the group is
- * cleared by dispositioning that examiner-observed head. This looks wrong and
- * is not: "examiner events record without gating" (SPEC decision 4) means an
- * examiner event never *initiates* gating — an examiner-only source has no
- * AI-discovered event and returns early above — not that an examiner
- * observation can never be the subject of a judgment. Once it supersedes an AI
- * finding it IS the current observation of that source, and whether candor is
- * still owed on that history is a legal question this package must never
- * compute, so it blocks until a human decides. Narrowing the head lookup to
- * AI-discovered events would leave no unsuperseded head at all and trip
- * `ambiguous-lineage` with no way to clear it. Pinned in both directions by the
- * "an examiner-observed head is dispositionable" suite in `CandorPolicy.test.ts`.
+ * Discovery provenance records how the event entered the system; it no longer
+ * decides whether the event participates. An examiner-observed event therefore
+ * initiates gating in its own right and remains clearable only by a human
+ * disposition bound to the current observation.
  */
 const evaluateGroup = Effect.fn("CandorPolicy.evaluateGroup")(function* (
   group: ReadonlyArray<PatentCitationEvent>,
   dispositions: ReadonlyArray<CandorDisposition>
 ): Effect.fn.Return<ReadonlyArray<UncoveredEvent>, never, SourceTextResolver | import("effect/Crypto").Crypto> {
-  const aiEvents = A.filter(group, isAiDiscovered);
-  if (A.isReadonlyArrayNonEmpty(aiEvents) === false) {
-    return A.empty<UncoveredEvent>();
-  }
-
   const superseded = supersededEventIds(group);
   const heads = A.filter(group, (event) => !HashSet.has(superseded, event.id));
 
   const uncoveredWith = (reason: UncoveredReason) =>
-    A.map(aiEvents, (event) => UncoveredEvent.make({ eventId: event.id, reason }));
+    A.map(group, (event) => UncoveredEvent.make({ eventId: event.id, reason }));
 
   if (A.length(heads) !== 1) {
     return uncoveredWith("ambiguous-lineage");
@@ -255,8 +235,9 @@ const evaluateGroup = Effect.fn("CandorPolicy.evaluateGroup")(function* (
  *
  * Events are deduplicated by id before anything else, so redelivering a record
  * that was already recorded cannot move a head or change a verdict. Grouping is
- * by `sourceRef`, the version-independent logical-source key, because currency
- * is a question about one source's observations.
+ * by `sourceRef` and the parsed patent reference. Currency is a question about
+ * successive observations of one cited document, not every citation that an
+ * examiner happened to record in the same prosecution document.
  *
  * **Example** (Evaluate through the constructed shape)
  *
@@ -274,13 +255,17 @@ export const makeCandorPolicy = (): CandorPolicyShape =>
   CandorPolicyShape.make({
     evaluate: Effect.fn("CandorPolicy.evaluate")(function* (scope: CandorFilingScope) {
       const reader = yield* CandorRecordReader;
-      const recorded = yield* reader.eventsForFiling(scope);
-      const dispositions = yield* reader.dispositionsForFiling(scope);
+      const snapshot = yield* reader.snapshotForFiling(scope);
 
-      const events = A.dedupeWith(recorded, (left, right) => left.id === right.id);
-      const groups = A.groupBy(events, (event) => event.grounding.source.sourceRef);
+      const events = A.dedupeWith(snapshot.events, (left, right) => left.id === right.id);
+      const groups = A.groupBy(events, (event) =>
+        encodeCitationLineageKey({
+          reference: event.reference,
+          sourceRef: event.grounding.source.sourceRef,
+        })
+      );
 
-      const uncovered = yield* Effect.forEach(R.values(groups), (group) => evaluateGroup(group, dispositions));
+      const uncovered = yield* Effect.forEach(R.values(groups), (group) => evaluateGroup(group, snapshot.dispositions));
 
       return CandorGateVerdict.make({
         scope,

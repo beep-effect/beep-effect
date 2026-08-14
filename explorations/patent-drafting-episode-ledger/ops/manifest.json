@@ -3,12 +3,12 @@
   "exploration": {
     "slug": "patent-drafting-episode-ledger",
     "title": "Patent Drafting Episode Ledger",
-    "status": "active",
-    "stage": "shape",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/patent-drafting-episode-ledger"],
       "docs": [],
       "supersededBy": null
     },

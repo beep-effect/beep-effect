@@ -19,6 +19,7 @@ import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlError from "effect/unstable/sql/SqlError";
 
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url));
@@ -40,11 +41,14 @@ const candorTableNames: ReadonlyArray<string> = [
 const expectedConstraintNames: ReadonlyArray<string> = [
   "law_practice_candor_disposition_org_id_id_unique",
   "law_practice_candor_disposition_pkey",
+  "law_practice_candor_disposition_st13_office_check",
   "law_practice_candor_disposition_supersedes_fk",
   "law_practice_ids_submission_fact_pkey",
+  "law_practice_ids_submission_fact_st13_office_check",
   "law_practice_patent_citation_event_org_id_id_unique",
   "law_practice_patent_citation_event_pkey",
   "law_practice_patent_citation_event_possible_duplicate_fk",
+  "law_practice_patent_citation_event_st13_office_check",
 ];
 
 const expectedTriggerNames: ReadonlyArray<string> = [
@@ -238,5 +242,64 @@ if (!shouldRunPgliteIntegration) {
         120_000
       );
     });
+
+    for (const { constraintName, identity, table } of [
+      {
+        constraintName: "law_practice_candor_disposition_st13_office_check",
+        identity: { applicationNumber: "102014000345678", kind: "WipoSt13" },
+        table: "law_practice_candor_disposition",
+      },
+      {
+        constraintName: "law_practice_ids_submission_fact_st13_office_check",
+        identity: { applicationNumber: "102014000345678", kind: "WipoSt13", officeCode: null },
+        table: "law_practice_ids_submission_fact",
+      },
+      {
+        constraintName: "law_practice_patent_citation_event_st13_office_check",
+        identity: { applicationNumber: "102014000345678", kind: "WipoSt13", officeCode: "ZZ" },
+        table: "law_practice_patent_citation_event",
+      },
+    ] as const) {
+      layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+        it.effect(
+          `refuses unresolved legacy ST.13 identity at the constraint in ${table}`,
+          Effect.fnUntraced(function* () {
+            const sql = yield* migrateAndRecord();
+
+            // Clone a schema-valid fixture row, changing only its persisted
+            // identity and primary identifiers for each acceptance/denial probe.
+            const recordSql =
+              table === "law_practice_candor_disposition"
+                ? `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, $1::jsonb, decided_at, disposes, lifecycle, litigation_frame_judgment, rule56_judgment, supersedes, entity_type, id + $2::integer, public_id || $3::text FROM ${table} WHERE id = 1`
+                : table === "law_practice_ids_submission_fact"
+                  ? `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, candidate_window, $1::jsonb, content, fees, modeled_from, office_treatment, operative_date, statement, submission_kind, entity_type, id + $2::integer, public_id || $3::text FROM ${table} WHERE id = 1`
+                  : `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, actor, $1::jsonb, discovery, grounding, observed_at, possible_duplicate_of, quarantine, reference, supersedes, entity_type, id + $2::integer, public_id || $3::text FROM ${table} WHERE id = 1`;
+
+            const conformantIdentity = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+              applicationNumber: "102014000345678",
+              kind: "WipoSt13",
+              officeCode: "EP",
+            });
+            yield* sql.unsafe(recordSql, [conformantIdentity, 100, "-st13-valid"]);
+            const accepted = yield* sql.unsafe<{ readonly officeCode: string }>(
+              `SELECT citing_application ->> 'officeCode' AS "officeCode" FROM ${table} WHERE id = 101`
+            );
+            expect(accepted).toEqual([{ officeCode: "EP" }]);
+
+            const encodedIdentity = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(identity);
+            const violation = yield* sql.unsafe(recordSql, [encodedIdentity, 200, "-st13-invalid"]).pipe(Effect.flip);
+
+            expect(violation).toBeInstanceOf(SqlError.SqlError);
+            expect(violation.reason).toBeInstanceOf(SqlError.ConstraintError);
+            const cause = yield* S.decodeUnknownEffect(S.Struct({ code: S.Literal("23514"), constraint: S.String }))(
+              violation.reason.cause
+            );
+            expect(cause.constraint).toBe(constraintName);
+            expect(inspect(violation.reason.cause, { depth: 10 })).toContain(constraintName);
+          }),
+          120_000
+        );
+      });
+    }
   });
 }

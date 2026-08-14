@@ -10,6 +10,7 @@
 import { thunkUndefined } from "@beep/utils";
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import { Atom } from "effect/unstable/reactivity";
 
 const REVEAL_OFFSET_PX = 560;
@@ -28,7 +29,11 @@ const backToTopVisibleAtom = Atom.make((get) => {
   const update = () => get.setSelf(browserWindow.scrollY > REVEAL_OFFSET_PX);
 
   browserWindow.addEventListener("scroll", update, { passive: true });
-  get.addFinalizer(() => browserWindow.removeEventListener("scroll", update));
+  // Teardown-safe: under the coverage runtime the registry can finalize after
+  // jsdom has already stripped the window's methods.
+  get.addFinalizer(
+    () => P.isFunction(browserWindow.removeEventListener) && browserWindow.removeEventListener("scroll", update)
+  );
 
   return browserWindow.scrollY > REVEAL_OFFSET_PX;
 });

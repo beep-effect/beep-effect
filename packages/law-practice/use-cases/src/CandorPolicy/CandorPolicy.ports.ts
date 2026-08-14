@@ -7,17 +7,53 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
+import { CandorDisposition, PatentCitationEvent } from "@beep/law-practice-domain";
 import { EffectSchema, Fn } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { CandorFilingScope } from "./CandorPolicy.values.ts";
 import type { SourceTextResolver } from "@beep/file-processing/SourceText";
-import type { CandorDisposition, PatentCitationEvent } from "@beep/law-practice-domain";
 import type * as Crypto from "effect/Crypto";
 import type { CandorRecordReadError } from "./CandorPolicy.errors.ts";
 import type { CandorGateVerdict } from "./CandorPolicy.values.ts";
 
 const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.ports");
+
+/**
+ * One transactionally consistent view of the candor material for a filing.
+ *
+ * **Details**
+ *
+ * Events and dispositions are deliberately coupled in one value so a policy
+ * evaluation cannot combine an older event read with a newer disposition read.
+ * Durable adapters must construct this value inside one protected database
+ * snapshot; fixture adapters must read it from one atomic state cell.
+ *
+ * **Example** (Build an empty filing snapshot)
+ *
+ * ```ts
+ * import { CandorRecordSnapshot } from "@beep/law-practice-use-cases/CandorPolicy"
+ *
+ * const snapshot = CandorRecordSnapshot.make({ dispositions: [], events: [] })
+ * console.log(snapshot.events.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CandorRecordSnapshot extends S.Class<CandorRecordSnapshot>($I`CandorRecordSnapshot`)(
+  {
+    dispositions: S.Array(CandorDisposition).annotateKey({
+      description: "Attorney dispositions visible in the same protected read snapshot as the events.",
+    }),
+    events: S.Array(PatentCitationEvent).annotateKey({
+      description: "Patent citation events visible in the same protected read snapshot as the dispositions.",
+    }),
+  },
+  $I.annote("CandorRecordSnapshot", {
+    description: "Transactionally consistent candor events and dispositions for one filing.",
+  })
+) {}
 
 /**
  * Service shape for reading the recorded candor material of one filing.
@@ -32,14 +68,14 @@ const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.ports");
  *
  * The shape is read-only by construction: there is no update and no delete, so
  * a recorded disposition can only ever be revised by appending a superseding
- * record. Both methods are keyed by one exact citing-application
- * representation inside one organization; matching across representations is not
- * inferred here, and
- * reconciling them is a named follow-on.
+ * record. The snapshot is keyed by one exact citing-application
+ * representation inside one organization. Matching across representations is
+ * deliberately absent because the USPTO number does not carry the filing year
+ * that ST.13 requires.
  *
  * **Gotchas**
  *
- * Returning an empty array means "the store answered and there is nothing".
+ * Returning a snapshot with empty arrays means "the store answered and there is nothing".
  * A store that cannot answer must fail with `CandorRecordReadError`, because a
  * gate that treats an unreadable store as empty would report "not blocked" for
  * a filing it never actually checked.
@@ -47,15 +83,16 @@ const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.ports");
  * **Example** (Build a read-only fixture reader)
  *
  * ```ts
- * import { CandorRecordReaderShape } from "@beep/law-practice-use-cases/CandorPolicy"
+ * import { CandorRecordReaderShape, CandorRecordSnapshot } from "@beep/law-practice-use-cases/CandorPolicy"
  * import { Effect } from "effect"
  *
  * const reader = CandorRecordReaderShape.make({
- *   dispositionsForFiling: () => Effect.succeed([]),
- *   eventsForFiling: () => Effect.succeed([]),
+ *   snapshotForFiling: () => Effect.succeed(
+ *     CandorRecordSnapshot.make({ dispositions: [], events: [] })
+ *   ),
  * })
  *
- * console.log(typeof reader.eventsForFiling) // "function"
+ * console.log(typeof reader.snapshotForFiling) // "function"
  * ```
  *
  * @category services
@@ -63,17 +100,11 @@ const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.ports");
  */
 export class CandorRecordReaderShape extends S.Class<CandorRecordReaderShape>($I`CandorRecordReaderShape`)(
   {
-    dispositionsForFiling: Fn({
+    snapshotForFiling: Fn({
       input: CandorFilingScope,
-      output: EffectSchema<ReadonlyArray<CandorDisposition>, CandorRecordReadError, never>(),
+      output: EffectSchema<CandorRecordSnapshot, CandorRecordReadError, never>(),
     }).annotateKey({
-      description: "Read every recorded attorney disposition for one exact tenant-scoped filing.",
-    }),
-    eventsForFiling: Fn({
-      input: CandorFilingScope,
-      output: EffectSchema<ReadonlyArray<PatentCitationEvent>, CandorRecordReadError, never>(),
-    }).annotateKey({
-      description: "Read every recorded patent citation event for one exact tenant-scoped filing.",
+      description: "Read events and dispositions for one filing from one protected snapshot.",
     }),
   },
   $I.annote("CandorRecordReaderShape", {
@@ -93,7 +124,7 @@ export class CandorRecordReaderShape extends S.Class<CandorRecordReaderShape>($I
  * **Example** (Read a filing's events through the port)
  *
  * ```ts
- * import { CandorRecordReader, CandorRecordReaderShape } from "@beep/law-practice-use-cases/CandorPolicy"
+ * import { CandorRecordReader, CandorRecordReaderShape, CandorRecordSnapshot } from "@beep/law-practice-use-cases/CandorPolicy"
  * import { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy"
  * import { CitingApplicationIdentity, UsptoNormalizedApplicationNumber } from "@beep/law-practice-domain"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
@@ -101,7 +132,7 @@ export class CandorRecordReaderShape extends S.Class<CandorRecordReaderShape>($I
  *
  * const program = Effect.gen(function* () {
  *   const reader = yield* CandorRecordReader
- *   return yield* reader.eventsForFiling(
+ *   return yield* reader.snapshotForFiling(
  *     CandorFilingScope.make({
  *       citingApplication: CitingApplicationIdentity.make({
  *         applicationNumber: UsptoNormalizedApplicationNumber.make("16138242"),
@@ -114,13 +145,14 @@ export class CandorRecordReaderShape extends S.Class<CandorRecordReaderShape>($I
  *   Effect.provideService(
  *     CandorRecordReader,
  *     CandorRecordReaderShape.make({
- *       dispositionsForFiling: () => Effect.succeed([]),
- *       eventsForFiling: () => Effect.succeed([]),
+ *       snapshotForFiling: () => Effect.succeed(
+ *         CandorRecordSnapshot.make({ dispositions: [], events: [] })
+ *       ),
  *     })
  *   )
  * )
  *
- * Effect.runPromise(program).then((events) => console.log(events))
+ * Effect.runPromise(program).then((snapshot) => console.log(snapshot.events))
  * ```
  *
  * @category services
@@ -199,7 +231,7 @@ export class CandorPolicyShape extends S.Class<CandorPolicyShape>($I`CandorPolic
  * **When to use**
  *
  * Use when a filing-promotion decision must not proceed until every current
- * AI-discovered citation event carries an attorney judgment bound to its exact
+ * recorded citation event carries an attorney judgment bound to its exact
  * observation version.
  *
  * **Example** (Consume the gate through its tag)

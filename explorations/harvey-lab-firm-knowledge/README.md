@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -18,9 +18,8 @@ methodology, and a legal-DMS task taxonomy.
 
 ## Next Open Question
 
-Draft/review the shaped pitch for two goals: the eval framework (including one
-external baseline run) and the tracked-changes wedge rung. The U4 fixture spike
-is the P0 kill-gate; generator and DMS rungs remain MAP re-entry points.
+No blocking question. Reopen at `decompose` only when the corpus-generator or
+DMS-taxonomy gate in [`MAP.md`](./MAP.md) fires.
 
 ## Read This First
 
@@ -34,6 +33,16 @@ is the P0 kill-gate; generator and DMS rungs remain MAP re-entry points.
 ## Trail
 
 <Dated one-liners, newest first: what each session did and where it stopped.>
+
+- 2026-08-13 (final ceremony): operator signed off `BRIEF.md` and `MAP.md`;
+  graduated [`effect-native-legal-eval`](../../goals/effect-native-legal-eval/README.md)
+  and [`tracked-changes-ingest-wedge`](../../goals/tracked-changes-ingest-wedge/README.md).
+  Generator/DMS candidates remain MAP re-entry points; both goals preserve the
+  synthetic-first and later-real-data-on-device-only boundary.
+
+- 2026-08-13 (ceremony): drafted `BRIEF.md` and `MAP.md` for the eval and
+  tracked-changes goals. Stage remains `shape`; operator BRIEF review is the
+  gate. Generator and DMS work remain re-entry points.
 
 - 2026-08-13: align closed; tracked-changes-aware ingest selected with U4 as
   the P0 kill-gate and structural fallback. Synthetic C&H is first; the

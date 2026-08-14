@@ -29,7 +29,7 @@ Use this command for execution-capable sessions:
 
 1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
 2. [`SPEC.md`](./SPEC.md) - normative source of truth (decision log included).
-3. [`PLAN.md`](./PLAN.md) - active execution plan (two rungs).
+3. [`PLAN.md`](./PLAN.md) - archived execution plan (two completed rungs).
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger
    (inherited from the exploration).
@@ -37,15 +37,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Closed. PR #575 merged as `5e4df6be4a`. The gate ships fail-closed with both rungs
-proven; the cross-slice consultation and its `foundation/capability` gate port are
-deferred with `research/01-gate-shape-check.md` as standing evidence, and the
-"widening the quantified gate set" align question stays parked. P0, P1, and the scoped P2 are complete. The owner rulings recorded as
-`SPEC.md` decisions 10 and 11 kept rung 2 to the half that needs no cross-slice
-decision: durable ports, repository and layers, the slice's first db-admin
-migration with append-only guards, and the IDS fact records. The cross-slice
-consultation and its `foundation/capability` gate port are deferred with
-`research/01-gate-shape-check.md` as the standing evidence.
+Closed. PR #575 merged as `5e4df6be4a`; P0, P1, and the scoped P2 are complete.
+The successor packet terminally resolved both former align questions. Every
+current recorded event now enters the quantified set, and the only existing
+candidate-acceptance implementation consults a law-neutral, tenant-bound shared
+gate backed by a fail-closed candor adapter. The repository still has no
+production candidate-acceptance composition root, so the successor proves the
+contract and fixture acceptance boundary without claiming live product
+protection that does not exist.
 
 ## Latest Evidence
 
@@ -62,10 +61,12 @@ consultation and its `foundation/capability` gate port are deferred with
   `@beep/law-practice-domain`, `@beep/law-practice-use-cases`,
   `@beep/law-practice-tables`, `@beep/law-practice-server`,
   `@beep/shared-domain`, and `@beep/db-admin`.
-- **P0 gate-shape check (2026-08-05).**
+- **P0 gate-shape check (2026-08-05; resolved by successor).**
   [`research/01-gate-shape-check.md`](./research/01-gate-shape-check.md) — the
-  two shapes the SPEC authorized are both unavailable; foundation-mediated
-  port inversion is recommended and awaits owner sign-off.
+  two shapes the SPEC authorized were both unavailable. Its then-pending
+  foundation-mediated recommendation is historical: the successor shipped the
+  architecture-approved `shared/use-cases` port and terminally resolved the
+  sign-off question.
 - **P0 surface re-verification (2026-08-05).**
   [`research/02-surface-reverification.md`](./research/02-surface-reverification.md)
   — every SOURCES.md §4 surface confirmed current; two drift notes recorded.
@@ -99,64 +100,31 @@ owner-directed scope widening — see the SPEC's "no unrelated refactors" criter
 | First db-admin migration + PGlite test + `AcceptedProofManifest` | `packages/_internal/db-admin/drizzle/20260813130540_baseline/`, `test/integration/LawPracticeCandorGateMigration.pglite.test.ts`, four manifest entries |
 | Append-only guards proven, not just installed | The PGlite test asserts the exact constraint/trigger name sets, then that both an UPDATE and a DELETE against a recorded disposition are rejected |
 | IDS fact families as presence-only facts | `packages/law-practice/domain/src/entities/IdsSubmissionFact/` — candidate window (never a compliance label), 1.17(p)/(v) fees, 1.97(e) statement + 1.98(a)(4) assertion, 1.98 content presence, office treatment as observed, own operative date per act |
-| Live filing-promotion consultation | **Deferred** — SPEC decisions 10 and 11; see `research/01-gate-shape-check.md` |
+| Filing-promotion consultation | **Resolved by successor** — `../candor-gate-followups-closeout/` ships the tenant-bound shared gate contract, protects the repository's fixture candidate-acceptance boundary, and supplies a fail-closed law adapter. No production acceptance runtime exists to compose. |
 
-## Unowned Follow-Ons (audited 2026-08-10)
+## Follow-On Resolution (2026-08-13)
 
-This packet is closed, so nothing below is scheduled. The audit that produced this
-list checked every active goal and exploration: **no packet owns any of the five.**
-For these five local follow-ons, this section is the citation target: a future
-packet claims an item by naming it here rather than rediscovering it. This routing
-choice does not extend speed-loop closeout decision 55 beyond the earlier
-grilled-but-unshipped widgets retained in that packet.
+[`../candor-gate-followups-closeout/`](../candor-gate-followups-closeout/) claimed
+and terminally disposed every item from the former unowned list. No item remains
+routed from this packet.
 
-Two are already normative elsewhere and are listed for routing only:
+| Former follow-on | Successor disposition |
+| --- | --- |
+| Cross-slice filing-promotion consultation | Implemented at the only existing fixture candidate-acceptance boundary through tenant-bound `@beep/shared-use-cases/PromotionGate` and the law-practice server adapter; no nonexistent production composition root is claimed. |
+| Examiner-observed quantified set | Implemented; every current recorded event gates until it has a human disposition. |
+| ST.13 and USPTO-normalized identity | Primary authority disproved deterministic conversion; ST.13 requires a known non-U.S. office, rejects `US`, `XX`, and absent/non-string office values, and exact representations remain distinct. The successor migration refuses unresolved legacy rows. |
+| Candor JSONB planner risk | Representative-volume PGlite proof uses the existing `org_id` index; no new physical index is justified. |
+| Shared test Crypto layer | Census found five distinct semantics and only two hazardous identical fakes; promotion is explicitly rejected. |
 
-1. **Cross-slice filing-promotion consultation + its `foundation/capability` gate
-   port.** Recorded in SPEC decisions 10 and 11, the Criterion-to-Proof map above,
-   and the SPEC's pending Exception Ledger row, with
-   [`research/01-gate-shape-check.md`](./research/01-gate-shape-check.md) as
-   standing evidence. Unowned, not unrecorded.
-2. **Widening the quantified gate set** so examiner-observed events gate in their
-   own right. Parked by SPEC decision 4 and named-not-graduated in
-   `explorations/patent-citation-candor-gate/MAP.md`. Unowned, not unrecorded.
-
-Three lived only in the 2026-08-05 reflection until this audit and would have been
-lost with it:
-
-3. **No ST.13 ↔ USPTO-normalized conversion on `CitingApplicationIdentity`,** so a
-   filing recorded under both representations gates twice. This is deliberate —
-   translating an eight-digit USPTO number to ST.13 needs USPTO's
-   series-code-to-year table, and inventing one would fabricate legal identity. The
-   reflection assigns it to "the reference-reconciliation follow-on"; **that packet
-   does not exist.** Whoever mints it inherits this.
-4. **The Drizzle repository filters by jsonb equality on the encoded citing
-   application, and `citing_application` carries no dedicated index.** Every read
-   also constrains `org_id`, whose index can narrow the scan to one tenant before
-   PostgreSQL applies the JSONB predicate; the tables also carry unique
-   `public_id` indexes. No representative-volume `EXPLAIN` proves a table scan.
-   Capture that evidence before deciding whether a generated column or expression
-   index is justified.
-5. **No shared `Crypto.Crypto` test layer in `@beep/test-utils`,** so every proof
-   reaching `verifyTextAnchor` supplies its own via `BunCrypto.layer`,
-   `NodeCrypto.layer`, or a hand-roll. Sharper than the reflection's version: the
-   only *real* Web-Crypto hand-roll is
-   `packages/law-practice/use-cases/test/CandorPolicy.test.ts`, so promoting a real
-   layer would deduplicate exactly one site — but the identity-stub shape
-   (`digest: (_algorithm, data) => Effect.succeed(data)`,
-   `randomBytes: (size) => new Uint8Array(size).fill(1)`) repeats verbatim in only
-   two files: `EntityKernel.test.ts` and
-   `ContradictionTriage.observability.test.ts`. The nearby ThreadStore crypto
-   layers exercise different success and failure behavior. A shared identity stub
-   would therefore deduplicate two sites; this audit does not claim that it has
-   earned promotion.
+The successor's `research/DECISIONS.md` and dedicated evidence receipts are the
+current citation targets for these dispositions.
 
 ## Notes
 
 - One packet, two strict rungs: rung 1 is the in-memory domain proof
-  (deliberately not shippable protection); rung 2 (durability + the slice's
-  first db-admin migration + live promotion-path invocation) is where risk
-  retirement lands.
+  (deliberately not shippable protection); rung 2 is durability plus the
+  slice's first db-admin migration. The successor later added the shared
+  contract and fixture acceptance invocation; no live product path exists.
 - Budget circuit-breaker: if rung 1 busts its week, drop
   `PatentFragmentLocator` entirely — never the observation-version binding or
   the fail-closed predicate.

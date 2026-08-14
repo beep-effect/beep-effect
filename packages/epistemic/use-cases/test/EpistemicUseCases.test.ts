@@ -2,11 +2,15 @@ import { CandidateClaim, ClaimGateResult, ClaimLifecycle, ClaimProjectionView, E
 import * as ClaimGateUC from "@beep/epistemic-use-cases/ClaimGate";
 import * as ClaimLifecycleUC from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { ClaimProjection, projectClaims } from "@beep/epistemic-use-cases/ClaimProjection";
-import { ShaclValidationServiceLive } from "@beep/semantic-web/adapters/shacl-engine";
-import { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
+import { makeNamedNode } from "@beep/semantic-web/rdf";
+import {
+  ShaclValidationResult,
+  ShaclValidationService,
+  ShaclValidationViolation,
+} from "@beep/semantic-web/services/shacl-validation";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -33,9 +37,37 @@ const candidate = makeCandidate(1, "claim.patentability", "candidate");
 const alreadyAdmitted = makeCandidate(4, "claim.alreadyAdmitted", "admitted");
 const admittedVerdict = S.decodeSync(ClaimGateResult)({ verdict: "admitted" });
 
+// Stubbed port: conforms exactly when the projected dataset carries evidence
+// quads beyond the claim's type quad, mirroring the bounded engine's minCount
+// semantics. Integration over the real bounded validator lives in
+// @beep/epistemic-server's BoundedShaclValidator tests.
+const StubShaclValidation = Layer.succeed(
+  ShaclValidationService,
+  ShaclValidationService.of({
+    validate: Effect.fn((request) =>
+      Effect.succeed(
+        request.dataset.quads.length > 1
+          ? ShaclValidationResult.make({ conforms: true, violations: [], truncated: false })
+          : ShaclValidationResult.make({
+              conforms: false,
+              truncated: false,
+              violations: [
+                ShaclValidationViolation.make({
+                  focusNode: "https://beep.dev/epistemic/claim/claim.patentability",
+                  path: makeNamedNode("https://beep.dev/epistemic/hasEvidenceQuote"),
+                  message: "Expected at least 1 evidence quote.",
+                  severity: "violation",
+                }),
+              ],
+            })
+      )
+    ),
+  })
+);
+
 describe("@beep/epistemic-use-cases", () => {
-  // Boots only the bounded SHACL capability layer — no other slice, no runtime.
-  it.layer(ShaclValidationServiceLive)("claim gate over the bounded SHACL engine", (it) => {
+  // Boots only the stubbed SHACL port — no other slice, no live capability.
+  it.layer(StubShaclValidation)("claim gate over the stubbed SHACL port", (it) => {
     it.effect(
       "admits a well-formed claim and advances candidate -> shape_valid",
       Effect.fnUntraced(function* () {

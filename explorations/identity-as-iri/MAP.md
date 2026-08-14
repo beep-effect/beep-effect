@@ -9,16 +9,18 @@ explicitly marked NET-NEW.
 
 ## Candidate Goal Packets
 
-**Lifecycle annotation (2026-07-14):** `identity-iri-core` is
+**Lifecycle annotation (2026-08-13):** `identity-iri-core` is
 **COMPLETED-RETAINED (5/5)**, satisfying the fold dependency;
 [`identity-iri-fold`](../../goals/identity-iri-fold/README.md) is
-**GRADUATED**; `identity-iri-fibered` is **HOLD** until the fold lands.
+**COMPLETED-RETAINED**; and
+[`identity-iri-fibered`](../../goals/identity-iri-fibered/README.md) is
+**GRADUATED / BLOCKED** by the semantic-web PR2+PR3 cleanup notes.
 
 | Slug | Mission | Depends on | Capabilities cited |
 | --- | --- | --- | --- |
 | `identity-iri-core` | Rewrite `@beep/identity` in place: vocab registry data + `Curie`/`Predicate`/`Expand` literal types + expand/contract + PN_LOCAL codecs + composer binding (`make({authority, prefix, vocab})`, literal `.iri`/`.curie`, projection-only `rebase`) — surface shape-stable, zero call-site changes | none | Port donors: [`scratchpad/identity/{Vocab,Curie,PnLocal,Composer}.ts`](../../scratchpad/identity/) (proven, 27/27). Preserve-exactly surface: [`research/11-audit-identity-coupling.md`](./research/11-audit-identity-coupling.md). Existing composer: `packages/foundation/modeling/identity/src/Id.ts`. Vocab source constants: `packages/foundation/modeling/rdf/src/Vocab/*`. NET-NEW: literal-type registry, codecs, IRI/CURIE getters, rebase |
 | `identity-iri-fold` | Repopulate `@beep/ontology`: `$I.key`/`$I.class`/`$I.ontology` fold, `AssembledOntology` + `OntologyAssemblyError` taxonomy, JSON-LD/@context/Turtle/Markdown projections, SKOS profiles, §8 FOLIO `Ontology.models.ts` migrations (idempotent sweeps; also fixes the pre-existing cspell junk words there) | `identity-iri-core` | Port donors: [`scratchpad/identity/{Ontology,Projections}.ts`](../../scratchpad/identity/). Salvage: [`assets/ontology-prototype/`](./assets/ontology-prototype/) (projections, assembly walker, error taxonomy, test fixtures — our own dead code). Migration target: `packages/foundation/modeling/ontology/src/Ontology.models.ts`. NET-NEW: nominal entrypoints, AST datatype/object inference, Markdown projection port |
-| `identity-iri-fibered` | `Fibered` kit (discrete case) + `JSDocTagDefinition.make` migration (byte-identical) + `IdentityRegistry` interface in `@beep/identity` with local layer; store layers (Oxigraph stub) + SHACL projection in `@beep/semantic-web` | `identity-iri-core`, `identity-iri-fold` | Fibration prior art: `JSDocTagDefinition.make` (`@beep/schema`). SHACL gate: `@beep/semantic-web` shacl services. Retrieval patterns (clean-room only): dxos/skygest reports in [`research/repos/`](./research/repos/). NET-NEW: `Fibered`, policy projections, `pullback`, registry service |
+| [`identity-iri-fibered`](../../goals/identity-iri-fibered/README.md) | `Fibered` kit (discrete case) + `JSDocTagDefinition.make` migration (byte-identical) + `IdentityRegistry` interface in `@beep/identity` with local layer; store layers as test/dev Layers + SHACL projection against the post-move contract in `@beep/semantic-web` | `identity-iri-core`, `identity-iri-fold`; blocked by semantic-web PR2+PR3 cleanup notes | Fibration prior art: `JSDocTagDefinition.make` (`@beep/schema`). SHACL gate: `packages/foundation/capability/semantic-web/src/services/shacl-validation.ts`. Retrieval patterns (clean-room only): dxos/skygest reports in [`research/repos/`](./research/repos/). NET-NEW: `Fibered`, policy projections, `pullback`, registry service |
 
 ## Sequencing
 
@@ -28,9 +30,10 @@ surface) and carries the repo-wide blast radius (every file imports
 `@beep/identity`), so it merges alone with the shape-stable proof harness.
 Fold unlocks the product-visible payoff (FOLIO models migrate, projections
 ship). Fibered is the agent-retrieval capstone and can trail without blocking
-product work. `identity-iri-core` is completed-retained;
-`identity-iri-fold` graduated 2026-07-14; `identity-iri-fibered` remains held
-until the fold lands.
+product work. `identity-iri-core` and `identity-iri-fold` are
+completed-retained. `identity-iri-fibered` graduated 2026-08-13 but
+implementation remains blocked until both semantic-web cleanup notes have
+landed-content evidence.
 
 ## First Vertical Slice
 

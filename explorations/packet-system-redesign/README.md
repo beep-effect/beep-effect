@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `align`
+Stage: `decompose`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -18,12 +18,9 @@ BDUF ceremony.
 
 ## Next Open Question
 
-None — ready for shape. Sixteen align decisions resolved (D1–D11 packet
-machinery; D12–D14 packets-app sequencing/IA/realtime; D15 packets as sole
-system of record; D16 no state folders — paths permanent, state projected)
-in `DECISIONS.md` (2026-08-10).
-Next session drafts `BRIEF.md` from capture + research + decisions; the
-app's home (likely `apps/`) is deferred to decompose per D12.
+Does the operator approve [`MAP.md`](./MAP.md) as the goal boundaries,
+dependencies, capability composition, sequencing, and first vertical slice?
+No goals are scaffolded until that review passes.
 
 ## Read This First
 
@@ -33,8 +30,17 @@ app's home (likely `apps/`) is deferred to decompose per D12.
 4. [`research/2026-08-10-codex-deep-research-redesign.md`](./research/2026-08-10-codex-deep-research-redesign.md) - Codex deep-research revision (imported).
 5. [`RESEARCH.md`](./RESEARCH.md) - synthesis of imports + six Grok lanes (stage 1).
 6. [`DECISIONS.md`](./DECISIONS.md) - grilling log (stage 2).
+7. [`BRIEF.md`](./BRIEF.md) - operator-ratified shaped pitch.
+8. [`MAP.md`](./MAP.md) - decomposition awaiting operator review.
 
 ## Trail
+
+- 2026-08-13 (final ceremony): operator signed off `BRIEF.md`; stage advanced
+  to `decompose` and `MAP.md` was drafted from D1-D16 plus live capability
+  verification. MAP review is the next gate; no goal was scaffolded.
+
+- 2026-08-13 (ceremony): drafted `BRIEF.md` from CAPTURE, RESEARCH, and
+  D1-D16; stage advanced to `shape`. Operator BRIEF review is next.
 
 - 2026-08-10: packets-app capture added (read-only pulse/kanban/DAG UI; the
   operator's "what do I do next" bottleneck); lane 7 dispatched with the

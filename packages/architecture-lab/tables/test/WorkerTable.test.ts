@@ -41,9 +41,10 @@ describe("Worker table", () => {
         "architecture_lab_worker_status_lookup_idx",
         "architecture_lab_worker_public_id_unique_idx",
       ]);
-      expect(config.indexes.find((index) => index.config.name.endsWith("public_id_unique_idx"))?.config.unique).toBe(
-        true
-      );
+      expect(
+        config.indexes.find((index) => index.config.name === "architecture_lab_worker_public_id_unique_idx")?.config
+          .unique
+      ).toBe(true);
       expect(fromWorkerRow({ ...row, id }).displayName).toBe("Ada Lovelace");
     })
   );

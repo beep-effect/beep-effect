@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "document-ast-pattern-classification",
+    "title": "Document AST Pattern Classification",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/document-ast-pattern-classification",
+  "lifecycle": "active",
+  "mission": "Classify Md, Pandoc, and Lexical constructors with schema-truth PO annotations and derived conservation proof.",
+  "statusNote": "Graduated second from document-structure-ontologies; campaign delivery follows patent-document-schema.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/document-structure-ontologies",
+    "graduated": "2026-08-13"
+  },
+  "dependencies": ["goals/patent-document-schema"],
+  "blockedBy": ["goals/patent-document-schema"],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/document-ast-pattern-classification/README.md",
+    "goals/document-ast-pattern-classification/SPEC.md",
+    "goals/document-ast-pattern-classification/PLAN.md",
+    "goals/document-ast-pattern-classification/GOAL.md",
+    "goals/document-ast-pattern-classification/research/SOURCES.md",
+    "explorations/document-structure-ontologies/BRIEF.md",
+    "explorations/document-structure-ontologies/MAP.md",
+    "explorations/document-structure-ontologies/DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/document-structure-ontologies/research/SOURCES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/document-ast-pattern-classification/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Research", "status": "pending" },
+    { "id": "P1", "name": "Implement", "status": "pending" },
+    { "id": "P2", "name": "Verify", "status": "pending" },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/document-ast-pattern-classification/GOAL.md)\" -le 4000",
+    "jq . goals/document-ast-pattern-classification/ops/manifest.json",
+    "rg -n \"document-ast-pattern-classification|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/document-ast-pattern-classification",
+    "git diff --check -- goals/document-ast-pattern-classification",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The design creates a sidecar source of truth or duplicate diagnostic channel.",
+    "Exhaustiveness cannot be proven from the live unions.",
+    "The implementation would absorb sibling campaign scope."
+  ]
+}

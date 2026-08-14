@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "epistemic-memory-retention-projections",
+    "title": "Epistemic Memory Retention Projections",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/epistemic-memory-retention-projections",
+  "lifecycle": "active",
+  "mission": "Ship rebuildable tier and memory-pressure projections with inert schema-validated retention policy behind calibration evidence.",
+  "statusNote": "Mechanism may proceed now. Tier, decay, and threshold policy must remain inert until a calibration-evidence gate passes; RRF integration is follow-on only.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-memory-tiers-bitemporal-edges",
+    "graduated": "2026-08-13"
+  },
+  "dependencies": ["goals/epistemic-bitemporal-edge-core"],
+  "blockedBy": [],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/epistemic-memory-retention-projections/README.md",
+    "goals/epistemic-memory-retention-projections/SPEC.md",
+    "goals/epistemic-memory-retention-projections/PLAN.md",
+    "goals/epistemic-memory-retention-projections/GOAL.md",
+    "goals/epistemic-memory-retention-projections/research/SOURCES.md",
+    "explorations/agent-memory-tiers-bitemporal-edges/BRIEF.md",
+    "explorations/agent-memory-tiers-bitemporal-edges/MAP.md",
+    "explorations/agent-memory-tiers-bitemporal-edges/DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/agent-memory-tiers-bitemporal-edges/research/SOURCES.md",
+    "../../explorations/agent-memory-tiers-bitemporal-edges/research/memory-tier-decay-and-eviction.md",
+    "../../explorations/agent-memory-tiers-bitemporal-edges/research/rrf-retrieval-layer-consumption.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/epistemic-memory-retention-projections/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research and calibration gate",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement projections and report",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify rebuild and authority isolation",
+      "status": "pending"
+    },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/epistemic-memory-retention-projections/GOAL.md)\" -le 4000",
+    "jq . goals/epistemic-memory-retention-projections/ops/manifest.json",
+    "rg -n \"epistemic-memory-retention-projections|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/epistemic-memory-retention-projections",
+    "git diff --check -- goals/epistemic-memory-retention-projections",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The projection would mutate or replace accepted authority records.",
+    "Retention policy would activate without calibration evidence.",
+    "The implementation would absorb RRF arithmetic or operator-memory scope."
+  ]
+}

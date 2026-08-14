@@ -18,6 +18,26 @@ const decodeMessageOption = S.decodeUnknownOption(S.NonEmptyString);
 const getErrorMessage = (value: unknown): O.Option<string> =>
   value instanceof Error ? decodeMessageOption(value.message) : O.none();
 
+const PgliteErrorFields = {
+  operation: S.NonEmptyString.annotateKey({
+    description: "Driver operation that failed.",
+  }),
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "Original native or third-party defect when one was available.",
+    })
+  ),
+  message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "Non-empty message extracted from the originating failure.",
+    })
+  ),
+} satisfies S.Struct.Fields;
+const samePgliteErrorFields = S.toEquivalence(S.TaggedStruct("PgliteError", PgliteErrorFields));
+const samePgliteError = (self: PgliteError, that: PgliteError): boolean => samePgliteErrorFields(self, that);
+
 /**
  * Technical failure raised by the `@beep/pglite` driver boundary.
  *
@@ -42,26 +62,14 @@ const getErrorMessage = (value: unknown): O.Option<string> =>
  */
 export class PgliteError extends S.TaggedError<PgliteError>($I`PgliteError`)(
   "PgliteError",
-  {
-    operation: S.NonEmptyString.annotateKey({
-      description: "Driver operation that failed.",
-    }),
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Original native or third-party defect when one was available.",
-      })
-    ),
-    message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Non-empty message extracted from the originating failure.",
-      })
-    ),
-  },
-  $I.annote("PgliteError", {
-    description: "Technical PGlite driver failure scoped to a driver operation.",
-  })
+  PgliteErrorFields,
+  $I.annoteClass<S.declare<PgliteError>, readonly [S.TaggedStruct<"PgliteError", typeof PgliteErrorFields>]>(
+    "PgliteError",
+    {
+      description: "Technical PGlite driver failure scoped to a driver operation.",
+      toEquivalence: () => samePgliteError,
+    }
+  )
 ) {
   /**
    * Normalize an unknown PGlite-adjacent failure into a {@link PgliteError}.

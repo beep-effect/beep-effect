@@ -136,16 +136,16 @@ export class KnowledgeOperationalError extends S.TaggedError<KnowledgeOperationa
 }
 
 /**
- * An archive-local probe process that exited non-zero without emitting its structured output.
+ * A current-checkout probe over archive data that exited non-zero without structured output.
  *
  * **Details**
  *
- * The probes import the scanned revision's own CLI modules, so a revision whose workspace imports no
- * longer resolve — a deleted barrel export, an unparsable module — dies before it can report
- * anything. This class is separate from {@link KnowledgeOperationalError} because the two sides of a
- * comparison own the failure differently: on HEAD it is the branch author's own tree and is re-raised
- * as operational, while on the merge-base it degrades the comparison's probe coverage and is recorded
- * in the report instead of failing the run.
+ * The probes import current-checkout CLI modules and use the selected revision only as filesystem
+ * data. A module boot failure or a projection that rejects that data can still exit before reporting
+ * anything. This class is separate from {@link KnowledgeOperationalError} because the two data sides
+ * of a comparison own the failure differently: on HEAD it is the branch author's own tree and is
+ * re-raised as operational, while on the merge-base it degrades the comparison's probe coverage and
+ * is recorded in the report instead of failing the run.
  *
  * **Gotchas**
  *
@@ -158,7 +158,7 @@ export class KnowledgeOperationalError extends S.TaggedError<KnowledgeOperationa
  * import { KnowledgeProbeBootError } from "@beep/repo-cli/commands/Knowledge/Knowledge.errors"
  *
  * const error = KnowledgeProbeBootError.make({
- *   message: 'Archive-local probe "command-probe.ts" failed with exit 1.',
+ *   message: "Current-checkout command probe against archive data failed with exit 1.",
  * })
  *
  * console.log(error._tag) // "KnowledgeProbeBootError"
@@ -173,7 +173,7 @@ export class KnowledgeProbeBootError extends S.TaggedError<KnowledgeProbeBootErr
     message: S.String,
   },
   $I.annote("KnowledgeProbeBootError", {
-    description: "An archive-local probe that exited non-zero before emitting structured output.",
+    description: "A current-checkout probe over archive data that exited before emitting structured output.",
   })
 ) {}
 
