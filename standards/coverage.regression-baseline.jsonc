@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-14T01:07:25.750Z",
-  "git_sha": "d3d12df8a3e74b779124d7ef6b8f8bced583a919",
+  "generated_at": "2026-08-14T01:42:32.658Z",
+  "git_sha": "9a6f0bd8e4d682cede1ea103509dd486d92e36d3",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "packages": {
@@ -23275,10 +23275,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts": {
-          "lines": 86.48,
-          "statements": 85.87,
+          "lines": 86.59,
+          "statements": 85.97,
           "branches": 71.42,
-          "functions": 81.65,
+          "functions": 81.81,
           "uncovered": {
             "lines": 35,
             "statements": 38,
