@@ -37,10 +37,12 @@ Complete fallback and push runs remain one `Coverage Regression` fleet job:
 
 1. Clean stale coverage outputs once.
 2. Prebuild the workspace once with the existing fleet concurrency of four.
-3. Run coverage with `turbo run coverage --only` in four concurrent,
-   single-task shards, capping each Vitest process at two workers so aggregate
-   test fan-out fits the fleet worker's eight vCPUs; dependency builds are
-   neither skipped nor repeated.
+3. Run coverage with `turbo run coverage --only` in eight concurrent,
+   single-task shards. The measured `@beep/repo-cli` and `@beep/repo-utils`
+   long poles retain two Vitest workers; the six mixed shards use one worker
+   each. Aggregate test-process fan-out remains capped at 10, exactly matching
+   the merged five-shard candidate; dependency builds are neither skipped nor
+   repeated.
 4. Collect the disjoint per-package summaries and run the unchanged full
    ratchet comparison.
 
@@ -48,12 +50,16 @@ The workflow appends every Turbo summary from the prebuild and shard processes,
 so full-run cache, task-count, duration, and long-pole telemetry remains
 complete even though the lane now launches multiple Turbo processes.
 
-Least-loaded placement uses the accepted hosted package durations checked into
-the planner. The 125 current owners resolve to four stable shards containing
-5, 32, 44, and 44 packages with modeled weights of 793 seconds each. Every
-owner appears exactly once; `@beep/shacl` is the one current owner not yet in
-the 124-package committed baseline. New packages use a 15-second default and
-enter the same deterministic name-tiebroken placement.
+Least-loaded placement uses hosted package durations checked into the planner.
+The 20 largest durations from PR #707 override the older PR #684 profile and
+account for roughly 60% of measured package test time; the older evidence
+continues to weight the tail. The 127 current coverage owners resolve to eight
+stable shards containing 1, 1, 17, 22, 22, 21, 21, and 22 packages. The two
+long poles are isolated at modeled weights of 721 and 605 seconds, while the
+six mixed shards are balanced at 450 two-worker-equivalent seconds before
+their per-shard worker limit is applied. Every owner appears exactly once.
+New packages use a 15-second default and enter the same deterministic
+name-tiebroken placement.
 
 ## Admission and rollback
 
@@ -102,6 +108,33 @@ in 2m36s; the five shards completed 1, 18, 35, 36, and 37 tasks in 3m45s, 5m19s,
 5m34s, 7m26s, and 6m55s; and the ratchet compared all 126 baseline packages.
 Every task was a cache miss, and there was no shutdown or OOM. Local timing
 still cannot satisfy the hosted wall-time gate.
+
+Final PR #707 run `31766791221`, job `94664247028`, accepted the five-shard
+candidate's correctness but rejected its economics. The job took 23m14s and
+the verification step took 22m00s. Its zero-cache 128-task prebuild took
+3m39s; all five shards passed in 12m03s, 15m13s, 15m46s, 18m15s, and 17m39s;
+and the ratchet compared all 126 baseline packages. There was no timeout,
+runner shutdown, or OOM. The live task profile showed that the longest mixed
+tail queues, rather than the isolated `@beep/repo-cli` shard, controlled wall
+time. The PR was merged externally immediately after the green job, before its
+timing could be admitted, so the merged shape remains correctness-green but
+economics-rejected.
+
+The successor keeps the same job, VM, file-parallel coverage path, and
+aggregate cap of 10 Vitest workers. It isolates `@beep/repo-utils` alongside
+`@beep/repo-cli`, then redistributes the remaining tail from four two-worker
+queues into six one-worker queues. This changes scheduling granularity without
+increasing total worker fan-out: `2 + 2 + (6 × 1) = 10`. The #707 live weights
+predict independent mixed queues rather than the observed 18m15s straggler;
+hosted wall time remains the admission authority.
+
+The successor's forced local full-path proof passed on exact base
+`93e403dac2` with remote cache disabled. The prebuild completed 128/128 tasks
+in 55 seconds. Shards 1-8 completed 1, 1, 17, 22, 22, 21, 21, and 22 tasks in
+3m42s, 3m21s, 5m50s, 5m21s, 5m36s, 5m37s, 5m08s, and 5m59s. Every task was a
+cache miss; the ratchet compared all 126 baseline packages; and there was no
+test failure, runner shutdown, or OOM. The proof accepts correctness and the
+resource bound only—local wall time is not the fleet admission result.
 
 The live PR admission must prove all summaries, all regression tests, no runner
 shutdown/OOM, and complete job wall time below 20 minutes. Any source change

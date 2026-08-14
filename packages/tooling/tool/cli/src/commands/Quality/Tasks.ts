@@ -110,17 +110,21 @@ const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // tuning; the 16GB-survival value was 2.
 const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
-// Five weighted shards reduce the non-repo-cli long poles while keeping the
-// work inside one fleet job. Two Vitest workers per shard bound aggregate
-// test-process fan-out at 10 instead of the unbounded pool's potential 40.
-const COVERAGE_FULL_SHARD_COUNT = 5;
+// Eight weighted shards keep the work inside one fleet job while letting the
+// mixed package tail drain independently. The two measured long poles retain
+// two Vitest workers; the other six shards use one each, preserving the
+// previous aggregate test-process fan-out cap of 10 on the 8-vCPU runner.
+const COVERAGE_FULL_SHARD_COUNT = 8;
+const COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES = ["@beep/repo-cli", "@beep/repo-utils"] as const;
 // repo-cli deliberately disables file parallelism for ordinary package runs,
 // but serial imports consumed 728.76 seconds in the rejected live coverage
 // candidate. Full coverage uses isolated Vitest workers, so enable file
 // parallelism only on this orchestrated path; a two-worker local probe passed
 // all 90 files in 200.86 seconds with identical coverage.
 const COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG = "--fileParallelism=true";
-const COVERAGE_FULL_VITEST_MAX_WORKERS_ARG = "--maxWorkers=2";
+const COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG = "--maxWorkers=2";
+const COVERAGE_FULL_VITEST_MIXED_MAX_WORKERS_ARG = "--maxWorkers=1";
+const COVERAGE_FULL_VITEST_WORKER_CAP = 10;
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
 const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
@@ -1334,7 +1338,9 @@ const coverageFullShardStep = (
         ...A.map(packageNames, (packageName) => `--filter=${packageName}`),
         "--",
         COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
-        COVERAGE_FULL_VITEST_MAX_WORKERS_ARG,
+        A.some(packageNames, (packageName) => A.contains(COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES, packageName))
+          ? COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG
+          : COVERAGE_FULL_VITEST_MIXED_MAX_WORKERS_ARG,
       ]
     ),
     cwd,
@@ -1971,7 +1977,7 @@ const runFullShardedCoverage = Effect.fn("QualityTasks.runFullShardedCoverage")(
 
   const [prebuildStep, ...shardSteps] = coverageFullSteps(repoRoot, packageNames, args);
   yield* Console.log(
-    `[beep-cli] coverage:full: prebuild once, then ${A.length(shardSteps)} weighted in-job shard(s) at aggregate concurrency ${COVERAGE_FULL_SHARD_COUNT}`
+    `[beep-cli] coverage:full: prebuild once, then ${A.length(shardSteps)} weighted in-job shard(s) with aggregate Vitest worker cap ${COVERAGE_FULL_VITEST_WORKER_CAP}`
   );
   yield* runStep(prebuildStep);
   yield* runStreamingStepGroup("coverage:full", shardSteps, COVERAGE_FULL_SHARD_COUNT);
