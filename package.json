@@ -412,7 +412,7 @@
     "pkg:verify": "beep-cli quality package-verify",
     "pkg:verify:quick": "beep-cli quality package-verify --quick",
     "postinstall": "lefthook install && bun run infra:prepare-gha-runners",
-    "prepare": "node scripts/prune-tsgo-backups.mjs && effect-tsgo patch",
+    "prepare": "effect-tsgo unpatch && node scripts/prune-tsgo-backups.mjs && effect-tsgo patch",
     "purge": "bun run beep purge",
     "quality:dev": "bun run beep quality dev",
     "release": "bun run build && bun run test && bun run lint && bun run audit:full && changeset publish",

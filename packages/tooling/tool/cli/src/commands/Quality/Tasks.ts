@@ -1410,6 +1410,10 @@ const rootCheckSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
   turboStep(repoRoot, "check", ["check"], boundedRootTurboArgs(args)),
   ...optionalQualityTaskStep({
     enabled: shouldRunRepoWideSteps(args),
+    step: () => repoCliStep(repoRoot, "check:tsgo:rules", ["quality", "tsgo-rules"]),
+  }),
+  ...optionalQualityTaskStep({
+    enabled: shouldRunRepoWideSteps(args),
     step: () => repoCliStep(repoRoot, "check:tsgo:tests", ["quality", "test-tsgo"]),
   }),
   ...optionalQualityTaskStep({

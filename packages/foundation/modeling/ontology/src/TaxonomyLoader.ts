@@ -9,6 +9,7 @@ import { $OntologyId } from "@beep/identity/packages";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { Context, Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { isFilingSegment, TaxonomySeed } from "./SemanticFoundation.models.ts";
@@ -94,9 +95,16 @@ export type VendorLoadStatus = typeof VendorLoadStatus.Type;
  * @since 0.0.0
  */
 export class VendorManifestEntry extends S.Class<VendorManifestEntry>($I`VendorManifestEntry`)(
-  { format: S.Literal("jsonld"), id: S.NonEmptyString, loadStatus: VendorLoadStatus, path: VendorSlicePath },
+  {
+    format: S.Literal("jsonld"),
+    id: S.NonEmptyString,
+    loadStatus: VendorLoadStatus,
+    path: VendorSlicePath,
+  },
   $I.annote("VendorManifestEntry", { description: "Manifest row for one explicitly vetted JSON-LD taxonomy slice." })
-) {}
+) {
+  static readonly decodeUnknownJsonStringEffect = S.decodeUnknownEffect(S.fromJsonString(VendorManifestEntry));
+}
 
 /**
  *  Raised when the manifest cannot be read.
@@ -225,46 +233,100 @@ export class VendorSlicePathEscape extends TaggedErrorClass<VendorSlicePathEscap
 ) {}
 
 const decodeManifestEntry = S.decodeUnknownEffect(S.fromJsonString(VendorManifestEntry));
-const decodeTaxonomySeed = S.decodeUnknownEffect(S.fromJsonString(TaxonomySeed));
 
 const parseManifest = Effect.fn("TaxonomyLoader.parseManifest")(function* (path: string, content: string) {
   const lines = A.filter(A.map(Str.split(content, "\n"), Str.trim), Str.isNonEmpty);
   return yield* Effect.forEach(
     lines,
     (line, index) =>
-      decodeManifestEntry(line).pipe(Effect.mapError(() => TaxonomyManifestParseError.make({ line: index + 1, path }))),
+      decodeManifestEntry(line).pipe(
+        Effect.mapError(() =>
+          TaxonomyManifestParseError.make({
+            line: index + 1,
+            path,
+          })
+        )
+      ),
     { concurrency: 1 }
   );
 });
 
-const readSlice = Effect.fn("TaxonomyLoader.readSlice")(function* (entry: VendorManifestEntry, vendorRoot: string) {
-  return yield* VendorLoadStatus.$match(entry.loadStatus, {
-    UNVETTED: () => Effect.fail(VendorSliceUnvetted.make({ id: entry.id })),
-    VETTED: Effect.fn("TaxonomyLoader.readVettedSlice")(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const canonicalVendorRoot = yield* fs
-        .realPath(vendorRoot)
-        .pipe(Effect.mapError(() => VendorSliceReadError.make({ id: entry.id, path: vendorRoot })));
-      const candidatePath = A.join([canonicalVendorRoot, entry.path], "/");
-      const path = yield* fs
-        .realPath(candidatePath)
-        .pipe(Effect.mapError(() => VendorSliceReadError.make({ id: entry.id, path: candidatePath })));
-      const separator = Str.includes("\\")(canonicalVendorRoot) && !Str.includes("/")(canonicalVendorRoot) ? "\\" : "/";
-      const rootedPrefix = Str.endsWith(separator)(canonicalVendorRoot)
-        ? canonicalVendorRoot
-        : `${canonicalVendorRoot}${separator}`;
-      if (!Str.startsWith(rootedPrefix)(path)) {
-        return yield* VendorSlicePathEscape.make({ id: entry.id, path, vendorRoot: canonicalVendorRoot });
-      }
-      const content = yield* fs
-        .readFileString(path)
-        .pipe(Effect.mapError(() => VendorSliceReadError.make({ id: entry.id, path })));
-      return yield* decodeTaxonomySeed(content).pipe(
-        Effect.mapError(() => VendorSliceParseError.make({ id: entry.id, path }))
-      );
-    }),
-  });
-});
+const readSlice: {
+  (
+    entry: VendorManifestEntry,
+    vendorRoot: string
+  ): Effect.fn.Return<
+    TaxonomySeed,
+    VendorSliceParseError | VendorSlicePathEscape | VendorSliceReadError | VendorSliceUnvetted,
+    FileSystem.FileSystem
+  >;
+  (
+    vendorRoot: string
+  ): (
+    entry: VendorManifestEntry
+  ) => Effect.fn.Return<
+    TaxonomySeed,
+    VendorSliceParseError | VendorSlicePathEscape | VendorSliceReadError | VendorSliceUnvetted,
+    FileSystem.FileSystem
+  >;
+} = dual(
+  2,
+  Effect.fn("TaxonomyLoader.readSlice")(function* (
+    entry: VendorManifestEntry,
+    vendorRoot: string
+  ): Effect.fn.Return<
+    TaxonomySeed,
+    VendorSliceParseError | VendorSlicePathEscape | VendorSliceReadError | VendorSliceUnvetted,
+    FileSystem.FileSystem
+  > {
+    return yield* VendorLoadStatus.$match(entry.loadStatus, {
+      UNVETTED: () => Effect.fail(VendorSliceUnvetted.make({ id: entry.id })),
+      VETTED: Effect.fn("TaxonomyLoader.readVettedSlice")(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const canonicalVendorRoot = yield* fs.realPath(vendorRoot).pipe(
+          Effect.mapError(() =>
+            VendorSliceReadError.make({
+              id: entry.id,
+              path: vendorRoot,
+            })
+          )
+        );
+        const candidatePath = A.join([canonicalVendorRoot, entry.path], "/");
+        const path = yield* fs.realPath(candidatePath).pipe(
+          Effect.mapError(() =>
+            VendorSliceReadError.make({
+              id: entry.id,
+              path: candidatePath,
+            })
+          )
+        );
+        const separator =
+          Str.includes("\\")(canonicalVendorRoot) && !Str.includes("/")(canonicalVendorRoot) ? "\\" : "/";
+        const rootedPrefix = Str.endsWith(separator)(canonicalVendorRoot)
+          ? canonicalVendorRoot
+          : `${canonicalVendorRoot}${separator}`;
+        if (!Str.startsWith(rootedPrefix)(path)) {
+          return yield* VendorSlicePathEscape.make({
+            id: entry.id,
+            path,
+            vendorRoot: canonicalVendorRoot,
+          });
+        }
+        const content = yield* fs.readFileString(path).pipe(
+          Effect.mapError(() =>
+            VendorSliceReadError.make({
+              id: entry.id,
+              path,
+            })
+          )
+        );
+        return yield* TaxonomySeed.fromUnknownJsonStringEffect(content).pipe(
+          Effect.mapError(() => VendorSliceParseError.make({ id: entry.id, path }))
+        );
+      }),
+    });
+  })
+);
 
 /**
  *  Service contract for loading the committed seed plus explicitly vetted slices.
@@ -282,19 +344,35 @@ const readSlice = Effect.fn("TaxonomyLoader.readSlice")(function* (entry: Vendor
 export class TaxonomyLoader extends Context.Service<
   TaxonomyLoader,
   {
-    readonly load: (
-      manifestPath: string,
-      vendorRoot: string
-    ) => Effect.Effect<
-      TaxonomySeed,
-      | TaxonomyManifestReadError
-      | TaxonomyManifestParseError
-      | VendorSliceUnvetted
-      | VendorSliceReadError
-      | VendorSliceParseError
-      | VendorSlicePathEscape,
-      FileSystem.FileSystem
-    >;
+    readonly load: {
+      (
+        manifestPath: string,
+        vendorRoot: string
+      ): Effect.Effect<
+        TaxonomySeed,
+        | TaxonomyManifestReadError
+        | TaxonomyManifestParseError
+        | VendorSliceUnvetted
+        | VendorSliceReadError
+        | VendorSliceParseError
+        | VendorSlicePathEscape,
+        FileSystem.FileSystem
+      >;
+      (
+        vendorRoot: string
+      ): (
+        manifestPath: string
+      ) => Effect.Effect<
+        TaxonomySeed,
+        | TaxonomyManifestReadError
+        | TaxonomyManifestParseError
+        | VendorSliceUnvetted
+        | VendorSliceReadError
+        | VendorSliceParseError
+        | VendorSlicePathEscape,
+        FileSystem.FileSystem
+      >;
+    };
   }
 >()($I`TaxonomyLoader`) {
   /**
@@ -311,26 +389,29 @@ export class TaxonomyLoader extends Context.Service<
    * @since 0.0.0
    */
   static readonly layer = Layer.succeed(this, {
-    load: Effect.fn("TaxonomyLoader.load")(function* (manifestPath: string, vendorRoot: string) {
-      const fs = yield* FileSystem.FileSystem;
-      const content = yield* fs
-        .readFileString(manifestPath)
-        .pipe(Effect.mapError(() => TaxonomyManifestReadError.make({ path: manifestPath })));
-      const entries = yield* parseManifest(manifestPath, content);
-      const slices = yield* Effect.forEach(entries, (entry) => readSlice(entry, vendorRoot), { concurrency: 1 });
-      return TaxonomySeed.make({
-        concepts: A.appendAll(
-          SemanticFoundationSeed.concepts,
-          A.flatMap(slices, (slice) => slice.concepts)
-        ),
-        filingRoots: A.appendAll(
-          SemanticFoundationSeed.filingRoots,
-          A.flatMap(slices, (slice) => slice.filingRoots)
-        ),
-        pathTemplateSegments: SemanticFoundationSeed.pathTemplateSegments,
-        schemeIri: SemanticFoundationSeed.schemeIri,
-        title: SemanticFoundationSeed.title,
-      });
-    }),
+    load: dual(
+      2,
+      Effect.fn("TaxonomyLoader.load")(function* (manifestPath: string, vendorRoot: string) {
+        const fs = yield* FileSystem.FileSystem;
+        const content = yield* fs
+          .readFileString(manifestPath)
+          .pipe(Effect.mapError(() => TaxonomyManifestReadError.make({ path: manifestPath })));
+        const entries = yield* parseManifest(manifestPath, content);
+        const slices = yield* Effect.forEach(entries, (entry) => readSlice(entry, vendorRoot), { concurrency: 1 });
+        return TaxonomySeed.make({
+          concepts: A.appendAll(
+            SemanticFoundationSeed.concepts,
+            A.flatMap(slices, (slice) => slice.concepts)
+          ),
+          filingRoots: A.appendAll(
+            SemanticFoundationSeed.filingRoots,
+            A.flatMap(slices, (slice) => slice.filingRoots)
+          ),
+          pathTemplateSegments: SemanticFoundationSeed.pathTemplateSegments,
+          schemeIri: SemanticFoundationSeed.schemeIri,
+          title: SemanticFoundationSeed.title,
+        });
+      })
+    ),
   });
 }

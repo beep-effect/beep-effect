@@ -7,6 +7,7 @@ import {
 import { ExtractionTarget } from "@beep/langextract/Target";
 import { DocumentId } from "@beep/nlp/Core";
 import { NonNegativeInt } from "@beep/schema";
+import * as O from "@beep/utils/Option";
 import { describe, expect, layer } from "@effect/vitest";
 import { Duration, Effect, Fiber, Layer, Stream } from "effect";
 import { TestClock } from "effect/testing";
@@ -73,7 +74,7 @@ describe("LangExtractService", () => {
       Effect.fnUntraced(function* () {
         const request = LangExtractRequest.make({
           documentId: DocumentId.make("doc-1"),
-          options: LangExtractOptions.make({ maxExtractions: NonNegativeInt.make(1) }),
+          options: O.some(LangExtractOptions.make({ maxExtractions: O.some(NonNegativeInt.make(1)) })),
           targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
           text: "Alice founded Acme.",
         });
@@ -111,7 +112,7 @@ describe("LangExtractService", () => {
 
         expect(error).toBeInstanceOf(LangExtractError);
         expect(error.reason).toBe("model-generation-timeout");
-        expect(error.details?.cause).toBe("language-model-generate-text-timeout");
+        expect(O.getOrUndefined(error.details)?.cause).toBe("language-model-generate-text-timeout");
       })
     );
   });

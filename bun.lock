@@ -2675,6 +2675,9 @@
       "bin": {
         "tsgo": "./tsgo.js",
       },
+      "dependencies": {
+        "@effect/tsgo": "catalog:",
+      },
     },
   },
   "trustedDependencies": [

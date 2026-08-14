@@ -279,6 +279,10 @@ export const Span = SpanFields.check(
  */
 export type Span = typeof Span.Type;
 
+export declare namespace Span {
+  export type Encoded = typeof Span.Encoded;
+}
+
 /**
  * PROV-O-aligned provenance for a piece of derived annotation: where it came
  * from (`source`), what produced it (`generatedBy` ~ `prov:wasGeneratedBy`),

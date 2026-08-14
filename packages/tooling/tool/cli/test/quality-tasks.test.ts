@@ -892,7 +892,7 @@ describe("quality task adapter", () => {
   it("includes repo-level tsgo diagnostics for affected root check lanes", () => {
     const steps = rootQualityStepsForTesting("/repo", getInvocation(["check", "--affected", "--summarize"]));
 
-    expect(steps).toHaveLength(3);
+    expect(steps).toHaveLength(4);
     expect(steps[0]).toMatchObject({
       label: "check",
       command: "bunx",
@@ -907,6 +907,11 @@ describe("quality task adapter", () => {
       "--summarize",
     ]);
     expect(A.slice(steps, { start: 1 })).toEqual([
+      expect.objectContaining({
+        label: "check:tsgo:rules",
+        command: "bun",
+        args: ["run", "beep", "quality", "tsgo-rules"],
+      }),
       expect.objectContaining({
         label: "check:tsgo:tests",
         command: "bun",
