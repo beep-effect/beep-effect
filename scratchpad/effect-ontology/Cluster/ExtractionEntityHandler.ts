@@ -9,7 +9,10 @@
  */
 
 import { NonNegativeInt } from "@beep/schema/Int";
+import * as Str from "@beep/utils/Str";
+import { thunk0 } from "@beep/utils/thunk";
 import { Chunk, DateTime, Deferred, Duration, Effect, HashMap, Option, Random, Ref, Stream } from "effect";
+import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -94,18 +97,7 @@ const toExtractionParams = (
       }),
   });
 
-const statusName = (status: RunStatus): "pending" | "running" | "complete" | "failed" => {
-  switch (status._tag) {
-    case "Pending":
-      return "pending";
-    case "Running":
-      return "running";
-    case "Complete":
-      return "complete";
-    case "Failed":
-      return "failed";
-  }
-};
+const statusName = (status: RunStatus): "pending" | "running" | "complete" | "failed" => Str.uncapitalize(status._tag);
 
 export const makeExtractionEntityHandler = Effect.gen(function* () {
   const runService = yield* ExtractionRunService;
@@ -168,12 +160,24 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       yield* tokenBudget.reset(config.llm.maxTokens);
       const chunkingStart = yield* DateTime.now;
       const chunks = yield* stageTimeout
-        .withTimeout("chunking", nlpService.chunkText(text, { maxChunkSize: 500, preserveSentences: true }), () =>
-          Effect.logWarning("Chunking soft timeout reached")
+        .withTimeout(
+          "chunking",
+          nlpService.chunkText(text, {
+            maxChunkSize: 500,
+            preserveSentences: true,
+          }),
+          () => Effect.logWarning("Chunking soft timeout reached")
         )
         .pipe(
           Effect.catchTag("TimeoutError", () =>
-            Effect.succeed([{ index: 0, text, startOffset: 0, endOffset: text.length }])
+            Effect.succeed([
+              {
+                index: 0,
+                text,
+                startOffset: 0,
+                endOffset: text.length,
+              },
+            ])
           )
         );
 
@@ -189,7 +193,11 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       yield* runService.createRun(
         text,
         {
-          chunking: { maxChunkSize: 500, preserveSentences: true, overlapTokens: 0 },
+          chunking: {
+            maxChunkSize: 500,
+            preserveSentences: true,
+            overlapTokens: 0,
+          },
           llm: {
             model: config.llm.model,
             temperature: config.llm.temperature,
@@ -242,9 +250,16 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           const verifiedRelations = config.grounder.enabled
             ? (yield* grounder.verifyRelationBatch(
                 chunk.text,
-                relationArray.map((relation) => ({ context: chunk.text, relation }))
+                A.map(relationArray, (relation) => ({
+                  context: chunk.text,
+                  relation,
+                }))
               )).filter((result) => result.grounded)
-            : relationArray.map((relation) => ({ relation, grounded: true, confidence: 1 }));
+            : A.map(relationArray, (relation) => ({
+                relation,
+                grounded: true,
+                confidence: 1,
+              }));
 
           const entityArray = Chunk.toReadonlyArray(entities);
           const entityTypes = HashSet.fromIterable(entityArray.flatMap((entity) => entity.types));
@@ -328,9 +343,9 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
     function* (envelope: ClusterEntity.Request<typeof GetCachedResultRpc>) {
       const key = IdempotencyKey.make(envelope.payload.idempotencyKey);
       const run = yield* runService.getByKey(key);
-      if (P.isNull(run) || run.status._tag !== "Complete") return Option.none<KnowledgeGraphResult>();
+      if (P.isNull(run) || !P.isTagged(run.status, "Complete")) return Option.none<KnowledgeGraphResult>();
       const durationMs = O.match(run.stats, {
-        onNone: () => 0,
+        onNone: thunk0,
         onSome: (stats) => Duration.toMillis(stats.duration),
       });
       return Option.some({
@@ -353,7 +368,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       const key = IdempotencyKey.make(envelope.payload.idempotencyKey);
       const run = yield* runService.getByKey(key);
       if (P.isNull(run)) return yield* Effect.fail("Extraction not found");
-      if (run.status._tag === "Complete" || run.status._tag === "Failed") return false;
+      if (P.isTagged(run.status, "Complete") || P.isTagged(run.status, "Failed")) return false;
 
       const signal = HashMap.get(yield* Ref.get(cancellationRegistry), key as string);
       if (O.isSome(signal)) {
@@ -382,12 +397,13 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           error: O.none<string>(),
         };
       }
-      const completedAt =
-        run.status._tag === "Complete" ? O.some(DateTime.formatIso(run.status.completedAt)) : O.none();
-      const error = run.status._tag === "Failed" ? O.some(run.status.error.message) : O.none();
+      const completedAt = P.isTagged(run.status, "Complete")
+        ? O.some(DateTime.formatIso(run.status.completedAt))
+        : O.none();
+      const error = P.isTagged(run.status, "Failed") ? O.some(run.status.error.message) : O.none();
       return {
         status: statusName(run.status),
-        progress: O.some(run.status._tag === "Complete" ? 100 : run.status._tag === "Running" ? 50 : 0),
+        progress: O.some(P.isTagged(run.status, "Complete") ? 100 : P.isTagged(run.status, "Running") ? 50 : 0),
         startedAt: O.some(DateTime.formatIso(run.createdAt)),
         completedAt,
         error,

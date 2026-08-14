@@ -401,7 +401,7 @@ export class Triple extends S.Class<Triple>($I`Triple`)(
       _tag: "Triple" as const,
       subject: this.subject,
       predicate: this.predicate,
-      object: S.is(Literal)(this.object) ? this.object.toJSON() : this.object,
+      object: Literal.is(this.object) ? this.object.toJSON() : this.object,
     };
   }
 }
@@ -499,7 +499,7 @@ export class Quad extends S.Class<Quad>($I`Quad`)(
       _tag: "Quad" as const,
       subject: this.subject,
       predicate: this.predicate,
-      object: S.is(Literal)(this.object) ? this.object.toJSON() : this.object,
+      object: Literal.is(this.object) ? this.object.toJSON() : this.object,
       graph: O.getOrUndefined(this.graph),
     };
   }
