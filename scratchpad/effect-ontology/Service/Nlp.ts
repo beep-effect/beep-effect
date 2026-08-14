@@ -18,7 +18,7 @@ import { WinkTokenizationError } from "@beep/wink/Wink.errors";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { WinkEngine } from "@beep/wink/Wink.service";
 import { WinkCorpusManager } from "@beep/wink/WinkCorpus.service";
-import { Context, Data, Duration, Effect, Layer, Order, Schedule } from "effect";
+import { Context, Duration, Effect, Layer, Order, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
@@ -117,11 +117,17 @@ export interface OntologySemanticIndex {
  * @since 2.0.0
  * @category Errors
  */
-export class NlpIndexError extends Data.TaggedError("NlpIndexError")<{
-  readonly indexKind: "bm25" | "semantic";
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
+export class NlpIndexError extends S.TaggedError<NlpIndexError>($I`NlpIndexError`)(
+  "NlpIndexError",
+  {
+    indexKind: S.Literals(["bm25", "semantic"]),
+    message: S.String,
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+  },
+  $I.annote("NlpIndexError", {
+    description: "Failure caused by an invalid ontology index or its backing canonical Wink query.",
+  })
+) {}
 
 const WinkStringArray = S.Array(S.String);
 
@@ -485,7 +491,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
       searchSimilar: Effect.fn("NlpService.searchSimilar")(function* (
         query: string,
         docs: ReadonlyArray<string>,
-        k: number = 5
+        k: PosInt = PosInt.make(5)
       ) {
         const corpus = yield* corpora.createCorpus();
         return yield* Effect.gen(function* () {
@@ -495,7 +501,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
             )
           );
           yield* corpora.learnDocuments({ corpusId: corpus.corpusId, documents });
-          const queryResult = yield* corpora.query({ corpusId: corpus.corpusId, query, topN: PosInt.make(k) });
+          const queryResult = yield* corpora.query({ corpusId: corpus.corpusId, query, topN: k });
           return A.map(queryResult.ranked, (result): SimilarityResult => {
             const index = Number.parseInt(result.id.slice(result.id.lastIndexOf("-") + 1), 10);
             return { doc: docs[index], index, score: result.score };
@@ -505,7 +511,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
       searchSemantic: Effect.fn("NlpService.searchSemantic")(function* (
         query: string,
         docs: ReadonlyArray<string>,
-        k: number = 5
+        k: PosInt = PosInt.make(5)
       ) {
         const queryVector = yield* embedding
           .embed(query, "search_query")
@@ -682,26 +688,26 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
       searchOntologyIndex: (
         index: OntologyBM25Index,
         query: string,
-        limit: number = 10
+        limit: PosInt = PosInt.make(10)
       ): Effect.Effect<ReadonlyArray<OntologySearchResult>, NlpIndexError> =>
         Effect.gen(function* () {
           const corpusId = index._corpusId;
           const domainModelMap = index._domainModelMap;
           const ontology = index._ontology;
           if (P.not(P.isTruthy)(corpusId) || P.not(P.isTruthy)(domainModelMap) || P.not(P.isTruthy)(ontology)) {
-            return yield* new NlpIndexError({
+            return yield* NlpIndexError.make({
               indexKind: "bm25",
               message: "Invalid BM25 index reference",
+              cause: O.none(),
             });
           }
-          const queryResult = yield* corpora.query({ corpusId, query, topN: PosInt.make(limit) }).pipe(
-            Effect.mapError(
-              (cause) =>
-                new NlpIndexError({
-                  indexKind: "bm25",
-                  message: `Canonical Wink corpus query failed: ${cause.message}`,
-                  cause,
-                })
+          const queryResult = yield* corpora.query({ corpusId, query, topN: limit }).pipe(
+            Effect.mapError((cause) =>
+              NlpIndexError.make({
+                indexKind: "bm25",
+                message: `Canonical Wink corpus query failed: ${cause.message}`,
+                cause: O.some(cause),
+              })
             )
           );
           const results: Array<OntologySearchResult> = [];
@@ -799,15 +805,16 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
       searchOntologySemanticIndex: Effect.fn("NlpService.searchOntologySemanticIndex")(function* (
         index: OntologySemanticIndex,
         query: string,
-        limit: number = 10
+        limit: PosInt = PosInt.make(10)
       ) {
         const embeddingMap = index._embeddingMap;
         const domainModelMap = index._domainModelMap;
         const ontology = index._ontology;
         if (P.not(P.isTruthy)(embeddingMap) || P.not(P.isTruthy)(domainModelMap) || P.not(P.isTruthy)(ontology)) {
-          return yield* new NlpIndexError({
+          return yield* NlpIndexError.make({
             indexKind: "semantic",
             message: "Invalid semantic index reference",
+            cause: O.none(),
           });
         }
         const queryEmbedding = yield* embedding

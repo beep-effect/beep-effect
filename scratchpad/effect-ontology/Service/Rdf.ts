@@ -10,7 +10,7 @@
 
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
+import { N3ParseTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
 import type { BlankNode as BlankNodeType, GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
 import {
   IRI,
@@ -127,22 +127,26 @@ type N3Store = N3.Store;
  * @since 2.0.0
  */
 const RdfStoreBrand: unique symbol = Symbol.for("@beep/scratchpad/effect-ontology/RdfStore");
-const RdfStoreBackend: unique symbol = Symbol.for("@beep/scratchpad/effect-ontology/RdfStoreBackend");
 
 export interface RdfStore {
   readonly _tag: "RdfStore";
   readonly [RdfStoreBrand]: true;
-  readonly [RdfStoreBackend]: N3Store;
 }
 
-/** Guard for opaque workflow-store handles created by this module. */
-export const isRdfStore = (value: unknown): value is RdfStore => P.hasProperty(value, RdfStoreBrand);
+const rdfStoreBackends = new WeakMap<object, N3Store>();
 
-const makeRdfStore = (store: N3Store): RdfStore => ({
-  _tag: "RdfStore",
-  [RdfStoreBrand]: true,
-  [RdfStoreBackend]: store,
-});
+/** Guard for opaque workflow-store handles created by this module. */
+export const isRdfStore = (value: unknown): value is RdfStore =>
+  P.isTagged("RdfStore")(value) &&
+  P.hasProperty(value, RdfStoreBrand) &&
+  value[RdfStoreBrand] === true &&
+  rdfStoreBackends.has(value);
+
+const makeRdfStore = (store: N3Store): RdfStore => {
+  const handle: RdfStore = { _tag: "RdfStore", [RdfStoreBrand]: true };
+  rdfStoreBackends.set(handle, store);
+  return handle;
+};
 
 /** Create an empty mutable workflow store without exposing the backend. */
 export const emptyRdfStore = (): RdfStore => makeRdfStore(new N3.Store());
@@ -151,7 +155,15 @@ export const emptyRdfStore = (): RdfStore => makeRdfStore(new N3.Store());
 export const rdfStoreFromDataset = (dataset: CanonicalRdf.Dataset): RdfStore =>
   makeRdfStore(new N3.Store(A.map(dataset.quads, canonicalQuadToN3)));
 
-const backend = (store: RdfStore): N3Store => store[RdfStoreBackend];
+const backend = (store: RdfStore): N3Store =>
+  O.fromUndefinedOr(rdfStoreBackends.get(store)).pipe(
+    O.getOrThrowWith(() =>
+      RdfError.make({
+        message: "RdfStore backend invariant violated: handle was not created by this module",
+        cause: O.none(),
+      })
+    )
+  );
 
 /** Return the current number of canonical quads in a workflow store. */
 export const rdfStoreSize = (store: RdfStore): number => backend(store).size;
@@ -989,10 +1001,10 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             const predicateNode = N3.DataFactory.namedNode(triple.predicate);
 
             // Create object node (IRI or literal)
-              const objectNode = P.isString(triple.object)
-                ? triple.object.startsWith("http://") ||
-                  triple.object.startsWith("https://") ||
-                  triple.object.startsWith("urn:")
+            const objectNode = P.isString(triple.object)
+              ? triple.object.startsWith("http://") ||
+                triple.object.startsWith("https://") ||
+                triple.object.startsWith("urn:")
                 ? N3.DataFactory.namedNode(triple.object)
                 : N3.DataFactory.literal(triple.object)
               : P.isNumber(triple.object)
@@ -1169,33 +1181,39 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @returns Turtle string
        */
       toTurtle: (store: RdfStore) =>
-        turtleCodec
-          .serialize(
-            N3SerializeTurtleRequest.make({
-              dataset: rdfStoreToDataset(store),
-              prefixes: config.rdf.prefixes,
-            })
-          )
-          .pipe(
-            Effect.map(({ source }) => source),
-            Effect.mapError((error) =>
-              SerializationFailed.make({
-                message: `Turtle serialization failed: ${error.message}`,
-                cause: O.some(error),
-                format: O.some("Turtle"),
-              })
-            ),
-            Effect.timeoutOrElse({
-              duration: Duration.seconds(30),
-              orElse: () =>
-                Effect.fail(
-                  SerializationFailed.make({
-                    message: "Turtle serialization timed out after 30 seconds",
-                    format: O.some("Turtle"),
-                  })
-                ),
-            })
-          ),
+        Effect.callback<string, SerializationFailed>((resume) => {
+          const writer = new N3.Writer({
+            format: "text/turtle",
+            prefixes: config.rdf.prefixes,
+          });
+          backend(store).forEach((quad) => {
+            writer.addQuad(quad);
+          });
+          writer.end((error, result) =>
+            resume(
+              P.isTruthy(error)
+                ? Effect.fail(
+                    SerializationFailed.make({
+                      message: `Turtle serialization failed: ${error}`,
+                      cause: O.some(error),
+                      format: O.some("Turtle"),
+                    })
+                  )
+                : Effect.succeed(result)
+            )
+          );
+        }).pipe(
+          Effect.timeoutOrElse({
+            duration: Duration.seconds(30),
+            orElse: () =>
+              Effect.fail(
+                SerializationFailed.make({
+                  message: "Turtle serialization timed out after 30 seconds",
+                  format: O.some("Turtle"),
+                })
+              ),
+          })
+        ),
 
       /**
        * Serialize store to TriG format with named graphs

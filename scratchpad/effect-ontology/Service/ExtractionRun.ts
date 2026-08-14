@@ -104,7 +104,7 @@ const metadataKey = (runId: ExtractionRunId): string => runKey(runId, "metadata.
 
 const documentKey = (runId: ExtractionRunId): string => runKey(runId, "input", "document.txt");
 
-const chunkKey = (runId: ExtractionRunId, chunkIndex: number): string =>
+const chunkKey = (runId: ExtractionRunId, chunkIndex: NonNegativeInt): string =>
   runKey(runId, "input", "chunks", `chunk-${chunkIndex}.txt`);
 
 const outputKey = (runId: ExtractionRunId, filename: string): string => runKey(runId, "outputs", filename);
@@ -136,7 +136,11 @@ export interface ExtractionRunServiceMethods {
   /**
    * Save a text chunk
    */
-  saveChunk(runId: ExtractionRunId, chunkIndex: number, chunkText: string): Effect.Effect<ChunkId, ExtractionRunError>;
+  saveChunk(
+    runId: ExtractionRunId,
+    chunkIndex: NonNegativeInt,
+    chunkText: string
+  ): Effect.Effect<ChunkId, ExtractionRunError>;
 
   /**
    * Save an output artifact
@@ -322,14 +326,14 @@ const makeExtractionRunService = Effect.gen(function* () {
 
   const saveChunkRaw = Effect.fn("ExtractionRunService.saveChunk")(function* (
     runId: ExtractionRunId,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     chunkText: string
   ) {
-    const chunkId = ChunkId.fromDocument(runId, NonNegativeInt.make(chunkIndex));
+    const chunkId = ChunkId.fromDocument(runId, chunkIndex);
     yield* storage.set(chunkKey(runId, chunkIndex), chunkText);
     return chunkId;
   });
-  const saveChunk = (runId: ExtractionRunId, chunkIndex: number, chunkText: string) =>
+  const saveChunk = (runId: ExtractionRunId, chunkIndex: NonNegativeInt, chunkText: string) =>
     saveChunkRaw(runId, chunkIndex, chunkText).pipe(
       Effect.mapError(mapRunError("Failed to save extraction chunk", runId))
     );

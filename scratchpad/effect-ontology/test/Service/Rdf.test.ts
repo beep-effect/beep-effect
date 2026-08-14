@@ -54,7 +54,15 @@ describe("RdfBuilder", () => {
           },
           Confidence.make(0.8)
         );
+        const serialized = yield* Effect.exit(rdf.toTurtle(store));
+
         assert.strictEqual(rdfStoreSize(store), 2);
+        assert.isTrue(Exit.isSuccess(serialized));
+        if (Exit.isSuccess(serialized)) {
+          assert.include(serialized.value, "0.8");
+        }
+        assert.strictEqual(Reflect.ownKeys(store).length, 2);
+        assert.isFalse("_store" in store);
       })
     );
   });

@@ -1,8 +1,11 @@
+import { PosInt } from "@beep/schema/Int";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { assert, describe, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { EmbeddingService } from "../../Service/Embedding.ts";
-import { NlpService } from "../../Service/Nlp.ts";
+import { NlpIndexError, NlpService } from "../../Service/Nlp.ts";
 
 const EmbeddingServiceTest = Layer.succeed(
   EmbeddingService,
@@ -23,6 +26,19 @@ const NlpServiceTest = Layer.effect(NlpService, NlpService.make).pipe(
 );
 
 describe("NlpService canonical Wink adapter", () => {
+  it("models index failures with the canonical schema and defect cause", () => {
+    const cause = new Error("query unavailable");
+    const error = NlpIndexError.make({
+      indexKind: "bm25",
+      message: "Canonical Wink corpus query failed",
+      cause: O.some(cause),
+    });
+
+    assert.isTrue(S.is(NlpIndexError)(error));
+    assert.isTrue(O.isSome(error.cause));
+    assert.strictEqual(O.getOrThrow(error.cause), cause);
+  });
+
   it.layer(NlpServiceTest)("with canonical Wink services", (it) => {
     it.effect("decodes canonical Wink token, sentence, and entity output", () =>
       Effect.gen(function* () {
@@ -38,7 +54,11 @@ describe("NlpService canonical Wink adapter", () => {
     it.effect("ranks documents without exposing a Wink runtime index", () =>
       Effect.gen(function* () {
         const nlp = yield* NlpService;
-        const results = yield* nlp.searchSimilar("semantic graph", ["semantic graph model", "weather report"], 2);
+        const results = yield* nlp.searchSimilar(
+          "semantic graph",
+          ["semantic graph model", "weather report"],
+          PosInt.make(2)
+        );
 
         assert.isAtLeast(results.length, 1);
         assert.strictEqual(results[0].index, 0);

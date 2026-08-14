@@ -16,6 +16,7 @@ import { IRI, makeBlankNode, makeNamedNode } from "@beep/rdf";
 import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
 import { RDF_FIRST, RDF_NIL, RDF_REST, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_COMMENT, RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
+import { PosInt } from "@beep/schema/Int";
 import {
   SKOS_ALT_LABEL as SKOS_ALTLABEL,
   SKOS_BROADER,
@@ -819,7 +820,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           [
             P.isNotNull(semanticIndex)
               ? Effect.gen(function* () {
-                  const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, searchLimit);
+                  const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
                   const classesMap = MutableHashMap.empty<string, ClassDefinition>();
                   for (const result of results) {
                     if (P.isNotUndefined(result.class)) {
@@ -838,7 +839,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
                 }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
               : Effect.succeed(Chunk.empty<ClassDefinition>()),
             Effect.gen(function* () {
-              const results = yield* nlp.searchOntologyIndex(bm25Index, query, searchLimit);
+              const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
               const classesMap = MutableHashMap.empty<string, ClassDefinition>();
               for (const result of results) {
                 if (P.isNotUndefined(result.class)) {
@@ -925,7 +926,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             [
               P.isNotNull(semanticIndex)
                 ? Effect.gen(function* () {
-                    const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, searchLimit);
+                    const results = yield* nlp.searchOntologySemanticIndex(
+                      semanticIndex,
+                      query,
+                      PosInt.make(searchLimit)
+                    );
                     const classesMap = MutableHashMap.empty<string, ClassDefinition>();
                     for (const result of results) {
                       if (P.isNotUndefined(result.class)) {
@@ -944,7 +949,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
                   }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
                 : Effect.succeed(Chunk.empty<ClassDefinition>()),
               Effect.gen(function* () {
-                const results = yield* nlp.searchOntologyIndex(bm25Index, query, searchLimit);
+                const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
                 const classesMap = MutableHashMap.empty<string, ClassDefinition>();
                 for (const result of results) {
                   if (P.isNotUndefined(result.class)) {
@@ -1010,7 +1015,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           properties: Chunk.toReadonlyArray(properties),
         });
         const index = yield* getBm25Index;
-        const results = yield* nlp.searchOntologyIndex(index, query, limit);
+        const results = yield* nlp.searchOntologyIndex(index, query, PosInt.make(limit));
         const validClasses = MutableHashMap.empty<string, ClassDefinition>();
         for (const result of results) {
           if (P.isNotUndefined(result.class)) {
@@ -1029,7 +1034,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
       }),
       searchProperties: Effect.fn("OntologyService.searchProperties")(function* (query: string, limit: number = 10) {
         const index = yield* getBm25Index;
-        const results = yield* nlp.searchOntologyIndex(index, query, limit);
+        const results = yield* nlp.searchOntologyIndex(index, query, PosInt.make(limit));
         return Chunk.fromIterable(results.filter((r) => r.property !== undefined).map((r) => r.property!));
       }),
       getPropertiesFor: Effect.fn("OntologyService.getPropertiesFor")(function* (classIris: ReadonlyArray<string>) {
@@ -1065,7 +1070,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           properties: Chunk.toReadonlyArray(properties),
         });
         const index = yield* getSemanticIndex;
-        const results = yield* nlp.searchOntologySemanticIndex(index, query, limit);
+        const results = yield* nlp.searchOntologySemanticIndex(index, query, PosInt.make(limit));
         const validClasses = MutableHashMap.empty<string, ClassDefinition>();
         for (const result of results) {
           if (P.isNotUndefined(result.class)) {
@@ -1087,7 +1092,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         limit: number = 10
       ) {
         const index = yield* getSemanticIndex;
-        const results = yield* nlp.searchOntologySemanticIndex(index, query, limit);
+        const results = yield* nlp.searchOntologySemanticIndex(index, query, PosInt.make(limit));
         return Chunk.fromIterable(results.filter((r) => r.property !== undefined).map((r) => r.property!));
       }),
       searchClassesHybrid: Effect.fn("OntologyService.searchClassesHybrid")(function* (
@@ -1106,7 +1111,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           [
             Effect.gen(function* () {
               const semanticIndex = yield* getSemanticIndex;
-              const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, searchLimit);
+              const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
               const classesMap = MutableHashMap.empty<string, ClassDefinition>();
               for (const result of results) {
                 if (P.isNotUndefined(result.class)) {
@@ -1135,7 +1140,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             ),
             Effect.gen(function* () {
               const bm25Index = yield* getBm25Index;
-              const results = yield* nlp.searchOntologyIndex(bm25Index, query, searchLimit);
+              const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
               const classesMap = MutableHashMap.empty<string, ClassDefinition>();
               for (const result of results) {
                 if (P.isNotUndefined(result.class)) {
@@ -1199,7 +1204,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const [semanticResults, bm25Results] = yield* Effect.all(
           [
             Effect.gen(function* () {
-              const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, searchLimit);
+              const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
               const classesMap = MutableHashMap.empty<string, ClassDefinition>();
               for (const result of results) {
                 if (P.isNotUndefined(result.class)) {
@@ -1228,7 +1233,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             ),
             Effect.gen(function* () {
               const bm25Index = yield* getBm25Index;
-              const results = yield* nlp.searchOntologyIndex(bm25Index, query, searchLimit);
+              const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
               const classesMap = MutableHashMap.empty<string, ClassDefinition>();
               for (const result of results) {
                 if (P.isNotUndefined(result.class)) {

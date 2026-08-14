@@ -77,10 +77,10 @@ export interface ProgressBuilderState {
  * Create a new progress builder state
  */
 export const makeProgressBuilder = dual2(
-  (runId: ExtractionRunId, totalChunks: number): Effect.Effect<Ref.Ref<ProgressBuilderState>> =>
+  (runId: ExtractionRunId, totalChunks: PosInt): Effect.Effect<Ref.Ref<ProgressBuilderState>> =>
     Ref.make<ProgressBuilderState>({
       runId,
-      totalChunks: PosInt.make(totalChunks),
+      totalChunks,
       processedChunks: NonNegativeInt.make(0),
       currentPhaseProgress: Percentage.make(0),
     })
@@ -101,14 +101,14 @@ export const createExtractionStarted: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
     textMetadata: {
-      characterCount: number;
-      estimatedAvgChunkSize: number;
+      characterCount: PosInt;
+      estimatedAvgChunkSize: PosInt;
       contentType?: string;
     }
   ): Effect.Effect<ExtractionStartedEvent>;
   (textMetadata: {
-    characterCount: number;
-    estimatedAvgChunkSize: number;
+    characterCount: PosInt;
+    estimatedAvgChunkSize: PosInt;
     contentType?: string;
   }): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionStartedEvent>;
 } = dual(
@@ -116,8 +116,8 @@ export const createExtractionStarted: {
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
     textMetadata: {
-      characterCount: number;
-      estimatedAvgChunkSize: number;
+      characterCount: PosInt;
+      estimatedAvgChunkSize: PosInt;
       contentType?: string;
     }
   ): Effect.fn.Return<ExtractionStartedEvent> {
@@ -128,10 +128,10 @@ export const createExtractionStarted: {
       runId: state.runId,
       timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
       overallProgress: Percentage.make(0),
-      totalChunks: PosInt.make(state.totalChunks),
+      totalChunks: state.totalChunks,
       textMetadata: {
-        characterCount: PosInt.make(textMetadata.characterCount),
-        estimatedAvgChunkSize: PosInt.make(textMetadata.estimatedAvgChunkSize),
+        characterCount: textMetadata.characterCount,
+        estimatedAvgChunkSize: textMetadata.estimatedAvgChunkSize,
         contentType: O.fromUndefinedOr(textMetadata.contentType),
       },
     });
@@ -144,22 +144,22 @@ export const createExtractionStarted: {
 export const createChunkingProgress: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunksCompleted: number,
-    chunksProcessing: number,
-    avgChunkSize: number
+    chunksCompleted: NonNegativeInt,
+    chunksProcessing: NonNegativeInt,
+    avgChunkSize: PosInt
   ): Effect.Effect<ChunkingProgressEvent>;
   (
-    chunksCompleted: number,
-    chunksProcessing: number,
-    avgChunkSize: number
+    chunksCompleted: NonNegativeInt,
+    chunksProcessing: NonNegativeInt,
+    avgChunkSize: PosInt
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkingProgressEvent>;
 } = dual(
   4,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunksCompleted: number,
-    chunksProcessing: number,
-    avgChunkSize: number
+    chunksCompleted: NonNegativeInt,
+    chunksProcessing: NonNegativeInt,
+    avgChunkSize: PosInt
   ): Effect.fn.Return<ChunkingProgressEvent> {
     const state = yield* Ref.get(ref);
     return ChunkingProgressEvent.make({
@@ -168,9 +168,9 @@ export const createChunkingProgress: {
       runId: state.runId,
       timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
-      chunksCompleted: NonNegativeInt.make(chunksCompleted),
-      chunksProcessing: NonNegativeInt.make(chunksProcessing),
-      avgChunkSize: PosInt.make(avgChunkSize),
+      chunksCompleted,
+      chunksProcessing,
+      avgChunkSize,
     });
   })
 );
@@ -181,21 +181,21 @@ export const createChunkingProgress: {
 export const createChunkProcessingStarted: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
-    chunkTextLength: number,
+    chunkIndex: NonNegativeInt,
+    chunkTextLength: PosInt,
     textPreview: string
   ): Effect.Effect<ChunkProcessingStartedEvent>;
   (
-    chunkIndex: number,
-    chunkTextLength: number,
+    chunkIndex: NonNegativeInt,
+    chunkTextLength: PosInt,
     textPreview: string
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingStartedEvent>;
 } = dual(
   4,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
-    chunkTextLength: number,
+    chunkIndex: NonNegativeInt,
+    chunkTextLength: PosInt,
     textPreview: string
   ): Effect.fn.Return<ChunkProcessingStartedEvent> {
     const state = yield* Ref.get(ref);
@@ -205,8 +205,8 @@ export const createChunkProcessingStarted: {
       runId: state.runId,
       timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
-      chunkIndex: NonNegativeInt.make(chunkIndex),
-      chunkTextLength: PosInt.make(chunkTextLength),
+      chunkIndex,
+      chunkTextLength,
       textPreview,
     });
   })
@@ -218,14 +218,14 @@ export const createChunkProcessingStarted: {
 export const createEntityFound: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     entityId: string,
     mention: string,
     types: ReadonlyArray<string>,
     confidence?: Confidence
   ): Effect.Effect<EntityFoundEvent>;
   (
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     entityId: string,
     mention: string,
     types: ReadonlyArray<string>,
@@ -235,7 +235,7 @@ export const createEntityFound: {
   5,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     entityId: string,
     mention: string,
     types: ReadonlyArray<string>,
@@ -248,7 +248,7 @@ export const createEntityFound: {
       runId: state.runId,
       timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
       overallProgress: Percentage.make(calculateOverallProgress(state, 40)),
-      chunkIndex: NonNegativeInt.make(chunkIndex),
+      chunkIndex,
       entityId,
       mention,
       types: A.fromIterable(types),
@@ -263,7 +263,7 @@ export const createEntityFound: {
 export const createRelationFound: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     subjectId: string,
     predicate: string,
     object: string | number | boolean,
@@ -271,7 +271,7 @@ export const createRelationFound: {
     confidence?: Confidence
   ): Effect.Effect<RelationFoundEvent>;
   (
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     subjectId: string,
     predicate: string,
     object: string | number | boolean,
@@ -282,7 +282,7 @@ export const createRelationFound: {
   6,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     subjectId: string,
     predicate: string,
     object: string | number | boolean,
@@ -296,7 +296,7 @@ export const createRelationFound: {
       runId: state.runId,
       timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
       overallProgress: Percentage.make(calculateOverallProgress(state, 60)),
-      chunkIndex: NonNegativeInt.make(chunkIndex),
+      chunkIndex,
       subjectId,
       predicate,
       object,
@@ -312,27 +312,27 @@ export const createRelationFound: {
 export const createChunkProcessingComplete: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
-    entityCount: number,
-    relationCount: number,
-    durationMs: number,
+    chunkIndex: NonNegativeInt,
+    entityCount: NonNegativeInt,
+    relationCount: NonNegativeInt,
+    durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
   ): Effect.Effect<ChunkProcessingCompleteEvent>;
   (
-    chunkIndex: number,
-    entityCount: number,
-    relationCount: number,
-    durationMs: number,
+    chunkIndex: NonNegativeInt,
+    entityCount: NonNegativeInt,
+    relationCount: NonNegativeInt,
+    durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingCompleteEvent>;
 } = dual(
   6,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
-    entityCount: number,
-    relationCount: number,
-    durationMs: number,
+    chunkIndex: NonNegativeInt,
+    entityCount: NonNegativeInt,
+    relationCount: NonNegativeInt,
+    durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
   ): Effect.fn.Return<ChunkProcessingCompleteEvent> {
     const state = yield* Ref.get(ref);
@@ -342,10 +342,10 @@ export const createChunkProcessingComplete: {
       runId: state.runId,
       timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
       overallProgress: Percentage.make(calculateOverallProgress(state, 100)),
-      chunkIndex: NonNegativeInt.make(chunkIndex),
-      entityCount: NonNegativeInt.make(entityCount),
-      relationCount: NonNegativeInt.make(relationCount),
-      durationMs: PosInt.make(durationMs),
+      chunkIndex,
+      entityCount,
+      relationCount,
+      durationMs,
       errors: O.fromUndefinedOr(errors),
     });
   })
@@ -357,31 +357,31 @@ export const createChunkProcessingComplete: {
 export const createExtractionComplete: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    totalEntities: number,
-    totalRelations: number,
-    uniqueEntityTypes: number,
-    totalDurationMs: number,
-    successfulChunks: number,
-    failedChunks: number
+    totalEntities: NonNegativeInt,
+    totalRelations: NonNegativeInt,
+    uniqueEntityTypes: NonNegativeInt,
+    totalDurationMs: PosInt,
+    successfulChunks: NonNegativeInt,
+    failedChunks: NonNegativeInt
   ): Effect.Effect<ExtractionCompleteEvent>;
   (
-    totalEntities: number,
-    totalRelations: number,
-    uniqueEntityTypes: number,
-    totalDurationMs: number,
-    successfulChunks: number,
-    failedChunks: number
+    totalEntities: NonNegativeInt,
+    totalRelations: NonNegativeInt,
+    uniqueEntityTypes: NonNegativeInt,
+    totalDurationMs: PosInt,
+    successfulChunks: NonNegativeInt,
+    failedChunks: NonNegativeInt
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionCompleteEvent>;
 } = dual(
   7,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    totalEntities: number,
-    totalRelations: number,
-    uniqueEntityTypes: number,
-    totalDurationMs: number,
-    successfulChunks: number,
-    failedChunks: number
+    totalEntities: NonNegativeInt,
+    totalRelations: NonNegativeInt,
+    uniqueEntityTypes: NonNegativeInt,
+    totalDurationMs: PosInt,
+    successfulChunks: NonNegativeInt,
+    failedChunks: NonNegativeInt
   ): Effect.fn.Return<ExtractionCompleteEvent> {
     const state = yield* Ref.get(ref);
     return ExtractionCompleteEvent.make({
@@ -390,25 +390,25 @@ export const createExtractionComplete: {
       runId: state.runId,
       timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
       overallProgress: Percentage.make(100),
-      totalEntities: NonNegativeInt.make(totalEntities),
-      totalRelations: NonNegativeInt.make(totalRelations),
-      uniqueEntityTypes: NonNegativeInt.make(uniqueEntityTypes),
-      totalDurationMs: PosInt.make(totalDurationMs),
-      successfulChunks: NonNegativeInt.make(successfulChunks),
-      failedChunks: NonNegativeInt.make(failedChunks),
+      totalEntities,
+      totalRelations,
+      uniqueEntityTypes,
+      totalDurationMs,
+      successfulChunks,
+      failedChunks,
     });
   })
 );
 
 type CreateExtractionFailedOptions = {
   readonly isTemporary?: boolean;
-  readonly retryAfterMs?: number;
+  readonly retryAfterMs?: PosInt;
   readonly partialResults?: {
-    readonly entityCount: number;
-    readonly relationCount: number;
-    readonly processedChunks: number;
+    readonly entityCount: NonNegativeInt;
+    readonly relationCount: NonNegativeInt;
+    readonly processedChunks: NonNegativeInt;
   };
-  readonly lastSuccessfulChunkIndex?: number;
+  readonly lastSuccessfulChunkIndex?: NonNegativeInt;
 };
 
 /**
@@ -449,18 +449,12 @@ export const createExtractionFailed: {
       retryStrategy: P.isNotUndefined(options?.isTemporary)
         ? ExtractionFailedRetryStrategy.cases.exponential_backoff.makeOption({
             type: "exponential_backoff" as const,
-            delayMs: O.fromUndefinedOr(options.retryAfterMs).pipe(O.map(PosInt.make)),
+            delayMs: O.fromUndefinedOr(options.retryAfterMs),
             maxAttempts: O.some(PosInt.make(3)),
           })
         : O.none(),
-      partialResults: O.fromUndefinedOr(options?.partialResults).pipe(
-        O.map((results) => ({
-          entityCount: NonNegativeInt.make(results.entityCount),
-          relationCount: NonNegativeInt.make(results.relationCount),
-          processedChunks: NonNegativeInt.make(results.processedChunks),
-        }))
-      ),
-      lastSuccessfulChunkIndex: O.fromUndefinedOr(options?.lastSuccessfulChunkIndex).pipe(O.map(NonNegativeInt.make)),
+      partialResults: O.fromUndefinedOr(options?.partialResults),
+      lastSuccessfulChunkIndex: O.fromUndefinedOr(options?.lastSuccessfulChunkIndex),
     });
   })
 );
@@ -471,14 +465,14 @@ export const createExtractionFailed: {
 export const createRecoverableError: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     errorType: string,
     errorMessage: string,
     phase: string,
     recoveryAction: string
   ): Effect.Effect<RecoverableErrorEvent>;
   (
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     errorType: string,
     errorMessage: string,
     phase: string,
@@ -488,7 +482,7 @@ export const createRecoverableError: {
   6,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     errorType: string,
     errorMessage: string,
     phase: string,
@@ -500,7 +494,7 @@ export const createRecoverableError: {
       runId: state.runId,
       timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
       overallProgress: Percentage.make(calculateOverallProgress(state, 50)),
-      chunkIndex: NonNegativeInt.make(chunkIndex),
+      chunkIndex,
       errorType,
       errorMessage,
       phase,
@@ -522,10 +516,10 @@ export const markChunkProcessed = (ref: Ref.Ref<ProgressBuilderState>): Effect.E
  * Set phase progress
  */
 export const setPhaseProgress = dual2(
-  (ref: Ref.Ref<ProgressBuilderState>, progress: number): Effect.Effect<void> =>
+  (ref: Ref.Ref<ProgressBuilderState>, progress: Percentage): Effect.Effect<void> =>
     Ref.update(ref, (state) => ({
       ...state,
-      currentPhaseProgress: Percentage.make(Math.min(100, Math.max(0, progress))),
+      currentPhaseProgress: progress,
     }))
 );
 
