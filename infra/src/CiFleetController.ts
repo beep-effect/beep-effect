@@ -12,10 +12,11 @@
 
 import { $InfraId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { O } from "@beep/utils";
+import { O, Str } from "@beep/utils";
 import * as aws from "@pulumi/aws";
 import * as ghaRunners from "@pulumi/gharunners";
 import * as pulumi from "@pulumi/pulumi";
+import { flow } from "effect";
 import * as S from "effect/Schema";
 import { withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
 
@@ -109,7 +110,19 @@ BEEP_IMDS_DROP
 )
 `;
 
-const runnerPostInstall = runnerToolbeltPostInstall + imdsJobHookPostInstall;
+// The terraform-module bridge writes module inputs into `pulumi.tf.json`, and
+// Terraform's JSON syntax parses every string value as an HCL template: a
+// literal bash `${...}` (or `%{...}`) plans as an HCL reference and fails the
+// whole stack with "Invalid reference". `$${` / `%%{` render back to `${` /
+// `%{` in the instance's user-data, so the scripts run byte-identical. The
+// callback replacer is load-bearing: in a plain replacement string, `$$`
+// collapses to `$` and the escape silently becomes a no-op.
+const escapeHclTemplateSequences = flow(
+  Str.replaceAllWith(/\$\{/gu, () => "$${"),
+  Str.replaceAll("%{", "%%{")
+);
+
+const runnerPostInstall = escapeHclTemplateSequences(runnerToolbeltPostInstall + imdsJobHookPostInstall);
 
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
 const ssmParameterArnPattern = /^arn:aws[a-z-]*:ssm:[a-z0-9-]+:[0-9]*:parameter\/.+$/u;
