@@ -21,7 +21,7 @@ Five workstreams:
   `remote:r`; CLI stops forcing local-only); warm = verified main-push writes + `beep cache
   warm` recovery; measure hit rates before tuning keys; fix `vitest.setup.ts` input hole first.
 - **D Concurrency**: machine-wide weighted admission leases in XDG_RUNTIME_DIR (5 GiB tokens,
-  ~40-48 GiB budget; full-proof 16, merged-preview 24, review-fix 4×3); queue with visible
+  ~40-48 GiB budget; token weights: full-proof 3, merged-preview 5, review-fix 1×3); queue with visible
   progress; adaptive Check c3/c2; heartbeats + starttime-checked reaping; RSS telemetry before
   raising caps.
 - **E Hot files**: publish refuses hand-staged `goals/INDEX.md` and regenerates it; INDEX

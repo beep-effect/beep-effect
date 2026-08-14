@@ -35,24 +35,31 @@ harness hooks and machine-local state, not notifications someone might read.
   headSha+lane). One accumulated fix commit per wave, not one push per lane. A new push
   supersedes the prior wave. Acceptance: synthetic first-red reaches the inbox in <15s p95;
   three reds on one head produce one repair session with three queued capsules.
-- **A2 Hook-mutex + ACK inbox** (ADHD survivor 1; `research/adhd/out-deepen1.json`). Writers
+- **A2 Hook-mutex + ACK inbox** (ADHD survivor 1; `research/adhd-ideation.md` §deepen1). Writers
   (watch, local lane runner, collision detector) append typed NDJSON rows to
   `<checkout>/.beep/inbox/`; hot path is stat+read of local git-ignored files only. Claude
   PreToolUse denies the next tool on unacked P0 rows with the capsule as the deny reason;
   SessionStart/UserPromptSubmit splice unread rows as "fix this now" and consume them; Codex
   adapter injects at next tool boundary; Grok tails via Monitor. ACK = explicit receipt file
   (fix SHA | wontfix+reason | thread URL). Severity-gated: P0 (required red, sibling collision)
-  denies; P1 (review thread) injects; P2 (base drift) SessionStart-only. Diagnostic/ACK tools
-  are allow-listed so the mutex cannot deadlock the fix itself.
-- **A3 Can't-leave-the-scene** (ADHD survivor 2; `research/adhd/out-deepen2.json`). Stop hook
+  denies; P1 (review thread) injects; P2 (base drift) SessionStart-only. The P0 denial is a
+  one-shot interruption, not a standing wall: the first denied boundary flips the session into
+  failure-scoped incident mode in which diagnostic, edit, test, and repair tools are all
+  permitted (the capsule keeps being re-presented as context); denial re-arms only for attempts
+  to start unrelated new work while the row is unacked. ACK (or waive) exits incident mode —
+  the mutex can never deadlock the fix it exists to cause.
+- **A3 Can't-leave-the-scene** (ADHD survivor 2; `research/adhd-ideation.md` §deepen2). Stop hook
   refuses session end while the session's published PR has unacked failures (refusal carries the
   capsule + fix command). Yeet poison-pill: after a local shard fails or a required check goes
-  red, commit/publish/new-work in that checkout refuse until the exact failing shard re-runs
-  green or an attributed, expiring waive `(shard, reason, actor, expiry)` is recorded. Scoped to
+  red, starting unrelated new work in that checkout refuses — but repair-scoped commit/publish
+  addressing the failure is always permitted (it is the canonical yeet path to clearing a hosted
+  red) and transfers the pill to the resulting head. The pill clears when the failing local
+  shard re-runs green, when the repaired head's hosted check reports green, or via an
+  attributed, expiring waive `(shard, reason, actor, expiry)`. Scoped to
   the 16 required contexts + named local shards only. SessionStart inheritance: a fresh session
   in a poisoned checkout receives the capsule immediately — spawning a new session is not an
   escape hatch.
-- **A4 Dead-owner takeover + warm fixer** (ADHD survivor 3; `research/adhd/out-deepen3.json`).
+- **A4 Dead-owner takeover + warm fixer** (ADHD survivor 3; `research/adhd-ideation.md` §deepen3).
   Publish writes a PR lease (session id, pid+starttime, freshness); hooks refresh it. A machine
   watcher treats "stale freshness AND unacked failure AND pid dead/frozen" as dead-owner:
   CAS-steals the lease, prefers headless resume of the owner, else spawns an incident-mode fixer
@@ -79,16 +86,20 @@ harness hooks and machine-local state, not notifications someone might read.
 
 ## Workstream B — Local green ⇒ remote green (full parity)
 
-Target: local verify green ⇒ all 16 required contexts green, first push. Only genuinely
-remote-only gates (Greptile, Vercel, dependency-review API, PR Size label) are excluded — and
-they are non-required or predictable. Infra flakiness is fixed, so every remaining red is a
-parity defect to be closed, not tolerated.
+Target: local verify green ⇒ all 16 required contexts green, first push. Exclusions are
+explicit: Greptile, Vercel, and PR Size are non-required; the Security context's
+dependency-review sub-gate is `required: true, replay: "none"` — hosted-only by design (GitHub
+dependency graph + license policy), so it sits outside the hard local-guarantee metric and is
+covered instead by a cheap local predictor (dependency-diff shape + license screen of lockfile
+changes, advisory only). Infra flakiness is fixed, so every remaining red is a parity defect to
+be closed, not tolerated.
 
 - **B1 Same argv.** Yeet lanes invoke `beep ci lane <id>` (Check, Test Unit/Integration, Lint,
   Lint Policy) instead of cousin root commands. (`research/c3-local-remote-parity.md` §4.)
 - **B2 Coverage locally.** `beep ci lane coverage --affected --base origin/main` in the full
-  proof, ratchet baseline pinned from `origin/main` (never the branch's own copy). Land the
-  in-flight #698 (PR scoping + weighted shards) first. Skip for `goals/**`-only diffs.
+  proof, ratchet baseline pinned from `origin/main` (never the branch's own copy). #698 (PR
+  scoping + weighted shards) landed 2026-08-13 as `286a2be63b` — build on it. Skip for
+  `goals/**`-only diffs.
 - **B3 Missing cheap lanes.** Codegen Drift, PR-range commitlint (`--from <base-sha>`),
   path-gated Desktop IPC, base-pinned gitleaks config/ignore + pinned container digest.
 - **B4 `--ci-parity` pre-publish tier.** Materialize the existing merged preview
@@ -132,9 +143,11 @@ parity defect to be closed, not tolerated.
 ## Workstream D — Concurrency: install the gate the profile describes
 
 - **D1 Machine-wide weighted admission.** `${XDG_RUNTIME_DIR}/beep/admit/` leases (schema:
-  pid + /proc starttime, kind, estimateGiB, measured hotPaths); 5 GiB tokens, capacity
-  `min(10, floor((MemAvailable−10)/5))`, hard floor 15 GiB free. Weights: review-fix 4 (×3),
-  full-proof 16, merged-preview 24, publish 1. Waiters queue with visible progress; publish
+  pid + /proc starttime, kind, weightTokens, measured hotPaths); 5 GiB tokens, capacity
+  `min(10, floor((MemAvailable−10)/5))`, hard floor 15 GiB free. Weights are in the same token
+  units as capacity (1 token ≈ 5 GiB): review-fix 1 (×3), full-proof 3 (≈16 GiB),
+  merged-preview 5 (≈24 GiB), publish 1 — at 8-token capacity two full proofs fit, two
+  merged-previews correctly don't. Waiters queue with visible progress; publish
   priority with 2-minute aging; per-checkout quality-lock retained. Evidence: post-#668 Check
   peaks 11.0 GiB c1 / 15.6 GiB c2; Lint nested shards 30-45 GiB — the current true peak.
 - **D2 Adaptive lane concurrency.** Solo Check c3, contended c2 (the only measured-safe pair);

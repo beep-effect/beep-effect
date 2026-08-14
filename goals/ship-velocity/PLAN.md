@@ -11,8 +11,9 @@ phase flips ride the final PR of each phase.
   each gets a dated decision note when its implementation PR opens.
 - Baseline metrics snapshot (SPEC §Metrics) from existing artifacts: c1-raw-failures.txt,
   merge-commit counts, current monitor latency budget.
-- Land the two in-flight branches that already implement backlog items: #698 (coverage scoping)
-  and `feat/runners-bake`.
+- ~~Land the two in-flight branches that already implement backlog items~~ — done: #698
+  (coverage scoping, `286a2be63b`) and #702 (runners-bake, `ddc8a873b1`) merged 2026-08-13/14.
+  Verify closure only; do not restart either.
 
 ## P1 — Instant wins
 
@@ -32,7 +33,7 @@ phase flips ride the final PR of each phase.
 
 ## P3 — Full parity
 
-- B2 coverage in local proof (after #698 lands).
+- B2 coverage in local proof (#698 landed — build on its scoping).
 - B3 missing cheap lanes; B7 docgen predicate into CLI.
 - B4 `--ci-parity` merged-tree pre-publish tier + PR-posture env.
 - B6 test-file typecheck preflight.
