@@ -178,7 +178,7 @@ export interface RunnersServiceShape {
 export class RunnersService extends Context.Service<RunnersService, RunnersServiceShape>()($I`RunnersService`) {}
 
 const runnersError = (message: string, cause?: unknown): RunnersCommandError =>
-  RunnersCommandError.make({ message, ...(cause === undefined ? {} : { cause }) });
+  cause === undefined ? RunnersCommandError.make({ message }) : RunnersCommandError.make({ message, cause });
 
 const awsArgs = (region: string, args: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.appendAll(["--no-cli-pager", "--region", region], args);
