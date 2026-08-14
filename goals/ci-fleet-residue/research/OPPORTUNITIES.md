@@ -182,3 +182,20 @@ Record receipts at the moment friction happens; redact for the public repo.
   the only evidence (terminate-on-failure) plus an eventually-consistent
   read is a false-negative machine; verifiers must retry reads that can
   trail the state transition they gate on.
+
+## 2026-08-14 — bake revision must be pushed; console posting latency varies 3x
+
+- What: three bakes from the activation branch failed in-guest at
+  `git checkout --detach <rev>`: the bake guest clones from GitHub and the
+  branch was unpushed, so HEAD was unreachable — the instance launches,
+  installs everything, verifies the Bun archive (CSF-016 worked first
+  try), then dies on the checkout. Separately, EC2's post-at-stop console
+  latency varied from under 2 minutes (first successful bake) to over 6
+  (the window that false-failed a later one) — the wait is now 20 minutes.
+- Evidence: `BEEP_RUNNERS_BAKE_FAILED line 18: git -C /tmp/beep-effect
+  checkout --detach 2d76aa59...` in the posted console; `/tmp/
+  bun-linux-x64.zip: OK` immediately above it.
+- Prevention: landed — `assertRevisionPushed` refuses the bake before any
+  AWS call when no remote branch contains HEAD, naming the push as the
+  remedy. The general rule: any command that ships a local revision to a
+  remote executor must prove remote reachability first.

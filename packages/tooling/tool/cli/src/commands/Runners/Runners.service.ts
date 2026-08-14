@@ -42,8 +42,9 @@ const REPORT_FILE_NAME = "runners-bake-report.json";
 const AWS_POLL_INTERVAL = Duration.seconds(15);
 const BAKE_WAIT_LIMIT = Duration.hours(6);
 // EC2 posts a stopped instance's console output minutes after the stop; the
-// window an empty read is propagation rather than a bake failure.
-const CONSOLE_POST_LIMIT = Duration.minutes(6);
+// window an empty read is propagation rather than a bake failure. Observed
+// live: one bake posted within ~2 minutes, the next took over 6.
+const CONSOLE_POST_LIMIT = Duration.minutes(20);
 const IMAGE_WAIT_LIMIT = Duration.hours(2);
 
 const BunVersion = S.String.check(
@@ -195,6 +196,27 @@ const runAws = Effect.fn("Runners.runAws")(function* (
   return result.output;
 });
 
+// The bake guest clones from GitHub and detaches to this revision, so a
+// revision that only exists locally fails inside the guest after the
+// instance has already launched. Refuse before any AWS call instead.
+const assertRevisionPushed = Effect.fn("Runners.assertRevisionPushed")(function* (
+  repoRoot: string,
+  revision: string
+): Effect.fn.Return<void, RunnersCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+  const result = yield* runCaptured({
+    command: "git",
+    args: ["branch", "-r", "--contains", revision],
+    cwd: repoRoot,
+    source: "all",
+    trim: true,
+  }).pipe(RunnersCommandError.mapError("Failed to check remote reachability of the bake revision."));
+  if (result.exitCode !== 0 || Str.isEmpty(result.output)) {
+    return yield* RunnersCommandError.make({
+      message: `Bake revision ${revision} is not reachable from any remote branch; push it before baking.`,
+    });
+  }
+});
+
 const runGitRevision = Effect.fn("Runners.gitRevision")(function* (
   repoRoot: string
 ): Effect.fn.Return<string, RunnersCommandError, ChildProcessSpawner.ChildProcessSpawner> {
@@ -275,6 +297,7 @@ const loadLocalInputs = Effect.fn("Runners.loadLocalInputs")(function* (): Effec
     RunnersCommandError.mapError(`${bunArchiveSha256Path} must contain one SHA-256 digest.`)
   );
   const gitRevision = yield* runGitRevision(repoRoot);
+  yield* assertRevisionPushed(repoRoot, gitRevision);
   return BakeLocalInputs.make({ repoRoot, lockfileSha256, bunArchiveSha256, bunVersion, gitRevision });
 });
 
