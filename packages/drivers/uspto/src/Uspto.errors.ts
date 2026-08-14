@@ -64,25 +64,36 @@ export const UsptoErrorReason = UsptoErrorReasonKit.pipe(
  */
 export type UsptoErrorReason = typeof UsptoErrorReason.Type;
 
+const UsptoErrorContextFields = {
+  cause: S.OptionFromOptionalKey(S.String).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "Sanitized technical cause when one is available.",
+    })
+  ),
+  status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "HTTP response status associated with the failure when one is available.",
+    })
+  ),
+} satisfies S.Struct.Fields;
+
 class UsptoErrorOptions extends S.Class<UsptoErrorOptions>($I`UsptoErrorOptions`)(
-  {
-    cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Sanitized technical cause when one is available.",
-      })
-    ),
-    status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "HTTP response status associated with the failure when one is available.",
-      })
-    ),
-  },
+  UsptoErrorContextFields,
   $I.annote("UsptoErrorOptions", {
     description: "Options for configuring sanitized USPTO driver errors.",
   })
 ) {}
+
+const UsptoErrorFields = {
+  ...UsptoErrorContextFields,
+  reason: UsptoErrorReason.annotateKey({
+    description: "Redacted technical error reason.",
+  }),
+} satisfies S.Struct.Fields;
+const sameUsptoErrorFields = S.toEquivalence(S.TaggedStruct("UsptoError", UsptoErrorFields));
+const sameUsptoError = (self: UsptoError, that: UsptoError): boolean => sameUsptoErrorFields(self, that);
 
 /**
  * Technical failure raised inside the USPTO driver boundary.
@@ -101,26 +112,14 @@ class UsptoErrorOptions extends S.Class<UsptoErrorOptions>($I`UsptoErrorOptions`
  */
 export class UsptoError extends S.TaggedError<UsptoError>($I`UsptoError`)(
   "UsptoError",
-  {
-    cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Sanitized technical cause when one is available.",
-      })
-    ),
-    reason: UsptoErrorReason.annotateKey({
-      description: "Redacted technical error reason.",
-    }),
-    status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "HTTP response status associated with the failure when one is available.",
-      })
-    ),
-  },
-  $I.annote("UsptoError", {
-    description: "Redacted technical failure raised inside the USPTO driver boundary.",
-  })
+  UsptoErrorFields,
+  $I.annoteClass<S.declare<UsptoError>, readonly [S.TaggedStruct<"UsptoError", typeof UsptoErrorFields>]>(
+    "UsptoError",
+    {
+      description: "Redacted technical failure raised inside the USPTO driver boundary.",
+      toEquivalence: () => sameUsptoError,
+    }
+  )
 ) {
   /**
    * Create a USPTO technical error with sanitized context.

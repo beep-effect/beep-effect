@@ -193,7 +193,7 @@ it("round-trips handwritten ACP schemas through encoded form", () =>
         assertEncodedRoundTrip(AcpProtocol.AcpProtocolLogEvent, event);
         assertEncodedRoundTrip(AcpProtocol.AcpProtocolLoggingOptions, options);
         assertEncodedRoundTrip(AcpProtocol.AcpIncomingNotification, notification);
-        assertEncodedRoundTrip(AcpError.AcpError, error, { compareDecoded: false });
+        assertEncodedRoundTrip(AcpError.AcpError, error);
       }
     ),
     fcRuns(25)

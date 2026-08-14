@@ -354,13 +354,13 @@ packages/<kernel>/
 ```
 
 `shared/domain` is the active normal home today; `shared/config` is a reserved
-normal role for real cross-slice config contracts. `shared/use-cases`,
-`shared/client`, `shared/server`, and `shared/ui` do not exist yet. They are
-reserved high-bar exceptions, created only when real exported behavior clears the
-promotion bar. `shared/use-cases` in particular has no package directory today
-because nothing has met that bar.
+normal role for real cross-slice config contracts. `shared/client`,
+`shared/server`, and `shared/ui` do not exist yet. They are reserved high-bar
+exceptions, created only when real exported behavior clears the promotion bar.
+`shared/use-cases` now exists as a contract-only exception whose first promoted
+surface is the tenant-bound `PromotionGate`.
 
-A future `shared/use-cases` package would be contract-only: deliberate
+The `shared/use-cases` package is contract-only: deliberate
 cross-slice commands, queries, driver-neutral DTOs, driver-neutral boundary
 contracts, client-safe application errors, facade interfaces, and ultra-high-bar
 product ports are allowed. A shared product port must prove why a shared
@@ -376,7 +376,7 @@ that package's README before or alongside the export. The record must include:
 - the exported surface being promoted
 - rejected homes, especially the owning slice and `foundation`
 - runtime, adapter, driver, and Layer limits
-- contract-only proof for future `shared/use-cases`
+- contract-only proof for `shared/use-cases`
 - review evidence for the deliberate coupling
 
 `standards/architecture/DECISIONS.md` records architecture-wide policy changes.
@@ -663,7 +663,7 @@ appropriate ways:
 - Slice-to-slice direct imports across `domain`, `use-cases`, `server`,
   `tables`, `client`, or `ui` packages of *different* slices are forbidden.
   Cross-slice integration goes through emitted events or, if a real contract has
-  been promoted, the future `shared/use-cases` package. This is the same family
+  been promoted, the `shared/use-cases` package. This is the same family
   of acyclic ceiling that drivers respect among themselves, applied to slices.
 - Product slices and shared-kernel packages do not depend on
   `packages/tooling/*/*`.
@@ -1051,7 +1051,7 @@ Canonical subpath names are required names when that role exists, not a requirem
 to add placeholder exports. Package roots and `./*` exports may remain during
 migration, but they are not the canonical boundary contract.
 
-If a future high-bar `shared/use-cases` package is created, it follows the same
+The high-bar `shared/use-cases` package follows the same
 `/public`, `/server`, and `/test` contract. It is narrower than slice
 `use-cases`: only commands, queries, driver-neutral DTOs, driver-neutral boundary
 contracts, client-safe application errors, facade interfaces, and ultra-high-bar
@@ -1147,16 +1147,16 @@ Use-cases own imperative application intent and boundary language:
 
 Product ports live here by default because they describe what the application
 needs in product language. Protocol declarations also live here by default.
-Slice `use-cases` may also declare workflow/process/scheduler contracts. A
-future high-bar `shared/use-cases` package does not: it is contract-only and
+Slice `use-cases` may also declare workflow/process/scheduler contracts. The
+high-bar `shared/use-cases` package does not: it is contract-only and
 limited to deliberate cross-slice commands, queries, driver-neutral DTOs,
 driver-neutral boundary contracts, client-safe application errors, facade
-interfaces, and ultra-high-bar product ports. Product ports in that future
+interfaces, and ultra-high-bar product ports. Product ports in that
 package are exceptional even inside the high-bar exception and require explicit
 proof that a less coupled shared contract is insufficient.
 
 Use-cases may import config contracts and services, but neither slice
-`use-cases` nor any future `shared/use-cases` package owns live Layers that read
+`use-cases` nor the `shared/use-cases` package owns live Layers that read
 the runtime environment or participate in package-local or top-level application
 entrypoint Layer composition.
 
@@ -1211,11 +1211,12 @@ Reserved roles are:
 - `shared/tables`
 - `shared/ui`
 
-`shared/tables` currently exists as a narrow metadata-only package. The others
-above are role names, not package directories today. `shared/use-cases` does not
-exist yet because no cross-slice contract has met the promotion bar.
+`shared/tables` currently exists as a narrow metadata-only package.
+`shared/use-cases` also exists as a contract-only exception for the promoted
+tenant-bound `PromotionGate`; the remaining names above are reserved roles, not
+package directories today.
 
-A future `shared/use-cases` package is contract-only. It may own cross-slice
+The `shared/use-cases` package is contract-only. It may own cross-slice
 commands, queries, driver-neutral DTOs, driver-neutral boundary contracts,
 client-safe application errors, facade interfaces, and ultra-high-bar product
 ports. Product ports must prove why a command/query/event/facade contract is

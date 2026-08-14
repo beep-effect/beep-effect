@@ -29,7 +29,7 @@ type DuckDbErrorContextInput = {
 
 const isDuckDbDefect = S.is(DuckDbDefect);
 
-const causeFromUnknown = (cause: unknown): O.Option<unknown> =>
+const causeFromUnknown = (cause: unknown): O.Option<typeof DuckDbDefect.Type> =>
   P.hasInspectableObjectShape(cause) && isDuckDbDefect(cause) ? O.some(cause) : O.none();
 
 const errorOptionsFromInput = (options: DuckDbErrorContextInput): DuckDbErrorFromUnknownOptions =>
@@ -106,27 +106,43 @@ export type DuckDbOperation = typeof DuckDbOperation.Type;
  * @category errors
  * @since 0.0.0
  */
+const DuckDbErrorContextFields = {
+  cause: S.OptionFromOptionalKey(DuckDbDefect).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Inspectable originating defect, when available.",
+  }),
+  databasePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "DuckDB database path active when the failure occurred.",
+  }),
+  statement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "SQL statement active when the failure occurred.",
+  }),
+} satisfies S.Struct.Fields;
+
 export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknownOptions>(
   $I`DuckDbErrorFromUnknownOptions`
 )(
   {
-    cause: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Inspectable originating defect, when available.",
-    }),
-    databasePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "DuckDB database path active when the failure occurred.",
-    }),
+    ...DuckDbErrorContextFields,
     message: S.String.pipe(SchemaUtils.withKeyDefaults("DuckDB operation failed.")).annotateKey({
       description: "Human-readable failure summary.",
-    }),
-    statement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "SQL statement active when the failure occurred.",
     }),
   },
   $I.annote("DuckDbErrorFromUnknownOptions", {
     description: "Options used when normalizing unknown DuckDB boundary failures.",
   })
 ) {}
+
+const DuckDbErrorFields = {
+  ...DuckDbErrorContextFields,
+  message: S.String.annotateKey({
+    description: "Human-readable failure summary.",
+  }),
+  operation: DuckDbOperation.annotateKey({
+    description: "DuckDB driver operation that failed.",
+  }),
+} satisfies S.Struct.Fields;
+const sameDuckDbErrorFields = S.toEquivalence(S.TaggedStruct("DuckDbError", DuckDbErrorFields));
+const sameDuckDbError = (self: DuckDbError, that: DuckDbError): boolean => sameDuckDbErrorFields(self, that);
 
 /**
  * Recoverable technical failure raised by the DuckDB driver boundary.
@@ -161,26 +177,14 @@ export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknow
  */
 export class DuckDbError extends S.TaggedError<DuckDbError>($I`DuckDbError`)(
   "DuckDbError",
-  {
-    cause: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Inspectable originating defect, when available.",
-    }),
-    databasePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "DuckDB database path active when the failure occurred.",
-    }),
-    message: S.String.annotateKey({
-      description: "Human-readable failure summary.",
-    }),
-    operation: DuckDbOperation.annotateKey({
-      description: "DuckDB driver operation that failed.",
-    }),
-    statement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "SQL statement active when the failure occurred.",
-    }),
-  },
-  $I.annote("DuckDbError", {
-    description: "Technical DuckDB driver failure scoped to a driver operation.",
-  })
+  DuckDbErrorFields,
+  $I.annoteClass<S.declare<DuckDbError>, readonly [S.TaggedStruct<"DuckDbError", typeof DuckDbErrorFields>]>(
+    "DuckDbError",
+    {
+      description: "Technical DuckDB driver failure scoped to a driver operation.",
+      toEquivalence: () => sameDuckDbError,
+    }
+  )
 ) {
   static readonly is = S.is(DuckDbError);
 

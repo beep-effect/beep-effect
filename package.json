@@ -440,6 +440,7 @@
     "packages/foundation/primitive/*",
     "packages/foundation/ui-system/*",
     "packages/shared/domain",
+    "packages/shared/use-cases",
     "packages/shared/tables",
     "packages/tooling/library/*",
     "packages/tooling/policy-pack/*",

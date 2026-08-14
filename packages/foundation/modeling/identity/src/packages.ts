@@ -97,6 +97,7 @@ const generatedComposers = $I.compose(
 
   // Shared Kernel Slice Packages
   "shared-domain",
+  "shared-use-cases",
   "shared-tables",
 
   "oip-web",
@@ -457,6 +458,23 @@ export const $TestUtilsId = composers.$TestUtilsId;
  * @since 0.0.0
  */
 export const $SharedDomainId = composers.$SharedDomainId;
+
+/**
+ * Identity composer for the `@beep/shared-use-cases` package.
+ *
+ * **Example** (Make a shared use-case contract ID)
+ *
+ * ```ts
+ * import { $SharedUseCasesId } from "@beep/identity/packages"
+ *
+ * const id = $SharedUseCasesId.make("PromotionGate")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $SharedUseCasesId: Identity.IdentityComposer<"@beep/shared-use-cases"> = composers.$SharedUseCasesId;
 
 /**
  * Identity composer for the `@beep/shared-tables` package.
