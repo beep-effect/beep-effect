@@ -19,7 +19,6 @@
  */
 
 import { $EditorId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import { cn } from "@beep/ui/lib/utils";
 import { A } from "@beep/utils";
 import { useAtom, useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
@@ -66,7 +65,7 @@ class MentionMenuOption extends MenuOption {
   }
 }
 
-class MentionLookupError extends TaggedErrorClass<MentionLookupError>($I`MentionLookupError`)(
+class MentionLookupError extends S.TaggedError<MentionLookupError>($I`MentionLookupError`)(
   "MentionLookupError",
   {
     reason: S.Literals(["source-failed", "invalid-results"]).annotateKey({

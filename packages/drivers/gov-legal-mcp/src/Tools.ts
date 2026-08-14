@@ -24,7 +24,6 @@ import {
 import { GovinfoErrorReason, Search } from "@beep/govinfo";
 import { $GovLegalMcpId } from "@beep/identity/packages";
 import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
-import { TaggedErrorClass } from "@beep/schema";
 import { Result } from "effect";
 import * as S from "effect/Schema";
 import { Tool, Toolkit } from "effect/unstable/ai";
@@ -88,7 +87,7 @@ export class EcfrListTitlesParams extends S.Class<EcfrListTitlesParams>($I`EcfrL
  * @category errors
  * @since 0.0.0
  */
-export class GovinfoSearchFailure extends TaggedErrorClass<GovinfoSearchFailure>($I`GovinfoSearchFailure`)(
+export class GovinfoSearchFailure extends S.TaggedError<GovinfoSearchFailure>($I`GovinfoSearchFailure`)(
   "GovinfoSearchFailure",
   { reason: GovinfoErrorReason },
   $I.annote("GovinfoSearchFailure", {

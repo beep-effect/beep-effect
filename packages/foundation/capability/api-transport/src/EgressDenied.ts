@@ -14,7 +14,6 @@
  */
 
 import { $ApiTransportId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ApiTransportId.create("EgressDenied");
@@ -44,7 +43,7 @@ const $I = $ApiTransportId.create("EgressDenied");
  * @category errors
  * @since 0.0.0
  */
-export class EgressDenied extends TaggedErrorClass<EgressDenied>($I`EgressDenied`)(
+export class EgressDenied extends S.TaggedError<EgressDenied>($I`EgressDenied`)(
   "EgressDenied",
   {},
   $I.annote("EgressDenied", {

@@ -6,7 +6,7 @@
  */
 
 import { $FfmpegId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -208,7 +208,7 @@ export class FFmpegErrorFromUnknownOptions extends S.Class<FFmpegErrorFromUnknow
  * @category errors
  * @since 0.0.0
  */
-export class FFmpegError extends TaggedErrorClass<FFmpegError>($I`FFmpegError`)(
+export class FFmpegError extends S.TaggedError<FFmpegError>($I`FFmpegError`)(
   "FFmpegError",
   {
     command: S.OptionFromOptionalKey(S.String).pipe(

@@ -13755,6 +13755,22 @@
       "owner": "@beep/identity"
     },
     {
+      "file": "packages/foundation/modeling/identity/src/Id.ts",
+      "symbol": "IdentityInterpolationError",
+      "kind": "tagged-error",
+      "owner": "@beep/identity",
+      "identity": "@beep/identity/errors/IdentityInterpolationError",
+      "description": "Identity template tags do not allow interpolations."
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Id.ts",
+      "symbol": "IdentitySegmentCountError",
+      "kind": "tagged-error",
+      "owner": "@beep/identity",
+      "identity": "@beep/identity/errors/IdentitySegmentCountError",
+      "description": "Identity template tags must use a single literal segment."
+    },
+    {
       "file": "packages/foundation/modeling/identity/src/Vocab.ts",
       "symbol": "VocabEntry",
       "kind": "schema-class",
@@ -13863,6 +13879,14 @@
       "owner": "@beep/lexical-schema",
       "identity": "LexicalCompatibilityResult",
       "description": "Lossless Lexical wire plus an optional strict semantic state and compatibility diagnostics."
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+      "symbol": "LexicalDecodeError",
+      "kind": "tagged-error",
+      "owner": "@beep/lexical-schema",
+      "identity": "LexicalDecodeError",
+      "description": "Typed failure raised when a Lexical semantic or wire payload cannot be decoded."
     },
     {
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
@@ -15430,6 +15454,14 @@
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+      "symbol": "PandocDecodeError",
+      "kind": "tagged-error",
+      "owner": "@beep/pandoc-ast",
+      "identity": "PandocDecodeError",
+      "description": "Typed failure raised when a Pandoc semantic or lossless JSON payload cannot be decoded."
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
       "symbol": "PandocJsonFromString",
       "kind": "codec",
       "owner": "@beep/pandoc-ast",
@@ -15459,6 +15491,14 @@
       "owner": "@beep/pandoc-ast",
       "identity": "DocumentToPandocResult",
       "description": "Result of mapping an @beep/md document to Pandoc."
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+      "symbol": "PandocMappingError",
+      "kind": "tagged-error",
+      "owner": "@beep/pandoc-ast",
+      "identity": "PandocMappingError",
+      "description": "Typed failure raised when a Pandoc and Md compatibility projection cannot be completed."
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
@@ -16787,12 +16827,6 @@
       "owner": "@beep/schema"
     },
     {
-      "file": "packages/foundation/modeling/schema/src/CauseTaggedError/CauseTaggedError.errors.ts",
-      "symbol": "CauseTaggedError",
-      "kind": "tagged-error",
-      "owner": "@beep/schema"
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Color/Color.adjust.ts",
       "symbol": "ColorAmount",
       "kind": "brand",
@@ -17409,7 +17443,9 @@
       "file": "packages/foundation/modeling/schema/src/CsvError/CsvError.errors.ts",
       "symbol": "CsvError",
       "kind": "tagged-error",
-      "owner": "@beep/schema"
+      "owner": "@beep/schema",
+      "identity": "CsvError",
+      "description": "Raised when CSV parsing, header validation, or formatting fails."
     },
     {
       "file": "packages/foundation/modeling/schema/src/CsvParser/CsvParser.parser.ts",
@@ -19101,6 +19137,46 @@
       "description": "A branded kebab-case string."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralKitEnumMappingCoverageError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "LiteralKitEnumMappingCoverageError",
+      "description": "A manual LiteralKit enum mapping did not exactly match the provided literal set."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralKitEnumMappingDuplicateLiteralError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "LiteralKitEnumMappingDuplicateLiteralError",
+      "description": "The same source literal appeared more than once in a manual LiteralKit enum mapping."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralKitKeyCollisionError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "LiteralKitKeyCollisionError",
+      "description": "Different literals encoded to the same LiteralKit helper key."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralKitTaggedUnionLiteralError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "LiteralKitTaggedUnionLiteralError",
+      "description": "LiteralKit.toTaggedUnion only supports literals that can be used as object property keys."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralNotInSetError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "LiteralNotInSetError",
+      "description": "Error thrown when an input value is not found in the provided literals array."
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/LocalDate/LocalDate.schema.ts",
       "symbol": "LocalDate",
       "kind": "schema-class",
@@ -19136,7 +19212,9 @@
       "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
       "symbol": "MappedLiteralDuplicateError",
       "kind": "tagged-error",
-      "owner": "@beep/schema"
+      "owner": "@beep/schema",
+      "identity": "MappedLiteralDuplicateError",
+      "description": "Thrown when mapped literal entries are not one-to-one."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Markdown.ts",
@@ -19260,7 +19338,9 @@
       "file": "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts",
       "symbol": "ParserOptionsError",
       "kind": "tagged-error",
-      "owner": "@beep/schema"
+      "owner": "@beep/schema",
+      "identity": "ParserOptionsError",
+      "description": "Raised when CSV parser options cannot be decoded or normalized."
     },
     {
       "file": "packages/foundation/modeling/schema/src/PascalStr.ts",
@@ -19562,11 +19642,123 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "CoreError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "CoreError",
+      "description": "A core error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "CrossOriginEmbedderPolicyError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "CrossOriginEmbedderPolicyError",
+      "description": "A cross-origin embedder policy error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "CrossOriginOpenerPolicyError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "CrossOriginOpenerPolicyError",
+      "description": "A cross-origin opener policy error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "CrossOriginResourcePolicyError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "CrossOriginResourcePolicyError",
+      "description": "A cross-origin resource policy error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "CspError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "CspError",
+      "description": "A CSP error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "ExpectCtError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "ExpectCtError",
+      "description": "An Expect-CT error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "ForceHttpsRedirectError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "ForceHttpsRedirectError",
+      "description": "A force HTTPS redirect error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "FrameGuardError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "FrameGuardError",
+      "description": "A frame guard error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "NoOpenError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "NoOpenError",
+      "description": "A no open error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "NoSniffError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "NoSniffError",
+      "description": "A no sniff error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "PermissionsPolicyError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "PermissionsPolicyError",
+      "description": "A permissions policy error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "PermittedCrossDomainPoliciesError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "PermittedCrossDomainPoliciesError",
+      "description": "A permitted cross-domain policies error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "ReferrerPolicyError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "ReferrerPolicyError",
+      "description": "A referrer policy error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
       "symbol": "SecureHeaderError",
       "kind": "tagged-union",
       "owner": "@beep/schema",
       "identity": "SecureHeaderError",
       "description": "A secure header error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "XssProtectionError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "XssProtectionError",
+      "description": "An XSS protection error."
     },
     {
       "file": "packages/foundation/modeling/schema/src/SecureHeaderOptions/SecureHeaderOptions.schema.ts",
@@ -20011,7 +20203,7 @@
     {
       "file": "packages/foundation/modeling/utils/src/Glob.ts",
       "symbol": "GlobError",
-      "kind": "schema-const",
+      "kind": "tagged-error",
       "owner": "@beep/utils",
       "identity": "GlobError",
       "description": "An error that occurs during glob pattern matching."
@@ -20041,7 +20233,7 @@
     {
       "file": "packages/foundation/modeling/utils/src/Struct.ts",
       "symbol": "EmptyStructError",
-      "kind": "schema-const",
+      "kind": "tagged-error",
       "owner": "@beep/utils",
       "identity": "EmptyStructError",
       "description": "Invariant violation thrown when a struct expected to have at least one string key is empty."
@@ -24985,6 +25177,14 @@
       "description": "Parquet export mode for one AI metrics derived storage write."
     },
     {
+      "file": "packages/tooling/library/ai-metrics/src/file-inventory.ts",
+      "symbol": "AiMetricsFileInventoryError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsFileInventoryError",
+      "description": "Failure to inspect a file or read a directory in an AI metrics storage tree."
+    },
+    {
       "file": "packages/tooling/library/ai-metrics/src/forwarder.ts",
       "symbol": "AiMetricsForwarderError",
       "kind": "tagged-error",
@@ -29150,6 +29350,14 @@
       "owner": "@beep/test-utils",
       "identity": "TestDatabaseInfoShape",
       "description": "Runtime metadata for an ephemeral integration-test database instance."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts",
+      "symbol": "AiMetricsCommandError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "AiMetricsCommandError",
+      "description": "User-facing failure raised by the AI metrics CLI command suite."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts",
@@ -35746,6 +35954,14 @@
       "owner": "@beep/repo-cli",
       "identity": "CliReportedExit",
       "description": "Silent non-zero process exit requested after command output was rendered."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Json.ts",
+      "symbol": "CliJsonError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "CliJsonError",
+      "description": "Failure raised when a repo-cli command cannot encode a JSON payload."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",

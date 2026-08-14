@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import * as S from "effect/Schema";
 
@@ -25,7 +25,7 @@ const $I = $AgentsUseCasesId.create("entities/ProviderInstance/ProviderInstance.
  * @category errors
  * @since 0.0.0
  */
-export class ProviderInstanceNotFound extends TaggedErrorClass<ProviderInstanceNotFound>($I`ProviderInstanceNotFound`)(
+export class ProviderInstanceNotFound extends S.TaggedError<ProviderInstanceNotFound>($I`ProviderInstanceNotFound`)(
   "ProviderInstanceNotFound",
   { providerInstanceId: Agents.ProviderInstanceId },
   $I.annote("ProviderInstanceNotFound", { description: "The requested provider instance does not exist." })
@@ -46,7 +46,7 @@ export class ProviderInstanceNotFound extends TaggedErrorClass<ProviderInstanceN
  * @category errors
  * @since 0.0.0
  */
-export class ProviderUnauthenticated extends TaggedErrorClass<ProviderUnauthenticated>($I`ProviderUnauthenticated`)(
+export class ProviderUnauthenticated extends S.TaggedError<ProviderUnauthenticated>($I`ProviderUnauthenticated`)(
   "ProviderUnauthenticated",
   { providerInstanceId: Agents.ProviderInstanceId, guidance: S.NonEmptyString },
   $I.annote("ProviderUnauthenticated", { description: "The provider CLI is unauthenticated and requires login." })
@@ -66,7 +66,7 @@ export class ProviderUnauthenticated extends TaggedErrorClass<ProviderUnauthenti
  * @category errors
  * @since 0.0.0
  */
-export class ProviderProbeUnavailable extends TaggedErrorClass<ProviderProbeUnavailable>($I`ProviderProbeUnavailable`)(
+export class ProviderProbeUnavailable extends S.TaggedError<ProviderProbeUnavailable>($I`ProviderProbeUnavailable`)(
   "ProviderProbeUnavailable",
   { guidance: S.NonEmptyString },
   $I.annote("ProviderProbeUnavailable", {

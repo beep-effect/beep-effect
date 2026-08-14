@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, Order, pipe } from "effect";
@@ -96,7 +96,7 @@ export type TurboConfigProofSelectorMode = typeof TurboConfigProofSelectorMode.T
  * @category errors
  * @since 0.0.0
  */
-export class TurboConfigProofError extends TaggedErrorClass<TurboConfigProofError>($I`TurboConfigProofError`)(
+export class TurboConfigProofError extends S.TaggedError<TurboConfigProofError>($I`TurboConfigProofError`)(
   "TurboConfigProofError",
   {
     message: S.String,

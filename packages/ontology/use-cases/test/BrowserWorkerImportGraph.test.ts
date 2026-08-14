@@ -1,4 +1,3 @@
-/** @effect-diagnostics nodeBuiltinImport:skip-file asyncFunction:skip-file */
 /**
  * Browser-conditions regression guard for the visualizer worker import graph.
  *
@@ -17,29 +16,57 @@
  * disabled, asserts the markdown stack stays out of the graph, and then
  * evaluates the bundle in this DOM-less runtime.
  */
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
-import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import * as NodeServices from "@effect/platform-node/NodeServices";
+import { expect, layer } from "@effect/vitest";
+import { Context, Effect, FileSystem, Layer, Path } from "effect";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { build } from "esbuild";
 
 const WORKER_ENTRY = "@beep/ontology-use-cases/aggregates/Session/worker";
 
 const PACKAGE_ROOT = new URL("..", import.meta.url);
 
-describe("@beep/ontology-use-cases worker import graph (browser conditions)", () => {
+class DynamicModuleLoadError extends S.TaggedError<DynamicModuleLoadError>()("DynamicModuleLoadError", {
+  cause: S.Defect({ includeStack: true }),
+  url: S.String,
+}) {}
+
+const loadDynamicModule = Effect.fn("DynamicModuleLoader.load")((url: string) =>
+  Effect.tryPromise<unknown, DynamicModuleLoadError>({
+    try: () => import(url),
+    catch: (cause) => DynamicModuleLoadError.make({ cause, url }),
+  })
+);
+
+class DynamicModuleLoader extends Context.Service<DynamicModuleLoader, { readonly load: typeof loadDynamicModule }>()(
+  "@beep/ontology-use-cases/test/BrowserWorkerImportGraph.test/DynamicModuleLoader"
+) {}
+
+const dynamicModuleLoaderLayer = Layer.succeed(
+  DynamicModuleLoader,
+  DynamicModuleLoader.of({
+    load: loadDynamicModule,
+  })
+);
+
+const testPlatformLayer = Layer.mergeAll(NodeServices.layer, dynamicModuleLoaderLayer);
+
+layer(testPlatformLayer)("@beep/ontology-use-cases worker import graph (browser conditions)", (it) => {
   it.effect(
     "bundles and evaluates the worker entrypoint under Vite-dev-like browser resolution",
     Effect.fnUntraced(function* () {
       expect("document" in globalThis).toBe(false);
       expect("window" in globalThis).toBe(false);
 
-      const result = yield* Effect.promise(() =>
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const dynamicModules = yield* DynamicModuleLoader;
+      const packageRoot = yield* path.fromFileUrl(PACKAGE_ROOT);
+      const result = yield* Effect.tryPromise(() =>
         build({
           entryPoints: [WORKER_ENTRY],
-          absWorkingDir: fileURLToPath(PACKAGE_ROOT),
+          absWorkingDir: packageRoot,
           bundle: true,
           write: false,
           format: "esm",
@@ -70,18 +97,13 @@ describe("@beep/ontology-use-cases worker import graph (browser conditions)", ()
 
       // Strongest form: the bundle's top-level code must run where no DOM
       // exists, exactly like a fresh module worker.
-      const dir = yield* Effect.promise(() => mkdtemp(join(tmpdir(), "beep-worker-graph-")));
-      yield* Effect.promise(async () => {
-        const bundlePath = join(dir, "worker-graph.mjs");
-        await writeFile(bundlePath, result.outputFiles[0]?.text ?? "");
-        try {
-          const moduleExports: Record<string, unknown> = await import(pathToFileURL(bundlePath).href);
-          expect(moduleExports.WorkerCommand).toBeDefined();
-          expect(moduleExports.buildOntologyGraphProjection).toBeDefined();
-        } finally {
-          await rm(dir, { recursive: true, force: true });
-        }
-      });
+      const dir = yield* fs.makeTempDirectoryScoped({ prefix: "beep-worker-graph-" });
+      const bundlePath = path.join(dir, "worker-graph.mjs");
+      yield* fs.writeFileString(bundlePath, result.outputFiles[0]?.text ?? "");
+      const bundleUrl = yield* path.toFileUrl(bundlePath);
+      const moduleExports = yield* dynamicModules.load(bundleUrl.href);
+      expect(P.hasProperty(moduleExports, "WorkerCommand")).toBe(true);
+      expect(P.hasProperty(moduleExports, "buildOntologyGraphProjection")).toBe(true);
     }),
     120_000
   );

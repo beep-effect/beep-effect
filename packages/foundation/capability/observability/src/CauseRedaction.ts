@@ -33,7 +33,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Cause, Effect, flow, Match, Result } from "effect";
 import { dual } from "effect/Function";
@@ -475,7 +475,7 @@ export const redactCauseForClient = (input: unknown): RedactedCause =>
  * @category error-handling
  * @since 0.0.0
  */
-export class RedactedCauseError extends TaggedErrorClass<RedactedCauseError>($I`RedactedCauseError`)(
+export class RedactedCauseError extends S.TaggedError<RedactedCauseError>($I`RedactedCauseError`)(
   "RedactedCauseError",
   {
     redacted: RedactedCause,

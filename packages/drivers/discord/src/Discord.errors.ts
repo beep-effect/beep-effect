@@ -6,7 +6,7 @@
  */
 
 import { $DiscordId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { DiscordHttpStatus } from "./Discord.models.ts";
 import type * as O from "effect/Option";
@@ -86,7 +86,7 @@ export type DiscordErrorReason = typeof DiscordErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class DiscordError extends TaggedErrorClass<DiscordError>($I`DiscordError`)(
+export class DiscordError extends S.TaggedError<DiscordError>($I`DiscordError`)(
   "DiscordError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(

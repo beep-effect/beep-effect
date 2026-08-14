@@ -29,7 +29,7 @@
 
 import { $ProfessionalDesktopId } from "@beep/identity";
 import { LogRedactedCauseOptions, tapRedactedCause } from "@beep/observability";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, P, Str, thunkEffectVoid } from "@beep/utils";
 import { invoke } from "@tauri-apps/api/core";
 import { Effect, flow, Layer, Metric, Queue, Ref, Stream } from "effect";
@@ -152,7 +152,7 @@ const sidecarClosedMessage = (payload: SidecarClosedPayload): string =>
  * @category errors
  * @since 0.0.0
  */
-class SidecarClosedError extends TaggedErrorClass<SidecarClosedError>($I`SidecarClosedError`)(
+class SidecarClosedError extends S.TaggedError<SidecarClosedError>($I`SidecarClosedError`)(
   "SidecarClosedError",
   {
     message: S.String,
@@ -170,7 +170,7 @@ class SidecarClosedError extends TaggedErrorClass<SidecarClosedError>($I`Sidecar
  * @category errors
  * @since 0.0.0
  */
-class SidecarSendError extends TaggedErrorClass<SidecarSendError>($I`SidecarSendError`)(
+class SidecarSendError extends S.TaggedError<SidecarSendError>($I`SidecarSendError`)(
   "SidecarSendError",
   {
     causeMessage: S.String,

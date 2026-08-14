@@ -6,7 +6,6 @@
  */
 
 import { $AnthropicId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $AnthropicId.create("Anthropic.errors");
@@ -37,7 +36,7 @@ const $I = $AnthropicId.create("Anthropic.errors");
  * @category errors
  * @since 0.0.0
  */
-export class RepairError extends TaggedErrorClass<RepairError>($I`RepairError`)(
+export class RepairError extends S.TaggedError<RepairError>($I`RepairError`)(
   "RepairError",
   {
     message: S.NonEmptyString.annotateKey({

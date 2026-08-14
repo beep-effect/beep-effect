@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
@@ -29,7 +28,7 @@ const $I = $RepoCliId.create("commands/Runners/Runners.errors");
  * @category errors
  * @since 0.0.0
  */
-export class RunnersCommandError extends TaggedErrorClass<RunnersCommandError>($I`RunnersCommandError`)(
+export class RunnersCommandError extends S.TaggedError<RunnersCommandError>($I`RunnersCommandError`)(
   "RunnersCommandError",
   {
     message: S.String,

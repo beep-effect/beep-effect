@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Sha256Hex, TaggedErrorClass } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -28,7 +28,7 @@ const $I = $RepoCliId.create("commands/Corpus/Corpus.errors");
  * @category error-handling
  * @since 0.0.0
  */
-export class CorpusCommandError extends TaggedErrorClass<CorpusCommandError>($I`CorpusCommandError`)(
+export class CorpusCommandError extends S.TaggedError<CorpusCommandError>($I`CorpusCommandError`)(
   "CorpusCommandError",
   {
     message: S.String,
@@ -70,7 +70,7 @@ export class CorpusCommandError extends TaggedErrorClass<CorpusCommandError>($I`
  * @category error-handling
  * @since 0.0.0
  */
-export class CorpusArchiveMoveUncoveredFileError extends TaggedErrorClass<CorpusArchiveMoveUncoveredFileError>(
+export class CorpusArchiveMoveUncoveredFileError extends S.TaggedError<CorpusArchiveMoveUncoveredFileError>(
   $I`CorpusArchiveMoveUncoveredFileError`
 )(
   "CorpusArchiveMoveUncoveredFileError",
@@ -107,7 +107,7 @@ export class CorpusArchiveMoveUncoveredFileError extends TaggedErrorClass<Corpus
  * @category error-handling
  * @since 0.0.0
  */
-export class CorpusArchiveMoveDigestMismatchError extends TaggedErrorClass<CorpusArchiveMoveDigestMismatchError>(
+export class CorpusArchiveMoveDigestMismatchError extends S.TaggedError<CorpusArchiveMoveDigestMismatchError>(
   $I`CorpusArchiveMoveDigestMismatchError`
 )(
   "CorpusArchiveMoveDigestMismatchError",
@@ -143,7 +143,7 @@ export class CorpusArchiveMoveDigestMismatchError extends TaggedErrorClass<Corpu
  * @category error-handling
  * @since 0.0.0
  */
-export class CorpusArchiveMoveDestinationConflictError extends TaggedErrorClass<CorpusArchiveMoveDestinationConflictError>(
+export class CorpusArchiveMoveDestinationConflictError extends S.TaggedError<CorpusArchiveMoveDestinationConflictError>(
   $I`CorpusArchiveMoveDestinationConflictError`
 )(
   "CorpusArchiveMoveDestinationConflictError",

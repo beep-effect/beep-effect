@@ -32,7 +32,6 @@ import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, profilePhase } from "@beep/observability";
 import { makeLayer as makePgliteLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
-import { TaggedErrorClass } from "@beep/schema";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { Clock, Config, Effect, FileSystem, Layer, Path } from "effect";
@@ -99,7 +98,7 @@ const ChatDbIncompatibleRecoveryMessage =
 
 const ViteFileSystemPrefix = "/@fs/";
 
-class IncompatiblePgliteDataDir extends TaggedErrorClass<IncompatiblePgliteDataDir>($I`IncompatiblePgliteDataDir`)(
+class IncompatiblePgliteDataDir extends S.TaggedError<IncompatiblePgliteDataDir>($I`IncompatiblePgliteDataDir`)(
   "IncompatiblePgliteDataDir",
   {
     cause: S.Unknown.annotateKey({ description: "Failure raised while probing the existing PGlite data directory." }),

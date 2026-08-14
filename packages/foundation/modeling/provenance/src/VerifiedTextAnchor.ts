@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ProvenanceId } from "@beep/identity/packages";
-import { LiteralKit, Sha256HexFromBytes, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { Effect } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
@@ -77,7 +77,7 @@ export type VerifiedTextAnchorErrorReason = typeof VerifiedTextAnchorErrorReason
  * @category errors
  * @since 0.0.0
  */
-export class VerifiedTextAnchorError extends TaggedErrorClass<VerifiedTextAnchorError>($I`VerifiedTextAnchorError`)(
+export class VerifiedTextAnchorError extends S.TaggedError<VerifiedTextAnchorError>($I`VerifiedTextAnchorError`)(
   "VerifiedTextAnchorError",
   {
     message: S.String,

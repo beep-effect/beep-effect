@@ -23,7 +23,7 @@ Glob.Schema
 The package root remains a curated flat facade:
 
 ```ts
-import { DurationInput, Glob, TaggedErrorClass } from "@beep/schema"
+import { DurationInput, Glob } from "@beep/schema"
 ```
 
 Root flat exports are convenience and compatibility, not the canonical home for

@@ -6,7 +6,7 @@
  */
 
 import { $TikaId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -105,7 +105,7 @@ export class TikaErrorOptions extends S.Class<TikaErrorOptions>($I`TikaErrorOpti
  * @category errors
  * @since 0.0.0
  */
-export class TikaError extends TaggedErrorClass<TikaError>($I`TikaError`)(
+export class TikaError extends S.TaggedError<TikaError>($I`TikaError`)(
   "TikaError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(

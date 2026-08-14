@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, NonEmptyTrimmedStr, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonEmptyTrimmedStr, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, Encoding, flow, Order, pipe, SchemaTransformation } from "effect";
@@ -303,7 +303,7 @@ export class AiMetricsPrivacyCheckResult extends S.Class<AiMetricsPrivacyCheckRe
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsPrivacyError extends TaggedErrorClass<AiMetricsPrivacyError>($I`AiMetricsPrivacyError`)(
+export class AiMetricsPrivacyError extends S.TaggedError<AiMetricsPrivacyError>($I`AiMetricsPrivacyError`)(
   "AiMetricsPrivacyError",
   {
     cause: S.Defect({ includeStack: true }),

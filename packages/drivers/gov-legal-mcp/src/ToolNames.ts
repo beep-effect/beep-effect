@@ -13,7 +13,7 @@
 
 import { createHash } from "node:crypto";
 import { $GovLegalMcpId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { flow, HashMap, HashSet, Match, Number as N, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -200,7 +200,7 @@ export class ToolNameCollisionReport extends S.Class<ToolNameCollisionReport>($I
  * @category errors
  * @since 0.0.0
  */
-export class ToolNameNormalizationError extends TaggedErrorClass<ToolNameNormalizationError>(
+export class ToolNameNormalizationError extends S.TaggedError<ToolNameNormalizationError>(
   $I`ToolNameNormalizationError`
 )(
   "ToolNameNormalizationError",
@@ -240,7 +240,7 @@ export class ToolNameNormalizationError extends TaggedErrorClass<ToolNameNormali
  * @category errors
  * @since 0.0.0
  */
-export class ToolNameCollisionError extends TaggedErrorClass<ToolNameCollisionError>($I`ToolNameCollisionError`)(
+export class ToolNameCollisionError extends S.TaggedError<ToolNameCollisionError>($I`ToolNameCollisionError`)(
   "ToolNameCollisionError",
   {
     collisionKeys: S.Array(S.String),
@@ -278,9 +278,7 @@ export class ToolNameCollisionError extends TaggedErrorClass<ToolNameCollisionEr
  * @category errors
  * @since 0.0.0
  */
-export class ToolNameRegistrationError extends TaggedErrorClass<ToolNameRegistrationError>(
-  $I`ToolNameRegistrationError`
-)(
+export class ToolNameRegistrationError extends S.TaggedError<ToolNameRegistrationError>($I`ToolNameRegistrationError`)(
   "ToolNameRegistrationError",
   {
     candidate: ToolNameCandidate,

@@ -20,7 +20,6 @@
 "@beep/chalk": patch
 "@beep/colors": patch
 "@beep/cosmos": patch
-"@beep/courtlistener": patch
 "@beep/data": patch
 "@beep/db-admin": patch
 "@beep/discord": patch
@@ -31,7 +30,6 @@
 "@beep/documents-server": patch
 "@beep/documents-tables": patch
 "@beep/documents-use-cases": patch
-"@beep/dol": patch
 "@beep/drizzle": patch
 "@beep/duckdb": patch
 "@beep/ecfr": patch
@@ -41,7 +39,6 @@
 "@beep/epistemic-tables": patch
 "@beep/face-detection": patch
 "@beep/fc-runs": patch
-"@beep/federal-register": patch
 "@beep/ffmpeg": patch
 "@beep/file-processing": patch
 "@beep/firecrawl": patch
@@ -81,7 +78,6 @@
 "@beep/postgres": patch
 "@beep/pretext": patch
 "@beep/professional-desktop": patch
-"@beep/protobuf": patch
 "@beep/provenance": patch
 "@beep/rdf": patch
 "@beep/rdf-canonize": patch

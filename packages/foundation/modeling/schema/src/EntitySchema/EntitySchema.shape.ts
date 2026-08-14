@@ -8,7 +8,6 @@ import { A, P, Struct } from "@beep/utils";
 import { SchemaAST as AST, Match, pipe, Tuple } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { TaggedErrorClass } from "../TaggedErrorClass/index.ts";
 import { EncodedAbsenceKind as EncodedAbsenceKindSchema } from "./EntitySchema.persist.ts";
 import { $I } from "./EntitySchema.shared.ts";
 import type { EncodedAbsenceKind } from "./EntitySchema.persist.ts";
@@ -33,7 +32,7 @@ type EncodedFieldShapeMember<T extends EncodedAbsenceKind> = {
   readonly isOptional: boolean;
 };
 
-class SelectedRowFieldShapeError extends TaggedErrorClass<SelectedRowFieldShapeError>($I`SelectedRowFieldShapeError`)(
+class SelectedRowFieldShapeError extends S.TaggedError<SelectedRowFieldShapeError>($I`SelectedRowFieldShapeError`)(
   "SelectedRowFieldShapeError",
   {
     field: S.String,
@@ -60,7 +59,7 @@ class SelectedRowFieldShapeError extends TaggedErrorClass<SelectedRowFieldShapeE
  * @category errors
  * @since 0.0.0
  */
-export class EntityFieldInputError extends TaggedErrorClass<EntityFieldInputError>($I`EntityFieldInputError`)(
+export class EntityFieldInputError extends S.TaggedError<EntityFieldInputError>($I`EntityFieldInputError`)(
   "EntityFieldInputError",
   {
     field: S.String,
@@ -89,7 +88,7 @@ export class EntityFieldInputError extends TaggedErrorClass<EntityFieldInputErro
  * @category errors
  * @since 0.0.0
  */
-export class EntitySchemaAttachmentError extends TaggedErrorClass<EntitySchemaAttachmentError>(
+export class EntitySchemaAttachmentError extends S.TaggedError<EntitySchemaAttachmentError>(
   $I`EntitySchemaAttachmentError`
 )(
   "EntitySchemaAttachmentError",

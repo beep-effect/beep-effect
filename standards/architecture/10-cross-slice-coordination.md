@@ -162,7 +162,7 @@ The `RevokeMembership` command handler in `iam/server` writes `MembershipRevoked
 
 **3. `billing/server` subscribes via a thin handler.**
 
-New file: `packages/billing/server/src/Subscription/Subscription.event-handlers.ts`. It imports `MembershipRevoked` from the future `@beep/shared-use-cases/public` subpath after promotion, registers a handler that decodes the payload, and calls billing's own internal `cancelInvoicesFor` use-case. The handler returns an `Effect.Effect<A, E, R>` and is built with `Effect.fn` per repo convention; failures decode into a `TaggedErrorClass` (from `@beep/schema`) defined in `billing/use-cases`.
+New file: `packages/billing/server/src/Subscription/Subscription.event-handlers.ts`. It imports `MembershipRevoked` from the future `@beep/shared-use-cases/public` subpath after promotion, registers a handler that decodes the payload, and calls billing's own internal `cancelInvoicesFor` use-case. The handler returns an `Effect.Effect<A, E, R>` and is built with `Effect.fn` per repo convention; failures decode into a class extending `S.TaggedError` directly from `effect/Schema`, defined in `billing/use-cases`.
 
 Result:
 

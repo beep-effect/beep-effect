@@ -842,9 +842,6 @@
       "@beep/schema/BufferEncoding": [
         "./packages/foundation/modeling/schema/src/BufferEncoding.ts"
       ],
-      "@beep/schema/CauseTaggedError": [
-        "./packages/foundation/modeling/schema/src/CauseTaggedError/index.ts"
-      ],
       "@beep/schema/CommonTextSchemas": [
         "./packages/foundation/modeling/schema/src/CommonTextSchemas.ts"
       ],
@@ -963,14 +960,8 @@
       "@beep/schema/StatusCauseError": [
         "./packages/foundation/modeling/schema/src/StatusCauseError.ts"
       ],
-      "@beep/schema/StatusCauseTaggedErrorClass": [
-        "./packages/foundation/modeling/schema/src/StatusCauseTaggedErrorClass/index.ts"
-      ],
       "@beep/schema/String": [
         "./packages/foundation/modeling/schema/src/String.ts"
-      ],
-      "@beep/schema/TaggedErrorClass": [
-        "./packages/foundation/modeling/schema/src/TaggedErrorClass/index.ts"
       ],
       "@beep/schema/Thunk": [
         "./packages/foundation/modeling/schema/src/Thunk.ts"
@@ -1414,8 +1405,6 @@
       "@beep/documents-use-cases/server": [
         "./packages/documents/use-cases/src/server.ts"
       ],
-      "@beep/protobuf": ["./packages/drivers/protobuf/src/index.ts"],
-      "@beep/protobuf/*": ["./packages/drivers/protobuf/src/*"],
       "@beep/schema/Bytes": [
         "./packages/foundation/modeling/schema/src/Bytes.ts"
       ],
