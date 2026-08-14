@@ -6,6 +6,7 @@ import * as O from "@beep/utils/Option";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import { assert, it as effectIt } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -273,6 +274,46 @@ describe("tsconfig-sync", () => {
         })
       )
     ));
+
+  effectIt.effect(
+    "generates the source-only Knowledge test seam from the repo-cli registry",
+    Effect.fnUntraced(function* () {
+      yield* withTempRepo(
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const rootDir = process.cwd();
+
+          yield* bootstrapRootConfig(rootDir, {
+            workspaces: ["packages/tooling/tool/cli"],
+            references: [],
+            paths: {},
+            syncpackSources: ["package.json"],
+          });
+          yield* bootstrapWorkspace(rootDir, {
+            relativeDir: "packages/tooling/tool/cli",
+            packageName: "@beep/repo-cli",
+            exports: {
+              ".": "./src/index.ts",
+              "./commands/Knowledge": "./src/commands/Knowledge/index.ts",
+              "./test/*": "./src/test/*.test-kit.ts",
+              "./package.json": "./package.json",
+            },
+          });
+
+          yield* syncTsconfigAtRoot(rootDir, {
+            mode: "sync",
+            filter: "@beep/repo-cli",
+            verbose: false,
+          });
+
+          const paths = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+          assert.deepStrictEqual(paths.compilerOptions.paths["@beep/repo-cli/test/Knowledge"], [
+            "./packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts",
+          ]);
+        })
+      );
+    })
+  );
 
   it("does not synthesize wildcard aliases for packages without wildcard exports", () =>
     Effect.runPromise(
