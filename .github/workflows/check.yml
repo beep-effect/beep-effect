@@ -122,6 +122,9 @@ jobs:
       TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
       TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
       TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
+      # Stream task logs line-by-line so a wedged lane task shows its last
+      # live output instead of buffering everything behind a group header.
+      TURBO_LOG_ORDER: stream
       DATABASE_URL: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
       DATABASE_URL_UNPOOLED: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
       EMAIL_RESEND_API_KEY: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
