@@ -955,6 +955,21 @@ const missingCoverageSnapshotPackages = (
     A.sort(Order.String)
   );
 
+const validateCoverageSnapshotCompleteness = Effect.fn("CoverageRegression.validateCoverageSnapshotCompleteness")(
+  function* (entries: ReadonlyArray<CoverageSnapshotEntry>, expectedPackageNames: ReadonlyArray<string>) {
+    if (A.isReadonlyArrayEmpty(entries)) {
+      return yield* QualityTaskConfigurationError.new("No coverage summaries were generated; cannot write baseline.");
+    }
+
+    const missingExpected = missingCoverageSnapshotPackages(entries, expectedPackageNames);
+    if (A.isReadonlyArrayNonEmpty(missingExpected)) {
+      return yield* QualityTaskConfigurationError.new(
+        `Refusing to write ${coverageRegressionBaselinePath}: ${A.length(missingExpected)} selected package(s) produced no coverage summary: ${A.join(missingExpected, ", ")}. Re-run the scoped coverage command and fix every missing summary before regenerating the baseline.`
+      );
+    }
+  }
+);
+
 /**
  * Write the committed coverage regression baseline from generated summaries.
  *
@@ -990,15 +1005,7 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
   > {
     const path = yield* Path.Path;
     const entries = yield* collectCoverageSnapshot(repoRoot);
-    if (A.isReadonlyArrayEmpty(entries)) {
-      return yield* QualityTaskConfigurationError.new("No coverage summaries were generated; cannot write baseline.");
-    }
-    const missingExpected = missingCoverageSnapshotPackages(entries, expectedPackageNames);
-    if (A.isReadonlyArrayNonEmpty(missingExpected)) {
-      return yield* QualityTaskConfigurationError.new(
-        `Refusing to write ${coverageRegressionBaselinePath}: ${A.length(missingExpected)} selected package(s) produced no coverage summary: ${A.join(missingExpected, ", ")}. Re-run the scoped coverage command and fix every missing summary before regenerating the baseline.`
-      );
-    }
+    yield* validateCoverageSnapshotCompleteness(entries, expectedPackageNames);
 
     // Absent and unreadable are different answers. Collapsing a read or decode
     // failure into "no previous document" would take the snapshot-only branch
