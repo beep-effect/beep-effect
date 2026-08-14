@@ -8,6 +8,7 @@
  * @module Workflow/EntityResolutionGraph
  */
 
+import type { IRI } from "@beep/rdf";
 import { NodeIndex } from "@beep/schema/Graph";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -36,7 +37,6 @@ import {
   EntityResolutionStats,
   SimilarityEdge,
 } from "../Domain/Model/EntityResolutionGraph.ts";
-import type { IRI } from "../Domain/Model/shared.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { EmbeddingService } from "../Service/Embedding.ts";
 import { dual2, dual3 } from "../Utils/Dual.ts";

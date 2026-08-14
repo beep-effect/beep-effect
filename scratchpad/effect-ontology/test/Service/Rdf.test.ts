@@ -1,6 +1,6 @@
+import { IRI } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Exit, Layer } from "effect";
-import { IRI } from "../../Domain/Rdf/Types.ts";
 import { RdfBuilder, rdfStoreSize, rdfStoreToDataset } from "../../Service/Rdf.ts";
 
 const RdfBuilderTest = RdfBuilder.Default.pipe(

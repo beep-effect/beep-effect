@@ -10,23 +10,31 @@ import { $OntologyId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import type { FastCheck } from "effect/testing";
 
 const $I = $OntologyId.create("Ontology.models");
 
 const decodeUrlStringOption = S.decodeUnknownOption(S.URLFromString);
+const makeHttpUrlArbitrary = (fc: typeof FastCheck) =>
+  fc
+    .tuple(fc.boolean(), fc.uuid())
+    .map(([secure, id]: readonly [boolean, string]) => `${secure ? "https" : "http"}://example.test/resource/${id}`);
 
-const HttpUrlFormatCheck = S.makeFilter<string>((value) => O.isSome(decodeUrlStringOption(value)), {
-  identifier: $I`HttpUrlFormatCheck`,
-  title: "HTTP URL Format",
-  description: "HTTP URL values must be valid absolute URL strings.",
-  message: "HTTP URL must be a valid URL string.",
-  arbitrary: {
-    candidate: {
-      weight: 32,
-      make: (fc) => fc.webUrl(),
+const HttpUrlFormatCheck = S.makeFilter<string>(
+  (value) => O.exists(decodeUrlStringOption(value), (url) => url.protocol === "http:" || url.protocol === "https:"),
+  {
+    identifier: $I`HttpUrlFormatCheck`,
+    title: "HTTP URL Format",
+    description: "HTTP URL values must be valid absolute URL strings using the http or https scheme.",
+    message: "HTTP URL must be a valid absolute URL using the http or https scheme.",
+    arbitrary: {
+      candidate: {
+        weight: 32,
+        make: makeHttpUrlArbitrary,
+      },
     },
-  },
-});
+  }
+);
 
 const FolioIriToken = S.NonEmptyString.pipe(
   $I.annoteSchema("FolioIriToken", {
@@ -85,7 +93,7 @@ export type SourceType = typeof SourceType.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const HttpUrl = S.String.check(
+const HttpUrlDefinition = S.String.check(
   HttpUrlFormatCheck,
   S.isMinLength(1, {
     identifier: $I`HttpUrlMinLengthCheck`,
@@ -97,10 +105,16 @@ export const HttpUrl = S.String.check(
     title: "HTTP URL Max Length",
     description: "HTTP URL values must not exceed 2083 characters.",
   })
-).pipe(
+).annotate({
+  toArbitrary: () => makeHttpUrlArbitrary,
+});
+
+export const HttpUrl = HttpUrlDefinition.pipe(
+  SchemaUtils.withCodecStatics,
   $I.annoteSchema("HttpUrl", {
     description: "HTTP URL of the ontology source when the source type is http.",
     format: "uri",
+    toArbitrary: () => makeHttpUrlArbitrary,
   })
 );
 

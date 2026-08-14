@@ -13,7 +13,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
-import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import type { SparqlQueryProfile } from "@beep/semantic-web/services/sparql-query";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
 import { Chunk, Context, Data, DateTime, Duration, Effect, Layer, Match, MutableHashMap } from "effect";
@@ -24,7 +24,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
-import type { ShaclValidationError, ValidationPolicyError } from "../Domain/Error/Shacl.ts";
+import type { ValidationPolicyError } from "../Domain/Error/Shacl.ts";
 import { ContentHash, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { ChunkingConfig, LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
@@ -828,7 +828,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const fallbackTriples = Effect.fn("OntologyAgent.queryFallback")(function* (error: { message: string }) {
             yield* Effect.logWarning("SPARQL execution failed, falling back to all triples", {
               error: error.message,
-              query: sparqlResult.sparql,
+              profile,
+              queryLength: sparqlResult.sparql.length,
             });
             const allQuads = yield* rdfBuilder.queryStore(dataStore, {});
             return A.map(Chunk.toReadonlyArray(allQuads), (quad) => ({

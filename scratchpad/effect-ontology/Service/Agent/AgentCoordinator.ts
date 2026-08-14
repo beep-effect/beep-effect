@@ -964,7 +964,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
         let iteration = 0;
         let status: RefinementStatus = "max-iterations";
         let lastValidationReport: unknown;
-        const violationsFixed: Array<number> = [];
+        const violationsFixed: Array<NonNegativeInt> = [];
 
         // Main refinement loop
         while (iteration < refinementConfig.maxIterations) {
@@ -1051,7 +1051,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
             correctedCount?: number;
           };
           currentGraph = correctionOutput.correctedGraph;
-          violationsFixed.push(correctionOutput.correctedCount ?? 0);
+          violationsFixed.push(NonNegativeInt.make(correctionOutput.correctedCount ?? 0));
 
           // Check confidence threshold
           if (O.isSome(refinementConfig.minConfidence)) {

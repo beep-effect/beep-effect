@@ -10,15 +10,16 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { AbsoluteIRI, NamedNode, ObjectTerm } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { SchemaGetter } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import { ContentHash, GcsUri } from "../Identity.ts";
-import { Confidence } from "../Model/index.ts";
-import { AbsoluteIRI, NamedNode, ObjectTerm } from "../Rdf/index.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/KnowledgeModel");
 

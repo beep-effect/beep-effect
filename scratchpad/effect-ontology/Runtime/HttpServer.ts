@@ -1,3 +1,4 @@
+import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -16,7 +17,6 @@ import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstab
 import { BatchId, DocumentId, GcsUri } from "../Domain/Identity.ts";
 import { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
-import { IRI, makeLiteral, makeNamedNode } from "../Domain/Rdf/Types.ts";
 import type { BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
 import { BatchManifest } from "../Domain/Schema/Batch.ts";
 import type { PreprocessingOptions } from "../Domain/Schema/BatchRequest.ts";

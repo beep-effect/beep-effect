@@ -1,33 +1,13 @@
-import { SafePnLocal as CanonicalSafePnLocal } from "@beep/identity";
+import { SafePnLocal } from "@beep/identity";
 import * as CanonicalRdf from "@beep/rdf";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import {
-  BlankNode,
-  Literal,
-  makeBlankNode,
-  makeLiteral,
-  makeNamedNode,
-  makeQuad,
-  NamedNode,
-  Quad,
-  SafePnLocal,
-  Triple,
-} from "../../../Domain/Rdf/Types.ts";
+import { Triple } from "../../../Domain/Rdf/Types.ts";
+
+const { BlankNode, Literal, makeBlankNode, makeLiteral, makeNamedNode, NamedNode, Quad } = CanonicalRdf;
 
 describe("effect-ontology RDF types", () => {
-  it("re-exports canonical RDF schemas and constructors by identity", () => {
-    expect(BlankNode).toBe(CanonicalRdf.BlankNode);
-    expect(Literal).toBe(CanonicalRdf.Literal);
-    expect(NamedNode).toBe(CanonicalRdf.NamedNode);
-    expect(Quad).toBe(CanonicalRdf.Quad);
-    expect(makeBlankNode).toBe(CanonicalRdf.makeBlankNode);
-    expect(makeLiteral).toBe(CanonicalRdf.makeLiteral);
-    expect(makeNamedNode).toBe(CanonicalRdf.makeNamedNode);
-    expect(makeQuad).toBe(CanonicalRdf.makeQuad);
-  });
-
   it("derives arbitraries whose values satisfy local adapter schemas", () => {
     for (const schema of [SafePnLocal, Triple]) {
       const arbitrary = S.toArbitrary(schema)(fc);
@@ -41,7 +21,7 @@ describe("effect-ontology RDF types", () => {
     }
   });
 
-  it("re-exports canonical RDF/JS term discrimination", () => {
+  it("uses canonical RDF/JS term discrimination", () => {
     const namedNode = makeNamedNode("https://example.org/alice");
     const blankNode = makeBlankNode("alice");
     const literal = makeLiteral("Alice", "http://www.w3.org/2001/XMLSchema#string");
@@ -68,8 +48,7 @@ describe("effect-ontology RDF types", () => {
     expect(recovered.object).toEqual(triple.object);
   });
 
-  it("re-exports canonical safe Turtle local names without a competing brand", () => {
-    expect(SafePnLocal).toBe(CanonicalSafePnLocal);
+  it("uses canonical safe Turtle local names without a competing brand", () => {
     expect(S.is(SafePnLocal)("prefLabel")).toBe(true);
     expect(S.is(SafePnLocal)("contains/slash")).toBe(false);
     expect(S.is(SafePnLocal)("contains space")).toBe(false);

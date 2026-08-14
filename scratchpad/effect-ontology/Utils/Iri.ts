@@ -10,6 +10,7 @@
  */
 
 import { SafePnLocal } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -19,7 +20,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { IRI } from "../Domain/Rdf/Types.ts";
 
 /**
  * Build a case-insensitive lookup map from IRIs.

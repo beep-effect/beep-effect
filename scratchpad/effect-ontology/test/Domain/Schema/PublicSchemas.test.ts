@@ -1,3 +1,4 @@
+import { HttpUrl as CanonicalHttpUrl } from "@beep/ontology/Ontology.models";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -52,6 +53,10 @@ const publicSchemas = A.flatMap(schemaModules, ([moduleName, moduleExports]) =>
 );
 
 describe("effect-ontology public schema surface", () => {
+  it("uses the canonical ontology HTTP URL schema at link-ingestion boundaries", () => {
+    expect(LinkIngestion.HttpUrl).toBe(CanonicalHttpUrl);
+  });
+
   it("derives arbitraries whose samples satisfy every exported schema", () => {
     expect(publicSchemas.length).toBeGreaterThan(50);
 

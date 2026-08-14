@@ -9,12 +9,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
 import * as Duration from "effect/Duration";
 import * as S from "effect/Schema";
 import {
   ErrorMessage,
-  ErrorUrl,
   Milliseconds,
   makeOntologyErrorClass,
   OptionalErrorCause,
@@ -47,7 +46,7 @@ export const ImageFetchError = makeOntologyErrorClass.make(
     message: ErrorMessage.annotateKey({
       description: "Human-readable image-fetch diagnostic.",
     }),
-    url: ErrorUrl.annotateKey({
+    url: URLStr.annotateKey({
       description: "Canonical image URL that failed to load.",
     }),
     statusCode: OptionalHttpStatusCode.annotateKey({
@@ -74,7 +73,7 @@ export const ImageFetchError = makeOntologyErrorClass.make(
 export type ImageFetchError = typeof ImageFetchError.Type;
 
 const ImageTimeoutErrorFields = {
-  url: ErrorUrl.annotateKey({
+  url: URLStr.annotateKey({
     description: "Canonical image URL whose request timed out.",
   }),
   timeoutMs: Milliseconds.annotateKey({
@@ -93,15 +92,15 @@ const ImageTimeoutErrorBase = S.TaggedError<ImageTimeoutError>($I`ImageTimeoutEr
   "ImageTimeoutError",
   ImageTimeoutErrorFields,
   {
-  ...$I.annote("ImageTimeoutError", {
-    description: "Image download that exceeded its configured deadline.",
-  }),
-  toArbitrary:
-    ([from]) =>
-    () => ({
-      arbitrary: from.arbitrary.map(makeImageTimeoutError),
-      terminal: from.terminal?.map(makeImageTimeoutError),
+    ...$I.annote("ImageTimeoutError", {
+      description: "Image download that exceeded its configured deadline.",
     }),
+    toArbitrary:
+      ([from]) =>
+      () => ({
+        arbitrary: from.arbitrary.map(makeImageTimeoutError),
+        terminal: from.terminal?.map(makeImageTimeoutError),
+      }),
   }
 );
 
@@ -173,7 +172,7 @@ export const ImageTooLargeError = makeOntologyErrorClass.make(
   $I`ImageTooLargeError`,
   "ImageTooLargeError",
   {
-    url: ErrorUrl.annotateKey({
+    url: URLStr.annotateKey({
       description: "Canonical URL of the oversized image.",
     }),
     sizeBytes: NonNegativeInt.annotateKey({
@@ -225,7 +224,7 @@ export const ImageInvalidTypeError = makeOntologyErrorClass.make(
   $I`ImageInvalidTypeError`,
   "ImageInvalidTypeError",
   {
-    url: ErrorUrl.annotateKey({
+    url: URLStr.annotateKey({
       description: "Canonical URL of the rejected image.",
     }),
     contentType: S.NonEmptyString.annotateKey({
@@ -286,7 +285,7 @@ const ImageErrorDefinition = S.Union([
 export const ImageError = ImageErrorDefinition.pipe(
   $I.annoteSchema("ImageError", {
     description: "Exhaustive tagged union of image-operation failures.",
-  toArbitrary: () => S.toArbitrary(ImageErrorDefinition),
+    toArbitrary: () => S.toArbitrary(ImageErrorDefinition),
   })
 );
 

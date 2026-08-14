@@ -1,10 +1,10 @@
 import { CoreVocab } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import { OWL_OBJECT_PROPERTY, OWL_TERMS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TERMS, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { SKOS_PREF_LABEL, SKOS_TERMS } from "@beep/rdf/Vocab/Skos";
 import { describe, expect, it } from "@effect/vitest";
 import { CLAIMS, CORE, CORRECTIONS, EXTR } from "../../../Domain/Rdf/Constants.ts";
-import { IRI } from "../../../Domain/Rdf/Types.ts";
 
 describe("effect-ontology RDF vocabulary constants", () => {
   it("uses canonical package constants for standards vocabularies", () => {

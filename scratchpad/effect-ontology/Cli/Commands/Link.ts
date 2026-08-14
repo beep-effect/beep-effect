@@ -7,13 +7,13 @@
  * @module Cli/Commands/Link
  */
 
+import { IRI } from "@beep/rdf";
 import { Console, Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Command, Flag as Options } from "effect/unstable/cli";
-import { IRI } from "../../Domain/Rdf/Types.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { WikidataClient } from "../../Service/WikidataClient.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";

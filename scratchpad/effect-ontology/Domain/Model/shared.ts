@@ -12,14 +12,11 @@
  */
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf/Iri";
-import { SchemaUtils, URLStr } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
-
-export { Confidence, IRI, URLStr };
 
 /**
  * JSON-safe scalar accepted as an entity or mention attribute value.

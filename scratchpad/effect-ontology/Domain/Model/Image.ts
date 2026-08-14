@@ -5,10 +5,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MimeType, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, MimeType, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex, URLStr } from "@beep/schema";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { URLStr } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/Image");
 
@@ -231,15 +230,13 @@ export class ImageAsset extends S.Class<ImageAsset>($I`ImageAsset`)(
   /** Non-throwing asset decoder. */
   static readonly decodeOption = S.decodeUnknownOption(ImageAsset);
 
-  static readonly decodeJsonStringEffect = S.decodeEffect(
-    S.fromJsonString(ImageAsset)
-  )
+  static readonly decodeJsonStringEffect = S.decodeEffect(S.fromJsonString(ImageAsset));
 
-  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ImageAsset, { space: 2 }))
+  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ImageAsset, { space: 2 }));
 
-  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ImageAsset)
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ImageAsset);
 
-  static readonly encodeEffect = S.encodeEffect(ImageAsset)
+  static readonly encodeEffect = S.encodeEffect(ImageAsset);
 }
 
 const ImageRefFields = {

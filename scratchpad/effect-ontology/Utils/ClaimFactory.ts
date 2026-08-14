@@ -8,7 +8,9 @@
  * @module Utils/ClaimFactory
  */
 
-import { makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
+import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Effect, Hash } from "effect";
@@ -19,8 +21,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type { Entity, Relation } from "../Domain/Model/Entity.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
-import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
-import { IRI, makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
 import type { ClaimRank } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import type { CreateClaimInput } from "../Service/Claim.ts";
@@ -72,7 +72,7 @@ export interface ClaimFactoryOptions {
   /** Ontology ID for namespace scoping */
   readonly ontologyId: string;
   /** Default confidence score (0-1) */
-  readonly defaultConfidence?: number;
+  readonly defaultConfidence?: Confidence;
   /** Default claim rank */
   readonly defaultRank?: ClaimRank;
 }
@@ -311,7 +311,7 @@ export const generateClaimId = dual4(
  */
 export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOptions): ReadonlyArray<ClaimData> => {
   const claims: Array<ClaimData> = [];
-  const { baseNamespace, defaultConfidence = 0.85, documentId, ontologyId } = options;
+  const { baseNamespace, defaultConfidence = Confidence.make(0.85), documentId, ontologyId } = options;
 
   // Build subject IRI
   const subjectIri = buildIri(baseNamespace, entity.id);
@@ -404,7 +404,7 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
  * @category Transformations
  */
 export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryOptions): ClaimData => {
-  const { baseNamespace, defaultConfidence = 0.85, documentId, ontologyId } = options;
+  const { baseNamespace, defaultConfidence = Confidence.make(0.85), documentId, ontologyId } = options;
 
   // Build subject IRI
   const subjectIri = buildIri(baseNamespace, relation.subjectId);

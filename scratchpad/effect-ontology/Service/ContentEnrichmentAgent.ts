@@ -86,7 +86,7 @@ const EnrichmentOutputSchema = Schema.Struct({
   language: Schema.String.annotate({
     description: "ISO 639-1 language code (e.g., 'en', 'es', 'de')",
   }),
-  wordCount: Schema.Finite.annotate({
+  wordCount: NonNegativeInt.annotate({
     description: "Approximate word count of the content",
   }),
 });

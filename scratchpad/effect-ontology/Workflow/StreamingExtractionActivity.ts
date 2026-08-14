@@ -16,6 +16,7 @@
  * @packageDocumentation
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
 import { DateTime, Duration, Effect, Schedule } from "effect";
@@ -389,7 +390,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
         baseNamespace,
         documentId: input.documentId,
         ontologyId: input.ontologyId,
-        defaultConfidence: 0.85,
+        defaultConfidence: Confidence.make(0.85),
       });
 
       // Convert claims to RDF quads and add to store

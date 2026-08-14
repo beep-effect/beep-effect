@@ -8,8 +8,10 @@
  * @module Service/Claim
  */
 
+import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
+import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
+import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Context, DateTime, Effect, Layer } from "effect";
@@ -17,8 +19,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
-import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
-import { IRI, makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
 import type { ClaimFilter } from "../Repository/Claim.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ClaimInsertRow, ClaimRow } from "../Repository/schema.ts";
@@ -84,7 +84,7 @@ export interface CreateClaimInput {
   readonly objectType: "iri" | "literal";
   readonly articleId: string;
   readonly ontologyId: string;
-  readonly confidence: number;
+  readonly confidence: Confidence;
   readonly evidence?: {
     readonly text: string;
     readonly startOffset: number;

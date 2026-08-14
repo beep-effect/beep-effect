@@ -5,7 +5,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import * as A from "effect/Array";
@@ -18,7 +21,6 @@ import type { Entity, Relation } from "./Entity.ts";
 import { KnowledgeGraph } from "./Entity.ts";
 import { ChunkingConfig } from "./ExtractionRun.ts";
 import { OntologyRef } from "./Ontology.ts";
-import { Confidence, IRI } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/OntologyAgent");
 

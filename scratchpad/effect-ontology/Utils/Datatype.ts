@@ -8,10 +8,10 @@
  * @module Utils/Datatype
  */
 
+import type { IRI } from "@beep/rdf";
 import { makeNamedNode } from "@beep/rdf";
 import { XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as P from "effect/Predicate";
-import type { IRI } from "../Domain/Rdf/Types.ts";
 import { dual2 } from "./Dual.ts";
 
 const XSD_DATE = makeNamedNode(`${XSD_NAMESPACE}date`);

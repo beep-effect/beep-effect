@@ -53,9 +53,6 @@ export const ValidationPolicySeverity = S.Literals(ShaclSeverity.pickOptions(["v
  */
 export type ValidationPolicySeverity = typeof ValidationPolicySeverity.Type;
 
-/** Canonical semantic-web SHACL validation failure. */
-export { ShaclValidationError };
-
 /**
  * Failure to load a SHACL shapes graph.
  *

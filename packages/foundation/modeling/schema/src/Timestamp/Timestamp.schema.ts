@@ -12,7 +12,7 @@ import { DateTime, Effect, flow, Order as Order_, pipe, SchemaIssue, SchemaTrans
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { PosInt } from "../Int.ts";
+import { NonNegativeInt } from "../Int.ts";
 import { NonEmptyTrimmedStr } from "../String.ts";
 import type { Brand } from "effect";
 import type * as Ordering from "effect/Ordering";
@@ -73,7 +73,7 @@ export const ISOStr = NonEmptyTrimmedStr.check(S.makeFilter((i) => O.isSome(Date
 export type ISOStr = typeof ISOStr.Type;
 
 /**
- * Branded positive integer schema for epoch milliseconds since 1970-01-01T00:00:00.000Z.
+ * Branded non-negative integer schema for epoch milliseconds since 1970-01-01T00:00:00.000Z.
  *
  * **Example** (Decode epoch milliseconds)
  *
@@ -90,7 +90,7 @@ export type ISOStr = typeof ISOStr.Type;
  * @category constructors
  * @since 0.0.0
  */
-export const EpochMillis = PosInt.pipe(
+export const EpochMillis = NonNegativeInt.pipe(
   S.brand("EpochMillis"),
   $I.annoteSchema("EpochMillis", {
     description: "Epoch milliseconds since 1970-01-01T00:00:00.000Z",
@@ -212,9 +212,9 @@ export declare namespace ToIsoStr {
  * **Example** (Make and convert Timestamp)
  *
  * ```ts
- * import { Timestamp } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp } from "@beep/schema/Timestamp"
  *
- * const ts = Timestamp.make({ epochMillis: 1704067200000 })
+ * const ts = Timestamp.make({ epochMillis: EpochMillis.make(1704067200000) })
  *
  * console.log(ts.toISOStr())
  * console.log(ts.toLocalDate().toISOString())
@@ -223,10 +223,10 @@ export declare namespace ToIsoStr {
  * **Example** (Compare timestamps with isBefore)
  *
  * ```ts
- * import { Timestamp, now, isBefore } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, isBefore, now } from "@beep/schema/Timestamp"
  *
  * const a = now()
- * const b = Timestamp.make({ epochMillis: 0 })
+ * const b = Timestamp.make({ epochMillis: EpochMillis.make(0) })
  *
  * console.log(isBefore(b, a)) // true
  * ```
@@ -236,7 +236,7 @@ export declare namespace ToIsoStr {
  */
 export class Timestamp extends S.Class<Timestamp>("Timestamp")(
   {
-    epochMillis: S.Int.check(S.isGreaterThanOrEqualTo(1)),
+    epochMillis: EpochMillis,
   },
   $I.annote("Timestamp", {
     description: "Timestamp - A Schema.Class wrapping DateTime.Utc for UTC timestamps",
@@ -303,9 +303,9 @@ export class Timestamp extends S.Class<Timestamp>("Timestamp")(
  * **Example** (Guard Timestamp instance)
  *
  * ```ts
- * import { Timestamp, isTimestamp } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, isTimestamp } from "@beep/schema/Timestamp"
  *
- * const timestamp = Timestamp.make({ epochMillis: 1704067200000 })
+ * const timestamp = Timestamp.make({ epochMillis: EpochMillis.make(1704067200000) })
  * console.log(isTimestamp(timestamp))
  * ```
  *
@@ -331,7 +331,7 @@ export const isTimestamp = Timestamp.is;
  * @since 0.0.0
  */
 export const fromDateTime = (dateTime: DateTime.Utc): Timestamp =>
-  Timestamp.make({ epochMillis: dateTime.epochMilliseconds });
+  Timestamp.make({ epochMillis: EpochMillis.make(dateTime.epochMilliseconds) });
 
 /**
  * Create a `Timestamp` from a JavaScript `Date`.
@@ -348,7 +348,7 @@ export const fromDateTime = (dateTime: DateTime.Utc): Timestamp =>
  * @category constructors
  * @since 0.0.0
  */
-export const fromDate = (date: Date): Timestamp => Timestamp.make({ epochMillis: date.getTime() });
+export const fromDate = (date: Date): Timestamp => Timestamp.make({ epochMillis: EpochMillis.make(date.getTime()) });
 
 /**
  * Create a `Timestamp` from an ISO 8601 string, returning an `Effect` that fails for invalid input.
@@ -373,7 +373,8 @@ export const fromString = (dateString: string): Effect.Effect<Timestamp, SchemaI
     DateTime.make(dateString),
     O.match({
       onNone: () => Effect.fail(new SchemaIssue.InvalidValue()),
-      onSome: (dateTime) => Effect.succeed(Timestamp.make({ epochMillis: DateTime.toEpochMillis(dateTime) })),
+      onSome: (dateTime) =>
+        Effect.succeed(Timestamp.make({ epochMillis: EpochMillis.make(DateTime.toEpochMillis(dateTime)) })),
     })
   );
 
@@ -392,7 +393,8 @@ export const fromString = (dateString: string): Effect.Effect<Timestamp, SchemaI
  * @category constructors
  * @since 0.0.0
  */
-export const now = (): Timestamp => Timestamp.make({ epochMillis: DateTime.nowUnsafe().epochMilliseconds });
+export const now = (): Timestamp =>
+  Timestamp.make({ epochMillis: EpochMillis.make(DateTime.nowUnsafe().epochMilliseconds) });
 
 /**
  * Get the current timestamp as an `Effect` using the Clock service, testable with `TestClock`.
@@ -413,7 +415,7 @@ export const now = (): Timestamp => Timestamp.make({ epochMillis: DateTime.nowUn
  */
 export const nowEffect: Effect.Effect<Timestamp> = Effect.map(
   Effect.clockWith((clock) => clock.currentTimeMillis),
-  (millis) => Timestamp.make({ epochMillis: Number(millis) })
+  (millis) => Timestamp.make({ epochMillis: EpochMillis.make(Number(millis)) })
 );
 
 /**
@@ -422,10 +424,10 @@ export const nowEffect: Effect.Effect<Timestamp> = Effect.map(
  * **Example** (Compare chronological order)
  *
  * ```ts
- * import { Timestamp, Order } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Order, Timestamp } from "@beep/schema/Timestamp"
  *
- * const earlier = Timestamp.make({ epochMillis: 1 })
- * const later = Timestamp.make({ epochMillis: 2 })
+ * const earlier = Timestamp.make({ epochMillis: EpochMillis.make(1) })
+ * const later = Timestamp.make({ epochMillis: EpochMillis.make(2) })
  * console.log(Order(earlier, later))
  * ```
  *
@@ -450,10 +452,10 @@ export const Order: {
  * **Example** (Check earlier timestamp)
  *
  * ```ts
- * import { Timestamp, isBefore } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, isBefore } from "@beep/schema/Timestamp"
  *
- * const earlier = Timestamp.make({ epochMillis: 1 })
- * const later = Timestamp.make({ epochMillis: 2 })
+ * const earlier = Timestamp.make({ epochMillis: EpochMillis.make(1) })
+ * const later = Timestamp.make({ epochMillis: EpochMillis.make(2) })
  * console.log(isBefore(earlier, later))
  * ```
  *
@@ -471,10 +473,10 @@ export const isBefore: {
  * **Example** (Check later timestamp)
  *
  * ```ts
- * import { Timestamp, isAfter } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, isAfter } from "@beep/schema/Timestamp"
  *
- * const earlier = Timestamp.make({ epochMillis: 1 })
- * const later = Timestamp.make({ epochMillis: 2 })
+ * const earlier = Timestamp.make({ epochMillis: EpochMillis.make(1) })
+ * const later = Timestamp.make({ epochMillis: EpochMillis.make(2) })
  * console.log(isAfter(later, earlier))
  * ```
  *
@@ -492,10 +494,10 @@ export const isAfter: {
  * **Example** (Equal epoch timestamps)
  *
  * ```ts
- * import { Timestamp, equals } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, equals } from "@beep/schema/Timestamp"
  *
- * const a = Timestamp.make({ epochMillis: 1 })
- * const b = Timestamp.make({ epochMillis: 1 })
+ * const a = Timestamp.make({ epochMillis: EpochMillis.make(1) })
+ * const b = Timestamp.make({ epochMillis: EpochMillis.make(1) })
  * console.log(equals(a, b))
  * ```
  *
@@ -513,9 +515,9 @@ export const equals: {
  * **Example** (Add milliseconds to timestamp)
  *
  * ```ts
- * import { Timestamp, addMillis } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, addMillis } from "@beep/schema/Timestamp"
  *
- * const timestamp = Timestamp.make({ epochMillis: 1 })
+ * const timestamp = Timestamp.make({ epochMillis: EpochMillis.make(1) })
  * console.log(addMillis(timestamp, 999).epochMillis)
  * ```
  *
@@ -525,7 +527,11 @@ export const equals: {
 export const addMillis: {
   (millis: number): (self: Timestamp) => Timestamp;
   (self: Timestamp, millis: number): Timestamp;
-} = dual(2, (self: Timestamp, millis: number): Timestamp => Timestamp.make({ epochMillis: self.epochMillis + millis }));
+} = dual(
+  2,
+  (self: Timestamp, millis: number): Timestamp =>
+    Timestamp.make({ epochMillis: EpochMillis.make(self.epochMillis + millis) })
+);
 
 /**
  * Add seconds to a timestamp.
@@ -533,9 +539,9 @@ export const addMillis: {
  * **Example** (Add seconds to timestamp)
  *
  * ```ts
- * import { Timestamp, addSeconds } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, addSeconds } from "@beep/schema/Timestamp"
  *
- * const timestamp = Timestamp.make({ epochMillis: 1 })
+ * const timestamp = Timestamp.make({ epochMillis: EpochMillis.make(1) })
  * console.log(addSeconds(timestamp, 1).epochMillis)
  * ```
  *
@@ -553,9 +559,9 @@ export const addSeconds: {
  * **Example** (Add minutes to timestamp)
  *
  * ```ts
- * import { Timestamp, addMinutes } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, addMinutes } from "@beep/schema/Timestamp"
  *
- * const timestamp = Timestamp.make({ epochMillis: 1 })
+ * const timestamp = Timestamp.make({ epochMillis: EpochMillis.make(1) })
  * console.log(addMinutes(timestamp, 1).epochMillis)
  * ```
  *
@@ -573,9 +579,9 @@ export const addMinutes: {
  * **Example** (Add hours to timestamp)
  *
  * ```ts
- * import { Timestamp, addHours } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, addHours } from "@beep/schema/Timestamp"
  *
- * const timestamp = Timestamp.make({ epochMillis: 1 })
+ * const timestamp = Timestamp.make({ epochMillis: EpochMillis.make(1) })
  * console.log(addHours(timestamp, 1).epochMillis)
  * ```
  *
@@ -593,9 +599,9 @@ export const addHours: {
  * **Example** (Add days to timestamp)
  *
  * ```ts
- * import { Timestamp, addDays } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, addDays } from "@beep/schema/Timestamp"
  *
- * const timestamp = Timestamp.make({ epochMillis: 1 })
+ * const timestamp = Timestamp.make({ epochMillis: EpochMillis.make(1) })
  * console.log(addDays(timestamp, 1).epochMillis)
  * ```
  *
@@ -613,10 +619,10 @@ export const addDays: {
  * **Example** (Difference in milliseconds)
  *
  * ```ts
- * import { Timestamp, diffInMillis } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, diffInMillis } from "@beep/schema/Timestamp"
  *
- * const earlier = Timestamp.make({ epochMillis: 1 })
- * const later = Timestamp.make({ epochMillis: 1001 })
+ * const earlier = Timestamp.make({ epochMillis: EpochMillis.make(1) })
+ * const later = Timestamp.make({ epochMillis: EpochMillis.make(1001) })
  * console.log(diffInMillis(later, earlier))
  * ```
  *
@@ -634,10 +640,10 @@ export const diffInMillis: {
  * **Example** (Difference in seconds)
  *
  * ```ts
- * import { Timestamp, diffInSeconds } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, diffInSeconds } from "@beep/schema/Timestamp"
  *
- * const earlier = Timestamp.make({ epochMillis: 1 })
- * const later = Timestamp.make({ epochMillis: 2001 })
+ * const earlier = Timestamp.make({ epochMillis: EpochMillis.make(1) })
+ * const later = Timestamp.make({ epochMillis: EpochMillis.make(2001) })
  * console.log(diffInSeconds(later, earlier))
  * ```
  *
@@ -655,10 +661,10 @@ export const diffInSeconds: {
  * **Example** (Earlier of two timestamps)
  *
  * ```ts
- * import { Timestamp, min } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, min } from "@beep/schema/Timestamp"
  *
- * const earlier = Timestamp.make({ epochMillis: 1 })
- * const later = Timestamp.make({ epochMillis: 2 })
+ * const earlier = Timestamp.make({ epochMillis: EpochMillis.make(1) })
+ * const later = Timestamp.make({ epochMillis: EpochMillis.make(2) })
  * console.log(min(earlier, later).epochMillis)
  * ```
  *
@@ -676,10 +682,10 @@ export const min: {
  * **Example** (Later of two timestamps)
  *
  * ```ts
- * import { Timestamp, max } from "@beep/schema/Timestamp"
+ * import { EpochMillis, Timestamp, max } from "@beep/schema/Timestamp"
  *
- * const earlier = Timestamp.make({ epochMillis: 1 })
- * const later = Timestamp.make({ epochMillis: 2 })
+ * const earlier = Timestamp.make({ epochMillis: EpochMillis.make(1) })
+ * const later = Timestamp.make({ epochMillis: EpochMillis.make(2) })
  * console.log(max(earlier, later).epochMillis)
  * ```
  *
@@ -705,4 +711,4 @@ export const max: {
  * @category constructors
  * @since 0.0.0
  */
-export const EPOCH: Timestamp = Timestamp.make({ epochMillis: 0 });
+export const EPOCH: Timestamp = Timestamp.make({ epochMillis: EpochMillis.make(0) });

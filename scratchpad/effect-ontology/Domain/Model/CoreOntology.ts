@@ -4,8 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { IRI } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { DateTime, Effect, SchemaGetter } from "effect";
 import * as A from "effect/Array";
@@ -14,7 +17,7 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { FastCheck } from "effect/testing";
-import { Attributes, Confidence, IRI } from "./shared.ts";
+import { Attributes } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/CoreOntology");
 const utf8Encoder = new TextEncoder();

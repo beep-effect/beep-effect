@@ -19,6 +19,7 @@ import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import type { Entity as ClusterEntity } from "effect/unstable/cluster";
 import type { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ContentHash, IdempotencyKey, Namespace, OntologyName } from "../Domain/Identity.ts";
@@ -185,12 +186,12 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         );
 
       const ontologyParts = ontologyId.includes("/") ? ontologyId.split("/") : ["default", ontologyId];
-      const namespace = Namespace.make(ontologyParts[0]);
-      const name = OntologyName.make(ontologyParts[1] ?? ontologyParts[0]);
+      const namespace = yield* S.decodeEffect(Namespace)(ontologyParts[0]);
+      const name = yield* S.decodeEffect(OntologyName)(ontologyParts[1] ?? ontologyParts[0]);
       const ontologyRef = OntologyRef.make({
         namespace,
         name,
-        contentHash: ContentHash.make(ontologyVersion),
+        contentHash: yield* S.decodeEffect(ContentHash)(ontologyVersion),
       });
 
       yield* runService.createRun(

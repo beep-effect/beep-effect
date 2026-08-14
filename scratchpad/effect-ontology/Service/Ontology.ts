@@ -11,7 +11,8 @@
 
 import { createHash } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
-import { makeNamedNode } from "@beep/rdf";
+import type { GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
+import { IRI, makeBlankNode, makeNamedNode } from "@beep/rdf";
 import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
 import { RDF_FIRST, RDF_NIL, RDF_REST, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_COMMENT, RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
@@ -36,13 +37,12 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { OntologyFileNotFound, OntologyParsingFailed } from "../Domain/Error/Ontology.ts";
+import * as S from "effect/Schema";
+import { OntologyError, OntologyFileNotFound, OntologyParsingFailed } from "../Domain/Error/Ontology.ts";
 import type { RdfError } from "../Domain/Error/Rdf.ts";
 import { ContentHash, Namespace, OntologyName, OntologyVersion } from "../Domain/Identity.ts";
 import { ClassDefinition, OntologyContext, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import type { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
-import type { GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
-import { IRI, makeBlankNode } from "../Domain/Rdf/Types.ts";
 import type { OntologyEntry } from "../Domain/Schema/OntologyRegistry.ts";
 import { dual3 } from "../Utils/Dual.ts";
 import { rrfFusion } from "../Utils/Retrieval.ts";
@@ -780,10 +780,24 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           .pipe(Effect.orElseSucceed(() => Option.none<OntologyEntry>()));
       }),
       hasRegistry: Effect.succeed(Option.isSome(registryOpt)),
-      generateVersion: (ontologyId: string, ontologyIri: string): OntologyVersion => {
+      generateVersion: Effect.fn("OntologyService.generateVersion")(function* (
+        ontologyId: string,
+        ontologyIri: string
+      ) {
+        const decodeIdentity = <A, I>(schema: S.Codec<A, I>, label: string) =>
+          S.decodeUnknownEffect(schema)(ontologyId).pipe(
+            Effect.mapError((cause) =>
+              OntologyError.make({
+                message: `Invalid ontology ${label}: ${ontologyId}`,
+                cause: O.some(cause),
+              })
+            )
+          );
+        const namespace = yield* decodeIdentity(Namespace, "namespace");
+        const name = yield* decodeIdentity(OntologyName, "name");
         const hash = ContentHash.make(createHash("sha256").update(ontologyIri).digest("hex"));
-        return OntologyVersion.fromParts(Namespace.make(ontologyId), OntologyName.make(ontologyId), hash);
-      },
+        return OntologyVersion.fromParts(namespace, name, hash);
+      }),
       searchClassesHybridFromUri: Effect.fn("OntologyService.searchClassesHybridFromUri")(function* (
         uri: string,
         query: string,

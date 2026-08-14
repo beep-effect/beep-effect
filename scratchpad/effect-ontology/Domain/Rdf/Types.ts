@@ -8,44 +8,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId, SafePnLocal } from "@beep/identity";
-import {
-  AbsoluteIRI,
-  BlankNode,
-  DefaultGraph,
-  GraphTerm,
-  IRI,
-  Literal,
-  makeBlankNode,
-  makeLiteral,
-  makeNamedNode,
-  makeQuad,
-  NamedNode,
-  ObjectTerm,
-  Quad,
-  Subject,
-} from "@beep/rdf";
+import { $ScratchpadId } from "@beep/identity";
+import type { GraphTerm, Quad } from "@beep/rdf";
+import { makeQuad, NamedNode, ObjectTerm, Subject } from "@beep/rdf";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Rdf/Types");
-
-export {
-  AbsoluteIRI,
-  BlankNode,
-  DefaultGraph,
-  GraphTerm,
-  IRI,
-  Literal,
-  makeBlankNode,
-  makeLiteral,
-  makeNamedNode,
-  makeQuad,
-  NamedNode,
-  ObjectTerm,
-  Quad,
-  SafePnLocal,
-  Subject,
-};
 
 /**
  * Graph-independent RDF statement backed by canonical RDF/JS terms.
@@ -53,7 +21,8 @@ export {
  * **Example** (Convert a triple to a default-graph quad)
  *
  * ```ts
- * import { Triple, makeLiteral, makeNamedNode } from "@effect-ontology/Rdf/Types.ts"
+ * import { makeLiteral, makeNamedNode } from "@beep/rdf"
+ * import { Triple } from "@effect-ontology/Rdf/Types.ts"
  *
  * const triple = Triple.make({
  *   subject: makeNamedNode("https://example.org/ada"),
@@ -82,7 +51,8 @@ export class Triple extends S.Class<Triple>($I`Triple`)(
    * **Example** (Project a quad)
    *
    * ```ts
-   * import { Triple, makeLiteral, makeNamedNode, makeQuad } from "@effect-ontology/Rdf/Types.ts"
+   * import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf"
+   * import { Triple } from "@effect-ontology/Rdf/Types.ts"
    *
    * const quad = makeQuad(
    *   makeNamedNode("https://example.org/ada"),
@@ -109,7 +79,8 @@ export class Triple extends S.Class<Triple>($I`Triple`)(
    * **Example** (Attach a named graph)
    *
    * ```ts
-   * import { Triple, makeLiteral, makeNamedNode } from "@effect-ontology/Rdf/Types.ts"
+   * import { makeLiteral, makeNamedNode } from "@beep/rdf"
+   * import { Triple } from "@effect-ontology/Rdf/Types.ts"
    *
    * const triple = Triple.make({
    *   subject: makeNamedNode("https://example.org/ada"),

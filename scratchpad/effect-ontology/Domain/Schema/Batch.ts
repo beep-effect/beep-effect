@@ -273,8 +273,9 @@ export class ValidationActivityViolationSummary extends S.Class<ValidationActivi
  * Compact output of the SHACL validation activity.
  *
  * @remarks
- * This transport summary complements the standards-level
- * `ShaclValidationReport`: it records artifact locations and workflow timing.
+ * This transport summary complements the experiment execution
+ * `ShaclValidationReport`, whose nested validation result owns standards-level
+ * conformance; this value records artifact locations and workflow timing.
  *
  * @example
  * ```ts

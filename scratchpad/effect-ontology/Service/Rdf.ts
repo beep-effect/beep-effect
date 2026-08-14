@@ -10,7 +10,15 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
-import { makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
+import type { BlankNode as BlankNodeType, GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
+import {
+  IRI,
+  makeBlankNode,
+  makeNamedNode as makeCanonicalNamedNode,
+  makeLiteral,
+  makeNamedNode,
+  makeQuad,
+} from "@beep/rdf";
 import * as CanonicalRdf from "@beep/rdf/Rdf";
 import { DCTERMS_NAMESPACE } from "@beep/rdf/Vocab/Dcterms";
 import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
@@ -21,23 +29,16 @@ import type { Scope } from "effect";
 import { Chunk, Context, Duration, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as Match from "effect/Match";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Rec from "effect/Record";
 import * as N3 from "n3";
 import { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Error/Rdf.ts";
-import type { Entity, Relation } from "../Domain/Model/Entity.ts";
+import type { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { CLAIMS, CORE, EXTR } from "../Domain/Rdf/Constants.ts";
-import type {
-  BlankNode as BlankNodeType,
-  GraphTerm,
-  NamedNode,
-  ObjectTerm,
-  Quad,
-  Subject,
-} from "../Domain/Rdf/Types.ts";
-import { IRI, makeBlankNode, makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
-import { createN3Builders, entityToQuads, relationToQuad } from "../Utils/Rdf.ts";
+import { buildIri } from "../Utils/Rdf.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Rdf");
@@ -46,6 +47,67 @@ const PROV_GENERATED_AT_TIME = makeCanonicalNamedNode(`${PROV_NAMESPACE}generate
 const DCTERMS_SOURCE = makeCanonicalNamedNode(`${DCTERMS_NAMESPACE}source`);
 const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
 const XSD_DECIMAL = makeCanonicalNamedNode(`${XSD_NAMESPACE}decimal`);
+
+interface RdfConstructionPrefixes {
+  readonly rdf: string;
+  readonly rdfs: string;
+  readonly xsd: string;
+  readonly schema?: string;
+}
+
+const n3NamedNode = (value: string): N3.NamedNode => N3.DataFactory.namedNode(IRI.fromUnknown(value));
+
+const valueToN3Literal = (value: string | number | boolean, prefixes: RdfConstructionPrefixes): N3.Literal => {
+  if (P.isString(value)) return N3.DataFactory.literal(value);
+  const datatype = P.isBoolean(value)
+    ? `${prefixes.xsd}boolean`
+    : Number.isInteger(value)
+      ? `${prefixes.xsd}integer`
+      : `${prefixes.xsd}decimal`;
+  return N3.DataFactory.literal(`${value}`, n3NamedNode(datatype));
+};
+
+const entityToN3Quads = (
+  entity: Entity,
+  baseNamespace: string,
+  prefixes: RdfConstructionPrefixes
+): ReadonlyArray<N3.Quad> => {
+  const subject = n3NamedNode(buildIri(baseNamespace, entity.id));
+  const typeQuads = A.map(entity.types, (typeIri) =>
+    N3.DataFactory.quad(subject, n3NamedNode(`${prefixes.rdf}type`), n3NamedNode(typeIri))
+  );
+  const labelQuad = N3.DataFactory.quad(
+    subject,
+    n3NamedNode(`${prefixes.rdfs}label`),
+    N3.DataFactory.literal(entity.mention)
+  );
+  const attributeQuads = A.map(Rec.toEntries(entity.attributes), ([predicate, value]) => {
+    const predicateIri = IRI.is(predicate) ? predicate : `${prefixes.schema ?? baseNamespace}${predicate}`;
+    return N3.DataFactory.quad(subject, n3NamedNode(predicateIri), valueToN3Literal(value, prefixes));
+  });
+  return A.append(A.appendAll(typeQuads, attributeQuads), labelQuad);
+};
+
+const relationObjectToN3Term = (
+  object: RelationObject,
+  baseNamespace: string,
+  prefixes: RdfConstructionPrefixes
+): N3.Quad_Object =>
+  Match.value(object).pipe(
+    Match.tagsExhaustive({
+      EntityReference: ({ value }) => n3NamedNode(buildIri(baseNamespace, value)),
+      Text: ({ value }) => valueToN3Literal(value, prefixes),
+      Number: ({ value }) => valueToN3Literal(value, prefixes),
+      Boolean: ({ value }) => valueToN3Literal(value, prefixes),
+    })
+  );
+
+const relationToN3Quad = (relation: Relation, baseNamespace: string, prefixes: RdfConstructionPrefixes): N3.Quad =>
+  N3.DataFactory.quad(
+    n3NamedNode(buildIri(baseNamespace, relation.subjectId)),
+    n3NamedNode(relation.predicate),
+    relationObjectToN3Term(relation.object, baseNamespace, prefixes)
+  );
 
 /**
  * N3Store type (from n3 library) - internal use only
@@ -517,9 +579,6 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
     const config = yield* ConfigService;
     const turtleCodec = yield* N3TurtleCodec;
 
-    // Create N3 term builders with IRI validation
-    const builders = createN3Builders(N3.DataFactory, true);
-
     const baseNs = config.rdf.baseNamespace;
     const prefixes = config.rdf.prefixes;
 
@@ -693,7 +752,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
 
             for (const entity of entities) {
               // Use pure util function for transformation
-              const quads = entityToQuads(entity, namespace, prefixes, builders);
+              const quads = entityToN3Quads(entity, namespace, prefixes);
               for (const quad of quads) {
                 // Add to named graph if specified, otherwise default graph
                 if (P.isNotUndefined(graphNode)) {
@@ -742,7 +801,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
 
             for (const rel of relations) {
               // Use pure util function for transformation
-              const quad = relationToQuad(rel, namespace, prefixes, builders);
+              const quad = relationToN3Quad(rel, namespace, prefixes);
               // Add to named graph if specified, otherwise default graph
               if (P.isNotUndefined(graphNode)) {
                 n3Store.addQuad(N3.DataFactory.quad(quad.subject, quad.predicate, quad.object, graphNode));

@@ -11,6 +11,7 @@
  * @since 2.0.0
  */
 
+import type { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
 import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
@@ -19,7 +20,6 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
-import type { IRI } from "../Domain/Rdf/Types.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { buildLocalNameToIriMapSafe, expandLocalNameToIri, extractLocalNameFromIri } from "../Utils/Iri.ts";
 import { EmptyVocabularyError } from "./Errors.ts";

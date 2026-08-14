@@ -8,12 +8,12 @@
  * @module Workflow/Merge
  */
 
+import { IRI } from "@beep/rdf";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Chunk, HashMap, HashSet, Option, Order, Schema } from "effect";
 import * as MutableHashMap from "effect/MutableHashMap";
 import type { Relation } from "../Domain/Model/Entity.ts";
 import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts";
-import { IRI } from "../Domain/Model/shared.ts";
 import { dual2 } from "../Utils/Dual.ts";
 
 const decodeEntityTypes = Schema.decodeUnknownSync(Schema.NonEmptyArray(IRI));

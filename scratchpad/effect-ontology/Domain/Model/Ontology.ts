@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PrimaryKey, pipe } from "effect";
 import * as A from "effect/Array";
@@ -17,7 +18,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ContentHash, Namespace, OntologyName } from "../Identity.ts";
 import { PathLayout } from "../PathLayout.ts";
-import { IRI } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/Ontology");
 

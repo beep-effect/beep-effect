@@ -363,10 +363,7 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
   /**
    * Timeout for the entire refinement loop in milliseconds
    */
-  timeoutMs: Schema.Finite.check(Schema.isGreaterThan(0)).pipe(
-    Schema.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
-  ),
+  timeoutMs: PosInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Whether to save intermediate states for resume
@@ -482,7 +479,7 @@ export class RefinementResult extends Schema.Class<RefinementResult>("Refinement
   /**
    * Violations fixed per iteration
    */
-  violationsFixed: Schema.Array(Schema.Finite).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  violationsFixed: Schema.Array(NonNegativeInt).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {
   /**
    * Whether refinement produced a conformant graph

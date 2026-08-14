@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { SchemaGetter } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
-import { IRI } from "../Rdf/Types.ts";
 import { RdfObject } from "./KnowledgeModel.ts";
 import { ArticleSummary, ClaimRank, ClaimWithRank } from "./Timeline.ts";
 

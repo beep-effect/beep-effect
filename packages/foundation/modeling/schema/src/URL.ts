@@ -87,6 +87,8 @@ const filterHttpsUrl = S.makeFilter(
   }
 );
 
+const HttpsUrlDefinition = S.String.pipe(S.check(filterHttpsUrl), S.brand("HttpsUrl"));
+
 /**
  * Branded schema for absolute URL strings that use the `https:` protocol.
  *
@@ -103,8 +105,6 @@ const filterHttpsUrl = S.makeFilter(
  * @category validation
  * @since 0.0.0
  */
-const HttpsUrlDefinition = S.String.pipe(S.check(filterHttpsUrl), S.brand("HttpsUrl"));
-
 export const HttpsUrl = HttpsUrlDefinition.annotate({
   toArbitrary: () => (fc) =>
     fc.uuid().map((id) => S.decodeSync(HttpsUrlDefinition)(`https://example.test/resource/${id}`)),

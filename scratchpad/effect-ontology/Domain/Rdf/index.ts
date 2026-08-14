@@ -22,12 +22,12 @@
  */
 export * from "./Constants.ts";
 /**
- * Canonical RDF/JS terms and constructors plus graph-free triples.
+ * Graph-free RDF statement adapter.
  *
  * @example
  * ```ts
- * import { IRI } from "@effect-ontology/Rdf/index.ts"
- * console.log(IRI.is("https://schema.org/Person")) // true
+ * import { Triple } from "@effect-ontology/Rdf/index.ts"
+ * console.log(Triple)
  * ```
  *
  * @category rdf

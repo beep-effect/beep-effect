@@ -15,7 +15,7 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema/Int";
-import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import {
   ShaclValidationRequest,
   ShaclValidationResult,
@@ -28,7 +28,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as N3 from "n3";
-import type { ShaclValidationError } from "../Domain/Error/Shacl.ts";
 import { ShapesLoadError, ValidationPolicyError, ValidationReportError } from "../Domain/Error/Shacl.ts";
 import { ShaclValidationReport, ValidationPolicy } from "../Domain/Schema/Shacl.ts";
 import { sha256Sync } from "../Utils/Hash.ts";

@@ -410,7 +410,7 @@ const makeExtractionRunService = Effect.gen(function* () {
         keys.flatMap((key): Array<ExtractionRunId> => {
           const match = /^runs\/([^/]+)\/metadata\.json$/.exec(key);
           const runId = match?.[1];
-          return P.isUndefined(runId) ? [] : [DocumentId.make(runId)];
+          return P.isUndefined(runId) || !DocumentId.is(runId) ? [] : [runId];
         }),
         (runId) => getRun(runId),
         {concurrency: 10}

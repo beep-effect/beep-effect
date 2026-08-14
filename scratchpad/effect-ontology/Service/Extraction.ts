@@ -9,6 +9,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import { Chunk, Context, Duration, Effect, Layer, Match, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -23,7 +24,7 @@ import {
 } from "../Domain/Error/Extraction.ts";
 import { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
-import { EntityId, IRI } from "../Domain/Model/shared.ts";
+import { EntityId } from "../Domain/Model/shared.ts";
 import {
   generateStructuredEntityPrompt,
   generateStructuredMentionPrompt,

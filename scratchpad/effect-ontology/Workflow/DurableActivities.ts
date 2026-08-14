@@ -16,7 +16,7 @@
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
-import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import { IRI, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_USED, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
@@ -41,7 +41,7 @@ import { ContentHash, GcsUri } from "../Domain/Identity.ts";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts";
 import { ElementEmbedding, OntologyEmbeddings, OntologyEmbeddingsJson } from "../Domain/Model/OntologyEmbeddings.ts";
-import { EntityId, IRI } from "../Domain/Model/shared.ts";
+import { EntityId } from "../Domain/Model/shared.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import type {
@@ -985,7 +985,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
             baseNamespace,
             documentId: docMeta.documentId,
             ontologyId: input.ontologyId,
-            defaultConfidence: 0.85,
+            defaultConfidence: Confidence.make(0.85),
           });
 
           if (claims.length === 0) {

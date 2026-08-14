@@ -8,8 +8,10 @@
  * @module Service/Assertion
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
+import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
+import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
@@ -18,10 +20,9 @@ import * as Clock from "effect/Clock";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
+import * as S from "effect/Schema";
 import { ContentHash } from "../Domain/Identity.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
-import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
-import { IRI, makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
 import type { AssertionStatus } from "../Domain/Schema/KnowledgeModel.ts";
 import { AssertionId } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
@@ -86,7 +87,7 @@ export interface CreateAssertionInput {
     readonly objectType?: "iri" | "literal";
   };
   /** Confidence score (0-1), defaults to average of source claims */
-  readonly confidence?: number;
+  readonly confidence?: Confidence;
 }
 
 /**
@@ -131,7 +132,7 @@ export interface AssertionRow {
   readonly assertedAt: Date;
   readonly derivedFrom: ReadonlyArray<string>;
   readonly curatedBy: string | null;
-  readonly confidence: number;
+  readonly confidence: Confidence;
   readonly validFrom: Date | null;
   readonly validTo: Date | null;
   readonly rejectedAt: Date | null;
@@ -239,9 +240,19 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
       const predicateIri = input.override?.predicate ?? baseClaim.predicateIri;
       const objectValue = input.override?.object ?? baseClaim.objectValue;
       const objectType = input.override?.objectType ?? (baseClaim.objectType as "iri" | "literal") ?? "literal";
+      const meanConfidence =
+        sourceClaims.reduce((sum, c) => sum + parseFloat(c.confidenceScore ?? "0.5"), 0) / sourceClaims.length;
       const avgConfidence =
         input.confidence ??
-        sourceClaims.reduce((sum, c) => sum + parseFloat(c.confidenceScore ?? "0.5"), 0) / sourceClaims.length;
+        (yield* S.decodeEffect(Confidence)(meanConfidence).pipe(
+          Effect.mapError(
+            () =>
+              new AssertionError({
+                operation: "create",
+                message: "Source claims contain an invalid confidence score",
+              })
+          )
+        ));
       const randomSuffix = Math.abs(yield* Random.nextInt)
         .toString(36)
         .slice(0, 6);
