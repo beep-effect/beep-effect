@@ -53,11 +53,13 @@ Not started. Scaffold evidence: the six lane reports under
   second, tauri last. Split tripwire: if either track grows a second
   primary, supersede the phase into a sibling packet
   (`ci-fleet-endgame` precedent) — do not widen this one.
-- Known live acceptance fixture: the 2026-08-13 residue of PR #680's
-  driver deletions (stale `standards/jsdoc-documentation.inventory.jsonc`
-  rows, retired-list-papered pending changesets, untracked artifact
-  dirs). `delete-package --check` (doctor) must fail on it; fixing that
-  residue lands with P1 as the command's acceptance test.
+- Doctor's P1 acceptance fixture is SYNTHETIC: a test constructs the
+  residue classes catalogued from PR #680's deletions (stale inventory
+  rows, orphaned pending changesets, leftover identity composer,
+  untracked artifact dirs — `research/05` §0 / Appendix A) and asserts
+  `delete-package --check` reports each. Review-verified 2026-08-13: the
+  live residue was machine-local and has since been cleaned, so ambient
+  tree state is never the fixture.
 - Naming is settled: `apps/labs/*`, glossary term "lab app" — NOT
   "experiments", which doctrine 11 already uses for feature-flag-gated
   experiments.

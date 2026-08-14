@@ -23,7 +23,8 @@ Scope:
   round-trip verification, this packet.
 - Out: production apps, slice retirement automation, cascade deletes outside
   labs, `beep labs promote` command, goals bootstrap, architecture-command
-  or CI-topology redesign, relaxing any code law.
+  redesign, CI-topology redesign beyond the labs lane and required-lane
+  filters SPEC names (those ARE in scope), relaxing any code law.
 
 Workflow:
 

@@ -20,6 +20,12 @@ There is **no** `beep delete-package`. `beep create-package` is a one-way regist
 
 Architecture `11-evolution-and-deprecation.md` requires a five-step slice sunset. **No historical deletion followed it.** Pre-v1 remotes used a DECISIONS waiver (`Retired 2026-06-15`, Stack Installer). Experiments should inherit that waiver, not a fake quarter-long sunset.
 
+> **Errata (2026-08-13, PR #710 review):** the "residue today" observations in §0/§2/Appendix A
+> were captured on the research author's worktree. Review verified that the untracked artifact
+> dirs were machine-local and the stale committed rows have since been cleaned on main (#705
+> inventory rewrite, #690 hygiene sweep). Treat Appendix A as a catalog of residue *classes* for
+> the synthetic doctor fixture, not as live tree state.
+
 ---
 
 ## 1. Method
@@ -733,7 +739,7 @@ Resolve `<name-or-path>` via `turbo query ls` / `resolveWorkspaceDirs`: accept `
 
 **Phase 5 — changesets.** Apply §5.2. Write the deletion changeset.
 
-**Phase 6 — remove files.** `git rm -r -- <path>` for tracked files, then `fs.remove(path, { recursive, force })` for the leftover ignored tree. For Tauri, also remove `src-tauri/target` if present. For slices, iterate every role path from the architecture plan.
+**Phase 6 — remove files.** `git rm -r --ignore-unmatch -- <path>` for tracked files (or invoke `git rm` only for the non-empty result of `git ls-files -- <path>`; a wholly untracked scaffold — e.g. a lab created and deleted in one session — makes plain `git rm` exit 128 with "pathspec did not match"), then `fs.remove(path, { recursive, force })` for the leftover ignored tree. For Tauri, also remove `src-tauri/target` if present. For slices, iterate every role path from the architecture plan.
 
 **Phase 7 — derived sync.** `syncTsconfigAtRoot({ mode: "sync" })`. This is the same function create-package uses; it will drop aliases/refs/syncpack rows because the workspace is gone.
 

@@ -124,8 +124,12 @@ Higher sources outrank lower sources when they conflict.
   and would otherwise fail required lanes on every upstream PR as turbo
   dependents. Lint Policy (unscoped, one context) splits internally: law
   steps keep `apps/labs/**`, ceremony steps (docgen check, jsdoc lanes)
-  exclude it. Never add a labs context to ruleset 10240248
-  (`research/04-governance-gates.md` §5).
+  exclude it. Lab law violations cannot wedge that shared lane: they are
+  gated at the lab's own PR exactly like any package's, and a lab that
+  turns red under a later rule-tightening is fixed, inventoried, or simply
+  deleted — delete-package is the cheap escape valve that makes keeping
+  labs under full law affordable. Never add a labs context to ruleset
+  10240248 (`research/04-governance-gates.md` §5).
 - **Geometry is the single prune list (D6):** `delete-package` must not
   hand-maintain a parallel checklist; every surface it prunes is declared
   in the `RegistrationSurface` schema, and `doctor` diffs that
@@ -156,22 +160,33 @@ Higher sources outrank lower sources when they conflict.
   deletion removes exactly those entries.
 - **Per-lab storage (D12):** labs that need Postgres declare a
   lab-namespaced schema in their manifest; `delete-package`'s data phase
-  drops it; labs never add to `packages/*/tables`.
+  drops it only behind an explicit destructive-consent flag (e.g.
+  `--drop-data`), after verifying the schema name is uniquely derived from
+  and owned by the target lab, and never against a non-local connection
+  without a further explicit override — absent consent it prints the
+  manual drop step instead. Labs never add to `packages/*/tables`.
 - Keep changes focused; no unrelated refactors or formatting churn.
 
 ## Acceptance Criteria
 
 Track A — delete-package:
 
-- [ ] `beep delete-package --check <name>` (doctor) fails on the live
-      2026-08-13 residue of the PR #680 driver deletions, and that residue
-      is fixed in the P1 PR as the acceptance test
-      (`research/05-deletion-prior-art.md` §9.3).
+- [ ] Doctor's acceptance fixture is synthetic and reproducible: a P1 test
+      constructs the residue classes catalogued from the PR #680 deletions
+      (`research/05-deletion-prior-art.md` §0, Appendix A) — stale
+      committed inventory rows, an orphan pending changeset, a leftover
+      identity composer, an untracked artifact dir — and asserts
+      `delete-package --check` reports each one. Ambient tree state is
+      never the fixture (review-verified 2026-08-13: the live #680 residue
+      was machine-local and has since been cleaned); any matching residue
+      found at P1 time is swept in that PR as a bonus, not relied on.
 - [ ] Deleting a freshly minted zero-consumer package leaves: no tracked or
       untracked files under its path, no workspace entry, no identity
       composer or shape-test row, no tsconfig/syncpack rows, no lockfile
-      records, regenerated baselines, a `{}` deletion changeset, and a
-      green verify battery (`tsconfig-sync --check`, `lint
+      records, regenerated baselines, a `{}` deletion changeset (non-lab
+      targets only — deletions under `apps/labs/**` skip the changeset via
+      the path-aware status wrapper, consistent with D2's ceremony
+      exemption), and a green verify battery (`tsconfig-sync --check`, `lint
       identity-registry`, `quality changeset-graph`, `fallow boundaries
       --check`, exact-name `rg` sweep).
 - [ ] The command refuses each hard-refuse case in
