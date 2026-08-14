@@ -270,8 +270,8 @@ Sources:
 7. Prove a PR can read a known artifact and receives 403 on a direct artifact
    `PUT` using its token.
 8. Complete P2 cutover and teardown proof.
-9. Enable trusted writes on ephemeral fleet jobs. Keep manual burst workers
-   read-only or cache-disabled.
+9. Enable trusted writes on ephemeral fleet jobs. Keep the retired manual
+   launcher absent; teardown remains cleanup-only.
 
 ## Risks and controls
 

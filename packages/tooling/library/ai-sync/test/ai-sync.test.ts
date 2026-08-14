@@ -424,7 +424,22 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
           const directPushGrant = yield* Effect.flip(
             validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
           );
-          assert.include(directPushGrant.message, "unapproved auto-approved Bash rule: Bash(git push:*)");
+          assert.include(directPushGrant.message, "unapproved auto-approved permission: Bash(git push:*)");
+
+          yield* Effect.forEach(
+            ["Write(**/.github/workflows/**)", "WebFetch(domain:example.com)", "mcp__github__create_pull_request"],
+            Effect.fn(function* (permission) {
+              yield* writeText(
+                claudePath,
+                yield* encodeJson({ permissions: { ...repoSafeClaudePermissions, allow: [permission] } })
+              );
+              const unsafeClaude = yield* Effect.flip(
+                validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+              );
+              assert.include(unsafeClaude.message, `unapproved auto-approved permission: ${permission}`);
+            }),
+            { discard: true }
+          );
 
           yield* Effect.forEach(
             [
