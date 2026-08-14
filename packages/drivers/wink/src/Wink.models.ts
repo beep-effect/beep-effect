@@ -27,10 +27,11 @@ const makeWinkStringArrayArbitrary = (fc: typeof FastCheck) => fc.array(fc.strin
  *
  * ```ts
  * import { WinkStringArray } from "@beep/wink"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
- * const values = S.decodeSync(WinkStringArray)(["sentence", "tokens"])
- * console.log(values.length) // 2
+ * const values = S.decodeResult(WinkStringArray)(["sentence", "tokens"])
+ * console.log(Result.isSuccess(values)) // true
  * ```
  *
  * @category models
