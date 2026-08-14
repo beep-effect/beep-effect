@@ -30,6 +30,10 @@ Doctrine recorded in
 [`standards/architecture/DECISIONS.md`](../../standards/architecture/DECISIONS.md)
 ("2026-06-18: Cross-Slice Consumption Of The Epistemic Boundary").
 
+Related research: [`explorations/project-intelligence/CAPTURE.md`](../../explorations/project-intelligence/CAPTURE.md)
+preserves the authority-versus-projection findings from the superseded
+project-intelligence loop.
+
 ## Current Phase
 
 All phases complete and reviewed. `@beep/schema` `UnitInterval`,

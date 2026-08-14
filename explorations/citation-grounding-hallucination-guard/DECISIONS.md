@@ -1,5 +1,14 @@
 # Citation Grounding & Hallucination Guard — Decisions
 
+## 2026-08-13 — Packet graduation and guard re-entry
+
+**Decision:** Close the packet as `graduated`. `citation-ground-before-cite`
+reopens this packet at `decompose` only after both
+`citation-verified-span-substrate` and `citation-extraction-engine` land. The
+reopened shape gate decides align Q7: qualifier-aware stance-layer placement
+and the minimum qualifiers for claim comparison, using
+[`research/2026-07-25-academia-corpus-mining-note.md`](./research/2026-07-25-academia-corpus-mining-note.md).
+
 <!--
 Historical Stage 2 (ALIGN) seed, pre-drafted 2026-06-29 from RESEARCH.md +
 CAPTURE.md. These open recommendations are preserved as the pre-align record;

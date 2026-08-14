@@ -1,5 +1,12 @@
 # Decisions
 
+## 2026-08-13 — Packet graduation and external re-entry triggers
+
+**Decision:** Close the packet as `graduated`. The five queued candidates
+remain re-entry points; reopen at `decompose` when the applicable external
+trigger arrives from Tom's task set or consent, a client mandate, a demonstrated
+PST need, or sufficient Slice-1 data.
+
 <!--
 Stage 2. The grilling log. One entry per resolved branch-closing question,
 newest last. Unresolved questions live in ops/manifest.json `openQuestions`

@@ -6,17 +6,18 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { sanitizeSensitiveText } from "@beep/observability";
 import { findRepoRoot } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
+import { Str } from "@beep/utils";
 import { Context, Effect, FileSystem, HashSet, Layer, Match, MutableHashMap, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { extract as extractTar } from "tar";
-import { runCaptured } from "../../internal/process/StepExec.ts";
+import { OutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import {
   readGitRenames,
   readGitTree,
@@ -24,6 +25,7 @@ import {
   resolveGitMergeBase,
   writeGitArchive,
 } from "../../internal/repo-run/GitExec.ts";
+import { KnowledgeCommandSurface } from "./Knowledge.command-surface.ts";
 import {
   KNOWLEDGE_HISTORY_REMEDIATION,
   KnowledgeOperationalError,
@@ -59,7 +61,9 @@ import {
 } from "./Knowledge.schemas.ts";
 import type { Crypto } from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { CapturedStreams } from "../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
+import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";
 import type { KnowledgeInlineSpan, KnowledgeRefsReport, KnowledgeTreeOracle } from "./Knowledge.refs.ts";
 import type { KnowledgeCommandProbeResult } from "./Knowledge.schemas.ts";
 
@@ -83,10 +87,61 @@ const NORMALIZATION_VERSION = "knowledge-normalization/v1";
 const FINDING_ID_PREFIX = "knowledge-finding/v1:";
 const INDEX_PATH = "goals/INDEX.md";
 const COMMAND_PREFIX = "bun run beep";
+const COMMAND_INPUT_ROW_PREFIX = "command/v1";
 const SEMANTIC_DELTA_DIGEST_FAILURE = "Failed to compute a semantic-delta SHA-256 digest.";
+const PROBE_STREAM_MAX_CHARS = 1024 * 1024;
+const PROBE_DIAGNOSTIC_MAX_CHARS = 2048;
+const PROBE_STREAM_BOUND = OutputBound.make({
+  maxChars: PROBE_STREAM_MAX_CHARS,
+  truncatedNotice: "\n[probe stream truncated]",
+});
+const OSC_ESCAPE_PATTERN = /\u001B\][\s\S]*?(?:\u0007|\u001B\\)/gu;
+const ANSI_ESCAPE_PATTERN = /\u001B\[[0-?]*[ -/]*[@-~]/gu;
+const OTHER_ESCAPE_PATTERN = /\u001B[@-Z\\-_]/gu;
+const DISALLOWED_DIAGNOSTIC_CONTROL_PATTERN = /[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/gu;
+const FORMAT_CHARACTER_PATTERN = /\p{Cf}/gu;
+const POSIX_ABSOLUTE_PATH_PATTERN =
+  /(?<![A-Za-z0-9_.>:/-])\/[A-Za-z0-9._@+-]+(?:\/[A-Za-z0-9._@+-]+)*(?::\d+(?::\d+)?)?/gu;
+const WINDOWS_ABSOLUTE_PATH_PATTERN = /[A-Za-z]:\\(?:[^\\\s"'`]+\\)*[^\\\s"'`]+(?::\d+(?::\d+)?)?/gu;
 const textEncoder = new TextEncoder();
 const bytesEquivalent = S.toEquivalence(S.Uint8Array);
 const decodeFindingId = S.decodeUnknownEffect(KnowledgeFindingId);
+
+const replaceKnownProbeRoots = (
+  input: string,
+  currentCheckoutRoot: string,
+  archiveRoot: string,
+  scratchRoot: string
+): string =>
+  A.reduce(
+    A.make(
+      [scratchRoot, "<probe-scratch>"] as const,
+      [archiveRoot, "<archive-data>"] as const,
+      [currentCheckoutRoot, "<current-checkout>"] as const
+    ),
+    input,
+    (text, [root, replacement]) =>
+      Str.isEmpty(root) || Str.equivalence(root, "/") ? text : Str.replaceAll(root, replacement)(text)
+  );
+
+const sanitizeProbeDiagnostic = (input: string, currentCheckoutRoot = "", archiveRoot = "", scratchRoot = ""): string =>
+  pipe(
+    replaceKnownProbeRoots(input, currentCheckoutRoot, archiveRoot, scratchRoot),
+    Str.replace(/\r\n/gu, "\n"),
+    Str.replace(/\r/gu, ""),
+    Str.replace(OSC_ESCAPE_PATTERN, ""),
+    Str.replace(ANSI_ESCAPE_PATTERN, ""),
+    Str.replace(OTHER_ESCAPE_PATTERN, ""),
+    Str.replace(DISALLOWED_DIAGNOSTIC_CONTROL_PATTERN, ""),
+    Str.replace(FORMAT_CHARACTER_PATTERN, ""),
+    Str.replace(POSIX_ABSOLUTE_PATH_PATTERN, "<absolute-path>"),
+    Str.replace(WINDOWS_ABSOLUTE_PATH_PATTERN, "<absolute-path>"),
+    sanitizeSensitiveText,
+    Str.truncate(PROBE_DIAGNOSTIC_MAX_CHARS)
+  );
+
+const sanitizePublicFindingText = (input: string): string =>
+  pipe(sanitizeProbeDiagnostic(input), Str.replace(/\n+/gu, " "), Str.trim);
 
 /**
  * Everything the scanner may read from one side of a comparison.
@@ -99,16 +154,21 @@ const decodeFindingId = S.decodeUnknownEffect(KnowledgeFindingId);
  *
  * **Gotchas**
  *
- * Only the two probe operations may fail with {@link KnowledgeProbeBootError}, and only that error is
- * survivable: it is how an oracle reports that its archive's probe could not start at all, which the
- * scanner treats as lost coverage on the base side and as an operational failure on the HEAD side.
- * Every other failure of every operation fails the whole comparison closed.
+ * Only current-checkout runtime probes may fail with {@link KnowledgeProbeBootError}, and only that
+ * error is survivable: it reports that current code could not start against that oracle's archive
+ * data, which the scanner treats as lost coverage on the base side and as an operational failure on
+ * the HEAD side. Static command-surface derivation always fails the whole comparison closed.
  *
  * @see {@link KnowledgePairedOracleInput} for the two-sided input that carries rename lineage.
  * @category services
  * @since 0.0.0
  */
 export interface KnowledgeArchiveOracle {
+  readonly commandTree: Effect.Effect<KnowledgeStaticCommandTree, KnowledgeOperationalError>;
+  readonly currentCommandTree: Effect.Effect<
+    KnowledgeStaticCommandTree,
+    KnowledgeOperationalError | KnowledgeProbeBootError
+  >;
   readonly indexBytes: Effect.Effect<KnowledgeIndexBytes, KnowledgeOperationalError | KnowledgeProbeBootError>;
   readonly probeCommands: (
     commands: ReadonlyArray<ReadonlyArray<string>>
@@ -128,9 +188,9 @@ export interface KnowledgeArchiveOracle {
  * **Gotchas**
  *
  * `probePolicy` is one value for the comparison rather than one per oracle on purpose. Probing only
- * the base would report every archive-local command and index finding as resolved, and probing only
- * HEAD would report every one of them as introduced. This is a request, not a guarantee: a base
- * archive whose probe cannot boot downgrades the whole comparison, both sides at once.
+ * the base would report every archive-data command and index finding as resolved, and probing only
+ * HEAD would report every one of them as introduced. This is a request, not a guarantee: a base-data
+ * probe that cannot boot downgrades the whole comparison, both sides at once.
  *
  * @see {@link KnowledgeArchiveOracle} for the per-side read surface this input pairs.
  * @category services
@@ -281,7 +341,7 @@ const makeHeadDocumentId = (
 
 const findingLocation = (path: string, line: number, column: number): KnowledgeFindingLocation =>
   KnowledgeFindingLocation.make({
-    path,
+    path: sanitizePublicFindingText(path),
     line: NonNegativeInt.make(line),
     column: NonNegativeInt.make(column),
   });
@@ -427,17 +487,37 @@ const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
   return { candidates, commands };
 });
 
-const commandCandidates = Effect.fn("Knowledge.commandCandidates")(function* (
+const commandProbeResults = Effect.fn("Knowledge.commandProbeResults")(function* (
   oracle: KnowledgeArchiveOracle,
   occurrences: ReadonlyArray<KnowledgeCommandOccurrence>
 ) {
-  if (A.isReadonlyArrayEmpty(occurrences)) {
-    return A.empty<KnowledgeFindingCandidate>();
-  }
   const results = yield* oracle.probeCommands(A.map(occurrences, (occurrence) => occurrence.words));
   if (A.length(results) !== A.length(occurrences)) {
     return yield* KnowledgeOperationalError.make({
-      message: "Archive-local command probe returned a result count that did not match its inputs.",
+      message: "Current-checkout command probe returned a result count that did not match its archive-data inputs.",
+    });
+  }
+  return results;
+});
+
+const staticCommandProbeResults = (
+  tree: KnowledgeStaticCommandTree,
+  occurrences: ReadonlyArray<KnowledgeCommandOccurrence>
+): ReadonlyArray<KnowledgeCommandProbeResult> =>
+  A.map(occurrences, (occurrence) => {
+    const [status, canonicalPath] = KnowledgeCommandSurface.resolveStaticCommand(tree, occurrence.words);
+    return status === "resolved"
+      ? KnowledgeCommandResolved.make({ canonicalPath })
+      : KnowledgeCommandUnknown.make({ canonicalPath });
+  });
+
+const commandCandidatesFromResults = Effect.fn("Knowledge.commandCandidatesFromResults")(function* (
+  occurrences: ReadonlyArray<KnowledgeCommandOccurrence>,
+  results: ReadonlyArray<KnowledgeCommandProbeResult>
+) {
+  if (A.length(results) !== A.length(occurrences)) {
+    return yield* KnowledgeOperationalError.make({
+      message: "Current-checkout command probe returned a result count that did not match its archive-data inputs.",
     });
   }
   let candidates = A.empty<KnowledgeFindingCandidate>();
@@ -456,7 +536,7 @@ const commandCandidates = Effect.fn("Knowledge.commandCandidates")(function* (
         subject: nfc(`beep-command:${canonical}`),
         location: occurrence.location,
         message: `Unknown beep command path: ${canonical}.`,
-        remediation: "Update the inline command to a command available in the matching archive.",
+        remediation: "Update the inline command to one available in the current CLI command surface.",
       })
     );
   }
@@ -479,7 +559,7 @@ const indexCandidate = Effect.fn("Knowledge.indexCandidate")(function* (
       documentId,
       subject: `producer://goals/index:${expectedDigest}:${archivedDigest}`,
       location: KnowledgeFindingLocation.make({ path: INDEX_PATH }),
-      message: "goals/INDEX.md differs from the archive-local manifest projection.",
+      message: "goals/INDEX.md differs from the current-checkout projection of the archive data.",
       remediation: "Run `bun run beep goals index --write` and commit the regenerated index.",
     })
   );
@@ -504,7 +584,7 @@ const documentCandidatesForSide = Effect.fn("Knowledge.documentCandidatesForSide
   return { candidates, commands };
 });
 
-/** The archive-local reads one side's probe substep needs once the tracked-tree pass has finished. */
+/** The archive-data reads one side's probe substep needs once the tracked-tree pass has finished. */
 interface KnowledgeProbeSideInput {
   readonly commands: ReadonlyArray<KnowledgeCommandOccurrence>;
   readonly indexDocumentId: string;
@@ -522,8 +602,35 @@ const probeCandidatesForSide = Effect.fn("Knowledge.probeCandidatesForSide")(fun
   oracle: KnowledgeArchiveOracle,
   side: KnowledgeProbeSideInput
 ) {
-  const candidates = yield* commandCandidates(oracle, side.commands);
+  // Derive provenance first so unsupported archive syntax always fails closed rather than hiding
+  // behind a degradable runtime boot failure. The runtime result is intentionally discarded: it
+  // preserves base-data boot/degradation semantics, while the static tree owns base attribution.
+  const commandTree = yield* oracle.commandTree;
+  yield* commandProbeResults(oracle, side.commands);
+  const candidates = yield* commandCandidatesFromResults(
+    side.commands,
+    staticCommandProbeResults(commandTree, side.commands)
+  );
   const index = yield* indexCandidate(oracle, side.indexDocumentId);
+  return O.match(index, {
+    onNone: () => candidates,
+    onSome: (candidate) => A.append(candidates, candidate),
+  });
+});
+
+const probeCandidatesForHead = Effect.fn("Knowledge.probeCandidatesForHead")(function* (
+  oracle: KnowledgeArchiveOracle,
+  baseCommands: ReadonlyArray<KnowledgeCommandOccurrence>,
+  head: KnowledgeProbeSideInput
+) {
+  // The current checkout must successfully load every command needed by either revision while using
+  // HEAD data before any merge-base-only failure may degrade coverage. Keep the raw base prefix in the
+  // probe input, then discard its results: only HEAD occurrences may produce HEAD findings.
+  const combinedOccurrences = A.appendAll(baseCommands, head.commands);
+  const combinedResults = yield* commandProbeResults(oracle, combinedOccurrences);
+  const headResults = A.drop(combinedResults, A.length(baseCommands));
+  const candidates = yield* commandCandidatesFromResults(head.commands, headResults);
+  const index = yield* indexCandidate(oracle, head.indexDocumentId);
   return O.match(index, {
     onNone: () => candidates,
     onSome: (candidate) => A.append(candidates, candidate),
@@ -538,7 +645,9 @@ const PROBE_BOOT_EXCERPT_LINES = 5;
 
 const probeBootExcerpt = (error: KnowledgeProbeBootError): string =>
   pipe(
-    Str.split(/\r?\n/u)(error.message),
+    error.message,
+    sanitizeProbeDiagnostic,
+    Str.split(/\r?\n/u),
     A.map(Str.trimEnd),
     A.filter(P.not(Str.isEmpty)),
     A.take(PROBE_BOOT_EXCERPT_LINES),
@@ -562,14 +671,25 @@ const probeBothSides = Effect.fn("Knowledge.probeBothSides")(function* (
   base: KnowledgeProbeSideInput,
   head: KnowledgeProbeSideInput
 ) {
-  // Base runs first so its boot failure escapes before HEAD is probed at all. HEAD's own boot
-  // failure is converted here, which leaves the base one as the only survivable failure left.
-  const baseCandidates = yield* probeCandidatesForSide(input.base, base);
-  const headCandidates = yield* probeCandidatesForSide(input.head, head).pipe(
+  const [currentTree, headStaticTree] = yield* Effect.all([input.head.currentCommandTree, input.head.commandTree]).pipe(
     Effect.catchTag("KnowledgeProbeBootError", (error) =>
-      Effect.fail(KnowledgeOperationalError.make({ message: error.message }))
+      Effect.fail(KnowledgeOperationalError.make({ message: sanitizeProbeDiagnostic(error.message) }))
     )
   );
+  if (!KnowledgeCommandSurface.staticCommandNodeEquivalent(currentTree, headStaticTree)) {
+    return yield* KnowledgeOperationalError.make({
+      message: "Static command surface provenance does not match the current-checkout command tree.",
+    });
+  }
+  // HEAD runs first because both sides execute the current checkout's code. Its command probe receives
+  // the union of base and HEAD inputs, so a current-code defect in a base-only command fails as the
+  // branch author's operational error before a base-data-only incompatibility may degrade coverage.
+  const headCandidates = yield* probeCandidatesForHead(input.head, base.commands, head).pipe(
+    Effect.catchTag("KnowledgeProbeBootError", (error) =>
+      Effect.fail(KnowledgeOperationalError.make({ message: sanitizeProbeDiagnostic(error.message) }))
+    )
+  );
+  const baseCandidates = yield* probeCandidatesForSide(input.base, base);
   return {
     policy: KnowledgeProbePolicy.Enum.enabled,
     detail: O.none<string>(),
@@ -583,8 +703,9 @@ const resolveProbeCandidates = Effect.fn("Knowledge.resolveProbeCandidates")(fun
   base: KnowledgeProbeSideInput,
   head: KnowledgeProbeSideInput
 ) {
-  // Both probe evaluators run Bun on the scanned revision's own code, so an untrusted comparison
-  // stops here with only the tracked-tree classes it derived without executing anything.
+  // Both evaluators run current-checkout code against the selected revision's data. The existing
+  // trust policy remains a defense-in-depth boundary: a skipped comparison stops here with only the
+  // tracked-tree classes and performs no data-driven probe work at all.
   if (!KnowledgeProbePolicy.is.enabled(input.probePolicy)) {
     return skippedProbeOutcome(input.probePolicy, O.none());
   }
@@ -622,12 +743,15 @@ const findingsFromCandidates = Effect.fn("Knowledge.findingsFromCandidates")(fun
         findingId,
         kind: candidate.kind,
         severity: "blocking",
-        documentId: candidate.documentId,
-        subject: candidate.subject,
+        documentId: sanitizePublicFindingText(candidate.documentId),
+        subject: sanitizePublicFindingText(candidate.subject),
         occurrence: NonNegativeInt.make(occurrence),
-        location: candidate.location,
-        message: candidate.message,
-        remediation: candidate.remediation,
+        location: KnowledgeFindingLocation.make({
+          ...candidate.location,
+          path: sanitizePublicFindingText(candidate.location.path),
+        }),
+        message: sanitizePublicFindingText(candidate.message),
+        remediation: sanitizePublicFindingText(candidate.remediation),
       })
     );
   }
@@ -649,9 +773,9 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * **Gotchas**
  *
  * `input.probePolicy` is the requested policy, applied to both sides at once; the report carries the
- * policy that was actually achieved, which is weaker when the merge-base archive's probe failed to
- * boot. Either way a non-`enabled` report is still a well-formed delta, but one whose empty buckets
- * only cover the classes that need no archive-local execution.
+ * policy that was actually achieved, which is weaker when the current-checkout probe failed to boot
+ * against merge-base archive data. Either way a non-`enabled` report is still a well-formed delta, but
+ * one whose empty buckets only cover the classes that need no executable probe.
  *
  * **Example** (Scan two empty archives)
  *
@@ -662,6 +786,8 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * import type { KnowledgeArchiveOracle } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
  *
  * const emptyArchive: KnowledgeArchiveOracle = {
+ *   commandTree: Effect.die("unused under skipped policy"),
+ *   currentCommandTree: Effect.die("unused under skipped policy"),
  *   indexBytes: Effect.succeed(
  *     KnowledgeIndexBytes.make({ expected: new Uint8Array(), archived: new Uint8Array() })
  *   ),
@@ -673,7 +799,7 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * const report = scanKnowledgePair({
  *   base: emptyArchive,
  *   head: emptyArchive,
- *   probePolicy: "enabled",
+ *   probePolicy: "skipped-untrusted-context",
  *   renames: [],
  * })
  *
@@ -758,13 +884,14 @@ const ROOT_COMMAND_MODULE = "packages/tooling/tool/cli/src/commands/Root.ts";
 const PORTFOLIO_INDEX_MODULE = "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts";
 
 /**
- * Command-probe program text, bound to absolute paths.
+ * Command-probe program text, bound to the executing checkout's command module.
  *
- * The probe module and its input live in the scratch root, never in the archive, so a scanned branch
- * that tracks a symlink at a scratch file name cannot redirect a write out of the sandbox. Only the
- * archive module it imports is read from `archiveRoot`.
+ * The probe module and its input live in the scratch root, never in the archive, so a scanned revision
+ * cannot redirect either file. The command implementation is also loaded from the checkout already
+ * executing the semantic-delta command. The archive is only the child process's working directory and
+ * therefore contributes data, never executable modules.
  *
- * @param rootCommandModule - Absolute path of the archive-local root command module.
+ * @param rootCommandModule - Absolute path of the current-checkout root command module.
  * @param inputPath - Absolute path of the tab-delimited command input file.
  * @returns Probe source ready to write into the scratch root.
  */
@@ -775,7 +902,12 @@ import { Command } from "effect/unstable/cli"
 import { rootCommand } from ${JSON.stringify(rootCommandModule)}
 
 const input = await Bun.file(${JSON.stringify(inputPath)}).text()
-const commands = input.split("\\n").map((line) => line === "" ? [] : line.split("\\t"))
+// This file is scratch-owned. Its writer prepends one structural field to every row, making an empty
+// file zero commands and a prefix-only row the root command without trusting archive data.
+const commands = input === "" ? [] : input.split("\\n").map((line) => {
+  const [, ...words] = line.split("\\t")
+  return words
+})
 const children = (command) => command.subcommands.flatMap((group) => group.commands)
 const resolve = (words) => {
   let command = rootCommand
@@ -803,7 +935,7 @@ const program = Effect.gen(function*() {
       )
       if (Result.isFailure(help) && help.failure?._tag !== "ShowHelp") yield* Effect.fail(help.failure)
     }
-    results.push(result.status + "\\t" + result.canonicalPath.join("\\t"))
+    results.push([result.status, ...result.canonicalPath].join("\\t"))
   }
   process.stdout.write(results.join("\\n"))
 })
@@ -811,12 +943,13 @@ BunRuntime.runMain(program.pipe(Effect.provide(BunServices.layer)))
 `;
 
 /**
- * Index-probe program text, bound to an absolute path.
+ * Index-probe program text, bound to the executing checkout's index builder.
  *
  * The projection still runs with the archive root as its working directory, so `"."` resolves to the
- * archive; only the module specifier and the probe file itself are absolute.
+ * archive data. The module specifier and probe file are absolute paths outside the archive, preventing
+ * an archived `PortfolioIndex.ts` (or one of its archived dependencies) from entering the module graph.
  *
- * @param portfolioIndexModule - Absolute path of the archive-local portfolio index module.
+ * @param portfolioIndexModule - Absolute path of the current-checkout portfolio index module.
  * @returns Probe source ready to write into the scratch root.
  */
 const indexProbeSource = (portfolioIndexModule: string): string => `
@@ -852,27 +985,77 @@ const makeHermeticEnv = Effect.fn("Knowledge.makeHermeticEnv")(function* (scratc
   };
 });
 
-const runArchiveProcess = Effect.fn("Knowledge.runArchiveProcess")(function* (
+const probeStreamSection = (
+  label: string,
+  output: string,
+  currentCheckoutRoot: string,
   archiveRoot: string,
+  scratchRoot: string
+): O.Option<string> =>
+  pipe(
+    sanitizeProbeDiagnostic(output, currentCheckoutRoot, archiveRoot, scratchRoot),
+    O.liftPredicate(Str.isNonEmpty),
+    O.map((detail) => `${label}:\n${detail}`)
+  );
+
+const renderProbeStreams = (
+  result: CapturedStreams,
+  currentCheckoutRoot: string,
+  archiveRoot: string,
+  scratchRoot: string
+): string => {
+  const sections = A.getSomes(
+    A.make(
+      probeStreamSection("stdout", result.stdout, currentCheckoutRoot, archiveRoot, scratchRoot),
+      probeStreamSection("stderr", result.stderr, currentCheckoutRoot, archiveRoot, scratchRoot)
+    )
+  );
+  return A.join(result.truncated ? A.append(sections, "capture: truncated") : sections, "\n");
+};
+
+const runArchiveProcess = Effect.fn("Knowledge.runArchiveProcess")(function* (
+  probeLabel: string,
+  runtimeExecutable: string,
+  currentCheckoutRoot: string,
+  archiveRoot: string,
+  scratchRoot: string,
   env: Readonly<Record<string, string>>,
-  scriptPath: string
+  scriptPath: string,
+  bunfigPath: string,
+  tsconfigPath: string,
+  envFilePath: string
 ) {
-  const result = yield* runCaptured({
-    command: process.execPath,
-    args: [scriptPath],
+  const result = yield* runCapturedStreams({
+    command: runtimeExecutable,
+    args: [
+      `--config=${bunfigPath}`,
+      `--tsconfig-override=${tsconfigPath}`,
+      "--no-env-file",
+      `--env-file=${envFilePath}`,
+      scriptPath,
+    ],
     cwd: archiveRoot,
     env,
     extendEnv: false,
-    source: "all",
-  }).pipe(KnowledgeOperationalError.mapError(`Failed to spawn archive-local probe "${scriptPath}".`));
+    bound: PROBE_STREAM_BOUND,
+  }).pipe(
+    KnowledgeOperationalError.mapError(`Failed to spawn current-checkout ${probeLabel} probe against archive data.`)
+  );
   // The probe writes its structured output in one final call, so a non-zero exit means it never got
-  // there: the archive's own modules failed to load or the help action itself threw.
+  // there: the current-checkout probe failed to load or the projection itself failed.
   if (result.exitCode !== 0) {
+    const output = renderProbeStreams(result, currentCheckoutRoot, archiveRoot, scratchRoot);
     return yield* KnowledgeProbeBootError.make({
-      message: `Archive-local probe "${scriptPath}" failed with exit ${result.exitCode}.${Str.isEmpty(result.output) ? "" : `\n${result.output}`}`,
+      message: `Current-checkout ${probeLabel} probe against archive data failed with exit ${result.exitCode}.${Str.isEmpty(output) ? "" : `\n${output}`}`,
     });
   }
-  return result.output;
+  if (result.truncated) {
+    const output = renderProbeStreams(result, currentCheckoutRoot, archiveRoot, scratchRoot);
+    return yield* KnowledgeOperationalError.make({
+      message: `Current-checkout ${probeLabel} probe emitted more than ${PROBE_STREAM_MAX_CHARS} characters for archive data; refusing to parse truncated structured output.${Str.isEmpty(output) ? "" : `\n${output}`}`,
+    });
+  }
+  return result;
 });
 
 const commandProbeResultFromLine = (line: string): O.Option<KnowledgeCommandProbeResult> => {
@@ -888,24 +1071,70 @@ const commandProbeResultFromLine = (line: string): O.Option<KnowledgeCommandProb
 };
 
 const decodeCommandProbeOutput = (
-  output: string,
-  expectedCount: number
+  result: CapturedStreams,
+  expectedCount: number,
+  currentCheckoutRoot: string,
+  archiveRoot: string,
+  scratchRoot: string
 ): Effect.Effect<ReadonlyArray<KnowledgeCommandProbeResult>, KnowledgeOperationalError> => {
-  const lines = Str.isEmpty(output) ? A.empty<string>() : Str.split(/\r?\n/u)(output);
+  const lines = Str.isEmpty(result.stdout) ? A.empty<string>() : Str.split(/\r?\n/u)(result.stdout);
+  const actualCount = A.length(lines);
+  const diagnostic = renderProbeStreams(result, currentCheckoutRoot, archiveRoot, scratchRoot);
   if (A.length(lines) !== expectedCount) {
-    return KnowledgeOperationalError.make({ message: "Archive-local command probe emitted malformed output." });
+    return KnowledgeOperationalError.make({
+      message: `Current-checkout command probe emitted malformed output for archive data: expected ${expectedCount} line(s), received ${actualCount}.${Str.isEmpty(diagnostic) ? "" : `\n${diagnostic}`}`,
+    });
   }
   return O.match(O.all(A.map(lines, commandProbeResultFromLine)), {
-    onNone: () => KnowledgeOperationalError.make({ message: "Archive-local command probe emitted an unknown status." }),
+    onNone: () =>
+      KnowledgeOperationalError.make({
+        message: `Current-checkout command probe emitted an unknown status for archive data: expected ${expectedCount} recognized line(s), received ${actualCount}.${Str.isEmpty(diagnostic) ? "" : `\n${diagnostic}`}`,
+      }),
     onSome: Effect.succeed,
   });
 };
 
-const makeLiveArchiveOracle = Effect.fn("Knowledge.makeLiveArchiveOracle")(function* (
-  repoRoot: string,
+/**
+ * Builds one archive-backed semantic-delta oracle without executing code from the archive.
+ *
+ * **Details**
+ *
+ * Probe programs import their command and index implementations from `currentCheckoutRoot`. They run
+ * with `archiveRoot` as their working directory so those current implementations still inspect the
+ * selected revision's data. A scratch-owned Bun config, TypeScript config, dependency link, and input
+ * file prevent an archived config or module-resolution rule from injecting archive code before the
+ * probe starts.
+ *
+ * **Gotchas**
+ *
+ * `archiveRoot` is intentionally a data boundary, not a code root. Do not place probe scripts,
+ * dependency links, runtime configuration, or module specifiers beneath it.
+ *
+ * **Example** (Construct an archive-data oracle)
+ *
+ * ```ts
+ * import { makeKnowledgeArchiveOracle } from "@beep/repo-cli/test/Knowledge"
+ *
+ * const program = makeKnowledgeArchiveOracle("/repo", "/tmp/archive", "/tmp/scratch", [])
+ * console.log(program)
+ * ```
+ *
+ * @internal
+ * @param currentCheckoutRoot - Repository root containing the CLI code already executing this scan.
+ * @param archiveRoot - Extracted revision used only as the probe working directory and data source.
+ * @param scratchRoot - Isolated directory for generated programs, inputs, and runtime configuration.
+ * @param trackedEntries - Git-tree entries belonging to the extracted revision.
+ * @param runtimeExecutable - Bun executable running the generated probe; defaults to this process.
+ * @returns An archive oracle whose executable module graph comes from the current checkout.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle")(function* (
+  currentCheckoutRoot: string,
   archiveRoot: string,
   scratchRoot: string,
-  trackedEntries: ReadonlyArray<KnowledgeTrackedEntry>
+  trackedEntries: ReadonlyArray<KnowledgeTrackedEntry>,
+  runtimeExecutable = process.execPath
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -914,11 +1143,20 @@ const makeLiveArchiveOracle = Effect.fn("Knowledge.makeLiveArchiveOracle")(funct
     .makeDirectory(scratchRoot, { recursive: true })
     .pipe(KnowledgeOperationalError.mapError("Failed to create an archive scratch root."));
   const env = yield* makeHermeticEnv(scratchRoot);
+  const bunfigPath = path.join(scratchRoot, "bunfig.toml");
+  const tsconfigPath = path.join(scratchRoot, "tsconfig.json");
+  const envFilePath = path.resolve(scratchRoot, "empty.env");
   yield* fs
-    .symlink(path.join(repoRoot, "node_modules"), path.join(archiveRoot, "node_modules"))
-    .pipe(KnowledgeOperationalError.mapError("Failed to link installed dependencies into an archive root."));
+    .writeFileString(bunfigPath, "# Semantic-delta probes intentionally ignore archive-local Bun configuration.\n")
+    .pipe(KnowledgeOperationalError.mapError("Failed to write the semantic-delta Bun configuration."));
   yield* fs
-    .symlink(path.join(repoRoot, "node_modules"), path.join(scratchRoot, "node_modules"))
+    .writeFileString(tsconfigPath, "{}\n")
+    .pipe(KnowledgeOperationalError.mapError("Failed to write the semantic-delta TypeScript configuration."));
+  yield* fs
+    .writeFileString(envFilePath, "")
+    .pipe(KnowledgeOperationalError.mapError("Failed to write the semantic-delta empty environment file."));
+  yield* fs
+    .symlink(path.join(currentCheckoutRoot, "node_modules"), path.join(scratchRoot, "node_modules"))
     .pipe(KnowledgeOperationalError.mapError("Failed to link installed dependencies into an archive scratch root."));
   const readBytes = Effect.fn("Knowledge.archiveReadBytes")(function* (repoPath: string) {
     return yield* fs
@@ -929,38 +1167,83 @@ const makeLiveArchiveOracle = Effect.fn("Knowledge.makeLiveArchiveOracle")(funct
   const probeCommands = Effect.fn("Knowledge.archiveProbeCommands")(function* (
     commands: ReadonlyArray<ReadonlyArray<string>>
   ) {
-    if (A.isReadonlyArrayEmpty(commands)) {
-      return A.empty<KnowledgeCommandProbeResult>();
-    }
     const inputPath = path.join(scratchRoot, "command-input");
     const scriptPath = path.join(scratchRoot, "command-probe.ts");
     yield* fs
       .writeFileString(
         inputPath,
         A.join(
-          A.map(commands, (words) => A.join(words, "\t")),
+          A.map(commands, (words) => A.join(A.prepend(words, COMMAND_INPUT_ROW_PREFIX), "\t")),
           "\n"
         )
       )
-      .pipe(KnowledgeOperationalError.mapError("Failed to write archive-local command probe input."));
+      .pipe(KnowledgeOperationalError.mapError("Failed to write current-checkout command probe input."));
     yield* fs
-      .writeFileString(scriptPath, commandProbeSource(path.join(archiveRoot, ROOT_COMMAND_MODULE), inputPath))
-      .pipe(KnowledgeOperationalError.mapError("Failed to write archive-local command probe."));
-    const output = yield* runArchiveProcess(archiveRoot, env, scriptPath);
-    return yield* decodeCommandProbeOutput(output, A.length(commands));
+      .writeFileString(scriptPath, commandProbeSource(path.join(currentCheckoutRoot, ROOT_COMMAND_MODULE), inputPath))
+      .pipe(KnowledgeOperationalError.mapError("Failed to write current-checkout command probe."));
+    const result = yield* runArchiveProcess(
+      "command",
+      runtimeExecutable,
+      currentCheckoutRoot,
+      archiveRoot,
+      scratchRoot,
+      env,
+      scriptPath,
+      bunfigPath,
+      tsconfigPath,
+      envFilePath
+    );
+    return yield* decodeCommandProbeOutput(result, A.length(commands), currentCheckoutRoot, archiveRoot, scratchRoot);
   });
+
+  const currentCommandTree = Effect.gen(function* () {
+    const scriptPath = path.join(scratchRoot, "command-tree-probe.ts");
+    yield* fs
+      .writeFileString(
+        scriptPath,
+        KnowledgeCommandSurface.commandTreeProbeSource(path.join(currentCheckoutRoot, ROOT_COMMAND_MODULE))
+      )
+      .pipe(KnowledgeOperationalError.mapError("Failed to write current-checkout command tree probe."));
+    const result = yield* runArchiveProcess(
+      "command tree",
+      runtimeExecutable,
+      currentCheckoutRoot,
+      archiveRoot,
+      scratchRoot,
+      env,
+      scriptPath,
+      bunfigPath,
+      tsconfigPath,
+      envFilePath
+    );
+    return yield* KnowledgeCommandSurface.decodeCurrentCommandTree(result.stdout);
+  }).pipe(Effect.provide(runtime));
 
   const indexBytes = Effect.gen(function* () {
     const scriptPath = path.join(scratchRoot, "index-probe.ts");
     yield* fs
-      .writeFileString(scriptPath, indexProbeSource(path.join(archiveRoot, PORTFOLIO_INDEX_MODULE)))
-      .pipe(KnowledgeOperationalError.mapError("Failed to write archive-local index probe."));
-    const expected = textEncoder.encode(yield* runArchiveProcess(archiveRoot, env, scriptPath));
+      .writeFileString(scriptPath, indexProbeSource(path.join(currentCheckoutRoot, PORTFOLIO_INDEX_MODULE)))
+      .pipe(KnowledgeOperationalError.mapError("Failed to write current-checkout index probe."));
+    const result = yield* runArchiveProcess(
+      "index",
+      runtimeExecutable,
+      currentCheckoutRoot,
+      archiveRoot,
+      scratchRoot,
+      env,
+      scriptPath,
+      bunfigPath,
+      tsconfigPath,
+      envFilePath
+    );
+    const expected = textEncoder.encode(result.stdout);
     const archived = trackedPathExists(trackedEntries, INDEX_PATH) ? yield* readBytes(INDEX_PATH) : new Uint8Array();
     return KnowledgeIndexBytes.make({ expected, archived });
   }).pipe(Effect.provide(runtime));
 
   return {
+    commandTree: KnowledgeCommandSurface.buildStaticCommandTree(archiveRoot).pipe(Effect.provide(runtime)),
+    currentCommandTree,
     trackedEntries,
     readBytes: (repoPath: string) => readBytes(repoPath).pipe(Effect.provide(runtime)),
     probeCommands: (commands: ReadonlyArray<ReadonlyArray<string>>) =>
@@ -975,13 +1258,13 @@ const READABLE_ARCHIVE_ENTRY_TYPES = HashSet.make("File", "Directory");
  * Materializes only the entry types the scan reads, so a hostile revision cannot aim extraction
  * anywhere.
  *
- * Regular files carry every scanned document and every module the probes import; directories carry
- * their structure. Links are dropped: the tracked-path oracle already comes from `git ls-tree` rather
- * than the extracted tree, documents whose blob is a link are filtered out by mode before they are
- * ever read, and a link entry in an untrusted archive is the classic primitive for redirecting a
- * later write out of the archive root. Dropping them also keeps `strict` extraction meaningful — a
- * repository that tracks a link through another link would otherwise abort the whole scan on an
- * entry nothing reads.
+ * Regular files carry every scanned document and archive-data input; directories carry their
+ * structure. Probe modules come exclusively from the current checkout. Links are dropped: the
+ * tracked-path oracle already comes from `git ls-tree` rather than the extracted tree, documents whose
+ * blob is a link are filtered out by mode before they are ever read, and a link entry in an untrusted
+ * archive is the classic primitive for redirecting a later read or write out of the archive root.
+ * Dropping them also keeps `strict` extraction meaningful — a repository that tracks a link through
+ * another link would otherwise abort the whole scan on an entry nothing reads.
  *
  * The argument is read structurally because the library shares this filter signature with archive
  * creation, where the second parameter is a stat result carrying no entry type at all. Extraction
@@ -1037,16 +1320,15 @@ const readHeadRepository = Effect.fn("Knowledge.readHeadRepository")(function* (
 });
 
 /**
- * Decides whether this invocation may execute archive-local `--help` and index probes.
+ * Decides whether this invocation may run current-checkout `--help` and index probes on archive data.
  *
  * **Details**
  *
- * Probing runs Bun on code taken from the scanned revision, which is the same trust boundary as
- * running that revision's tests. Locally, on `push`, and on a same-repo pull request that boundary is
- * already ours, so probes run. On a pull request whose head branch lives in another repository — a
- * fork of this public repository — probing would execute a contributor's code on our runner, so the
- * probe substep is skipped and the comparison degrades to the classes the tracked-tree oracle decides
- * on its own.
+ * Probing runs code from the checkout already executing this command and supplies the selected
+ * revision only as filesystem data. Locally, on `push`, and on a same-repo pull request, probes run.
+ * On a pull request whose head branch lives in another repository — a fork of this public repository
+ * — the probe substep remains skipped as defense in depth against data-driven behavior, and the
+ * comparison degrades to the classes the tracked-tree oracle decides on its own.
  *
  * **Gotchas**
  *
@@ -1147,8 +1429,18 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
           score: rename.score,
         })
       );
-      const base = yield* makeLiveArchiveOracle(repoRoot, baseRoot, path.join(tempRoot, "base-scratch"), baseEntries);
-      const head = yield* makeLiveArchiveOracle(repoRoot, headRoot, path.join(tempRoot, "head-scratch"), headEntries);
+      const base = yield* makeKnowledgeArchiveOracle(
+        repoRoot,
+        baseRoot,
+        path.join(tempRoot, "base-scratch"),
+        baseEntries
+      );
+      const head = yield* makeKnowledgeArchiveOracle(
+        repoRoot,
+        headRoot,
+        path.join(tempRoot, "head-scratch"),
+        headEntries
+      );
       return yield* scanKnowledgePair({ base, head, probePolicy, renames });
     })
   );

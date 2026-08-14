@@ -1,6 +1,6 @@
 # Brief — Document-Structure & Metadata Ontologies over the AST Family
 
-Status: DRAFT — awaiting operator review (shape stage).
+Status: RATIFIED 2026-08-13.
 Inputs: [`CAPTURE.md`](./CAPTURE.md) · [`RESEARCH.md`](./RESEARCH.md) ·
 [`DECISIONS.md`](./DECISIONS.md) (D1–D6).
 

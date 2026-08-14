@@ -15,6 +15,38 @@ import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Knowledge/Knowledge.schemas");
 
+const KnowledgePublicText = S.String.check(
+  S.isPattern(/^[^\p{Cc}\p{Cf}]*$/u, {
+    identifier: $I`KnowledgePublicTextCheck`,
+    title: "Control-free knowledge report text",
+    description: "Public knowledge finding fields contain no control or Unicode format characters.",
+    message: "Expected knowledge report text without control or format characters",
+  })
+).pipe(
+  $I.annoteSchema("KnowledgePublicText", {
+    description: "Single-line control-free text safe for public knowledge report fields.",
+  })
+);
+
+type KnowledgePublicText = typeof KnowledgePublicText.Type;
+
+const isKnowledgePublicText = S.is(KnowledgePublicText);
+
+const KnowledgePublicDetail = S.String.check(
+  S.isPattern(/^(?:[^\p{Cc}\p{Cf}]|\n)*$/u, {
+    identifier: $I`KnowledgePublicDetailCheck`,
+    title: "Control-free knowledge report detail",
+    description: "Public knowledge diagnostics may contain line feeds but no other control or format characters.",
+    message: "Expected knowledge report detail without unsafe control or format characters",
+  })
+).pipe(
+  $I.annoteSchema("KnowledgePublicDetail", {
+    description: "Multiline public knowledge diagnostic text whose only permitted control is line feed.",
+  })
+);
+
+type KnowledgePublicDetail = typeof KnowledgePublicDetail.Type;
+
 /**
  * Stable finding classes owned by knowledge-surface evaluators.
  *
@@ -136,29 +168,29 @@ export type KnowledgeFindingSeverity = typeof KnowledgeFindingSeverity.Type;
 export const isKnowledgeFindingSeverity = S.is(KnowledgeFindingSeverity);
 
 /**
- * Whether a comparison was allowed to execute archive-local probes.
+ * Whether a comparison was allowed to run current-checkout probes against archive data.
  *
  * **Details**
  *
- * The `--help` command probe and the index projection both run Bun on code taken from the scanned
- * revision. That is the same trust boundary as running the revision's tests, which is fine locally
- * and on same-repo branches but is arbitrary code execution when the revision came from a fork.
- * `skipped-untrusted-context` records that the run deliberately declined to execute, so a green
- * report on a fork pull request can never be mistaken for a fully probed one.
+ * The `--help` command probe and the index projection both load code only from the checkout already
+ * executing the scan. The selected revision contributes filesystem data and the child process's
+ * working directory, never executable modules. `skipped-untrusted-context` retains the fork policy
+ * as defense in depth against data-driven behavior and records that the run deliberately declined to
+ * probe, so a green fork report can never be mistaken for a fully probed one.
  *
- * `skipped-base-boot-failure` records the other way probe coverage is lost. The merge-base archive's
- * probe process exited non-zero without emitting its structured output, which is what happens when a
- * branch deletes a workspace export the base revision's CLI still imports. That is a property of the
- * base revision, not a defect the branch can repair on the base side, so the comparison degrades
- * rather than failing closed. The equivalent HEAD failure stays an operational error, because HEAD is
- * the branch author's own tree.
+ * `skipped-base-boot-failure` records the other way probe coverage is lost. The current-checkout
+ * probe process exited non-zero against merge-base archive data without emitting its structured
+ * output. That can happen when the current probe cannot interpret the base revision's data. The
+ * branch cannot repair the base side, so the comparison degrades rather than failing closed. The
+ * equivalent HEAD-data failure stays an operational error, because HEAD is the branch author's own
+ * tree.
  *
  * **Gotchas**
  *
- * The policy is a property of the whole comparison, never of one side: probing only one archive
- * would turn every probe-class finding into a spurious introduced or resolved entry. That is why a
- * base boot failure discards the base probe results it had already collected instead of comparing
- * them against an unprobed HEAD.
+ * The policy is a property of the whole comparison, never of one side: probing only one archive's
+ * data would turn every probe-class finding into a spurious introduced or resolved entry. That is
+ * why a base boot failure discards the base probe results it had already collected instead of
+ * comparing them against an unprobed HEAD.
  *
  * **Example** (Read the probe policy domain)
  *
@@ -178,12 +210,12 @@ export const KnowledgeProbePolicy = LiteralKit([
   "skipped-base-boot-failure",
 ]).pipe(
   $I.annoteSchema("KnowledgeProbePolicy", {
-    description: "Whether archive-local command and index probes were allowed to execute, and ran.",
+    description: "Whether current-checkout command and index probes ran against archive data.",
   })
 );
 
 /**
- * Whether archive-local probes ran for a comparison.
+ * Whether current-checkout probes ran against archive data for a comparison.
  *
  * @see {@link KnowledgeProbePolicy} for the runtime schema and the fork-pull-request rule.
  * @category type-level
@@ -209,15 +241,15 @@ export type KnowledgeProbePolicy = typeof KnowledgeProbePolicy.Type;
 export const isKnowledgeProbePolicy = S.is(KnowledgeProbePolicy);
 
 /**
- * Finding classes that only an archive-local probe can decide.
+ * Finding classes that only a current-checkout probe against archive data can decide.
  *
  * **Details**
  *
- * `unknown-beep-command` needs the archive's own command tree and `index-drift` needs the archive's
- * own index projection, so both disappear from any comparison whose {@link KnowledgeProbePolicy} is
- * not `enabled`, while `broken-tracked-path` and `failed-assertion` keep working from the
- * tracked-tree oracle alone. This is the ratified graceful degradation, and naming it here keeps the
- * scanner and its tests reading from one list.
+ * `unknown-beep-command` needs the current command tree plus the archive's documented command input,
+ * and `index-drift` needs the current index projection over archive data. Both disappear from any
+ * comparison whose {@link KnowledgeProbePolicy} is not `enabled`, while `broken-tracked-path` and
+ * `failed-assertion` keep working from the tracked-tree oracle alone. This is the ratified graceful
+ * degradation, and naming it here keeps the scanner and its tests reading from one list.
  *
  * **Example** (Read the probe-dependent classes)
  *
@@ -313,6 +345,25 @@ export class KnowledgeFindingLocation extends S.Class<KnowledgeFindingLocation>(
   })
 ) {}
 
+const KnowledgePublicFindingLocation = KnowledgeFindingLocation.check(
+  S.makeFilter<KnowledgeFindingLocation>(
+    (location) =>
+      isKnowledgePublicText(location.path) || {
+        path: ["path"],
+        issue: "Expected a knowledge finding path without control or format characters",
+      },
+    {
+      identifier: $I`KnowledgePublicFindingLocationCheck`,
+      title: "Control-free knowledge finding location",
+      description: "Semantic-delta finding locations contain no terminal control or Unicode format characters.",
+    }
+  )
+).pipe(
+  $I.annoteSchema("KnowledgePublicFindingLocation", {
+    description: "Display location safe for semantic-delta human and JSON report surfaces.",
+  })
+);
+
 /**
  * One normalized knowledge finding, versioned for cross-archive comparison.
  *
@@ -320,7 +371,10 @@ export class KnowledgeFindingLocation extends S.Class<KnowledgeFindingLocation>(
  *
  * `schemaVersion` and `normalizationVersion` are tags supplied by the constructor, so callers pass
  * only the semantic fields. Two findings are the same finding exactly when their `findingId` values
- * match; `occurrence` disambiguates repeated identical subjects inside one document.
+ * match; `occurrence` disambiguates repeated identical subjects inside one document. Report-facing
+ * document, subject, location, message, and remediation text is control-free. The scanner assigns the
+ * identity from the raw normalized candidate before sanitizing those display fields, so hardening a
+ * renderer does not churn stable finding ids.
  *
  * **Example** (Build a broken-path finding)
  *
@@ -360,12 +414,12 @@ export class KnowledgeFinding extends S.Class<KnowledgeFinding>($I`KnowledgeFind
     findingId: KnowledgeFindingId,
     kind: KnowledgeFindingKind,
     severity: KnowledgeFindingSeverity,
-    documentId: S.String,
-    subject: S.String,
+    documentId: KnowledgePublicText,
+    subject: KnowledgePublicText,
     occurrence: NonNegativeInt,
-    location: KnowledgeFindingLocation,
-    message: S.String,
-    remediation: S.String,
+    location: KnowledgePublicFindingLocation,
+    message: KnowledgePublicText,
+    remediation: KnowledgePublicText,
   },
   $I.annote("KnowledgeFinding", {
     description: "Versioned normalized knowledge finding with comparison-scoped semantic identity.",
@@ -441,7 +495,7 @@ export const decodeKnowledgeFinding: {
  *   subject: "producer://goals/index",
  *   occurrence: NonNegativeInt.make(0),
  *   location: KnowledgeFindingLocation.make({ path: "goals/INDEX.md" }),
- *   message: "goals/INDEX.md differs from the archive-local manifest projection.",
+ *   message: "goals/INDEX.md differs from the current-checkout projection of the archive data.",
  *   remediation: "Run the goals index generator and commit the regenerated index.",
  * })
  *
@@ -531,7 +585,7 @@ export class KnowledgeRename extends S.Class<KnowledgeRename>($I`KnowledgeRename
 ) {}
 
 /**
- * A documented command that resolved against the archive-local command tree.
+ * A documented command that resolved against the current-checkout command tree.
  *
  * **Details**
  *
@@ -557,12 +611,12 @@ export class KnowledgeCommandResolved extends S.Class<KnowledgeCommandResolved>(
     canonicalPath: S.Array(S.String),
   },
   $I.annote("KnowledgeCommandResolved", {
-    description: "A structurally resolved archive-local beep command path whose help action was probed.",
+    description: "A structurally resolved current-checkout beep command path whose help action was probed.",
   })
 ) {}
 
 /**
- * A documented command that failed to resolve against the archive-local command tree.
+ * A documented command that failed to resolve against the current-checkout command tree.
  *
  * **Details**
  *
@@ -593,7 +647,7 @@ export class KnowledgeCommandUnknown extends S.Class<KnowledgeCommandUnknown>($I
 ) {}
 
 /**
- * Result of the mandatory archive-local structural command probe.
+ * Result of the mandatory current-checkout structural command probe over archive data.
  *
  * **Details**
  *
@@ -621,12 +675,12 @@ export class KnowledgeCommandUnknown extends S.Class<KnowledgeCommandUnknown>($I
 export const KnowledgeCommandProbeResult = S.Union([KnowledgeCommandResolved, KnowledgeCommandUnknown]).pipe(
   S.toTaggedUnion("status"),
   $I.annoteSchema("KnowledgeCommandProbeResult", {
-    description: "Resolved or unknown archive-local command-tree result.",
+    description: "Resolved or unknown current-checkout command-tree result for archive data.",
   })
 );
 
 /**
- * Either outcome of one archive-local command probe, discriminated by `status`.
+ * Either outcome of one current-checkout command probe over archive data, discriminated by `status`.
  *
  * @see {@link KnowledgeCommandProbeResult} for the runtime schema and its tagged-union narrowing.
  * @category type-level
@@ -639,9 +693,10 @@ export type KnowledgeCommandProbeResult = typeof KnowledgeCommandProbeResult.Typ
  *
  * **Details**
  *
- * The comparison is byte-exact: `expected` is produced by running the archive-local index generator,
- * and `archived` is the committed `goals/INDEX.md` from the same archive. Any difference becomes a
- * single `index-drift` finding whose subject carries both digests.
+ * The comparison is byte-exact: `expected` is produced by running the current-checkout index
+ * generator with the archive as its working directory, and `archived` is the committed
+ * `goals/INDEX.md` from that archive. Any difference becomes a single `index-drift` finding whose
+ * subject carries both digests.
  *
  * **Example** (Compare a matching index pair)
  *
@@ -717,12 +772,12 @@ export class KnowledgeFindingCandidate extends S.Class<KnowledgeFindingCandidate
 ) {}
 
 /**
- * One documented `bun run beep` invocation awaiting archive-local resolution.
+ * One archived `bun run beep` invocation awaiting current-checkout resolution.
  *
  * **Details**
  *
  * `words` holds the command tail after the `bun run beep` prefix, already split on whitespace, so the
- * probe can walk the archive's own command tree without re-parsing the source span.
+ * probe can walk the current-checkout command tree without re-parsing the source span.
  *
  * **Example** (Queue a documented command for probing)
  *
@@ -801,7 +856,9 @@ export class KnowledgeSemanticDeltaReport extends S.Class<KnowledgeSemanticDelta
     resolved: S.Array(KnowledgeFinding),
     unchanged: S.Array(KnowledgeFinding),
     probePolicy: KnowledgeProbePolicy,
-    probeSkipDetail: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
+    probeSkipDetail: S.OptionFromOptionalKey(KnowledgePublicDetail).pipe(
+      S.withConstructorDefault(Effect.succeed(O.none<KnowledgePublicDetail>()))
+    ),
   },
   $I.annote("KnowledgeSemanticDeltaReport", {
     description: "Findings introduced, resolved, and unchanged between merge-base and HEAD archives.",

@@ -60,6 +60,14 @@ public `ClaimGate` at
 prove absent/ambiguous/stale/cross-matter failures and the `NO_CITATION`
 negative-attempt/no-entity behavior.
 
+**Re-entry:** This is the packet's re-entry point under the repository's
+reopen-at-`decompose` convention. Reopen only after both
+`citation-verified-span-substrate` and `citation-extraction-engine` land. At
+that reopened shape gate, decide align Q7 from
+[`research/2026-07-25-academia-corpus-mining-note.md`](./research/2026-07-25-academia-corpus-mining-note.md):
+placement of the qualifier-aware stance layer and its minimum comparison
+qualifiers.
+
 ## Gated Follow-Ons
 
 - **`citation-mpep-patterns` (NET-NEW):** add MPEP § patterns after v1 parity;

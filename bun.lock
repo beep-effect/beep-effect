@@ -384,6 +384,7 @@
         "@beep/md": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
+        "@beep/shared-use-cases": "workspace:^",
         "@beep/utils": "workspace:^",
         "@beep/workspace-domain": "workspace:^",
         "@beep/workspace-use-cases": "workspace:^",
@@ -2111,6 +2112,7 @@
         "@beep/mcp-kit": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/shared-use-cases": "workspace:^",
         "@beep/tika": "workspace:^",
         "@beep/utils": "workspace:^",
         "drizzle-orm": "catalog:",
@@ -2311,6 +2313,21 @@
         "@beep/utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+      },
+    },
+    "packages/shared/use-cases": {
+      "name": "@beep/shared-use-cases",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/tooling/library/ai-metrics": {
@@ -3314,6 +3331,8 @@
     "@beep/shared-domain": ["@beep/shared-domain@workspace:packages/shared/domain"],
 
     "@beep/shared-tables": ["@beep/shared-tables@workspace:packages/shared/tables"],
+
+    "@beep/shared-use-cases": ["@beep/shared-use-cases@workspace:packages/shared/use-cases"],
 
     "@beep/storybook": ["@beep/storybook@workspace:apps/storybook"],
 

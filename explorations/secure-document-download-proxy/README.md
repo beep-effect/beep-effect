@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -16,10 +16,9 @@ UUID-guarded resource route with an encrypted, auto-expiring opaque-link store.
 
 ## Next Open Question
 
-None. Eight alignment questions and the fan-out are ratified. Resume from the
-gated Box origin, viewer integration, or additional-origin candidate only when a
-named consumer pull satisfies its gate; implementation starts at
-[`goals/secure-document-delivery`](../../goals/secure-document-delivery/README.md).
+None while graduated. The gated Box origin, viewer integration, and
+additional-origin candidates remain MAP re-entry points; a fired gate reopens
+this packet at `decompose`.
 
 ## Read This First
 
@@ -40,6 +39,9 @@ in-repo `@beep/*` brick it composes. Derived from the gold-intake cluster
 
 ## Trail
 
+- 2026-08-13: holding-pen convention ratified; the packet flipped to
+  `graduated`. Its three gated MAP candidates remain re-entry points, and a
+  fired gate reopens this packet at `decompose`.
 - 2026-07-14: graduated `goals/secure-document-delivery`; exploration remains active for three gated candidates.
 - 2026-07-14: align closed in one round — Q1-Q8 and fan-out ratified; brief and map drafted.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.

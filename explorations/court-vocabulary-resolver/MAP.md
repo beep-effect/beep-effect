@@ -9,6 +9,12 @@
 | optional | `court-name-fuzzy-ranking` | Add evidence-calibrated alternative ranking without changing core resolver determinism. | `court-string-resolver` | Gated by representative calibration fixtures and a metric-specific acceptance threshold. |
 | optional | `court-vocabulary-skos-projection` | Generate a SKOS view from the canonical vocabulary. | `court-reporter-vocabulary` | Gated by a named consumer; derived only, never a second taxonomy. |
 
+`court-string-resolver` is the packet's re-entry point under the repository's
+reopen-at-`decompose` convention. Reopen when
+`court-reporter-vocabulary` proves the versioned artifact, stable-ID
+lifecycle, and compatibility contract. Fuzzy ranking and SKOS remain gated
+follow-on notes rather than independent reopen triggers.
+
 ## Sequencing
 
 `court-reporter-vocabulary` is the first vertical slice because every resolver

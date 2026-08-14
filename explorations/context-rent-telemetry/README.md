@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `capture`
-Status: `active`
+Status: `parked`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -15,9 +15,8 @@ change agent behavior. Instrument it; prune empirically instead of by taste.
 
 ## Next Open Question
 
-Which harness telemetry signal can attribute an agent behavior change to a specific
-guidance line (CLAUDE.md rule, skill description) — and can the
-agent-effectiveness-loop Phoenix substrate measure it without new infrastructure?
+Resume when knowledge-surface-automation Workstream C ships pruning-proposal
+machinery. Decide the A/B guidance-degraded-session question at unpark.
 
 ## Read This First
 
@@ -25,6 +24,10 @@ agent-effectiveness-loop Phoenix substrate measure it without new infrastructure
 2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0).
 
 ## Trail
+
+- 2026-08-13: parked the empirical arm. Resume when
+  knowledge-surface-automation Workstream C ships pruning-proposal machinery;
+  decide the A/B guidance-degraded-session question at unpark.
 
 - 2026-07-31: packet opened — spin-off captured from the knowledge-surface-automation
   ratification interview (Workstream C's context-bloat pruning stays proposal-only;

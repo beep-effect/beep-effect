@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -45,6 +45,11 @@ jurisdiction controlled vocabulary" (14 nuggets).
 6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-08-13: packet closed `graduated`; `court-string-resolver` is the
+  re-entry point and reopens this packet at `decompose` once the versioned
+  artifact, stable-ID lifecycle, and compatibility contract are proven.
+  Fuzzy ranking and SKOS remain gated follow-on notes.
 
 - 2026-07-14: shape gate signed off as drafted; graduated
   [`goals/court-reporter-vocabulary`](../../goals/court-reporter-vocabulary/README.md)
