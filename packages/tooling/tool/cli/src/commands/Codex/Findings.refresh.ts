@@ -491,8 +491,9 @@ const upsertManagedRefreshBlock = (
   return Str.includes(anchor)(text) ? Str.replace(anchor, `${anchor}${block}\n\n`)(text) : `${text}\n${block}\n`;
 };
 
-const mergeReadme = (
+const mergeManagedPacketDocument = (
   text: string,
+  heading: string,
   priorCount: number,
   capturedCount: number,
   appendedCount: number,
@@ -501,22 +502,7 @@ const mergeReadme = (
 ): string =>
   upsertManagedRefreshBlock(
     replaceCountTruth(text, priorCount, capturedCount, priorSeverity, capturedSeverity),
-    "## Current Phase",
-    priorCount,
-    appendedCount
-  );
-
-const mergeGoal = (
-  text: string,
-  priorCount: number,
-  capturedCount: number,
-  appendedCount: number,
-  priorSeverity: string,
-  capturedSeverity: string
-): string =>
-  upsertManagedRefreshBlock(
-    replaceCountTruth(text, priorCount, capturedCount, priorSeverity, capturedSeverity),
-    "Rules:",
+    heading,
     priorCount,
     appendedCount
   );
@@ -585,6 +571,65 @@ const dispositionCountsEqual = (
   left["out-of-scope"] === right["out-of-scope"] &&
   left.untriaged === right.untriaged;
 
+const validateManifestCatalog = Effect.fnUntraced(function* (
+  manifest: typeof RefreshManifest.Type,
+  ledger: CodexTriageLedger
+) {
+  const priorCount = ledger.findings.length;
+  const priorSeverityCounts = severityCountsOf(ledger.findings);
+  const priorDispositionCounts = dispositionCountsOf(ledger.findings);
+  if (
+    manifest.catalog.expectedCount !== priorCount ||
+    manifest.catalog.capturedCount !== priorCount ||
+    !severityCountsEqual(manifest.catalog.severityCounts, priorSeverityCounts) ||
+    !dispositionCountsEqual(manifest.catalog.dispositionCounts, priorDispositionCounts)
+  ) {
+    return yield* ingestFailure(
+      "refresh-metadata-drift",
+      "The existing manifest catalog does not reconcile with the triage ledger. Repair packet counts before refreshing."
+    );
+  }
+});
+
+const validateManifestProvenance = Effect.fnUntraced(function* (
+  manifest: typeof RefreshManifest.Type,
+  plan: CodexPacketPlan
+) {
+  if (
+    !Str.equivalence(manifest.initiative.id, plan.slug) ||
+    !Str.equivalence(manifest.branch, plan.branch) ||
+    !Str.equivalence(manifest.source.repository, plan.repository) ||
+    !Str.equivalence(manifest.source.capturedAt, plan.capturedAt)
+  ) {
+    return yield* ingestFailure(
+      "refresh-metadata-drift",
+      "The existing manifest provenance does not match the incoming full snapshot."
+    );
+  }
+});
+
+const reopenManifestPhases = Effect.fnUntraced(function* (
+  text: string,
+  phases: (typeof RefreshManifest.Type)["phases"]
+) {
+  let merged = text;
+  for (const phaseId of ["P2", "P3"]) {
+    const index = A.findFirstIndex(phases, (phase) => phase.id === phaseId);
+    if (O.isNone(index)) {
+      return yield* ingestFailure(
+        "refresh-packet-unreadable",
+        `The existing manifest is missing ${phaseId}; refresh cannot reopen validation safely.`
+      );
+    }
+    merged = applyJsoncModification({
+      content: merged,
+      path: ["phases", index.value, "status"],
+      value: "in-progress",
+    });
+  }
+  return merged;
+});
+
 const mergeManifest = Effect.fnUntraced(function* (
   text: string,
   plan: CodexPacketPlan,
@@ -601,31 +646,10 @@ const mergeManifest = Effect.fnUntraced(function* (
       )
     )
   );
+  yield* validateManifestCatalog(parsed, ledger);
+  yield* validateManifestProvenance(parsed, plan);
   const priorCount = ledger.findings.length;
-  const priorSeverityCounts = severityCountsOf(ledger.findings);
   const priorDispositionCounts = dispositionCountsOf(ledger.findings);
-  if (
-    parsed.catalog.expectedCount !== priorCount ||
-    parsed.catalog.capturedCount !== priorCount ||
-    !severityCountsEqual(parsed.catalog.severityCounts, priorSeverityCounts) ||
-    !dispositionCountsEqual(parsed.catalog.dispositionCounts, priorDispositionCounts)
-  ) {
-    return yield* ingestFailure(
-      "refresh-metadata-drift",
-      "The existing manifest catalog does not reconcile with the triage ledger. Repair packet counts before refreshing."
-    );
-  }
-  if (
-    !Str.equivalence(parsed.initiative.id, plan.slug) ||
-    !Str.equivalence(parsed.branch, plan.branch) ||
-    !Str.equivalence(parsed.source.repository, plan.repository) ||
-    !Str.equivalence(parsed.source.capturedAt, plan.capturedAt)
-  ) {
-    return yield* ingestFailure(
-      "refresh-metadata-drift",
-      "The existing manifest provenance does not match the incoming full snapshot."
-    );
-  }
   const capturedCount = plan.records.length;
   const dispositionCounts = { ...priorDispositionCounts, untriaged: priorDispositionCounts.untriaged + appendedCount };
   let merged = text;
@@ -645,16 +669,7 @@ const mergeManifest = Effect.fnUntraced(function* (
   if (parsed.statusNote !== undefined) {
     modify(["statusNote"], appendRefreshSummary(parsed.statusNote, priorCount, appendedCount));
   }
-  for (const phaseId of ["P2", "P3"]) {
-    const index = A.findFirstIndex(parsed.phases, (phase) => phase.id === phaseId);
-    if (O.isNone(index)) {
-      return yield* ingestFailure(
-        "refresh-packet-unreadable",
-        `The existing manifest is missing ${phaseId}; refresh cannot reopen validation safely.`
-      );
-    }
-    modify(["phases", index.value, "status"], "in-progress");
-  }
+  merged = yield* reopenManifestPhases(merged, parsed.phases);
   modify(
     ["verificationCommands"],
     A.map(parsed.verificationCommands, (command) =>
@@ -716,12 +731,9 @@ const mergeTriage = Effect.fnUntraced(function* (
   return merged;
 });
 
-const mergeFindingsIndex = Effect.fnUntraced(function* (
+const validatePublishedIndexRows = Effect.fnUntraced(function* (
   text: string,
-  generated: string,
-  plan: CodexPacketPlan,
-  prior: ReadonlyArray<{ readonly id: string }>,
-  appended: ReadonlyArray<CodexFindingRecord>
+  prior: ReadonlyArray<{ readonly id: string }>
 ) {
   for (const finding of prior) {
     if (!Str.includes(`[${finding.id}]`)(text)) {
@@ -731,6 +743,9 @@ const mergeFindingsIndex = Effect.fnUntraced(function* (
       );
     }
   }
+});
+
+const mergeIndexSeverityRows = (text: string, plan: CodexPacketPlan): string => {
   let merged = text;
   for (const severity of CodexFindingSeverity.Options) {
     const count = plan.severityCounts[severity] ?? 0;
@@ -741,6 +756,13 @@ const mergeFindingsIndex = Effect.fnUntraced(function* (
       merged = Str.replace("| --- | ---: |", `| --- | ---: |\n| ${severity} | ${count} |`)(merged);
     }
   }
+  return merged;
+};
+
+const generatedIndexRows = Effect.fnUntraced(function* (
+  generated: string,
+  appended: ReadonlyArray<CodexFindingRecord>
+) {
   const generatedLines = Str.split("\n")(generated);
   const rows: Array<string> = [];
   for (const record of appended) {
@@ -753,29 +775,51 @@ const mergeFindingsIndex = Effect.fnUntraced(function* (
     }
     rows.push(generatedRow.value);
   }
-  if (A.isReadonlyArrayNonEmpty(rows)) {
-    const anchor = Str.includes("\n\n## Current Remediation State")(merged)
-      ? "\n\n## Current Remediation State"
-      : "\n\n## Closeout Mapping";
-    if (!Str.includes(anchor)(merged)) {
-      return yield* ingestFailure(
-        "refresh-packet-unreadable",
-        "findings/INDEX.md has no stable section after its findings table."
-      );
-    }
-    merged = Str.replace(anchor, `\n${A.join(rows, "\n")}${anchor}`)(merged);
+  return rows;
+});
+
+const appendIndexRows = Effect.fnUntraced(function* (text: string, rows: ReadonlyArray<string>) {
+  if (A.isReadonlyArrayEmpty(rows)) {
+    return text;
   }
+  const anchor = Str.includes("\n\n## Current Remediation State")(text)
+    ? "\n\n## Current Remediation State"
+    : "\n\n## Closeout Mapping";
+  if (!Str.includes(anchor)(text)) {
+    return yield* ingestFailure(
+      "refresh-packet-unreadable",
+      "findings/INDEX.md has no stable section after its findings table."
+    );
+  }
+  return Str.replace(anchor, `\n${A.join(rows, "\n")}${anchor}`)(text);
+});
+
+const mergeFindingsIndex = Effect.fnUntraced(function* (
+  text: string,
+  generated: string,
+  plan: CodexPacketPlan,
+  prior: ReadonlyArray<{ readonly id: string }>,
+  appended: ReadonlyArray<CodexFindingRecord>
+) {
+  yield* validatePublishedIndexRows(text, prior);
+  const rows = yield* generatedIndexRows(generated, appended);
+  const merged = yield* appendIndexRows(mergeIndexSeverityRows(text, plan), rows);
   return upsertManagedRefreshBlock(merged, "## Current Remediation State", prior.length, appended.length);
 });
 
-const validateReconciliation = Effect.fnUntraced(function* (plan: CodexPacketPlan, source: CodexRefreshLedgerSource) {
-  const prior = source.ledger.findings;
+const validateRefreshSnapshotCount = Effect.fnUntraced(function* (plan: CodexPacketPlan) {
   if (plan.expectedCount !== plan.records.length) {
     return yield* ingestFailure(
       "refresh-metadata-drift",
       "A refresh requires an exact full snapshot: expectedCount must equal the decoded finding count."
     );
   }
+});
+
+const validateRefreshProvenance = Effect.fnUntraced(function* (
+  plan: CodexPacketPlan,
+  source: CodexRefreshLedgerSource
+) {
   if (
     !Str.equivalence(source.ledger.meta.repository, plan.repository) ||
     !Str.equivalence(source.ledger.meta.capturedAt, plan.capturedAt) ||
@@ -787,29 +831,40 @@ const validateReconciliation = Effect.fnUntraced(function* (plan: CodexPacketPla
       "The incoming snapshot provenance does not match the existing packet. Use the same repository, date, branch, and findings view."
     );
   }
+});
+
+const findingCaptureIsStable = (incoming: CodexFindingRecord, existing: CodexTriageFinding): boolean =>
+  Str.equivalence(incoming.id, existing.id) &&
+  Str.equivalence(incoming.title, existing.title) &&
+  Str.equivalence(incoming.severity, existing.severity) &&
+  Str.equivalence(incoming.codexStatus, existing.codexStatus) &&
+  Str.equivalence(incoming.commit, existing.commit);
+
+const validatePublishedFindings = Effect.fnUntraced(function* (
+  incomingRecords: ReadonlyArray<CodexFindingRecord>,
+  prior: ReadonlyArray<CodexTriageFinding>
+) {
   for (const existing of prior) {
-    const incoming = A.findFirst(plan.records, (record) => Str.equivalence(record.codexId, existing.codexId));
+    const incoming = A.findFirst(incomingRecords, (record) => Str.equivalence(record.codexId, existing.codexId));
     if (O.isNone(incoming)) {
       return yield* ingestFailure(
         "refresh-removal",
         "The incoming snapshot removes at least one previously captured Codex identity. Refresh accepts full supersets only."
       );
     }
-    if (
-      !Str.equivalence(incoming.value.id, existing.id) ||
-      !Str.equivalence(incoming.value.title, existing.title) ||
-      !Str.equivalence(incoming.value.severity, existing.severity) ||
-      !Str.equivalence(incoming.value.codexStatus, existing.codexStatus) ||
-      !Str.equivalence(incoming.value.commit, existing.commit)
-    ) {
+    if (!findingCaptureIsStable(incoming.value, existing)) {
       return yield* ingestFailure(
         "refresh-identity-drift",
         "A previously captured Codex identity changed its stable CSF binding or captured metadata. Refresh refuses identity drift."
       );
     }
   }
-  const priorCodexIds = A.map(prior, (finding) => finding.codexId);
-  const appended = A.filter(plan.records, (record) => !A.contains(priorCodexIds, record.codexId));
+});
+
+const validateAppendedOrdinals = Effect.fnUntraced(function* (
+  appended: ReadonlyArray<CodexFindingRecord>,
+  prior: ReadonlyArray<CodexTriageFinding>
+) {
   const highestReserved = A.reduce(prior, 0, (highest, finding) =>
     Math.max(
       highest,
@@ -824,6 +879,16 @@ const validateReconciliation = Effect.fnUntraced(function* (plan: CodexPacketPla
       "A new finding would reuse or skip a reserved CSF ordinal. New identities must append after the highest published ordinal."
     );
   }
+});
+
+const validateReconciliation = Effect.fnUntraced(function* (plan: CodexPacketPlan, source: CodexRefreshLedgerSource) {
+  const prior = source.ledger.findings;
+  yield* validateRefreshSnapshotCount(plan);
+  yield* validateRefreshProvenance(plan, source);
+  yield* validatePublishedFindings(plan.records, prior);
+  const priorCodexIds = A.map(prior, (finding) => finding.codexId);
+  const appended = A.filter(plan.records, (record) => !A.contains(priorCodexIds, record.codexId));
+  yield* validateAppendedOrdinals(appended, prior);
   return appended;
 });
 
@@ -836,6 +901,313 @@ const documentsForScan = (files: ReadonlyArray<PacketSnapshotFile>): ReadonlyArr
       scan: Str.startsWith("raw/reports/")(file.path) ? "report" : "reject",
     })
   );
+
+const requireGeneratedDocument = Effect.fnUntraced(function* (
+  documents: ReadonlyArray<PacketDocument>,
+  relativePath: string
+) {
+  const document = A.findFirst(documents, (candidate) => Str.equivalence(candidate.path, relativePath));
+  if (O.isNone(document)) {
+    return yield* ingestFailure("refresh-packet-unreadable", `The generated evidence set is missing ${relativePath}.`);
+  }
+  return document.value;
+});
+
+const mergeSnapshotTextFile = Effect.fnUntraced(function* (
+  files: ReadonlyArray<PacketSnapshotFile>,
+  relativePath: string,
+  merge: (contents: string) => Effect.Effect<string, CodexFindingsIngestError>
+) {
+  const existing = yield* requireSnapshotFile(files, relativePath);
+  const contents = yield* merge(existing.contents);
+  return upsertSnapshotFile(files, PacketSnapshotFile.make({ path: relativePath, contents }));
+});
+
+const mergePacketMarkdownDocuments = Effect.fnUntraced(function* (
+  files: ReadonlyArray<PacketSnapshotFile>,
+  plan: CodexPacketPlan,
+  priorCount: number,
+  appendedCount: number,
+  priorSeverity: string,
+  capturedSeverity: string
+) {
+  const capturedCount = plan.records.length;
+  let merged = yield* mergeSnapshotTextFile(files, "README.md", (contents) =>
+    Effect.succeed(
+      mergeManagedPacketDocument(
+        contents,
+        "## Current Phase",
+        priorCount,
+        capturedCount,
+        appendedCount,
+        priorSeverity,
+        capturedSeverity
+      )
+    )
+  );
+  merged = yield* mergeSnapshotTextFile(merged, "GOAL.md", (contents) =>
+    Effect.succeed(
+      mergeManagedPacketDocument(
+        contents,
+        "Rules:",
+        priorCount,
+        capturedCount,
+        appendedCount,
+        priorSeverity,
+        capturedSeverity
+      )
+    )
+  );
+  merged = yield* mergeSnapshotTextFile(merged, "SPEC.md", (contents) =>
+    Effect.succeed(mergeSpec(contents, priorCount, capturedCount, priorSeverity, capturedSeverity))
+  );
+  merged = yield* mergeSnapshotTextFile(merged, "PLAN.md", (contents) =>
+    Effect.succeed(mergePlan(contents, plan, priorCount, appendedCount, priorSeverity, capturedSeverity))
+  );
+  return yield* mergeSnapshotTextFile(merged, "research/SOURCES.md", (contents) =>
+    Effect.succeed(mergeSources(contents, priorCount, capturedCount))
+  );
+});
+
+const mergePacketStateDocuments = Effect.fnUntraced(function* (
+  files: ReadonlyArray<PacketSnapshotFile>,
+  generatedIndex: PacketDocument,
+  plan: CodexPacketPlan,
+  ledger: CodexTriageLedger,
+  appended: ReadonlyArray<CodexFindingRecord>
+) {
+  let merged = yield* mergeSnapshotTextFile(files, "ops/manifest.json", (contents) =>
+    mergeManifest(contents, plan, ledger, appended.length)
+  );
+  merged = yield* mergeSnapshotTextFile(merged, "ops/triage.json", (contents) =>
+    mergeTriage(contents, ledger, plan, appended)
+  );
+  return yield* mergeSnapshotTextFile(merged, "findings/INDEX.md", (contents) =>
+    mergeFindingsIndex(contents, generatedIndex.contents, plan, ledger.findings, appended)
+  );
+});
+
+const appendGeneratedFindingDocuments = Effect.fnUntraced(function* (
+  files: ReadonlyArray<PacketSnapshotFile>,
+  original: ReadonlyArray<PacketSnapshotFile>,
+  documents: ReadonlyArray<PacketDocument>,
+  appended: ReadonlyArray<CodexFindingRecord>
+) {
+  let merged = files;
+  for (const record of appended) {
+    const relativePath = `findings/${record.id}.md`;
+    if (O.isSome(snapshotFile(original, relativePath))) {
+      return yield* ingestFailure(
+        "refresh-identity-drift",
+        `The reserved path ${relativePath} already exists without a matching ledger identity.`
+      );
+    }
+    const generated = yield* requireGeneratedDocument(documents, relativePath);
+    merged = upsertSnapshotFile(
+      merged,
+      PacketSnapshotFile.make({ path: generated.path, contents: generated.contents })
+    );
+  }
+  return merged;
+});
+
+const mergeAppendedPacketFiles = Effect.fnUntraced(function* (
+  original: ReadonlyArray<PacketSnapshotFile>,
+  documents: ReadonlyArray<PacketDocument>,
+  plan: CodexPacketPlan,
+  source: CodexRefreshLedgerSource,
+  appended: ReadonlyArray<CodexFindingRecord>
+) {
+  const generatedIndex = yield* requireGeneratedDocument(documents, "findings/INDEX.md");
+  const priorCount = source.ledger.findings.length;
+  const priorSeverity = severityPhrase(source.ledger.findings);
+  const capturedSeverity = severityPhrase(plan.records);
+  const markdown = yield* mergePacketMarkdownDocuments(
+    original,
+    plan,
+    priorCount,
+    appended.length,
+    priorSeverity,
+    capturedSeverity
+  );
+  const state = yield* mergePacketStateDocuments(markdown, generatedIndex, plan, source.ledger, appended);
+  return yield* appendGeneratedFindingDocuments(state, original, documents, appended);
+});
+
+const mergeRefreshPacketFiles = Effect.fnUntraced(function* (
+  original: ReadonlyArray<PacketSnapshotFile>,
+  documents: ReadonlyArray<PacketDocument>,
+  plan: CodexPacketPlan,
+  source: CodexRefreshLedgerSource,
+  appended: ReadonlyArray<CodexFindingRecord>
+) {
+  if (A.isReadonlyArrayEmpty(appended)) {
+    return original;
+  }
+  return yield* mergeAppendedPacketFiles(original, documents, plan, source, appended);
+});
+
+const appendRawEvidenceFiles = (
+  files: ReadonlyArray<PacketSnapshotFile>,
+  documents: ReadonlyArray<PacketDocument>
+): ReadonlyArray<PacketSnapshotFile> =>
+  pipe(
+    documents,
+    A.filter((document) => Str.startsWith("raw/")(document.path) && !Str.equivalence(document.path, "raw/.gitignore")),
+    A.reduce(files, (merged, document) =>
+      upsertSnapshotFile(merged, PacketSnapshotFile.make({ path: document.path, contents: document.contents }))
+    )
+  );
+
+const changedSnapshotFiles = (
+  original: ReadonlyArray<PacketSnapshotFile>,
+  finalFiles: ReadonlyArray<PacketSnapshotFile>
+): ReadonlyArray<PacketSnapshotFile> =>
+  A.filter(finalFiles, (file) => {
+    const existing = snapshotFile(original, file.path);
+    return O.isNone(existing) || !Str.equivalence(existing.value.contents, file.contents);
+  });
+
+const makeRefreshResult = (
+  slug: string,
+  updatedPaths: ReadonlyArray<string>,
+  committed: boolean,
+  reportedEvidence: ReadonlyArray<string>,
+  reconciliation: CodexFindingsRefreshReconciliation
+) => ({
+  packetPath: `goals/${slug}`,
+  written: A.map(updatedPaths, (relativePath) => `goals/${slug}/${relativePath}`),
+  committed,
+  reportedEvidence,
+  reconciliation,
+});
+
+const stageRefreshSnapshot = Effect.fnUntraced(function* (
+  canonicalRoot: string,
+  stagingRelative: string,
+  files: ReadonlyArray<PacketSnapshotFile>
+) {
+  const path = yield* Path.Path;
+  for (const file of files) {
+    yield* writeFileWithinCanonicalRootAtomically({
+      canonicalRoot,
+      candidate: path.join(stagingRelative, file.path),
+      bytes: encoder.encode(file.contents),
+    }).pipe(Effect.mapError((cause) => packetFailure("staging-failed", `${file.path} could not be staged.`, cause)));
+  }
+});
+
+const assertRefreshSnapshotUnchanged = Effect.fnUntraced(function* (
+  packetDir: string,
+  canonicalPacketDir: string,
+  original: ReadonlyArray<PacketSnapshotFile>
+) {
+  const current = yield* readPacketSnapshot(packetDir, canonicalPacketDir);
+  if (!snapshotsAreEqual(original, current)) {
+    return yield* packetFailure(
+      "packet-changed",
+      "The existing packet changed during refresh staging. Re-run against the current packet."
+    );
+  }
+});
+
+const verifyMovedAsideSnapshot = Effect.fnUntraced(function* (
+  packetDir: string,
+  backupDir: string,
+  original: ReadonlyArray<PacketSnapshotFile>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  // Close the last comparison-to-rename race: a writer could change the
+  // packet after the preflight snapshot but immediately before this move.
+  // Compare the moved-aside bytes before promotion so that version is
+  // restored rather than silently replaced when it differs.
+  const canonicalBackupDir = yield* fs
+    .realPath(backupDir)
+    .pipe(
+      Effect.mapError((cause) => packetFailure("commit-failed", "The moved-aside packet could not be verified.", cause))
+    );
+  const movedAside = yield* readPacketSnapshot(backupDir, canonicalBackupDir);
+  if (!snapshotsAreEqual(original, movedAside)) {
+    yield* fs.rename(backupDir, packetDir).pipe(Effect.ignore);
+    return yield* packetFailure(
+      "packet-changed",
+      "The existing packet changed during refresh promotion. Re-run against the current packet."
+    );
+  }
+});
+
+const promoteRefreshSnapshot = Effect.fnUntraced(function* (
+  packetDir: string,
+  stagingDir: string,
+  backupDir: string,
+  original: ReadonlyArray<PacketSnapshotFile>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs
+    .rename(packetDir, backupDir)
+    .pipe(
+      Effect.mapError((cause) => packetFailure("commit-failed", "The existing packet could not be moved aside.", cause))
+    );
+  yield* verifyMovedAsideSnapshot(packetDir, backupDir, original);
+  const restoreThenFail = Effect.fnUntraced(function* (cause: unknown) {
+    yield* fs.rename(backupDir, packetDir).pipe(Effect.ignore);
+    return yield* packetFailure("commit-failed", "The staged refresh could not be promoted.", cause);
+  });
+  yield* fs.rename(stagingDir, packetDir).pipe(Effect.catch(restoreThenFail));
+  yield* fs
+    .remove(backupDir, { recursive: true, force: true })
+    .pipe(
+      Effect.mapError((cause) =>
+        packetFailure("commit-failed", "The verified prior-packet backup could not be removed.", cause)
+      )
+    );
+});
+
+const cleanupRefreshStaging = Effect.fnUntraced(function* (packetDir: string, stagingDir: string, backupDir: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const backupExists = yield* fs.exists(backupDir).pipe(Effect.orElseSucceed(() => false));
+  const packetExists = yield* fs.exists(packetDir).pipe(Effect.orElseSucceed(() => false));
+  if (backupExists && !packetExists) {
+    // The backup is the only surviving copy in this state. Restore it or
+    // leave it in place for recovery; cleanup must never delete it.
+    yield* fs.rename(backupDir, packetDir).pipe(Effect.ignore);
+  }
+  yield* fs.remove(stagingDir, { recursive: true, force: true }).pipe(Effect.ignore);
+});
+
+const commitRefreshSnapshot = Effect.fnUntraced(function* (
+  canonicalRoot: string,
+  canonicalPacketDir: string,
+  packetDir: string,
+  slug: string,
+  original: ReadonlyArray<PacketSnapshotFile>,
+  finalFiles: ReadonlyArray<PacketSnapshotFile>,
+  updatedPaths: ReadonlyArray<string>,
+  reportedEvidence: ReadonlyArray<string>,
+  reconciliation: CodexFindingsRefreshReconciliation
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const goalsDir = path.join(canonicalRoot, "goals");
+  const stagingDir = yield* fs
+    .makeTempDirectory({ directory: goalsDir, prefix: `.tmp-${slug}-refresh-` })
+    .pipe(
+      Effect.mapError((cause) =>
+        packetFailure("staging-failed", "A refresh staging directory could not be created.", cause)
+      )
+    );
+  const backupDir = `${stagingDir}-previous`;
+  const stagingRelative = path.relative(canonicalRoot, stagingDir);
+  return yield* Effect.onError(
+    Effect.gen(function* () {
+      yield* stageRefreshSnapshot(canonicalRoot, stagingRelative, finalFiles);
+      yield* assertRefreshSnapshotUnchanged(packetDir, canonicalPacketDir, original);
+      yield* promoteRefreshSnapshot(packetDir, stagingDir, backupDir, original);
+      return makeRefreshResult(slug, updatedPaths, true, reportedEvidence, reconciliation);
+    }),
+    () => cleanupRefreshStaging(packetDir, stagingDir, backupDir)
+  );
+});
 
 /**
  * Reconcile and atomically promote a full-snapshot refresh.
@@ -862,8 +1234,6 @@ export const refreshCodexFindingsPacket = Effect.fnUntraced(function* (options: 
   readonly documents: ReadonlyArray<PacketDocument>;
   readonly dryRun: boolean;
 }) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const { canonicalPacketDir, canonicalRoot, packetDir } = yield* ensurePacketDirectory(options.repoRoot, options.slug);
   const original = yield* readPacketSnapshot(packetDir, canonicalPacketDir);
   const triageFile = yield* requireSnapshotFile(original, "ops/triage.json");
@@ -876,93 +1246,16 @@ export const refreshCodexFindingsPacket = Effect.fnUntraced(function* (options: 
   const appended = yield* validateReconciliation(options.plan, options.source);
   const priorCount = options.source.ledger.findings.length;
   const capturedCount = options.plan.records.length;
-  let finalFiles: ReadonlyArray<PacketSnapshotFile> = original;
-
-  if (A.isReadonlyArrayNonEmpty(appended)) {
-    const generatedIndex = A.findFirst(options.documents, (document) => document.path === "findings/INDEX.md");
-    if (O.isNone(generatedIndex)) {
-      return yield* ingestFailure(
-        "refresh-packet-unreadable",
-        "The generated evidence set is missing findings/INDEX.md."
-      );
-    }
-    const priorSeverity = severityPhrase(options.source.ledger.findings);
-    const capturedSeverity = severityPhrase(options.plan.records);
-    const mergeTextFile = Effect.fnUntraced(function* (
-      relativePath: string,
-      merge: (contents: string) => Effect.Effect<string, CodexFindingsIngestError>
-    ) {
-      const existing = yield* requireSnapshotFile(finalFiles, relativePath);
-      const contents = yield* merge(existing.contents);
-      finalFiles = upsertSnapshotFile(finalFiles, PacketSnapshotFile.make({ path: relativePath, contents }));
-    });
-    yield* mergeTextFile("README.md", (contents) =>
-      Effect.succeed(mergeReadme(contents, priorCount, capturedCount, appended.length, priorSeverity, capturedSeverity))
-    );
-    yield* mergeTextFile("GOAL.md", (contents) =>
-      Effect.succeed(mergeGoal(contents, priorCount, capturedCount, appended.length, priorSeverity, capturedSeverity))
-    );
-    yield* mergeTextFile("SPEC.md", (contents) =>
-      Effect.succeed(mergeSpec(contents, priorCount, capturedCount, priorSeverity, capturedSeverity))
-    );
-    yield* mergeTextFile("PLAN.md", (contents) =>
-      Effect.succeed(mergePlan(contents, options.plan, priorCount, appended.length, priorSeverity, capturedSeverity))
-    );
-    yield* mergeTextFile("research/SOURCES.md", (contents) =>
-      Effect.succeed(mergeSources(contents, priorCount, capturedCount))
-    );
-    yield* mergeTextFile("ops/manifest.json", (contents) =>
-      mergeManifest(contents, options.plan, options.source.ledger, appended.length)
-    );
-    yield* mergeTextFile("ops/triage.json", (contents) =>
-      mergeTriage(contents, options.source.ledger, options.plan, appended)
-    );
-    yield* mergeTextFile("findings/INDEX.md", (contents) =>
-      mergeFindingsIndex(
-        contents,
-        generatedIndex.value.contents,
-        options.plan,
-        options.source.ledger.findings,
-        appended
-      )
-    );
-    for (const record of appended) {
-      const relativePath = `findings/${record.id}.md`;
-      if (O.isSome(snapshotFile(original, relativePath))) {
-        return yield* ingestFailure(
-          "refresh-identity-drift",
-          `The reserved path ${relativePath} already exists without a matching ledger identity.`
-        );
-      }
-      const generated = A.findFirst(options.documents, (document) => document.path === relativePath);
-      if (O.isNone(generated)) {
-        return yield* ingestFailure(
-          "refresh-packet-unreadable",
-          `The generated evidence set is missing ${relativePath}.`
-        );
-      }
-      finalFiles = upsertSnapshotFile(
-        finalFiles,
-        PacketSnapshotFile.make({ path: generated.value.path, contents: generated.value.contents })
-      );
-    }
-  }
-
-  for (const document of A.filter(
+  const mergedFiles = yield* mergeRefreshPacketFiles(
+    original,
     options.documents,
-    (document) => Str.startsWith("raw/")(document.path) && !Str.equivalence(document.path, "raw/.gitignore")
-  )) {
-    finalFiles = upsertSnapshotFile(
-      finalFiles,
-      PacketSnapshotFile.make({ path: document.path, contents: document.contents })
-    );
-  }
-
+    options.plan,
+    options.source,
+    appended
+  );
+  const finalFiles = appendRawEvidenceFiles(mergedFiles, options.documents);
   const reportedEvidence = yield* assertPacketDocumentsClean(documentsForScan(finalFiles));
-  const changed = A.filter(finalFiles, (file) => {
-    const existing = snapshotFile(original, file.path);
-    return O.isNone(existing) || !Str.equivalence(existing.value.contents, file.contents);
-  });
+  const changed = changedSnapshotFiles(original, finalFiles);
   const updatedPaths = A.map(changed, (file) => file.path);
   const reconciliation = CodexFindingsRefreshReconciliation.make({
     status: A.isReadonlyArrayEmpty(appended) ? "no-new-findings" : "updated",
@@ -974,101 +1267,18 @@ export const refreshCodexFindingsPacket = Effect.fnUntraced(function* (options: 
   });
 
   if (options.dryRun || A.isReadonlyArrayEmpty(changed)) {
-    return {
-      packetPath: `goals/${options.slug}`,
-      written: A.map(updatedPaths, (relativePath) => `goals/${options.slug}/${relativePath}`),
-      committed: false,
-      reportedEvidence,
-      reconciliation,
-    };
+    return makeRefreshResult(options.slug, updatedPaths, false, reportedEvidence, reconciliation);
   }
-
-  const goalsDir = path.join(canonicalRoot, "goals");
-  const stagingDir = yield* fs
-    .makeTempDirectory({ directory: goalsDir, prefix: `.tmp-${options.slug}-refresh-` })
-    .pipe(
-      Effect.mapError((cause) =>
-        packetFailure("staging-failed", "A refresh staging directory could not be created.", cause)
-      )
-    );
-  const backupDir = `${stagingDir}-previous`;
-  const stagingRelative = path.relative(canonicalRoot, stagingDir);
-
-  return yield* Effect.onError(
-    Effect.gen(function* () {
-      for (const file of finalFiles) {
-        yield* writeFileWithinCanonicalRootAtomically({
-          canonicalRoot,
-          candidate: path.join(stagingRelative, file.path),
-          bytes: encoder.encode(file.contents),
-        }).pipe(
-          Effect.mapError((cause) => packetFailure("staging-failed", `${file.path} could not be staged.`, cause))
-        );
-      }
-      const current = yield* readPacketSnapshot(packetDir, canonicalPacketDir);
-      if (!snapshotsAreEqual(original, current)) {
-        return yield* packetFailure(
-          "packet-changed",
-          "The existing packet changed during refresh staging. Re-run against the current packet."
-        );
-      }
-      yield* fs
-        .rename(packetDir, backupDir)
-        .pipe(
-          Effect.mapError((cause) =>
-            packetFailure("commit-failed", "The existing packet could not be moved aside.", cause)
-          )
-        );
-      // Close the last comparison-to-rename race: a writer could change the
-      // packet after the preflight snapshot but immediately before this move.
-      // Compare the moved-aside bytes before promotion so that version is
-      // restored rather than silently replaced when it differs.
-      const canonicalBackupDir = yield* fs
-        .realPath(backupDir)
-        .pipe(
-          Effect.mapError((cause) =>
-            packetFailure("commit-failed", "The moved-aside packet could not be verified.", cause)
-          )
-        );
-      const movedAside = yield* readPacketSnapshot(backupDir, canonicalBackupDir);
-      if (!snapshotsAreEqual(original, movedAside)) {
-        yield* fs.rename(backupDir, packetDir).pipe(Effect.ignore);
-        return yield* packetFailure(
-          "packet-changed",
-          "The existing packet changed during refresh promotion. Re-run against the current packet."
-        );
-      }
-      const restoreThenFail = Effect.fnUntraced(function* (cause: unknown) {
-        yield* fs.rename(backupDir, packetDir).pipe(Effect.ignore);
-        return yield* packetFailure("commit-failed", "The staged refresh could not be promoted.", cause);
-      });
-      yield* fs.rename(stagingDir, packetDir).pipe(Effect.catch(restoreThenFail));
-      yield* fs
-        .remove(backupDir, { recursive: true, force: true })
-        .pipe(
-          Effect.mapError((cause) =>
-            packetFailure("commit-failed", "The verified prior-packet backup could not be removed.", cause)
-          )
-        );
-      return {
-        packetPath: `goals/${options.slug}`,
-        written: A.map(updatedPaths, (relativePath) => `goals/${options.slug}/${relativePath}`),
-        committed: true,
-        reportedEvidence,
-        reconciliation,
-      };
-    }),
-    () =>
-      Effect.gen(function* () {
-        const backupExists = yield* fs.exists(backupDir).pipe(Effect.orElseSucceed(() => false));
-        const packetExists = yield* fs.exists(packetDir).pipe(Effect.orElseSucceed(() => false));
-        if (backupExists && !packetExists) {
-          // The backup is the only surviving copy in this state. Restore it or
-          // leave it in place for recovery; cleanup must never delete it.
-          yield* fs.rename(backupDir, packetDir).pipe(Effect.ignore);
-        }
-        yield* fs.remove(stagingDir, { recursive: true, force: true }).pipe(Effect.ignore);
-      })
+  return yield* commitRefreshSnapshot(
+    canonicalRoot,
+    canonicalPacketDir,
+    packetDir,
+    options.slug,
+    original,
+    finalFiles,
+    updatedPaths,
+    reportedEvidence,
+    reconciliation
   );
 });
 
