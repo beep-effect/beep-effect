@@ -19437,15 +19437,15 @@
     },
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
-      "lines": 71.53,
-      "statements": 70.26,
-      "branches": 64.28,
-      "functions": 60.47,
+      "lines": 71.74,
+      "statements": 70.46,
+      "branches": 64.48,
+      "functions": 60.73,
       "uncovered": {
-        "lines": 674,
-        "statements": 752,
-        "branches": 180,
-        "functions": 453
+        "lines": 669,
+        "statements": 747,
+        "branches": 179,
+        "functions": 450
       },
       "files": {
         "apps/professional-desktop/src/App.tsx": {
@@ -20097,15 +20097,15 @@
           }
         },
         "apps/professional-desktop/src/transport/TauriIpcSocket.ts": {
-          "lines": 35.29,
-          "statements": 32.25,
-          "branches": 0,
-          "functions": 2.04,
+          "lines": 41.17,
+          "statements": 37.63,
+          "branches": 10,
+          "functions": 8.16,
           "uncovered": {
-            "lines": 55,
-            "statements": 63,
-            "branches": 10,
-            "functions": 48
+            "lines": 50,
+            "statements": 58,
+            "branches": 9,
+            "functions": 45
           }
         },
         "apps/professional-desktop/src/workspace/ProfessionalWorkspace.ts": {
