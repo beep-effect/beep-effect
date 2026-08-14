@@ -63,12 +63,17 @@ const runnerToolbeltPostInstall = `(
 // a wrapper execs the root-owned installer through a sudoers entry scoped to
 // exactly that one non-writable script. Re-invocation from a malicious step is
 // harmless — the installer is idempotent and only re-asserts the DROP. Every
-// wiring step fails OPEN (missing runner dir -> hook unarmed -> the Gate E
-// token-PUT probe fails the deploy), never into runner-start-failed; the whole
-// snippet stays subshell-scoped for the same inline-user-data reason as the
-// toolbelt above.
+// firewall prerequisite and hook invocation fails CLOSED before job steps can
+// run. A missing runner directory leaves the hook visibly unarmed for Gate E
+// to reject during deployment; the whole snippet stays subshell-scoped for the
+// same inline-user-data reason as the toolbelt above.
 const imdsJobHookPostInstall = `(
   set -eu
+  dnf install -y iptables-nft
+  command -v iptables >/dev/null 2>&1
+  iptables --version | grep -Fq 'nf_tables'
+  iptables -m owner --help >/dev/null 2>&1
+  logger -t beep-imds-hook "verified iptables-nft with OWNER match support"
   install -d -m 0755 /opt/beep
   cat > /opt/beep/imds-job-started.sh <<'BEEP_IMDS_DROP'
 #!/usr/bin/env bash
@@ -339,14 +344,16 @@ type CiFleetControllerArgs = {
  * uid (so the DROP lands per-job, when the agent no longer needs IMDS), and
  * root's config-time IMDS for JIT registration stays open (uid-scoped rule).
  * Privilege transition is explicit — the hook wrapper execs the root-owned
- * installer through a sudoers entry scoped to exactly that script — and the
- * wiring fails OPEN (unarmed hook, caught by the Gate E IMDSv2 token-PUT
- * probe, which must FAIL from a job step) rather than into
- * `runner-start-failed`. Deploys are gated on Gate E plus the full
- * guest-isolation red-team re-run on a live ephemeral worker; the always-on
- * layers remain IMDSv2 hop limit 1, the permissions-boundary-capped instance
- * role, the ephemeral one-job-one-VM lifecycle, and JIT config that keeps no
- * registration token on the instance.
+ * installer through a sudoers entry scoped to exactly that script. Boot first
+ * installs `iptables-nft` and verifies the nft backend plus OWNER match before
+ * writing or wiring the hook. The installer and wrapper propagate failures so
+ * GitHub's job-start hook fails closed before any job step can run. A missing
+ * runner directory leaves the hook unarmed for the Gate E IMDSv2 token-PUT
+ * probe to reject during deployment; no live deployment proof is claimed here.
+ * Deploys are gated on Gate E plus the full guest-isolation red-team re-run on
+ * a live ephemeral worker; the always-on layers remain IMDSv2 hop limit 1, the
+ * permissions-boundary-capped instance role, the ephemeral one-job-one-VM
+ * lifecycle, and JIT config that keeps no registration token on the instance.
  *
  * Reliability semantics for the one-job-one-VM fleet: `job_retry` rescues a
  * job whose runner died between launch and pickup (spot reclaim, boot
