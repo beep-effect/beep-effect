@@ -69,10 +69,15 @@ const runnerToolbeltPostInstall = `(
 // toolbelt above.
 const imdsJobHookPostInstall = `(
   set -eu
+  dnf install -y iptables-nft
   install -d -m 0755 /opt/beep
   cat > /opt/beep/imds-job-started.sh <<'BEEP_IMDS_DROP'
 #!/usr/bin/env bash
 set -eu
+if ! command -v iptables >/dev/null 2>&1; then
+  logger -t beep-imds-hook "iptables unavailable; per-job IMDS DROP NOT installed"
+  exit 0
+fi
 runner_uid="$(id -u ${runnerRunAs})"
 iptables -C OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "\${runner_uid}" -j DROP 2>/dev/null \\
   || iptables -A OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "\${runner_uid}" -j DROP
