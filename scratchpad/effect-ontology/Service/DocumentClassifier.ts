@@ -9,7 +9,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Layer, Schema } from "effect";
 import * as A from "effect/Array";
@@ -81,7 +81,7 @@ export const BatchClassificationResponse = Schema.Struct({
   classifications: Schema.Array(
     Schema.Struct({
       /** Document index in the batch (0-based) */
-      index: Schema.Finite,
+      index: NonNegativeInt,
       /** Classification result */
       classification: DocumentClassification,
     })
@@ -114,7 +114,7 @@ export const ClassifyBatchInput = Schema.Struct({
   documents: Schema.Array(
     Schema.Struct({
       /** Index for result correlation */
-      index: Schema.Finite,
+      index: NonNegativeInt,
       /** Document text preview */
       preview: Schema.String,
       /** Content type hint */

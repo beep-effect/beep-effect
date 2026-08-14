@@ -9,11 +9,8 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
-import {
-  ShaclSeverity,
-  ShaclValidationResult,
-  ShaclValidationViolation,
-} from "@beep/semantic-web/services/shacl-validation";
+import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import { ShaclValidationResult } from "@beep/semantic-web/services/shacl-validation";
 import { flow } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -25,98 +22,6 @@ import * as S from "effect/Schema";
 import type { FastCheck } from "effect/testing";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Shacl");
-
-/**
- * Canonical SHACL severity schema from `@beep/semantic-web`.
- *
- * @remarks
- * Severity classifies a result but does not change whether SHACL validation
- * produced that result. Workflow failure behavior belongs to
- * {@link ValidationPolicy}.
- *
- * @example
- * ```ts
- * import { ShaclViolationSeverity } from "@effect-ontology/Schema/Shacl.ts"
- *
- * console.log(ShaclViolationSeverity.is("warning")) // true
- * ```
- *
- * @see {@link https://www.w3.org/TR/shacl/#severity | SHACL severity}
- * @category schemas
- * @since 0.0.0
- */
-export const ShaclViolationSeverity = ShaclSeverity;
-
-/**
- * Runtime value accepted by {@link ShaclViolationSeverity}.
- *
- * @example
- * ```ts
- * import type { ShaclViolationSeverity } from "@effect-ontology/Schema/Shacl.ts"
- *
- * const severity: ShaclViolationSeverity = "info"
- * console.log(severity) // "info"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ShaclViolationSeverity = ShaclSeverity;
-
-/**
- * Normalized SHACL validation result discriminated by standard severity.
- *
- * @remarks
- * `focusNode`, `severity`, and `sourceConstraintComponent` preserve the
- * mandatory SHACL result fields. The application normalizes the optional
- * SHACL message collection to one required, non-empty diagnostic.
- *
- * @example
- * ```ts
- * import * as Rdf from "@beep/rdf/Rdf"
- * import { ShaclViolation } from "@effect-ontology/Schema/Shacl.ts"
- *
- * const result = ShaclViolation.make({
- *   focusNode: "https://example.com/alice",
- *   path: Rdf.makeNamedNode("https://schema.org/name"),
- *   message: "Expected at least one value.",
- *   severity: "violation"
- * })
- *
- * console.log(result.severity) // "violation"
- * ```
- *
- * @invariant The discriminator is one of the standard SHACL severities, and
- * every result identifies a non-empty focus node, message, and source
- * constraint component.
- * @see {@link https://www.w3.org/TR/shacl/#validation-result | SHACL validation result}
- * @category models
- * @since 0.0.0
- */
-export const ShaclViolation = ShaclValidationViolation;
-
-/**
- * Runtime value decoded by {@link ShaclViolation}.
- *
- * @example
- * ```ts
- * import * as Rdf from "@beep/rdf/Rdf"
- * import { ShaclViolation, type ShaclViolation as ShaclViolationValue } from "@effect-ontology/Schema/Shacl.ts"
- *
- * const result: ShaclViolationValue = ShaclViolation.make({
- *   focusNode: "https://example.com/alice",
- *   path: Rdf.makeNamedNode("https://schema.org/name"),
- *   message: "The preferred label is missing.",
- *   severity: "info"
- * })
- *
- * console.log(result.severity) // "info"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ShaclViolation = ShaclValidationViolation;
 
 const isValidValidationDuration = P.every([Duration.isFinite, Duration.isGreaterThanOrEqualTo(Duration.zero)]);
 const decodeValidationDuration = S.decodeUnknownResult(S.DurationFromMillis);
@@ -313,7 +218,7 @@ export const ValidationPolicy = ValidationPolicyFields.annotate({
   }),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics((schema) => ({
-    shouldFail: dual(2, (policy: typeof schema.Type, results: ReadonlyArray<ShaclViolation>): boolean =>
+    shouldFail: dual(2, (policy: typeof schema.Type, results: ReadonlyArray<ShaclValidationViolation>): boolean =>
       Bool.and(
         Bool.not(policy.logOnly),
         Bool.or(

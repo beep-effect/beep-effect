@@ -32,9 +32,12 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { NonNegNum } from "@beep/schema/Number";
+import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from "effect";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -42,14 +45,14 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
-import * as N3 from "n3";
 import type { Agent } from "../../Domain/Model/Agent.ts";
 import { AgentId, AgentMetadata, ValidationResult } from "../../Domain/Model/Agent.ts";
 import type { OntologyContext } from "../../Domain/Model/Ontology.ts";
 import { ConfigService, ConfigServiceDefault } from "../Config.ts";
 import { generateObjectWithFeedback } from "../GenerateWithFeedback.ts";
 import type { RdfStore } from "../Rdf.ts";
-import type { ShaclValidationReport, ShaclViolation } from "../Shacl.ts";
+import { rdfStoreAddQuad, rdfStoreQuads, rdfStoreRemoveQuads } from "../Rdf.ts";
+import type { ShaclValidationReport } from "../Shacl.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Agent/CorrectorAgent");
 
@@ -65,7 +68,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Agent/CorrectorAgent");
  */
 export class CorrectionError extends Data.TaggedError("CorrectionError")<{
   readonly message: string;
-  readonly violation: ShaclViolation;
+  readonly violation: ShaclValidationViolation;
   readonly strategy: CorrectionStrategy;
   readonly cause?: unknown;
 }> {}
@@ -186,7 +189,7 @@ export class CorrectionResult extends Schema.Class<CorrectionResult>("Correction
   /**
    * The original violation
    */
-  violation: Schema.Any, // ShaclViolation
+  violation: Schema.Any, // ShaclValidationViolation
 
   /**
    * The correction that was generated
@@ -321,7 +324,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
       ),
       Schedule.jittered
     );
-    const classifyViolation = (violation: ShaclViolation): CorrectionStrategy => {
+    const classifyViolation = (violation: ShaclValidationViolation): CorrectionStrategy => {
       const message = Str.toLowerCase(violation.message);
       if (
         Str.includes("mincount")(message) ||
@@ -349,7 +352,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
       return "skip";
     };
     const buildCorrectionPrompt = (
-      violation: ShaclViolation,
+      violation: ShaclValidationViolation,
       strategy: CorrectionStrategy,
       entityContext: string,
       ontologyContext: OntologyContext
@@ -441,7 +444,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
       return parts.filter((p) => p !== "").join("\n");
     };
     const getEntityContext = (store: RdfStore, focusNode: string): string => {
-      const quads = store._store.getQuads(N3.DataFactory.namedNode(focusNode), null, null, null);
+      const quads = rdfStoreQuads(store, { subject: makeNamedNode(focusNode) });
       if (quads.length === 0) return "";
       const lines = quads.map((q) => {
         const obj = q.object.termType === "Literal" ? `"${q.object.value}"` : `<${q.object.value}>`;
@@ -450,7 +453,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
       return lines.join("\n");
     };
     const generateCorrection = Effect.fn("CorrectorAgent.generateCorrection")(function* (
-      violation: ShaclViolation,
+      violation: ShaclValidationViolation,
       store: RdfStore,
       ontologyContext: OntologyContext
     ): Effect.fn.Return<Correction, CorrectionError> {
@@ -511,7 +514,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
           });
           return;
         }
-        const focusNode = N3.DataFactory.namedNode(correction.focusNode);
+        const focusNode = makeNamedNode(correction.focusNode);
         switch (correction.strategy) {
           case "generate-value":
           case "coerce-datatype":
@@ -519,16 +522,13 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
             if (O.isNone(correction.newValue) || O.isNone(correction.path)) {
               return;
             }
-            const predicate = N3.DataFactory.namedNode(correction.path.value);
+            const predicate = makeNamedNode(correction.path.value);
             if (O.isSome(correction.originalValue)) {
-              const oldQuads = store._store.getQuads(focusNode, predicate, null, null);
-              store._store.removeQuads(oldQuads);
+              const oldQuads = rdfStoreQuads(store, { subject: focusNode, predicate });
+              rdfStoreRemoveQuads(store, oldQuads);
             }
-            const newObject =
-              typeof correction.newValue.value === "string"
-                ? N3.DataFactory.literal(correction.newValue.value)
-                : N3.DataFactory.literal(String(correction.newValue.value));
-            store._store.addQuad(focusNode, predicate, newObject);
+            const newObject = makeLiteral(`${correction.newValue.value}`, XSD_STRING.value);
+            rdfStoreAddQuad(store, makeQuad(focusNode, predicate, newObject));
             yield* Effect.logInfo("CorrectorAgent: Applied value correction", {
               focusNode: correction.focusNode,
               path: correction.path,
@@ -538,11 +538,11 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
           }
           case "reclassify-entity": {
             if (O.isNone(correction.newType)) return;
-            const typePredicate = N3.DataFactory.namedNode(RDF_TYPE.value);
-            const oldTypeQuads = store._store.getQuads(focusNode, typePredicate, null, null);
-            store._store.removeQuads(oldTypeQuads);
-            const newTypeNode = N3.DataFactory.namedNode(correction.newType.value);
-            store._store.addQuad(focusNode, typePredicate, newTypeNode);
+            const typePredicate = makeNamedNode(RDF_TYPE.value);
+            const oldTypeQuads = rdfStoreQuads(store, { subject: focusNode, predicate: typePredicate });
+            rdfStoreRemoveQuads(store, oldTypeQuads);
+            const newTypeNode = makeNamedNode(correction.newType.value);
+            rdfStoreAddQuad(store, makeQuad(focusNode, typePredicate, newTypeNode));
             yield* Effect.logInfo("CorrectorAgent: Applied reclassification", {
               focusNode: correction.focusNode,
               newType: correction.newType,
@@ -573,7 +573,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
         )
       );
     const correct = Effect.fn("CorrectorAgent.correct")(function* (
-      violation: ShaclViolation,
+      violation: ShaclValidationViolation,
       store: RdfStore,
       ontologyContext: OntologyContext
     ): Effect.fn.Return<CorrectionResult, CorrectionError | CorrectionApplicationError> {

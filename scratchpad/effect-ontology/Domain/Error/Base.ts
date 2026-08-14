@@ -59,11 +59,7 @@ export const ErrorMessage = S.NonEmptyString.annotate({
 export type ErrorMessage = typeof ErrorMessage.Type;
 
 /**
- * Canonical URL string with an explicit arbitrary for error metadata.
- *
- * @remarks
- * This preserves the repository's `URLStr` validation and supplies the
- * generator annotation needed by error-family property tests.
+ * Canonical URL string used as error metadata.
  *
  * @example
  * ```ts
@@ -76,13 +72,7 @@ export type ErrorMessage = typeof ErrorMessage.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ErrorUrl = S.declare(URLStr.is).pipe(
-  $I.annoteSchema("ErrorUrl", {
-    description: "Canonical URL string used as ontology-error context.",
-    toArbitrary: () => (fc) => fc.webUrl().map(URLStr.make),
-  }),
-  SchemaUtils.withCodecStatics
-);
+export const ErrorUrl = URLStr;
 
 /**
  * Runtime URL accepted by {@link ErrorUrl}.
@@ -98,7 +88,7 @@ export const ErrorUrl = S.declare(URLStr.is).pipe(
  * @category type-level
  * @since 0.0.0
  */
-export type ErrorUrl = typeof ErrorUrl.Type;
+export type ErrorUrl = URLStr;
 
 /**
  * Optional canonical URL normalized from an absent object key.
@@ -150,7 +140,7 @@ export const OptionalErrorUrl = S.OptionFromNullishOr(ErrorUrl)
 export type OptionalErrorUrl = typeof OptionalErrorUrl.Type;
 
 /**
- * Canonical RDF IRI with an explicit arbitrary for error metadata.
+ * Canonical RDF IRI used as error metadata.
  *
  * @example
  * ```ts
@@ -163,13 +153,7 @@ export type OptionalErrorUrl = typeof OptionalErrorUrl.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ErrorIri = S.declare(IRI.is).pipe(
-  $I.annoteSchema("ErrorIri", {
-    description: "Canonical RFC 3987 IRI used as ontology-error context.",
-    toArbitrary: () => (fc) => fc.webUrl().map(IRI.make),
-  }),
-  SchemaUtils.withCodecStatics
-);
+export const ErrorIri = IRI;
 
 /**
  * Runtime IRI accepted by {@link ErrorIri}.
@@ -185,7 +169,7 @@ export const ErrorIri = S.declare(IRI.is).pipe(
  * @category type-level
  * @since 0.0.0
  */
-export type ErrorIri = typeof ErrorIri.Type;
+export type ErrorIri = IRI;
 
 /**
  * Optional canonical RDF IRI normalized from an absent object key.
@@ -237,7 +221,7 @@ export const OptionalErrorIri = S.OptionFromNullishOr(ErrorIri)
 export type OptionalErrorIri = typeof OptionalErrorIri.Type;
 
 /**
- * Canonical RFC 3986 URI with an explicit arbitrary for error metadata.
+ * Canonical RFC 3986 URI used as error metadata.
  *
  * @example
  * ```ts
@@ -250,13 +234,7 @@ export type OptionalErrorIri = typeof OptionalErrorIri.Type;
  * @category errors
  * @since 0.0.0
  */
-export const ErrorUri = S.declare(URI.is).pipe(
-  $I.annoteSchema("ErrorUri", {
-    description: "Canonical RFC 3986 URI used as ontology-error context.",
-    toArbitrary: () => (fc) => fc.webUrl().map(URI.make),
-  }),
-  SchemaUtils.withCodecStatics
-);
+export const ErrorUri = URI;
 
 /**
  * Runtime URI accepted by {@link ErrorUri}.
@@ -272,13 +250,10 @@ export const ErrorUri = S.declare(URI.is).pipe(
  * @category type-level
  * @since 0.0.0
  */
-export type ErrorUri = typeof ErrorUri.Type;
-
-const decodeFilePath = S.decodeUnknownSync(FilePath);
-const isFilePath = FilePath.pipe(S.is);
+export type ErrorUri = URI;
 
 /**
- * Canonical file path with an explicit arbitrary for error metadata.
+ * Canonical file path used as error metadata.
  *
  * @example
  * ```ts
@@ -292,14 +267,7 @@ const isFilePath = FilePath.pipe(S.is);
  * @category errors
  * @since 0.0.0
  */
-export const ErrorFilePath = S.declare(isFilePath).pipe(
-  $I.annoteSchema("ErrorFilePath", {
-    description: "Canonical filesystem path used as ontology-error context.",
-    toArbitrary: () => (fc) =>
-      fc.constantFrom("data/ontology.ttl", "/tmp/ontology.ttl", "fixtures/embeddings.bin").map(decodeFilePath),
-  }),
-  SchemaUtils.withCodecStatics
-);
+export const ErrorFilePath = FilePath;
 
 /**
  * Runtime path accepted by {@link ErrorFilePath}.
@@ -315,7 +283,7 @@ export const ErrorFilePath = S.declare(isFilePath).pipe(
  * @category type-level
  * @since 0.0.0
  */
-export type ErrorFilePath = typeof ErrorFilePath.Type;
+export type ErrorFilePath = FilePath;
 
 const ErrorDefect = S.Defect({ includeStack: true });
 

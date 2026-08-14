@@ -22,7 +22,7 @@
  */
 export * from "./Constants.ts";
 /**
- * Canonical RDF/JS terms, datasets, prefix maps, and graph-free triples.
+ * Canonical RDF/JS terms and constructors plus graph-free triples.
  *
  * @example
  * ```ts

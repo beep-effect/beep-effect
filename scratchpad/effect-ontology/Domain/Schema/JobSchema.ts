@@ -11,9 +11,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { HttpsUrl, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { ContentHash, OntologyName, SecureHttpUrl } from "../Identity.ts";
+import { ContentHash, OntologyName } from "../Identity.ts";
 import { EntityId } from "../Model/shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/JobSchema");
@@ -115,7 +115,7 @@ const BackgroundJobDefinition = S.TaggedUnion({
   WebhookJob: {
     id: BackgroundJobId,
     createdAt: S.DateTimeUtcFromString,
-    url: SecureHttpUrl,
+    url: HttpsUrl,
     eventType: S.NonEmptyString,
     payload: S.Json,
   },

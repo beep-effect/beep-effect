@@ -18,12 +18,15 @@ import * as Clock from "effect/Clock";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
+import { ContentHash } from "../Domain/Identity.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
 import { IRI, makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
-import type { AssertionId, AssertionStatus } from "../Domain/Schema/KnowledgeModel.ts";
+import type { AssertionStatus } from "../Domain/Schema/KnowledgeModel.ts";
+import { AssertionId } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ClaimRow } from "../Repository/schema.ts";
+import { sha256 } from "../Utils/Hash.ts";
 import { RdfBuilder } from "./Rdf.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Assertion");
@@ -243,7 +246,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         .toString(36)
         .slice(0, 6);
       const uniqueSuffix = `${(yield* Clock.currentTimeMillis).toString(36)}${randomSuffix}`;
-      const id = `assertion-${uniqueSuffix}` as AssertionId;
+      const id = AssertionId.fromContentHash(ContentHash.make(yield* sha256(uniqueSuffix)));
       const assertionRow: AssertionRow = {
         id,
         subjectIri,
@@ -269,7 +272,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
      */
     const getAssertion = Effect.fn("getAssertion")(function* (id: string) {
       const assertions = yield* Ref.get(assertionsRef);
-      const assertion = HashMap.get(assertions, id as AssertionId);
+      const assertion = AssertionId.is(id) ? HashMap.get(assertions, id) : Option.none();
       if (Option.isNone(assertion)) {
         return Option.none<AssertionWithProvenance>();
       }
@@ -319,7 +322,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
      */
     const getSupportingClaims = Effect.fn("getSupportingClaims")(function* (assertionId: string) {
       const assertions = yield* Ref.get(assertionsRef);
-      const assertion = HashMap.get(assertions, assertionId as AssertionId);
+      const assertion = AssertionId.is(assertionId) ? HashMap.get(assertions, assertionId) : Option.none();
       if (Option.isNone(assertion)) {
         return [];
       }
@@ -341,7 +344,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
     const reject = Effect.fn("reject")(function* (assertionId: string, reason: string) {
       const now = yield* DateTime.now;
       const assertions = yield* Ref.get(assertionsRef);
-      const assertion = HashMap.get(assertions, assertionId as AssertionId);
+      const assertion = AssertionId.is(assertionId) ? HashMap.get(assertions, assertionId) : Option.none();
       if (Option.isNone(assertion)) {
         return yield* new AssertionError({
           operation: "reject",
@@ -354,7 +357,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         rejectedAt: DateTime.toDate(now),
         rejectionReason: reason,
       };
-      yield* Ref.update(assertionsRef, HashMap.set(assertionId as AssertionId, updated));
+      yield* Ref.update(assertionsRef, HashMap.set(AssertionId.fromUnknown(assertion.value.id), updated));
     });
 
     // -------------------------------------------------------------------------

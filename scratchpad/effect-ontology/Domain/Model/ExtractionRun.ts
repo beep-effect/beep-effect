@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { PrimaryKey } from "effect";
 import * as S from "effect/Schema";
 import { DocumentId, IdempotencyKey, OntologyVersion } from "../Identity.ts";
@@ -270,7 +270,7 @@ export const RunStatus = S.TaggedUnion({
  */
 export type RunStatus = typeof RunStatus.Type;
 
-const ChunkSize = S.Int.check(
+const ChunkSize = PosInt.check(
   S.isBetween(
     { minimum: 100, maximum: 10_000 },
     {
@@ -282,7 +282,7 @@ const ChunkSize = S.Int.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 100, max: 10_000 }),
+    toArbitrary: () => (fc) => fc.integer({ min: 100, max: 10_000 }).map(PosInt.make),
   })
   .pipe(
     $I.annoteSchema("ChunkSize", {
@@ -290,7 +290,7 @@ const ChunkSize = S.Int.check(
     })
   );
 
-const OverlapTokens = S.Int.check(
+const OverlapTokens = NonNegativeInt.check(
   S.isBetween(
     { minimum: 0, maximum: 200 },
     {
@@ -302,7 +302,7 @@ const OverlapTokens = S.Int.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 0, max: 200 }),
+    toArbitrary: () => (fc) => fc.integer({ min: 0, max: 200 }).map(NonNegativeInt.make),
   })
   .pipe(
     $I.annoteSchema("OverlapTokens", {
@@ -311,9 +311,9 @@ const OverlapTokens = S.Int.check(
   );
 
 const ChunkingConfigFields = {
-  maxChunkSize: ChunkSize.pipe(SchemaUtils.withKeyDefaults(4_000)),
+  maxChunkSize: ChunkSize.pipe(SchemaUtils.withKeyDefaults(ChunkSize.make(4_000))),
   preserveSentences: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-  overlapTokens: OverlapTokens.pipe(SchemaUtils.withKeyDefaults(50)),
+  overlapTokens: OverlapTokens.pipe(SchemaUtils.withKeyDefaults(OverlapTokens.make(50))),
 } as const;
 
 /**
@@ -375,24 +375,7 @@ const Temperature = S.Finite.check(
     })
   );
 
-const PositiveTokenCount = S.Int.check(
-  S.isGreaterThan(0, {
-    identifier: $I`PositiveTokenCountCheck`,
-    title: "Positive Token Count",
-    description: "A token limit greater than zero.",
-    message: "Token limit must be greater than zero.",
-  })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 1_000_000 }),
-  })
-  .pipe(
-    $I.annoteSchema("PositiveTokenCount", {
-      description: "Strictly positive model token limit.",
-    })
-  );
-
-const LlmTimeout = S.Int.check(
+const LlmTimeout = PosInt.check(
   S.isBetween(
     { minimum: 1_000, maximum: 300_000 },
     {
@@ -404,7 +387,7 @@ const LlmTimeout = S.Int.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1_000, max: 300_000 }),
+    toArbitrary: () => (fc) => fc.integer({ min: 1_000, max: 300_000 }).map(PosInt.make),
   })
   .pipe(
     S.decodeTo(S.DurationFromMillis),
@@ -416,7 +399,7 @@ const LlmTimeout = S.Int.check(
 const LlmConfigFields = {
   model: S.NonEmptyString,
   temperature: Temperature,
-  maxTokens: PositiveTokenCount,
+  maxTokens: PosInt,
   timeout: LlmTimeout,
 } as const;
 
@@ -447,7 +430,7 @@ export class LlmConfig extends S.Class<LlmConfig>($I`LlmConfig`)(
   })
 ) {}
 
-const Concurrency = S.Int.check(
+const Concurrency = PosInt.check(
   S.isBetween(
     { minimum: 1, maximum: 32 },
     {
@@ -459,7 +442,7 @@ const Concurrency = S.Int.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 32 }),
+    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 32 }).map(PosInt.make),
   })
   .pipe(
     $I.annoteSchema("Concurrency", {
@@ -471,7 +454,7 @@ const RunConfigFields = {
   ontology: OntologyRef,
   chunking: ChunkingConfig,
   llm: LlmConfig,
-  concurrency: Concurrency.pipe(SchemaUtils.withKeyDefaults(4)),
+  concurrency: Concurrency.pipe(SchemaUtils.withKeyDefaults(Concurrency.make(4))),
   enableGrounding: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
 } as const;
 
@@ -686,7 +669,7 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
     return PathLayout.run.output(this.id, type);
   }
 
-  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ExtractionRun, { space: 2 }))
+  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ExtractionRun, { space: 2 }));
 }
 
 /**

@@ -10,7 +10,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import type { NonNegativeInt } from "@beep/schema";
-import { HttpsUrl, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { SchemaUtils, Sha256Hex } from "@beep/schema";
 import { identity, Match } from "effect";
 import type * as Brand from "effect/Brand";
 import { dual } from "effect/Function";
@@ -27,43 +27,6 @@ const gcsObjectNamePattern = /^(?!\.{1,2}$)(?!\.well-known\/acme-challenge\/)(?!
 type BrandedGcsBucket = string & Brand.Brand<"GcsBucket">;
 type BrandedGcsObject = string & Brand.Brand<"GcsObject">;
 type BrandedGcsUri = `gs://${string}/${string}` & Brand.Brand<"GcsUri">;
-
-/**
- * Validated absolute HTTPS resource location.
- *
- * @example
- * ```ts
- * import { SecureHttpUrl } from "@effect-ontology/Identity.ts"
- *
- * const url = SecureHttpUrl.fromUnknown("https://example.org/report.pdf")
- * console.log(SecureHttpUrl.is(url)) // true
- * ```
- *
- * @invariant Is an absolute URL whose protocol is exactly `https:`.
- * @category identifiers
- * @since 0.0.0
- */
-export const SecureHttpUrl = HttpsUrl;
-
-/**
- * Runtime value decoded by {@link SecureHttpUrl}.
- *
- * @example
- * ```ts
- * import {
- *   SecureHttpUrl,
- *   type SecureHttpUrl as SecureHttpUrlValue
- * } from "@effect-ontology/Identity.ts"
- *
- * const url: SecureHttpUrlValue =
- *   SecureHttpUrl.fromUnknown("https://example.org/report.pdf")
- * console.log(url)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type SecureHttpUrl = HttpsUrl;
 
 const utf8Encoder = new TextEncoder();
 const isNotGcsIpv4Address = P.not((value: string) => gcsIpv4AddressPattern.test(value));

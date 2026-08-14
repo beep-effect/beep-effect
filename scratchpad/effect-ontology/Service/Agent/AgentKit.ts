@@ -20,9 +20,8 @@ import { ConfigService, ConfigServiceDefault } from "../Config.ts";
 import { LinkIngestionService } from "../LinkIngestionService.ts";
 import { OntologyService } from "../Ontology.ts";
 import { OntologyAgent } from "../OntologyAgent.ts";
-import type { RdfStore } from "../Rdf.ts";
-import { RdfBuilder } from "../Rdf.ts";
-import { ShaclService } from "../Shacl.ts";
+import { isRdfStore, RdfBuilder } from "../Rdf.ts";
+import { ShaclWorkflowService } from "../Shacl.ts";
 import { StorageService, StorageServiceLive } from "../Storage.ts";
 import { AgentCoordinator } from "./AgentCoordinator.ts";
 import { CorrectorAgent } from "./CorrectorAgent.ts";
@@ -46,16 +45,6 @@ export class AgentInputError extends Data.TaggedError("AgentInputError")<{
 
 const mergeTask = (task: AgentTask, updates: Partial<AgentTask>): AgentTask => AgentTask.make({ ...task, ...updates });
 
-const isRdfStore = (value: unknown): value is RdfStore =>
-  typeof value === "object" &&
-  value !== null &&
-  "_tag" in value &&
-  (
-    value as {
-      _tag?: string;
-    }
-  )._tag === "RdfStore";
-
 const isKnowledgeGraph = (value: unknown): value is KnowledgeGraph =>
   typeof value === "object" && value !== null && "entities" in value && "relations" in value;
 
@@ -69,7 +58,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
     const ontologyAgent = yield* OntologyAgent;
     const ontologyService = yield* OntologyService;
     const rdfBuilder = yield* RdfBuilder;
-    const shaclService = yield* ShaclService;
+    const shaclService = yield* ShaclWorkflowService;
     const ingestionOpt = yield* Effect.serviceOption(LinkIngestionService);
     const storage = yield* StorageService;
     const corrector = yield* CorrectorAgent;
@@ -90,7 +79,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
     const getShapesStore = yield* Effect.cached(
       Effect.gen(function* () {
         const ontologyStore = yield* getOntologyStore;
-        return yield* shaclService.generateShapesFromOntology(ontologyStore._store);
+        return yield* shaclService.generateShapesFromOntology(ontologyStore);
       })
     );
     const buildStoreFromGraph = Effect.fn("buildStoreFromGraph")(function* (graph: KnowledgeGraph) {
@@ -234,7 +223,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       execute: Effect.fn(function* (task): Effect.fn.Return<AgentTask, AgentInputError | unknown, never> {
         const rdfStore = yield* resolveStore(task);
         const shapesStore = yield* getShapesStore;
-        const report = yield* shaclService.validate(rdfStore._store, shapesStore);
+        const report = yield* shaclService.validateWithReport(rdfStore, shapesStore);
         const explanations = ontologyAgent.explainViolations(report.validation.violations);
         return mergeTask(task, {
           rdfStore: O.some(rdfStore),
@@ -303,7 +292,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       OntologyAgent.Default,
       OntologyService.Default,
       RdfBuilder.Default,
-      ShaclService.Default,
+      ShaclWorkflowService.Default,
       StorageServiceLive,
       CorrectorAgent.Default,
       AgentCoordinator.Default,

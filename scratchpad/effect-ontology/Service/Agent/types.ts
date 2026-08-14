@@ -254,7 +254,7 @@ export class PipelineConfig extends Schema.Class<PipelineConfig>("PipelineConfig
       agentSequence: O.some(["extractor", "validator", "corrector"]),
       termination: O.some(
         TerminationCondition.make({
-          maxIterations,
+          maxIterations: PosInt.make(maxIterations),
           stopOnConformance: true,
         })
       ),

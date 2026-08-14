@@ -1,21 +1,20 @@
 import * as Rdf from "@beep/rdf/Rdf";
-import { ShaclValidationResult } from "@beep/semantic-web/services/shacl-validation";
+import {
+  ShaclSeverity,
+  ShaclValidationResult,
+  ShaclValidationViolation,
+} from "@beep/semantic-web/services/shacl-validation";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import {
-  ShaclValidationReport,
-  ShaclViolation,
-  ShaclViolationSeverity,
-  ValidationPolicy,
-} from "../../../Domain/Schema/Shacl.ts";
+import { ShaclValidationReport, ValidationPolicy } from "../../../Domain/Schema/Shacl.ts";
 
 const path = Rdf.makeNamedNode("https://schema.org/name");
 const sourceConstraintComponent = Rdf.makeNamedNode("http://www.w3.org/ns/shacl#MinCountConstraintComponent");
 
-const violation = ShaclViolation.make({
+const violation = ShaclValidationViolation.make({
   focusNode: "https://example.com/alice",
   path,
   message: "Expected at least one value.",
@@ -23,7 +22,7 @@ const violation = ShaclViolation.make({
   sourceConstraintComponent: O.some(sourceConstraintComponent),
 });
 
-const warning = ShaclViolation.make({
+const warning = ShaclValidationViolation.make({
   focusNode: "https://example.com/alice",
   path,
   message: "A preferred label is recommended.",
@@ -34,8 +33,8 @@ const warning = ShaclViolation.make({
 describe("effect-ontology SHACL schemas", () => {
   it("derives schema-valid values for every public SHACL schema", () => {
     const schemas: ReadonlyArray<S.Constraint> = [
-      ShaclViolationSeverity,
-      ShaclViolation,
+      ShaclSeverity,
+      ShaclValidationViolation,
       ShaclValidationReport,
       ValidationPolicy,
     ];

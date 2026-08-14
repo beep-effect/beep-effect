@@ -19,6 +19,7 @@ import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { IdempotencyKey } from "../Domain/Identity.ts";
 import { dual4 } from "./Dual.ts";
 import { sha256Sync, sha256SyncFull } from "./Hash.ts";
 
@@ -28,20 +29,7 @@ const $I = $ScratchpadId.create("effect-ontology/Utils/IdempotencyKey");
 // Types
 // =============================================================================
 
-/**
- * Branded type for idempotency keys
- *
- * Ensures type safety when passing keys between layers.
- */
-export const IdempotencyKey = S.String.pipe(
-  S.check(S.isPattern(/^[a-f0-9]{64}$/)),
-  S.brand("IdempotencyKey"),
-  $I.annoteSchema("IdempotencyKey", {
-    description: "SHA-256 hash used for deduplication across all layers",
-  })
-);
-
-export type IdempotencyKey = typeof IdempotencyKey.Type;
+export { IdempotencyKey };
 
 /**
  * Extraction parameters that affect output
@@ -152,7 +140,7 @@ export const computeIdempotencyKey = dual4(
     const input = `${normalized}|${ontologyId}|${ontologyVersion}|${paramsHash}`;
     const hash = sha256SyncFull(input);
 
-    return hash as IdempotencyKey;
+    return IdempotencyKey.make(hash);
   }
 );
 
@@ -187,7 +175,7 @@ export const computeIdempotencyKeyEffect = dual4(
  * @param value - String to validate
  * @returns true if valid idempotency key format
  */
-export const isValidIdempotencyKey = (value: string): value is IdempotencyKey => /^[a-f0-9]{64}$/.test(value);
+export const isValidIdempotencyKey = IdempotencyKey.is;
 
 /**
  * Parse string to IdempotencyKey with validation

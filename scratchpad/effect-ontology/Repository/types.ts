@@ -215,10 +215,10 @@ export const BatchRun = Schema.Struct({
   id: BatchRunId,
   batchId: Schema.String,
   status: BatchRunStatus,
-  documentsTotal: Schema.Finite,
-  documentsProcessed: Schema.Finite,
-  claimsExtracted: Schema.Finite,
-  conflictsDetected: Schema.Finite,
+  documentsTotal: NonNegativeInt,
+  documentsProcessed: NonNegativeInt,
+  claimsExtracted: NonNegativeInt,
+  conflictsDetected: NonNegativeInt,
   startedAt: Schema.NullOr(Schema.DateTimeUtc),
   completedAt: Schema.NullOr(Schema.DateTimeUtc),
   errorMessage: Schema.NullOr(Schema.String),
@@ -230,9 +230,9 @@ export type BatchRun = typeof BatchRun.Type;
 export const BatchRunInsert = Schema.Struct({
   id: BatchRunId.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   batchId: Schema.String,
-  documentsTotal: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
-  documentsProcessed: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
-  claimsExtracted: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
-  conflictsDetected: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
+  documentsTotal: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+  documentsProcessed: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+  claimsExtracted: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+  conflictsDetected: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
 });
 export type BatchRunInsert = typeof BatchRunInsert.Type;

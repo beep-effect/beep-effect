@@ -38,7 +38,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { OntologyFileNotFound, OntologyParsingFailed } from "../Domain/Error/Ontology.ts";
 import type { RdfError } from "../Domain/Error/Rdf.ts";
-import type { OntologyVersion } from "../Domain/Identity.ts";
+import { ContentHash, Namespace, OntologyName, OntologyVersion } from "../Domain/Identity.ts";
 import { ClassDefinition, OntologyContext, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import type { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import type { GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
@@ -781,8 +781,8 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
       }),
       hasRegistry: Effect.succeed(Option.isSome(registryOpt)),
       generateVersion: (ontologyId: string, ontologyIri: string): OntologyVersion => {
-        const hash = createHash("sha256").update(ontologyIri).digest("hex").slice(0, 16);
-        return `${ontologyId}/${ontologyId}@${hash}` as OntologyVersion;
+        const hash = ContentHash.make(createHash("sha256").update(ontologyIri).digest("hex"));
+        return OntologyVersion.fromParts(Namespace.make(ontologyId), OntologyName.make(ontologyId), hash);
       },
       searchClassesHybridFromUri: Effect.fn("OntologyService.searchClassesHybridFromUri")(function* (
         uri: string,

@@ -11,12 +11,12 @@
  * @since 0.0.0
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { UnitInterval } from "@beep/schema/UnitInterval";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
 
@@ -140,29 +140,6 @@ const Timestamp = S.String.pipe(
   S.check(S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/)),
   $I.annoteSchema("Timestamp", {
     description: "ISO 8601 timestamp with second precision, optional milliseconds, and an optional UTC marker.",
-  })
-);
-
-/**
- * Constrains extraction and grounding confidence to the inclusive unit interval.
- *
- * **Example** (Reject confidence above one)
- *
- * ```ts
- * import { UnitInterval } from "@beep/schema/UnitInterval"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * console.log(O.isSome(S.decodeUnknownOption(UnitInterval)(0.9))) // true
- * console.log(O.isNone(S.decodeUnknownOption(UnitInterval)(1.1))) // true
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-const Confidence = UnitInterval.pipe(
-  $I.annoteSchema("Confidence", {
-    description: "Finite confidence score between zero and one, inclusive.",
   })
 );
 

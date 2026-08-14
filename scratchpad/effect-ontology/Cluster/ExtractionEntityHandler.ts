@@ -9,8 +9,7 @@
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
-import type { PosInt } from "@beep/schema/Int";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import type { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Str from "@beep/utils/Str";
@@ -167,7 +166,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         .withTimeout(
           "chunking",
           nlpService.chunkText(text, {
-            maxChunkSize: 500,
+            maxChunkSize: PosInt.make(500),
             preserveSentences: true,
           }),
           () => Effect.logWarning("Chunking soft timeout reached")
@@ -198,17 +197,17 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         text,
         {
           chunking: {
-            maxChunkSize: 500,
+            maxChunkSize: PosInt.make(500),
             preserveSentences: true,
-            overlapTokens: 0,
+            overlapTokens: NonNegativeInt.make(0),
           },
           llm: {
             model: config.llm.model,
             temperature: config.llm.temperature,
-            maxTokens: config.llm.maxTokens,
+            maxTokens: PosInt.make(config.llm.maxTokens),
             timeout: Duration.millis(config.llm.timeoutMs),
           },
-          concurrency: config.runtime.concurrency,
+          concurrency: PosInt.make(config.runtime.concurrency),
           ontology: ontologyRef,
           enableGrounding: config.grounder.enabled,
         },

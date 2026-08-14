@@ -95,6 +95,7 @@ describe("effect-ontology schema-owned domain behavior", () => {
   it("derives stable knowledge and job identifiers from the full content hash", () => {
     expect(ClaimId.fromContentHash(contentHash)).toBe("claim-aaaaaaaaaaaa");
     expect(AssertionId.fromContentHash(contentHash)).toBe("assertion-aaaaaaaaaaaa");
+    expect(AssertionId.is("assertion-mssxstfx21i3v9")).toBe(false);
     expect(DerivedAssertionId.fromContentHash(contentHash)).toBe("derived-aaaaaaaaaaaa");
     expect(BackgroundJobId.fromContentHash(contentHash)).toBe("job-aaaaaaaaaaaa");
   });

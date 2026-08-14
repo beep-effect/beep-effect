@@ -9,6 +9,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import type { BM25Config } from "@beep/nlp/Core/Vectorization";
+import { DefaultBM25Config } from "@beep/nlp/Core/Vectorization";
 import { Context, Data, Duration, Effect, Layer, Order, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -81,24 +83,6 @@ export interface ChunkOptions {
    * with strategy-specific defaults.
    */
   readonly strategy?: ChunkingStrategy;
-}
-
-/**
- * BM25 configuration parameters
- */
-export interface BM25Config {
-  /**
-   * Term frequency saturation parameter (default: 1.2)
-   */
-  readonly k1?: number;
-  /**
-   * Length normalization parameter (default: 0.75)
-   */
-  readonly b?: number;
-  /**
-   * Query term frequency normalization (default: 1)
-   */
-  readonly k?: number;
 }
 
 /**
@@ -261,11 +245,11 @@ function chunkBySections(text: string, maxChunkSize: number, _overlapSentences: 
 
   // Find all section header positions
   const headerMatches: Array<{ index: number; match: string }> = [];
-  let match: RegExpExecArray | null;
-
   const pattern = new RegExp(SECTION_HEADER_PATTERN.source, "gm");
-  while ((match = pattern.exec(text)) !== null) {
+  let match = pattern.exec(text);
+  while (P.isNotNull(match)) {
     headerMatches.push({ index: match.index, match: match[0] });
+    match = pattern.exec(text);
   }
 
   // If no headers found, fall back to simple chunking
@@ -330,11 +314,11 @@ function chunkBySpeakerTurns(text: string, maxChunkSize: number, _overlapSentenc
 
   // Find all speaker turn positions
   const turnMatches: Array<{ index: number; match: string }> = [];
-  let match: RegExpExecArray | null;
-
   const pattern = new RegExp(SPEAKER_TURN_PATTERN.source, "gm");
-  while ((match = pattern.exec(text)) !== null) {
+  let match = pattern.exec(text);
+  while (P.isNotNull(match)) {
     turnMatches.push({ index: match.index, match: match[0] });
+    match = pattern.exec(text);
   }
 
   // If no speaker turns found, fall back to simple chunking
@@ -456,11 +440,11 @@ function chunkBySize(text: string, maxChunkSize: number, startIndex: number): Ar
   const sentencePattern = /[.!?]+\s+/g;
   const sentences: Array<string> = [];
   let lastEnd = 0;
-  let sentenceMatch: RegExpExecArray | null;
-
-  while ((sentenceMatch = sentencePattern.exec(text)) !== null) {
+  let sentenceMatch = sentencePattern.exec(text);
+  while (P.isNotNull(sentenceMatch)) {
     sentences.push(text.slice(lastEnd, sentenceMatch.index + sentenceMatch[0].length));
     lastEnd = sentenceMatch.index + sentenceMatch[0].length;
+    sentenceMatch = sentencePattern.exec(text);
   }
   // Add remaining text as last sentence
   if (lastEnd < text.length) {
@@ -696,14 +680,13 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
           return chunks;
         })
       ),
-      createOntologyIndex: (ontology: OntologyContext, config?: BM25Config): Effect.Effect<OntologyBM25Index> =>
+      createOntologyIndex: (
+        ontology: OntologyContext,
+        config: BM25Config = DefaultBM25Config
+      ): Effect.Effect<OntologyBM25Index> =>
         Effect.sync(() => {
           const engine = winkBM25();
-          const bm25Params = {
-            k1: config?.k1 ?? 1.2,
-            b: config?.b ?? 0.75,
-            k: config?.k ?? 1,
-          };
+          const bm25Params = { k1: config.k1, b: config.b, k: config.k };
           engine.defineConfig({
             fldWeights: { text: 1 },
             bm25Params,
@@ -843,44 +826,44 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         query: string,
         limit: number = 10
       ) {
-          const embeddingMap = index._embeddingMap;
-          const domainModelMap = index._domainModelMap;
-          const ontology = index._ontology;
-          if (P.not(P.isTruthy)(embeddingMap) || P.not(P.isTruthy)(domainModelMap) || P.not(P.isTruthy)(ontology)) {
-            return yield* new NlpIndexError({
-              indexKind: "semantic",
-              message: "Invalid semantic index reference",
-            });
+        const embeddingMap = index._embeddingMap;
+        const domainModelMap = index._domainModelMap;
+        const ontology = index._ontology;
+        if (P.not(P.isTruthy)(embeddingMap) || P.not(P.isTruthy)(domainModelMap) || P.not(P.isTruthy)(ontology)) {
+          return yield* new NlpIndexError({
+            indexKind: "semantic",
+            message: "Invalid semantic index reference",
+          });
+        }
+        const queryEmbedding = yield* embedding
+          .embed(query, "search_query")
+          .pipe(Effect.retry(embeddingRetrySchedule), Effect.timeout(Duration.millis(EMBEDDING_TIMEOUT_MS)));
+        const results: Array<
+          OntologySearchResult & {
+            score: number;
           }
-          const queryEmbedding = yield* embedding
-            .embed(query, "search_query")
-            .pipe(Effect.retry(embeddingRetrySchedule), Effect.timeout(Duration.millis(EMBEDDING_TIMEOUT_MS)));
-          const results: Array<
-            OntologySearchResult & {
-              score: number;
-            }
-          > = [];
-          for (const [iri, docEmbedding] of embeddingMap) {
-            const score = embedding.cosineSimilarity(queryEmbedding, docEmbedding);
-            if (score > 0) {
-              const domainModel = MutableHashMap.get(domainModelMap, iri);
-              if (O.isSome(domainModel)) {
-                const iriValue = IRI.fromUnknown(iri);
-                const classDef = ontology.getClass(iriValue);
-                const propertyDef = ontology.getProperty(iriValue);
-                results.push({
-                  iri,
-                  score,
-                  ...(O.isSome(classDef) ? { class: classDef.value } : {}),
-                  ...(O.isSome(propertyDef) ? { property: propertyDef.value } : {}),
-                });
-              }
+        > = [];
+        for (const [iri, docEmbedding] of embeddingMap) {
+          const score = embedding.cosineSimilarity(queryEmbedding, docEmbedding);
+          if (score > 0) {
+            const domainModel = MutableHashMap.get(domainModelMap, iri);
+            if (O.isSome(domainModel)) {
+              const iriValue = IRI.fromUnknown(iri);
+              const classDef = ontology.getClass(iriValue);
+              const propertyDef = ontology.getProperty(iriValue);
+              results.push({
+                iri,
+                score,
+                ...(O.isSome(classDef) ? { class: classDef.value } : {}),
+                ...(O.isSome(propertyDef) ? { property: propertyDef.value } : {}),
+              });
             }
           }
-          return A.take(
-            A.sortWith(results, (result) => -result.score, Order.Number),
-            limit
-          );
+        }
+        return A.take(
+          A.sortWith(results, (result) => -result.score, Order.Number),
+          limit
+        );
       }),
     };
   }),

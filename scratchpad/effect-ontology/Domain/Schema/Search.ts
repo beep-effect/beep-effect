@@ -6,6 +6,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { SchemaGetter } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import { IRI } from "../Rdf/Types.ts";
@@ -58,37 +59,15 @@ const SearchDateRange = SearchDateRangeDefinition.pipe(
   })
 );
 
-const PositiveLimitFromString = S.FiniteFromString.check(
-  S.makeFilterGroup(
-    [
-      S.isInt({
-        identifier: $I`SuggestionLimitIntegerCheck`,
-        title: "Integer Suggestion Limit",
-        description: "A suggestion-limit query value with no fractional component.",
-        message: "Suggestion limit must be an integer.",
-      }),
-      S.isGreaterThan(0, {
-        identifier: $I`SuggestionLimitPositiveCheck`,
-        title: "Positive Suggestion Limit",
-        description: "A suggestion-limit query value strictly greater than zero.",
-        message: "Suggestion limit must be positive.",
-      }),
-    ],
-    {
-      identifier: $I`SuggestionLimitChecks`,
-      title: "Suggestion Limit",
-      description: "Positive integer checks for a URL-query suggestion limit.",
-    }
-  )
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: Number.MAX_SAFE_INTEGER }),
+const PositiveLimitFromString = S.FiniteFromString.pipe(
+  S.decodeTo(PosInt, {
+    decode: SchemaGetter.transform(PosInt.make),
+    encode: SchemaGetter.transform((value): number => value),
+  }),
+  $I.annoteSchema("PositiveLimitFromString", {
+    description: "URL-query string decoded to a finite positive suggestion limit.",
   })
-  .pipe(
-    $I.annoteSchema("PositiveLimitFromString", {
-      description: "URL-query string decoded to a finite positive suggestion limit.",
-    })
-  );
+);
 
 /**
  * Body for full-text and faceted claim search.

@@ -1,7 +1,7 @@
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Exit, Layer } from "effect";
 import { IRI } from "../../Domain/Rdf/Types.ts";
-import { RdfBuilder } from "../../Service/Rdf.ts";
+import { RdfBuilder, rdfStoreSize, rdfStoreToDataset } from "../../Service/Rdf.ts";
 
 const RdfBuilderTest = RdfBuilder.Default.pipe(
   Layer.provide(
@@ -24,6 +24,19 @@ describe("RdfBuilder", () => {
 
         assert.isTrue(IRI.is(valid));
         assert.isTrue(Exit.isFailure(invalid));
+      })
+    );
+
+    it.effect("round-trips Turtle through the canonical N3 codec", () =>
+      Effect.gen(function* () {
+        const rdf = yield* RdfBuilder;
+        const store = yield* rdf.parseTurtle('<https://example.org/ada> <https://schema.org/name> "Ada" .');
+        const source = yield* rdf.toTurtle(store);
+        const reparsed = yield* rdf.parseTurtle(source);
+
+        assert.strictEqual(rdfStoreSize(reparsed), 1);
+        assert.isFalse("_store" in reparsed);
+        assert.strictEqual(rdfStoreToDataset(reparsed).quads.length, 1);
       })
     );
   });

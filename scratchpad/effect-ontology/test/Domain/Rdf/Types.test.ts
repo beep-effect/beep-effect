@@ -1,4 +1,5 @@
 import { SafePnLocal as CanonicalSafePnLocal } from "@beep/identity";
+import * as CanonicalRdf from "@beep/rdf";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -8,6 +9,7 @@ import {
   makeBlankNode,
   makeLiteral,
   makeNamedNode,
+  makeQuad,
   NamedNode,
   Quad,
   SafePnLocal,
@@ -15,6 +17,17 @@ import {
 } from "../../../Domain/Rdf/Types.ts";
 
 describe("effect-ontology RDF types", () => {
+  it("re-exports canonical RDF schemas and constructors by identity", () => {
+    expect(BlankNode).toBe(CanonicalRdf.BlankNode);
+    expect(Literal).toBe(CanonicalRdf.Literal);
+    expect(NamedNode).toBe(CanonicalRdf.NamedNode);
+    expect(Quad).toBe(CanonicalRdf.Quad);
+    expect(makeBlankNode).toBe(CanonicalRdf.makeBlankNode);
+    expect(makeLiteral).toBe(CanonicalRdf.makeLiteral);
+    expect(makeNamedNode).toBe(CanonicalRdf.makeNamedNode);
+    expect(makeQuad).toBe(CanonicalRdf.makeQuad);
+  });
+
   it("derives arbitraries whose values satisfy local adapter schemas", () => {
     for (const schema of [SafePnLocal, Triple]) {
       const arbitrary = S.toArbitrary(schema)(fc);

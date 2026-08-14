@@ -1,3 +1,5 @@
+import { IRI, URI } from "@beep/rdf";
+import { FilePath, URLStr } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
@@ -117,6 +119,13 @@ const publicSchemas: ReadonlyArray<S.Constraint> = [
 ];
 
 describe("effect-ontology domain errors", () => {
+  it("uses canonical schemas for shared error metadata values", () => {
+    expect(Base.ErrorUrl).toBe(URLStr);
+    expect(Base.ErrorIri).toBe(IRI);
+    expect(Base.ErrorUri).toBe(URI);
+    expect(Base.ErrorFilePath).toBe(FilePath);
+  });
+
   it("derives schema-valid values for every public error schema", () => {
     for (const schema of publicSchemas) {
       const arbitrary = S.toArbitrary(schema)(fc);

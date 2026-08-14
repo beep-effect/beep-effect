@@ -32,7 +32,7 @@ import { OntologyService } from "../Service/Ontology.ts";
 import { OntologyRegistryService } from "../Service/OntologyRegistry.ts";
 import { RdfBuilder } from "../Service/Rdf.ts";
 import { Reasoner } from "../Service/Reasoner.ts";
-import { ShaclService } from "../Service/Shacl.ts";
+import { ShaclWorkflowService } from "../Service/Shacl.ts";
 import { StorageServiceLive } from "../Service/Storage.ts";
 import { BatchExtractionWorkflowLayer, WorkflowOrchestratorLive } from "../Service/WorkflowOrchestrator.ts";
 import { MetricsService } from "../Telemetry/Metrics.ts";
@@ -179,7 +179,10 @@ const OntologyBundle = Layer.mergeAll(OntologyServiceWithRegistry, RdfBuilderBun
  * - StorageService (shape loading)
  * - ConfigService (provided via CoreDependenciesLayer)
  */
-const ShaclBundle = ShaclService.Default.pipe(Layer.provideMerge(RdfBuilderBundle), Layer.provideMerge(StorageBundle));
+const ShaclBundle = ShaclWorkflowService.Default.pipe(
+  Layer.provideMerge(RdfBuilderBundle),
+  Layer.provideMerge(StorageBundle)
+);
 
 /**
  * Embedding services for vector similarity operations

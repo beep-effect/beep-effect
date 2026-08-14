@@ -10,8 +10,10 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { NonNegNum } from "@beep/schema/Number";
+import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from "effect";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -19,8 +21,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
-import type { ShaclViolation } from "../Domain/Schema/Shacl.ts";
-import { ShaclViolationSeverity } from "../Domain/Schema/Shacl.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
 
@@ -38,7 +38,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
  */
 export class ExplanationError extends Data.TaggedError("ExplanationError")<{
   readonly message: string;
-  readonly violation: ShaclViolation;
+  readonly violation: ShaclValidationViolation;
   readonly cause?: unknown;
 }> {}
 
@@ -60,7 +60,7 @@ export class ExplanationContext extends Schema.Class<ExplanationContext>("Explan
   /** Domain description for additional context */
   domainDescription: Schema.String.pipe(SchemaUtils.withKeyDefaults("")),
   /** Maximum tokens for the explanation */
-  maxTokens: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(500)),
+  maxTokens: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(500))),
 }) {
   /**
    * Create empty context
@@ -93,7 +93,7 @@ export class LlmViolationExplanation extends Schema.Class<LlmViolationExplanatio
   /** Suggested fix action */
   suggestion: Schema.String,
   /** Severity level */
-  severity: ShaclViolationSeverity,
+  severity: ShaclSeverity,
   /** Affected entity IRIs */
   affectedEntities: Schema.Array(Schema.String),
   /** Confidence in the explanation (0-1) */
@@ -201,7 +201,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
      * Generate explanation for a single violation
      */
     const explain = Effect.fn("ViolationExplainer.explain")(function* (
-      violation: ShaclViolation,
+      violation: ShaclValidationViolation,
       context: ExplanationContext
     ): Effect.fn.Return<LlmViolationExplanation, ExplanationError> {
       yield* Effect.logInfo("ViolationExplainer.explain starting", {
@@ -254,7 +254,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
      * Explain multiple violations in batch
      */
     const explainBatch = Effect.fn("ViolationExplainer.explainBatch")(function* (
-      violations: ReadonlyArray<ShaclViolation>,
+      violations: ReadonlyArray<ShaclValidationViolation>,
       context: ExplanationContext,
       options?: { concurrency?: number }
     ): Effect.fn.Return<BatchExplanationResult, ExplanationError> {
@@ -290,7 +290,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
     /**
      * Generate a quick rule-based explanation (no LLM)
      */
-    const explainQuick = (violation: ShaclViolation): LlmViolationExplanation => {
+    const explainQuick = (violation: ShaclValidationViolation): LlmViolationExplanation => {
       const { explanation, suggestion } = generateRuleBasedExplanation(violation);
 
       return LlmViolationExplanation.make({
@@ -350,7 +350,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
        * @returns Explanation (LLM or rule-based)
        */
       explainWithFallback: (
-        violation: ShaclViolation,
+        violation: ShaclValidationViolation,
         context: ExplanationContext
       ): Effect.Effect<LlmViolationExplanation, never> =>
         explain(violation, context).pipe(
@@ -378,7 +378,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
 /**
  * Build explanation prompt for LLM
  */
-const buildExplanationPrompt = (violation: ShaclViolation, context: ExplanationContext): string => {
+const buildExplanationPrompt = (violation: ShaclValidationViolation, context: ExplanationContext): string => {
   let parts: Array<string> = [
     "You are an expert at explaining SHACL validation errors in plain language.",
     "",
@@ -424,7 +424,9 @@ const buildExplanationPrompt = (violation: ShaclViolation, context: ExplanationC
 /**
  * Generate rule-based explanation (no LLM)
  */
-const generateRuleBasedExplanation = (violation: ShaclViolation): { explanation: string; suggestion: string } => {
+const generateRuleBasedExplanation = (
+  violation: ShaclValidationViolation
+): { explanation: string; suggestion: string } => {
   const message = Str.toLowerCase(violation.message);
   const path = violation.path.value;
 

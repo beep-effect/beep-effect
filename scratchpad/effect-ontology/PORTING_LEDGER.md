@@ -37,10 +37,10 @@ scratchpad, moved to its correct upstream path at `Domain/Schema/Shacl.ts`.
   annotation. `S.Class`, `S.TaggedClass`, and tagged error classes use their
   v4 declaration-level arbitrary annotation; class refinements that can reject
   generated fields override it explicitly.
-- Opaque foundation checks are retained on the encoded side of an
-  encoded-to-declaration codec. The declaration side owns a constructive
-  `toArbitrary`, eliminating inherited filter warnings without weakening
-  boundary validation.
+- Canonical foundation schemas own constructive `toArbitrary` metadata and are
+  imported directly. Encoded-to-declaration codecs remain only where an
+  explicit legacy wire representation differs from the canonical decoded
+  model.
 - The public-schema property audit calls `S.toArbitrary(schema, {
   report: true })`, requires zero warnings, samples each exported schema, and
   checks every sample with `S.is(schema)`.
@@ -55,7 +55,7 @@ scratchpad, moved to its correct upstream path at `Domain/Schema/Shacl.ts`.
 
 | Source | Disposition and target | Boundary, defaults, invariants, arbitrary, and tests |
 | --- | --- | --- |
-| `Identity.ts` | **redesigned** in the same path | Full SHA-256 content identity is distinct from the explicit legacy prefix; HTTPS URLs directly reuse `@beep/schema` `HttpsUrl`; GCS, namespace, ontology, document, chunk, run, and batch identities remain experiment-owned and schema-backed. Explicit bounded/pattern arbitraries; `Identity.test.ts`. |
+| `Identity.ts` | **redesigned** in the same path | Full SHA-256 content identity is distinct from the explicit legacy prefix; HTTPS URLs are consumed directly from `@beep/schema` without a compatibility alias; GCS, namespace, ontology, document, chunk, run, and batch identities remain experiment-owned and schema-backed. Explicit bounded/pattern arbitraries; `Identity.test.ts`. |
 | `PathLayout.ts` | **redesigned** in the same path | Reversible path codecs own parsing and construction; run/image/canonical paths reject traversal and non-canonical encodings. Explicit arbitraries and round-trip properties; `PathLayout.test.ts`. |
 | `index.ts` | **ported** in the same path | Namespaced Error, Identity, Model, PathLayout, RDF, and Schema exports preserve family boundaries; package remains quarantined. |
 
@@ -70,7 +70,7 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | --- | --- | --- |
 | `Error/Activity.ts` | **redesigned** | Activity names, timeouts, cancellation, and defects are variant-owned. |
 | `Error/Auth.ts` | **redesigned** | Ticket/authentication failures retain only safe diagnostics and typed context. |
-| `Error/Base.ts` | **redesigned** | Shared messages, codes, status, causes, URLs, and retry metadata are canonical schema values. |
+| `Error/Base.ts` | **redesigned** | URL, IRI, URI, and file-path metadata directly reuse their canonical schemas; shared messages, codes, status, causes, optionality, and retry metadata remain experiment-owned. |
 | `Error/Circuit.ts` | **redesigned** | Circuit-open and execution failures own non-negative timing/retry data. |
 | `Error/Embedding.ts` | **redesigned** | Embedding provider, input, response, and dimension failures are discriminated. |
 | `Error/EventBus.ts` | **redesigned** | Publish, subscribe, serialization, and handler failures own their legal payloads. |
@@ -109,8 +109,8 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 
 | Source | Disposition and target | Boundary, defaults, invariants, arbitrary, and tests |
 | --- | --- | --- |
-| `Rdf/Types.ts` | **subsumed** by `@beep/rdf` plus a local `Triple` adapter | RDF/JS terms, dataset, prefix map, and constructors are canonical re-exports; graph-free triples convert explicitly to/from quads. Arbitrary and interop tests in `Rdf/Types.test.ts`. |
-| `Rdf/Constants.ts` | **subsumed** by `@beep/rdf/Vocab/*` plus experiment-owned vocabularies | Available standard RDF/RDFS/OWL/XSD/SKOS/PROV/DCTERMS terms are imported directly; missing terms are constructed from canonical namespaces, while SHACL terms use one local namespace pending a shared owner. This module retains only EXTR, CLAIMS, CORRECTIONS, and CORE NamedNodes. |
+| `Rdf/Types.ts` | **subsumed** by `@beep/rdf` plus a local `Triple` adapter | RDF/JS term schemas and constructors are canonical re-exports; graph-free triples convert explicitly to/from quads. Arbitrary and interop tests in `Rdf/Types.test.ts`. |
+| `Rdf/Constants.ts` | **subsumed** by `@beep/rdf/Vocab/*` plus experiment-owned vocabularies | Standard RDF/RDFS/OWL/XSD/SKOS/PROV/DCTERMS terms are imported directly by consumers. This module retains only EXTR, CLAIMS, CORRECTIONS, and CORE NamedNodes. |
 | `Rdf/index.ts` | **ported** | Complete canonical RDF adapter and vocabulary barrel. |
 
 ## Schema modules
@@ -132,7 +132,7 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | `Schema/OntologyBrowser.ts` | **ported and hardened** | Canonical ontology/IRI values, normalized labels/collections, non-negative counts; arbitrary audit. |
 | `Schema/OntologyRegistry.ts` | **redesigned** | Canonical identities/storage paths, complete resources/entry defaults, typed JSON codecs, registry lookup statics; arbitrary audit. |
 | `Schema/Search.ts` | **ported and hardened** | Trimmed queries, bounded pagination, non-negative totals, unit confidence, normalized results; arbitrary audit. |
-| `Schema/Shacl.ts` | **subsumed** by `@beep/semantic-web` plus local policy/report metadata | Canonical severity, violation, result, and error contracts cross the service boundary; an explicit legacy engine adapter constructs canonical RDF terms, while experiment-owned policy and execution metadata remain local. |
+| `Schema/Shacl.ts` | **subsumed** by `@beep/semantic-web` plus local policy/report metadata | Consumers import canonical severity, violation, result, and error contracts directly; an explicit legacy engine adapter constructs canonical RDF terms, while experiment-owned policy and execution metadata remain local. |
 | `Schema/Timeline.ts` | **redesigned** | Bitemporal nested values, canonical RDF/IRI terms, bounded query pagination, tagged claim conflicts, Option/default response data; arbitrary audit. |
 | `Schema/index.ts` | **ported** | Upstream public surface retained; specialized collision-prone event/curation/job modules remain explicit subpaths. |
 

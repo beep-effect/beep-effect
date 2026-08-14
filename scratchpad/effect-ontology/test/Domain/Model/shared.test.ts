@@ -1,9 +1,20 @@
+import { Confidence as CanonicalConfidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { IRI as CanonicalIRI } from "@beep/rdf/Iri";
+import { URLStr as CanonicalURLStr } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import { Attributes, AttributeValue, Confidence, EntityId, OptionalConfidence } from "../../../Domain/Model/shared.ts";
+import {
+  Attributes,
+  AttributeValue,
+  Confidence,
+  EntityId,
+  IRI,
+  OptionalConfidence,
+  URLStr,
+} from "../../../Domain/Model/shared.ts";
 
 const sharedSchemas: ReadonlyArray<S.Constraint> = [
   AttributeValue,
@@ -14,6 +25,12 @@ const sharedSchemas: ReadonlyArray<S.Constraint> = [
 ];
 
 describe("effect-ontology shared model schemas", () => {
+  it("re-exports canonical shared value schemas by identity", () => {
+    expect(Confidence).toBe(CanonicalConfidence);
+    expect(IRI).toBe(CanonicalIRI);
+    expect(URLStr).toBe(CanonicalURLStr);
+  });
+
   it("derives arbitraries whose values satisfy every public schema", () => {
     for (const schema of sharedSchemas) {
       const arbitrary = S.toArbitrary(schema)(fc);

@@ -16,12 +16,12 @@ import { $ScratchpadId } from "@beep/identity";
 import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Context, Data, Effect, Layer, Schema } from "effect";
 import * as Clock from "effect/Clock";
-import * as N3 from "n3";
 import type { RdfStore } from "./Rdf.ts";
+import { cloneRdfStore, rdfStoreApplyRules, rdfStoreSize } from "./Rdf.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Reasoner");
 
@@ -74,7 +74,7 @@ export type ReasoningProfile = typeof ReasoningProfile.Type;
 export class ReasoningConfig extends Schema.Class<ReasoningConfig>("ReasoningConfig")({
   profile: ReasoningProfile.pipe(SchemaUtils.withKeyDefaults("rdfs" as const)),
   customRules: Schema.Array(Schema.String).pipe(SchemaUtils.withKeyDefaults([])),
-  maxIterations: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(100)),
+  maxIterations: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(100))),
 }) {
   /**
    * Create default RDFS reasoning config
@@ -105,10 +105,10 @@ export class ReasoningConfig extends Schema.Class<ReasoningConfig>("ReasoningCon
  * @category Models
  */
 export class ReasoningResult extends Schema.Class<ReasoningResult>("ReasoningResult")({
-  inferredTripleCount: Schema.Finite,
-  totalTripleCount: Schema.Finite,
-  rulesApplied: Schema.Finite,
-  durationMs: Schema.Finite,
+  inferredTripleCount: NonNegativeInt,
+  totalTripleCount: NonNegativeInt,
+  rulesApplied: NonNegativeInt,
+  durationMs: NonNegNum,
 }) {
   /**
    * True if any new triples were inferred
@@ -278,29 +278,6 @@ const getRulesForProfile = (profile: ReasoningProfile): ReadonlyArray<string> =>
  */
 export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
   make: Effect.sync(() => {
-    const n3Parser = new N3.Parser({ format: "text/n3" });
-
-    /**
-     * Parse N3 rules into a store
-     */
-    const parseRules = (rules: ReadonlyArray<string>): Effect.Effect<N3.Store, RuleParseError> =>
-      Effect.try({
-        try: () => {
-          const rulesStore = new N3.Store();
-          for (const rule of rules) {
-            const quads = n3Parser.parse(rule);
-            rulesStore.addQuads(quads);
-          }
-          return rulesStore;
-        },
-        catch: (error) =>
-          new RuleParseError({
-            message: `Failed to parse N3 rules: ${error}`,
-            rule: rules.join("\n"),
-            cause: error,
-          }),
-      });
-
     /**
      * Core reasoning function - mutates the store
      */
@@ -309,7 +286,7 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
       config: ReasoningConfig
     ): Effect.fn.Return<ReasoningResult, ReasoningError | RuleParseError> {
       const startTime = yield* Clock.currentTimeMillis;
-      const initialSize = store._store.size;
+      const initialSize = rdfStoreSize(store);
 
       yield* Effect.logInfo("Reasoner.reason starting", {
         profile: config.profile,
@@ -324,45 +301,39 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
       if (allRules.length === 0) {
         yield* Effect.logDebug("No rules to apply");
         return ReasoningResult.make({
-          inferredTripleCount: 0,
-          totalTripleCount: initialSize,
-          rulesApplied: 0,
-          durationMs: (yield* Clock.currentTimeMillis) - startTime,
+          inferredTripleCount: NonNegativeInt.make(0),
+          totalTripleCount: NonNegativeInt.make(initialSize),
+          rulesApplied: NonNegativeInt.make(0),
+          durationMs: NonNegNum.make((yield* Clock.currentTimeMillis) - startTime),
         });
       }
 
-      // Parse rules
-      const rulesStore = yield* parseRules(allRules);
+      yield* rdfStoreApplyRules(store, allRules).pipe(
+        Effect.mapError(
+          (error) =>
+            new ReasoningError({
+              message: error.message,
+              cause: error,
+            })
+        )
+      );
 
-      // Apply reasoning
-      yield* Effect.try({
-        try: () => {
-          const reasoner = new N3.Reasoner(store._store);
-          reasoner.reason(rulesStore);
-        },
-        catch: (error) =>
-          new ReasoningError({
-            message: `Reasoning failed: ${error}`,
-            cause: error,
-          }),
-      });
-
-      const finalSize = store._store.size;
+      const finalSize = rdfStoreSize(store);
       const inferredCount = finalSize - initialSize;
       const durationMs = (yield* Clock.currentTimeMillis) - startTime;
 
       yield* Effect.logInfo("Reasoner.reason complete", {
         inferredTriples: inferredCount,
         totalTriples: finalSize,
-        rulesApplied: allRules.length,
-        durationMs,
+        rulesApplied: NonNegativeInt.make(allRules.length),
+        durationMs: NonNegNum.make(durationMs),
       });
 
       return ReasoningResult.make({
-        inferredTripleCount: inferredCount,
-        totalTripleCount: finalSize,
-        rulesApplied: allRules.length,
-        durationMs,
+        inferredTripleCount: NonNegativeInt.make(inferredCount),
+        totalTripleCount: NonNegativeInt.make(finalSize),
+        rulesApplied: NonNegativeInt.make(allRules.length),
+        durationMs: NonNegNum.make(durationMs),
       });
     });
 
@@ -380,11 +351,7 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
       ReasoningError | RuleParseError
     > {
       // Create a copy of the store
-      const copyStore = new N3.Store();
-      const quads = store._store.getQuads(null, null, null, null);
-      copyStore.addQuads(quads);
-
-      const wrappedStore: RdfStore = { _tag: "RdfStore", _store: copyStore };
+      const wrappedStore = cloneRdfStore(store);
 
       // Apply reasoning to the copy
       const result = yield* reason(wrappedStore, config);

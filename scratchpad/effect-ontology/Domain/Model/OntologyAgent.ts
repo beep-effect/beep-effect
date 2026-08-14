@@ -6,13 +6,14 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import * as A from "effect/Array";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ExtractionRunId } from "../Identity.ts";
-import { ShaclValidationReport, ShaclViolationSeverity, ValidationPolicy } from "../Schema/Shacl.ts";
+import { ShaclValidationReport, ValidationPolicy } from "../Schema/Shacl.ts";
 import type { Entity, Relation } from "./Entity.ts";
 import { KnowledgeGraph } from "./Entity.ts";
 import { ChunkingConfig } from "./ExtractionRun.ts";
@@ -21,7 +22,7 @@ import { Confidence, IRI } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/OntologyAgent");
 
-const AgentConcurrency = S.Int.check(
+const AgentConcurrency = PosInt.check(
   S.isBetween(
     { minimum: 1, maximum: 64 },
     {
@@ -33,7 +34,7 @@ const AgentConcurrency = S.Int.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 64 }),
+    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 64 }).map(PosInt.make),
   })
   .pipe(
     $I.annoteSchema("AgentConcurrency", {
@@ -881,7 +882,7 @@ const ViolationExplanationFields = {
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "Optional corrective action when one can be determined." })
   ),
-  severity: ShaclViolationSeverity.annotateKey({
+  severity: ShaclSeverity.annotateKey({
     description: "Standard SHACL severity assigned to the diagnostic.",
   }),
 } as const;

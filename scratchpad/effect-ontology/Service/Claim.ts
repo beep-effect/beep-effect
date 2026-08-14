@@ -23,7 +23,7 @@ import type { ClaimFilter } from "../Repository/Claim.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ClaimInsertRow, ClaimRow } from "../Repository/schema.ts";
 import type { RdfStore } from "./Rdf.ts";
-import { RdfBuilder } from "./Rdf.ts";
+import { RdfBuilder, rdfStoreAddQuad } from "./Rdf.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Claim");
 const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
@@ -482,7 +482,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Convenience method that converts a claim to quads and adds them to a store.
      */
-    const addClaimToStore = Effect.fn(function* (_store: RdfStore, claim: ClaimRow, graphUri?: string) {
+    const addClaimToStore = Effect.fn(function* (_rdfStore: RdfStore, claim: ClaimRow, graphUri?: string) {
       // Add quads to store using low-level N3 operations
       // The RdfBuilder doesn't have a direct addQuads method, so we build manually
       return yield* toReifiedTriples(claim, graphUri);
@@ -498,33 +498,8 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
 
       for (const claim of claims) {
         const quads = yield* toReifiedTriples(claim, graphUri);
-        // Add each quad to the store
         for (const quad of quads) {
-          // Use the store's internal N3 store directly
-          const n3 = yield* Effect.promise(() => import("n3"));
-          const n3Store = store._store;
-
-          const subject =
-            quad.subject.termType === "BlankNode"
-              ? n3.DataFactory.blankNode(quad.subject.value)
-              : n3.DataFactory.namedNode(quad.subject.value);
-          const predicate = n3.DataFactory.namedNode(quad.predicate.value);
-          const object =
-            quad.object.termType === "Literal"
-              ? O.isSome(quad.object.language)
-                ? n3.DataFactory.literal(quad.object.value, quad.object.language.value)
-                : n3.DataFactory.literal(quad.object.value, n3.DataFactory.namedNode(quad.object.datatype.value))
-              : quad.object.termType === "BlankNode"
-                ? n3.DataFactory.blankNode(quad.object.value)
-                : n3.DataFactory.namedNode(quad.object.value);
-          const graph =
-            quad.graph.termType === "DefaultGraph"
-              ? n3.DataFactory.defaultGraph()
-              : quad.graph.termType === "BlankNode"
-                ? n3.DataFactory.blankNode(quad.graph.value)
-                : n3.DataFactory.namedNode(quad.graph.value);
-
-          n3Store.addQuad(n3.DataFactory.quad(subject, predicate, object, graph));
+          rdfStoreAddQuad(store, quad);
         }
       }
 

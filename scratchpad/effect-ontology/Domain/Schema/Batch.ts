@@ -11,10 +11,11 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { MimeType, NonNegativeInt, NonNegNum, SchemaUtils } from "@beep/schema";
+import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyName, OntologyVersion } from "../Identity.ts";
 import { defaultPreprocessingOptions, LanguageCode, PreprocessingOptions } from "./DocumentMetadata.ts";
-import { ShaclViolationSeverity, ValidationPolicy } from "./Shacl.ts";
+import { ValidationPolicy } from "./Shacl.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Batch");
 const defaultValidationPolicy = ValidationPolicy.fromUnknown({});
@@ -250,7 +251,7 @@ export class ValidationActivityViolationSummary extends S.Class<ValidationActivi
   $I`ValidationActivityViolationSummary`
 )(
   {
-    severity: ShaclViolationSeverity.annotateKey({
+    severity: ShaclSeverity.annotateKey({
       description: "Standard SHACL severity summarized by this value.",
     }),
     count: NonNegativeInt.annotateKey({

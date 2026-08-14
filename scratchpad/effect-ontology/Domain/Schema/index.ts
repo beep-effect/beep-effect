@@ -167,19 +167,6 @@ export {
    * @since 0.0.0
    */
   ShaclValidationReport,
-  /**
-   * Severity-tagged SHACL validation result.
-   *
-   * @example
-   * ```ts
-   * import { ShaclViolation } from "@effect-ontology/Schema/index.ts"
-   * console.log(ShaclViolation.discriminants)
-   * ```
-   *
-   * @category validation
-   * @since 0.0.0
-   */
-  ShaclViolation,
 } from "./Shacl.ts";
 export {
   /**

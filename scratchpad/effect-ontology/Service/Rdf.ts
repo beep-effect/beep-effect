@@ -9,7 +9,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
 import { makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
+import * as CanonicalRdf from "@beep/rdf/Rdf";
 import { DCTERMS_NAMESPACE } from "@beep/rdf/Vocab/Dcterms";
 import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
@@ -18,6 +20,7 @@ import { XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/V
 import type { Scope } from "effect";
 import { Chunk, Context, Duration, Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -50,17 +53,109 @@ const XSD_DECIMAL = makeCanonicalNamedNode(`${XSD_NAMESPACE}decimal`);
 type N3Store = N3.Store;
 
 /**
- * RdfStore - Abstract RDF store type
+ * Mutable N3 workflow store retained inside the experiment.
  *
- * Opaque wrapper around N3.Store to hide backend implementation.
- * All N3-specific code stays within RdfService.
+ * @internal This is not an RDF domain contract and is deliberately absent
+ * from the experiment entrypoint. Canonical external boundaries use
+ * `@beep/rdf` Dataset; this wrapper exists only for mutation-heavy legacy
+ * reasoning workflows until those workflows are ported to immutable datasets.
  *
  * @since 2.0.0
  */
+const RdfStoreBrand: unique symbol = Symbol.for("@beep/scratchpad/effect-ontology/RdfStore");
+
 export interface RdfStore {
   readonly _tag: "RdfStore";
-  readonly _store: N3Store;
+  readonly [RdfStoreBrand]: true;
 }
+
+const rdfStoreBackends = new WeakMap<RdfStore, N3Store>();
+
+/** Guard for opaque workflow-store handles created by this module. */
+export const isRdfStore = (value: unknown): value is RdfStore => P.hasProperty(value, RdfStoreBrand);
+
+const makeRdfStore = (store: N3Store): RdfStore => {
+  const handle: RdfStore = { _tag: "RdfStore", [RdfStoreBrand]: true };
+  rdfStoreBackends.set(handle, store);
+  return handle;
+};
+
+/** Create an empty mutable workflow store without exposing the backend. */
+export const emptyRdfStore = (): RdfStore => makeRdfStore(new N3.Store());
+
+/** Create a mutable workflow store from a canonical RDF dataset. */
+export const rdfStoreFromDataset = (dataset: CanonicalRdf.Dataset): RdfStore =>
+  makeRdfStore(new N3.Store(A.map(dataset.quads, canonicalQuadToN3)));
+
+const backend = (store: RdfStore): N3Store => {
+  const value = rdfStoreBackends.get(store);
+  if (P.isUndefined(value)) {
+    return new N3.Store();
+  }
+  return value;
+};
+
+/** Return the current number of canonical quads in a workflow store. */
+export const rdfStoreSize = (store: RdfStore): number => backend(store).size;
+
+/** Return canonical quads matching a workflow-store pattern. */
+export const rdfStoreQuads: {
+  (pattern: QuadPattern): (store: RdfStore) => ReadonlyArray<Quad>;
+  (store: RdfStore, pattern: QuadPattern): ReadonlyArray<Quad>;
+} = dual(2, (store: RdfStore, pattern: QuadPattern): ReadonlyArray<Quad> => {
+  const n3Store = backend(store);
+  return A.map(
+    n3Store.getQuads(
+      domainTermToN3Term(pattern.subject ?? null),
+      domainTermToN3Term(pattern.predicate ?? null),
+      domainTermToN3Term(pattern.object ?? null),
+      domainTermToN3Term(pattern.graph ?? null)
+    ),
+    n3QuadToDomainQuad
+  );
+});
+
+/** Return every canonical quad in a workflow store. */
+export const rdfStoreAllQuads = (store: RdfStore): ReadonlyArray<Quad> => rdfStoreQuads(store, {});
+
+/** Add one canonical quad to a mutable workflow store. */
+export const rdfStoreAddQuad: {
+  (quad: Quad): (store: RdfStore) => void;
+  (store: RdfStore, quad: Quad): void;
+} = dual(2, (store: RdfStore, quad: Quad): void => {
+  backend(store).addQuad(canonicalQuadToN3(quad));
+});
+
+/** Remove canonical quads from a mutable workflow store. */
+export const rdfStoreRemoveQuads: {
+  (quads: Iterable<Quad>): (store: RdfStore) => void;
+  (store: RdfStore, quads: Iterable<Quad>): void;
+} = dual(2, (store: RdfStore, quads: Iterable<Quad>): void => {
+  backend(store).removeQuads(A.map(A.fromIterable(quads), canonicalQuadToN3));
+});
+
+/** Clone a workflow store without exposing its mutable backend. */
+export const cloneRdfStore = (store: RdfStore): RdfStore => makeRdfStore(new N3.Store(backend(store)));
+
+/** Apply N3 rules while keeping the mutable driver backend private. */
+export const rdfStoreApplyRules = Effect.fn("RdfStore.applyRules")(function* (
+  store: RdfStore,
+  rules: ReadonlyArray<string>
+) {
+  yield* Effect.try({
+    try: () => {
+      const parser = new N3.Parser({ format: "N3" });
+      const ruleStore = new N3.Store();
+      for (const rule of rules) ruleStore.addQuads(parser.parse(rule));
+      new N3.Reasoner(backend(store)).reason(ruleStore);
+    },
+    catch: (cause) =>
+      RdfError.make({
+        message: `Failed to apply RDF reasoning rules: ${cause}`,
+        cause: O.some(cause),
+      }),
+  });
+});
 
 /**
  * QuadPattern - Query pattern for store queries
@@ -106,6 +201,39 @@ const n3QuadToDomainQuad = (n3Quad: N3.Quad): Quad => {
     ? makeQuad(subject, predicate, { object, graph: makeNamedNode(n3Quad.graph.value) })
     : makeQuad(subject, predicate, object);
 };
+
+const canonicalSubjectToN3 = (term: CanonicalRdf.Subject): N3.Quad_Subject =>
+  CanonicalRdf.Subject.match(term, {
+    NamedNode: (value) => N3.DataFactory.namedNode(value.value),
+    BlankNode: (value) => N3.DataFactory.blankNode(value.value),
+  });
+
+const canonicalObjectToN3 = (term: CanonicalRdf.ObjectTerm): N3.Quad_Object =>
+  CanonicalRdf.ObjectTerm.match(term, {
+    NamedNode: (value) => N3.DataFactory.namedNode(value.value),
+    BlankNode: (value) => N3.DataFactory.blankNode(value.value),
+    Literal: (value) =>
+      O.match(value.language, {
+        onNone: () => N3.DataFactory.literal(value.value, N3.DataFactory.namedNode(value.datatype.value)),
+        onSome: (language) => N3.DataFactory.literal(value.value, language),
+      }),
+  });
+
+const canonicalQuadToN3 = (quad: CanonicalRdf.Quad): N3.Quad =>
+  N3.DataFactory.quad(
+    canonicalSubjectToN3(quad.subject),
+    N3.DataFactory.namedNode(quad.predicate.value),
+    canonicalObjectToN3(quad.object),
+    quad.graph.termType === "DefaultGraph"
+      ? N3.DataFactory.defaultGraph()
+      : quad.graph.termType === "NamedNode"
+        ? N3.DataFactory.namedNode(quad.graph.value)
+        : N3.DataFactory.blankNode(quad.graph.value)
+  );
+
+/** Convert the experiment's mutable store to the canonical RDF dataset contract. */
+export const rdfStoreToDataset = (store: RdfStore): CanonicalRdf.Dataset =>
+  CanonicalRdf.makeDataset(A.map(backend(store).getQuads(null, null, null, null), n3QuadToDomainQuad));
 
 /**
  * Internal: Convert domain term to N3 Term for querying
@@ -387,6 +515,7 @@ export interface RdfBuilderShape {
 export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
   make: Effect.gen(function* () {
     const config = yield* ConfigService;
+    const turtleCodec = yield* N3TurtleCodec;
 
     // Create N3 term builders with IRI validation
     const builders = createN3Builders(N3.DataFactory, true);
@@ -405,17 +534,18 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       makeStore: Effect.acquireRelease(
         Effect.sync(() => {
           const n3Store = new N3.Store();
-          return { _tag: "RdfStore" as const, _store: n3Store } satisfies RdfStore;
+          return makeRdfStore(n3Store);
         }),
         (store) =>
           Effect.sync(() => {
             // Actually clear the store to release memory
-            const quads = store._store.getQuads(null, null, null, null);
-            store._store.removeQuads(quads);
+            const n3Store = backend(store);
+            const quads = n3Store.getQuads(null, null, null, null);
+            n3Store.removeQuads(quads);
           }).pipe(
             Effect.tap(() =>
               Effect.logDebug("RDF store cleared", {
-                finalQuadCount: store._store.size,
+                finalQuadCount: rdfStoreSize(store),
               })
             )
           )
@@ -430,7 +560,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        */
       createStore: Effect.sync(() => {
         const n3Store = new N3.Store();
-        return { _tag: "RdfStore" as const, _store: n3Store } satisfies RdfStore;
+        return makeRdfStore(n3Store);
       }),
 
       /**
@@ -443,21 +573,20 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @returns Effect yielding RdfStore or ParsingFailed
        */
       parseTurtle: (turtle: string) =>
-        Effect.try({
-          try: () => {
-            const parser = new N3.Parser();
-            const quads = parser.parse(turtle);
+        turtleCodec.parse(N3ParseTurtleRequest.make({ source: turtle })).pipe(
+          Effect.map(({ dataset }) => {
             const n3Store = new N3.Store();
-            n3Store.addQuads(quads);
-            return { _tag: "RdfStore" as const, _store: n3Store } satisfies RdfStore;
-          },
-          catch: (error) =>
+            n3Store.addQuads(A.map(dataset.quads, canonicalQuadToN3));
+            return makeRdfStore(n3Store);
+          }),
+          Effect.mapError((error) =>
             ParsingFailed.make({
-              message: `Failed to parse Turtle: ${error}`,
+              message: `Failed to parse Turtle: ${error.message}`,
               cause: O.some(error),
               format: O.some("Turtle"),
-            }),
-        }),
+            })
+          )
+        ),
 
       /**
        * Parse TriG string to RDF store
@@ -474,7 +603,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             const quads = parser.parse(trig);
             const n3Store = new N3.Store();
             n3Store.addQuads(quads);
-            return { _tag: "RdfStore" as const, _store: n3Store } satisfies RdfStore;
+            return makeRdfStore(n3Store);
           },
           catch: (error) =>
             ParsingFailed.make({
@@ -497,7 +626,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       queryStore: (store: RdfStore, pattern: QuadPattern) =>
         Effect.try({
           try: () => {
-            const n3Store = store._store;
+            const n3Store = backend(store);
 
             // Convert domain terms to N3 terms for querying
             const n3Subject = domainTermToN3Term(pattern.subject ?? null);
@@ -547,7 +676,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       addEntities: (store: RdfStore, entities: Iterable<Entity>, options?: AddTriplesOptions) =>
         Effect.try({
           try: () => {
-            const n3Store = store._store;
+            const n3Store = backend(store);
             const graphNode = P.isNotUndefined(options?.graphUri)
               ? N3.DataFactory.namedNode(options.graphUri)
               : undefined;
@@ -596,7 +725,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       addRelations: (store: RdfStore, relations: Iterable<Relation>, options?: AddTriplesOptions) =>
         Effect.try({
           try: () => {
-            const n3Store = store._store;
+            const n3Store = backend(store);
             const graphNode = P.isNotUndefined(options?.graphUri)
               ? N3.DataFactory.namedNode(options.graphUri)
               : undefined;
@@ -644,7 +773,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       addSameAsLinks: (store: RdfStore, canonicalMap: Record<string, string>) =>
         Effect.try({
           try: () => {
-            const n3Store = store._store;
+            const n3Store = backend(store);
             const sameAsPredicate = N3.DataFactory.namedNode(OWL_SAME_AS.value);
 
             for (const [mentionId, canonicalId] of Object.entries(canonicalMap)) {
@@ -690,7 +819,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       addExtractionMetadata: (store: RdfStore, metadata: ExtractionMetadata) =>
         Effect.try({
           try: () => {
-            const n3Store = store._store;
+            const n3Store = backend(store);
             const graphNode = N3.DataFactory.namedNode(metadata.graphUri);
             const graphSubject = N3.DataFactory.namedNode(metadata.graphUri);
 
@@ -781,7 +910,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       ) =>
         Effect.try({
           try: () => {
-            const n3Store = store._store;
+            const n3Store = backend(store);
             const graphNode = P.isNotUndefined(graphUri)
               ? N3.DataFactory.namedNode(graphUri)
               : N3.DataFactory.defaultGraph();
@@ -863,7 +992,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       ) =>
         Effect.try({
           try: () => {
-            const n3Store = store._store;
+            const n3Store = backend(store);
             const graphNode = P.isNotUndefined(options?.graphUri)
               ? N3.DataFactory.namedNode(options.graphUri)
               : N3.DataFactory.defaultGraph();
@@ -972,45 +1101,33 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @returns Turtle string
        */
       toTurtle: (store: RdfStore) =>
-        Effect.callback<string, SerializationFailed>((resume) => {
-          const n3Store = store._store;
-          const writer = new N3.Writer({
-            format: "Turtle",
-            prefixes: config.rdf.prefixes,
-          });
-
-          // Add all quads from store
-          n3Store.forEach((q) => {
-            writer.addQuad(q);
-          });
-
-          writer.end((error, result) => {
-            if (P.isTruthy(error)) {
-              resume(
+        turtleCodec
+          .serialize(
+            N3SerializeTurtleRequest.make({
+              dataset: rdfStoreToDataset(store),
+              prefixes: config.rdf.prefixes,
+            })
+          )
+          .pipe(
+            Effect.map(({ source }) => source),
+            Effect.mapError((error) =>
+              SerializationFailed.make({
+                message: `Turtle serialization failed: ${error.message}`,
+                cause: O.some(error),
+                format: O.some("Turtle"),
+              })
+            ),
+            Effect.timeoutOrElse({
+              duration: Duration.seconds(30),
+              orElse: () =>
                 Effect.fail(
                   SerializationFailed.make({
-                    message: `Turtle serialization failed: ${error}`,
-                    cause: O.some(error),
+                    message: "Turtle serialization timed out after 30 seconds",
                     format: O.some("Turtle"),
                   })
-                )
-              );
-            } else {
-              resume(Effect.succeed(result));
-            }
-          });
-        }).pipe(
-          Effect.timeoutOrElse({
-            duration: Duration.seconds(30),
-            orElse: () =>
-              Effect.fail(
-                SerializationFailed.make({
-                  message: "Turtle serialization timed out after 30 seconds",
-                  format: O.some("Turtle"),
-                })
-              ),
-          })
-        ),
+                ),
+            })
+          ),
 
       /**
        * Serialize store to TriG format with named graphs
@@ -1023,7 +1140,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        */
       toTriG: (store: RdfStore) =>
         Effect.callback<string, SerializationFailed>((resume) => {
-          const n3Store = store._store;
+          const n3Store = backend(store);
           const writer = new N3.Writer({
             format: "application/trig",
             prefixes: config.rdf.prefixes,
@@ -1070,7 +1187,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       getGraphs: (store: RdfStore) =>
         Effect.try({
           try: () => {
-            const n3Store = store._store;
+            const n3Store = backend(store);
             const graphs = MutableHashSet.empty<string>();
 
             // Iterate all quads and collect unique graph IRIs
@@ -1095,7 +1212,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       getQuadsFromGraph: (store: RdfStore, graphIri: IRI) =>
         Effect.try({
           try: () => {
-            const n3Store = store._store;
+            const n3Store = backend(store);
             const graphNode = N3.DataFactory.namedNode(graphIri);
             const n3Quads = n3Store.getQuads(null, null, null, graphNode);
             return Chunk.fromIterable(n3Quads.map(n3QuadToDomainQuad));
@@ -1113,7 +1230,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       copyGraphQuads: (store: RdfStore, sourceGraph: IRI, targetGraph: IRI) =>
         Effect.try({
           try: () => {
-            const n3Store = store._store;
+            const n3Store = backend(store);
             const sourceNode = N3.DataFactory.namedNode(sourceGraph);
             const targetNode = N3.DataFactory.namedNode(targetGraph);
 
@@ -1140,7 +1257,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       deleteGraph: (store: RdfStore, graphIri: IRI) =>
         Effect.try({
           try: () => {
-            const n3Store = store._store;
+            const n3Store = backend(store);
             const graphNode = N3.DataFactory.namedNode(graphIri);
 
             // Get all quads in the graph
@@ -1168,8 +1285,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       mergeStores: (target: RdfStore, source: RdfStore) =>
         Effect.try({
           try: () => {
-            const targetStore = target._store;
-            const sourceStore = source._store;
+            const targetStore = backend(target);
+            const sourceStore = backend(source);
 
             // Get initial count
             const initialCount = targetStore.size;
@@ -1199,9 +1316,9 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
         Effect.try({
           try: () => {
             const newStore = new N3.Store();
-            const sourceQuads = source._store.getQuads(null, null, null, null);
+            const sourceQuads = backend(source).getQuads(null, null, null, null);
             newStore.addQuads(sourceQuads);
-            return { _tag: "RdfStore" as const, _store: newStore } satisfies RdfStore;
+            return makeRdfStore(newStore);
           },
           catch: (error) =>
             RdfError.make({
@@ -1219,7 +1336,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @param shapesGraph - SHACL shapes as Turtle string
        * @returns Validation result
        */
-      validate: (_store: RdfStore, _shapesGraph: string) =>
+      validate: (_rdfStore: RdfStore, _shapesGraph: string) =>
         Effect.succeed({
           conforms: true,
           report: "SHACL validation not yet implemented",
@@ -1227,5 +1344,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
     } satisfies RdfBuilderShape;
   }),
 }) {
-  static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([ConfigServiceDefault]));
+  static readonly Default = Layer.effect(this, this.make).pipe(
+    Layer.provide([ConfigServiceDefault, N3TurtleCodecLive])
+  );
 }
