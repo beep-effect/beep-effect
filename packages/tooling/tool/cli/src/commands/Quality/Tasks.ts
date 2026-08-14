@@ -116,11 +116,12 @@ const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const COVERAGE_FULL_SHARD_COUNT = 5;
 // repo-cli deliberately disables file parallelism for ordinary package runs,
 // but serial imports consumed 728.76 seconds in the rejected live coverage
-// candidate. Full coverage uses isolated Vitest workers, so enable file
-// parallelism only on this orchestrated path; a two-worker local probe passed
-// all 90 files in 200.86 seconds with identical coverage.
-const COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG = "--fileParallelism=true";
-const COVERAGE_FULL_VITEST_MAX_WORKERS_ARG = "--maxWorkers=2";
+// candidate. Full coverage and baseline regeneration use isolated Vitest
+// workers, so enable file parallelism only on these canonical orchestration
+// paths; a two-worker local probe passed all 90 files in 200.86 seconds.
+const COVERAGE_VITEST_FILE_PARALLELISM_ARG = "--fileParallelism=true";
+const COVERAGE_VITEST_MAX_WORKERS_ARG = "--maxWorkers=2";
+const COVERAGE_VITEST_ARGS = ["--", COVERAGE_VITEST_FILE_PARALLELISM_ARG, COVERAGE_VITEST_MAX_WORKERS_ARG] as const;
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
 const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
@@ -1307,7 +1308,7 @@ const coverageStep = (cwd: string, options: CoverageTaskOptions) =>
   QualityTaskStep.make({
     label: options.writeBaseline ? "coverage:baseline" : "coverage:ratchet",
     command: "bunx",
-    args: turboRunArgs(["coverage"], options.args),
+    args: turboRunArgs(["coverage"], options.writeBaseline ? [...options.args, ...COVERAGE_VITEST_ARGS] : options.args),
     cwd,
     env: {
       ...coverageEnvironment(),
@@ -1332,9 +1333,7 @@ const coverageFullShardStep = (
         "--summarize",
         ...passthroughArgs,
         ...A.map(packageNames, (packageName) => `--filter=${packageName}`),
-        "--",
-        COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
-        COVERAGE_FULL_VITEST_MAX_WORKERS_ARG,
+        ...COVERAGE_VITEST_ARGS,
       ]
     ),
     cwd,

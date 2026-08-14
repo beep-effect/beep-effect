@@ -1372,7 +1372,10 @@ describe("quality task adapter", () => {
   it("keeps report-only coverage reserved for baseline regeneration", () => {
     const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
       withEnvVar("NODE_OPTIONS", undefined, () =>
-        rootQualityStepsForTesting("/repo", getInvocation(["coverage", "--write-baseline", "--concurrency=1"]))
+        rootQualityStepsForTesting(
+          "/repo",
+          getInvocation(["coverage", "--", "--write-baseline", "--concurrency=1", "--force"])
+        )
       )
     );
 
@@ -1380,7 +1383,13 @@ describe("quality task adapter", () => {
     expect(steps[0]).toMatchObject({
       label: "coverage:baseline",
       command: "bunx",
-      args: expectedTurboArgs("coverage", ["--concurrency=1"]),
+      args: expectedTurboArgs("coverage", [
+        "--concurrency=1",
+        "--force",
+        "--",
+        "--fileParallelism=true",
+        "--maxWorkers=2",
+      ]),
       env: {
         BEEP_FC_SEED: "20260708",
         CI: "true",
