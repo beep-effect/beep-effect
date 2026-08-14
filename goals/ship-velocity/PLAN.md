@@ -9,8 +9,9 @@ phase flips ride the final PR of each phase.
 - Land this packet; record operator decisions: C2 (PR remote reads / CSF-014), E2 (INDEX
   end-state), E6 (path-filtered required checks) — all pre-approved 2026-08-13 in principle,
   each gets a dated decision note when its implementation PR opens.
-- Baseline metrics snapshot (SPEC §Metrics) from existing artifacts: c1-raw-failures.txt,
-  merge-commit counts, current monitor latency budget.
+- ~~Baseline metrics snapshot (SPEC §Metrics) from existing artifacts: c1-raw-failures.txt,
+  merge-commit counts, current monitor latency budget~~ — done 2026-08-14:
+  `research/metrics-baseline.md` freezes all five metric baselines + re-measurement protocol.
 - ~~Land the two in-flight branches that already implement backlog items~~ — done: #698
   (coverage scoping, `286a2be63b`) and #702 (runners-bake, `ddc8a873b1`) merged 2026-08-13/14.
   Verify closure only; do not restart either.
