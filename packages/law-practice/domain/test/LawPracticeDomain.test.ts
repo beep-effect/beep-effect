@@ -4,6 +4,7 @@ import {
   Citation,
   CitationBase,
   CitationWarning,
+  CitingApplicationIdentity,
   Claim,
   ClaimNumber,
   ContextOptions,
@@ -53,6 +54,7 @@ import {
   SubsequentHistoryEntry,
   SupraCitation,
   WarningPosition,
+  WipoSt13OfficeCode,
 } from "@beep/law-practice-domain";
 import { NonNegativeInt } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
@@ -174,6 +176,38 @@ describe("@beep/law-practice-domain", () => {
     expect(OfficeCode.is.EP("EP")).toBe(true);
     expect(OfficeCode.is.XX("XX")).toBe(true);
     expect(S.is(OfficeCode)("AA")).toBe(false);
+    expect(S.is(WipoSt13OfficeCode)("EP")).toBe(true);
+    expect(S.is(WipoSt13OfficeCode)("US")).toBe(false);
+    expect(S.is(WipoSt13OfficeCode)("XX")).toBe(false);
+    expect(WipoSt13OfficeCode.is.EP("EP")).toBe(true);
+    expect("US" in WipoSt13OfficeCode.is).toBe(false);
+    expect("XX" in WipoSt13OfficeCode.is).toBe(false);
+    expect(
+      O.isSome(
+        S.decodeOption(CitingApplicationIdentity)({
+          applicationNumber: "102014000345678",
+          kind: "WipoSt13",
+          officeCode: "EP",
+        })
+      )
+    ).toBe(true);
+    expect(
+      O.isNone(
+        S.decodeUnknownOption(CitingApplicationIdentity)({
+          applicationNumber: "102018000138242",
+          kind: "WipoSt13",
+          officeCode: "US",
+        })
+      )
+    ).toBe(true);
+    expect(
+      O.isNone(
+        S.decodeUnknownOption(CitingApplicationIdentity)({
+          applicationNumber: "102014000345678",
+          kind: "WipoSt13",
+        })
+      )
+    ).toBe(true);
 
     expect(KindCode.is.A("A")).toBe(true);
     expect(KindCode.is.A1("A1")).toBe(true);
