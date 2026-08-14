@@ -167,8 +167,7 @@ const RequiredClaudeRepoDenyPermission = LiteralKit([
 
 const isRequiredClaudeRepoDenyPermission = S.is(RequiredClaudeRepoDenyPermission);
 
-const unapprovedClaudeBashPermission = (permission: string): boolean =>
-  (permission === "Bash" || Str.startsWith("Bash(")(permission)) && !isApprovedClaudeRepoBashPermission(permission);
+const unapprovedClaudePermission = (permission: string): boolean => !isApprovedClaudeRepoBashPermission(permission);
 
 const renderValidationCause = (cause: unknown): string => Str.replaceAll(/, got [^\n)]+/g, "")(String(cause));
 
@@ -241,7 +240,7 @@ const validateClaudeRepoSafetyPolicy = (content: string) =>
       const deniedPermissions = O.flatMap(settings.permissions, (permissions) => permissions.deny).pipe(
         O.getOrElse(A.empty<string>)
       );
-      const unapprovedPermissions = A.filter(allowedPermissions, unapprovedClaudeBashPermission);
+      const unapprovedPermissions = A.filter(allowedPermissions, unapprovedClaudePermission);
       const missingRequiredDenyPermissions = A.filter(
         RequiredClaudeRepoDenyPermission.Options,
         (permission) => !A.contains(deniedPermissions, permission)
@@ -259,7 +258,7 @@ const validateClaudeRepoSafetyPolicy = (content: string) =>
         )
       );
       const findings = A.flatten([
-        A.map(unapprovedPermissions, (permission) => `unapproved auto-approved Bash rule: ${permission}`),
+        A.map(unapprovedPermissions, (permission) => `unapproved auto-approved permission: ${permission}`),
         A.map(missingRequiredDenyPermissions, (permission) => `missing required deny rule: ${permission}`),
         A.map(
           unexpectedDenyPermissions,

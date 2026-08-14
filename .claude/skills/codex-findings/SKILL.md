@@ -42,8 +42,14 @@ Useful flags:
 | `--dry-run` | Report the packet without writing anything. |
 | `--expected-count N` | Fail closed if the export holds fewer than the dashboard reported. |
 | `--slug` / `--branch` / `--date` | Override the derived packet identity. |
+| `--refresh` | Append unseen IDs from a full snapshot while preserving prior triage and CSF prose. |
 | `--force` | Replace an existing packet. **Destroys hand-written triage prose.** |
 | `--json` | Machine-readable summary. |
+
+`--refresh` and `--force` are mutually exclusive. A refresh requires an
+existing decodable packet and an exact full-snapshot superset: missing prior
+IDs, changed prior metadata, duplicate bindings, count drift, or packet
+provenance drift all fail closed.
 
 The capture date comes from the export filename, or `--date`. It never comes
 from the clock, so re-ingesting the same export is byte-identical.
@@ -51,6 +57,13 @@ from the clock, so re-ingesting the same export is byte-identical.
 What lands: `README.md`, `GOAL.md`, `SPEC.md`, `PLAN.md`, `research/SOURCES.md`,
 `ops/manifest.json`, `ops/triage.json`, `findings/INDEX.md`, one
 `findings/CSF-NNN.md` per finding, and a gitignored `raw/`.
+
+On refresh, existing triage entries, lanes, and CSF files are not regenerated.
+Unseen findings append after the highest reserved ordinal as untriaged P2/P3
+work; machine-owned counts and status surfaces are reconciled, and the ignored
+normalized raw snapshot is refreshed. The human and `--json` summaries include
+the preserved IDs, appended IDs, and changed paths. Repeating an identical full
+snapshot is a no-op.
 
 ## 3. Execute
 
@@ -72,10 +85,9 @@ evidence-backed `False positive`). Accepted risk is not available. Direct
 
 ## Invariants worth knowing
 
-- **Identifiers are sticky.** Re-ingesting preserves each `codexId → CSF-NNN`
-  binding and appends new findings. A number is never reused, even after its
-  finding leaves the export, because it is quoted in triage prose and in the
-  close allowlist.
+- **Identifiers are sticky.** Refresh preserves each `codexId → CSF-NNN`
+  binding and appends new findings. A number is never reused, and a refresh
+  refuses a snapshot that omits a previously captured identity.
 - **Personal data never enters the CLI.** `author_email`, `assignee_name`, and
   `assignee_email` are dropped at the parse boundary, and the reject-scan
   independently refuses email addresses.
@@ -86,15 +98,21 @@ evidence-backed `False positive`). Accepted risk is not available. Direct
 - **`raw/` is gitignored and holds the normalized capture only.** The CSV is
   never copied into the repository — it carries report bodies and an email
   address in every row.
-- **Writes are atomic.** The packet is staged, scanned, then promoted with a
-  single rename, so a crash cannot leave a half-packet and an existing packet
-  is never clobbered without `--force`.
+- **Writes are staged and recoverable.** The complete packet is scanned and
+  staged before promotion. Refresh moves the prior packet to a recovery backup,
+  verifies its bytes again, restores it on a failed promotion, and removes the
+  backup only after the new packet is in place.
 
-## Not implemented yet
+## Refresh an existing packet
 
-`--refresh` (merging a new export into an existing packet while preserving
-hand-written prose) does not exist. Today the choices are a new slug or
-`--force`. The sticky-identity mechanism it needs is already in place.
+Export the complete filtered findings view again, then run:
+
+```sh
+bun run beep codex findings ingest --refresh --from ~/Downloads/codex-security-findings-<timestamp>.csv
+```
+
+Do not pre-filter the refresh to only new rows: removals are indistinguishable
+from a partial capture, so the command deliberately requires a full superset.
 
 Source-commit ancestry is checked by a packet verification command rather than
 the CLI, because this repository squash-merges and a valid finding's source

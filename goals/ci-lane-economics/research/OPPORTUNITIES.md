@@ -296,3 +296,29 @@ evidence, what would have prevented it). Redact for the public repo.
   the coverage runtime (env-guard them off when coverage instrumentation is
   active) or express the bound relative to an in-run calibration constant
   instead of absolute milliseconds.
+
+## 2026-08-14 — green correctness merged before timing admission
+
+- **Doing:** monitoring the final PR #707 Coverage Regression wave and waiting
+  to admit or reject the five-shard shape against the packet's 20-minute gate.
+- **Evidence:** job `94664247028` completed green in 23m14s, with the
+  verification step itself taking 22m00s. The PR was merged externally three
+  seconds after the job ended, before the timing evidence could be classified
+  and the packet closeout state could be written. The implementation is
+  correctness-green but economics-rejected, so a successor PR is required.
+- **Would have prevented it:** hold merge until the active packet records its
+  admission decision, or make packet admission/closeout a protected required
+  context for performance-governed changes.
+
+## 2026-08-14 — moving main carried a stale generated goal index
+
+- **Doing:** running the canonical full Yeet verification for the bounded
+  eight-shard successor after refreshing to the latest `origin/main`.
+- **Evidence:** build, security, lint subcommands, and all 128 package
+  typechecks passed, but the aggregate lint lane exited only because
+  `goals/INDEX.md` on the refreshed base reported 143 packets while the live
+  manifests projected 144. The candidate changes no goal manifest; regenerating
+  the index changed only the packet and active counts.
+- **Would have prevented it:** require the generated goal-index check on main
+  before merge, or regenerate `goals/INDEX.md` in the PR that adds a packet
+  manifest so unrelated successors do not inherit the drift.

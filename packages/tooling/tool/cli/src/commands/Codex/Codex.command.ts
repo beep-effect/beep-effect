@@ -104,6 +104,7 @@ export const codexCommand = Command.make("codex", {}, () =>
     "Codex commands:",
     "- bun run beep codex quality-review-fix-loop",
     "- bun run beep codex findings ingest --from <export.csv>",
+    "- bun run beep codex findings ingest --refresh --from <full-export.csv>",
   ])
 ).pipe(
   Command.withDescription("Codex agent helper commands"),

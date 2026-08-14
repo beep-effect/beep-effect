@@ -23,9 +23,17 @@ import { decodeCodexFindingsCsv } from "./Findings.csv.ts";
 import { CodexFindingsIngestError, CodexFindingsRedactionError } from "./Findings.errors.ts";
 import { defaultPacketSlug, planPacket, priorIdsOfEntries } from "./Findings.normalize.ts";
 import { renderPacketDocuments } from "./Findings.packet.ts";
+import {
+  loadCodexRefreshLedgerSource,
+  priorIdsOfRefreshSource,
+  refreshCodexFindingsPacket,
+  validateCodexFindingsIngestModes,
+} from "./Findings.refresh.ts";
 import { describeSensitiveHits, scanSensitiveUnknown } from "./Findings.scan.ts";
 import { decodeCodexTriageLedger } from "./Findings.triage.schemas.ts";
 import { writePacket } from "./Findings.write.ts";
+import type { CodexFindingsRefreshReconciliation, CodexRefreshLedgerSource } from "./Findings.refresh.ts";
+import type { CodexPacketPlan } from "./Findings.schemas.ts";
 
 const SOURCE_URL = "https://chatgpt.com/codex/cloud/security/findings/";
 
@@ -91,35 +99,22 @@ const readPriorIds = Effect.fnUntraced(function* (packetDir: string) {
   return priorIdsOfEntries(entries);
 });
 
-/**
- * Ingest a Codex findings CSV export into a bootstrapped goal packet.
- *
- * **Example** (Naming the ingest entry point)
- *
- * ```ts
- * import { runCodexFindingsIngest } from "@beep/repo-cli/commands/Codex/Findings.command"
- *
- * console.log(typeof runCodexFindingsIngest) // "function"
- * ```
- *
- * @param options - Validated ingest flags, including the export path.
- * @returns An effect that writes or plans the packet and prints the summary.
- * @category use-cases
- * @since 0.0.0
- */
-export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
+type CodexFindingsIngestCommandOptions = {
   readonly from: string;
   readonly slug: O.Option<string>;
   readonly date: O.Option<string>;
   readonly branch: O.Option<string>;
   readonly expectedCount: O.Option<number>;
+  readonly refresh: boolean;
   readonly force: boolean;
   readonly dryRun: boolean;
   readonly json: boolean;
-}) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(
+};
+
+type DecodedCodexFindingsCsv = Effect.Success<ReturnType<typeof decodeCodexFindingsCsv>>;
+
+const locateRepositoryRoot = Effect.fn("CodexFindings.locateRepositoryRoot")(function* () {
+  return yield* findRepoRoot().pipe(
     Effect.mapError(() =>
       CodexFindingsIngestError.make({
         reason: "payload-unreadable",
@@ -127,8 +122,11 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
       })
     )
   );
+});
 
-  const text = yield* fs.readFileString(options.from).pipe(
+const readCodexFindingsExport = Effect.fn("CodexFindings.readExport")(function* (from: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const text = yield* fs.readFileString(from).pipe(
     Effect.mapError(() =>
       CodexFindingsIngestError.make({
         reason: "payload-unreadable",
@@ -136,10 +134,14 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
       })
     )
   );
+  return yield* decodeCodexFindingsCsv(text);
+});
 
-  const parsed = yield* decodeCodexFindingsCsv(text);
-
-  const resolvedDate = O.orElse(options.date, () => captureDateFromFileName(path.basename(options.from)));
+const resolveCaptureDate = Effect.fn("CodexFindings.resolveCaptureDate")(function* (
+  date: O.Option<string>,
+  fileName: string
+) {
+  const resolvedDate = O.orElse(date, () => captureDateFromFileName(fileName));
   if (O.isNone(resolvedDate)) {
     return yield* CodexFindingsIngestError.make({
       reason: "capture-date-unknown",
@@ -147,8 +149,14 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
         "The capture date could not be read from the export filename. Pass --date YYYY-MM-DD so the packet is reproducible rather than clock-dependent.",
     });
   }
-  const capturedAt = resolvedDate.value;
+  return resolvedDate.value;
+});
 
+const decodeCapturePayload = Effect.fn("CodexFindings.decodeCapturePayload")(function* (
+  parsed: DecodedCodexFindingsCsv,
+  capturedAt: string,
+  expectedCount: O.Option<number>
+) {
   const payloadInput = {
     schemaVersion: "codex-findings-capture/v1",
     capture: {
@@ -156,7 +164,7 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
       sourceUrl: SOURCE_URL,
       repository: parsed.repository,
       findingsView: `repo-scoped, status=${A.join(A.map(parsed.statuses, Str.toLowerCase), "|")}`,
-      expectedCount: O.getOrElse(options.expectedCount, () => A.length(parsed.findings)),
+      expectedCount: O.getOrElse(expectedCount, () => A.length(parsed.findings)),
       authState: "authenticated",
     },
     findings: parsed.findings,
@@ -173,7 +181,7 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
     });
   }
 
-  const payload = yield* decodeCodexFindingsCapturePayload(payloadInput).pipe(
+  return yield* decodeCodexFindingsCapturePayload(payloadInput).pipe(
     Effect.mapError(() =>
       CodexFindingsIngestError.make({
         reason: "payload-invalid",
@@ -182,57 +190,186 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
       })
     )
   );
+});
 
+const loadPlanningProvenance = Effect.fn("CodexFindings.loadPlanningProvenance")(function* (
+  options: CodexFindingsIngestCommandOptions,
+  repoRoot: string,
+  provisionalSlug: string
+) {
+  if (!options.refresh) {
+    const path = yield* Path.Path;
+    return {
+      refreshSource: O.none<CodexRefreshLedgerSource>(),
+      priorIds: yield* readPriorIds(path.join(repoRoot, "goals", provisionalSlug)),
+      plannedBranch: O.getOrUndefined(options.branch),
+    };
+  }
+
+  const source = yield* loadCodexRefreshLedgerSource({ repoRoot, slug: provisionalSlug });
+  return {
+    refreshSource: O.some(source),
+    priorIds: priorIdsOfRefreshSource(source),
+    plannedBranch: O.getOrElse(options.branch, () => source.ledger.meta.branch),
+  };
+});
+
+const prepareCodexFindingsIngest = Effect.fn("CodexFindings.prepareIngest")(function* (
+  options: CodexFindingsIngestCommandOptions
+) {
+  const path = yield* Path.Path;
+  const repoRoot = yield* locateRepositoryRoot();
+  const parsed = yield* readCodexFindingsExport(options.from);
+  const capturedAt = yield* resolveCaptureDate(options.date, path.basename(options.from));
+  const payload = yield* decodeCapturePayload(parsed, capturedAt, options.expectedCount);
   // Must match the slug planPacket will derive, or prior identifiers would be
   // read from the wrong packet; both sides go through the same helper.
   const provisionalSlug = O.getOrElse(options.slug, () => defaultPacketSlug(capturedAt));
-  const priorIds = yield* readPriorIds(path.join(repoRoot, "goals", provisionalSlug));
-
+  const provenance = yield* loadPlanningProvenance(options, repoRoot, provisionalSlug);
   const plan = yield* planPacket(payload, {
     slug: O.getOrUndefined(options.slug),
-    branch: O.getOrUndefined(options.branch),
+    branch: provenance.plannedBranch,
     capturedAt,
     expectedCount: O.getOrUndefined(options.expectedCount),
-    priorIds,
+    priorIds: provenance.priorIds,
   });
 
-  const documents = renderPacketDocuments({
-    plan,
-    // Report bodies are the evidence P2 validates against. They only ever reach
-    // ignored `raw/reports/`; no tracked renderer accepts this shape.
-    rawReports: parsed.reports,
-    // Raw evidence is the normalized capture, never the export itself: the CSV
-    // carries author email addresses and unsanitized report bodies.
-    rawPayloadJson: `${encodePayload(payload)}\n`,
-  });
-
-  const outcome = yield* writePacket({
+  return {
     repoRoot,
-    slug: plan.slug,
-    documents,
-    dryRun: options.dryRun,
-    force: options.force,
-  });
+    plan,
+    refreshSource: provenance.refreshSource,
+    documents: renderPacketDocuments({
+      plan,
+      // Report bodies are the evidence P2 validates against. They only ever reach
+      // ignored `raw/reports/`; no tracked renderer accepts this shape.
+      rawReports: parsed.reports,
+      // Raw evidence is the normalized capture, never the export itself: the CSV
+      // carries author email addresses and unsanitized report bodies.
+      rawPayloadJson: `${encodePayload(payload)}\n`,
+    }),
+  };
+});
 
-  // The packet is already promoted, so a failed index regeneration must not
-  // fail the ingest — but it must not be silent either, or `goals/INDEX.md`
-  // goes stale while the run reports success.
-  const indexRegenerated =
-    options.dryRun ||
-    (yield* writePortfolioIndex().pipe(
-      Effect.as(true),
-      Effect.orElseSucceed(() => false)
-    ));
+type PreparedCodexFindingsIngest = Effect.Success<ReturnType<typeof prepareCodexFindingsIngest>>;
 
-  // Walk the severity domain rather than the counts object so the summary keeps
-  // canonical most-severe-first order and omits zero-count severities.
-  const severities = A.join(
+const writeCodexFindingsIngest = Effect.fn("CodexFindings.writeIngest")(function* (
+  options: CodexFindingsIngestCommandOptions,
+  prepared: PreparedCodexFindingsIngest
+) {
+  if (O.isSome(prepared.refreshSource)) {
+    const outcome = yield* refreshCodexFindingsPacket({
+      repoRoot: prepared.repoRoot,
+      slug: prepared.plan.slug,
+      source: prepared.refreshSource.value,
+      plan: prepared.plan,
+      documents: prepared.documents,
+      dryRun: options.dryRun,
+    });
+    return { outcome, reconciliation: O.some(outcome.reconciliation) };
+  }
+
+  return {
+    outcome: yield* writePacket({
+      repoRoot: prepared.repoRoot,
+      slug: prepared.plan.slug,
+      documents: prepared.documents,
+      dryRun: options.dryRun,
+      force: options.force,
+    }),
+    reconciliation: O.none<CodexFindingsRefreshReconciliation>(),
+  };
+});
+
+type CodexFindingsIngestWriteResult = Effect.Success<ReturnType<typeof writeCodexFindingsIngest>>;
+type CodexFindingsIngestOutcome = CodexFindingsIngestWriteResult["outcome"];
+
+const regeneratePortfolioIndex = Effect.fn("CodexFindings.regeneratePortfolioIndex")(function* (
+  dryRun: boolean,
+  reconciliation: O.Option<CodexFindingsRefreshReconciliation>
+) {
+  const unchangedRefresh = O.isSome(reconciliation) && A.isReadonlyArrayEmpty(reconciliation.value.appendedIds);
+  if (dryRun || unchangedRefresh) {
+    return true;
+  }
+  return yield* writePortfolioIndex().pipe(
+    Effect.as(true),
+    Effect.orElseSucceed(() => false)
+  );
+});
+
+const renderSeveritySummary = (plan: CodexPacketPlan): string =>
+  A.join(
     A.map(
       A.filter(CodexFindingSeverity.Options, (severity) => (plan.severityCounts[severity] ?? 0) > 0),
       (severity) => `${severity} ${plan.severityCounts[severity] ?? 0}`
     ),
     " · "
   );
+
+const renderRawEvidenceLines = (outcome: CodexFindingsIngestOutcome): ReadonlyArray<string> =>
+  A.match(outcome.reportedEvidence, {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (reportedEvidence) => [
+      `! raw      ${A.length(reportedEvidence)} report body/bodies carry sensitive-shaped text (ignored, untracked): ${A.join(reportedEvidence, ", ")}`,
+    ],
+  });
+
+const renderPacketStatusLine = (
+  outcome: CodexFindingsIngestOutcome,
+  reconciliation: O.Option<CodexFindingsRefreshReconciliation>,
+  dryRun: boolean
+): string => {
+  if (outcome.committed) {
+    return `✓ packet   ${outcome.packetPath}  (${A.length(outcome.written)} files updated)`;
+  }
+  if (dryRun) {
+    return `• dry run  ${outcome.packetPath} not written  (${A.length(outcome.written)} files planned)`;
+  }
+  if (O.isSome(reconciliation) && reconciliation.value.status === "no-new-findings") {
+    return `✓ refresh  ${outcome.packetPath} already reconciled; no new findings`;
+  }
+  return `• packet  ${outcome.packetPath} unchanged`;
+};
+
+const renderRefreshLines = (reconciliation: O.Option<CodexFindingsRefreshReconciliation>): ReadonlyArray<string> =>
+  O.match(reconciliation, {
+    onNone: A.empty<string>,
+    onSome: (result) =>
+      A.match(result.appendedIds, {
+        onEmpty: A.empty<string>,
+        onNonEmpty: (appendedIds) => [
+          `✓ refresh  preserved ${result.priorCount} prior records; appended ${A.join(appendedIds, ", ")}`,
+        ],
+      }),
+  });
+
+const renderCodexFindingsIngestLines = (
+  plan: CodexPacketPlan,
+  outcome: CodexFindingsIngestOutcome,
+  reconciliation: O.Option<CodexFindingsRefreshReconciliation>,
+  dryRun: boolean,
+  indexRegenerated: boolean
+): ReadonlyArray<string> => [
+  `✓ export   ${A.length(plan.records)} findings   ${renderSeveritySummary(plan)}`,
+  "✓ scan     0 rejections across payload and tracked documents",
+  ...renderRawEvidenceLines(outcome),
+  renderPacketStatusLine(outcome, reconciliation, dryRun),
+  ...renderRefreshLines(reconciliation),
+  ...(indexRegenerated
+    ? A.empty<string>()
+    : ["! index    goals/INDEX.md could not be regenerated; run `beep goals index`"]),
+  "",
+  `Next: /goal follow the instructions in ${outcome.packetPath}/GOAL.md`,
+];
+
+const printCodexFindingsIngestResult = Effect.fn("CodexFindings.printIngestResult")(function* (
+  options: CodexFindingsIngestCommandOptions,
+  plan: CodexPacketPlan,
+  writeResult: CodexFindingsIngestWriteResult
+) {
+  const { outcome, reconciliation } = writeResult;
+  const indexRegenerated = yield* regeneratePortfolioIndex(options.dryRun, reconciliation);
+  const refreshJson = O.map(reconciliation, (refresh) => ({ refresh }));
 
   yield* printJsonOrLines(
     options.json,
@@ -244,25 +381,35 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
       severityCounts: plan.severityCounts,
       files: A.length(outcome.written),
       indexRegenerated,
+      ...O.getOrElse(refreshJson, () => ({})),
     },
-    [
-      `✓ export   ${A.length(plan.records)} findings   ${severities}`,
-      "✓ scan     0 rejections across payload and tracked documents",
-      ...(A.isReadonlyArrayEmpty(outcome.reportedEvidence)
-        ? A.empty<string>()
-        : [
-            `! raw      ${A.length(outcome.reportedEvidence)} report body/bodies carry sensitive-shaped text (ignored, untracked): ${A.join(outcome.reportedEvidence, ", ")}`,
-          ]),
-      outcome.committed
-        ? `✓ packet   ${outcome.packetPath}  (${A.length(outcome.written)} files)`
-        : `• dry run  ${outcome.packetPath} not written  (${A.length(outcome.written)} files planned)`,
-      ...(indexRegenerated
-        ? A.empty<string>()
-        : ["! index    goals/INDEX.md could not be regenerated; run `beep goals index`"]),
-      "",
-      `Next: /goal follow the instructions in ${outcome.packetPath}/GOAL.md`,
-    ]
+    renderCodexFindingsIngestLines(plan, outcome, reconciliation, options.dryRun, indexRegenerated)
   );
+});
+
+/**
+ * Ingest a Codex findings CSV export into a bootstrapped goal packet.
+ *
+ * **Example** (Naming the ingest entry point)
+ *
+ * ```ts
+ * import { runCodexFindingsIngest } from "@beep/repo-cli/commands/Codex/Findings.command"
+ *
+ * console.log(typeof runCodexFindingsIngest) // "function"
+ * ```
+ *
+ * @param options - Validated ingest flags, including the export path.
+ * @returns An effect that writes or plans the packet and prints the summary.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const runCodexFindingsIngest = Effect.fn("CodexFindings.runIngest")(function* (
+  options: CodexFindingsIngestCommandOptions
+) {
+  yield* validateCodexFindingsIngestModes({ refresh: options.refresh, force: options.force });
+  const prepared = yield* prepareCodexFindingsIngest(options);
+  const writeResult = yield* writeCodexFindingsIngest(options, prepared);
+  yield* printCodexFindingsIngestResult(options, prepared.plan, writeResult);
 });
 
 const fromFlag = Flag.string("from").pipe(
@@ -281,6 +428,9 @@ const expectedCountFlag = Flag.integer("expected-count").pipe(
   Flag.optional,
   Flag.withDescription("Finding total the dashboard reported, used to fail closed on a partial export")
 );
+const refreshFlag = Flag.boolean("refresh").pipe(
+  Flag.withDescription("Append unseen findings to an existing packet while preserving prior triage and CSF prose")
+);
 
 const findingsIngestCommand = Command.make(
   "ingest",
@@ -290,6 +440,7 @@ const findingsIngestCommand = Command.make(
     date: dateFlag,
     branch: branchFlag,
     expectedCount: expectedCountFlag,
+    refresh: refreshFlag,
     force: forceFlag("Replace an existing packet, discarding its hand-written triage prose"),
     dryRun: dryRunFlag("Report the packet that would be written without touching the filesystem"),
     json: jsonFlag,
@@ -301,12 +452,13 @@ const findingsIngestCommand = Command.make(
       date: flags.date,
       branch: flags.branch,
       expectedCount: flags.expectedCount,
+      refresh: flags.refresh,
       force: flags.force,
       dryRun: flags.dryRun,
       json: flags.json,
     });
   })
-).pipe(Command.withDescription("Bootstrap a goal packet from a signed-in Codex findings CSV export"));
+).pipe(Command.withDescription("Capture or refresh a goal packet from a signed-in Codex findings CSV export"));
 
 /**
  * `beep codex findings` — capture-to-packet commands.
@@ -326,6 +478,7 @@ export const findingsCommand = Command.make("findings", {}, () =>
   printLines([
     "Codex findings commands:",
     "- bun run beep codex findings ingest --from <export.csv>",
+    "- bun run beep codex findings ingest --refresh --from <full-export.csv>",
     "",
     "Export the CSV from the signed-in findings view first:",
     `  ${SOURCE_URL}`,
