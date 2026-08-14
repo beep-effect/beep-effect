@@ -1633,6 +1633,7 @@ describe("quality task adapter", () => {
         "coverage:shard-2",
         "coverage:shard-3",
         "coverage:shard-4",
+        "coverage:shard-5",
       ]);
       expect(steps[0]?.args).toEqual([
         "turbo",
@@ -1650,7 +1651,7 @@ describe("quality task adapter", () => {
         expect(step.args).toContain("--force");
         expect(step.args).toContain("--remote-only");
         expect(step.args).toContain("--output-logs=errors-only");
-        expect(A.takeRight(step.args, 2)).toEqual(["--", "--maxWorkers=2"]);
+        expect(A.takeRight(step.args, 3)).toEqual(["--", "--fileParallelism=true", "--maxWorkers=2"]);
         expect(step.args).not.toContain("--concurrency=4");
         expect(step.args).not.toContain("9");
       }
