@@ -10,96 +10,16 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { IRI as CanonicalIRI } from "@beep/rdf/Iri";
-import { URLStr as CanonicalURLStr, SchemaUtils } from "@beep/schema";
-import { UnitInterval } from "@beep/schema/UnitInterval";
+import { IRI } from "@beep/rdf/Iri";
+import { SchemaUtils, URLStr } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
 
-/**
- * Canonical RDF IRI with an explicit property-testing generator.
- *
- * @remarks
- * The declaration delegates acceptance and construction to `@beep/rdf` while
- * hiding its opaque syntax filter from downstream arbitrary derivation.
- *
- * @example
- * ```ts
- * import { IRI } from "@effect-ontology/Model/shared.ts"
- *
- * const iri = IRI.fromUnknown("https://example.com/ontology#Person")
- * console.log(IRI.is(iri)) // true
- * ```
- *
- * @invariant The value satisfies the repository's canonical RFC 3987 IRI schema.
- * @category rdf
- * @since 0.0.0
- */
-export const IRI = S.declare(CanonicalIRI.is).pipe(
-  $I.annoteSchema("IRI", {
-    description: "Canonical RFC 3987 IRI with an explicit web-IRI arbitrary.",
-    toArbitrary: () => (fc) => fc.webUrl().map(CanonicalIRI.make),
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime IRI accepted by {@link IRI}.
- *
- * @example
- * ```ts
- * import { IRI, type IRI as IriValue } from "@effect-ontology/Model/shared.ts"
- *
- * const iri: IriValue = IRI.fromUnknown("https://example.com/id")
- * console.log(iri)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type IRI = typeof IRI.Type;
-
-/**
- * Canonical URL string with an explicit web-URL generator.
- *
- * @example
- * ```ts
- * import { URLStr } from "@effect-ontology/Model/shared.ts"
- *
- * const url = URLStr.fromUnknown("https://example.com/image.png")
- * console.log(URLStr.is(url)) // true
- * ```
- *
- * @invariant A non-empty string accepted by the platform URL parser.
- * @category urls
- * @since 0.0.0
- */
-export const URLStr = S.declare(CanonicalURLStr.is).pipe(
-  $I.annoteSchema("URLStr", {
-    description: "Canonical URL string with an explicit web-URL arbitrary.",
-    toArbitrary: () => (fc) => fc.webUrl().map(CanonicalURLStr.make),
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime URL accepted by {@link URLStr}.
- *
- * @example
- * ```ts
- * import { URLStr, type URLStr as UrlValue } from "@effect-ontology/Model/shared.ts"
- *
- * const url: UrlValue = URLStr.fromUnknown("https://example.com")
- * console.log(url)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type URLStr = typeof URLStr.Type;
+export { Confidence, IRI, URLStr };
 
 /**
  * JSON-safe scalar accepted as an entity or mention attribute value.
@@ -200,50 +120,6 @@ export const Attributes = S.Record(S.String, AttributeValue)
  * @since 0.0.0
  */
 export type Attributes = typeof Attributes.Type;
-
-/**
- * Confidence value on the closed unit interval.
- *
- * @remarks
- * This semantic alias reuses the repository's canonical
- * {@link UnitInterval} schema, including its finite-number guarantee.
- *
- * @example
- * ```ts
- * import { Confidence } from "@effect-ontology/Model/shared.ts"
- *
- * console.log(Confidence.is(0.95)) // true
- * console.log(Confidence.is(1.5)) // false
- * ```
- *
- * @invariant Finite and between zero and one, inclusive.
- * @category value-objects
- * @since 0.0.0
- */
-export const Confidence = UnitInterval.annotate({
-  toArbitrary: () => S.toArbitrary(UnitInterval),
-}).pipe(
-  $I.annoteSchema("Confidence", {
-    description: "Finite confidence score on the closed unit interval from zero through one.",
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime value decoded by {@link Confidence}. {@inheritDoc Confidence}
- *
- * @example
- * ```ts
- * import { Confidence, type Confidence as ConfidenceValue } from "@effect-ontology/Model/shared.ts"
- *
- * const confidence: ConfidenceValue = Confidence.make(0.95)
- * console.log(confidence)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type Confidence = typeof Confidence.Type;
 
 /**
  * Nullish-compatible optional confidence value.
@@ -372,67 +248,3 @@ export const EntityId = S.String.check(
  * @since 0.0.0
  */
 export type EntityId = typeof EntityId.Type;
-
-export {
-  /**
-   * Compatibility export for the upstream schema name.
-   *
-   * @example
-   * ```ts
-   * import { AttributesSchema } from "@effect-ontology/Model/shared.ts"
-   *
-   * console.log(AttributesSchema.is({ active: true })) // true
-   * ```
-   *
-   * @deprecated Use {@link Attributes}; new schema values omit the `Schema` suffix.
-   * @category interop
-   * @since 0.0.0
-   */
-  Attributes as AttributesSchema,
-  /**
-   * Compatibility export for the upstream schema name.
-   *
-   * @example
-   * ```ts
-   * import { ConfidenceSchema } from "@effect-ontology/Model/shared.ts"
-   *
-   * console.log(ConfidenceSchema.is(0.8)) // true
-   * ```
-   *
-   * @deprecated Use {@link Confidence}; new schema values omit the `Schema` suffix.
-   * @category interop
-   * @since 0.0.0
-   */
-  Confidence as ConfidenceSchema,
-  /**
-   * Compatibility export for the upstream schema name.
-   *
-   * @example
-   * ```ts
-   * import { EntityIdSchema } from "@effect-ontology/Model/shared.ts"
-   *
-   * console.log(EntityIdSchema.is("al_nassr_fc")) // true
-   * ```
-   *
-   * @deprecated Use {@link EntityId}; new schema values omit the `Schema` suffix.
-   * @category interop
-   * @since 0.0.0
-   */
-  EntityId as EntityIdSchema,
-  /**
-   * Compatibility export for the upstream schema name.
-   *
-   * @example
-   * ```ts
-   * import * as O from "effect/Option"
-   * import { OptionalConfidenceSchema } from "@effect-ontology/Model/shared.ts"
-   *
-   * console.log(O.isNone(OptionalConfidenceSchema.fromUnknown(undefined))) // true
-   * ```
-   *
-   * @deprecated Use {@link OptionalConfidence}; it normalizes absence to `Option`.
-   * @category interop
-   * @since 0.0.0
-   */
-  OptionalConfidence as OptionalConfidenceSchema,
-};

@@ -11,6 +11,23 @@
 
 import { createHash } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
+import { makeNamedNode } from "@beep/rdf";
+import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
+import { RDF_FIRST, RDF_NIL, RDF_REST, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { RDFS_COMMENT, RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
+import {
+  SKOS_ALT_LABEL as SKOS_ALTLABEL,
+  SKOS_BROADER,
+  SKOS_CLOSE_MATCH as SKOS_CLOSEMATCH,
+  SKOS_DEFINITION,
+  SKOS_EXACT_MATCH as SKOS_EXACTMATCH,
+  SKOS_HIDDEN_LABEL as SKOS_HIDDENLABEL,
+  SKOS_NAMESPACE,
+  SKOS_NARROWER,
+  SKOS_PREF_LABEL as SKOS_PREFLABEL,
+  SKOS_RELATED,
+  SKOS_SCOPE_NOTE as SKOS_SCOPENOTE,
+} from "@beep/rdf/Vocab/Skos";
 import { Chunk, Context, Duration, Effect, HashMap, Layer, Option, Ref } from "effect";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -19,42 +36,13 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import { OntologyFileNotFound, OntologyParsingFailed } from "../Domain/Error/Ontology.ts";
 import type { RdfError } from "../Domain/Error/Rdf.ts";
 import type { OntologyVersion } from "../Domain/Identity.ts";
 import { ClassDefinition, OntologyContext, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import type { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
-import {
-  OWL,
-  OWL_CLASS,
-  OWL_DATATYPE_PROPERTY,
-  OWL_EQUIVALENT_CLASS,
-  OWL_FUNCTIONAL_PROPERTY,
-  OWL_INVERSEOF,
-  OWL_OBJECT_PROPERTY,
-  RDF,
-  RDF_TYPE,
-  RDFS_COMMENT,
-  RDFS_DOMAIN,
-  RDFS_LABEL,
-  RDFS_RANGE,
-  RDFS_SUBCLASSOF,
-  RDFS_SUBPROPERTYOF,
-  SKOS_ALTLABEL,
-  SKOS_BROADER,
-  SKOS_CLOSEMATCH,
-  SKOS_DEFINITION,
-  SKOS_EXACTMATCH,
-  SKOS_EXAMPLE,
-  SKOS_HIDDENLABEL,
-  SKOS_NARROWER,
-  SKOS_PREFLABEL,
-  SKOS_RELATED,
-  SKOS_SCOPENOTE,
-} from "../Domain/Rdf/Constants.ts";
-import type { Quad } from "../Domain/Rdf/Types.ts";
-import { IRI, Literal } from "../Domain/Rdf/Types.ts";
+import type { GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
+import { IRI, makeBlankNode } from "../Domain/Rdf/Types.ts";
 import type { OntologyEntry } from "../Domain/Schema/OntologyRegistry.ts";
 import { dual3 } from "../Utils/Dual.ts";
 import { rrfFusion } from "../Utils/Retrieval.ts";
@@ -63,10 +51,22 @@ import { NlpService } from "./Nlp.ts";
 import { OntologyRegistryService } from "./OntologyRegistry.ts";
 import type { RdfBuilderShape, RdfStore } from "./Rdf.ts";
 import { RdfBuilder } from "./Rdf.ts";
+
+const namedNodeValue = (value: IRI | NamedNode): string => (P.isString(value) ? value : value.value);
+
 import type { StorageServiceMethods } from "./Storage.ts";
 import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Ontology");
+const RDFS_DOMAIN = makeNamedNode(`${RDFS_NAMESPACE}domain`);
+const RDFS_RANGE = makeNamedNode(`${RDFS_NAMESPACE}range`);
+const RDFS_SUBCLASSOF = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);
+const RDFS_SUBPROPERTYOF = makeNamedNode(`${RDFS_NAMESPACE}subPropertyOf`);
+const SKOS_EXAMPLE = makeNamedNode(`${SKOS_NAMESPACE}example`);
+const OWL_FUNCTIONAL_PROPERTY = makeNamedNode(`${OWL_NAMESPACE}FunctionalProperty`);
+const OWL_INVERSEOF = makeNamedNode(`${OWL_NAMESPACE}inverseOf`);
+const OWL_EQUIVALENT_CLASS = makeNamedNode(`${OWL_NAMESPACE}equivalentClass`);
+const OWL_UNION_OF = makeNamedNode(`${OWL_NAMESPACE}unionOf`);
 
 /**
  * Load and merge external vocabularies into an RDF store
@@ -148,10 +148,10 @@ export const parseOntologyFromStore = dual3(
       readonly queryStore: (
         store: RdfStore,
         pattern: {
-          readonly subject?: IRI | null;
-          readonly predicate?: IRI | null;
-          readonly object?: IRI | null;
-          readonly graph?: IRI | null;
+          readonly subject?: IRI | Subject | null;
+          readonly predicate?: IRI | NamedNode | null;
+          readonly object?: IRI | ObjectTerm | null;
+          readonly graph?: IRI | GraphTerm | null;
         }
       ) => Effect.Effect<Chunk.Chunk<Quad>, RdfError>;
     },
@@ -168,13 +168,13 @@ export const parseOntologyFromStore = dual3(
   > =>
     Effect.gen(function* () {
       // Helper to fetch all values for a predicate into a MutableHashMap
-      const fetchPredicateMap = Effect.fn("fetchPredicateMap")(function* (predicate: IRI) {
+      const fetchPredicateMap = Effect.fn("fetchPredicateMap")(function* (predicate: IRI | NamedNode) {
         const quads = yield* rdf.queryStore(store, { predicate });
         const map = MutableHashMap.empty<string, Array<string>>();
         for (const quad of Chunk.toReadonlyArray(quads)) {
-          if (typeof quad.subject === "string" && !quad.subject.startsWith("_:")) {
-            const subject = quad.subject;
-            const value = S.is(Literal)(quad.object) ? quad.object.value : (quad.object as string);
+          if (quad.subject.termType === "NamedNode") {
+            const subject = quad.subject.value;
+            const value = quad.object.value;
             const values = O.getOrElse(MutableHashMap.get(map, subject), () => {
               const created: Array<string> = [];
               MutableHashMap.set(map, subject, created);
@@ -188,7 +188,7 @@ export const parseOntologyFromStore = dual3(
 
       // Helper to wrap predicate fetch with graceful failure handling
       // Returns empty map if the query fails, allowing partial ontology loads
-      const fetchPredicateMapSafe = (predicate: IRI) =>
+      const fetchPredicateMapSafe = (predicate: IRI | NamedNode) =>
         fetchPredicateMap(predicate).pipe(
           Effect.catch((error) =>
             Effect.gen(function* () {
@@ -208,31 +208,25 @@ export const parseOntologyFromStore = dual3(
           let current = listNode;
 
           // Traverse the RDF list (max 100 iterations to prevent infinite loops)
-          for (let i = 0; i < 100 && current && current !== RDF.nil; i++) {
+          for (let i = 0; i < 100 && current && current !== namedNodeValue(RDF_NIL); i++) {
             // Get rdf:first (the item at this position)
             const firstQuads = yield* rdf.queryStore(store, {
-              subject: current as IRI,
-              predicate: RDF.first,
+              subject: makeBlankNode(current),
+              predicate: RDF_FIRST,
             });
             for (const q of Chunk.toReadonlyArray(firstQuads)) {
-              const value = S.is(Literal)(q.object) ? q.object.value : (q.object as string);
-              // Only include named nodes (not blank nodes)
-              if (typeof value === "string" && !value.startsWith("_:")) {
-                items.push(value);
+              if (q.object.termType === "NamedNode") {
+                items.push(q.object.value);
               }
             }
 
             // Get rdf:rest (pointer to next list node)
             const restQuads = yield* rdf.queryStore(store, {
-              subject: current as IRI,
-              predicate: RDF.rest,
+              subject: makeBlankNode(current),
+              predicate: RDF_REST,
             });
             const restQuad = Chunk.toReadonlyArray(restQuads)[0];
-            current = P.isTruthy(restQuad)
-              ? S.is(Literal)(restQuad.object)
-                ? restQuad.object.value
-                : (restQuad.object as string)
-              : "";
+            current = P.isTruthy(restQuad) ? restQuad.object.value : "";
           }
 
           return items;
@@ -243,13 +237,13 @@ export const parseOntologyFromStore = dual3(
         Effect.gen(function* () {
           // Query for owl:unionOf on this blank node
           const unionQuads = yield* rdf.queryStore(store, {
-            subject: blankNode as IRI,
-            predicate: OWL.unionOf,
+            subject: makeBlankNode(blankNode),
+            predicate: OWL_UNION_OF,
           });
 
           const members: Array<string> = [];
           for (const q of Chunk.toReadonlyArray(unionQuads)) {
-            const listNode = S.is(Literal)(q.object) ? q.object.value : (q.object as string);
+            const listNode = q.object.value;
             const listItems = yield* resolveRdfList(listNode);
             members.push(...listItems);
           }
@@ -258,19 +252,19 @@ export const parseOntologyFromStore = dual3(
         });
 
       // Fetch domain/range with blank node union resolution
-      const fetchDomainRangeMap = Effect.fn("fetchDomainRangeMap")(function* (predicate: IRI) {
+      const fetchDomainRangeMap = Effect.fn("fetchDomainRangeMap")(function* (predicate: IRI | NamedNode) {
         const quads = yield* rdf.queryStore(store, { predicate });
         const map = MutableHashMap.empty<string, Array<string>>();
         for (const quad of Chunk.toReadonlyArray(quads)) {
-          if (typeof quad.subject === "string" && !quad.subject.startsWith("_:")) {
-            const subject = quad.subject;
-            const value = S.is(Literal)(quad.object) ? quad.object.value : (quad.object as string);
+          if (quad.subject.termType === "NamedNode") {
+            const subject = quad.subject.value;
+            const value = quad.object.value;
             const values = O.getOrElse(MutableHashMap.get(map, subject), () => {
               const created: Array<string> = [];
               MutableHashMap.set(map, subject, created);
               return created;
             });
-            if (typeof value === "string" && value.startsWith("_:")) {
+            if (quad.object.termType === "BlankNode") {
               const unionMembers = yield* resolveBlankNodeUnion(value).pipe(
                 Effect.orElseSucceed(() => [] as Array<string>)
               );
@@ -283,7 +277,7 @@ export const parseOntologyFromStore = dual3(
         return map;
       });
 
-      const fetchDomainRangeMapSafe = (predicate: IRI) =>
+      const fetchDomainRangeMapSafe = (predicate: IRI | NamedNode) =>
         fetchDomainRangeMap(predicate).pipe(
           Effect.catch((error) =>
             Effect.gen(function* () {
@@ -376,8 +370,8 @@ export const parseOntologyFromStore = dual3(
       // Store as HashSet<string> for easy lookup by string IDs
       const functionalProps = HashSet.fromIterable(
         Chunk.toReadonlyArray(functionalPropQuads)
-          .filter((q) => typeof q.subject === "string")
-          .map((q) => q.subject as string)
+          .filter((q) => q.subject.termType === "NamedNode")
+          .map((q) => q.subject.value)
       );
 
       const propInfos = MutableHashMap.empty<
@@ -388,13 +382,13 @@ export const parseOntologyFromStore = dual3(
         }
       >();
       for (const quad of Chunk.toReadonlyArray(objectPropQuads)) {
-        if (typeof quad.subject === "string" && !quad.subject.startsWith("_:")) {
-          MutableHashMap.set(propInfos, quad.subject, { id: quad.subject, rangeType: "object" });
+        if (quad.subject.termType === "NamedNode") {
+          MutableHashMap.set(propInfos, quad.subject.value, { id: quad.subject.value, rangeType: "object" });
         }
       }
       for (const quad of Chunk.toReadonlyArray(datatypePropQuads)) {
-        if (typeof quad.subject === "string" && !quad.subject.startsWith("_:")) {
-          MutableHashMap.set(propInfos, quad.subject, { id: quad.subject, rangeType: "datatype" });
+        if (quad.subject.termType === "NamedNode") {
+          MutableHashMap.set(propInfos, quad.subject.value, { id: quad.subject.value, rangeType: "datatype" });
         }
       }
 
@@ -425,8 +419,8 @@ export const parseOntologyFromStore = dual3(
       const finalClasses: Array<ClassDefinition> = [];
       const classSet = MutableHashSet.empty<string>(); // To ensure unique classes
       for (const quad of Chunk.toReadonlyArray(classQuads)) {
-        if (typeof quad.subject === "string" && !quad.subject.startsWith("_:")) {
-          const id = quad.subject;
+        if (quad.subject.termType === "NamedNode") {
+          const id = quad.subject.value;
           if (MutableHashSet.has(classSet, id)) continue;
           MutableHashSet.add(classSet, id);
 

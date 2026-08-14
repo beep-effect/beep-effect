@@ -11,8 +11,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
+import { PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import { dual } from "effect/Function";
@@ -23,7 +24,7 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import type { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 
-const $I = $ScratchpadId.create("effect-ontology/Cluser/BackpressureHandler");
+const $I = $ScratchpadId.create("effect-ontology/Cluster/BackpressureHandler");
 
 /**
  * Alias for backward compatibility - maps to ProgressEvent from Contract
@@ -40,41 +41,29 @@ export type ExtractionProgressEvent = ProgressEvent;
 export class BackpressureConfig extends S.Class<BackpressureConfig>($I`BackpressureConfig`)(
   {
     /** Maximum queued events before dropping starts */
-    maxQueuedEvents: S.Finite.pipe(
-      SchemaUtils.withKeyDefaults(1000),
+    maxQueuedEvents: PosInt.pipe(
+      SchemaUtils.withKeyDefaults(PosInt.make(1000)),
       $I.annoteKey("BackpressureConfig.maxQueuedEvents", {
         description: "Maximum queued events before dropping starts",
       })
     ),
     /** Queue load threshold (0-1) to start sampling */
-    samplingThreshold: NonNegativeInt.pipe(
-      S.check(
-        S.isBetween({
-          minimum: 0,
-          maximum: 1,
-        })
-      ),
-      SchemaUtils.withKeyDefaults(NonNegativeInt.make(0.8)),
+    samplingThreshold: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0.8)),
       $I.annoteKey("BackpressureConfig.samplingThreshold", {
         description: "Queue load threshold (0-1) to start sampling",
       })
     ),
     /** Sampling rate when threshold exceeded (0-1, e.g., 0.1 = keep 10%) */
-    samplingRate: NonNegativeInt.pipe(
-      S.check(
-        S.isBetween({
-          minimum: 0,
-          maximum: 1,
-        })
-      ),
-      SchemaUtils.withKeyDefaults(NonNegativeInt.make(0.1)),
+    samplingRate: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0.1)),
       $I.annoteKey("BackpressureConfig.samplingRate", {
         description: "Sampling rate when threshold exceeded (0-1, e.g., 0.1 = keep 10%)",
       })
     ),
   },
   $I.annote("BackpressureConfig", {
-    description: "",
+    description: "Queue capacity and bounded sampling ratios for extraction progress backpressure.",
   })
 ) {}
 

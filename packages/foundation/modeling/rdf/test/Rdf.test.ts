@@ -748,6 +748,10 @@ describe("@beep/rdf crispening parity", () => {
     assertDecodeEncodeDecodeStable(LanguageTag);
     assertRoundTrips(PrefixMap);
     assertDecodeEncodeDecodeStable(Literal);
+    assertRoundTrips(Term);
+    assertRoundTrips(Subject);
+    assertRoundTrips(ObjectTerm);
+    assertRoundTrips(GraphTerm);
     assertRoundTrips(JsonLdDocument);
     assertRoundTrips(EvidenceAnchor);
     assertRoundTrips(WebAnnotationFromEvidenceAnchor);

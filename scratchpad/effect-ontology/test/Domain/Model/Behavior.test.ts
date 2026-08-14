@@ -156,7 +156,7 @@ describe("effect-ontology model behavior", () => {
   });
 
   it("rejects ontology embedding artifacts with inconsistent dimensions", () => {
-    const artifact = S.decodeUnknownResult(OntologyEmbeddings)({
+    const artifact = S.decodeResult(OntologyEmbeddings)({
       ontologyUri: "gs://beep-ontology/ontology.ttl",
       version: "a".repeat(64),
       model: "text-embedding-3-small",

@@ -102,7 +102,7 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | `Model/OntologyAgent.ts` | **redesigned** | Complete default agent/extraction policy, Option-normalized query/reasoning/validation data, derived validation counts, consistent metrics; model behavior coverage. |
 | `Model/OntologyEmbeddings.ts` | **redesigned** | Full content version, finite non-empty vectors, uniform dimension check, JSON codec, schema-owned semantic text/version/path behavior; model behavior and arbitrary coverage. |
 | `Model/OutputType.ts` | **redesigned** | LiteralKit filename/type domains and total registry lookups replace parallel conditionals; `OutputType.test.ts`. |
-| `Model/shared.ts` | **subsumed and hardened** | `@beep/schema` UnitInterval and canonical RDF attributes are reused; entity IDs are validated and expose schema-owned equivalence; `shared.test.ts`. |
+| `Model/shared.ts` | **subsumed and hardened** | Direct `@beep/epistemic-domain` confidence plus `@beep/rdf` IRI and `@beep/schema` URL exports replace local wrappers; only experiment-owned attributes, optionality, and entity IDs remain; `shared.test.ts`. |
 | `Model/index.ts` | **redesigned** | Complete barrel now exports all 14 model modules instead of the incomplete upstream subset. |
 
 ## RDF modules
@@ -110,7 +110,7 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | Source | Disposition and target | Boundary, defaults, invariants, arbitrary, and tests |
 | --- | --- | --- |
 | `Rdf/Types.ts` | **subsumed** by `@beep/rdf` plus a local `Triple` adapter | RDF/JS terms, dataset, prefix map, and constructors are canonical re-exports; graph-free triples convert explicitly to/from quads. Arbitrary and interop tests in `Rdf/Types.test.ts`. |
-| `Rdf/Constants.ts` | **ported and hardened** | RDF/RDFS/OWL/XSD/SKOS/SHACL/PROV/DCTERMS/schema vocabularies use canonical IRI schemas and documented registries; arbitrary/registry tests. |
+| `Rdf/Constants.ts` | **subsumed** by `@beep/rdf/Vocab/*` plus experiment-owned vocabularies | Standard RDF/RDFS/OWL/XSD/SKOS/SHACL/PROV/DCTERMS/Schema.org terms and inventories are imported directly from `@beep/rdf`; this module retains only EXTR, CLAIMS, CORRECTIONS, and CORE NamedNodes. |
 | `Rdf/index.ts` | **ported** | Complete canonical RDF adapter and vocabulary barrel. |
 
 ## Schema modules
@@ -132,7 +132,7 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | `Schema/OntologyBrowser.ts` | **ported and hardened** | Canonical ontology/IRI values, normalized labels/collections, non-negative counts; arbitrary audit. |
 | `Schema/OntologyRegistry.ts` | **redesigned** | Canonical identities/storage paths, complete resources/entry defaults, typed JSON codecs, registry lookup statics; arbitrary audit. |
 | `Schema/Search.ts` | **ported and hardened** | Trimmed queries, bounded pagination, non-negative totals, unit confidence, normalized results; arbitrary audit. |
-| `Schema/Shacl.ts` | **redesigned** | Severity-tagged results, report conformance iff results are empty, finite duration, normalized fields, default policy with schema-owned `shouldFail`; dedicated property/behavior tests. |
+| `Schema/Shacl.ts` | **subsumed** by `@beep/semantic-web` plus local policy/report metadata | Canonical severity, violation, result, and error contracts cross the service boundary; an explicit legacy engine adapter constructs canonical RDF terms, while experiment-owned policy and execution metadata remain local. |
 | `Schema/Timeline.ts` | **redesigned** | Bitemporal nested values, canonical RDF/IRI terms, bounded query pagination, tagged claim conflicts, Option/default response data; arbitrary audit. |
 | `Schema/index.ts` | **ported** | Upstream public surface retained; specialized collision-prone event/curation/job modules remain explicit subpaths. |
 

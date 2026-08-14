@@ -1,49 +1,28 @@
+import { CoreVocab } from "@beep/identity";
+import { OWL_OBJECT_PROPERTY, OWL_TERMS } from "@beep/rdf/Vocab/Owl";
+import { RDF_TERMS, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { SKOS_PREF_LABEL, SKOS_TERMS } from "@beep/rdf/Vocab/Skos";
 import { describe, expect, it } from "@effect/vitest";
-import * as S from "effect/Schema";
-import { FastCheck as fc } from "effect/testing";
-import {
-  CLAIMS,
-  CORE,
-  KNOWN_VOCABULARIES,
-  KnownVocabulary,
-  KnownVocabularyRegistry,
-  OWL,
-  RDF,
-  RDF_TYPE,
-  SCHEMA,
-  SKOS,
-} from "../../../Domain/Rdf/Constants.ts";
+import { CLAIMS, CORE, CORRECTIONS, EXTR } from "../../../Domain/Rdf/Constants.ts";
 import { IRI } from "../../../Domain/Rdf/Types.ts";
 
 describe("effect-ontology RDF vocabulary constants", () => {
-  it("derives arbitraries whose values satisfy vocabulary metadata schemas", () => {
-    for (const schema of [KnownVocabulary, KnownVocabularyRegistry]) {
-      const arbitrary = S.toArbitrary(schema)(fc);
-
-      fc.assert(
-        fc.property(arbitrary, (value) => {
-          expect(S.is(schema)(value)).toBe(true);
-        }),
-        { numRuns: 32 }
-      );
-    }
+  it("uses canonical package constants for standards vocabularies", () => {
+    expect(RDF_TYPE.value).toBe("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+    expect(OWL_OBJECT_PROPERTY.value).toBe("http://www.w3.org/2002/07/owl#ObjectProperty");
+    expect(SKOS_PREF_LABEL.value).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
   });
 
-  it("exposes branded IRI values for standards vocabularies", () => {
-    expect(RDF.type).toBe("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
-    expect(OWL.ObjectProperty).toBe("http://www.w3.org/2002/07/owl#ObjectProperty");
-    expect(SKOS.prefLabel).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
-    expect(RDF_TYPE).toBe(RDF.type);
+  it("retains only experiment-owned vocabularies locally", () => {
+    expect(CLAIMS.Claim.value).toBe("http://effect-ontology.dev/claims#Claim");
+    expect(CORRECTIONS.Retraction.value).toBe("http://effect-ontology.dev/corrections#Retraction");
+    expect(EXTR.confidence.value).toBe("http://example.org/kg/confidence");
+    expect(IRI.is(CORE.Mention.value)).toBe(true);
   });
 
-  it("retains explicit experimental namespaces as branded IRIs", () => {
-    expect(CLAIMS.Claim).toBe("http://effect-ontology.dev/claims#Claim");
-    expect(IRI.is(CORE.Mention)).toBe(true);
-    expect(SCHEMA.Person).toBe("http://schema.org/Person");
-  });
-
-  it("validates the complete known-vocabulary registry", () => {
-    expect(KnownVocabularyRegistry.is(KNOWN_VOCABULARIES)).toBe(true);
-    expect(KNOWN_VOCABULARIES[IRI.fromUnknown("http://www.w3.org/ns/prov#")]?.prefix).toBe("prov");
+  it("uses generated term inventories backed by identity CoreVocab", () => {
+    expect(RDF_TERMS).toEqual(CoreVocab.rdf.terms);
+    expect(OWL_TERMS).toEqual(CoreVocab.owl.terms);
+    expect(SKOS_TERMS).toEqual(CoreVocab.skos.terms);
   });
 });

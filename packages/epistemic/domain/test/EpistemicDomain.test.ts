@@ -23,6 +23,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
@@ -70,6 +71,10 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
 describe("@beep/epistemic-domain", () => {
   it("exports value schemas from the package identity", () => {
     expect(ClaimLifecycle.is.candidate("candidate")).toBe(true);
+  });
+
+  it("publishes canonical arbitrary metadata for Confidence", () => {
+    expect(SchemaAST.resolve(Confidence.ast)?.toArbitrary).toBeDefined();
   });
 
   it("wires CandidateClaim to the epistemic BaseEntity identity", () => {

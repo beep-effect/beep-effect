@@ -11,11 +11,13 @@
  * @since 0.0.0
  */
 
-import {$ScratchpadId} from "@beep/identity";
-import {NonNegativeInt, PosInt} from "@beep/schema/Int";
-import {LiteralKit} from "@beep/schema/LiteralKit";
+import { $ScratchpadId } from "@beep/identity";
+import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import {pipe} from "effect";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { pipe } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Contract/ProgressStreaming");
@@ -147,24 +149,18 @@ const Timestamp = S.String.pipe(
  * **Example** (Reject confidence above one)
  *
  * ```ts
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const confidence = S.Finite.pipe(S.check(S.isBetween({ minimum: 0, maximum: 1 })))
- * console.log(O.isSome(S.decodeUnknownOption(confidence)(0.9))) // true
- * console.log(O.isNone(S.decodeUnknownOption(confidence)(1.1))) // true
+ * console.log(O.isSome(S.decodeUnknownOption(UnitInterval)(0.9))) // true
+ * console.log(O.isNone(S.decodeUnknownOption(UnitInterval)(1.1))) // true
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-const Confidence = S.Finite.pipe(
-  S.check(
-    S.isBetween({
-      minimum: 0,
-      maximum: 1,
-    })
-  ),
+const Confidence = UnitInterval.pipe(
   $I.annoteSchema("Confidence", {
     description: "Finite confidence score between zero and one, inclusive.",
   })
@@ -177,10 +173,11 @@ const Confidence = S.Finite.pipe(
  * **Example** (Validate progress bounds)
  *
  * ```ts
+ * import { Percentage } from "@beep/schema/Percentage"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const progress = S.Int.pipe(S.check(S.isBetween({ minimum: 0, maximum: 100 })))
+ * const progress = Percentage.pipe(S.check(S.isInt()))
  * console.log(O.isSome(S.decodeUnknownOption(progress)(75))) // true
  * console.log(O.isNone(S.decodeUnknownOption(progress)(101))) // true
  * ```
@@ -188,13 +185,8 @@ const Confidence = S.Finite.pipe(
  * @category schemas
  * @since 0.0.0
  */
-const ProgressPercentage = S.Int.pipe(
-  S.check(
-    S.isBetween({
-      minimum: 0,
-      maximum: 100,
-    })
-  ),
+const ProgressPercentage = Percentage.pipe(
+  S.check(S.isInt()),
   $I.annoteSchema("ProgressPercentage", {
     description: "Whole-number completion percentage between zero and one hundred, inclusive.",
   })
@@ -325,8 +317,7 @@ export class ExtractionStartedEvent extends S.TaggedClass<ExtractionStartedEvent
   $I.annote("ExtractionStartedEvent", {
     description: "Extraction lifecycle event announcing the initial chunk workload and source-text statistics.",
   })
-) {
-}
+) {}
 
 /**
  * Records the chunking policy selected when source segmentation begins.
@@ -379,8 +370,7 @@ export class ChunkingStartedEvent extends S.TaggedClass<ChunkingStartedEvent>($I
   $I.annote("ChunkingStartedEvent", {
     description: "Extraction lifecycle event emitted when text chunking begins.",
   })
-) {
-}
+) {}
 
 /**
  * Reports completed and active chunk counts while text segmentation is running.
@@ -429,8 +419,7 @@ export class ChunkingProgressEvent extends S.TaggedClass<ChunkingProgressEvent>(
   $I.annote("ChunkingProgressEvent", {
     description: "Periodic progress snapshot for the text chunking stage.",
   })
-) {
-}
+) {}
 
 /**
  * Summarizes the final chunk count, average size, and elapsed time after text
@@ -480,8 +469,7 @@ export class ChunkingCompleteEvent extends S.TaggedClass<ChunkingCompleteEvent>(
   $I.annote("ChunkingCompleteEvent", {
     description: "Extraction lifecycle event summarizing successful text chunking.",
   })
-) {
-}
+) {}
 
 /**
  * Identifies the chunk entering the extraction pipeline and carries a bounded
@@ -534,8 +522,7 @@ export class ChunkProcessingStartedEvent extends S.TaggedClass<ChunkProcessingSt
   $I.annote("ChunkProcessingStartedEvent", {
     description: "Extraction lifecycle event emitted when full processing begins for one chunk.",
   })
-) {
-}
+) {}
 
 /**
  * Reports mention-detection progress and the number of mentions accumulated for
@@ -587,8 +574,7 @@ export class MentionExtractionProgressEvent extends S.TaggedClass<MentionExtract
   $I.annote("MentionExtractionProgressEvent", {
     description: "Periodic progress snapshot for mention extraction within one chunk.",
   })
-) {
-}
+) {}
 
 /**
  * Reports entity-resolution progress and candidate-class activity for the active
@@ -647,8 +633,7 @@ export class EntityExtractionProgressEvent extends S.TaggedClass<EntityExtractio
   $I.annote("EntityExtractionProgressEvent", {
     description: "Periodic progress snapshot for entity extraction within one chunk.",
   })
-) {
-}
+) {}
 
 /**
  * Carries a sampled entity discovery for live inspection without requiring the
@@ -717,8 +702,7 @@ export class EntityFoundEvent extends S.TaggedClass<EntityFoundEvent>($I`EntityF
   $I.annote("EntityFoundEvent", {
     description: "Sampled domain event exposing one extracted entity during streaming.",
   })
-) {
-}
+) {}
 
 /**
  * Reports relation-extraction progress together with the entity population
@@ -777,8 +761,7 @@ export class RelationExtractionProgressEvent extends S.TaggedClass<RelationExtra
   $I.annote("RelationExtractionProgressEvent", {
     description: "Periodic progress snapshot for relation extraction within one chunk.",
   })
-) {
-}
+) {}
 
 /**
  * Carries a sampled relation discovery with enough information to distinguish an
@@ -855,8 +838,7 @@ export class RelationFoundEvent extends S.TaggedClass<RelationFoundEvent>($I`Rel
   $I.annote("RelationFoundEvent", {
     description: "Sampled domain event exposing one extracted relation during streaming.",
   })
-) {
-}
+) {}
 
 /**
  * Reports how many candidate relations have been verified and how many satisfy
@@ -914,8 +896,7 @@ export class GroundingProgressEvent extends S.TaggedClass<GroundingProgressEvent
   $I.annote("GroundingProgressEvent", {
     description: "Periodic progress snapshot for relation grounding within one chunk.",
   })
-) {
-}
+) {}
 
 /**
  * Summarizes the results, duration, and non-fatal diagnostics produced after one
@@ -1005,8 +986,7 @@ export class ChunkProcessingCompleteEvent extends S.TaggedClass<ChunkProcessingC
   $I.annote("ChunkProcessingCompleteEvent", {
     description: "Extraction lifecycle event summarizing the completed processing of one chunk.",
   })
-) {
-}
+) {}
 
 /**
  * Publishes the final graph counts, chunk outcomes, and wall-clock duration after
@@ -1078,8 +1058,7 @@ export class ExtractionCompleteEvent extends S.TaggedClass<ExtractionCompleteEve
   $I.annote("ExtractionCompleteEvent", {
     description: "Terminal domain event summarizing a successfully merged extraction.",
   })
-) {
-}
+) {}
 
 export const ExtractionFailedRetryStrategy = pipe(
   {
@@ -1100,8 +1079,8 @@ export const ExtractionFailedRetryStrategy = pipe(
       })
     ),
   } as const,
-  (fields) => S.Union(
-    [
+  (fields) =>
+    S.Union([
       S.Struct({
         /** Selects retry delays that grow exponentially between attempts. */
         type: S.tag("exponential_backoff").pipe(
@@ -1141,13 +1120,12 @@ export const ExtractionFailedRetryStrategy = pipe(
           description: "Retry policy explicitly disabling automatic retry attempts.",
         })
       ),
-    ]
-  ).pipe(
-    S.toTaggedUnion("type"),
-    $I.annoteSchema("ExtractionFailedRetryStrategy", {
-      description: "Optional retry policy for a recoverable extraction failure.",
-    })
-  )
+    ]).pipe(
+      S.toTaggedUnion("type"),
+      $I.annoteSchema("ExtractionFailedRetryStrategy", {
+        description: "Optional retry policy for a recoverable extraction failure.",
+      })
+    )
 );
 
 export type ExtractionFailedRetryStrategy = typeof ExtractionFailedRetryStrategy.Type;
@@ -1199,10 +1177,7 @@ export class ExtractionFailedEvent extends S.TaggedClass<ExtractionFailedEvent>(
     ),
 
     /** Optional retry policy for a recoverable extraction failure. */
-    retryStrategy: ExtractionFailedRetryStrategy.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault
-    ),
+    retryStrategy: ExtractionFailedRetryStrategy.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
     /** Optional usable counts accumulated before the terminal failure. */
     partialResults: S.Struct({
@@ -1244,8 +1219,7 @@ export class ExtractionFailedEvent extends S.TaggedClass<ExtractionFailedEvent>(
   $I.annote("ExtractionFailedEvent", {
     description: "Terminal domain event describing a systemic extraction failure and recovery options.",
   })
-) {
-}
+) {}
 
 /**
  * Terminates the stream after client cancellation while preserving optional
@@ -1321,8 +1295,7 @@ export class ExtractionCancelledEvent extends S.TaggedClass<ExtractionCancelledE
   $I.annote("ExtractionCancelledEvent", {
     description: "Terminal domain event describing graceful client-requested extraction cancellation.",
   })
-) {
-}
+) {}
 
 /**
  * Warns that the server event queue is approaching capacity and tells the client
@@ -1383,8 +1356,7 @@ export class BackpressureWarningEvent extends S.TaggedClass<BackpressureWarningE
   $I.annote("BackpressureWarningEvent", {
     description: "Flow-control event warning that slow client consumption is exhausting server queue capacity.",
   })
-) {
-}
+) {}
 
 /**
  * Reports a chunk-scoped failure together with the recovery action taken while
@@ -1449,8 +1421,7 @@ export class RecoverableErrorEvent extends S.TaggedClass<RecoverableErrorEvent>(
   $I.annote("RecoverableErrorEvent", {
     description: "Non-terminal domain event describing a recovered chunk-level extraction failure.",
   })
-) {
-}
+) {}
 
 /**
  * Reports the systemic condition that halted extraction and exposes optional
@@ -1541,8 +1512,7 @@ export class FatalErrorEvent extends S.TaggedClass<FatalErrorEvent>($I`FatalErro
   $I.annote("FatalErrorEvent", {
     description: "Terminal domain event describing a fatal systemic extraction failure.",
   })
-) {
-}
+) {}
 
 // =============================================================================
 // Generic Stage Lifecycle Events (used by ExtractionEntityHandler)
@@ -1609,8 +1579,7 @@ export class StageStartedEvent extends S.TaggedClass<StageStartedEvent>($I`Stage
   $I.annote("StageStartedEvent", {
     description: "Generic lifecycle event announcing the start of an extraction stage.",
   })
-) {
-}
+) {}
 
 /**
  * Reports completion and item counts for a coarse pipeline stage.
@@ -1666,8 +1635,7 @@ export class StageProgressEvent extends S.TaggedClass<StageProgressEvent>($I`Sta
   $I.annote("StageProgressEvent", {
     description: "Generic progress snapshot for a coarse extraction stage.",
   })
-) {
-}
+) {}
 
 /**
  * Summarizes the elapsed time and item count after a coarse pipeline stage
@@ -1717,8 +1685,7 @@ export class StageCompletedEvent extends S.TaggedClass<StageCompletedEvent>($I`S
   $I.annote("StageCompletedEvent", {
     description: "Generic lifecycle event summarizing a completed extraction stage.",
   })
-) {
-}
+) {}
 
 /**
  * Reports a bounded delay caused by token, request, or concurrency limits.
@@ -1763,8 +1730,7 @@ export class RateLimitedEvent extends S.TaggedClass<RateLimitedEvent>($I`RateLim
   $I.annote("RateLimitedEvent", {
     description: "Flow-control event describing a temporary rate-limit delay.",
   })
-) {
-}
+) {}
 
 // =============================================================================
 // Union Type: All Progress Events
@@ -1971,8 +1937,7 @@ export class CancellationRequest extends S.Class<CancellationRequest>($I`Cancell
   $I.annote("CancellationRequest", {
     description: "Client command requesting graceful cancellation of an extraction run.",
   })
-) {
-}
+) {}
 
 /**
  * Server acknowledgment stating whether a cancellation request was accepted.
@@ -2030,8 +1995,7 @@ export class CancellationResponse extends S.Class<CancellationResponse>($I`Cance
   $I.annote("CancellationResponse", {
     description: "Server acknowledgment of an extraction cancellation request.",
   })
-) {
-}
+) {}
 
 // =============================================================================
 // Error Recovery Contract
@@ -2260,8 +2224,7 @@ export class ProgressMessage extends S.TaggedClass<ProgressMessage>($I`ProgressM
   $I.annote("ProgressMessage", {
     description: "RPC-safe envelope for one extraction progress event or serialization diagnostic.",
   })
-) {
-}
+) {}
 
 // =============================================================================
 // WebSocket Contract Layer (Protocol)
@@ -2392,8 +2355,7 @@ export class StartExtractionRequest extends S.TaggedClass<StartExtractionRequest
   $I.annote("StartExtractionRequest", {
     description: "Client command requesting a new or resumed ontology extraction.",
   })
-) {
-}
+) {}
 
 /**
  * Server acknowledgment that identifies the run and reports whether an extraction
@@ -2465,8 +2427,7 @@ export class StartExtractionResponse extends S.TaggedClass<StartExtractionRespon
   $I.annote("StartExtractionResponse", {
     description: "Server acknowledgment accepting or rejecting an extraction request.",
   })
-) {
-}
+) {}
 
 /**
  * Client acknowledgment identifying the progress event released from server-side
@@ -2513,5 +2474,4 @@ export class AckMessage extends S.TaggedClass<AckMessage>($I`AckMessage`)(
   $I.annote("AckMessage", {
     description: "Client acknowledgment used to release one event from backpressure tracking.",
   })
-) {
-}
+) {}

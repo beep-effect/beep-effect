@@ -8,10 +8,15 @@
  * @module Utils/Datatype
  */
 
+import { makeNamedNode } from "@beep/rdf";
+import { XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as P from "effect/Predicate";
-import { XSD } from "../Domain/Rdf/Constants.ts";
 import type { IRI } from "../Domain/Rdf/Types.ts";
 import { dual2 } from "./Dual.ts";
+
+const XSD_DATE = makeNamedNode(`${XSD_NAMESPACE}date`);
+const XSD_DATE_TIME = makeNamedNode(`${XSD_NAMESPACE}dateTime`);
+const XSD_DECIMAL = makeNamedNode(`${XSD_NAMESPACE}decimal`);
 
 /**
  * Result of datatype normalization
@@ -107,41 +112,41 @@ export const normalizeDatatype = dual2((value: string, expectedType: IRI | undef
 
   // Empty string → xsd:string
   if (trimmed === "") {
-    return { value: trimmed, datatype: XSD.string };
+    return { value: trimmed, datatype: XSD_STRING.value };
   }
 
   // DateTime check (must come before date check)
   if (ISO_DATETIME_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD.dateTime };
+    return { value: trimmed, datatype: XSD_DATE_TIME.value };
   }
 
   // Date check
   if (ISO_DATE_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD.date };
+    return { value: trimmed, datatype: XSD_DATE.value };
   }
 
   // Boolean check (case-insensitive, normalize to lowercase)
   if (BOOLEAN_PATTERN.test(trimmed)) {
-    return { value: trimmed.toLowerCase(), datatype: XSD.boolean };
+    return { value: trimmed.toLowerCase(), datatype: XSD_BOOLEAN.value };
   }
 
   // Scientific notation → xsd:double
   if (SCIENTIFIC_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD.double };
+    return { value: trimmed, datatype: XSD_DOUBLE.value };
   }
 
   // Decimal check (must come before integer check)
   if (DECIMAL_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD.decimal };
+    return { value: trimmed, datatype: XSD_DECIMAL.value };
   }
 
   // Integer check
   if (INTEGER_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD.integer };
+    return { value: trimmed, datatype: XSD_INTEGER.value };
   }
 
   // Default to string
-  return { value: trimmed, datatype: XSD.string };
+  return { value: trimmed, datatype: XSD_STRING.value };
 });
 
 /**

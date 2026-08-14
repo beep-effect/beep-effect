@@ -122,18 +122,16 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
         yield* Effect.logDebug("Loading ontology for SHACL shapes", { ontologyPath });
 
         // Load from storage (GCS or local filesystem via StorageService)
-        const contentOpt = yield* storage
-          .get(ontologyPath)
-          .pipe(
-            Effect.mapError(
-              (cause) =>
-                new OntologyAgentError({
-                  operation: "loadOntology",
-                  message: `Failed to load ontology from storage: ${cause.message}`,
-                  cause,
-                })
-            )
-          );
+        const contentOpt = yield* storage.get(ontologyPath).pipe(
+          Effect.mapError(
+            (cause) =>
+              new OntologyAgentError({
+                operation: "loadOntology",
+                message: `Failed to load ontology from storage: ${cause.message}`,
+                cause,
+              })
+          )
+        );
 
         if (contentOpt === undefined) {
           return yield* new OntologyAgentError({
@@ -143,18 +141,16 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
         }
 
         // Parse Turtle to RDF store
-        const ontologyStore = yield* rdfBuilder
-          .parseTurtle(contentOpt)
-          .pipe(
-            Effect.mapError(
-              (cause) =>
-                new OntologyAgentError({
-                  operation: "parseOntology",
-                  message: `Failed to parse ontology: ${cause.message}`,
-                  cause,
-                })
-            )
-          );
+        const ontologyStore = yield* rdfBuilder.parseTurtle(contentOpt).pipe(
+          Effect.mapError(
+            (cause) =>
+              new OntologyAgentError({
+                operation: "parseOntology",
+                message: `Failed to parse ontology: ${cause.message}`,
+                cause,
+              })
+          )
+        );
 
         yield* Effect.logInfo("Ontology store loaded for SHACL shapes", {
           ontologyPath,
@@ -591,8 +587,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             entityCount: metrics.entityCount,
             relationCount: metrics.relationCount,
             inferredTripleCount: reasoningResult.inferredTripleCount,
-            conforms: report.conforms,
-            violationCount: report.violations.length,
+            conforms: report.validation.conforms,
+            violationCount: report.validation.violations.length,
           });
 
           return ExtractionResult.fromUnknown({
@@ -661,7 +657,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
         violations.map((v) =>
           ViolationExplanation.make({
             focusNode: v.focusNode,
-            path: v.path,
+            path: O.some(v.path.value),
             explanation: formatViolationExplanation(v),
             suggestion: O.fromNullishOr(generateCorrectionSuggestion(v)),
             severity: v.severity,
@@ -723,13 +719,13 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const report = yield* shaclService.validateWithPolicy(dataStore._store, shapesStore, effectivePolicy);
 
           // Group violations by severity
-          const byLevel = groupViolationsBySeverity(report.violations);
+          const byLevel = groupViolationsBySeverity(report.validation.violations);
 
           // Generate explanations
-          const explanations = report.violations.map((v: any) =>
+          const explanations = report.validation.violations.map((v) =>
             ViolationExplanation.make({
               focusNode: v.focusNode,
-              path: v.path,
+              path: O.some(v.path.value),
               explanation: formatViolationExplanation(v),
               suggestion: O.fromNullishOr(generateCorrectionSuggestion(v)),
               severity: v.severity,
@@ -740,16 +736,16 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const duration = DateTime.distance(startTime, endTime);
 
           yield* Effect.logInfo("OntologyAgent.validateGraph complete", {
-            conforms: report.conforms,
-            violationCount: report.violations.length,
+            conforms: report.validation.conforms,
+            violationCount: report.validation.violations.length,
             criticalCount: byLevel.violations.length,
             warningCount: byLevel.warnings.length,
             durationMs: Duration.toMillis(duration),
           });
 
           return EnhancedValidationReport.fromUnknown({
-            conforms: report.conforms,
-            violationCount: report.violations.length,
+            conforms: report.validation.conforms,
+            violationCount: report.validation.violations.length,
             explanations,
             byLevel,
             duration: Duration.toMillis(duration),
@@ -821,13 +817,13 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                 // Fallback to all triples if SPARQL execution fails
                 const allQuads = yield* rdfBuilder.queryStore(dataStore, {});
                 const quads: ReadonlyArray<SparqlQuad> = A.map(Chunk.toReadonlyArray(allQuads), (q) => ({
-                  subject: q.subject,
-                  predicate: q.predicate,
+                  subject: q.subject.value,
+                  predicate: q.predicate.value,
                   object:
-                    typeof q.object === "object" && "value" in q.object
+                    q.object.termType === "Literal"
                       ? { type: "literal" as const, value: q.object.value }
-                      : { type: "uri" as const, value: q.object as string },
-                  ...(O.isSome(q.graph) ? { graph: q.graph.value } : {}),
+                      : { type: "uri" as const, value: q.object.value },
+                  ...(q.graph.termType === "DefaultGraph" ? {} : { graph: q.graph.value }),
                 }));
                 return new FallbackResult({
                   quads,
@@ -1125,11 +1121,8 @@ const buildRunConfig = (configService: AppConfig, agentConfig?: OntologyAgentCon
  * Format SHACL violation into human-readable explanation
  */
 const formatViolationExplanation = (violation: ShaclViolation): string => {
-  const path = O.match(violation.path, {
-    onNone: () => "",
-    onSome: (value) => ` for property "${extractLocalName(value)}"`,
-  });
-  const value = O.isSome(violation.value) ? ` (value: "${violation.value}")` : "";
+  const path = ` for property "${extractLocalName(violation.path.value)}"`;
+  const value = O.isSome(violation.value) ? ` (value: "${violation.value.value.value}")` : "";
   return `${violation.severity}: ${violation.message}${path}${value}`;
 };
 
@@ -1170,13 +1163,13 @@ const groupViolationsBySeverity = (violations: ReadonlyArray<ShaclViolation>): V
   for (const v of violations) {
     const message = formatViolationExplanation(v);
     switch (v.severity) {
-      case "Violation":
+      case "violation":
         grouped.violations.push(message);
         break;
-      case "Warning":
+      case "warning":
         grouped.warnings.push(message);
         break;
-      case "Info":
+      case "info":
         grouped.info.push(message);
         break;
     }

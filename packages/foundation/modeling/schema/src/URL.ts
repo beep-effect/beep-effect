@@ -38,8 +38,11 @@ const urlStr = Brand.check<URLStr>(filterURLStr);
  * @category validation
  * @since 0.0.0
  */
-export const URLStr = NonEmptyTrimmedStr.pipe(
+export const URLStr = NonEmptyTrimmedStr.annotate({
+  toArbitrary: () => (fc) => fc.webUrl().map(urlStr),
+}).pipe(
   S.fromBrand("URLStr", urlStr),
+  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics(() => ({
     filter: filterURLStr,
     is: isURLStr,
@@ -47,6 +50,7 @@ export const URLStr = NonEmptyTrimmedStr.pipe(
   })),
   $I.annoteSchema("URLStr", {
     description: "A URL encoded as a string",
+    toArbitrary: () => (fc) => fc.webUrl().map(urlStr),
   })
 );
 

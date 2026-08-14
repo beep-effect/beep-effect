@@ -127,8 +127,7 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
     description: "Versioned ontology-scoped batch manifest with non-empty documents and a complete validation policy.",
   })
 ) {
-
-  static readonly decodeOptionString = S.decodeOption(S.fromJsonString(BatchManifest))
+  static readonly decodeOptionString = S.decodeOption(S.fromJsonString(BatchManifest));
 }
 
 /**
@@ -236,7 +235,7 @@ export class ValidationActivityInput extends S.Class<ValidationActivityInput>($I
  * import { ValidationActivityViolationSummary } from "@effect-ontology/Schema/Batch.ts"
  *
  * const summary = S.decodeUnknownSync(ValidationActivityViolationSummary)({
- *   severity: "Warning",
+ *   severity: "warning",
  *   count: 0
  * })
  * console.log(summary.sampleMessages) // []

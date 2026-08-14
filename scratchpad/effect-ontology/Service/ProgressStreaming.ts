@@ -9,6 +9,8 @@
  */
 
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { Percentage } from "@beep/schema/Percentage";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Chunk, Clock, Data, Effect, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -123,7 +125,7 @@ export const createExtractionStarted: {
       eventId: uuidv4(),
       runId: state.runId,
       timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: 0,
+      overallProgress: Percentage.make(0),
       totalChunks: PosInt.make(state.totalChunks),
       textMetadata: {
         characterCount: PosInt.make(textMetadata.characterCount),
@@ -163,7 +165,7 @@ export const createChunkingProgress: {
       eventId: uuidv4(),
       runId: state.runId,
       timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: PosInt.make(NonNegativeInt.make(calculateOverallProgress(state, 0))),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       chunksCompleted: NonNegativeInt.make(chunksCompleted),
       chunksProcessing: NonNegativeInt.make(chunksProcessing),
       avgChunkSize: PosInt.make(avgChunkSize),
@@ -200,7 +202,7 @@ export const createChunkProcessingStarted: {
       eventId: uuidv4(),
       runId: state.runId,
       timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 0),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       chunkIndex: NonNegativeInt.make(chunkIndex),
       chunkTextLength: PosInt.make(chunkTextLength),
       textPreview,
@@ -243,12 +245,12 @@ export const createEntityFound: {
       eventId: uuidv4(),
       runId: state.runId,
       timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 40),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 40)),
       chunkIndex: NonNegativeInt.make(chunkIndex),
       entityId,
       mention,
       types: A.fromIterable(types),
-      confidence: O.fromUndefinedOr(confidence),
+      confidence: O.fromUndefinedOr(confidence).pipe(O.map(UnitInterval.make)),
     });
   })
 );
@@ -291,13 +293,13 @@ export const createRelationFound: {
       eventId: uuidv4(),
       runId: state.runId,
       timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 60),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 60)),
       chunkIndex: NonNegativeInt.make(chunkIndex),
       subjectId,
       predicate,
       object,
       isEntityReference,
-      confidence: O.fromUndefinedOr(confidence),
+      confidence: O.fromUndefinedOr(confidence).pipe(O.map(UnitInterval.make)),
     });
   })
 );
@@ -337,7 +339,7 @@ export const createChunkProcessingComplete: {
       eventId: uuidv4(),
       runId: state.runId,
       timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 100),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 100)),
       chunkIndex: NonNegativeInt.make(chunkIndex),
       entityCount: NonNegativeInt.make(entityCount),
       relationCount: NonNegativeInt.make(relationCount),
@@ -385,7 +387,7 @@ export const createExtractionComplete: {
       eventId: uuidv4(),
       runId: state.runId,
       timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: 100,
+      overallProgress: Percentage.make(100),
       totalEntities: NonNegativeInt.make(totalEntities),
       totalRelations: NonNegativeInt.make(totalRelations),
       uniqueEntityTypes: NonNegativeInt.make(uniqueEntityTypes),
@@ -438,7 +440,7 @@ export const createExtractionFailed: {
       eventId: uuidv4(),
       runId: state.runId,
       timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 0),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       errorType,
       errorMessage,
       isRecoverable,
@@ -495,7 +497,7 @@ export const createRecoverableError: {
       eventId: uuidv4(),
       runId: state.runId,
       timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 50),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 50)),
       chunkIndex: NonNegativeInt.make(chunkIndex),
       errorType,
       errorMessage,

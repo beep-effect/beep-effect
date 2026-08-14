@@ -12,6 +12,7 @@
  */
 
 import { SchemaUtils } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -184,11 +185,9 @@ export const makeRelationSchema = dual2(
           description: "Character offset end (exclusive)",
         })
       ),
-      confidence: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 }))
-        .pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
-        .annotate({
-          description: "Extraction confidence (0-1)",
-        }),
+      confidence: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
+        description: "Extraction confidence (0-1)",
+      }),
     }).annotate({
       description: "Character-level text evidence for provenance",
     });

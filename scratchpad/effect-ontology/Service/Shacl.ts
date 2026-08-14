@@ -9,18 +9,11 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as Rdf from "@beep/rdf/Rdf";
+import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema/Int";
-import {
-  Context,
-  DateTime,
-  Duration,
-  Effect,
-  HashMap,
-  Layer,
-  MutableHashMap,
-  Order,
-  Ref,
-} from "effect";
+import { ShaclValidationResult } from "@beep/semantic-web/services/shacl-validation";
+import { Context, DateTime, Duration, Effect, HashMap, Layer, MutableHashMap, Order, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -47,11 +40,11 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Shacl");
 // Re-export types for backward compatibility
 export { ShaclValidationReport, ShaclViolation, ValidationPolicy };
 
-const mapSeverity = (severity: { value?: string } | undefined): "Violation" | "Warning" | "Info" => {
-  if (P.isUndefined(severity?.value)) return "Info";
-  if (Str.endsWith("Violation")(severity.value)) return "Violation";
-  if (Str.endsWith("Warning")(severity.value)) return "Warning";
-  return "Info";
+const mapSeverity = (severity: { value?: string } | undefined): "violation" | "warning" | "info" => {
+  if (P.isUndefined(severity?.value)) return "info";
+  if (Str.endsWith("Violation")(severity.value)) return "violation";
+  if (Str.endsWith("Warning")(severity.value)) return "warning";
+  return "info";
 };
 
 /**
@@ -110,7 +103,65 @@ const hashStore = (store: N3.Store): string => {
   return sha256Sync(sortedNquads);
 };
 
-const decodeShaclViolation = S.decodeUnknownSync(ShaclViolation);
+const UNKNOWN_PATH = Rdf.makeNamedNode("urn:beep:shacl:path:unknown");
+
+const optionalNamedNode = (term: { value?: string } | undefined): O.Option<Rdf.NamedNode> =>
+  P.isString(term?.value) ? O.some(Rdf.makeNamedNode(term.value)) : O.none();
+
+interface LegacyObjectTerm {
+  readonly termType?: string;
+  readonly value?: string;
+  readonly language?: string;
+  readonly datatype?: { readonly value?: string };
+  readonly term?: LegacyObjectTerm;
+  readonly terms?: ReadonlyArray<LegacyObjectTerm>;
+}
+
+const unwrapLegacyTerm = (term: LegacyObjectTerm): LegacyObjectTerm => term.term ?? term.terms?.[0] ?? term;
+
+const optionalObjectTerm = (term: LegacyObjectTerm | undefined): O.Option<Rdf.ObjectTerm> => {
+  if (P.isUndefined(term)) return O.none();
+  const candidate = unwrapLegacyTerm(term);
+  if (!P.isString(candidate.value)) return O.none();
+  switch (candidate.termType) {
+    case "NamedNode":
+      return O.some(Rdf.makeNamedNode(candidate.value));
+    case "BlankNode":
+      return O.some(Rdf.makeBlankNode(candidate.value));
+    case "Literal":
+      return O.some(
+        Rdf.makeLiteral(
+          candidate.value,
+          candidate.datatype?.value ?? XSD_STRING.value,
+          P.isString(candidate.language) && Str.isNonEmpty(candidate.language) ? { language: candidate.language } : {}
+        )
+      );
+    default:
+      return O.some(Rdf.makeLiteral(candidate.value, XSD_STRING.value));
+  }
+};
+
+/** Explicit legacy ingress adapter from shacl-engine RDF/JS results. */
+interface LegacyShaclResult {
+  readonly focusNode?: { readonly value?: string };
+  readonly path?: { readonly value?: string };
+  readonly value?: LegacyObjectTerm;
+  readonly message?: unknown;
+  readonly severity?: { readonly value?: string };
+  readonly sourceShape?: { readonly value?: string };
+  readonly sourceConstraintComponent?: { readonly value?: string };
+}
+
+const legacyResultToCanonicalViolation = (result: LegacyShaclResult): ShaclViolation =>
+  ShaclViolation.make({
+    focusNode: result.focusNode?.value ?? "urn:beep:shacl:focus:unknown",
+    path: P.isString(result.path?.value) ? Rdf.makeNamedNode(result.path.value) : UNKNOWN_PATH,
+    value: optionalObjectTerm(result.value),
+    message: extractMessage(result.message),
+    severity: mapSeverity(result.severity),
+    sourceShape: optionalNamedNode(result.sourceShape),
+    sourceConstraintComponent: optionalNamedNode(result.sourceConstraintComponent),
+  });
 
 export interface ShaclServiceMethods {
   readonly validate: (
@@ -206,7 +257,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
    *   violations: [{
    *     focusNode: "http://example.org/entity1",
    *     message: "Missing required property",
-   *     severity: "Violation"
+   *     severity: "violation"
    *   }]
    * })
    * ```
@@ -228,8 +279,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
           Effect.gen(function* () {
             const now = yield* DateTime.now;
             return ShaclValidationReport.make({
-              conforms,
-              violations,
+              validation: ShaclValidationResult.make({ conforms, violations, truncated: false }),
               validatedAt: now,
               dataGraphTripleCount: NonNegativeInt.make(dataStore.size),
               shapesGraphTripleCount: NonNegativeInt.make(shapesStore.size),
@@ -259,10 +309,13 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
           validateWithPolicy: Effect.fn("ShaclService.validateWithPolicy")(function* (dataStore, shapesStore, policy) {
             const report = yield* makeReport(dataStore, shapesStore);
             const violationCount = A.filter(
-              report.violations,
-              (violation) => violation.severity === "Violation"
+              report.validation.violations,
+              (violation) => violation.severity === "violation"
             ).length;
-            const warningCount = A.filter(report.violations, (violation) => violation.severity === "Warning").length;
+            const warningCount = A.filter(
+              report.validation.violations,
+              (violation) => violation.severity === "warning"
+            ).length;
             const failOnViolation = policy.failOnViolation ?? true;
             const failOnWarning = policy.failOnWarning ?? false;
             if (failOnViolation && violationCount > 0) {
@@ -270,7 +323,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
                 message: `Validation policy failed: ${violationCount} violation(s) found`,
                 violationCount: NonNegativeInt.make(violationCount),
                 warningCount: NonNegativeInt.make(warningCount),
-                severity: "Violation",
+                severity: "violation",
               });
             }
             if (failOnWarning && warningCount > 0) {
@@ -278,7 +331,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
                 message: `Validation policy failed: ${warningCount} warning(s) found`,
                 violationCount: NonNegativeInt.make(violationCount),
                 warningCount: NonNegativeInt.make(warningCount),
-                severity: "Warning",
+                severity: "warning",
               });
             }
             return report;
@@ -320,34 +373,29 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
               }),
             catch: (cause) =>
               ShaclValidationError.make({
+                reason: "engineFailure",
                 message: `Failed to create SHACL validator: ${cause}`,
-                cause: O.some(cause),
               }),
           });
           const report = yield* Effect.tryPromise({
             try: () => validator.validate({ dataset: dataStore }),
             catch: (cause) =>
               ShaclValidationError.make({
+                reason: "engineFailure",
                 message: `SHACL validation failed: ${cause}`,
-                cause: O.some(cause),
               }),
           });
           const end = yield* DateTime.now;
-          return ShaclValidationReport.fromUnknown({
-            conforms: report.conforms,
-            violations:
-              A.map(report.results ?? [], (result: any) => ({
-                focusNode: result.focusNode?.value ?? "unknown",
-                path: result.path?.value,
-                value: result.value?.value,
-                message: extractMessage(result.message),
-                severity: mapSeverity(result.severity),
-                sourceShape: result.sourceShape?.value,
-              })) ?? [],
+          return ShaclValidationReport.make({
+            validation: ShaclValidationResult.make({
+              conforms: report.conforms,
+              violations: A.map(report.results ?? [], legacyResultToCanonicalViolation),
+              truncated: false,
+            }),
             validatedAt: start,
-            dataGraphTripleCount: dataStore.size,
-            shapesGraphTripleCount: shapesStore.size,
-            durationMs: Duration.toMillis(DateTime.distance(start, end)),
+            dataGraphTripleCount: NonNegativeInt.make(dataStore.size),
+            shapesGraphTripleCount: NonNegativeInt.make(shapesStore.size),
+            durationMs: DateTime.distance(start, end),
           });
         }),
         loadShapes,
@@ -561,8 +609,8 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
               }),
             catch: (cause) =>
               ShaclValidationError.make({
+                reason: "engineFailure",
                 message: `Failed to create SHACL validator: ${cause}`,
-                cause: O.some(cause),
               }),
           });
           const start = yield* DateTime.now;
@@ -570,31 +618,21 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
             try: () => validator.validate({ dataset: dataStore }),
             catch: (cause) =>
               ShaclValidationError.make({
+                reason: "engineFailure",
                 message: `SHACL validation failed: ${cause}`,
-                cause: O.some(cause),
               }),
           });
           const end = yield* DateTime.now;
-          const violations = A.map(report.results ?? [], (result: any) =>
-            decodeShaclViolation({
-              focusNode: result.focusNode?.value ?? "unknown",
-              path: result.path?.value,
-              value: result.value?.value,
-              message: extractMessage(result.message),
-              severity: mapSeverity(result.severity),
-              sourceShape: result.sourceShape?.value,
-            })
-          );
-          const validationReport = ShaclValidationReport.fromUnknown({
-            conforms: report.conforms,
-            violations,
+          const violations = A.map(report.results ?? [], legacyResultToCanonicalViolation);
+          const validationReport = ShaclValidationReport.make({
+            validation: ShaclValidationResult.make({ conforms: report.conforms, violations, truncated: false }),
             validatedAt: start,
             dataGraphTripleCount: NonNegativeInt.make(dataStore.size),
             shapesGraphTripleCount: NonNegativeInt.make(shapesStore.size),
-            durationMs: Duration.toMillis(DateTime.distance(start, end)),
+            durationMs: DateTime.distance(start, end),
           });
-          const violationCount = A.filter(violations, (violation) => violation.severity === "Violation").length;
-          const warningCount = A.filter(violations, (violation) => violation.severity === "Warning").length;
+          const violationCount = A.filter(violations, (violation) => violation.severity === "violation").length;
+          const warningCount = A.filter(violations, (violation) => violation.severity === "warning").length;
           const failOnViolation = policy.failOnViolation ?? true;
           const failOnWarning = policy.failOnWarning ?? false;
           const logOnly = policy.logOnly ?? false;
@@ -620,7 +658,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
               message: `Validation policy failed: ${violationCount} violation(s) found`,
               violationCount: NonNegativeInt.make(violationCount),
               warningCount: NonNegativeInt.make(warningCount),
-              severity: "Violation",
+              severity: "violation",
             });
           }
           if (failOnWarning && warningCount > 0) {
@@ -628,7 +666,7 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
               message: `Validation policy failed: ${warningCount} warning(s) found`,
               violationCount: NonNegativeInt.make(violationCount),
               warningCount: NonNegativeInt.make(warningCount),
-              severity: "Warning",
+              severity: "warning",
             });
           }
           if (warningCount > 0 && !failOnWarning) {

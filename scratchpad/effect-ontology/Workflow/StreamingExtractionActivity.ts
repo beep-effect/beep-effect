@@ -398,25 +398,36 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       for (const quad of claimQuads) {
         const n3 = yield* Effect.promise(() => import("n3"));
         const { DataFactory } = n3;
-        const subject = DataFactory.namedNode(quad.subject as string);
-        const predicate = DataFactory.namedNode(quad.predicate as string);
+        const subject =
+          quad.subject.termType === "BlankNode"
+            ? DataFactory.blankNode(quad.subject.value)
+            : DataFactory.namedNode(quad.subject.value);
+        const predicate = DataFactory.namedNode(quad.predicate.value);
 
         // Handle object (IRI or Literal)
-        let object: ReturnType<typeof DataFactory.namedNode> | ReturnType<typeof DataFactory.literal>;
-        if (typeof quad.object === "string") {
-          object = DataFactory.namedNode(quad.object);
-        } else {
+        let object:
+          | ReturnType<typeof DataFactory.namedNode>
+          | ReturnType<typeof DataFactory.blankNode>
+          | ReturnType<typeof DataFactory.literal>;
+        if (quad.object.termType === "Literal") {
           const lit = quad.object;
-          if (O.isSome(lit.datatype)) {
-            object = DataFactory.literal(lit.value, DataFactory.namedNode(lit.datatype.value));
-          } else if (O.isSome(lit.language)) {
+          if (O.isSome(lit.language)) {
             object = DataFactory.literal(lit.value, lit.language.value);
           } else {
-            object = DataFactory.literal(lit.value);
+            object = DataFactory.literal(lit.value, DataFactory.namedNode(lit.datatype.value));
           }
+        } else if (quad.object.termType === "BlankNode") {
+          object = DataFactory.blankNode(quad.object.value);
+        } else {
+          object = DataFactory.namedNode(quad.object.value);
         }
 
-        const graphNode = O.isSome(quad.graph) ? DataFactory.namedNode(quad.graph.value) : DataFactory.defaultGraph();
+        const graphNode =
+          quad.graph.termType === "DefaultGraph"
+            ? DataFactory.defaultGraph()
+            : quad.graph.termType === "BlankNode"
+              ? DataFactory.blankNode(quad.graph.value)
+              : DataFactory.namedNode(quad.graph.value);
 
         store._store.addQuad(DataFactory.quad(subject, predicate, object, graphNode));
       }

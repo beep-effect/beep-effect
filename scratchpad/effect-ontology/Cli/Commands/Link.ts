@@ -8,11 +8,12 @@
  */
 
 import { Console, Effect, FileSystem } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import { Command, Flag as Options } from "effect/unstable/cli";
-import { IriSchema } from "../../Domain/Rdf/Types.ts";
+import { IRI } from "../../Domain/Rdf/Types.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { WikidataClient } from "../../Service/WikidataClient.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
@@ -105,7 +106,7 @@ To create a link, run:`);
     yield* Console.log("Q-IDs should match the pattern: Q followed by digits (e.g., Q42)");
     return;
   }
-  const entityIriResult = IriSchema.decodeResult(entityIri);
+  const entityIriResult = S.decodeResult(IRI)(entityIri);
   if (entityIriResult._tag === "Failure") {
     yield* Console.error(`Invalid entity IRI: ${entityIri}`);
     return;

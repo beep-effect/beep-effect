@@ -17,9 +17,10 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
+import type { ShaclViolation } from "../Domain/Schema/Shacl.ts";
+import { ShaclViolationSeverity } from "../Domain/Schema/Shacl.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
-import type { ShaclViolation } from "./Shacl.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
 
@@ -90,7 +91,7 @@ export class LlmViolationExplanation extends Schema.Class<LlmViolationExplanatio
   /** Suggested fix action */
   suggestion: Schema.String,
   /** Severity level */
-  severity: Schema.Literals(["Violation", "Warning", "Info"]),
+  severity: ShaclViolationSeverity,
   /** Affected entity IRIs */
   affectedEntities: Schema.Array(Schema.String),
   /** Confidence in the explanation (0-1) */
@@ -100,7 +101,7 @@ export class LlmViolationExplanation extends Schema.Class<LlmViolationExplanatio
    * True if this is a critical violation
    */
   get isCritical(): boolean {
-    return this.severity === "Violation";
+    return this.severity === "violation";
   }
 }
 
@@ -203,7 +204,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
     ): Effect.fn.Return<LlmViolationExplanation, ExplanationError> {
       yield* Effect.logInfo("ViolationExplainer.explain starting", {
         focusNode: violation.focusNode,
-        path: violation.path,
+        path: O.some(violation.path.value),
         severity: violation.severity,
       });
 
@@ -238,7 +239,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
 
       return LlmViolationExplanation.make({
         focusNode: violation.focusNode,
-        path: violation.path,
+        path: O.some(violation.path.value),
         explanation: result.explanation,
         suggestion: result.suggestion,
         severity: violation.severity,
@@ -292,7 +293,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
 
       return LlmViolationExplanation.make({
         focusNode: violation.focusNode,
-        path: violation.path,
+        path: O.some(violation.path.value),
         explanation,
         suggestion,
         severity: violation.severity,
@@ -381,7 +382,7 @@ const buildExplanationPrompt = (violation: ShaclViolation, context: ExplanationC
     "",
     "## Violation Details",
     `- **Focus Node**: ${violation.focusNode}`,
-    O.match(violation.path, { onNone: () => "", onSome: (path) => `- **Property Path**: ${path}` }),
+    `- **Property Path**: ${violation.path.value}`,
     `- **Message**: ${violation.message}`,
     `- **Severity**: ${violation.severity}`,
     "",
@@ -423,7 +424,7 @@ const buildExplanationPrompt = (violation: ShaclViolation, context: ExplanationC
  */
 const generateRuleBasedExplanation = (violation: ShaclViolation): { explanation: string; suggestion: string } => {
   const message = Str.toLowerCase(violation.message);
-  const path = O.getOrElse(violation.path, () => "unknown");
+  const path = violation.path.value;
 
   // Cardinality constraints
   if (Str.includes("mincount")(message) || Str.includes("min count")(message)) {

@@ -13,6 +13,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
+import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
+import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { LiteralKit } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Context, Data, Effect, Layer, Schema } from "effect";
@@ -125,8 +128,8 @@ export class ReasoningResult extends Schema.Class<ReasoningResult>("ReasoningRes
  * If ?s is of type ?c and ?c is subClassOf ?c2, then ?s is of type ?c2
  */
 const RDFS_SUBCLASS_RULE = `
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <${RDFS_NAMESPACE}> .
+@prefix rdf: <${RDF_NAMESPACE}> .
 
 {
   ?s rdf:type ?c .
@@ -142,7 +145,7 @@ const RDFS_SUBCLASS_RULE = `
  * If ?c1 subClassOf ?c2 and ?c2 subClassOf ?c3, then ?c1 subClassOf ?c3
  */
 const RDFS_SUBCLASS_CHAIN_RULE = `
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdfs: <${RDFS_NAMESPACE}> .
 
 {
   ?c1 rdfs:subClassOf ?c2 .
@@ -156,7 +159,7 @@ const RDFS_SUBCLASS_CHAIN_RULE = `
  * RDFS subPropertyOf transitivity rule
  */
 const RDFS_SUBPROPERTY_RULE = `
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rdfs: <${RDFS_NAMESPACE}> .
 
 {
   ?s ?p ?o .
@@ -172,8 +175,8 @@ const RDFS_SUBPROPERTY_RULE = `
  * If ?p has domain ?c and ?s ?p ?o, then ?s is of type ?c
  */
 const RDFS_DOMAIN_RULE = `
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <${RDFS_NAMESPACE}> .
+@prefix rdf: <${RDF_NAMESPACE}> .
 
 {
   ?s ?p ?o .
@@ -190,8 +193,8 @@ const RDFS_DOMAIN_RULE = `
  * (Only for object properties, not literals)
  */
 const RDFS_RANGE_RULE = `
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <${RDFS_NAMESPACE}> .
+@prefix rdf: <${RDF_NAMESPACE}> .
 
 {
   ?s ?p ?o .
@@ -205,7 +208,7 @@ const RDFS_RANGE_RULE = `
  * OWL sameAs transitivity rule
  */
 const OWL_SAMEAS_RULE = `
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix owl: <${OWL_NAMESPACE}> .
 
 {
   ?a owl:sameAs ?b .
@@ -219,7 +222,7 @@ const OWL_SAMEAS_RULE = `
  * OWL sameAs symmetry rule
  */
 const OWL_SAMEAS_SYMMETRY_RULE = `
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix owl: <${OWL_NAMESPACE}> .
 
 {
   ?a owl:sameAs ?b .

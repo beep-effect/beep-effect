@@ -8,6 +8,7 @@
  * @module Utils/QuadDelta
  */
 
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
@@ -129,10 +130,8 @@ export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string,
  * @since 2.0.0
  * @category Functions
  */
-export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<N3.Quad> => {
-  const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-  return A.filter(delta.newQuads, (quad) => quad.predicate.value === RDF_TYPE);
-};
+export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<N3.Quad> =>
+  A.filter(delta.newQuads, (quad) => quad.predicate.value === RDF_TYPE.value);
 
 /**
  * Creates a summary of the delta for logging/telemetry.

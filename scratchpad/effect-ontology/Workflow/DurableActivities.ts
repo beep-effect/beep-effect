@@ -15,6 +15,10 @@
  * @since 2.0.0
  */
 
+import { makeNamedNode } from "@beep/rdf";
+import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_USED, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
+import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { SchemaUtils } from "@beep/schema";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -37,7 +41,7 @@ import { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts";
 import { ElementEmbedding, OntologyEmbeddings, OntologyEmbeddingsJson } from "../Domain/Model/OntologyEmbeddings.ts";
 import { EntityId, IRI } from "../Domain/Model/shared.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
-import { CLAIMS, PROV, RDF, RDFS } from "../Domain/Rdf/Constants.ts";
+import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import type {
   IngestionActivityInput,
   ResolutionActivityInput,
@@ -69,6 +73,12 @@ import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
 import { extractLocalNameFromIri } from "../Utils/Iri.ts";
 import { computeQuadDelta } from "../Utils/QuadDelta.ts";
+
+const RDF_STATEMENT = makeNamedNode(`${RDF_NAMESPACE}Statement`);
+const RDF_SUBJECT = makeNamedNode(`${RDF_NAMESPACE}subject`);
+const RDF_PREDICATE = makeNamedNode(`${RDF_NAMESPACE}predicate`);
+const RDF_OBJECT = makeNamedNode(`${RDF_NAMESPACE}object`);
+const PROV_GENERATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}generatedAtTime`);
 
 // -----------------------------------------------------------------------------
 // Output Schemas (must be serializable for journaling)
@@ -178,7 +188,7 @@ const parseTurtleStats = Effect.fn("parseTurtleStats")(function* (turtle: string
   const rdf = yield* RdfBuilder;
   const store = yield* rdf.parseTurtle(turtle);
   const typeQuads = yield* rdf.queryStore(store, {
-    predicate: RDF.type,
+    predicate: RDF_TYPE,
   });
   const allQuads = yield* rdf.queryStore(store, {});
   return {
@@ -198,15 +208,14 @@ const parseTurtleStats = Effect.fn("parseTurtleStats")(function* (turtle: string
  */
 const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (store: RdfStore) {
   const rdf = yield* RdfBuilder;
-  const typeQuads = yield* rdf.queryStore(store, { predicate: RDF.type });
-  const labelQuads = yield* rdf.queryStore(store, { predicate: RDFS.label });
+  const typeQuads = yield* rdf.queryStore(store, { predicate: RDF_TYPE });
+  const labelQuads = yield* rdf.queryStore(store, { predicate: RDFS_LABEL });
   const entityTypes = MutableHashMap.empty<string, Array<string>>();
   const entityIris = MutableHashSet.empty<string>();
   for (const quad of typeQuads) {
-    const subjectIri = quad.subject as string;
-    if (subjectIri.startsWith("_:")) continue;
-    const typeIri = quad.object as string;
-    if (typeof typeIri !== "string") continue;
+    if (quad.subject.termType !== "NamedNode" || quad.object.termType !== "NamedNode") continue;
+    const subjectIri = quad.subject.value;
+    const typeIri = quad.object.value;
     if (typeIri.includes("owl#") || typeIri.includes("rdf-schema#")) continue;
     if (subjectIri.startsWith(CLAIMS.namespace)) continue;
     if (typeIri.startsWith(CLAIMS.namespace)) continue;
@@ -217,16 +226,9 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
   }
   const entityLabels = MutableHashMap.empty<string, string>();
   for (const quad of labelQuads) {
-    const subjectIri = quad.subject as string;
+    const subjectIri = quad.subject.value;
     if (MutableHashSet.has(entityIris, subjectIri)) {
-      const label =
-        typeof quad.object === "string"
-          ? quad.object
-          : (
-              quad.object as {
-                value: string;
-              }
-            ).value;
+      const label = quad.object.value;
       MutableHashMap.set(entityLabels, subjectIri, label);
     }
   }
@@ -249,15 +251,16 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
   const allQuads = yield* rdf.queryStore(store, {});
   const relations: Array<Relation> = [];
   for (const quad of allQuads) {
-    const subjectIri = quad.subject as string;
+    if (quad.subject.termType !== "NamedNode") continue;
+    const subjectIri = quad.subject.value;
     const subjectLocalName = extractLocalNameFromIri(subjectIri);
     const subjectId = EntityId.make(subjectLocalName);
     if (!MutableHashSet.has(entityIdSet, subjectId)) continue;
-    const predicate = quad.predicate as string;
-    if (predicate === RDF.type || predicate === RDFS.label) continue;
+    const predicate = quad.predicate.value;
+    if (predicate === RDF_TYPE.value || predicate === RDFS_LABEL.value) continue;
     const objectValue = quad.object;
-    if (typeof objectValue === "string" && !objectValue.startsWith("_:")) {
-      const objectLocalName = extractLocalNameFromIri(objectValue);
+    if (objectValue.termType === "NamedNode") {
+      const objectLocalName = extractLocalNameFromIri(objectValue.value);
       const objectId = EntityId.make(objectLocalName);
       if (MutableHashSet.has(entityIdSet, objectId)) {
         relations.push(
@@ -606,17 +609,19 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
 
       yield* Effect.logInfo("Validation activity complete", {
         batchId: input.batchId,
-        conforms: report.conforms,
-        violations: NonNegativeInt.make(report.violations.length),
+        conforms: report.validation.conforms,
+        violations: NonNegativeInt.make(report.validation.violations.length),
         policyApplied: policy,
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       });
 
       return {
         validatedUri: GcsUri.fromUnknown(`gs://${bucket}/${validationGraphPath}`),
-        conforms: report.conforms,
-        violations: NonNegativeInt.make(report.violations.length),
-        violationSummary: P.isTruthy(report.violations.length) ? summarizeViolations(report.violations) : [],
+        conforms: report.validation.conforms,
+        violations: NonNegativeInt.make(report.validation.violations.length),
+        violationSummary: P.isTruthy(report.validation.violations.length)
+          ? summarizeViolations(report.validation.violations)
+          : [],
         reportUri: GcsUri.fromUnknown(`gs://${bucket}/${reportPath}`),
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       };
@@ -1302,9 +1307,9 @@ export const makeInferenceActivity = (input: InferenceInput) =>
         };
 
         // Add inference activity metadata
-        addQuad(inferenceActivityIri, RDF.type, PROV.Activity);
-        addQuad(inferenceActivityIri, PROV.generatedAtTime, DateTime.formatIso(start));
-        addQuad(inferenceActivityIri, PROV.used, input.resolvedGraphUri);
+        addQuad(inferenceActivityIri, RDF_TYPE.value, PROV_ACTIVITY.value);
+        addQuad(inferenceActivityIri, PROV_GENERATED_AT_TIME.value, DateTime.formatIso(start));
+        addQuad(inferenceActivityIri, PROV_USED.value, input.resolvedGraphUri);
         provenanceQuadCount += 3;
 
         // For each inferred triple, add prov:wasGeneratedBy linking to the activity
@@ -1317,15 +1322,15 @@ export const makeInferenceActivity = (input: InferenceInput) =>
           const statementIri = `${inferenceActivityIri}/stmt/${Math.abs(quadHash).toString(16)}`;
 
           // Reify the statement
-          addQuad(statementIri, RDF.type, RDF.Statement);
-          addQuad(statementIri, RDF.subject, quad.subject.value);
-          addQuad(statementIri, RDF.predicate, quad.predicate.value);
+          addQuad(statementIri, RDF_TYPE.value, RDF_STATEMENT.value);
+          addQuad(statementIri, RDF_SUBJECT.value, quad.subject.value);
+          addQuad(statementIri, RDF_PREDICATE.value, quad.predicate.value);
           addQuad(
             statementIri,
-            RDF.object,
+            RDF_OBJECT.value,
             quad.object.termType === "Literal" ? `"${quad.object.value}"` : quad.object.value
           );
-          addQuad(statementIri, PROV.wasGeneratedBy, inferenceActivityIri);
+          addQuad(statementIri, PROV_WAS_GENERATED_BY.value, inferenceActivityIri);
           provenanceQuadCount += 5;
         }
 
@@ -1564,10 +1569,7 @@ export const LlmVerificationInput = S.Struct({
   /** Entity pairs with low confidence to verify */
   entityPairs: S.Array(EntityPair),
   /** Similarity threshold below which to verify (default: 0.7) */
-  verificationThreshold: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).pipe(
-    S.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
-  ),
+  verificationThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
 export type LlmVerificationInput = typeof LlmVerificationInput.Type;
 
@@ -1582,7 +1584,7 @@ export const VerifiedPair = S.Struct({
   /** Whether LLM confirmed these are the same entity */
   sameEntity: S.Boolean,
   /** LLM confidence in the verification */
-  confidence: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })),
+  confidence: UnitInterval,
   /** Original similarity score */
   originalSimilarity: S.Finite,
 });
@@ -1612,7 +1614,7 @@ const EntityComparisonSchema = S.Struct({
   sameEntity: S.Boolean.annotate({
     description: "True if these refer to the same real-world entity",
   }),
-  confidence: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).annotate({
+  confidence: UnitInterval.annotate({
     description: "Confidence in the decision (0-1)",
   }),
   reasoning: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
@@ -1635,7 +1637,7 @@ const BatchComparisonSchema = S.Struct({
       sameEntity: S.Boolean.annotate({
         description: "True if these refer to the same real-world entity",
       }),
-      confidence: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).annotate({
+      confidence: UnitInterval.annotate({
         description: "Confidence in the decision (0-1)",
       }),
     })
@@ -1848,7 +1850,7 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
           );
 
           // Map results back to pairs
-          type ComparisonResult = { index: number; sameEntity: boolean; confidence: number };
+          type ComparisonResult = { index: number; sameEntity: boolean; confidence: UnitInterval };
           const resultsMap = HashMap.fromIterable(
             (result.value.results as ReadonlyArray<ComparisonResult>).map((r) => [r.index, r])
           );
@@ -1859,7 +1861,10 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
               entityA: pair.entityA,
               entityB: pair.entityB,
               sameEntity: O.match(llmResult, { onNone: () => false, onSome: (value) => value.sameEntity }),
-              confidence: O.match(llmResult, { onNone: () => 0, onSome: (value) => value.confidence }),
+              confidence: O.match(llmResult, {
+                onNone: () => UnitInterval.make(0),
+                onSome: (value) => value.confidence,
+              }),
               originalSimilarity: pair.similarity,
             };
 
@@ -1923,7 +1928,7 @@ const DocumentClassificationResponse = S.Struct({
     description: "2-5 domain tags describing the document topic",
   }),
   /** Complexity score 0-1 */
-  complexityScore: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).annotate({
+  complexityScore: UnitInterval.annotate({
     description: "Document complexity (0=simple, 1=complex)",
   }),
   /** Entity density estimation */

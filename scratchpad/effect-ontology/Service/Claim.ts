@@ -9,13 +9,16 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Context, DateTime, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
-import { CLAIMS, RDF, XSD } from "../Domain/Rdf/Constants.ts";
-import type { IRI } from "../Domain/Rdf/Types.ts";
-import { Literal, Quad } from "../Domain/Rdf/Types.ts";
+import { CLAIMS } from "../Domain/Rdf/Constants.ts";
+import type { GraphTerm, IRI, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
+import { makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
 import type { ClaimFilter } from "../Repository/Claim.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ClaimInsertRow, ClaimRow } from "../Repository/schema.ts";
@@ -23,6 +26,34 @@ import type { RdfStore } from "./Rdf.ts";
 import { RdfBuilder } from "./Rdf.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Claim");
+const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
+
+const canonicalNamedNode = (value: IRI | NamedNode): NamedNode => (P.isString(value) ? makeNamedNode(value) : value);
+
+const canonicalLiteral = (input: {
+  readonly value: string;
+  readonly language?: O.Option<string>;
+  readonly datatype?: O.Option<IRI | NamedNode>;
+}): Literal => {
+  const datatype = O.getOrElse(input.datatype ?? O.none(), () => XSD_STRING);
+  const language = O.getOrUndefined(input.language ?? O.none());
+  return makeLiteral(input.value, canonicalNamedNode(datatype).value, P.isUndefined(language) ? {} : { language });
+};
+
+const canonicalQuad = (input: {
+  readonly subject: IRI | Subject;
+  readonly predicate: IRI | NamedNode;
+  readonly object: IRI | ObjectTerm;
+  readonly graph: O.Option<IRI | GraphTerm>;
+}): Quad => {
+  const subject = P.isString(input.subject) ? makeNamedNode(input.subject) : input.subject;
+  const predicate = canonicalNamedNode(input.predicate);
+  const object = P.isString(input.object) ? makeNamedNode(input.object) : input.object;
+  const graph = O.map(input.graph, (value) => (P.isString(value) ? makeNamedNode(value) : value));
+  return O.isSome(graph)
+    ? makeQuad(subject, predicate, { object, graph: graph.value })
+    : makeQuad(subject, predicate, object);
+};
 
 const randomUuid = Effect.all([
   Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
@@ -231,9 +262,9 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
 
         // Type assertion
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: claimIri,
-            predicate: RDF.type,
+            predicate: RDF_TYPE,
             object: CLAIMS.Claim,
             graph: O.fromNullishOr(graph),
           })
@@ -243,7 +274,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
         // Uses claims:claimSubject, claims:claimPredicate, claims:claimObject|claimLiteral
         // instead of RDF reification (rdf:subject, rdf:predicate, rdf:object)
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.claimSubject,
             object: claim.subjectIri as IRI,
@@ -252,7 +283,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
         );
 
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.claimPredicate,
             object: claim.predicateIri as IRI,
@@ -264,7 +295,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
         // This preserves the semantic distinction defined in claims.ttl
         if (claim.objectType === "iri") {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: claimIri,
               predicate: CLAIMS.claimObject,
               object: claim.objectValue as IRI,
@@ -273,10 +304,10 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
           );
         } else {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: claimIri,
               predicate: CLAIMS.claimLiteral,
-              object: Literal.make({ value: claim.objectValue }),
+              object: canonicalLiteral({ value: claim.objectValue }),
               graph: O.fromNullishOr(graph),
             })
           );
@@ -291,7 +322,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
               : CLAIMS.Normal;
 
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.rank,
             object: rankIri,
@@ -302,12 +333,12 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
         // Confidence
         if (P.isNotNull(claim.confidenceScore)) {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: claimIri,
               predicate: CLAIMS.confidence,
-              object: Literal.make({
+              object: canonicalLiteral({
                 value: claim.confidenceScore,
-                datatype: O.fromNullishOr(XSD.double),
+                datatype: O.fromNullishOr(XSD_DOUBLE),
               }),
               graph: O.fromNullishOr(graph),
             })
@@ -317,12 +348,12 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
         // Asserted at (when the claim was extracted/recorded)
         if (P.isNotNull(claim.assertedAt)) {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: claimIri,
               predicate: CLAIMS.extractedAt,
-              object: Literal.make({
+              object: canonicalLiteral({
                 value: claim.assertedAt.toISOString(),
-                datatype: O.fromNullishOr(XSD.dateTime),
+                datatype: O.fromNullishOr(XSD_DATE_TIME),
               }),
               graph: O.fromNullishOr(graph),
             })
@@ -331,7 +362,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
 
         // Source article
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.statedIn,
             object: `${CLAIMS.namespace}article/${claim.articleId}` as IRI,
@@ -342,12 +373,12 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
         // Temporal validity
         if (P.isNotNull(claim.validFrom)) {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: claimIri,
               predicate: CLAIMS.validFrom,
-              object: Literal.make({
+              object: canonicalLiteral({
                 value: claim.validFrom.toISOString(),
-                datatype: O.fromNullishOr(XSD.dateTime),
+                datatype: O.fromNullishOr(XSD_DATE_TIME),
               }),
               graph: O.fromNullishOr(graph),
             })
@@ -356,12 +387,12 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
 
         if (P.isNotNull(claim.validTo)) {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: claimIri,
               predicate: CLAIMS.validUntil,
-              object: Literal.make({
+              object: canonicalLiteral({
                 value: claim.validTo.toISOString(),
-                datatype: O.fromNullishOr(XSD.dateTime),
+                datatype: O.fromNullishOr(XSD_DATE_TIME),
               }),
               graph: O.fromNullishOr(graph),
             })
@@ -371,12 +402,12 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
         // Deprecation info
         if (P.isNotNull(claim.deprecatedAt)) {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: claimIri,
               predicate: CLAIMS.deprecatedAt,
-              object: Literal.make({
+              object: canonicalLiteral({
                 value: claim.deprecatedAt.toISOString(),
-                datatype: O.fromNullishOr(XSD.dateTime),
+                datatype: O.fromNullishOr(XSD_DATE_TIME),
               }),
               graph: O.fromNullishOr(graph),
             })
@@ -388,7 +419,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
           const evidenceIri = `${claimIri}/evidence` as IRI;
 
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: claimIri,
               predicate: CLAIMS.hasEvidence,
               object: evidenceIri,
@@ -397,31 +428,31 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
           );
 
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: evidenceIri,
-              predicate: RDF.type,
+              predicate: RDF_TYPE,
               object: CLAIMS.Evidence,
               graph: O.fromNullishOr(graph),
             })
           );
 
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: evidenceIri,
               predicate: CLAIMS.evidenceText,
-              object: Literal.make({ value: claim.evidenceText }),
+              object: canonicalLiteral({ value: claim.evidenceText }),
               graph: O.fromNullishOr(graph),
             })
           );
 
           if (claim.evidenceStartOffset !== null) {
             quads.push(
-              Quad.make({
+              canonicalQuad({
                 subject: evidenceIri,
                 predicate: CLAIMS.startOffset,
-                object: Literal.make({
+                object: canonicalLiteral({
                   value: claim.evidenceStartOffset.toString(),
-                  datatype: O.fromNullishOr(XSD.integer),
+                  datatype: O.fromNullishOr(XSD_INTEGER),
                 }),
                 graph: O.fromNullishOr(graph),
               })
@@ -430,12 +461,12 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
 
           if (claim.evidenceEndOffset !== null) {
             quads.push(
-              Quad.make({
+              canonicalQuad({
                 subject: evidenceIri,
                 predicate: CLAIMS.endOffset,
-                object: Literal.make({
+                object: canonicalLiteral({
                   value: claim.evidenceEndOffset.toString(),
-                  datatype: O.fromNullishOr(XSD.integer),
+                  datatype: O.fromNullishOr(XSD_INTEGER),
                 }),
                 graph: O.fromNullishOr(graph),
               })
@@ -473,18 +504,25 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
           const n3 = yield* Effect.promise(() => import("n3"));
           const n3Store = store._store;
 
-          const subject = n3.DataFactory.namedNode(quad.subject);
-          const predicate = n3.DataFactory.namedNode(quad.predicate);
-          const object = Literal.is(quad.object)
-            ? O.isSome(quad.object.datatype)
-              ? n3.DataFactory.literal(quad.object.value, n3.DataFactory.namedNode(quad.object.datatype.value))
-              : O.isSome(quad.object.language)
+          const subject =
+            quad.subject.termType === "BlankNode"
+              ? n3.DataFactory.blankNode(quad.subject.value)
+              : n3.DataFactory.namedNode(quad.subject.value);
+          const predicate = n3.DataFactory.namedNode(quad.predicate.value);
+          const object =
+            quad.object.termType === "Literal"
+              ? O.isSome(quad.object.language)
                 ? n3.DataFactory.literal(quad.object.value, quad.object.language.value)
-                : n3.DataFactory.literal(quad.object.value)
-            : n3.DataFactory.namedNode(quad.object as string);
-          const graph = O.isSome(quad.graph)
-            ? n3.DataFactory.namedNode(quad.graph.value)
-            : n3.DataFactory.defaultGraph();
+                : n3.DataFactory.literal(quad.object.value, n3.DataFactory.namedNode(quad.object.datatype.value))
+              : quad.object.termType === "BlankNode"
+                ? n3.DataFactory.blankNode(quad.object.value)
+                : n3.DataFactory.namedNode(quad.object.value);
+          const graph =
+            quad.graph.termType === "DefaultGraph"
+              ? n3.DataFactory.defaultGraph()
+              : quad.graph.termType === "BlankNode"
+                ? n3.DataFactory.blankNode(quad.graph.value)
+                : n3.DataFactory.namedNode(quad.graph.value);
 
           n3Store.addQuad(n3.DataFactory.quad(subject, predicate, object, graph));
         }

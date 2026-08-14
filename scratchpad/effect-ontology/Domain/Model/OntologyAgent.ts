@@ -290,7 +290,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
   get isValid(): boolean {
     return O.match(this.validationReport, {
       onNone: () => true,
-      onSome: (report) => report.conforms,
+      onSome: (report) => report.validation.conforms,
     });
   }
 
@@ -903,9 +903,9 @@ class ViolationExplanationModel extends S.Class<ViolationExplanationModel>($I`Vi
  * const explanation = ViolationExplanation.fromUnknown({
  *   focusNode: "https://example.org/alice",
  *   explanation: "Expected at least one name.",
- *   severity: "Violation"
+ *   severity: "violation"
  * })
- * console.log(explanation.severity) // "Violation"
+ * console.log(explanation.severity) // "violation"
  * ```
  *
  * @invariant Focus node and explanation are non-empty; severity is standard SHACL.

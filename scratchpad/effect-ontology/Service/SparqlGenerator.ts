@@ -14,7 +14,8 @@
  * @module Service/SparqlGenerator
  */
 
-import { $ScratchpadId } from "@beep/identity";
+import { $ScratchpadId, CoreVocab } from "@beep/identity";
+import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { SchemaUtils } from "@beep/schema";
 import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from "effect";
 import * as O from "effect/Option";
@@ -165,9 +166,9 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
           const prefixDeclarations = formatPrefixes(
             prefixes ?? {
               "": config.rdf.baseNamespace,
-              rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-              rdfs: "http://www.w3.org/2000/01/rdf-schema#",
-              xsd: "http://www.w3.org/2001/XMLSchema#",
+              rdf: CoreVocab.rdf.iri,
+              rdfs: CoreVocab.rdfs.iri,
+              xsd: XSD_NAMESPACE,
             }
           );
 

@@ -361,8 +361,8 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
         "",
         "## Violation Details",
         `- **Focus Node**: ${violation.focusNode}`,
-        O.isSome(violation.path) ? `- **Property Path**: ${violation.path}` : "",
-        O.isSome(violation.value) ? `- **Current Value**: ${violation.value}` : "",
+        `- **Property Path**: ${violation.path.value}`,
+        O.isSome(violation.value) ? `- **Current Value**: ${violation.value.value.value}` : "",
         `- **Message**: ${violation.message}`,
         `- **Severity**: ${violation.severity}`,
         "",
@@ -459,7 +459,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
       const strategy = classifyViolation(violation);
       yield* Effect.logInfo("CorrectorAgent.generateCorrection", {
         focusNode: violation.focusNode,
-        path: violation.path,
+        path: O.some(violation.path.value),
         strategy,
       });
       const entityContext = getEntityContext(store, violation.focusNode);
@@ -492,8 +492,8 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
       return Correction.make({
         strategy: result.strategy,
         focusNode: violation.focusNode,
-        path: violation.path,
-        originalValue: violation.value,
+        path: O.some(violation.path.value),
+        originalValue: O.map(violation.value, (value) => value.value),
         newValue: result.newValue,
         newType: result.newType,
         explanation: result.explanation,
@@ -605,10 +605,10 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
       const startTime = yield* Clock.currentTimeMillis;
       const concurrency = options?.concurrency ?? config.runtime.llmConcurrencyLimit;
       yield* Effect.logInfo("CorrectorAgent.correctAll starting", {
-        violationCount: report.violations.length,
+        violationCount: report.validation.violations.length,
         concurrency,
       });
-      const violations = A.filter(report.violations, (violation) => violation.severity === "Violation");
+      const violations = A.filter(report.validation.violations, (violation) => violation.severity === "violation");
       const results = yield* Effect.all(
         A.map(violations, (violation) =>
           correct(violation, store, ontologyContext).pipe(
@@ -619,7 +619,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
                   correction: Correction.make({
                     strategy: "skip",
                     focusNode: violation.focusNode,
-                    path: violation.path,
+                    path: O.some(violation.path.value),
                     explanation: `Error: ${error.message}`,
                     confidence: 0,
                   }),
@@ -676,7 +676,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
           execute: (input) => correctAll(input.report, input.store, input.ontologyContext),
           validate: O.some((input) =>
             Effect.succeed(
-              input.report.violations.length > 0
+              input.report.validation.violations.length > 0
                 ? ValidationResult.pass()
                 : ValidationResult.warn(["No violations to correct"])
             )

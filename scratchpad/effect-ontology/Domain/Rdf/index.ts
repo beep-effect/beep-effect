@@ -9,12 +9,12 @@
  * @since 0.0.0
  */
 /**
- * Standard and experiment-specific RDF vocabulary constants.
+ * Experiment-owned RDF vocabulary constants.
  *
  * @example
  * ```ts
- * import { RDF } from "@effect-ontology/Rdf/index.ts"
- * console.log(RDF.type.value)
+ * import { CLAIMS } from "@effect-ontology/Rdf/index.ts"
+ * console.log(CLAIMS.Claim.value)
  * ```
  *
  * @category rdf

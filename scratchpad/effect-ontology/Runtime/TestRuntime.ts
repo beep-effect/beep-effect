@@ -16,6 +16,7 @@
  * @module Runtime/TestRuntime
  */
 
+import * as Rdf from "@beep/rdf/Rdf";
 import { BunServices } from "@effect/platform-bun";
 import { ConfigProvider, DateTime, Effect, Layer, ManagedRuntime, Stream } from "effect";
 import * as P from "effect/Predicate";
@@ -37,7 +38,8 @@ import {
 import { NlpService } from "../Service/Nlp.ts";
 import { OntologyService } from "../Service/Ontology.ts";
 import { RdfBuilder } from "../Service/Rdf.ts";
-import { ShaclService, ShaclValidationReport, type ValidationPolicy } from "../Service/Shacl.ts";
+import type { ValidationPolicy } from "../Service/Shacl.ts";
+import { ShaclService, ShaclValidationReport } from "../Service/Shacl.ts";
 import { StorageServiceTest } from "../Service/Storage.ts";
 import { MetricsService } from "../Telemetry/Metrics.ts";
 
@@ -112,7 +114,7 @@ export const TestConfigProvider = ConfigProvider.fromUnknown({
 export const MockShaclService = (options?: {
   readonly conforms?: boolean;
   readonly violations?: ReadonlyArray<{
-    readonly severity: "Violation" | "Warning" | "Info";
+    readonly severity: "violation" | "warning" | "info";
     readonly message: string;
     readonly focusNode?: string;
     readonly path?: string;
@@ -123,16 +125,21 @@ export const MockShaclService = (options?: {
   const makeReport = Effect.fn("ShaclService.makeTestReport")(function* (dataStore: N3.Store, shapesStore: N3.Store) {
     const violations = (options?.violations ?? []).map((violation) => ({
       focusNode: violation.focusNode ?? "test:node",
+      path: Rdf.makeNamedNode(violation.path ?? "urn:beep:shacl:path:unknown"),
       message: violation.message,
       severity: violation.severity,
-      sourceConstraintComponent: "test:constraint",
-      ...(P.isNotUndefined(violation.path) ? { path: violation.path } : {}),
-      ...(P.isNotUndefined(violation.value) ? { value: violation.value } : {}),
-      ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: violation.sourceShape } : {}),
+      sourceConstraintComponent: Rdf.makeNamedNode("urn:beep:shacl:constraint:test"),
+      ...(P.isNotUndefined(violation.value)
+        ? {
+            value: S.encodeSync(Rdf.Literal)(
+              Rdf.makeLiteral(violation.value, "http://www.w3.org/2001/XMLSchema#string")
+            ),
+          }
+        : {}),
+      ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: Rdf.makeNamedNode(violation.sourceShape) } : {}),
     }));
     return yield* S.decodeEffect(ShaclValidationReport)({
-      conforms: violations.length === 0,
-      violations,
+      validation: { conforms: violations.length === 0, violations, truncated: false },
       validatedAt: DateTime.formatIso(yield* DateTime.now),
       dataGraphTripleCount: dataStore.size,
       shapesGraphTripleCount: shapesStore.size,
@@ -146,7 +153,9 @@ export const MockShaclService = (options?: {
       Effect.sync(() => {
         const parser = new N3.Parser();
         const store = new N3.Store();
-        parser.parse(turtle).forEach((quad) => store.addQuad(quad));
+        parser.parse(turtle).forEach((quad) => {
+          store.addQuad(quad);
+        });
         return store;
       })
     ),

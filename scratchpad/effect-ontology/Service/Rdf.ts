@@ -9,23 +9,40 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
+import { DCTERMS_NAMESPACE } from "@beep/rdf/Vocab/Dcterms";
+import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
+import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import type { Scope } from "effect";
 import { Chunk, Context, Duration, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import * as N3 from "n3";
 import { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Error/Rdf.ts";
 import type { Entity, Relation } from "../Domain/Model/Entity.ts";
-import { CLAIMS, CORE, DCTERMS, EXTR, OWL, PROV, RDF, XSD } from "../Domain/Rdf/Constants.ts";
-import type { BlankNode as BlankNodeType, RdfTerm } from "../Domain/Rdf/Types.ts";
-import { IRI, Literal, Quad } from "../Domain/Rdf/Types.ts";
+import { CLAIMS, CORE, EXTR } from "../Domain/Rdf/Constants.ts";
+import type {
+  BlankNode as BlankNodeType,
+  GraphTerm,
+  NamedNode,
+  ObjectTerm,
+  Quad,
+  Subject,
+} from "../Domain/Rdf/Types.ts";
+import { IRI, makeBlankNode, makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
 import { createN3Builders, entityToQuads, relationToQuad } from "../Utils/Rdf.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Rdf");
+const OWL_SAME_AS = makeCanonicalNamedNode(`${OWL_NAMESPACE}sameAs`);
+const PROV_GENERATED_AT_TIME = makeCanonicalNamedNode(`${PROV_NAMESPACE}generatedAtTime`);
+const DCTERMS_SOURCE = makeCanonicalNamedNode(`${DCTERMS_NAMESPACE}source`);
+const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
+const XSD_DECIMAL = makeCanonicalNamedNode(`${XSD_NAMESPACE}decimal`);
 
 /**
  * N3Store type (from n3 library) - internal use only
@@ -53,26 +70,22 @@ export interface RdfStore {
  * @since 2.0.0
  */
 export interface QuadPattern {
-  readonly subject?: IRI | BlankNodeType | null;
-  readonly predicate?: IRI | null;
-  readonly object?: RdfTerm | null;
-  readonly graph?: IRI | null;
+  readonly subject?: IRI | Subject | null;
+  readonly predicate?: IRI | NamedNode | null;
+  readonly object?: IRI | ObjectTerm | null;
+  readonly graph?: IRI | GraphTerm | null;
 }
 
 /**
- * Internal: Convert N3 Term to domain RdfTerm
+ * Internal: Convert N3 Term to the canonical RDF object-term union
  */
-const n3TermToDomainTerm = (term: N3.Term): RdfTerm => {
+const n3TermToDomainTerm = (term: N3.Term): ObjectTerm => {
   if (term.termType === "NamedNode") {
-    return term.value as IRI;
+    return makeNamedNode(term.value);
   } else if (term.termType === "BlankNode") {
-    return `_:${term.value}` as const as BlankNodeType;
+    return makeBlankNode(term.value);
   } else if (term.termType === "Literal") {
-    return Literal.make({
-      value: term.value,
-      language: O.fromNullishOr(term.language || undefined),
-      datatype: O.fromNullishOr(P.isTruthy(term.datatype) ? (term.datatype.value as IRI) : undefined),
-    });
+    return makeLiteral(term.value, term.datatype.value, P.isTruthy(term.language) ? { language: term.language } : {});
   } else {
     throw new Error(`Unsupported term type: ${term.termType}`);
   }
@@ -83,46 +96,41 @@ const n3TermToDomainTerm = (term: N3.Term): RdfTerm => {
  */
 const n3QuadToDomainQuad = (n3Quad: N3.Quad): Quad => {
   const subject =
-    n3Quad.subject.termType === "NamedNode"
-      ? (n3Quad.subject.value as IRI)
-      : (`_:${n3Quad.subject.value}` as const as BlankNodeType);
+    n3Quad.subject.termType === "NamedNode" ? makeNamedNode(n3Quad.subject.value) : makeBlankNode(n3Quad.subject.value);
 
-  const predicate = n3Quad.predicate.value as IRI;
+  const predicate = makeNamedNode(n3Quad.predicate.value);
 
   const object = n3TermToDomainTerm(n3Quad.object);
 
-  const graph = n3Quad.graph.termType === "NamedNode" ? (n3Quad.graph.value as IRI) : undefined;
-
-  return Quad.make({
-    subject,
-    predicate,
-    object,
-    graph: O.fromNullishOr(graph),
-  });
+  return n3Quad.graph.termType === "NamedNode"
+    ? makeQuad(subject, predicate, { object, graph: makeNamedNode(n3Quad.graph.value) })
+    : makeQuad(subject, predicate, object);
 };
 
 /**
  * Internal: Convert domain term to N3 Term for querying
  */
-const domainTermToN3Term = (term: IRI | BlankNodeType | RdfTerm | null | undefined): N3.Term | null => {
+const domainTermToN3Term = (
+  term: IRI | BlankNodeType | NamedNode | GraphTerm | ObjectTerm | null | undefined
+): N3.Term | null => {
   if (term === null || term === undefined) {
     return null;
   }
   if (typeof term === "string") {
-    if (term.startsWith("_:")) {
-      return N3.DataFactory.blankNode(term.slice(2));
-    } else {
-      return N3.DataFactory.namedNode(term);
-    }
+    return N3.DataFactory.namedNode(term);
   }
-  if (S.is(Literal)(term)) {
-    return O.isSome(term.datatype)
-      ? N3.DataFactory.literal(term.value, N3.DataFactory.namedNode(term.datatype.value))
-      : O.isSome(term.language)
-        ? N3.DataFactory.literal(term.value, term.language.value)
-        : N3.DataFactory.literal(term.value);
+  if (term.termType === "Literal") {
+    return O.isSome(term.language)
+      ? N3.DataFactory.literal(term.value, term.language.value)
+      : N3.DataFactory.literal(term.value, N3.DataFactory.namedNode(term.datatype.value));
   }
-  throw new Error(`Cannot convert term to N3 term: ${term}`);
+  if (term.termType === "BlankNode") {
+    return N3.DataFactory.blankNode(term.value);
+  }
+  if (term.termType === "DefaultGraph") {
+    return N3.DataFactory.defaultGraph();
+  }
+  return N3.DataFactory.namedNode(term.value);
 };
 
 /**
@@ -637,7 +645,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
         Effect.try({
           try: () => {
             const n3Store = store._store;
-            const sameAsPredicate = N3.DataFactory.namedNode(OWL.sameAs);
+            const sameAsPredicate = N3.DataFactory.namedNode(OWL_SAME_AS.value);
 
             for (const [mentionId, canonicalId] of Object.entries(canonicalMap)) {
               // Skip self-referential links
@@ -696,15 +704,20 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
 
             // prov:wasGeneratedBy
             n3Store.addQuad(
-              N3.DataFactory.quad(graphSubject, N3.DataFactory.namedNode(PROV.wasGeneratedBy), activityNode, graphNode)
+              N3.DataFactory.quad(
+                graphSubject,
+                N3.DataFactory.namedNode(PROV_WAS_GENERATED_BY.value),
+                activityNode,
+                graphNode
+              )
             );
 
             // prov:generatedAtTime
             n3Store.addQuad(
               N3.DataFactory.quad(
                 graphSubject,
-                N3.DataFactory.namedNode(PROV.generatedAtTime),
-                N3.DataFactory.literal(metadata.timestamp, N3.DataFactory.namedNode(XSD.dateTime)),
+                N3.DataFactory.namedNode(PROV_GENERATED_AT_TIME.value),
+                N3.DataFactory.literal(metadata.timestamp, N3.DataFactory.namedNode(XSD_DATE_TIME.value)),
                 graphNode
               )
             );
@@ -713,7 +726,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             n3Store.addQuad(
               N3.DataFactory.quad(
                 graphSubject,
-                N3.DataFactory.namedNode(DCTERMS.source),
+                N3.DataFactory.namedNode(DCTERMS_SOURCE.value),
                 N3.DataFactory.namedNode(metadata.sourceUri),
                 graphNode
               )
@@ -738,8 +751,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             n3Store.addQuad(
               N3.DataFactory.quad(
                 activityNode,
-                N3.DataFactory.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"),
-                N3.DataFactory.namedNode(PROV.Activity),
+                N3.DataFactory.namedNode(RDF_TYPE.value),
+                N3.DataFactory.namedNode(PROV_ACTIVITY.value),
                 graphNode
               )
             );
@@ -786,8 +799,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
                   ? N3.DataFactory.namedNode(triple.object)
                   : N3.DataFactory.literal(triple.object)
                 : typeof triple.object === "number"
-                  ? N3.DataFactory.literal(triple.object.toString(), N3.DataFactory.namedNode(XSD.double))
-                  : N3.DataFactory.literal(triple.object.toString(), N3.DataFactory.namedNode(XSD.boolean));
+                  ? N3.DataFactory.literal(triple.object.toString(), N3.DataFactory.namedNode(XSD_DOUBLE.value))
+                  : N3.DataFactory.literal(triple.object.toString(), N3.DataFactory.namedNode(XSD_BOOLEAN.value));
 
             // Create the original quad (triple)
             const originalQuad = N3.DataFactory.quad(subjectNode, predicateNode, objectNode, graphNode);
@@ -799,8 +812,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             // The N3.DataFactory.quad() can accept a Quad as subject for RDF-star
             const confidenceQuad = N3.DataFactory.quad(
               originalQuad, // Quoted triple as subject (RDF-star)
-              N3.DataFactory.namedNode(EXTR.confidence),
-              N3.DataFactory.literal(confidence.toString(), N3.DataFactory.namedNode(XSD.double)),
+              N3.DataFactory.namedNode(EXTR.confidence.value),
+              N3.DataFactory.literal(confidence.toString(), N3.DataFactory.namedNode(XSD_DOUBLE.value)),
               graphNode
             );
 
@@ -865,8 +878,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             n3Store.addQuad(
               N3.DataFactory.quad(
                 mentionNode,
-                N3.DataFactory.namedNode(RDF.type),
-                N3.DataFactory.namedNode(CORE.Mention),
+                N3.DataFactory.namedNode(RDF_TYPE.value),
+                N3.DataFactory.namedNode(CORE.Mention.value),
                 graphNode
               )
             );
@@ -875,7 +888,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             n3Store.addQuad(
               N3.DataFactory.quad(
                 mentionNode,
-                N3.DataFactory.namedNode(CLAIMS.evidenceText),
+                N3.DataFactory.namedNode(CLAIMS.evidenceText.value),
                 N3.DataFactory.literal(mention.text),
                 graphNode
               )
@@ -885,8 +898,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             n3Store.addQuad(
               N3.DataFactory.quad(
                 mentionNode,
-                N3.DataFactory.namedNode(CLAIMS.startOffset),
-                N3.DataFactory.literal(mention.startChar.toString(), N3.DataFactory.namedNode(XSD.integer)),
+                N3.DataFactory.namedNode(CLAIMS.startOffset.value),
+                N3.DataFactory.literal(mention.startChar.toString(), N3.DataFactory.namedNode(XSD_INTEGER.value)),
                 graphNode
               )
             );
@@ -895,8 +908,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             n3Store.addQuad(
               N3.DataFactory.quad(
                 mentionNode,
-                N3.DataFactory.namedNode(CLAIMS.endOffset),
-                N3.DataFactory.literal(mention.endChar.toString(), N3.DataFactory.namedNode(XSD.integer)),
+                N3.DataFactory.namedNode(CLAIMS.endOffset.value),
+                N3.DataFactory.literal(mention.endChar.toString(), N3.DataFactory.namedNode(XSD_INTEGER.value)),
                 graphNode
               )
             );
@@ -906,8 +919,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
               n3Store.addQuad(
                 N3.DataFactory.quad(
                   mentionNode,
-                  N3.DataFactory.namedNode(CLAIMS.confidence),
-                  N3.DataFactory.literal(mention.confidence.toString(), N3.DataFactory.namedNode(XSD.decimal)),
+                  N3.DataFactory.namedNode(CLAIMS.confidence.value),
+                  N3.DataFactory.literal(mention.confidence.toString(), N3.DataFactory.namedNode(XSD_DECIMAL.value)),
                   graphNode
                 )
               );
@@ -915,14 +928,14 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
 
             // core:mentions (mention → entity)
             n3Store.addQuad(
-              N3.DataFactory.quad(mentionNode, N3.DataFactory.namedNode(CORE.mentions), entityNode, graphNode)
+              N3.DataFactory.quad(mentionNode, N3.DataFactory.namedNode(CORE.mentions.value), entityNode, graphNode)
             );
 
             // core:hasEvidentialMention (entity → mention)
             n3Store.addQuad(
               N3.DataFactory.quad(
                 entityNode,
-                N3.DataFactory.namedNode(CORE.hasEvidentialMention),
+                N3.DataFactory.namedNode(CORE.hasEvidentialMention.value),
                 mentionNode,
                 graphNode
               )
@@ -933,7 +946,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
               n3Store.addQuad(
                 N3.DataFactory.quad(
                   mentionNode,
-                  N3.DataFactory.namedNode(CLAIMS.statedIn),
+                  N3.DataFactory.namedNode(CLAIMS.statedIn.value),
                   N3.DataFactory.namedNode(options.sourceUri),
                   graphNode
                 )

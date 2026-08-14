@@ -9,20 +9,54 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
+import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
+import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { XSD_DOUBLE, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Context, Data, DateTime, Effect, HashMap, Layer, Option, Ref } from "effect";
 import * as Clock from "effect/Clock";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
-import { CLAIMS, PROV, RDF, XSD } from "../Domain/Rdf/Constants.ts";
-import type { IRI } from "../Domain/Rdf/Types.ts";
-import { Literal, Quad } from "../Domain/Rdf/Types.ts";
+import { CLAIMS } from "../Domain/Rdf/Constants.ts";
+import type { GraphTerm, IRI, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
+import { makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
 import type { AssertionId, AssertionStatus } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ClaimRow } from "../Repository/schema.ts";
 import { RdfBuilder } from "./Rdf.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Assertion");
+const RDF_SUBJECT = makeCanonicalNamedNode(`${RDF_NAMESPACE}subject`);
+const RDF_PREDICATE = makeCanonicalNamedNode(`${RDF_NAMESPACE}predicate`);
+const RDF_OBJECT = makeCanonicalNamedNode(`${RDF_NAMESPACE}object`);
+const PROV_GENERATED_AT_TIME = makeCanonicalNamedNode(`${PROV_NAMESPACE}generatedAtTime`);
+const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
+
+const canonicalNamedNode = (value: IRI | NamedNode): NamedNode => (P.isString(value) ? makeNamedNode(value) : value);
+
+const canonicalLiteral = (input: {
+  readonly value: string;
+  readonly datatype?: O.Option<IRI | NamedNode>;
+}): Literal => {
+  const datatype = O.getOrElse(input.datatype ?? O.none(), () => XSD_STRING);
+  return makeLiteral(input.value, canonicalNamedNode(datatype).value);
+};
+
+const canonicalQuad = (input: {
+  readonly subject: IRI | Subject;
+  readonly predicate: IRI | NamedNode;
+  readonly object: IRI | ObjectTerm;
+  readonly graph: O.Option<IRI | GraphTerm>;
+}): Quad => {
+  const subject = P.isString(input.subject) ? makeNamedNode(input.subject) : input.subject;
+  const predicate = canonicalNamedNode(input.predicate);
+  const object = P.isString(input.object) ? makeNamedNode(input.object) : input.object;
+  const graph = O.map(input.graph, (value) => (P.isString(value) ? makeNamedNode(value) : value));
+  return O.isSome(graph)
+    ? makeQuad(subject, predicate, { object, graph: graph.value })
+    : makeQuad(subject, predicate, object);
+};
 
 // =============================================================================
 // Types
@@ -343,9 +377,9 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
 
         // Type assertion
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: assertionIri,
-            predicate: RDF.type,
+            predicate: RDF_TYPE,
             object: ASSERTIONS.Assertion,
             graph: O.fromNullishOr(graph),
           })
@@ -353,18 +387,18 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
 
         // RDF reification (the actual triple being asserted)
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: assertionIri,
-            predicate: RDF.subject,
+            predicate: RDF_SUBJECT,
             object: assertion.subjectIri as IRI,
             graph: O.fromNullishOr(graph),
           })
         );
 
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: assertionIri,
-            predicate: RDF.predicate,
+            predicate: RDF_PREDICATE,
             object: assertion.predicateIri as IRI,
             graph: O.fromNullishOr(graph),
           })
@@ -373,12 +407,12 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         const objectTerm =
           assertion.objectType === "iri"
             ? (assertion.objectValue as IRI)
-            : Literal.make({ value: assertion.objectValue });
+            : canonicalLiteral({ value: assertion.objectValue });
 
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: assertionIri,
-            predicate: RDF.object,
+            predicate: RDF_OBJECT,
             object: objectTerm,
             graph: O.fromNullishOr(graph),
           })
@@ -393,7 +427,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
               : ASSERTIONS.Pending;
 
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: assertionIri,
             predicate: CLAIMS.claimStatus,
             object: statusIri,
@@ -403,12 +437,12 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
 
         // Confidence
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: assertionIri,
             predicate: CLAIMS.confidence,
-            object: Literal.make({
+            object: canonicalLiteral({
               value: assertion.confidence.toString(),
-              datatype: O.fromNullishOr(XSD.double),
+              datatype: O.fromNullishOr(XSD_DOUBLE),
             }),
             graph: O.fromNullishOr(graph),
           })
@@ -416,12 +450,12 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
 
         // Asserted at
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: assertionIri,
             predicate: ASSERTIONS.assertedAt,
-            object: Literal.make({
+            object: canonicalLiteral({
               value: assertion.assertedAt.toISOString(),
-              datatype: O.fromNullishOr(XSD.dateTime),
+              datatype: O.fromNullishOr(XSD_DATE_TIME),
             }),
             graph: O.fromNullishOr(graph),
           })
@@ -430,10 +464,10 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         // Curated by
         if (P.isNotNull(assertion.curatedBy)) {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: assertionIri,
               predicate: ASSERTIONS.curatedBy,
-              object: Literal.make({ value: assertion.curatedBy }),
+              object: canonicalLiteral({ value: assertion.curatedBy }),
               graph: O.fromNullishOr(graph),
             })
           );
@@ -442,7 +476,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         // Derived from claims (provenance)
         for (const claimId of assertion.derivedFrom) {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: assertionIri,
               predicate: ASSERTIONS.derivedFromClaim,
               object: `${CLAIMS.namespace}${claimId}` as IRI,
@@ -453,12 +487,12 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
 
         // PROV-O provenance
         quads.push(
-          Quad.make({
+          canonicalQuad({
             subject: assertionIri,
-            predicate: PROV.generatedAtTime,
-            object: Literal.make({
+            predicate: PROV_GENERATED_AT_TIME,
+            object: canonicalLiteral({
               value: assertion.assertedAt.toISOString(),
-              datatype: O.fromNullishOr(XSD.dateTime),
+              datatype: O.fromNullishOr(XSD_DATE_TIME),
             }),
             graph: O.fromNullishOr(graph),
           })
@@ -467,12 +501,12 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         // Temporal validity
         if (P.isNotNull(assertion.validFrom)) {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: assertionIri,
               predicate: CLAIMS.validFrom,
-              object: Literal.make({
+              object: canonicalLiteral({
                 value: assertion.validFrom.toISOString(),
-                datatype: O.fromNullishOr(XSD.dateTime),
+                datatype: O.fromNullishOr(XSD_DATE_TIME),
               }),
               graph: O.fromNullishOr(graph),
             })
@@ -481,12 +515,12 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
 
         if (P.isNotNull(assertion.validTo)) {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: assertionIri,
               predicate: CLAIMS.validUntil,
-              object: Literal.make({
+              object: canonicalLiteral({
                 value: assertion.validTo.toISOString(),
-                datatype: O.fromNullishOr(XSD.dateTime),
+                datatype: O.fromNullishOr(XSD_DATE_TIME),
               }),
               graph: O.fromNullishOr(graph),
             })
@@ -496,12 +530,12 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         // Rejection info
         if (P.isNotNull(assertion.rejectedAt)) {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: assertionIri,
               predicate: ASSERTIONS.rejectedAt,
-              object: Literal.make({
+              object: canonicalLiteral({
                 value: assertion.rejectedAt.toISOString(),
-                datatype: O.fromNullishOr(XSD.dateTime),
+                datatype: O.fromNullishOr(XSD_DATE_TIME),
               }),
               graph: O.fromNullishOr(graph),
             })
@@ -510,10 +544,10 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
 
         if (P.isNotNull(assertion.rejectionReason)) {
           quads.push(
-            Quad.make({
+            canonicalQuad({
               subject: assertionIri,
               predicate: ASSERTIONS.rejectionReason,
-              object: Literal.make({ value: assertion.rejectionReason }),
+              object: canonicalLiteral({ value: assertion.rejectionReason }),
               graph: O.fromNullishOr(graph),
             })
           );

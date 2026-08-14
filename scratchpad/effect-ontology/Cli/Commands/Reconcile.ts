@@ -8,16 +8,20 @@
  * @module Cli/Commands/Reconcile
  */
 
+import { makeNamedNode } from "@beep/rdf";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { Chunk, Console, Effect, FileSystem, Option, Schema } from "effect";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import { Command, Flag as Options } from "effect/unstable/cli";
-import type { IRI, Literal } from "../../Domain/Rdf/Types.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+
+const SCHEMA_NAME = makeNamedNode("http://schema.org/name");
 
 // =============================================================================
 // Command Options
@@ -130,32 +134,32 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     }
     const store = yield* rdf.parseTurtle(graphContentOpt);
     const typeQuads = yield* rdf.queryStore(store, {
-      predicate: "http://www.w3.org/1999/02/22-rdf-syntax-ns#type" as IRI,
+      predicate: RDF_TYPE,
     });
     const entityTypes = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
     for (const quad of typeQuads) {
-      const iri = quad.subject;
-      if (!iri.startsWith("_:")) {
+      if (quad.subject.termType === "NamedNode") {
+        const iri = quad.subject.value;
         const types = Option.getOrElse(MutableHashMap.get(entityTypes, iri), () => {
           const created = MutableHashSet.empty<string>();
           MutableHashMap.set(entityTypes, iri, created);
           return created;
         });
-        const typeIri = typeof quad.object === "string" ? quad.object : (quad.object as Literal).value;
+        const typeIri = quad.object.value;
         MutableHashSet.add(types, typeIri);
       }
     }
     const rdfsLabelQuads = yield* rdf.queryStore(store, {
-      predicate: "http://www.w3.org/2000/01/rdf-schema#label" as IRI,
+      predicate: RDFS_LABEL,
     });
     const schemaNameQuads = yield* rdf.queryStore(store, {
-      predicate: "http://schema.org/name" as IRI,
+      predicate: SCHEMA_NAME,
     });
     const entityLabels = MutableHashMap.empty<string, string>();
     for (const quad of Chunk.toArray(rdfsLabelQuads).concat(Chunk.toArray(schemaNameQuads))) {
-      const subject = quad.subject;
-      if (!subject.startsWith("_:") && !MutableHashMap.has(entityLabels, subject)) {
-        const label = typeof quad.object === "string" ? quad.object : (quad.object as Literal).value;
+      if (quad.subject.termType === "NamedNode" && !MutableHashMap.has(entityLabels, quad.subject.value)) {
+        const subject = quad.subject.value;
+        const label = quad.object.value;
         MutableHashMap.set(entityLabels, subject, label);
       }
     }

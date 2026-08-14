@@ -154,6 +154,7 @@ const GcsObjectName = S.String.check(
     toArbitrary: () => (fc) => fc.stringMatching(/^[A-Za-z0-9][A-Za-z0-9._/-]{0,63}$/),
   })
   .pipe(
+    SchemaUtils.withCodecStatics,
     $I.annoteSchema("GcsObjectName", {
       description:
         "Google Cloud Storage flat-namespace object name constrained to the provider's general syntax and 1,024-byte UTF-8 limit.",
@@ -360,9 +361,9 @@ export type IdempotencyKey = typeof IdempotencyKey.Type;
  * @category validation
  * @since 0.0.0
  */
-const GcsBucketEncoded = S.String.check(GcsBucketChecks).pipe(S.brand("GcsBucket"));
+const GcsBucketEncoded = S.String.check(GcsBucketChecks).pipe(S.brand("GcsBucket"), SchemaUtils.withCodecStatics);
 
-const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => S.is(GcsBucketEncoded)(input)).annotate({
+const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => GcsBucketEncoded.is(input)).annotate({
   toArbitrary: () => (fc) =>
     fc
       .stringMatching(gcsBucketNamePattern)
@@ -569,7 +570,7 @@ const GcsObjectChecks = S.makeFilterGroup(
  * @category validation
  * @since 0.0.0
  */
-const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(S.brand("GcsObject"));
+const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(S.brand("GcsObject"), SchemaUtils.withCodecStatics);
 
 const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => S.is(GcsObjectEncoded)(input)).annotate({
   toArbitrary: () => (fc) =>
