@@ -17,8 +17,11 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { UUID } from "@beep/schema/String";
+import { ISOStr } from "@beep/schema/Timestamp";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
+import { ExtractionRunId } from "../Domain/Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Contract/ProgressStreaming");
 
@@ -111,14 +114,6 @@ export type ProgressEventTag = typeof ProgressEventTag.Type;
  * @category identifiers
  * @since 0.0.0
  */
-const ExtractionRunId = S.String.pipe(
-  S.check(S.isPattern(/^doc-[a-f0-9]{12}$/)),
-  $I.annoteSchema("ExtractionRunId", {
-    description:
-      "Document-derived extraction run identifier with a doc- prefix and 12 lowercase hexadecimal characters.",
-  })
-);
-
 /**
  * Accepts the UTC-oriented ISO 8601 timestamp representation carried by the
  * streaming protocol.
@@ -136,13 +131,6 @@ const ExtractionRunId = S.String.pipe(
  * @category schemas
  * @since 0.0.0
  */
-const Timestamp = S.String.pipe(
-  S.check(S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z?$/)),
-  $I.annoteSchema("Timestamp", {
-    description: "ISO 8601 timestamp with second precision, optional milliseconds, and an optional UTC marker.",
-  })
-);
-
 /**
  * Constrains protocol progress to an integer percentage from zero through one
  * hundred.
@@ -192,7 +180,7 @@ const ProgressPercentage = Percentage.pipe(
  */
 const BaseProgressEvent = S.Struct({
   /** Unique identifier for this event (UUID v4) */
-  eventId: S.String.pipe(
+  eventId: UUID.pipe(
     $I.annoteKey("BaseProgressEvent.eventId", {
       description: "Unique identifier for this event (UUID v4)",
     })
@@ -206,7 +194,7 @@ const BaseProgressEvent = S.Struct({
   ),
 
   /** Server timestamp at which the event was created. */
-  timestamp: Timestamp.pipe(
+  timestamp: ISOStr.pipe(
     $I.annoteKey("BaseProgressEvent.timestamp", {
       description: "Server timestamp at which the event was created.",
     })
@@ -1959,7 +1947,7 @@ export class CancellationResponse extends S.Class<CancellationResponse>($I`Cance
     ),
 
     /** Server timestamp at which the response was created. */
-    timestamp: Timestamp.pipe(
+    timestamp: ISOStr.pipe(
       $I.annoteKey("CancellationResponse.timestamp", {
         description: "Server timestamp at which the response was created.",
       })
@@ -2192,7 +2180,7 @@ export class ProgressMessage extends S.TaggedClass<ProgressMessage>($I`ProgressM
     ),
 
     /** Server timestamp at which the transport envelope was created. */
-    createdAt: Timestamp.pipe(
+    createdAt: ISOStr.pipe(
       $I.annoteKey("ProgressMessage.createdAt", {
         description: "Server timestamp at which the transport envelope was created.",
       })
@@ -2395,7 +2383,7 @@ export class StartExtractionResponse extends S.TaggedClass<StartExtractionRespon
     ),
 
     /** Server timestamp at which the response was created. */
-    timestamp: Timestamp.pipe(
+    timestamp: ISOStr.pipe(
       $I.annoteKey("StartExtractionResponse.timestamp", {
         description: "Server timestamp at which the response was created.",
       })
@@ -2435,14 +2423,14 @@ export class AckMessage extends S.TaggedClass<AckMessage>($I`AckMessage`)(
     ),
 
     /** Unique identifier of the progress event received by the client. */
-    eventId: S.String.pipe(
+    eventId: UUID.pipe(
       $I.annoteKey("AckMessage.eventId", {
         description: "Unique identifier of the progress event received by the client.",
       })
     ),
 
     /** Client timestamp at which event receipt was acknowledged. */
-    timestamp: Timestamp.pipe(
+    timestamp: ISOStr.pipe(
       $I.annoteKey("AckMessage.timestamp", {
         description: "Client timestamp at which event receipt was acknowledged.",
       })

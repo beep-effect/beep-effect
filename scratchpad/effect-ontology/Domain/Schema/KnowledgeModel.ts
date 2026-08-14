@@ -20,6 +20,7 @@ import { SchemaGetter } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import { ContentHash, GcsUri } from "../Identity.ts";
+import { EventId as CanonicalEventId } from "../Model/CoreOntology.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/KnowledgeModel");
 
@@ -27,7 +28,6 @@ const claimIdPattern = /^claim-[0-9a-f]{12}$/;
 const assertionIdPattern = /^assertion-[0-9a-f]{12}$/;
 const derivedAssertionIdPattern = /^derived-[0-9a-f]{12}$/;
 const ruleIdPattern = /^rule-[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const eventIdPattern = /^event-[0-9a-f]{12}$/;
 const decodeDateTimeUtcFromMillis = S.decodeUnknownSync(S.DateTimeUtcFromMillis);
 
 /**
@@ -707,27 +707,7 @@ export class DerivedAssertion extends S.Class<DerivedAssertion>($I`DerivedAssert
  * @category identifiers
  * @since 0.0.0
  */
-export const EventId = S.String.check(
-  S.isPattern(eventIdPattern, {
-    identifier: $I`EventIdPatternCheck`,
-    title: "Event Identifier",
-    description: "An event- prefix followed by exactly twelve lowercase hexadecimal characters.",
-    message: "Event ID must use event- followed by exactly twelve lowercase hexadecimal characters.",
-  })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(eventIdPattern),
-  })
-  .pipe(
-    S.brand("EventId"),
-    $I.annoteSchema("EventId", {
-      description: "Deterministic compact identifier for one real-world event node.",
-    }),
-    SchemaUtils.withCodecStatics,
-    SchemaUtils.withStatics((schema) => ({
-      fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`event-${ContentHash.idFragment(hash)}`),
-    }))
-  );
+export const EventId = CanonicalEventId;
 
 /**
  * Runtime value decoded by {@link EventId}.

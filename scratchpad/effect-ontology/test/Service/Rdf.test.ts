@@ -1,3 +1,4 @@
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Exit, Layer } from "effect";
@@ -37,6 +38,23 @@ describe("RdfBuilder", () => {
         assert.strictEqual(rdfStoreSize(reparsed), 1);
         assert.isFalse("_store" in reparsed);
         assert.strictEqual(rdfStoreToDataset(reparsed).quads.length, 1);
+      })
+    );
+
+    it.effect("serializes only canonically branded confidence values", () =>
+      Effect.gen(function* () {
+        const rdf = yield* RdfBuilder;
+        const store = yield* rdf.createStore;
+        yield* rdf.addTripleWithConfidence(
+          store,
+          {
+            subject: "https://example.org/subject",
+            predicate: "https://example.org/predicate",
+            object: "value",
+          },
+          Confidence.make(0.8)
+        );
+        assert.strictEqual(rdfStoreSize(store), 2);
       })
     );
   });

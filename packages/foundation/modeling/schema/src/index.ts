@@ -233,6 +233,13 @@ export * from "./Html.ts";
  */
 export * as HttpMethod from "./HttpMethod/index.ts";
 /**
+ * Canonical schema for any three-digit HTTP response status.
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export { HttpStatusCode } from "./HttpStatus/index.ts";
+/**
  * @since 0.0.0
  * @category validation
  */

@@ -23,8 +23,8 @@ import {Context, Data, DateTime, Effect, Layer} from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
-import type {ExtractionRunId, IdempotencyKey} from "../Domain/Identity.ts";
-import {ChunkId, DocumentId, OntologyVersion} from "../Domain/Identity.ts";
+import type { ExtractionRunId, IdempotencyKey } from "../Domain/Identity.ts";
+import { ChunkId, ContentHash, DocumentId, ExtractionRunId as ExtractionRunIdSchema, OntologyVersion } from "../Domain/Identity.ts";
 import type {
   AuditErrorType,
   AuditEventType,
@@ -69,11 +69,8 @@ const sha256Hex = (content: string): string => createHash("sha256").update(conte
  * @returns Deterministic document ID
  */
 const generateDocumentId = (text: string): ExtractionRunId => {
-  const hash = sha256Hex(text);
-  // Use first 12 hex chars to match DocumentId schema pattern
-  // This gives 48 bits of entropy - sufficient for unique document identification
-  const prefix = hash.slice(0, 12);
-  return `doc-${prefix}` as ExtractionRunId;
+  const documentId = DocumentId.fromContentHash(ContentHash.make(sha256Hex(text)));
+  return ExtractionRunIdSchema.make(documentId);
 };
 
 /**

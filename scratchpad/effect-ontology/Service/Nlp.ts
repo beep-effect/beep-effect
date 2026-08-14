@@ -14,6 +14,7 @@ import { DefaultBM25Config } from "@beep/nlp/Core/Vectorization";
 import { Tokenization } from "@beep/nlp-processing/Core";
 import { IRI } from "@beep/rdf";
 import { PosInt } from "@beep/schema/Int";
+import { WinkTokenizationError } from "@beep/wink/Wink.errors";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { WinkEngine } from "@beep/wink/Wink.service";
 import { WinkCorpusManager } from "@beep/wink/WinkCorpus.service";
@@ -22,6 +23,7 @@ import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import type { ClassDefinition, OntologyContext, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import type { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import type { ChunkingStrategy } from "../Domain/Schema/DocumentMetadata.ts";
@@ -118,7 +120,15 @@ export interface OntologySemanticIndex {
 export class NlpIndexError extends Data.TaggedError("NlpIndexError")<{
   readonly indexKind: "bm25" | "semantic";
   readonly message: string;
+  readonly cause?: unknown;
 }> {}
+
+const WinkStringArray = S.Array(S.String);
+
+const decodeWinkStrings = (value: unknown, operation: string, text: string) =>
+  S.decodeUnknownEffect(WinkStringArray)(value).pipe(
+    Effect.mapError((cause) => WinkTokenizationError.fromCause(cause, operation, { text }))
+  );
 
 /**
  * Search result from ontology BM25 index
@@ -462,11 +472,15 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
       tokenize: Effect.fn("NlpService.tokenize")(function* (text: string) {
         const doc = yield* winkEngine.getWinkDoc(text);
         const its = yield* winkEngine.its;
-        return {
-          tokens: doc.tokens().out(its.normal) as Array<string>,
-          sentences: doc.sentences().out() as Array<string>,
-          entities: doc.entities().out() as Array<string>,
-        };
+        const [tokens, sentences, entities] = yield* Effect.all(
+          [
+            decodeWinkStrings(doc.tokens().out(its.normal), "normalizedTokens", text),
+            decodeWinkStrings(doc.sentences().out(), "sentences", text),
+            decodeWinkStrings(doc.entities().out(), "entities", text),
+          ],
+          { concurrency: 3 }
+        );
+        return { tokens, sentences, entities };
       }),
       searchSimilar: Effect.fn("NlpService.searchSimilar")(function* (
         query: string,
@@ -540,7 +554,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
           return chunkByParagraphs(text, maxChunkSize, overlapSentences);
         }
         const doc = yield* winkEngine.getWinkDoc(text);
-        const sentences = doc.sentences().out() as Array<string>;
+        const sentences = yield* decodeWinkStrings(doc.sentences().out(), "sentences", text);
         if (sentences.length === 0) {
           return [];
         }
@@ -686,6 +700,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
                 new NlpIndexError({
                   indexKind: "bm25",
                   message: `Canonical Wink corpus query failed: ${cause.message}`,
+                  cause,
                 })
             )
           );
@@ -707,39 +722,45 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
           }
           return results;
         }),
-      createOntologySemanticIndex: (ontology: OntologyContext): Effect.Effect<OntologySemanticIndex> =>
-        Effect.gen(function* () {
-          const documents = ontology.toDocuments();
-          const embeddingMap = MutableHashMap.empty<string, ReadonlyArray<number>>();
-          const domainModelMap = MutableHashMap.empty<string, ClassDefinition | PropertyDefinition>();
-          const iris = documents.map(([iri]) => iri);
-          const texts = documents.map(([, document]) => document);
-          const embeddings = yield* embedding.embedBatch(texts, "search_document").pipe(
-            Effect.retry(embeddingRetrySchedule),
-            Effect.timeout(Duration.millis(EMBEDDING_TIMEOUT_MS * texts.length)),
-            Effect.orElseSucceed(() => [] as ReadonlyArray<ReadonlyArray<number>>)
-          );
-          for (let i = 0; i < iris.length && i < embeddings.length; i++) {
-            const iri = iris[i];
-            const emb = embeddings[i];
-            MutableHashMap.set(embeddingMap, iri, emb);
-            const classDef = ontology.getClass(iri);
-            const propertyDef = ontology.getProperty(iri);
-            if (O.isSome(classDef)) {
-              MutableHashMap.set(domainModelMap, iri, classDef.value);
-            } else if (O.isSome(propertyDef)) {
-              MutableHashMap.set(domainModelMap, iri, propertyDef.value);
-            }
+      createOntologySemanticIndex: Effect.fn("NlpService.createOntologySemanticIndex")(function* (
+        ontology: OntologyContext
+      ) {
+        const documents = ontology.toDocuments();
+        const embeddingMap = MutableHashMap.empty<string, ReadonlyArray<number>>();
+        const domainModelMap = MutableHashMap.empty<string, ClassDefinition | PropertyDefinition>();
+        const iris = documents.map(([iri]) => iri);
+        const texts = documents.map(([, document]) => document);
+        const embeddings = yield* embedding.embedBatch(texts, "search_document").pipe(
+          Effect.retry(embeddingRetrySchedule),
+          Effect.timeout(Duration.millis(EMBEDDING_TIMEOUT_MS * texts.length)),
+          Effect.tapError((cause) =>
+            Effect.logWarning("Ontology semantic index embedding failed", {
+              documentCount: texts.length,
+              cause,
+            })
+          )
+        );
+        for (let i = 0; i < iris.length && i < embeddings.length; i++) {
+          const iri = iris[i];
+          const emb = embeddings[i];
+          MutableHashMap.set(embeddingMap, iri, emb);
+          const classDef = ontology.getClass(iri);
+          const propertyDef = ontology.getProperty(iri);
+          if (O.isSome(classDef)) {
+            MutableHashMap.set(domainModelMap, iri, classDef.value);
+          } else if (O.isSome(propertyDef)) {
+            MutableHashMap.set(domainModelMap, iri, propertyDef.value);
           }
-          const index: OntologySemanticIndex = {
-            _tag: "OntologySemanticIndex",
-            documentCount: MutableHashMap.size(embeddingMap),
-            _embeddingMap: embeddingMap,
-            _domainModelMap: domainModelMap,
-            _ontology: ontology,
-          };
-          return index;
-        }),
+        }
+        const index: OntologySemanticIndex = {
+          _tag: "OntologySemanticIndex",
+          documentCount: MutableHashMap.size(embeddingMap),
+          _embeddingMap: embeddingMap,
+          _domainModelMap: domainModelMap,
+          _ontology: ontology,
+        };
+        return index;
+      }),
       createOntologySemanticIndexFromPrecomputed: (
         ontology: OntologyContext,
         embeddings: OntologyEmbeddings

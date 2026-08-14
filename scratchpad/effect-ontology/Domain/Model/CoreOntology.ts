@@ -17,6 +17,7 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { FastCheck } from "effect/testing";
+import { ContentHash } from "../Identity.ts";
 import { Attributes } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/CoreOntology");
@@ -507,6 +508,7 @@ export const EventId = S.String.check(
     }),
     SchemaUtils.withCodecStatics,
     SchemaUtils.withStatics((schema) => ({
+      fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`event-${ContentHash.idFragment(hash)}`),
       fromSeed: Effect.fn("EventId.fromSeed")(function* (seed: string) {
         const digest = yield* digestText(seed);
         return schema.make(`event-${Str.takeLeft(12)(digest)}`);

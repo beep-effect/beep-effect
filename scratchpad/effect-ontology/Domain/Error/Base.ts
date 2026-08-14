@@ -12,6 +12,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
+import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import type { Cause } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -309,58 +310,6 @@ export const OptionalNonNegativeInt = S.OptionFromNullishOr(NonNegativeInt)
  * @since 0.0.0
  */
 export type OptionalNonNegativeInt = typeof OptionalNonNegativeInt.Type;
-
-/**
- * Valid three-digit HTTP response status.
- *
- * @example
- * ```ts
- * import { HttpStatusCode } from "@effect-ontology/Error/Base.ts"
- *
- * console.log(HttpStatusCode.make(404))
- * ```
- *
- * @invariant The value is an integer from 100 through 599.
- * @category errors
- * @since 0.0.0
- */
-export const HttpStatusCode = S.Int.check(
-  S.isBetween(
-    { minimum: 100, maximum: 599 },
-    {
-      identifier: $I`HttpStatusCodeRangeCheck`,
-      title: "HTTP Status Code Range",
-      description: "A three-digit HTTP response status from 100 through 599.",
-      message: "HTTP status code must be an integer between 100 and 599.",
-    }
-  )
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 100, max: 599 }),
-  })
-  .pipe(
-    S.brand("HttpStatusCode"),
-    $I.annoteSchema("HttpStatusCode", {
-      description: "Valid three-digit HTTP response status.",
-    }),
-    SchemaUtils.withCodecStatics
-  );
-
-/**
- * Runtime status accepted by {@link HttpStatusCode}.
- *
- * @example
- * ```ts
- * import { HttpStatusCode, type HttpStatusCode as Status } from "@effect-ontology/Error/Base.ts"
- *
- * const status: Status = HttpStatusCode.make(503)
- * console.log(status)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type HttpStatusCode = typeof HttpStatusCode.Type;
 
 /**
  * Optional HTTP response status normalized from an absent object key.

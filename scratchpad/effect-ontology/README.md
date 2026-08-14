@@ -43,7 +43,7 @@ bun run --cwd scratchpad lint:effect-ontology
 bun run --cwd scratchpad docgen
 ```
 
-The arbitrary audit loads all 55 source modules, derives every uppercase
+The arbitrary audit loads all 54 retained source modules, derives every uppercase
 exported schema with reporting enabled, requires identifier/title/description
 and `toArbitrary` annotations, requires zero derivation warnings, and checks
 eight generated decoded values per export with `Schema.is`.

@@ -79,20 +79,6 @@ export const SourceType = LiteralKit(["http", "github"]).pipe(
  */
 export type SourceType = typeof SourceType.Type;
 
-/**
- * HTTP URL string metadata shape from the OpenAPI document.
- *
- * **Example** (Inspecting HttpUrl schema AST)
- *
- * ```ts
- * import { HttpUrl } from "@beep/ontology/Ontology.models"
- *
- * console.log(HttpUrl.ast)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
 const HttpUrlDefinition = S.String.check(
   HttpUrlFormatCheck,
   S.isMinLength(1, {
@@ -109,6 +95,20 @@ const HttpUrlDefinition = S.String.check(
   toArbitrary: () => makeHttpUrlArbitrary,
 });
 
+/**
+ * HTTP or HTTPS URL string metadata shape from the OpenAPI document.
+ *
+ * **Example** (Inspecting HttpUrl schema AST)
+ *
+ * ```ts
+ * import { HttpUrl } from "@beep/ontology/Ontology.models"
+ *
+ * console.log(HttpUrl.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const HttpUrl = HttpUrlDefinition.pipe(
   SchemaUtils.withCodecStatics,
   $I.annoteSchema("HttpUrl", {

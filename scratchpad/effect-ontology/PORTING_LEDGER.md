@@ -22,14 +22,17 @@ promotion status.
 | Source family | Files | Status | Governing disposition |
 | --- | ---: | --- | --- |
 | Root | 3 | implemented | split identity/storage; exact path adapters |
-| Error | 16 | implemented | boundary-local tagged error families |
+| Error | 15 | implemented | boundary-local tagged errors; SPARQL contracts use their canonical owner |
 | Model | 15 | implemented | rich schema models and canonical reuse |
 | Rdf | 3 | implemented | canonical `@beep/rdf` adapters |
 | Schema | 18 | implemented | decoded v4 models and selective ingress |
 
-The target contains exactly the same 55 relative TypeScript module paths as the
-frozen source. `Domain/Shacl.ts`, which predated the experiment in this
-scratchpad, moved to its correct upstream path at `Domain/Schema/Shacl.ts`.
+The target retains 54 of the frozen source's 55 relative TypeScript module
+paths. `Domain/Error/Sparql.ts` is the sole path-level omission: its query
+contract and error ownership are subsumed by
+`@beep/semantic-web/services/sparql-query`. `Domain/Shacl.ts`, which predated
+the experiment in this scratchpad, moved to its correct upstream path at
+`Domain/Schema/Shacl.ts`.
 
 ## Arbitrary and boundary policy
 
@@ -70,7 +73,7 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | --- | --- | --- |
 | `Error/Activity.ts` | **redesigned** | Activity names, timeouts, cancellation, and defects are variant-owned. |
 | `Error/Auth.ts` | **redesigned** | Ticket/authentication failures retain only safe diagnostics and typed context. |
-| `Error/Base.ts` | **redesigned** | URL, IRI, URI, and file-path metadata directly reuse their canonical schemas; shared messages, codes, status, causes, optionality, and retry metadata remain experiment-owned. |
+| `Error/Base.ts` | **redesigned** | Optional URL and IRI metadata directly embed their canonical schemas; shared messages, codes, status, causes, optionality, and retry metadata remain experiment-owned. |
 | `Error/Circuit.ts` | **redesigned** | Circuit-open and execution failures own non-negative timing/retry data. |
 | `Error/Embedding.ts` | **redesigned** | Embedding provider, input, response, and dimension failures are discriminated. |
 | `Error/EventBus.ts` | **redesigned** | Publish, subscribe, serialization, and handler failures own their legal payloads. |
@@ -81,7 +84,7 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | `Error/Ontology.ts` | **redesigned** | Ontology lookup/load/parse/validation failures use canonical ontology and storage identities. |
 | `Error/Rdf.ts` | **redesigned** | RDF parse, serialize, term, graph, and query failures carry RDF-specific context. |
 | `Error/Shacl.ts` | **redesigned** | Shape generation and validation failures are separate from standards-level result conformance. |
-| `Error/Sparql.ts` | **redesigned** | Parse, execution, endpoint, timeout, and result failures use validated query/endpoint metadata. |
+| `Error/Sparql.ts` | **subsumed and removed** | The local query adapter and its parallel parse/execution error family were removed; canonical query contracts and `SparqlQueryError` remain owned by `@beep/semantic-web/services/sparql-query`. |
 | `Error/Workflow.ts` | **redesigned** | Workflow, transition, activity, suspension, and terminal failures own stage-specific data. |
 | `Error/index.ts` | **ported** | Complete public error barrel. |
 
@@ -109,9 +112,9 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 
 | Source | Disposition and target | Boundary, defaults, invariants, arbitrary, and tests |
 | --- | --- | --- |
-| `Rdf/Types.ts` | **subsumed** by `@beep/rdf` plus a local `Triple` adapter | RDF/JS term schemas and constructors are canonical re-exports; graph-free triples convert explicitly to/from quads. Arbitrary and interop tests in `Rdf/Types.test.ts`. |
+| `Rdf/Types.ts` | **subsumed** by `@beep/rdf` plus a local `Triple` adapter | RDF/JS term schemas and constructors are imported directly from their canonical owner; this module exports only the graph-free `Triple`, which converts explicitly to/from canonical quads. Arbitrary and interop tests in `Rdf/Types.test.ts`. |
 | `Rdf/Constants.ts` | **subsumed** by `@beep/rdf/Vocab/*` plus experiment-owned vocabularies | Standard RDF/RDFS/OWL/XSD/SKOS/PROV/DCTERMS terms are imported directly by consumers. This module retains only EXTR, CLAIMS, CORRECTIONS, and CORE NamedNodes. |
-| `Rdf/index.ts` | **ported** | Complete canonical RDF adapter and vocabulary barrel. |
+| `Rdf/index.ts` | **ported** | Barrel for experiment-owned vocabularies and the graph-free `Triple`; canonical RDF terms and constructors remain direct `@beep/rdf` imports. |
 
 ## Schema modules
 
@@ -128,7 +131,7 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | `Schema/Inference.ts` | **ported and hardened** | LiteralKit reasoning/status, non-negative stats, complete collections/options, canonical request/response boundaries; arbitrary audit. |
 | `Schema/JobSchema.ts` | **redesigned** | Tagged jobs, HTTPS webhooks, JSON payloads, content-derived IDs, zero-attempt/default Option retry metadata; source timestamp-concatenation ID helper rejected below. |
 | `Schema/KnowledgeModel.ts` | **redesigned** | Canonical RDF terms and `@beep/provenance` text anchors, content IDs, ordered temporal intervals, tagged evidence source, non-empty evidence/support, defaults and schema-owned constructors; historical text-span keys cross one total codec. |
-| `Schema/LinkIngestion.ts` | **redesigned** | HTTP(S) links, canonical content/GCS identities, Option metadata, tagged batch results, and response-summary invariant; arbitrary audit. |
+| `Schema/LinkIngestion.ts` | **redesigned** | HTTP(S) links directly reuse and re-export the canonical `@beep/ontology/Ontology.models` `HttpUrl`; content/GCS identities are canonical, while Option metadata, tagged batch results, and the response-summary invariant remain experiment-owned; exact identity test and arbitrary audit. |
 | `Schema/OntologyBrowser.ts` | **ported and hardened** | Canonical ontology/IRI values, normalized labels/collections, non-negative counts; arbitrary audit. |
 | `Schema/OntologyRegistry.ts` | **redesigned** | Canonical identities/storage paths, complete resources/entry defaults, typed JSON codecs, registry lookup statics; arbitrary audit. |
 | `Schema/Search.ts` | **ported and hardened** | Trimmed queries, bounded pagination, non-negative totals, unit confidence, normalized results; arbitrary audit. |
@@ -136,12 +139,13 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | `Schema/Timeline.ts` | **redesigned** | Bitemporal nested values, canonical RDF/IRI terms, bounded query pagination, tagged claim conflicts, Option/default response data; arbitrary audit. |
 | `Schema/index.ts` | **ported** | Upstream public surface retained; specialized collision-prone event/curation/job modules remain explicit subpaths. |
 
-## Renamed, absorbed, or rejected source symbols
+## Selected renamed, absorbed, or rejected source symbols
 
-The frozen tree declares 471 named runtime/type exports. Static per-module
-comparison finds 415 same-named target exports and the 56 intentional mappings
-below; no source export is unaccounted for. Every source export not listed here
-retains its source name in the same relative target module.
+The module rows above govern every export in the frozen 471-symbol source
+surface, including whole-family canonical substitutions such as RDF terms and
+SPARQL query contracts. The table below calls out the non-obvious symbol-level
+renames, absorptions, and doctrine rejections; it is not a one-to-one export
+census.
 
 | Source symbol(s) | Disposition | Replacement and reason |
 | --- | --- | --- |
@@ -187,6 +191,6 @@ line-for-line.
 
 ## Promotion status
 
-All 55 modules are **quarantined**. Passing focused proof establishes the
+All 54 retained modules are **quarantined**. Passing focused proof establishes the
 quality of the experiment only; it does not authorize an import from a product
 package or a root export from `scratchpad/index.ts`.

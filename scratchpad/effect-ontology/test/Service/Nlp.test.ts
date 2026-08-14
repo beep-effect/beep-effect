@@ -24,6 +24,17 @@ const NlpServiceTest = Layer.effect(NlpService, NlpService.make).pipe(
 
 describe("NlpService canonical Wink adapter", () => {
   it.layer(NlpServiceTest)("with canonical Wink services", (it) => {
+    it.effect("decodes canonical Wink token, sentence, and entity output", () =>
+      Effect.gen(function* () {
+        const nlp = yield* NlpService;
+        const result = yield* nlp.tokenize("Ada Lovelace wrote the first algorithm.");
+
+        assert.include(result.tokens, "ada");
+        assert.isAtLeast(result.sentences.length, 1);
+        assert.isArray(result.entities);
+      })
+    );
+
     it.effect("ranks documents without exposing a Wink runtime index", () =>
       Effect.gen(function* () {
         const nlp = yield* NlpService;

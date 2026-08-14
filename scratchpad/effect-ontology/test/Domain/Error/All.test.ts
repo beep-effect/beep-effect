@@ -28,7 +28,6 @@ const publicSchemas: ReadonlyArray<S.Constraint> = [
   Base.OptionalErrorCause,
   Base.OptionalErrorMessage,
   Base.OptionalNonNegativeInt,
-  Base.HttpStatusCode,
   Base.OptionalHttpStatusCode,
   Base.Milliseconds,
   Base.OptionalMilliseconds,

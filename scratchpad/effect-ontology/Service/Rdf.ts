@@ -8,6 +8,7 @@
  * @module Service/Rdf
  */
 
+import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
 import type { BlankNode as BlankNodeType, GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
@@ -34,6 +35,7 @@ import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Rec from "effect/Record";
+import * as Result from "effect/Result";
 import * as N3 from "n3";
 import { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Error/Rdf.ts";
 import type { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
@@ -125,22 +127,22 @@ type N3Store = N3.Store;
  * @since 2.0.0
  */
 const RdfStoreBrand: unique symbol = Symbol.for("@beep/scratchpad/effect-ontology/RdfStore");
+const RdfStoreBackend: unique symbol = Symbol.for("@beep/scratchpad/effect-ontology/RdfStoreBackend");
 
 export interface RdfStore {
   readonly _tag: "RdfStore";
   readonly [RdfStoreBrand]: true;
+  readonly [RdfStoreBackend]: N3Store;
 }
-
-const rdfStoreBackends = new WeakMap<RdfStore, N3Store>();
 
 /** Guard for opaque workflow-store handles created by this module. */
 export const isRdfStore = (value: unknown): value is RdfStore => P.hasProperty(value, RdfStoreBrand);
 
-const makeRdfStore = (store: N3Store): RdfStore => {
-  const handle: RdfStore = { _tag: "RdfStore", [RdfStoreBrand]: true };
-  rdfStoreBackends.set(handle, store);
-  return handle;
-};
+const makeRdfStore = (store: N3Store): RdfStore => ({
+  _tag: "RdfStore",
+  [RdfStoreBrand]: true,
+  [RdfStoreBackend]: store,
+});
 
 /** Create an empty mutable workflow store without exposing the backend. */
 export const emptyRdfStore = (): RdfStore => makeRdfStore(new N3.Store());
@@ -149,13 +151,7 @@ export const emptyRdfStore = (): RdfStore => makeRdfStore(new N3.Store());
 export const rdfStoreFromDataset = (dataset: CanonicalRdf.Dataset): RdfStore =>
   makeRdfStore(new N3.Store(A.map(dataset.quads, canonicalQuadToN3)));
 
-const backend = (store: RdfStore): N3Store => {
-  const value = rdfStoreBackends.get(store);
-  if (P.isUndefined(value)) {
-    return new N3.Store();
-  }
-  return value;
-};
+const backend = (store: RdfStore): N3Store => store[RdfStoreBackend];
 
 /** Return the current number of canonical quads in a workflow store. */
 export const rdfStoreSize = (store: RdfStore): number => backend(store).size;
@@ -243,17 +239,31 @@ const n3TermToDomainTerm = (term: N3.Term): ObjectTerm => {
     return makeBlankNode(term.value);
   } else if (term.termType === "Literal") {
     return makeLiteral(term.value, term.datatype.value, P.isTruthy(term.language) ? { language: term.language } : {});
-  } else {
-    throw new Error(`Unsupported term type: ${term.termType}`);
   }
+  return Result.fail(
+    RdfError.make({
+      message: `Unsupported N3 object term type: ${term.termType}`,
+      cause: O.none(),
+    })
+  ).pipe(Result.getOrThrowWith((error) => error));
 };
 
 /**
  * Internal: Convert N3 Quad to domain Quad
  */
 const n3QuadToDomainQuad = (n3Quad: N3.Quad): Quad => {
-  const subject =
-    n3Quad.subject.termType === "NamedNode" ? makeNamedNode(n3Quad.subject.value) : makeBlankNode(n3Quad.subject.value);
+  const subject = Match.value(n3Quad.subject).pipe(
+    Match.when({ termType: "NamedNode" }, (term) => makeNamedNode(term.value)),
+    Match.when({ termType: "BlankNode" }, (term) => makeBlankNode(term.value)),
+    Match.orElse((term) =>
+      Result.fail(
+        RdfError.make({
+          message: `Unsupported N3 subject term type: ${term.termType}`,
+          cause: O.none(),
+        })
+      ).pipe(Result.getOrThrowWith((error) => error))
+    )
+  );
 
   const predicate = makeNamedNode(n3Quad.predicate.value);
 
@@ -306,7 +316,7 @@ const domainTermToN3Term = (
   if (term === null || term === undefined) {
     return null;
   }
-  if (typeof term === "string") {
+  if (P.isString(term)) {
     return N3.DataFactory.namedNode(term);
   }
   if (term.termType === "Literal") {
@@ -425,7 +435,7 @@ export interface RdfBuilderShape {
   readonly addTripleWithConfidence: (
     store: RdfStore,
     triple: { subject: string; predicate: string; object: string | number | boolean },
-    confidence: number,
+    confidence: Confidence,
     graphUri?: string
   ) => Effect.Effect<void, RdfError, never>;
   /**
@@ -436,7 +446,7 @@ export interface RdfBuilderShape {
   readonly generateMentionTriples: (
     store: RdfStore,
     entityUri: string,
-    mention: { text: string; startChar: number; endChar: number; confidence?: number },
+    mention: { text: string; startChar: number; endChar: number; confidence?: Confidence },
     options?: { mentionUri?: string; sourceUri?: string; graphUri?: string }
   ) => Effect.Effect<string, RdfError, never>;
   readonly toTurtle: (store: RdfStore) => Effect.Effect<string, SerializationFailed, never>;
@@ -835,7 +845,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             const n3Store = backend(store);
             const sameAsPredicate = N3.DataFactory.namedNode(OWL_SAME_AS.value);
 
-            for (const [mentionId, canonicalId] of Object.entries(canonicalMap)) {
+            for (const [mentionId, canonicalId] of Rec.toEntries(canonicalMap)) {
               // Skip self-referential links
               if (mentionId === canonicalId) continue;
 
@@ -964,7 +974,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       addTripleWithConfidence: (
         store: RdfStore,
         triple: { subject: string; predicate: string; object: string | number | boolean },
-        confidence: number,
+        confidence: Confidence,
         graphUri?: string
       ) =>
         Effect.try({
@@ -979,16 +989,15 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             const predicateNode = N3.DataFactory.namedNode(triple.predicate);
 
             // Create object node (IRI or literal)
-            const objectNode =
-              typeof triple.object === "string"
+              const objectNode = P.isString(triple.object)
                 ? triple.object.startsWith("http://") ||
                   triple.object.startsWith("https://") ||
                   triple.object.startsWith("urn:")
-                  ? N3.DataFactory.namedNode(triple.object)
-                  : N3.DataFactory.literal(triple.object)
-                : typeof triple.object === "number"
-                  ? N3.DataFactory.literal(triple.object.toString(), N3.DataFactory.namedNode(XSD_DOUBLE.value))
-                  : N3.DataFactory.literal(triple.object.toString(), N3.DataFactory.namedNode(XSD_BOOLEAN.value));
+                ? N3.DataFactory.namedNode(triple.object)
+                : N3.DataFactory.literal(triple.object)
+              : P.isNumber(triple.object)
+                ? N3.DataFactory.literal(triple.object.toString(), N3.DataFactory.namedNode(XSD_DOUBLE.value))
+                : N3.DataFactory.literal(triple.object.toString(), N3.DataFactory.namedNode(XSD_BOOLEAN.value));
 
             // Create the original quad (triple)
             const originalQuad = N3.DataFactory.quad(subjectNode, predicateNode, objectNode, graphNode);
@@ -1046,7 +1055,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
       generateMentionTriples: (
         store: RdfStore,
         entityUri: string,
-        mention: { text: string; startChar: number; endChar: number; confidence?: number },
+        mention: { text: string; startChar: number; endChar: number; confidence?: Confidence },
         options?: { mentionUri?: string; sourceUri?: string; graphUri?: string }
       ) =>
         Effect.try({

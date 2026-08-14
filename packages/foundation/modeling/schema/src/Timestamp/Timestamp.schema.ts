@@ -13,6 +13,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { NonNegativeInt } from "../Int.ts";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { NonEmptyTrimmedStr } from "../String.ts";
 import type { Brand } from "effect";
 import type * as Ordering from "effect/Ordering";
@@ -95,7 +96,8 @@ export const EpochMillis = NonNegativeInt.pipe(
   $I.annoteSchema("EpochMillis", {
     description: "Epoch milliseconds since 1970-01-01T00:00:00.000Z",
     documentation: "Stores the epoch milliseconds internally.\nEncoded as ISO 8601 datetime string.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
