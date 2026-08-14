@@ -4,7 +4,7 @@
 
 Remediate every open Codex Cloud security finding visible at
 `https://chatgpt.com/codex/cloud/security/findings/` for
-`kriegcloud/beep-effect` in the 15-finding batch captured on 2026-08-13. Publish
+`kriegcloud/beep-effect` in the 19-finding batch captured on 2026-08-13. Publish
 the work through Yeet, reach mergeable hosted state, merge, then resolve the
 exact captured findings until no packet-applicable finding remains open.
 
@@ -45,13 +45,12 @@ exact captured findings until no packet-applicable finding remains open.
 - Security controls may not be simplified away for diff size.
 - Full reports stay in ignored `raw/`; tracked records contain only sanitized
   metadata, summaries, validation, decisions, changed files, and proof.
-- Browser closure happens after merge, against the exact 15-ID allowlist.
+- Browser closure happens after merge, against the exact 19-ID allowlist.
 - Preserve unrelated work and stage only reviewed packet intent.
-- PRs #681 (`CSF-002`), #685 (`CSF-007`), and #688 (`CSF-010`) are merged.
-  CSF-009 PR #697 and CSF-014 PR #696 are open, unmerged, and under hosted
-  monitoring after full Yeet verify 21/21; hosted green is not yet claimed.
-  CSF-012, CSF-013, and CSF-015 are prepared but not merged, and the six runner
-  findings remain held pending architecture and external proof.
+- CSF-002, CSF-007, CSF-009, CSF-010, CSF-013, and CSF-014 are merged.
+  Consolidate CSF-012, CSF-015, CSF-016, CSF-017, CSF-018, and CSF-019 into
+  PR #712. The six runner findings remain held pending architecture and
+  external proof.
 
 ## Known P4 Architecture Blocker
 
@@ -64,7 +63,7 @@ eligible closeout disposition.
 
 ## Acceptance Criteria
 
-- [x] All 15 findings have sanitized tracked CSF records with Codex ID, severity,
+- [x] All 19 findings have sanitized tracked CSF records with Codex ID, severity,
       title, source commit, and public summary.
 - [x] Every finding has a current-HEAD verdict, disposition, lane, rationale,
       remediation state, changed-file set, and verification evidence.
@@ -75,7 +74,7 @@ eligible closeout disposition.
 - [ ] Yeet repair and verify are green on the complete remediation scope.
 - [ ] Each remaining branch is published, hosted checks and reviews are closed,
       and its PR is mergeable and merged.
-- [ ] All 15 captured Codex findings are resolved after merge and the live view
+- [ ] All 19 captured Codex findings are resolved after merge and the live view
       shows zero packet-applicable open findings.
 
 ## Verification Matrix
@@ -84,12 +83,12 @@ eligible closeout disposition.
 | ----------------- | ----------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
 | Launcher size     | `test "$(wc -m < goals/codex-security-findings-2026-08-13/GOAL.md)" -le 4000`                                     | Pass                                    |
 | JSON shape        | `jq .` over both files in `ops/`                                                                                  | Pass                                    |
-| Finding count     | CSF file count equals 15                                                                                          | Pass                                    |
-| Severity count    | 6 High, 5 Medium, 1 Low, 3 Informational                                                                          | Pass                                    |
+| Finding count     | CSF file count equals 19                                                                                          | Pass                                    |
+| Severity count    | 7 High, 6 Medium, 2 Low, 4 Informational                                                                          | Pass                                    |
 | Raw ignored       | `git status --short -- .../raw`                                                                                   | Only `.gitignore` tracked               |
 | Sanitization      | tracked packet secret/path pattern scan                                                                           | No matches                              |
 | Per-finding proof | command recorded in finding and triage ledger                                                                     | Pass                                    |
-| Release metadata  | changeset parser reports patch releases for `@beep/ai-sync` and `@beep/infra`; ignored `@beep/repo-cli` is absent | Pass                                    |
+| Release metadata  | changeset status accepts every changed package and intentional no-release entry                               | Pass                                    |
 | Repair proof      | `bun run beep yeet repair`                                                                                        | 9/9 lanes and verdict outcome `success` |
 | Repo proof        | `bun run beep yeet verify`                                                                                        | Green                                   |
 | Hosted proof      | Yeet monitor and review closeout                                                                                  | Green and mergeable                     |

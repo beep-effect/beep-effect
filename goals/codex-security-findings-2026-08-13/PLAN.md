@@ -2,25 +2,24 @@
 
 ## Status
 
-Status: `active`. Validation and lane partitioning are complete for all 15
-findings. Three bounded remediations are merged, two are open and unmerged
-under hosted monitoring, three more have prepared unmerged fixes, one finding
-was already fixed, and six CI trust-boundary findings remain blocked on
-architecture and external deployment proof.
+Status: `active`. Validation and lane partitioning are complete for all 19
+findings. Six bounded remediations are merged, one finding was already fixed,
+six repository-fixable findings are being consolidated into PR #712, and six
+CI trust-boundary findings remain blocked on architecture and external proof.
 
 ## Phases
 
 | Phase              | Status      | Goal                                                    | Exit criteria                                                                                                                                                  |
 | ------------------ | ----------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | P0 bootstrap       | complete    | Create feature branch and packet scaffold.              | Branch and launcher exist; packet JSON parses.                                                                                                                 |
-| P1 capture | complete | Capture the full signed-in CSV snapshot. | 15 IDs reconcile: 6 High, 5 Medium, 1 Low, 3 Informational. |
-| P2 validate        | complete    | Validate captured reports at current HEAD.              | All 15 findings have verdicts, dispositions, rationales, and owners.                                                                                          |
-| P3 lane-partition  | complete    | Assign findings to disjoint root-cause lanes.           | L1-L11 preserve the original order and cover all 15 findings exactly once.                                                                                    |
-| P4 remediate       | in-progress | Fix all real findings with focused checks.              | Three fixes are merged, two are open/unmerged, three are prepared/unmerged, and six CI findings await architecture/external evidence.                         |
-| P5 repo-proof      | in-progress | Run packet validation and Yeet repair/verify.           | CSF-009/014 passed full Yeet 21/21; CSF-013 full Yeet is running; remaining exact-branch proof is still required.                                             |
-| P6 publish         | in-progress | Publish intentional PRs through Yeet.                   | PRs #681/#685/#688 are merged; #696/#697 are open and monitoring; CSF-012/013/015 remain prepared but unmerged.                                              |
+| P1 capture | complete | Capture the full signed-in CSV snapshot. | 19 IDs reconcile: 7 High, 6 Medium, 2 Low, 4 Informational. |
+| P2 validate | complete | Validate all reports at current HEAD. | 19/19 have verdict, disposition, and rationale. |
+| P3 lane-partition | complete | Assign findings to disjoint root-cause lanes. | 19/19 have an owner and lane. |
+| P4 remediate       | in-progress | Fix all real findings with focused checks.              | Six fixes are merged, six are locally proved for PR #712, and six CI findings await external evidence.                                                      |
+| P5 repo-proof      | in-progress | Run packet validation and Yeet repair/verify.           | Focused proof is green; combined merged-tree generation and exact-head full Yeet remain.                                                                     |
+| P6 publish         | in-progress | Publish intentional PRs through Yeet.                   | Consolidate the remaining repository-fixable findings into PR #712 and close every review thread.                                                            |
 | P7 monitor         | pending     | Close hosted checks and actionable reviews.             | PR green and mergeable.                                                                                                                                        |
-| P8 merge-and-close | pending | Merge and close captured findings. | Required PRs merged; all 15 IDs resolved. |
+| P8 merge-and-close | pending | Merge and close captured findings. | PR merged; all 19 IDs resolved. |
 | P9 close           | pending     | Record evidence, reflection, and lifecycle.             | Packet set to `completed-retained` in the same closeout PR state.                                                                                              |
 
 ## Execution Rules
@@ -31,10 +30,9 @@ architecture and external deployment proof.
 - Keep global files and ledgers serialized.
 - Use focused tests first, then package checks, then Yeet.
 - Never stage ignored raw evidence.
-- PRs #681, #685, and #688 are merged. PRs #696 and #697 are open, unmerged,
-  and under hosted monitoring; do not claim hosted green. CSF-012, CSF-013, and
-  CSF-015 remain prepared but unmerged. Keep the six runner findings held
-  without the required architecture and external proof.
+- Six remediation findings are merged. Consolidate CSF-012, CSF-015, and
+  CSF-016 through CSF-019 into PR #712. Keep the six runner findings held
+  without the required architecture and external proof; never merge the PR.
 
 ## Active Architecture Stop
 
@@ -94,22 +92,24 @@ boundary.
 
 ## Refreshed Finding Evidence
 
-- CSF-014 is confirmed and fixed on its prepared branch: pull-request-capable
-  lanes use local-only Turbo caching and receive no reusable Turbo credential;
-  the trusted push build retains remote read/write caching. Focused tests passed
-  2/2 alongside repo-cli check, lint, changeset parse, and diff proof. Full Yeet
-  verify passed 21/21 on the exact current base; the pushed PR #696 is open and
-  unmerged under hosted monitoring, with hosted green not yet claimed.
-- CSF-009 passed full Yeet verify 21/21 on the exact current base; the pushed PR
-  #697 is open and unmerged under hosted monitoring, with hosted green not yet
-  claimed.
-- CSF-013 has current main merged into its prepared branch and focused 7/7
-  proof. Full Yeet is running; no hosted or deployment result is claimed.
-- CSF-015 is confirmed and fixed on its prepared branch: canonical PathSafety
-  confinement and re-resolution cover every key/root operation, including
-  prefix-directory swaps and root/clear symlink cases. The effect-ontology
-  check, focused tests (6/6), Biome, diff, changeset, and frozen install passed.
-  Full experiment lint remains inherited red in unrelated files.
+- CSF-012 and CSF-015 retain their reviewed local implementations for the
+  combined #712 publication. CSF-012's final baseline must be regenerated on
+  the merged exact-hosted-runtime tree; CSF-015 retains its explicit trusted
+  filesystem-ownership boundary.
+- CSF-016 replaces the mutable remote installer with a versioned Bun archive
+  verified against a tracked digest. The digest is part of bake freshness and
+  durable provenance, not only an inline shell check.
+- CSF-017 validates every Claude allow grant against the exact approved domain;
+  non-Bash file, network, and MCP mutation regressions fail closed.
+- CSF-018 requires all legacy registry roots and source instances to match the
+  active salt namespace before promotion.
+- CSF-019 proves complete legacy journal sets before skipping re-baselined SQL,
+  rejects partial histories, and covers current and version-zero Drizzle
+  journals with PGlite.
+- The first combined focused run passed 60/60 across runner bake, AI-sync,
+  identity registry, and Postgres integration suites. Package checks, targeted
+  Biome/ESLint, Fallow, and diff checks are green. Exact merged-tree Yeet proof
+  remains pending.
 
 ## Packet Verification
 
@@ -118,11 +118,11 @@ test "$(wc -m < goals/codex-security-findings-2026-08-13/GOAL.md)" -le 4000
 jq . goals/codex-security-findings-2026-08-13/ops/manifest.json
 jq . goals/codex-security-findings-2026-08-13/ops/triage.json
 bun -e 'import { decodeCodexTriageLedger } from "./packages/tooling/tool/cli/src/commands/Codex/Findings.triage.schemas.ts"; import { Effect } from "effect"; const input = await Bun.file("goals/codex-security-findings-2026-08-13/ops/triage.json").json(); await Effect.runPromise(decodeCodexTriageLedger(input))'
-test "$(find goals/codex-security-findings-2026-08-13/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = 15
+test "$(find goals/codex-security-findings-2026-08-13/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = 19
 bun run beep goals index --check
 bun run beep goals doctor
 bun run beep yeet repair
-bun -e 'import parse from "@changesets/parse"; const parsed = parse(await Bun.file(".changeset/codex-security-findings-2026-08-13.md").text()); const actual = parsed.releases.map(({ name, type }) => `${name}:${type}`).sort(); const expected = ["@beep/ai-sync:patch", "@beep/infra:patch"]; if (JSON.stringify(actual) !== JSON.stringify(expected)) process.exit(1)'
+bun run changeset:status:since-main
 bun -e 'import { scanSensitiveText } from "./packages/tooling/tool/cli/src/commands/Codex/Findings.scan.ts"; const root = "goals/codex-security-findings-2026-08-13"; const glob = new Bun.Glob("**/*"); const hits = []; for await (const path of glob.scan({ cwd: root, onlyFiles: true })) { if (path.startsWith("raw/")) continue; hits.push(...scanSensitiveText(path, await Bun.file(`${root}/${path}`).text())); } if (hits.length > 0) process.exit(1)'
 git diff --check -- goals/codex-security-findings-2026-08-13 goals/INDEX.md
 ```

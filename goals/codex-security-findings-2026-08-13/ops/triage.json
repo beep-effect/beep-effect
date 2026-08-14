@@ -4,11 +4,11 @@
     "repository": "kriegcloud/beep-effect",
     "findingsView": "repo-scoped, status=new",
     "branch": "codex/security-findings-2026-08-13",
-    "expectedCount": 15,
-    "capturedCount": 15,
+    "expectedCount": 19,
+    "capturedCount": 19,
     "capturedAt": "2026-08-13",
     "captureMethod": "signed-in-csv-export",
-    "note": "P2 and P3 are complete for all 15 findings: 14 remediate and 1 already-fixed. PRs #681, #685, and #688 are merged. CSF-009 PR #697 and CSF-014 PR #696 passed full Yeet verify 21/21 and are open/unmerged under hosted monitoring; hosted green is not yet claimed. CSF-012, CSF-013, and CSF-015 remain prepared but unmerged. CSF-013 has focused 7/7 source/mock proof and full Yeet running, with no Pulumi deployment claim. Six runner findings remain held."
+    "note": "P2 and P3 are complete for all 19 findings: 18 remediate and 1 already-fixed. CSF-002, CSF-007, CSF-009, CSF-010, CSF-013, and CSF-014 are merged; CSF-011 was already fixed. CSF-012, CSF-015, CSF-016, CSF-017, CSF-018, and CSF-019 have focused local proof and are being consolidated into PR #712; merged-tree full proof and publication remain pending. Six runner findings remain blocked on external admission, organization, and AWS deployment evidence."
   },
   "lanes": {
     "L1-ci-runner-admission": {
@@ -65,6 +65,26 @@
       "status": "complete",
       "findings": ["CSF-015"],
       "title": "Local storage path confinement"
+    },
+    "L12-verified-runner-bake-artifact": {
+      "status": "complete",
+      "findings": ["CSF-016"],
+      "title": "Verified runner bake artifact"
+    },
+    "L13-agent-permission-domain": {
+      "status": "complete",
+      "findings": ["CSF-017"],
+      "title": "Agent permission domain"
+    },
+    "L14-identity-registry-salt-proof": {
+      "status": "complete",
+      "findings": ["CSF-018"],
+      "title": "Identity registry salt proof"
+    },
+    "L15-migration-rebaseline-compatibility": {
+      "status": "complete",
+      "findings": ["CSF-019"],
+      "title": "Migration re-baseline compatibility"
     }
   },
   "findings": [
@@ -518,6 +538,136 @@
           "bun -e 'import parse from \"@changesets/parse\"; parse(await Bun.file(\".changeset/csf-015-local-storage-confinement.md\").text())'",
           "git diff --check -- .changeset/csf-015-local-storage-confinement.md bun.lock scratchpad/package.json scratchpad/effect-ontology/Service/Storage.ts scratchpad/effect-ontology/test/Service/Storage.test.ts",
           "bun install --frozen-lockfile"
+        ]
+      }
+    },
+    {
+      "id": "CSF-016",
+      "codexId": "a0921bdb2c4c8191bef211deceacdbce",
+      "title": "Runner AMI bake executes unverified remote installer",
+      "severity": "High",
+      "codexStatus": "New",
+      "commit": "ddc8a873b154bcddecb956580b77e165698bdffc",
+      "ownerArea": "Runner AMI bake supply chain",
+      "lane": "L12-verified-runner-bake-artifact",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The AMI bake executes a mutable installer script fetched from bun.sh. Pinning the requested Bun version does not authenticate the installer or installed binary before the instance becomes a reusable runner image."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "The bake downloads the versioned Bun release archive, verifies a repository-pinned SHA-256 digest before extraction, and carries that digest through dirty-input checks, image tags, freshness checks, plans, and durable reports. Focused proof is green; combined exact-head Yeet proof remains pending.",
+        "changedFiles": [
+          ".bun-linux-x64.sha256",
+          ".changeset/csf-016-verified-bun-archive.md",
+          "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+          "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+          "packages/tooling/tool/cli/test/runners-bake.test.ts"
+        ],
+        "verificationCommands": [
+          "node node_modules/vitest/vitest.mjs run packages/tooling/tool/cli/test/runners-bake.test.ts packages/tooling/library/ai-sync/test/ai-sync.test.ts packages/tooling/library/ai-metrics/test/identity-registry.test.ts packages/drivers/postgres/test/integration/Postgres.pglite.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "bun run --filter @beep/repo-cli check",
+          "bunx biome check packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts packages/tooling/tool/cli/test/runners-bake.test.ts",
+          "bun run beep quality fallow audit --base origin/main --check"
+        ]
+      }
+    },
+    {
+      "id": "CSF-017",
+      "codexId": "1f36661c9d90819194cbbb2dcab38a0d",
+      "title": "Claude safety policy ignores non-Bash allow grants",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "commit": "180c8a2bc002deeba60d22e60ef0088fefbe2531",
+      "ownerArea": "AI-sync checked-in agent safety policy",
+      "lane": "L13-agent-permission-domain",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "The Claude policy gate filters only Bash-shaped allow entries, so non-Bash file, network, and MCP mutation grants can bypass the exact checked-in approval domain."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Every permissions.allow entry must now belong to the exact approved repository grant domain. Regressions reject protected workflow writes, network fetch grants, and MCP mutation grants. Focused proof is green; combined exact-head Yeet proof remains pending.",
+        "changedFiles": [
+          ".changeset/csf-017-claude-permission-domain.md",
+          "packages/tooling/library/ai-sync/src/validation.ts",
+          "packages/tooling/library/ai-sync/test/ai-sync.test.ts"
+        ],
+        "verificationCommands": [
+          "node node_modules/vitest/vitest.mjs run packages/tooling/library/ai-sync/test/ai-sync.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "bun run --filter @beep/ai-sync check",
+          "bunx biome check packages/tooling/library/ai-sync/src/validation.ts packages/tooling/library/ai-sync/test/ai-sync.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-018",
+      "codexId": "91a45adf70408191972ff02c56b9e54c",
+      "title": "Legacy registry migration trusts one matching digest",
+      "severity": "Low",
+      "codexStatus": "New",
+      "commit": "2fe7a8e688060da89489d0bcff43957a6d042e72",
+      "ownerArea": "AI metrics identity registry",
+      "lane": "L14-identity-registry-salt-proof",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "A fingerprint-less legacy registry is promoted when any one root or source digest matches, which can relabel unrelated mixed-salt rows as belonging to the current namespace."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "Legacy promotion now requires every existing root and source-instance identity to match the active salted namespace. A mixed-registry regression proves one valid row cannot promote unrelated identities. Focused proof is green; combined exact-head Yeet proof remains pending.",
+        "changedFiles": [
+          ".changeset/csf-018-legacy-registry-proof.md",
+          "packages/tooling/library/ai-metrics/src/identity-registry.ts",
+          "packages/tooling/library/ai-metrics/test/identity-registry.test.ts"
+        ],
+        "verificationCommands": [
+          "node node_modules/vitest/vitest.mjs run packages/tooling/library/ai-metrics/test/identity-registry.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "bun run --filter @beep/repo-ai-metrics check",
+          "bunx biome check packages/tooling/library/ai-metrics/src/identity-registry.ts packages/tooling/library/ai-metrics/test/identity-registry.test.ts"
+        ]
+      }
+    },
+    {
+      "id": "CSF-019",
+      "codexId": "f5918d64f4708191a9e2c11a66b0bce2",
+      "title": "Migration re-baseline breaks existing databases",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "commit": "ec3bc91e63db2c3df716401fb1244c7d267b8045",
+      "ownerArea": "Postgres migration compatibility",
+      "lane": "L15-migration-rebaseline-compatibility",
+      "verdict": "confirmed-vulnerable",
+      "disposition": "remediate",
+      "validation": {
+        "status": "complete",
+        "confidence": "high",
+        "rationale": "Professional Desktop replaces historical migration names with non-idempotent baseline names, while the bundled migrator selects pending work by journal name. Existing databases therefore attempt to reapply conflicting schema and function SQL."
+      },
+      "remediation": {
+        "status": "complete",
+        "summary": "The bundled migrator accepts complete legacy-name proof sets, skips re-baselined SQL only when every required old journal name is present, rejects partial histories, and preserves Drizzle version-zero journal upgrades. Professional Desktop declares the exact old-to-canonical mapping. Focused proof is green; combined exact-head Yeet proof remains pending.",
+        "changedFiles": [
+          ".changeset/csf-019-migration-rebaseline.md",
+          "apps/professional-desktop/src/runtime/Migrations.ts",
+          "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+          "packages/drivers/postgres/test/integration/Postgres.pglite.test.ts"
+        ],
+        "verificationCommands": [
+          "node node_modules/vitest/vitest.mjs run packages/drivers/postgres/test/integration/Postgres.pglite.test.ts --pool=forks --maxWorkers=1 --no-file-parallelism",
+          "bun run --filter @beep/postgres check",
+          "bun run --filter @beep/professional-desktop check",
+          "bunx biome check packages/drivers/postgres/src/PostgresDrizzle.service.ts packages/drivers/postgres/test/integration/Postgres.pglite.test.ts apps/professional-desktop/src/runtime/Migrations.ts",
+          "bun run beep quality fallow audit --base origin/main --check"
         ]
       }
     }
