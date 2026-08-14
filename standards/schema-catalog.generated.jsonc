@@ -2650,8 +2650,7 @@
       "symbol": "AiProviderCliError",
       "kind": "tagged-error",
       "owner": "@beep/ai-provider-cli",
-      "identity": "AiProviderCliError",
-      "description": "Redacted technical failure emitted by Claude or Codex CLI status probes."
+      "identity": "AiProviderCliError"
     },
     {
       "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
@@ -2882,8 +2881,7 @@
       "symbol": "BoxError",
       "kind": "tagged-error",
       "owner": "@beep/box",
-      "identity": "BoxError",
-      "description": "Sanitized technical failure raised by the Box driver boundary."
+      "identity": "BoxError"
     },
     {
       "file": "packages/drivers/box/src/Box.errors.ts",
@@ -3674,8 +3672,7 @@
       "symbol": "EcfrError",
       "kind": "tagged-error",
       "owner": "@beep/ecfr",
-      "identity": "EcfrError",
-      "description": "Redacted technical failure raised by the eCFR REST API driver boundary."
+      "identity": "EcfrError"
     },
     {
       "file": "packages/drivers/ecfr/src/Ecfr.errors.ts",
@@ -5598,8 +5595,7 @@
       "symbol": "GovinfoError",
       "kind": "tagged-error",
       "owner": "@beep/govinfo",
-      "identity": "GovinfoError",
-      "description": "Redacted technical failure raised by the GovInfo REST API driver boundary."
+      "identity": "GovinfoError"
     },
     {
       "file": "packages/drivers/govinfo/src/Govinfo.errors.ts",
@@ -5630,24 +5626,21 @@
       "symbol": "FailureBadRequest",
       "kind": "tagged-error",
       "owner": "@beep/govinfo",
-      "identity": "FailureBadRequest",
-      "description": "Bad-request failure returned when GovInfo rejects the submitted search payload."
+      "identity": "FailureBadRequest"
     },
     {
       "file": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
       "symbol": "FailureInternalServerError",
       "kind": "tagged-error",
       "owner": "@beep/govinfo",
-      "identity": "FailureInternalServerError",
-      "description": "Internal-server-error failure returned when GovInfo reports an unexpected server-side error."
+      "identity": "FailureInternalServerError"
     },
     {
       "file": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
       "symbol": "FailureNotFound",
       "kind": "tagged-error",
       "owner": "@beep/govinfo",
-      "identity": "FailureNotFound",
-      "description": "Not-found failure returned when the GovInfo search route or resource is unavailable."
+      "identity": "FailureNotFound"
     },
     {
       "file": "packages/drivers/govinfo/src/domain/values/CollectionContainer/CollectionContainer.model.ts",
@@ -7053,8 +7046,7 @@
       "symbol": "OnePasswordCliError",
       "kind": "tagged-error",
       "owner": "@beep/onepassword-cli",
-      "identity": "OnePasswordCliError",
-      "description": "Redacted technical failure emitted by the 1Password CLI driver."
+      "identity": "OnePasswordCliError"
     },
     {
       "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.errors.ts",
@@ -8429,8 +8421,7 @@
       "symbol": "PostgresError",
       "kind": "tagged-error",
       "owner": "@beep/postgres",
-      "identity": "PostgresError",
-      "description": "Technical Postgres driver failure scoped to a driver operation."
+      "identity": "PostgresError"
     },
     {
       "file": "packages/drivers/postgres/src/Postgres.errors.ts",

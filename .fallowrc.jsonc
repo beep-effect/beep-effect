@@ -319,12 +319,6 @@
         "reason": "Pre-existing callback body unchanged from scratchpad/bsl merged by PR #651 and named only for a targeted override; Fallow audit attributes its measured finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
       },
       {
-        "files": ["packages/ecosystem/effect-drizzle/src/pg/extras.ts"],
-        "functions": ["isNode"],
-        "maxCognitive": 16,
-        "reason": "Pre-existing function body unchanged from scratchpad/bsl merged by PR #651; Fallow audit attributes its cognitive finding as introduced after the scratchpad-to-ecosystem move. Review by 2026-11-30: attribution artifact, not a budget — re-verify and drop if audit no longer misattributes."
-      },
-      {
         "files": ["packages/ecosystem/effect-drizzle/src/sqlite/extras.ts"],
         "functions": ["isNode"],
         "maxCognitive": 15,

@@ -36,7 +36,6 @@
     "jsonc-parser": "catalog:",
     "micromark": "catalog:",
     "micromark-extension-gfm": "catalog:",
-    "uuid": "catalog:",
     "yaml": "catalog:"
   },
   "devDependencies": {

@@ -291,6 +291,7 @@
         "@beep/law-practice-tables": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/workspace-tables": "workspace:^",
+        "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -719,7 +720,6 @@
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
-        "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -1863,7 +1863,6 @@
         "jsonc-parser": "catalog:",
         "micromark": "catalog:",
         "micromark-extension-gfm": "catalog:",
-        "uuid": "catalog:",
         "yaml": "catalog:",
       },
       "devDependencies": {

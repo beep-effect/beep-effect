@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-13T23:25:07.498Z",
+  "generatedAt": "2026-08-14T00:17:27.978Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -58770,8 +58770,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaTopology.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaTopology.ts",
-          "line": 65,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schematopology-ts-65-schematopologyviolation",
+          "line": 59,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schematopology-ts-59-schematopologyviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -58792,8 +58792,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaTopology.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaTopology.ts",
-          "line": 438,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schematopology-ts-438-collectschematopologyviolations",
+          "line": 432,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schematopology-ts-432-collectschematopologyviolations",
           "currentTags": [
             "@category",
             "@since"
@@ -58814,8 +58814,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaTopology.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaTopology.ts",
-          "line": 472,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schematopology-ts-472-runschematopologylint",
+          "line": 466,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schematopology-ts-466-runschematopologylint",
           "currentTags": [
             "@category",
             "@since"
@@ -58836,8 +58836,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaTopology.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaTopology.ts",
-          "line": 500,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schematopology-ts-500-lintschematopologycommand",
+          "line": 494,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schematopology-ts-494-lintschematopologycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -89158,8 +89158,8 @@
           "exportKind": "class",
           "filePath": "src/entities/ActFrame/ActFrame.model.ts",
           "repoPath": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.model.ts",
-          "line": 90,
-          "anchor": "packages-law-practice-domain-src-entities-actframe-actframe-model-ts-90-actframe",
+          "line": 85,
+          "anchor": "packages-law-practice-domain-src-entities-actframe-actframe-model-ts-85-actframe",
           "currentTags": [
             "@category",
             "@since"
@@ -89528,14 +89528,13 @@
           "remediationStatus": "open"
         },
         {
-          "symbolName": "export * from \"./ActFrame.model.ts\";",
+          "symbolName": "export * from \"./ActFrame.behavior.ts\";",
           "exportKind": "re-export",
           "filePath": "src/entities/ActFrame/index.ts",
           "repoPath": "packages/law-practice/domain/src/entities/ActFrame/index.ts",
-          "line": 9,
-          "anchor": "packages-law-practice-domain-src-entities-actframe-index-ts-9-export-from-actframe-model-ts",
+          "line": 15,
+          "anchor": "packages-law-practice-domain-src-entities-actframe-index-ts-15-export-from-actframe-behavior-ts",
           "currentTags": [
-            "@packageDocumentation",
             "@category",
             "@since"
           ],
@@ -89551,16 +89550,13 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./ActFrame.behavior.ts\";",
+          "symbolName": "export * from \"./ActFrame.model.ts\";",
           "exportKind": "re-export",
           "filePath": "src/entities/ActFrame/index.ts",
           "repoPath": "packages/law-practice/domain/src/entities/ActFrame/index.ts",
-          "line": 17,
-          "anchor": "packages-law-practice-domain-src-entities-actframe-index-ts-17-export-from-actframe-behavior-ts",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
+          "line": 16,
+          "anchor": "packages-law-practice-domain-src-entities-actframe-index-ts-16-export-from-actframe-model-ts",
+          "currentTags": [],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -89577,8 +89573,8 @@
           "exportKind": "re-export",
           "filePath": "src/entities/ActFrame/index.ts",
           "repoPath": "packages/law-practice/domain/src/entities/ActFrame/index.ts",
-          "line": 25,
-          "anchor": "packages-law-practice-domain-src-entities-actframe-index-ts-25-export-from-actframe-values-ts",
+          "line": 23,
+          "anchor": "packages-law-practice-domain-src-entities-actframe-index-ts-23-export-from-actframe-values-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -108295,8 +108291,8 @@
           "exportKind": "class",
           "filePath": "src/AiProviderCli.errors.ts",
           "repoPath": "packages/drivers/ai-provider-cli/src/AiProviderCli.errors.ts",
-          "line": 45,
-          "anchor": "packages-drivers-ai-provider-cli-src-aiprovidercli-errors-ts-45-aiproviderclierror",
+          "line": 72,
+          "anchor": "packages-drivers-ai-provider-cli-src-aiprovidercli-errors-ts-72-aiproviderclierror",
           "currentTags": [
             "@category",
             "@since"
@@ -181486,8 +181482,8 @@
           "exportKind": "class",
           "filePath": "src/identity-registry.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
-          "line": 203,
-          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-203-aimetricsidentityregistry",
+          "line": 204,
+          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-204-aimetricsidentityregistry",
           "currentTags": [
             "@category",
             "@since"
@@ -181508,8 +181504,8 @@
           "exportKind": "class",
           "filePath": "src/identity-registry.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
-          "line": 238,
-          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-238-aimetricscanonicalrootinput",
+          "line": 239,
+          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-239-aimetricscanonicalrootinput",
           "currentTags": [
             "@category",
             "@since"
@@ -181530,8 +181526,8 @@
           "exportKind": "class",
           "filePath": "src/identity-registry.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
-          "line": 269,
-          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-269-aimetricsidentityregistryupsertinput",
+          "line": 270,
+          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-270-aimetricsidentityregistryupsertinput",
           "currentTags": [
             "@category",
             "@since"
@@ -181552,8 +181548,8 @@
           "exportKind": "class",
           "filePath": "src/identity-registry.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
-          "line": 306,
-          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-306-aimetricsidentityregistryerror",
+          "line": 307,
+          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-307-aimetricsidentityregistryerror",
           "currentTags": [
             "@category",
             "@since"
@@ -181574,8 +181570,8 @@
           "exportKind": "const",
           "filePath": "src/identity-registry.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
-          "line": 537,
-          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-537-isnestedgitroot",
+          "line": 538,
+          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-538-isnestedgitroot",
           "currentTags": [
             "@param",
             "@returns",
@@ -181598,8 +181594,8 @@
           "exportKind": "const",
           "filePath": "src/identity-registry.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
-          "line": 591,
-          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-591-makeaimetricscanonicalroot",
+          "line": 592,
+          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-592-makeaimetricscanonicalroot",
           "currentTags": [
             "@param",
             "@returns",
@@ -181622,8 +181618,8 @@
           "exportKind": "const",
           "filePath": "src/identity-registry.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
-          "line": 743,
-          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-743-readaimetricsidentityregistry",
+          "line": 744,
+          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-744-readaimetricsidentityregistry",
           "currentTags": [
             "@param",
             "@returns",
@@ -181646,8 +181642,8 @@
           "exportKind": "const",
           "filePath": "src/identity-registry.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
-          "line": 809,
-          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-809-identityregistrytojson",
+          "line": 824,
+          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-824-identityregistrytojson",
           "currentTags": [
             "@param",
             "@returns",
@@ -181670,8 +181666,8 @@
           "exportKind": "const",
           "filePath": "src/identity-registry.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/identity-registry.ts",
-          "line": 972,
-          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-972-upsertaimetricsidentityregistry",
+          "line": 991,
+          "anchor": "packages-tooling-library-ai-metrics-src-identity-registry-ts-991-upsertaimetricsidentityregistry",
           "currentTags": [
             "@param",
             "@returns",
@@ -183738,8 +183734,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 51,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-51-ai-metrics-otlp-attribute-allowlist",
+          "line": 52,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-52-ai-metrics-otlp-attribute-allowlist",
           "currentTags": [
             "@category",
             "@since"
@@ -183760,8 +183756,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 91,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-91-aimetricsotlpattributevalue",
+          "line": 92,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-92-aimetricsotlpattributevalue",
           "currentTags": [
             "@category",
             "@since"
@@ -183782,8 +183778,8 @@
           "exportKind": "type",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 112,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-112-aimetricsotlpattributevalue",
+          "line": 113,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-113-aimetricsotlpattributevalue",
           "currentTags": [
             "@category",
             "@since"
@@ -183804,8 +183800,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 132,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-132-aimetricsotlpexporterror",
+          "line": 133,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-133-aimetricsotlpexporterror",
           "currentTags": [
             "@category",
             "@since"
@@ -183826,8 +183822,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 168,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-168-aimetricsotlpexportinput",
+          "line": 169,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-169-aimetricsotlpexportinput",
           "currentTags": [
             "@category",
             "@since"
@@ -183848,8 +183844,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 210,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-210-aimetricsotlpspanprojection",
+          "line": 211,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-211-aimetricsotlpspanprojection",
           "currentTags": [
             "@category",
             "@since"
@@ -183870,8 +183866,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 258,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-258-aimetricsotlpspanprojectionbatch",
+          "line": 259,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-259-aimetricsotlpspanprojectionbatch",
           "currentTags": [
             "@category",
             "@since"
@@ -183892,8 +183888,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 298,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-298-aimetricsotlpexportresult",
+          "line": 299,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-299-aimetricsotlpexportresult",
           "currentTags": [
             "@category",
             "@since"
@@ -183914,8 +183910,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 593,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-593-readaimetricsotlpspanprojections",
+          "line": 608,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-608-readaimetricsotlpspanprojections",
           "currentTags": [
             "@effects",
             "@category",
@@ -183937,8 +183933,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 644,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-644-markaimetricsotlpturnsexported",
+          "line": 659,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-659-markaimetricsotlpturnsexported",
           "currentTags": [
             "@effects",
             "@category",
@@ -183960,8 +183956,8 @@
           "exportKind": "interface",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 798,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-798-aimetricsotlpspansendershape",
+          "line": 817,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-817-aimetricsotlpspansendershape",
           "currentTags": [
             "@category",
             "@since"
@@ -183982,8 +183978,8 @@
           "exportKind": "class",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 833,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-833-aimetricsotlpspansender",
+          "line": 852,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-852-aimetricsotlpspansender",
           "currentTags": [
             "@category",
             "@since"
@@ -184004,8 +184000,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 947,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-947-runaimetricsotlpprojectionbatchexport",
+          "line": 975,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-975-runaimetricsotlpprojectionbatchexport",
           "currentTags": [
             "@effects",
             "@category",
@@ -184027,8 +184023,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 1016,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1016-runaimetricsotlpexport",
+          "line": 1044,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1044-runaimetricsotlpexport",
           "currentTags": [
             "@effects",
             "@category",
@@ -184050,8 +184046,8 @@
           "exportKind": "const",
           "filePath": "src/otlp.ts",
           "repoPath": "packages/tooling/library/ai-metrics/src/otlp.ts",
-          "line": 1062,
-          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1062-otlpexportresulttojson",
+          "line": 1090,
+          "anchor": "packages-tooling-library-ai-metrics-src-otlp-ts-1090-otlpexportresulttojson",
           "currentTags": [
             "@category",
             "@since"
@@ -198769,8 +198765,8 @@
           "exportKind": "class",
           "filePath": "src/Box.errors.ts",
           "repoPath": "packages/drivers/box/src/Box.errors.ts",
-          "line": 156,
-          "anchor": "packages-drivers-box-src-box-errors-ts-156-boxerroroptions",
+          "line": 166,
+          "anchor": "packages-drivers-box-src-box-errors-ts-166-boxerroroptions",
           "currentTags": [
             "@category",
             "@since"
@@ -198791,8 +198787,8 @@
           "exportKind": "class",
           "filePath": "src/Box.errors.ts",
           "repoPath": "packages/drivers/box/src/Box.errors.ts",
-          "line": 203,
-          "anchor": "packages-drivers-box-src-box-errors-ts-203-boxerror",
+          "line": 215,
+          "anchor": "packages-drivers-box-src-box-errors-ts-215-boxerror",
           "currentTags": [
             "@category",
             "@since"
@@ -229568,8 +229564,8 @@
           "exportKind": "const",
           "filePath": "src/contradiction/ContradictionQaSeed.ts",
           "repoPath": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
-          "line": 99,
-          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-99-contradiction-qa-seed-env",
+          "line": 96,
+          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-96-contradiction-qa-seed-env",
           "currentTags": [
             "@category",
             "@since"
@@ -229590,8 +229586,8 @@
           "exportKind": "const",
           "filePath": "src/contradiction/ContradictionQaSeed.ts",
           "repoPath": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
-          "line": 116,
-          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-116-contradiction-qa-vault-root-env",
+          "line": 113,
+          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-113-contradiction-qa-vault-root-env",
           "currentTags": [
             "@category",
             "@since"
@@ -229612,8 +229608,8 @@
           "exportKind": "const",
           "filePath": "src/contradiction/ContradictionQaSeed.ts",
           "repoPath": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
-          "line": 134,
-          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-134-contradiction-qa-source-locator",
+          "line": 131,
+          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-131-contradiction-qa-source-locator",
           "currentTags": [
             "@category",
             "@since"
@@ -229634,8 +229630,8 @@
           "exportKind": "const",
           "filePath": "src/contradiction/ContradictionQaSeed.ts",
           "repoPath": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
-          "line": 159,
-          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-159-contradiction-qa-anchor-start",
+          "line": 156,
+          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-156-contradiction-qa-anchor-start",
           "currentTags": [
             "@category",
             "@since"
@@ -229656,8 +229652,8 @@
           "exportKind": "const",
           "filePath": "src/contradiction/ContradictionQaSeed.ts",
           "repoPath": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
-          "line": 184,
-          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-184-contradiction-qa-source-text",
+          "line": 181,
+          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-181-contradiction-qa-source-text",
           "currentTags": [
             "@category",
             "@since"
@@ -229678,8 +229674,8 @@
           "exportKind": "class",
           "filePath": "src/contradiction/ContradictionQaSeed.ts",
           "repoPath": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
-          "line": 221,
-          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-221-contradictionqaseederror",
+          "line": 218,
+          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-218-contradictionqaseederror",
           "currentTags": [
             "@category",
             "@since"
@@ -229700,8 +229696,8 @@
           "exportKind": "const",
           "filePath": "src/contradiction/ContradictionQaSeed.ts",
           "repoPath": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
-          "line": 1025,
-          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-1025-seedcontradictionqafixtures",
+          "line": 1022,
+          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-1022-seedcontradictionqafixtures",
           "currentTags": [
             "@effects",
             "@category",
@@ -229723,8 +229719,8 @@
           "exportKind": "const",
           "filePath": "src/contradiction/ContradictionQaSeed.ts",
           "repoPath": "apps/professional-desktop/src/contradiction/ContradictionQaSeed.ts",
-          "line": 1129,
-          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-1129-contradictionqaseedlive",
+          "line": 1126,
+          "anchor": "apps-professional-desktop-src-contradiction-contradictionqaseed-ts-1126-contradictionqaseedlive",
           "currentTags": [
             "@category",
             "@since"
@@ -233732,8 +233728,8 @@
           "exportKind": "const",
           "filePath": "src/entities/Contradiction/Contradiction.behavior.ts",
           "repoPath": "packages/epistemic/domain/src/entities/Contradiction/Contradiction.behavior.ts",
-          "line": 53,
-          "anchor": "packages-epistemic-domain-src-entities-contradiction-contradiction-behavior-ts-53-hasvalidseals",
+          "line": 56,
+          "anchor": "packages-epistemic-domain-src-entities-contradiction-contradiction-behavior-ts-56-hasvalidseals",
           "currentTags": [
             "@returns",
             "@category",
@@ -233817,12 +233813,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./Contradiction.model.ts\";",
+          "symbolName": "export * from \"./Contradiction.behavior.ts\";",
           "exportKind": "re-export",
           "filePath": "src/entities/Contradiction/index.ts",
           "repoPath": "packages/epistemic/domain/src/entities/Contradiction/index.ts",
           "line": 14,
-          "anchor": "packages-epistemic-domain-src-entities-contradiction-index-ts-14-export-from-contradiction-model-ts",
+          "anchor": "packages-epistemic-domain-src-entities-contradiction-index-ts-14-export-from-contradiction-behavior-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -233839,12 +233835,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./Contradiction.behavior.ts\";",
+          "symbolName": "export * from \"./Contradiction.model.ts\";",
           "exportKind": "re-export",
           "filePath": "src/entities/Contradiction/index.ts",
           "repoPath": "packages/epistemic/domain/src/entities/Contradiction/index.ts",
-          "line": 22,
-          "anchor": "packages-epistemic-domain-src-entities-contradiction-index-ts-22-export-from-contradiction-behavior-ts",
+          "line": 21,
+          "anchor": "packages-epistemic-domain-src-entities-contradiction-index-ts-21-export-from-contradiction-model-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -234015,12 +234011,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./EdgeVersion.model.ts\";",
+          "symbolName": "export * from \"./EdgeVersion.behavior.ts\";",
           "exportKind": "re-export",
           "filePath": "src/entities/EdgeVersion/index.ts",
           "repoPath": "packages/epistemic/domain/src/entities/EdgeVersion/index.ts",
-          "line": 22,
-          "anchor": "packages-epistemic-domain-src-entities-edgeversion-index-ts-22-export-from-edgeversion-model-ts",
+          "line": 14,
+          "anchor": "packages-epistemic-domain-src-entities-edgeversion-index-ts-14-export-from-edgeversion-behavior-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -234037,12 +234033,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./EdgeVersion.behavior.ts\";",
+          "symbolName": "export * from \"./EdgeVersion.model.ts\";",
           "exportKind": "re-export",
           "filePath": "src/entities/EdgeVersion/index.ts",
           "repoPath": "packages/epistemic/domain/src/entities/EdgeVersion/index.ts",
-          "line": 30,
-          "anchor": "packages-epistemic-domain-src-entities-edgeversion-index-ts-30-export-from-edgeversion-behavior-ts",
+          "line": 29,
+          "anchor": "packages-epistemic-domain-src-entities-edgeversion-index-ts-29-export-from-edgeversion-model-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -234130,8 +234126,8 @@
           "exportKind": "const",
           "filePath": "src/entities/EvidenceVerification/EvidenceVerification.behavior.ts",
           "repoPath": "packages/epistemic/domain/src/entities/EvidenceVerification/EvidenceVerification.behavior.ts",
-          "line": 62,
-          "anchor": "packages-epistemic-domain-src-entities-evidenceverification-evidenceverification-behavior-ts-62-manifestationkeyfor",
+          "line": 60,
+          "anchor": "packages-epistemic-domain-src-entities-evidenceverification-evidenceverification-behavior-ts-60-manifestationkeyfor",
           "currentTags": [
             "@category",
             "@since"
@@ -234152,30 +234148,8 @@
           "exportKind": "class",
           "filePath": "src/entities/EvidenceVerification/EvidenceVerification.model.ts",
           "repoPath": "packages/epistemic/domain/src/entities/EvidenceVerification/EvidenceVerification.model.ts",
-          "line": 41,
-          "anchor": "packages-epistemic-domain-src-entities-evidenceverification-evidenceverification-model-ts-41-evidenceverification",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./EvidenceVerification.model.ts\";",
-          "exportKind": "re-export",
-          "filePath": "src/entities/EvidenceVerification/index.ts",
-          "repoPath": "packages/epistemic/domain/src/entities/EvidenceVerification/index.ts",
-          "line": 22,
-          "anchor": "packages-epistemic-domain-src-entities-evidenceverification-index-ts-22-export-from-evidenceverification-model-ts",
+          "line": 39,
+          "anchor": "packages-epistemic-domain-src-entities-evidenceverification-evidenceverification-model-ts-39-evidenceverification",
           "currentTags": [
             "@category",
             "@since"
@@ -234196,8 +234170,30 @@
           "exportKind": "re-export",
           "filePath": "src/entities/EvidenceVerification/index.ts",
           "repoPath": "packages/epistemic/domain/src/entities/EvidenceVerification/index.ts",
-          "line": 30,
-          "anchor": "packages-epistemic-domain-src-entities-evidenceverification-index-ts-30-export-from-evidenceverification-behavior-ts",
+          "line": 14,
+          "anchor": "packages-epistemic-domain-src-entities-evidenceverification-index-ts-14-export-from-evidenceverification-behavior-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./EvidenceVerification.model.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/entities/EvidenceVerification/index.ts",
+          "repoPath": "packages/epistemic/domain/src/entities/EvidenceVerification/index.ts",
+          "line": 29,
+          "anchor": "packages-epistemic-domain-src-entities-evidenceverification-index-ts-29-export-from-evidenceverification-model-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -249104,8 +249100,8 @@
           "exportKind": "class",
           "filePath": "src/Ecfr.errors.ts",
           "repoPath": "packages/drivers/ecfr/src/Ecfr.errors.ts",
-          "line": 116,
-          "anchor": "packages-drivers-ecfr-src-ecfr-errors-ts-116-ecfrerror",
+          "line": 136,
+          "anchor": "packages-drivers-ecfr-src-ecfr-errors-ts-136-ecfrerror",
           "currentTags": [
             "@category",
             "@since"
@@ -339087,8 +339083,8 @@
           "exportKind": "class",
           "filePath": "src/OnePasswordCli.errors.ts",
           "repoPath": "packages/drivers/onepassword-cli/src/OnePasswordCli.errors.ts",
-          "line": 59,
-          "anchor": "packages-drivers-onepassword-cli-src-onepasswordcli-errors-ts-59-onepasswordclierroroptions",
+          "line": 77,
+          "anchor": "packages-drivers-onepassword-cli-src-onepasswordcli-errors-ts-77-onepasswordclierroroptions",
           "currentTags": [
             "@category",
             "@since"
@@ -339109,8 +339105,8 @@
           "exportKind": "class",
           "filePath": "src/OnePasswordCli.errors.ts",
           "repoPath": "packages/drivers/onepassword-cli/src/OnePasswordCli.errors.ts",
-          "line": 96,
-          "anchor": "packages-drivers-onepassword-cli-src-onepasswordcli-errors-ts-96-onepasswordclierror",
+          "line": 111,
+          "anchor": "packages-drivers-onepassword-cli-src-onepasswordcli-errors-ts-111-onepasswordclierror",
           "currentTags": [
             "@category",
             "@since"
@@ -341180,8 +341176,8 @@
           "exportKind": "class",
           "filePath": "src/Govinfo.errors.ts",
           "repoPath": "packages/drivers/govinfo/src/Govinfo.errors.ts",
-          "line": 150,
-          "anchor": "packages-drivers-govinfo-src-govinfo-errors-ts-150-govinfoerror",
+          "line": 168,
+          "anchor": "packages-drivers-govinfo-src-govinfo-errors-ts-168-govinfoerror",
           "currentTags": [
             "@category",
             "@since"
@@ -341334,8 +341330,8 @@
           "exportKind": "class",
           "filePath": "src/domain/contracts/Search/Search.contract.ts",
           "repoPath": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
-          "line": 114,
-          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-114-failurebadrequest",
+          "line": 140,
+          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-140-failurebadrequest",
           "currentTags": [
             "@category",
             "@since"
@@ -341356,8 +341352,8 @@
           "exportKind": "class",
           "filePath": "src/domain/contracts/Search/Search.contract.ts",
           "repoPath": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
-          "line": 144,
-          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-144-failurenotfound",
+          "line": 171,
+          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-171-failurenotfound",
           "currentTags": [
             "@category",
             "@since"
@@ -341378,8 +341374,8 @@
           "exportKind": "class",
           "filePath": "src/domain/contracts/Search/Search.contract.ts",
           "repoPath": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
-          "line": 174,
-          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-174-failureinternalservererror",
+          "line": 202,
+          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-202-failureinternalservererror",
           "currentTags": [
             "@category",
             "@since"
@@ -341400,8 +341396,8 @@
           "exportKind": "const",
           "filePath": "src/domain/contracts/Search/Search.contract.ts",
           "repoPath": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
-          "line": 201,
-          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-201-failure",
+          "line": 230,
+          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-230-failure",
           "currentTags": [
             "@category",
             "@since"
@@ -341422,8 +341418,8 @@
           "exportKind": "type",
           "filePath": "src/domain/contracts/Search/Search.contract.ts",
           "repoPath": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
-          "line": 228,
-          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-228-failure",
+          "line": 257,
+          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-257-failure",
           "currentTags": [
             "@category",
             "@since"
@@ -341444,8 +341440,8 @@
           "exportKind": "namespace",
           "filePath": "src/domain/contracts/Search/Search.contract.ts",
           "repoPath": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
-          "line": 245,
-          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-245-failure",
+          "line": 274,
+          "anchor": "packages-drivers-govinfo-src-domain-contracts-search-search-contract-ts-274-failure",
           "currentTags": [
             "@category",
             "@since"
@@ -405201,8 +405197,8 @@
           "exportKind": "class",
           "filePath": "src/Postgres.errors.ts",
           "repoPath": "packages/drivers/postgres/src/Postgres.errors.ts",
-          "line": 39,
-          "anchor": "packages-drivers-postgres-src-postgres-errors-ts-39-postgreserrorcontext",
+          "line": 72,
+          "anchor": "packages-drivers-postgres-src-postgres-errors-ts-72-postgreserrorcontext",
           "currentTags": [
             "@category",
             "@since"
@@ -405223,8 +405219,8 @@
           "exportKind": "class",
           "filePath": "src/Postgres.errors.ts",
           "repoPath": "packages/drivers/postgres/src/Postgres.errors.ts",
-          "line": 358,
-          "anchor": "packages-drivers-postgres-src-postgres-errors-ts-358-postgreserror",
+          "line": 384,
+          "anchor": "packages-drivers-postgres-src-postgres-errors-ts-384-postgreserror",
           "currentTags": [
             "@category",
             "@since"
@@ -405245,8 +405241,8 @@
           "exportKind": "const",
           "filePath": "src/Postgres.errors.ts",
           "repoPath": "packages/drivers/postgres/src/Postgres.errors.ts",
-          "line": 484,
-          "anchor": "packages-drivers-postgres-src-postgres-errors-ts-484-extractpostgresdiagnostics",
+          "line": 467,
+          "anchor": "packages-drivers-postgres-src-postgres-errors-ts-467-extractpostgresdiagnostics",
           "currentTags": [
             "@category",
             "@since"
@@ -410933,8 +410929,8 @@
           "exportKind": "type",
           "filePath": "src/entities/EvidenceVerification/EvidenceVerification.converters.ts",
           "repoPath": "packages/epistemic/tables/src/entities/EvidenceVerification/EvidenceVerification.converters.ts",
-          "line": 34,
-          "anchor": "packages-epistemic-tables-src-entities-evidenceverification-evidenceverification-converters-ts-34-evidenceverificationrow",
+          "line": 31,
+          "anchor": "packages-epistemic-tables-src-entities-evidenceverification-evidenceverification-converters-ts-31-evidenceverificationrow",
           "currentTags": [
             "@category",
             "@since"
@@ -410955,8 +410951,8 @@
           "exportKind": "type",
           "filePath": "src/entities/EvidenceVerification/EvidenceVerification.converters.ts",
           "repoPath": "packages/epistemic/tables/src/entities/EvidenceVerification/EvidenceVerification.converters.ts",
-          "line": 51,
-          "anchor": "packages-epistemic-tables-src-entities-evidenceverification-evidenceverification-converters-ts-51-evidenceverificationinsert",
+          "line": 48,
+          "anchor": "packages-epistemic-tables-src-entities-evidenceverification-evidenceverification-converters-ts-48-evidenceverificationinsert",
           "currentTags": [
             "@category",
             "@since"
@@ -410977,8 +410973,8 @@
           "exportKind": "const",
           "filePath": "src/entities/EvidenceVerification/EvidenceVerification.converters.ts",
           "repoPath": "packages/epistemic/tables/src/entities/EvidenceVerification/EvidenceVerification.converters.ts",
-          "line": 109,
-          "anchor": "packages-epistemic-tables-src-entities-evidenceverification-evidenceverification-converters-ts-109-toevidenceverificationinsert",
+          "line": 106,
+          "anchor": "packages-epistemic-tables-src-entities-evidenceverification-evidenceverification-converters-ts-106-toevidenceverificationinsert",
           "currentTags": [
             "@category",
             "@since"
@@ -410999,8 +410995,8 @@
           "exportKind": "const",
           "filePath": "src/entities/EvidenceVerification/EvidenceVerification.converters.ts",
           "repoPath": "packages/epistemic/tables/src/entities/EvidenceVerification/EvidenceVerification.converters.ts",
-          "line": 141,
-          "anchor": "packages-epistemic-tables-src-entities-evidenceverification-evidenceverification-converters-ts-141-fromevidenceverificationrow",
+          "line": 138,
+          "anchor": "packages-epistemic-tables-src-entities-evidenceverification-evidenceverification-converters-ts-138-fromevidenceverificationrow",
           "currentTags": [
             "@category",
             "@since"

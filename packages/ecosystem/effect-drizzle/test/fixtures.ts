@@ -76,7 +76,7 @@ export class AuditedRecord extends auditKit.Entity<AuditedRecord>("AuditedRecord
   (columns) => [Table.check(sql<boolean>`${columns.name} <> ''`, "audited_record_name_non_empty")]
 ) {}
 
-export class NamedUniqueRecord extends Model<NamedUniqueRecord>("NamedUniqueRecord")(
+class NamedUniqueRecord extends Model<NamedUniqueRecord>("NamedUniqueRecord")(
   {
     email: String.pipe(pg.text()),
   },
