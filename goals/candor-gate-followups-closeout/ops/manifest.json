@@ -3,14 +3,14 @@
   "initiative": {
     "id": "candor-gate-followups-closeout",
     "title": "Candor Gate Follow-Ups Closeout",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-08-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/candor-gate-followups-closeout",
-  "lifecycle": "active",
-  "statusNote": "Claims the five unowned follow-ons from patent-citation-candor-gate plus the unexplained Lint Policy local/hosted divergence.",
+  "lifecycle": "completed-retained",
+  "statusNote": "All six claimed items reached terminal implementation or evidence-backed disposition; PR #699 reached merge-ready with zero unresolved threads.",
   "mission": "Retire every parked candor-gate follow-up through implementation or evidence-backed no-build disposition, explain the Lint Policy divergence, and leave no owned residue.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -69,17 +69,17 @@
     {
       "id": "P2",
       "name": "Verify and review",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

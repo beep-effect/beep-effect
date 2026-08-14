@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -30,8 +30,9 @@ state with no silently deferred residue.
 
 ## Current Phase
 
-P2 Verify and review: all six claimed items have terminal implementation or
-evidence dispositions; focused, baseline, reviewer, and Yeet proof remain.
+Closed: all six claimed items have terminal implementation or evidence
+dispositions. PR #699 passed every hosted check with zero unresolved review
+threads and reached Yeet `merge-ready: yes`; merge remains the operator's call.
 
 ## Claimed Items
 

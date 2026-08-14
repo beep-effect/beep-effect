@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`
+Status: `completed-retained`
 
 ## Phases
 
@@ -11,8 +11,8 @@ Status: `active`
 | P0 Re-verify and decide | complete | Re-check every parked claim against live source, architecture, primary identity authority, and current tooling. | `research/DECISIONS.md` records one scoped implementation or terminal evidence path per item. |
 | P1 Implement and evidence-dispose | complete | Ship the behavioral items and capture measured no-build/already-fixed dispositions. | All six SPEC criteria have focused proof. |
 | P2 Verify and review | complete | Run focused gates, quality baseline, and up to three read-only reviewer/fixer rounds. | Green baseline and zero required reviewer findings. |
-| P3 Yeet: PR to mergeable | active | Verify, publish, answer and resolve every review thread, and monitor hosted checks. | Yeet reports `merge-ready: yes`. |
-| P4 Close | pending | Write reflection, flip lifecycle, and remove predecessor routing residue. | Reflection validates and packet reports no remaining owned follow-up. |
+| P3 Yeet: PR to mergeable | complete | Verify, publish, answer and resolve every review thread, and monitor hosted checks. | Yeet reports `merge-ready: yes`. |
+| P4 Close | complete | Write reflection, flip lifecycle, and remove predecessor routing residue. | Reflection validates and packet reports no remaining owned follow-up. |
 
 ## Execution Order
 
