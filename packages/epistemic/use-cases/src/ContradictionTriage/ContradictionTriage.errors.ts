@@ -8,7 +8,7 @@
 import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic";
 import { ContradictionCandidateKey } from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -71,7 +71,7 @@ export type ContradictionTriageOperation = typeof ContradictionTriageOperation.T
  * @category errors
  * @since 0.0.0
  */
-export class ContradictionRepositoryUnavailable extends TaggedErrorClass<ContradictionRepositoryUnavailable>(
+export class ContradictionRepositoryUnavailable extends S.TaggedError<ContradictionRepositoryUnavailable>(
   $I`ContradictionRepositoryUnavailable`
 )(
   "ContradictionRepositoryUnavailable",
@@ -178,7 +178,7 @@ export type ContradictionReviewConflictReason = typeof ContradictionReviewConfli
  * @category errors
  * @since 0.0.0
  */
-export class ContradictionReviewConflict extends TaggedErrorClass<ContradictionReviewConflict>(
+export class ContradictionReviewConflict extends S.TaggedError<ContradictionReviewConflict>(
   $I`ContradictionReviewConflict`
 )(
   "ContradictionReviewConflict",
@@ -269,7 +269,7 @@ export type ContradictionSubmissionConflictReason = typeof ContradictionSubmissi
  * @category errors
  * @since 0.0.0
  */
-export class ContradictionSubmissionConflict extends TaggedErrorClass<ContradictionSubmissionConflict>(
+export class ContradictionSubmissionConflict extends S.TaggedError<ContradictionSubmissionConflict>(
   $I`ContradictionSubmissionConflict`
 )(
   "ContradictionSubmissionConflict",

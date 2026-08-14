@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, readPackageJsonFile } from "@beep/repo-utils";
-import { normalizePath, TaggedErrorClass } from "@beep/schema";
+import { normalizePath } from "@beep/schema";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, HashSet, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -119,7 +119,7 @@ export class EcosystemPolaritySummary extends S.Class<EcosystemPolaritySummary>(
  * @category errors
  * @since 0.0.0
  */
-export class EcosystemPolarityError extends TaggedErrorClass<EcosystemPolarityError>($I`EcosystemPolarityError`)(
+export class EcosystemPolarityError extends S.TaggedError<EcosystemPolarityError>($I`EcosystemPolarityError`)(
   "EcosystemPolarityError",
   { message: S.String },
   $I.annote("EcosystemPolarityError", {

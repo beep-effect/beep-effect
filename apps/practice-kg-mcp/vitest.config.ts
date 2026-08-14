@@ -1,13 +1,11 @@
-import { defineConfig } from "vitest/config";
+import { defineConfig, mergeConfig } from "vitest/config";
+import shared from "../../vitest.shared.ts";
 
-const isBun = process.versions.bun !== undefined;
-
-export default defineConfig({
-  test: {
-    coverage: {
-      provider: isBun ? "istanbul" : "v8",
+export default mergeConfig(
+  shared,
+  defineConfig({
+    test: {
+      include: ["test/**/*.test.{ts,tsx}"],
     },
-    include: ["test/**/*.test.{ts,tsx}"],
-    passWithNoTests: true,
-  },
-});
+  })
+);

@@ -263,7 +263,7 @@ Glob.Schema
 The package root remains a curated flat facade for convenience and migration:
 
 ```ts
-import { DurationInput, Glob, TaggedErrorClass } from "@beep/schema"
+import { DurationInput, Glob } from "@beep/schema"
 ```
 
 Root exports are not the canonical place for full concept namespaces. New

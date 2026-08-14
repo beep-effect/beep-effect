@@ -6,7 +6,7 @@
  */
 
 import { $XaiId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -92,7 +92,7 @@ export type XAiErrorReason = typeof XAiErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class XAiError extends TaggedErrorClass<XAiError>($I`XAiError`)(
+export class XAiError extends S.TaggedError<XAiError>($I`XAiError`)(
   "XAiError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),

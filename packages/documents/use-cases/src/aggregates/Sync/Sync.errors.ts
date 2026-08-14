@@ -7,7 +7,6 @@
 
 import { DmsProvider } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 
@@ -32,7 +31,7 @@ const $I = $DocumentsUseCasesId.create("aggregates/Sync/Sync.errors");
  * @category errors
  * @since 0.0.0
  */
-export class DmsMirrorUnavailable extends TaggedErrorClass<DmsMirrorUnavailable>($I`DmsMirrorUnavailable`)(
+export class DmsMirrorUnavailable extends S.TaggedError<DmsMirrorUnavailable>($I`DmsMirrorUnavailable`)(
   "DmsMirrorUnavailable",
   {
     provider: DmsProvider.annotateKey({
@@ -65,7 +64,7 @@ export class DmsMirrorUnavailable extends TaggedErrorClass<DmsMirrorUnavailable>
  * @category errors
  * @since 0.0.0
  */
-export class VaultScanFailed extends TaggedErrorClass<VaultScanFailed>($I`VaultScanFailed`)(
+export class VaultScanFailed extends S.TaggedError<VaultScanFailed>($I`VaultScanFailed`)(
   "VaultScanFailed",
   {
     reason: S.NonEmptyString.annotateKey({
@@ -92,7 +91,7 @@ export class VaultScanFailed extends TaggedErrorClass<VaultScanFailed>($I`VaultS
  * @category errors
  * @since 0.0.0
  */
-export class VaultSyncActionError extends TaggedErrorClass<VaultSyncActionError>($I`VaultSyncActionError`)(
+export class VaultSyncActionError extends S.TaggedError<VaultSyncActionError>($I`VaultSyncActionError`)(
   "VaultSyncActionError",
   {
     message: S.String,

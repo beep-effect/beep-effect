@@ -6,7 +6,6 @@
  */
 
 import { $UiId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -56,7 +55,7 @@ export class ReactContextInvariantOptions extends S.Class<ReactContextInvariantO
  * @category errors
  * @since 0.0.0
  */
-export class ReactContextInvariantError extends TaggedErrorClass<ReactContextInvariantError>(
+export class ReactContextInvariantError extends S.TaggedError<ReactContextInvariantError>(
   $I`ReactContextInvariantError`
 )(
   "ReactContextInvariantError",

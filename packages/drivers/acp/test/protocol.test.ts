@@ -46,7 +46,15 @@ const RequestPermissionResponseArbitrary = Schema.toArbitrary(RequestPermissionR
 const AcpProtocolLogEventArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLogEvent)(fc);
 const AcpProtocolLoggingOptionsArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLoggingOptions)(fc);
 const AcpIncomingNotificationArbitrary = Schema.toArbitrary(AcpProtocol.AcpIncomingNotification)(fc);
-const AcpErrorArbitrary = Schema.toArbitrary(AcpError.AcpError)(fc);
+const AcpErrorArbitrary = Schema.toArbitrary(AcpError.AcpError)(fc).filter((error) =>
+  AcpError.AcpError.match(error, {
+    AcpProcessExitedError: (failure) => O.isNone(failure.cause),
+    AcpProtocolParseError: (failure) => O.isNone(failure.cause),
+    AcpRequestError: () => true,
+    AcpSpawnError: (failure) => O.isNone(failure.cause),
+    AcpTransportError: (failure) => O.isNone(failure.cause),
+  })
+);
 const childProcessProtocolTestTimeout = 30_000;
 const mockPeerPath = Effect.map(Effect.service(Path.Path), (path) =>
   path.join(import.meta.dirname, "fixtures/acp-mock-peer.ts")
@@ -193,7 +201,7 @@ it("round-trips handwritten ACP schemas through encoded form", () =>
         assertEncodedRoundTrip(AcpProtocol.AcpProtocolLogEvent, event);
         assertEncodedRoundTrip(AcpProtocol.AcpProtocolLoggingOptions, options);
         assertEncodedRoundTrip(AcpProtocol.AcpIncomingNotification, notification);
-        assertEncodedRoundTrip(AcpError.AcpError, error, { compareDecoded: false });
+        assertEncodedRoundTrip(AcpError.AcpError, error);
       }
     ),
     fcRuns(25)

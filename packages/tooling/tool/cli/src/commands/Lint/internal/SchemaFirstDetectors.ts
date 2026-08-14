@@ -23,15 +23,15 @@ const PRIMITIVE_DATA_TYPE_PATTERN =
 const RENDER_CONTRACT_PATTERN =
   /\bReact(?:\.|\b)|\bReactNode\b|\bJSX\.Element\b|\b[A-Za-z0-9_$]*(?:Component|Renderer)\b/;
 const SCHEMA_VALUE_PATTERN =
-  /\b(?:S|Schema)\.(?:Class|Struct|TaggedClass|TaggedStruct|ErrorClass|TaggedErrorClass|declare|decodeTo|transform)\b|\b(?:Field|LiteralKit|MappedLiteralKit)\s*\(/;
-const SCHEMA_FIELDS_CALL_PATTERN = /\bS\.(?:Class|Struct|TaggedClass|TaggedStruct|ErrorClass|TaggedErrorClass)\b/;
-const SCHEMA_CLASS_FIELDS_CALL_PATTERN = /\bS\.(?:Class|TaggedClass|ErrorClass|TaggedErrorClass)\b/;
+  /\b(?:S|Schema)\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError|declare|decodeTo|transform)\b|\b(?:Field|LiteralKit|MappedLiteralKit)\s*\(/;
+const SCHEMA_FIELDS_CALL_PATTERN = /\bS\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError)\b/;
+const SCHEMA_CLASS_FIELDS_CALL_PATTERN = /\bS\.(?:Class|TaggedClass|Error|TaggedError)\b/;
 const NUMERIC_DOMAIN_TOKENS = ["timeout", "count", "size", "rate", "limit", "ms", "seconds"] as const;
 const STATIC_API_SCHEMA_SIGNAL_PATTERN = /\b(?:S\.(?:TaggedUnion|toTaggedUnion)|LiteralKit|MappedLiteralKit)\s*\(/;
 const DEFAULTS_SCHEMA_SIGNAL_PATTERN =
-  /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|ErrorClass|TaggedErrorClass)|withConstructorDefault|withDecodingDefault|SchemaUtils\.withKeyDefaults)\b/;
+  /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError)|withConstructorDefault|withDecodingDefault|SchemaUtils\.withKeyDefaults)\b/;
 const EQUIVALENCE_SCHEMA_SIGNAL_PATTERN =
-  /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|ErrorClass|TaggedErrorClass|toEquivalence|overrideToEquivalence)|SchemaUtils\.toEquivalence)\b/;
+  /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError|toEquivalence|overrideToEquivalence)|SchemaUtils\.toEquivalence)\b/;
 const FN_CALL_SIGNAL_PATTERN = /\bFn\s*\(/;
 const NORMALIZATION_METHOD_NAMES = ["trim", "toUpperCase", "toLowerCase"] as const;
 const NORMALIZATION_CALL_SIGNAL_PATTERN = /\.(?:trim|toUpperCase|toLowerCase)\(/;

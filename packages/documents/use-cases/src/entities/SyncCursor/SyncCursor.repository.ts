@@ -9,7 +9,7 @@
 import * as DomainSyncCursor from "@beep/documents-domain/entities/SyncCursor";
 import { DmsProvider } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -81,7 +81,7 @@ export class SyncCursorSeed extends S.Class<SyncCursorSeed>($I`SyncCursorSeed`)(
  * @category errors
  * @since 0.0.0
  */
-export class SyncCursorRepositoryUnavailable extends TaggedErrorClass<SyncCursorRepositoryUnavailable>(
+export class SyncCursorRepositoryUnavailable extends S.TaggedError<SyncCursorRepositoryUnavailable>(
   $I`SyncCursorRepositoryUnavailable`
 )(
   "SyncCursorRepositoryUnavailable",

@@ -6,7 +6,6 @@
  */
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath";
 import { A } from "@beep/utils";
 import { Effect, pipe } from "effect";
@@ -37,7 +36,7 @@ const SHORT_DIGEST_LENGTH = 12;
  * @category errors
  * @since 0.0.0
  */
-export class TaxonomyProjectionError extends TaggedErrorClass<TaxonomyProjectionError>($I`TaxonomyProjectionError`)(
+export class TaxonomyProjectionError extends S.TaggedError<TaxonomyProjectionError>($I`TaxonomyProjectionError`)(
   "TaxonomyProjectionError",
   {
     reason: S.NonEmptyString.annotateKey({

@@ -14,7 +14,7 @@
  */
 
 import { $NlpMcpId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Clock, Duration, Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -355,7 +355,7 @@ export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.S
  * @since 0.0.0
  * @category errors
  */
-export class DatasetLoadError extends TaggedErrorClass<DatasetLoadError>($I`DatasetLoadError`)(
+export class DatasetLoadError extends S.TaggedError<DatasetLoadError>($I`DatasetLoadError`)(
   "DatasetLoadError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))

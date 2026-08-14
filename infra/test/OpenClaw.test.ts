@@ -1,8 +1,5 @@
-/** @effect-diagnostics nodeBuiltinImport:skip-file */
 // The rendered acceptance script is executed once to prove its fail-closed
-// usage path; a raw spawn keeps @beep/infra free of platform-node test deps.
-import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
+// usage path through Effect's real Node child-process service.
 import {
   makeOpenClawBundleHash,
   makeOpenClawDeploymentIntent,
@@ -36,10 +33,13 @@ import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as R from "@beep/utils/Record";
 import * as Str from "@beep/utils/Str";
-import { Effect, pipe, Result } from "effect";
+import * as NodeServices from "@effect/platform-node/NodeServices";
+import { describe, expect, it } from "@effect/vitest";
+import { Crypto, Effect, Encoding, pipe, Result } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
+import * as Stream from "effect/Stream";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import {
   openClawLegalSoulMarkdown,
   openClawProofSkillMarkdown,
@@ -91,6 +91,24 @@ const deploymentConfig = OpenClawDeploymentConfig.make({
     providerId: "local",
   },
   telegramBotTokenRef: OpenclawSecretReference.make("op://beep-openclaw/telegram/bot-token"),
+});
+
+const sha256Hex = Effect.fnUntraced(function* (text: string) {
+  const crypto = yield* Crypto.Crypto;
+  const digest = yield* crypto.digest("SHA-256", new TextEncoder().encode(text));
+  return Encoding.encodeHex(digest);
+});
+
+const runCaptured = Effect.fnUntraced(function* (command: ChildProcess.Command) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  return yield* Effect.scoped(
+    Effect.gen(function* () {
+      const handle = yield* spawner.spawn(command);
+      return yield* Effect.all([handle.stderr.pipe(Stream.decodeText(), Stream.mkString), handle.exitCode], {
+        concurrency: "unbounded",
+      });
+    })
+  );
 });
 const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
 const defaultGeneration = makeOpenClawGeneration(defaultArgs);
@@ -374,14 +392,19 @@ describe("@beep/infra OpenClaw", () => {
     expect(S.is(OpenClawBackupShipScriptInput)(backupInput)).toBe(true);
   });
 
-  it("addresses a generation by the length-delimited config/persona/skill/compatibility bundle", () => {
-    expect(defaultGeneration.configHash).toBe(
-      createHash("sha256").update(defaultGeneration.canonicalJson, "utf8").digest("hex")
-    );
-    expect(defaultGeneration.generationId).not.toBe(defaultGeneration.configHash);
-    expect(defaultGeneration.generationId).toMatch(/^[0-9a-f]{64}$/u);
-    expect(makeOpenClawGeneration(defaultArgs).generationId).toBe(defaultGeneration.generationId);
-  });
+  it.layer(NodeServices.layer)(
+    "addresses a generation by the length-delimited config/persona/skill/compatibility bundle",
+    (it) =>
+      it.effect(
+        "matches the platform SHA-256 digest",
+        Effect.fnUntraced(function* () {
+          expect(defaultGeneration.configHash).toBe(yield* sha256Hex(defaultGeneration.canonicalJson));
+          expect(defaultGeneration.generationId).not.toBe(defaultGeneration.configHash);
+          expect(defaultGeneration.generationId).toMatch(/^[0-9a-f]{64}$/u);
+          expect(makeOpenClawGeneration(defaultArgs).generationId).toBe(defaultGeneration.generationId);
+        })
+      )
+  );
 
   it("re-addresses the generation when the deployment intent changes", () => {
     const other = makeOpenClawGeneration(
@@ -391,19 +414,22 @@ describe("@beep/infra OpenClaw", () => {
     expect(other.generationId).not.toBe(defaultGeneration.generationId);
   });
 
-  it("re-addresses the generation when only SOUL bytes change", () => {
-    const changedSoulHash = OpenclawSha256Hex.make(
-      createHash("sha256").update(`${openClawLegalSoulMarkdown}\n`, "utf8").digest("hex")
-    );
+  it.layer(NodeServices.layer)("re-addresses the generation when only SOUL bytes change", (it) =>
+    it.effect(
+      "hashes the changed SOUL through the platform crypto service",
+      Effect.fnUntraced(function* () {
+        const changedSoulHash = OpenclawSha256Hex.make(yield* sha256Hex(`${openClawLegalSoulMarkdown}\n`));
 
-    expect(
-      makeOpenClawBundleHash({
-        configHash: defaultGeneration.configHash,
-        proofSkillHash: defaultGeneration.proofSkillHash,
-        soulHash: changedSoulHash,
+        expect(
+          makeOpenClawBundleHash({
+            configHash: defaultGeneration.configHash,
+            proofSkillHash: defaultGeneration.proofSkillHash,
+            soulHash: changedSoulHash,
+          })
+        ).not.toBe(defaultGeneration.generationId);
       })
-    ).not.toBe(defaultGeneration.generationId);
-  });
+    )
+  );
 
   it("renders the systemd unit byte-identically to the recorded golden text", () => {
     expect(renderOpenClawUnit(defaultGeneration)).toBe(goldenUnitText);
@@ -720,23 +746,28 @@ describe("@beep/infra OpenClaw", () => {
     expect(script.endsWith("exit 0")).toBe(true);
   });
 
-  it("renders a separate fail-closed live acceptance command", () => {
-    const script = scriptBody(renderOpenClawLiveAcceptanceScript(defaultGeneration));
+  it.layer(NodeServices.layer)("renders a separate fail-closed live acceptance command", (it) =>
+    it.effect(
+      "executes the rendered Bash script for real",
+      Effect.fnUntraced(function* () {
+        const script = scriptBody(renderOpenClawLiveAcceptanceScript(defaultGeneration));
 
-    expect(script).toContain("LIVE-ACCEPTANCE-FAIL");
-    expect(script).toContain("skills list --json --eligible --agent");
-    expect(script).toContain("message send --channel telegram");
-    expect(script).toContain("channels status --channel telegram --probe --json");
-    expect(script).toContain("secrets reload --json");
-    expect(script).toContain("P3_MODEL_OK");
-    expect(script).toContain("P3_SKILL_OK");
-    expect(script).toContain("export OPENCLAW_CONFIG_PATH='/etc/beep/openclaw/current/openclaw.json'");
-    expect(script).toContain("export OPENCLAW_STATE_DIR='/var/lib/beep/openclaw'");
-    expect(script.trimEnd().endsWith("exit 0")).toBe(false);
-    const missingPhase = spawnSync("/bin/bash", ["-lc", script], { encoding: "utf8" });
-    expect(missingPhase.status).toBe(1);
-    expect(missingPhase.stderr).toContain("usage: live-acceptance degraded|restored");
-  });
+        expect(script).toContain("LIVE-ACCEPTANCE-FAIL");
+        expect(script).toContain("skills list --json --eligible --agent");
+        expect(script).toContain("message send --channel telegram");
+        expect(script).toContain("channels status --channel telegram --probe --json");
+        expect(script).toContain("secrets reload --json");
+        expect(script).toContain("P3_MODEL_OK");
+        expect(script).toContain("P3_SKILL_OK");
+        expect(script).toContain("export OPENCLAW_CONFIG_PATH='/etc/beep/openclaw/current/openclaw.json'");
+        expect(script).toContain("export OPENCLAW_STATE_DIR='/var/lib/beep/openclaw'");
+        expect(script.trimEnd().endsWith("exit 0")).toBe(false);
+        const [stderr, exitCode] = yield* runCaptured(ChildProcess.make("/bin/bash", ["-lc", script]));
+        expect(exitCode).toBe(1);
+        expect(stderr).toContain("usage: live-acceptance degraded|restored");
+      })
+    )
+  );
 
   it("encrypts snapshot archives locally and verifies a remote sha256 receipt", () => {
     const script = scriptBody(

@@ -7,7 +7,7 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -62,7 +62,7 @@ const AiMetricsCoverageGap = LiteralKit([
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsScorecardError extends TaggedErrorClass<AiMetricsScorecardError>($I`AiMetricsScorecardError`)(
+export class AiMetricsScorecardError extends S.TaggedError<AiMetricsScorecardError>($I`AiMetricsScorecardError`)(
   "AiMetricsScorecardError",
   {
     cause: S.Defect({ includeStack: true }),

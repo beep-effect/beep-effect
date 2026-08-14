@@ -6,7 +6,6 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 
@@ -27,7 +26,7 @@ const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.error
  * @category errors
  * @since 0.0.0
  */
-export class TurnGenerationError extends TaggedErrorClass<TurnGenerationError>($I`TurnGenerationError`)(
+export class TurnGenerationError extends S.TaggedError<TurnGenerationError>($I`TurnGenerationError`)(
   "TurnGenerationError",
   {
     message: S.String,

@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-// @effect-diagnostics strictEffectProvide:skip-file
 
 /**
  * Offline compiled-binary smoke for the practice KG MCP host.
@@ -11,15 +10,13 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { buildPracticeKgBundle, PracticeKgOptions, PracticeKgToolkit } from "@beep/law-practice-server";
-import { TaggedErrorClass } from "@beep/schema";
-import { BunRuntime } from "@effect/platform-bun";
-import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, FileSystem, flow, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { runEntrypoint } from "./entrypoint.ts";
 import { makePracticeKgBuildLayer } from "./runtime/Layer.ts";
 
 const $I = $PracticeKgMcpId.create("smoke");
@@ -99,7 +96,7 @@ class SmokeCallResponse extends S.Class<SmokeCallResponse>($I`SmokeCallResponse`
   $I.annote("SmokeCallResponse", { description: "Tool-call JSON-RPC response from the compiled MCP host." })
 ) {}
 
-class SmokeFailure extends TaggedErrorClass<SmokeFailure>($I`SmokeFailure`)(
+class SmokeFailure extends S.TaggedError<SmokeFailure>($I`SmokeFailure`)(
   "SmokeFailure",
   {
     cause: S.optionalKey(S.Defect({ includeStack: true })),
@@ -121,7 +118,8 @@ const substituteManifestTokens = (exeDir: string, bundleOut: string) =>
   );
 
 const makeCatalog = Effect.fn("PracticeKgSmoke.makeCatalog")(function* (databasePath: string) {
-  yield* Effect.gen(function* () {
+  const catalogLayer = DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }));
+  const populateCatalog = Effect.gen(function* () {
     const db = yield* DuckDb;
     yield* db.run(`
       CREATE TABLE corpus_source_files (
@@ -147,7 +145,8 @@ const makeCatalog = Effect.fn("PracticeKgSmoke.makeCatalog")(function* (database
       "INSERT INTO corpus_organized VALUES ($1, 'smoke', 'fixture.txt', 'docket', 'fixture-client', '20001US01', '20001', 'dockets/20001/20001US01/fixture.txt', 'fixture.txt')",
       [FixtureDigest]
     );
-  }).pipe(Effect.provide(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))), Effect.scoped);
+  });
+  yield* Effect.scoped(Layer.build(Layer.effectDiscard(populateCatalog).pipe(Layer.provide(catalogLayer))));
 });
 
 const makeFixtureBundle = Effect.fn("PracticeKgSmoke.makeFixtureBundle")(function* (root: string) {
@@ -167,21 +166,17 @@ const makeFixtureBundle = Effect.fn("PracticeKgSmoke.makeFixtureBundle")(functio
     `{"artifactId":"artifact-smoke","digest":"${FixtureDigest}","engine":"tika","format":"text","operationId":"operation:smoke","relativePath":"text/operation:smoke.txt","sizeBytes":13,"status":"succeeded"}\n`
   );
   yield* fs.writeFileString(path.join(textRoot, "operation:smoke.txt"), "smoke fixture");
-  yield* Effect.scoped(
-    Layer.build(makePracticeKgBuildLayer(path.join(bundleOut, "kg.pglite"))).pipe(
-      Effect.flatMap((context) =>
-        buildPracticeKgBundle(
-          PracticeKgOptions.make({
-            bundleOut,
-            corpusRoot,
-            includeRefresh: false,
-            overwrite: false,
-            skipEmails: true,
-          })
-        ).pipe(Effect.provide(context))
-      )
-    )
+  const buildLayer = makePracticeKgBuildLayer(path.join(bundleOut, "kg.pglite"));
+  const buildBundle = buildPracticeKgBundle(
+    PracticeKgOptions.make({
+      bundleOut,
+      corpusRoot,
+      includeRefresh: false,
+      overwrite: false,
+      skipEmails: true,
+    })
   );
+  yield* Effect.scoped(Layer.build(Layer.effectDiscard(buildBundle).pipe(Layer.provide(buildLayer))));
   return bundleOut;
 });
 
@@ -304,8 +299,5 @@ const program = Effect.scoped(
     }
     yield* runCompiledHost(executable, bundleOut, root);
   })
-).pipe(Effect.provide(BunServices.layer));
-
-if (import.meta.main) {
-  BunRuntime.runMain(program);
-}
+);
+runEntrypoint({ isMain: import.meta.main, program });

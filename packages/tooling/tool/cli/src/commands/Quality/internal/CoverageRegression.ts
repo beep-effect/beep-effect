@@ -117,6 +117,18 @@ export class CoveragePackageBaseline extends S.Class<CoveragePackageBaseline>($I
   })
 ) {}
 
+class CoverageTieredMinimum extends S.Class<CoverageTieredMinimum>($I`CoverageTieredMinimum`)(
+  {
+    lines: S.Finite,
+    statements: S.Finite,
+    branches: S.Finite,
+    functions: S.Finite,
+  },
+  $I.annote("CoverageTieredMinimum", {
+    description: "Repository-wide minimum coverage percentages by metric.",
+  })
+) {}
+
 /**
  * Committed package coverage regression baseline document.
  *
@@ -130,12 +142,28 @@ export class CoverageRegressionBaseline extends S.Class<CoverageRegressionBaseli
     git_sha: S.String,
     command: S.String,
     epsilon: S.Finite,
+    minimum: CoverageTieredMinimum,
+    exemptions: S.Record(S.String, S.NonEmptyString),
+    follow_ups: S.Record(S.String, S.NonEmptyString),
     packages: S.Record(S.String, CoveragePackageBaseline),
   },
   $I.annote("CoverageRegressionBaseline", {
     description: "Package coverage percentages used by the fail-on-drop ratchet.",
   })
 ) {}
+
+const defaultCoverageTieredMinimum = CoverageTieredMinimum.make({
+  lines: 70,
+  statements: 70,
+  branches: 50,
+  functions: 60,
+});
+
+const defaultCoverageExemptions: Record<string, string> = {
+  "@beep/scratchpad": "User-excluded aggregate workspace with multiple experimental Vitest boundaries.",
+  "@beep/storybook": "User-excluded Storybook runner whose self-coverage would be self-fulfilling.",
+  "@beep/tsgo-shim": "Plain JavaScript launcher shim with no TypeScript source surface.",
+};
 
 class VitestCoverageMetric extends S.Class<VitestCoverageMetric>($I`VitestCoverageMetric`)(
   {
@@ -242,8 +270,10 @@ export class CoverageComparisonResult extends S.Class<CoverageComparisonResult>(
   {
     comparedCount: S.Int,
     failures: S.Array(CoverageComparisonFailure),
+    minimumFailures: S.Array(CoverageComparisonFailure),
     missingActuals: S.Array(S.String),
     newPackages: S.Array(CoverageSnapshotEntry),
+    followUpDebt: S.Array(CoverageSnapshotEntry),
   },
   $I.annote("CoverageComparisonResult", {
     description: "Outcome of comparing current coverage against the committed baseline.",
@@ -256,6 +286,56 @@ const metricNames = CoverageMetricName.Options;
 
 const hasCoverageScript = (info: WorkspacePackageInfo): boolean =>
   pipe(info.packageJson.scripts ?? {}, R.get("coverage"), O.isSome);
+
+/**
+ * Find workspace packages that have neither a coverage script nor a named exemption.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const coverageDispositionGapsForTesting: {
+  (
+    coveragePackageNames: ReadonlyArray<string>,
+    exemptionNames: ReadonlyArray<string>
+  ): (workspacePackageNames: ReadonlyArray<string>) => ReadonlyArray<string>;
+  (
+    workspacePackageNames: ReadonlyArray<string>,
+    coveragePackageNames: ReadonlyArray<string>,
+    exemptionNames: ReadonlyArray<string>
+  ): ReadonlyArray<string>;
+} = dual(
+  3,
+  (
+    workspacePackageNames: ReadonlyArray<string>,
+    coveragePackageNames: ReadonlyArray<string>,
+    exemptionNames: ReadonlyArray<string>
+  ): ReadonlyArray<string> =>
+    pipe(
+      workspacePackageNames,
+      A.filter((name) => !A.contains(coveragePackageNames, name) && !A.contains(exemptionNames, name)),
+      A.sort(Order.String)
+    )
+);
+
+const workspaceCoverageDispositionGaps = Effect.fn("CoverageRegression.workspaceCoverageDispositionGaps")(function* (
+  repoRoot: string,
+  path: Path.Path,
+  exemptions: Record<string, string>
+): Effect.fn.Return<ReadonlyArray<string>, QualityTaskConfigurationError, FileSystem.FileSystem> {
+  const packageMap = yield* discoverWorkspacePackages(repoRoot, path).pipe(
+    QualityTaskConfigurationError.mapError("Failed to discover workspace packages for coverage policy.")
+  );
+  const workspacePackages = pipe(
+    A.fromIterable(MutableHashMap.values(packageMap)),
+    A.filter((info) => info.path !== ".")
+  );
+
+  return coverageDispositionGapsForTesting(
+    A.map(workspacePackages, (info) => info.name),
+    A.map(A.filter(workspacePackages, hasCoverageScript), (info) => info.name),
+    R.keys(exemptions)
+  );
+});
 
 const coverageSummaryPath = (path: Path.Path, info: WorkspacePackageInfo): string =>
   path.join(info.absolutePath, "coverage", "coverage-summary.json");
@@ -473,14 +553,18 @@ export const baselineEntriesLostByReplacement: {
 const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocumentFromSnapshot")(function* (
   repoRoot: string,
   entries: ReadonlyArray<CoverageSnapshotEntry>,
-  previous: O.Option<CoverageRegressionBaseline>
+  previous: O.Option<CoverageRegressionBaseline>,
+  scoped: boolean
 ): Effect.fn.Return<
   CoverageRegressionBaseline,
   QualityTaskConfigurationError,
   ChildProcessSpawner.ChildProcessSpawner
 > {
-  const generatedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const gitSha = yield* readGitSha(repoRoot);
+  const inheritedMetadata = scoped ? previous : O.none<CoverageRegressionBaseline>();
+  const generatedAt = O.isSome(inheritedMetadata)
+    ? inheritedMetadata.value.generated_at
+    : yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
+  const gitSha = O.isSome(inheritedMetadata) ? inheritedMetadata.value.git_sha : yield* readGitSha(repoRoot);
 
   return CoverageRegressionBaseline.make({
     schema_version: 1,
@@ -488,17 +572,29 @@ const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocum
     // and revision for the whole document would attribute a provenance the
     // unmeasured entries do not have. Only a full regeneration earns fresh
     // metadata; a merge inherits the last one.
-    generated_at: pipe(previous, O.match({ onNone: () => generatedAt, onSome: (document) => document.generated_at })),
-    git_sha: pipe(previous, O.match({ onNone: () => gitSha, onSome: (document) => document.git_sha })),
+    generated_at: generatedAt,
+    git_sha: gitSha,
     command: coverageRegressionRegenerationCommand,
     epsilon: coverageRegressionEpsilon,
-    packages: pipe(
+    minimum: pipe(
       previous,
-      O.match({
-        onNone: () => snapshotPackages(entries),
-        onSome: (document) => mergeCoverageBaselinePackagesForTesting(document.packages, entries),
-      })
+      O.map((document) => document.minimum),
+      O.getOrElse(() => defaultCoverageTieredMinimum)
     ),
+    exemptions: pipe(
+      previous,
+      O.map((document) => document.exemptions),
+      O.getOrElse(() => defaultCoverageExemptions)
+    ),
+    follow_ups: pipe(
+      previous,
+      O.map((document) => document.follow_ups),
+      O.getOrElse(() => ({}))
+    ),
+    packages:
+      scoped && O.isSome(previous)
+        ? mergeCoverageBaselinePackagesForTesting(previous.value.packages, entries)
+        : snapshotPackages(entries),
   });
 });
 
@@ -646,7 +742,7 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
       }
     }
 
-    const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries, scoped ? previous : O.none());
+    const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries, previous, scoped);
     const content = yield* formatBaseline(baseline);
     yield* writeArtifact({
       path: path.join(repoRoot, coverageRegressionBaselinePath),
@@ -724,6 +820,27 @@ const droppedMetrics = (
     }))
   );
 
+const isNamedFollowUp = (baseline: CoverageRegressionBaseline, packageName: string): boolean =>
+  pipe(baseline.follow_ups, R.get(packageName), O.isSome);
+
+const belowMinimumMetrics = (
+  packageName: string,
+  actual: CoveragePackageBaseline,
+  minimum: CoverageTieredMinimum,
+  epsilon: number
+): ReadonlyArray<CoverageComparisonFailure> =>
+  pipe(
+    metricNames,
+    A.filter((metric) => actual[metric] + epsilon < minimum[metric]),
+    A.map((metric) => ({
+      packageName,
+      packagePath: actual.path,
+      metric,
+      baseline: minimum[metric],
+      actual: actual[metric],
+    }))
+  );
+
 const compareCoverage = (
   baseline: CoverageRegressionBaseline,
   actuals: ReadonlyArray<CoverageSnapshotEntry>,
@@ -746,6 +863,11 @@ const compareCoverage = (
       )
     )
   );
+  const minimumFailures = pipe(
+    actuals,
+    A.filter((actual) => !isNamedFollowUp(baseline, actual.packageName)),
+    A.flatMap((actual) => belowMinimumMetrics(actual.packageName, actual.baseline, baseline.minimum, baseline.epsilon))
+  );
   const missingActuals = missingCoverageSnapshotPackages(
     actuals,
     scoped ? expectedPackageNames : A.map(baselineEntries, ([packageName]) => packageName)
@@ -755,12 +877,19 @@ const compareCoverage = (
     A.filter((actual) => pipe(baseline.packages, R.get(actual.packageName), O.isNone)),
     A.sort(packageByNameOrder)
   );
+  const followUpDebt = pipe(
+    actuals,
+    A.filter((actual) => isNamedFollowUp(baseline, actual.packageName)),
+    A.sort(packageByNameOrder)
+  );
 
   return {
     comparedCount: A.length(actuals) - A.length(newPackages),
     failures,
+    minimumFailures,
     missingActuals,
     newPackages,
+    followUpDebt,
   };
 };
 
@@ -845,7 +974,24 @@ const renderNewPackageWarnings = (packages: ReadonlyArray<CoverageSnapshotEntry>
       `  - ${entry.packageName} (${entry.baseline.path}) is missing from ${coverageRegressionBaselinePath}; run ${coverageRegressionRegenerationCommand} and review the baseline diff.`
   );
 
-const regressionLines = (result: CoverageComparisonResult): ReadonlyArray<string> => {
+const renderFollowUpDebt = (
+  baseline: CoverageRegressionBaseline,
+  packages: ReadonlyArray<CoverageSnapshotEntry>
+): ReadonlyArray<string> =>
+  A.map(packages, (entry) => {
+    const metrics = entry.baseline;
+    const rationale = pipe(
+      baseline.follow_ups,
+      R.get(entry.packageName),
+      O.getOrElse(() => "Named coverage debt follow-up.")
+    );
+    return `  - ${entry.packageName} (${metrics.path}) L/S/B/F ${metrics.lines}/${metrics.statements}/${metrics.branches}/${metrics.functions}: ${rationale}`;
+  });
+
+const regressionLines = (
+  result: CoverageComparisonResult,
+  dispositionGaps: ReadonlyArray<string>
+): ReadonlyArray<string> => {
   const sections = [
     ...A.match(result.failures, {
       onEmpty: A.empty<string>,
@@ -854,11 +1000,25 @@ const regressionLines = (result: CoverageComparisonResult): ReadonlyArray<string
         ...renderCoverageFailures(failures),
       ],
     }),
+    ...A.match(result.minimumFailures, {
+      onEmpty: A.empty<string>,
+      onNonEmpty: (failures) => [
+        "[coverage-minimum] coverage is below the repository tiered minimum:",
+        ...renderCoverageFailures(failures),
+      ],
+    }),
     ...A.match(result.missingActuals, {
       onEmpty: A.empty<string>,
       onNonEmpty: (missing) => [
         "[coverage-ratchet] missing coverage summaries for required package(s):",
         ...A.map(missing, (packageName) => `  - ${packageName}`),
+      ],
+    }),
+    ...A.match(dispositionGaps, {
+      onEmpty: A.empty<string>,
+      onNonEmpty: (gaps) => [
+        "[coverage-minimum] workspace package(s) without coverage or a named exemption:",
+        ...A.map(gaps, (packageName) => `  - ${packageName}`),
       ],
     }),
   ];
@@ -883,6 +1043,8 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
     const baseline = yield* readBaseline(repoRoot);
     const actuals = yield* collectCoverageSnapshot(repoRoot);
     const result = compareCoverage(baseline, actuals, scoped, expectedPackageNames);
+    const path = yield* Path.Path;
+    const dispositionGaps = yield* workspaceCoverageDispositionGaps(repoRoot, path, baseline.exemptions);
 
     if (A.isReadonlyArrayNonEmpty(result.newPackages)) {
       yield* Console.warn(
@@ -896,11 +1058,34 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
       );
     }
 
+    if (A.isReadonlyArrayNonEmpty(result.followUpDebt)) {
+      yield* Console.warn(
+        A.join(
+          [
+            "[coverage-minimum] named follow-up debt (non-blocking; committed monotonic floors still apply):",
+            ...renderFollowUpDebt(baseline, result.followUpDebt),
+          ],
+          "\n"
+        )
+      );
+    }
+
+    yield* Console.log(
+      `[coverage-minimum] named exemptions: ${A.join(
+        A.map(R.toEntries(baseline.exemptions), ([name, rationale]) => `${name} (${rationale})`),
+        "; "
+      )}`
+    );
+
     yield* enforceRatchet({
       regressions: [
         {
-          present: A.isReadonlyArrayNonEmpty(result.failures) || A.isReadonlyArrayNonEmpty(result.missingActuals),
-          lines: regressionLines(result),
+          present:
+            A.isReadonlyArrayNonEmpty(result.failures) ||
+            A.isReadonlyArrayNonEmpty(result.minimumFailures) ||
+            A.isReadonlyArrayNonEmpty(result.missingActuals) ||
+            A.isReadonlyArrayNonEmpty(dispositionGaps),
+          lines: regressionLines(result, dispositionGaps),
           error: QualityTaskFailed.new(1, "coverage:ratchet", "beep-cli coverage"),
         },
       ],

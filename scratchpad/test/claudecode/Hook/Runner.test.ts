@@ -8,7 +8,7 @@
  * @since 0.1.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -38,7 +38,7 @@ class TestOutput extends S.Class<TestOutput>($I`TestOutput`)({
   permissionMode: S.OptionFromOptionalKey(HookPermissionMode).pipe(SchemaUtils.withNoneDefault),
 }) {}
 
-class TestFailure extends TaggedErrorClass<TestFailure>($I`TestFailure`)("TestFailure", {
+class TestFailure extends S.TaggedError<TestFailure>($I`TestFailure`)("TestFailure", {
   message: S.String,
 }) {}
 

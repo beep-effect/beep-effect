@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Inspectable, Runtime } from "effect";
@@ -41,7 +40,7 @@ type QualityScriptCommandErrorOptions =
  * @category error-handling
  * @since 0.0.0
  */
-export class ChangesetGraphError extends TaggedErrorClass<ChangesetGraphError>($I`ChangesetGraphError`)(
+export class ChangesetGraphError extends S.TaggedError<ChangesetGraphError>($I`ChangesetGraphError`)(
   "ChangesetGraphError",
   {
     message: S.String,
@@ -88,9 +87,7 @@ export class ChangesetGraphError extends TaggedErrorClass<ChangesetGraphError>($
  * @category errors
  * @since 0.0.0
  */
-export class QualityScriptCommandError extends TaggedErrorClass<QualityScriptCommandError>(
-  $I`QualityScriptCommandError`
-)(
+export class QualityScriptCommandError extends S.TaggedError<QualityScriptCommandError>($I`QualityScriptCommandError`)(
   "QualityScriptCommandError",
   {
     message: S.String,
@@ -146,7 +143,7 @@ export class QualityScriptCommandError extends TaggedErrorClass<QualityScriptCom
  * @category error-handling
  * @since 0.0.0
  */
-export class QualityTaskFailed extends TaggedErrorClass<QualityTaskFailed>($I`QualityTaskFailed`)(
+export class QualityTaskFailed extends S.TaggedError<QualityTaskFailed>($I`QualityTaskFailed`)(
   "QualityTaskFailed",
   {
     label: S.String,
@@ -202,7 +199,7 @@ export class QualityTaskFailed extends TaggedErrorClass<QualityTaskFailed>($I`Qu
  * @category error-handling
  * @since 0.0.0
  */
-export class QualityTaskGroupFailed extends TaggedErrorClass<QualityTaskGroupFailed>($I`QualityTaskGroupFailed`)(
+export class QualityTaskGroupFailed extends S.TaggedError<QualityTaskGroupFailed>($I`QualityTaskGroupFailed`)(
   "QualityTaskGroupFailed",
   {
     label: S.String,
@@ -251,7 +248,7 @@ export class QualityTaskGroupFailed extends TaggedErrorClass<QualityTaskGroupFai
  * @category error-handling
  * @since 0.0.0
  */
-export class QualityTaskConfigurationError extends TaggedErrorClass<QualityTaskConfigurationError>(
+export class QualityTaskConfigurationError extends S.TaggedError<QualityTaskConfigurationError>(
   $I`QualityTaskConfigurationError`
 )(
   "QualityTaskConfigurationError",
@@ -285,7 +282,7 @@ export class QualityTaskConfigurationError extends TaggedErrorClass<QualityTaskC
  * @category error-handling
  * @since 0.0.0
  */
-export class UnexpectedQualityTaskFailure extends TaggedErrorClass<UnexpectedQualityTaskFailure>(
+export class UnexpectedQualityTaskFailure extends S.TaggedError<UnexpectedQualityTaskFailure>(
   $I`UnexpectedQualityTaskFailure`
 )(
   "UnexpectedQualityTaskFailure",

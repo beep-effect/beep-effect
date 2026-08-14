@@ -6,7 +6,7 @@
  */
 
 import { $HubspotId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { O, thunkUndefined } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -86,7 +86,7 @@ export type HubSpotErrorReason = typeof HubSpotErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError`)(
+export class HubSpotError extends S.TaggedError<HubSpotError>($I`HubSpotError`)(
   "HubSpotError",
   {
     cause: S.optionalKey(S.String).annotateKey({

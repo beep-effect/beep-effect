@@ -15,7 +15,7 @@
 
 import { LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -147,7 +147,7 @@ const optionalDefect = (description: string) =>
  * @category errors
  * @since 0.0.0
  */
-export class SupersessionConflict extends TaggedErrorClass<SupersessionConflict>($I`SupersessionConflict`)(
+export class SupersessionConflict extends S.TaggedError<SupersessionConflict>($I`SupersessionConflict`)(
   "SupersessionConflict",
   {
     cause: optionalDefect("Optional underlying defect captured when a database backstop rejected the supersession."),
@@ -272,7 +272,7 @@ export class SupersessionConflict extends TaggedErrorClass<SupersessionConflict>
  * @category errors
  * @since 0.0.0
  */
-export class EdgeConstraintViolation extends TaggedErrorClass<EdgeConstraintViolation>($I`EdgeConstraintViolation`)(
+export class EdgeConstraintViolation extends S.TaggedError<EdgeConstraintViolation>($I`EdgeConstraintViolation`)(
   "EdgeConstraintViolation",
   {
     constraintName: S.NonEmptyString.annotateKey({
@@ -326,9 +326,7 @@ export class EdgeConstraintViolation extends TaggedErrorClass<EdgeConstraintViol
  * @category errors
  * @since 0.0.0
  */
-export class EdgeRepositoryUnavailable extends TaggedErrorClass<EdgeRepositoryUnavailable>(
-  $I`EdgeRepositoryUnavailable`
-)(
+export class EdgeRepositoryUnavailable extends S.TaggedError<EdgeRepositoryUnavailable>($I`EdgeRepositoryUnavailable`)(
   "EdgeRepositoryUnavailable",
   {
     cause: optionalDefect("Optional underlying driver defect captured when the repository could not serve a request."),
