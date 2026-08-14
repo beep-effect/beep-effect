@@ -71,3 +71,10 @@ export * from "./GovernedTierGate/index.ts";
  * @since 0.0.0
  */
 export * from "./Layer.ts";
+/**
+ * Bounded SHACL validation exports.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./ShaclValidation/index.ts";

@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -17,8 +17,9 @@ is valuable for beep-effect's semantic/KG work.
 
 ## Next Open Question
 
-Does the operator approve [`BRIEF.md`](./BRIEF.md) as the shaped contract?
-No goal is scaffolded until that review passes.
+No blocking question. Reopen at `decompose` when semantic-foundation M4 fires
+the SHACL candidate or a multilingual consumer supplies its competency
+question.
 
 ## Read This First
 
@@ -30,6 +31,11 @@ No goal is scaffolded until that review passes.
 6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-08-13 (final ceremony): operator signed off `BRIEF.md` and `MAP.md`;
+  graduated [`attributed-multi-claim-span`](../../goals/attributed-multi-claim-span/README.md)
+  with lexicog CQ authoring included. SHACL and language discipline remain
+  gated MAP re-entry points.
 
 - 2026-08-13 (ceremony): drafted `BRIEF.md` and `MAP.md`; span annotation is
   the lead, SHACL remains M4-gated, language discipline is a re-entry, and
