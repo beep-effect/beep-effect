@@ -31,7 +31,7 @@ required context.
 | Docgen | fleet | fleet | 13.4m | Retain; `uses_turbo: false`, so there is no cache-backed re-fit case. |
 | Codegen Drift | hosted | hosted | 3.3m | Retain. |
 | Repo Sanity | hosted | hosted | 4.1m | Retain. |
-| Coverage Regression | fleet | fleet | 29.5m | Keep one fleet placement. Use exact directly changed coverage owners on PRs with an explicit full fallback; prebuild once and run eight stable weighted in-job shards with coverage-only file parallelism. Give the two measured long poles two workers and the six mixed shards one each. |
+| Coverage Regression | fleet | fleet | 29.5m | Keep one fleet placement. Use exact directly changed coverage owners on PRs with an explicit full fallback; prebuild once and run nine stable weighted in-job shards with coverage-only file parallelism. Give the two measured long poles two workers and the seven mixed shards one each. |
 | Knip | hosted | hosted | 3.1m | Retain. |
 | Commitlint | hosted | hosted | 1.8m | Retain. |
 | Secret Scanning | hosted | hosted | 1.0m | Retain. |
@@ -49,9 +49,9 @@ required context.
   the conservative upper bound because this decision adds no fleet work.
 - Absolute ceiling: **$200/month** remains a hard stop. No Coverage shard may
   add a VM until its per-wave and monthly projection is recorded here. The
-  successor uses eight package queues inside the existing one-job/one-VM
-  boundary while preserving the merged candidate's aggregate cap of 10 Vitest
-  workers, so it adds no job, VM, or projected monthly spend.
+  successor uses nine package queues inside the existing one-job/one-VM
+  boundary with an aggregate cap of 11 Vitest workers, so it adds no job, VM,
+  or projected monthly spend.
 
 The census measures job wall time rather than controller boot/billing time.
 The failed hosted admission creates no standing fleet delta: retaining the
@@ -121,6 +121,20 @@ pre-packet placement cannot raise the approved projection.
   3m21s-5m59s; and all 126 baseline packages accepted by the ratchet. There was
   no test failure, shutdown, or OOM. This accepts local correctness/resource
   behavior; only the live fleet job may accept timing.
+- PR #716 run `31777323977`, job `94695402310`, accepted the eight-shard
+  candidate's correctness but rejected its timing at 22m18s. The 3m30s
+  prebuild was followed by isolated long-pole shards at 11m01s and 13m08s,
+  while the six mixed shards controlled the tail at 15m51s-17m27s. No test,
+  ratchet, shutdown, or OOM failure occurred. The next candidate adds one
+  mixed queue and one bounded worker, yielding nine shards with aggregate
+  Vitest fan-out 11; reject it if the complete hosted job remains at or above
+  20 minutes or correctness/resource behavior regresses.
+- The nine-shard candidate passed its forced local full path on exact base
+  `a10825dd01`: a 54-second, 130-package zero-cache prebuild; nine green
+  zero-cache shards at 3m09s-6m00s; and all 127 baseline packages accepted by
+  the ratchet. The complete path took 6m55s with no test failure, shutdown, or
+  OOM. This accepts local correctness/resource behavior; only the live fleet
+  job may accept timing.
 
 ## P2 live admission evidence
 
@@ -135,3 +149,4 @@ pre-packet placement cannot raise the approved projection.
 | `31753283207` attempt 2 / `94625871718` | `beep-ec2-heavy` | Passed after 23m23s | The two-worker cap eliminated the contention-sensitive failures and compared all 124 packages. The 3m38s prebuild plus four green shards at 15m32s-18m23s still exceeded the charter. | Reject the uniform two-worker timing admission; exclude it from the accepted P3 population and admit the smallest bounded increase, three workers per shard. |
 | `31759003628` / `94641084512` | `beep-ec2-heavy` | Failed after 23m08s | The 3m30s prebuild led into three green shards at 16m05s-17m16s. The repo-cli shard failed after 18m16s when a bounded-work assertion measured 1026.30ms against 1000ms; no OOM or runner shutdown occurred. | Reject the uniform three-worker admission and exclude it from duration percentiles. Enable file parallelism only for full coverage, restore two workers, and use five weighted shards to reduce the mixed-shard long poles. |
 | `31766791221` / `94664247028` | `beep-ec2-heavy` | Passed after 23m14s | The file-parallel five-shard design passed every test and compared all 126 baseline packages without shutdown/OOM. A 3m39s zero-cache prebuild preceded green shards at 12m03s-18m15s; the complete verification step took 22m00s. | Accept correctness but reject timing. Exclude it from the accepted P3 population; preserve its aggregate worker cap while splitting the three mixed queues into six independently draining queues. |
+| `31777323977` / `94695402310` | `beep-ec2-heavy` | Passed after 22m18s | The eight-shard design passed every check and the complete ratchet without shutdown/OOM. Its 3m30s prebuild preceded isolated long-pole shards at 11m01s and 13m08s, but the six mixed queues drained in 15m51s-17m27s and controlled wall time. | Accept correctness but reject timing. Exclude it from the accepted P3 population; split the mixed tail into seven queues with one additional bounded worker. |

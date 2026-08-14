@@ -37,12 +37,11 @@ Complete fallback and push runs remain one `Coverage Regression` fleet job:
 
 1. Clean stale coverage outputs once.
 2. Prebuild the workspace once with the existing fleet concurrency of four.
-3. Run coverage with `turbo run coverage --only` in eight concurrent,
+3. Run coverage with `turbo run coverage --only` in nine concurrent,
    single-task shards. The measured `@beep/repo-cli` and `@beep/repo-utils`
-   long poles retain two Vitest workers; the six mixed shards use one worker
-   each. Aggregate test-process fan-out remains capped at 10, exactly matching
-   the merged five-shard candidate; dependency builds are neither skipped nor
-   repeated.
+   long poles retain two Vitest workers; the seven mixed shards use one worker
+   each. Aggregate test-process fan-out is bounded at 11; dependency builds
+   are neither skipped nor repeated.
 4. Collect the disjoint per-package summaries and run the unchanged full
    ratchet comparison.
 
@@ -53,10 +52,10 @@ complete even though the lane now launches multiple Turbo processes.
 Least-loaded placement uses hosted package durations checked into the planner.
 The 20 largest durations from PR #707 override the older PR #684 profile and
 account for roughly 60% of measured package test time; the older evidence
-continues to weight the tail. The 127 current coverage owners resolve to eight
-stable shards containing 1, 1, 17, 22, 22, 21, 21, and 22 packages. The two
+continues to weight the tail. The 127 current coverage owners resolve to nine
+stable shards containing 1, 1, 13, 19, 19, 18, 19, 19, and 18 packages. The two
 long poles are isolated at modeled weights of 721 and 605 seconds, while the
-six mixed shards are balanced at 450 two-worker-equivalent seconds before
+seven mixed shards are balanced at 385-386 two-worker-equivalent seconds before
 their per-shard worker limit is applied. Every owner appears exactly once.
 New packages use a 15-second default and enter the same deterministic
 name-tiebroken placement.
@@ -135,6 +134,32 @@ in 55 seconds. Shards 1-8 completed 1, 1, 17, 22, 22, 21, 21, and 22 tasks in
 cache miss; the ratchet compared all 126 baseline packages; and there was no
 test failure, runner shutdown, or OOM. The proof accepts correctness and the
 resource bound only—local wall time is not the fleet admission result.
+
+PR #716 accepted the eight-shard candidate's correctness but rejected its
+economics. Run `31777323977`, job `94695402310`, passed every required check,
+compared the complete coverage baseline, and showed no timeout, runner
+shutdown, or OOM, but the job still took 22m18s. The zero-cache prebuild took
+3m30s. The isolated long poles finished first (`@beep/repo-utils` in 11m01s
+and `@beep/repo-cli` in 13m08s), while the six one-worker mixed queues
+controlled the tail at 15m51s, 16m24s, 17m00s, 17m07s, 17m14s, and 17m27s.
+The PR was merged externally after the green result, so the shape is merged
+and correctness-green but remains excluded from the accepted P3 population.
+
+The next candidate preserves the same job, VM, long-pole worker limits, and
+coverage semantics, but redistributes the mixed tail across seven one-worker
+queues. Peak Vitest fan-out rises by one, from 10 to 11, rather than applying
+a broad worker increase. The live profile shows the long-pole queues drain
+well before the mixed tail; the additional queue targets that bottleneck while
+remaining below the rejected four-shard three-worker shape's uniform
+contention. Hosted wall time remains the admission authority.
+
+The nine-shard candidate's forced local full-path proof passed on exact base
+`a10825dd01` with remote cache disabled. The 130-package zero-cache prebuild
+completed in 54 seconds. All nine shards passed in 3m09s, 3m47s, 4m17s,
+4m22s, 4m22s, 4m30s, 5m04s, 5m20s, and 6m00s; the complete local path took
+6m55s. The ratchet compared all 127 baseline packages, and there was no test
+failure, runner shutdown, or OOM. This accepts local correctness and the
+resource bound only; the live fleet job remains the timing authority.
 
 The live PR admission must prove all summaries, all regression tests, no runner
 shutdown/OOM, and complete job wall time below 20 minutes. Any source change

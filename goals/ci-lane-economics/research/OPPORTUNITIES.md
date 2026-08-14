@@ -322,3 +322,47 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** require the generated goal-index check on main
   before merge, or regenerate `goals/INDEX.md` in the PR that adds a packet
   manifest so unrelated successors do not inherit the drift.
+
+## 2026-08-14 — eight-shard correctness merged before timing admission
+
+- **Doing:** admitting PR #716's bounded eight-shard Coverage Regression shape
+  against the packet's 20-minute live-fleet ceiling.
+- **Evidence:** job `94695402310` passed every check without timeout, shutdown,
+  or OOM, but took 22m18s. The PR merged externally 2m52s after the job ended,
+  before the rejected timing result was written into the packet.
+- **Would have prevented it:** require the packet's timing-admission decision
+  before merging performance-governed changes, even when correctness is green.
+
+## 2026-08-14 — checkout ownership changed during successor closeout
+
+- **Doing:** publishing and monitoring the verified eight-shard successor from
+  its feature branch.
+- **Evidence:** the normal checkout was switched to unrelated runner work while
+  the coverage branch was published, merged as #716, and deleted. Reconstructing
+  the exact result required hosted PR state plus reflog evidence before the next
+  candidate could start safely.
+- **Would have prevented it:** serialize branch ownership through Yeet closeout,
+  or reserve an explicit execution worktree for the performance admission loop.
+
+## 2026-08-14 — nested worktree broke fixed-depth TypeScript resolution
+
+- **Doing:** isolating the nine-shard candidate from unrelated work in the
+  normal checkout, then running the focused repo-cli package typecheck.
+- **Evidence:** a worktree nested under the repository made fixed-depth config
+  paths resolve source from the parent checkout and emitted unrelated missing
+  Node and `Float16Array` types; the candidate's 105 focused tests and Biome
+  check passed in the same location.
+- **Would have prevented it:** create execution worktrees as sibling checkouts,
+  or make root/config resolution derive from the current Git common directory
+  instead of assuming a fixed package depth.
+
+## 2026-08-14 — scoped repair rewrote an unrelated inherited finding
+
+- **Doing:** running the canonical Yeet repair pass for the nine-shard
+  successor's five-file change set.
+- **Evidence:** the terse-effect writer scanned outside the candidate scope and
+  rewrote one inherited helper in `PostgresDrizzle.service.ts`; the same pass
+  reported other inherited manual findings but did not rewrite them. The
+  unrelated change had to be identified and removed before verification.
+- **Would have prevented it:** constrain repair writers to the declared Yeet
+  change set, or require explicit opt-in before a repair tier edits clean paths.
