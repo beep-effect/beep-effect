@@ -13,3 +13,14 @@ session/machine ids.
 - `beep goals` has no scaffold/bootstrap subcommand (doctor/index/set-status only); this packet
   was hand-mirrored from ci-lane-economics. The `beep goals bootstrap` gap is already routed to
   knowledge-surface-automation Workstream E — this is a second live receipt for it.
+
+## 2026-08-13 — this packet's own publish hit the treadmill it documents
+
+- First `yeet publish` was refused stale-base: main advanced 3 commits during packet authoring
+  and #699 touched `goals/INDEX.md` (the overlap path). Then git auto-merged INDEX plausibly but
+  wrong — `beep goals index --write` post-merge corrected 2 lines the textual merge got past.
+  Third receipt for the E1/E2 backlog items (publish-time regeneration + INDEX end-state); also
+  a live demo of why auto-heal must regenerate, never trust textual merges of projections.
+- Biome's pre-commit lane strict-parses staged `.json` research artifacts and its auto-fix
+  mangled one raw model-output file; evidence files now land as fenced markdown. Prevention
+  candidate: research/ artifact extensions exempt from code-parser lanes.
