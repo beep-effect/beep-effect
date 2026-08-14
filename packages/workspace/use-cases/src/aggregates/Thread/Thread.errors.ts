@@ -7,7 +7,7 @@
  */
 
 import { $WorkspaceUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 
@@ -42,7 +42,7 @@ const ThreadStoreErrorReason = S.NonEmptyString.pipe(
  * @category errors
  * @since 0.0.0
  */
-export class ThreadStoreNotFound extends TaggedErrorClass<ThreadStoreNotFound>($I`ThreadStoreNotFound`)(
+export class ThreadStoreNotFound extends S.TaggedError<ThreadStoreNotFound>($I`ThreadStoreNotFound`)(
   "ThreadStoreNotFound",
   {
     threadId: WorkspaceIdentity.ThreadId.annotateKey({
@@ -78,7 +78,7 @@ export class ThreadStoreNotFound extends TaggedErrorClass<ThreadStoreNotFound>($
  * @category errors
  * @since 0.0.0
  */
-export class ThreadStoreConflict extends TaggedErrorClass<ThreadStoreConflict>($I`ThreadStoreConflict`)(
+export class ThreadStoreConflict extends S.TaggedError<ThreadStoreConflict>($I`ThreadStoreConflict`)(
   "ThreadStoreConflict",
   {
     threadId: WorkspaceIdentity.ThreadId.annotateKey({
@@ -109,7 +109,7 @@ export class ThreadStoreConflict extends TaggedErrorClass<ThreadStoreConflict>($
  * @category errors
  * @since 0.0.0
  */
-export class ThreadStoreUnavailable extends TaggedErrorClass<ThreadStoreUnavailable>($I`ThreadStoreUnavailable`)(
+export class ThreadStoreUnavailable extends S.TaggedError<ThreadStoreUnavailable>($I`ThreadStoreUnavailable`)(
   "ThreadStoreUnavailable",
   {
     reason: ThreadStoreErrorReason.annotateKey({

@@ -339,9 +339,7 @@ type SchemaKindRule = {
 const SCHEMA_KIND_RULES: ReadonlyArray<SchemaKindRule> = [
   {
     kind: "tagged-error",
-    matches: (calls) =>
-      hasIdentifierCall(calls, ["TaggedErrorClass", "StatusCauseTaggedErrorClass"]) ||
-      hasPropertyAccessCall(calls, "S", ["TaggedErrorClass"]),
+    matches: (calls) => hasPropertyAccessCall(calls, "S", ["TaggedError"]),
   },
   { kind: "error-class", matches: (calls) => hasPropertyAccessCall(calls, "S", ["ErrorClass"]) },
   { kind: "tagged-class", matches: (calls) => hasPropertyAccessCall(calls, "S", ["TaggedClass"]) },

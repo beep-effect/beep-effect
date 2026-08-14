@@ -13,7 +13,7 @@ import { SourceTextPage } from "@beep/file-processing/SourceText";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { NonNegativeInt } from "@beep/schema/Int";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
@@ -495,7 +495,7 @@ export type ContradictionActionErrorReason = typeof ContradictionActionErrorReas
  * @category errors
  * @since 0.0.0
  */
-export class ContradictionActionError extends TaggedErrorClass<ContradictionActionError>($I`ContradictionActionError`)(
+export class ContradictionActionError extends S.TaggedError<ContradictionActionError>($I`ContradictionActionError`)(
   "ContradictionActionError",
   {
     reason: ContradictionActionErrorReason.annotateKey({

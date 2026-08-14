@@ -6,7 +6,6 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Clock, Effect, Encoding, FileSystem, Path, Redacted, Result } from "effect";
 import * as S from "effect/Schema";
@@ -34,7 +33,7 @@ const AES_GCM_NONCE_BYTES = 12;
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsArchiveError extends TaggedErrorClass<AiMetricsArchiveError>($I`AiMetricsArchiveError`)(
+export class AiMetricsArchiveError extends S.TaggedError<AiMetricsArchiveError>($I`AiMetricsArchiveError`)(
   "AiMetricsArchiveError",
   {
     cause: S.Defect({ includeStack: true }),

@@ -9,7 +9,6 @@ import {
   NonNegativeInt,
   PosInt,
   SchemaUtils,
-  TaggedErrorClass,
 } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect } from "effect";
@@ -64,7 +63,7 @@ export class ExecutionLimits extends S.Class<ExecutionLimits>($I`ExecutionLimits
  * @category errors
  * @since 0.0.0
  */
-export class InvalidExecutionLimits extends TaggedErrorClass<InvalidExecutionLimits>($I`InvalidExecutionLimits`)(
+export class InvalidExecutionLimits extends S.TaggedError<InvalidExecutionLimits>($I`InvalidExecutionLimits`)(
   "InvalidExecutionLimits",
   {
     message: S.String,

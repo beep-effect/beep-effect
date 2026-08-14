@@ -22,7 +22,7 @@
     "coverage": "bunx vitest run --coverage",
     "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
     "beep:build": "tsc -b tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json && tsgo -p tsconfig.drizzle.json && bun run beep:check:tests && bun run migrations:check",
+    "beep:check": "tsgo -b tsconfig.json && tsgo -p tsconfig.drizzle.json && tsgo -p tsconfig.scripts.json --noEmit && bun run beep:check:tests && bun run migrations:check",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:test": "bunx --bun vitest run --exclude=test/integration/**",
     "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
@@ -43,11 +43,11 @@
   "devDependencies": {
     "@beep/test-utils": "workspace:^",
     "@beep/utils": "workspace:^",
+    "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
-    "drizzle-kit": "catalog:",
-    "drizzle-orm": "catalog:"
+    "drizzle-kit": "catalog:"
   },
   "exports": {
     "./package.json": "./package.json",

@@ -7,7 +7,7 @@
 
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { ChangeOperation, Session, SessionChangeDelta, SessionId } from "@beep/ontology-domain/aggregates/Session";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 import * as Rpc from "effect/unstable/rpc/Rpc";
@@ -41,7 +41,7 @@ const $I = $OntologyUseCasesId.create("aggregates/Session/Session.rpc");
  * @category errors
  * @since 0.0.0
  */
-export class OntologyActionError extends TaggedErrorClass<OntologyActionError>($I`OntologyActionError`)(
+export class OntologyActionError extends S.TaggedError<OntologyActionError>($I`OntologyActionError`)(
   "OntologyActionError",
   {
     message: S.String,

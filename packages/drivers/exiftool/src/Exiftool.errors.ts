@@ -6,7 +6,7 @@
  */
 
 import { $ExiftoolId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -212,7 +212,7 @@ export class ExiftoolErrorFromUnknownOptions extends S.Class<ExiftoolErrorFromUn
  * @category errors
  * @since 0.0.0
  */
-export class ExiftoolError extends TaggedErrorClass<ExiftoolError>($I`ExiftoolError`)(
+export class ExiftoolError extends S.TaggedError<ExiftoolError>($I`ExiftoolError`)(
   "ExiftoolError",
   {
     command: S.OptionFromOptionalKey(S.String).pipe(

@@ -8,9 +8,10 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PromotionGateRequest } from "@beep/shared-use-cases/PromotionGate";
 import { Context } from "effect";
+import * as S from "effect/Schema";
 import type { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy";
 import type { Effect } from "effect";
 
@@ -77,7 +78,7 @@ export type CandorPromotionSubjectResolutionReason = typeof CandorPromotionSubje
  * @category errors
  * @since 0.0.0
  */
-export class CandorPromotionSubjectResolutionError extends TaggedErrorClass<CandorPromotionSubjectResolutionError>(
+export class CandorPromotionSubjectResolutionError extends S.TaggedError<CandorPromotionSubjectResolutionError>(
   $I`CandorPromotionSubjectResolutionError`
 )(
   "CandorPromotionSubjectResolutionError",

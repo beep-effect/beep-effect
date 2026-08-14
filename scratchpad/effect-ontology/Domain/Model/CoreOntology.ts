@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256HexFromBytes, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { DateTime, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -802,7 +802,7 @@ const CoreOperationErrorFields = {
  * @category errors
  * @since 0.0.0
  */
-export class MentionError extends TaggedErrorClass<MentionError>($I`MentionError`)(
+export class MentionError extends S.TaggedError<MentionError>($I`MentionError`)(
   "MentionError",
   CoreOperationErrorFields,
   $I.annote("MentionError", {
@@ -824,7 +824,7 @@ export class MentionError extends TaggedErrorClass<MentionError>($I`MentionError
  * @category errors
  * @since 0.0.0
  */
-export class TrackedEntityError extends TaggedErrorClass<TrackedEntityError>($I`TrackedEntityError`)(
+export class TrackedEntityError extends S.TaggedError<TrackedEntityError>($I`TrackedEntityError`)(
   "TrackedEntityError",
   CoreOperationErrorFields,
   $I.annote("TrackedEntityError", {
@@ -846,7 +846,7 @@ export class TrackedEntityError extends TaggedErrorClass<TrackedEntityError>($I`
  * @category errors
  * @since 0.0.0
  */
-export class TrackedEventError extends TaggedErrorClass<TrackedEventError>($I`TrackedEventError`)(
+export class TrackedEventError extends S.TaggedError<TrackedEventError>($I`TrackedEventError`)(
   "TrackedEventError",
   CoreOperationErrorFields,
   $I.annote("TrackedEventError", {

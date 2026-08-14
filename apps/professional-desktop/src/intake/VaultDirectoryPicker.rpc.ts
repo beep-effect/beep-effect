@@ -6,7 +6,6 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 import * as Rpc from "effect/unstable/rpc/Rpc";
@@ -29,7 +28,7 @@ const $I = $ProfessionalDesktopId.create("intake/VaultDirectoryPicker.rpc");
  * @category errors
  * @since 0.0.0
  */
-export class VaultDirectoryPickError extends TaggedErrorClass<VaultDirectoryPickError>($I`VaultDirectoryPickError`)(
+export class VaultDirectoryPickError extends S.TaggedError<VaultDirectoryPickError>($I`VaultDirectoryPickError`)(
   "VaultDirectoryPickError",
   {
     message: S.String,

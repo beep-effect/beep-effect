@@ -6,7 +6,7 @@
  */
 
 import { $RepoDocgenId } from "@beep/identity/packages";
-import { PosInt, TaggedErrorClass } from "@beep/schema";
+import { PosInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Context, Effect, Layer, Order, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -1128,7 +1128,7 @@ export type DocgenErrorTypeId = typeof DocgenErrorTypeId;
  * @category models
  * @since 0.0.0
  */
-export class DocgenError extends TaggedErrorClass<DocgenError>($I`DocgenError`)(
+export class DocgenError extends S.TaggedError<DocgenError>($I`DocgenError`)(
   "DocgenError",
   {
     message: S.String.annotateKey({

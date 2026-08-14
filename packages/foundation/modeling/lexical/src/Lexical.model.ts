@@ -18,7 +18,7 @@
 // cspell:word youtu
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
-import { CauseTaggedError, LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, Result, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
@@ -3060,8 +3060,12 @@ export const EditorStateWireFromJson = S.fromJsonString(SerializedEditorStateWir
  * @category errors
  * @since 0.0.0
  */
-export class LexicalDecodeError extends CauseTaggedError<LexicalDecodeError>($I`LexicalDecodeError`)(
+export class LexicalDecodeError extends S.TaggedError<LexicalDecodeError>($I`LexicalDecodeError`)(
   "LexicalDecodeError",
+  {
+    message: S.String,
+    cause: S.Defect({ includeStack: true }),
+  },
   $I.annote("LexicalDecodeError", {
     description: "Typed failure raised when a Lexical semantic or wire payload cannot be decoded.",
   })
@@ -3160,10 +3164,10 @@ export class LexicalCompatibilityResult extends S.Class<LexicalCompatibilityResu
 const decodeStrictEditorStateResult = S.decodeUnknownResult(SerializedEditorState);
 const decodeLosslessEditorStateResult = S.decodeUnknownResult(SerializedEditorStateWire);
 const inspectStrictEditorState = S.decodeUnknownResult(SerializedEditorState);
-const strictEditorStateDecodeError = LexicalDecodeError.new("Lexical editor state failed strict semantic decoding.");
-const losslessEditorStateDecodeError = LexicalDecodeError.new(
-  "Lexical editor state failed lossless JSON-wire decoding."
-);
+const strictEditorStateDecodeError = (cause: unknown): LexicalDecodeError =>
+  LexicalDecodeError.make({ cause, message: "Lexical editor state failed strict semantic decoding." });
+const losslessEditorStateDecodeError = (cause: unknown): LexicalDecodeError =>
+  LexicalDecodeError.make({ cause, message: "Lexical editor state failed lossless JSON-wire decoding." });
 
 /**
  * Synchronously decodes an unknown payload into the supported strict semantic

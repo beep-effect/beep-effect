@@ -64,7 +64,7 @@ clonable:
 
 - Tables tier — `packages/law-practice/tables/src/entities/index.ts:12`, `:17`,
   `:37` export three candor tables, each with `.table.ts` + `.converters.ts`.
-- Migration — `packages/_internal/db-admin/drizzle/20260806031625_law_practice_candor_gate/`
+- Migration — `packages/_internal/db-admin/drizzle/20260813130540_baseline/`
   (`migration.sql` + `snapshot.json`), still the **only** drizzle migration
   naming `law_practice`, so the slice's schema is now in the baseline snapshot
   and a second goal generates a delta migration rather than a bootstrap.

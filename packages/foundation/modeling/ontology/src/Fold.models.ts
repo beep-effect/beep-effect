@@ -15,7 +15,6 @@ import { $OntologyId } from "@beep/identity/packages";
 import { IRI } from "@beep/rdf/Iri";
 import { LanguageTag } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -716,7 +715,7 @@ export type OntologyAssemblyErrorReason = typeof OntologyAssemblyErrorReason.Typ
  * @category error-handling
  * @since 0.0.0
  */
-export class OntologyAssemblyError extends TaggedErrorClass<OntologyAssemblyError>($I`OntologyAssemblyError`)(
+export class OntologyAssemblyError extends S.TaggedError<OntologyAssemblyError>($I`OntologyAssemblyError`)(
   "OntologyAssemblyError",
   {
     reason: OntologyAssemblyErrorReason,

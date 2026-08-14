@@ -6,7 +6,7 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -162,7 +162,7 @@ export type RunpodDocsErrorReason = typeof RunpodDocsErrorReason.Type;
  * @category errors
  * @since 0.1.0
  */
-export class RunpodError extends TaggedErrorClass<RunpodError>($I`RunpodError`)(
+export class RunpodError extends S.TaggedError<RunpodError>($I`RunpodError`)(
   "RunpodError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
@@ -248,7 +248,7 @@ export class RunpodError extends TaggedErrorClass<RunpodError>($I`RunpodError`)(
  * @category errors
  * @since 0.1.0
  */
-export class RunpodDocsError extends TaggedErrorClass<RunpodDocsError>($I`RunpodDocsError`)(
+export class RunpodDocsError extends S.TaggedError<RunpodDocsError>($I`RunpodDocsError`)(
   "RunpodDocsError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),

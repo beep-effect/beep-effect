@@ -4,9 +4,9 @@
     "slug": "packet-system-redesign",
     "title": "Exploration & Goal Packet System Redesign",
     "status": "active",
-    "stage": "shape",
+    "stage": "decompose",
     "openQuestions": [
-      "Operator shape gate: does BRIEF.md match the operator's picture? (sign-off required before decompose)"
+      "Operator MAP review gate: does MAP.md correctly name the goal boundaries, dependencies, capability composition, sequencing, and first vertical slice?"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {

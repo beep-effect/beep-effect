@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `shape`
+Stage: `decompose`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -18,8 +18,9 @@ BDUF ceremony.
 
 ## Next Open Question
 
-Does the operator approve [`BRIEF.md`](./BRIEF.md) as the shaped contract?
-The app's exact home remains a decompose-stage decision per D12.
+Does the operator approve [`MAP.md`](./MAP.md) as the goal boundaries,
+dependencies, capability composition, sequencing, and first vertical slice?
+No goals are scaffolded until that review passes.
 
 ## Read This First
 
@@ -29,9 +30,14 @@ The app's exact home remains a decompose-stage decision per D12.
 4. [`research/2026-08-10-codex-deep-research-redesign.md`](./research/2026-08-10-codex-deep-research-redesign.md) - Codex deep-research revision (imported).
 5. [`RESEARCH.md`](./RESEARCH.md) - synthesis of imports + six Grok lanes (stage 1).
 6. [`DECISIONS.md`](./DECISIONS.md) - grilling log (stage 2).
-7. [`BRIEF.md`](./BRIEF.md) - shaped pitch awaiting operator review.
+7. [`BRIEF.md`](./BRIEF.md) - operator-ratified shaped pitch.
+8. [`MAP.md`](./MAP.md) - decomposition awaiting operator review.
 
 ## Trail
+
+- 2026-08-13 (final ceremony): operator signed off `BRIEF.md`; stage advanced
+  to `decompose` and `MAP.md` was drafted from D1-D16 plus live capability
+  verification. MAP review is the next gate; no goal was scaffolded.
 
 - 2026-08-13 (ceremony): drafted `BRIEF.md` from CAPTURE, RESEARCH, and
   D1-D16; stage advanced to `shape`. Operator BRIEF review is next.

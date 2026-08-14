@@ -28,7 +28,7 @@ packages/notes/
     src/
       aggregates/Note/
         Note.model.ts        # schema-first class: identity + shape + tiny Effect.fn behavior
-        Note.errors.ts       # actionable domain errors (S.TaggedErrorClass)
+        Note.errors.ts       # actionable domain errors (S.TaggedError)
         index.ts             # public exports for the Note aggregate
       index.ts               # package barrel
   use-cases/
@@ -53,7 +53,7 @@ packages/notes/
 What each file owns, in one or two sentences:
 
 - `Note.model.ts` — the schema-first class. Identity, shape, and small pure behavior live here; nothing that needs a Layer.
-- `Note.errors.ts` — `S.TaggedErrorClass` definitions for failure modes the use-cases and server may raise.
+- `Note.errors.ts` — classes extending `S.TaggedError` for failure modes the use-cases and server may raise.
 - `Note.commands.ts` / `Note.queries.ts` — schemas for intent. They describe what the caller is asking for, not how it is executed.
 - `Note.ports.ts` — port declarations only. The use-cases package defines what a `NoteRepository` looks like; it does not implement one.
 - `Note.service.ts` — the use-case service. It depends on ports and domain values, and is the only thing the server-side Layer needs to wire.
@@ -141,7 +141,7 @@ From the path alone you know: this file is HTTP wiring for membership operations
 | Suffix              | Allowed contents                                                            |
 |---------------------|-----------------------------------------------------------------------------|
 | `.model.ts`         | schema-first class, identity + shape, occasional small `Effect.fn` methods. |
-| `.errors.ts`        | `S.TaggedErrorClass` definitions.                                           |
+| `.errors.ts`        | Classes extending `S.TaggedError`.                                         |
 | `.policy.ts`        | pure decision rules (functions, not services).                              |
 | `.behavior.ts`      | pure transitions (`Effect.fn` returning typed failures).                    |
 | `.commands.ts`      | command schemas (intent shapes).                                            |

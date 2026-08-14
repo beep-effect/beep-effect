@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $BoxId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import * as S from "effect/Schema";
 
 const $I = $BoxId.create("errors/ClientError.errors");
 
@@ -32,7 +32,7 @@ const $I = $BoxId.create("errors/ClientError.errors");
  * @category errors
  * @since 0.0.0
  */
-export class PLACEHOLDER extends TaggedErrorClass<PLACEHOLDER>($I`PLACEHOLDER`)(
+export class PLACEHOLDER extends S.TaggedError<PLACEHOLDER>($I`PLACEHOLDER`)(
   "PLACEHOLDER",
   {},
   $I.annote("PLACEHOLDER", {

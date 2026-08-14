@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $DockId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { CommandId } from "./Dock.ids.ts";
 
@@ -78,7 +78,7 @@ export type DockRejectionReason = typeof DockRejectionReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class DockCommandRejected extends TaggedErrorClass<DockCommandRejected>($I`DockCommandRejected`)(
+export class DockCommandRejected extends S.TaggedError<DockCommandRejected>($I`DockCommandRejected`)(
   "DockCommandRejected",
   {
     commandId: CommandId,
@@ -149,7 +149,7 @@ export type DockInvariantReason = typeof DockInvariantReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class DockInvariantViolation extends TaggedErrorClass<DockInvariantViolation>($I`DockInvariantViolation`)(
+export class DockInvariantViolation extends S.TaggedError<DockInvariantViolation>($I`DockInvariantViolation`)(
   "DockInvariantViolation",
   {
     reason: DockInvariantReason,
@@ -212,7 +212,7 @@ export type DockInputBoundary = typeof DockInputBoundary.Type;
  * @category errors
  * @since 0.0.0
  */
-export class DockInputError extends TaggedErrorClass<DockInputError>($I`DockInputError`)(
+export class DockInputError extends S.TaggedError<DockInputError>($I`DockInputError`)(
   "DockInputError",
   {
     boundary: DockInputBoundary,
@@ -275,7 +275,7 @@ export type DockPersistenceOperation = typeof DockPersistenceOperation.Type;
  * @category errors
  * @since 0.0.0
  */
-export class DockPersistenceError extends TaggedErrorClass<DockPersistenceError>($I`DockPersistenceError`)(
+export class DockPersistenceError extends S.TaggedError<DockPersistenceError>($I`DockPersistenceError`)(
   "DockPersistenceError",
   {
     operation: DockPersistenceOperation,
@@ -301,7 +301,7 @@ export class DockPersistenceError extends TaggedErrorClass<DockPersistenceError>
  * @category errors
  * @since 0.0.0
  */
-export class DockSnapshotMissing extends TaggedErrorClass<DockSnapshotMissing>($I`DockSnapshotMissing`)(
+export class DockSnapshotMissing extends S.TaggedError<DockSnapshotMissing>($I`DockSnapshotMissing`)(
   "DockSnapshotMissing",
   {
     message: S.String,

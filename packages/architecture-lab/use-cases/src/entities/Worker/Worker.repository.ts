@@ -8,7 +8,7 @@
 
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
@@ -35,7 +35,7 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository"
  * @category repositories
  * @since 0.0.0
  */
-export class WorkerRepositoryNotFound extends TaggedErrorClass<WorkerRepositoryNotFound>($I`WorkerRepositoryNotFound`)(
+export class WorkerRepositoryNotFound extends S.TaggedError<WorkerRepositoryNotFound>($I`WorkerRepositoryNotFound`)(
   "WorkerRepositoryNotFound",
   {
     workerId: DomainWorker.WorkerId,
@@ -69,7 +69,7 @@ export class WorkerRepositoryNotFound extends TaggedErrorClass<WorkerRepositoryN
  * @category repositories
  * @since 0.0.0
  */
-export class WorkerRepositoryConflict extends TaggedErrorClass<WorkerRepositoryConflict>($I`WorkerRepositoryConflict`)(
+export class WorkerRepositoryConflict extends S.TaggedError<WorkerRepositoryConflict>($I`WorkerRepositoryConflict`)(
   "WorkerRepositoryConflict",
   {
     workerId: DomainWorker.WorkerId,
@@ -101,7 +101,7 @@ export class WorkerRepositoryConflict extends TaggedErrorClass<WorkerRepositoryC
  * @category repositories
  * @since 0.0.0
  */
-export class WorkerRepositoryUnavailable extends TaggedErrorClass<WorkerRepositoryUnavailable>(
+export class WorkerRepositoryUnavailable extends S.TaggedError<WorkerRepositoryUnavailable>(
   $I`WorkerRepositoryUnavailable`
 )(
   "WorkerRepositoryUnavailable",

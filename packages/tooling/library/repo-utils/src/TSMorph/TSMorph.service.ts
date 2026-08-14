@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Context, Effect, FileSystem, flow, Inspectable, Layer, MutableHashMap, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -99,7 +99,7 @@ const decodeNonNegativeInt = S.decodeUnknownEffect(NonNegativeInt);
  * @category models
  * @since 0.0.0
  */
-export class TsMorphServiceUnavailableError extends TaggedErrorClass<TsMorphServiceUnavailableError>(
+export class TsMorphServiceUnavailableError extends S.TaggedError<TsMorphServiceUnavailableError>(
   $I`TsMorphServiceUnavailableError`
 )(
   "TsMorphServiceUnavailableError",
@@ -127,7 +127,7 @@ export class TsMorphServiceUnavailableError extends TaggedErrorClass<TsMorphServ
  * @category models
  * @since 0.0.0
  */
-export class TsMorphScopeResolutionError extends TaggedErrorClass<TsMorphScopeResolutionError>(
+export class TsMorphScopeResolutionError extends S.TaggedError<TsMorphScopeResolutionError>(
   $I`TsMorphScopeResolutionError`
 )(
   "TsMorphScopeResolutionError",
@@ -155,7 +155,7 @@ export class TsMorphScopeResolutionError extends TaggedErrorClass<TsMorphScopeRe
  * @category models
  * @since 0.0.0
  */
-export class TsMorphProjectLoadError extends TaggedErrorClass<TsMorphProjectLoadError>($I`TsMorphProjectLoadError`)(
+export class TsMorphProjectLoadError extends S.TaggedError<TsMorphProjectLoadError>($I`TsMorphProjectLoadError`)(
   "TsMorphProjectLoadError",
   {
     scopeId: ProjectScopeId,
@@ -181,7 +181,7 @@ export class TsMorphProjectLoadError extends TaggedErrorClass<TsMorphProjectLoad
  * @category models
  * @since 0.0.0
  */
-export class TsMorphSourceFileError extends TaggedErrorClass<TsMorphSourceFileError>($I`TsMorphSourceFileError`)(
+export class TsMorphSourceFileError extends S.TaggedError<TsMorphSourceFileError>($I`TsMorphSourceFileError`)(
   "TsMorphSourceFileError",
   {
     scopeId: S.OptionFromNullOr(ProjectScopeId),
@@ -230,7 +230,7 @@ export class TsMorphSourceFileError extends TaggedErrorClass<TsMorphSourceFileEr
  * @category models
  * @since 0.0.0
  */
-export class TsMorphSymbolNotFoundError extends TaggedErrorClass<TsMorphSymbolNotFoundError>(
+export class TsMorphSymbolNotFoundError extends S.TaggedError<TsMorphSymbolNotFoundError>(
   $I`TsMorphSymbolNotFoundError`
 )(
   "TsMorphSymbolNotFoundError",
@@ -261,7 +261,7 @@ export class TsMorphSymbolNotFoundError extends TaggedErrorClass<TsMorphSymbolNo
  * @category models
  * @since 0.0.0
  */
-export class TsMorphUnsupportedFileError extends TaggedErrorClass<TsMorphUnsupportedFileError>(
+export class TsMorphUnsupportedFileError extends S.TaggedError<TsMorphUnsupportedFileError>(
   $I`TsMorphUnsupportedFileError`
 )(
   "TsMorphUnsupportedFileError",

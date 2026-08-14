@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-// @effect-diagnostics strictEffectProvide:skip-file
 
 /**
  * Cross-platform MCPB packaging entrypoint for the read-only practice KG host.
@@ -10,10 +9,7 @@
 
 import { $PracticeKgMcpId } from "@beep/identity/packages";
 import { PracticeKgToolkit } from "@beep/law-practice-server";
-import { TaggedErrorClass } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
-import { BunRuntime } from "@effect/platform-bun";
-import * as BunServices from "@effect/platform-bun/BunServices";
 import { Effect, Encoding, FileSystem, Match, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -21,6 +17,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
+import { runEntrypoint } from "./entrypoint.ts";
 
 const $I = $PracticeKgMcpId.create("package");
 
@@ -79,7 +76,7 @@ const TargetSpecs = {
   },
 } as const satisfies Record<Exclude<PackageTarget, "all">, Record<string, string>>;
 
-class PackageFailure extends TaggedErrorClass<PackageFailure>($I`PackageFailure`)(
+class PackageFailure extends S.TaggedError<PackageFailure>($I`PackageFailure`)(
   "PackageFailure",
   {
     cause: S.optionalKey(S.Defect({ includeStack: true })),
@@ -347,8 +344,5 @@ const program = Command.make(
     );
     yield* Effect.forEach(targets, (targetName) => packageTarget(targetName, output), { discard: true });
   })
-).pipe(Command.run({ version: "0.0.0" }), Effect.provide(BunServices.layer));
-
-if (import.meta.main) {
-  BunRuntime.runMain(program);
-}
+).pipe(Command.run({ version: "0.0.0" }));
+runEntrypoint({ isMain: import.meta.main, program });

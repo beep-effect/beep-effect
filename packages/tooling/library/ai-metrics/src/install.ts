@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, Match, pipe } from "effect";
@@ -133,7 +133,7 @@ const requireRawArchiveKeySecretRef = Effect.fn("AiMetrics.requireRawArchiveKeyS
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsInstallConfigurationError extends TaggedErrorClass<AiMetricsInstallConfigurationError>(
+export class AiMetricsInstallConfigurationError extends S.TaggedError<AiMetricsInstallConfigurationError>(
   $I`AiMetricsInstallConfigurationError`
 )(
   "AiMetricsInstallConfigurationError",
