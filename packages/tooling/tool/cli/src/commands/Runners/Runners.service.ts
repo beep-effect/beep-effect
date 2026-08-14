@@ -41,6 +41,8 @@ const BAKE_COMPLETE_MARKER = "BEEP_RUNNERS_BAKE_COMPLETE";
 const BAKE_FAILED_MARKER = "BEEP_RUNNERS_BAKE_FAILED";
 const BAKE_CANONICAL_REPO = "github.com/beep-effect/beep-effect";
 const BAKE_CLONE_URL = `https://${BAKE_CANONICAL_REPO}.git`;
+// HTTPS remotes carry `github.com/owner/repo`, SSH remotes `github.com:owner/repo`.
+const BAKE_CANONICAL_REMOTE_FORMS = [BAKE_CANONICAL_REPO, "github.com:beep-effect/beep-effect"];
 const REPORT_FILE_NAME = "runners-bake-report.json";
 const AWS_POLL_INTERVAL = Duration.seconds(15);
 const BAKE_WAIT_LIMIT = Duration.hours(6);
@@ -217,7 +219,7 @@ const assertRevisionPushed = Effect.fn("Runners.assertRevisionPushed")(function*
   }).pipe(RunnersCommandError.mapError("Failed to list Git remotes for the bake reachability check."));
   const canonicalRemotes = pipe(
     Str.split("\n")(remotes.output),
-    A.filter(Str.includes(BAKE_CANONICAL_REPO)),
+    A.filter((line) => A.some(BAKE_CANONICAL_REMOTE_FORMS, (form) => Str.includes(form)(line))),
     A.map((line) => A.head(Str.split("\t")(Str.trim(line)))),
     A.getSomes,
     A.dedupe
