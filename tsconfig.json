@@ -1926,6 +1926,9 @@
       "@beep/law-practice-server/CandorPromotionGate": [
         "./packages/law-practice/server/src/CandorPromotionGate/index.ts"
       ],
+      "@beep/repo-cli/commands/Runners": [
+        "./packages/tooling/tool/cli/src/commands/Runners/index.ts"
+      ],
       "@beep/shared-use-cases": ["./packages/shared/use-cases/src/index.ts"],
       "@beep/shared-use-cases/PromotionGate": [
         "./packages/shared/use-cases/src/PromotionGate/index.ts"
