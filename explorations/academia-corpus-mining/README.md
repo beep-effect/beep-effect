@@ -19,11 +19,9 @@ work streams and land the intelligence here for later goal graduation.
 
 ## Next Open Question
 
-Wave 2 (deferred, parked revival trigger once the dispatch fully lands):
-run the approved second mining pass over the June-29 ~240-paper backlog,
-starting with the 97 legal-NLP/extraction papers. Everything else is
-decided or explicitly deferred into routed targets — see the nine align
-entries in [`DECISIONS.md`](./DECISIONS.md).
+Parked revival trigger: the operator triages the wave-2 routing proposals in
+the external synthesis routing table. Proposals never auto-enter the packet
+tree.
 
 ## Read This First
 
@@ -37,6 +35,19 @@ entries in [`DECISIONS.md`](./DECISIONS.md).
 8. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-08-13: wave 2 EXECUTED. The approved “97 legal-NLP/extraction papers”
+  count was aggregate-only and largely consumed by July wave-1 deep reads
+  (including the 144 June-29 papers already noted), so the operator ratified
+  re-triage by definition. Five first-page-grounded batches classified the
+  199-paper no-note backlog as core 2 / extended 44 / excluded 153; all 46
+  core+extended papers were deep-read (46/46 notes, zero failures). External
+  synthesis: `~/YeeBois/research/academia-2026-07/synthesis/wave2-synthesis.md`.
+  It found zero contradictions of the master ten findings and produced 14
+  routing proposals, including `legal-inference-policy`,
+  `ontology-curation-governance`, `evidence-source-policy-calibration`, and
+  `ontology-lifecycle-qa`. Packet stays parked; proposals require operator
+  triage and never auto-enter the packet tree.
 
 - 2026-07-25 (park): binding-doc PR landed the typed-verdict replacement
   (`docs/product/prose-to-proof.md`, the approval policy) and the

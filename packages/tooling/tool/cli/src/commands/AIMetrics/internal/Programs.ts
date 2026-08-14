@@ -1507,7 +1507,8 @@ const forwarderOtlpExported = (
     turnSpanCount: result.turnSpanCount,
   });
 
-const forwarderOtlpExportFailureMessage = "OTLP export did not complete after the forwarder run.";
+const forwarderOtlpExportFailureMessage =
+  "OTLP export did not complete after the forwarder run. Pending spans remain uncheckpointed for retry.";
 
 /**
  * Option schema for the ForwarderOtlpExportFailed AI metrics helper.

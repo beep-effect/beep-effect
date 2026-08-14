@@ -3,12 +3,9 @@
   "exploration": {
     "slug": "atlas-synthesis",
     "title": "Atlas Synthesis \u2014 Current State <-> Goals/Vision Grounding",
-    "status": "active",
-    "stage": "research",
-    "openQuestions": [
-      "Launch the two graduated goal packets: build goals/epistemic-claim-lifecycle-gate FIRST (the reusable boundary), then goals/law-practice-office-action-spike (the IP-law vertical + loop).",
-      "Continue the outcome-decomposition: the verticals/goals AFTER office-action review (intake, drafting, contract review) once the loop turns once."
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "links": {
       "goals": [
         "goals/epistemic-claim-lifecycle-gate",
@@ -25,6 +22,6 @@
       "supersededBy": null
     },
     "created": "2026-06-17",
-    "updated": "2026-07-14"
+    "updated": "2026-08-13"
   }
 }

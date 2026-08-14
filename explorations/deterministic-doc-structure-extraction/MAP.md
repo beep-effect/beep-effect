@@ -13,6 +13,13 @@ deferred do not enter the graduated first goal's appetite.
 | `law-doc-structure-streaming` **DEFERRED** | Expose extraction progress only for a named product consumer. | Named consumer required; Q7 doctrine is binding. | **NET-NEW:** schema-backed span-preserving `Complete` plus presentation-only `Partial`; never `LangExtractResult` verbatim or `AnnotatedDocument`. |
 | `law-doc-structure-calibration-cascade` **DEFERRED** | Calibrate per-family thresholds on labeled candidate outcomes, then evaluate local privilege-approved LLM refinement. | Labeled outcomes and approved local path required. | Reuse typed abstention/candidates. **NET-NEW:** calibration evaluation, thresholds, and cascade policy implementation. |
 
+## Re-entry Points
+
+The four non-graduated rows above are re-entry points under the repository's
+reopen-at-`decompose` convention. Reopen when
+`law-doc-structure-oa-slice` records first-slice acceptance; each row still
+retains its own named consumer, corpus, calibration, or streaming gate.
+
 ## Cross-Packet Contracts
 
 | Packet | Relationship | Contract carried here |

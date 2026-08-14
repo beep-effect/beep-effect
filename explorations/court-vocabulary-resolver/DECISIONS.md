@@ -1,5 +1,12 @@
 # Court Vocabulary Resolver — Decisions
 
+## 2026-08-13 — Packet graduation and resolver re-entry
+
+**Decision:** Close the packet as `graduated`. `court-string-resolver` becomes
+the re-entry point and reopens the packet at `decompose` after
+`court-reporter-vocabulary` proves its versioned artifact, stable-ID lifecycle,
+and compatibility contract. Fuzzy ranking and SKOS remain gated follow-ons.
+
 The align gate closed on 2026-07-14. All seven alignment questions below are
 ratified and locked. Items under **Deferred Work** are implementation spikes or
 optional follow-ons, not unresolved alignment questions.

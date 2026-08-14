@@ -137,6 +137,16 @@ const BoxHttpStatusCode = S.Int.check(
   SchemaUtils.withCodecStatics
 );
 
+const BoxErrorContextFields = {
+  cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  code: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  context: S.OptionFromOptionalKey(BoxApiFailureContext).pipe(SchemaUtils.withNoneDefault),
+  helpUrl: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  method: S.OptionFromOptionalKey(BoxMethodName).pipe(SchemaUtils.withNoneDefault),
+  requestId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  status: S.OptionFromOptionalKey(BoxHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+} satisfies S.Struct.Fields;
+
 /**
  * Options used when constructing Box driver errors.
  *
@@ -155,14 +165,8 @@ const BoxHttpStatusCode = S.Int.check(
  */
 export class BoxErrorOptions extends S.Class<BoxErrorOptions>($I`BoxErrorOptions`)(
   {
-    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    code: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    context: S.OptionFromOptionalKey(BoxApiFailureContext).pipe(SchemaUtils.withNoneDefault),
-    helpUrl: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    method: S.OptionFromOptionalKey(BoxMethodName).pipe(SchemaUtils.withNoneDefault),
-    requestId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    ...BoxErrorContextFields,
     sdkVersion: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    status: S.OptionFromOptionalKey(BoxHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("BoxErrorOptions", {
     description: "Sanitized options for constructing Box driver errors.",
@@ -185,6 +189,14 @@ class BoxErrorOptionsInput extends S.Class<BoxErrorOptionsInput>($I`BoxErrorOpti
   })
 ) {}
 
+const BoxErrorFields = {
+  ...BoxErrorContextFields,
+  reason: BoxErrorReason,
+  sdkVersion: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(BOX_SDK_VERSION)),
+} satisfies S.Struct.Fields;
+const sameBoxErrorFields = S.toEquivalence(S.TaggedStruct("BoxError", BoxErrorFields));
+const sameBoxError = (self: BoxError, that: BoxError): boolean => sameBoxErrorFields(self, that);
+
 /**
  * Technical failure raised by the Box driver boundary.
  *
@@ -202,19 +214,10 @@ class BoxErrorOptionsInput extends S.Class<BoxErrorOptionsInput>($I`BoxErrorOpti
  */
 export class BoxError extends S.TaggedError<BoxError>($I`BoxError`)(
   "BoxError",
-  {
-    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    code: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    context: S.OptionFromOptionalKey(BoxApiFailureContext).pipe(SchemaUtils.withNoneDefault),
-    helpUrl: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    method: S.OptionFromOptionalKey(BoxMethodName).pipe(SchemaUtils.withNoneDefault),
-    reason: BoxErrorReason,
-    requestId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    sdkVersion: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(BOX_SDK_VERSION)),
-    status: S.OptionFromOptionalKey(BoxHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
-  },
-  $I.annote("BoxError", {
+  BoxErrorFields,
+  $I.annoteClass<S.declare<BoxError>, readonly [S.TaggedStruct<"BoxError", typeof BoxErrorFields>]>("BoxError", {
     description: "Sanitized technical failure raised by the Box driver boundary.",
+    toEquivalence: () => sameBoxError,
   })
 ) {
   /**

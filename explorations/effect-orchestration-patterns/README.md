@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -22,11 +22,8 @@ remain in [`research/SOURCES.md`](./research/SOURCES.md) as provenance.
 
 ## Next Open Question
 
-The immediate spike has graduated. Resume only when one of four demand triggers
-fires: a measured failure survives limiter/retry/workflow/monitoring; a second
-fan-out consumer proves congruent semantics; a runtime must select compatible
-providers; or a second `ExecutionPlan` consumer proves matching LLM retry
-semantics. See [`MAP.md`](./MAP.md).
+None while graduated. The four demand-gated MAP candidates remain re-entry
+points; when one of their triggers fires, reopen this packet at `decompose`.
 
 ## Read This First
 
@@ -39,6 +36,9 @@ semantics. See [`MAP.md`](./MAP.md).
 
 ## Trail
 
+- 2026-08-13: holding-pen convention ratified; the packet flipped to
+  `graduated`. Its four demand-gated MAP candidates remain re-entry points, and
+  a fired gate reopens this packet at `decompose`.
 - 2026-07-14: BRIEF ratified as drafted; graduated only [`effect-v4-workflow-engine-spike`](../../goals/effect-v4-workflow-engine-spike/README.md); four candidates remain demand-gated and status stays active.
 - 2026-07-14: research refreshed against v4 workflow + api-transport; reframe ratified; 4 decisions + 4 gated deferrals.
 - 2026-06-29: research-complete — RESEARCH.md synthesized, codex gate-1 folded, DECISIONS pre-drafted.

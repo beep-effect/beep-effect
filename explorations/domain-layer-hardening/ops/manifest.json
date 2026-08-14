@@ -3,10 +3,10 @@
   "exploration": {
     "slug": "domain-layer-hardening",
     "title": "Domain-Layer Hardening",
-    "status": "active",
+    "status": "parked",
     "stage": "graduate",
     "openQuestions": [
-      "Concrete trigger: goals/domain-kernel-hardening is paused until KG tables approach scale and opens with the ROADMAP PRD P2 librarian condition; packets 2-7 remain held behind packet 1 per the MAP dependency graph."
+      "Resume when goals/domain-kernel-hardening unpauses; packets 2-7 require a fresh align and shape pass because the domain layer will have drifted."
     ],
     "links": {
       "goals": ["goals/domain-kernel-hardening"],
@@ -19,6 +19,6 @@
       "supersededBy": null
     },
     "created": "2026-06-29",
-    "updated": "2026-07-14"
+    "updated": "2026-08-13"
   }
 }
