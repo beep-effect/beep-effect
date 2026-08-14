@@ -328,8 +328,8 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
  *
  * Caller-controlled keys are validated and resolved against a pinned canonical
  * root before each adapter operation. Traversal, absolute keys, stable symlink
- * escapes, and root or prefix replacement completed before resolution fail
- * closed.
+ * escapes, and root or prefix replacement that resolves outside the pinned
+ * boundary fail closed.
  *
  * This portable path-based adapter does not defend against another principal
  * renaming path components between resolution and use. Deployments must ensure
