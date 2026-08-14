@@ -26,7 +26,7 @@ Scope:
 
 - In: `packages/law-practice/domain`, `packages/law-practice/use-cases`, and
   the two EntityId registrations in
-  `packages/shared/domain/src/identity/LawPractice.ts`; rung 2 adds
+  `packages/shared/domain/src/identity/LawPractice`; rung 2 adds
   `law-practice/tables`, `law-practice/server`, and the slice's first
   db-admin migration (+ PGlite test + `AcceptedProofManifest`).
 - Out: the agents slice's vocabularies, `PriorArtReference`

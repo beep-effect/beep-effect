@@ -56,7 +56,7 @@ decompose settlements (11–12):
    UFO-L's "essential and inseparable parts" makes the correlative pair the
    simple relator — a scheme alone cannot express its own invariant.
 6. **Package home** — `packages/law-practice/domain` beside the patent
-   entities, entity ids in `packages/shared/domain/src/identity/LawPractice.ts`,
+   entities, entity ids in `packages/shared/domain/src/identity/LawPractice`,
    with a named **promotion gate**: extract a legal-core package only when a
    second legal consumer needs the contract, through the normal
    promotion-record gate. UFO-L's core-vs-domain layering is preserved as a
@@ -374,7 +374,7 @@ stale pair survives in
   [`MAP.md`](../../explorations/legal-position-relator-runtime/MAP.md) are all
   the wrong shape.
 - Actor provenance arrives free: `createdByPrincipal`/`updatedByPrincipal` on
-  `BaseEntity.fields` (`packages/shared/domain/src/entity/BaseEntity.ts:82`,
+  `BaseEntity.fields` (`packages/shared/domain/src/entity/ProductEntity.ts:82`,
   `:88`), persisted jsonb with `valueStrategy: "providedByContext"`.
 
 ### Rung-2 cross-slice handoff (P0 output, not a pre-authorized edit)
@@ -541,7 +541,7 @@ Rung 1 — domain proof:
       constitution × permission outcome present in the relator's event
       vocabulary. `result` is absent from the relator.
 - [ ] EntityId registrations land in
-      `packages/shared/domain/src/identity/LawPractice.ts`, following the
+      `packages/shared/domain/src/identity/LawPractice`, following the
       candor-era stanza shape.
 - [ ] The `LegalPositionRelatorPolicy` `Context.Service` contract lands in
       `packages/law-practice/use-cases` (tag in `*.ports.ts`), owning relator

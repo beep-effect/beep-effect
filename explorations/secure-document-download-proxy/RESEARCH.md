@@ -217,7 +217,7 @@ Already present to compose against (verified via `rg`/`ls`, 2026-06-29):
   rationale — not a bespoke SQLite file and not a second PGlite store.
   `@effect/sql` driver packages (`packages/drivers/pglite`, `packages/drivers/postgres`)
   and `drizzle-orm` (`package.json:156`) back this; table-modeling precedent:
-  `EntityTable.models.ts` (`packages/drivers/drizzle/src/EntityTable.models.ts`),
+  `EntityTable.models.ts` (`packages/drivers/drizzle/src/index.ts`),
   `EntityId` (`packages/shared/domain/src/entity/EntityId.ts`), and the `$I` identity
   composer (`packages/foundation/modeling/identity/src/Id.ts`).
 - **Crypto/id primitives present, including repo-native UUID modeling** —
