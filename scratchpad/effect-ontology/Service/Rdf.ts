@@ -36,6 +36,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Rec from "effect/Record";
 import * as Result from "effect/Result";
+import * as Str from "effect/String";
 import * as N3 from "n3";
 import { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Error/Rdf.ts";
 import type { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
@@ -62,6 +63,7 @@ interface RdfConstructionPrefixes {
 }
 
 const n3NamedNode = (value: string): N3.NamedNode => N3.DataFactory.namedNode(IRI.fromUnknown(value));
+const isIriObjectString = P.some([Str.startsWith("http://"), Str.startsWith("https://"), Str.startsWith("urn:")]);
 
 const valueToN3Literal = (value: string | number | boolean, prefixes: RdfConstructionPrefixes): N3.Literal => {
   if (P.isString(value)) return N3.DataFactory.literal(value);
@@ -435,11 +437,10 @@ export interface RdfBuilderShape {
     metadata: ExtractionMetadata
   ) => Effect.Effect<void, RdfError, never>;
   /**
-   * Add a triple with confidence annotation using RDF-star
+   * Add a triple with a standard RDF reification confidence annotation.
    *
-   * Creates the original triple and adds a confidence score annotation
-   * using RDF-star quoted triple syntax:
-   * `<<subject predicate object>> ex:confidence "0.95"^^xsd:double .`
+   * Creates the original triple and a reified `rdf:Statement` carrying the
+   * confidence score.
    *
    * @param store - Target RDF store
    * @param triple - Triple components (subject IRI, predicate IRI, object IRI or literal)
@@ -993,20 +994,16 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
         Effect.try({
           try: () => {
             const n3Store = backend(store);
-            const graphNode = P.isNotUndefined(graphUri)
-              ? N3.DataFactory.namedNode(graphUri)
-              : N3.DataFactory.defaultGraph();
+            const graphNode = P.isNotUndefined(graphUri) ? n3NamedNode(graphUri) : N3.DataFactory.defaultGraph();
 
             // Create subject and predicate nodes
-            const subjectNode = N3.DataFactory.namedNode(triple.subject);
-            const predicateNode = N3.DataFactory.namedNode(triple.predicate);
+            const subjectNode = n3NamedNode(triple.subject);
+            const predicateNode = n3NamedNode(triple.predicate);
 
             // Create object node (IRI or literal)
             const objectNode = P.isString(triple.object)
-              ? triple.object.startsWith("http://") ||
-                triple.object.startsWith("https://") ||
-                triple.object.startsWith("urn:")
-                ? N3.DataFactory.namedNode(triple.object)
+              ? isIriObjectString(triple.object)
+                ? n3NamedNode(triple.object)
                 : N3.DataFactory.literal(triple.object)
               : P.isNumber(triple.object)
                 ? N3.DataFactory.literal(triple.object.toString(), N3.DataFactory.namedNode(XSD_DOUBLE.value))
@@ -1184,39 +1181,51 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * Serialize store to Turtle with prefixes
        *
        * Uses prefixes from ConfigService for clean output.
-       * Async operation via N3.Writer.
+       * Delegates canonical Dataset serialization to `@beep/n3`.
        *
        * @param store - RdfStore to serialize
        * @returns Turtle string
        */
       toTurtle: (store: RdfStore) =>
-        turtleCodec
-          .serialize(
-            N3SerializeTurtleRequest.make({
-              dataset: rdfStoreToDataset(store),
-              prefixes: config.rdf.prefixes,
-            })
-          )
-          .pipe(
-            Effect.map(({ source }) => source),
-            Effect.mapError((error) =>
-              SerializationFailed.make({
-                message: `Turtle serialization failed: ${error.message}`,
-                cause: O.some(error),
-                format: O.some("Turtle"),
-              })
-            ),
-            Effect.timeoutOrElse({
-              duration: Duration.seconds(30),
-              orElse: () =>
-                Effect.fail(
+        Effect.try({
+          try: () => rdfStoreToDataset(store),
+          catch: (error) =>
+            SerializationFailed.make({
+              message: `Failed to convert RDF store to canonical Dataset: ${error}`,
+              cause: O.some(error),
+              format: O.some("Turtle"),
+            }),
+        }).pipe(
+          Effect.flatMap((dataset) =>
+            turtleCodec
+              .serialize(
+                N3SerializeTurtleRequest.make({
+                  dataset,
+                  prefixes: config.rdf.prefixes,
+                })
+              )
+              .pipe(
+                Effect.map(({ source }) => source),
+                Effect.mapError((error) =>
                   SerializationFailed.make({
-                    message: "Turtle serialization timed out after 30 seconds",
+                    message: `Turtle serialization failed: ${error.message}`,
+                    cause: O.some(error),
                     format: O.some("Turtle"),
                   })
-                ),
-            })
+                )
+              )
           ),
+          Effect.timeoutOrElse({
+            duration: Duration.seconds(30),
+            orElse: () =>
+              Effect.fail(
+                SerializationFailed.make({
+                  message: "Turtle serialization timed out after 30 seconds",
+                  format: O.some("Turtle"),
+                })
+              ),
+          })
+        ),
 
       /**
        * Serialize store to TriG format with named graphs

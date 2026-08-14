@@ -87,5 +87,56 @@ describe("RdfBuilder", () => {
         assert.include(error.message, "default graph");
       })
     );
+
+    it.effect("rejects invalid confidence triple IRIs before mutating the store", () =>
+      Effect.gen(function* () {
+        const rdf = yield* RdfBuilder;
+        const invalidInputs = [
+          {
+            triple: { subject: "not an iri", predicate: "https://example.org/predicate", object: "value" },
+          },
+          {
+            triple: { subject: "https://example.org/subject", predicate: "not an iri", object: "value" },
+          },
+          {
+            triple: {
+              subject: "https://example.org/subject",
+              predicate: "https://example.org/predicate",
+              object: "http://[",
+            },
+          },
+          {
+            graphUri: "not an iri",
+            triple: {
+              subject: "https://example.org/subject",
+              predicate: "https://example.org/predicate",
+              object: "value",
+            },
+          },
+        ];
+
+        for (const input of invalidInputs) {
+          const store = yield* rdf.createStore;
+          const error = yield* rdf
+            .addTripleWithConfidence(store, input.triple, Confidence.make(0.8), input.graphUri)
+            .pipe(Effect.flip);
+
+          assert.strictEqual(error._tag, "RdfError");
+          assert.strictEqual(rdfStoreSize(store), 0);
+        }
+      })
+    );
+
+    it.effect("maps detached store invariant failures to SerializationFailed", () =>
+      Effect.gen(function* () {
+        const rdf = yield* RdfBuilder;
+        const store = yield* rdf.createStore;
+        const detachedStore = { ...store };
+        const error = yield* rdf.toTurtle(detachedStore).pipe(Effect.flip);
+
+        assert.strictEqual(error._tag, "SerializationFailed");
+        assert.include(error.message, "canonical Dataset");
+      })
+    );
   });
 });
