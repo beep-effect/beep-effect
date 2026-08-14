@@ -1,4 +1,5 @@
 import { runCodexFindingsIngest } from "@beep/repo-cli/commands/Codex";
+import { renderPrettyCommandJson } from "@beep/repo-cli/test/Cli";
 import {
   CODEX_CSV_COLUMNS,
   CodexTriageFinding,
@@ -90,7 +91,7 @@ const planFor = (findings: ReadonlyArray<CaptureFinding>, source?: CodexRefreshL
     )
   );
 
-const documentsFor = (plan: Effect.Effect.Success<ReturnType<typeof planFor>>): ReadonlyArray<PacketDocument> =>
+const documentsFor = (plan: Effect.Success<ReturnType<typeof planFor>>): ReadonlyArray<PacketDocument> =>
   renderPacketDocuments({
     plan,
     rawPayloadJson: "{}\n",
@@ -102,9 +103,9 @@ const documentsFor = (plan: Effect.Effect.Success<ReturnType<typeof planFor>>): 
     })),
   });
 
-const encodeLedger = S.encodeUnknownEffect(CodexTriageLedger);
-const encodeLedgerText = Effect.fnUntraced(function* (ledger: CodexTriageLedger) {
-  return `${JSON.stringify(yield* encodeLedger(ledger), null, 2)}\n`;
+const encodeLedger = S.encodeUnknownEffect(S.fromJsonString(CodexTriageLedger));
+const encodeLedgerText = Effect.fn("CodexFindingsRefreshTest.encodeLedgerText")(function* (ledger: CodexTriageLedger) {
+  return renderPrettyCommandJson(yield* encodeLedger(ledger));
 });
 
 const findingEntryWindow = (text: string, id: string, nextId: string): string => {
@@ -228,7 +229,7 @@ const packetSnapshot = Effect.fnUntraced(function* (includeRaw = true) {
   const entries = A.sort(yield* fs.readDirectory(root, { recursive: true }), Order.String);
   const files: Array<string> = [];
   for (const entry of entries) {
-    if (!includeRaw && Str.startsWith("raw/")(entry)) {
+    if (includeRaw === false && Str.startsWith("raw/")(entry)) {
       continue;
     }
     const info = yield* fs.stat(`${root}/${entry}`);
@@ -549,7 +550,7 @@ describe("codex findings preservation-safe refresh", () => {
         const packetDir = `${process.cwd()}/goals/${SLUG}`;
         const failingFileSystem = FileSystem.FileSystem.of({
           ...fs,
-          rename: (from, to) =>
+          rename: Effect.fn("CodexFindingsRefreshTest.failingRename")((from, to) =>
             Str.includes("-refresh-")(from) && !Str.endsWith("-previous")(from) && Str.equivalence(to, packetDir)
               ? Effect.fail(
                   PlatformError.systemError({
@@ -559,7 +560,8 @@ describe("codex findings preservation-safe refresh", () => {
                     description: "injected promotion failure",
                   })
                 )
-              : fs.rename(from, to),
+              : fs.rename(from, to)
+          ),
         });
 
         const exit = yield* Effect.exit(
