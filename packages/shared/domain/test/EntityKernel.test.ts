@@ -1,6 +1,8 @@
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { $SharedDomainId } from "@beep/identity/packages";
 import { Cuid, CuidState } from "@beep/schema/Cuid";
 import * as DomainBarrel from "@beep/shared-domain";
+import { Membership, Organization } from "@beep/shared-domain/entities";
 import * as EntityBarrel from "@beep/shared-domain/entity";
 import * as EntityId from "@beep/shared-domain/entity/EntityId";
 import * as EntityRef from "@beep/shared-domain/entity/EntityRef";
@@ -12,6 +14,7 @@ import * as SourceKind from "@beep/shared-domain/entity/SourceKind";
 import { fcRuns } from "@beep/test-utils";
 import { Str } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
+import { getTableConfig } from "drizzle-orm/pg-core";
 import { Crypto, Effect, Exit, Layer } from "effect";
 import { cast } from "effect/Function";
 import * as O from "effect/Option";
@@ -188,6 +191,24 @@ describe("ProductEntity", () => {
     expect(inserted.updatedAt).toBeDefined();
     expect("id" in inserted).toBe(false);
     expect("rowVersion" in inserted).toBe(false);
+  });
+
+  it("materializes model extras into kit-provided table indexes", () => {
+    const membership = Membership.Model.pipe(toPgTable, getTableConfig);
+    const organization = Organization.Model.pipe(toPgTable, getTableConfig);
+    const indexNames = (config: { indexes: ReadonlyArray<{ config: { name?: string } }> }) =>
+      config.indexes.map((index) => index.config.name);
+
+    expect(indexNames(membership)).toEqual(
+      expect.arrayContaining(["shared_membership_user_id_btree_idx", "shared_membership_public_id_unique_idx"])
+    );
+    expect(indexNames(organization)).toEqual(
+      expect.arrayContaining([
+        "shared_organization_license_tier_lookup_idx",
+        "shared_organization_slug_unique_idx",
+        "shared_organization_public_id_unique_idx",
+      ])
+    );
   });
 });
 
