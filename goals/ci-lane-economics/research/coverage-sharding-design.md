@@ -37,11 +37,11 @@ Complete fallback and push runs remain one `Coverage Regression` fleet job:
 
 1. Clean stale coverage outputs once.
 2. Prebuild the workspace once with the existing fleet concurrency of four.
-3. Run coverage with `turbo run coverage --only` in nine concurrent,
-   single-task shards. The measured `@beep/repo-cli` and `@beep/repo-utils`
-   long poles retain two Vitest workers; the seven mixed shards use one worker
-   each. Aggregate test-process fan-out is bounded at 11; dependency builds
-   are neither skipped nor repeated.
+3. Run coverage with `turbo run coverage --only` in ten concurrent,
+   single-task shards. The serial-import-heavy `@beep/repo-cli` long pole
+   retains two Vitest workers; `@beep/repo-utils` and the eight mixed shards
+   use one worker each. Aggregate test-process fan-out remains bounded at 11;
+   dependency builds are neither skipped nor repeated.
 4. Collect the disjoint per-package summaries and run the unchanged full
    ratchet comparison.
 
@@ -52,10 +52,10 @@ complete even though the lane now launches multiple Turbo processes.
 Least-loaded placement uses hosted package durations checked into the planner.
 The 20 largest durations from PR #707 override the older PR #684 profile and
 account for roughly 60% of measured package test time; the older evidence
-continues to weight the tail. The 127 current coverage owners resolve to nine
-stable shards containing 1, 1, 13, 19, 19, 18, 19, 19, and 18 packages. The two
-long poles are isolated at modeled weights of 721 and 605 seconds, while the
-seven mixed shards are balanced at 385-386 two-worker-equivalent seconds before
+continues to weight the tail. The 127 current coverage owners resolve to ten
+stable shards containing 1, 1, 9, 16, 16, 17, 17, 17, 17, and 16 packages.
+The two long poles are isolated at modeled weights of 721 and 605 seconds,
+while the eight mixed shards are balanced at 336-340 modeled seconds before
 their per-shard worker limit is applied. Every owner appears exactly once.
 New packages use a 15-second default and enter the same deterministic
 name-tiebroken placement.
@@ -198,6 +198,26 @@ processes to build the same referenced projects. The repaired forced,
 zero-cache, concurrency-four build passed all 128 tasks in 56.2s. The failed
 attempt remains excluded from duration percentiles and requires a fresh live
 admission.
+
+The repaired nine-shard retry, run `31802039933`, job `94772037908`, passed
+correctness but rejected timing at 21m39s. Its forced zero-cache prebuild
+passed 128/128 tasks in 3m38s. The repaired `@beep/repo-utils` shard finished
+in 2m15s and `@beep/repo-cli` in 13m48s, while the seven mixed queues again
+controlled the tail at 14m55s, 15m03s, 15m08s, 15m24s, 15m57s, 16m25s, and
+16m44s. The ratchet compared all 127 baseline packages, with no test failure,
+runner shutdown, or OOM. The successor spends repo-utils' measured headroom:
+it moves that isolated shard from two workers to one and splits the mixed tail
+across eight one-worker queues. Together with repo-cli's two workers, the ten
+shards preserve aggregate fan-out at 11 while reducing the measured
+bottleneck's queue weight.
+
+The ten-shard successor then passed its forced local full path with remote
+cache disabled. The 128-task prebuild passed with zero cache hits in 17.2
+seconds. Shards 1-10 passed 1, 1, 9, 16, 16, 17, 17, 17, 17, and 16 tasks in
+3m26s, 57s, 3m44s, 3m55s, 3m51s, 3m07s, 4m08s, 3m26s, 3m54s, and 3m57s.
+The complete summary window took 4m26s, and the ratchet compared all 127
+baseline packages. This accepts local correctness and the unchanged resource
+bound only; the live fleet remains the timing authority.
 
 The live PR admission must prove all summaries, all regression tests, no runner
 shutdown/OOM, and complete job wall time below 20 minutes. Any source change

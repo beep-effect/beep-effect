@@ -110,13 +110,13 @@ const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // tuning; the 16GB-survival value was 2.
 const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
-// Nine weighted shards keep the work inside one fleet job while shortening the
-// mixed package tail that controlled the rejected eight-shard live run. The
-// two measured long poles retain two Vitest workers; the other seven shards
-// use one each, bounding aggregate test-process fan-out at 11 on the 8-vCPU
-// runner.
-const COVERAGE_FULL_SHARD_COUNT = 9;
-const COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES = ["@beep/repo-cli", "@beep/repo-utils"] as const;
+// Ten weighted shards keep the work inside one fleet job while shortening the
+// mixed package tail that controlled the rejected nine-shard live run. The
+// serial-import-heavy repo-cli long pole retains two Vitest workers; repo-utils
+// and the eight mixed shards use one each, bounding aggregate test-process
+// fan-out at 11 on the 8-vCPU runner.
+const COVERAGE_FULL_SHARD_COUNT = 10;
+const COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES = ["@beep/repo-cli"] as const;
 // repo-cli deliberately disables file parallelism for ordinary package runs,
 // but serial imports consumed 728.76 seconds in the rejected live coverage
 // candidate. Full coverage and full baseline regeneration share this shard

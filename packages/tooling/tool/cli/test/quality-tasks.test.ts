@@ -2084,7 +2084,7 @@ describe("quality task adapter", () => {
     expect(A.some(shards, (shard) => A.contains(shard.packageNames, "@beep/repo-cli"))).toBe(true);
   });
 
-  it("isolates the two live long poles in the calibrated nine-shard plan", () => {
+  it("isolates the two live long poles in the calibrated ten-shard plan", () => {
     const shards = planCoverageFullShards(
       [
         "@beep/db-admin",
@@ -2108,7 +2108,7 @@ describe("quality task adapter", () => {
         "@beep/test-utils",
         "@beep/wink",
       ],
-      9
+      10
     );
 
     expect(shards[0]?.packageNames).toEqual(["@beep/repo-cli"]);
@@ -2130,6 +2130,7 @@ describe("quality task adapter", () => {
           "@beep/e",
           "@beep/f",
           "@beep/g",
+          "@beep/h",
         ],
         ["--concurrency", "9", "--force", "--remote-only", "--output-logs=errors-only", "--summarize"]
       );
@@ -2145,6 +2146,7 @@ describe("quality task adapter", () => {
         "coverage:shard-7",
         "coverage:shard-8",
         "coverage:shard-9",
+        "coverage:shard-10",
       ]);
       expect(steps[0]?.args).toEqual([
         "turbo",
@@ -2165,15 +2167,13 @@ describe("quality task adapter", () => {
         expect(step.args).toContain("--output-logs=errors-only");
         expect(A.takeRight(step.args, 2)).toEqual([
           "--fileParallelism=true",
-          A.some(step.args, (arg) => arg === "--filter=@beep/repo-cli" || arg === "--filter=@beep/repo-utils")
-            ? "--maxWorkers=2"
-            : "--maxWorkers=1",
+          A.some(step.args, (arg) => arg === "--filter=@beep/repo-cli") ? "--maxWorkers=2" : "--maxWorkers=1",
         ]);
         expect(step.args).not.toContain("--concurrency=4");
         expect(step.args).not.toContain("9");
       }
-      expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=2"))).toHaveLength(2);
-      expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=1"))).toHaveLength(7);
+      expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=2"))).toHaveLength(1);
+      expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=1"))).toHaveLength(9);
     }));
 
   it("uses the hosted shard worker shape for full baseline regeneration", () => {
@@ -2199,8 +2199,8 @@ describe("quality task adapter", () => {
       expect(step.args).not.toContain("--write-baseline");
       expect(step.env).toMatchObject({ VITEST_COVERAGE_REPORT_ONLY: "1" });
     }
-    expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=2"))).toHaveLength(2);
-    expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=1"))).toHaveLength(7);
+    expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=2"))).toHaveLength(1);
+    expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=1"))).toHaveLength(9);
   });
 
   it("separates a percentage drop caused by deleting covered code from one caused by losing coverage", () => {

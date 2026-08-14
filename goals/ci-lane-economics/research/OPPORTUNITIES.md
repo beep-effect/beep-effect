@@ -424,3 +424,17 @@ evidence, what would have prevented it). Redact for the public repo.
   actual workspace dependencies so Turbo is the sole cross-package build
   scheduler and no independent `tsc -b` process writes the same referenced
   projects concurrently.
+
+## 2026-08-14 — repaired long pole kept an unnecessary worker while the mixed tail missed admission
+
+- **Doing:** admitting the repaired nine-shard Coverage Regression head on PR
+  #719 against the under-20-minute live-fleet ceiling.
+- **Evidence:** run `31802039933`, job `94772037908`, passed every coverage
+  test and all 127 baseline comparisons in 21m39s. The repaired repo-utils
+  shard drained in 2m15s, repo-cli in 13m48s, and the seven mixed queues
+  controlled wall time at 14m55s-16m44s. Repo-utils still held two workers
+  while the measured bottleneck lacked enough independent queues.
+- **Would have prevented it:** reallocate worker capacity after the
+  infrastructure repair's first live profile—one repo-utils worker plus an
+  eighth mixed queue preserves the aggregate cap while targeting the actual
+  tail.
