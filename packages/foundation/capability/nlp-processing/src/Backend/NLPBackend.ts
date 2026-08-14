@@ -7,7 +7,7 @@
  * adapters/wrappers, and composition enables fallback strategies.
  *
  * Effect v4 `@beep/nlp` implementation notes:
- * `Data.TaggedError` becomes {@link @beep/schema#TaggedErrorClass} scoped by a
+ * `Data.TaggedError` becomes `S.TaggedError` from `effect/Schema`, scoped by a
  * `$NlpProcessingId` composer, `Context.GenericTag` becomes the
  * `Context.Service` class form used across this package, and `Object.keys`
  * becomes `Struct.keys`.
@@ -17,7 +17,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Context, Inspectable, pipe, Struct } from "effect";
 import { dual } from "effect/Function";
@@ -61,7 +61,7 @@ const isBackendOperationErrorDataFirst = (args: IArguments): boolean => args.len
  * @category errors
  * @since 0.0.0
  */
-export class BackendNotSupported extends TaggedErrorClass<BackendNotSupported>($I`BackendNotSupported`)(
+export class BackendNotSupported extends S.TaggedError<BackendNotSupported>($I`BackendNotSupported`)(
   "BackendNotSupported",
   {
     backend: S.String,
@@ -105,7 +105,7 @@ export class BackendNotSupported extends TaggedErrorClass<BackendNotSupported>($
  * @category errors
  * @since 0.0.0
  */
-export class BackendInitError extends TaggedErrorClass<BackendInitError>($I`BackendInitError`)(
+export class BackendInitError extends S.TaggedError<BackendInitError>($I`BackendInitError`)(
   "BackendInitError",
   {
     backend: S.String,
@@ -150,7 +150,7 @@ export class BackendInitError extends TaggedErrorClass<BackendInitError>($I`Back
  * @category errors
  * @since 0.0.0
  */
-export class BackendOperationError extends TaggedErrorClass<BackendOperationError>($I`BackendOperationError`)(
+export class BackendOperationError extends S.TaggedError<BackendOperationError>($I`BackendOperationError`)(
   "BackendOperationError",
   {
     backend: S.String,

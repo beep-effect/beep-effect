@@ -9,7 +9,7 @@
  */
 
 import { $AiProviderCliId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -88,7 +88,7 @@ export type AiProviderCliHomeFsOperation = typeof AiProviderCliHomeFsOperation.T
  * @category errors
  * @since 0.0.0
  */
-export class AiProviderCliHomeFileSystemError extends TaggedErrorClass<AiProviderCliHomeFileSystemError>(
+export class AiProviderCliHomeFileSystemError extends S.TaggedError<AiProviderCliHomeFileSystemError>(
   $I`AiProviderCliHomeFileSystemError`
 )(
   "AiProviderCliHomeFileSystemError",
@@ -149,7 +149,7 @@ export class AiProviderCliHomeFileSystemError extends TaggedErrorClass<AiProvide
  * @category errors
  * @since 0.0.0
  */
-export class AiProviderCliHomePathConflictError extends TaggedErrorClass<AiProviderCliHomePathConflictError>(
+export class AiProviderCliHomePathConflictError extends S.TaggedError<AiProviderCliHomePathConflictError>(
   $I`AiProviderCliHomePathConflictError`
 )(
   "AiProviderCliHomePathConflictError",
@@ -192,7 +192,7 @@ export class AiProviderCliHomePathConflictError extends TaggedErrorClass<AiProvi
  * @category errors
  * @since 0.0.0
  */
-export class AiProviderCliHomeEntryConflictError extends TaggedErrorClass<AiProviderCliHomeEntryConflictError>(
+export class AiProviderCliHomeEntryConflictError extends S.TaggedError<AiProviderCliHomeEntryConflictError>(
   $I`AiProviderCliHomeEntryConflictError`
 )(
   "AiProviderCliHomeEntryConflictError",
@@ -243,7 +243,7 @@ export class AiProviderCliHomeEntryConflictError extends TaggedErrorClass<AiProv
  * @category errors
  * @since 0.0.0
  */
-export class AiProviderCliHomePrivateEntrySymlinkError extends TaggedErrorClass<AiProviderCliHomePrivateEntrySymlinkError>(
+export class AiProviderCliHomePrivateEntrySymlinkError extends S.TaggedError<AiProviderCliHomePrivateEntrySymlinkError>(
   $I`AiProviderCliHomePrivateEntrySymlinkError`
 )(
   "AiProviderCliHomePrivateEntrySymlinkError",

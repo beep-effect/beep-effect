@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { Fn, LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { Fn, LiteralKit } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
@@ -178,7 +178,7 @@ export class AiMetricsDataRoot extends S.Class<AiMetricsDataRoot>($I`AiMetricsDa
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsDataRootError extends TaggedErrorClass<AiMetricsDataRootError>($I`AiMetricsDataRootError`)(
+export class AiMetricsDataRootError extends S.TaggedError<AiMetricsDataRootError>($I`AiMetricsDataRootError`)(
   "AiMetricsDataRootError",
   {
     cause: S.Defect({ includeStack: true }),

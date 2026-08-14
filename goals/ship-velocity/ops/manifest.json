@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ship-velocity",
+    "title": "Ship Velocity",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ship-velocity",
+  "lifecycle": "active",
+  "statusNote": "P0 ratification: packet landed with the 9-lane fan-out evidence and ADHD backpressure designs; next actions are the P0 decision notes and the P1 instant wins.",
+  "mission": "Agents ship correct code faster: sub-minute failure backpressure into the owning session, local verify that near-guarantees the 16 required remote checks, readable+warm Turbo cache in every checkout, memory-aware concurrent verify/publish, and no derived-file merge treadmill.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "goal": "goals/speed-loop",
+    "graduated": "2026-08-13",
+    "note": "Successor surface for speed-loop/repo-quality-throughput/quality-speedup threads plus the 2026-08-13 nine-lane fan-out (codex Sol + grok 4.6) and ADHD backpressure divergence; carries the open monitor/parity/cache/concurrency/hot-file items those retained packets parked."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until a representative week shows: backpressure p95 under 60s to an attached session (under 5 minutes with takeover), the parity ledger records zero recurring locally-catchable required-check failures, every sibling checkout reads the remote cache, at least two concurrent verifies run under admission without OOM, hot-file conflicts no longer force PR rework, and the final PR is driven to mergeable via yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ship-velocity/README.md",
+    "goals/ship-velocity/SPEC.md",
+    "goals/ship-velocity/PLAN.md",
+    "goals/ship-velocity/GOAL.md"
+  ],
+  "researchReports": [
+    "research/c2-yeet-monitor-backpressure.md",
+    "research/c3-local-remote-parity.md",
+    "research/c4-turbo-cache.md",
+    "research/c5-concurrency-policy.md",
+    "research/c6-conflicts-queue.md",
+    "research/c7-opportunities.md",
+    "research/g1-external-research.md",
+    "research/g2-design-ideas.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ship-velocity/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Ratify and baseline",
+      "status": "in-progress"
+    },
+    {
+      "id": "P1",
+      "name": "Instant wins",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Backpressure engine",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Full parity",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Concurrency and cache proof",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Hot-file endgame and close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ship-velocity/GOAL.md)\" -le 4000",
+    "jq . goals/ship-velocity/ops/manifest.json",
+    "bun run beep goals doctor",
+    "git diff --check -- goals/ship-velocity"
+  ],
+  "stopConditions": [
+    "Any backpressure enforcement (hook deny, Stop veto, poison-pill) deadlocks a session or checkout - severity gates and waives must ship with the enforcement, never after.",
+    "Admission/auto-heal/takeover would mutate state it cannot attribute (foreign lease, malformed lock, baseline regeneration) - fail loud and stop.",
+    "PR remote-cache reads or path-filtered required checks proceed without their recorded operator decision note.",
+    "A parity change weakens a security lane (gitleaks pinning, OSV, fork isolation) to make local green easier."
+  ]
+}

@@ -3,7 +3,7 @@
  * failure constructors, and the schema-decodability of each tagged error.
  *
  * Effect v4 + `@effect/vitest` coverage for backend design.
- * Errors are `TaggedErrorClass` instances, so they round-trip through schema
+ * Errors are `S.TaggedError` instances, so they round-trip through schema
  * decode/encode like any other `@beep/schema` model.
  */
 

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -17,7 +17,7 @@ const $I = $ScratchpadId.create("codemode/Codemode.tool-error");
  * @category models
  * @since 0.0.0
  */
-export class ToolError extends TaggedErrorClass<ToolError>($I`ToolError`)(
+export class ToolError extends S.TaggedError<ToolError>($I`ToolError`)(
   "ToolError",
   {
     message: S.String,

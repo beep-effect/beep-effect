@@ -6,7 +6,7 @@
  */
 
 import { $PostgresId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, pipe, Result } from "effect";
 import * as S from "effect/Schema";
@@ -15,6 +15,39 @@ import { getPgErrorName, PgErrorName } from "./PostgresSqlState.models.ts";
 
 const $I = $PostgresId.create("Postgres.errors");
 const REDACTED_SQL_PARAMETER = "<redacted>";
+
+const PostgresDiagnosticFields = {
+  message: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Primary diagnostic message reported by Postgres or an adjacent driver." }),
+  severity: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Severity reported by Postgres diagnostics." }),
+  detail: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Detailed diagnostic text reported by Postgres." }),
+  hint: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Hint text reported by Postgres." }),
+  schemaName: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Schema name reported by Postgres diagnostics." }),
+  tableName: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Table name reported by Postgres diagnostics." }),
+  columnName: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Column name reported by Postgres diagnostics." }),
+  constraintName: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Constraint name reported by Postgres diagnostics." }),
+  query: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "SQL statement associated with the normalized failure." }),
+  params: S.OptionFromOptionalKey(S.Unknown.pipe(S.Array))
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Opaque query parameters captured for redacted diagnostics." }),
+} satisfies S.Struct.Fields;
 
 /**
  * Optional diagnostic context captured while normalizing Postgres-adjacent failures.
@@ -38,33 +71,7 @@ const REDACTED_SQL_PARAMETER = "<redacted>";
  */
 export class PostgresErrorContext extends S.Class<PostgresErrorContext>($I`PostgresErrorContext`)(
   {
-    columnName: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Column name reported by Postgres diagnostics." }),
-    constraintName: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Constraint name reported by Postgres diagnostics." }),
-    detail: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Detailed diagnostic text reported by Postgres." }),
-    hint: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Hint text reported by Postgres." }),
-    message: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Primary diagnostic message reported by Postgres or an adjacent driver." }),
-    params: S.OptionFromOptionalKey(S.Unknown.pipe(S.Array))
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Opaque query parameters captured for redacted diagnostics." }),
-    query: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "SQL statement associated with the normalized failure." }),
-    schemaName: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Schema name reported by Postgres diagnostics." }),
-    severity: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Severity reported by Postgres diagnostics." }),
+    ...PostgresDiagnosticFields,
     sourceLocation: S.OptionFromOptionalKey(S.String)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({ description: "Best-effort source file and position associated with the failure." }),
@@ -74,9 +81,6 @@ export class PostgresErrorContext extends S.Class<PostgresErrorContext>($I`Postg
     sqlStateName: S.OptionFromOptionalKey(PgErrorName)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({ description: "Canonical SQLSTATE name derived from the SQLSTATE code." }),
-    tableName: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Table name reported by Postgres diagnostics." }),
     where: S.OptionFromOptionalKey(S.String)
       .pipe(SchemaUtils.withNoneDefault)
       .annotateKey({ description: "Contextual where-clause or stack detail reported by Postgres." }),
@@ -340,6 +344,28 @@ const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
     ? optionFrom(value)
     : O.none();
 
+const PostgresErrorFields = {
+  operation: S.String.annotateKey({ description: "Driver operation being performed when the failure occurred." }),
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Schema-safe defect captured from the original failure when available." }),
+  ...PostgresDiagnosticFields,
+  sqlState: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Five-character SQLSTATE code reported by Postgres." }),
+  sqlStateName: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Canonical SQLSTATE name derived from the SQLSTATE code." }),
+  where: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Contextual where-clause or stack detail reported by Postgres." }),
+  sourceLocation: S.OptionFromOptionalKey(S.String)
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({ description: "Best-effort source file and position associated with the failure." }),
+} satisfies S.Struct.Fields;
+const samePostgresErrorFields = S.toEquivalence(S.TaggedStruct("PostgresError", PostgresErrorFields));
+const samePostgresError = (self: PostgresError, that: PostgresError): boolean => samePostgresErrorFields(self, that);
+
 /**
  * Technical failure raised by the `@beep/postgres` driver boundary.
  *
@@ -355,59 +381,16 @@ const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
  * @category errors
  * @since 0.0.0
  */
-export class PostgresError extends TaggedErrorClass<PostgresError>($I`PostgresError`)(
+export class PostgresError extends S.TaggedError<PostgresError>($I`PostgresError`)(
   "PostgresError",
-  {
-    operation: S.String.annotateKey({ description: "Driver operation being performed when the failure occurred." }),
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Schema-safe defect captured from the original failure when available." }),
-    message: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Primary diagnostic message reported by Postgres or an adjacent driver." }),
-    sqlState: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Five-character SQLSTATE code reported by Postgres." }),
-    sqlStateName: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Canonical SQLSTATE name derived from the SQLSTATE code." }),
-    severity: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Severity reported by Postgres diagnostics." }),
-    detail: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Detailed diagnostic text reported by Postgres." }),
-    hint: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Hint text reported by Postgres." }),
-    where: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Contextual where-clause or stack detail reported by Postgres." }),
-    schemaName: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Schema name reported by Postgres diagnostics." }),
-    tableName: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Table name reported by Postgres diagnostics." }),
-    columnName: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Column name reported by Postgres diagnostics." }),
-    constraintName: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Constraint name reported by Postgres diagnostics." }),
-    query: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "SQL statement associated with the normalized failure." }),
-    params: S.OptionFromOptionalKey(S.Unknown.pipe(S.Array))
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Opaque query parameters captured for redacted diagnostics." }),
-    sourceLocation: S.OptionFromOptionalKey(S.String)
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({ description: "Best-effort source file and position associated with the failure." }),
-  },
-  $I.annote("PostgresError", {
-    description: "Technical Postgres driver failure scoped to a driver operation.",
-  })
+  PostgresErrorFields,
+  $I.annoteClass<S.declare<PostgresError>, readonly [S.TaggedStruct<"PostgresError", typeof PostgresErrorFields>]>(
+    "PostgresError",
+    {
+      description: "Technical Postgres driver failure scoped to a driver operation.",
+      toEquivalence: () => samePostgresError,
+    }
+  )
 ) {
   static readonly is = S.is(PostgresError);
 

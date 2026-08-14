@@ -3,5 +3,5 @@ language js
 // Replaces `beep lint tooling-tagged-errors`. Scope to packages/tooling/** via
 // the consuming biome config `overrides`. Flags native `new Error(...)`.
 `new Error($message)` as $err where {
-  register_diagnostic(span=$err, message="Rule: do not construct a native Error in tooling source. Why: native errors bypass typed error channels. Fix: use TaggedErrorClass from @beep/schema (or a tagged error subclass) instead.", severity="error")
+  register_diagnostic(span=$err, message="Rule: do not construct a native Error in tooling source. Why: native errors bypass typed error channels. Fix: use S.TaggedError from effect/Schema (or a tagged error subclass) instead.", severity="error")
 }

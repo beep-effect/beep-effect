@@ -53,15 +53,15 @@ finding; nothing may be merely renamed or re-deferred.
 
 ## Acceptance Criteria
 
-- [ ] Candidate output promotion consults a shared cross-slice gate and refuses a blocked verdict; a law-practice adapter maps `CandorPolicy` without leaking law vocabulary into the shared contract.
-- [ ] Examiner-observed current events enter the quantified gate set on their own and require a recorded human disposition; focused tests pin the widened behavior.
-- [ ] ST.13 identities carry an ST.3 office code, reject `US`, and remain distinct from USPTO-normalized identities; tests prove that no unsupported cross-representation equality is invented.
-- [ ] Representative-volume `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` evidence exists for each candor read shape and the index/no-index decision follows that evidence.
-- [ ] The test-Crypto census ends in either an earned shared layer with multiple equivalent consumers or a documented no-build decision proving the abstractions differ or remain below threshold.
-- [ ] The Lint Policy divergence is reproduced or explained from current planner modes and pinned by focused tests; the old receipt is marked resolved with exact evidence.
-- [ ] The predecessor README routes all five items to this packet and, at close, contains no unowned candor follow-up.
-- [ ] Focused package checks and tests, the quality baseline, reviewer loop, and Yeet proof pass.
-- [ ] No unrelated refactors or formatting churn.
+- [x] Candidate output promotion consults a shared cross-slice gate and refuses a blocked verdict; a law-practice adapter maps `CandorPolicy` without leaking law vocabulary into the shared contract.
+- [x] Examiner-observed current events enter the quantified gate set on their own and require a recorded human disposition; focused tests pin the widened behavior.
+- [x] ST.13 identities carry an ST.3 office code, reject `US`, and remain distinct from USPTO-normalized identities; tests prove that no unsupported cross-representation equality is invented.
+- [x] Representative-volume `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` evidence exists for each candor read shape and the index/no-index decision follows that evidence.
+- [x] The test-Crypto census ends in either an earned shared layer with multiple equivalent consumers or a documented no-build decision proving the abstractions differ or remain below threshold.
+- [x] The Lint Policy divergence is reproduced or explained from current planner modes and pinned by focused tests; the old receipt is marked resolved with exact evidence.
+- [x] The predecessor README routes all five items to this packet and, at close, contains no unowned candor follow-up.
+- [x] Focused package checks and tests, the quality baseline, reviewer loop, and Yeet proof pass.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

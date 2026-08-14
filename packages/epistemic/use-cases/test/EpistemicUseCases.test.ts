@@ -2,7 +2,7 @@ import { CandidateClaim, ClaimGateResult, ClaimLifecycle, ClaimProjectionView, E
 import * as ClaimGateUC from "@beep/epistemic-use-cases/ClaimGate";
 import * as ClaimLifecycleUC from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { ClaimProjection, projectClaims } from "@beep/epistemic-use-cases/ClaimProjection";
-import { makeNamedNode } from "@beep/semantic-web/rdf";
+import { makeNamedNode } from "@beep/rdf/Rdf";
 import {
   ShaclValidationResult,
   ShaclValidationService,

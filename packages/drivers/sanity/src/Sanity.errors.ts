@@ -6,7 +6,7 @@
  */
 
 import { $SanityId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, thunkFalse, thunkUndefined } from "@beep/utils";
 import { pipe, Result } from "effect";
 import * as P from "effect/Predicate";
@@ -117,7 +117,7 @@ export type SanityErrorReason = typeof SanityErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class SanityError extends TaggedErrorClass<SanityError>($I`SanityError`)(
+export class SanityError extends S.TaggedError<SanityError>($I`SanityError`)(
   "SanityError",
   {
     cause: S.optionalKey(S.String).annotateKey({

@@ -44,11 +44,10 @@ const name = pipe(
 import { Effect } from "effect"
 import * as S from "effect/Schema"
 import { $PackageNameId } from "@beep/identity/packages"
-import { TaggedErrorClass } from "@beep/schema"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
 
-class JsonParseError extends TaggedErrorClass<JsonParseError>($I`JsonParseError`)(
+class JsonParseError extends S.TaggedError<JsonParseError>($I`JsonParseError`)(
   "JsonParseError",
   { message: S.String, input: S.String },
   $I.annote("JsonParseError", { description: "Invalid JSON payload" })

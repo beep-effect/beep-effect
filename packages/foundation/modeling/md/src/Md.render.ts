@@ -6,7 +6,7 @@
  */
 
 import { $MdId } from "@beep/identity";
-import { HtmlFragment, Markdown, TaggedErrorClass } from "@beep/schema";
+import { HtmlFragment, Markdown } from "@beep/schema";
 import { A, Html, R, Str, thunkEmptyStr } from "@beep/utils";
 import { Effect, flow, identity, Match, Number as N, Order, Result, SchemaGetter, SchemaIssue, Tuple } from "effect";
 import { cast, dual, pipe } from "effect/Function";
@@ -122,7 +122,7 @@ const renderJsonFrontmatter: (frontmatter: O.Option<JsonRecord>) => string = flo
  * @category error-handling
  * @since 0.0.0
  */
-export class RenderError extends TaggedErrorClass<RenderError>($I`RenderError`)(
+export class RenderError extends S.TaggedError<RenderError>($I`RenderError`)(
   "RenderError",
   {
     adapter: S.String,

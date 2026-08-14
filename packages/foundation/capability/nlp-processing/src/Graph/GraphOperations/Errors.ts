@@ -2,7 +2,7 @@
  * GraphOperations/Errors - failures raised during graph-operation execution.
  *
  * Effect v4 `@beep/nlp` implementation notes:
- * each `Data.TaggedError` becomes a {@link @beep/schema#TaggedErrorClass} scoped
+ * each `Data.TaggedError` becomes `S.TaggedError` from `effect/Schema`, scoped
  * by a `$NlpProcessingId` composer, `unknown` cause fields become
  * `S.Defect({ includeStack: true })`, and node-scoped failures carry the `NodeId` schema.
  *
@@ -11,7 +11,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { NodeId } from "../EffectGraph.ts";
 
@@ -38,7 +38,7 @@ const $I = $NlpProcessingId.create("Graph/GraphOperations/Errors");
  * @category errors
  * @since 0.0.0
  */
-export class ValidationError extends TaggedErrorClass<ValidationError>($I`ValidationError`)(
+export class ValidationError extends S.TaggedError<ValidationError>($I`ValidationError`)(
   "ValidationError",
   {
     errors: S.Array(S.String),
@@ -71,7 +71,7 @@ export class ValidationError extends TaggedErrorClass<ValidationError>($I`Valida
  * @category errors
  * @since 0.0.0
  */
-export class TimeoutError extends TaggedErrorClass<TimeoutError>($I`TimeoutError`)(
+export class TimeoutError extends S.TaggedError<TimeoutError>($I`TimeoutError`)(
   "TimeoutError",
   {
     nodeId: NodeId,
@@ -110,7 +110,7 @@ export class TimeoutError extends TaggedErrorClass<TimeoutError>($I`TimeoutError
  * @category errors
  * @since 0.0.0
  */
-export class OperationError extends TaggedErrorClass<OperationError>($I`OperationError`)(
+export class OperationError extends S.TaggedError<OperationError>($I`OperationError`)(
   "OperationError",
   {
     cause: S.Defect({ includeStack: true }),
@@ -143,7 +143,7 @@ export class OperationError extends TaggedErrorClass<OperationError>($I`Operatio
  * @category errors
  * @since 0.0.0
  */
-export class GraphError extends TaggedErrorClass<GraphError>($I`GraphError`)(
+export class GraphError extends S.TaggedError<GraphError>($I`GraphError`)(
   "GraphError",
   {
     message: S.String,
@@ -178,7 +178,7 @@ export class GraphError extends TaggedErrorClass<GraphError>($I`GraphError`)(
  * @category errors
  * @since 0.0.0
  */
-export class StorageError extends TaggedErrorClass<StorageError>($I`StorageError`)(
+export class StorageError extends S.TaggedError<StorageError>($I`StorageError`)(
   "StorageError",
   {
     cause: S.Defect({ includeStack: true }),
@@ -209,7 +209,7 @@ export class StorageError extends TaggedErrorClass<StorageError>($I`StorageError
  * @category errors
  * @since 0.0.0
  */
-export class ExecutionError extends TaggedErrorClass<ExecutionError>($I`ExecutionError`)(
+export class ExecutionError extends S.TaggedError<ExecutionError>($I`ExecutionError`)(
   "ExecutionError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),

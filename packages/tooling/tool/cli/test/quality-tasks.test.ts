@@ -20,6 +20,7 @@ import {
   compareCoverageRegressionSnapshotsForTesting,
   compareJSDocTotalsForTesting,
   compareKnipFindingsForTesting,
+  coverageDispositionGapsForTesting,
   coverageFullStepsForTesting,
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
@@ -118,6 +119,14 @@ const coverageRegressionBaseline = CoverageRegressionBaseline.make({
   git_sha: "test-sha",
   command: "bun run coverage:baseline:write",
   epsilon: 0.001,
+  minimum: {
+    lines: 0,
+    statements: 0,
+    branches: 0,
+    functions: 0,
+  },
+  exemptions: {},
+  follow_ups: {},
   packages: {
     "@beep/existing": coveragePackageBaseline("packages/existing"),
   },
@@ -1417,6 +1426,60 @@ describe("quality task adapter", () => {
     );
   });
 
+  it("enforces tiered minimums independently while allowing named follow-up debt", () => {
+    const policyBaseline = CoverageRegressionBaseline.make({
+      ...coverageRegressionBaseline,
+      minimum: {
+        lines: 70,
+        statements: 70,
+        branches: 50,
+        functions: 60,
+      },
+      follow_ups: {
+        "@beep/debt": "Dedicated follow-up.",
+      },
+      packages: {
+        "@beep/debt": coveragePackageBaseline("packages/debt", 10),
+        "@beep/existing": coveragePackageBaseline("packages/existing", 80),
+      },
+    });
+    const result = compareCoverageRegressionSnapshotsForTesting(
+      policyBaseline,
+      [
+        { packageName: "@beep/debt", baseline: coveragePackageBaseline("packages/debt", 10) },
+        {
+          packageName: "@beep/existing",
+          baseline: CoveragePackageBaseline.make({
+            path: "packages/existing",
+            lines: 65,
+            statements: 65,
+            branches: 45,
+            functions: 55,
+          }),
+        },
+      ],
+      false
+    );
+
+    expect(A.map(result.minimumFailures, (failure) => failure.metric).sort()).toEqual([
+      "branches",
+      "functions",
+      "lines",
+      "statements",
+    ]);
+    expect(A.map(result.followUpDebt, (entry) => entry.packageName)).toEqual(["@beep/debt"]);
+  });
+
+  it("requires every workspace package to have coverage or a named exemption", () => {
+    expect(
+      coverageDispositionGapsForTesting(
+        ["@beep/covered", "@beep/exempt", "@beep/missing"],
+        ["@beep/covered"],
+        ["@beep/exempt"]
+      )
+    ).toEqual(["@beep/missing"]);
+  });
+
   it("fails when an exact selected coverage owner omits its summary", () => {
     expect(
       compareCoverageRegressionSnapshotsForExpectedPackagesForTesting(
@@ -1575,6 +1638,7 @@ describe("quality task adapter", () => {
         "coverage:shard-2",
         "coverage:shard-3",
         "coverage:shard-4",
+        "coverage:shard-5",
       ]);
       expect(steps[0]?.args).toEqual([
         "turbo",
@@ -1592,7 +1656,7 @@ describe("quality task adapter", () => {
         expect(step.args).toContain("--force");
         expect(step.args).toContain("--remote-only");
         expect(step.args).toContain("--output-logs=errors-only");
-        expect(A.takeRight(step.args, 2)).toEqual(["--", "--maxWorkers=2"]);
+        expect(A.takeRight(step.args, 3)).toEqual(["--", "--fileParallelism=true", "--maxWorkers=2"]);
         expect(step.args).not.toContain("--concurrency=4");
         expect(step.args).not.toContain("9");
       }

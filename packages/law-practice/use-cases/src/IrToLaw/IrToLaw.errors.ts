@@ -8,7 +8,7 @@
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { AlignmentStatus } from "@beep/langextract/Extraction";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -88,7 +88,7 @@ export type IrToLawExtractionErrorReason = typeof IrToLawExtractionErrorReason.T
  * @category errors
  * @since 0.0.0
  */
-export class IrToLawExtractionError extends TaggedErrorClass<IrToLawExtractionError>($I`IrToLawExtractionError`)(
+export class IrToLawExtractionError extends S.TaggedError<IrToLawExtractionError>($I`IrToLawExtractionError`)(
   "IrToLawExtractionError",
   {
     alignmentStatus: S.OptionFromOptionalKey(AlignmentStatus).pipe(SchemaUtils.withNoneDefault).annotateKey({

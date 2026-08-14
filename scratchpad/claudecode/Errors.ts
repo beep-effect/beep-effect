@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("claudecode/Errors");
@@ -53,7 +53,7 @@ const HookToolPayload = LiteralKit(["tool_name", "tool_input", "tool_response"])
  * @category errors
  * @since 0.0.0
  */
-export class HookStdinReadError extends TaggedErrorClass<HookStdinReadError>($I`HookStdinReadError`)(
+export class HookStdinReadError extends S.TaggedError<HookStdinReadError>($I`HookStdinReadError`)(
   "HookStdinReadError",
   { cause: S.Defect() },
   $I.annote("HookStdinReadError", {
@@ -81,7 +81,7 @@ export class HookStdinReadError extends TaggedErrorClass<HookStdinReadError>($I`
  * @category errors
  * @since 0.0.0
  */
-export class HookInputDecodeError extends TaggedErrorClass<HookInputDecodeError>($I`HookInputDecodeError`)(
+export class HookInputDecodeError extends S.TaggedError<HookInputDecodeError>($I`HookInputDecodeError`)(
   "HookInputDecodeError",
   {
     cause: S.Defect(),
@@ -109,7 +109,7 @@ export class HookInputDecodeError extends TaggedErrorClass<HookInputDecodeError>
  * @category errors
  * @since 0.0.0
  */
-export class HookHandlerError extends TaggedErrorClass<HookHandlerError>($I`HookHandlerError`)(
+export class HookHandlerError extends S.TaggedError<HookHandlerError>($I`HookHandlerError`)(
   "HookHandlerError",
   { cause: S.Defect() },
   $I.annote("HookHandlerError", {
@@ -134,7 +134,7 @@ export class HookHandlerError extends TaggedErrorClass<HookHandlerError>($I`Hook
  * @category errors
  * @since 0.0.0
  */
-export class HookOutputEncodeError extends TaggedErrorClass<HookOutputEncodeError>($I`HookOutputEncodeError`)(
+export class HookOutputEncodeError extends S.TaggedError<HookOutputEncodeError>($I`HookOutputEncodeError`)(
   "HookOutputEncodeError",
   { cause: S.Defect() },
   $I.annote("HookOutputEncodeError", {
@@ -159,7 +159,7 @@ export class HookOutputEncodeError extends TaggedErrorClass<HookOutputEncodeErro
  * @category errors
  * @since 0.0.0
  */
-export class HookStdoutWriteError extends TaggedErrorClass<HookStdoutWriteError>($I`HookStdoutWriteError`)(
+export class HookStdoutWriteError extends S.TaggedError<HookStdoutWriteError>($I`HookStdoutWriteError`)(
   "HookStdoutWriteError",
   { cause: S.Defect() },
   $I.annote("HookStdoutWriteError", {
@@ -183,7 +183,7 @@ export class HookStdoutWriteError extends TaggedErrorClass<HookStdoutWriteError>
  * @category errors
  * @since 0.0.0
  */
-export class HookControlledExit extends TaggedErrorClass<HookControlledExit>($I`HookControlledExit`)(
+export class HookControlledExit extends S.TaggedError<HookControlledExit>($I`HookControlledExit`)(
   "HookControlledExit",
   { code: S.Finite },
   $I.annote("HookControlledExit", {
@@ -212,7 +212,7 @@ export class HookControlledExit extends TaggedErrorClass<HookControlledExit>($I`
  * @category errors
  * @since 0.0.0
  */
-export class HookToolDecodeError extends TaggedErrorClass<HookToolDecodeError>($I`HookToolDecodeError`)(
+export class HookToolDecodeError extends S.TaggedError<HookToolDecodeError>($I`HookToolDecodeError`)(
   "HookToolDecodeError",
   {
     event: HookToolEvent,
@@ -244,7 +244,7 @@ export class HookToolDecodeError extends TaggedErrorClass<HookToolDecodeError>($
  * @category errors
  * @since 0.0.0
  */
-export class TranscriptReadError extends TaggedErrorClass<TranscriptReadError>($I`TranscriptReadError`)(
+export class TranscriptReadError extends S.TaggedError<TranscriptReadError>($I`TranscriptReadError`)(
   "TranscriptReadError",
   { path: S.String, cause: S.Defect() },
   $I.annote("TranscriptReadError", {
@@ -271,7 +271,7 @@ export class TranscriptReadError extends TaggedErrorClass<TranscriptReadError>($
  * @category errors
  * @since 0.0.0
  */
-export class SettingsReadError extends TaggedErrorClass<SettingsReadError>($I`SettingsReadError`)(
+export class SettingsReadError extends S.TaggedError<SettingsReadError>($I`SettingsReadError`)(
   "SettingsReadError",
   { path: S.String, cause: S.Defect() },
   $I.annote("SettingsReadError", {
@@ -294,7 +294,7 @@ export class SettingsReadError extends TaggedErrorClass<SettingsReadError>($I`Se
  * @category errors
  * @since 0.0.0
  */
-export class SettingsParseError extends TaggedErrorClass<SettingsParseError>($I`SettingsParseError`)(
+export class SettingsParseError extends S.TaggedError<SettingsParseError>($I`SettingsParseError`)(
   "SettingsParseError",
   { path: S.String, cause: S.Defect() },
   $I.annote("SettingsParseError", {
@@ -318,7 +318,7 @@ export class SettingsParseError extends TaggedErrorClass<SettingsParseError>($I`
  * @category errors
  * @since 0.0.0
  */
-export class SettingsDecodeError extends TaggedErrorClass<SettingsDecodeError>($I`SettingsDecodeError`)(
+export class SettingsDecodeError extends S.TaggedError<SettingsDecodeError>($I`SettingsDecodeError`)(
   "SettingsDecodeError",
   { path: S.String, cause: S.Defect() },
   $I.annote("SettingsDecodeError", {
@@ -346,7 +346,7 @@ export class SettingsDecodeError extends TaggedErrorClass<SettingsDecodeError>($
  * @category errors
  * @since 0.0.0
  */
-export class PluginWriteError extends TaggedErrorClass<PluginWriteError>($I`PluginWriteError`)(
+export class PluginWriteError extends S.TaggedError<PluginWriteError>($I`PluginWriteError`)(
   "PluginWriteError",
   { path: S.String, cause: S.Defect() },
   $I.annote("PluginWriteError", {
@@ -373,7 +373,7 @@ export class PluginWriteError extends TaggedErrorClass<PluginWriteError>($I`Plug
  * @category errors
  * @since 0.0.0
  */
-export class PluginDefinitionError extends TaggedErrorClass<PluginDefinitionError>($I`PluginDefinitionError`)(
+export class PluginDefinitionError extends S.TaggedError<PluginDefinitionError>($I`PluginDefinitionError`)(
   "PluginDefinitionError",
   {
     kind: S.String,
@@ -401,7 +401,7 @@ export class PluginDefinitionError extends TaggedErrorClass<PluginDefinitionErro
  * @category errors
  * @since 0.0.0
  */
-export class PluginLoadError extends TaggedErrorClass<PluginLoadError>($I`PluginLoadError`)(
+export class PluginLoadError extends S.TaggedError<PluginLoadError>($I`PluginLoadError`)(
   "PluginLoadError",
   { path: S.String, cause: S.Defect() },
   $I.annote("PluginLoadError", {
@@ -429,7 +429,7 @@ export class PluginLoadError extends TaggedErrorClass<PluginLoadError>($I`Plugin
  * @category errors
  * @since 0.0.0
  */
-export class FrontmatterReadError extends TaggedErrorClass<FrontmatterReadError>($I`FrontmatterReadError`)(
+export class FrontmatterReadError extends S.TaggedError<FrontmatterReadError>($I`FrontmatterReadError`)(
   "FrontmatterReadError",
   { path: S.String, cause: S.Defect() },
   $I.annote("FrontmatterReadError", {
@@ -454,7 +454,7 @@ export class FrontmatterReadError extends TaggedErrorClass<FrontmatterReadError>
  * @category errors
  * @since 0.0.0
  */
-export class FrontmatterParseError extends TaggedErrorClass<FrontmatterParseError>($I`FrontmatterParseError`)(
+export class FrontmatterParseError extends S.TaggedError<FrontmatterParseError>($I`FrontmatterParseError`)(
   "FrontmatterParseError",
   { path: S.String, cause: S.Defect() },
   $I.annote("FrontmatterParseError", {
@@ -479,7 +479,7 @@ export class FrontmatterParseError extends TaggedErrorClass<FrontmatterParseErro
  * @category errors
  * @since 0.0.0
  */
-export class FrontmatterDecodeError extends TaggedErrorClass<FrontmatterDecodeError>($I`FrontmatterDecodeError`)(
+export class FrontmatterDecodeError extends S.TaggedError<FrontmatterDecodeError>($I`FrontmatterDecodeError`)(
   "FrontmatterDecodeError",
   { path: S.String, cause: S.Defect() },
   $I.annote("FrontmatterDecodeError", {
@@ -506,7 +506,7 @@ export class FrontmatterDecodeError extends TaggedErrorClass<FrontmatterDecodeEr
  * @category errors
  * @since 0.0.0
  */
-export class McpConfigError extends TaggedErrorClass<McpConfigError>($I`McpConfigError`)(
+export class McpConfigError extends S.TaggedError<McpConfigError>($I`McpConfigError`)(
   "McpConfigError",
   { path: S.String, cause: S.Defect() },
   $I.annote("McpConfigError", {

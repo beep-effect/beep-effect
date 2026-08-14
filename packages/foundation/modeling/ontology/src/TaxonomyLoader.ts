@@ -6,7 +6,7 @@
  */
 
 import { $OntologyId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Context, Effect, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -119,9 +119,7 @@ export class VendorManifestEntry extends S.Class<VendorManifestEntry>($I`VendorM
  * @category errors
  * @since 0.0.0
  */
-export class TaxonomyManifestReadError extends TaggedErrorClass<TaxonomyManifestReadError>(
-  $I`TaxonomyManifestReadError`
-)(
+export class TaxonomyManifestReadError extends S.TaggedError<TaxonomyManifestReadError>($I`TaxonomyManifestReadError`)(
   "TaxonomyManifestReadError",
   { path: S.NonEmptyString },
   $I.annote("TaxonomyManifestReadError", { description: "The vendor manifest is missing or unreadable." })
@@ -140,7 +138,7 @@ export class TaxonomyManifestReadError extends TaggedErrorClass<TaxonomyManifest
  * @category errors
  * @since 0.0.0
  */
-export class TaxonomyManifestParseError extends TaggedErrorClass<TaxonomyManifestParseError>(
+export class TaxonomyManifestParseError extends S.TaggedError<TaxonomyManifestParseError>(
   $I`TaxonomyManifestParseError`
 )(
   "TaxonomyManifestParseError",
@@ -161,7 +159,7 @@ export class TaxonomyManifestParseError extends TaggedErrorClass<TaxonomyManifes
  * @category errors
  * @since 0.0.0
  */
-export class VendorSliceUnvetted extends TaggedErrorClass<VendorSliceUnvetted>($I`VendorSliceUnvetted`)(
+export class VendorSliceUnvetted extends S.TaggedError<VendorSliceUnvetted>($I`VendorSliceUnvetted`)(
   "VendorSliceUnvetted",
   { id: S.NonEmptyString },
   $I.annote("VendorSliceUnvetted", { description: "A vendor slice is not explicitly VETTED for loading." })
@@ -180,7 +178,7 @@ export class VendorSliceUnvetted extends TaggedErrorClass<VendorSliceUnvetted>($
  * @category errors
  * @since 0.0.0
  */
-export class VendorSliceReadError extends TaggedErrorClass<VendorSliceReadError>($I`VendorSliceReadError`)(
+export class VendorSliceReadError extends S.TaggedError<VendorSliceReadError>($I`VendorSliceReadError`)(
   "VendorSliceReadError",
   { id: S.NonEmptyString, path: S.NonEmptyString },
   $I.annote("VendorSliceReadError", { description: "An explicitly vetted vendor slice is unreadable." })
@@ -199,7 +197,7 @@ export class VendorSliceReadError extends TaggedErrorClass<VendorSliceReadError>
  * @category errors
  * @since 0.0.0
  */
-export class VendorSliceParseError extends TaggedErrorClass<VendorSliceParseError>($I`VendorSliceParseError`)(
+export class VendorSliceParseError extends S.TaggedError<VendorSliceParseError>($I`VendorSliceParseError`)(
   "VendorSliceParseError",
   { id: S.NonEmptyString, path: S.NonEmptyString },
   $I.annote("VendorSliceParseError", { description: "An explicitly vetted vendor taxonomy slice is unparsable." })
@@ -224,7 +222,7 @@ export class VendorSliceParseError extends TaggedErrorClass<VendorSliceParseErro
  * @category errors
  * @since 0.0.0
  */
-export class VendorSlicePathEscape extends TaggedErrorClass<VendorSlicePathEscape>($I`VendorSlicePathEscape`)(
+export class VendorSlicePathEscape extends S.TaggedError<VendorSlicePathEscape>($I`VendorSlicePathEscape`)(
   "VendorSlicePathEscape",
   { id: S.NonEmptyString, path: S.NonEmptyString, vendorRoot: S.NonEmptyString },
   $I.annote("VendorSlicePathEscape", {

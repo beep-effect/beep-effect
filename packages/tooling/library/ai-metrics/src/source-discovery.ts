@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Stream } from "effect";
@@ -276,7 +276,7 @@ export class AiMetricsSourceDiscoveryResult extends S.Class<AiMetricsSourceDisco
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsSourceDiscoveryError extends TaggedErrorClass<AiMetricsSourceDiscoveryError>(
+export class AiMetricsSourceDiscoveryError extends S.TaggedError<AiMetricsSourceDiscoveryError>(
   $I`AiMetricsSourceDiscoveryError`
 )(
   "AiMetricsSourceDiscoveryError",

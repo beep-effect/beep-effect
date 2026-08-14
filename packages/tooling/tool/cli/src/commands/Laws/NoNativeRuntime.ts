@@ -465,7 +465,7 @@ const formatViolationMessage = (violation: NativeRuntimeViolation): string => {
   }
 
   if (violation.messageId === "nativeError") {
-    return `Avoid native ${data?.ctor ?? ""} in production code. Use TaggedErrorClass or add an allowlist entry.`;
+    return `Avoid native ${data?.ctor ?? ""} in production code. Use S.TaggedError from effect/Schema or add an allowlist entry.`;
   }
 
   if (violation.messageId === "dateStatic") {

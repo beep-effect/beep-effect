@@ -8,7 +8,7 @@
 import { DuckDb, DuckDbParquetExport } from "@beep/duckdb";
 import { PathSafety } from "@beep/file-processing";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Path, pipe } from "effect";
@@ -675,7 +675,7 @@ const derivedStorageMigrations = [
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsDerivedStorageError extends TaggedErrorClass<AiMetricsDerivedStorageError>(
+export class AiMetricsDerivedStorageError extends S.TaggedError<AiMetricsDerivedStorageError>(
   $I`AiMetricsDerivedStorageError`
 )(
   "AiMetricsDerivedStorageError",

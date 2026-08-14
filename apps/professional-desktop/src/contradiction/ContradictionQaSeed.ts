@@ -58,7 +58,7 @@ import {
   VerifyTextAnchorInput,
   verifyTextAnchor,
 } from "@beep/provenance/VerifiedTextAnchor";
-import { LiteralKit, NonNegativeInt, PosInt, Sha256HexFromBytes, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { Cuid } from "@beep/schema/Cuid";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Principal } from "@beep/shared-domain/entity/Principal";
@@ -215,7 +215,7 @@ type ContradictionQaSeedErrorReason = typeof ContradictionQaSeedErrorReason.Type
  * @category errors
  * @since 0.0.0
  */
-export class ContradictionQaSeedError extends TaggedErrorClass<ContradictionQaSeedError>($I`ContradictionQaSeedError`)(
+export class ContradictionQaSeedError extends S.TaggedError<ContradictionQaSeedError>($I`ContradictionQaSeedError`)(
   "ContradictionQaSeedError",
   {
     message: S.NonEmptyString,

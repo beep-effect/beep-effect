@@ -42,6 +42,22 @@ const makeRepository = (workItemId: DomainWorkItem.WorkItemId): WorkItemServer.W
 
 describe("WorkItem use-cases", () => {
   it.effect(
+    "creates and lists work items through the repository port",
+    Effect.fnUntraced(function* () {
+      const workItemId = yield* decodeWorkItemId("work-item-1");
+      const useCases = WorkItemServer.WorkItem.makeWorkItemUseCases(makeRepository(workItemId));
+
+      const created = yield* useCases.create(
+        WorkItem.CreateWorkItemCommand.make({ id: workItemId, title: "Document topology" })
+      );
+      const listed = yield* useCases.list(WorkItem.ListWorkItemsQuery.make({}));
+
+      expect(created.id).toBe(workItemId);
+      expect(listed).toHaveLength(1);
+    })
+  );
+
+  it.effect(
     "redacts repository unavailable details at the public action boundary",
     Effect.fnUntraced(function* () {
       const workItemId = yield* decodeWorkItemId("work-item-1");

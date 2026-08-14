@@ -7,7 +7,6 @@
 
 import { $OntologyId } from "@beep/identity/packages";
 import { IRIReference } from "@beep/rdf";
-import { TaggedErrorClass } from "@beep/schema";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -101,7 +100,7 @@ export class LibrarianOutput extends S.Class<LibrarianOutput>($I`LibrarianOutput
  * @category errors
  * @since 0.0.0
  */
-export class TaxonomyConceptNotFound extends TaggedErrorClass<TaxonomyConceptNotFound>($I`TaxonomyConceptNotFound`)(
+export class TaxonomyConceptNotFound extends S.TaggedError<TaxonomyConceptNotFound>($I`TaxonomyConceptNotFound`)(
   "TaxonomyConceptNotFound",
   { conceptIri: IRIReference },
   $I.annote("TaxonomyConceptNotFound", {
@@ -123,7 +122,7 @@ export class TaxonomyConceptNotFound extends TaggedErrorClass<TaxonomyConceptNot
  * @category errors
  * @since 0.0.0
  */
-export class UnsupportedDocumentClass extends TaggedErrorClass<UnsupportedDocumentClass>($I`UnsupportedDocumentClass`)(
+export class UnsupportedDocumentClass extends S.TaggedError<UnsupportedDocumentClass>($I`UnsupportedDocumentClass`)(
   "UnsupportedDocumentClass",
   { conceptIri: IRIReference, documentClass: DocumentClass },
   $I.annote("UnsupportedDocumentClass", {

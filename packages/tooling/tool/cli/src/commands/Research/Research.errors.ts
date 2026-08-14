@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -28,7 +27,7 @@ const $I = $RepoCliId.create("commands/Research/Research.errors");
  * @category error-handling
  * @since 0.0.0
  */
-export class ResearchCommandError extends TaggedErrorClass<ResearchCommandError>($I`ResearchCommandError`)(
+export class ResearchCommandError extends S.TaggedError<ResearchCommandError>($I`ResearchCommandError`)(
   "ResearchCommandError",
   {
     message: S.String,

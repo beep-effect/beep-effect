@@ -54,6 +54,18 @@ describe("Anthropic repair helpers", () => {
     })
   );
 
+  it.effect(
+    "fails with a typed repair error when provider usage metadata is absent",
+    Effect.fnUntraced(function* () {
+      const error = yield* collectToolParamsJsonWithUsage(
+        Stream.make(Response.makePart("tool-params-delta", { delta: '{"repairs":[]}', id: "repair" }))
+      ).pipe(Effect.flip);
+
+      expect(error._tag).toBe("RepairError");
+      expect(error.message).toContain("without provider usage metadata");
+    })
+  );
+
   it.effect("round-trips schema-derived repair responses through JSON", () =>
     Effect.sync(() =>
       fc.assert(
