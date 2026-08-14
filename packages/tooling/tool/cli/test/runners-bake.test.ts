@@ -145,7 +145,15 @@ const makeBakeSpawner = (
     const argv = [command.command, ...command.args];
     const output = Match.value(command.command).pipe(
       Match.when("git", () =>
-        Effect.succeed(stubHandle(A.contains(command.args, "status") ? "" : "0123456789abcdef0123456789abcdef01234567"))
+        Effect.succeed(
+          A.contains(command.args, "status")
+            ? stubHandle("")
+            : A.contains(command.args, "remote")
+              ? stubHandle("origin\thttps://github.com/beep-effect/beep-effect.git (fetch)")
+              : A.contains(command.args, "--contains")
+                ? stubHandle("  origin/main")
+                : stubHandle("0123456789abcdef0123456789abcdef01234567")
+        )
       ),
       Match.when("aws", () =>
         Match.value(command.args).pipe(
@@ -441,6 +449,10 @@ describe("runner bake planning and argv", () => {
           )
         ).toBe(true);
         expect(A.contains("--iam-instance-profile")(runInstances)).toBe(false);
+        // Only the bake mode ships the revision to a guest clone, and it must
+        // prove reachability against the canonical remote before AWS calls.
+        expect(A.some(captured, A.contains("--contains"))).toBe(true);
+        expect(A.some(captured, A.contains("remote"))).toBe(true);
         expect(argumentAfter(runInstances, "--block-device-mappings")).toStrictEqual(
           O.some(
             '[{"DeviceName":"/dev/xvda","Ebs":{"DeleteOnTermination":true,"Encrypted":true,"Iops":3000,"Throughput":250,"VolumeSize":100,"VolumeType":"gp3"}}]'
@@ -502,6 +514,19 @@ describe("runner bake planning and argv", () => {
         )
       );
       expect(pending._tag).toBe("AwsResourcePending");
+
+      // A partial publication (boot noise, no marker either way) is the same
+      // propagation window: the narrating script writes from its first
+      // command, so nonempty is not terminal.
+      const partial = yield* Effect.flip(
+        readPostedConsoleForTesting("us-east-1", "i-bake").pipe(
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            makeBakeSpawner(commands, "cloud-init boot noise without any marker")
+          )
+        )
+      );
+      expect(partial._tag).toBe("AwsResourcePending");
     })
   );
 
@@ -510,7 +535,7 @@ describe("runner bake planning and argv", () => {
       Effect.fnUntraced(function* (tmpDir) {
         const path = yield* Path.Path;
         const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-        const consoleOutput = "bake failed";
+        const consoleOutput = "BEEP_RUNNERS_BAKE_FAILED line 5: false";
         const spawner = makeBakeSpawner(commands, consoleOutput);
         const testLayer = RunnersServiceLive.pipe(
           Layer.provide(
@@ -595,6 +620,7 @@ describe("runner bake planning and argv", () => {
     expect(script).toContain("git -C /tmp/beep-effect checkout --detach 0123456789abcdef0123456789abcdef01234567");
     expect(script).toContain(`= "${digest}"`);
     expect(script).toContain(`'1.3.14' > /etc/beep-ci/bun-version`);
+    expect(script).toContain(`'${bunArchiveDigest}' > /etc/beep-ci/bun-archive.sha256`);
     expect(script).toContain("touch /etc/beep-ci/baked-runner");
     expect(script).toContain("rm -rf /tmp/beep-effect /root/.cache /home/ec2-user/.cache");
     // AL2023's cloud-init lacks the newer --machine-id flag; the reset is
