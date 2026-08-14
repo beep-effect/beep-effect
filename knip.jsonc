@@ -142,11 +142,12 @@
     "@beep/test-utils",
     "@lexical/list",
     "lexical",
-    // brace-expansion, fast-uri, hono: root `dependencies` entries that exist solely to back
-    // the security-pin `overrides` (see package.json overrides); nothing imports them at root.
+    // brace-expansion, fast-uri, hono, nanoid: root `dependencies` entries that exist solely to
+    // back the security-pin `overrides` (see package.json overrides); nothing imports them at root.
     "brace-expansion",
     "fast-uri",
     "hono",
+    "nanoid",
     "@beep/graph-3d",
     "@vitest/browser",
     "emojibase-data",

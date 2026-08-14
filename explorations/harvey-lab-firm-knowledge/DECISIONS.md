@@ -72,3 +72,17 @@ re-entry points.
 **Rationale:** This selects the unclaimed, OIP-load-bearing wedge while making
 the uncertain conversion boundary fail fast and preserving an evidence-based
 fallback.
+
+## 2026-08-13 — Operator shape and MAP sign-off
+
+**Question:** Operator shape gate: does BRIEF.md match the operator's picture?
+(sign-off required before decompose)
+
+**Answer:** Signed off as drafted. The sign-off also covers `MAP.md`, so both
+`effect-native-legal-eval` and `tracked-changes-ingest-wedge` may be scaffolded
+immediately.
+
+**Rationale:** The eval goal includes the one-time external-harness baseline;
+the wedge keeps U4 as its P0 kill-gate and records the structural fallback.
+Generator and DMS candidates remain MAP re-entry points. Synthetic C&H stays
+first; any later real OIP data room remains on-device only.

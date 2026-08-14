@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -18,8 +18,8 @@ methodology, and a legal-DMS task taxonomy.
 
 ## Next Open Question
 
-Does the operator approve [`BRIEF.md`](./BRIEF.md) as the shaped contract?
-No goals are scaffolded until that review passes.
+No blocking question. Reopen at `decompose` only when the corpus-generator or
+DMS-taxonomy gate in [`MAP.md`](./MAP.md) fires.
 
 ## Read This First
 
@@ -33,6 +33,12 @@ No goals are scaffolded until that review passes.
 ## Trail
 
 <Dated one-liners, newest first: what each session did and where it stopped.>
+
+- 2026-08-13 (final ceremony): operator signed off `BRIEF.md` and `MAP.md`;
+  graduated [`effect-native-legal-eval`](../../goals/effect-native-legal-eval/README.md)
+  and [`tracked-changes-ingest-wedge`](../../goals/tracked-changes-ingest-wedge/README.md).
+  Generator/DMS candidates remain MAP re-entry points; both goals preserve the
+  synthetic-first and later-real-data-on-device-only boundary.
 
 - 2026-08-13 (ceremony): drafted `BRIEF.md` and `MAP.md` for the eval and
   tracked-changes goals. Stage remains `shape`; operator BRIEF review is the

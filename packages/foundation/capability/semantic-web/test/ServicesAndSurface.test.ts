@@ -2,7 +2,6 @@ import { Dataset, makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQu
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import * as SemanticWeb from "@beep/semantic-web";
-import { ShaclValidationServiceLive } from "@beep/semantic-web/adapters/shacl-engine";
 import { WebAnnotation } from "@beep/semantic-web/adapters/web-annotation";
 import {
   CanonicalizationService,
@@ -13,7 +12,6 @@ import {
   ShaclNodeShape,
   ShaclPropertyShape,
   ShaclValidationRequest,
-  ShaclValidationService,
 } from "@beep/semantic-web/services/shacl-validation";
 import {
   SparqlQueryRequest,
@@ -65,9 +63,6 @@ const FingerprintDatasetRequestArbitrary = S.toArbitrary(FingerprintDatasetReque
 
 const runCanonicalization = <A, E>(effect: Effect.Effect<A, E, CanonicalizationService>) =>
   Effect.runPromise(effect.pipe(provideScopedLayer(CanonicalizationServiceLive), Effect.orDie));
-
-const runShacl = <A, E>(effect: Effect.Effect<A, E, ShaclValidationService>) =>
-  Effect.runPromise(effect.pipe(provideScopedLayer(ShaclValidationServiceLive), Effect.orDie));
 
 const runSparql = <A, E>(effect: Effect.Effect<A, E, SparqlQueryService>) =>
   Effect.runPromise(effect.pipe(provideScopedLayer(UnsupportedSparqlQueryServiceLive), Effect.orDie));
@@ -269,45 +264,6 @@ describe("Services and Surface", () => {
 
       expect(leftFingerprint.fingerprint).toBe(rightFingerprint.fingerprint);
       expect(leftFingerprint.canonicalText).toBe(rightFingerprint.canonicalText);
-    })
-  );
-
-  it.effect("validates bounded SHACL-inspired shapes and truncates when max results is reached", () =>
-    Effect.gen(function* () {
-      const result = yield* Effect.promise(() =>
-        Promise.resolve(
-          runShacl(
-            Effect.gen(function* () {
-              const service = yield* ShaclValidationService;
-              return yield* service.validate(
-                decodeUnknownSync(ShaclValidationRequest)({
-                  dataset: yield* S.encodeEffect(Dataset)(dataset),
-                  maxResults: 1,
-                  shapes: [
-                    {
-                      properties: [
-                        {
-                          minCount: 1,
-                          path: makeNamedNode("https://schema.org/knows"),
-                        },
-                        {
-                          datatype: makeNamedNode(XSD_STRING.value),
-                          path: makeNamedNode("https://schema.org/name"),
-                        },
-                      ],
-                      targetClass: makeNamedNode("https://schema.org/Person"),
-                    },
-                  ],
-                })
-              );
-            })
-          )
-        )
-      );
-
-      expect(result.conforms).toBe(false);
-      expect(result.truncated).toBe(true);
-      expect(result.violations).toHaveLength(1);
     })
   );
 

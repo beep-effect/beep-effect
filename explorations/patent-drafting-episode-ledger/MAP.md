@@ -1,12 +1,12 @@
 # Map — Patent Drafting Episode Ledger
 
-Status: DRAFT FOR OPERATOR BRIEF REVIEW 2026-08-13.
+Status: OPERATOR-RATIFIED 2026-08-13; rung 1 graduated.
 
 ## Candidate Goal
 
 | Rung | Slug | Mission | Depends on | Capability boundary |
 | --- | --- | --- | --- | --- |
-| 1 | `patent-drafting-episode-ledger` (not yet created) | Ship the law-owned append-only DraftingEpisode, replay fold, support-set promotion gate, seven-field answer annex, and rebuildable projection/fallback proof. | Live professional-runtime, verified-span, practice-KG, candor-gate, and retrieval SPEC contracts; no build-order block. | Reuse `RuntimeApprovalGate`, verified anchors, law-practice append-only persistence, `CandorGateVerdict.isBlocked`, and the existing claims batch. NET-NEW: event union/fold, support closure schema, annex, watermark rule, projection port. |
+| 1 | [`patent-drafting-episode-ledger`](../../goals/patent-drafting-episode-ledger/README.md) | Ship the law-owned append-only DraftingEpisode, replay fold, support-set promotion gate, seven-field answer annex, and rebuildable projection/fallback proof. | Live professional-runtime, verified-span, practice-KG, candor-gate, and retrieval SPEC contracts; no build-order block. | Reuse `RuntimeApprovalGate`, verified anchors, law-practice append-only persistence, `CandorGateVerdict.isBlocked`, and the existing claims batch. NET-NEW: event union/fold, support closure schema, annex, watermark rule, projection port. |
 
 ## Deferred Re-entry
 
@@ -16,10 +16,9 @@ Status: DRAFT FOR OPERATOR BRIEF REVIEW 2026-08-13.
 
 ## Sequencing
 
-Operator review and sign-off of `BRIEF.md` is the current gate. After sign-off,
-decompose the rung-1 packet against live symbols and graduate it. The public
-USPTO benchmark follows only after the public corpus and rung-1 replay contract
-exist; it cannot hold the first rung open.
+Operator sign-off covered the BRIEF and MAP, and rung 1 graduated on
+2026-08-13. The public USPTO benchmark follows only after the public corpus and
+rung-1 replay contract exist; it cannot hold the first rung open.
 
 ## First Vertical Slice
 

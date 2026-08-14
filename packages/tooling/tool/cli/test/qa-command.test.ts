@@ -172,6 +172,9 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
     expect(O.isNone(extractLastJsonBlock("opening { and prose {still not json}"))).toBe(true);
   });
 
+  // The bound only needs to separate linear from quadratic (quadratic on 40k
+  // spans runs tens of seconds); keep it loose enough to absorb coverage
+  // instrumentation overhead on loaded CI shard runners.
   it("stays bounded on pathological unmatched-opening-brace output", () => {
     const hostile = Str.repeat(40_000)("{");
     const startedAt = globalThis.performance.now();
@@ -179,7 +182,7 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
     const elapsedMs = globalThis.performance.now() - startedAt;
 
     expect(O.isNone(extracted)).toBe(true);
-    expect(elapsedMs).toBeLessThan(1000);
+    expect(elapsedMs).toBeLessThan(5000);
   });
 
   it("stays bounded on pathological balanced-object output", () => {
@@ -191,7 +194,7 @@ describe("commands/Qa JudgeCheck JSON extraction", () => {
     const elapsedMs = globalThis.performance.now() - startedAt;
 
     expect(O.getOrElse(extracted, () => "")).toBe('{ "final": true }');
-    expect(elapsedMs).toBeLessThan(1000);
+    expect(elapsedMs).toBeLessThan(5000);
   });
 });
 

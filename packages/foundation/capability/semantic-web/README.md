@@ -13,7 +13,6 @@ package `@beep/rdf-canonize`.
 - `@beep/semantic-web/uri`
 - `@beep/semantic-web/jsonld`
 - `@beep/semantic-web/services/*`
-- `@beep/semantic-web/adapters/shacl-engine`
 - compatibility shims for `@beep/semantic-web/prov`, `@beep/semantic-web/evidence`, and `@beep/semantic-web/adapters/web-annotation`
 
 ## Canonical Imports

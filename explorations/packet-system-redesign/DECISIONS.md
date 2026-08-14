@@ -343,3 +343,15 @@ transition PRs balloon into rename diffs (the operator's own objection).
 variant (defensible — one-way, once, conflict-free — but not adopted now;
 may resurface as a decompose-stage decluttering option if the 112+ packet
 count becomes a real search/context cost).
+
+## 2026-08-13 — Operator shape sign-off
+
+**Question:** Operator shape gate: does BRIEF.md match the operator's picture?
+(sign-off required before decompose)
+
+**Answer:** Signed off as drafted. No MAP existed at sign-off, so the packet
+advances to `decompose` and `MAP.md` becomes the next operator review gate.
+
+**Rationale:** D1–D16 and the BRIEF are ratified, but candidate goal boundaries,
+sequencing, capability citations, and the first vertical slice still require
+an explicit decomposition artifact before any goal may be scaffolded.
