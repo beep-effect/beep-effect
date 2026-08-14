@@ -420,9 +420,15 @@ const runCheckMode = Effect.fn("DeletePackage.runCheckMode")(function* (
     if (!Str.equivalence(item.status, "clean"))
       yield* Console.log(`[check] ${item.surfaceId}: ${item.status} ${A.join(item.evidence, ", ")}`);
   }
-  if (!resolved.liveWorkspace && !doctorIsClean(observations))
-    return yield* failWithReportedExit("delete-package --check: residue found.");
-  yield* Console.log("[delete-package --check] clean: the declared inverse plan closes every registration surface.");
+  if (!resolved.liveWorkspace) {
+    if (!doctorIsClean(observations)) return yield* failWithReportedExit("delete-package --check: residue found.");
+    yield* Console.log("[delete-package --check] clean: no registration residue remains for the deleted target.");
+    return;
+  }
+  const pending = A.filter(observations, (item) => !Str.equivalence(item.status, "clean"));
+  yield* Console.log(
+    `[delete-package --check] live target: ${A.length(pending)} surface(s) carry registrations the inverse plan removes.`
+  );
 });
 
 const runApplyMode = Effect.fn("DeletePackage.runApplyMode")(function* (
