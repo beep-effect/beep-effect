@@ -279,7 +279,19 @@ export const Span = SpanFields.check(
  */
 export type Span = typeof Span.Type;
 
+/**
+ * Encoded companion types for the {@link Span} runtime schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace Span {
+  /**
+   * Wire representation accepted and emitted by {@link Span}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Encoded = typeof Span.Encoded;
 }
 
