@@ -865,6 +865,8 @@ export const makeBakeScriptForTesting = makeBakeScript;
  * console.log(typeof pendingWhileNotFoundForTesting)
  * ```
  *
+ * @param options - Effect to guard plus the resource and NotFound code to match.
+ * @returns The guarded effect with the propagation window surfaced as pending.
  * @category testing
  * @since 0.0.0
  */
