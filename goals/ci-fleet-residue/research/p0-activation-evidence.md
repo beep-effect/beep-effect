@@ -3,26 +3,28 @@
 Status: bake **COMPLETE** 2026-08-14; activation set ships with this PR;
 deploy + live probes follow the merge.
 
-## Bake report (attempt 16 — the activated image)
+## Bake report (attempt 18 — the activated image)
 
 ```json
 {
-  "amiId": "ami-012c2a9252a1bbd6f",
+  "amiId": "ami-07fb13d84a42d3584",
   "lockfileSha256": "6c946550eea7e3f4f56456c5ab37ec0d721d237fea4dacaf089da53f86dfdc82",
   "bunArchiveSha256": "951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f",
   "bunVersion": "1.3.14",
   "baseAmiId": "ami-07a5b367e8dc8bd92",
   "priorPin": "ami-07a5b367e8dc8bd92",
-  "pulumiPinCommand": "cd infra/ci-runners && pulumi config set ciFleetController:amiId ami-012c2a9252a1bbd6f --stack production",
-  "startedAt": "2026-08-14T09:24:22.681Z",
-  "completedAt": "2026-08-14T09:37:05.254Z"
+  "pulumiPinCommand": "cd infra/ci-runners && pulumi config set ciFleetController:amiId ami-07fb13d84a42d3584 --stack production",
+  "startedAt": "2026-08-14T10:20:37.904Z",
+  "completedAt": "2026-08-14T10:33:44.938Z"
 }
 ```
 
-An earlier bake (attempt 12, `ami-076e22e205ce6a512`) predated the CSF-016
-verified-archive merge (#712): its Bun came from the unverified installer
-and it lacks the `beep-ci:bun-archive-sha256` tag. It was never activated
-and should be deregistered (snapshot included).
+Two earlier bakes are superseded and slated for deregistration (snapshots
+included), neither ever activated: `ami-076e22e205ce6a512` (attempt 12,
+predates the CSF-016 verified-archive merge — unverified Bun installer, no
+archive tag) and `ami-012c2a9252a1bbd6f` (attempt 16, verified archive but
+no in-image `/etc/beep-ci/bun-archive.sha256` marker, which the CI fast
+path now requires per review).
 
 In-guest proof: the serial console carried `BEEP_RUNNERS_BAKE_COMPLETE`
 after a full 2490-package warm `bun install` (9.22s from the package
@@ -44,7 +46,7 @@ the console before EC2 posted it and terminated good instances.
 
 ## The activation set (this PR)
 
-- (a) `ciFleetController:amiId` pinned to `ami-012c2a9252a1bbd6f`.
+- (a) `ciFleetController:amiId` pinned to `ami-07fb13d84a42d3584`.
 - (b) `runnerToolbeltPostInstall` no-ops behind `/etc/beep-ci/baked-runner`
   (fail-open; IMDS-hook snippet stays unconditional — iptables-nft is not
   baked).
