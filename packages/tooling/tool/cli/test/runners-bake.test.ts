@@ -136,7 +136,8 @@ const argumentAfter = (argv: ReadonlyArray<string>, flag: string): O.Option<stri
 
 const makeBakeSpawner = (
   commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>,
-  consoleOutput: string
+  consoleOutput: string,
+  git: { readonly remotes?: string; readonly contains?: string } = {}
 ): ChildProcessSpawner.ChildProcessSpawner["Service"] =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) {
@@ -149,9 +150,9 @@ const makeBakeSpawner = (
           A.contains(command.args, "status")
             ? stubHandle("")
             : A.contains(command.args, "remote")
-              ? stubHandle("origin\thttps://github.com/beep-effect/beep-effect.git (fetch)")
+              ? stubHandle(git.remotes ?? "origin\thttps://github.com/beep-effect/beep-effect.git (fetch)")
               : A.contains(command.args, "--contains")
-                ? stubHandle("  origin/main")
+                ? stubHandle(git.contains ?? "  origin/main")
                 : stubHandle("0123456789abcdef0123456789abcdef01234567")
         )
       ),
@@ -528,6 +529,61 @@ describe("runner bake planning and argv", () => {
       );
       expect(partial._tag).toBe("AwsResourcePending");
     })
+  );
+
+  it.effect("refuses to bake when no remote points at the canonical repository", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const path = yield* Path.Path;
+        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+        const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", {
+          remotes: "fork\thttps://github.com/someone/beep-effect-fork.git (fetch)",
+        });
+        const testLayer = RunnersServiceLive.pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+              NodeFileSystem.layer,
+              NodePath.layer,
+              NodeCrypto.layer
+            )
+          )
+        );
+        const error = yield* Effect.gen(function* () {
+          const service = yield* RunnersService;
+          return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
+        }).pipe(provideScopedLayer(testLayer));
+        expect(error.message).toContain("No Git remote points at github.com/beep-effect/beep-effect");
+        // The guard must refuse before any AWS call reaches the spawner.
+        expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
+      })
+    )
+  );
+
+  it.effect("refuses to bake a revision reachable only from a fork remote", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const path = yield* Path.Path;
+        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+        const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", { contains: "  fork/feature" });
+        const testLayer = RunnersServiceLive.pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+              NodeFileSystem.layer,
+              NodePath.layer,
+              NodeCrypto.layer
+            )
+          )
+        );
+        const error = yield* Effect.gen(function* () {
+          const service = yield* RunnersService;
+          return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
+        }).pipe(provideScopedLayer(testLayer));
+        expect(error.message).toContain("is not reachable from any github.com/beep-effect/beep-effect remote branch");
+        expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
+      })
+    )
   );
 
   it.effect("terminates the temporary instance when bake verification fails", () =>
