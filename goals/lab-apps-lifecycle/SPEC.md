@@ -8,7 +8,7 @@ Two observable capabilities, standing on one substrate:
    <nextjs|vite|service> --lab` (final flag shape decided in P2) mints a
    fully law-abiding experimental app under `apps/labs/<name>` — portless
    dev script, identity composer, workspace membership, tsconfig project
-   wiring, schema-validated lab manifest — and `bun run beep labs list`
+   wiring, schema-validated lab manifest — and `beep labs list` (NET-NEW)
    enumerates every lab with its disposition.
 2. **Complete deletion.** `bun run beep delete-package <name-or-path>`
    removes any leaf workspace package or app and prunes every registration
@@ -76,8 +76,8 @@ Higher sources outrank lower sources when they conflict.
   guard.
 - `packages/tooling/tool/cli/src/commands/DeletePackage/**` (NET-NEW) —
   command, dependents scan, plan/apply/check, doctor.
-- A NET-NEW geometry module (home decided in P0; candidate:
-  `packages/tooling/tool/cli/src/commands/internal/` or
+- A NET-NEW geometry module (home decided in P0; candidate: a new
+  internal module under `packages/tooling/tool/cli/src/commands/` or
   `@beep/repo-utils`) — `RegistrationSurface` schema + `dependentsOf`.
 - `packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts` —
   orphan-composer detection (extras currently invisible).
@@ -88,12 +88,12 @@ Higher sources outrank lower sources when they conflict.
   P0 from `research/04-governance-gates.md` §2): deprecated-API lint
   shards, knip, docgen scan globs, coverage collector filter,
   changeset-status wrapper.
-- `packages/tooling/tool/cli/src/commands/CiLane.ts` +
+- `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts` +
   `.../Quality/Tasks.ts` — required-lane `--filter=!./apps/labs/**`,
   non-required labs lane, Lint Policy law/ceremony step scoping.
 - `.../commands/Qa/Qa.session.ts` (`portlessUrlForApp`) — labs hostname
   segment support.
-- `apps/labs/` — new root; first labs land here in P2/P4 verification.
+- `apps/labs/*` — new root; first labs land here in P2/P4 verification.
 - `standards/architecture/GLOSSARY.md` ("lab app") and, if the P2 review
   agrees the bar is met, a `standards/architecture/DECISIONS.md` entry for
   the labs root + zero-root-churn registration (D5, D14).
@@ -201,7 +201,7 @@ Track B — labs:
 
 ## First Vertical Slice
 
-Scaffold `apps/labs/round-trip-probe` with the vite variant → prove
+Scaffold a throwaway vite lab `round-trip-probe` under `apps/labs/*` → prove
 typecheck + portless dev serve → `beep delete-package round-trip-probe` →
 prove `--check`/doctor green and `git status` clean apart from intended
 edits. This slice exercises glob membership, identity add/remove,
