@@ -199,3 +199,26 @@ Record receipts at the moment friction happens; redact for the public repo.
   AWS call when no remote branch contains HEAD, naming the push as the
   remedy. The general rule: any command that ships a local revision to a
   remote executor must prove remote reachability first.
+
+## 2026-08-14 — hosted docgen "hang" was turbo grouped-log backpressure
+
+- What: PR #718's Docgen lane hung five consecutive times, always wedging
+  the moment `@beep/repo-cli:docgen` started, while the identical command
+  (same mode, forced turbo, pinned to 8 cores) passed locally in under two
+  minutes. Two wrong theories fell first: the ship-velocity A7 success-exit
+  class (a lane process-group reaper now guards every verification lane —
+  correct fix, wrong bug) and per-package docgen flake (rerun-proof: 5/5).
+  The discriminating probe — `TURBO_LOG_ORDER: stream` on the lane job —
+  made the job pass immediately: turbo's grouped log mode buffers a task's
+  output behind its group header and stopped draining the pipe of the
+  chattiest task (repo-cli, 1139 examples), so the child blocked on a full
+  pipe write forever. This branch exposed it by making repo-cli's docgen
+  inputs stale enough to run hosted at full output volume.
+- Evidence: runs 31797064763 (attempts 1/3/4) and 31810908695 all wedge at
+  the `@beep/repo-cli:docgen` group open with zero further output; run on
+  head d52aa0077a with streamed logs completes Docgen green in ~5 minutes;
+  #716's repo-cli docgen hosted took 11 seconds (smaller output).
+- Prevention: landed — lane jobs stream task logs (also the observability
+  posture a wedge diagnosis needs), and lane process groups are reaped
+  after the lane exits. Feeds ship-velocity SPEC A7: buffered child pipes
+  are a hang class of their own, distinct from success-exit wedges.
