@@ -32,3 +32,7 @@ session/machine ids.
   `No issues found` exit 0 — a live misattributed-composite-hint receipt (see
   `research/c7-opportunities.md` finding 3; capsule work must derive hints from the failing
   sublane, not the composite).
+- Verify attempt on the third catch-up merge failed with no-location TS2589 in three unrelated
+  packages (@beep/ui, @beep/box, @beep/xai) in one run — the environmental native-compiler flake
+  class, live receipt for the SPEC's TS2589 class-aware arbitration item; the verdict again
+  surfaced the misattributed OSV hint alongside it.
