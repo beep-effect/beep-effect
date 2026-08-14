@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-14T05:48:47.951Z",
-  "git_sha": "967d779db85e35d4c1400ecf17811e0ca88b4d64",
+  "generated_at": "2026-08-14T07:30:12.668Z",
+  "git_sha": "50be6e6b9b6e04b26ccddef9a21ffec710ca0786",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
@@ -10779,10 +10779,10 @@
     },
     "@beep/infra": {
       "path": "infra",
-      "lines": 61.17,
-      "statements": 61.3,
+      "lines": 61.28,
+      "statements": 61.41,
       "branches": 36.92,
-      "functions": 56.75,
+      "functions": 57.04,
       "uncovered": {
         "lines": 278,
         "statements": 284,
@@ -10803,10 +10803,10 @@
           }
         },
         "infra/src/CiFleetController.ts": {
-          "lines": 92.68,
-          "statements": 92.68,
+          "lines": 93.02,
+          "statements": 93.02,
           "branches": 100,
-          "functions": 60,
+          "functions": 66.66,
           "uncovered": {
             "lines": 3,
             "statements": 3,
@@ -19439,12 +19439,12 @@
       "path": "apps/professional-desktop",
       "lines": 71.74,
       "statements": 70.46,
-      "branches": 64.48,
+      "branches": 63.88,
       "functions": 60.73,
       "uncovered": {
         "lines": 669,
         "statements": 747,
-        "branches": 179,
+        "branches": 182,
         "functions": 450
       },
       "files": {
@@ -19523,12 +19523,12 @@
         "apps/professional-desktop/src/chat/ui/ChatApp.tsx": {
           "lines": 65.21,
           "statements": 62.5,
-          "branches": 75,
+          "branches": 50,
           "functions": 35.71,
           "uncovered": {
             "lines": 8,
             "statements": 9,
-            "branches": 1,
+            "branches": 2,
             "functions": 9
           }
         },
@@ -19595,12 +19595,12 @@
         "apps/professional-desktop/src/chat/ui/Sidebar.tsx": {
           "lines": 68.18,
           "statements": 62.5,
-          "branches": 53.84,
+          "branches": 38.46,
           "functions": 30,
           "uncovered": {
             "lines": 7,
             "statements": 9,
-            "branches": 6,
+            "branches": 8,
             "functions": 7
           }
         },
@@ -21003,15 +21003,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 70.64,
-      "statements": 70.38,
-      "branches": 56.69,
-      "functions": 62.82,
+      "lines": 70.74,
+      "statements": 70.47,
+      "branches": 56.72,
+      "functions": 62.98,
       "uncovered": {
-        "lines": 8295,
-        "statements": 8704,
-        "branches": 4588,
-        "functions": 3064
+        "lines": 8302,
+        "statements": 8711,
+        "branches": 4582,
+        "functions": 3067
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -21543,15 +21543,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts": {
-          "lines": 69.35,
-          "statements": 68.18,
-          "branches": 59.52,
-          "functions": 45,
+          "lines": 75.7,
+          "statements": 75,
+          "branches": 62.5,
+          "functions": 63.15,
           "uncovered": {
-            "lines": 19,
-            "statements": 21,
-            "branches": 17,
-            "functions": 11
+            "lines": 26,
+            "statements": 28,
+            "branches": 12,
+            "functions": 14
           }
         },
         "packages/tooling/tool/cli/src/commands/Codex/Findings.csv.ts": {
@@ -21603,14 +21603,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts": {
-          "lines": 87.39,
-          "statements": 87.46,
-          "branches": 78,
-          "functions": 81.55,
+          "lines": 89.35,
+          "statements": 89.31,
+          "branches": 78.37,
+          "functions": 85.03,
           "uncovered": {
             "lines": 43,
             "statements": 45,
-            "branches": 33,
+            "branches": 32,
             "functions": 19
           }
         },
@@ -23679,10 +23679,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": {
-          "lines": 67.75,
-          "statements": 68.27,
-          "branches": 63.57,
-          "functions": 71.36,
+          "lines": 67.98,
+          "statements": 68.49,
+          "branches": 64.21,
+          "functions": 71.48,
           "uncovered": {
             "lines": 218,
             "statements": 224,
