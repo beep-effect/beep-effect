@@ -23,6 +23,9 @@
       "path": "../packages/drivers/pretext/tsconfig.json"
     },
     {
+      "path": "../packages/foundation/capability/file-processing/tsconfig.json"
+    },
+    {
       "path": "../packages/foundation/modeling/identity/tsconfig.json"
     },
     {

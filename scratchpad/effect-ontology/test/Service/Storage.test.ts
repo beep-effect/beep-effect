@@ -60,13 +60,25 @@ describe("effect-ontology local StorageService", () => {
         assert.strictEqual(yield* storage.get("documents/report.txt"), "inside");
         assert.deepStrictEqual(yield* storage.list("documents"), ["report.txt"]);
         assert.strictEqual(yield* fs.readFileString(path.join(root, "tenant-a", "documents", "report.txt")), "inside");
+
+        const bytes = new Uint8Array([0, 1, 2, 255]);
+        yield* storage.set("documents/payload.bin", bytes);
+        assert.deepStrictEqual(yield* storage.getUint8Array("documents/payload.bin"), bytes);
+
+        const versioned = yield* storage.getWithGeneration("documents/report.txt");
+        assert.isTrue(O.isSome(versioned));
+        if (O.isSome(versioned)) {
+          yield* storage.setIfGenerationMatch("documents/report.txt", "updated", versioned.value.generation);
+          assert.strictEqual(yield* storage.get("documents/report.txt"), "updated");
+        }
+
         yield* storage.clear;
         assert.deepStrictEqual(yield* fs.readDirectory(path.join(root, "tenant-a")), []);
       })
     );
 
     it.effect(
-      "rejects traversal, absolute, and symlink escapes across every key-bearing local operation",
+      "rejects unsafe keys across every key-bearing operation and pre-positioned symlink escapes",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -76,25 +88,34 @@ describe("effect-ontology local StorageService", () => {
         const outsideSecret = path.join(outside, "secret.txt");
         const outsideNew = path.join(outside, "new.txt");
         const absoluteInside = path.join(root, "inside.txt");
+        const linkedOutside = path.join(root, "linked-outside");
         yield* fs.makeDirectory(root);
         yield* fs.makeDirectory(outside);
         yield* fs.writeFileString(absoluteInside, "inside");
         yield* fs.writeFileString(outsideSecret, "outside-secret");
         yield* fs.symlink(outsideSecret, path.join(root, "linked-secret.txt"));
+        yield* fs.symlink(outside, linkedOutside);
         const storage = Context.get(yield* Layer.build(makeLocalStorageLayer(root)), StorageService);
 
         const errors = yield* Effect.all([
           storage.get("../outside/secret.txt").pipe(Effect.flip),
           storage.get("linked-secret.txt").pipe(Effect.flip),
+          storage.get("linked-outside/secret.txt").pipe(Effect.flip),
           storage.getUint8Array(outsideSecret).pipe(Effect.flip),
+          storage.getUint8Array("linked-outside/secret.txt").pipe(Effect.flip),
           storage.get(absoluteInside).pipe(Effect.flip),
           storage.get("documents/./report.txt").pipe(Effect.flip),
           storage.get("documents/../inside.txt").pipe(Effect.flip),
           storage.set("../outside/new.txt", "escaped").pipe(Effect.flip),
+          storage.set("linked-outside/new.txt", "escaped").pipe(Effect.flip),
           storage.remove("../outside/secret.txt").pipe(Effect.flip),
+          storage.remove("linked-outside/secret.txt").pipe(Effect.flip),
           storage.list("../outside").pipe(Effect.flip),
+          storage.list("linked-outside").pipe(Effect.flip),
           storage.getWithGeneration("../outside/secret.txt").pipe(Effect.flip),
+          storage.getWithGeneration("linked-outside/secret.txt").pipe(Effect.flip),
           storage.setIfGenerationMatch("../outside/new.txt", "escaped", "0").pipe(Effect.flip),
+          storage.setIfGenerationMatch("linked-outside/new.txt", "escaped", "0").pipe(Effect.flip),
         ]);
 
         A.forEach(errors, assertLocalPathRejected);
@@ -105,7 +126,7 @@ describe("effect-ontology local StorageService", () => {
     );
 
     it.effect(
-      "rechecks the configured prefix after creating it instead of pinning a swapped symlink target",
+      "rejects a prefix replaced before its post-creation containment recheck",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -144,7 +165,7 @@ describe("effect-ontology local StorageService", () => {
     );
 
     it.effect(
-      "rechecks the pinned root before root-wide operations when the configured path becomes a symlink",
+      "rejects configured-root replacement completed between operations",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -170,7 +191,7 @@ describe("effect-ontology local StorageService", () => {
     );
 
     it.effect(
-      "keeps the pinned root and rejects a symlink child before clear can touch its target",
+      "rejects a pre-positioned child symlink before clear",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
