@@ -85,9 +85,10 @@ run_completed=0
 conclusion=""
 for (( poll = 1; poll <= max_run_polls; poll++ )); do
   record_controller_runners
-  status="$(gh run view "${run_id}" --json status --jq .status)"
-  echo "run ${run_id}: ${status} (${poll}/${max_run_polls})"
-  if [[ "${status}" == completed ]]; then
+  # `status` is a read-only special parameter in zsh; never assign to it.
+  run_status="$(gh run view "${run_id}" --json status --jq .status)"
+  echo "run ${run_id}: ${run_status} (${poll}/${max_run_polls})"
+  if [[ "${run_status}" == completed ]]; then
     run_completed=1
     conclusion="$(gh run view "${run_id}" --json conclusion --jq .conclusion)"
     break

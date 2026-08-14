@@ -78,3 +78,107 @@ Record receipts at the moment friction happens; redact for the public repo.
   an HCL template parse, so review + CI stayed green on an undeployable
   artifact). Longer term: a plan/preview smoke lane for infra-touching PRs
   would have caught this pre-merge.
+
+## 2026-08-14 — redteam-verify.sh could never finish under zsh
+
+- What: dispatching the P2 Gate E / red-team validation, the wrapper
+  `goals/ci-fleet-endgame/ops/redteam-verify.sh` crashed at its first run
+  poll: `status` is a read-only special parameter in zsh (aliases `$?`),
+  and the script assigns `status="$(gh run view ...)"` under a
+  `#!/usr/bin/env zsh` shebang — so the teardown/termination assertions
+  can never have executed in this form. The dispatched run itself was fine;
+  gates and teardown were asserted manually.
+- Evidence: `redteam-verify.sh:88: read-only variable: status`; run
+  31779611279 completed green while the wrapper had already died.
+- Prevention: renamed to `run_status` (fixed with the P2 evidence PR). Ops
+  scripts under zsh shebangs need a reserved-parameter pass (`status`,
+  `options`, `argv`); a bash shebang would also have dodged it.
+
+## 2026-08-14 — background op reads silently dismiss the 1Password prompt
+
+- What: the first live `beep runners bake` failed before AWS: reading
+  `op://BEEP_CI/aws-runner-launcher` from a background task raised the
+  1Password desktop authorization prompt with nobody watching, and it was
+  dismissed — "authorization prompt dismissed, please try again". A
+  foreground retry minutes later failed the same way (prompt still not
+  reaching the operator).
+- Evidence: bake task exit 1 with the op client error before any aws call.
+- Prevention: authorize new-vault access in a foreground operator command
+  first (`! op read ...` in-session), then run the long job in the
+  background; or grant the CLI standing access to the vault ahead of
+  fan-out work.
+
+## 2026-08-14 — first live bake hit three IAM walls the design never metabolized
+
+- What: `beep runners bake` (shipped #702, never operator-run) failed three
+  ways in sequence: (1) the launcher user `beep-ci-runner-launcher` had no
+  `ssm:GetParameter` on the public AL2023 parameter — its policies were
+  built for burst RunInstances only, never extended for bake reads /
+  CreateImage / console output; (2) extending inline policy hit the 2048-char
+  aggregate inline quota → moved to a customer-managed `beep-ci-bake` policy;
+  (3) the launcher's own guardrails DENY RunInstances whenever an instance
+  profile is attached (`DenyLaunchWithInstanceProfile`) — bake guests must be
+  identity-less — while the CLI made `--instance-profile` a REQUIRED flag.
+  The brief's "minimal instance profile (SSM only if used)" open question
+  resolves to: NO profile at all (console-marker driver needs no in-guest
+  AWS), and the CLI was fixed to make the flag opt-in.
+- Evidence: AccessDeniedException on ssm:GetParameter; LimitExceeded
+  (2048-byte user policy quota); UnauthorizedOperation "explicit deny"
+  naming ec2:InstanceProfile null-condition. Managed policy
+  `beep-ci-bake` (SSM base-AMI + pin read, tag-conditioned GetConsoleOutput
+  + CreateImage, CreateImage-conditioned CreateTags) now attached to the
+  launcher.
+- Prevention: the launcher user and its policies are hand-managed (infra
+  only references them in comments) — bake permissions should move into IaC
+  with the rest of the fleet; command briefs that add a new AWS caller
+  should enumerate the caller's exact action set against the live policy
+  before the first operator run.
+
+## 2026-08-14 — blind bake failures until the script narrated itself
+
+- What: two more live-bake failure classes after the IAM walls. (1) The CLI
+  treated `InvalidInstanceID.NotFound` from the first post-launch
+  describe-instances as fatal — EC2 read-after-write propagation, seconds
+  wide — killing the bake right after RunInstances succeeded; fixed by
+  folding NotFound (instance and AMI variants) into the AwsResourcePending
+  retry. (2) The bake script emitted nothing to the serial console until its
+  final success marker, so an in-guest failure produced only "stopped
+  without the marker" with zero forensics — and the failure-path teardown
+  terminates the instance, destroying the console evidence the verifier had
+  already fetched. After adding `exec >> /dev/console` + an ERR trap that
+  prints the failing line, one run pinpointed the actual bug instantly:
+  AL2023's cloud-init rejects the newer `--machine-id` flag
+  (`cloud-init clean --logs --machine-id` → "unrecognized arguments"), so
+  the bake died on its LAST cleanup line after a fully successful install
+  (2490 packages warm in 9.22s). Replaced with `cloud-init clean --logs` +
+  explicit `truncate -s 0 /etc/machine-id` + dbus machine-id removal.
+- Evidence: console snapshot with `BEEP_RUNNERS_BAKE_FAILED line 25:
+  cloud-init clean --logs --machine-id`; attempts 4 and 5 outputs.
+- Prevention: landed — bake scripts narrate to the console permanently and
+  the ERR trap names the failing line; propagation NotFound is retried and
+  unit-tested. Residual idea for the next touch: the verifier should attach
+  the console tail to the no-marker error instead of discarding it.
+
+## 2026-08-14 — the verifier terminated three good bakes; two more AWS shape gotchas
+
+- What: after the console narration landed, three consecutive bakes
+  actually SUCCEEDED in-guest (marker on the serial console) while the CLI
+  reported failure and terminated the freshly baked instance: EC2 posts a
+  stopped instance's console output minutes after the stop, and the
+  verifier read it immediately, got empty, and called that "no marker".
+  Two further shape gotchas: AWS CLI v2 auto-decodes get-console-output's
+  Output field (a base64 decode layer on top fails on plain text), and
+  CreateImage evaluates snapshot resources with ACCOUNT-LESS ARNs
+  (`arn:aws:ec2:us-east-1::snapshot/*`) — an account-qualified policy
+  resource silently never matches.
+- Evidence: attempt 9's error carried an empty console tail while the
+  poller's running-state snapshot held BEEP_RUNNERS_BAKE_COMPLETE; attempt
+  10 failed "invalid base64 console output"; attempt 11's encoded-auth
+  failure named the account-less snapshot ARN. Attempt 12 shipped
+  ami-076e22e205ce6a512.
+- Prevention: landed — empty post-stop console reads retry as pending
+  (6-minute window), the base64 layer is gone, and the policy uses the
+  ARN forms AWS actually evaluates. Meta-lesson: a teardown that destroys
+  the only evidence (terminate-on-failure) plus an eventually-consistent
+  read is a false-negative machine; verifiers must retry reads that can
+  trail the state transition they gate on.

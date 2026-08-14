@@ -139,13 +139,12 @@ const runBakeCommand = Effect.fn("Runners.runBakeCommand")(function* (options: B
       Effect.fnUntraced(function* () {
         const subnetId = yield* requiredFlag("subnet", options.subnet);
         const securityGroupId = yield* requiredFlag("security-group", options.securityGroup);
-        const instanceProfile = yield* requiredFlag("instance-profile", options.instanceProfile);
         const bakeTimestamp = yield* Clock.currentTimeMillis;
         const config = BakeConfig.make({
           region: options.region,
           subnetId,
           securityGroupId,
-          instanceProfile,
+          instanceProfile: options.instanceProfile,
           bakeTimestamp,
           baseAmiSsmParameter: options.baseAmiParameter,
           instanceType: options.instanceType,
@@ -192,7 +191,7 @@ const bakeCommand = Command.make(
     ),
     instanceProfile: Flag.string("instance-profile").pipe(
       Flag.optional,
-      Flag.withDescription("Minimal bake instance profile name")
+      Flag.withDescription("Optional bake instance profile (omit: launcher guardrails deny profiled launches)")
     ),
     baseAmiParameter: Flag.string("base-ami-parameter").pipe(
       Flag.withDefault("/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64"),

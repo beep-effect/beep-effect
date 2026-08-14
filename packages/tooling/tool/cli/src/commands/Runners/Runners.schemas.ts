@@ -101,12 +101,13 @@ const defaultTags = S.Record(S.String, S.String).pipe(
  *
  * ```ts
  * import { BakeConfig } from "@beep/repo-cli/commands/Runners"
+ * import { O } from "@beep/utils"
  *
  * const config = BakeConfig.make({
  *   region: "us-east-1",
  *   subnetId: "subnet-0123456789abcdef0",
  *   securityGroupId: "sg-0123456789abcdef0",
- *   instanceProfile: "beep-runners-bake",
+ *   instanceProfile: O.none(),
  *   bakeTimestamp: 1786640400000,
  * })
  * console.log(config.instanceType) // "r7a.2xlarge"
@@ -120,7 +121,10 @@ export class BakeConfig extends S.Class<BakeConfig>($I`BakeConfig`)(
     region: S.NonEmptyString,
     subnetId: S.NonEmptyString,
     securityGroupId: S.NonEmptyString,
-    instanceProfile: S.NonEmptyString,
+    // The launcher's guardrails DENY RunInstances whenever an instance
+    // profile is present (bake guests get no AWS identity); the console-marker
+    // driver needs no in-guest AWS calls, so the profile is opt-in only.
+    instanceProfile: S.OptionFromOptionalKey(S.NonEmptyString),
     bakeTimestamp: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     baseAmiSsmParameter: defaultBaseAmiParameter,
     instanceType: defaultInstanceType,

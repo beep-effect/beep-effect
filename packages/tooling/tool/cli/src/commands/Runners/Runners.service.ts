@@ -41,6 +41,9 @@ const BAKE_COMPLETE_MARKER = "BEEP_RUNNERS_BAKE_COMPLETE";
 const REPORT_FILE_NAME = "runners-bake-report.json";
 const AWS_POLL_INTERVAL = Duration.seconds(15);
 const BAKE_WAIT_LIMIT = Duration.hours(6);
+// EC2 posts a stopped instance's console output minutes after the stop; the
+// window an empty read is propagation rather than a bake failure.
+const CONSOLE_POST_LIMIT = Duration.minutes(6);
 const IMAGE_WAIT_LIMIT = Duration.hours(2);
 
 const BunVersion = S.String.check(
@@ -283,6 +286,8 @@ const getPriorPin = (
 
 const makeBakeScript = (inputs: BakeLocalInputs): string => `#!/usr/bin/env bash
 set -euo pipefail
+exec >> /dev/console 2>&1
+trap 'echo "BEEP_RUNNERS_BAKE_FAILED line \${LINENO}: \${BASH_COMMAND}" >> /dev/console' ERR
 shutdown -P +350
 trap 'shutdown -P now' EXIT
 dnf install -y git unzip zip jq docker libicu
@@ -302,10 +307,14 @@ printf '%s\n' '${inputs.bunVersion}' > /etc/beep-ci/bun-version
 printf '%s\n' '${inputs.gitRevision}' > /etc/beep-ci/source-revision
 touch /etc/beep-ci/baked-runner
 rm -rf /tmp/beep-effect /root/.cache /home/ec2-user/.cache
-cloud-init clean --logs --machine-id
+cloud-init clean --logs
+truncate -s 0 /etc/machine-id
+rm -f /var/lib/dbus/machine-id
 rm -rf /var/lib/cloud/instances/* /var/log/cloud-init*.log
 sync
 echo '${BAKE_COMPLETE_MARKER}' > /dev/console
+sync
+sleep 10
 trap - EXIT
 shutdown -P now
 `;
@@ -366,8 +375,10 @@ const runInstance = Effect.fn("Runners.runInstance")(function* (
     config.instanceType,
     "--network-interfaces",
     `DeviceIndex=0,SubnetId=${config.subnetId},Groups=${config.securityGroupId},AssociatePublicIpAddress=true,DeleteOnTermination=true`,
-    "--iam-instance-profile",
-    `Name=${config.instanceProfile}`,
+    ...O.match(config.instanceProfile, {
+      onNone: () => [],
+      onSome: (name) => ["--iam-instance-profile", `Name=${name}`],
+    }),
     "--metadata-options",
     "HttpTokens=required,HttpEndpoint=enabled,HttpPutResponseHopLimit=1,InstanceMetadataTags=enabled",
     "--instance-initiated-shutdown-behavior",
@@ -403,7 +414,7 @@ const waitForAwsState = Effect.fn("Runners.waitForAwsState")(function* <R>(
   resource: string,
   expected: string,
   limit: Duration.Duration,
-  readState: Effect.Effect<string, RunnersCommandError, R>
+  readState: Effect.Effect<string, RunnersCommandError | AwsResourcePending, R>
 ) {
   yield* readState.pipe(
     Effect.flatMap((actual) =>
@@ -423,6 +434,22 @@ const waitForAwsState = Effect.fn("Runners.waitForAwsState")(function* <R>(
   );
 });
 
+// EC2 read-after-write is eventually consistent: a just-created resource can
+// 404 on describe for several seconds. Fold that window into the pending-state
+// retry instead of failing the bake on the propagation race.
+const pendingWhileNotFound =
+  (resource: string, notFoundCode: string) =>
+  <A, R>(
+    self: Effect.Effect<A, RunnersCommandError, R>
+  ): Effect.Effect<A, RunnersCommandError | AwsResourcePending, R> =>
+    Effect.catchTag(self, "RunnersCommandError", (error) =>
+      Effect.fail<RunnersCommandError | AwsResourcePending>(
+        Str.includes(notFoundCode)(error.message)
+          ? AwsResourcePending.make({ actual: "propagating", expected: "visible", resource })
+          : error
+      )
+    );
+
 const readInstanceState = Effect.fn("Runners.readInstanceState")(function* (region: string, instanceId: string) {
   const output = yield* runAws(region, [
     "ec2",
@@ -433,7 +460,7 @@ const readInstanceState = Effect.fn("Runners.readInstanceState")(function* (regi
     "Reservations[].Instances[].State.Name",
     "--output",
     "json",
-  ]);
+  ]).pipe(pendingWhileNotFound(instanceId, "InvalidInstanceID.NotFound"));
   const states = yield* parseAws("EC2 describe-instances state", decodeAwsStates, output);
   return yield* A.head(states).pipe(
     O.match({
@@ -453,7 +480,7 @@ const readImageState = Effect.fn("Runners.readImageState")(function* (region: st
     "Images[].State",
     "--output",
     "json",
-  ]);
+  ]).pipe(pendingWhileNotFound(imageId, "InvalidAMIID.NotFound"));
   const states = yield* parseAws("EC2 describe-images state", decodeAwsStates, output);
   return yield* A.head(states).pipe(
     O.match({
@@ -463,8 +490,7 @@ const readImageState = Effect.fn("Runners.readImageState")(function* (region: st
   );
 });
 
-const verifyBakeCompleted = Effect.fn("Runners.verifyBakeCompleted")(function* (region: string, instanceId: string) {
-  yield* waitForAwsState(instanceId, "stopped", BAKE_WAIT_LIMIT, readInstanceState(region, instanceId));
+const readPostedConsole = Effect.fn("Runners.readPostedConsole")(function* (region: string, instanceId: string) {
   const output = yield* runAws(region, [
     "ec2",
     "get-console-output",
@@ -475,19 +501,35 @@ const verifyBakeCompleted = Effect.fn("Runners.verifyBakeCompleted")(function* (
     "json",
   ]);
   const response = yield* parseAws("EC2 get-console-output", decodeConsoleOutput, output);
-  const consoleOutput = yield* response.Output.pipe(
-    O.match({
-      onNone: () =>
-        Effect.fail(RunnersCommandError.make({ message: `AWS returned no console output for ${instanceId}.` })),
-      onSome: (encoded) =>
-        S.decodeEffect(S.StringFromBase64)(encoded).pipe(
-          RunnersCommandError.mapError(`AWS returned invalid base64 console output for ${instanceId}.`)
-        ),
-    })
+  // AWS CLI v2 auto-decodes get-console-output's base64 Output field, so the
+  // value arrives as plain console text.
+  const decoded = O.getOrElse(response.Output, () => "");
+  // An empty read right after "stopped" is the post-at-stop propagation
+  // window, not a bake verdict — surface it as pending so the caller retries.
+  return yield* Str.isEmpty(Str.trim(decoded))
+    ? Effect.fail(AwsResourcePending.make({ actual: "unposted", expected: "posted", resource: instanceId }))
+    : Effect.succeed(decoded);
+});
+
+const verifyBakeCompleted = Effect.fn("Runners.verifyBakeCompleted")(function* (region: string, instanceId: string) {
+  yield* waitForAwsState(instanceId, "stopped", BAKE_WAIT_LIMIT, readInstanceState(region, instanceId));
+  const consoleOutput = yield* readPostedConsole(region, instanceId).pipe(
+    Effect.retry({
+      schedule: Schedule.spaced(AWS_POLL_INTERVAL).pipe(Schedule.upTo({ duration: CONSOLE_POST_LIMIT })),
+      while: P.isTagged("AwsResourcePending"),
+    }),
+    Effect.catchTag("AwsResourcePending", () =>
+      RunnersCommandError.make({
+        message: `Bake instance ${instanceId} console output was not posted within ${Duration.format(CONSOLE_POST_LIMIT)} of stopping.`,
+      })
+    )
   );
   if (!Str.includes(BAKE_COMPLETE_MARKER)(consoleOutput)) {
+    // Attach the console tail: without it an in-guest failure is a blind
+    // "no marker" once teardown destroys the instance and its console buffer.
+    const consoleTail = Str.slice(Math.max(0, consoleOutput.length - 1500))(consoleOutput);
     return yield* RunnersCommandError.make({
-      message: `Bake instance ${instanceId} stopped without the ${BAKE_COMPLETE_MARKER} success marker.`,
+      message: `Bake instance ${instanceId} stopped without the ${BAKE_COMPLETE_MARKER} success marker. Console tail:\n${consoleTail}`,
     });
   }
 });
@@ -547,7 +589,7 @@ const makePlan = Effect.fn("Runners.plan")(function* () {
     lockfileSha256: inputs.lockfileSha256,
     bunVersion: inputs.bunVersion,
     gitRevision: inputs.gitRevision,
-    requiredFlags: ["--region", "--subnet", "--security-group", "--instance-profile"],
+    requiredFlags: ["--region", "--subnet", "--security-group"],
     invariants: [
       "beep-ci=runner",
       "beep-ci:bake=true",
@@ -709,6 +751,43 @@ export const writeBakeReportForTesting = writeBakeReport;
  * @since 0.0.0
  */
 export const makeBakeScriptForTesting = makeBakeScript;
+
+/**
+ * Test-only NotFound-to-pending mapper used to prove propagation tolerance.
+ *
+ * **Example** (Inspect the test mapper)
+ *
+ * ```ts
+ * import { pendingWhileNotFoundForTesting } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof pendingWhileNotFoundForTesting)
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const pendingWhileNotFoundForTesting = <A, R>(options: {
+  readonly self: Effect.Effect<A, RunnersCommandError, R>;
+  readonly resource: string;
+  readonly notFoundCode: string;
+}): Effect.Effect<A, RunnersCommandError | AwsResourcePending, R> =>
+  pendingWhileNotFound(options.resource, options.notFoundCode)(options.self);
+
+/**
+ * Test-only posted-console reader used to prove post-at-stop tolerance.
+ *
+ * **Example** (Inspect the test reader)
+ *
+ * ```ts
+ * import { readPostedConsoleForTesting } from "@beep/repo-cli/commands/Runners"
+ *
+ * console.log(typeof readPostedConsoleForTesting)
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const readPostedConsoleForTesting = readPostedConsole;
 
 /**
  * Test-only AWS command runner for injected-spawner argv assertions.

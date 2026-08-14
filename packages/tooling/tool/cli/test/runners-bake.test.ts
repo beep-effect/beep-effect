@@ -9,8 +9,11 @@ import {
   BakeReportJson,
   DEFAULT_RUNNER_BASE_AMI_PARAMETER,
   makeBakeScriptForTesting,
+  pendingWhileNotFoundForTesting,
+  RunnersCommandError,
   RunnersService,
   RunnersServiceLive,
+  readPostedConsoleForTesting,
   resolveBakeMode,
   runAwsForTesting,
   runBakeCommandForTesting,
@@ -77,7 +80,7 @@ const makePlan = () =>
     lockfileSha256: digest,
     bunVersion: "1.3.14",
     gitRevision: "0123456789abcdef0123456789abcdef01234567",
-    requiredFlags: ["--subnet", "--security-group", "--instance-profile"],
+    requiredFlags: ["--subnet", "--security-group"],
     invariants: ["beep-ci=runner"],
     steps: [BakePlanStep.make({ name: "resolve-base-ami", argv: ["aws", "ssm", "get-parameter"] })],
   });
@@ -108,12 +111,12 @@ const bakeOptions = () => ({
   report: O.none<string>(),
 });
 
-const bakeConfig = () =>
+const bakeConfig = (instanceProfile: O.Option<string> = O.none()) =>
   BakeConfig.make({
     region: "us-east-1",
     subnetId: "subnet-0123456789abcdef0",
     securityGroupId: "sg-0123456789abcdef0",
-    instanceProfile: "beep-runners-bake",
+    instanceProfile,
     bakeTimestamp: 1786640400000,
   });
 
@@ -261,7 +264,7 @@ describe("runner bake planning and argv", () => {
       yield* runWithStubService(true, { ...bakeOptions(), check: true });
       yield* runWithStubService(true, bakeOptions());
       expect(yield* TestConsole.logLines).toStrictEqual([
-        "lockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\ngit revision: 0123456789abcdef0123456789abcdef01234567\nrequired flags: --subnet, --security-group, --instance-profile\nresolve-base-ami: aws ssm get-parameter",
+        "lockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\ngit revision: 0123456789abcdef0123456789abcdef01234567\nrequired flags: --subnet, --security-group\nresolve-base-ami: aws ssm get-parameter",
         "AMI: ami-0123456789abcdef0\nlockfile: fresh\nbun version: fresh\nfresh: yes",
         "baked AMI: ami-0123456789abcdef0\nbase AMI: ami-0fedcba9876543210\nlockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\npin: cd infra/ci-runners && pulumi config set ciFleetController:amiId ami-0123456789abcdef0 --stack production",
       ]);
@@ -288,10 +291,8 @@ describe("runner bake planning and argv", () => {
       );
       expect(missingSecurityGroup.message).toBe("runners bake: --security-group is required.");
 
-      const missingInstanceProfile = yield* Effect.flip(
-        runWithStubService(true, { ...bakeOptions(), instanceProfile: O.none() })
-      );
-      expect(missingInstanceProfile.message).toBe("runners bake: --instance-profile is required.");
+      // --instance-profile is optional: launcher guardrails deny profiled launches.
+      yield* runWithStubService(true, { ...bakeOptions(), instanceProfile: O.none() });
     })
   );
 
@@ -376,12 +377,7 @@ describe("runner bake planning and argv", () => {
         return { check, currentPlan };
       }).pipe(provideScopedLayer(testLayer));
 
-      expect(currentPlan.requiredFlags).toStrictEqual([
-        "--region",
-        "--subnet",
-        "--security-group",
-        "--instance-profile",
-      ]);
+      expect(currentPlan.requiredFlags).toStrictEqual(["--region", "--subnet", "--security-group"]);
       expect(A.map(currentPlan.steps, (step) => step.name)).toStrictEqual([
         "resolve-base-ami",
         "launch-bake-instance",
@@ -404,7 +400,8 @@ describe("runner bake planning and argv", () => {
       Effect.fnUntraced(function* (tmpDir) {
         const path = yield* Path.Path;
         const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-        const consoleOutput = yield* S.encodeEffect(S.StringFromBase64)("BEEP_RUNNERS_BAKE_COMPLETE\n");
+        // AWS CLI v2 hands back get-console-output's Output already decoded.
+        const consoleOutput = "BEEP_RUNNERS_BAKE_COMPLETE";
         const spawner = makeBakeSpawner(commands, consoleOutput);
         const testLayer = RunnersServiceLive.pipe(
           Layer.provide(
@@ -436,6 +433,7 @@ describe("runner bake planning and argv", () => {
             O.exists(Str.startsWith('{"ResourceType":"instance","Tags":['))
           )
         ).toBe(true);
+        expect(A.contains("--iam-instance-profile")(runInstances)).toBe(false);
         expect(argumentAfter(runInstances, "--block-device-mappings")).toStrictEqual(
           O.some(
             '[{"DeviceName":"/dev/xvda","Ebs":{"DeleteOnTermination":true,"Encrypted":true,"Iops":3000,"Throughput":250,"VolumeSize":100,"VolumeType":"gp3"}}]'
@@ -457,12 +455,55 @@ describe("runner bake planning and argv", () => {
     )
   );
 
+  it.effect("maps propagation NotFound errors into the pending retry signal", () =>
+    Effect.gen(function* () {
+      // A just-created EC2 resource can 404 on describe until propagation
+      // completes; that class must fold into the pending-state retry.
+      const pending = yield* Effect.flip(
+        pendingWhileNotFoundForTesting({
+          self: Effect.fail(
+            RunnersCommandError.make({
+              message:
+                "aws failed: An error occurred (InvalidInstanceID.NotFound) when calling the DescribeInstances operation: The instance ID 'i-bake' does not exist",
+            })
+          ),
+          resource: "i-bake",
+          notFoundCode: "InvalidInstanceID.NotFound",
+        })
+      );
+      expect(pending._tag).toBe("AwsResourcePending");
+
+      const passthrough = yield* Effect.flip(
+        pendingWhileNotFoundForTesting({
+          self: Effect.fail(RunnersCommandError.make({ message: "AccessDenied" })),
+          resource: "i-bake",
+          notFoundCode: "InvalidInstanceID.NotFound",
+        })
+      );
+      expect(passthrough._tag).toBe("RunnersCommandError");
+    })
+  );
+
+  it.effect("classifies an unposted post-stop console read as pending", () =>
+    Effect.gen(function* () {
+      // EC2 posts a stopped instance's console minutes after the stop; an
+      // empty read is the propagation window, never a bake verdict.
+      const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+      const pending = yield* Effect.flip(
+        readPostedConsoleForTesting("us-east-1", "i-bake").pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, makeBakeSpawner(commands, ""))
+        )
+      );
+      expect(pending._tag).toBe("AwsResourcePending");
+    })
+  );
+
   it.effect("terminates the temporary instance when bake verification fails", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {
         const path = yield* Path.Path;
         const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-        const consoleOutput = yield* S.encodeEffect(S.StringFromBase64)("bake failed\n");
+        const consoleOutput = "bake failed";
         const spawner = makeBakeSpawner(commands, consoleOutput);
         const testLayer = RunnersServiceLive.pipe(
           Layer.provide(
@@ -476,7 +517,9 @@ describe("runner bake planning and argv", () => {
         );
         const error = yield* Effect.gen(function* () {
           const service = yield* RunnersService;
-          return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
+          return yield* Effect.flip(
+            service.bake(bakeConfig(O.some("beep-runners-bake")), O.some(path.join(tmpDir, "bake-report.json")))
+          );
         }).pipe(provideScopedLayer(testLayer));
 
         expect(error.message).toContain("stopped without the BEEP_RUNNERS_BAKE_COMPLETE success marker");
@@ -525,6 +568,8 @@ describe("runner bake planning and argv", () => {
       })
     );
     expect(script).toContain("set -euo pipefail");
+    expect(script).toContain("exec >> /dev/console 2>&1");
+    expect(script).toContain("BEEP_RUNNERS_BAKE_FAILED line ${LINENO}: ${BASH_COMMAND}");
     expect(script).toContain("shutdown -P +350");
     expect(script).toContain("dnf install -y git unzip zip jq docker libicu");
     expect(script).toContain("bun install --cwd /tmp/beep-effect --frozen-lockfile");
@@ -533,7 +578,11 @@ describe("runner bake planning and argv", () => {
     expect(script).toContain(`'1.3.14' > /etc/beep-ci/bun-version`);
     expect(script).toContain("touch /etc/beep-ci/baked-runner");
     expect(script).toContain("rm -rf /tmp/beep-effect /root/.cache /home/ec2-user/.cache");
-    expect(script).toContain("cloud-init clean --logs --machine-id");
+    // AL2023's cloud-init lacks the newer --machine-id flag; the reset is
+    // explicit so first boot regenerates a fresh machine identity.
+    expect(script).toContain("cloud-init clean --logs\n");
+    expect(script).toContain("truncate -s 0 /etc/machine-id");
+    expect(script).toContain("rm -f /var/lib/dbus/machine-id");
     expect(script).toContain("rm -rf /var/lib/cloud/instances/* /var/log/cloud-init*.log");
     expect(script).toContain("BEEP_RUNNERS_BAKE_COMPLETE");
     expect(script).toContain("trap - EXIT");
