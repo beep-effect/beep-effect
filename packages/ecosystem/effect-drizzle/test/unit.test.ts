@@ -122,6 +122,7 @@ import {
   ExplicitVariantModel,
   effectDrizzleSchema,
   exactKeyResolutionSchema,
+  extraCoverageRecordTable,
   mechanicalTable,
   namedUniqueRecordTable,
   Organization,
@@ -281,6 +282,17 @@ describe("toPgTable", () => {
     const membershipPrimaryKey = first(membershipConfig.primaryKeys, "membership primary key");
     expect(membershipPrimaryKey.name).toBe("membership_pk");
     expect(membershipPrimaryKey.columns.map((candidate) => candidate.name)).toEqual(["organization_id", "user_id"]);
+  });
+
+  it("emits partial unique indexes and explicitly unsafe checks", () => {
+    const config = getTableConfig(extraCoverageRecordTable);
+
+    expect(config.indexes.map((candidate) => candidate.config.name)).toContain(
+      "extra_coverage_record_email_unique_idx"
+    );
+    expect(config.checks.map((candidate) => candidate.name)).toContain("extra_coverage_record_code_check");
+    expect(pg.Table.Node.is(pg.Table.unsafeCheckSql("positive_count", "count > 0"))).toBe(true);
+    expect(pg.Table.Node.is({ _tag: "unknown", name: "unknown" })).toBe(false);
   });
 });
 

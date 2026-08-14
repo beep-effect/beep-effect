@@ -438,8 +438,10 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/effect-drizzle": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "drizzle-orm": "catalog:",
       },
     },
     "packages/architecture-lab/server": {
@@ -528,10 +530,12 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
+        "drizzle-orm": "catalog:",
       },
     },
     "packages/documents/server": {
@@ -1437,9 +1441,11 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "drizzle-orm": "catalog:",
       },
     },
     "packages/epistemic/server": {
@@ -2591,9 +2597,11 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "drizzle-orm": "catalog:",
       },
     },
     "packages/workspace/server": {

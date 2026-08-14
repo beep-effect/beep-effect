@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-14T07:30:12.668Z",
-  "git_sha": "50be6e6b9b6e04b26ccddef9a21ffec710ca0786",
+  "generated_at": "2026-08-14T13:50:20.751Z",
+  "git_sha": "88c68925505e574d5157b52b206455767857c799",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
@@ -321,8 +321,8 @@
     },
     "@beep/agents-domain": {
       "path": "packages/agents/domain",
-      "lines": 80.64,
-      "statements": 80.61,
+      "lines": 81.25,
+      "statements": 81.18,
       "branches": 80,
       "functions": 67.5,
       "uncovered": {
@@ -333,8 +333,8 @@
       },
       "files": {
         "packages/agents/domain/src/entities/Agent/Agent.model.ts": {
-          "lines": 25,
-          "statements": 25,
+          "lines": 40,
+          "statements": 40,
           "branches": 100,
           "functions": 0,
           "uncovered": {
@@ -1662,7 +1662,7 @@
       "lines": 80,
       "statements": 80.48,
       "branches": 62.5,
-      "functions": 65.71,
+      "functions": 66.66,
       "uncovered": {
         "lines": 16,
         "statements": 16,
@@ -1730,7 +1730,31 @@
             "functions": 0
           }
         },
+        "packages/architecture-lab/domain/src/entities/Worker/Worker.behavior.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/architecture-lab/domain/src/entities/Worker/Worker.values.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -1755,30 +1779,6 @@
           }
         },
         "packages/architecture-lab/domain/src/entities/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/architecture-lab/domain/src/identity/ArchitectureLab.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/architecture-lab/domain/src/identity/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -5163,10 +5163,10 @@
     },
     "@beep/documents-domain": {
       "path": "packages/documents/domain",
-      "lines": 92.85,
-      "statements": 93,
+      "lines": 93,
+      "statements": 93.13,
       "branches": 58.33,
-      "functions": 84.21,
+      "functions": 86.95,
       "uncovered": {
         "lines": 7,
         "statements": 7,
@@ -5246,6 +5246,18 @@
             "functions": 0
           }
         },
+        "packages/documents/domain/src/entities/SyncConflict/SyncConflict.values.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/documents/domain/src/entities/SyncConflict/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -5259,6 +5271,18 @@
           }
         },
         "packages/documents/domain/src/entities/SyncCursor/SyncCursor.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/domain/src/entities/SyncCursor/SyncCursor.values.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -5294,6 +5318,18 @@
             "functions": 0
           }
         },
+        "packages/documents/domain/src/entities/SyncItem/SyncItem.values.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/documents/domain/src/entities/SyncItem/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -5318,6 +5354,18 @@
             "functions": 0
           }
         },
+        "packages/documents/domain/src/entities/SyncOperation/SyncOperation.values.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/documents/domain/src/entities/SyncOperation/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -5331,30 +5379,6 @@
           }
         },
         "packages/documents/domain/src/entities/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/domain/src/identity/Documents.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/documents/domain/src/identity/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -6327,15 +6351,15 @@
     },
     "@beep/drizzle": {
       "path": "packages/drivers/drizzle",
-      "lines": 87.74,
-      "statements": 88.28,
-      "branches": 79.68,
-      "functions": 83.92,
+      "lines": 93,
+      "statements": 93.22,
+      "branches": 78.94,
+      "functions": 96.07,
       "uncovered": {
-        "lines": 25,
-        "statements": 26,
-        "branches": 13,
-        "functions": 18
+        "lines": 7,
+        "statements": 8,
+        "branches": 8,
+        "functions": 2
       },
       "files": {
         "packages/drivers/drizzle/src/Drizzle.errors.ts": {
@@ -6360,18 +6384,6 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
-          }
-        },
-        "packages/drivers/drizzle/src/EntityTable.models.ts": {
-          "lines": 82.69,
-          "statements": 82.69,
-          "branches": 80.76,
-          "functions": 73.77,
-          "uncovered": {
-            "lines": 18,
-            "statements": 18,
-            "branches": 5,
-            "functions": 16
           }
         },
         "packages/drivers/drizzle/src/index.ts": {
@@ -6855,15 +6867,15 @@
     },
     "@beep/effect-drizzle": {
       "path": "packages/ecosystem/effect-drizzle",
-      "lines": 84.38,
-      "statements": 83.91,
-      "branches": 81.64,
-      "functions": 76.76,
+      "lines": 84.68,
+      "statements": 84.21,
+      "branches": 81.93,
+      "functions": 77.42,
       "uncovered": {
-        "lines": 258,
-        "statements": 286,
-        "branches": 194,
-        "functions": 174
+        "lines": 256,
+        "statements": 284,
+        "branches": 190,
+        "functions": 172
       },
       "files": {
         "packages/ecosystem/effect-drizzle/src/core/Field.ts": {
@@ -7083,15 +7095,15 @@
           }
         },
         "packages/ecosystem/effect-drizzle/src/pg/extras.ts": {
-          "lines": 96.77,
-          "statements": 97.01,
-          "branches": 91.11,
-          "functions": 92,
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 4,
-            "functions": 2
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/ecosystem/effect-drizzle/src/pg/index.ts": {
@@ -7452,10 +7464,10 @@
     },
     "@beep/epistemic-domain": {
       "path": "packages/epistemic/domain",
-      "lines": 93.16,
-      "statements": 91.68,
+      "lines": 93.27,
+      "statements": 91.81,
       "branches": 100,
-      "functions": 78.12,
+      "functions": 78.52,
       "uncovered": {
         "lines": 29,
         "statements": 38,
@@ -7535,6 +7547,18 @@
             "functions": 0
           }
         },
+        "packages/epistemic/domain/src/entities/Contradiction/Contradiction.behavior.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts": {
           "lines": 100,
           "statements": 100,
@@ -7559,9 +7583,9 @@
             "functions": 0
           }
         },
-        "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.model.ts": {
-          "lines": 20,
-          "statements": 15.15,
+        "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts": {
+          "lines": 16.66,
+          "statements": 12.5,
           "branches": 100,
           "functions": 0,
           "uncovered": {
@@ -7569,6 +7593,18 @@
             "statements": 28,
             "branches": 0,
             "functions": 28
+          }
+        },
+        "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/epistemic/domain/src/entities/EdgeVersion/index.ts": {
@@ -7596,6 +7632,18 @@
           }
         },
         "packages/epistemic/domain/src/entities/Evidence/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/epistemic/domain/src/entities/EvidenceVerification/EvidenceVerification.behavior.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -7656,30 +7704,6 @@
           }
         },
         "packages/epistemic/domain/src/entities/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/domain/src/identity/Epistemic.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/epistemic/domain/src/identity/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -11085,8 +11109,8 @@
     },
     "@beep/law-practice-domain": {
       "path": "packages/law-practice/domain",
-      "lines": 77.5,
-      "statements": 77.27,
+      "lines": 78.14,
+      "statements": 77.89,
       "branches": 59.01,
       "functions": 58.37,
       "uncovered": {
@@ -11096,6 +11120,18 @@
         "functions": 77
       },
       "files": {
+        "packages/law-practice/domain/src/entities/ActFrame/ActFrame.behavior.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/law-practice/domain/src/entities/ActFrame/ActFrame.model.ts": {
           "lines": 100,
           "statements": 100,
@@ -19437,15 +19473,15 @@
     },
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
-      "lines": 71.74,
-      "statements": 70.46,
-      "branches": 63.88,
-      "functions": 60.73,
+      "lines": 72.29,
+      "statements": 71,
+      "branches": 64.28,
+      "functions": 61.43,
       "uncovered": {
-        "lines": 669,
-        "statements": 747,
-        "branches": 182,
-        "functions": 450
+        "lines": 656,
+        "statements": 733,
+        "branches": 180,
+        "functions": 442
       },
       "files": {
         "apps/professional-desktop/src/App.tsx": {
@@ -20097,15 +20133,15 @@
           }
         },
         "apps/professional-desktop/src/transport/TauriIpcSocket.ts": {
-          "lines": 41.17,
-          "statements": 37.63,
-          "branches": 10,
-          "functions": 8.16,
+          "lines": 56.47,
+          "statements": 52.17,
+          "branches": 30,
+          "functions": 24.48,
           "uncovered": {
-            "lines": 50,
-            "statements": 58,
-            "branches": 9,
-            "functions": 45
+            "lines": 37,
+            "statements": 44,
+            "branches": 7,
+            "functions": 37
           }
         },
         "apps/professional-desktop/src/workspace/ProfessionalWorkspace.ts": {
@@ -21004,13 +21040,13 @@
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
       "lines": 70.74,
-      "statements": 70.47,
-      "branches": 56.72,
-      "functions": 62.98,
+      "statements": 70.48,
+      "branches": 56.73,
+      "functions": 62.99,
       "uncovered": {
         "lines": 8302,
         "statements": 8711,
-        "branches": 4582,
+        "branches": 4583,
         "functions": 3067
       },
       "files": {
@@ -23235,14 +23271,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts": {
-          "lines": 72.64,
-          "statements": 72.99,
-          "branches": 45,
-          "functions": 71.92,
+          "lines": 73.1,
+          "statements": 73.44,
+          "branches": 46.66,
+          "functions": 72.88,
           "uncovered": {
             "lines": 64,
             "statements": 64,
-            "branches": 55,
+            "branches": 56,
             "functions": 16
           }
         },
@@ -27585,15 +27621,15 @@
     },
     "@beep/schema": {
       "path": "packages/foundation/modeling/schema",
-      "lines": 92.8,
-      "statements": 91.92,
-      "branches": 86.87,
-      "functions": 86.71,
+      "lines": 93.22,
+      "statements": 92.25,
+      "branches": 88.51,
+      "functions": 87.43,
       "uncovered": {
-        "lines": 272,
-        "statements": 321,
-        "branches": 165,
-        "functions": 172
+        "lines": 232,
+        "statements": 279,
+        "branches": 124,
+        "functions": 146
       },
       "files": {
         "packages/foundation/modeling/schema/src/AbortSignal.ts": {
@@ -28376,18 +28412,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/DomainModel.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/Double.ts": {
           "lines": 100,
           "statements": 100,
@@ -28461,102 +28485,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/Email.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.constructors.ts": {
-          "lines": 80,
-          "statements": 80,
-          "branches": 87.5,
-          "functions": 50,
-          "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 1,
-            "functions": 3
-          }
-        },
-        "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.definition.ts": {
-          "lines": 50,
-          "statements": 50,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 0,
-            "functions": 2
-          }
-        },
-        "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.factory.ts": {
-          "lines": 81.53,
-          "statements": 81.67,
-          "branches": 69.76,
-          "functions": 77.19,
-          "uncovered": {
-            "lines": 24,
-            "statements": 24,
-            "branches": 26,
-            "functions": 13
-          }
-        },
-        "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.fields.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.shape.ts": {
-          "lines": 84.37,
-          "statements": 82.6,
-          "branches": 77.19,
-          "functions": 72,
-          "uncovered": {
-            "lines": 10,
-            "statements": 12,
-            "branches": 13,
-            "functions": 7
-          }
-        },
-        "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.shared.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/EntitySchema/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -29576,90 +29504,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/Model/Model.codecs.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Model/Model.datetime.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Model/Model.fields.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Model/Model.sqlite.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Model/Model.uuid.ts": {
-          "lines": 83.33,
-          "statements": 83.33,
-          "branches": 100,
-          "functions": 66.66,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/Model/Model.variants.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Model/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/MutableHashMap.ts": {
           "lines": 95.74,
           "statements": 95.74,
@@ -30560,42 +30404,6 @@
             "functions": 1
           }
         },
-        "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 96.15,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 1,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.overridable.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/VariantSchema/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/Xml.ts": {
           "lines": 88,
           "statements": 88,
@@ -30858,14 +30666,14 @@
     },
     "@beep/shared-domain": {
       "path": "packages/shared/domain",
-      "lines": 99.66,
-      "statements": 99.68,
-      "branches": 97.43,
+      "lines": 99.75,
+      "statements": 99.76,
+      "branches": 100,
       "functions": 100,
       "uncovered": {
         "lines": 1,
         "statements": 1,
-        "branches": 1,
+        "branches": 0,
         "functions": 0
       },
       "files": {
@@ -31037,18 +30845,6 @@
             "functions": 0
           }
         },
-        "packages/shared/domain/src/entity/BaseEntity.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 75,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 1,
-            "functions": 0
-          }
-        },
         "packages/shared/domain/src/entity/EntityId.ts": {
           "lines": 100,
           "statements": 100,
@@ -31074,6 +30870,18 @@
           }
         },
         "packages/shared/domain/src/entity/Principal.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/entity/ProductEntity.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -31145,7 +30953,7 @@
             "functions": 0
           }
         },
-        "packages/shared/domain/src/identity/Agents.ts": {
+        "packages/shared/domain/src/identity/Agents/AgentId.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -31157,7 +30965,7 @@
             "functions": 0
           }
         },
-        "packages/shared/domain/src/identity/Epistemic.ts": {
+        "packages/shared/domain/src/identity/Agents/ProviderInstanceId.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -31169,7 +30977,7 @@
             "functions": 0
           }
         },
-        "packages/shared/domain/src/identity/LawPractice.ts": {
+        "packages/shared/domain/src/identity/Agents/SkillId.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -31181,7 +30989,7 @@
             "functions": 0
           }
         },
-        "packages/shared/domain/src/identity/Shared.ts": {
+        "packages/shared/domain/src/identity/Agents/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -31193,7 +31001,715 @@
             "functions": 0
           }
         },
-        "packages/shared/domain/src/identity/Workspace.ts": {
+        "packages/shared/domain/src/identity/ArchitectureLab/WorkerId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/ArchitectureLab/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Documents/SyncConflictId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Documents/SyncCursorId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Documents/SyncItemId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Documents/SyncOperationId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Documents/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Epistemic/ActivityId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Epistemic/CandidateClaimId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Epistemic/ClaimDispositionId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Epistemic/ContradictionCandidateId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Epistemic/ContradictionDispositionId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Epistemic/ContradictionReceiptId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Epistemic/EdgeVersionId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Epistemic/EvidenceId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Epistemic/EvidenceVerificationId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Epistemic/UsageRecordId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Epistemic/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/ActFrameId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/CandorDispositionId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/CitationId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/ClaimId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/CorrectionDeltaId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/DistinctionId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/IdsSubmissionFactId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/LegalClientId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/LegalContactId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/LegalOppositionCandidateId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/LegalPositionRelatorId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/MatterId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/OfficeActionId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/PartyId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/PatentAssetId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/PatentCitationEventId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/PowerExerciseId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/PriorArtReferenceId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/RejectionId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/LawPractice/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Shared/ActivityId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Shared/AgentId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Shared/AgentVersionId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Shared/ConnectorAccountId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Shared/LocalMachineId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Shared/MembershipId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Shared/OrganizationId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Shared/ServiceAccountId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Shared/TeamId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Shared/UserId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Shared/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Workspace/ApprovalGateId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Workspace/CandidateDraftId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Workspace/CandidateProjectId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Workspace/CandidateTaskId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Workspace/ContextPacketId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Workspace/EmailArtifactId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Workspace/MessageId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Workspace/ThreadId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Workspace/TurnId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Workspace/WorkspaceId.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/shared/domain/src/identity/Workspace/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -31485,30 +32001,6 @@
           }
         },
         "packages/shared/tables/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/shared/tables/src/table/Table.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/shared/tables/src/table/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -34556,6 +35048,18 @@
             "functions": 0
           }
         },
+        "packages/workspace/domain/src/entities/Message/Message.values.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/workspace/domain/src/entities/Message/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -34593,6 +35097,18 @@
           }
         },
         "packages/workspace/domain/src/entities/Turn/Turn.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/workspace/domain/src/entities/Turn/Turn.values.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

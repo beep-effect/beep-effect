@@ -1,6 +1,8 @@
 import * as Worker from "@beep/architecture-lab-domain/entities/Worker";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { describe, expect, it } from "@effect/vitest";
+import { getTableConfig } from "drizzle-orm/pg-core";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
@@ -34,4 +36,11 @@ describe("Worker entity", () => {
       expect(Object.keys(Worker.Worker.jsonUpdate.fields)).toEqual(["displayName", "status"]);
     })
   );
+
+  it("materializes Worker model extras into table indexes", () => {
+    const worker = Worker.Worker.pipe(toPgTable, getTableConfig);
+    const workerIndexNames = worker.indexes.map((index) => index.config.name);
+
+    expect(workerIndexNames).toEqual(expect.arrayContaining(["architecture_lab_worker_status_lookup_idx"]));
+  });
 });

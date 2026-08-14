@@ -1023,12 +1023,14 @@
         "from": "@beep/architecture-lab-domain",
         "allow": [
           "@beep/architecture-lab-domain",
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-domain",
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain"
@@ -1319,6 +1321,7 @@
         "from": "@beep/documents-domain",
         "allow": [
           "@beep/documents-domain",
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/rdf",
           "@beep/schema",
@@ -1328,6 +1331,7 @@
         ],
         "allowTypeOnly": [
           "@beep/documents-domain",
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/rdf",
           "@beep/schema",
@@ -1521,6 +1525,7 @@
       {
         "from": "@beep/epistemic-domain",
         "allow": [
+          "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/identity",
           "@beep/provenance",
@@ -1530,6 +1535,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/identity",
           "@beep/provenance",
@@ -3297,6 +3303,7 @@
       {
         "from": "@beep/workspace-domain",
         "allow": [
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/md",
           "@beep/schema",
@@ -3305,6 +3312,7 @@
           "@beep/workspace-domain"
         ],
         "allowTypeOnly": [
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/md",
           "@beep/schema",

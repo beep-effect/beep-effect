@@ -88,6 +88,21 @@ class NamedUniqueRecord extends Model<NamedUniqueRecord>("NamedUniqueRecord")(
 
 export const namedUniqueRecordTable = toPgTable(NamedUniqueRecord);
 
+class ExtraCoverageRecord extends Model<ExtraCoverageRecord>("ExtraCoverageRecord")(
+  {
+    code: String.pipe(pg.text()),
+    email: String.pipe(pg.text()),
+  },
+  (columns) => [
+    Table.uniqueIndex("extra_coverage_record_email_unique_idx", [columns.email], {
+      where: sql<boolean>`${columns.email} <> ''`,
+    }),
+    Table.unsafeCheckSql("extra_coverage_record_code_check", "code <> ''"),
+  ]
+) {}
+
+export const extraCoverageRecordTable = toPgTable(ExtraCoverageRecord);
+
 class AuditedEvent extends auditKit.Entity<AuditedEvent>("AuditedEvent")({
   label: String,
   status: RecordStatus.pipe(pg.enum("record_status")),
