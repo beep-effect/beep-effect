@@ -41,7 +41,7 @@ domain + persistence, on local-first PGlite.
 | Component | Capability basis |
 | --- | --- |
 | Thread / Turn / Message entities (Turn = aggregate + ordered typed items; branching = parent-turn lineage) | **NET-NEW** entities; spec `goals/agentic-professional-runtime/docs/data-model-shared-core.md`; mechanism `BaseEntity.Class` + persisted descriptors (`packages/shared/domain/src/entity/BaseEntity.ts`) |
-| Tables + migrations | `EntityTable.pgTableFrom` (`packages/drivers/drizzle`); table pattern `packages/shared/tables/src/entities/Organization/Organization.table.ts`; migrations `packages/_internal/db-admin`; lands in existing `packages/workspace/{domain,tables}` |
+| Tables + migrations | `EntityTable.pgTableFrom` (`packages/drivers/drizzle`); table helpers `packages/shared/tables/src/table/Table.ts`; migrations `packages/_internal/db-admin`; lands in existing `packages/workspace/{domain,tables}` |
 | PGlite storage + early migration smoke task | `@electric-sql/pglite` 0.5.1 + `pglite-socket` 0.2.1 (root catalog); **NET-NEW** wiring |
 | `drivers/anthropic` (`@beep/anthropic`): acquisition Layer, ExecutionPlan acquisition-only retry, model-catalog pin, technical `.config.ts` | **NET-NEW** package; family pattern `packages/drivers/{openai-compat,venice-ai,xai}`; logic port from proof `server/Anthropic.ts`; lib `@effect/ai-anthropic` 4.0.0-beta.79 (catalog) |
 | `agent-capability` → `agents` slice rename (+ runtime SPEC.md slice-table amendment) | existing `packages/agent-capability/{domain,use-cases}`; cleanup-on-touch inside this packet |
