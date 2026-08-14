@@ -31,7 +31,7 @@ const $I = $RepoUtilsId.create("Workspaces");
  * @category configuration
  * @since 0.0.0
  */
-const IGNORED_DIRS = ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.turbo/**"];
+const IGNORED_DIRS = ["**/node_modules/**", "**/dist/**", "**/build/**", "**/coverage/**", "**/.turbo/**"];
 const absoluteWorkspacePattern = /^(?:[A-Za-z]:\/|\/\/|\/)/;
 
 const isWorkspacePatternArray = (value: PackageJsonWorkspaces): value is ReadonlyArray<string> => A.isArray(value);
