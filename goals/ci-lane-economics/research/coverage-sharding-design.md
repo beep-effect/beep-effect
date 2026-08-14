@@ -185,6 +185,20 @@ The complete summary window took 6m31s, every task was a cache miss, and the
 ratchet compared all 127 baseline packages. This re-accepts local correctness
 and the resource bound; a new live fleet job remains the timing authority.
 
+PR #719's next live attempt, run `31799253491`, job `94763099702`, stopped in
+the cold prebuild after 1m27s, before any coverage shard started. It repeated
+the earlier impossible `thunk.ts is not a module` signature. The exact merge
+ref passed all 128 forced build tasks with zero cache hits in 1m03s, proving
+the committed source was intact. The task trace exposed the race:
+`@beep/ontology-config` was eligible beside `@beep/utils`, while its unused
+Schema project reference caused its own `tsc -b` process to recurse through
+Schema, Data, and Utils outside Turbo's dependency ordering. Removing that
+stale reference keeps the cold prebuild concurrent without allowing two
+processes to build the same referenced projects. The repaired forced,
+zero-cache, concurrency-four build passed all 128 tasks in 56.2s. The failed
+attempt remains excluded from duration percentiles and requires a fresh live
+admission.
+
 The live PR admission must prove all summaries, all regression tests, no runner
 shutdown/OOM, and complete job wall time below 20 minutes. Any source change
 that makes a true regression green, omits a selected summary, or loses a full

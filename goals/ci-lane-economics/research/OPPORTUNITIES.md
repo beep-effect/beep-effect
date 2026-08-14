@@ -404,3 +404,23 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** expose an explicit local full-sharded flag or
   dedicated replay command instead of making the execution shape depend on an
   implicit environment variable.
+
+## 2026-08-14 — stale project reference raced the cold coverage prebuild
+
+- **Doing:** admitting the repaired nine-shard Coverage Regression head on PR
+  #719.
+- **Evidence:** run `31799253491`, job `94763099702`, failed after 1m27s when
+  `@beep/ontology-config` reported `thunk.ts is not a module` and cascading
+  missing `@beep/utils` exports. The exact merge ref then passed all 128 forced
+  build tasks with zero cache hits in 1m03s. Its cold task trace showed
+  `@beep/ontology-config` starting beside `@beep/utils`; an unused Schema
+  project reference made that early task recursively build
+  Schema -> Data -> Utils outside Turbo's package dependency order.
+- **Repair proof:** with the stale reference removed, the same forced,
+  zero-cache, concurrency-four build passed 128/128 tasks in 56.2s. The
+  `@beep/ontology-config` task completed without recursing into Schema, Data,
+  or Utils while Turbo continued scheduling those packages itself.
+- **Would have prevented it:** keep package project references aligned with
+  actual workspace dependencies so Turbo is the sole cross-package build
+  scheduler and no independent `tsc -b` process writes the same referenced
+  projects concurrently.
