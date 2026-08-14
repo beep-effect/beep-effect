@@ -13,6 +13,7 @@ const config = {
     "packages/foundation/primitive/*/package.json",
     "packages/foundation/ui-system/*/package.json",
     "packages/shared/domain/package.json",
+    "packages/shared/use-cases/package.json",
     "packages/shared/tables/package.json",
     "packages/tooling/library/*/package.json",
     "packages/tooling/policy-pack/*/package.json",

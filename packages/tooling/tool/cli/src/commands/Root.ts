@@ -28,6 +28,7 @@ import { purgeCommand } from "./Purge/index.ts";
 import { qaCommand } from "./Qa/index.ts";
 import { qualityCommand } from "./Quality/index.ts";
 import { researchCommand } from "./Research/index.ts";
+import { runnersCommand } from "./Runners/index.ts";
 import { skillsCommand } from "./Skills/index.ts";
 import { syncDataToTsCommand } from "./SyncDataToTs/index.ts";
 import { topoSortCommand } from "./TopoSort/index.ts";
@@ -81,6 +82,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     lawsCommand,
     qualityCommand,
     researchCommand,
+    runnersCommand,
     createPackageCommand,
     codegenCommand,
     purgeCommand,

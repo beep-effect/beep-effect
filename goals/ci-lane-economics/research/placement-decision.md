@@ -31,7 +31,7 @@ required context.
 | Docgen | fleet | fleet | 13.4m | Retain; `uses_turbo: false`, so there is no cache-backed re-fit case. |
 | Codegen Drift | hosted | hosted | 3.3m | Retain. |
 | Repo Sanity | hosted | hosted | 4.1m | Retain. |
-| Coverage Regression | fleet | fleet | 29.5m | Keep one fleet placement; use directly changed coverage owners on PRs with an explicit full fallback, and stable weighted full-run shards on `main`/nightly. Do not add fleet jobs until shard cost is measured. |
+| Coverage Regression | fleet | fleet | 29.5m | Keep one fleet placement. Use exact directly changed coverage owners on PRs with an explicit full fallback; prebuild once and run four stable weighted in-job shards with bounded Vitest workers for complete runs. |
 | Knip | hosted | hosted | 3.1m | Retain. |
 | Commitlint | hosted | hosted | 1.8m | Retain. |
 | Secret Scanning | hosted | hosted | 1.0m | Retain. |
@@ -48,7 +48,9 @@ required context.
 - Governing projection: the signed **$100/month** standing projection remains
   the conservative upper bound because this decision adds no fleet work.
 - Absolute ceiling: **$200/month** remains a hard stop. No Coverage shard may
-  add a VM until its per-wave and monthly projection is recorded here.
+  add a VM until its per-wave and monthly projection is recorded here. The
+  revised candidate uses four processes inside the existing one-job/one-VM
+  boundary, so it adds no job, VM, or projected monthly spend.
 
 The census measures job wall time rather than controller boot/billing time.
 The failed hosted admission creates no standing fleet delta: retaining the
@@ -70,6 +72,25 @@ pre-packet placement cannot raise the approved projection.
 - Reject the Coverage redesign if a selected package can omit a summary, a
   current true regression turns green, or a full-fallback input selects less
   than the present full package set.
+- The five-shard admission was rejected after live job `94583467537` passed in
+  22m18s: aggregate five-way coverage contention stretched the isolated
+  `@beep/repo-cli` shard to 20m16s. The revised four-shard candidate matches the
+  fleet's accepted Turbo concurrency.
+- The first four-shard admission was rejected after job `94608048289` failed
+  in 24m10s. The three mixed shards passed in 15m30s-16m46s, but unbounded
+  Vitest subprocess fan-out starved the sequential `@beep/repo-cli` shard: it
+  took 19m13s and failed ten 5-second timeout tests plus one 1-second timing
+  assertion. The next candidate caps every shard's Vitest pool at two workers,
+  bounding aggregate test fan-out at the eight-vCPU runner's capacity.
+- Reject or roll back the worker-bounded four-shard admission if the existing
+  32-GB fleet runner shuts down, exhausts memory, or the complete required job
+  remains at or above 20 minutes. The design raises in-job package concurrency,
+  not fleet job count.
+- The worker-bounded candidate passed its forced local full-path proof with
+  remote cache disabled: a 23-second prebuild, four green shards at 8m06s to
+  9m40s, and all 124 summaries accepted by the ratchet. This proves local
+  correctness and bounded execution; the live fleet run remains the admission
+  authority.
 
 ## P2 live admission evidence
 
@@ -77,3 +98,6 @@ pre-packet placement cannot raise the approved projection.
 | --- | --- | --- | --- | --- |
 | `31723283969` / `94525310886` | `ubuntu-24.04` | Failed after 10m25s | GitHub-hosted runner received a shutdown signal; the verification step was cancelled and four in-flight Turbo tasks exited 137. This was not the workflow's 40-minute timeout or a test assertion failure. | Track as an infrastructure failure and exclude from duration percentiles. Targeted retry required. |
 | `31723283969` attempt 2 / `94533388363` | `ubuntu-24.04` | Failed after 11m21s | A different GitHub-hosted runner received the same SIGTERM during the verification step after 8m05s of Turbo work. Tests emitted before termination passed; two remaining builds exited 137. | Repeated shutdown falsifies the hosted re-fit and fires the rollback. Exclude from duration percentiles. |
+| `31727475076` / `94539333691` | `beep-ec2-heavy` | Passed after 28m23s | Accepted rollback head; Coverage itself ran 227 tasks with zero cache hits in 27m02s and compared all 124 packages. | Confirms correctness and the structural p95 breach; supplies the weights for the in-job shard admission. |
+| `31740786046` / `94583467537` | `beep-ec2-heavy` | Passed after 22m18s | Five-shard candidate compared all 124 packages without shutdown/OOM, but four mixed shards took 14m59s-15m54s and isolated `@beep/repo-cli` took 20m16s under five-way contention. | Reject the five-shard timing admission; exclude it from the accepted P3 population and test four shards at the fleet's accepted concurrency. |
+| `31748322804` / `94608048289` | `beep-ec2-heavy` | Failed after 24m10s | The prebuild took 3m32s and three shards passed in 15m30s-16m46s. The `@beep/repo-cli` shard took 19m13s and failed contention-sensitive timeouts because each co-resident Vitest process still sized itself from the whole host. | Reject the unbounded four-shard admission; exclude it from duration percentiles and admit the four-shard/two-worker candidate. |

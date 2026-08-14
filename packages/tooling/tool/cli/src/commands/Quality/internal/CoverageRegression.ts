@@ -944,6 +944,17 @@ const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* 
   ].join("\n");
 });
 
+const missingCoverageSnapshotPackages = (
+  entries: ReadonlyArray<CoverageSnapshotEntry>,
+  expectedPackageNames: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+  pipe(
+    expectedPackageNames,
+    A.filter((packageName) => !A.some(entries, (entry) => entry.packageName === packageName)),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+
 /**
  * Write the committed coverage regression baseline from generated summaries.
  *
@@ -963,13 +974,15 @@ const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* 
  *
  * @param repoRoot - Repository root.
  * @param scoped - Whether the coverage run was intentionally filtered or affected-scoped.
+ * @param expectedPackageNames - Exact scoped package names that must emit summaries before the baseline is written.
  * @category use-cases
  * @since 0.0.0
  */
 export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.writeCoverageRegressionBaseline")(
   function* (
     repoRoot: string,
-    scoped: boolean
+    scoped: boolean,
+    expectedPackageNames: ReadonlyArray<string> = A.empty<string>()
   ): Effect.fn.Return<
     void,
     CoverageRegressionError,
@@ -979,6 +992,12 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     const entries = yield* collectCoverageSnapshot(repoRoot);
     if (A.isReadonlyArrayEmpty(entries)) {
       return yield* QualityTaskConfigurationError.new("No coverage summaries were generated; cannot write baseline.");
+    }
+    const missingExpected = missingCoverageSnapshotPackages(entries, expectedPackageNames);
+    if (A.isReadonlyArrayNonEmpty(missingExpected)) {
+      return yield* QualityTaskConfigurationError.new(
+        `Refusing to write ${coverageRegressionBaselinePath}: ${A.length(missingExpected)} selected package(s) produced no coverage summary: ${A.join(missingExpected, ", ")}. Re-run the scoped coverage command and fix every missing summary before regenerating the baseline.`
+      );
     }
 
     // Absent and unreadable are different answers. Collapsing a read or decode
@@ -1222,7 +1241,8 @@ const droppedCoverageMetrics = (
 const compareCoverage = (
   baseline: CoverageRegressionBaseline,
   actuals: ReadonlyArray<CoverageSnapshotEntry>,
-  scoped: boolean
+  scoped: boolean,
+  expectedPackageNames: ReadonlyArray<string> = A.empty<string>()
 ): CoverageComparisonResult => {
   const actualsByName = actualByPackageName(actuals);
   const baselineEntries = A.sort(
@@ -1240,13 +1260,10 @@ const compareCoverage = (
       )
     )
   );
-  const missingActuals = scoped
-    ? A.empty<string>()
-    : pipe(
-        baselineEntries,
-        A.filter(([packageName]) => pipe(actualsByName, R.get(packageName), O.isNone)),
-        A.map(([packageName]) => packageName)
-      );
+  const missingActuals = missingCoverageSnapshotPackages(
+    actuals,
+    scoped ? expectedPackageNames : A.map(baselineEntries, ([packageName]) => packageName)
+  );
   const newPackages = pipe(
     actuals,
     A.filter((actual) => pipe(baseline.packages, R.get(actual.packageName), O.isNone)),
@@ -1278,6 +1295,55 @@ export const compareCoverageRegressionSnapshotsForTesting: {
     scoped: boolean
   ): CoverageComparisonResult;
 } = dual(3, compareCoverage);
+
+/**
+ * Compare a scoped snapshot while requiring every explicitly selected package
+ * to have emitted a coverage summary.
+ *
+ * **Example** (Require a selected package summary)
+ *
+ * ```ts
+ * import {
+ *   compareCoverageRegressionSnapshotsForExpectedPackagesForTesting,
+ *   type CoverageRegressionBaseline,
+ *   type CoverageSnapshotEntry
+ * } from "@beep/repo-cli/test/Quality"
+ *
+ * declare const baseline: CoverageRegressionBaseline
+ * declare const actuals: ReadonlyArray<CoverageSnapshotEntry>
+ * const result = compareCoverageRegressionSnapshotsForExpectedPackagesForTesting(
+ *   baseline,
+ *   actuals,
+ *   ["@beep/schema"]
+ * )
+ * console.log(result.missingActuals)
+ * ```
+ *
+ * @param baseline - Committed coverage baseline.
+ * @param actuals - Coverage summaries produced by the scoped run.
+ * @param expectedPackageNames - Exact selected coverage owners.
+ * @returns Regression, missing-summary, and new-package findings.
+ * @category testing
+ * @since 0.0.0
+ */
+export const compareCoverageRegressionSnapshotsForExpectedPackagesForTesting: {
+  (
+    actuals: ReadonlyArray<CoverageSnapshotEntry>,
+    expectedPackageNames: ReadonlyArray<string>
+  ): (baseline: CoverageRegressionBaseline) => CoverageComparisonResult;
+  (
+    baseline: CoverageRegressionBaseline,
+    actuals: ReadonlyArray<CoverageSnapshotEntry>,
+    expectedPackageNames: ReadonlyArray<string>
+  ): CoverageComparisonResult;
+} = dual(
+  3,
+  (
+    baseline: CoverageRegressionBaseline,
+    actuals: ReadonlyArray<CoverageSnapshotEntry>,
+    expectedPackageNames: ReadonlyArray<string>
+  ): CoverageComparisonResult => compareCoverage(baseline, actuals, true, expectedPackageNames)
+);
 
 const coverageFailureLocation = (failure: CoverageComparisonFailure): string =>
   pipe(
@@ -1328,7 +1394,7 @@ const regressionLines = (result: CoverageComparisonResult): ReadonlyArray<string
     ...A.match(result.missingActuals, {
       onEmpty: A.empty<string>,
       onNonEmpty: (missing) => [
-        "[coverage-ratchet] missing coverage summaries for baseline package(s):",
+        "[coverage-ratchet] missing coverage summaries for required package(s):",
         ...A.map(missing, (packageName) => `  - ${coverageDiagnosticFragment(packageName)}`),
       ],
     }),
@@ -1341,17 +1407,19 @@ const regressionLines = (result: CoverageComparisonResult): ReadonlyArray<string
  *
  * @param repoRoot - Repository root.
  * @param scoped - Whether the coverage run was intentionally filtered or affected-scoped.
+ * @param expectedPackageNames - Exact scoped package names that must emit summaries.
  * @category use-cases
  * @since 0.0.0
  */
 export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.compareCoverageRegressionBaseline")(
   function* (
     repoRoot: string,
-    scoped: boolean
+    scoped: boolean,
+    expectedPackageNames: ReadonlyArray<string> = A.empty<string>()
   ): Effect.fn.Return<void, CoverageRegressionError | QualityTaskFailed, FileSystem.FileSystem | Path.Path> {
     const baseline = yield* readBaseline(repoRoot);
     const actuals = yield* collectCoverageSnapshot(repoRoot);
-    const result = compareCoverage(baseline, actuals, scoped);
+    const result = compareCoverage(baseline, actuals, scoped, expectedPackageNames);
 
     if (A.isReadonlyArrayNonEmpty(result.newPackages)) {
       yield* Console.warn(

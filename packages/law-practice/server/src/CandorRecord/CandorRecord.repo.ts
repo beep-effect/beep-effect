@@ -25,6 +25,7 @@ import {
   fromPatentCitationEventRow,
   toPatentCitationEventInsert,
 } from "@beep/law-practice-tables/entities/PatentCitationEvent";
+import { CandorRecordSnapshot } from "@beep/law-practice-use-cases/CandorPolicy";
 import {
   CandorRecordRepositoryShape,
   CandorRecordRepositoryUnavailable,
@@ -49,6 +50,7 @@ const tableNameFor: Record<CandorRecordOperation, string> = {
   listDispositions: "law_practice_candor_disposition",
   listEvents: "law_practice_patent_citation_event",
   listSubmissionFacts: "law_practice_ids_submission_fact",
+  readSnapshot: "law_practice_patent_citation_event+law_practice_candor_disposition",
   recordDisposition: "law_practice_candor_disposition",
   recordEvent: "law_practice_patent_citation_event",
   recordSubmissionFact: "law_practice_ids_submission_fact",
@@ -150,31 +152,46 @@ const filedUnder = <
  * @since 0.0.0
  */
 export const makeInMemoryCandorRecordRepository = Effect.fn("CandorRecord.makeInMemory")(function* () {
-  const dispositions = yield* Ref.make<ReadonlyArray<CandorDisposition>>([]);
-  const events = yield* Ref.make<ReadonlyArray<PatentCitationEvent>>([]);
-  const submissionFacts = yield* Ref.make<ReadonlyArray<IdsSubmissionFact>>([]);
+  const state = yield* Ref.make<{
+    readonly dispositions: ReadonlyArray<CandorDisposition>;
+    readonly events: ReadonlyArray<PatentCitationEvent>;
+    readonly submissionFacts: ReadonlyArray<IdsSubmissionFact>;
+  }>({ dispositions: [], events: [], submissionFacts: [] });
 
   return CandorRecordRepositoryShape.make({
     listDispositions: Effect.fn("CandorRecord.listDispositions")(function* (scope: CandorFilingScope) {
-      return filedUnder(yield* Ref.get(dispositions), scope);
+      return filedUnder((yield* Ref.get(state)).dispositions, scope);
     }),
     listEvents: Effect.fn("CandorRecord.listEvents")(function* (scope: CandorFilingScope) {
-      return filedUnder(yield* Ref.get(events), scope);
+      return filedUnder((yield* Ref.get(state)).events, scope);
     }),
     listSubmissionFacts: Effect.fn("CandorRecord.listSubmissionFacts")(function* (scope: CandorFilingScope) {
-      return filedUnder(yield* Ref.get(submissionFacts), scope);
+      return filedUnder((yield* Ref.get(state)).submissionFacts, scope);
     }),
     recordDisposition: Effect.fn("CandorRecord.recordDisposition")(function* (disposition: CandorDisposition) {
-      yield* Ref.update(dispositions, A.append(disposition));
+      yield* Ref.update(state, (current) => ({
+        ...current,
+        dispositions: A.append(current.dispositions, disposition),
+      }));
       return disposition;
     }),
     recordEvent: Effect.fn("CandorRecord.recordEvent")(function* (event: PatentCitationEvent) {
-      yield* Ref.update(events, A.append(event));
+      yield* Ref.update(state, (current) => ({ ...current, events: A.append(current.events, event) }));
       return event;
     }),
     recordSubmissionFact: Effect.fn("CandorRecord.recordSubmissionFact")(function* (fact: IdsSubmissionFact) {
-      yield* Ref.update(submissionFacts, A.append(fact));
+      yield* Ref.update(state, (current) => ({
+        ...current,
+        submissionFacts: A.append(current.submissionFacts, fact),
+      }));
       return fact;
+    }),
+    readSnapshot: Effect.fn("CandorRecord.readSnapshot")(function* (scope: CandorFilingScope) {
+      const current = yield* Ref.get(state);
+      return CandorRecordSnapshot.make({
+        dispositions: filedUnder(current.dispositions, scope),
+        events: filedUnder(current.events, scope),
+      });
     }),
   });
 });
@@ -192,8 +209,9 @@ export const makeInMemoryCandorRecordRepository = Effect.fn("CandorRecord.makeIn
  * **Gotchas**
  *
  * Nothing here matches across representations: a filing recorded as a
- * normalized USPTO number is not found by its WIPO ST.13 form. Reconciling the
- * two is a named follow-on, never a silent equality rule.
+ * normalized USPTO number is not found by an ST.13 form. The USPTO number
+ * cannot supply ST.13's filing-year field, so this exact-representation rule is
+ * terminal rather than a deferred silent equality rule.
  *
  * **Example** (Build the adapter without touching a database)
  *
@@ -277,6 +295,31 @@ export const makeCandorRecordRepository = Effect.fn("CandorRecord.makeDrizzle")(
         .returning()
         .pipe(repositoryUnavailable("recordSubmissionFact"));
       return yield* decodeAppended(rows, "recordSubmissionFact", fromIdsSubmissionFactRow, fact);
+    }),
+    readSnapshot: Effect.fn("CandorRecord.drizzleReadSnapshot")(function* (scope: CandorFilingScope) {
+      const filing = yield* encodeCitingApplication(scope.citingApplication).pipe(
+        repositoryUnavailable("readSnapshot")
+      );
+      return yield* db
+        .transaction(
+          Effect.fnUntraced(function* (tx) {
+            const eventRows = yield* tx
+              .select()
+              .from(eventTable)
+              .where(and(eq(eventTable.orgId, scope.orgId), eq(eventTable.citingApplication, filing)))
+              .orderBy(asc(eventTable.id));
+            const dispositionRows = yield* tx
+              .select()
+              .from(dispositionTable)
+              .where(and(eq(dispositionTable.orgId, scope.orgId), eq(dispositionTable.citingApplication, filing)))
+              .orderBy(asc(dispositionTable.id));
+            const events = yield* decodeRows(eventRows, "readSnapshot", fromPatentCitationEventRow);
+            const dispositions = yield* decodeRows(dispositionRows, "readSnapshot", fromCandorDispositionRow);
+            return CandorRecordSnapshot.make({ dispositions, events });
+          }),
+          { accessMode: "read only", isolationLevel: "repeatable read" }
+        )
+        .pipe(repositoryUnavailable("readSnapshot"));
     }),
   });
 });

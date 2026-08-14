@@ -5,7 +5,7 @@ import { DbSchema as LawPracticeDbSchema } from "@beep/law-practice-tables";
 import { toCandorDispositionInsert } from "@beep/law-practice-tables/entities/CandorDisposition";
 import { toIdsSubmissionFactInsert } from "@beep/law-practice-tables/entities/IdsSubmissionFact";
 import { toPatentCitationEventInsert } from "@beep/law-practice-tables/entities/PatentCitationEvent";
-import { makeDrizzle, migrate } from "@beep/postgres";
+import { makeDrizzle, migrate, migrateBundle } from "@beep/postgres";
 import {
   baseEntityFixtureInput,
   makePgliteIntegrationGate,
@@ -15,6 +15,7 @@ import {
 import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { readMigrationFiles } from "drizzle-orm/migrator";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -22,6 +23,13 @@ import * as SqlClient from "effect/unstable/sql/SqlClient";
 
 const { shouldRunPgliteIntegration } = makePgliteIntegrationGate();
 const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url));
+const st13OfficeMigrationName = "20260813173652_law_practice_st13_office_identity";
+const priorMigrations = readMigrationFiles({ migrationsFolder })
+  .filter((migration) => migration.name !== st13OfficeMigrationName)
+  .map((migration) => ({ name: migration.name, sql: migration.sql.join("\n--> statement-breakpoint\n") }));
+const st13OfficeMigration = readMigrationFiles({ migrationsFolder })
+  .filter((migration) => migration.name === st13OfficeMigrationName)
+  .map((migration) => ({ name: migration.name, sql: migration.sql.join("\n--> statement-breakpoint\n") }));
 
 // The drizzle folder contains `CREATE EXTENSION btree_gist` (the epistemic edge
 // migration), which the shared external pglite-socket lane cannot load, so this
@@ -40,11 +48,14 @@ const candorTableNames: ReadonlyArray<string> = [
 const expectedConstraintNames: ReadonlyArray<string> = [
   "law_practice_candor_disposition_org_id_id_unique",
   "law_practice_candor_disposition_pkey",
+  "law_practice_candor_disposition_st13_office_check",
   "law_practice_candor_disposition_supersedes_fk",
   "law_practice_ids_submission_fact_pkey",
+  "law_practice_ids_submission_fact_st13_office_check",
   "law_practice_patent_citation_event_org_id_id_unique",
   "law_practice_patent_citation_event_pkey",
   "law_practice_patent_citation_event_possible_duplicate_fk",
+  "law_practice_patent_citation_event_st13_office_check",
 ];
 
 const expectedTriggerNames: ReadonlyArray<string> = [
@@ -198,6 +209,18 @@ const migrateAndRecord = Effect.fnUntraced(function* () {
   return sql;
 });
 
+const migrateBeforeSt13OfficeGuard = Effect.fnUntraced(function* () {
+  const info = yield* TestDatabaseInfo;
+  const db = yield* makeDrizzle();
+  const migrationsSchema = pipe(
+    info.schema,
+    O.getOrElse(() => "drizzle")
+  );
+
+  yield* migrateBundle(db, { migrations: priorMigrations, migrationsSchema });
+  return { db, migrationsSchema } as const;
+});
+
 if (!shouldRunPgliteIntegration) {
   describe.skip("db-admin law-practice-candor-gate migration PgLite integration", () => {});
 } else {
@@ -238,5 +261,64 @@ if (!shouldRunPgliteIntegration) {
         120_000
       );
     });
+
+    for (const [table, identity] of [
+      ["law_practice_candor_disposition", { applicationNumber: "102014000345678", kind: "WipoSt13" }],
+      [
+        "law_practice_ids_submission_fact",
+        { applicationNumber: "102014000345678", kind: "WipoSt13", officeCode: null },
+      ],
+      [
+        "law_practice_patent_citation_event",
+        { applicationNumber: "102014000345678", kind: "WipoSt13", officeCode: "ZZ" },
+      ],
+    ] as const) {
+      layer(makeMigrationProofLayer(), { timeout: "2 minutes" })((it) => {
+        it.effect(
+          `refuses the actual upgrade for unresolved legacy ST.13 identity in ${table}`,
+          Effect.fnUntraced(function* () {
+            const { db, migrationsSchema } = yield* migrateBeforeSt13OfficeGuard();
+            const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+
+            // Seed by cloning a schema-valid fixture row from a clean prior
+            // migration database, changing only the persisted identity.
+            const recordSql =
+              table === "law_practice_candor_disposition"
+                ? `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, $1::jsonb, decided_at, disposes, lifecycle, litigation_frame_judgment, rule56_judgment, supersedes, entity_type, id + 100, public_id || '-legacy' FROM ${table} WHERE id = 1`
+                : table === "law_practice_ids_submission_fact"
+                  ? `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, candidate_window, $1::jsonb, content, fees, modeled_from, office_treatment, operative_date, statement, submission_kind, entity_type, id + 100, public_id || '-legacy' FROM ${table} WHERE id = 1`
+                  : `INSERT INTO ${table} SELECT created_at, created_by_principal, org_id, row_version, schema_version, source, updated_at, updated_by_principal, actor, $1::jsonb, discovery, grounding, observed_at, possible_duplicate_of, quarantine, reference, supersedes, entity_type, id + 100, public_id || '-legacy' FROM ${table} WHERE id = 1`;
+
+            // The prior bundle creates empty tables, so first seed the three
+            // valid rows through the same schema converters used above.
+            const event = yield* S.decodeUnknownEffect(PatentCitationEvent)(eventInput);
+            const disposition = yield* S.decodeUnknownEffect(CandorDisposition)(dispositionInput);
+            const submissionFact = yield* S.decodeUnknownEffect(IdsSubmissionFact)(submissionFactInput);
+            yield* db
+              .insert(LawPracticeDbSchema.patentCitationEvent)
+              .values(yield* Effect.fromResult(toPatentCitationEventInsert(event)));
+            yield* db
+              .insert(LawPracticeDbSchema.candorDisposition)
+              .values(yield* Effect.fromResult(toCandorDispositionInsert(disposition)));
+            yield* db
+              .insert(LawPracticeDbSchema.idsSubmissionFact)
+              .values(yield* Effect.fromResult(toIdsSubmissionFactInsert(submissionFact)));
+            const encodedIdentity = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(identity);
+            yield* sql.unsafe(recordSql, [encodedIdentity]);
+
+            const upgrade = yield* migrateBundle(db, {
+              migrations: st13OfficeMigration,
+              migrationsSchema,
+              migrationsTable: "__drizzle_st13_upgrade",
+            }).pipe(Effect.flip);
+
+            expect(inspect(upgrade, { depth: 10 })).toContain(
+              "legacy WipoSt13 candor identity requires explicit office resolution before migration"
+            );
+          }),
+          120_000
+        );
+      });
+    }
   });
 }

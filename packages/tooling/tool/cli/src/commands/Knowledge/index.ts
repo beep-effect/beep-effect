@@ -11,7 +11,12 @@
  * @category cli-commands
  * @since 0.0.0
  */
-export * from "./Knowledge.command.ts";
+export {
+  knowledgeCommand,
+  knowledgeRefsCommand,
+  knowledgeSemanticDeltaCommand,
+  knowledgeSemanticDeltaFailure,
+} from "./Knowledge.command.ts";
 /**
  * Knowledge semantic-delta tagged errors.
  *
@@ -39,4 +44,23 @@ export * from "./Knowledge.schemas.ts";
  * @category services
  * @since 0.0.0
  */
-export * from "./Knowledge.service.ts";
+export {
+  KnowledgeService,
+  KnowledgeServiceLive,
+  makeKnowledgeFindingId,
+  makeKnowledgeTreeOracle,
+  resolveKnowledgeProbePolicy,
+  scanKnowledgePair,
+} from "./Knowledge.service.ts";
+/**
+ * Paired-archive scanner service contracts.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export type {
+  KnowledgeArchiveOracle,
+  KnowledgePairedOracleInput,
+  KnowledgeServiceShape,
+  KnowledgeTreeOracle,
+} from "./Knowledge.service.ts";

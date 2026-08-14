@@ -33,8 +33,13 @@ export {
  *
  * ```ts
  * import { makeInMemoryProfessionalRuntimeSdk } from "@beep/agents-use-cases/proof"
+ * import { PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate"
+ * import { Effect } from "effect"
  *
- * const sdk = makeInMemoryProfessionalRuntimeSdk([])
+ * const sdk = makeInMemoryProfessionalRuntimeSdk({
+ *   fixtures: [],
+ *   promotionGate: { evaluate: () => Effect.succeed(PromotionGateVerdict.cases.clear.make({})) }
+ * })
  * console.log(typeof sdk.getContextPacket) // "function"
  * ```
  *
@@ -65,6 +70,7 @@ export { makeInMemoryProfessionalRuntimeSdk } from "./processes/ProfessionalRunt
  *     subject: "Provisional patent help",
  *     threadId: "thread-law-001"
  *   },
+ *   promotionSubjects: [{ id: "application-16138242", kind: "patent-application" }],
  *   seed: {
  *     organization: { organizationId: "org-law-fixture" },
  *     scenarioId: "law-patent-intake",
