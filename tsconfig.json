@@ -630,6 +630,9 @@
       "@beep/repo-cli/test/Docgen": [
         "./packages/tooling/tool/cli/src/test/Docgen.test-kit.ts"
       ],
+      "@beep/repo-cli/test/Knowledge": [
+        "./packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts"
+      ],
       "@beep/repo-cli/test/Laws": [
         "./packages/tooling/tool/cli/src/test/Laws.test-kit.ts"
       ],
@@ -1919,6 +1922,19 @@
       ],
       "@beep/effect-drizzle/sqlite": [
         "./packages/ecosystem/effect-drizzle/src/sqlite/index.ts"
+      ],
+      "@beep/law-practice-server/CandorPromotionGate": [
+        "./packages/law-practice/server/src/CandorPromotionGate/index.ts"
+      ],
+      "@beep/shared-use-cases": ["./packages/shared/use-cases/src/index.ts"],
+      "@beep/shared-use-cases/PromotionGate": [
+        "./packages/shared/use-cases/src/PromotionGate/index.ts"
+      ],
+      "@beep/shared-use-cases/public": [
+        "./packages/shared/use-cases/src/public.ts"
+      ],
+      "@beep/shared-use-cases/server": [
+        "./packages/shared/use-cases/src/server.ts"
       ]
     }
   }

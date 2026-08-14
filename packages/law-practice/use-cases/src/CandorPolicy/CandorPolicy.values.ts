@@ -85,7 +85,7 @@ export class CandorFilingScope extends S.Class<CandorFilingScope>($I`CandorFilin
 ) {}
 
 /**
- * Why one AI-discovered event is not covered by an attorney judgment.
+ * Why one recorded event is not covered by an attorney judgment.
  *
  * **When to use**
  *
@@ -120,7 +120,7 @@ export class CandorFilingScope extends S.Class<CandorFilingScope>($I`CandorFilin
  */
 export const UncoveredReason = UncoveredReasonBase.pipe(
   $I.annoteSchema("UncoveredReason", {
-    description: "Fail-closed reason one AI-discovered citation event is not covered by an attorney judgment.",
+    description: "Fail-closed reason one recorded citation event is not covered by an attorney judgment.",
   }),
   SchemaUtils.withLiteralKitStatics(UncoveredReasonBase)
 );
@@ -156,14 +156,14 @@ export type UncoveredReason = typeof UncoveredReason.Type;
 export class UncoveredEvent extends S.Class<UncoveredEvent>($I`UncoveredEvent`)(
   {
     eventId: LawPractice.PatentCitationEventId.annotateKey({
-      description: "Identifier of the AI-discovered event that is not covered.",
+      description: "Identifier of the recorded event that is not covered.",
     }),
     reason: UncoveredReason.annotateKey({
       description: "Fail-closed reason this event is not covered.",
     }),
   },
   $I.annote("UncoveredEvent", {
-    description: "One AI-discovered citation event the gate declines to treat as covered, with its reason.",
+    description: "One recorded citation event the gate declines to treat as covered, with its reason.",
   })
 ) {}
 
@@ -218,7 +218,7 @@ export class CandorGateVerdict extends S.Class<CandorGateVerdict>($I`CandorGateV
       description: "Tenant-scoped filing this verdict was recomputed for.",
     }),
     uncovered: S.Array(UncoveredEvent).annotateKey({
-      description: "Every AI-discovered event the gate declines to treat as covered, with its reason.",
+      description: "Every recorded event the gate declines to treat as covered, with its reason.",
     }),
   },
   $I.annote("CandorGateVerdict", {
@@ -261,7 +261,7 @@ export class CandorGateVerdict extends S.Class<CandorGateVerdict>($I`CandorGateV
    * ```
    *
    * @param verdict - A recomputed candor verdict.
-   * @returns Whether at least one AI-discovered event is uncovered.
+   * @returns Whether at least one recorded event is uncovered.
    * @category predicates
    * @since 0.0.0
    */

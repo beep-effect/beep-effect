@@ -52,6 +52,7 @@
     "@beep/md": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
+    "@beep/shared-use-cases": "workspace:^",
     "@beep/utils": "workspace:^",
     "@beep/workspace-domain": "workspace:^",
     "@beep/workspace-use-cases": "workspace:^",

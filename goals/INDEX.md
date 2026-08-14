@@ -12,6 +12,7 @@ drifts from the manifests, and merge conflicts are resolved by regenerating.
 | --- | --- | --- | --- | --- |
 | [agentic-governance-laws](./agentic-governance-laws/README.md) | Agentic Governance Laws | 0/5 | 2026-08-06 | Give three repo-wide governance laws an owner with enforcement: a minting process cannot raise its own ceiling, capped … |
 | [agentic-professional-runtime](./agentic-professional-runtime/README.md) | Agentic Professional Runtime | 3/5 | 2026-07-14 | Define the local-first agentic professional-services runtime that beep-effect will prove through two real product slice… |
+| [candor-gate-followups-closeout](./candor-gate-followups-closeout/README.md) | Candor Gate Follow-Ups Closeout | 2/5 | 2026-08-13 | Retire every parked candor-gate follow-up through implementation or evidence-backed no-build disposition, explain the L… |
 | [ci-fleet-endgame](./ci-fleet-endgame/README.md) | CI Fleet Endgame | 4/7 | 2026-08-13 | Deliver both co-primary CI endgames: an on-demand worker-per-job system and no required job that waits 20 minutes. |
 | [ci-fleet-residue](./ci-fleet-residue/README.md) | CI Fleet Residue | 1/5 | 2026-08-13 | Retire the fleet endgame's deferred residue - baked AMI, spot posture, IMDS job-hook isolation with red-team re-run, an… |
 | [ci-lane-economics](./ci-lane-economics/README.md) | CI Lane Economics | 2/4 | 2026-08-13 | No required CI job waits 20 minutes (p95, not median): re-measure every lane cache-warm, then place each on the cheapes… |

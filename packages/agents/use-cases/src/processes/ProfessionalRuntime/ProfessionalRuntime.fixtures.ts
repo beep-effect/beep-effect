@@ -6,6 +6,7 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
+import { PromotionSubjectRef } from "@beep/shared-use-cases/PromotionGate";
 import { A, Str } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -78,6 +79,7 @@ class RuntimeFixtureSeedInput extends S.Class<RuntimeFixtureSeedInput>($I`Runtim
  *     subject: "Provisional patent help",
  *     threadId: "thread-law-001"
  *   },
+ *   promotionSubjects: [{ id: "application-16138242", kind: "patent-application" }],
  *   seed: {
  *     organization: { organizationId: "org-law-fixture" },
  *     scenarioId: "law-patent-intake",
@@ -95,6 +97,9 @@ export class RuntimeFixtureInput extends S.Class<RuntimeFixtureInput>($I`Runtime
   {
     body: S.String,
     email: RuntimeFixtureEmailInput,
+    promotionSubjects: S.NonEmptyArray(PromotionSubjectRef).annotateKey({
+      description: "Trusted product subjects bound to the deterministic fixture output by its host.",
+    }),
     seed: RuntimeFixtureSeedInput,
   },
   $I.annote("RuntimeFixtureInput", {
@@ -721,6 +726,7 @@ const fixtureRunnerForScenario: (
  *     subject: "Provisional patent help",
  *     threadId: "thread-law-001"
  *   },
+ *   promotionSubjects: [{ id: "application-16138242", kind: "patent-application" }],
  *   seed: {
  *     organization: { organizationId: "org-law-fixture" },
  *     scenarioId: "law-patent-intake",

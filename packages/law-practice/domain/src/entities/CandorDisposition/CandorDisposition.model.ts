@@ -36,7 +36,7 @@ const $I = $LawPracticeDomainId.create("entities/CandorDisposition/CandorDisposi
  * Authorship is the `createdByPrincipal` every entity already carries. The
  * predicate that consumes this entity fails closed on that discriminator: only
  * a `User`-kind principal's disposition covers an event, so an agent can never
- * dispose of its own AI-discovered finding.
+ * dispose of its own recorded finding.
  *
  * **Gotchas**
  *
