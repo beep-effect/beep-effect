@@ -2,8 +2,8 @@
 
 ## Status
 
-P1 implementation and evidence disposition are complete. The package and
-end-to-end verification phases remain before packet close.
+All six items are terminal. Focused proof, the reviewer loop, exact-head Yeet
+verification, and PR #699 hosted closeout passed with zero unresolved threads.
 
 | Item | Current finding | Intended exit | Status |
 | --- | --- | --- | --- |
