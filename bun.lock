@@ -368,7 +368,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/agents-domain": "workspace:^",
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
@@ -450,6 +450,7 @@
         "@beep/identity": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
@@ -467,6 +468,7 @@
       "dependencies": {
         "@beep/architecture-lab-domain": "workspace:^",
         "@beep/effect-drizzle": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
@@ -488,6 +490,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/shared-domain": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -500,6 +503,7 @@
         "@beep/architecture-lab-domain": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
         "effect": "catalog:",
       },
@@ -559,7 +563,8 @@
       "version": "0.0.2",
       "dependencies": {
         "@beep/documents-domain": "workspace:^",
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
@@ -1471,12 +1476,13 @@
       "name": "@beep/epistemic-tables",
       "version": "0.0.2",
       "dependencies": {
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/shared-domain": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1491,6 +1497,7 @@
         "@beep/epistemic-use-cases": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "@beep/ui": "workspace:^",
         "@effect/atom-react": "catalog:",
         "@phosphor-icons/react": "catalog:",
@@ -2122,7 +2129,7 @@
       "name": "@beep/law-practice-tables",
       "version": "0.0.0",
       "dependencies": {
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/law-practice-domain": "workspace:^",
         "@beep/schema": "workspace:^",
         "drizzle-orm": "catalog:",
@@ -2297,7 +2304,7 @@
       "name": "@beep/shared-tables",
       "version": "0.0.2",
       "dependencies": {
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
@@ -2602,7 +2609,7 @@
       "name": "@beep/workspace-tables",
       "version": "0.0.2",
       "dependencies": {
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/workspace-domain": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
