@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "attributed-multi-claim-span",
+    "title": "Attributed Multi-Claim Span",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/attributed-multi-claim-span",
+  "lifecycle": "active",
+  "mission": "Ship attributed, supersedable multi-claim annotations over TextAnchor/EvidenceSpan and prove the LangExtract-to-ClaimGate loop.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/lynx-lkg-ontology-grounding",
+    "graduated": "2026-08-13"
+  },
+  "dependencies": [
+    "goals/citation-verified-span-substrate",
+    "goals/langextract-capability",
+    "goals/epistemic-claim-lifecycle-gate"
+  ],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/attributed-multi-claim-span/README.md",
+    "goals/attributed-multi-claim-span/SPEC.md",
+    "goals/attributed-multi-claim-span/PLAN.md",
+    "goals/attributed-multi-claim-span/GOAL.md",
+    "goals/attributed-multi-claim-span/research/SOURCES.md",
+    "explorations/lynx-lkg-ontology-grounding/BRIEF.md",
+    "explorations/lynx-lkg-ontology-grounding/MAP.md",
+    "explorations/lynx-lkg-ontology-grounding/DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/lynx-lkg-ontology-grounding/research/SOURCES.md",
+    "../../explorations/lynx-lkg-ontology-grounding/research/04-beep-effect-grounding.md",
+    "../../explorations/lynx-lkg-ontology-grounding/research/05-value-assessment.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/attributed-multi-claim-span/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Seam and competency-question audit",
+      "status": "pending"
+    },
+    { "id": "P1", "name": "Annotation slice", "status": "pending" },
+    { "id": "P2", "name": "Verify", "status": "pending" },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/attributed-multi-claim-span/GOAL.md)\" -le 4000",
+    "jq . goals/attributed-multi-claim-span/ops/manifest.json",
+    "rg -n \"attributed-multi-claim-span|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/attributed-multi-claim-span",
+    "git diff --check -- goals/attributed-multi-claim-span",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The annotation aggregate would become a second claim or identity authority.",
+    "A required source artifact lacks verified reuse terms.",
+    "The slice requires pre-M4 SHACL generation or a general multilingual model.",
+    "Existing anchor/span or ClaimGate contracts would need unrelated redesign."
+  ]
+}
