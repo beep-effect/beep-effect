@@ -255,7 +255,7 @@ const readSlice: {
   (
     entry: VendorManifestEntry,
     vendorRoot: string
-  ): Effect.fn.Return<
+  ): Effect.Effect<
     TaxonomySeed,
     VendorSliceParseError | VendorSlicePathEscape | VendorSliceReadError | VendorSliceUnvetted,
     FileSystem.FileSystem
@@ -264,7 +264,7 @@ const readSlice: {
     vendorRoot: string
   ): (
     entry: VendorManifestEntry
-  ) => Effect.fn.Return<
+  ) => Effect.Effect<
     TaxonomySeed,
     VendorSliceParseError | VendorSlicePathEscape | VendorSliceReadError | VendorSliceUnvetted,
     FileSystem.FileSystem
