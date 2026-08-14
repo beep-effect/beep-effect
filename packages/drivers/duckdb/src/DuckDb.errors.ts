@@ -29,7 +29,7 @@ type DuckDbErrorContextInput = {
 
 const isDuckDbDefect = S.is(DuckDbDefect);
 
-const causeFromUnknown = (cause: unknown): O.Option<typeof DuckDbDefect.Type> =>
+const causeFromUnknown = (cause: unknown): O.Option<unknown> =>
   P.hasInspectableObjectShape(cause) && isDuckDbDefect(cause) ? O.some(cause) : O.none();
 
 const errorOptionsFromInput = (options: DuckDbErrorContextInput): DuckDbErrorFromUnknownOptions =>
@@ -79,6 +79,20 @@ export const DuckDbOperation = LiteralKit(["copyTableToParquet", "query", "run",
  */
 export type DuckDbOperation = typeof DuckDbOperation.Type;
 
+const DuckDbErrorLeadingContextFields = {
+  cause: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Inspectable originating defect, when available.",
+  }),
+  databasePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "DuckDB database path active when the failure occurred.",
+  }),
+} satisfies S.Struct.Fields;
+const DuckDbErrorTrailingContextFields = {
+  statement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "SQL statement active when the failure occurred.",
+  }),
+} satisfies S.Struct.Fields;
+
 /**
  * Diagnostic context captured while normalizing an unknown DuckDB failure.
  *
@@ -106,26 +120,15 @@ export type DuckDbOperation = typeof DuckDbOperation.Type;
  * @category errors
  * @since 0.0.0
  */
-const DuckDbErrorContextFields = {
-  cause: S.OptionFromOptionalKey(DuckDbDefect).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "Inspectable originating defect, when available.",
-  }),
-  databasePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "DuckDB database path active when the failure occurred.",
-  }),
-  statement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
-    description: "SQL statement active when the failure occurred.",
-  }),
-} satisfies S.Struct.Fields;
-
 export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknownOptions>(
   $I`DuckDbErrorFromUnknownOptions`
 )(
   {
-    ...DuckDbErrorContextFields,
+    ...DuckDbErrorLeadingContextFields,
     message: S.String.pipe(SchemaUtils.withKeyDefaults("DuckDB operation failed.")).annotateKey({
       description: "Human-readable failure summary.",
     }),
+    ...DuckDbErrorTrailingContextFields,
   },
   $I.annote("DuckDbErrorFromUnknownOptions", {
     description: "Options used when normalizing unknown DuckDB boundary failures.",
@@ -133,13 +136,14 @@ export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknow
 ) {}
 
 const DuckDbErrorFields = {
-  ...DuckDbErrorContextFields,
+  ...DuckDbErrorLeadingContextFields,
   message: S.String.annotateKey({
     description: "Human-readable failure summary.",
   }),
   operation: DuckDbOperation.annotateKey({
     description: "DuckDB driver operation that failed.",
   }),
+  ...DuckDbErrorTrailingContextFields,
 } satisfies S.Struct.Fields;
 const sameDuckDbErrorFields = S.toEquivalence(S.TaggedStruct("DuckDbError", DuckDbErrorFields));
 const sameDuckDbError = (self: DuckDbError, that: DuckDbError): boolean => sameDuckDbErrorFields(self, that);

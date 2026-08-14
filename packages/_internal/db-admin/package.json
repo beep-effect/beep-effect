@@ -47,8 +47,7 @@
     "@effect/vitest": "catalog:",
     "@electric-sql/pglite": "catalog:",
     "@types/node": "catalog:",
-    "drizzle-kit": "catalog:",
-    "drizzle-orm": "catalog:"
+    "drizzle-kit": "catalog:"
   },
   "exports": {
     "./package.json": "./package.json",

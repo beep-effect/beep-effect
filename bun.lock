@@ -301,7 +301,6 @@
         "@electric-sql/pglite": "catalog:",
         "@types/node": "catalog:",
         "drizzle-kit": "catalog:",
-        "drizzle-orm": "catalog:",
       },
     },
     "packages/agents/client": {

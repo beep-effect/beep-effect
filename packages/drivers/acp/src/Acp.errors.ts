@@ -215,6 +215,21 @@ export class AcpTransportError extends S.TaggedError<AcpTransportError>($I`AcpTr
   })
 ) {}
 
+const AcpRequestErrorFields = {
+  code: AcpSchema.ErrorCode.annotateKey({
+    description: "JSON-RPC error code returned by the ACP peer.",
+  }),
+  data: S.OptionFromOptionalKey(S.Json).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    description: "Optional JSON-RPC error data returned by the ACP peer; wire JSON only.",
+  }),
+  errorMessage: S.String.annotateKey({
+    description: "JSON-RPC error message returned by the ACP peer.",
+  }),
+} satisfies S.Struct.Fields;
+const sameAcpRequestErrorFields = S.toEquivalence(S.TaggedStruct("AcpRequestError", AcpRequestErrorFields));
+const sameAcpRequestError = (self: AcpRequestError, that: AcpRequestError): boolean =>
+  sameAcpRequestErrorFields(self, that);
+
 /**
  * JSON-RPC request failure returned by an ACP peer.
  *
@@ -232,19 +247,13 @@ export class AcpTransportError extends S.TaggedError<AcpTransportError>($I`AcpTr
  */
 export class AcpRequestError extends S.TaggedError<AcpRequestError>($I`AcpRequestError`)(
   "AcpRequestError",
-  {
-    code: AcpSchema.ErrorCode.annotateKey({
-      description: "JSON-RPC error code returned by the ACP peer.",
-    }),
-    data: S.OptionFromOptionalKey(S.Json).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional JSON-RPC error data returned by the ACP peer; wire JSON only.",
-    }),
-    errorMessage: S.String.annotateKey({
-      description: "JSON-RPC error message returned by the ACP peer.",
-    }),
-  },
-  $I.annote("AcpRequestError", {
+  AcpRequestErrorFields,
+  $I.annoteClass<
+    S.declare<AcpRequestError>,
+    readonly [S.TaggedStruct<"AcpRequestError", typeof AcpRequestErrorFields>]
+  >("AcpRequestError", {
     description: "JSON-RPC request failure returned by an ACP peer.",
+    toEquivalence: () => sameAcpRequestError,
   })
 ) {
   static readonly is = S.is(AcpRequestError);

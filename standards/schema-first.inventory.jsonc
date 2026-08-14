@@ -1,9 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-13",
-  // infra scope covers the Effect workspace surfaces only: infra/lambda/** is a
-  // self-contained esbuild-bundled Lambda package (own package.json, no @beep/schema
-  // dependency), outside the schema-first law's reach by construction.
+  "generatedOn": "2026-08-14",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -94,9 +91,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 191,
+      "line": 184,
       "owner": "@beep/db-admin",
-      "reason": "Migration regression decodes fixed candor event, disposition, submission, and identity fixtures to prove the actual pre-upgrade refusal and post-upgrade constraints; schema-derived round-trip coverage for the law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
+      "reason": "Migration regression decodes fixed candor event, disposition, submission, and identity fixtures to prove the birth constraints and append-only denials on the re-baselined chain; schema-derived round-trip coverage for the law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
     {
       "file": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
@@ -163,6 +160,16 @@
       "status": "exception",
       "owner": "@beep/acp",
       "reason": "Terminal constructor contract intentionally binds schema-modeled ACP identifiers to live request Effects."
+    },
+    {
+      "file": "packages/drivers/duckdb/test/DuckDb.service.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 100,
+      "owner": "@beep/duckdb",
+      "reason": "The file's round-trip property suite derives its arbitraries from S.toArbitrary and then sanitizes defect-bearing fields per the repo equivalence precedent; the mapped arbitrary form is schema-derived coverage the detector cannot attribute, and the fixed codec assertions pin encoded wire shapes byte-identically."
     },
     {
       "file": "packages/drivers/graph-3d/src/Graph3D.react.ts",

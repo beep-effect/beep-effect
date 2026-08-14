@@ -778,6 +778,16 @@ export class AiSyncValidationResult extends S.Class<AiSyncValidationResult>($I`A
   })
 ) {}
 
+const AiSyncErrorFields = {
+  message: S.String,
+  sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  relativePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  schemaId: AiSyncValidationSchemaId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  cause: S.Defect({ includeStack: true }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+} satisfies S.Struct.Fields;
+const sameAiSyncErrorFields = S.toEquivalence(S.TaggedStruct("AiSyncError", AiSyncErrorFields));
+const sameAiSyncError = (self: AiSyncError, that: AiSyncError): boolean => sameAiSyncErrorFields(self, that);
+
 /**
  * Typed AI sync operational error.
  *
@@ -792,16 +802,6 @@ export class AiSyncValidationResult extends S.Class<AiSyncValidationResult>($I`A
  * @category errors
  * @since 0.0.0
  */
-const AiSyncErrorFields = {
-  message: S.String,
-  sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  relativePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  schemaId: AiSyncValidationSchemaId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  cause: S.Defect({ includeStack: true }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-} satisfies S.Struct.Fields;
-const sameAiSyncErrorFields = S.toEquivalence(S.TaggedStruct("AiSyncError", AiSyncErrorFields));
-const sameAiSyncError = (self: AiSyncError, that: AiSyncError): boolean => sameAiSyncErrorFields(self, that);
-
 export class AiSyncError extends S.TaggedError<AiSyncError>($I`AiSyncError`)(
   "AiSyncError",
   AiSyncErrorFields,
