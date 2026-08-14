@@ -72,6 +72,80 @@
         "statements": 336,
         "branches": 50,
         "functions": 270
+      },
+      "files": {
+        "src/Acp.errors.ts": {
+          "lines": 13,
+          "statements": 13,
+          "branches": 5,
+          "functions": 7
+        },
+        "src/Acp.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/AcpAgent.service.ts": {
+          "lines": 47,
+          "statements": 47,
+          "branches": 0,
+          "functions": 47
+        },
+        "src/AcpClient.service.ts": {
+          "lines": 100,
+          "statements": 102,
+          "branches": 17,
+          "functions": 58
+        },
+        "src/AcpProtocol.service.ts": {
+          "lines": 44,
+          "statements": 48,
+          "branches": 23,
+          "functions": 34
+        },
+        "src/AcpRpc.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/AcpTerminal.models.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/_generated/meta.gen.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/_generated/schema.gen.ts": {
+          "lines": 108,
+          "statements": 108,
+          "branches": 0,
+          "functions": 108
+        },
+        "src/internal/shared.ts": {
+          "lines": 13,
+          "statements": 13,
+          "branches": 3,
+          "functions": 11
+        },
+        "src/internal/stdio.ts": {
+          "lines": 3,
+          "statements": 4,
+          "branches": 2,
+          "functions": 4
+        }
       }
     },
     "@beep/agents-client": {
@@ -150,6 +224,50 @@
         "statements": 90,
         "branches": 12,
         "functions": 55
+      },
+      "files": {
+        "src/AiProviderCli.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/AiProviderCli.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/AiProviderCli.service.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/AiProviderCliHome.errors.ts": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 0,
+          "functions": 6
+        },
+        "src/AiProviderCliHome.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/AiProviderCliHome.service.ts": {
+          "lines": 79,
+          "statements": 81,
+          "branches": 11,
+          "functions": 49
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/ai-sync": {
@@ -163,6 +281,68 @@
         "statements": 43,
         "branches": 16,
         "functions": 22
+      },
+      "files": {
+        "src/drift.ts": {
+          "lines": 10,
+          "statements": 11,
+          "branches": 4,
+          "functions": 8
+        },
+        "src/generator.ts": {
+          "lines": 18,
+          "statements": 18,
+          "branches": 0,
+          "functions": 9
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/schemas.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/source-map.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/transforms.ts": {
+          "lines": 0,
+          "statements": 1,
+          "branches": 2,
+          "functions": 1
+        },
+        "src/validation.ts": {
+          "lines": 13,
+          "statements": 13,
+          "branches": 7,
+          "functions": 6
+        },
+        "src/_generated/schemas.gen.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/_generated/source-metadata.gen.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/anthropic": {
@@ -176,6 +356,32 @@
         "statements": 7,
         "branches": 5,
         "functions": 7
+      },
+      "files": {
+        "src/Anthropic.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Anthropic.repair.ts": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 3,
+          "functions": 5
+        },
+        "src/Anthropic.service.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 2,
+          "functions": 2
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/api-transport": {
@@ -189,6 +395,26 @@
         "statements": 19,
         "branches": 4,
         "functions": 13
+      },
+      "files": {
+        "src/EgressDenied.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Transport.ts": {
+          "lines": 19,
+          "statements": 19,
+          "branches": 4,
+          "functions": 13
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/architecture-lab-client": {
@@ -215,6 +441,56 @@
         "statements": 7,
         "branches": 0,
         "functions": 1
+      },
+      "files": {
+        "src/index.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/layer.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/public.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/secrets.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/server.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/test.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/WorkItem/WorkItem.layer.ts": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/aggregates/WorkItem/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/architecture-lab-domain": {
@@ -228,6 +504,98 @@
         "statements": 16,
         "branches": 3,
         "functions": 12
+      },
+      "files": {
+        "src/index.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/WorkItem/WorkItem.errors.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/WorkItem/WorkItem.model.ts": {
+          "lines": 14,
+          "statements": 14,
+          "branches": 3,
+          "functions": 12
+        },
+        "src/aggregates/WorkItem/WorkItem.values.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/WorkItem/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Worker/Worker.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Worker/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/identity/ArchitectureLab.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/identity/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/WorkPriority/WorkPriority.behavior.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/WorkPriority/WorkPriority.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/WorkPriority/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/architecture-lab-proof": {
@@ -306,6 +674,668 @@
         "statements": 472,
         "branches": 23,
         "functions": 400
+      },
+      "files": {
+        "src/Box.errors.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 1,
+          "functions": 1
+        },
+        "src/Box.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Box.service.ts": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 0,
+          "functions": 5
+        },
+        "src/Box.streaming.ts": {
+          "lines": 54,
+          "statements": 56,
+          "branches": 17,
+          "functions": 43
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/_generated/Box.models.gen.ts": {
+          "lines": 244,
+          "statements": 280,
+          "branches": 0,
+          "functions": 280
+        },
+        "src/_generated/Box.operations.gen.ts": {
+          "lines": 69,
+          "statements": 69,
+          "branches": 3,
+          "functions": 66
+        },
+        "src/experimental/Box.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/Box.schemas.ts": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/aggregates/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/AiTaxonomy/AiTaxonomy.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/AiTaxonomy/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/AiTextGen/AiTextGen.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/AiTextGen/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/AppItem/AppItem.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/AppItem/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Collaboration/Collaboration.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Collaboration/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Comment/Comment.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Comment/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/DevicePinner/DevicePinner.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/DevicePinner/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/EmailAlias/EmailAlias.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/EmailAlias/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Event/Event.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Event/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/File/File.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/File/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/FileVersion/FileVersion.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/FileVersion/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Folder/Folder.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Folder/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/FolderReference/FolderReference.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/FolderReference/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Group/Group.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Group/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/GroupMembership/GroupMembership.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/GroupMembership/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/IntegrationMapping/IntegrationMapping.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/IntegrationMapping/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Invite/Invite.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Invite/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Item/Item.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Item/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Outcome/Outcome.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Outcome/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/PLACEHOLDER/PLACEHOLDER.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/PLACEHOLDER/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/RetentionPolicy/RetentionPolicy.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/RetentionPolicy/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/RetentionPolicyAssignment/RetentionPolicyAssignment.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/RetentionPolicyAssignment/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/SignRequest/SignRequest.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/SignRequest/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/SignTemplate/SignTemplate.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/SignTemplate/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/StoragePolicy/StoragePolicy.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/StoragePolicy/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/StoragePolicyAssignment/StoragePolicyAssignment.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/StoragePolicyAssignment/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Task/Task.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Task/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TaskAssignment/TaskAssignment.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TaskAssignment/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashFile/TrashFile.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashFile/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashFileRestored/TrashFileRestored.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashFileRestored/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashFolder/TrashFolder.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashFolder/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashFolderRestored/TrashFolderRestored.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashFolderRestored/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashWebLink/TrashWebLink.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashWebLink/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashWebLinkRestored/TrashWebLinkRestored.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/TrashWebLinkRestored/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/UploadSession/UploadSession.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/UploadSession/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/User/User.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/User/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/WebLink/WebLink.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/WebLink/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Webhook/Webhook.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Webhook/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Workflow/Workflow.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/Workflow/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/ZipDownload/ZipDownload.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/entities/ZipDownload/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/errors/ClientError.errors.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/errors/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/Classification/Classification.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/Classification/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/Metadata/Metadata.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/Metadata/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/PLACEHOLDER/PLACEHOLDER.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/PLACEHOLDER/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/Resource/Resource.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/Resource/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/SearchResult/PLACEHOLDER.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/SearchResult/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/SerializedData/SerializedData.model.ts": {
+          "lines": 7,
+          "statements": 8,
+          "branches": 0,
+          "functions": 4
+        },
+        "src/experimental/domain/values/SerializedData/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/UploadPart/UploadPart.model.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/domain/values/UploadPart/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/Box.constants.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/Box.runtime.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 2,
+          "functions": 1
+        }
       }
     },
     "@beep/chalk": {
@@ -319,6 +1349,68 @@
         "statements": 33,
         "branches": 14,
         "functions": 28
+      },
+      "files": {
+        "src/Chalk.browser.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Chalk.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/AnsiStyles.ts": {
+          "lines": 10,
+          "statements": 12,
+          "branches": 11,
+          "functions": 8
+        },
+        "src/internal/ChalkRuntime.ts": {
+          "lines": 1,
+          "statements": 2,
+          "branches": 3,
+          "functions": 1
+        },
+        "src/internal/ChalkSchema.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/PublicSurface.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/SupportsColor.browser.ts": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 0,
+          "functions": 4
+        },
+        "src/internal/SupportsColor.ts": {
+          "lines": 14,
+          "statements": 14,
+          "branches": 0,
+          "functions": 14
+        },
+        "src/internal/Utilities.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        }
       }
     },
     "@beep/colors": {
@@ -332,6 +1424,32 @@
         "statements": 1,
         "branches": 0,
         "functions": 1
+      },
+      "files": {
+        "src/Colors.browser.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Colors.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/ColorsSchema.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/cosmos": {
@@ -345,6 +1463,44 @@
         "statements": 118,
         "branches": 56,
         "functions": 37
+      },
+      "files": {
+        "src/Cosmos.backend.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 1,
+          "functions": 1
+        },
+        "src/Cosmos.errors.ts": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 4,
+          "functions": 2
+        },
+        "src/Cosmos.projection.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/Cosmos.renderer.ts": {
+          "lines": 104,
+          "statements": 114,
+          "branches": 50,
+          "functions": 34
+        },
+        "src/browser.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/data": {
@@ -358,6 +1514,182 @@
         "statements": 16,
         "branches": 0,
         "functions": 2
+      },
+      "files": {
+        "src/Blockchain.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Calendar.ts": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/CurrencyCodes.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/HotKey.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/KeyboardShortcuts.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/MimeTypes.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Territories.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Timezones.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/generated/cldr-territories.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/generated/iana-media-types.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/generated/iana-timezones.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/generated/iso4217.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/currency-codes.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/keyboard-shortcuts.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/timezones.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/utils.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/calendar/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/calendar/month.ts": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/calendar/weekday.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/mime-types/application.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/mime-types/audio.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/mime-types/image.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/mime-types/index.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 0,
+          "functions": 2
+        },
+        "src/internal/data/mime-types/misc.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/mime-types/text.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/data/mime-types/video.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/db-admin": {
@@ -384,6 +1716,32 @@
         "statements": 8,
         "branches": 4,
         "functions": 8
+      },
+      "files": {
+        "src/Discord.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Discord.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Discord.service.ts": {
+          "lines": 7,
+          "statements": 8,
+          "branches": 4,
+          "functions": 8
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/doc-text": {
@@ -410,6 +1768,152 @@
         "statements": 89,
         "branches": 21,
         "functions": 77
+      },
+      "files": {
+        "src/AnchoredBox.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Dock.atoms.ts": {
+          "lines": 1,
+          "statements": 2,
+          "branches": 0,
+          "functions": 2
+        },
+        "src/Dock.commands.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Dock.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Dock.events.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Dock.geometry.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Dock.ids.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Dock.models-tree.ts": {
+          "lines": 15,
+          "statements": 18,
+          "branches": 0,
+          "functions": 18
+        },
+        "src/Dock.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Dock.outcomes.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Dock.placement.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Dock.protocol.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Dock.reducer.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Dock.tree.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/DockEngine.service.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/DockPolicy.ts": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 0,
+          "functions": 6
+        },
+        "src/Geometry.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 4,
+          "functions": 0
+        },
+        "src/Minima.ts": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 0,
+          "functions": 3
+        },
+        "src/Recency.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/DockAtoms.session.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/Dual.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/Geometry.projection.ts": {
+          "lines": 5,
+          "statements": 6,
+          "branches": 0,
+          "functions": 6
+        },
+        "src/internal/Reducer.ts": {
+          "lines": 53,
+          "statements": 53,
+          "branches": 16,
+          "functions": 41
+        }
       }
     },
     "@beep/dock-react": {
@@ -436,6 +1940,152 @@
         "statements": 7,
         "branches": 5,
         "functions": 3
+      },
+      "files": {
+        "src/index.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/Document/Document.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/Document/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/IntakeBatch/IntakeBatch.model.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/IntakeBatch/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/SyncConflict/SyncConflict.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/SyncConflict/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/SyncCursor/SyncCursor.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/SyncCursor/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/SyncItem/SyncItem.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/SyncItem/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/SyncOperation/SyncOperation.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/SyncOperation/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/identity/Documents.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/identity/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/Sync/Sync.values.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/Sync/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/Taxonomy/Taxonomy.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/Taxonomy/Taxonomy.projection.ts": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 4,
+          "functions": 3
+        },
+        "src/values/Taxonomy/Taxonomy.seed.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/values/Taxonomy/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/documents-server": {
@@ -488,6 +2138,32 @@
         "statements": 26,
         "branches": 13,
         "functions": 18
+      },
+      "files": {
+        "src/Drizzle.errors.ts": {
+          "lines": 7,
+          "statements": 8,
+          "branches": 8,
+          "functions": 2
+        },
+        "src/Drizzle.service.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/EntityTable.models.ts": {
+          "lines": 18,
+          "statements": 18,
+          "branches": 5,
+          "functions": 16
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/duckdb": {
@@ -501,6 +2177,44 @@
         "statements": 20,
         "branches": 9,
         "functions": 15
+      },
+      "files": {
+        "src/DuckDb.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/DuckDb.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/DuckDb.service.ts": {
+          "lines": 10,
+          "statements": 12,
+          "branches": 1,
+          "functions": 7
+        },
+        "src/DuckDbNative.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/DuckDbSqlClient.service.ts": {
+          "lines": 6,
+          "statements": 8,
+          "branches": 7,
+          "functions": 8
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/ecfr": {
@@ -514,6 +2228,32 @@
         "statements": 8,
         "branches": 1,
         "functions": 5
+      },
+      "files": {
+        "src/Ecfr.errors.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/Ecfr.service.ts": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 1,
+          "functions": 4
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/_generated/Ecfr.generated.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/editor": {
@@ -540,6 +2280,206 @@
         "statements": 286,
         "branches": 194,
         "functions": 174
+      },
+      "files": {
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/kit.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/core/Field.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/core/Meta.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/core/assembly.ts": {
+          "lines": 8,
+          "statements": 10,
+          "branches": 7,
+          "functions": 5
+        },
+        "src/core/classification.ts": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 4,
+          "functions": 2
+        },
+        "src/core/entity-id.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/core/literals.ts": {
+          "lines": 3,
+          "statements": 5,
+          "branches": 10,
+          "functions": 2
+        },
+        "src/core/model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/core/names.ts": {
+          "lines": 0,
+          "statements": 1,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/core/repository.ts": {
+          "lines": 31,
+          "statements": 34,
+          "branches": 9,
+          "functions": 15
+        },
+        "src/core/variant.ts": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 0,
+          "functions": 6
+        },
+        "src/internal/case.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/guards.ts": {
+          "lines": 0,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/internal/statics.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/pg/Column.ts": {
+          "lines": 27,
+          "statements": 28,
+          "branches": 19,
+          "functions": 23
+        },
+        "src/pg/combinators.ts": {
+          "lines": 23,
+          "statements": 25,
+          "branches": 8,
+          "functions": 16
+        },
+        "src/pg/derive.ts": {
+          "lines": 26,
+          "statements": 30,
+          "branches": 25,
+          "functions": 16
+        },
+        "src/pg/extras.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 4,
+          "functions": 2
+        },
+        "src/pg/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/pg/kit.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/pg/model.ts": {
+          "lines": 7,
+          "statements": 8,
+          "branches": 7,
+          "functions": 1
+        },
+        "src/pg/schema.ts": {
+          "lines": 17,
+          "statements": 20,
+          "branches": 13,
+          "functions": 13
+        },
+        "src/pg/table.ts": {
+          "lines": 11,
+          "statements": 11,
+          "branches": 2,
+          "functions": 10
+        },
+        "src/sqlite/Column.ts": {
+          "lines": 20,
+          "statements": 23,
+          "branches": 28,
+          "functions": 19
+        },
+        "src/sqlite/combinators.ts": {
+          "lines": 8,
+          "statements": 8,
+          "branches": 3,
+          "functions": 6
+        },
+        "src/sqlite/derive.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/sqlite/extras.ts": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 4,
+          "functions": 3
+        },
+        "src/sqlite/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/sqlite/kit.ts": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 3,
+          "functions": 2
+        },
+        "src/sqlite/model.ts": {
+          "lines": 15,
+          "statements": 16,
+          "branches": 17,
+          "functions": 2
+        },
+        "src/sqlite/schema.ts": {
+          "lines": 23,
+          "statements": 26,
+          "branches": 18,
+          "functions": 16
+        },
+        "src/sqlite/table.ts": {
+          "lines": 15,
+          "statements": 16,
+          "branches": 9,
+          "functions": 12
+        }
       }
     },
     "@beep/epistemic-client": {
@@ -644,6 +2584,38 @@
         "statements": 26,
         "branches": 25,
         "functions": 18
+      },
+      "files": {
+        "src/Exiftool.errors.ts": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 6,
+          "functions": 5
+        },
+        "src/Exiftool.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Exiftool.service.ts": {
+          "lines": 19,
+          "statements": 19,
+          "branches": 11,
+          "functions": 12
+        },
+        "src/ExiftoolConfig.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 8,
+          "functions": 1
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/face-detection": {
@@ -657,6 +2629,32 @@
         "statements": 177,
         "branches": 90,
         "functions": 67
+      },
+      "files": {
+        "src/FaceDetection.errors.ts": {
+          "lines": 10,
+          "statements": 10,
+          "branches": 11,
+          "functions": 9
+        },
+        "src/FaceDetection.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/FaceDetection.service.ts": {
+          "lines": 154,
+          "statements": 167,
+          "branches": 79,
+          "functions": 58
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/fc-runs": {
@@ -670,6 +2668,20 @@
         "statements": 0,
         "branches": 0,
         "functions": 0
+      },
+      "files": {
+        "src/FastCheckRuns.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/ffmpeg": {
@@ -709,6 +2721,38 @@
         "statements": 32,
         "branches": 8,
         "functions": 19
+      },
+      "files": {
+        "src/Firecrawl.errors.ts": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 3,
+          "functions": 4
+        },
+        "src/Firecrawl.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Firecrawl.service.ts": {
+          "lines": 28,
+          "statements": 28,
+          "branches": 5,
+          "functions": 15
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/Firecrawl.responses.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/gov-legal-mcp": {
@@ -735,6 +2779,194 @@
         "statements": 9,
         "branches": 0,
         "functions": 6
+      },
+      "files": {
+        "src/Govinfo.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Govinfo.service.ts": {
+          "lines": 8,
+          "statements": 9,
+          "branches": 0,
+          "functions": 6
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/contracts/Api.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/contracts/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/contracts/Search/Search.contract.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/contracts/Search/Search.http.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/contracts/Search/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/GovinfoNumeric.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/CollectionContainer/CollectionContainer.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/CollectionContainer/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/CollectionSummary/CollectionSummary.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/CollectionSummary/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/GranuleContainer/GranuleContainer.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/GranuleContainer/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/GranuleMetadata/GranuleMetadata.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/GranuleMetadata/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/PackageInfo/PackageInfo.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/PackageInfo/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/SearchBody/SearchBody.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/SearchBody/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/SearchResponse/SearchResponse.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/SearchResponse/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/SearchResult/SearchResult.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/SearchResult/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/Sort/Sort.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/Sort/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/SummaryItem/SummaryItem.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/domain/values/SummaryItem/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/graph-3d": {
@@ -748,6 +2980,50 @@
         "statements": 605,
         "branches": 155,
         "functions": 70
+      },
+      "files": {
+        "src/Graph3D.errors.ts": {
+          "lines": 8,
+          "statements": 8,
+          "branches": 4,
+          "functions": 4
+        },
+        "src/Graph3D.projection.ts": {
+          "lines": 117,
+          "statements": 120,
+          "branches": 33,
+          "functions": 13
+        },
+        "src/Graph3D.react.ts": {
+          "lines": 44,
+          "statements": 45,
+          "branches": 13,
+          "functions": 10
+        },
+        "src/Graph3D.renderer.ts": {
+          "lines": 411,
+          "statements": 432,
+          "branches": 105,
+          "functions": 43
+        },
+        "src/browser.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/react.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/html": {
@@ -761,6 +3037,104 @@
         "statements": 15,
         "branches": 0,
         "functions": 10
+      },
+      "files": {
+        "src/Html.attributes.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/Html.conformance.ts": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 0,
+          "functions": 6
+        },
+        "src/Html.contract.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Html.foreign.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Html.meta.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Html.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Html.nodes.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Html.policy.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/Html.serialize.ts": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 0,
+          "functions": 2
+        },
+        "src/Html.source-size.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Html.srcset.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/Html.ascii.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/Html.language-tag-registry.generated.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/Html.language-tag.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/Html.readonly.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/hubspot": {
@@ -774,6 +3148,26 @@
         "statements": 32,
         "branches": 9,
         "functions": 23
+      },
+      "files": {
+        "src/HubSpot.errors.ts": {
+          "lines": 6,
+          "statements": 11,
+          "branches": 7,
+          "functions": 9
+        },
+        "src/HubSpot.service.ts": {
+          "lines": 19,
+          "statements": 21,
+          "branches": 2,
+          "functions": 14
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/identity": {
@@ -787,6 +3181,44 @@
         "statements": 24,
         "branches": 16,
         "functions": 18
+      },
+      "files": {
+        "src/Curie.ts": {
+          "lines": 14,
+          "statements": 16,
+          "branches": 1,
+          "functions": 15
+        },
+        "src/Id.ts": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 1,
+          "functions": 3
+        },
+        "src/PnLocal.ts": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 14,
+          "functions": 0
+        },
+        "src/Vocab.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/packages.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/infra": {
@@ -904,6 +3336,62 @@
         "statements": 303,
         "branches": 174,
         "functions": 150
+      },
+      "files": {
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/rules/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/rules/namespace-node-imports.ts": {
+          "lines": 16,
+          "statements": 23,
+          "branches": 8,
+          "functions": 12
+        },
+        "src/rules/no-global-process-runtime.ts": {
+          "lines": 26,
+          "statements": 43,
+          "branches": 28,
+          "functions": 25
+        },
+        "src/rules/no-inline-schema-compile.ts": {
+          "lines": 57,
+          "statements": 67,
+          "branches": 28,
+          "functions": 33
+        },
+        "src/rules/no-js-extension-imports.ts": {
+          "lines": 25,
+          "statements": 35,
+          "branches": 19,
+          "functions": 18
+        },
+        "src/rules/no-manual-effect-runtime-in-tests.ts": {
+          "lines": 53,
+          "statements": 66,
+          "branches": 38,
+          "functions": 27
+        },
+        "src/rules/no-opaque-instance-fields.ts": {
+          "lines": 45,
+          "statements": 59,
+          "branches": 33,
+          "functions": 26
+        },
+        "src/rules/utils.ts": {
+          "lines": 10,
+          "statements": 10,
+          "branches": 20,
+          "functions": 9
+        }
       }
     },
     "@beep/m365": {
@@ -917,6 +3405,38 @@
         "statements": 81,
         "branches": 11,
         "functions": 57
+      },
+      "files": {
+        "src/M365.auth.ts": {
+          "lines": 46,
+          "statements": 49,
+          "branches": 3,
+          "functions": 36
+        },
+        "src/M365.errors.ts": {
+          "lines": 4,
+          "statements": 7,
+          "branches": 2,
+          "functions": 7
+        },
+        "src/M365.schemas.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/M365.service.ts": {
+          "lines": 24,
+          "statements": 25,
+          "branches": 6,
+          "functions": 14
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/m365-mcp": {
@@ -943,6 +3463,62 @@
         "statements": 18,
         "branches": 4,
         "functions": 17
+      },
+      "files": {
+        "src/ApiKeyRequired.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/FieldTier.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/McpCaller.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/SanitizedSpan.ts": {
+          "lines": 9,
+          "statements": 9,
+          "branches": 3,
+          "functions": 9
+        },
+        "src/SourceAuth.ts": {
+          "lines": 2,
+          "statements": 3,
+          "branches": 0,
+          "functions": 3
+        },
+        "src/TierGate.ts": {
+          "lines": 2,
+          "statements": 5,
+          "branches": 1,
+          "functions": 4
+        },
+        "src/ToolAnnotations.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/ToolkitComposition.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/md": {
@@ -969,6 +3545,26 @@
         "statements": 16,
         "branches": 5,
         "functions": 16
+      },
+      "files": {
+        "src/N3.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/N3.service.ts": {
+          "lines": 16,
+          "statements": 16,
+          "branches": 5,
+          "functions": 16
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/nlp": {
@@ -982,6 +3578,182 @@
         "statements": 132,
         "branches": 70,
         "functions": 100
+      },
+      "files": {
+        "src/IdentifierText.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/PathText.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/QueryText.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/VariantText.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Algebra/Monoid.ts": {
+          "lines": 33,
+          "statements": 50,
+          "branches": 27,
+          "functions": 28
+        },
+        "src/Algebra/NLPMonoid.ts": {
+          "lines": 4,
+          "statements": 8,
+          "branches": 4,
+          "functions": 6
+        },
+        "src/Algebra/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Core/Document.ts": {
+          "lines": 6,
+          "statements": 11,
+          "branches": 1,
+          "functions": 9
+        },
+        "src/Core/Pattern.ts": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 2,
+          "functions": 7
+        },
+        "src/Core/PatternBuilders.ts": {
+          "lines": 5,
+          "statements": 7,
+          "branches": 11,
+          "functions": 6
+        },
+        "src/Core/PatternOperations.ts": {
+          "lines": 1,
+          "statements": 4,
+          "branches": 4,
+          "functions": 4
+        },
+        "src/Core/PatternParsers.ts": {
+          "lines": 9,
+          "statements": 9,
+          "branches": 0,
+          "functions": 9
+        },
+        "src/Core/Sentence.ts": {
+          "lines": 3,
+          "statements": 4,
+          "branches": 1,
+          "functions": 4
+        },
+        "src/Core/Similarity.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Core/Token.ts": {
+          "lines": 8,
+          "statements": 16,
+          "branches": 2,
+          "functions": 13
+        },
+        "src/Core/Vectorization.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Core/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Graph/GraphOps.ts": {
+          "lines": 13,
+          "statements": 15,
+          "branches": 6,
+          "functions": 13
+        },
+        "src/Graph/Schema.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Graph/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Handoff/Contract.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Handoff/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Ontology/Kind.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 12,
+          "functions": 0
+        },
+        "src/Ontology/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Operations/Composable.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/Operations/Definition.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Operations/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/numbers.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/nlp-mcp": {
@@ -1021,6 +3793,44 @@
         "statements": 45,
         "branches": 12,
         "functions": 33
+      },
+      "files": {
+        "src/Obs.errors.ts": {
+          "lines": 3,
+          "statements": 4,
+          "branches": 6,
+          "functions": 4
+        },
+        "src/Obs.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Obs.service.ts": {
+          "lines": 19,
+          "statements": 19,
+          "branches": 5,
+          "functions": 11
+        },
+        "src/ObsProtocol.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/ObsProtocol.service.ts": {
+          "lines": 18,
+          "statements": 22,
+          "branches": 1,
+          "functions": 18
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/observability": {
@@ -1034,6 +3844,158 @@
         "statements": 208,
         "branches": 106,
         "functions": 118
+      },
+      "files": {
+        "src/CauseDiagnostics.ts": {
+          "lines": 8,
+          "statements": 8,
+          "branches": 0,
+          "functions": 8
+        },
+        "src/CauseRedaction.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 2,
+          "functions": 2
+        },
+        "src/CoreConfig.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/HttpError.ts": {
+          "lines": 20,
+          "statements": 20,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Logging.ts": {
+          "lines": 43,
+          "statements": 44,
+          "branches": 18,
+          "functions": 29
+        },
+        "src/Metric.ts": {
+          "lines": 11,
+          "statements": 11,
+          "branches": 14,
+          "functions": 3
+        },
+        "src/Observed.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/PhaseProfiler.ts": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 6,
+          "functions": 1
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/experimental/server/DevToolsRelay.ts": {
+          "lines": 10,
+          "statements": 15,
+          "branches": 1,
+          "functions": 11
+        },
+        "src/experimental/server/OtlpPacketLab.ts": {
+          "lines": 18,
+          "statements": 20,
+          "branches": 10,
+          "functions": 18
+        },
+        "src/experimental/server/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/decode.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 2,
+          "functions": 1
+        },
+        "src/server/Config.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/server/DevTools.ts": {
+          "lines": 16,
+          "statements": 17,
+          "branches": 2,
+          "functions": 10
+        },
+        "src/server/ErrorReporting.ts": {
+          "lines": 18,
+          "statements": 18,
+          "branches": 8,
+          "functions": 10
+        },
+        "src/server/HttpApiTelemetry.ts": {
+          "lines": 19,
+          "statements": 19,
+          "branches": 18,
+          "functions": 9
+        },
+        "src/server/Layer.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 4,
+          "functions": 1
+        },
+        "src/server/NodeSdk.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 2,
+          "functions": 0
+        },
+        "src/server/Prometheus.ts": {
+          "lines": 8,
+          "statements": 8,
+          "branches": 4,
+          "functions": 3
+        },
+        "src/server/TraceContext.ts": {
+          "lines": 14,
+          "statements": 15,
+          "branches": 15,
+          "functions": 9
+        },
+        "src/server/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/web/Config.ts": {
+          "lines": 2,
+          "statements": 3,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/web/Layer.ts": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 0,
+          "functions": 2
+        },
+        "src/web/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/oip-web": {
@@ -1060,6 +4022,32 @@
         "statements": 15,
         "branches": 6,
         "functions": 9
+      },
+      "files": {
+        "src/OnePasswordCli.errors.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 4,
+          "functions": 1
+        },
+        "src/OnePasswordCli.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/OnePasswordCli.service.ts": {
+          "lines": 13,
+          "statements": 14,
+          "branches": 2,
+          "functions": 8
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/ontology": {
@@ -1073,6 +4061,74 @@
         "statements": 48,
         "branches": 37,
         "functions": 33
+      },
+      "files": {
+        "src/Fold.assembly.ts": {
+          "lines": 23,
+          "statements": 23,
+          "branches": 22,
+          "functions": 12
+        },
+        "src/Fold.markdown.ts": {
+          "lines": 12,
+          "statements": 12,
+          "branches": 6,
+          "functions": 10
+        },
+        "src/Fold.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Fold.projections.ts": {
+          "lines": 10,
+          "statements": 11,
+          "branches": 9,
+          "functions": 9
+        },
+        "src/Ontology.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/SemanticFoundation.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/SemanticFoundation.seed.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/TaxonomyLoader.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/TaxonomyRegistry.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 0,
+          "functions": 2
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/Fold.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/ontology-client": {
@@ -1099,6 +4155,62 @@
         "statements": 0,
         "branches": 0,
         "functions": 0
+      },
+      "files": {
+        "src/McpConfig.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/ServerConfig.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/TestLayer.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/layer.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/public.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/secrets.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/server.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/test.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/ontology-domain": {
@@ -1112,6 +4224,44 @@
         "statements": 13,
         "branches": 10,
         "functions": 11
+      },
+      "files": {
+        "src/index.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/Session/Session.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/Session/Session.model.ts": {
+          "lines": 12,
+          "statements": 12,
+          "branches": 10,
+          "functions": 11
+        },
+        "src/aggregates/Session/Session.values.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/Session/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/ontology-server": {
@@ -1164,6 +4314,32 @@
         "statements": 54,
         "branches": 36,
         "functions": 36
+      },
+      "files": {
+        "src/OpenAiCompat.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/OpenAiCompatClient.service.ts": {
+          "lines": 6,
+          "statements": 8,
+          "branches": 1,
+          "functions": 7
+        },
+        "src/OpenAiCompatLanguageModel.service.ts": {
+          "lines": 46,
+          "statements": 46,
+          "branches": 35,
+          "functions": 29
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/openclaw": {
@@ -1177,6 +4353,62 @@
         "statements": 33,
         "branches": 20,
         "functions": 21
+      },
+      "files": {
+        "src/Openclaw.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Openclaw.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/OpenclawCli.service.ts": {
+          "lines": 9,
+          "statements": 9,
+          "branches": 6,
+          "functions": 4
+        },
+        "src/OpenclawIntent.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/OpenclawProbe.service.ts": {
+          "lines": 10,
+          "statements": 10,
+          "branches": 12,
+          "functions": 6
+        },
+        "src/OpenclawRender.ts": {
+          "lines": 1,
+          "statements": 2,
+          "branches": 0,
+          "functions": 2
+        },
+        "src/OpenclawSystemd.service.ts": {
+          "lines": 10,
+          "statements": 11,
+          "branches": 2,
+          "functions": 8
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/spawn.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        }
       }
     },
     "@beep/oxigraph": {
@@ -1203,6 +4435,80 @@
         "statements": 30,
         "branches": 28,
         "functions": 23
+      },
+      "files": {
+        "src/CsoAuth.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Pacer.errors.ts": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 1,
+          "functions": 2
+        },
+        "src/Pacer.http.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 8,
+          "functions": 1
+        },
+        "src/Pacer.layer.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Pacer.mock-data.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/Pacer.mock.ts": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 4,
+          "functions": 6
+        },
+        "src/Pacer.tokens.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/PacerAuth.service.ts": {
+          "lines": 5,
+          "statements": 6,
+          "branches": 2,
+          "functions": 6
+        },
+        "src/Pcl.api.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Pcl.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/PclClient.service.ts": {
+          "lines": 10,
+          "statements": 12,
+          "branches": 12,
+          "functions": 8
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/pandoc-ast": {
@@ -1229,6 +4535,32 @@
         "statements": 1,
         "branches": 1,
         "functions": 1
+      },
+      "files": {
+        "src/Pglite.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/Pglite.test-layer.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/PgliteClient.service.ts": {
+          "lines": 0,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/phoenix": {
@@ -1242,6 +4574,32 @@
         "statements": 108,
         "branches": 32,
         "functions": 88
+      },
+      "files": {
+        "src/Phoenix.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/Phoenix.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Phoenix.service.ts": {
+          "lines": 101,
+          "statements": 108,
+          "branches": 31,
+          "functions": 88
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/postgres": {
@@ -1255,6 +4613,56 @@
         "statements": 43,
         "branches": 36,
         "functions": 25
+      },
+      "files": {
+        "src/Postgres.errors.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 7,
+          "functions": 0
+        },
+        "src/PostgresClient.service.ts": {
+          "lines": 6,
+          "statements": 7,
+          "branches": 0,
+          "functions": 3
+        },
+        "src/PostgresDiagnostics.service.ts": {
+          "lines": 24,
+          "statements": 26,
+          "branches": 26,
+          "functions": 14
+        },
+        "src/PostgresDrizzle.service.ts": {
+          "lines": 7,
+          "statements": 8,
+          "branches": 3,
+          "functions": 8
+        },
+        "src/PostgresInterop.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/PostgresSqlState.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/PostgresDiagnosticGuards.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/practice-kg-mcp": {
@@ -1281,6 +4689,44 @@
         "statements": 20,
         "branches": 11,
         "functions": 13
+      },
+      "files": {
+        "src/Pretext.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Pretext.models.ts": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 1,
+          "functions": 3
+        },
+        "src/PretextCapture.service.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/PretextCapture.test-layer.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/browser.ts": {
+          "lines": 13,
+          "statements": 15,
+          "branches": 10,
+          "functions": 9
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/professional-desktop": {
@@ -1307,6 +4753,32 @@
         "statements": 0,
         "branches": 0,
         "functions": 0
+      },
+      "files": {
+        "src/SourceTextIdentity.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/TextAnchor.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/VerifiedTextAnchor.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/qa-capture": {
@@ -1333,6 +4805,140 @@
         "statements": 22,
         "branches": 3,
         "functions": 22
+      },
+      "files": {
+        "src/Evidence.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Iri.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/JsonLd.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Prov.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Rdf.ts": {
+          "lines": 12,
+          "statements": 12,
+          "branches": 0,
+          "functions": 12
+        },
+        "src/SemanticSchemaMetadata.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Uri.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Adapters/WebAnnotation.ts": {
+          "lines": 8,
+          "statements": 8,
+          "branches": 0,
+          "functions": 8
+        },
+        "src/Vocab/Dcterms.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/Oa.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/Owl.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/Prov.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/Rdf.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/Rdfs.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/Skos.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/Xsd.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/generated/Dcterms.terms.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/generated/Owl.terms.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/generated/Rdf.terms.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/generated/Rdfs.terms.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Vocab/generated/Skos.terms.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/rdf-canonize": {
@@ -1385,6 +4991,188 @@
         "statements": 96,
         "branches": 13,
         "functions": 61
+      },
+      "files": {
+        "src/index.ts": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/eslint/DeprecatedApisESLintConfig.ts": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/eslint/DocsESLintConfig.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/eslint/EffectLawsAllowlist.ts": {
+          "lines": 12,
+          "statements": 15,
+          "branches": 0,
+          "functions": 8
+        },
+        "src/eslint/NoNativeRuntimeHotspots.ts": {
+          "lines": 6,
+          "statements": 8,
+          "branches": 0,
+          "functions": 4
+        },
+        "src/eslint/RequireCategoryTagRule.ts": {
+          "lines": 21,
+          "statements": 23,
+          "branches": 0,
+          "functions": 19
+        },
+        "src/eslint/Shared.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/internal/eslint/EffectLawsAllowlistSchemas.ts": {
+          "lines": 14,
+          "statements": 14,
+          "branches": 0,
+          "functions": 12
+        },
+        "src/internal/eslint/EffectLawsAllowlistSnapshotCodegen.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/internal/eslint/RuleAstSchemas.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/internal/eslint/RuleHelpers.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/internal/eslint/generated/EffectLawsAllowlistSnapshot.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next/NextConfig.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next/SharedNextConfig.model.ts": {
+          "lines": 13,
+          "statements": 16,
+          "branches": 9,
+          "functions": 7
+        },
+        "src/next/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next/internal.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/next/security.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next/models/AllowedDevOrigin.schema.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next/models/Compiler.schema.ts": {
+          "lines": 0,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/next/models/ConfigPrimitives.schema.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next/models/ExperimentalConfig.schema.ts": {
+          "lines": 0,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/next/models/ImageConfig.schema.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 2,
+          "functions": 1
+        },
+        "src/next/models/PrefetchInliningConfig.schema.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next/models/Routes.schema.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next/models/Shared.schema.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next/models/SubresourceIntegrityPlugin.schema.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next/models/Turbopack.schema.ts": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 0,
+          "functions": 5
+        },
+        "src/next/models/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/next/security/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        }
       }
     },
     "@beep/repo-docgen": {
@@ -1424,6 +5212,38 @@
         "statements": 79,
         "branches": 21,
         "functions": 63
+      },
+      "files": {
+        "src/Runpod.errors.ts": {
+          "lines": 8,
+          "statements": 9,
+          "branches": 4,
+          "functions": 5
+        },
+        "src/Runpod.service.ts": {
+          "lines": 41,
+          "statements": 41,
+          "branches": 14,
+          "functions": 31
+        },
+        "src/RunpodDocs.service.ts": {
+          "lines": 10,
+          "statements": 10,
+          "branches": 3,
+          "functions": 8
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/_generated/Runpod.generated.ts": {
+          "lines": 15,
+          "statements": 19,
+          "branches": 0,
+          "functions": 19
+        }
       }
     },
     "@beep/sanity": {
@@ -1437,6 +5257,26 @@
         "statements": 31,
         "branches": 10,
         "functions": 19
+      },
+      "files": {
+        "src/Sanity.errors.ts": {
+          "lines": 8,
+          "statements": 10,
+          "branches": 7,
+          "functions": 8
+        },
+        "src/Sanity.service.ts": {
+          "lines": 21,
+          "statements": 21,
+          "branches": 3,
+          "functions": 11
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/schema": {
@@ -1463,6 +5303,32 @@
         "statements": 84,
         "branches": 73,
         "functions": 42
+      },
+      "files": {
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/services/canonicalization.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/services/shacl-validation.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/services/sparql-query.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/shacl": {
@@ -1489,6 +5355,260 @@
         "statements": 1,
         "branches": 1,
         "functions": 0
+      },
+      "files": {
+        "src/aggregates.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entity.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/identity.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/aggregates/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Membership/Membership.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Membership/Membership.values.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Membership/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Organization/Organization.behavior.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Organization/Organization.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Organization/Organization.values.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Organization/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/User/User.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/User/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entity/BaseEntity.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/entity/EntityId.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entity/EntityRef.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entity/Principal.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entity/PublicEntityId.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entity/SourceKind.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entity/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entity/primitives.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/identity/Agents.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/identity/Epistemic.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/identity/LawPractice.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/identity/Shared.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/identity/Workspace.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/identity/index.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/ClaimLifecycle/ClaimLifecycle.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/ClaimLifecycle/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/LocalDate/LocalDate.behavior.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/LocalDate/LocalDate.calendar.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/LocalDate/LocalDate.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/LocalDate/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/OnePasswordReference/OnePasswordReference.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/OnePasswordReference/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/Rule/Rule.model.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/values/Rule/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/shared-tables": {
@@ -1502,6 +5622,74 @@
         "statements": 0,
         "branches": 0,
         "functions": 0
+      },
+      "files": {
+        "src/Schema.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Membership/Membership.table.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Membership/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Organization/Organization.table.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/Organization/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/User/User.table.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/entities/User/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/table/Table.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/table/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/tailscale": {
@@ -1515,6 +5703,32 @@
         "statements": 17,
         "branches": 5,
         "functions": 13
+      },
+      "files": {
+        "src/Tailscale.errors.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/Tailscale.models.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Tailscale.service.ts": {
+          "lines": 16,
+          "statements": 16,
+          "branches": 5,
+          "functions": 12
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/test-utils": {
@@ -1528,6 +5742,44 @@
         "statements": 134,
         "branches": 24,
         "functions": 84
+      },
+      "files": {
+        "src/Entity.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/FastCheckRuns.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Layer.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Schema.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/SqlTest.ts": {
+          "lines": 94,
+          "statements": 98,
+          "branches": 22,
+          "functions": 69
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/tika": {
@@ -1554,6 +5806,38 @@
         "statements": 0,
         "branches": 0,
         "functions": 0
+      },
+      "files": {
+        "src/TArray.types.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/TString.types.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/TUnsafe.types.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/TUtils.types.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/ui": {
@@ -1567,6 +5851,812 @@
         "statements": 2426,
         "branches": 1878,
         "functions": 996
+      },
+      "files": {
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/components/accordion.tsx": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 0,
+          "functions": 4
+        },
+        "src/components/alert-dialog.tsx": {
+          "lines": 13,
+          "statements": 13,
+          "branches": 5,
+          "functions": 12
+        },
+        "src/components/alert.tsx": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 0,
+          "functions": 4
+        },
+        "src/components/aspect-ratio.tsx": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/components/attachment.tsx": {
+          "lines": 11,
+          "statements": 11,
+          "branches": 11,
+          "functions": 9
+        },
+        "src/components/avatar.tsx": {
+          "lines": 29,
+          "statements": 29,
+          "branches": 16,
+          "functions": 9
+        },
+        "src/components/badge.tsx": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 1,
+          "functions": 1
+        },
+        "src/components/banner.tsx": {
+          "lines": 15,
+          "statements": 15,
+          "branches": 5,
+          "functions": 6
+        },
+        "src/components/breadcrumb.tsx": {
+          "lines": 8,
+          "statements": 8,
+          "branches": 2,
+          "functions": 7
+        },
+        "src/components/bubble.tsx": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 4,
+          "functions": 4
+        },
+        "src/components/button-group.tsx": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 1,
+          "functions": 3
+        },
+        "src/components/button.tsx": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 2,
+          "functions": 1
+        },
+        "src/components/calendar-event-card.tsx": {
+          "lines": 14,
+          "statements": 14,
+          "branches": 28,
+          "functions": 7
+        },
+        "src/components/calendar.tsx": {
+          "lines": 15,
+          "statements": 15,
+          "branches": 19,
+          "functions": 7
+        },
+        "src/components/card.tsx": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 1,
+          "functions": 7
+        },
+        "src/components/carousel.tsx": {
+          "lines": 61,
+          "statements": 67,
+          "branches": 29,
+          "functions": 21
+        },
+        "src/components/chart.tsx": {
+          "lines": 69,
+          "statements": 72,
+          "branches": 127,
+          "functions": 18
+        },
+        "src/components/checkbox.tsx": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/components/collapsible.tsx": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 0,
+          "functions": 3
+        },
+        "src/components/color-picker.tsx": {
+          "lines": 14,
+          "statements": 16,
+          "branches": 15,
+          "functions": 8
+        },
+        "src/components/combobox.tsx": {
+          "lines": 17,
+          "statements": 17,
+          "branches": 18,
+          "functions": 16
+        },
+        "src/components/command.tsx": {
+          "lines": 10,
+          "statements": 10,
+          "branches": 3,
+          "functions": 9
+        },
+        "src/components/context-menu.tsx": {
+          "lines": 16,
+          "statements": 16,
+          "branches": 5,
+          "functions": 15
+        },
+        "src/components/conversation.tsx": {
+          "lines": 11,
+          "statements": 11,
+          "branches": 10,
+          "functions": 5
+        },
+        "src/components/country-select.tsx": {
+          "lines": 13,
+          "statements": 14,
+          "branches": 21,
+          "functions": 10
+        },
+        "src/components/date-picker.tsx": {
+          "lines": 16,
+          "statements": 19,
+          "branches": 8,
+          "functions": 8
+        },
+        "src/components/dialog.tsx": {
+          "lines": 12,
+          "statements": 12,
+          "branches": 6,
+          "functions": 10
+        },
+        "src/components/direction.tsx": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/components/drawer.tsx": {
+          "lines": 11,
+          "statements": 11,
+          "branches": 0,
+          "functions": 10
+        },
+        "src/components/dropdown-menu.tsx": {
+          "lines": 17,
+          "statements": 17,
+          "branches": 9,
+          "functions": 15
+        },
+        "src/components/effect-date-time-picker.tsx": {
+          "lines": 151,
+          "statements": 163,
+          "branches": 59,
+          "functions": 89
+        },
+        "src/components/emoji-picker.tsx": {
+          "lines": 16,
+          "statements": 17,
+          "branches": 10,
+          "functions": 8
+        },
+        "src/components/empty.tsx": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 1,
+          "functions": 6
+        },
+        "src/components/field.tsx": {
+          "lines": 32,
+          "statements": 32,
+          "branches": 20,
+          "functions": 17
+        },
+        "src/components/hover-card.tsx": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 4,
+          "functions": 3
+        },
+        "src/components/input-group.tsx": {
+          "lines": 9,
+          "statements": 9,
+          "branches": 6,
+          "functions": 7
+        },
+        "src/components/input-otp.tsx": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 4,
+          "functions": 4
+        },
+        "src/components/input.tsx": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 2,
+          "functions": 1
+        },
+        "src/components/item.tsx": {
+          "lines": 12,
+          "statements": 12,
+          "branches": 3,
+          "functions": 10
+        },
+        "src/components/kbd.tsx": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 0,
+          "functions": 2
+        },
+        "src/components/knowledge-graph.tsx": {
+          "lines": 155,
+          "statements": 172,
+          "branches": 84,
+          "functions": 45
+        },
+        "src/components/label.tsx": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/components/link-preview.tsx": {
+          "lines": 118,
+          "statements": 126,
+          "branches": 86,
+          "functions": 32
+        },
+        "src/components/live-waveform.tsx": {
+          "lines": 249,
+          "statements": 260,
+          "branches": 152,
+          "functions": 26
+        },
+        "src/components/marker.tsx": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 1,
+          "functions": 3
+        },
+        "src/components/menubar.tsx": {
+          "lines": 17,
+          "statements": 17,
+          "branches": 4,
+          "functions": 16
+        },
+        "src/components/message-scroller.tsx": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 10,
+          "functions": 6
+        },
+        "src/components/message.tsx": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 1,
+          "functions": 6
+        },
+        "src/components/native-select.tsx": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 1,
+          "functions": 3
+        },
+        "src/components/navigation-menu.tsx": {
+          "lines": 9,
+          "statements": 9,
+          "branches": 4,
+          "functions": 8
+        },
+        "src/components/notification-card.tsx": {
+          "lines": 29,
+          "statements": 33,
+          "branches": 39,
+          "functions": 15
+        },
+        "src/components/orb-background.tsx": {
+          "lines": 13,
+          "statements": 13,
+          "branches": 5,
+          "functions": 3
+        },
+        "src/components/orb.tsx": {
+          "lines": 130,
+          "statements": 137,
+          "branches": 80,
+          "functions": 21
+        },
+        "src/components/pagination.tsx": {
+          "lines": 8,
+          "statements": 8,
+          "branches": 5,
+          "functions": 7
+        },
+        "src/components/phone-input.tsx": {
+          "lines": 25,
+          "statements": 27,
+          "branches": 24,
+          "functions": 12
+        },
+        "src/components/popover.tsx": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 4,
+          "functions": 6
+        },
+        "src/components/progress.tsx": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 0,
+          "functions": 5
+        },
+        "src/components/radio-group.tsx": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 0,
+          "functions": 2
+        },
+        "src/components/rating.tsx": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 6,
+          "functions": 3
+        },
+        "src/components/resizable.tsx": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 7,
+          "functions": 3
+        },
+        "src/components/scroll-area.tsx": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/components/select.tsx": {
+          "lines": 11,
+          "statements": 11,
+          "branches": 6,
+          "functions": 9
+        },
+        "src/components/separator.tsx": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 1,
+          "functions": 1
+        },
+        "src/components/sheet.tsx": {
+          "lines": 11,
+          "statements": 11,
+          "branches": 4,
+          "functions": 10
+        },
+        "src/components/sidebar.tsx": {
+          "lines": 98,
+          "statements": 104,
+          "branches": 85,
+          "functions": 43
+        },
+        "src/components/skeleton.tsx": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/components/slider.tsx": {
+          "lines": 14,
+          "statements": 14,
+          "branches": 18,
+          "functions": 3
+        },
+        "src/components/sonner.tsx": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 1,
+          "functions": 1
+        },
+        "src/components/speech-input.tsx": {
+          "lines": 76,
+          "statements": 77,
+          "branches": 50,
+          "functions": 20
+        },
+        "src/components/spinner.tsx": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/components/switch.tsx": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 1,
+          "functions": 1
+        },
+        "src/components/table-icons.tsx": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 0,
+          "functions": 6
+        },
+        "src/components/table.tsx": {
+          "lines": 9,
+          "statements": 9,
+          "branches": 0,
+          "functions": 8
+        },
+        "src/components/tabs.tsx": {
+          "lines": 6,
+          "statements": 6,
+          "branches": 2,
+          "functions": 4
+        },
+        "src/components/textarea.tsx": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/components/toast.tsx": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 3,
+          "functions": 6
+        },
+        "src/components/toaster.tsx": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 6,
+          "functions": 3
+        },
+        "src/components/todo-item.tsx": {
+          "lines": 39,
+          "statements": 45,
+          "branches": 68,
+          "functions": 8
+        },
+        "src/components/toggle-group.tsx": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 12,
+          "functions": 2
+        },
+        "src/components/toggle.tsx": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 2,
+          "functions": 1
+        },
+        "src/components/toolbar.tsx": {
+          "lines": 30,
+          "statements": 30,
+          "branches": 33,
+          "functions": 14
+        },
+        "src/components/tooltip.tsx": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 3,
+          "functions": 4
+        },
+        "src/components/tour.tsx": {
+          "lines": 82,
+          "statements": 92,
+          "branches": 48,
+          "functions": 35
+        },
+        "src/components/upload.tsx": {
+          "lines": 55,
+          "statements": 57,
+          "branches": 24,
+          "functions": 25
+        },
+        "src/components/verified-source-text-viewer.tsx": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 1,
+          "functions": 1
+        },
+        "src/components/blocks/editor-00/editor.tsx": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 0,
+          "functions": 4
+        },
+        "src/components/blocks/editor-00/nodes.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/components/blocks/editor-00/plugins.tsx": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/components/editor/editor-ui/content-editable.tsx": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 4,
+          "functions": 1
+        },
+        "src/components/editor/themes/editor-theme.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/components/ui/button.tsx": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 2,
+          "functions": 1
+        },
+        "src/components/ui/tooltip.tsx": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 5,
+          "functions": 4
+        },
+        "src/hooks/index.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/hooks/use-scribe.ts": {
+          "lines": 85,
+          "statements": 99,
+          "branches": 32,
+          "functions": 34
+        },
+        "src/hooks/useMobile.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/hooks/useNumberInput.ts": {
+          "lines": 129,
+          "statements": 135,
+          "branches": 88,
+          "functions": 43
+        },
+        "src/hooks/useSpinner.ts": {
+          "lines": 30,
+          "statements": 32,
+          "branches": 6,
+          "functions": 17
+        },
+        "src/internal/react-atoms.ts": {
+          "lines": 22,
+          "statements": 25,
+          "branches": 10,
+          "functions": 7
+        },
+        "src/lib/date-time.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/lib/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/lib/react-invariant.ts": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 2,
+          "functions": 1
+        },
+        "src/lib/toaster.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/lib/url.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 3,
+          "functions": 0
+        },
+        "src/lib/utils.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/colors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/scales.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/shadows.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/theme-init-script.tsx": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/themes/theme-provider.tsx": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 6,
+          "functions": 3
+        },
+        "src/themes/theme.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/types.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/typography.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/components/alert.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/components/autocomplete.ts": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 6,
+          "functions": 5
+        },
+        "src/themes/components/avatar.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 6,
+          "functions": 1
+        },
+        "src/themes/components/button.ts": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 104,
+          "functions": 4
+        },
+        "src/themes/components/card.ts": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 0,
+          "functions": 3
+        },
+        "src/themes/components/chip.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 62,
+          "functions": 2
+        },
+        "src/themes/components/controls.ts": {
+          "lines": 2,
+          "statements": 4,
+          "branches": 42,
+          "functions": 4
+        },
+        "src/themes/components/data-grid.ts": {
+          "lines": 8,
+          "statements": 8,
+          "branches": 30,
+          "functions": 8
+        },
+        "src/themes/components/date-picker.ts": {
+          "lines": 5,
+          "statements": 5,
+          "branches": 18,
+          "functions": 5
+        },
+        "src/themes/components/dialog.ts": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 2,
+          "functions": 4
+        },
+        "src/themes/components/layout.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/components/link.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/components/list.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/components/menu.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 12,
+          "functions": 2
+        },
+        "src/themes/components/progress.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/themes/components/select.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 2,
+          "functions": 1
+        },
+        "src/themes/components/svg-icon.ts": {
+          "lines": 7,
+          "statements": 7,
+          "branches": 14,
+          "functions": 7
+        },
+        "src/themes/components/table.ts": {
+          "lines": 10,
+          "statements": 10,
+          "branches": 24,
+          "functions": 10
+        },
+        "src/themes/components/text-field.ts": {
+          "lines": 11,
+          "statements": 11,
+          "branches": 60,
+          "functions": 11
+        },
+        "src/themes/components/tree-view.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 2,
+          "functions": 1
+        }
       }
     },
     "@beep/uspto": {
@@ -1580,6 +6670,32 @@
         "statements": 27,
         "branches": 10,
         "functions": 18
+      },
+      "files": {
+        "src/Uspto.errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Uspto.models.ts": {
+          "lines": 0,
+          "statements": 2,
+          "branches": 1,
+          "functions": 2
+        },
+        "src/Uspto.service.ts": {
+          "lines": 24,
+          "statements": 25,
+          "branches": 9,
+          "functions": 16
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/uspto-mcp": {
@@ -1606,6 +6722,170 @@
         "statements": 113,
         "branches": 22,
         "functions": 70
+      },
+      "files": {
+        "src/Array.ts": {
+          "lines": 2,
+          "statements": 4,
+          "branches": 1,
+          "functions": 3
+        },
+        "src/Bool.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/DateTime.ts": {
+          "lines": 14,
+          "statements": 19,
+          "branches": 0,
+          "functions": 10
+        },
+        "src/DrainableWorker.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Equal.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Errors.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Event.ts": {
+          "lines": 4,
+          "statements": 4,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/FileSystem.ts": {
+          "lines": 14,
+          "statements": 14,
+          "branches": 2,
+          "functions": 9
+        },
+        "src/Function.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Glob.ts": {
+          "lines": 2,
+          "statements": 2,
+          "branches": 3,
+          "functions": 1
+        },
+        "src/GlobalValue.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 1,
+          "functions": 0
+        },
+        "src/Html.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/NodeUrl.ts": {
+          "lines": 2,
+          "statements": 3,
+          "branches": 1,
+          "functions": 2
+        },
+        "src/Number.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Option.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Path.ts": {
+          "lines": 1,
+          "statements": 3,
+          "branches": 2,
+          "functions": 2
+        },
+        "src/Predicate.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/Random.ts": {
+          "lines": 9,
+          "statements": 14,
+          "branches": 0,
+          "functions": 8
+        },
+        "src/Record.ts": {
+          "lines": 1,
+          "statements": 1,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/Str.ts": {
+          "lines": 4,
+          "statements": 8,
+          "branches": 2,
+          "functions": 8
+        },
+        "src/Stream.ts": {
+          "lines": 3,
+          "statements": 3,
+          "branches": 0,
+          "functions": 1
+        },
+        "src/Struct.ts": {
+          "lines": 7,
+          "statements": 8,
+          "branches": 6,
+          "functions": 4
+        },
+        "src/Text.ts": {
+          "lines": 5,
+          "statements": 6,
+          "branches": 2,
+          "functions": 5
+        },
+        "src/Utils.ts": {
+          "lines": 9,
+          "statements": 9,
+          "branches": 2,
+          "functions": 1
+        },
+        "src/index.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        },
+        "src/thunk.ts": {
+          "lines": 2,
+          "statements": 14,
+          "branches": 0,
+          "functions": 14
+        },
+        "src/internal/StructPath.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 0,
+          "functions": 0
+        }
       }
     },
     "@beep/venice-ai": {

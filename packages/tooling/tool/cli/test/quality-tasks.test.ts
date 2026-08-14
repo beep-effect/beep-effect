@@ -65,9 +65,8 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
-import { NodeChildProcessSpawner } from "@effect/platform-node";
-import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
-import * as NodePath from "@effect/platform-node/NodePath";
+import { NodeServices } from "@effect/platform-node";
+import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -75,15 +74,13 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess } from "effect/unstable/process";
-import { describe, expect, it } from "vitest";
-import type { GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
+import type {
+  CoverageFileUncoveredCounts,
+  GithubCheckLaneWave,
+  QualityTaskInvocation,
+} from "@beep/repo-cli/test/Quality";
 
-const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
-const PlatformLayer = Layer.mergeAll(
-  FileSystemLayer,
-  NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(FileSystemLayer)),
-  TestConsole.layer
-);
+const TestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
 const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(GithubChecksFallowFeatureMatrix);
 const isQualityTaskFailed = S.is(QualityTaskFailed);
@@ -113,6 +110,8 @@ const coverageUncovered = (count: number): CoverageUncoveredCounts =>
     branches: count,
     functions: count,
   });
+const coverageFiles = (entries: Record<string, number>): CoverageFileUncoveredCounts =>
+  pipe(entries, R.map(coverageUncovered));
 const coverageRegressionBaseline = CoverageRegressionBaseline.make({
   schema_version: 1,
   generated_at: "2026-07-06T00:00:00.000Z",
@@ -155,7 +154,7 @@ const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
 
       return yield* use;
     })
-  ).pipe(provideScopedLayer(PlatformLayer));
+  ).pipe(provideScopedLayer(TestLayer));
 
 const getInvocation = (argv: ReadonlyArray<string>): QualityTaskInvocation => {
   const invocation = parseQualityTaskInvocation(argv);
@@ -317,6 +316,69 @@ describe("quality task adapter", () => {
       fix: false,
       args: ["--affected"],
     });
+  });
+
+  it("protects ordinary root build and check lanes from no-location TS2589 flakes", () => {
+    const build = rootQualityStepsForTesting("/repo", getInvocation(["build"]));
+    const check = rootQualityStepsForTesting("/repo", getInvocation(["check"]));
+
+    expect(build[0]?.flakeQuarantine).toBe("ts2589-no-location");
+    expect(check[0]?.flakeQuarantine).toBe("ts2589-no-location");
+  });
+
+  it.layer(TestLayer)("ordinary root build flake quarantine", (it) => {
+    it.effect("reruns a quarantinable failure through direct Turbo", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const binDir = path.join(tmpDir, "bin");
+        const fakeBunxPath = path.join(binDir, "bunx");
+        const commandLogPath = path.join(tmpDir, "build-commands.log");
+
+        yield* Effect.acquireRelease(
+          Effect.sync(() => {
+            const previousCwd = process.cwd();
+            process.chdir(tmpDir);
+            return previousCwd;
+          }),
+          (previousCwd) => Effect.sync(() => process.chdir(previousCwd))
+        );
+        yield* fs.makeDirectory(path.join(tmpDir, ".git"), { recursive: true });
+        yield* fs.makeDirectory(binDir, { recursive: true });
+        yield* fs.writeFileString(
+          fakeBunxPath,
+          [
+            "#!/usr/bin/env sh",
+            "count=0",
+            "test ! -f build-count.txt || count=$(sed -n '1p' build-count.txt)",
+            "count=$((count + 1))",
+            "printf '%s\\n' \"$count\" > build-count.txt",
+            "printf '%s\\n' \"$*\" >> build-commands.log",
+            'if [ "$count" -eq 1 ]; then',
+            "  printf '%s\\n' '@beep/langextract:build: error TS2589: Type instantiation is excessively deep and possibly infinite.'",
+            "  printf '%s\\n' 'Failed:    @beep/langextract#build'",
+            "  exit 2",
+            "fi",
+            "exit 0",
+            "",
+          ].join("\n")
+        );
+        yield* fs.chmod(fakeBunxPath, 0o755);
+
+        yield* withEnvVarEffect("PATH", `${binDir}:${Bun.env.PATH ?? ""}`, runQualityTask(getInvocation(["build"])));
+
+        const commands = pipe(yield* fs.readFileString(commandLogPath), Str.split(/\r?\n/u), A.filter(Str.isNonEmpty));
+        expect(commands).toHaveLength(3);
+        expect(commands[1]).toContain("--filter=@beep/langextract");
+        expect(commands[1]).not.toContain("-- --filter=@beep/langextract");
+        expect(commands[2]).not.toContain("--filter=@beep/langextract");
+
+        const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+        expect(logText).toContain("no-location TS2589 flake signature detected for @beep/langextract#build");
+        expect(logText).toContain("quarantined 1 environment-only TS2589 flake incident(s); lane rerun green");
+      })
+    );
   });
 
   it("builds package-only audit steps by default and keeps turbo filters", () =>
@@ -597,7 +659,7 @@ describe("quality task adapter", () => {
             ["heavy:check", "not-run-early-stop"],
           ]);
         }),
-        provideScopedLayer(PlatformLayer)
+        provideScopedLayer(TestLayer)
       )
     ));
 
@@ -620,7 +682,7 @@ describe("quality task adapter", () => {
         Effect.map(({ report }) => {
           expect(A.map(report.lanes, (lane) => lane.status)).toEqual(["failed", "passed"]);
         }),
-        provideScopedLayer(PlatformLayer)
+        provideScopedLayer(TestLayer)
       )
     ));
 
@@ -707,7 +769,7 @@ describe("quality task adapter", () => {
               expect(result.stdout).toContain("new file mode");
             }),
           ({ fs, repoRoot }) => fs.remove(repoRoot, { recursive: true, force: true }).pipe(Effect.ignore)
-        ).pipe(provideScopedLayer(PlatformLayer))
+        ).pipe(provideScopedLayer(TestLayer))
       )
     ));
 
@@ -732,7 +794,7 @@ describe("quality task adapter", () => {
 
         expect(wiredFallowLaneIds).toEqual(promotedLaneIds);
         expect(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix)).toEqual([]);
-      }).pipe(provideScopedLayer(FileSystemLayer))
+      }).pipe(provideScopedLayer(TestLayer))
     ));
 
   it("does not wire removed Fallow dupes or reuse clone lanes", () => {
@@ -795,7 +857,7 @@ describe("quality task adapter", () => {
         const labels = A.map(plan, (step) => step.label);
         expect(A.take(labels, 2)).toEqual(["ci:fallow:audit", "ci:fallow:dead-code"]);
         expect(labels).toContain("ci:fallow:envelope-check:dead-code");
-      }).pipe(provideScopedLayer(FileSystemLayer))
+      }).pipe(provideScopedLayer(TestLayer))
     ));
 
   it("rejects a promoted Fallow matrix row that is not wired into pre-push", () => {
@@ -1674,6 +1736,7 @@ describe("quality task adapter", () => {
           branches: 50,
           functions: 50,
           uncovered: O.some(coverageUncovered(50)),
+          files: O.some(coverageFiles({ "src/kept.ts": 50 })),
         }),
       },
     });
@@ -1692,6 +1755,7 @@ describe("quality task adapter", () => {
           branches: 44.44,
           functions: 44.44,
           uncovered: O.some(coverageUncovered(50)),
+          files: O.some(coverageFiles({ "src/kept.ts": 50 })),
         })
       )
     ).toEqual([]);
@@ -1706,6 +1770,7 @@ describe("quality task adapter", () => {
           branches: 45.45,
           functions: 45.45,
           uncovered: O.some(coverageUncovered(60)),
+          files: O.some(coverageFiles({ "src/kept.ts": 60 })),
         })
       )
     ).toEqual(
@@ -1715,7 +1780,52 @@ describe("quality task adapter", () => {
     );
   });
 
-  it("keeps the percentage-only rule when either side predates the uncovered counts", () => {
+  it("catches coverage loss offset by deleting uncovered code from another file", () => {
+    const before = CoverageRegressionBaseline.make({
+      ...coverageRegressionBaseline,
+      packages: {
+        "@beep/existing": CoveragePackageBaseline.make({
+          path: "packages/existing",
+          lines: 60,
+          statements: 60,
+          branches: 60,
+          functions: 60,
+          uncovered: O.some(coverageUncovered(40)),
+          files: O.some(
+            coverageFiles({
+              "src/lost.ts": 0,
+              "src/deleted.ts": 5,
+              "src/stable.ts": 35,
+            })
+          ),
+        }),
+      },
+    });
+    const actual = CoveragePackageBaseline.make({
+      path: "packages/existing",
+      lines: 57.89,
+      statements: 57.89,
+      branches: 57.89,
+      functions: 57.89,
+      uncovered: O.some(coverageUncovered(40)),
+      files: O.some(
+        coverageFiles({
+          "src/lost.ts": 5,
+          "src/stable.ts": 35,
+        })
+      ),
+    });
+
+    const failures = compareCoverageRegressionSnapshotsForTesting(
+      before,
+      [{ packageName: "@beep/existing", baseline: actual }],
+      false
+    ).failures;
+
+    expect(A.map(failures, (failure) => failure.metric)).toEqual(["branches", "functions", "lines", "statements"]);
+  });
+
+  it("keeps the percentage-only rule when either side predates file-level counts", () => {
     const failures = compareCoverageRegressionSnapshotsForTesting(
       coverageRegressionBaseline,
       [{ packageName: "@beep/existing", baseline: coveragePackageBaseline("packages/existing", 49) }],

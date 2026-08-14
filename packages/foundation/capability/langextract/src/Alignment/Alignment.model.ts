@@ -455,7 +455,11 @@ const candidateFromGrounded = (grounded: GroundedExtraction): ExtractionCandidat
  * @category codecs
  * @since 0.0.0
  */
-export const GroundedExtractionFromCandidate = ExtractionCandidate.pipe(
+export const GroundedExtractionFromCandidate: S.Codec<
+  GroundedExtraction,
+  typeof ExtractionCandidate.Encoded,
+  CurrentAlignmentSource
+> = ExtractionCandidate.pipe(
   S.decodeTo(S.toType(GroundedExtraction), {
     decode: SchemaGetter.transformOrFail((candidate: ExtractionCandidate) =>
       CurrentAlignmentSource.useSync((source) => alignCandidate(candidate, source))
@@ -493,7 +497,11 @@ export const GroundedExtractionFromCandidate = ExtractionCandidate.pipe(
  * @category codecs
  * @since 0.0.0
  */
-export const GroundedExtractionsFromCandidates = S.Array(ExtractionCandidate).pipe(
+export const GroundedExtractionsFromCandidates: S.Codec<
+  ReadonlyArray<GroundedExtraction>,
+  ReadonlyArray<typeof ExtractionCandidate.Encoded>,
+  CurrentAlignmentSource
+> = S.Array(ExtractionCandidate).pipe(
   S.decodeTo(GroundedExtraction.pipe(S.Array, S.toType), {
     decode: SchemaGetter.transformOrFail((candidates: ReadonlyArray<ExtractionCandidate>) =>
       CurrentAlignmentSource.useSync((source) => alignCandidates(candidates, source))

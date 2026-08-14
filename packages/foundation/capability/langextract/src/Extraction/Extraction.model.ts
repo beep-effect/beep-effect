@@ -243,7 +243,8 @@ export const GroundedExtraction = S.Union([
   S.toTaggedUnion("alignmentStatus"),
   $I.annoteSchema("GroundedExtraction", {
     description: "Extraction candidate with deterministic source-alignment metadata.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

@@ -1,3 +1,4 @@
+import { resolvePathWithinCanonicalRoot } from "@beep/file-processing/PathSafety";
 import { $ScratchpadId } from "@beep/identity";
 import { Storage } from "@google-cloud/storage";
 import { Context, Data, Effect, FileSystem, Layer, Path } from "effect";
@@ -289,10 +290,27 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   const path = yield* Path.Path;
   const basePath = config.localPath ?? "./output";
   const globalPrefix = config.pathPrefix ?? "";
-  const resolvePath = (key: string) => (key.startsWith("/") ? key : path.join(basePath, globalPrefix, key));
+  const storageRoot = path.resolve(basePath, globalPrefix);
+  yield* fs.makeDirectory(storageRoot, { recursive: true });
+  const canonicalRoot = yield* fs.realPath(storageRoot);
+  const resolvePath = (key: string) =>
+    resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: key }).pipe(
+      Effect.provideService(FileSystem.FileSystem, fs),
+      Effect.provideService(Path.Path, path)
+    );
   const ensureDir = (filePath: string) => fs.makeDirectory(path.dirname(filePath), { recursive: true });
   const localKvError = (method: string, key: string) => (cause: unknown) =>
     new KeyValueStore.KeyValueStoreError({ method, key, message: String(cause), cause });
+  const localStorageError = (method: string, key: string) => (cause: unknown) =>
+    new SystemError({
+      _tag: "InvalidData",
+      module: "Storage",
+      method,
+      pathOrDescriptor: key,
+      description: String(cause),
+    });
+  const resolveStoragePath = (method: string, key: string) =>
+    resolvePath(key).pipe(Effect.mapError(localStorageError(method, key)));
 
   const walkDirRecursive = Effect.fn("Storage.walkDirRecursive")(function* (
     currentDir: string,
@@ -317,19 +335,19 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   const impl = KeyValueStore.make({
     get: (key) =>
       Effect.gen(function* () {
-        const resolved = resolvePath(key);
+        const resolved = yield* resolvePath(key);
         if (!(yield* fs.exists(resolved))) return undefined;
         return yield* fs.readFileString(resolved);
       }).pipe(Effect.mapError(localKvError("get", key))),
     getUint8Array: (key) =>
       Effect.gen(function* () {
-        const resolved = resolvePath(key);
+        const resolved = yield* resolvePath(key);
         if (!(yield* fs.exists(resolved))) return undefined;
         return yield* fs.readFile(resolved);
       }).pipe(Effect.mapError(localKvError("getUint8Array", key))),
     set: (key, value) =>
       Effect.gen(function* () {
-        const resolved = resolvePath(key);
+        const resolved = yield* resolvePath(key);
         yield* ensureDir(resolved);
         if (typeof value === "string") {
           yield* fs.writeFileString(resolved, value);
@@ -339,21 +357,19 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       }).pipe(Effect.mapError(localKvError("set", key))),
     remove: (key) =>
       Effect.gen(function* () {
-        const resolved = resolvePath(key);
+        const resolved = yield* resolvePath(key);
         if (yield* fs.exists(resolved)) yield* fs.remove(resolved);
       }).pipe(Effect.mapError(localKvError("remove", key))),
     clear: Effect.gen(function* () {
-      const root = path.join(basePath, globalPrefix);
-      if (yield* fs.exists(root)) yield* fs.remove(root, { recursive: true });
-      yield* fs.makeDirectory(root, { recursive: true });
+      if (yield* fs.exists(canonicalRoot)) yield* fs.remove(canonicalRoot, { recursive: true });
+      yield* fs.makeDirectory(canonicalRoot, { recursive: true });
     }).pipe(Effect.mapError(localKvError("clear", globalPrefix))),
     size: Effect.gen(function* () {
-      const root = path.join(basePath, globalPrefix);
-      if (!(yield* fs.exists(root))) return 0;
-      const files = yield* walkDirRecursive(root, "");
+      if (!(yield* fs.exists(canonicalRoot))) return 0;
+      const files = yield* walkDirRecursive(canonicalRoot, "");
       let totalSize = 0;
       for (const file of files) {
-        const stat = yield* fs.stat(path.join(root, file));
+        const stat = yield* fs.stat(path.join(canonicalRoot, file));
         totalSize += Number(stat.size);
       }
       return totalSize;
@@ -363,12 +379,12 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   return {
     ...impl,
     list: Effect.fn("Storage.local.list")(function* (prefix: string) {
-      const dir = path.join(basePath, globalPrefix, prefix);
+      const dir = yield* resolveStoragePath("list", prefix);
       if (!(yield* fs.exists(dir))) return [];
       return yield* walkDirRecursive(dir, "");
     }),
     getWithGeneration: Effect.fn("Storage.local.getWithGeneration")(function* (key: string) {
-      const resolved = resolvePath(key);
+      const resolved = yield* resolveStoragePath("getWithGeneration", key);
       if (!(yield* fs.exists(resolved))) return O.none();
       const content = yield* fs.readFileString(resolved);
       const stat = yield* fs.stat(resolved);
@@ -383,7 +399,7 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       value: string,
       expectedGeneration: string
     ) {
-      const resolved = resolvePath(key);
+      const resolved = yield* resolveStoragePath("setIfGenerationMatch", key);
       if (yield* fs.exists(resolved)) {
         const stat = yield* fs.stat(resolved);
         const currentGeneration = O.match(stat.mtime, {

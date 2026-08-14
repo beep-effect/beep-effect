@@ -6,13 +6,23 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, Inspectable, MutableHashMap, Order, Path, pipe } from "effect";
-import { dual } from "effect/Function";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { thunkFalse, thunkTrue } from "@beep/utils/thunk";
+import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { dual, pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.ts";
 import { runCaptured } from "../../../internal/process/index.ts";
 import { enforceRatchet } from "../../../internal/ratchet/index.ts";
@@ -92,13 +102,40 @@ export class CoverageUncoveredCounts extends S.Class<CoverageUncoveredCounts>($I
 ) {}
 
 /**
+ * Absolute uncovered counts keyed by package-relative source file path.
+ *
+ * **Details**
+ *
+ * Keeping the counts per file prevents a coverage loss in one file from being
+ * hidden by deleting already-uncovered code from another file. Deleted files
+ * are absent from the current map and therefore do not count as regressions.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CoverageFileUncoveredCounts = S.Record(S.String, CoverageUncoveredCounts).pipe(
+  $I.annoteSchema("CoverageFileUncoveredCounts", {
+    description: "Absolute uncovered counts keyed by package-relative source file path.",
+  })
+);
+
+/**
+ * Runtime type for {@link CoverageFileUncoveredCounts}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CoverageFileUncoveredCounts = typeof CoverageFileUncoveredCounts.Type;
+
+/**
  * Per-package coverage percentages stored in the committed baseline.
  *
  * **Gotchas**
  *
- * `uncovered` is optional so baselines written before it existed still decode.
- * When either side of a comparison lacks it the ratchet falls back to the
- * percentage-only rule, which is the stricter of the two.
+ * `uncovered` and `files` are optional so older baselines still decode. File
+ * counts are the evidence that lets the ratchet ignore covered-code deletion
+ * without netting unrelated file changes together. When either side lacks
+ * them, comparison falls back to the stricter percentage-only rule.
  *
  * @category models
  * @since 0.0.0
@@ -111,6 +148,7 @@ export class CoveragePackageBaseline extends S.Class<CoveragePackageBaseline>($I
     branches: S.Finite,
     functions: S.Finite,
     uncovered: CoverageUncoveredCounts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    files: CoverageFileUncoveredCounts.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("CoveragePackageBaseline", {
     description: "Committed coverage percentages for one workspace package.",
@@ -189,14 +227,18 @@ class VitestCoverageSummaryTotal extends S.Class<VitestCoverageSummaryTotal>($I`
   })
 ) {}
 
-class VitestCoverageSummary extends S.Class<VitestCoverageSummary>($I`VitestCoverageSummary`)(
-  {
+const VitestCoverageSummary = S.StructWithRest(
+  S.Struct({
     total: VitestCoverageSummaryTotal,
-  },
-  $I.annote("VitestCoverageSummary", {
+  }),
+  [S.Record(S.String, VitestCoverageSummaryTotal)]
+).pipe(
+  $I.annoteSchema("VitestCoverageSummary", {
     description: "Minimal Vitest coverage-summary.json shape consumed by the ratchet.",
   })
-) {}
+);
+
+type VitestCoverageSummary = typeof VitestCoverageSummary.Type;
 
 /**
  * Baseline entry paired with the package it covers, used when reporting
@@ -326,7 +368,9 @@ const workspaceCoverageDispositionGaps = Effect.fn("CoverageRegression.workspace
     QualityTaskConfigurationError.mapError("Failed to discover workspace packages for coverage policy.")
   );
   const workspacePackages = pipe(
-    A.fromIterable(MutableHashMap.values(packageMap)),
+    packageMap,
+    MutableHashMap.values,
+    A.fromIterable,
     A.filter((info) => info.path !== ".")
   );
 
@@ -344,21 +388,40 @@ const coveragePctValue = (value: VitestCoveragePct): number => (value === "Unkno
 
 const uncoveredCount = (metric: VitestCoverageMetric): number => metric.total - metric.covered;
 
-const toCoveragePackageBaseline = (path: string, summary: VitestCoverageSummary): CoveragePackageBaseline =>
+const toCoverageUncoveredCounts = (summary: VitestCoverageSummaryTotal): CoverageUncoveredCounts =>
+  CoverageUncoveredCounts.make({
+    lines: uncoveredCount(summary.lines),
+    statements: uncoveredCount(summary.statements),
+    branches: uncoveredCount(summary.branches),
+    functions: uncoveredCount(summary.functions),
+  });
+
+const toCoverageFileUncoveredCounts = (
+  packageAbsolutePath: string,
+  path: Path.Path,
+  summary: VitestCoverageSummary
+): CoverageFileUncoveredCounts =>
+  pipe(
+    summary,
+    R.remove("total"),
+    R.mapKeys((filePath) => repoRelative(filePath, packageAbsolutePath, path)),
+    R.map(toCoverageUncoveredCounts)
+  );
+
+const toCoveragePackageBaseline = (
+  packagePath: string,
+  packageAbsolutePath: string,
+  path: Path.Path,
+  summary: VitestCoverageSummary
+): CoveragePackageBaseline =>
   CoveragePackageBaseline.make({
-    path,
+    path: packagePath,
     lines: coveragePctValue(summary.total.lines.pct),
     statements: coveragePctValue(summary.total.statements.pct),
     branches: coveragePctValue(summary.total.branches.pct),
     functions: coveragePctValue(summary.total.functions.pct),
-    uncovered: O.some(
-      CoverageUncoveredCounts.make({
-        lines: uncoveredCount(summary.total.lines),
-        statements: uncoveredCount(summary.total.statements),
-        branches: uncoveredCount(summary.total.branches),
-        functions: uncoveredCount(summary.total.functions),
-      })
-    ),
+    uncovered: O.some(toCoverageUncoveredCounts(summary.total)),
+    files: O.some(toCoverageFileUncoveredCounts(packageAbsolutePath, path, summary)),
   });
 
 const packageByNameOrder = Order.mapInput(Order.String, (entry: CoverageSnapshotEntry) => entry.packageName);
@@ -389,7 +452,9 @@ const workspaceCoveragePackages = Effect.fn("CoverageRegression.workspaceCoverag
   );
 
   return pipe(
-    A.fromIterable(MutableHashMap.values(packageMap)),
+    packageMap,
+    MutableHashMap.values,
+    A.fromIterable,
     A.filter(hasCoverageScript),
     A.sort(Order.mapInput(Order.String, (info: WorkspacePackageInfo) => info.name))
   );
@@ -423,7 +488,12 @@ const maybeSnapshotEntry = Effect.fn("CoverageRegression.maybeSnapshotEntry")(fu
   const summary = yield* readCoverageSummary(summaryPath);
   return O.some({
     packageName: info.name,
-    baseline: toCoveragePackageBaseline(repoRelative(info.absolutePath, repoRoot, path), summary),
+    baseline: toCoveragePackageBaseline(
+      repoRelative(info.absolutePath, repoRoot, path),
+      info.absolutePath,
+      path,
+      summary
+    ),
   });
 });
 
@@ -443,7 +513,11 @@ export const cleanCoverageRegressionOutputs = Effect.fn("CoverageRegression.clea
 
   yield* Effect.forEach(
     packages,
-    (info) => fs.remove(path.join(info.absolutePath, "coverage"), { force: true, recursive: true }),
+    (info) =>
+      fs.remove(path.join(info.absolutePath, "coverage"), {
+        force: true,
+        recursive: true,
+      }),
     { concurrency: 8, discard: true }
   ).pipe(QualityTaskConfigurationError.mapError("Failed to clean stale coverage outputs."));
 });
@@ -730,7 +804,13 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
         Effect.map(A.map((info) => info.name))
       );
       const lost = baselineEntriesLostByReplacement(
-        pipe(previous, O.match({ onNone: A.empty<string>, onSome: (document) => R.keys(document.packages) })),
+        pipe(
+          previous,
+          O.match({
+            onNone: A.empty<string>,
+            onSome: (document) => R.keys(document.packages),
+          })
+        ),
         A.map(entries, (entry) => entry.packageName),
         workspaceNames
       );
@@ -764,25 +844,16 @@ const actualByPackageName = (actuals: ReadonlyArray<CoverageSnapshotEntry>) =>
   R.fromEntries(A.map(actuals, (entry) => [entry.packageName, entry] as const));
 
 /**
- * Whether a metric's percentage drop reflects lost coverage rather than deleted
- * covered code.
+ * Whether a metric's percentage drop reflects lost coverage rather than
+ * deleted covered code.
  *
  * A percentage falls both when untested code is added and when tested code is
- * removed, and only the first is a regression. The uncovered count tells them
- * apart: deleting covered code leaves it flat, losing coverage raises it. When
- * either side predates the count the percentage rule stands alone, which keeps
- * the stricter behaviour for baselines that have not been rewritten yet.
- *
- * Known blind spot. When the total does not shrink this is exact — coverage can
- * only be lost by raising the uncovered count. When the total does shrink, a
- * real regression can hide behind an exactly offsetting deletion: losing tests
- * on five covered units while five unrelated uncovered units are deleted moves
- * 60/100 to 55/95, which is byte-identical to simply deleting five covered
- * units. Package-level totals cannot separate those two histories at all, so
- * catching it would need per-file counts, which would grow the committed
- * baseline by roughly the size of the repo. The trade is deliberate: a rare miss
- * that needs a coincidental offset, in exchange for not failing every change
- * that deletes tested code.
+ * removed, and only the first is a regression. Comparing uncovered counts per
+ * file prevents a loss in one file from being cancelled by deletion of an
+ * unrelated uncovered file. Files deleted from the package are ignored, so
+ * deleting covered code still does not fail the ratchet. When either side
+ * predates file-level counts, the percentage rule stands alone, preserving the
+ * stricter migration behaviour.
  *
  * @param metric - Metric being compared.
  * @param baseline - Committed entry for the package.
@@ -798,7 +869,18 @@ const metricRegressed = (
 ): boolean =>
   actual[metric] + epsilon < baseline[metric] &&
   pipe(
-    O.zipWith(baseline.uncovered, actual.uncovered, (before, after) => after[metric] > before[metric]),
+    O.zipWith(baseline.files, actual.files, (beforeFiles, afterFiles) =>
+      pipe(
+        R.toEntries(afterFiles),
+        A.some(([filePath, after]) =>
+          pipe(
+            R.get(beforeFiles, filePath),
+            O.map((before) => after[metric] > before[metric]),
+            O.getOrElse(() => after[metric] > 0)
+          )
+        )
+      )
+    ),
     O.getOrElse(thunkTrue)
   );
 

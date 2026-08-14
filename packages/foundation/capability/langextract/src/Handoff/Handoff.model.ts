@@ -11,6 +11,11 @@ import * as S from "effect/Schema";
 
 const $I = $LangExtractId.create("Handoff");
 
+const GroundedExtractions: S.Codec<
+  ReadonlyArray<GroundedExtraction>,
+  ReadonlyArray<GroundedExtraction.Encoded>
+> = S.Array(GroundedExtraction);
+
 /**
  * Input required to build an NLP handoff document.
  *
@@ -36,7 +41,7 @@ const $I = $LangExtractId.create("Handoff");
 export class AnnotatedDocumentInput extends S.Class<AnnotatedDocumentInput>($I`AnnotatedDocumentInput`)(
   {
     documentId: DocumentId,
-    extractions: S.Array(GroundedExtraction),
+    extractions: GroundedExtractions,
     generatedBy: S.String,
     text: S.String,
     timestamp: S.Finite,

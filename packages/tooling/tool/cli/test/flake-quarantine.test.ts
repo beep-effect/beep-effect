@@ -145,6 +145,21 @@ describe("quarantine rerun steps", () => {
     expect(rerun.flakeQuarantine).toBeUndefined();
   });
 
+  it("appends the package filter as a Turbo option for direct Turbo lanes", () => {
+    const directTurboLane = QualityTaskStep.make({
+      label: "build",
+      command: "bunx",
+      args: ["turbo", "run", "build", "--concurrency=3"],
+      cwd: "/repo",
+      flakeQuarantine: "ts2589-no-location",
+      useLocalEnv: true,
+    });
+    const rerun = standaloneQuarantineRerunStep(directTurboLane, task);
+
+    expect(rerun.args).toEqual(["turbo", "run", "build", "--concurrency=3", "--filter=@beep/box"]);
+    expect(rerun.useLocalEnv).toBe(true);
+  });
+
   it("keeps an inherited TURBO_FORCE on the standalone rerun so cache replay cannot green it", () => {
     const forcedLane = QualityTaskStep.make({ ...laneStep, env: { TURBO_FORCE: "true" } });
     const rerun = standaloneQuarantineRerunStep(forcedLane, task);
@@ -157,6 +172,12 @@ describe("quarantine rerun steps", () => {
     expect(rerun.args).toEqual(["run", "build"]);
     expect(rerun.env).toEqual({ TURBO_FORCE: undefined });
     expect(rerun.flakeQuarantine).toBeUndefined();
+  });
+
+  it("preserves local environment loading on the full lane rerun", () => {
+    const rerun = laneQuarantineRerunStep(QualityTaskStep.make({ ...laneStep, useLocalEnv: true }));
+
+    expect(rerun.useLocalEnv).toBe(true);
   });
 });
 
