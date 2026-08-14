@@ -19,6 +19,7 @@ import {
   CandorPolicyLive,
   CandorRecordReader,
   CandorRecordReaderShape,
+  CandorRecordSnapshot,
 } from "@beep/law-practice-use-cases/CandorPolicy";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -181,8 +182,8 @@ const readerLayer = (build: Effect.Effect<Fixture, S.SchemaError, Crypto.Crypto>
     CandorRecordReader,
     Effect.map(build, (fixture) =>
       CandorRecordReaderShape.make({
-        dispositionsForFiling: () => Effect.succeed(fixture.dispositions),
-        eventsForFiling: () => Effect.succeed(fixture.events),
+        snapshotForFiling: () =>
+          Effect.succeed(CandorRecordSnapshot.make({ dispositions: fixture.dispositions, events: fixture.events })),
       })
     )
   );
@@ -317,6 +318,17 @@ const foreignReferenceSupersession = Effect.fnUntraced(function* () {
   } satisfies Fixture;
 });
 
+/** Two separately identified citations happen to share one prosecution source. */
+const independentReferencesSameSource = Effect.fnUntraced(function* () {
+  const first = yield* observation("a", TEXT_A);
+  const second = yield* observation("a", TEXT_A2);
+  return {
+    dispositions: [yield* dispositionFixture(10, targets(1, first)), yield* dispositionFixture(11, targets(2, second))],
+    events: [yield* eventFixture(1, first), yield* eventFixture(2, second, { reference: "9999999" })],
+    sources: [sourceEntry(first), sourceEntry(second)],
+  } satisfies Fixture;
+});
+
 /** A crafted head tries to supersede through two equally empty references. */
 const emptyReferenceSupersession = Effect.fnUntraced(function* () {
   const older = yield* observation("a", TEXT_A);
@@ -420,14 +432,15 @@ const driftedSource = Effect.fnUntraced(function* () {
   } satisfies Fixture;
 });
 
-const examinerOnly = Effect.fnUntraced(function* () {
-  const a = yield* observation("a", TEXT_A);
-  return {
-    dispositions: [],
-    events: [yield* eventFixture(1, a, { discovery: "ExaminerObserved" })],
-    sources: [sourceEntry(a)],
-  } satisfies Fixture;
-});
+const examinerOnly = (disposed: boolean) =>
+  Effect.fnUntraced(function* () {
+    const a = yield* observation("a", TEXT_A);
+    return {
+      dispositions: disposed ? [yield* dispositionFixture(10, targets(1, a))] : [],
+      events: [yield* eventFixture(1, a, { discovery: "ExaminerObserved" })],
+      sources: [sourceEntry(a)],
+    } satisfies Fixture;
+  });
 
 // ---------------------------------------------------------------------------
 // Proof
@@ -546,8 +559,16 @@ describe("CandorPolicy — supersession stays within one patent reference", () =
     it.effect("does not release an AI citation through a foreign reference's disposition", () =>
       Effect.gen(function* () {
         const verdict = yield* evaluateFiling();
-        expectBlocked(verdict, ["ambiguous-lineage", "ambiguous-lineage"]);
-        expect(blockedEventIds(verdict)).toEqual([1, 2]);
+        expectBlocked(verdict, ["no-disposition"]);
+        expect(blockedEventIds(verdict)).toEqual([1]);
+      })
+    );
+  });
+
+  layer(scenario(independentReferencesSameSource()))((it) => {
+    it.effect("releases two independently disposed citations recorded in one prosecution source", () =>
+      Effect.gen(function* () {
+        expectReleased(yield* evaluateFiling());
       })
     );
   });
@@ -649,8 +670,8 @@ describe("CandorPolicy — an examiner-observed head is dispositionable", () => 
         // The AI event is superseded, but its history is not discharged by the
         // arrival of an examiner record — only a human can decide that.
         const verdict = yield* evaluateFiling();
-        expectBlocked(verdict, ["no-disposition"]);
-        expect(blockedEventIds(verdict)).toEqual([1]);
+        expectBlocked(verdict, ["no-disposition", "no-disposition"]);
+        expect(blockedEventIds(verdict)).toEqual([1, 2]);
       })
     );
   });
@@ -658,17 +679,27 @@ describe("CandorPolicy — an examiner-observed head is dispositionable", () => 
   layer(scenario(examinerHeadOverAiEvent(true)()))((it) => {
     it.effect("releases once a disposition binds to that examiner-observed head", () =>
       Effect.gen(function* () {
-        // Pins the clearability half: "examiner events record without gating"
-        // constrains what INITIATES gating, not what can be dispositioned.
+        // The examiner head is the current observation; one human disposition
+        // clears the whole declared lineage.
         expectReleased(yield* evaluateFiling());
       })
     );
   });
 });
 
-describe("CandorPolicy — examiner occurrences record without gating", () => {
-  layer(scenario(examinerOnly()))((it) => {
-    it.effect("does not gate on an examiner-observed event that carries no disposition", () =>
+describe("CandorPolicy — examiner occurrences gate in their own right", () => {
+  layer(scenario(examinerOnly(false)()))((it) => {
+    it.effect("blocks on an examiner-observed event that carries no disposition", () =>
+      Effect.gen(function* () {
+        const verdict = yield* evaluateFiling();
+        expectBlocked(verdict, ["no-disposition"]);
+        expect(blockedEventIds(verdict)).toEqual([1]);
+      })
+    );
+  });
+
+  layer(scenario(examinerOnly(true)()))((it) => {
+    it.effect("releases an examiner-only source after a human disposition", () =>
       Effect.gen(function* () {
         expectReleased(yield* evaluateFiling());
       })

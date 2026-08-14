@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,18 +31,28 @@ after the relator wedge graduated).
 
 ## Next Open Question
 
-Draft and review `BRIEF.md` against the six-question contract ratified
-2026-08-13. All manifest questions are resolved; the packet is at `shape`.
+No blocking question. Reopen at `decompose` only when the public-USPTO
+benchmark gate in [`MAP.md`](./MAP.md) fires.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0): the merged cluster row (primary + absorbed first rung), eleven nuggets, grounding, resolved grill boundaries, cautions.
 3. [`DECISIONS.md`](./DECISIONS.md) - pre-seeded wedge decisions: research lanes, dependency posture, orchestration, PR staging.
-4. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger (stub until research).
+4. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
 5. Parent packet: [`../legal-patent-kg-deepening/ROUTING-SEED.md`](../legal-patent-kg-deepening/ROUTING-SEED.md) / [`DECISIONS.md`](../legal-patent-kg-deepening/DECISIONS.md) - the routing matrix and campaign grill log.
+6. [`BRIEF.md`](./BRIEF.md) - operator-ratified shaped contract.
+7. [`MAP.md`](./MAP.md) - ratified rung 1 and deferred benchmark sequencing.
 
 ## Trail
+
+- 2026-08-13 (final ceremony): operator signed off `BRIEF.md` and `MAP.md`;
+  graduated [`patent-drafting-episode-ledger`](../../goals/patent-drafting-episode-ledger/README.md).
+  The public-USPTO benchmark remains a MAP re-entry point.
+
+- 2026-08-13 (ceremony): drafted `BRIEF.md` and `MAP.md` from the ratified
+  six-question contract. Stage remains `shape`; operator BRIEF review is the
+  gate before decomposition or goal scaffolding.
 
 - 2026-08-13: align closed; all six questions resolved in `DECISIONS.md`.
   Stage advanced to `shape`; BRIEF drafting/review is next.

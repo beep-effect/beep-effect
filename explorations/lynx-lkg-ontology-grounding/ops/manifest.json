@@ -3,8 +3,8 @@
   "exploration": {
     "slug": "lynx-lkg-ontology-grounding",
     "title": "Lynx LKG Ontology Grounding",
-    "status": "active",
-    "stage": "shape",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [],
     "sources": [
       "research/SOURCES.md",
@@ -15,7 +15,7 @@
       "research/05-value-assessment.md"
     ],
     "links": {
-      "goals": [],
+      "goals": ["goals/attributed-multi-claim-span"],
       "docs": [],
       "supersededBy": null
     },

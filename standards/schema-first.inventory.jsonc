@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-11",
+  "generatedOn": "2026-08-13",
   // infra scope covers the Effect workspace surfaces only: infra/lambda/** is a
   // self-contained esbuild-bundled Lambda package (own package.json, no @beep/schema
   // dependency), outside the schema-first law's reach by construction.
@@ -10,6 +10,16 @@
     "infra/{src,test}/**/*.ts"
   ],
   "entries": [
+    {
+      "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 14,
+      "owner": "@beep/epistemic-server",
+      "reason": "Fixture-driven integration coverage of the bounded SHACL validator behind the claim gate; schema-derived property coverage for these request/dataset schemas already lives in packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts."
+    },
     {
       "file": "apps/oip-web/src/content/OipSeo.ts",
       "symbol": "oipTwitterHandle",
@@ -94,9 +104,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 180,
+      "line": 191,
       "owner": "@beep/db-admin",
-      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Migration regression decodes fixed candor event, disposition, submission, and identity fixtures to prove the actual pre-upgrade refusal and post-upgrade constraints; schema-derived round-trip coverage for the law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
     {
       "file": "packages/_internal/db-admin/test/integration/LawPracticeLegalPositionMigration.pglite.test.ts",
@@ -522,9 +532,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 79,
+      "line": 75,
       "owner": "@beep/law-practice-server",
-      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Schema-heavy test file has 5 Schema codec assertions but no schema-derived property coverage."
     },
     {
       "file": "packages/law-practice/server/test/CandorRecord.test.ts",
@@ -532,7 +542,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 65,
+      "line": 69,
       "owner": "@beep/law-practice-server",
       "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
     },
@@ -572,9 +582,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 92,
+      "line": 93,
       "owner": "@beep/law-practice-use-cases",
-      "reason": "Schema-heavy test file has 5 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Deterministic policy fixtures decode exact anchored event and disposition wires so lineage, source-resolution, supersession, and fail-closed semantics remain observable; schema-derived round-trip coverage for these law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
     },
     {
       "file": "packages/ontology/server/test/OntologyTools.test.ts",

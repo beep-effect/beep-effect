@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -17,10 +17,9 @@ is valuable for beep-effect's semantic/KG work.
 
 ## Next Open Question
 
-Draft/review the shaped pitch for the ratified shortlist: span annotation
-first; SHACL generation behind M4; `lkg.ttl` routed through the document-
-structure FOLIO machinery; multilingual discipline deferred; ELI delivered as
-a reference-only research asset; lexicog receives a competency question.
+No blocking question. Reopen at `decompose` when semantic-foundation M4 fires
+the SHACL candidate or a multilingual consumer supplies its competency
+question.
 
 ## Read This First
 
@@ -32,6 +31,15 @@ a reference-only research asset; lexicog receives a competency question.
 6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-08-13 (final ceremony): operator signed off `BRIEF.md` and `MAP.md`;
+  graduated [`attributed-multi-claim-span`](../../goals/attributed-multi-claim-span/README.md)
+  with lexicog CQ authoring included. SHACL and language discipline remain
+  gated MAP re-entry points.
+
+- 2026-08-13 (ceremony): drafted `BRIEF.md` and `MAP.md`; span annotation is
+  the lead, SHACL remains M4-gated, language discipline is a re-entry, and
+  lexicog CQ authoring is included. Stage remains `shape` for operator review.
 
 - 2026-08-13: align closed with all five questions resolved; stage advanced to
   `shape`. Span annotation leads, SHACL waits behind M4, multilingual work is a

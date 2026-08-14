@@ -109,4 +109,44 @@ describe("CI commands", () => {
         })
       )
     ));
+
+  it("renders every Turbo summary when aggregation is requested", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const runDirectory = path.join(process.cwd(), ".turbo", "runs");
+
+          yield* fs.makeDirectory(runDirectory, { recursive: true });
+          yield* Effect.forEach(["build", "coverage"], (task, index) =>
+            fs.writeFileString(
+              path.join(runDirectory, `${task}.json`),
+              encodeJson({
+                execution: {
+                  attempted: 1,
+                  command: `turbo run ${task}`,
+                  endTime: 2_000 + index,
+                  startTime: index,
+                  success: 1,
+                },
+                tasks: [
+                  {
+                    execution: { endTime: 1_500, startTime: 500 },
+                    taskId: `@beep/repo-cli#${task}`,
+                  },
+                ],
+              })
+            )
+          );
+
+          yield* appendTurboSummary(O.none(), true);
+
+          const output = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(output.match(/## Turbo Summary/gu) ?? []).toHaveLength(2);
+          expect(output).toContain("`@beep/repo-cli#build`");
+          expect(output).toContain("`@beep/repo-cli#coverage`");
+        })
+      )
+    ));
 });

@@ -12,8 +12,13 @@
  *
  * ```ts
  * import { makeInMemoryProfessionalRuntimeSdk } from "@beep/agents-use-cases/test"
+ * import { PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate"
+ * import { Effect } from "effect"
  *
- * const sdk = makeInMemoryProfessionalRuntimeSdk([])
+ * const sdk = makeInMemoryProfessionalRuntimeSdk({
+ *   fixtures: [],
+ *   promotionGate: { evaluate: () => Effect.succeed(PromotionGateVerdict.cases.clear.make({})) }
+ * })
  * console.log(sdk)
  * ```
  *

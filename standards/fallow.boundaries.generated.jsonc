@@ -684,6 +684,12 @@
         ]
       },
       {
+        "name": "@beep/shared-use-cases",
+        "patterns": [
+          "packages/shared/use-cases/src/**"
+        ]
+      },
+      {
         "name": "@beep/storybook",
         "patterns": [
           "apps/storybook/src/**"
@@ -901,6 +907,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -913,6 +920,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -1542,6 +1550,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1561,6 +1570,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1910,6 +1920,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -1932,6 +1943,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -3070,6 +3082,21 @@
           "@beep/shared-domain",
           "@beep/shared-tables",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/shared-use-cases",
+        "allow": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-use-cases",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-use-cases",
+          "@beep/test-utils"
         ]
       },
       {

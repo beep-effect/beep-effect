@@ -1,22 +1,22 @@
 /**
- * Local SHACL validation adapter backing.
+ * Bounded SHACL validation layer backing the epistemic claim gate.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { A } from "@beep/utils";
-import { Effect, Layer, pipe } from "effect";
-import * as O from "effect/Option";
-import { serializeTerm } from "../rdf.ts";
+import { serializeTerm } from "@beep/rdf/Rdf";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import {
   ShaclValidationResult,
   ShaclValidationService,
   ShaclValidationViolation,
-} from "../services/shacl-validation.ts";
-import { RDF_TYPE } from "../vocab/rdf.ts";
-import type { Subject, Term } from "../rdf.ts";
-import type { ShaclValidationServiceShape } from "../services/shacl-validation.ts";
+} from "@beep/semantic-web/services/shacl-validation";
+import { A } from "@beep/utils";
+import { Effect, Layer, pipe } from "effect";
+import * as O from "effect/Option";
+import type { Subject, Term } from "@beep/rdf/Rdf";
+import type { ShaclValidationServiceShape } from "@beep/semantic-web/services/shacl-validation";
 
 const emptySubjectKeys: Array<string> = [];
 const emptyViolations: Array<ShaclValidationViolation> = [];
@@ -43,13 +43,20 @@ const focusNodeValue = (subject: Subject): string =>
 /**
  * Bounded SHACL-inspired validation service live layer.
  *
+ * **Details**
+ *
+ * A deliberately minimal validator (target class, `minCount`, `maxCount`,
+ * `datatype`, `hasValue`) that keeps the epistemic claim gate dependency-free.
+ * It is not a full SHACL engine; the general-purpose `shacl-engine`-backed
+ * implementation lives in the `@beep/shacl` driver.
+ *
  * **Example** (Validate empty dataset)
  *
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
- * import { BoundedShaclValidationServiceLive } from "@beep/semantic-web/adapters/shacl-engine"
+ * import { BoundedShaclValidationServiceLive } from "@beep/epistemic-server/ShaclValidation"
  * import {
  *   ShaclValidationRequest,
  *   ShaclValidationService
@@ -206,36 +213,3 @@ export const BoundedShaclValidationServiceLive = Layer.succeed(
     }),
   } satisfies ShaclValidationServiceShape)
 );
-
-/**
- * Backward-compatible alias for the bounded v1 SHACL adapter.
- *
- * **Example** (Validate with alias layer)
- *
- * ```ts
- * import { strictEqual } from "node:assert"
- * import { Effect } from "effect"
- * import * as S from "effect/Schema"
- * import { ShaclValidationServiceLive } from "@beep/semantic-web/adapters/shacl-engine"
- * import {
- *   ShaclValidationRequest,
- *   ShaclValidationService
- * } from "@beep/semantic-web/services/shacl-validation"
- *
- * const request = S.decodeUnknownSync(ShaclValidationRequest)({
- *   dataset: { quads: [] },
- *   shapes: []
- * })
- * const result = Effect.runSync(
- *   Effect.gen(function* () {
- *     const service = yield* ShaclValidationService
- *     return yield* service.validate(request)
- *   }).pipe(Effect.provide(ShaclValidationServiceLive))
- * )
- * strictEqual(result.truncated, false)
- * ```
- *
- * @category layers
- * @since 0.0.0
- */
-export const ShaclValidationServiceLive = BoundedShaclValidationServiceLive;

@@ -8,16 +8,22 @@ import {
   RuntimeScope,
   SdkContextPacket,
 } from "@beep/agents-use-cases/public";
-import { makeInMemoryProfessionalRuntimeSdk, runRuntimeFixture } from "@beep/agents-use-cases/test";
+import {
+  makeInMemoryProfessionalRuntimeSdk,
+  RuntimeFixtureInput,
+  runRuntimeFixture,
+} from "@beep/agents-use-cases/test";
+import { PromotionBlockReason, PromotionGateVerdict, PromotionSubjectRef } from "@beep/shared-use-cases/PromotionGate";
+import { PromotionGate } from "@beep/shared-use-cases/server";
 import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Result } from "effect";
+import { Effect, Ref, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import type { RuntimeFixtureInput } from "@beep/agents-use-cases/test";
+import type { PromotionGateRequest } from "@beep/shared-use-cases/PromotionGate";
 
 const lawFixture: RuntimeFixtureInput = {
   body: A.join(
@@ -36,6 +42,12 @@ const lawFixture: RuntimeFixtureInput = {
     subject: "Provisional patent help",
     threadId: "thread-law-001",
   },
+  promotionSubjects: [
+    PromotionSubjectRef.make({
+      id: "application-16138242",
+      kind: "patent-application",
+    }),
+  ],
   seed: {
     organization: {
       organizationId: "org-law-fixture",
@@ -51,6 +63,15 @@ const lawScope = RuntimeScope.make({
   organizationId: lawFixture.seed.organization.organizationId,
   threadId: lawFixture.email.threadId,
   workspaceId: lawFixture.seed.workspace.workspaceId,
+});
+const clearPromotionGate = PromotionGate.of({
+  evaluate: Effect.fn("PromotionGate.evaluate")((request) =>
+    Effect.sync(() => {
+      expect(request.subject).toStrictEqual(lawFixture.promotionSubjects[0]);
+      expect(request.tenantRef).toBe(lawScope.organizationId);
+      return PromotionGateVerdict.cases.clear.make({});
+    })
+  ),
 });
 const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
   const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
@@ -137,7 +158,7 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
 
   it.effect("serves context packets through the in-memory SDK facade", () =>
     Effect.gen(function* () {
-      const sdk = makeInMemoryProfessionalRuntimeSdk([lawFixture]);
+      const sdk = makeInMemoryProfessionalRuntimeSdk({ fixtures: [lawFixture], promotionGate: clearPromotionGate });
       const packet = yield* sdk.getContextPacket(
         GetContextPacket.make({
           artifactId: lawFixture.email.artifactId,
@@ -153,7 +174,7 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
 
   it.effect("accepts matching candidate output proposals", () =>
     Effect.gen(function* () {
-      const sdk = makeInMemoryProfessionalRuntimeSdk([lawFixture]);
+      const sdk = makeInMemoryProfessionalRuntimeSdk({ fixtures: [lawFixture], promotionGate: clearPromotionGate });
       const outputSet = yield* runRuntimeFixture(lawFixture);
       const accepted = yield* sdk.proposeCandidateOutputSet(
         ProposeCandidateOutputSet.make({
@@ -164,6 +185,143 @@ describe("@beep/agents-use-cases", { concurrent: false }, () => {
       );
 
       expect(accepted).toStrictEqual(outputSet);
+    })
+  );
+
+  it.effect("refuses candidate output when a vertical promotion policy blocks", () =>
+    Effect.gen(function* () {
+      const outputSet = yield* runRuntimeFixture(lawFixture);
+      const blockedGate = PromotionGate.of({
+        evaluate: Effect.fn("PromotionGate.evaluate")(() =>
+          Effect.succeed(
+            PromotionGateVerdict.cases.blocked.make({
+              reason: PromotionBlockReason.make("vertical-policy-blocked"),
+            })
+          )
+        ),
+      });
+      const sdk = makeInMemoryProfessionalRuntimeSdk({ fixtures: [lawFixture], promotionGate: blockedGate });
+
+      const refusal = yield* sdk
+        .proposeCandidateOutputSet(
+          ProposeCandidateOutputSet.make({
+            outputSet,
+            producedByPrincipalId: "principal-agent-runtime-fixture",
+            scope: lawScope,
+          })
+        )
+        .pipe(Effect.flip);
+
+      expect(refusal._tag).toBe("ProfessionalRuntimePromotionBlocked");
+    })
+  );
+
+  it.effect("rechecks a clear promotion decision immediately before acceptance", () =>
+    Effect.gen(function* () {
+      const outputSet = yield* runRuntimeFixture(lawFixture);
+      const evaluations = yield* Ref.make(0);
+      const gate = PromotionGate.of({
+        evaluate: Effect.fn("PromotionGate.evaluate")(() =>
+          Ref.getAndUpdate(evaluations, (count) => count + 1).pipe(
+            Effect.map((count) =>
+              count === 0
+                ? PromotionGateVerdict.cases.clear.make({})
+                : PromotionGateVerdict.cases.blocked.make({
+                    reason: PromotionBlockReason.make("vertical-policy-revision-advanced"),
+                  })
+            )
+          )
+        ),
+      });
+      const sdk = makeInMemoryProfessionalRuntimeSdk({ fixtures: [lawFixture], promotionGate: gate });
+
+      const refusal = yield* sdk
+        .proposeCandidateOutputSet(
+          ProposeCandidateOutputSet.make({
+            outputSet,
+            producedByPrincipalId: "principal-agent-runtime-fixture",
+            scope: lawScope,
+          })
+        )
+        .pipe(Effect.flip);
+
+      expect(refusal).toMatchObject({
+        _tag: "ProfessionalRuntimePromotionBlocked",
+        reason: "vertical-policy-revision-advanced",
+      });
+      expect(yield* Ref.get(evaluations)).toBe(2);
+    })
+  );
+
+  it.effect("derives the tenant-bound subject instead of accepting a caller-selected clear subject", () =>
+    Effect.gen(function* () {
+      const outputSet = yield* runRuntimeFixture(lawFixture);
+      const unrelatedId = "unrelated-clear-application";
+      const gate = PromotionGate.of({
+        evaluate: Effect.fn("PromotionGate.evaluate")((request: PromotionGateRequest) =>
+          Effect.succeed(
+            request.subject.id === unrelatedId
+              ? PromotionGateVerdict.cases.clear.make({})
+              : PromotionGateVerdict.cases.blocked.make({
+                  reason: PromotionBlockReason.make("vertical-policy-blocked"),
+                })
+          )
+        ),
+      });
+      const sdk = makeInMemoryProfessionalRuntimeSdk({ fixtures: [lawFixture], promotionGate: gate });
+
+      const refusal = yield* sdk
+        .proposeCandidateOutputSet(
+          ProposeCandidateOutputSet.make({
+            outputSet,
+            producedByPrincipalId: "principal-agent-runtime-fixture",
+            scope: lawScope,
+          })
+        )
+        .pipe(Effect.flip);
+
+      expect(refusal).toMatchObject({
+        _tag: "ProfessionalRuntimePromotionBlocked",
+        subject: { id: "application-16138242" },
+      });
+    })
+  );
+
+  it.effect("refuses when a later trusted promotion subject blocks", () =>
+    Effect.gen(function* () {
+      const blockingSubject = PromotionSubjectRef.make({ id: "application-blocked", kind: "patent-application" });
+      const fixture = RuntimeFixtureInput.make({
+        ...lawFixture,
+        promotionSubjects: [...lawFixture.promotionSubjects, blockingSubject],
+      });
+      const outputSet = yield* runRuntimeFixture(fixture);
+      const gate = PromotionGate.of({
+        evaluate: Effect.fn("PromotionGate.evaluate")((candidate: PromotionGateRequest) =>
+          Effect.succeed(
+            candidate.subject.id === blockingSubject.id
+              ? PromotionGateVerdict.cases.blocked.make({
+                  reason: PromotionBlockReason.make("vertical-policy-blocked"),
+                })
+              : PromotionGateVerdict.cases.clear.make({})
+          )
+        ),
+      });
+      const sdk = makeInMemoryProfessionalRuntimeSdk({ fixtures: [fixture], promotionGate: gate });
+
+      const refusal = yield* sdk
+        .proposeCandidateOutputSet(
+          ProposeCandidateOutputSet.make({
+            outputSet,
+            producedByPrincipalId: "principal-agent-runtime-fixture",
+            scope: lawScope,
+          })
+        )
+        .pipe(Effect.flip);
+
+      expect(refusal).toMatchObject({
+        _tag: "ProfessionalRuntimePromotionBlocked",
+        subject: { id: blockingSubject.id },
+      });
     })
   );
 

@@ -152,9 +152,14 @@ export * from "./processes/ProfessionalRuntime/ProfessionalRuntime.values.ts";
  *
  * ```ts
  * import { makeInMemoryProfessionalRuntimeSdk } from "@beep/agents-use-cases/proof"
+ * import { PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate"
  * import type { ProfessionalRuntimeSdk } from "@beep/agents-use-cases/public"
+ * import { Effect } from "effect"
  *
- * const sdk: ProfessionalRuntimeSdk = makeInMemoryProfessionalRuntimeSdk([])
+ * const sdk: ProfessionalRuntimeSdk = makeInMemoryProfessionalRuntimeSdk({
+ *   fixtures: [],
+ *   promotionGate: { evaluate: () => Effect.succeed(PromotionGateVerdict.cases.clear.make({})) }
+ * })
  * console.log(typeof sdk.proposeCandidateOutputSet) // "function"
  * ```
  *

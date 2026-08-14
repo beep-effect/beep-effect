@@ -27,7 +27,6 @@ import {
 } from "@beep/epistemic-use-cases/ClaimDisposition";
 import { ClaimGate, makeClaimGate } from "@beep/epistemic-use-cases/ClaimGate";
 import { ClaimTransition, makeClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle";
-import { ShaclValidationServiceLive } from "@beep/semantic-web/adapters/shacl-engine";
 import { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { Effect, Layer } from "effect";
 import { ClaimDispositionRepositoryDrizzle, ClaimDispositionRepositoryInMemory } from "./ClaimDisposition/index.ts";
@@ -39,6 +38,7 @@ import {
 } from "./ContradictionTriage/index.ts";
 import { EdgeAuthorityRepositoryDrizzle } from "./EdgeAuthority/index.ts";
 import { ExecutionLedgerDrizzle } from "./ExecutionLedger/index.ts";
+import { BoundedShaclValidationServiceLive } from "./ShaclValidation/index.ts";
 import type { EdgeAuthorityRepository } from "@beep/epistemic-use-cases/EdgeAuthority";
 import type { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import type {
@@ -90,7 +90,7 @@ export const EpistemicServerLive: Layer.Layer<
   ClaimGateOutcomeResolverLayer.pipe(
     Layer.provide(Layer.merge(ClaimTransitionLayer, ClaimDispositionRepositoryInMemory))
   )
-).pipe(Layer.provide(ShaclValidationServiceLive));
+).pipe(Layer.provide(BoundedShaclValidationServiceLive));
 
 /**
  * Drizzle-backed epistemic server layer: the live surface plus the bitemporal
@@ -119,7 +119,7 @@ export const EpistemicServerDrizzleLive: Layer.Layer<
   never,
   PostgresDrizzle
 > = Layer.mergeAll(
-  ClaimGateLayer.pipe(Layer.provide(ShaclValidationServiceLive)),
+  ClaimGateLayer.pipe(Layer.provide(BoundedShaclValidationServiceLive)),
   ClaimTransitionLayer,
   ClaimDispositionRepositoryDrizzle,
   ContradictionTriageRepositoryDrizzle,
