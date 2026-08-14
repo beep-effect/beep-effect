@@ -57,7 +57,7 @@ boundary.
   directed narrow publication.
 - Final refresh: `origin/main` `642331b86c`, merge HEAD `8337a21710`, and
   completed `bun install`.
-- `bun run beep coverage -- --write-baseline --concurrency=1` exited 0 after
+- `bun run coverage:baseline:write` exited 0 after
   Turbo 230/230 in 22m54.534s and wrote schema v2 with 127 packages.
 - `bun run audit:github quality` exited 0 with all 15 lanes passing: nine
   preflight lanes (`changeset`, `graph`, `tsconfig`, `fallow`, `versions`,
