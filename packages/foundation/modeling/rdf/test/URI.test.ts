@@ -6,7 +6,7 @@ import {
   resolveUriReference,
   URI,
   URIReference,
-} from "@beep/semantic-web/uri";
+} from "@beep/rdf/Uri";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
