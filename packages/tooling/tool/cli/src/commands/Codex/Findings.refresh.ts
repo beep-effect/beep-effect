@@ -1,6 +1,8 @@
 /**
  * Preservation-safe refresh support for Codex findings packets.
  *
+ * **Details**
+ *
  * A refresh is an append-only reconciliation, never a packet regeneration.
  * Existing finding identities, triage judgments, lanes, and authored CSF files
  * are retained while unseen Codex identifiers receive new monotonically
