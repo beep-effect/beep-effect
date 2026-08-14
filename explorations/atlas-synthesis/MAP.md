@@ -92,7 +92,7 @@ parallelizable, reusable half.
    verified `Evidence.model.ts:31-42`); it carries **no character offsets**. v3's
    `domain/src/values/EvidenceSpan.value.ts` (`{text,startChar,endChar,confidence}`,
    confirmed in `43`) is the donor pattern to port. *Challenge resolved:*
-   `@beep/semantic-web/evidence`'s `TextPositionSelector` already models
+   `@beep/rdf/Evidence`'s `TextPositionSelector` already models
    start/end offsets — but it is an RDF-annotation selector in the semantic-web
    capability, **not** the epistemic A-Box `Evidence` field set. The port adds the
    offsets to the epistemic entity (reusing the selector vocabulary as the shape
