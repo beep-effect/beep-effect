@@ -787,6 +787,8 @@ const readCoverageSummary = Effect.fn("CoverageRegression.readCoverageSummary")(
 /**
  * Decode a Vitest coverage summary into the package baseline shape.
  *
+ * **Details**
+ *
  * This test seam exercises the same JSON boundary and repo-relative file-path
  * normalization used by snapshot collection without requiring a workspace
  * discovery fixture.
