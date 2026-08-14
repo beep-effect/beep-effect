@@ -27,3 +27,16 @@ term-level work.
 **Rationale:** The ordering advances consumer-backed semantic work, reuses the
 existing vetted-seed machinery, and avoids speculative multilingual or
 unlicensed file adoption.
+
+## 2026-08-13 — Operator shape and MAP sign-off
+
+**Question:** Operator shape gate: does BRIEF.md match the operator's picture?
+(sign-off required before decompose)
+
+**Answer:** Signed off as drafted. The sign-off also covers `MAP.md`, so the
+lead `attributed-multi-claim-span` goal may be scaffolded immediately, with
+lexicog competency-question authoring included.
+
+**Rationale:** SHACL generation remains behind its M4 gate and language
+discipline remains a MAP re-entry note; neither becomes a goal in this
+ceremony.

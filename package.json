@@ -332,6 +332,7 @@
     "hono": "^4.13.0",
     "js-yaml": "5.2.2",
     "minimatch": "10.2.5",
+    "nanoid": "^3.3.18",
     "postcss": "^8.5.23",
     "sharp": "catalog:",
     "tar": "catalog:"
@@ -537,6 +538,7 @@
     "brace-expansion": "^5.0.9",
     "fast-uri": "^3.1.5",
     "hono": "^4.13.0",
+    "nanoid": "^3.3.18",
     "postcss": "^8.5.23"
   }
 }

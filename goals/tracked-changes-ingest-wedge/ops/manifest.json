@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "tracked-changes-ingest-wedge",
+    "title": "Tracked-Changes Ingest Wedge",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/tracked-changes-ingest-wedge",
+  "lifecycle": "active",
+  "mission": "Prove and ship tracked-changes-aware OOXML-to-canonical ingest with U4 as a P0 kill-gate and structural fallback.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/harvey-lab-firm-knowledge",
+    "graduated": "2026-08-13"
+  },
+  "dependencies": ["goals/effect-native-legal-eval"],
+  "blockedBy": ["goals/effect-native-legal-eval"],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/tracked-changes-ingest-wedge/README.md",
+    "goals/tracked-changes-ingest-wedge/SPEC.md",
+    "goals/tracked-changes-ingest-wedge/PLAN.md",
+    "goals/tracked-changes-ingest-wedge/GOAL.md",
+    "goals/tracked-changes-ingest-wedge/research/SOURCES.md",
+    "explorations/harvey-lab-firm-knowledge/BRIEF.md",
+    "explorations/harvey-lab-firm-knowledge/MAP.md",
+    "explorations/harvey-lab-firm-knowledge/DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/SOURCES.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/mine-synthetic-corpus.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/verify-completeness.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/tracked-changes-ingest-wedge/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "U4 fixture kill-gate", "status": "pending" },
+    { "id": "P1", "name": "Minimal ingest rung", "status": "pending" },
+    { "id": "P2", "name": "Verify with synthetic C&H", "status": "pending" },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/tracked-changes-ingest-wedge/GOAL.md)\" -le 4000",
+    "jq . goals/tracked-changes-ingest-wedge/ops/manifest.json",
+    "rg -n \"tracked-changes-ingest-wedge|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/tracked-changes-ingest-wedge",
+    "git diff --check -- goals/tracked-changes-ingest-wedge",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "U4 hard-fails semantic preservation and no explicit structural fallback is viable.",
+    "Semantic implementation would proceed after a hard failure without operator re-approval.",
+    "The sibling eval framework is unavailable and would need duplication.",
+    "Any real OIP/client material would leave the device."
+  ]
+}

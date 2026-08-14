@@ -216,3 +216,15 @@ the runtime vocabulary.
 
 **Decision:** Align is closed; all six manifest questions are resolved and the
 packet advances to shape.
+
+## 2026-08-13 — Operator shape and MAP sign-off
+
+**Question:** Operator shape gate: does BRIEF.md match the operator's picture?
+(sign-off required before decompose)
+
+**Answer:** Signed off as drafted. The sign-off also covers `MAP.md`, so the
+rung-1 `patent-drafting-episode-ledger` goal may be scaffolded immediately.
+
+**Rationale:** The operator ratified the shaped contract and its decomposition.
+The public-USPTO benchmark remains a MAP re-entry point and is not graduated as
+a goal in this ceremony.

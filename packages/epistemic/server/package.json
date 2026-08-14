@@ -40,6 +40,7 @@
     "./ExecutionLedger": "./src/ExecutionLedger/index.ts",
     "./GovernedEgress": "./src/GovernedEgress/index.ts",
     "./GovernedTierGate": "./src/GovernedTierGate/index.ts",
+    "./ShaclValidation": "./src/ShaclValidation/index.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
   },
@@ -62,6 +63,7 @@
     "@beep/observability": "workspace:^",
     "@beep/postgres": "workspace:^",
     "@beep/provenance": "workspace:^",
+    "@beep/rdf": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/semantic-web": "workspace:^",
     "@beep/shared-domain": "workspace:^",

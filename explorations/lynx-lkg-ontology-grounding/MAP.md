@@ -1,12 +1,12 @@
 # Map — Lynx LKG Ontology Grounding
 
-Status: DRAFT FOR OPERATOR BRIEF REVIEW 2026-08-13.
+Status: OPERATOR-RATIFIED 2026-08-13; lead goal graduated.
 
 ## Candidate Goal
 
 | Order | Slug | Mission | Depends on | Capability boundary |
 | --- | --- | --- | --- | --- |
-| 1 | `attributed-multi-claim-span` (not yet created) | Ship attributed, supersedable multi-claim annotations over the TextAnchor/EvidenceSpan seam and prove the LangExtract-to-ClaimGate loop. | Existing verified-anchor, EvidenceSpan, LangExtract, and ClaimGate contracts. | Reuse `packages/foundation/modeling/provenance/src/TextAnchor.ts`, `packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts`, and the current ClaimGate service. NET-NEW: per-claim attribution/supersession annotation shape. |
+| 1 | [`attributed-multi-claim-span`](../../goals/attributed-multi-claim-span/README.md) | Ship attributed, supersedable multi-claim annotations over the TextAnchor/EvidenceSpan seam and prove the LangExtract-to-ClaimGate loop. | Existing verified-anchor, EvidenceSpan, LangExtract, and ClaimGate contracts. | Reuse `packages/foundation/modeling/provenance/src/TextAnchor.ts`, `packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts`, and the current ClaimGate service. NET-NEW: per-claim attribution/supersession annotation shape. |
 
 ## Gated Re-entry
 
@@ -22,8 +22,8 @@ license and vetting record. The ELI donor profile remains a research asset for
 
 ## Sequencing
 
-Operator BRIEF review comes first. After sign-off, the attributed-span goal is
-decomposed and may graduate. SHACL and language candidates remain dormant until
+Operator sign-off covered the BRIEF and MAP, and the attributed-span goal
+graduated on 2026-08-13. SHACL and language candidates remain dormant until
 their named gates fire, at which point this packet reopens at `decompose`.
 
 ## First Vertical Slice

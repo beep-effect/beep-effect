@@ -183,3 +183,20 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** treat subprocess worker pools as part of the
   lane's aggregate concurrency budget and pass an explicit per-shard Vitest
   worker cap derived from host vCPUs divided by shard count.
+
+## 2026-08-14 — wall-clock perf assertion still flakes under capped coverage shards
+
+- **Doing:** babysitting PR #695 (unrelated refactor) through the post-#698
+  sharded Coverage Regression lane.
+- **Evidence:** run `31757037521` job `94634965992`: `coverage:shard-1`
+  (`--maxWorkers=2`) failed only
+  `test/qa-command.test.ts > JudgeCheck JSON extraction > stays bounded on
+  pathological balanced-object output` — `expected 1050.17 to be less than
+  1000`; 1513 of 1519 passed. The worker cap fixed the 5-second timeout class
+  but a 1000ms wall-clock bound still sits within instrumentation jitter, so
+  any root-file-touching PR can draw this flake. Rerun attributed as
+  environment-only, not content.
+- **Would have prevented it:** exempt wall-clock performance assertions from
+  the coverage runtime (env-guard them off when coverage instrumentation is
+  active) or express the bound relative to an in-run calibration constant
+  instead of absolute milliseconds.

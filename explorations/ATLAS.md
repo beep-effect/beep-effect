@@ -40,23 +40,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ### Active
 
 - [`packet-system-redesign`](./packet-system-redesign/README.md) —
-  shape-stage with [`BRIEF.md`](./packet-system-redesign/BRIEF.md) drafted
-  for operator review: redesign of the explorations/goals packet
-  machinery itself — strict pre-code design gates, derived readiness,
-  control-plane event chains, evidence receipts, verifiable approvals,
-  tier-routed ceremony. Capture seeded 2026-08-10 from the Notion three-pass
-  proposal + Codex deep-research revision; six Grok research lanes
-  (web + GitHub + x.com) synthesized in the packet `RESEARCH.md`; the full
-  11-question align agenda resolved the same day as D1–D11 in
-  `DECISIONS.md` (per-event CAS event store, docs-PR digest approvals,
-  derived stage pair, computed tier floor, design gate at graduation,
-  generated ATLAS/README status, OPPORTUNITIES promotion, single
-  packet-core, self-hosting pilot, two-phase done, four flow metrics).
-  Same-day expansions: Pocock-skills comparison (frontier-rounds `/grilling`
-  ported); packets-app lane 7 researched and decided D12–D16 (KSA-D
-  respected — static pulse-first HTML v1 then read-only React v2 as a MAP
-  candidate; push+poll realtime; git-markdown packets stay the sole system
-  of record, hosted trackers ruled out). Next: operator review of the BRIEF.
+  decompose-stage: operator signed off [`BRIEF.md`](./packet-system-redesign/BRIEF.md)
+  on 2026-08-13; [`MAP.md`](./packet-system-redesign/MAP.md) now proposes the
+  single colocated packet-core, design/approval gate, projection migration,
+  evidence closure, and gated React v2 packets app. D8 keeps one core behind
+  existing CLI groups; D9 self-hosts the first advisory slice; D12 leaves KSA
+  owning static HTML v1. Next: operator MAP review; no goals exist yet.
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
   graduate-stage, still active: spine graduated 2026-08-13 to
   [`goals/skill-contract-kernel/`](../goals/skill-contract-kernel/README.md)
@@ -65,41 +54,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   browser leases, memory routing, fleet protocols) remain candidates in
   [`MAP.md`](./typed-agent-skill-contracts/MAP.md); decision log in
   [`DECISIONS.md`](./typed-agent-skill-contracts/DECISIONS.md).
-- [`harvey-lab-firm-knowledge`](./harvey-lab-firm-knowledge/README.md) —
-  shape-stage with [`BRIEF.md`](./harvey-lab-firm-knowledge/BRIEF.md) and
-  [`MAP.md`](./harvey-lab-firm-knowledge/MAP.md) drafted for operator review:
-  tracked-changes-aware ingest is
-  the wedge, with the U4 fixture spike as P0 kill-gate and structural
-  representation as fallback. Synthetic C&H is first; run the upstream
-  podman+metered-keys harness once, then keep an Effect-native eval as the
-  durable surface. Two goals advance (eval + tracked changes); generator/DMS
-  remain MAP re-entry points. Research mined Harvey + Engram's synthetic firm
-  (Calderwood & Harkness — 266 matters, ~9.3k Office files, ~100M tokens, 250
-  graded firm-knowledge tasks in MIT-licensed harvey-labs) for leverage: a
-  graded testbed for the knowledge-engine bet, spec→feature→render synthetic
-  corpus generation for confidentiality-safe OIP evals, all-pass/rubric eval
-  methodology ports to beep qa, and a legal-DMS task taxonomy. Research landed
-  2026-08-08: 12-agent opus-5 run produced 12 verified reports under
-  `research/` (286 fact-checks; 20 opportunities → 6 KEEP / 2 KEEP-cond /
-  10 WEAKEN / 2 KILL; new find: LAB's pipeline is redline-blind while 371
-  tasks grade redlines — an unclaimed, OIP-load-bearing wedge). Two decisions
-  pre-seeded: C&H is a standing test asset; their eval code is reference for a
-  roll-our-own Effect-native eval.
-- [`lynx-lkg-ontology-grounding`](./lynx-lkg-ontology-grounding/README.md) —
-  shape-stage with [`BRIEF.md`](./lynx-lkg-ontology-grounding/BRIEF.md) and
-  [`MAP.md`](./lynx-lkg-ontology-grounding/MAP.md) drafted for operator
-  review: span annotation leads; SHACL
-  generation waits behind M4; multilingual discipline is a re-entry;
-  `lkg.ttl` rides document-structure-ontologies' FOLIO machinery; ELI is a
-  reference-only research asset for future `legal-rule-time-identity`; and
-  lexicog receives a competency question. Deep-dive of the Lynx LKG ontology
-  (https://lynx-project.eu/doc/lkg/) and its 15 reference ontologies, grounded
-  against beep-effect's semantic/KG capability (successor strand to graduated
-  `legal-ontology-landscape`, which cited Lynx in one line only). Research
-  landed 2026-08-06: Lynx is a pattern donor, not a vocabulary donor — five
-  ranked opportunities in `research/05-value-assessment.md`; zero
-  patent/IP modelling in the whole corpus, so semantic-foundation M2/M3 gaps
-  stay open.
 - [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
   initiative for a configurable full-document substrate and eventual
   Professional Desktop document Portal. A live Lexical Playground `0.49.0`
@@ -110,30 +64,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   app-owned, and collaboration/redlining/DOCX/PDF/Portal work sequenced after
   single-user parity. First goal graduated:
   [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md).
-- [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md) —
-  shape-stage third wedge of the `legal-patent-kg-deepening` routing matrix;
-  [`BRIEF.md`](./patent-drafting-episode-ledger/BRIEF.md) and
-  [`MAP.md`](./patent-drafting-episode-ledger/MAP.md) are drafted for
-  operator review; no goal scaffolds before sign-off. All six align questions
-  closed 2026-08-13. Full drafting event union ships,
-  watermark lag alone triggers fallback, rebuild proof compares bytes and
-  answers, all seven annex policy fields ship in rung 1, §112(d)-closure
-  support sets carry attorney-only verdicts, routing is fixed with override,
-  the public-USPTO benchmark is deferred, and refusal composes law-side on
-  `CandorGateVerdict.isBlocked`. The packet remains a law-owned, append-only
-  `DraftingEpisode` product
-  record — closed event union + pure replay fold over outline, retrieval,
-  chunk generation, limitation support, deterministic validation, bounded
-  retry, correction delta, and attorney disposition — whose first rung is the
-  `ClaimLimitationSupportSet` promotion gate (a submachine sharing
-  `RuntimeApprovalGate`, merged in by the 2026-08-01 reconciliation grill),
-  with deterministic retrieval disclosed through a machine-readable answer
-  annex and memory engines behind an engine-agnostic `MemoryProjection` port
-  as lossy rebuildable projections with recent-raw fallback — the resolved
-  remo2/remo3 boundaries binding (no persistent graph store; no projection
-  becomes authority; the 2026-08-06 operator dev-memory role change leaves
-  the product/operator boundary untouched). Research highlights: the
-  never-compute boundary proved two-sided from MPEP/statute primary text.
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
   align-stage: ratify identity assurance, requalification policy, and scoped
   human dispositions for exact, digest-bound model arrangements.
@@ -273,6 +203,26 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md)
+  — graduated 2026-08-13 into
+  [`patent-drafting-episode-ledger`](../goals/patent-drafting-episode-ledger/README.md):
+  law-owned append-only DraftingEpisode, statutory-closure support-set gate,
+  seven-field annex, and rebuildable projection/fallback proof. The public-
+  USPTO benchmark remains a reopen-at-`decompose` MAP point.
+- [`lynx-lkg-ontology-grounding`](./lynx-lkg-ontology-grounding/README.md) —
+  graduated 2026-08-13 into
+  [`attributed-multi-claim-span`](../goals/attributed-multi-claim-span/README.md),
+  including lexicog CQ authoring on the TextAnchor/EvidenceSpan and
+  LangExtract-to-ClaimGate seam. SHACL generation remains M4-gated; language
+  discipline remains a consumer/CQ-gated re-entry note.
+- [`harvey-lab-firm-knowledge`](./harvey-lab-firm-knowledge/README.md) —
+  graduated 2026-08-13 into
+  [`effect-native-legal-eval`](../goals/effect-native-legal-eval/README.md) and
+  [`tracked-changes-ingest-wedge`](../goals/tracked-changes-ingest-wedge/README.md).
+  The former owns one external-harness baseline; the latter starts with U4 as
+  a kill-gate and retains the structural fallback. Synthetic C&H is first;
+  later real OIP data is on-device only. Generator/DMS rungs remain MAP
+  re-entry points.
 - [`document-structure-ontologies`](./document-structure-ontologies/README.md)
   — graduated 2026-08-13 after live capability verification and four-goal
   decomposition: [`patent-document-schema`](../goals/patent-document-schema/README.md)

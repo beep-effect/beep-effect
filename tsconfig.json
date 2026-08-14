@@ -1912,6 +1912,9 @@
       "@beep/effect-drizzle/sqlite": [
         "./packages/ecosystem/effect-drizzle/src/sqlite/index.ts"
       ],
+      "@beep/epistemic-server/ShaclValidation": [
+        "./packages/epistemic/server/src/ShaclValidation/index.ts"
+      ],
       "@beep/law-practice-server/CandorPromotionGate": [
         "./packages/law-practice/server/src/CandorPromotionGate/index.ts"
       ],

@@ -3,11 +3,9 @@
   "exploration": {
     "slug": "lynx-lkg-ontology-grounding",
     "title": "Lynx LKG Ontology Grounding",
-    "status": "active",
-    "stage": "shape",
-    "openQuestions": [
-      "Operator shape gate: does BRIEF.md match the operator's picture? (sign-off required before decompose)"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": [
       "research/SOURCES.md",
       "research/01-lynx-project-overview.md",
@@ -17,7 +15,7 @@
       "research/05-value-assessment.md"
     ],
     "links": {
-      "goals": [],
+      "goals": ["goals/attributed-multi-claim-span"],
       "docs": [],
       "supersededBy": null
     },
