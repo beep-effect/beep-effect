@@ -6,7 +6,7 @@
  */
 import { $LangExtractId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
-import * as O from "@beep/utils/Option";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as S from "effect/Schema";
 
 const $I = $LangExtractId.create("VerifiedSpan");
@@ -72,7 +72,7 @@ export type VerifiedSpanErrorReason = typeof VerifiedSpanErrorReason.Type;
 export class VerifiedSpanError extends TaggedErrorClass<VerifiedSpanError>($I`VerifiedSpanError`)(
   "VerifiedSpanError",
   {
-    candidateIndex: S.optionalKey(NonNegativeInt),
+    candidateIndex: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     message: S.String,
     reason: VerifiedSpanErrorReason,
   },
@@ -84,16 +84,12 @@ export class VerifiedSpanError extends TaggedErrorClass<VerifiedSpanError>($I`Ve
    * Construct a failure without retaining raw source or locator text.
    *
    * @param reason - Machine-readable closed-failure reason.
-   * @param candidateIndex - Optional index into a direct `GroundedExtraction[]` input.
    * @returns A sanitized verified-span error.
    * @category constructors
    * @since 0.0.0
    */
-  static readonly fromReason = (reason: VerifiedSpanErrorReason, candidateIndex?: NonNegativeInt): VerifiedSpanError =>
+  static readonly fromReason = (reason: VerifiedSpanErrorReason): VerifiedSpanError =>
     VerifiedSpanError.make({
-      ...O.getSomesStruct({
-        candidateIndex: O.fromUndefinedOr(candidateIndex),
-      }),
       message: `Verified span rejected: ${reason}.`,
       reason,
     });

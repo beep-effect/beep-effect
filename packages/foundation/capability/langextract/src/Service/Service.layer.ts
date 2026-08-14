@@ -6,7 +6,7 @@
  */
 import { AlignmentSource, alignCandidates } from "@beep/langextract/Alignment";
 import {
-  AlignmentStatus,
+  GroundedExtraction,
   LangExtractDiagnostics,
   LangExtractError,
   LangExtractResult,
@@ -15,12 +15,9 @@ import {
 import { toAnnotatedDocument } from "@beep/langextract/Handoff";
 import { NonNegativeInt } from "@beep/schema/Int";
 import * as A from "@beep/utils/Array";
-import * as Clock from "effect/Clock";
-import * as Duration from "effect/Duration";
-import * as Effect from "effect/Effect";
+import { Clock, Duration, Effect, Layer, Number as Num } from "effect";
 import { pipe } from "effect/Function";
-import * as Layer from "effect/Layer";
-import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import { ensureRemoteExtractionAllowed } from "./Service.policy.ts";
 import { buildPrompt } from "./Service.prompt.ts";
@@ -51,8 +48,16 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
   return LangExtractService.of({
     extract: Effect.fn("LangExtractService.extract")(function* (request) {
       yield* ensureRemoteExtractionAllowed(remotePolicy, request);
-      const prompt = buildPrompt(request);
+      const prompt = yield* buildPrompt(request);
       const response = yield* languageModel.generateText({ prompt }).pipe(
+        Effect.tapCause(() =>
+          Effect.logWarning("LangExtract language-model generation failed.").pipe(
+            Effect.annotateLogs({
+              "langextract.document_id": request.documentId,
+              "langextract.operation": "generate_text",
+            })
+          )
+        ),
         Effect.mapError(() =>
           LangExtractError.fromReason("model-generation-failed", {
             details: { cause: "language-model-generate-text-failed" },
@@ -82,17 +87,17 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
       });
       const alignedCount = pipe(
         extractions,
-        A.filter(P.Struct({ alignmentStatus: P.not(AlignmentStatus.is.unaligned) })),
+        A.filter(GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_fuzzy"])),
         A.length
       );
-      const unalignedCount = extractions.length - alignedCount;
+      const unalignedCount = Num.subtract(A.length(extractions), alignedCount);
 
       return LangExtractResult.make({
         annotatedDocument,
         diagnostics: LangExtractDiagnostics.make({
           alignedCount: NonNegativeInt.make(alignedCount),
-          candidateCount: NonNegativeInt.make(candidates.length),
-          promptChars: NonNegativeInt.make(prompt.length),
+          candidateCount: NonNegativeInt.make(A.length(candidates)),
+          promptChars: NonNegativeInt.make(Str.length(prompt)),
           unalignedCount: NonNegativeInt.make(unalignedCount),
         }),
         documentId: request.documentId,
@@ -126,7 +131,7 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
  *     generateText: () =>
  *       Effect.succeed([
  *         Response.makePart("text", {
- *           text: JSON.stringify({ extractions: [{ label: "person", text: "Ada Lovelace" }] })
+ *           text: '{"extractions":[{"label":"person","text":"Ada Lovelace"}]}'
  *         }),
  *         Response.makePart("finish", { reason: "stop", response: undefined, usage })
  *       ]),

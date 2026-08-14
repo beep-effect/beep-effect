@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $LangExtractId } from "@beep/identity";
-import * as Context from "effect/Context";
+import { Context } from "effect";
 import type { LangExtractError, LangExtractRequest, LangExtractResult } from "@beep/langextract/Extraction";
 import type * as Effect from "effect/Effect";
 
@@ -70,6 +70,7 @@ export interface LangExtractRemotePolicyShape {
  * import { Contract } from "@beep/nlp/Handoff"
  * import { NonNegativeInt } from "@beep/schema"
  * import { Effect, Layer } from "effect"
+ * import * as Str from "effect/String"
  *
  * const documentId = DocumentId.make("doc-1")
  * const provenance = Contract.Provenance.make({
@@ -94,7 +95,7 @@ export interface LangExtractRemotePolicyShape {
  *           diagnostics: LangExtractDiagnostics.make({
  *             alignedCount: NonNegativeInt.make(0),
  *             candidateCount: NonNegativeInt.make(0),
- *             promptChars: NonNegativeInt.make(request.text.length),
+ *             promptChars: NonNegativeInt.make(Str.length(request.text)),
  *             unalignedCount: NonNegativeInt.make(0)
  *           }),
  *           documentId: request.documentId,

@@ -63,7 +63,7 @@ class TextOffsetRangeStruct extends S.Class<TextOffsetRangeStruct>($I`TextOffset
   })
 ) {}
 
-const TextOffsetRangeSchema = TextOffsetRangeStruct.mapFields(identity)
+const TextOffsetRangeInvariant = TextOffsetRangeStruct.mapFields(identity)
   .check(
     S.makeFilter(({ end, start }) => start < end, {
       identifier: $I`TextOffsetRangeOrderCheck`,
@@ -113,7 +113,7 @@ const TextOffsetRangeSchema = TextOffsetRangeStruct.mapFields(identity)
  * @since 0.0.0
  */
 export class TextOffsetRange extends S.Class<TextOffsetRange>($I`TextOffsetRange`)(
-  TextOffsetRangeSchema,
+  TextOffsetRangeInvariant,
   $I.annote("TextOffsetRange", {
     description: "A non-empty half-open incoming text range whose offset unit is declared explicitly.",
   })
@@ -133,7 +133,7 @@ class Utf16TextRangeStruct extends S.Class<Utf16TextRangeStruct>($I`Utf16TextRan
   })
 ) {}
 
-const Utf16TextRangeSchema = Utf16TextRangeStruct.mapFields(identity)
+const Utf16TextRangeInvariant = Utf16TextRangeStruct.mapFields(identity)
   .check(
     S.makeFilter(({ endChar, startChar }) => startChar < endChar, {
       identifier: $I`Utf16TextRangeOrderCheck`,
@@ -180,7 +180,7 @@ const Utf16TextRangeSchema = Utf16TextRangeStruct.mapFields(identity)
  * @since 0.0.0
  */
 export class Utf16TextRange extends S.Class<Utf16TextRange>($I`Utf16TextRange`)(
-  Utf16TextRangeSchema,
+  Utf16TextRangeInvariant,
   $I.annote("Utf16TextRange", {
     description: "Canonical non-empty half-open UTF-16 code-unit source-text range.",
   })

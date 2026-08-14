@@ -6,6 +6,7 @@
  */
 import { $LangExtractId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as S from "effect/Schema";
 
 const $I = $LangExtractId.create("Target");
@@ -53,8 +54,8 @@ export type ExtractionTargetKind = typeof ExtractionTargetKind.Type;
  */
 export class ExtractionTarget extends S.Class<ExtractionTarget>($I`ExtractionTarget`)(
   {
-    attributes: S.NonEmptyString.pipe(S.Array, S.optionalKey),
-    description: S.optionalKey(S.String),
+    attributes: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    description: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     kind: ExtractionTargetKind,
     name: S.NonEmptyString,
   },
@@ -79,7 +80,7 @@ export class ExtractionTarget extends S.Class<ExtractionTarget>($I`ExtractionTar
  */
 export class ExtractionExampleItem extends S.Class<ExtractionExampleItem>($I`ExtractionExampleItem`)(
   {
-    attributes: S.optionalKey(S.Record(S.String, S.String)),
+    attributes: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     label: S.NonEmptyString,
     text: S.NonEmptyString,
   },

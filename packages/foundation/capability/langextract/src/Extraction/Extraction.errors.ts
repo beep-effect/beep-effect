@@ -7,6 +7,7 @@
 import { $LangExtractId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -17,12 +18,12 @@ const $I = $LangExtractId.create("Extraction");
 /**
  * Machine-readable LangExtract failure reasons.
  *
- * **Example** (Check alignment-failed reason)
+ * **Example** (Check model-output-parse-failed reason)
  *
  * ```ts
  * import { LangExtractErrorReason } from "@beep/langextract/Extraction"
  *
- * console.log(LangExtractErrorReason.is["alignment-failed"]("alignment-failed"))
+ * console.log(LangExtractErrorReason.is["model-output-parse-failed"]("model-output-parse-failed"))
  * ```
  *
  * @category errors
@@ -32,10 +33,9 @@ export const LangExtractErrorReason = LiteralKit([
   "remote-policy-denied",
   "model-generation-failed",
   "model-generation-timeout",
+  "prompt-encoding-failed",
   "model-output-parse-failed",
   "model-output-schema-invalid",
-  "alignment-failed",
-  "handoff-failed",
 ]).pipe(
   $I.annoteSchema("LangExtractErrorReason", {
     description: "Sanitized failure reasons exposed by the LangExtract capability boundary.",
@@ -67,13 +67,13 @@ type LangExtractErrorFromReason = {
  * ```ts
  * import { LangExtractError } from "@beep/langextract/Extraction"
  *
- * console.log(LangExtractError.fromReason("alignment-failed", { message: "Could not align output." }))
+ * console.log(LangExtractError.fromReason("model-output-parse-failed", { message: "Could not parse output." }))
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export class LangExtractError extends S.TaggedError<LangExtractError>($I`LangExtractError`)(
+export class LangExtractError extends TaggedErrorClass<LangExtractError>($I`LangExtractError`)(
   "LangExtractError",
   {
     details: S.Record(S.String, S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),

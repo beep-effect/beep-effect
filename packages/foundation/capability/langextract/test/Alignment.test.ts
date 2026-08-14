@@ -4,20 +4,24 @@ import {
   alignCandidate,
   alignCandidates,
   CurrentAlignmentSource,
+  DEFAULT_MAX_EXTRACTIONS,
   GroundedExtractionFromCandidate,
   GroundedExtractionsFromCandidates,
   MatchedTextFromScored,
   SpanFromMatch,
   spanFromMatch,
 } from "@beep/langextract/Alignment";
-import { ExtractionCandidate } from "@beep/langextract/Extraction";
+import { ExtractionCandidate, GroundedExtraction, LangExtractOptions } from "@beep/langextract/Extraction";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import * as O from "@beep/utils/Option";
 import { describe, expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Num from "effect/Number";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 
 const ExtractionCandidateArbitrary = S.toArbitrary(ExtractionCandidate)(fc);
@@ -25,15 +29,24 @@ const ExtractionCandidateArbitrary = S.toArbitrary(ExtractionCandidate)(fc);
 const sourceOf = (sourceText: string) => AlignmentSource.make({ sourceText });
 
 describe("alignCandidate", () => {
+  it("constructs alignment sources through the data-last options form", () => {
+    const source = AlignmentSource.fromOptions(
+      LangExtractOptions.make({ maxExtractions: O.some(NonNegativeInt.make(3)) })
+    )("Ada Lovelace");
+
+    expect(source.maxExtractions).toBe(3);
+  });
+
   it("finds exact source matches", () => {
     const extraction = alignCandidate(
       ExtractionCandidate.make({ label: "person", text: "Alice" }),
       sourceOf("Alice founded Acme.")
     );
 
-    expect(extraction.alignmentStatus).toBe("match_exact");
-    expect(extraction.span?.start).toBe(0);
-    expect(extraction.span?.end).toBe(5);
+    expect(extraction).toMatchObject({
+      alignmentStatus: "match_exact",
+      span: { end: 5, start: 0 },
+    });
   });
 
   it("aligns through the data-last pipeable form", () => {
@@ -50,8 +63,7 @@ describe("alignCandidate", () => {
       sourceOf("Alice founded Acme.")
     );
 
-    expect(extraction.alignmentStatus).toBe("match_lesser");
-    expect(extraction.matchedText).toBe("Acme");
+    expect(extraction).toMatchObject({ alignmentStatus: "match_lesser", matchedText: "Acme" });
   });
 
   it("keeps lesser match spans anchored to source offsets after Unicode lowercase expansion", () => {
@@ -60,10 +72,11 @@ describe("alignCandidate", () => {
       sourceOf("Aİ Alice founded Acme.")
     );
 
-    expect(extraction.alignmentStatus).toBe("match_lesser");
-    expect(extraction.matchedText).toBe("Alice");
-    expect(extraction.span?.start).toBe(3);
-    expect(extraction.span?.end).toBe(8);
+    expect(extraction).toMatchObject({
+      alignmentStatus: "match_lesser",
+      matchedText: "Alice",
+      span: { end: 8, start: 3 },
+    });
   });
 
   it("matches decomposed source text when the query lowercases to more code units", () => {
@@ -72,10 +85,11 @@ describe("alignCandidate", () => {
       sourceOf("i̇ founded Acme.")
     );
 
-    expect(extraction.alignmentStatus).toBe("match_lesser");
-    expect(extraction.matchedText).toBe("i̇");
-    expect(extraction.span?.start).toBe(0);
-    expect(extraction.span?.end).toBe(2);
+    expect(extraction).toMatchObject({
+      alignmentStatus: "match_lesser",
+      matchedText: "i̇",
+      span: { end: 2, start: 0 },
+    });
   });
 
   it("uses bounded fuzzy matching", () => {
@@ -84,8 +98,7 @@ describe("alignCandidate", () => {
       AlignmentSource.make({ fuzzyThreshold: UnitInterval.make(0.75), sourceText: "Alice founded Acme." })
     );
 
-    expect(extraction.alignmentStatus).toBe("match_fuzzy");
-    expect(extraction.matchedText).toBe("Acme.");
+    expect(extraction).toMatchObject({ alignmentStatus: "match_fuzzy", matchedText: "Acme." });
   });
 
   it("scores fuzzy matching by Unicode code points", () => {
@@ -104,7 +117,7 @@ describe("alignCandidate", () => {
     );
 
     expect(extraction.alignmentStatus).toBe("unaligned");
-    expect(extraction.span).toBeUndefined();
+    expect(GroundedExtraction.guards.unaligned(extraction)).toBe(true);
   });
 
   it("keeps schema-derived aligned spans inside the source text", () =>
@@ -113,10 +126,10 @@ describe("alignCandidate", () => {
         const sourceText = `${prefix}${candidate.text}${suffix}`;
         const extraction = alignCandidate(candidate, sourceOf(sourceText));
 
-        if (extraction.span !== undefined) {
+        if (GroundedExtraction.isAnyOf(["match_exact", "match_lesser", "match_fuzzy"])(extraction)) {
           expect(extraction.span.start).toBeGreaterThanOrEqual(0);
-          expect(extraction.span.end).toBeLessThanOrEqual(sourceText.length);
-          expect(extraction.matchedText).toBe(sourceText.slice(extraction.span.start, extraction.span.end));
+          expect(extraction.span.end).toBeLessThanOrEqual(Str.length(sourceText));
+          expect(extraction.matchedText).toBe(Str.slice(extraction.span.start, extraction.span.end)(sourceText));
         }
       }),
       fcRuns(50)
@@ -131,27 +144,38 @@ describe("alignCandidate", () => {
           const aligned = alignCandidates(
             candidates,
             AlignmentSource.make({
-              maxExtractions: O.some(NonNegativeInt.make(maxExtractions)),
+              maxExtractions: NonNegativeInt.make(maxExtractions),
               sourceText: "",
             })
           );
 
-          expect(aligned.length).toBeLessThanOrEqual(maxExtractions);
-          expect(aligned.length).toBeLessThanOrEqual(candidates.length);
+          expect(A.length(aligned)).toBeLessThanOrEqual(maxExtractions);
+          expect(A.length(aligned)).toBeLessThanOrEqual(A.length(candidates));
         }
       ),
       fcRuns(50)
     ));
+
+  it("resolves the default extraction cap and supports data-last batch alignment", () => {
+    const candidates = A.makeBy(Num.increment(DEFAULT_MAX_EXTRACTIONS), () =>
+      ExtractionCandidate.make({ label: "place", text: "Paris" })
+    );
+    const aligned = alignCandidates(sourceOf(""))(candidates);
+
+    expect(A.length(aligned)).toBe(DEFAULT_MAX_EXTRACTIONS);
+  });
 });
 
 describe("SpanFromMatch", () => {
-  it("decodes a matched slice into a half-open span", () => {
-    const span = S.decodeSync(SpanFromMatch)([4, "Lovelace"]);
+  it.effect("decodes a matched slice into a half-open span", () =>
+    Effect.gen(function* () {
+      const span = yield* S.decodeEffect(SpanFromMatch)([4, "Lovelace"]);
 
-    expect(span.start).toBe(4);
-    expect(span.end).toBe(12);
-    expect(span).toStrictEqual(spanFromMatch([NonNegativeInt.make(4), "Lovelace"]));
-  });
+      expect(span.start).toBe(4);
+      expect(span.end).toBe(12);
+      expect(span).toStrictEqual(spanFromMatch([NonNegativeInt.make(4), "Lovelace"]));
+    })
+  );
 
   it.effect(
     "encodes a span back to its matched slice through the current alignment source",
@@ -180,9 +204,11 @@ describe("SpanFromMatch", () => {
 });
 
 describe("MatchedTextFromScored", () => {
-  it("drops the similarity score on decode", () => {
-    expect(S.decodeSync(MatchedTextFromScored)([0, "Acme.", 0.8])).toStrictEqual([0, "Acme."]);
-  });
+  it.effect("drops the similarity score on decode", () =>
+    Effect.gen(function* () {
+      expect(yield* S.decodeEffect(MatchedTextFromScored)([0, "Acme.", 0.8])).toStrictEqual([0, "Acme."]);
+    })
+  );
 
   it.effect(
     "forbids encoding because scores are not recoverable",
@@ -196,13 +222,15 @@ describe("MatchedTextFromScored", () => {
 });
 
 describe("AlignedMatchFromMatchedText", () => {
-  it("tags and untags a matched slice", () => {
-    const ExactMatch = AlignedMatchFromMatchedText("match_exact");
-    const aligned = S.decodeSync(ExactMatch)([0, "Ada"]);
+  it.effect("tags and untags a matched slice", () =>
+    Effect.gen(function* () {
+      const ExactMatch = AlignedMatchFromMatchedText("match_exact");
+      const aligned = yield* S.decodeEffect(ExactMatch)([0, "Ada"]);
 
-    expect(aligned).toStrictEqual(["match_exact", 0, "Ada"]);
-    expect(S.encodeSync(ExactMatch)(aligned)).toStrictEqual([0, "Ada"]);
-  });
+      expect(aligned).toStrictEqual(["match_exact", 0, "Ada"]);
+      expect(yield* S.encodeEffect(ExactMatch)(aligned)).toStrictEqual([0, "Ada"]);
+    })
+  );
 });
 
 describe("GroundedExtractionFromCandidate", () => {
@@ -214,10 +242,11 @@ describe("GroundedExtractionFromCandidate", () => {
         text: "Ada Lovelace",
       }).pipe(Effect.provideService(CurrentAlignmentSource, sourceOf("Ada Lovelace wrote notes.")));
 
-      expect(grounded.alignmentStatus).toBe("match_exact");
-      expect(grounded.span?.start).toBe(0);
-      expect(grounded.span?.end).toBe(12);
-      expect(grounded.matchedText).toBe("Ada Lovelace");
+      expect(grounded).toMatchObject({
+        alignmentStatus: "match_exact",
+        matchedText: "Ada Lovelace",
+        span: { end: 12, start: 0 },
+      });
     })
   );
 
@@ -230,7 +259,7 @@ describe("GroundedExtractionFromCandidate", () => {
       }).pipe(Effect.provideService(CurrentAlignmentSource, sourceOf("Ada Lovelace wrote notes.")));
 
       expect(grounded.alignmentStatus).toBe("unaligned");
-      expect(grounded.span).toBeUndefined();
+      expect(GroundedExtraction.guards.unaligned(grounded)).toBe(true);
     })
   );
 
@@ -260,14 +289,14 @@ describe("GroundedExtractionsFromCandidates", () => {
         Effect.provideService(
           CurrentAlignmentSource,
           AlignmentSource.make({
-            maxExtractions: O.some(NonNegativeInt.make(1)),
+            maxExtractions: NonNegativeInt.make(1),
             sourceText: "Ada Lovelace wrote notes.",
           })
         )
       );
 
-      expect(grounded.length).toBe(1);
-      expect(grounded[0]?.alignmentStatus).toBe("match_exact");
+      expect(A.length(grounded)).toBe(1);
+      expect(O.map(A.head(grounded), (extraction) => extraction.alignmentStatus)).toEqual(O.some("match_exact"));
     })
   );
 });

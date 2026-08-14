@@ -5,10 +5,11 @@
  * @since 0.0.0
  */
 import { $LangExtractId } from "@beep/identity";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
+import { Effect, Match } from "effect";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 import { MAX_EXTRACTION_CANDIDATES } from "./Extraction.config.ts";
@@ -17,10 +18,28 @@ import { ExtractionCandidate } from "./Extraction.model.ts";
 
 const $I = $LangExtractId.create("Extraction");
 
-const ModelOutputCandidates = S.Array(ExtractionCandidate).check(
-  S.isMaxLength(MAX_EXTRACTION_CANDIDATES, {
-    message: `Language model output must contain at most ${MAX_EXTRACTION_CANDIDATES} extraction candidates.`,
-  })
+const ModelOutputCandidates = S.Array(ExtractionCandidate)
+  .check(
+    S.isMaxLength(MAX_EXTRACTION_CANDIDATES, {
+      identifier: $I`ModelOutputCandidatesMaxLengthCheck`,
+      title: "Model Output Candidate Limit",
+      description: "Checks that one language-model response stays within the bounded extraction-candidate limit.",
+      message: `Language model output must contain at most ${MAX_EXTRACTION_CANDIDATES} extraction candidates.`,
+    })
+  )
+  .pipe(
+    $I.annoteSchema("ModelOutputCandidates", {
+      description: "Bounded extraction candidates accepted from one language-model response.",
+    })
+  );
+
+const ModelOutputJson = S.fromJsonString(S.Unknown).pipe(
+  $I.annoteSchema("ModelOutputJson", {
+    description: "JSON text emitted by a language model before response-shape validation.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    decodeUnknownEffect: S.decodeUnknownEffect(schema),
+  }))
 );
 
 class ModelOutputObject extends S.Class<ModelOutputObject>($I`ModelOutputObject`)(
@@ -32,24 +51,32 @@ class ModelOutputObject extends S.Class<ModelOutputObject>($I`ModelOutputObject`
   })
 ) {}
 
-const ModelOutput = S.Union([ModelOutputObject, ModelOutputCandidates]);
-const decodeModelOutputJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
-const decodeModelOutputPayload = S.decodeUnknownEffect(ModelOutput);
-type ParsedModelOutput = ReadonlyArray<ExtractionCandidate> | ModelOutputObject;
-const isCandidateArray = (output: ParsedModelOutput): output is ReadonlyArray<ExtractionCandidate> => A.isArray(output);
+const ModelOutput = S.Union([ModelOutputObject, ModelOutputCandidates]).pipe(
+  $I.annoteSchema("ModelOutput", {
+    description: "Accepted array or object-envelope shape for one language-model extraction response.",
+  }),
+  SchemaUtils.withStatics((schema) => {
+    const isCandidateArray = S.is(ModelOutputCandidates);
+
+    return {
+      decodeUnknownEffect: S.decodeUnknownEffect(schema),
+      toCandidates: (output: typeof schema.Type): ReadonlyArray<ExtractionCandidate> =>
+        Match.value(output).pipe(
+          Match.when(isCandidateArray, (candidates) => candidates),
+          Match.orElse((envelope) => envelope.extractions)
+        ),
+    };
+  })
+);
 
 const stripJsonFence = (text: string): string => {
   const trimmed = Str.trim(text);
-  const fenced = /^```(?:json)?\s*([\s\S]*?)\s*```$/iu.exec(trimmed);
-  return O.fromNullOr(fenced).pipe(
+  return Str.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/iu)(trimmed).pipe(
     O.flatMap(A.get(1)),
     O.map(Str.trim),
     O.getOrElse(() => trimmed)
   );
 };
-
-const outputToCandidates = (output: ParsedModelOutput): ReadonlyArray<ExtractionCandidate> =>
-  isCandidateArray(output) ? output : output.extractions;
 
 /**
  * Decode a model text response into extraction candidates.
@@ -71,14 +98,14 @@ const outputToCandidates = (output: ParsedModelOutput): ReadonlyArray<Extraction
 export const parseModelOutput: (text: string) => Effect.Effect<ReadonlyArray<ExtractionCandidate>, LangExtractError> =
   flow(
     stripJsonFence,
-    decodeModelOutputJson,
+    ModelOutputJson.decodeUnknownEffect,
     Effect.mapError(() =>
       LangExtractError.fromReason("model-output-parse-failed", {
         details: { cause: "json-parse-failed" },
         message: "Language model output was not valid JSON.",
       })
     ),
-    Effect.flatMap(decodeModelOutputPayload),
+    Effect.flatMap(ModelOutput.decodeUnknownEffect),
     Effect.catchTag("SchemaError", () =>
       Effect.fail(
         LangExtractError.fromReason("model-output-schema-invalid", {
@@ -87,6 +114,6 @@ export const parseModelOutput: (text: string) => Effect.Effect<ReadonlyArray<Ext
         })
       )
     ),
-    Effect.map(outputToCandidates),
+    Effect.map(ModelOutput.toCandidates),
     Effect.withSpan("LangExtract.parseModelOutput")
   );

@@ -11,15 +11,14 @@ import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
-import * as Context from "effect/Context";
-import * as Effect from "effect/Effect";
+import { Context, Effect, SchemaGetter, SchemaIssue } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as SchemaGetter from "effect/SchemaGetter";
-import * as SchemaIssue from "effect/SchemaIssue";
 import { alignCandidate, alignCandidates, spanFromMatch } from "./Alignment.behavior.ts";
-import { DEFAULT_FUZZY_THRESHOLD } from "./Alignment.config.ts";
+import { DEFAULT_FUZZY_THRESHOLD, DEFAULT_MAX_EXTRACTIONS } from "./Alignment.config.ts";
 import type { LangExtractOptions, LangExtractRequest } from "@beep/langextract/Extraction";
 
 const $I = $LangExtractId.create("Alignment");
@@ -189,7 +188,19 @@ export const AlignedMatch = S.Tuple([
  */
 export type AlignedMatch = typeof AlignedMatch.Type;
 
+/**
+ * Encoded companion type for the {@link AlignedMatch} runtime schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export declare namespace AlignedMatch {
+  /**
+   * Wire representation accepted and emitted by {@link AlignedMatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
   export type Encoded = typeof AlignedMatch.Encoded;
 }
 
@@ -198,9 +209,8 @@ export declare namespace AlignedMatch {
  *
  * **Details**
  *
- * `fuzzyThreshold` resolves at construction time through a schema constructor
- * default, so behavior never juggles an `Option` threshold. `maxExtractions`
- * stays `Option` because its fallback depends on the candidate batch length.
+ * Both options resolve at construction time through schema constructor
+ * defaults, so behavior never juggles an `Option` or recomputes fallbacks.
  *
  * **Example** (Construct an alignment source)
  *
@@ -217,7 +227,7 @@ export declare namespace AlignedMatch {
 export class AlignmentSource extends S.Class<AlignmentSource>($I`AlignmentSource`)(
   {
     fuzzyThreshold: UnitInterval.pipe(SchemaUtils.withConstantDefault<number>(DEFAULT_FUZZY_THRESHOLD)),
-    maxExtractions: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    maxExtractions: NonNegativeInt.pipe(SchemaUtils.withConstantDefault<number>(DEFAULT_MAX_EXTRACTIONS)),
     sourceText: S.String,
   },
   $I.annote("AlignmentSource", {
@@ -225,22 +235,25 @@ export class AlignmentSource extends S.Class<AlignmentSource>($I`AlignmentSource
   })
 ) {
   /**
-   * Resolve an alignment source from source text and optional extraction options.
+   * Resolve an alignment source from source text and decoded extraction options.
    *
    * @category constructors
    * @since 0.0.0
    */
-  static readonly fromOptions = (sourceText: string, options: O.Option<LangExtractOptions>): AlignmentSource =>
-    AlignmentSource.make({
-      sourceText,
-      ...O.getSomesStruct({
-        fuzzyThreshold: O.flatMap(options, (o) => o.fuzzyThreshold),
-        maxExtractions: O.map(
-          O.flatMap(options, (o) => o.maxExtractions),
-          O.some
-        ),
-      }),
-    });
+  static readonly fromOptions: {
+    (options: LangExtractOptions): (sourceText: string) => AlignmentSource;
+    (sourceText: string, options: LangExtractOptions): AlignmentSource;
+  } = dual(
+    2,
+    (sourceText: string, options: LangExtractOptions): AlignmentSource =>
+      AlignmentSource.make({
+        sourceText,
+        ...O.getSomesStruct({
+          fuzzyThreshold: options.fuzzyThreshold,
+          maxExtractions: options.maxExtractions,
+        }),
+      })
+  );
 
   /**
    * Resolve an alignment source from a provider-neutral extraction request.
@@ -287,7 +300,8 @@ export class CurrentAlignmentSource extends Context.Service<CurrentAlignmentSour
  *
  * **Details**
  *
- * Decoding is pure: `[start, text]` becomes `[start, start + text.length)`.
+ * Decoding is pure: `[start, text]` becomes a half-open span covering the
+ * matched text's UTF-16 length.
  * Encoding recovers the matched slice from {@link CurrentAlignmentSource} and
  * fails closed when the span exceeds the current source text.
  *
@@ -295,13 +309,15 @@ export class CurrentAlignmentSource extends Context.Service<CurrentAlignmentSour
  *
  * ```ts
  * import { SpanFromMatch } from "@beep/langextract/Alignment"
+ * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *
- * const span = S.decodeSync(SpanFromMatch)([4, "Lovelace"])
- * console.log(span.end) // 12
+ * Effect.runPromise(S.decodeEffect(SpanFromMatch)([4, "Lovelace"])).then(
+ *   (span) => console.log(span.end) // 12
+ * )
  * ```
  *
- * @category transformations
+ * @category codecs
  * @since 0.0.0
  */
 export const SpanFromMatch = MatchedText.pipe(
@@ -309,7 +325,7 @@ export const SpanFromMatch = MatchedText.pipe(
     decode: SchemaGetter.transform(spanFromMatch),
     encode: SchemaGetter.transformOrFail((span: Contract.Span.Encoded, options) =>
       CurrentAlignmentSource.use((source) => {
-        if (span.end > source.sourceText.length) {
+        if (span.end > Str.length(source.sourceText)) {
           return Effect.fail(
             new SchemaIssue.InvalidValue(
               { message: "Span end exceeds the current alignment source text." },
@@ -325,6 +341,9 @@ export const SpanFromMatch = MatchedText.pipe(
         return Effect.succeed(match);
       })
     ),
+  }),
+  $I.annoteSchema("SpanFromMatch", {
+    description: "Bidirectional codec between matched source slices and half-open UTF-16 spans.",
   })
 );
 
@@ -340,13 +359,15 @@ export const SpanFromMatch = MatchedText.pipe(
  *
  * ```ts
  * import { MatchedTextFromScored } from "@beep/langextract/Alignment"
+ * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *
- * const match = S.decodeSync(MatchedTextFromScored)([0, "Acme.", 0.8])
- * console.log(match[1]) // "Acme."
+ * Effect.runPromise(S.decodeEffect(MatchedTextFromScored)([0, "Acme.", 0.8])).then(
+ *   (match) => console.log(match[1]) // "Acme."
+ * )
  * ```
  *
- * @category transformations
+ * @category codecs
  * @since 0.0.0
  */
 export const MatchedTextFromScored = ScoredMatch.pipe(
@@ -358,6 +379,9 @@ export const MatchedTextFromScored = ScoredMatch.pipe(
     encode: SchemaGetter.forbidden(
       () => "Cannot restore a similarity score from a matched slice; re-run fuzzy alignment."
     ),
+  }),
+  $I.annoteSchema("MatchedTextFromScored", {
+    description: "One-way codec that projects a scored fuzzy window to its source match.",
   })
 );
 
@@ -368,14 +392,16 @@ export const MatchedTextFromScored = ScoredMatch.pipe(
  *
  * ```ts
  * import { AlignedMatchFromMatchedText } from "@beep/langextract/Alignment"
+ * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *
  * const ExactMatch = AlignedMatchFromMatchedText("match_exact")
- * console.log(S.decodeSync(ExactMatch)([0, "Ada"])[0]) // "match_exact"
- * console.log(S.encodeSync(ExactMatch)(S.decodeSync(ExactMatch)([0, "Ada"]))[1]) // "Ada"
+ * Effect.runPromise(S.decodeEffect(ExactMatch)([0, "Ada"])).then(
+ *   (match) => console.log(match[0]) // "match_exact"
+ * )
  * ```
  *
- * @category transformations
+ * @category codecs
  * @since 0.0.0
  */
 export const AlignedMatchFromMatchedText = (status: AlignedStatus) =>
@@ -389,16 +415,19 @@ export const AlignedMatchFromMatchedText = (status: AlignedStatus) =>
         const match: MatchedText = [NonNegativeInt.make(start), text];
         return match;
       }),
+    }),
+    $I.annoteSchema("AlignedMatchFromMatchedText", {
+      description: `Bidirectional codec between matched text and the ${status} alignment tier.`,
     })
   );
 
-const candidateFromGrounded = (grounded: GroundedExtraction.Encoded) =>
-  ExtractionCandidate.decodeUnknownEffect({
-    label: grounded.label,
-    text: grounded.text,
+const candidateFromGrounded = (grounded: GroundedExtraction): ExtractionCandidate =>
+  ExtractionCandidate.make({
     attributes: grounded.attributes,
     confidence: grounded.confidence,
-  }).pipe(Effect.mapError((error) => error.issue));
+    label: grounded.label,
+    text: grounded.text,
+  });
 
 /**
  * Codec from a model-emitted candidate to a source-grounded extraction.
@@ -407,8 +436,8 @@ const candidateFromGrounded = (grounded: GroundedExtraction.Encoded) =>
  *
  * Decoding aligns the candidate against {@link CurrentAlignmentSource} and
  * never fails: candidates with no match ground as `unaligned`. Encoding
- * projects the grounded extraction back to its candidate fields and re-decodes
- * them, so boundary invariants (length caps, attribute caps) stay enforced.
+ * projects the grounded extraction back to the candidate type. Both schemas
+ * share the same field definitions, so boundary invariants stay enforced.
  *
  * **Example** (Ground one candidate through the codec)
  *
@@ -423,15 +452,18 @@ const candidateFromGrounded = (grounded: GroundedExtraction.Encoded) =>
  * Effect.runPromise(program).then((grounded) => console.log(grounded.alignmentStatus)) // "match_exact"
  * ```
  *
- * @category transformations
+ * @category codecs
  * @since 0.0.0
  */
 export const GroundedExtractionFromCandidate = ExtractionCandidate.pipe(
-  S.decodeTo(GroundedExtraction, {
+  S.decodeTo(S.toType(GroundedExtraction), {
     decode: SchemaGetter.transformOrFail((candidate: ExtractionCandidate) =>
       CurrentAlignmentSource.useSync((source) => alignCandidate(candidate, source))
     ),
-    encode: SchemaGetter.transformOrFail(candidateFromGrounded),
+    encode: SchemaGetter.transform(candidateFromGrounded),
+  }),
+  $I.annoteSchema("GroundedExtractionFromCandidate", {
+    description: "Context-aware codec from a model candidate to a source-grounded extraction.",
   })
 );
 
@@ -440,32 +472,35 @@ export const GroundedExtractionFromCandidate = ExtractionCandidate.pipe(
  *
  * **Details**
  *
- * Decoding caps the batch at the resolved `maxExtractions` of
- * {@link CurrentAlignmentSource} (falling back to the default extraction cap)
- * and aligns each surviving candidate. Encoding projects every grounded
- * extraction back to a validated candidate.
+ * Decoding caps the batch at the already-resolved `maxExtractions` of
+ * {@link CurrentAlignmentSource} and aligns each surviving candidate. Encoding
+ * projects every grounded extraction back to a validated candidate.
  *
  * **Example** (Ground a candidate batch through the codec)
  *
  * ```ts
  * import { AlignmentSource, CurrentAlignmentSource, GroundedExtractionsFromCandidates } from "@beep/langextract/Alignment"
  * import { Effect } from "effect"
+ * import * as A from "effect/Array"
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeEffect(GroundedExtractionsFromCandidates)([{ label: "person", text: "Ada Lovelace" }]).pipe(
  *   Effect.provideService(CurrentAlignmentSource, AlignmentSource.make({ sourceText: "Ada Lovelace wrote notes." }))
  * )
- * Effect.runPromise(program).then((grounded) => console.log(grounded.length)) // 1
+ * Effect.runPromise(program).then((grounded) => console.log(A.length(grounded))) // 1
  * ```
  *
- * @category transformations
+ * @category codecs
  * @since 0.0.0
  */
 export const GroundedExtractionsFromCandidates = S.Array(ExtractionCandidate).pipe(
-  S.decodeTo(S.Array(GroundedExtraction), {
+  S.decodeTo(GroundedExtraction.pipe(S.Array, S.toType), {
     decode: SchemaGetter.transformOrFail((candidates: ReadonlyArray<ExtractionCandidate>) =>
       CurrentAlignmentSource.useSync((source) => alignCandidates(candidates, source))
     ),
-    encode: SchemaGetter.transformOrFail(Effect.forEach(candidateFromGrounded)),
+    encode: SchemaGetter.transform(A.map(candidateFromGrounded)),
+  }),
+  $I.annoteSchema("GroundedExtractionsFromCandidates", {
+    description: "Context-aware codec from candidate batches to source-grounded extractions.",
   })
 );

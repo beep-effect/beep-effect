@@ -245,8 +245,6 @@ export type DocumentSafetyViolation = typeof DocumentSafetyViolation.Type;
 type SafetyPath = ReadonlyArray<string | number>;
 
 const invalidScalarPattern = /\u0000|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u;
-const isSafeLinkUrl = S.is(SafeUrlAttribute);
-const isSafeImageUrl = S.is(SafeImageUrlAttribute);
 
 const appendPath = (path: SafetyPath, ...segments: ReadonlyArray<string | number>): SafetyPath => [
   ...path,
@@ -283,7 +281,7 @@ const unsafeUrlIssue = (
   path: SafetyPath
 ): ReadonlyArray<DocumentSafetyViolation> => {
   const policy = destinationKind === "image" ? UserContentImageUrlPolicySpec : UserContentLinkUrlPolicySpec;
-  const isSafeHtmlUrl = destinationKind === "image" ? isSafeImageUrl : isSafeLinkUrl;
+  const isSafeHtmlUrl = destinationKind === "image" ? SafeImageUrlAttribute.is : SafeUrlAttribute.is;
 
   return isUrlDestinationAllowedWithPolicy(destination, policy) && isSafeHtmlUrl(destination)
     ? []

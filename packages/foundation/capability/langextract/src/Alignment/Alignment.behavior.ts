@@ -4,14 +4,17 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema/Int";
 import * as O from "@beep/utils/Option";
+import { Match, Number as Num } from "effect";
 import * as A from "effect/Array";
-import { dual, identity } from "effect/Function";
+import * as Eq from "effect/Equal";
+import { dual, flow, identity, pipe } from "effect/Function";
 import * as Str from "effect/String";
-import { DEFAULT_MAX_EXTRACTIONS, MAX_FUZZY_QUERY_LENGTH, MAX_FUZZY_SOURCE_LENGTH } from "./Alignment.config.ts";
+import { MAX_FUZZY_QUERY_LENGTH, MAX_FUZZY_SOURCE_LENGTH } from "./Alignment.config.ts";
 import type { ExtractionCandidate } from "@beep/langextract/Extraction";
 import type { AlignedMatch, AlignedStatus, AlignmentSource, MatchedText, ScoredMatch } from "./Alignment.model.ts";
 
@@ -19,6 +22,12 @@ const lower = Str.toLowerCase;
 
 const alignedMatch = (status: AlignedStatus, [start, text]: MatchedText): AlignedMatch => [status, start, text];
 const matchedText = (start: number, text: string): MatchedText => [NonNegativeInt.make(start), text];
+const candidateFields = (candidate: ExtractionCandidate) => ({
+  attributes: candidate.attributes,
+  confidence: candidate.confidence,
+  label: candidate.label,
+  text: candidate.text,
+});
 
 /**
  * Convert a matched slice into its half-open source span.
@@ -37,40 +46,46 @@ const matchedText = (start: number, text: string): MatchedText => [NonNegativeIn
  */
 export const spanFromMatch = ([start, text]: MatchedText): Contract.Span =>
   Contract.Span.make({
-    end: NonNegativeInt.make(start + text.length),
+    end: NonNegativeInt.make(Num.sum(start, Str.length(text))),
     start,
   });
 
-const findExact = (sourceText: string, query: string): O.Option<MatchedText> => {
-  const start = sourceText.indexOf(query);
-  return start >= 0 ? O.some(matchedText(start, query)) : O.none();
-};
+const findExact = (sourceText: string, query: string): O.Option<MatchedText> =>
+  pipe(
+    sourceText,
+    Str.indexOf(query),
+    O.map((start) => matchedText(start, query))
+  );
 
-const lowerWithSourceOffsets = (
-  sourceText: string
-): {
+interface NormalizedSourceOffsets {
   readonly ends: ReadonlyArray<number>;
   readonly starts: ReadonlyArray<number>;
   readonly text: string;
-} => {
-  const starts = A.empty<number>();
-  const ends = A.empty<number>();
-  let text = "";
-  let sourceStart = 0;
+}
 
-  for (const segment of sourceText) {
-    const sourceEnd = sourceStart + segment.length;
-    const normalizedSegment = lower(segment);
-    for (let index = 0; index < normalizedSegment.length; index += 1) {
-      starts.push(sourceStart);
-      ends.push(sourceEnd);
-    }
-    text += normalizedSegment;
-    sourceStart = sourceEnd;
-  }
+type NormalizedSegment = readonly [sourceStart: number, sourceEnd: number, text: string];
 
-  return { ends, starts, text };
-};
+const lowerWithSourceOffsets = (sourceText: string): NormalizedSourceOffsets =>
+  pipe(
+    A.mapAccum(A.fromIterable(sourceText), 0, (sourceStart, segment): readonly [number, NormalizedSegment] => {
+      const sourceEnd = Num.sum(sourceStart, Str.length(segment));
+      return [sourceEnd, [sourceStart, sourceEnd, lower(segment)]];
+    }),
+    ([, segments]): NormalizedSourceOffsets => ({
+      ends: A.flatMap(segments, ([, sourceEnd, text]) => {
+        const codeUnits = A.take(Str.split(text, ""), Str.length(text));
+        return A.map(codeUnits, () => sourceEnd);
+      }),
+      starts: A.flatMap(segments, ([sourceStart, , text]) => {
+        const codeUnits = A.take(Str.split(text, ""), Str.length(text));
+        return A.map(codeUnits, () => sourceStart);
+      }),
+      text: A.join(
+        A.map(segments, ([, , text]) => text),
+        ""
+      ),
+    })
+  );
 
 const findLesser = (sourceText: string, query: string): O.Option<MatchedText> => {
   const normalizedQuery = lower(query);
@@ -79,104 +94,115 @@ const findLesser = (sourceText: string, query: string): O.Option<MatchedText> =>
   }
 
   const normalizedSource = lowerWithSourceOffsets(sourceText);
-  const normalizedStart = normalizedSource.text.indexOf(normalizedQuery);
-  if (normalizedStart < 0) {
-    return O.none();
-  }
-
-  const normalizedEnd = normalizedStart + normalizedQuery.length - 1;
-  return O.flatMap(A.get(normalizedSource.starts, normalizedStart), (start) =>
-    O.map(A.get(normalizedSource.ends, normalizedEnd), (end) => matchedText(start, sourceText.slice(start, end)))
+  return O.flatMap(Str.indexOf(normalizedQuery)(normalizedSource.text), (normalizedStart) =>
+    pipe(
+      O.all({
+        end: A.get(normalizedSource.ends, Num.decrement(Num.sum(normalizedStart, Str.length(normalizedQuery)))),
+        start: A.get(normalizedSource.starts, normalizedStart),
+      }),
+      O.map(({ end, start }) => matchedText(start, Str.slice(start, end)(sourceText)))
+    )
   );
 };
 
-const toCodePoints = (value: string): ReadonlyArray<string> => [...value];
+const toCodePoints = A.fromIterable<string>;
 
 const levenshtein = (left: ReadonlyArray<string>, right: ReadonlyArray<string>): number => {
-  const previous = A.makeBy(right.length + 1, identity);
+  const initial = A.makeBy(Num.increment(A.length(right)), identity);
+  const final = A.reduce(left, initial, (previous, leftPoint, leftIndex) => {
+    const currentStart = Num.increment(leftIndex);
+    const [, currentTail] = A.mapAccum(
+      right,
+      currentStart,
+      (leftDistance, rightPoint, rightIndex): readonly [number, number] => {
+        const diagonal = O.getOrElse(A.get(previous, rightIndex), () => 0);
+        const above = O.getOrElse(A.get(previous, Num.increment(rightIndex)), () => 0);
+        const distance = Eq.equals(leftPoint, rightPoint)
+          ? diagonal
+          : Num.increment(Num.min(diagonal, Num.min(leftDistance, above)));
+        return [distance, distance];
+      }
+    );
+    return A.prepend(currentTail, currentStart);
+  });
 
-  for (let i = 0; i < left.length; i += 1) {
-    const current = [i + 1];
-    for (let j = 0; j < right.length; j += 1) {
-      current[j + 1] =
-        left[i] === right[j]
-          ? (previous[j] ?? 0)
-          : Math.min(previous[j] ?? 0, current[j] ?? 0, previous[j + 1] ?? 0) + 1;
-    }
-    for (let k = 0; k < current.length; k += 1) {
-      previous[k] = current[k] ?? 0;
-    }
-    previous.length = current.length;
-  }
-
-  return previous[right.length] ?? 0;
+  return O.getOrElse(A.get(final, A.length(right)), () => 0);
 };
 
 const similarity = (left: string, right: string): UnitInterval => {
   const leftNormalized = toCodePoints(lower(left));
   const rightNormalized = toCodePoints(lower(right));
-  const denominator = Math.max(leftNormalized.length, rightNormalized.length, 1);
-  return UnitInterval.make(1 - levenshtein(leftNormalized, rightNormalized) / denominator);
+  const denominator = Num.max(A.length(leftNormalized), Num.max(A.length(rightNormalized), 1));
+  return UnitInterval.make(
+    Num.subtract(1, Num.divideUnsafe(levenshtein(leftNormalized, rightNormalized), denominator))
+  );
 };
 
-const wordsWithOffsets = (sourceText: string): ReadonlyArray<readonly [number, number]> => {
-  const words = A.empty<readonly [number, number]>();
-  const pattern = /\S+/gu;
-  let match: RegExpExecArray | null = pattern.exec(sourceText);
-
-  while (match !== null) {
-    words.push([match.index, match.index + match[0].length]);
-    match = pattern.exec(sourceText);
-  }
-
-  return words;
-};
+const wordsWithOffsets: (sourceText: string) => ReadonlyArray<readonly [number, number]> = flow(
+  Str.matchAll(/\S+/gu),
+  A.fromIterable,
+  A.flatMap((match) =>
+    A.fromOption(
+      O.map(
+        O.all({ match: A.head(match), start: O.fromUndefinedOr(match.index) }),
+        ({ match, start }): readonly [number, number] => [start, Num.sum(start, Str.length(match))]
+      )
+    )
+  )
+);
 
 const findFuzzy = (sourceText: string, query: string, threshold: UnitInterval): O.Option<MatchedText> => {
-  if (sourceText.length > MAX_FUZZY_SOURCE_LENGTH || query.length > MAX_FUZZY_QUERY_LENGTH) {
+  if (Str.length(sourceText) > MAX_FUZZY_SOURCE_LENGTH || Str.length(query) > MAX_FUZZY_QUERY_LENGTH) {
     return O.none();
   }
 
-  const queryWordCount = query.trim().split(/\s+/u).filter(Boolean).length;
-  if (queryWordCount === 0) {
+  const normalizedQuery = Str.trim(query);
+  if (Str.isEmpty(normalizedQuery)) {
     return O.none();
   }
 
+  const queryWordCount = A.length(Str.split(normalizedQuery, /\s+/u));
   const words = wordsWithOffsets(sourceText);
-  if (words.length < queryWordCount) {
+  if (A.length(words) < queryWordCount) {
     return O.none();
   }
 
-  let best: O.Option<ScoredMatch> = O.none();
-  for (let index = 0; index <= words.length - queryWordCount; index += 1) {
-    const start = words[index]?.[0];
-    const end = words[index + queryWordCount - 1]?.[1];
-    if (start === undefined || end === undefined) {
-      continue;
-    }
-
-    const candidate = sourceText.slice(start, end);
-    const score = similarity(candidate, query);
-    if (
-      score >= threshold &&
-      O.match(best, {
-        onNone: () => true,
-        onSome: (current) => score > current[2],
-      })
-    ) {
-      best = O.some([NonNegativeInt.make(start), candidate, score]);
-    }
-  }
+  const scored = pipe(
+    A.makeBy(Num.increment(Num.subtract(A.length(words), queryWordCount)), (index) =>
+      O.map(
+        O.all({
+          end: O.map(A.get(words, Num.decrement(Num.sum(index, queryWordCount))), ([, end]) => end),
+          start: O.map(A.get(words, index), ([start]) => start),
+        }),
+        ({ end, start }): ScoredMatch => {
+          const candidate = Str.slice(start, end)(sourceText);
+          return [NonNegativeInt.make(start), candidate, similarity(candidate, query)];
+        }
+      )
+    ),
+    A.getSomes,
+    A.filter(([, , score]) => Num.isGreaterThanOrEqualTo(score, threshold))
+  );
+  const best = A.reduce(scored, O.none<ScoredMatch>(), (currentBest, candidate) =>
+    pipe(
+      currentBest,
+      O.filter((current) => Num.isGreaterThanOrEqualTo(current[2], candidate[2])),
+      O.orElse(() => O.some(candidate))
+    )
+  );
 
   return O.map(best, ([start, text]) => matchedText(start, text));
 };
 
 const bestAlignedMatch = (source: AlignmentSource, query: string): O.Option<AlignedMatch> =>
-  O.firstSomeOf([
-    O.map(findExact(source.sourceText, query), (match) => alignedMatch("match_exact", match)),
-    O.map(findLesser(source.sourceText, query), (match) => alignedMatch("match_lesser", match)),
-    O.map(findFuzzy(source.sourceText, query, source.fuzzyThreshold), (match) => alignedMatch("match_fuzzy", match)),
-  ]);
+  pipe(
+    findExact(source.sourceText, query),
+    O.map((match) => alignedMatch("match_exact", match)),
+    O.orElse(() => O.map(findLesser(source.sourceText, query), (match) => alignedMatch("match_lesser", match))),
+    O.orElse(() =>
+      O.map(findFuzzy(source.sourceText, query, source.fuzzyThreshold), (match) => alignedMatch("match_fuzzy", match))
+    )
+  );
 
 /**
  * Align one extraction candidate against an alignment source.
@@ -208,9 +234,32 @@ export const alignCandidate: {
   2,
   (candidate: ExtractionCandidate, source: AlignmentSource): GroundedExtraction =>
     O.match(bestAlignedMatch(source, candidate.text), {
-      onNone: () => GroundedExtraction.fromCandidate(candidate, "unaligned"),
+      onNone: () => GroundedExtraction.cases.unaligned.make(candidateFields(candidate)),
       onSome: ([status, start, text]) =>
-        GroundedExtraction.fromCandidate(candidate, status, spanFromMatch([start, text]), text),
+        Match.value(status).pipe(
+          Match.when("match_exact", () =>
+            GroundedExtraction.cases.match_exact.make({
+              ...candidateFields(candidate),
+              matchedText: text,
+              span: spanFromMatch([start, text]),
+            })
+          ),
+          Match.when("match_lesser", () =>
+            GroundedExtraction.cases.match_lesser.make({
+              ...candidateFields(candidate),
+              matchedText: text,
+              span: spanFromMatch([start, text]),
+            })
+          ),
+          Match.when("match_fuzzy", () =>
+            GroundedExtraction.cases.match_fuzzy.make({
+              ...candidateFields(candidate),
+              matchedText: text,
+              span: spanFromMatch([start, text]),
+            })
+          ),
+          Match.exhaustive
+        ),
     })
 );
 
@@ -219,19 +268,20 @@ export const alignCandidate: {
  *
  * **Details**
  *
- * When the source resolves no explicit `maxExtractions`, the cap falls back to
- * `min(candidates.length, DEFAULT_MAX_EXTRACTIONS)`.
+ * The source resolves its default cap at schema construction time, so this
+ * behavior only applies the already-total `maxExtractions` value.
  *
  * **Example** (Align candidates both ways)
  *
  * ```ts
  * import { AlignmentSource, alignCandidates } from "@beep/langextract/Alignment"
  * import { ExtractionCandidate } from "@beep/langextract/Extraction"
+ * import * as A from "effect/Array"
  *
  * const source = AlignmentSource.make({ sourceText: "Ada Lovelace wrote notes." })
  * const candidates = [ExtractionCandidate.make({ label: "person", text: "Ada Lovelace" })]
- * console.log(alignCandidates(candidates, source).length)
- * console.log(alignCandidates(source)(candidates).length)
+ * console.log(A.length(alignCandidates(candidates, source)))
+ * console.log(A.length(alignCandidates(source)(candidates)))
  * ```
  *
  * @category mapping
@@ -242,8 +292,6 @@ export const alignCandidates: {
   (candidates: ReadonlyArray<ExtractionCandidate>, source: AlignmentSource): ReadonlyArray<GroundedExtraction>;
 } = dual(
   2,
-  (candidates: ReadonlyArray<ExtractionCandidate>, source: AlignmentSource): ReadonlyArray<GroundedExtraction> => {
-    const limit = O.getOrElse(source.maxExtractions, () => Math.min(A.length(candidates), DEFAULT_MAX_EXTRACTIONS));
-    return A.map(A.take(candidates, limit), alignCandidate(source));
-  }
+  (candidates: ReadonlyArray<ExtractionCandidate>, source: AlignmentSource): ReadonlyArray<GroundedExtraction> =>
+    A.map(A.take(candidates, source.maxExtractions), alignCandidate(source))
 );

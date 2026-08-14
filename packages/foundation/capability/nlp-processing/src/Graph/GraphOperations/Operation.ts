@@ -150,7 +150,7 @@ export const pure = <A, B>(config: {
   readonly name: string;
 }): GraphOperation<A, B> =>
   make({
-    apply: (node) => Effect.forEach(config.f(node.data), (b) => makeNode(b, O.some(node.id), O.some(config.name))),
+    apply: (node) => Effect.forEach(config.f(node.data), makeNode(O.some(node.id), O.some(config.name))),
     category: config.category,
     description: config.description,
     name: config.name,

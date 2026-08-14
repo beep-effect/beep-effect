@@ -11,7 +11,6 @@ import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import {
   MAX_CANDIDATE_ATTRIBUTES,
@@ -21,6 +20,44 @@ import {
 } from "./Extraction.config.ts";
 
 const $I = $LangExtractId.create("Extraction");
+
+const ExtractionCandidateLabel = S.NonEmptyString.check(
+  S.isPattern(/\S/u, {
+    identifier: $I`ExtractionCandidateLabelNonBlankCheck`,
+    title: "Non-Blank Extraction Candidate Label",
+    description: "Checks that an extraction candidate label contains at least one non-whitespace character.",
+    message: "Extraction candidate labels cannot be blank.",
+  }),
+  S.isMaxLength(MAX_CANDIDATE_TEXT_LENGTH, {
+    identifier: $I`ExtractionCandidateLabelMaxLengthCheck`,
+    title: "Extraction Candidate Label Length",
+    description: "Checks that an extraction candidate label stays within the bounded model-output length.",
+    message: `Extraction candidate label must be ${MAX_CANDIDATE_TEXT_LENGTH} characters or fewer.`,
+  })
+).pipe(
+  $I.annoteSchema("ExtractionCandidateLabel", {
+    description: "Non-blank, bounded label emitted for one extraction candidate.",
+  })
+);
+
+const ExtractionCandidateText = S.NonEmptyString.check(
+  S.isPattern(/\S/u, {
+    identifier: $I`ExtractionCandidateTextNonBlankCheck`,
+    title: "Non-Blank Extraction Candidate Text",
+    description: "Checks that extraction evidence contains at least one non-whitespace character.",
+    message: "Extraction candidate text cannot be blank.",
+  }),
+  S.isMaxLength(MAX_CANDIDATE_TEXT_LENGTH, {
+    identifier: $I`ExtractionCandidateTextMaxLengthCheck`,
+    title: "Extraction Candidate Text Length",
+    description: "Checks that extraction candidate source text stays within the bounded model-output length.",
+    message: `Extraction candidate text must be ${MAX_CANDIDATE_TEXT_LENGTH} characters or fewer.`,
+  })
+).pipe(
+  $I.annoteSchema("ExtractionCandidateText", {
+    description: "Non-blank, bounded source evidence emitted for one extraction candidate.",
+  })
+);
 
 /**
  * Alignment status assigned to a parsed extraction candidate.
@@ -104,6 +141,9 @@ export class ExtractionCandidate extends S.Class<ExtractionCandidate>($I`Extract
     attributes: S.Record(S.String, S.String).pipe(
       S.check(
         S.isMaxProperties(MAX_CANDIDATE_ATTRIBUTES, {
+          identifier: $I`ExtractionCandidateAttributesMaxPropertiesCheck`,
+          title: "Extraction Candidate Attribute Limit",
+          description: "Checks that one extraction candidate stays within the bounded attribute count.",
           message: `Extraction candidate attributes must have at most ${MAX_CANDIDATE_ATTRIBUTES} entries.`,
         })
       ),
@@ -111,23 +151,66 @@ export class ExtractionCandidate extends S.Class<ExtractionCandidate>($I`Extract
       SchemaUtils.withNoneDefault
     ),
     confidence: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    label: S.NonEmptyString.check(
-      S.isMaxLength(MAX_CANDIDATE_TEXT_LENGTH, {
-        message: `Extraction candidate label must be ${MAX_CANDIDATE_TEXT_LENGTH} characters or fewer.`,
-      })
-    ),
-    text: S.NonEmptyString.check(
-      S.isMaxLength(MAX_CANDIDATE_TEXT_LENGTH, {
-        message: `Extraction candidate text must be ${MAX_CANDIDATE_TEXT_LENGTH} characters or fewer.`,
-      })
-    ),
+    label: ExtractionCandidateLabel,
+    text: ExtractionCandidateText,
   },
   $I.annote("ExtractionCandidate", {
     description: "Model-emitted extraction candidate before deterministic source alignment.",
   })
-) {
-  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ExtractionCandidate);
-}
+) {}
+
+const GroundedExtractionCommonFields = {
+  attributes: ExtractionCandidate.fields.attributes,
+  confidence: ExtractionCandidate.fields.confidence,
+  label: ExtractionCandidate.fields.label,
+  text: ExtractionCandidate.fields.text,
+};
+
+const GroundedExtractionAlignedFields = {
+  ...GroundedExtractionCommonFields,
+  matchedText: S.NonEmptyString,
+  span: Contract.Span,
+};
+
+class GroundedExtractionMatchExact extends S.Class<GroundedExtractionMatchExact>($I`GroundedExtractionMatchExact`)(
+  {
+    ...GroundedExtractionAlignedFields,
+    alignmentStatus: S.tag(AlignmentStatus.Enum.match_exact),
+  },
+  $I.annote("GroundedExtractionMatchExact", {
+    description: "Source-grounded extraction aligned by an exact text match.",
+  })
+) {}
+
+class GroundedExtractionMatchLesser extends S.Class<GroundedExtractionMatchLesser>($I`GroundedExtractionMatchLesser`)(
+  {
+    ...GroundedExtractionAlignedFields,
+    alignmentStatus: S.tag(AlignmentStatus.Enum.match_lesser),
+  },
+  $I.annote("GroundedExtractionMatchLesser", {
+    description: "Source-grounded extraction aligned by a case-insensitive text match.",
+  })
+) {}
+
+class GroundedExtractionMatchFuzzy extends S.Class<GroundedExtractionMatchFuzzy>($I`GroundedExtractionMatchFuzzy`)(
+  {
+    ...GroundedExtractionAlignedFields,
+    alignmentStatus: S.tag(AlignmentStatus.Enum.match_fuzzy),
+  },
+  $I.annote("GroundedExtractionMatchFuzzy", {
+    description: "Source-grounded extraction aligned by a bounded fuzzy text match.",
+  })
+) {}
+
+class GroundedExtractionUnaligned extends S.Class<GroundedExtractionUnaligned>($I`GroundedExtractionUnaligned`)(
+  {
+    ...GroundedExtractionCommonFields,
+    alignmentStatus: S.tag(AlignmentStatus.Enum.unaligned),
+  },
+  $I.annote("GroundedExtractionUnaligned", {
+    description: "Extraction candidate for which deterministic source alignment found no match.",
+  })
+) {}
 
 /**
  * Extraction after deterministic source alignment.
@@ -140,52 +223,49 @@ export class ExtractionCandidate extends S.Class<ExtractionCandidate>($I`Extract
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const span = Contract.Span.make({ start: NonNegativeInt.make(0), end: NonNegativeInt.make(12) })
- * console.log(GroundedExtraction.make({ alignmentStatus: "match_exact", label: "person", span, text: "Ada Lovelace" }))
+ * console.log(GroundedExtraction.cases.match_exact.make({
+ *   label: "person",
+ *   matchedText: "Ada Lovelace",
+ *   span,
+ *   text: "Ada Lovelace"
+ * }))
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class GroundedExtraction extends S.Class<GroundedExtraction>($I`GroundedExtraction`)(
-  {
-    alignmentStatus: AlignmentStatus,
-    attributes: S.optionalKey(S.Record(S.String, S.String)),
-    confidence: S.optionalKey(UnitInterval),
-    label: S.NonEmptyString,
-    matchedText: S.optionalKey(S.String),
-    span: S.optionalKey(Contract.Span),
-    text: S.NonEmptyString,
-  },
-  $I.annote("GroundedExtraction", {
+export const GroundedExtraction = S.Union([
+  GroundedExtractionMatchExact,
+  GroundedExtractionMatchLesser,
+  GroundedExtractionMatchFuzzy,
+  GroundedExtractionUnaligned,
+]).pipe(
+  S.toTaggedUnion("alignmentStatus"),
+  $I.annoteSchema("GroundedExtraction", {
     description: "Extraction candidate with deterministic source-alignment metadata.",
   })
-) {
+);
+
+/**
+ * {@inheritDoc GroundedExtraction}
+ * @category models
+ * @since 0.0.0
+ */
+export type GroundedExtraction = typeof GroundedExtraction.Type;
+
+/**
+ * Encoded companion type for the {@link GroundedExtraction} tagged-union schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GroundedExtraction {
   /**
-   * Construct grounded alignment metadata from a parsed model candidate.
+   * Wire representation accepted and emitted by {@link GroundedExtraction}.
    *
-   * @category constructors
+   * @category type-level
    * @since 0.0.0
    */
-  static readonly fromCandidate = (
-    candidate: ExtractionCandidate,
-    status: AlignmentStatus,
-    span?: Contract.Span,
-    matchedText?: string
-  ): GroundedExtraction =>
-    GroundedExtraction.make({
-      alignmentStatus: status,
-      label: candidate.label,
-      text: candidate.text,
-      ...O.getSomesStruct({
-        attributes: candidate.attributes,
-        confidence: candidate.confidence,
-        matchedText: O.fromUndefinedOr(matchedText),
-        span: O.fromUndefinedOr(span),
-      }),
-    });
-}
-
-export declare namespace GroundedExtraction {
   export type Encoded = typeof GroundedExtraction.Encoded;
 }
 
@@ -219,9 +299,9 @@ export class LangExtractRequest extends S.Class<LangExtractRequest>($I`LangExtra
           message: `LangExtract request must include at most ${MAX_REQUEST_EXAMPLES} examples.`,
         })
       ),
-      S.optionalKey
+      SchemaUtils.withEmptyArrayDefaults<ExtractionExample>()
     ),
-    options: LangExtractOptions.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    options: LangExtractOptions.pipe(SchemaUtils.withKeyDefaults(LangExtractOptions.make({}))),
     targets: S.NonEmptyArray(ExtractionTarget),
     text: S.String.check(
       S.isMaxLength(MAX_REQUEST_TEXT_LENGTH, {

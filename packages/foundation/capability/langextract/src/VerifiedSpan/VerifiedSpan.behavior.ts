@@ -11,9 +11,10 @@ import { NonNegativeInt } from "@beep/schema";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
-import * as Effect from "effect/Effect";
+import { Chunk, Effect, Iterable as I, Match, Result } from "effect";
+import * as Bool from "effect/Boolean";
 import * as Eq from "effect/Equal";
-import { dual, flow, pipe } from "effect/Function";
+import { dual, flow, identity, pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { MAX_LOCATOR_LENGTH, MAX_SOURCE_TEXT_LENGTH } from "./VerifiedSpan.config.ts";
 import { VerifiedSpanError } from "./VerifiedSpan.errors.ts";
@@ -41,96 +42,158 @@ const WhitespaceCodePoint = S.String.check(
   })
 );
 
-interface NormalizedTextWithRawOffsets {
-  readonly ends: ReadonlyArray<number>;
-  readonly starts: ReadonlyArray<number>;
-  readonly text: string;
-}
+class NormalizedTextWithRawOffsets extends S.Class<NormalizedTextWithRawOffsets>($I`NormalizedTextWithRawOffsets`)(
+  {
+    ends: S.Array(NonNegativeInt),
+    starts: S.Array(NonNegativeInt),
+    text: S.String,
+  },
+  $I.annote("NormalizedTextWithRawOffsets", {
+    description: "Normalized locator text paired with the raw UTF-16 source range behind each normalized code unit.",
+  })
+) {}
 
-type RawCluster = readonly [start: number, end: number];
+const RawCluster = S.Tuple([NonNegativeInt, NonNegativeInt]).pipe(
+  $I.annoteSchema("RawCluster", {
+    description: "Half-open raw UTF-16 range whose code points normalize as one cluster.",
+  })
+);
+type RawCluster = typeof RawCluster.Type;
+
+type SourceClusterState = readonly [start: NonNegativeInt, clusters: Array<RawCluster>];
+type NormalizationState = readonly [starts: Array<NonNegativeInt>, ends: Array<NonNegativeInt>, points: Array<string>];
+type NormalizedRawPoint = readonly [point: string, sourceStart: NonNegativeInt, sourceEnd: NonNegativeInt];
+type MatchScanState = readonly [matchedLength: number, start: O.Option<number>];
+type ReconstructionState = readonly [expectedStart: NonNegativeInt, parts: Chunk.Chunk<string>];
+
+const rawCluster = (start: NonNegativeInt, end: NonNegativeInt): RawCluster => [start, end];
+const normalizedRawPoint = (
+  point: string,
+  sourceStart: NonNegativeInt,
+  sourceEnd: NonNegativeInt
+): NormalizedRawPoint => [point, sourceStart, sourceEnd];
+const sourceClusterInitial = (): SourceClusterState => [NonNegativeInt.make(0), A.empty()];
+const normalizationInitial = (): NormalizationState => [A.empty(), A.empty(), A.empty()];
+const matchScanInitial = (): MatchScanState => [0, O.none()];
+const reconstructionInitial = (): ReconstructionState => [NonNegativeInt.make(0), Chunk.empty()];
+const missingAnchor = () => "missing-anchor";
+const missingMatch = () => "missing-match";
 
 const isCombiningMark = S.is(CombiningMark);
 const isWhitespace = S.is(WhitespaceCodePoint);
 const normalizeUnicode = Str.normalize("NFKC");
 const joinsNormalizedCluster = (source: string, cluster: RawCluster, point: string): boolean => {
   const clusterText = Str.slice(cluster[0], cluster[1])(source);
-  return !Eq.equals(
-    normalizeUnicode(Str.concat(clusterText, point)),
-    Str.concat(normalizeUnicode(clusterText), normalizeUnicode(point))
+  return Bool.not(
+    Eq.equals(
+      normalizeUnicode(Str.concat(clusterText, point)),
+      Str.concat(normalizeUnicode(clusterText), normalizeUnicode(point))
+    )
   );
 };
 
 const sourceClusters = (source: string): ReadonlyArray<RawCluster> => {
-  // Store only raw boundaries so a long combining-mark run never rebuilds its
-  // accumulated text. Each cluster is sliced once during normalization below.
-  const clusters = A.empty<RawCluster>();
-  let start = 0;
-
-  for (const point of source) {
-    const end = start + Str.length(point);
-    const previous = A.last(clusters);
-    if (O.isSome(previous) && (isCombiningMark(point) || joinsNormalizedCluster(source, previous.value, point))) {
-      A.spliceInPlace(clusters, {
-        start: A.length(clusters) - 1,
-        deleteCount: 1,
-        items: [[previous.value[0], end]],
-      });
-    } else {
-      A.appendInPlace(clusters, [start, end]);
-    }
-    start = end;
-  }
-
+  // Performance boundary: one allocation keeps cluster construction linear for
+  // hostile 100k inputs. The completed array is read-only after this function.
+  const [, clusters] = pipe(
+    source,
+    A.fromIterable,
+    A.reduce(sourceClusterInitial(), ([start, clusters], point): SourceClusterState => {
+      const end = NonNegativeInt.make(start + Str.length(point));
+      const next = rawCluster(start, end);
+      return [
+        end,
+        pipe(
+          A.last(clusters),
+          O.match({
+            onNone: () => A.appendInPlace(clusters, next),
+            onSome: (previous) =>
+              pipe(
+                Bool.match(isCombiningMark(point), {
+                  onFalse: () => joinsNormalizedCluster(source, previous, point),
+                  onTrue: () => true,
+                }),
+                Bool.match({
+                  onFalse: () => A.appendInPlace(clusters, next),
+                  onTrue: () => {
+                    A.spliceInPlace(clusters, {
+                      start: A.length(clusters) - 1,
+                      deleteCount: 1,
+                      items: [rawCluster(previous[0], end)],
+                    });
+                    return clusters;
+                  },
+                })
+              ),
+          })
+        ),
+      ];
+    })
+  );
   return clusters;
 };
 
 const normalizeCluster = flow(normalizeUnicode, Str.replace(/[‘’‚‛]/gu, "'"), Str.replace(/[“”„‟]/gu, '"'));
 
 const appendNormalizedPoint = (
-  starts: Array<number>,
-  ends: Array<number>,
-  text: string,
+  [starts, ends, points]: NormalizationState,
   point: string,
-  sourceStart: number,
-  sourceEnd: number
-): string => {
-  if (!isWhitespace(point)) {
-    for (let index = 0; index < Str.length(point); index += 1) {
-      A.appendInPlace(starts, sourceStart);
-      A.appendInPlace(ends, sourceEnd);
-    }
-    return Str.concat(text, point);
-  }
-
-  if (Str.endsWith(" ")(text)) {
-    A.spliceInPlace(ends, {
-      start: A.length(ends) - 1,
-      deleteCount: 1,
-      items: [sourceEnd],
-    });
-    return text;
-  }
-
-  A.appendInPlace(starts, sourceStart);
-  A.appendInPlace(ends, sourceEnd);
-  return Str.concat(text, " ");
-};
+  sourceStart: NonNegativeInt,
+  sourceEnd: NonNegativeInt
+): NormalizationState =>
+  pipe(
+    isWhitespace(point),
+    Bool.match({
+      onFalse: () => {
+        A.appendAllInPlace(starts, A.replicate(sourceStart, Str.length(point)));
+        A.appendAllInPlace(ends, A.replicate(sourceEnd, Str.length(point)));
+        A.appendInPlace(points, point);
+        return [starts, ends, points];
+      },
+      onTrue: () =>
+        Match.value(O.exists(A.last(points), Eq.equals(" "))).pipe(
+          Match.when(false, (): NormalizationState => {
+            A.appendInPlace(starts, sourceStart);
+            A.appendInPlace(ends, sourceEnd);
+            A.appendInPlace(points, " ");
+            return [starts, ends, points];
+          }),
+          Match.orElse((): NormalizationState => {
+            A.spliceInPlace(ends, {
+              start: A.length(ends) - 1,
+              deleteCount: 1,
+              items: [sourceEnd],
+            });
+            return [starts, ends, points];
+          })
+        ),
+    })
+  );
 
 const normalizeWithRawOffsets = (source: string): NormalizedTextWithRawOffsets => {
-  // The paired offset maps are allocation-sensitive and can contain one entry
-  // per source code unit. Repository Array mutation helpers keep construction
-  // linear while all reads below remain total through Option.
-  const starts = A.empty<number>();
-  const ends = A.empty<number>();
-  let text = "";
+  // Performance boundary: these parallel offset maps can hold multiple entries per source
+  // code unit. Mutation stays inside this allocation boundary; the completed
+  // schema value is immutable to every downstream consumer.
+  const [starts, ends, points] = pipe(
+    sourceClusters(source),
+    I.flatMap(([sourceStart, sourceEnd]) =>
+      pipe(
+        source,
+        Str.slice(sourceStart, sourceEnd),
+        normalizeCluster,
+        I.map((point) => normalizedRawPoint(point, sourceStart, sourceEnd))
+      )
+    ),
+    I.reduce(normalizationInitial(), (state, [point, sourceStart, sourceEnd]) =>
+      appendNormalizedPoint(state, point, sourceStart, sourceEnd)
+    )
+  );
 
-  A.forEach(sourceClusters(source), ([sourceStart, sourceEnd]) => {
-    A.forEach(pipe(source, Str.slice(sourceStart, sourceEnd), normalizeCluster), (point) => {
-      text = appendNormalizedPoint(starts, ends, text, point, sourceStart, sourceEnd);
-    });
+  return NormalizedTextWithRawOffsets.make({
+    ends,
+    starts,
+    text: A.join(points, ""),
   });
-
-  return { ends, starts, text };
 };
 
 /**
@@ -155,35 +218,169 @@ const normalizeWithRawOffsets = (source: string): NormalizedTextWithRawOffsets =
  */
 export const normalizeTextLocator = (value: string): string => normalizeWithRawOffsets(value).text;
 
-const indexOfFrom: {
-  (text: string, locator: string, from: number): number;
-  (locator: string, from: number): (text: string) => number;
-} = dual(3, (text: string, locator: string, from: number): number => text.indexOf(locator, from));
+const fallbackLengths = (prefixTable: ReadonlyArray<number>, matchedLength: number): Iterable<number> =>
+  I.unfold(
+    O.some(matchedLength),
+    O.map((length): readonly [number, O.Option<number>] => [
+      length,
+      pipe(
+        length > 0,
+        Bool.match({
+          onFalse: O.none<number>,
+          onTrue: () => A.get(prefixTable, length - 1),
+        })
+      ),
+    ])
+  );
 
-const hasSameRange: {
-  (anchors: ReadonlyArray<TextAnchor>, candidate: TextAnchor): boolean;
-  (candidate: TextAnchor): (anchors: ReadonlyArray<TextAnchor>) => boolean;
-} = dual(2, (anchors: ReadonlyArray<TextAnchor>, candidate: TextAnchor): boolean =>
-  A.some(
-    anchors,
-    (anchor) => Eq.equals(anchor.startChar, candidate.startChar) && Eq.equals(anchor.endChar, candidate.endChar)
-  )
-);
+const nextMatchedLength = (
+  locator: string,
+  prefixTable: ReadonlyArray<number>,
+  matchedLength: number,
+  codeUnit: number
+): number =>
+  pipe(
+    fallbackLengths(prefixTable, matchedLength),
+    I.findFirst((candidate) => O.exists(Str.charCodeAt(locator, candidate), Eq.equals(codeUnit))),
+    O.map((candidate) => candidate + 1),
+    O.getOrElse(() => 0)
+  );
 
-const appendRawMatch = (matches: Array<TextAnchor>, sourceText: string, startChar: number, endChar: number): void => {
-  if (!isUtf16Boundary(sourceText, startChar) || !isUtf16Boundary(sourceText, endChar)) {
-    return;
-  }
-
-  const anchor = TextAnchor.make({
-    endChar: NonNegativeInt.make(endChar),
-    quote: Str.slice(startChar, endChar)(sourceText),
-    startChar: NonNegativeInt.make(startChar),
-  });
-  if (!hasSameRange(matches, anchor)) {
-    A.appendInPlace(matches, anchor);
-  }
+const prefixTable = (locator: string): ReadonlyArray<number> => {
+  // Performance boundary: this is the single KMP-table allocation. In-place append
+  // is linear; the table is immutable as soon as construction returns.
+  const table = A.make(0);
+  pipe(
+    I.range(1),
+    I.take(Str.length(locator) - 1),
+    I.reduce(0, (matchedLength, index) => {
+      const nextLength = pipe(
+        Str.charCodeAt(locator, index),
+        O.map((codeUnit) => nextMatchedLength(locator, table, matchedLength, codeUnit)),
+        O.getOrElse(() => 0)
+      );
+      A.appendInPlace(table, nextLength);
+      return nextLength;
+    })
+  );
+  return table;
 };
+
+const matchStarts = (text: string, locator: string): Iterable<number> => {
+  const locatorLength = Str.length(locator);
+  const table = prefixTable(locator);
+  const retainedLength = pipe(
+    A.get(table, locatorLength - 1),
+    O.getOrElse(() => 0)
+  );
+  return pipe(
+    I.range(0),
+    I.take(Str.length(text)),
+    I.scan(matchScanInitial(), ([matchedLength], index): MatchScanState => {
+      const nextLength = pipe(
+        Str.charCodeAt(text, index),
+        O.map((codeUnit) => nextMatchedLength(locator, table, matchedLength, codeUnit)),
+        O.getOrElse(() => 0)
+      );
+      return pipe(
+        Eq.equals(nextLength, locatorLength),
+        Bool.match({
+          onFalse: () => [nextLength, O.none()],
+          onTrue: () => [retainedLength, O.some(index - locatorLength + 1)],
+        })
+      );
+    }),
+    I.filterMap(([, start]) => Result.fromOption(start, missingMatch))
+  );
+};
+
+const rawAnchor = (sourceText: string, startChar: number, endChar: number): O.Option<TextAnchor> =>
+  pipe(
+    Bool.and(isUtf16Boundary(sourceText, startChar), isUtf16Boundary(sourceText, endChar)),
+    Bool.match({
+      onFalse: O.none<TextAnchor>,
+      onTrue: () =>
+        O.some(
+          TextAnchor.make({
+            endChar: NonNegativeInt.make(endChar),
+            quote: Str.slice(startChar, endChar)(sourceText),
+            startChar: NonNegativeInt.make(startChar),
+          })
+        ),
+    })
+  );
+
+const exactRawMatches = (sourceText: string, locator: string): ReadonlyArray<TextAnchor> =>
+  pipe(
+    matchStarts(sourceText, locator),
+    I.filterMap((startChar) =>
+      pipe(rawAnchor(sourceText, startChar, startChar + Str.length(locator)), Result.fromOption(missingAnchor))
+    ),
+    I.take(2),
+    A.fromIterable
+  );
+
+type NormalizedRange = readonly [startChar: NonNegativeInt, endChar: NonNegativeInt];
+
+const normalizedRange = (
+  normalizedSource: NormalizedTextWithRawOffsets,
+  normalizedStart: number,
+  normalizedEnd: number
+): O.Option<NormalizedRange> =>
+  O.all([A.get(normalizedSource.starts, normalizedStart), A.get(normalizedSource.ends, normalizedEnd - 1)]);
+
+const normalizedRawAnchor = (
+  sourceText: string,
+  normalizedSource: NormalizedTextWithRawOffsets,
+  normalizedLocator: string,
+  normalizedStart: number,
+  normalizedEnd: number,
+  startChar: NonNegativeInt,
+  endChar: NonNegativeInt
+): O.Option<TextAnchor> =>
+  pipe(
+    Bool.and(
+      Bool.not(O.exists(A.get(normalizedSource.starts, normalizedStart - 1), Eq.equals(startChar))),
+      Bool.not(O.exists(A.get(normalizedSource.ends, normalizedEnd), Eq.equals(endChar)))
+    ),
+    Bool.match({
+      onFalse: O.none<TextAnchor>,
+      onTrue: () =>
+        pipe(
+          rawAnchor(sourceText, startChar, endChar),
+          O.filter((anchor) => Eq.equals(normalizeTextLocator(anchor.quote), normalizedLocator))
+        ),
+    })
+  );
+
+const normalizedRawMatches = (
+  sourceText: string,
+  normalizedSource: NormalizedTextWithRawOffsets,
+  normalizedLocator: string
+): ReadonlyArray<TextAnchor> =>
+  pipe(
+    matchStarts(normalizedSource.text, normalizedLocator),
+    I.map((normalizedStart): O.Option<TextAnchor> => {
+      const normalizedEnd = normalizedStart + Str.length(normalizedLocator);
+      return pipe(
+        normalizedRange(normalizedSource, normalizedStart, normalizedEnd),
+        O.flatMap(([startChar, endChar]) =>
+          normalizedRawAnchor(
+            sourceText,
+            normalizedSource,
+            normalizedLocator,
+            normalizedStart,
+            normalizedEnd,
+            startChar,
+            endChar
+          )
+        )
+      );
+    }),
+    I.filterMap(Result.fromOption(missingAnchor)),
+    I.take(2),
+    A.fromIterable
+  );
 
 const findRawMatches: {
   (sourceText: string, normalizedSource: NormalizedTextWithRawOffsets, locator: string): ReadonlyArray<TextAnchor>;
@@ -191,61 +388,12 @@ const findRawMatches: {
 } = dual(
   3,
   (sourceText: string, normalizedSource: NormalizedTextWithRawOffsets, locator: string): ReadonlyArray<TextAnchor> => {
-    // crispen: overlapping-match enumeration is deliberately explicit; replacing
-    // it with a first-match combinator would violate the ambiguity contract.
     const normalizedLocator = normalizeTextLocator(locator);
-    const matches: Array<TextAnchor> = A.empty();
-    let rawStart = indexOfFrom(sourceText, locator, 0);
-
-    while (rawStart >= 0 && A.length(matches) < 2) {
-      appendRawMatch(matches, sourceText, rawStart, rawStart + Str.length(locator));
-      rawStart = indexOfFrom(sourceText, locator, rawStart + 1);
-    }
-
-    if (A.length(matches) > 0) {
-      return matches;
-    }
-
-    let normalizedStart = indexOfFrom(normalizedSource.text, normalizedLocator, 0);
-
-    while (normalizedStart >= 0 && A.length(matches) < 2) {
-      const normalizedEnd = normalizedStart + Str.length(normalizedLocator);
-      let nextNormalizedStart = normalizedStart + 1;
-      O.match(
-        O.all([
-          A.get(normalizedSource.starts, normalizedStart),
-          A.get(normalizedSource.ends, normalizedStart),
-          A.get(normalizedSource.ends, normalizedEnd - 1),
-        ]),
-        {
-          onNone: () => undefined,
-          onSome: ([startChar, startClusterEnd, endChar]) => {
-            const startsAtRawBoundary = !O.exists(
-              A.get(normalizedSource.starts, normalizedStart - 1),
-              Eq.equals(startChar)
-            );
-            const endsAtRawBoundary = !O.exists(A.get(normalizedSource.ends, normalizedEnd), Eq.equals(endChar));
-            if (startsAtRawBoundary && endsAtRawBoundary) {
-              const quote = Str.slice(startChar, endChar)(sourceText);
-              if (Eq.equals(normalizeTextLocator(quote), normalizedLocator)) {
-                appendRawMatch(matches, sourceText, startChar, endChar);
-                return;
-              }
-            }
-
-            while (
-              O.exists(A.get(normalizedSource.starts, nextNormalizedStart), (nextStart) => nextStart < startClusterEnd)
-            ) {
-              nextNormalizedStart += 1;
-            }
-          },
-        }
-      );
-
-      normalizedStart = indexOfFrom(normalizedSource.text, normalizedLocator, nextNormalizedStart);
-    }
-
-    return matches;
+    const exactMatches = exactRawMatches(sourceText, locator);
+    return A.match(exactMatches, {
+      onEmpty: () => normalizedRawMatches(sourceText, normalizedSource, normalizedLocator),
+      onNonEmpty: identity,
+    });
   }
 );
 
@@ -274,17 +422,14 @@ const locatePreparedRawText: {
     }
 
     const matches = findRawMatches(sourceText, normalizedSource, locator);
-    if (Eq.equals(A.length(matches), 0)) {
+    if (A.isReadonlyArrayEmpty(matches)) {
       return yield* VerifiedSpanError.fromReason("not-found");
     }
     if (A.length(matches) > 1) {
       return yield* VerifiedSpanError.fromReason("ambiguous");
     }
 
-    return yield* O.match(A.head(matches), {
-      onNone: () => Effect.fail(VerifiedSpanError.fromReason("not-found")),
-      onSome: Effect.succeed,
-    });
+    return yield* Effect.fromOption(A.head(matches), () => VerifiedSpanError.fromReason("not-found"));
   })
 );
 
@@ -330,6 +475,38 @@ export const locateRawText: {
   })
 );
 
+const convertUtf16CodeUnitRange = Effect.fnUntraced(function* (
+  range: TextOffsetRange,
+  sourceText: string
+): Effect.fn.Return<Utf16TextRange, VerifiedSpanError> {
+  if (
+    Bool.or(
+      range.end > Str.length(sourceText),
+      Bool.or(Bool.not(isUtf16Boundary(sourceText, range.start)), Bool.not(isUtf16Boundary(sourceText, range.end)))
+    )
+  ) {
+    return yield* VerifiedSpanError.fromReason("invalid-offset");
+  }
+  return Utf16TextRange.make({
+    endChar: range.end,
+    startChar: range.start,
+  });
+});
+
+const convertCodePointRange = Effect.fnUntraced(function* (
+  range: TextOffsetRange,
+  sourceText: string
+): Effect.fn.Return<Utf16TextRange, VerifiedSpanError> {
+  const points = A.fromIterable(sourceText);
+  if (range.end > A.length(points)) {
+    return yield* VerifiedSpanError.fromReason("invalid-offset");
+  }
+  return Utf16TextRange.make({
+    endChar: NonNegativeInt.make(Str.length(A.join(A.take(points, range.end), ""))),
+    startChar: NonNegativeInt.make(Str.length(A.join(A.take(points, range.start), ""))),
+  });
+});
+
 /**
  * Convert one declared half-open range into canonical UTF-16 offsets.
  *
@@ -353,20 +530,20 @@ export const locateRawText: {
  *   end: NonNegativeInt.make(2),
  *   unit: "unicode-code-point",
  * })
- * Effect.runPromise(convertTextOffsetRange("A😀B", range)).then(console.log)
+ * Effect.runPromise(convertTextOffsetRange(range, "A😀B")).then(console.log)
  * ```
  *
  * @category mapping
  * @since 0.0.0
  */
 export const convertTextOffsetRange: {
-  (sourceText: string, range: TextOffsetRange): Effect.Effect<Utf16TextRange, VerifiedSpanError>;
-  (range: TextOffsetRange): (sourceText: string) => Effect.Effect<Utf16TextRange, VerifiedSpanError>;
+  (sourceText: string): (range: TextOffsetRange) => Effect.Effect<Utf16TextRange, VerifiedSpanError>;
+  (range: TextOffsetRange, sourceText: string): Effect.Effect<Utf16TextRange, VerifiedSpanError>;
 } = dual(
   2,
   Effect.fn("VerifiedSpan.convertTextOffsetRange")(function* (
-    sourceText: string,
-    range: TextOffsetRange
+    range: TextOffsetRange,
+    sourceText: string
   ): Effect.fn.Return<Utf16TextRange, VerifiedSpanError> {
     if (Str.isEmpty(sourceText)) {
       return yield* VerifiedSpanError.fromReason("absent-text");
@@ -375,28 +552,9 @@ export const convertTextOffsetRange: {
       return yield* VerifiedSpanError.fromReason("limit-exceeded");
     }
 
-    if (TextOffsetUnit.is["utf16-code-unit"](range.unit)) {
-      if (
-        range.end > Str.length(sourceText) ||
-        !isUtf16Boundary(sourceText, range.start) ||
-        !isUtf16Boundary(sourceText, range.end)
-      ) {
-        return yield* VerifiedSpanError.fromReason("invalid-offset");
-      }
-      return Utf16TextRange.make({
-        endChar: range.end,
-        startChar: range.start,
-      });
-    }
-
-    const points = A.fromIterable(sourceText);
-    if (range.end > A.length(points)) {
-      return yield* VerifiedSpanError.fromReason("invalid-offset");
-    }
-
-    return Utf16TextRange.make({
-      endChar: NonNegativeInt.make(Str.length(A.join(A.take(points, range.end), ""))),
-      startChar: NonNegativeInt.make(Str.length(A.join(A.take(points, range.start), ""))),
+    return yield* TextOffsetUnit.$match(range.unit, {
+      "unicode-code-point": () => convertCodePointRange(range, sourceText),
+      "utf16-code-unit": () => convertUtf16CodeUnitRange(range, sourceText),
     });
   })
 );
@@ -431,21 +589,25 @@ export const reconstructSourceText = Effect.fn("VerifiedSpan.reconstructSourceTe
     return yield* VerifiedSpanError.fromReason("absent-text");
   }
 
-  const parts = A.empty<string>();
-  let expectedStart = 0;
-
-  for (const chunk of chunks) {
-    if (!Eq.equals(chunk.startChar, expectedStart) || Str.isEmpty(chunk.text)) {
-      return yield* VerifiedSpanError.fromReason("malformed-source");
+  const [, parts] = yield* Effect.reduce(
+    chunks,
+    reconstructionInitial,
+    ([expectedStart, parts], chunk): Effect.Effect<ReconstructionState, VerifiedSpanError> => {
+      if (Bool.or(Bool.not(Eq.equals(chunk.startChar, expectedStart)), Str.isEmpty(chunk.text))) {
+        return Effect.fail(VerifiedSpanError.fromReason("malformed-source"));
+      }
+      const nextStart = NonNegativeInt.make(expectedStart + Str.length(chunk.text));
+      return pipe(
+        nextStart > MAX_SOURCE_TEXT_LENGTH,
+        Bool.match({
+          onFalse: () => Effect.succeed([nextStart, Chunk.append(parts, chunk.text)]),
+          onTrue: () => Effect.fail(VerifiedSpanError.fromReason("limit-exceeded")),
+        })
+      );
     }
-    A.appendInPlace(parts, chunk.text);
-    expectedStart += Str.length(chunk.text);
-    if (expectedStart > MAX_SOURCE_TEXT_LENGTH) {
-      return yield* VerifiedSpanError.fromReason("limit-exceeded");
-    }
-  }
+  );
 
-  return A.join(parts, "");
+  return pipe(parts, Chunk.toReadonlyArray, A.join(""));
 });
 
 /**
@@ -465,13 +627,12 @@ export const reconstructSourceText = Effect.fn("VerifiedSpan.reconstructSourceTe
  * import { locateGroundedExtractions } from "@beep/langextract/VerifiedSpan"
  *
  * const candidates = [
- *   GroundedExtraction.make({
- *     alignmentStatus: "unaligned",
+ *   GroundedExtraction.cases.unaligned.make({
  *     label: "quotation",
  *     text: "\"Affirmed.\"",
  *   }),
  * ]
- * Effect.runPromise(locateGroundedExtractions("The court wrote “Affirmed.”", candidates)).then(console.log)
+ * Effect.runPromise(locateGroundedExtractions(candidates, "The court wrote “Affirmed.”")).then(console.log)
  * ```
  *
  * @category mapping
@@ -479,23 +640,23 @@ export const reconstructSourceText = Effect.fn("VerifiedSpan.reconstructSourceTe
  */
 export const locateGroundedExtractions: {
   (
-    sourceText: string,
-    extractions: readonly GroundedExtraction[]
-  ): Effect.Effect<readonly TextAnchor[], VerifiedSpanError>;
+    sourceText: string
+  ): (extractions: ReadonlyArray<GroundedExtraction>) => Effect.Effect<ReadonlyArray<TextAnchor>, VerifiedSpanError>;
   (
-    extractions: readonly GroundedExtraction[]
-  ): (sourceText: string) => Effect.Effect<readonly TextAnchor[], VerifiedSpanError>;
+    extractions: ReadonlyArray<GroundedExtraction>,
+    sourceText: string
+  ): Effect.Effect<ReadonlyArray<TextAnchor>, VerifiedSpanError>;
 } = dual(
   2,
   Effect.fn("VerifiedSpan.locateGroundedExtractions")(function* (
-    sourceText: string,
-    extractions: ReadonlyArray<GroundedExtraction>
+    extractions: ReadonlyArray<GroundedExtraction>,
+    sourceText: string
   ): Effect.fn.Return<ReadonlyArray<TextAnchor>, VerifiedSpanError> {
     if (A.length(extractions) > MAX_EXTRACTION_CANDIDATES) {
       return yield* VerifiedSpanError.fromReason("limit-exceeded");
     }
     if (A.isReadonlyArrayEmpty(extractions)) {
-      return [];
+      return A.empty();
     }
     if (Str.isEmpty(sourceText)) {
       return yield* VerifiedSpanError.fromReason("absent-text");
@@ -510,7 +671,7 @@ export const locateGroundedExtractions: {
         locatePreparedRawText(sourceText, normalizedSource, extraction.text).pipe(
           Effect.mapError((error) =>
             VerifiedSpanError.make({
-              candidateIndex: NonNegativeInt.make(index),
+              candidateIndex: O.some(NonNegativeInt.make(index)),
               message: error.message,
               reason: error.reason,
             })
