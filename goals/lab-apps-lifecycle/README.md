@@ -35,17 +35,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Census ratification and geometry schema design: re-verify the
-registration-surface census (`research/02-registration-blast-radius.md`
-§19 master table) against the live tree, then design the
-`RegistrationSurface` geometry schema that `create-package`,
-`delete-package`, and `doctor` all consume.
+P1 Implement delete-package with doctor mode: `beep delete-package` per
+`research/05` §9 phases 0–10 on the ratified `RegistrationSurface`
+geometry (`research/11-registration-geometry-design.md`), with the
+synthetic #680 residue fixture proving `--check`/doctor.
 
 ## Latest Evidence
 
-Not started. Scaffold evidence: the six lane reports under
-[`research/`](./research/) and the locked interview decisions in
-`SPEC.md` Decision Log.
+P0 complete 2026-08-14: census ratification
+(`research/10-p0-census-ratification.md`), geometry design
+(`research/11-registration-geometry-design.md`), and the ratified
+fourteen-edit gate-scoping list
+(`research/12-p0-gate-scoping-ratified.md`); P0 standards drafts archived
+at [`history/p0-standards-drafts/`](./history/p0-standards-drafts/) for P2.
 
 ## Notes
 
