@@ -6,7 +6,7 @@
  */
 
 import { $VeniceAiId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { HttpStatus } from "@beep/schema/HttpStatus";
 import { decodeJsonString } from "@beep/schema/Json";
 import { NonNegativeInt } from "@beep/schema/Number";
@@ -686,7 +686,7 @@ export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I
  * @category errors
  * @since 0.0.0
  */
-export class VeniceAIError extends TaggedErrorClass<VeniceAIError>($I`VeniceAIError`)(
+export class VeniceAIError extends S.TaggedError<VeniceAIError>($I`VeniceAIError`)(
   "VeniceAIError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(

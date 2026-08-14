@@ -49,7 +49,7 @@ import {
 import { IRI } from "@beep/rdf/Iri";
 import { makeLiteral, makeNamedNode, makeQuad, serializeQuad } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, Duration, Effect, flow, Layer, Order, pipe, Result, Semaphore } from "effect";
 import * as S from "effect/Schema";
@@ -1612,7 +1612,7 @@ const GRAPH_WORKER_MESSAGE_ERROR = "Ontology graph worker message failed to dese
 
 const GRAPH_WORKER_TIMEOUT_MESSAGE = "The graph worker did not respond. The diagram could not be drawn.";
 
-class OntologyGraphWorkerTimeoutError extends TaggedErrorClass<OntologyGraphWorkerTimeoutError>(
+class OntologyGraphWorkerTimeoutError extends S.TaggedError<OntologyGraphWorkerTimeoutError>(
   $I`OntologyGraphWorkerTimeoutError`
 )(
   "OntologyGraphWorkerTimeoutError",

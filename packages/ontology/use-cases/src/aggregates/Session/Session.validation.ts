@@ -34,7 +34,7 @@ import {
 } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import {
   ShaclNodeShape,
   ShaclPropertyShape,
@@ -311,7 +311,7 @@ export class ExportOntologyProvenanceResult extends S.Class<ExportOntologyProven
  * @category errors
  * @since 0.0.0
  */
-export class OntologyValidationError extends TaggedErrorClass<OntologyValidationError>($I`OntologyValidationError`)(
+export class OntologyValidationError extends S.TaggedError<OntologyValidationError>($I`OntologyValidationError`)(
   "OntologyValidationError",
   {
     reason: LiteralKit(["shaclFailed", "repairVerificationFailed", "actorIdentityMissing"]),

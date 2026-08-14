@@ -20,7 +20,6 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { TextEdge, TextNode } from "@beep/nlp/Graph/Schema";
-import { TaggedErrorClass } from "@beep/schema";
 import { A, O as OptionUtils, P } from "@beep/utils";
 import { Clock, Effect, Graph, MutableHashMap, MutableHashSet } from "effect";
 import { dual } from "effect/Function";
@@ -80,7 +79,7 @@ export type MutableTextGraph = Graph.MutableDirectedGraph<TextNode, TextEdge>;
  * @category errors
  * @since 0.0.0
  */
-export class GraphCycleError extends TaggedErrorClass<GraphCycleError>($I`GraphCycleError`)(
+export class GraphCycleError extends S.TaggedError<GraphCycleError>($I`GraphCycleError`)(
   "GraphCycleError",
   {
     parentIndex: S.Finite,

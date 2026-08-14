@@ -60,7 +60,7 @@ Primitives in `packages/foundation/modeling/*` (`@beep/schema`, `@beep/identity`
   `LiteralKit`/`MappedLiteralKit` for literal domains (exhaustive `.match`/`.cases`/guards) —
   `packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts`.
 - **Typed errors:** `TaggedErrorClass` (+ `CauseTaggedError`, `StatusCauseTaggedErrorClass`) —
-  `packages/foundation/modeling/schema/src/TaggedErrorClass/TaggedErrorClass.errors.ts`. No raw `Data.TaggedError`.
+  `packages/foundation/modeling/schema/src/index.ts`. No raw `Data.TaggedError`.
 - **Value objects** (`@beep/schema/*` barrel `packages/foundation/modeling/schema/src/index.ts`):
   Email, Slug, Semver, Sha256, CurrencyCode, URL, Int/PosInt/NonNegativeInt,
   UnitInterval, Percentage, LocalDate, crypto VOs.

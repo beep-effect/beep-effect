@@ -6,7 +6,7 @@
  */
 
 import { $OxigraphId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $OxigraphId.create("Oxigraph.errors");
@@ -76,7 +76,7 @@ export type OxigraphSparqlErrorReason = typeof OxigraphSparqlErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class OxigraphSparqlError extends TaggedErrorClass<OxigraphSparqlError>($I`OxigraphSparqlError`)(
+export class OxigraphSparqlError extends S.TaggedError<OxigraphSparqlError>($I`OxigraphSparqlError`)(
   "OxigraphSparqlError",
   {
     reason: OxigraphSparqlErrorReason,

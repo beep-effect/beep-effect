@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.errors");
@@ -28,7 +27,7 @@ const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.err
  * @category errors
  * @since 0.0.0
  */
-export class AgentEffectivenessEvalScorerError extends TaggedErrorClass<AgentEffectivenessEvalScorerError>(
+export class AgentEffectivenessEvalScorerError extends S.TaggedError<AgentEffectivenessEvalScorerError>(
   $I`AgentEffectivenessEvalScorerError`
 )(
   "AgentEffectivenessEvalScorerError",

@@ -1,5 +1,4 @@
 #!/usr/bin/env bun
-// @effect-diagnostics strictEffectProvide:skip-file
 
 /**
  * Stdio entrypoint for the portable practice knowledge-graph MCP host.
@@ -8,11 +7,10 @@
  * @since 0.0.0
  */
 
-import { BunRuntime } from "@effect/platform-bun";
-import * as BunServices from "@effect/platform-bun/BunServices";
 import { Config, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import { Command, Flag } from "effect/unstable/cli";
+import { runEntrypoint } from "./entrypoint.ts";
 import { PracticeKgHostError } from "./runtime/Host.ts";
 import { loadPracticeKgBundleContext, makePracticeKgHostLayer } from "./runtime/index.ts";
 import "../../../node_modules/@electric-sql/pglite/dist/initdb.wasm" with { type: "file" };
@@ -44,8 +42,5 @@ const serverCommand = Command.make(
   })
 );
 
-const program = Command.run(serverCommand, { version: "0.0.0" }).pipe(Effect.provide(BunServices.layer));
-
-if (import.meta.main) {
-  BunRuntime.runMain(program);
-}
+const program = Command.run(serverCommand, { version: "0.0.0" });
+runEntrypoint({ isMain: import.meta.main, program });

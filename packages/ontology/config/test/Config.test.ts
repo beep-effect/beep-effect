@@ -1,5 +1,12 @@
+import { VERSION } from "@beep/ontology-config";
 import { OntologyConfigLive, OntologyMcpConfigLive } from "@beep/ontology-config/layer";
-import { OntologyConfig, OntologyMcpConfig } from "@beep/ontology-config/server";
+import {
+  OntologyConfig,
+  OntologyMcpConfig,
+  OntologyMcpServerConfig,
+  OntologyServerConfig,
+} from "@beep/ontology-config/server";
+import { makeOntologyConfigTest, makeOntologyMcpConfigTest } from "@beep/ontology-config/test";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, ConfigProvider, Effect, Exit, Layer } from "effect";
 
@@ -12,6 +19,16 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 describe("OntologyConfigLive", () => {
+  it("exposes static test layers and the package version", () => {
+    expect(VERSION).toBe("0.0.0");
+    expect(Layer.isLayer(makeOntologyConfigTest(OntologyServerConfig.make({ workspaceRoot: "/srv/ontology" })))).toBe(
+      true
+    );
+    expect(Layer.isLayer(makeOntologyMcpConfigTest(OntologyMcpServerConfig.make({ mutationsEnabled: true })))).toBe(
+      true
+    );
+  });
+
   it.effect(
     "resolves the required ontology workspace root",
     Effect.fnUntraced(function* () {

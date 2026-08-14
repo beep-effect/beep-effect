@@ -10,7 +10,7 @@
 /// <reference path="./whatwg-url.d.ts" />
 
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Eq, Struct } from "@beep/utils";
 import { color as parseCssColor } from "@csstools/css-color-parser";
 import { isWhiteSpaceOrCommentNode, parseListOfComponentValues } from "@csstools/css-parser-algorithms";
@@ -195,7 +195,7 @@ export class HtmlConformanceIssue extends S.Class<HtmlConformanceIssue>($I`HtmlC
  * @category errors
  * @since 0.0.0
  */
-export class HtmlConformanceError extends TaggedErrorClass<HtmlConformanceError>($I`HtmlConformanceError`)(
+export class HtmlConformanceError extends S.TaggedError<HtmlConformanceError>($I`HtmlConformanceError`)(
   "HtmlConformanceError",
   {
     issues: S.NonEmptyArray(HtmlConformanceIssue),

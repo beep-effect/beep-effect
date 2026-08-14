@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Inspectable } from "effect";
 import * as S from "effect/Schema";
@@ -30,7 +29,7 @@ const messageWithCause = (message: string, cause: unknown): string =>
  * @category errors
  * @since 0.0.0
  */
-export class EffectImportRulesPersistenceError extends TaggedErrorClass<EffectImportRulesPersistenceError>(
+export class EffectImportRulesPersistenceError extends S.TaggedError<EffectImportRulesPersistenceError>(
   $I`EffectImportRulesPersistenceError`
 )(
   "EffectImportRulesPersistenceError",
@@ -64,7 +63,7 @@ export class EffectImportRulesPersistenceError extends TaggedErrorClass<EffectIm
  * @category errors
  * @since 0.0.0
  */
-export class NoNativeRuntimeRulesExecutionError extends TaggedErrorClass<NoNativeRuntimeRulesExecutionError>(
+export class NoNativeRuntimeRulesExecutionError extends S.TaggedError<NoNativeRuntimeRulesExecutionError>(
   $I`NoNativeRuntimeRulesExecutionError`
 )(
   "NoNativeRuntimeRulesExecutionError",
@@ -98,7 +97,7 @@ export class NoNativeRuntimeRulesExecutionError extends TaggedErrorClass<NoNativ
  * @category errors
  * @since 0.0.0
  */
-export class TerseEffectRulesPersistenceError extends TaggedErrorClass<TerseEffectRulesPersistenceError>(
+export class TerseEffectRulesPersistenceError extends S.TaggedError<TerseEffectRulesPersistenceError>(
   $I`TerseEffectRulesPersistenceError`
 )(
   "TerseEffectRulesPersistenceError",

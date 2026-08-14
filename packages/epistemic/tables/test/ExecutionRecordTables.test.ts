@@ -21,7 +21,12 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type { ExecutionDecisionInsert, ExecutionDecisionRow } from "@beep/epistemic-tables/values/ExecutionRecord";
+import type {
+  ExecutionDecisionInsert,
+  ExecutionDecisionRow,
+  ExecutionOutcomeInsert,
+  ExecutionOutcomeRow,
+} from "@beep/epistemic-tables/values/ExecutionRecord";
 import type { Table } from "drizzle-orm";
 
 const digest = (fill: string): string => fill.repeat(64);
@@ -33,6 +38,11 @@ const asSelectedRow = (insert: ExecutionDecisionInsert): ExecutionDecisionRow =>
   ...insert,
   prevHash: insert.prevHash ?? null,
   reason: insert.reason ?? null,
+});
+
+const asSelectedOutcomeRow = (insert: ExecutionOutcomeInsert): ExecutionOutcomeRow => ({
+  ...insert,
+  decisionVerdict: insert.decisionVerdict ?? "allowed",
 });
 
 const decodeDecision = S.decodeUnknownSync(ExecutionDecisionRecord);
@@ -124,7 +134,14 @@ describe("ExecutionRecordTables", () => {
   it("exposes exactly the outcome columns and no payload-capable column", () => {
     const facts = columnFacts(executionOutcomeTable);
 
-    expect(A.sort(R.keys(facts), Order.String)).toEqual(["decisionHash", "hash", "recordedAt", "runKey", "settlement"]);
+    expect(A.sort(R.keys(facts), Order.String)).toEqual([
+      "decisionHash",
+      "decisionVerdict",
+      "hash",
+      "recordedAt",
+      "runKey",
+      "settlement",
+    ]);
 
     for (const fact of R.values(facts)) {
       expect(payloadCapableColumnTypes).not.toContain(fact.columnType);
@@ -147,7 +164,7 @@ describe("ExecutionRecordTables", () => {
   it("round-trips an outcome record", () => {
     const insert = toExecutionOutcomeInsert(outcome);
 
-    expect(outcomeEquivalence(fromExecutionOutcomeRow({ ...insert }), outcome)).toBe(true);
+    expect(outcomeEquivalence(fromExecutionOutcomeRow(asSelectedOutcomeRow(insert)), outcome)).toBe(true);
   });
 
   it("keeps sealed records and their row projections in agreement", () => {
@@ -175,8 +192,11 @@ describe("ExecutionRecordTables", () => {
       settlement: "completed",
     });
 
-    expect(outcomeEquivalence(fromExecutionOutcomeRow(toExecutionOutcomeInsert(sealedOutcome)), sealedOutcome)).toBe(
-      true
-    );
+    expect(
+      outcomeEquivalence(
+        fromExecutionOutcomeRow(asSelectedOutcomeRow(toExecutionOutcomeInsert(sealedOutcome))),
+        sealedOutcome
+      )
+    ).toBe(true);
   });
 });

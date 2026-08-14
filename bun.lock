@@ -40,7 +40,6 @@
         "eslint-plugin-tsdoc": "catalog:",
         "fallow": "catalog:",
         "inspeffct": "catalog:",
-        "jsonc-parser": "catalog:",
         "knip": "catalog:",
         "lefthook": "catalog:",
         "micromark": "catalog:",
@@ -136,6 +135,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },
@@ -273,6 +273,8 @@
       },
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
         "effect": "catalog:",
@@ -295,11 +297,11 @@
       "devDependencies": {
         "@beep/test-utils": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
         "@electric-sql/pglite": "catalog:",
         "@types/node": "catalog:",
         "drizzle-kit": "catalog:",
-        "drizzle-orm": "catalog:",
       },
     },
     "packages/agents/client": {
@@ -1167,15 +1169,6 @@
         "@types/node": "catalog:",
         "bun-types": "catalog:",
         "vitest": "catalog:",
-      },
-    },
-    "packages/drivers/protobuf": {
-      "name": "@beep/protobuf",
-      "version": "0.0.0",
-      "devDependencies": {
-        "@effect/vitest": "catalog:",
-        "@types/node": "catalog:",
-        "bun-types": "catalog:",
       },
     },
     "packages/drivers/rdf-canonize": {
@@ -2281,6 +2274,7 @@
       "devDependencies": {
         "@beep/shacl": "workspace:^",
         "@beep/test-utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "esbuild": "catalog:",
@@ -3296,8 +3290,6 @@
     "@beep/pretext": ["@beep/pretext@workspace:packages/drivers/pretext"],
 
     "@beep/professional-desktop": ["@beep/professional-desktop@workspace:apps/professional-desktop"],
-
-    "@beep/protobuf": ["@beep/protobuf@workspace:packages/drivers/protobuf"],
 
     "@beep/provenance": ["@beep/provenance@workspace:packages/foundation/modeling/provenance"],
 

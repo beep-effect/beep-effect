@@ -10,7 +10,6 @@ import {
   MappedLiteralKit,
   NonEmptyTrimmedStr,
   SchemaUtils,
-  TaggedErrorClass,
 } from "@beep/schema";
 import { O, P, R, pipe } from "@beep/utils";
 import {
@@ -638,7 +637,7 @@ export class AppliedAuth extends S.Class<AppliedAuth>($I`AppliedAuth`)(
 }
 
 /** Invalid `fromSpec` boundary input. */
-export class InvalidOpenApiOptions extends TaggedErrorClass<InvalidOpenApiOptions>(
+export class InvalidOpenApiOptions extends S.TaggedError<InvalidOpenApiOptions>(
   $I`InvalidOpenApiOptions`
 )(
   "InvalidOpenApiOptions",

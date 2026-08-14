@@ -6,10 +6,11 @@
  */
 
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Effect, Exit } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { NextResponse } from "next/server";
 import { ContactSubmissionResponse, contactSubmissionPayloadFromFormDataEffect, submitContact } from "../../../contact";
 import type { ContactSubmissionPayload } from "../../../contact";
@@ -26,7 +27,7 @@ const ContactRoutePayloadErrorReason = LiteralKit(["form-data", "schema"]).pipe(
 
 type ContactRoutePayloadErrorReason = typeof ContactRoutePayloadErrorReason.Type;
 
-class ContactRoutePayloadError extends TaggedErrorClass<ContactRoutePayloadError>($I`ContactRoutePayloadError`)(
+class ContactRoutePayloadError extends S.TaggedError<ContactRoutePayloadError>($I`ContactRoutePayloadError`)(
   "ContactRoutePayloadError",
   {
     reason: ContactRoutePayloadErrorReason,

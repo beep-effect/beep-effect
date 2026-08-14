@@ -7,7 +7,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { P } from "@beep/utils";
 import { Effect, Runtime } from "effect";
 import { dual } from "effect/Function";
@@ -30,7 +29,7 @@ const $I = $RepoCliId.create("internal/cli/ExitCodeError");
  * @category errors
  * @since 0.0.0
  */
-export class CliReportedExit extends TaggedErrorClass<CliReportedExit>($I`CliReportedExit`)(
+export class CliReportedExit extends S.TaggedError<CliReportedExit>($I`CliReportedExit`)(
   "CliReportedExit",
   {
     message: S.String,

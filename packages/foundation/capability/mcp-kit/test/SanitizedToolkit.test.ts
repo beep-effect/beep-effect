@@ -9,7 +9,6 @@
  * @since 0.0.0
  */
 import { CurrentMcpCaller, sanitizedToolkit } from "@beep/mcp-kit";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { assert, describe, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as O from "effect/Option";
@@ -25,10 +24,9 @@ const FixtureTool = Tool.make("fixture_tool", {
   success: S.String,
 });
 
-class ExpectedFixtureFailure extends TaggedErrorClass<ExpectedFixtureFailure>("ExpectedFixtureFailure")(
-  "ExpectedFixtureFailure",
-  { message: S.String }
-) {}
+class ExpectedFixtureFailure extends S.TaggedError<ExpectedFixtureFailure>()("ExpectedFixtureFailure", {
+  message: S.String,
+}) {}
 
 const ExpectedFailureTool = Tool.make("expected_failure_tool", {
   failure: ExpectedFixtureFailure,

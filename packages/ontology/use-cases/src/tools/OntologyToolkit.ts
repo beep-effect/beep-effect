@@ -10,7 +10,7 @@ import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { annotateFourHints, destructiveWriteToolHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { ChangeOperation, SessionChangeDelta, SessionId } from "@beep/ontology-domain/aggregates/Session";
 import { PrefixMap } from "@beep/rdf/Rdf";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { Tool, Toolkit } from "effect/unstable/ai";
@@ -134,7 +134,7 @@ export type OntologyBudgetKind = typeof OntologyBudgetKind.Type;
  * @category errors
  * @since 0.0.0
  */
-export class OntologyCasConflict extends TaggedErrorClass<OntologyCasConflict>($I`OntologyCasConflict`)(
+export class OntologyCasConflict extends S.TaggedError<OntologyCasConflict>($I`OntologyCasConflict`)(
   "OntologyCasConflict",
   {
     expectedFingerprint: OntologyFingerprint,
@@ -154,7 +154,7 @@ export class OntologyCasConflict extends TaggedErrorClass<OntologyCasConflict>($
  * @category errors
  * @since 0.0.0
  */
-export class OntologyBudgetRefusal extends TaggedErrorClass<OntologyBudgetRefusal>($I`OntologyBudgetRefusal`)(
+export class OntologyBudgetRefusal extends S.TaggedError<OntologyBudgetRefusal>($I`OntologyBudgetRefusal`)(
   "OntologyBudgetRefusal",
   {
     kind: OntologyBudgetKind,
@@ -177,7 +177,7 @@ export class OntologyBudgetRefusal extends TaggedErrorClass<OntologyBudgetRefusa
  * @category errors
  * @since 0.0.0
  */
-export class OntologyReasonerDriftRefusal extends TaggedErrorClass<OntologyReasonerDriftRefusal>(
+export class OntologyReasonerDriftRefusal extends S.TaggedError<OntologyReasonerDriftRefusal>(
   $I`OntologyReasonerDriftRefusal`
 )(
   "OntologyReasonerDriftRefusal",
@@ -202,7 +202,7 @@ export class OntologyReasonerDriftRefusal extends TaggedErrorClass<OntologyReaso
  * @category errors
  * @since 0.0.0
  */
-export class OntologyNoOpRefusal extends TaggedErrorClass<OntologyNoOpRefusal>($I`OntologyNoOpRefusal`)(
+export class OntologyNoOpRefusal extends S.TaggedError<OntologyNoOpRefusal>($I`OntologyNoOpRefusal`)(
   "OntologyNoOpRefusal",
   { guidance: S.NonEmptyString, recoverable: S.Literal(true) },
   $I.annote("OntologyNoOpRefusal", {
@@ -220,7 +220,7 @@ export class OntologyNoOpRefusal extends TaggedErrorClass<OntologyNoOpRefusal>($
  * @category errors
  * @since 0.0.0
  */
-export class OntologyActorIdentityRefusal extends TaggedErrorClass<OntologyActorIdentityRefusal>(
+export class OntologyActorIdentityRefusal extends S.TaggedError<OntologyActorIdentityRefusal>(
   $I`OntologyActorIdentityRefusal`
 )(
   "OntologyActorIdentityRefusal",
@@ -240,7 +240,7 @@ export class OntologyActorIdentityRefusal extends TaggedErrorClass<OntologyActor
  * @category errors
  * @since 0.0.0
  */
-export class OntologyTierGateRefusal extends TaggedErrorClass<OntologyTierGateRefusal>($I`OntologyTierGateRefusal`)(
+export class OntologyTierGateRefusal extends S.TaggedError<OntologyTierGateRefusal>($I`OntologyTierGateRefusal`)(
   "OntologyTierGateRefusal",
   { guidance: S.NonEmptyString, recoverable: S.Literal(true) },
   $I.annote("OntologyTierGateRefusal", {
@@ -258,7 +258,7 @@ export class OntologyTierGateRefusal extends TaggedErrorClass<OntologyTierGateRe
  * @category errors
  * @since 0.0.0
  */
-export class OntologyToolExecutionError extends TaggedErrorClass<OntologyToolExecutionError>(
+export class OntologyToolExecutionError extends S.TaggedError<OntologyToolExecutionError>(
   $I`OntologyToolExecutionError`
 )(
   "OntologyToolExecutionError",

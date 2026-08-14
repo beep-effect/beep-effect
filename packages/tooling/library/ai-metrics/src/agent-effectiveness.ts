@@ -19,7 +19,7 @@ import {
   PhoenixPromptChatMessage,
   PhoenixPromptCreateInput,
 } from "@beep/phoenix";
-import { LiteralKit, SchemaUtils, TaggedErrorClass, UnknownRecord } from "@beep/schema";
+import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { DateTime, Effect, FileSystem, flow, Match, Path, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -216,7 +216,7 @@ export type AgentEffectivenessAnnotationValue = typeof AgentEffectivenessAnnotat
  * @category errors
  * @since 0.0.0
  */
-export class AgentEffectivenessError extends TaggedErrorClass<AgentEffectivenessError>($I`AgentEffectivenessError`)(
+export class AgentEffectivenessError extends S.TaggedError<AgentEffectivenessError>($I`AgentEffectivenessError`)(
   "AgentEffectivenessError",
   {
     cause: S.Defect({ includeStack: true }),

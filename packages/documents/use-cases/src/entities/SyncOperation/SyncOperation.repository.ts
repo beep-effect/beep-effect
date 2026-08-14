@@ -11,7 +11,7 @@ import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperat
 import * as Documents from "@beep/documents-domain/identity/Documents";
 import { DmsProvider, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -115,7 +115,7 @@ export class SyncOperationSeed extends S.Class<SyncOperationSeed>($I`SyncOperati
  * @category errors
  * @since 0.0.0
  */
-export class SyncOperationRepositoryConflict extends TaggedErrorClass<SyncOperationRepositoryConflict>(
+export class SyncOperationRepositoryConflict extends S.TaggedError<SyncOperationRepositoryConflict>(
   $I`SyncOperationRepositoryConflict`
 )(
   "SyncOperationRepositoryConflict",
@@ -154,7 +154,7 @@ export class SyncOperationRepositoryConflict extends TaggedErrorClass<SyncOperat
  * @category errors
  * @since 0.0.0
  */
-export class SyncOperationRepositoryNotFound extends TaggedErrorClass<SyncOperationRepositoryNotFound>(
+export class SyncOperationRepositoryNotFound extends S.TaggedError<SyncOperationRepositoryNotFound>(
   $I`SyncOperationRepositoryNotFound`
 )(
   "SyncOperationRepositoryNotFound",
@@ -186,7 +186,7 @@ export class SyncOperationRepositoryNotFound extends TaggedErrorClass<SyncOperat
  * @category errors
  * @since 0.0.0
  */
-export class SyncOperationRepositoryUnavailable extends TaggedErrorClass<SyncOperationRepositoryUnavailable>(
+export class SyncOperationRepositoryUnavailable extends S.TaggedError<SyncOperationRepositoryUnavailable>(
   $I`SyncOperationRepositoryUnavailable`
 )(
   "SyncOperationRepositoryUnavailable",

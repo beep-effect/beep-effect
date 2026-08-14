@@ -28,6 +28,9 @@
     },
     {
       "path": "../../packages/law-practice/server/tsconfig.json"
+    },
+    {
+      "path": "../../packages/tooling/test-kit/test-utils/tsconfig.json"
     }
   ]
 }

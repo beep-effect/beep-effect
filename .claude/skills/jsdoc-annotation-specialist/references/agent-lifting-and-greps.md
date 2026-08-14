@@ -97,7 +97,7 @@ empty bodies and all safety matches specifically within Example fences.
 
 ```bash
 rg -l 'extends S\.Class' --type ts | xargs rg -L 'annote'
-rg -l 'extends TaggedErrorClass' --type ts | xargs rg -L 'annote'
+rg -l 'extends S\.TaggedError' --type ts | xargs rg -L 'annote'
 rg -n 'annoteSchema|\.annotate\(' --type ts
 ```
 
