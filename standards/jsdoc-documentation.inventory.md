@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-14T01:29:15.480Z
+Generated: 2026-08-14T16:49:53.886Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 68 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 59 |
-| publicModules | 2475 |
-| publicExports | 16231 |
+| publicModules | 2467 |
+| publicExports | 16239 |
 | openModules | 397 |
 | openExports | 135 |
 | missingExportExamples | 4 |
@@ -73,7 +73,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 184 | 1393 | 46 | 10 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 189 | 1411 | 46 | 10 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 86 | 0 | 0 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
@@ -117,7 +117,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 60 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 30 | 108 | 4 | 0 |
 | 61 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 5 | 12 | 0 | 0 |
 | 62 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 28 | 62 | 0 | 0 |
-| 63 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 19 | 54 | 0 | 0 |
+| 63 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 4 | 40 | 0 | 0 |
 | 64 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 207 | 4 | 1 |
 | 65 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 22 | 325 | 0 | 0 |
 | 66 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
@@ -150,7 +150,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 93 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
 | 94 | `@beep/documents-domain` | `packages/documents/domain` | clean | 24 | 96 | 0 | 0 |
 | 95 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 255 | 1660 | 24 | 1 |
-| 96 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 21 | 48 | 8 | 4 |
+| 96 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 23 | 51 | 8 | 4 |
 | 97 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 22 | 215 | 1 | 1 |
 | 98 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
 | 99 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | clean | 9 | 21 | 0 | 0 |
@@ -176,7 +176,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 119 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 139 | 0 | 1 |
 | 120 | `@beep/documents-tables` | `packages/documents/tables` | clean | 15 | 40 | 0 | 0 |
 | 121 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 71 | 1 | 0 |
-| 122 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 42 | 0 | 0 |
+| 122 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 43 | 0 | 0 |
 | 123 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 52 | 0 | 0 |
 | 124 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
 | 125 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 22 | 1 | 0 |
@@ -823,10 +823,10 @@ Module findings:
 - `src/OpenClaw.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/CiFleetController.ts:152` `CiFleetControllerPulumiConfigValues` (const) - missing @example
-- `src/CiFleetController.ts:188` `CiFleetControllerConfig` (class) - missing @example
-- `src/CiFleetController.ts:214` `makeCiFleetControllerConfig` (const) - missing @example
-- `src/CiFleetController.ts:238` `loadCiFleetControllerConfig` (const) - missing @example
+- `src/CiFleetController.ts:221` `CiFleetControllerPulumiConfigValues` (const) - missing @example
+- `src/CiFleetController.ts:257` `CiFleetControllerConfig` (class) - missing @example
+- `src/CiFleetController.ts:283` `makeCiFleetControllerConfig` (const) - missing @example
+- `src/CiFleetController.ts:307` `loadCiFleetControllerConfig` (const) - missing @example
 - `src/OpenClaw.ts:402` `OpenClawExpectedIdentity` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:572` `OpenClawDeploymentConfig` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:769` `OpenClawBackupConfig` (class) - 1 documentation section/link violation(s)
