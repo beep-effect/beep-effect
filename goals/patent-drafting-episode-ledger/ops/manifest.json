@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "patent-drafting-episode-ledger",
+    "title": "Patent Drafting Episode Ledger",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/patent-drafting-episode-ledger",
+  "lifecycle": "active",
+  "mission": "Ship the law-owned DraftingEpisode, support-set promotion gate, answer annex, and rebuildable projection proof.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/patent-drafting-episode-ledger",
+    "graduated": "2026-08-13"
+  },
+  "dependencies": [
+    "goals/agentic-professional-runtime",
+    "goals/hybrid-retrieval-fusion-core",
+    "goals/practice-kg-mcp",
+    "goals/citation-verified-span-substrate",
+    "goals/patent-citation-candor-gate"
+  ],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/patent-drafting-episode-ledger/README.md",
+    "goals/patent-drafting-episode-ledger/SPEC.md",
+    "goals/patent-drafting-episode-ledger/PLAN.md",
+    "goals/patent-drafting-episode-ledger/GOAL.md",
+    "goals/patent-drafting-episode-ledger/research/SOURCES.md",
+    "explorations/patent-drafting-episode-ledger/BRIEF.md",
+    "explorations/patent-drafting-episode-ledger/MAP.md",
+    "explorations/patent-drafting-episode-ledger/DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/patent-drafting-episode-ledger/research/SOURCES.md",
+    "../../explorations/patent-drafting-episode-ledger/research/01-repo-surfaces.md",
+    "../../explorations/patent-drafting-episode-ledger/research/02-drafting-episode-frame.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/patent-drafting-episode-ledger/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Contract and fixture audit", "status": "pending" },
+    { "id": "P1", "name": "Ledger and promotion slice", "status": "pending" },
+    { "id": "P2", "name": "Verify", "status": "pending" },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/patent-drafting-episode-ledger/GOAL.md)\" -le 4000",
+    "jq . goals/patent-drafting-episode-ledger/ops/manifest.json",
+    "rg -n \"patent-drafting-episode-ledger|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/patent-drafting-episode-ledger",
+    "git diff --check -- goals/patent-drafting-episode-ledger",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "A required sibling contract is missing or would need amendment.",
+    "Practice-KG rows cannot be made totally deterministic within scope.",
+    "The design would compute a legal verdict from anchor fidelity.",
+    "An emitterless event payload would be treated as stable without producer proof."
+  ]
+}

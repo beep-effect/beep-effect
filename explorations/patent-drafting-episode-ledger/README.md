@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,8 +31,8 @@ after the relator wedge graduated).
 
 ## Next Open Question
 
-Does the operator approve [`BRIEF.md`](./BRIEF.md) as the shaped contract?
-No goal is scaffolded until that review passes.
+No blocking question. Reopen at `decompose` only when the public-USPTO
+benchmark gate in [`MAP.md`](./MAP.md) fires.
 
 ## Read This First
 
@@ -41,10 +41,14 @@ No goal is scaffolded until that review passes.
 3. [`DECISIONS.md`](./DECISIONS.md) - pre-seeded wedge decisions: research lanes, dependency posture, orchestration, PR staging.
 4. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
 5. Parent packet: [`../legal-patent-kg-deepening/ROUTING-SEED.md`](../legal-patent-kg-deepening/ROUTING-SEED.md) / [`DECISIONS.md`](../legal-patent-kg-deepening/DECISIONS.md) - the routing matrix and campaign grill log.
-6. [`BRIEF.md`](./BRIEF.md) - current shaped pitch awaiting operator review.
-7. [`MAP.md`](./MAP.md) - rung 1 and deferred benchmark sequencing.
+6. [`BRIEF.md`](./BRIEF.md) - operator-ratified shaped contract.
+7. [`MAP.md`](./MAP.md) - ratified rung 1 and deferred benchmark sequencing.
 
 ## Trail
+
+- 2026-08-13 (final ceremony): operator signed off `BRIEF.md` and `MAP.md`;
+  graduated [`patent-drafting-episode-ledger`](../../goals/patent-drafting-episode-ledger/README.md).
+  The public-USPTO benchmark remains a MAP re-entry point.
 
 - 2026-08-13 (ceremony): drafted `BRIEF.md` and `MAP.md` from the ratified
   six-question contract. Stage remains `shape`; operator BRIEF review is the
