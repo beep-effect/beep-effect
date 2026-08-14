@@ -2084,11 +2084,43 @@ describe("quality task adapter", () => {
     expect(A.some(shards, (shard) => A.contains(shard.packageNames, "@beep/repo-cli"))).toBe(true);
   });
 
+  it("isolates the two live long poles in the calibrated eight-shard plan", () => {
+    const shards = planCoverageFullShards(
+      [
+        "@beep/db-admin",
+        "@beep/dock",
+        "@beep/documents-server",
+        "@beep/editor",
+        "@beep/epistemic-server",
+        "@beep/epistemic-use-cases",
+        "@beep/law-practice-server",
+        "@beep/lexical-schema",
+        "@beep/lint-rules",
+        "@beep/nlp",
+        "@beep/nlp-processing",
+        "@beep/observability",
+        "@beep/ontology-client",
+        "@beep/professional-desktop",
+        "@beep/repo-ai-metrics",
+        "@beep/repo-cli",
+        "@beep/repo-utils",
+        "@beep/schema",
+        "@beep/test-utils",
+        "@beep/wink",
+      ],
+      8
+    );
+
+    expect(shards[0]?.packageNames).toEqual(["@beep/repo-cli"]);
+    expect(shards[1]?.packageNames).toEqual(["@beep/repo-utils"]);
+    expect(A.every(A.drop(shards, 2), (shard) => shard.weightSeconds < 300)).toBe(true);
+  });
+
   it("preserves caller Turbo flags while overriding full-coverage shard controls", () =>
     withEnvVar("CI", "true", () => {
       const steps = coverageFullStepsForTesting(
         "/repo",
-        ["@beep/a", "@beep/b", "@beep/c", "@beep/d", "@beep/e"],
+        ["@beep/repo-cli", "@beep/repo-utils", "@beep/a", "@beep/b", "@beep/c", "@beep/d", "@beep/e", "@beep/f"],
         ["--concurrency", "9", "--force", "--remote-only", "--output-logs=errors-only", "--summarize"]
       );
 
@@ -2099,6 +2131,9 @@ describe("quality task adapter", () => {
         "coverage:shard-3",
         "coverage:shard-4",
         "coverage:shard-5",
+        "coverage:shard-6",
+        "coverage:shard-7",
+        "coverage:shard-8",
       ]);
       expect(steps[0]?.args).toEqual([
         "turbo",
@@ -2110,17 +2145,42 @@ describe("quality task adapter", () => {
         "--remote-only",
         "--output-logs=errors-only",
       ]);
-      for (const step of A.drop(steps, 1)) {
+      const shardSteps = A.drop(steps, 1);
+      for (const step of shardSteps) {
         expect(step.args).toContain("--concurrency=1");
         expect(step.args).toContain("--summarize");
         expect(step.args).toContain("--force");
         expect(step.args).toContain("--remote-only");
         expect(step.args).toContain("--output-logs=errors-only");
-        expect(A.takeRight(step.args, 3)).toEqual(["--", "--fileParallelism=true", "--maxWorkers=2"]);
+        expect(A.takeRight(step.args, 2)).toEqual([
+          "--fileParallelism=true",
+          A.some(step.args, (arg) => arg === "--filter=@beep/repo-cli" || arg === "--filter=@beep/repo-utils")
+            ? "--maxWorkers=2"
+            : "--maxWorkers=1",
+        ]);
         expect(step.args).not.toContain("--concurrency=4");
         expect(step.args).not.toContain("9");
       }
+      expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=2"))).toHaveLength(2);
+      expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=1"))).toHaveLength(6);
     }));
+
+  it("uses the hosted shard worker shape for full baseline regeneration", () => {
+    const steps = coverageFullStepsForTesting(
+      "/repo",
+      ["@beep/repo-cli", "@beep/repo-utils", "@beep/a", "@beep/b", "@beep/c", "@beep/d", "@beep/e", "@beep/f"],
+      ["--write-baseline", "--force"]
+    );
+    const shardSteps = A.drop(steps, 1);
+
+    expect(steps[0]).not.toHaveProperty("env.VITEST_COVERAGE_REPORT_ONLY");
+    for (const step of shardSteps) {
+      expect(step.args).not.toContain("--write-baseline");
+      expect(step.env).toMatchObject({ VITEST_COVERAGE_REPORT_ONLY: "1" });
+    }
+    expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=2"))).toHaveLength(2);
+    expect(A.filter(shardSteps, (step) => A.contains(step.args, "--maxWorkers=1"))).toHaveLength(6);
+  });
 
   it("separates a percentage drop caused by deleting covered code from one caused by losing coverage", () => {
     // 50% as 50/100 covered, so 50 lines uncovered.

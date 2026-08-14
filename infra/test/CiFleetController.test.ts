@@ -2,7 +2,7 @@ import { CiFleetController, CiFleetControllerPulumiConfigValues, makeCiFleetCont
 import { O, Str } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import * as pulumi from "@pulumi/pulumi";
-import { Effect, MutableHashMap, Result } from "effect";
+import { Effect, MutableHashMap, pipe, Result } from "effect";
 import * as S from "effect/Schema";
 
 const validConfigValues = {
@@ -202,15 +202,26 @@ describe("@beep/infra CiFleetController", () => {
       assert.isTrue(Str.includes("exec sudo /opt/beep/imds-job-started.sh")(postInstall));
       assert.isTrue(Str.includes("ec2-user ALL=(root) NOPASSWD: /opt/beep/imds-job-started.sh")(postInstall));
       assert.isTrue(
-        Str.includes('iptables -C OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "${runner_uid}" -j DROP')(
+        Str.includes('iptables -C OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "$${runner_uid}" -j DROP')(
           postInstall
         )
       );
       assert.isTrue(
-        Str.includes('|| iptables -A OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "${runner_uid}" -j DROP')(
+        Str.includes('|| iptables -A OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "$${runner_uid}" -j DROP')(
           postInstall
         )
       );
+      // Terraform parses `.tf.json` strings as HCL templates: the module-bound
+      // value may carry no unescaped `${`/`%{`, and rendering `$${` back to
+      // `${` must reproduce the original bash byte-identically.
+      expect(postInstall).not.toMatch(/(?<!\$)\$\{/u);
+      expect(postInstall).not.toMatch(/(?<!%)%\{/u);
+      const rendered = pipe(postInstall, Str.replaceAll("$${", "${"), Str.replaceAll("%%{", "%{"));
+      assert.isTrue(
+        Str.includes('iptables -C OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "${runner_uid}" -j DROP')(rendered)
+      );
+      assert.isTrue(Str.includes('if [ -d "${runner_dir}" ]; then')(rendered));
+      assert.isTrue(Str.includes('if [ "${hook_armed}" = false ]; then')(rendered));
     })
   );
 });
