@@ -106,13 +106,12 @@ export const executionDecisionTable = pgTable(EXECUTION_DECISION_TABLE_NAME, {
  * `(run_key, hash)` makes an outcome without its write-ahead decision
  * unrepresentable.
  *
- * The physical table carries one column this projection deliberately omits:
- * `decision_verdict`, defaulted to `'allowed'`, CHECK-pinned to that literal,
+ * `decision_verdict` is defaulted to `'allowed'`, CHECK-pinned to that literal,
  * and bound by a second composite foreign key to the decision's
  * `(hash, verdict)` — which makes an outcome settling a DENIED decision
- * unrepresentable too. The column never varies, never carries data, and is
- * filled by the database default, so it stays out of the TypeScript surface on
- * purpose.
+ * unrepresentable too. The column never varies and is filled by the database
+ * default, but remains in the Drizzle projection so a generated baseline owns
+ * the complete physical column order.
  *
  * **Example** (Get outcome table name)
  *
@@ -129,6 +128,7 @@ export const executionDecisionTable = pgTable(EXECUTION_DECISION_TABLE_NAME, {
 export const executionOutcomeTable = pgTable(EXECUTION_OUTCOME_TABLE_NAME, {
   runKey: text("run_key").notNull(),
   decisionHash: text("decision_hash").notNull().primaryKey(),
+  decisionVerdict: text("decision_verdict").notNull().default("allowed").$type<"allowed">(),
   settlement: text("settlement").notNull().$type<ExecutionSettlement>(),
   recordedAt: bigint("recorded_at", { mode: "number" }).notNull(),
   hash: text("hash").notNull(),

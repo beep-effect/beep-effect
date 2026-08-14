@@ -10,7 +10,6 @@ import {
   MutableHashMapFromSelf,
   NonNegativeInt,
   SchemaUtils,
-  TaggedErrorClass
 } from "@beep/schema";
 import {A, N, O, P} from "@beep/utils";
 import {Effect, MutableHashMap, Result} from "effect";
@@ -889,7 +888,7 @@ export const supportedSyntaxMessage =
  * @category errors
  * @since 0.0.0
  */
-export class InterpreterRuntimeError extends TaggedErrorClass<InterpreterRuntimeError>($I`InterpreterRuntimeError`)(
+export class InterpreterRuntimeError extends S.TaggedError<InterpreterRuntimeError>($I`InterpreterRuntimeError`)(
   "InterpreterRuntimeError",
   {
     message: S.String,

@@ -79,6 +79,7 @@
   "devDependencies": {
     "@beep/shacl": "workspace:^",
     "@beep/test-utils": "workspace:^",
+    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "esbuild": "catalog:"

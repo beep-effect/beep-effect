@@ -10,7 +10,7 @@ import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Documen
 import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import { DmsProvider, RemoteItemId, SyncItemKind, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -115,7 +115,7 @@ export class SyncItemSeed extends S.Class<SyncItemSeed>($I`SyncItemSeed`)(
  * @category errors
  * @since 0.0.0
  */
-export class SyncItemRepositoryConflict extends TaggedErrorClass<SyncItemRepositoryConflict>(
+export class SyncItemRepositoryConflict extends S.TaggedError<SyncItemRepositoryConflict>(
   $I`SyncItemRepositoryConflict`
 )(
   "SyncItemRepositoryConflict",
@@ -154,7 +154,7 @@ export class SyncItemRepositoryConflict extends TaggedErrorClass<SyncItemReposit
  * @category errors
  * @since 0.0.0
  */
-export class SyncItemRepositoryNotFound extends TaggedErrorClass<SyncItemRepositoryNotFound>(
+export class SyncItemRepositoryNotFound extends S.TaggedError<SyncItemRepositoryNotFound>(
   $I`SyncItemRepositoryNotFound`
 )(
   "SyncItemRepositoryNotFound",
@@ -186,7 +186,7 @@ export class SyncItemRepositoryNotFound extends TaggedErrorClass<SyncItemReposit
  * @category errors
  * @since 0.0.0
  */
-export class SyncItemRepositoryUnavailable extends TaggedErrorClass<SyncItemRepositoryUnavailable>(
+export class SyncItemRepositoryUnavailable extends S.TaggedError<SyncItemRepositoryUnavailable>(
   $I`SyncItemRepositoryUnavailable`
 )(
   "SyncItemRepositoryUnavailable",

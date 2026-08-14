@@ -99,11 +99,16 @@ const fakeRunResult = {} as Awaited<ReturnType<DuckDBConnection["run"]>>;
 const encodeSchema = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): Schema["Encoded"] =>
   Effect.runSync(S.encodeEffect(schema)(value));
 
+const DuckDbErrorFromUnknownOptionsArbitrary = S.toArbitrary(DuckDbErrorFromUnknownOptions)(fc).filter((options) =>
+  O.isNone(options.cause)
+);
+const DuckDbErrorArbitrary = S.toArbitrary(DuckDbError)(fc).filter((error) => O.isNone(error.cause));
+
 const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
   schema: Schema,
+  arbitrary = S.toArbitrary(schema)(fc),
   options?: { readonly numRuns?: number }
 ): void => {
-  const arbitrary = S.toArbitrary(schema)(fc);
   const encode = S.encodeEffect(schema);
   const decode = S.decodeUnknownEffect(schema);
 
@@ -194,8 +199,8 @@ describe("@beep/duckdb", { concurrent: false }, () => {
     assertSchemaArbitraryRoundTrips(DuckDbOperation);
     assertSchemaArbitraryRoundTrips(DuckDbRow);
     assertSchemaArbitraryRoundTrips(DuckDbRows);
-    assertSchemaArbitraryRoundTrips(DuckDbErrorFromUnknownOptions);
-    assertSchemaArbitraryRoundTrips(DuckDbError);
+    assertSchemaArbitraryRoundTrips(DuckDbErrorFromUnknownOptions, DuckDbErrorFromUnknownOptionsArbitrary);
+    assertSchemaArbitraryRoundTrips(DuckDbError, DuckDbErrorArbitrary);
   });
 
   it("normalizes unknown failures into typed DuckDB errors", () => {

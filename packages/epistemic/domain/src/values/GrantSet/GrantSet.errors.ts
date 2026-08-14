@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import * as S from "effect/Schema";
 import { PolicyRevision } from "../ExecutionGrant/index.ts";
 
 const $I = $EpistemicDomainId.create("values/GrantSet/GrantSet.errors");
@@ -33,7 +33,7 @@ const $I = $EpistemicDomainId.create("values/GrantSet/GrantSet.errors");
  * @category errors
  * @since 0.0.0
  */
-export class GrantRevisionMismatch extends TaggedErrorClass<GrantRevisionMismatch>($I`GrantRevisionMismatch`)(
+export class GrantRevisionMismatch extends S.TaggedError<GrantRevisionMismatch>($I`GrantRevisionMismatch`)(
   "GrantRevisionMismatch",
   {
     setRevision: PolicyRevision,

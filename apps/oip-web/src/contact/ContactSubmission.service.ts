@@ -13,7 +13,7 @@ import {
   HubSpotUpsertContactRequest,
 } from "@beep/hubspot";
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Clock, Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
@@ -46,7 +46,7 @@ type ContactSubmissionErrorOptions = {
   readonly status?: number;
 };
 
-class ContactSubmissionError extends TaggedErrorClass<ContactSubmissionError>($I`ContactSubmissionError`)(
+class ContactSubmissionError extends S.TaggedError<ContactSubmissionError>($I`ContactSubmissionError`)(
   "ContactSubmissionError",
   {
     provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),

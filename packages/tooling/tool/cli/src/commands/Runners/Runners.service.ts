@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { LiteralKit, Sha256Hex, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Console, Context, DateTime, Duration, Effect, FileSystem, Layer, Path, pipe, Schedule } from "effect";
 import * as O from "effect/Option";
@@ -78,7 +78,7 @@ class AwsBlockDeviceMapping extends S.Class<AwsBlockDeviceMapping>($I`AwsBlockDe
   $I.annote("AwsBlockDeviceMapping", { description: "EC2 root block-device override for a runner bake." })
 ) {}
 
-class AwsResourcePending extends TaggedErrorClass<AwsResourcePending>($I`AwsResourcePending`)(
+class AwsResourcePending extends S.TaggedError<AwsResourcePending>($I`AwsResourcePending`)(
   "AwsResourcePending",
   { actual: S.NonEmptyString, expected: S.NonEmptyString, resource: S.NonEmptyString },
   $I.annote("AwsResourcePending", {

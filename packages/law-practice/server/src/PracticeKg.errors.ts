@@ -6,7 +6,6 @@
  */
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -47,9 +46,7 @@ const $I = $LawPracticeServerId.create("PracticeKg.errors");
  * @category errors
  * @since 0.0.0
  */
-export class PracticeKgProjectionError extends TaggedErrorClass<PracticeKgProjectionError>(
-  $I`PracticeKgProjectionError`
-)(
+export class PracticeKgProjectionError extends S.TaggedError<PracticeKgProjectionError>($I`PracticeKgProjectionError`)(
   "PracticeKgProjectionError",
   {
     message: S.String,

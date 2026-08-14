@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Inspectable } from "effect";
 import { dual } from "effect/Function";
@@ -41,7 +40,7 @@ const messageWithCause = (message: string, cause: unknown): string => `${message
  * @category utilities
  * @since 0.0.0
  */
-export class VersionSyncError extends TaggedErrorClass<VersionSyncError>($I`VersionSyncError`)(
+export class VersionSyncError extends S.TaggedError<VersionSyncError>($I`VersionSyncError`)(
   "VersionSyncError",
   {
     message: S.String,
@@ -94,7 +93,7 @@ export class VersionSyncError extends TaggedErrorClass<VersionSyncError>($I`Vers
  * @category utilities
  * @since 0.0.0
  */
-export class NetworkUnavailableError extends TaggedErrorClass<NetworkUnavailableError>($I`NetworkUnavailableError`)(
+export class NetworkUnavailableError extends S.TaggedError<NetworkUnavailableError>($I`NetworkUnavailableError`)(
   "NetworkUnavailableError",
   { message: S.String },
   $I.annote("NetworkUnavailableError", {
@@ -124,7 +123,7 @@ export class NetworkUnavailableError extends TaggedErrorClass<NetworkUnavailable
  * @category utilities
  * @since 0.0.0
  */
-export class VersionSyncDriftError extends TaggedErrorClass<VersionSyncDriftError>($I`VersionSyncDriftError`)(
+export class VersionSyncDriftError extends S.TaggedError<VersionSyncDriftError>($I`VersionSyncDriftError`)(
   "VersionSyncDriftError",
   {
     message: S.String,

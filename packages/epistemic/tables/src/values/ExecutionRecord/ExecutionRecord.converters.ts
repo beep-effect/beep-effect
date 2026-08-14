@@ -4,12 +4,12 @@
  * The PR 1 record schemas are their own row codecs: their encoded form is
  * already the flat wire projection these tables persist — digests as hex
  * strings, instants as epoch millis, `prevHash` as `null` at genesis — so the
- * converters are `S.encode`/`S.decode` at the boundary and nothing else. The
- * only asymmetry is `reason`: the column exists on every decision row (`null`
- * for allowed), while the domain union carries the field only on the denied
- * variant, so the null is stripped before decoding. The reason-shape invariant
- * itself (present iff denied) is owned by the migration's CHECK constraints,
- * not re-guarded here.
+ * converters are `S.encode`/`S.decode` at the boundary with two database-only
+ * fields removed while decoding. `reason` exists on every decision row (`null`
+ * for allowed), while the domain union carries it only on the denied variant.
+ * `decision_verdict` is the outcome table's defaulted foreign-key witness and
+ * is constant by constraint, so it is not domain data. Their invariants are
+ * owned by the migration rather than re-guarded here.
  *
  * @packageDocumentation
  * @category tables
@@ -186,5 +186,7 @@ export const toExecutionOutcomeInsert = (record: ExecutionOutcomeRecord): Execut
  * @category tables
  * @since 0.0.0
  */
-export const fromExecutionOutcomeRow = (row: ExecutionOutcomeRow): ExecutionOutcomeRecord =>
-  decodeExecutionOutcomeRow(row);
+export const fromExecutionOutcomeRow = (row: ExecutionOutcomeRow): ExecutionOutcomeRecord => {
+  const { decisionVerdict: _decisionVerdict, ...domainRow } = row;
+  return decodeExecutionOutcomeRow(domainRow);
+};

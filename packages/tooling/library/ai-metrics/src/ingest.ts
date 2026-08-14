@@ -6,7 +6,6 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, flow, Order, pipe } from "effect";
 import * as O from "effect/Option";
@@ -44,7 +43,7 @@ const encodeTranscriptIngestSummaryJson = S.encodeUnknownEffect(S.fromJsonString
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsIngestError extends TaggedErrorClass<AiMetricsIngestError>($I`AiMetricsIngestError`)(
+export class AiMetricsIngestError extends S.TaggedError<AiMetricsIngestError>($I`AiMetricsIngestError`)(
   "AiMetricsIngestError",
   {
     cause: S.Defect({ includeStack: true }),

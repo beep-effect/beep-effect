@@ -29,7 +29,7 @@ Use this command for execution-capable sessions:
 
 1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
 2. [`SPEC.md`](./SPEC.md) - normative source of truth (decision log included).
-3. [`PLAN.md`](./PLAN.md) - active execution plan (two rungs).
+3. [`PLAN.md`](./PLAN.md) - archived execution plan (two completed rungs).
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger
    (inherited from the exploration).
@@ -61,10 +61,12 @@ protection that does not exist.
   `@beep/law-practice-domain`, `@beep/law-practice-use-cases`,
   `@beep/law-practice-tables`, `@beep/law-practice-server`,
   `@beep/shared-domain`, and `@beep/db-admin`.
-- **P0 gate-shape check (2026-08-05).**
+- **P0 gate-shape check (2026-08-05; resolved by successor).**
   [`research/01-gate-shape-check.md`](./research/01-gate-shape-check.md) — the
-  two shapes the SPEC authorized are both unavailable; foundation-mediated
-  port inversion is recommended and awaits owner sign-off.
+  two shapes the SPEC authorized were both unavailable. Its then-pending
+  foundation-mediated recommendation is historical: the successor shipped the
+  architecture-approved `shared/use-cases` port and terminally resolved the
+  sign-off question.
 - **P0 surface re-verification (2026-08-05).**
   [`research/02-surface-reverification.md`](./research/02-surface-reverification.md)
   — every SOURCES.md §4 surface confirmed current; two drift notes recorded.
@@ -95,7 +97,7 @@ owner-directed scope widening — see the SPEC's "no unrelated refactors" criter
 | `CandorPolicy.test.ts` failing first then green, covering every listed scenario | `packages/law-practice/use-cases/test/CandorPolicy.test.ts` — 19 scenarios, real SHA-256, live `verifyTextAnchor` |
 | Test runs slice-isolated | Same file: in-memory `CandorRecordReader` + `Layer.succeed` `SourceTextResolver` fixture + a Web Crypto test layer; no other slice booted, no app runtime layer, no dependency added |
 | Durable append-and-read-only ports → repo/layer | Port: `packages/law-practice/use-cases/src/CandorRecord/CandorRecord.ports.ts` (six members, no update and no delete). Drizzle repo + layers: `packages/law-practice/server/src/CandorRecord/` — insert and select only, rows re-decoded through the entity schemas rather than trusted |
-| First db-admin migration + PGlite test + `AcceptedProofManifest` | `packages/_internal/db-admin/drizzle/20260806031625_law_practice_candor_gate/`, `test/integration/LawPracticeCandorGateMigration.pglite.test.ts`, four manifest entries |
+| First db-admin migration + PGlite test + `AcceptedProofManifest` | `packages/_internal/db-admin/drizzle/20260813130540_baseline/`, `test/integration/LawPracticeCandorGateMigration.pglite.test.ts`, four manifest entries |
 | Append-only guards proven, not just installed | The PGlite test asserts the exact constraint/trigger name sets, then that both an UPDATE and a DELETE against a recorded disposition are rejected |
 | IDS fact families as presence-only facts | `packages/law-practice/domain/src/entities/IdsSubmissionFact/` — candidate window (never a compliance label), 1.17(p)/(v) fees, 1.97(e) statement + 1.98(a)(4) assertion, 1.98 content presence, office treatment as observed, own operative date per act |
 | Filing-promotion consultation | **Resolved by successor** — `../candor-gate-followups-closeout/` ships the tenant-bound shared gate contract, protects the repository's fixture candidate-acceptance boundary, and supplies a fail-closed law adapter. No production acceptance runtime exists to compose. |

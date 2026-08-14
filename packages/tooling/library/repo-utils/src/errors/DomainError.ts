@@ -8,7 +8,6 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -31,7 +30,7 @@ const $I = $RepoUtilsId.create("errors/DomainError");
  * @category error-handling
  * @since 0.0.0
  */
-export class DomainError extends TaggedErrorClass<DomainError>($I`DomainError`)(
+export class DomainError extends S.TaggedError<DomainError>($I`DomainError`)(
   "DomainError",
   {
     message: S.String,

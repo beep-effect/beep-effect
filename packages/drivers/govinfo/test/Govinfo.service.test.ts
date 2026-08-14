@@ -214,6 +214,7 @@ describe("@beep/govinfo", () => {
     expect(encode(GovinfoErrorOptions, GovinfoErrorOptions.make({ status: O.some(429) }))).toEqual({
       status: 429,
     });
+    expect(GovinfoError.config().reason).toBe("config");
     expect(
       encode(GovinfoError, GovinfoError.of("response status", GovinfoErrorOptions.make({ status: O.some(429) })))
     ).toEqual({

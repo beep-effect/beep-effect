@@ -16,7 +16,7 @@
  * - `NodeId` is a `Brand.nominal` branded string (no `as`).
  * - native keyed/set collections become `MutableHashMap`/`MutableHashSet`; native
  *   array methods become `effect/Array`; partial `getOrThrow`/`!` become `Option` handling.
- * - `Data.TaggedError` becomes `TaggedErrorClass` from `@beep/schema`.
+ * - `Data.TaggedError` becomes `S.TaggedError` from `@beep/schema`.
  * - the terminal `Formatter` (which depended on the dropped `@effect/printer`) is gone;
  *   `show` renders the plain-text tree.
  *
@@ -25,7 +25,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { A, thunk0 } from "@beep/utils";
 import { Clock, Effect, Graph, HashMap, MutableHashMap, MutableHashSet, Random } from "effect";
 import { dual } from "effect/Function";
@@ -117,7 +117,7 @@ export const generateNodeId: Effect.Effect<NodeId> = Effect.gen(function* () {
  * @category errors
  * @since 0.0.0
  */
-export class NodeNotFoundError extends TaggedErrorClass<NodeNotFoundError>($I`NodeNotFoundError`)(
+export class NodeNotFoundError extends S.TaggedError<NodeNotFoundError>($I`NodeNotFoundError`)(
   "NodeNotFoundError",
   {
     nodeId: NodeId,

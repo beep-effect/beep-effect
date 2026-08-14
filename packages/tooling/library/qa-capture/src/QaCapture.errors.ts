@@ -6,7 +6,7 @@
  */
 
 import { $QaCaptureId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -40,7 +40,7 @@ const existingQaCaptureError = (cause: unknown): O.Option<QaCaptureError> =>
  * @category errors
  * @since 0.0.0
  */
-export class QaCaptureError extends TaggedErrorClass<QaCaptureError>($I`QaCaptureError`)(
+export class QaCaptureError extends S.TaggedError<QaCaptureError>($I`QaCaptureError`)(
   "QaCaptureError",
   {
     cause: S.OptionFromOptionalKey(QaCaptureDefect).pipe(

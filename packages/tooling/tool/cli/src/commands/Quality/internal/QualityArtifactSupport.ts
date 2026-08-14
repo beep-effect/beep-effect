@@ -1,7 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -27,7 +26,7 @@ type QualityArtifactGeneratorErrorOptions = {
  * @category errors
  * @since 0.0.0
  */
-export class QualityArtifactGeneratorError extends TaggedErrorClass<QualityArtifactGeneratorError>(
+export class QualityArtifactGeneratorError extends S.TaggedError<QualityArtifactGeneratorError>(
   $I`QualityArtifactGeneratorError`
 )(
   "QualityArtifactGeneratorError",

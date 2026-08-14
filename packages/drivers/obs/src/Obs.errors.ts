@@ -6,7 +6,7 @@
  */
 
 import { $ObsId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -144,7 +144,7 @@ const existingObsError = (cause: unknown): O.Option<ObsError> => (ObsError.is(ca
  * @category errors
  * @since 0.0.0
  */
-export class ObsError extends TaggedErrorClass<ObsError>($I`ObsError`)(
+export class ObsError extends S.TaggedError<ObsError>($I`ObsError`)(
   "ObsError",
   {
     cause: S.OptionFromOptionalKey(ObsDefect).pipe(

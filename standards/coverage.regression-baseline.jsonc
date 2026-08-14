@@ -7,6 +7,59 @@
   "git_sha": "64b08774b85107ef5cd3d5224c8034ebabf37c94",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
+  "minimum": {
+    "lines": 70,
+    "statements": 70,
+    "branches": 50,
+    "functions": 60
+  },
+  "exemptions": {
+    "@beep/scratchpad": "User-excluded aggregate workspace with multiple experimental Vitest boundaries.",
+    "@beep/storybook": "User-excluded Storybook runner whose self-coverage would be self-fulfilling.",
+    "@beep/tsgo-shim": "Plain JavaScript launcher shim with no TypeScript source surface."
+  },
+  "follow_ups": {
+    "@beep/acp": "Driver surface remains materially below the tier and needs dedicated protocol-path tests.",
+    "@beep/ai-provider-cli": "CLI and provider-bound behavior remains materially below the tier.",
+    "@beep/ai-sync": "Branch coverage remains below the tier across synchronization behavior.",
+    "@beep/api-transport": "Transport behavior needs additional typed error and request-path tests.",
+    "@beep/architecture-lab-config": "The proof-slice config package remains seeded pending broader config tests.",
+    "@beep/architecture-lab-server": "The proof-slice server package remains materially below the tier.",
+    "@beep/box": "Archive and platform-driver behavior remains materially below the tier.",
+    "@beep/cosmos": "Graph rendering driver behavior remains materially below the tier.",
+    "@beep/editor": "Editor UI behavior is interaction-heavy and remains materially below the tier.",
+    "@beep/epistemic-client": "Client state behavior needs additional focused tests to meet the function tier.",
+    "@beep/exiftool": "Driver branch behavior needs additional process-boundary tests.",
+    "@beep/face-detection": "Native and model-service behavior remains materially below the tier.",
+    "@beep/graph-3d": "Browser-bound tests are excluded from the Node lane; the 0/0/0/0 seed remains until a browser lane exists.",
+    "@beep/hubspot": "Driver function coverage needs additional API-path tests.",
+    "@beep/infra": "Pulumi-heavy infrastructure behavior is newly wired and seeded at its measured floor.",
+    "@beep/law-practice-domain": "The large domain surface needs a dedicated coverage follow-up.",
+    "@beep/law-practice-use-cases": "Use-case function coverage needs additional workflow tests.",
+    "@beep/lint-rules": "Multiple lint rules remain unexercised and require rule-specific fixtures.",
+    "@beep/m365": "Driver function coverage needs additional Microsoft Graph path tests.",
+    "@beep/m365-mcp": "MCP transport and branch behavior remains materially below the tier.",
+    "@beep/nlp-mcp": "MCP and streaming behavior remains materially below the tier.",
+    "@beep/nlp-processing": "The processing surface has a large absolute uncovered gap.",
+    "@beep/observability": "The package is numerically near the tier but its remaining gaps span runtime-specific integrations.",
+    "@beep/onepassword-cli": "Driver branch and function paths need additional command-boundary tests.",
+    "@beep/ontology-client": "Client and browser-oriented behavior remains below the tier.",
+    "@beep/ontology-ui": "UI session screens remain materially below the tier.",
+    "@beep/oxigraph": "Native database driver behavior remains materially below the tier.",
+    "@beep/phoenix": "Telemetry-driver behavior remains materially below the tier.",
+    "@beep/practice-kg-mcp": "New host-boundary tests establish a non-vacuous seed; packaging and database paths need follow-up coverage.",
+    "@beep/professional-desktop": "The statement gap is small, but remaining coverage is dominated by UI and runtime integrations.",
+    "@beep/qa-capture": "Browser witness and collector behavior remains materially below the Node tier.",
+    "@beep/repo-cli": "The large CLI surface and long-running suite require a dedicated coverage follow-up.",
+    "@beep/repo-configs": "Configuration helper function coverage remains below the tier.",
+    "@beep/repo-docgen": "The large docgen surface remains below the tier.",
+    "@beep/repo-utils": "The large utility surface needs additional focused function tests.",
+    "@beep/sanity": "Driver error and request paths remain below the tier.",
+    "@beep/test-utils": "Environment-sensitive helper coverage remains below the tier.",
+    "@beep/ui": "The shared UI system is interaction-heavy and remains materially below the tier.",
+    "@beep/wink": "NLP adapter behavior remains materially below the tier.",
+    "@beep/workspace-server": "The server surface has a large absolute uncovered gap despite being numerically near the tier."
+  },
   "packages": {
     "@beep/acp": {
       "path": "packages/drivers/acp",
@@ -114,14 +167,14 @@
     },
     "@beep/anthropic": {
       "path": "packages/drivers/anthropic",
-      "lines": 80.95,
-      "statements": 80.95,
-      "branches": 40,
+      "lines": 83.33,
+      "statements": 83.33,
+      "branches": 50,
       "functions": 61.11,
       "uncovered": {
-        "lines": 8,
-        "statements": 8,
-        "branches": 6,
+        "lines": 7,
+        "statements": 7,
+        "branches": 5,
         "functions": 7
       }
     },
@@ -140,13 +193,13 @@
     },
     "@beep/architecture-lab-client": {
       "path": "packages/architecture-lab/client",
-      "lines": 66.66,
-      "statements": 75,
+      "lines": 100,
+      "statements": 100,
       "branches": 100,
       "functions": 100,
       "uncovered": {
-        "lines": 1,
-        "statements": 1,
+        "lines": 0,
+        "statements": 0,
         "branches": 0,
         "functions": 0
       }
@@ -231,23 +284,23 @@
     },
     "@beep/architecture-lab-use-cases": {
       "path": "packages/architecture-lab/use-cases",
-      "lines": 73.58,
-      "statements": 73.68,
+      "lines": 79.24,
+      "statements": 78.94,
       "branches": 100,
-      "functions": 54.83,
+      "functions": 64.51,
       "uncovered": {
-        "lines": 14,
-        "statements": 15,
+        "lines": 11,
+        "statements": 12,
         "branches": 0,
-        "functions": 14
+        "functions": 11
       }
     },
     "@beep/box": {
       "path": "packages/drivers/box",
-      "lines": 47.32,
-      "statements": 46.36,
+      "lines": 47.57,
+      "statements": 46.66,
       "branches": 74.15,
-      "functions": 26.73,
+      "functions": 27,
       "uncovered": {
         "lines": 433,
         "statements": 472,
@@ -413,15 +466,15 @@
     },
     "@beep/documents-use-cases": {
       "path": "packages/documents/use-cases",
-      "lines": 97.22,
-      "statements": 94.73,
+      "lines": 100,
+      "statements": 100,
       "branches": 100,
-      "functions": 50,
+      "functions": 100,
       "uncovered": {
-        "lines": 1,
-        "statements": 2,
+        "lines": 0,
+        "statements": 0,
         "branches": 0,
-        "functions": 1
+        "functions": 0
       }
     },
     "@beep/drizzle": {
@@ -452,10 +505,10 @@
     },
     "@beep/ecfr": {
       "path": "packages/drivers/ecfr",
-      "lines": 95.37,
-      "statements": 95.48,
+      "lines": 95.48,
+      "statements": 95.6,
       "branches": 95,
-      "functions": 92.42,
+      "functions": 92.64,
       "uncovered": {
         "lines": 8,
         "statements": 8,
@@ -673,15 +726,15 @@
     },
     "@beep/govinfo": {
       "path": "packages/drivers/govinfo",
-      "lines": 82.14,
-      "statements": 81.03,
+      "lines": 80,
+      "statements": 78.2,
       "branches": 100,
-      "functions": 56.25,
+      "functions": 41.66,
       "uncovered": {
-        "lines": 10,
-        "statements": 11,
+        "lines": 8,
+        "statements": 9,
         "branches": 0,
-        "functions": 7
+        "functions": 6
       }
     },
     "@beep/graph-3d": {
@@ -734,6 +787,19 @@
         "statements": 24,
         "branches": 16,
         "functions": 18
+      }
+    },
+    "@beep/infra": {
+      "path": "infra",
+      "lines": 52.94,
+      "statements": 53.27,
+      "branches": 36.92,
+      "functions": 53.37,
+      "uncovered": {
+        "lines": 336,
+        "statements": 342,
+        "branches": 41,
+        "functions": 69
       }
     },
     "@beep/langextract": {
@@ -1024,15 +1090,15 @@
     },
     "@beep/ontology-config": {
       "path": "packages/ontology/config",
-      "lines": 80,
-      "statements": 70.58,
+      "lines": 100,
+      "statements": 100,
       "branches": 100,
-      "functions": 50,
+      "functions": 100,
       "uncovered": {
-        "lines": 3,
-        "statements": 5,
+        "lines": 0,
+        "statements": 0,
         "branches": 0,
-        "functions": 2
+        "functions": 0
       }
     },
     "@beep/ontology-domain": {
@@ -1141,15 +1207,15 @@
     },
     "@beep/pandoc-ast": {
       "path": "packages/foundation/modeling/pandoc-ast",
-      "lines": 85.58,
-      "statements": 85.71,
+      "lines": 85.33,
+      "statements": 85.48,
       "branches": 86.71,
-      "functions": 79.93,
+      "functions": 79.62,
       "uncovered": {
-        "lines": 123,
-        "statements": 133,
+        "lines": 126,
+        "statements": 136,
         "branches": 17,
-        "functions": 115
+        "functions": 118
       }
     },
     "@beep/pglite": {
@@ -1180,15 +1246,28 @@
     },
     "@beep/postgres": {
       "path": "packages/drivers/postgres",
-      "lines": 86.53,
-      "statements": 86.35,
-      "branches": 71.73,
-      "functions": 82.63,
+      "lines": 87.65,
+      "statements": 87.42,
+      "branches": 73.91,
+      "functions": 82.87,
       "uncovered": {
-        "lines": 42,
-        "statements": 46,
-        "branches": 39,
+        "lines": 39,
+        "statements": 43,
+        "branches": 36,
         "functions": 25
+      }
+    },
+    "@beep/practice-kg-mcp": {
+      "path": "apps/practice-kg-mcp",
+      "lines": 5.2,
+      "statements": 5.07,
+      "branches": 0,
+      "functions": 4.16,
+      "uncovered": {
+        "lines": 255,
+        "statements": 262,
+        "branches": 38,
+        "functions": 69
       }
     },
     "@beep/pretext": {
@@ -1215,19 +1294,6 @@
         "statements": 746,
         "branches": 182,
         "functions": 446
-      }
-    },
-    "@beep/protobuf": {
-      "path": "packages/drivers/protobuf",
-      "lines": 0,
-      "statements": 0,
-      "branches": 100,
-      "functions": 100,
-      "uncovered": {
-        "lines": 1,
-        "statements": 1,
-        "branches": 0,
-        "functions": 0
       }
     },
     "@beep/provenance": {
@@ -1284,28 +1350,28 @@
     },
     "@beep/repo-ai-metrics": {
       "path": "packages/tooling/library/ai-metrics",
-      "lines": 88.11,
-      "statements": 88.21,
-      "branches": 75.59,
-      "functions": 73.93,
+      "lines": 88.13,
+      "statements": 88.27,
+      "branches": 75.74,
+      "functions": 73.96,
       "uncovered": {
-        "lines": 292,
+        "lines": 293,
         "statements": 297,
-        "branches": 155,
-        "functions": 239
+        "branches": 154,
+        "functions": 240
       }
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 69.29,
-      "statements": 69.01,
-      "branches": 55.28,
-      "functions": 61.04,
+      "lines": 69.2,
+      "statements": 68.93,
+      "branches": 55.18,
+      "functions": 60.93,
       "uncovered": {
-        "lines": 8272,
-        "statements": 8686,
-        "branches": 4491,
-        "functions": 3044
+        "lines": 8321,
+        "statements": 8733,
+        "branches": 4514,
+        "functions": 3069
       }
     },
     "@beep/repo-configs": {
@@ -1399,6 +1465,19 @@
         "functions": 42
       }
     },
+    "@beep/shacl": {
+      "path": "packages/drivers/shacl",
+      "lines": 75.62,
+      "statements": 75.46,
+      "branches": 57.14,
+      "functions": 60.86,
+      "uncovered": {
+        "lines": 39,
+        "statements": 40,
+        "branches": 9,
+        "functions": 36
+      }
+    },
     "@beep/shared-domain": {
       "path": "packages/shared/domain",
       "lines": 99.66,
@@ -1414,13 +1493,13 @@
     },
     "@beep/shared-tables": {
       "path": "packages/shared/tables",
-      "lines": 25,
-      "statements": 25,
+      "lines": 100,
+      "statements": 100,
       "branches": 100,
       "functions": 100,
       "uncovered": {
-        "lines": 3,
-        "statements": 3,
+        "lines": 0,
+        "statements": 0,
         "branches": 0,
         "functions": 0
       }
@@ -1440,15 +1519,15 @@
     },
     "@beep/test-utils": {
       "path": "packages/tooling/test-kit/test-utils",
-      "lines": 66.1,
-      "statements": 65.67,
-      "branches": 54.38,
-      "functions": 46.71,
+      "lines": 56.61,
+      "statements": 55.77,
+      "branches": 57.89,
+      "functions": 38.68,
       "uncovered": {
-        "lines": 100,
-        "statements": 104,
-        "branches": 26,
-        "functions": 73
+        "lines": 128,
+        "statements": 134,
+        "branches": 24,
+        "functions": 84
       }
     },
     "@beep/tika": {
