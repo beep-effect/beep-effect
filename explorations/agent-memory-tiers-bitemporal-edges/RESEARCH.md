@@ -254,17 +254,17 @@ All paths verified via `ls`/`rg` on 2026-06-29 (working tree, branch
   missing durable *disposition* (not a missing rejected concept). Do not claim
   `rg rejected|superseded` returns zero; that hides the existing gate semantics.
 - **PROV-O substrate (richer than agentmemory's flat KV).**
-  `packages/foundation/modeling/rdf/src/Prov.ts` (`@beep/rdf`,
-  `@beep/semantic-web/prov`) exports `ObjectRef` (IRI/CURIE/local, brandable),
-  the public `ProvDateTime` / `ProvDateTimeEncoded` schemas (lines 120/165;
+  `packages/foundation/modeling/rdf/src/Prov.ts` (`@beep/rdf/Prov`) exports
+  `ObjectRef` (IRI/CURIE/local, brandable), the public `ProvDateTime` /
+  `ProvDateTimeEncoded` schemas (lines 177/127;
   ISO-8601 + `DateTime.make`-parseable). **Correction:** there is NO exported
   `ProvDateTimeChecks` — `provDateTimeChecks` is a *private* lowercase
-  `S.makeFilterGroup` const (line 38; the `$I\`ProvDateTimeChecks\`` at line 54 is
+  `S.makeFilterGroup` const (line 39; the `$I\`ProvDateTimeChecks\`` at line 55 is
   only its annotation identifier, not an export), so importing it would fail.
   Reuse the exported `ProvDateTime` for the four bitemporal timestamps, or add a
-  deliberate public export of the checks group in `@beep/semantic-web/prov`
+  deliberate public export of the checks group in `@beep/rdf/Prov`
   before depending on a checks helper. The file also exports a `Revision` PROV
-  class (line 746) with `wasRevisionOf`/`wasDerivedFrom` (lines 262-263). Project the
+  class (line 859) with `wasRevisionOf`/`wasDerivedFrom` (lines 282-283). Project the
   supersession chain: edge ⇒ `prov:Entity`, `supersededBy` ⇒ `prov:wasRevisionOf`,
   `sourceObservationIds` ⇒ `prov:wasDerivedFrom`, extraction ⇒ `prov:Activity`.
 - **Binding memory-layer standard.** `standards/memory-architecture/01-memory-layer-taxonomy.md`

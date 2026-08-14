@@ -44,6 +44,12 @@ see [`explorations/_gold-intake`](../_gold-intake/).
 
 ## Trail
 
+- 2026-08-13 (housekeeping): retargeted the packet's PROV-O references
+  (MAP.md reuse row, RESEARCH.md substrate note incl. line citations) from the
+  deleted `@beep/semantic-web` shim paths to their canonical `@beep/rdf` homes
+  as part of the semantic-web shim-removal PR. No stage/status change; the
+  graduated verdict and Next Open Question stand.
+
 - 2026-08-13 (ceremony): scaffolded
   `epistemic-memory-retention-projections`, marked MAP row 3 graduated,
   cross-linked manifests, and graduated the packet. Future candidates reopen
