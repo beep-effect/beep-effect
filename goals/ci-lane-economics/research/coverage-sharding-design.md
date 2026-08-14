@@ -69,16 +69,39 @@ then ran for 24m10s and failed: its three mixed shards passed in
 15m30s-16m46s, while the `@beep/repo-cli` shard took 19m13s and produced ten
 5-second timeout failures plus one 1-second timing-bound failure. One Turbo
 task per shard did not bound the Vitest subprocesses, so four packages could
-still size worker pools from the same eight-vCPU host. The revised candidate
-preserves four weighted shards but caps each Vitest pool at two workers,
+still size worker pools from the same eight-vCPU host. The next candidate
+preserved four weighted shards but capped each Vitest pool at two workers,
 bounding aggregate test fan-out at the host's CPU count. A focused local
 coverage run under that cap passed all 90 `@beep/repo-cli` files and 1,492
 tests (five skipped) in 6m55s without the hosted timeout failures. The forced
 full local path then passed with remote cache disabled: the one-time prebuild
 took 23 seconds, the four shards completed 5, 32, 44, and 44 tasks in 8m32s,
-8m06s, 9m06s, and 9m40s, and the ratchet compared all 124 summaries. That is
-the candidate submitted for live fleet admission; local timing alone does not
-satisfy the hosted wall-time gate.
+8m06s, 9m06s, and 9m40s, and the ratchet compared all 124 summaries. Live
+retry job `94625871718` confirmed the correctness repair but rejected the
+timing shape: all 124 summaries passed, yet a 3m38s prebuild plus shards at
+15m32s, 16m58s, 17m26s, and 18m23s produced a 23m23s job. The next candidate
+raised the explicit cap to three workers per shard. Its forced full-path proof
+passed locally, but live PR #707 job `94641084512` rejected both correctness
+and timing after 23m08s: the 3m30s prebuild led into three green mixed shards
+at 16m05s-17m16s, while the repo-cli shard failed at 18m16s when CPU
+contention pushed a bounded-work assertion to 1026.30ms against 1000ms.
+
+The live phase breakdown exposed the missed boundary: repo-cli's Vitest config
+sets `fileParallelism: false`, so raising `maxWorkers` could not shorten its
+728.76 seconds of serial imports. A coverage-only override passed the complete
+local repo-cli suite without exclusions: three workers completed 90 files and
+1,514 tests (five skipped) in 141.26 seconds, and the safer two-worker probe
+completed them in 200.86 seconds with identical coverage. The next candidate
+therefore uses five stable weighted shards with `--fileParallelism=true` and
+`--maxWorkers=2`. It bounds aggregate test-process fan-out at 10 rather than
+the rejected three-worker candidate's 12, while the fifth shard reduces each
+non-repo-cli weight from about 800 to about 608 seconds. After `origin/main`
+advanced twice, a fresh forced local full-path proof passed on exact base
+`9c621da122` with remote cache unavailable. The prebuild completed 128/128 tasks
+in 2m36s; the five shards completed 1, 18, 35, 36, and 37 tasks in 3m45s, 5m19s,
+5m34s, 7m26s, and 6m55s; and the ratchet compared all 126 baseline packages.
+Every task was a cache miss, and there was no shutdown or OOM. Local timing
+still cannot satisfy the hosted wall-time gate.
 
 The live PR admission must prove all summaries, all regression tests, no runner
 shutdown/OOM, and complete job wall time below 20 minutes. Any source change

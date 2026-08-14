@@ -184,6 +184,102 @@ evidence, what would have prevented it). Redact for the public repo.
   lane's aggregate concurrency budget and pass an explicit per-shard Vitest
   worker cap derived from host vCPUs divided by shard count.
 
+## 2026-08-13 — cold hosted prebuild flaked a second time
+
+- **Doing:** admitting the two-worker four-shard Coverage Regression candidate
+  on PR #698.
+- **Evidence:** run `31753283207`, job `94623544457`, failed after 1m26s when
+  the cold prebuild reported `thunk.ts is not a module` and missing exports
+  after five successful tasks. A clean detached worktree at exact merge ref
+  `c72c8e1ab3` then passed all 128 forced build tasks with zero cache hits in
+  1m03s. Targeted retry job `94625871718` passed the same prebuild.
+- **Would have prevented it:** make cold-build repeatability a first-class CI
+  probe and retry this known impossible-diagnostic signature once before
+  classifying it as a deterministic source failure.
+
+## 2026-08-13 — uniform two-worker cap preserved correctness but missed time
+
+- **Doing:** admitting the two-worker four-shard Coverage Regression candidate
+  on the existing eight-vCPU fleet runner.
+- **Evidence:** targeted retry job `94625871718` passed every test and compared
+  all 124 package summaries, but took 23m23s. Its cold prebuild took 3m38s and
+  the four shards took 15m32s, 16m58s, 17m26s, and 18m23s. The cap removed the
+  prior repo-cli timeouts but left insufficient CPU throughput for the charter.
+- **Would have prevented it:** a fleet-parity capacity model that includes the
+  cold prebuild and tests a small bounded worker-cap curve instead of treating
+  host-vCPU equality as the only safe candidate.
+
+## 2026-08-13 — uniform three-worker cap added contention without throughput
+
+- **Doing:** admitting the four-shard, three-worker Coverage Regression
+  candidate on PR #707.
+- **Evidence:** run `31759003628`, job `94641084512`, failed after 23m08s. The
+  cold prebuild took 3m30s; the three mixed shards passed in 16m05s, 16m32s,
+  and 17m16s, while the repo-cli shard failed after 18m16s when a bounded-work
+  assertion measured 1026.30ms against its 1000ms ceiling. There was no OOM or
+  runner shutdown. The repo-cli Vitest config disables file parallelism, so
+  raising `maxWorkers` could not shorten its 728.76 seconds of serial imports.
+- **Would have prevented it:** profile the long pole's Vitest configuration and
+  phase breakdown before raising a uniform worker cap; explicitly parallelize
+  the serial file-import boundary under a bounded coverage-only worker pool.
+
+## 2026-08-13 — root lint-fix did not accept file paths
+
+- **Doing:** formatting the focused Coverage Regression implementation files.
+- **Evidence:** `bun run lint:fix -- <two paths>` routed the paths to Turbo as
+  task names and exited with `Missing tasks in project`; no files were changed.
+- **Would have prevented it:** expose or document a canonical file-scoped
+  formatter entrypoint distinct from the root task-oriented lint-fix command.
+
+## 2026-08-13 — stale zero-cache flags became mutually exclusive
+
+- **Doing:** running the forced local full-path proof for the five-shard
+  coverage candidate.
+- **Evidence:** Turbo 2.10 rejected `--force --remote-only` before executing a
+  task because cache configuration cannot be combined with `force`; the prior
+  proof recipe had treated both as compatible zero-cache controls.
+- **Would have prevented it:** keep one canonical forced-execution recipe in
+  the packet or CLI and validate it against the pinned Turbo version.
+
+## 2026-08-13 — main advanced across an expensive local proof
+
+- **Doing:** proving and preparing the five-shard PR #707 revision for
+  publication.
+- **Evidence:** `origin/main` advanced from `ddc8a873b1` to `5ca003a342` while
+  the forced full coverage proof ran, including a concurrent edit to this
+  ledger. Rebasing therefore required additive conflict resolution and made
+  the successful old-base proof non-authoritative for the final head.
+- **Would have prevented it:** refresh and pin the intended merge base
+  immediately before expensive proof, and serialize writes to the active
+  packet ledger while an admission candidate is being closed out.
+
+## 2026-08-13 — main advanced again between verification and publish
+
+- **Doing:** publishing the fully verified five-shard PR #707 revision.
+- **Evidence:** Yeet reused the exact full proof but refused publication because
+  `origin/main` advanced from `5ca003a342` to `9c621da122` and overlapped the
+  coverage task test. The landed commit also edited all three active packet
+  evidence files, requiring another additive rebase and making the completed
+  proof non-authoritative for the final head.
+- **Would have prevented it:** serialize the final proof/publish window for an
+  active packet, or have the publisher pin and atomically lease-check the base
+  before starting the expensive proof.
+
+## 2026-08-13 — rebased cold prebuild hit transient TS2589
+
+- **Doing:** repeating the forced full-coverage proof after rebasing PR #707
+  onto the newly advanced main.
+- **Evidence:** the zero-cache prebuild stopped after nine seconds when
+  `@beep/box` reported `TS2589: Type instantiation is excessively deep and
+  possibly infinite`; an immediate focused `@beep/box` build passed in under
+  one second without a source change. A retry moved the same failure to
+  `@beep/xai` after 60 successful tasks; its immediate focused build also
+  passed. A process census showed a sibling checkout simultaneously running
+  many Vitest workers and a high-CPU tsgo check on the shared host.
+- **Would have prevented it:** retry this known transient compiler-depth
+  signature once at the failed package boundary before discarding an otherwise
+  admissible full-path proof.
+
 ## 2026-08-14 — wall-clock perf assertion still flakes under capped coverage shards
 
 - **Doing:** babysitting PR #695 (unrelated refactor) through the post-#698

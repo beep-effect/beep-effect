@@ -110,13 +110,16 @@ const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // tuning; the 16GB-survival value was 2.
 const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
-// Match the fleet's accepted Turbo concurrency. Five concurrent Vitest
-// coverage processes made the isolated repo-cli long pole slower than the
-// 20-minute job charter on live fleet hardware.
-const COVERAGE_FULL_SHARD_COUNT = 4;
-// Each shard owns one Turbo task at a time, but Vitest otherwise sizes its
-// worker pool from the whole 8-vCPU host. Bound each pool so four shards cannot
-// oversubscribe the runner and starve repo-cli's intentionally sequential suite.
+// Five weighted shards reduce the non-repo-cli long poles while keeping the
+// work inside one fleet job. Two Vitest workers per shard bound aggregate
+// test-process fan-out at 10 instead of the unbounded pool's potential 40.
+const COVERAGE_FULL_SHARD_COUNT = 5;
+// repo-cli deliberately disables file parallelism for ordinary package runs,
+// but serial imports consumed 728.76 seconds in the rejected live coverage
+// candidate. Full coverage uses isolated Vitest workers, so enable file
+// parallelism only on this orchestrated path; a two-worker local probe passed
+// all 90 files in 200.86 seconds with identical coverage.
+const COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG = "--fileParallelism=true";
 const COVERAGE_FULL_VITEST_MAX_WORKERS_ARG = "--maxWorkers=2";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
@@ -1330,6 +1333,7 @@ const coverageFullShardStep = (
         ...passthroughArgs,
         ...A.map(packageNames, (packageName) => `--filter=${packageName}`),
         "--",
+        COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
         COVERAGE_FULL_VITEST_MAX_WORKERS_ARG,
       ]
     ),
