@@ -741,7 +741,7 @@ const textLooksLikeSchemaExport = (name: string, node: Node): boolean => {
   }
   if (Node.isClassDeclaration(node)) {
     const text = getDocNode(node).getText();
-    return /\b(?:S\.Class|Model\.Class|TaggedErrorClass)\b/.test(text);
+    return /\b(?:S\.(?:Class|TaggedError)|Model\.Class)\b/.test(text);
   }
   if (!Node.isVariableDeclaration(node)) {
     return false;
@@ -749,7 +749,7 @@ const textLooksLikeSchemaExport = (name: string, node: Node): boolean => {
 
   const initializer = decodeTrimmedString(node.getInitializer()?.getText() ?? "");
   return (
-    /^(?:LiteralKit|TaggedErrorClass|DomainModel\.make|Table\.make)\s*\(/.test(initializer) ||
+    /^(?:LiteralKit|DomainModel\.make|Table\.make)\s*\(/.test(initializer) ||
     /^S\.(?:String|Number|Boolean|BigInt|Symbol|Object|Unknown|Any|Never|Void|Null|Undefined|Date|Array|Record|Struct|Union|Literal|TemplateLiteral|Tuple|Class|Enums|OptionFrom|NullOr|TaggedStruct|TaggedError)(?:\s*(?:[({[;,]|$)|\.pipe\s*\()/.test(
       initializer
     )

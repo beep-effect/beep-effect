@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "effect-native-legal-eval",
+    "title": "Effect-Native Legal Eval",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/effect-native-legal-eval",
+  "lifecycle": "active",
+  "mission": "Ship a schema-first Effect-native legal evaluation framework and record one externally comparable C&H baseline.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/harvey-lab-firm-knowledge",
+    "graduated": "2026-08-13"
+  },
+  "dependencies": [],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/effect-native-legal-eval/README.md",
+    "goals/effect-native-legal-eval/SPEC.md",
+    "goals/effect-native-legal-eval/PLAN.md",
+    "goals/effect-native-legal-eval/GOAL.md",
+    "goals/effect-native-legal-eval/research/SOURCES.md",
+    "explorations/harvey-lab-firm-knowledge/BRIEF.md",
+    "explorations/harvey-lab-firm-knowledge/MAP.md",
+    "explorations/harvey-lab-firm-knowledge/DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/SOURCES.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/map-evaluation.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/map-harness.md",
+    "../../explorations/harvey-lab-firm-knowledge/research/mine-eval-methodology.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/effect-native-legal-eval/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Baseline and contract audit", "status": "pending" },
+    { "id": "P1", "name": "Eval framework", "status": "pending" },
+    { "id": "P2", "name": "Verify and baseline", "status": "pending" },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/effect-native-legal-eval/GOAL.md)\" -le 4000",
+    "jq . goals/effect-native-legal-eval/ops/manifest.json",
+    "rg -n \"effect-native-legal-eval|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/effect-native-legal-eval",
+    "git diff --check -- goals/effect-native-legal-eval",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Metered execution lacks explicit operator approval, a cost bound, or cleanup.",
+    "The design requires retaining the Python harness as a normal runtime.",
+    "Any OIP/client material would leave the device or enter telemetry/remote evaluation.",
+    "The framework would duplicate rather than compose live judge/QA services."
+  ]
+}

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Inspectable } from "effect";
@@ -40,7 +39,7 @@ const causeMessage = (cause: unknown): string => {
  * @category utilities
  * @since 0.0.0
  */
-export class SyncDataToTsError extends TaggedErrorClass<SyncDataToTsError>($I`SyncDataToTsError`)(
+export class SyncDataToTsError extends S.TaggedError<SyncDataToTsError>($I`SyncDataToTsError`)(
   "SyncDataToTsError",
   {
     message: S.String,
@@ -100,7 +99,7 @@ export class SyncDataToTsError extends TaggedErrorClass<SyncDataToTsError>($I`Sy
  * @category utilities
  * @since 0.0.0
  */
-export class SyncDataToTsDriftError extends TaggedErrorClass<SyncDataToTsDriftError>($I`SyncDataToTsDriftError`)(
+export class SyncDataToTsDriftError extends S.TaggedError<SyncDataToTsDriftError>($I`SyncDataToTsDriftError`)(
   "SyncDataToTsDriftError",
   {
     message: S.String,

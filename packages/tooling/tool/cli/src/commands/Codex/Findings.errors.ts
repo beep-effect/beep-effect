@@ -12,7 +12,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Runtime } from "effect";
 import * as S from "effect/Schema";
@@ -117,7 +117,7 @@ export type CodexPacketWriteFailureReason = typeof CodexPacketWriteFailureReason
  * @category errors
  * @since 0.0.0
  */
-export class CodexFindingsIngestError extends TaggedErrorClass<CodexFindingsIngestError>($I`CodexFindingsIngestError`)(
+export class CodexFindingsIngestError extends S.TaggedError<CodexFindingsIngestError>($I`CodexFindingsIngestError`)(
   "CodexFindingsIngestError",
   {
     reason: CodexIngestFailureReason,
@@ -215,7 +215,7 @@ export class CodexFindingsIngestError extends TaggedErrorClass<CodexFindingsInge
  * @category errors
  * @since 0.0.0
  */
-export class CodexFindingsRedactionError extends TaggedErrorClass<CodexFindingsRedactionError>(
+export class CodexFindingsRedactionError extends S.TaggedError<CodexFindingsRedactionError>(
   $I`CodexFindingsRedactionError`
 )(
   "CodexFindingsRedactionError",
@@ -250,7 +250,7 @@ export class CodexFindingsRedactionError extends TaggedErrorClass<CodexFindingsR
  * @category errors
  * @since 0.0.0
  */
-export class CodexPacketWriteError extends TaggedErrorClass<CodexPacketWriteError>($I`CodexPacketWriteError`)(
+export class CodexPacketWriteError extends S.TaggedError<CodexPacketWriteError>($I`CodexPacketWriteError`)(
   "CodexPacketWriteError",
   {
     reason: CodexPacketWriteFailureReason,

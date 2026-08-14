@@ -7,7 +7,6 @@
 
 import { $OntologyDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import * as S from "effect/Schema";
 import { SessionId } from "./Session.values.ts";
 
@@ -74,7 +73,7 @@ export type SessionChangeRejectedReason = typeof SessionChangeRejectedReason.Typ
  * @category errors
  * @since 0.0.0
  */
-export class SessionChangeRejected extends TaggedErrorClass<SessionChangeRejected>($I`SessionChangeRejected`)(
+export class SessionChangeRejected extends S.TaggedError<SessionChangeRejected>($I`SessionChangeRejected`)(
   "SessionChangeRejected",
   {
     sessionId: SessionId,

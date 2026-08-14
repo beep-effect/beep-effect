@@ -1,15 +1,15 @@
 import { fileURLToPath } from "node:url";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
-import { BoundedShaclValidationServiceLive } from "../../../packages/foundation/capability/semantic-web/src/adapters/shacl-engine.ts";
-import { BoundedEvidenceProjection } from "../../../packages/foundation/capability/semantic-web/src/evidence.ts";
-import { ProvBundle } from "../../../packages/foundation/capability/semantic-web/src/prov.ts";
-import { Dataset } from "../../../packages/foundation/capability/semantic-web/src/rdf.ts";
+import { BoundedShaclValidationServiceLive } from "../../../packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts";
 import {
   ShaclNodeShape,
   ShaclValidationRequest,
   ShaclValidationService,
 } from "../../../packages/foundation/capability/semantic-web/src/services/shacl-validation.ts";
+import { BoundedEvidenceProjection } from "../../../packages/foundation/modeling/rdf/src/Evidence.ts";
+import { ProvBundle } from "../../../packages/foundation/modeling/rdf/src/Prov.ts";
+import { Dataset } from "../../../packages/foundation/modeling/rdf/src/Rdf.ts";
 
 const outputsUrl = new URL("../history/outputs/", import.meta.url);
 const readJson = async (fileName: string) => Bun.file(new URL(fileName, outputsUrl)).json();

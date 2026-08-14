@@ -161,6 +161,105 @@ export const workspaceMessageTable: typeof WorkspaceDbSchema.message = Workspace
 export const epistemicUsageRecordTable: typeof EpistemicDbSchema.usageRecord = EpistemicDbSchema.usageRecord;
 
 /**
+ * Epistemic candidate-claim table (drizzle-kit generate surface).
+ *
+ * **Example** (Reference the epistemic candidate-claim table)
+ *
+ * ```ts
+ * import { epistemicCandidateClaimTable } from "@beep/db-admin/schema"
+ *
+ * console.log(epistemicCandidateClaimTable)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const epistemicCandidateClaimTable: typeof EpistemicDbSchema.candidateClaim = EpistemicDbSchema.candidateClaim;
+
+/**
+ * Epistemic evidence table (drizzle-kit generate surface).
+ *
+ * **Example** (Reference the epistemic evidence table)
+ *
+ * ```ts
+ * import { epistemicEvidenceTable } from "@beep/db-admin/schema"
+ *
+ * console.log(epistemicEvidenceTable)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const epistemicEvidenceTable: typeof EpistemicDbSchema.evidence = EpistemicDbSchema.evidence;
+
+/**
+ * Epistemic edge-version table (drizzle-kit generate surface).
+ *
+ * **Example** (Reference the epistemic edge-version table)
+ *
+ * ```ts
+ * import { epistemicEdgeVersionTable } from "@beep/db-admin/schema"
+ *
+ * console.log(epistemicEdgeVersionTable)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const epistemicEdgeVersionTable: typeof EpistemicDbSchema.edgeVersion = EpistemicDbSchema.edgeVersion;
+
+/**
+ * Epistemic claim-disposition table (drizzle-kit generate surface).
+ *
+ * **Example** (Reference the epistemic claim-disposition table)
+ *
+ * ```ts
+ * import { epistemicClaimDispositionTable } from "@beep/db-admin/schema"
+ *
+ * console.log(epistemicClaimDispositionTable)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const epistemicClaimDispositionTable: typeof EpistemicDbSchema.claimDisposition =
+  EpistemicDbSchema.claimDisposition;
+
+/**
+ * Epistemic execution-decision table (drizzle-kit generate surface).
+ *
+ * **Example** (Reference the epistemic execution-decision table)
+ *
+ * ```ts
+ * import { epistemicExecutionDecisionTable } from "@beep/db-admin/schema"
+ *
+ * console.log(epistemicExecutionDecisionTable)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const epistemicExecutionDecisionTable: typeof EpistemicDbSchema.executionDecision =
+  EpistemicDbSchema.executionDecision;
+
+/**
+ * Epistemic execution-outcome table (drizzle-kit generate surface).
+ *
+ * **Example** (Reference the epistemic execution-outcome table)
+ *
+ * ```ts
+ * import { epistemicExecutionOutcomeTable } from "@beep/db-admin/schema"
+ *
+ * console.log(epistemicExecutionOutcomeTable)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const epistemicExecutionOutcomeTable: typeof EpistemicDbSchema.executionOutcome =
+  EpistemicDbSchema.executionOutcome;
+
+/**
  * Epistemic contradiction candidate table (drizzle-kit generate surface).
  *
  * **Example** (Read the contradiction candidate table name)

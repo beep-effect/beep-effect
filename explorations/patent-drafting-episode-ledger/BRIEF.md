@@ -1,6 +1,6 @@
 # Brief — Patent Drafting Episode Ledger
 
-Status: DRAFT FOR OPERATOR REVIEW 2026-08-13.
+Status: OPERATOR-RATIFIED 2026-08-13.
 
 ## Problem
 

@@ -137,13 +137,12 @@ const dataLast = pipe("hello", prefixTag("info"))
 
 ```ts
 import { $PackageNameId } from "@beep/identity/packages"
-import { TaggedErrorClass } from "@beep/schema"
 import { Effect } from "effect"
 import * as S from "effect/Schema"
 
 const $I = $PackageNameId.create("relative/path/to/file/from/package/src")
 
-class UserJsonCodecError extends TaggedErrorClass<UserJsonCodecError>($I`UserJsonCodecError`)(
+class UserJsonCodecError extends S.TaggedError<UserJsonCodecError>($I`UserJsonCodecError`)(
   "UserJsonCodecError",
   { message: S.String },
   $I.annote("UserJsonCodecError", {

@@ -6,7 +6,7 @@
  */
 
 import { $I as $RootId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -100,7 +100,7 @@ export class DocTextErrorOptions extends S.Class<DocTextErrorOptions>($I`DocText
  * @category errors
  * @since 0.0.0
  */
-export class DocTextError extends TaggedErrorClass<DocTextError>($I`DocTextError`)(
+export class DocTextError extends S.TaggedError<DocTextError>($I`DocTextError`)(
   "DocTextError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(

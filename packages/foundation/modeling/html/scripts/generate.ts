@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { createHash } from "node:crypto";
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 /**
  * Code generator for the exhaustive HTML AST.
  *
@@ -51,7 +51,7 @@ import { toAsciiLowerCase } from "../src/internal/Html.ascii.ts";
 
 const $I = $HtmlId.create("scripts/generate");
 
-class HtmlGenerationError extends TaggedErrorClass<HtmlGenerationError>($I`HtmlGenerationError`)(
+class HtmlGenerationError extends S.TaggedError<HtmlGenerationError>($I`HtmlGenerationError`)(
   "HtmlGenerationError",
   {
     cause: S.Defect({ includeStack: true }).pipe(S.optionalKey),

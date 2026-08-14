@@ -70,7 +70,7 @@ describe("rule registry", () => {
           name: "no-native-error",
           severity: "error",
           replaces: "lint tooling-tagged-errors",
-          summary: "Disallow native Error construction in tooling source; use TaggedErrorClass.",
+          summary: "Disallow native Error construction in tooling source; use S.TaggedError from effect/Schema.",
           scope: "packages/tooling/**/src/**",
         },
         "no-bigint-literals": {

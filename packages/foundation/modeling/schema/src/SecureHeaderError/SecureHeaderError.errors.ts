@@ -8,101 +8,12 @@ import { Tuple } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { SecureHeader } from "../SecureHeader/index.ts";
-import { TaggedErrorClass } from "../TaggedErrorClass/index.ts";
-import type { TaggedErrorClassFromFields } from "../TaggedErrorClass/index.ts";
 
 const $I = $SchemaId.create("SecureHeaderError");
 const commonFields = {
   message: S.String,
   cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
 } satisfies S.Struct.Fields;
-const makeSecureHeaderErrorBase = <Self, Tag extends string>(
-  name: string,
-  tag: Tag,
-  description: string
-): TaggedErrorClassFromFields<Self, Tag, typeof commonFields> =>
-  TaggedErrorClass<Self>($I.make(name))(
-    tag,
-    commonFields,
-    $I.annote(name, {
-      description,
-    })
-  );
-const CspErrorBase = makeSecureHeaderErrorBase<CspError, typeof SecureHeader.Enum.CONTENT_SECURITY_POLICY>(
-  "CspError",
-  SecureHeader.Enum.CONTENT_SECURITY_POLICY,
-  "A CSP error."
-);
-const ForceHttpsRedirectErrorBase = makeSecureHeaderErrorBase<
-  ForceHttpsRedirectError,
-  typeof SecureHeader.Enum.FORCE_HTTPS_REDIRECT
->("ForceHttpsRedirectError", SecureHeader.Enum.FORCE_HTTPS_REDIRECT, "A force HTTPS redirect error.");
-const XssProtectionErrorBase = makeSecureHeaderErrorBase<XssProtectionError, typeof SecureHeader.Enum.XSS_PROTECTION>(
-  "XssProtectionError",
-  SecureHeader.Enum.XSS_PROTECTION,
-  "An XSS protection error."
-);
-const ReferrerPolicyErrorBase = makeSecureHeaderErrorBase<
-  ReferrerPolicyError,
-  typeof SecureHeader.Enum.REFERRER_POLICY
->("ReferrerPolicyError", SecureHeader.Enum.REFERRER_POLICY, "A referrer policy error.");
-const NoSniffErrorBase = makeSecureHeaderErrorBase<NoSniffError, typeof SecureHeader.Enum.NO_SNIFF>(
-  "NoSniffError",
-  SecureHeader.Enum.NO_SNIFF,
-  "A no sniff error."
-);
-const NoOpenErrorBase = makeSecureHeaderErrorBase<NoOpenError, typeof SecureHeader.Enum.NO_OPEN>(
-  "NoOpenError",
-  SecureHeader.Enum.NO_OPEN,
-  "A no open error."
-);
-const FrameGuardErrorBase = makeSecureHeaderErrorBase<FrameGuardError, typeof SecureHeader.Enum.FRAME_GUARD>(
-  "FrameGuardError",
-  SecureHeader.Enum.FRAME_GUARD,
-  "A frame guard error."
-);
-const ExpectCtErrorBase = makeSecureHeaderErrorBase<ExpectCtError, typeof SecureHeader.Enum.EXPECT_CT>(
-  "ExpectCtError",
-  SecureHeader.Enum.EXPECT_CT,
-  "An Expect-CT error."
-);
-const PermissionsPolicyErrorBase = makeSecureHeaderErrorBase<
-  PermissionsPolicyError,
-  typeof SecureHeader.Enum.PERMISSIONS_POLICY
->("PermissionsPolicyError", SecureHeader.Enum.PERMISSIONS_POLICY, "A permissions policy error.");
-const CrossOriginOpenerPolicyErrorBase = makeSecureHeaderErrorBase<
-  CrossOriginOpenerPolicyError,
-  typeof SecureHeader.Enum.CROSS_ORIGIN_OPENER_POLICY
->("CrossOriginOpenerPolicyError", SecureHeader.Enum.CROSS_ORIGIN_OPENER_POLICY, "A cross-origin opener policy error.");
-const CrossOriginEmbedderPolicyErrorBase = makeSecureHeaderErrorBase<
-  CrossOriginEmbedderPolicyError,
-  typeof SecureHeader.Enum.CROSS_ORIGIN_EMBEDDER_POLICY
->(
-  "CrossOriginEmbedderPolicyError",
-  SecureHeader.Enum.CROSS_ORIGIN_EMBEDDER_POLICY,
-  "A cross-origin embedder policy error."
-);
-const CrossOriginResourcePolicyErrorBase = makeSecureHeaderErrorBase<
-  CrossOriginResourcePolicyError,
-  typeof SecureHeader.Enum.CROSS_ORIGIN_RESOURCE_POLICY
->(
-  "CrossOriginResourcePolicyError",
-  SecureHeader.Enum.CROSS_ORIGIN_RESOURCE_POLICY,
-  "A cross-origin resource policy error."
-);
-const PermittedCrossDomainPoliciesErrorBase = makeSecureHeaderErrorBase<
-  PermittedCrossDomainPoliciesError,
-  typeof SecureHeader.Enum.PERMITTED_CROSS_DOMAIN_POLICIES
->(
-  "PermittedCrossDomainPoliciesError",
-  SecureHeader.Enum.PERMITTED_CROSS_DOMAIN_POLICIES,
-  "A permitted cross-domain policies error."
-);
-const CoreErrorBase = makeSecureHeaderErrorBase<CoreError, typeof SecureHeader.Enum.CORE>(
-  "CoreError",
-  SecureHeader.Enum.CORE,
-  "A core error."
-);
 
 /**
  * Error raised while building a Content-Security-Policy header.
@@ -120,7 +31,11 @@ const CoreErrorBase = makeSecureHeaderErrorBase<CoreError, typeof SecureHeader.E
  * @category errors
  * @since 0.0.0
  */
-export class CspError extends CspErrorBase {}
+export class CspError extends S.TaggedError<CspError>($I.make("CspError"))(
+  SecureHeader.Enum.CONTENT_SECURITY_POLICY,
+  commonFields,
+  $I.annote("CspError", { description: "A CSP error." })
+) {}
 
 /**
  * Error raised while building force-HTTPS redirect headers.
@@ -138,7 +53,11 @@ export class CspError extends CspErrorBase {}
  * @category errors
  * @since 0.0.0
  */
-export class ForceHttpsRedirectError extends ForceHttpsRedirectErrorBase {}
+export class ForceHttpsRedirectError extends S.TaggedError<ForceHttpsRedirectError>($I.make("ForceHttpsRedirectError"))(
+  SecureHeader.Enum.FORCE_HTTPS_REDIRECT,
+  commonFields,
+  $I.annote("ForceHttpsRedirectError", { description: "A force HTTPS redirect error." })
+) {}
 
 /**
  * Error raised while building X-XSS-Protection headers.
@@ -156,7 +75,11 @@ export class ForceHttpsRedirectError extends ForceHttpsRedirectErrorBase {}
  * @category errors
  * @since 0.0.0
  */
-export class XssProtectionError extends XssProtectionErrorBase {}
+export class XssProtectionError extends S.TaggedError<XssProtectionError>($I.make("XssProtectionError"))(
+  SecureHeader.Enum.XSS_PROTECTION,
+  commonFields,
+  $I.annote("XssProtectionError", { description: "An XSS protection error." })
+) {}
 
 /**
  * Error raised while building Referrer-Policy headers.
@@ -174,7 +97,11 @@ export class XssProtectionError extends XssProtectionErrorBase {}
  * @category errors
  * @since 0.0.0
  */
-export class ReferrerPolicyError extends ReferrerPolicyErrorBase {}
+export class ReferrerPolicyError extends S.TaggedError<ReferrerPolicyError>($I.make("ReferrerPolicyError"))(
+  SecureHeader.Enum.REFERRER_POLICY,
+  commonFields,
+  $I.annote("ReferrerPolicyError", { description: "A referrer policy error." })
+) {}
 
 /**
  * Error raised while building X-Content-Type-Options headers.
@@ -192,7 +119,11 @@ export class ReferrerPolicyError extends ReferrerPolicyErrorBase {}
  * @category errors
  * @since 0.0.0
  */
-export class NoSniffError extends NoSniffErrorBase {}
+export class NoSniffError extends S.TaggedError<NoSniffError>($I.make("NoSniffError"))(
+  SecureHeader.Enum.NO_SNIFF,
+  commonFields,
+  $I.annote("NoSniffError", { description: "A no sniff error." })
+) {}
 
 /**
  * Error raised while building X-Download-Options headers.
@@ -210,7 +141,11 @@ export class NoSniffError extends NoSniffErrorBase {}
  * @category errors
  * @since 0.0.0
  */
-export class NoOpenError extends NoOpenErrorBase {}
+export class NoOpenError extends S.TaggedError<NoOpenError>($I.make("NoOpenError"))(
+  SecureHeader.Enum.NO_OPEN,
+  commonFields,
+  $I.annote("NoOpenError", { description: "A no open error." })
+) {}
 
 /**
  * Error raised while building frame-guard headers.
@@ -228,7 +163,11 @@ export class NoOpenError extends NoOpenErrorBase {}
  * @category errors
  * @since 0.0.0
  */
-export class FrameGuardError extends FrameGuardErrorBase {}
+export class FrameGuardError extends S.TaggedError<FrameGuardError>($I.make("FrameGuardError"))(
+  SecureHeader.Enum.FRAME_GUARD,
+  commonFields,
+  $I.annote("FrameGuardError", { description: "A frame guard error." })
+) {}
 
 /**
  * Error raised while building Expect-CT headers.
@@ -246,7 +185,11 @@ export class FrameGuardError extends FrameGuardErrorBase {}
  * @category errors
  * @since 0.0.0
  */
-export class ExpectCtError extends ExpectCtErrorBase {}
+export class ExpectCtError extends S.TaggedError<ExpectCtError>($I.make("ExpectCtError"))(
+  SecureHeader.Enum.EXPECT_CT,
+  commonFields,
+  $I.annote("ExpectCtError", { description: "An Expect-CT error." })
+) {}
 
 /**
  * Error raised while building Permissions-Policy headers.
@@ -264,7 +207,11 @@ export class ExpectCtError extends ExpectCtErrorBase {}
  * @category errors
  * @since 0.0.0
  */
-export class PermissionsPolicyError extends PermissionsPolicyErrorBase {}
+export class PermissionsPolicyError extends S.TaggedError<PermissionsPolicyError>($I.make("PermissionsPolicyError"))(
+  SecureHeader.Enum.PERMISSIONS_POLICY,
+  commonFields,
+  $I.annote("PermissionsPolicyError", { description: "A permissions policy error." })
+) {}
 
 /**
  * Error raised while building Cross-Origin-Opener-Policy headers.
@@ -282,7 +229,13 @@ export class PermissionsPolicyError extends PermissionsPolicyErrorBase {}
  * @category errors
  * @since 0.0.0
  */
-export class CrossOriginOpenerPolicyError extends CrossOriginOpenerPolicyErrorBase {}
+export class CrossOriginOpenerPolicyError extends S.TaggedError<CrossOriginOpenerPolicyError>(
+  $I.make("CrossOriginOpenerPolicyError")
+)(
+  SecureHeader.Enum.CROSS_ORIGIN_OPENER_POLICY,
+  commonFields,
+  $I.annote("CrossOriginOpenerPolicyError", { description: "A cross-origin opener policy error." })
+) {}
 
 /**
  * Error raised while building Cross-Origin-Embedder-Policy headers.
@@ -300,7 +253,13 @@ export class CrossOriginOpenerPolicyError extends CrossOriginOpenerPolicyErrorBa
  * @category errors
  * @since 0.0.0
  */
-export class CrossOriginEmbedderPolicyError extends CrossOriginEmbedderPolicyErrorBase {}
+export class CrossOriginEmbedderPolicyError extends S.TaggedError<CrossOriginEmbedderPolicyError>(
+  $I.make("CrossOriginEmbedderPolicyError")
+)(
+  SecureHeader.Enum.CROSS_ORIGIN_EMBEDDER_POLICY,
+  commonFields,
+  $I.annote("CrossOriginEmbedderPolicyError", { description: "A cross-origin embedder policy error." })
+) {}
 
 /**
  * Error raised while building Cross-Origin-Resource-Policy headers.
@@ -318,7 +277,13 @@ export class CrossOriginEmbedderPolicyError extends CrossOriginEmbedderPolicyErr
  * @category errors
  * @since 0.0.0
  */
-export class CrossOriginResourcePolicyError extends CrossOriginResourcePolicyErrorBase {}
+export class CrossOriginResourcePolicyError extends S.TaggedError<CrossOriginResourcePolicyError>(
+  $I.make("CrossOriginResourcePolicyError")
+)(
+  SecureHeader.Enum.CROSS_ORIGIN_RESOURCE_POLICY,
+  commonFields,
+  $I.annote("CrossOriginResourcePolicyError", { description: "A cross-origin resource policy error." })
+) {}
 
 /**
  * Error raised while building X-Permitted-Cross-Domain-Policies headers.
@@ -336,7 +301,13 @@ export class CrossOriginResourcePolicyError extends CrossOriginResourcePolicyErr
  * @category errors
  * @since 0.0.0
  */
-export class PermittedCrossDomainPoliciesError extends PermittedCrossDomainPoliciesErrorBase {}
+export class PermittedCrossDomainPoliciesError extends S.TaggedError<PermittedCrossDomainPoliciesError>(
+  $I.make("PermittedCrossDomainPoliciesError")
+)(
+  SecureHeader.Enum.PERMITTED_CROSS_DOMAIN_POLICIES,
+  commonFields,
+  $I.annote("PermittedCrossDomainPoliciesError", { description: "A permitted cross-domain policies error." })
+) {}
 
 /**
  * Error raised by shared secure-header infrastructure.
@@ -354,7 +325,11 @@ export class PermittedCrossDomainPoliciesError extends PermittedCrossDomainPolic
  * @category errors
  * @since 0.0.0
  */
-export class CoreError extends CoreErrorBase {}
+export class CoreError extends S.TaggedError<CoreError>($I.make("CoreError"))(
+  SecureHeader.Enum.CORE,
+  commonFields,
+  $I.annote("CoreError", { description: "A core error." })
+) {}
 
 /**
  * Tagged union schema for all secure-header errors.

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Inspectable } from "effect";
 import { dual } from "effect/Function";
@@ -60,7 +59,7 @@ const makeSkillsCommandError = (cause: unknown, message: string, file?: string, 
  * @category utilities
  * @since 0.0.0
  */
-export class SkillsCommandError extends TaggedErrorClass<SkillsCommandError>($I`SkillsCommandError`)(
+export class SkillsCommandError extends S.TaggedError<SkillsCommandError>($I`SkillsCommandError`)(
   "SkillsCommandError",
   {
     message: S.String,
@@ -107,7 +106,7 @@ export class SkillsCommandError extends TaggedErrorClass<SkillsCommandError>($I`
  * @category utilities
  * @since 0.0.0
  */
-export class SkillsDriftError extends TaggedErrorClass<SkillsDriftError>($I`SkillsDriftError`)(
+export class SkillsDriftError extends S.TaggedError<SkillsDriftError>($I`SkillsDriftError`)(
   "SkillsDriftError",
   {
     message: S.String,

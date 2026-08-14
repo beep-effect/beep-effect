@@ -18,7 +18,7 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as Struct from "@beep/utils/Struct";
 import { Effect, flow, pipe, SchemaIssue, SchemaTransformation, Tuple } from "effect";
 import * as A from "effect/Array";
@@ -31,7 +31,7 @@ import { readonlyStruct } from "./internal/Html.readonly.ts";
 
 const $I = $HtmlId.create("Html.attributes");
 
-class HtmlAttributeDomainError extends TaggedErrorClass<HtmlAttributeDomainError>($I`HtmlAttributeDomainError`)(
+class HtmlAttributeDomainError extends S.TaggedError<HtmlAttributeDomainError>($I`HtmlAttributeDomainError`)(
   "HtmlAttributeDomainError",
   { message: S.String },
   $I.annote("HtmlAttributeDomainError", {

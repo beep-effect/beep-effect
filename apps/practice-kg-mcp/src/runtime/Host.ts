@@ -13,7 +13,6 @@ import {
   PracticeKgBundleManifest,
   PracticeKgMcpServerConfig,
 } from "@beep/law-practice-server";
-import { TaggedErrorClass } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
@@ -39,7 +38,7 @@ const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(PracticeKgBundleMa
  * @category errors
  * @since 0.0.0
  */
-export class PracticeKgHostError extends TaggedErrorClass<PracticeKgHostError>($I`PracticeKgHostError`)(
+export class PracticeKgHostError extends S.TaggedError<PracticeKgHostError>($I`PracticeKgHostError`)(
   "PracticeKgHostError",
   {
     cause: S.optionalKey(S.Defect({ includeStack: true })),

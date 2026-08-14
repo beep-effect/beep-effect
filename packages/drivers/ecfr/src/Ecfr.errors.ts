@@ -6,7 +6,7 @@
  */
 
 import { $EcfrId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -98,6 +98,26 @@ export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOpti
   })
 ) {}
 
+const EcfrErrorFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "Original native or third-party defect when one was available.",
+    })
+  ),
+  reason: EcfrErrorReason.annotateKey({
+    description: "Redacted technical error reason.",
+  }),
+  status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "HTTP response status code associated with the eCFR failure when one was available.",
+    })
+  ),
+} satisfies S.Struct.Fields;
+const sameEcfrErrorFields = S.toEquivalence(S.TaggedStruct("EcfrError", EcfrErrorFields));
+const sameEcfrError = (self: EcfrError, that: EcfrError): boolean => sameEcfrErrorFields(self, that);
+
 /**
  * Technical failure raised by the eCFR REST API driver boundary.
  *
@@ -113,27 +133,12 @@ export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOpti
  * @category errors
  * @since 0.0.0
  */
-export class EcfrError extends TaggedErrorClass<EcfrError>($I`EcfrError`)(
+export class EcfrError extends S.TaggedError<EcfrError>($I`EcfrError`)(
   "EcfrError",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Original native or third-party defect when one was available.",
-      })
-    ),
-    reason: EcfrErrorReason.annotateKey({
-      description: "Redacted technical error reason.",
-    }),
-    status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "HTTP response status code associated with the eCFR failure when one was available.",
-      })
-    ),
-  },
-  $I.annote("EcfrError", {
+  EcfrErrorFields,
+  $I.annoteClass<S.declare<EcfrError>, readonly [S.TaggedStruct<"EcfrError", typeof EcfrErrorFields>]>("EcfrError", {
     description: "Redacted technical failure raised by the eCFR REST API driver boundary.",
+    toEquivalence: () => sameEcfrError,
   })
 ) {
   /**

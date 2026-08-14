@@ -9,7 +9,7 @@
 import { CosmosBackend, CosmosGraphProjection, CosmosRenderHandle, renderCosmosGraph } from "@beep/cosmos/browser";
 import { $ProfessionalDesktopId } from "@beep/identity";
 import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability";
-import { Fn, LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Fn, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Button } from "@beep/ui/components/button";
 import { O, P, pipe, thunkNull } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
@@ -27,7 +27,7 @@ import type { JSX } from "react";
 
 const $I = $ProfessionalDesktopId.create("spikes/CosmosSpike");
 
-class CosmosWorkerInitializationError extends TaggedErrorClass<CosmosWorkerInitializationError>(
+class CosmosWorkerInitializationError extends S.TaggedError<CosmosWorkerInitializationError>(
   $I`CosmosWorkerInitializationError`
 )(
   "CosmosWorkerInitializationError",

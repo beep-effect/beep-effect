@@ -10,7 +10,7 @@
  */
 
 import { $PretextId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $PretextId.create("Pretext.errors");
@@ -77,7 +77,7 @@ export type PretextMeasurementUnavailableReason = typeof PretextMeasurementUnava
  * @category errors
  * @since 0.0.0
  */
-export class PretextMeasurementUnavailableError extends TaggedErrorClass<PretextMeasurementUnavailableError>(
+export class PretextMeasurementUnavailableError extends S.TaggedError<PretextMeasurementUnavailableError>(
   $I`PretextMeasurementUnavailableError`
 )(
   "PretextMeasurementUnavailableError",
@@ -111,7 +111,7 @@ export class PretextMeasurementUnavailableError extends TaggedErrorClass<Pretext
  * @category errors
  * @since 0.0.0
  */
-export class PretextUnsupportedFontError extends TaggedErrorClass<PretextUnsupportedFontError>(
+export class PretextUnsupportedFontError extends S.TaggedError<PretextUnsupportedFontError>(
   $I`PretextUnsupportedFontError`
 )(
   "PretextUnsupportedFontError",
@@ -185,9 +185,7 @@ export type PretextSnapshotCodecOperation = typeof PretextSnapshotCodecOperation
  * @category errors
  * @since 0.0.0
  */
-export class PretextSnapshotCodecError extends TaggedErrorClass<PretextSnapshotCodecError>(
-  $I`PretextSnapshotCodecError`
-)(
+export class PretextSnapshotCodecError extends S.TaggedError<PretextSnapshotCodecError>($I`PretextSnapshotCodecError`)(
   "PretextSnapshotCodecError",
   {
     operation: PretextSnapshotCodecOperation,
@@ -259,7 +257,7 @@ export type PretextMeasurementOperation = typeof PretextMeasurementOperation.Typ
  * @category errors
  * @since 0.0.0
  */
-export class PretextMeasurementError extends TaggedErrorClass<PretextMeasurementError>($I`PretextMeasurementError`)(
+export class PretextMeasurementError extends S.TaggedError<PretextMeasurementError>($I`PretextMeasurementError`)(
   "PretextMeasurementError",
   {
     operation: PretextMeasurementOperation,

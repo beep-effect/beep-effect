@@ -6,7 +6,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 import type { Document, DocumentId } from "@beep/nlp/Core/Document";
@@ -40,7 +39,7 @@ type TokenizationShape = {
  * @category errors
  * @since 0.0.0
  */
-export class TokenizationError extends TaggedErrorClass<TokenizationError>($I`TokenizationError`)(
+export class TokenizationError extends S.TaggedError<TokenizationError>($I`TokenizationError`)(
   "TokenizationError",
   {
     cause: S.Defect({ includeStack: true }),

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -27,7 +26,7 @@ const $I = $RepoCliId.create("commands/TsconfigSync/TsconfigSync.errors");
  * @category utilities
  * @since 0.0.0
  */
-export class TsconfigSyncDriftError extends TaggedErrorClass<TsconfigSyncDriftError>($I`TsconfigSyncDriftError`)(
+export class TsconfigSyncDriftError extends S.TaggedError<TsconfigSyncDriftError>($I`TsconfigSyncDriftError`)(
   "TsconfigSyncDriftError",
   {
     fileCount: S.Finite,
@@ -75,7 +74,7 @@ export class TsconfigSyncDriftError extends TaggedErrorClass<TsconfigSyncDriftEr
  * @category utilities
  * @since 0.0.0
  */
-export class TsconfigSyncCycleError extends TaggedErrorClass<TsconfigSyncCycleError>($I`TsconfigSyncCycleError`)(
+export class TsconfigSyncCycleError extends S.TaggedError<TsconfigSyncCycleError>($I`TsconfigSyncCycleError`)(
   "TsconfigSyncCycleError",
   {
     cycles: S.String.pipe(S.Array, S.Array),
@@ -123,7 +122,7 @@ export class TsconfigSyncCycleError extends TaggedErrorClass<TsconfigSyncCycleEr
  * @category utilities
  * @since 0.0.0
  */
-export class TsconfigSyncFilterError extends TaggedErrorClass<TsconfigSyncFilterError>($I`TsconfigSyncFilterError`)(
+export class TsconfigSyncFilterError extends S.TaggedError<TsconfigSyncFilterError>($I`TsconfigSyncFilterError`)(
   "TsconfigSyncFilterError",
   {
     filter: S.String,
