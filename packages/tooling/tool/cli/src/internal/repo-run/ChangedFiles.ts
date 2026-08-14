@@ -150,11 +150,11 @@ export const collectChangedFiles = Effect.fn("ChangedFiles.collectChangedFiles")
   base: string,
   head: string
 ) {
-  const baseChanged = yield* runGitLines(repoRoot, ["diff", "--name-only", `${base}...${head}`]).pipe(
+  const baseChanged = yield* runGitLines(repoRoot, ["diff", "--no-renames", "--name-only", `${base}...${head}`]).pipe(
     Effect.mapError(DomainError.newCause(`Unable to resolve changed-file base range ${base}...${head}.`))
   );
   const workingTreeChanged = yield* collectDirtyWorktreeFiles(repoRoot, {
-    diffArgs: A.empty(),
+    diffArgs: ["--no-renames"],
     pathspecs: A.empty(),
     onProbeFailure: "fail",
   });

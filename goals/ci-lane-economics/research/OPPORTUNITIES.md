@@ -120,3 +120,66 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** scope retry automation to the PR's current head
   SHA and refuse stale-run reruns; alternatively include the head SHA in the
   concurrency key so a stale diagnostic retry cannot evict current-head proof.
+
+## 2026-08-13 — concurrent checkout proofs contaminated local lane timings
+
+- **Doing:** running the exact-head full Yeet proof to establish correctness
+  and collect clean local task weights for the P2 Coverage redesign.
+- **Evidence:** five independent checkout proofs were simultaneously running
+  the test-tsgo census on the same host. The exact-head proof finished green,
+  but its CPU-bound wall times were resource-contended and therefore are not
+  representative performance weights.
+- **Would have prevented it:** a host-wide quality concurrency lease or
+  fleet-aware local scheduler that serializes heavyweight proof phases across
+  sibling checkouts while allowing unrelated lightweight work to continue.
+
+## 2026-08-13 — local coverage timing hid fleet contention
+
+- **Doing:** admitting the five-shard Coverage Regression redesign on the live
+  32-GB fleet runner after its complete local proof passed.
+- **Evidence:** PR #698 job `94583467537` passed all 124 package comparisons but
+  took 22m18s. Its 43-second prebuild was not the bottleneck: four mixed shards
+  took 14m59s-15m54s while the isolated `@beep/repo-cli` shard stretched from
+  its 12m48 baseline weight to 20m16s under five simultaneous Vitest coverage
+  processes.
+- **Would have prevented it:** a fleet-parity performance runner for admission
+  tests, or a coverage planner invariant that caps aggregate shard concurrency
+  at the runner's already accepted Turbo concurrency.
+
+## 2026-08-13 — review-fix proof omitted a blocking Effect law
+
+- **Doing:** publishing the final review fixes for the P2 Coverage redesign.
+- **Evidence:** two consecutive `yeet repair --tier review-fix` passes completed
+  green, but the hosted Lint Policy job then found one introduced `effect-fn`
+  violation in `Ci.command.ts`: an `Effect.forEach` callback directly returned
+  `Effect.gen`. The focused `bun run beep laws effect-fn --check` caught the
+  corrected shape immediately.
+- **Would have prevented it:** include every blocking hosted policy law in the
+  review-fix tier, or report excluded blocking sublanes explicitly before the
+  tier can be treated as publish-ready proof.
+
+## 2026-08-13 — cold hosted build failed once but passed clean reproduction
+
+- **Doing:** admitting the four-shard Coverage shape after PR cache access was
+  changed to local-only on main.
+- **Evidence:** exact-head job `94603831042` failed during its prebuild with
+  transient `@beep/nlp` TypeScript/Effect diagnostics after 17 of 52 tasks. A
+  fresh detached clone of the same commit then completed the full local-only
+  root build with 128/128 tasks, zero cache hits, in 1m11s.
+- **Would have prevented it:** make cold-build repeatability a first-class CI
+  probe and automatically retry this diagnostic signature once before
+  classifying it as a deterministic source failure.
+
+## 2026-08-13 — Turbo concurrency did not bound Vitest worker fan-out
+
+- **Doing:** admitting the four-shard Coverage Regression candidate on the
+  existing eight-vCPU fleet runner.
+- **Evidence:** PR #698 job `94608048289` took 24m10s and failed. Three mixed
+  shards passed in 15m30s-16m46s; the shard containing `@beep/repo-cli` took
+  19m13s and failed ten explicit 5-second timeout tests plus one 1-second
+  timing assertion. Although each shard used Turbo concurrency one, every
+  package-local Vitest process could still size its worker pool from the whole
+  host, oversubscribing four co-resident shards.
+- **Would have prevented it:** treat subprocess worker pools as part of the
+  lane's aggregate concurrency budget and pass an explicit per-shard Vitest
+  worker cap derived from host vCPUs divided by shard count.

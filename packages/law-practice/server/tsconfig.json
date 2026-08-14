@@ -63,6 +63,9 @@
       "path": "../use-cases/tsconfig.json"
     },
     {
+      "path": "../../shared/use-cases/tsconfig.json"
+    },
+    {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"
     }
   ]

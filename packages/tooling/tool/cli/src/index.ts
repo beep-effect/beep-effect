@@ -283,6 +283,13 @@ export {
   rootCommand,
 } from "./commands/Root.ts";
 /**
+ * Runner AMI command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export { runnersCommand } from "./commands/Runners/index.ts";
+/**
  * Official data sync command for checked-in generated TypeScript modules.
  *
  * @category cli-commands

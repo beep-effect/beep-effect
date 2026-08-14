@@ -4,10 +4,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
 import type { Effect } from "effect";
 import type { ProposeCandidateOutputSet } from "./ProfessionalRuntime.commands.ts";
 import type { CandidateOutputSet, SdkContextPacket } from "./ProfessionalRuntime.contracts.ts";
-import type { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.ts";
+import type {
+  ProfessionalRuntimePromotionBlocked,
+  ProfessionalRuntimeValidationError,
+} from "./ProfessionalRuntime.errors.ts";
 import type { GetContextPacket } from "./ProfessionalRuntime.queries.ts";
 
 /**
@@ -17,9 +21,14 @@ import type { GetContextPacket } from "./ProfessionalRuntime.queries.ts";
  *
  * ```ts
  * import { makeInMemoryProfessionalRuntimeSdk } from "@beep/agents-use-cases/proof"
+ * import { PromotionGateVerdict } from "@beep/shared-use-cases/PromotionGate"
  * import type { ProfessionalRuntimeSdk } from "@beep/agents-use-cases/public"
+ * import { Effect } from "effect"
  *
- * const sdk: ProfessionalRuntimeSdk = makeInMemoryProfessionalRuntimeSdk([])
+ * const sdk: ProfessionalRuntimeSdk = makeInMemoryProfessionalRuntimeSdk({
+ *   fixtures: [],
+ *   promotionGate: { evaluate: () => Effect.succeed(PromotionGateVerdict.cases.clear.make({})) }
+ * })
  * console.log(typeof sdk.getContextPacket) // "function"
  * ```
  *
@@ -42,5 +51,5 @@ export interface ProfessionalRuntimeSdk {
    */
   readonly proposeCandidateOutputSet: (
     command: ProposeCandidateOutputSet
-  ) => Effect.Effect<CandidateOutputSet, ProfessionalRuntimeValidationError>;
+  ) => Effect.Effect<CandidateOutputSet, ProfessionalRuntimePromotionBlocked | ProfessionalRuntimeValidationError>;
 }
