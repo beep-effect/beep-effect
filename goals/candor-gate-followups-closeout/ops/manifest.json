@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/candor-gate-followups-closeout",
   "lifecycle": "completed-retained",
-  "statusNote": "All six claimed items reached terminal implementation or evidence-backed disposition; PR #699 reached merge-ready with zero unresolved threads.",
+  "statusNote": "All six claimed items reached terminal implementation or evidence-backed disposition in merged PR #699; follow-up PR #706 records the terminal lifecycle and reflection omitted before that merge.",
   "mission": "Retire every parked candor-gate follow-up through implementation or evidence-backed no-build disposition, explain the Lint Policy divergence, and leave no owned residue.",
   "executionCapable": true,
   "reflectionRequired": true,

@@ -32,7 +32,10 @@ state with no silently deferred residue.
 
 Closed: all six claimed items have terminal implementation or evidence
 dispositions. PR #699 passed every hosted check with zero unresolved review
-threads and reached Yeet `merge-ready: yes`; merge remains the operator's call.
+threads, reached Yeet `merge-ready: yes`, and merged as `343fc60735` on
+2026-08-13. PR #706 records the terminal lifecycle and reflection that were
+omitted when #699 merged during the final closeout proof; it is a corrective
+follow-up to the same-PR packet-state law, not additional implementation work.
 
 ## Claimed Items
 

@@ -29,7 +29,7 @@ Use this command for execution-capable sessions:
 
 1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
 2. [`SPEC.md`](./SPEC.md) - normative source of truth (decision log included).
-3. [`PLAN.md`](./PLAN.md) - active execution plan (two rungs).
+3. [`PLAN.md`](./PLAN.md) - archived execution plan (two completed rungs).
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger
    (inherited from the exploration).
@@ -61,10 +61,12 @@ protection that does not exist.
   `@beep/law-practice-domain`, `@beep/law-practice-use-cases`,
   `@beep/law-practice-tables`, `@beep/law-practice-server`,
   `@beep/shared-domain`, and `@beep/db-admin`.
-- **P0 gate-shape check (2026-08-05).**
+- **P0 gate-shape check (2026-08-05; resolved by successor).**
   [`research/01-gate-shape-check.md`](./research/01-gate-shape-check.md) — the
-  two shapes the SPEC authorized are both unavailable; foundation-mediated
-  port inversion is recommended and awaits owner sign-off.
+  two shapes the SPEC authorized were both unavailable. Its then-pending
+  foundation-mediated recommendation is historical: the successor shipped the
+  architecture-approved `shared/use-cases` port and terminally resolved the
+  sign-off question.
 - **P0 surface re-verification (2026-08-05).**
   [`research/02-surface-reverification.md`](./research/02-surface-reverification.md)
   — every SOURCES.md §4 surface confirmed current; two drift notes recorded.
