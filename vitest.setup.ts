@@ -408,6 +408,17 @@ const parseJsonlChunk: BunTestShim["JSONL"]["parseChunk"] = (content) => {
 };
 
 const normalizeFilePath = (value: string): string => value.replaceAll("\\", "/");
+const globMetaPattern = /[*?[{(!]/u;
+
+const scanRootForGlobPattern = (pattern: string): string => {
+  const segments = normalizeFilePath(pattern).split("/");
+  const firstMetaSegment = segments.findIndex((segment) => globMetaPattern.test(segment));
+  const staticSegments = firstMetaSegment === -1 ? segments.slice(0, -1) : segments.slice(0, firstMetaSegment);
+  return staticSegments.join("/");
+};
+
+const isMissingPathError = (cause: unknown): boolean =>
+  P.isError(cause) && P.hasProperty(cause, "code") && cause.code === "ENOENT";
 
 class GlobShim {
   private readonly matcher: (value: string) => boolean;
@@ -424,14 +435,28 @@ class GlobShim {
   scanSync(options?: BunGlobScanOptions): Iterable<string> {
     const cwd = options?.cwd ?? process.cwd();
     const entries: Array<string> = [];
-    const recursivePattern = this.pattern.includes("**");
+    const normalizedPattern = normalizeFilePath(this.pattern);
+    const patternDepth = normalizedPattern.split("/").length;
+    const recursivePattern = normalizedPattern.includes("**");
+    const scanRoot = scanRootForGlobPattern(normalizedPattern);
     const includeDirectories = options?.onlyFiles !== true && !this.pattern.endsWith("/**/*");
     const outputPath = (relativePath: string, absolutePath: string): string =>
       options?.absolute === true ? normalizeFilePath(absolutePath) : relativePath;
 
     // fallow-ignore-next-line complexity -- recursive walker preserves Bun's dotfile, symlink, directory, and file semantics
     const visit = (absoluteDirectory: string, relativeDirectory: string): void => {
-      for (const dirent of readdirSync(absoluteDirectory, { withFileTypes: true })) {
+      const dirents = (() => {
+        try {
+          return readdirSync(absoluteDirectory, { withFileTypes: true });
+        } catch (cause) {
+          if (isMissingPathError(cause)) {
+            return [];
+          }
+          throw cause;
+        }
+      })();
+
+      for (const dirent of dirents) {
         if (options?.dot !== true && dirent.name.startsWith(".")) {
           continue;
         }
@@ -461,14 +486,19 @@ class GlobShim {
           if (includeDirectories && this.match(relativePath)) {
             entries.push(outputPath(relativePath, absolutePath));
           }
-          visit(absolutePath, relativePath);
+          if (recursivePattern || relativePath.split("/").length < patternDepth) {
+            visit(absolutePath, relativePath);
+          }
         } else if (this.match(relativePath)) {
           entries.push(outputPath(relativePath, absolutePath));
         }
       }
     };
 
-    visit(cwd, "");
+    if (scanRoot.length > 0 && includeDirectories && this.match(scanRoot)) {
+      entries.push(outputPath(scanRoot, join(cwd, scanRoot)));
+    }
+    visit(join(cwd, scanRoot), scanRoot);
     return entries.sort();
   }
 }

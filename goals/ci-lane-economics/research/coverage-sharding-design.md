@@ -161,6 +161,30 @@ completed in 54 seconds. All nine shards passed in 3m09s, 3m47s, 4m17s,
 failure, runner shutdown, or OOM. This accepts local correctness and the
 resource bound only; the live fleet job remains the timing authority.
 
+PR #719's first live attempt, run `31794013295`, job `94746974171`, rejected
+both correctness and timing after 22m26s. Its 3m35s zero-cache prebuild passed
+128/128 tasks. Seven mixed queues then passed in 15m37s-17m30s, while the
+isolated `@beep/repo-utils` and `@beep/repo-cli` queues failed after 9m55s and
+14m32s. Both failures shared one coverage-only infrastructure cause: the Node
+`Bun.Glob` shim recursively walked the repository root for every pattern,
+including patterns with static package roots. Those repeated scans consumed
+hundreds of seconds and raced teardown of temporary `beep-biome-json-*`
+directories, yielding the repo-cli `ENOENT` and repo-utils glob error. The
+repair derives each scan root and non-recursive depth from the pattern and
+treats a directory that disappears mid-walk as an empty branch. Under Node
+coverage with two workers, the exact failing repo-utils file then passed in
+4.74s and the exact failing repo-cli file passed in 7.79s. The attempt remains
+excluded from duration percentiles; the repaired nine-shard head requires a
+fresh full-path proof and live admission.
+
+The repaired head then passed a fresh forced local full-path proof on the same
+exact base `a10825dd01`, with remote cache disabled. The 128-task prebuild
+passed in 24 seconds. Shards 1-9 passed 1, 1, 13, 19, 19, 18, 19, 19, and 18
+tasks in 4m28s, 31s, 5m05s, 5m13s, 5m06s, 5m42s, 6m07s, 5m35s, and 5m04s.
+The complete summary window took 6m31s, every task was a cache miss, and the
+ratchet compared all 127 baseline packages. This re-accepts local correctness
+and the resource bound; a new live fleet job remains the timing authority.
+
 The live PR admission must prove all summaries, all regression tests, no runner
 shutdown/OOM, and complete job wall time below 20 minutes. Any source change
 that makes a true regression green, omits a selected summary, or loses a full

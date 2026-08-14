@@ -135,6 +135,22 @@ pre-packet placement cannot raise the approved projection.
   the ratchet. The complete path took 6m55s with no test failure, shutdown, or
   OOM. This accepts local correctness/resource behavior; only the live fleet
   job may accept timing.
+- PR #719's first nine-shard job `94746974171` failed after 22m26s. Its 3m35s
+  zero-cache prebuild passed, seven mixed shards passed in 15m37s-17m30s, and
+  no runner shutdown or OOM occurred. The isolated repo-utils and repo-cli
+  shards exposed one shared Node coverage `Bun.Glob` shim defect: statically
+  rooted patterns still scanned the whole repository and raced teardown of
+  temporary Biome directories. Bounding scans to their static roots and
+  treating disappearing directories as empty branches made the exact failing
+  coverage files pass in 4.74s and 7.79s. Exclude the failed attempt from the
+  percentiles and require a fresh full-path proof plus live admission on the
+  repaired nine-shard head.
+- The repaired nine-shard head passed that forced local full path on exact base
+  `a10825dd01`: a 24-second, 128-task zero-cache prebuild; nine green zero-cache
+  shards at 31s-6m07s; and all 127 baseline packages accepted by the ratchet.
+  The complete summary window took 6m31s. This re-accepts local
+  correctness/resource behavior; only the next live fleet job may accept
+  timing.
 
 ## P2 live admission evidence
 
@@ -150,3 +166,4 @@ pre-packet placement cannot raise the approved projection.
 | `31759003628` / `94641084512` | `beep-ec2-heavy` | Failed after 23m08s | The 3m30s prebuild led into three green shards at 16m05s-17m16s. The repo-cli shard failed after 18m16s when a bounded-work assertion measured 1026.30ms against 1000ms; no OOM or runner shutdown occurred. | Reject the uniform three-worker admission and exclude it from duration percentiles. Enable file parallelism only for full coverage, restore two workers, and use five weighted shards to reduce the mixed-shard long poles. |
 | `31766791221` / `94664247028` | `beep-ec2-heavy` | Passed after 23m14s | The file-parallel five-shard design passed every test and compared all 126 baseline packages without shutdown/OOM. A 3m39s zero-cache prebuild preceded green shards at 12m03s-18m15s; the complete verification step took 22m00s. | Accept correctness but reject timing. Exclude it from the accepted P3 population; preserve its aggregate worker cap while splitting the three mixed queues into six independently draining queues. |
 | `31777323977` / `94695402310` | `beep-ec2-heavy` | Passed after 22m18s | The eight-shard design passed every check and the complete ratchet without shutdown/OOM. Its 3m30s prebuild preceded isolated long-pole shards at 11m01s and 13m08s, but the six mixed queues drained in 15m51s-17m27s and controlled wall time. | Accept correctness but reject timing. Exclude it from the accepted P3 population; split the mixed tail into seven queues with one additional bounded worker. |
+| `31794013295` / `94746974171` | `beep-ec2-heavy` | Failed after 22m26s | The 3m35s prebuild passed 128/128 tasks and seven mixed shards passed in 15m37s-17m30s. The repo-utils and repo-cli shards failed because the Node coverage Glob shim repeatedly traversed unrelated repository paths and raced temporary-directory teardown; no runner shutdown or OOM occurred. | Reject correctness and timing, exclude the attempt from duration percentiles, repair the shared test infrastructure, and require a fresh nine-shard admission. |

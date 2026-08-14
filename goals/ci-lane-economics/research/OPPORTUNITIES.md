@@ -366,3 +366,41 @@ evidence, what would have prevented it). Redact for the public repo.
   unrelated change had to be identified and removed before verification.
 - **Would have prevented it:** constrain repair writers to the declared Yeet
   change set, or require explicit opt-in before a repair tier edits clean paths.
+
+## 2026-08-14 — bundled Actions inspector depended on a broken Python shim
+
+- **Doing:** classifying PR #719's terminal Coverage Regression failure with
+  the repository's GitHub Actions inspection workflow.
+- **Evidence:** the bundled `inspect_pr_checks.py` entrypoint stopped before
+  reading the PR because its `python` command resolved through an invalid
+  application shim; direct authenticated `gh run view --log-failed` remained
+  usable.
+- **Would have prevented it:** ship the inspector with a verified interpreter
+  entrypoint or preflight the configured Python shim before routing CI
+  diagnosis through it.
+
+## 2026-08-14 — Node coverage Glob shim ignored static scan roots
+
+- **Doing:** admitting the nine-shard Coverage Regression candidate on PR
+  #719.
+- **Evidence:** run `31794013295`, job `94746974171`, failed after 22m26s.
+  The Node coverage shim recursively walked the complete repository for every
+  `Bun.Glob`, including statically rooted architecture and workspace patterns.
+  Concurrent scoped Biome directories disappeared during those unrelated
+  walks, producing `ENOENT` in repo-cli and an opaque glob failure in
+  repo-utils; the same scans consumed hundreds of seconds.
+- **Would have prevented it:** derive the scan root and maximum non-recursive
+  depth from each glob pattern, and treat a directory that disappears during a
+  recursive walk as an empty branch.
+
+## 2026-08-14 — local full-shard replay depended on implicit CI state
+
+- **Doing:** replaying the repaired nine-shard Coverage Regression path before
+  publication.
+- **Evidence:** the root coverage command without `CI=true` silently selected
+  the ordinary unsharded ratchet even with full-run arguments; its banner was
+  the only indication, and the run had to be cancelled after 38 seconds. The
+  same command with CI state selected `coverage:full` and nine queues.
+- **Would have prevented it:** expose an explicit local full-sharded flag or
+  dedicated replay command instead of making the execution shape depend on an
+  implicit environment variable.
