@@ -21,7 +21,7 @@ import {
   SoftwareAgent,
   Start,
   Usage,
-} from "@beep/semantic-web/prov";
+} from "@beep/rdf/Prov";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

@@ -586,7 +586,7 @@ const checkBake = Effect.fn("Runners.check")(function* (region: string) {
   const tags = pipe(
     A.head(response.Images),
     O.flatMap((image) => O.fromUndefinedOr(image.Tags)),
-    O.getOrElse(() => A.empty<AwsTag>())
+    O.getOrElse(A.empty<AwsTag>)
   );
   const rawLockfile = tagValue(tags, "beep-ci:lockfile-sha256");
   const actualLockfileSha256 = pipe(rawLockfile, O.flatMap(S.decodeUnknownOption(Sha256Hex)));
