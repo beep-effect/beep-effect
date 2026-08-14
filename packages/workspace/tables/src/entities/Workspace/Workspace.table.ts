@@ -29,6 +29,14 @@ export const Table = toPgTable(Workspace);
 /**
  * Physical Postgres table name derived from the Workspace entity.
  *
+ * **Example** (Read the table name)
+ *
+ * ```ts
+ * import { TABLE_NAME } from "@beep/workspace-tables/entities/Workspace"
+ *
+ * console.log(TABLE_NAME)
+ * ```
+ *
  * @category tables
  * @since 0.0.0
  */

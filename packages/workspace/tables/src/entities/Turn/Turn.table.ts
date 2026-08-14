@@ -29,6 +29,14 @@ export const Table = toPgTable(Turn);
 /**
  * Physical Postgres table name derived from the Turn entity.
  *
+ * **Example** (Read the table name)
+ *
+ * ```ts
+ * import { TABLE_NAME } from "@beep/workspace-tables/entities/Turn"
+ *
+ * console.log(TABLE_NAME)
+ * ```
+ *
  * @category tables
  * @since 0.0.0
  */

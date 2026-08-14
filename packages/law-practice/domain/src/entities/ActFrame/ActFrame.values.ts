@@ -496,7 +496,22 @@ const DistinctLabels = S.makeFilter(hasDistinctLabels, {
  * @category schemas
  * @since 0.0.0
  */
-export const ActFramePreconditions = S.Array(ActFramePrecondition).check(DistinctLabels);
+export const ActFramePreconditions = S.Array(ActFramePrecondition)
+  .check(DistinctLabels)
+  .pipe(
+    $I.annoteSchema("ActFramePreconditions", {
+      description: "The preconditions a recorded act frame states, with distinct element labels.",
+    })
+  );
+
+/**
+ * Runtime type for {@link ActFramePreconditions}.
+ *
+ * @see {@link ActFramePreconditions} for the runtime schema.
+ * @category models
+ * @since 0.0.0
+ */
+export type ActFramePreconditions = typeof ActFramePreconditions.Type;
 
 /**
  * Position transitions constrained to distinct element labels.
@@ -512,4 +527,19 @@ export const ActFramePreconditions = S.Array(ActFramePrecondition).check(Distinc
  * @category schemas
  * @since 0.0.0
  */
-export const PositionTransitions = S.Array(PositionTransition).check(DistinctLabels);
+export const PositionTransitions = S.Array(PositionTransition)
+  .check(DistinctLabels)
+  .pipe(
+    $I.annoteSchema("PositionTransitions", {
+      description: "The position transitions a recorded act frame creates or terminates, with distinct element labels.",
+    })
+  );
+
+/**
+ * Runtime type for {@link PositionTransitions}.
+ *
+ * @see {@link PositionTransitions} for the runtime schema.
+ * @category models
+ * @since 0.0.0
+ */
+export type PositionTransitions = typeof PositionTransitions.Type;
