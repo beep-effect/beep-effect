@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { Dataset } from "../rdf.ts";
@@ -138,7 +138,7 @@ export type CanonicalizationErrorReason = typeof CanonicalizationErrorReason.Typ
  * @category errors
  * @since 0.0.0
  */
-export class CanonicalizationError extends TaggedErrorClass<CanonicalizationError>($I`CanonicalizationError`)(
+export class CanonicalizationError extends S.TaggedError<CanonicalizationError>($I`CanonicalizationError`)(
   "CanonicalizationError",
   {
     reason: CanonicalizationErrorReason,

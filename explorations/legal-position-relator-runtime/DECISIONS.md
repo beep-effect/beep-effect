@@ -318,7 +318,7 @@ rung 2 shipped to `main` as PR #575 on 2026-08-06, so the ordering the BRIEF
 made conditional is already satisfied and the first-mover cost is paid by
 another packet. All four links of the lane exist and are clonable: three
 candor tables in `packages/law-practice/tables/src/entities/index.ts`;
-`packages/_internal/db-admin/drizzle/20260806031625_law_practice_candor_gate/`,
+`packages/_internal/db-admin/drizzle/20260813130540_baseline/`,
 still the only migration naming `law_practice`, so the slice's schema is in
 the baseline snapshot and a second goal generates a delta migration rather
 than a bootstrap; three `AcceptedProofManifest.ts` entries for that lane

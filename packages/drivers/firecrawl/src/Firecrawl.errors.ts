@@ -6,7 +6,7 @@
  */
 
 import { $FirecrawlId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { isNonNegative } from "@beep/schema/Number";
 import * as O from "@beep/utils/Option";
 import { Effect, flow, pipe, Result } from "effect";
@@ -308,7 +308,7 @@ class FirecrawlErrorOptionsInput extends S.Class<FirecrawlErrorOptionsInput>($I`
  * @category errors
  * @since 0.0.0
  */
-export class FirecrawlError extends TaggedErrorClass<FirecrawlError>($I`FirecrawlError`)(
+export class FirecrawlError extends S.TaggedError<FirecrawlError>($I`FirecrawlError`)(
   "FirecrawlError",
   {
     cause: optionalString,

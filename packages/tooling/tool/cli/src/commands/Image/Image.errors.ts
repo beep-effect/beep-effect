@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -27,7 +26,7 @@ const $I = $RepoCliId.create("commands/Image/Image.errors");
  * @category error-handling
  * @since 0.0.0
  */
-export class ImageCommandError extends TaggedErrorClass<ImageCommandError>($I`ImageCommandError`)(
+export class ImageCommandError extends S.TaggedError<ImageCommandError>($I`ImageCommandError`)(
   "ImageCommandError",
   {
     message: S.String,

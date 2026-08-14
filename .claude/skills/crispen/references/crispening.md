@@ -10,7 +10,7 @@ are current-as-written; trust the *symbol*, re-`rg` if a number drifted.
 
 ## Part A — the crispening toolkit
 
-Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedLiteralKit,TaggedErrorClass,CauseTaggedError}/`.
+Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedLiteralKit}/` and upstream `effect/Schema`.
 
 ### Defaults — kill `*Defaults` spreads and per-call boilerplate
 
@@ -59,7 +59,7 @@ Source: `packages/foundation/modeling/schema/src/{SchemaUtils,LiteralKit,MappedL
 
 ```ts
 import { $SchemaId } from "@beep/identity/packages";          // ~90 pre-built composers
-import { TaggedErrorClass, CauseTaggedError } from "@beep/schema";
+import * as S from "effect/Schema";
 
 const $I = $SchemaId.create("relative/path/from/pkg/src");    // file-scoped child composer
 
@@ -75,16 +75,24 @@ export const HeadingLevel = LiteralKit([1,2,3,4,5,6]).pipe($I.annoteSchema("Head
 { level: HeadingLevel.annotateKey({ description: "…" }) }
 
 // typed error (identifier from $I, never a bare string)
-class ParseError extends TaggedErrorClass<ParseError>($I`ParseError`)(
+class ParseError extends S.TaggedError<ParseError>($I`ParseError`)(
   "ParseError", { operation: S.String }, $I.annote("ParseError", { description: "…" })
 ) {}
 
-// boundary-translation error (always message + cause; dual .new / .mapError for pipes)
-class DomainError extends CauseTaggedError<DomainError>($I`DomainError`)(
-  "DomainError", $I.annote("DomainError", { description: "…" })
+// boundary-translation error (always declares message + cause explicitly)
+class DomainError extends S.TaggedError<DomainError>($I`DomainError`)(
+  "DomainError",
+  { message: S.String, cause: S.Defect({ includeStack: true }) },
+  $I.annote("DomainError", { description: "…" })
 ) {}
-// Effect.fail(raw).pipe(DomainError.mapError("Domain operation failed"))
+// Effect.fail(raw).pipe(Effect.mapError((cause) =>
+//   new DomainError({ message: "Domain operation failed", cause })
+// ))
 ```
+
+Use the package `$I` composer for a distinct namespaced identifier. When no
+distinct identifier is needed, use `S.TaggedError<ParseError>()("ParseError",
+fields)`. Never pass a bare identifier equal to the tag.
 
 `$I` API: `` $I`Name` `` (schema identifier), `$I.annote(name, extras)` (annotation record),
 `$I.annoteSchema(name, extras)` / `$I.annoteKey(name, extras)` (pipeable), `$XId.create(seg)`

@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
@@ -33,7 +32,7 @@ type CodexCommandErrorOptions =
  * @category errors
  * @since 0.0.0
  */
-export class CodexCommandError extends TaggedErrorClass<CodexCommandError>($I`CodexCommandError`)(
+export class CodexCommandError extends S.TaggedError<CodexCommandError>($I`CodexCommandError`)(
   "CodexCommandError",
   {
     message: S.String,

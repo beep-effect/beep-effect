@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { Dataset, NamedNode, ObjectTerm } from "../rdf.ts";
@@ -323,7 +323,7 @@ export type ShaclValidationErrorReason = typeof ShaclValidationErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class ShaclValidationError extends TaggedErrorClass<ShaclValidationError>($I`ShaclValidationError`)(
+export class ShaclValidationError extends S.TaggedError<ShaclValidationError>($I`ShaclValidationError`)(
   "ShaclValidationError",
   {
     reason: ShaclValidationErrorReason,

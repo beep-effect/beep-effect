@@ -6,7 +6,7 @@
  */
 
 import { $ShaclId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ShaclId.create("Shacl.errors");
@@ -75,7 +75,7 @@ export type ShaclEngineErrorReason = typeof ShaclEngineErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class ShaclEngineError extends TaggedErrorClass<ShaclEngineError>($I`ShaclEngineError`)(
+export class ShaclEngineError extends S.TaggedError<ShaclEngineError>($I`ShaclEngineError`)(
   "ShaclEngineError",
   {
     reason: ShaclEngineErrorReason,

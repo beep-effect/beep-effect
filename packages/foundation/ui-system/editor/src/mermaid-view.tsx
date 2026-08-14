@@ -8,7 +8,6 @@
 "use client";
 
 import { $EditorId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { useAtomValue } from "@effect/atom-react";
 import DOMPurify from "dompurify";
@@ -43,7 +42,7 @@ const unsafeDiagramMessage = "Diagram output did not satisfy the desktop safety 
  * @category errors
  * @since 0.0.0
  */
-export class MermaidRenderError extends TaggedErrorClass<MermaidRenderError>($I`MermaidRenderError`)(
+export class MermaidRenderError extends S.TaggedError<MermaidRenderError>($I`MermaidRenderError`)(
   "MermaidRenderError",
   {
     message: S.String.annotateKey({ description: "User-safe diagram failure message." }),

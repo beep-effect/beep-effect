@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Inspectable } from "effect";
 import { dual } from "effect/Function";
@@ -31,9 +30,7 @@ const messageWithCause = (message: string, cause: unknown): string =>
  * @category errors
  * @since 0.0.0
  */
-export class LintCircularAnalysisError extends TaggedErrorClass<LintCircularAnalysisError>(
-  $I`LintCircularAnalysisError`
-)(
+export class LintCircularAnalysisError extends S.TaggedError<LintCircularAnalysisError>($I`LintCircularAnalysisError`)(
   "LintCircularAnalysisError",
   {
     message: S.String,
@@ -64,7 +61,7 @@ export class LintCircularAnalysisError extends TaggedErrorClass<LintCircularAnal
  * @category errors
  * @since 0.0.0
  */
-export class LintFileDiscoveryError extends TaggedErrorClass<LintFileDiscoveryError>($I`LintFileDiscoveryError`)(
+export class LintFileDiscoveryError extends S.TaggedError<LintFileDiscoveryError>($I`LintFileDiscoveryError`)(
   "LintFileDiscoveryError",
   {
     message: S.String,
@@ -118,7 +115,7 @@ export class LintFileDiscoveryError extends TaggedErrorClass<LintFileDiscoveryEr
  * @category errors
  * @since 0.0.0
  */
-export class TestTypecheckBaselineError extends TaggedErrorClass<TestTypecheckBaselineError>(
+export class TestTypecheckBaselineError extends S.TaggedError<TestTypecheckBaselineError>(
   $I`TestTypecheckBaselineError`
 )(
   "TestTypecheckBaselineError",
@@ -160,7 +157,7 @@ export class TestTypecheckBaselineError extends TaggedErrorClass<TestTypecheckBa
  * @category errors
  * @since 0.0.0
  */
-export class SchemaFirstInventoryReadError extends TaggedErrorClass<SchemaFirstInventoryReadError>(
+export class SchemaFirstInventoryReadError extends S.TaggedError<SchemaFirstInventoryReadError>(
   $I`SchemaFirstInventoryReadError`
 )(
   "SchemaFirstInventoryReadError",

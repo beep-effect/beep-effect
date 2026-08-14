@@ -21,7 +21,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
 import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
-import { NonNegativeInt, PosInt, Sha256HexFromBytes, TaggedErrorClass } from "@beep/schema";
+import { NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Effect, FileSystem, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
@@ -169,7 +169,7 @@ export class PracticeKgClaimsSummary extends S.Class<PracticeKgClaimsSummary>($I
  * @category errors
  * @since 0.0.0
  */
-export class PracticeKgClaimsError extends TaggedErrorClass<PracticeKgClaimsError>($I`PracticeKgClaimsError`)(
+export class PracticeKgClaimsError extends S.TaggedError<PracticeKgClaimsError>($I`PracticeKgClaimsError`)(
   "PracticeKgClaimsError",
   {
     cause: S.optionalKey(S.Defect({ includeStack: true })),

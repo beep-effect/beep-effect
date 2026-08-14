@@ -12,7 +12,7 @@
  */
 
 import { $PacerId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import * as HttpStatus from "@beep/schema/HttpStatus";
 import { O } from "@beep/utils";
 import { Match } from "effect";
@@ -80,7 +80,7 @@ export type PacerAuthErrorReason = typeof PacerAuthErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class PacerAuthError extends TaggedErrorClass<PacerAuthError>($I`PacerAuthError`)(
+export class PacerAuthError extends S.TaggedError<PacerAuthError>($I`PacerAuthError`)(
   "PacerAuthError",
   {
     reason: PacerAuthErrorReason,
@@ -192,7 +192,7 @@ export type PacerPclErrorReason = typeof PacerPclErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class PacerPclError extends TaggedErrorClass<PacerPclError>($I`PacerPclError`)(
+export class PacerPclError extends S.TaggedError<PacerPclError>($I`PacerPclError`)(
   "PacerPclError",
   {
     reason: PacerPclErrorReason,
@@ -261,7 +261,7 @@ export class PacerPclError extends TaggedErrorClass<PacerPclError>($I`PacerPclEr
  * @category errors
  * @since 0.0.0
  */
-export class PacerConfigError extends TaggedErrorClass<PacerConfigError>($I`PacerConfigError`)(
+export class PacerConfigError extends S.TaggedError<PacerConfigError>($I`PacerConfigError`)(
   "PacerConfigError",
   {
     cause: S.optionalKey(S.String),

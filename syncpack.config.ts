@@ -98,7 +98,6 @@ const config = {
     "packages/drivers/ecfr/package.json",
     "packages/drivers/uspto-mcp/package.json",
     "packages/drivers/pacer/package.json",
-    "packages/drivers/protobuf/package.json",
     "packages/drivers/tailscale/package.json",
     "packages/drivers/pretext/package.json",
     "packages/drivers/graph-3d/package.json",

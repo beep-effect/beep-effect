@@ -118,17 +118,16 @@ const program = Effect.gen(function* () {
 
   if (mode === "check") {
     const command = "bun run --cwd apps/professional-desktop codegen";
-    return yield* Effect.fail(
-      new StaleMigrationBundle({
-        command,
-        message: `Professional Desktop migration bundle is stale. Run \`${command}\`.`,
-      })
-    );
+    return yield* StaleMigrationBundle.make({
+      command,
+      message: `Professional Desktop migration bundle is stale. Run \`${command}\`.`,
+    });
   }
 
   yield* fs.writeFileString(targetFile, nextSource);
 });
 
 const MainLive = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
+const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(MainLive))));
 
-BunRuntime.runMain(program.pipe(Effect.provide(MainLive)));
+BunRuntime.runMain(main);

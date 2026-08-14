@@ -6,7 +6,6 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
 import { Cause, Effect, Inspectable, pipe, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -112,7 +111,7 @@ const parameterNamesForTool = (tool: NlpTool): ReadonlyArray<string> => {
  * @category errors
  * @since 0.0.0
  */
-export class ExportedToolError extends TaggedErrorClass<ExportedToolError>($I`ExportedToolError`)(
+export class ExportedToolError extends S.TaggedError<ExportedToolError>($I`ExportedToolError`)(
   "ExportedToolError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),

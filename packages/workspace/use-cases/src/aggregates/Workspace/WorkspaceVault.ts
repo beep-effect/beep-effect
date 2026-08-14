@@ -6,7 +6,7 @@
  */
 
 import { $WorkspaceUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspace";
 import { Context, Effect, flow } from "effect";
@@ -100,7 +100,7 @@ export class SetWorkspaceVaultInput extends S.Class<SetWorkspaceVaultInput>($I`S
  * @category errors
  * @since 0.0.0
  */
-export class WorkspaceVaultStoreUnavailable extends TaggedErrorClass<WorkspaceVaultStoreUnavailable>(
+export class WorkspaceVaultStoreUnavailable extends S.TaggedError<WorkspaceVaultStoreUnavailable>(
   $I`WorkspaceVaultStoreUnavailable`
 )(
   "WorkspaceVaultStoreUnavailable",
@@ -130,9 +130,7 @@ export class WorkspaceVaultStoreUnavailable extends TaggedErrorClass<WorkspaceVa
  * @category errors
  * @since 0.0.0
  */
-export class WorkspaceVaultRootInvalid extends TaggedErrorClass<WorkspaceVaultRootInvalid>(
-  $I`WorkspaceVaultRootInvalid`
-)(
+export class WorkspaceVaultRootInvalid extends S.TaggedError<WorkspaceVaultRootInvalid>($I`WorkspaceVaultRootInvalid`)(
   "WorkspaceVaultRootInvalid",
   {
     path: S.String,
@@ -193,9 +191,7 @@ export type WorkspaceVaultStoreError = typeof WorkspaceVaultStoreError.Type;
  * @category errors
  * @since 0.0.0
  */
-export class WorkspaceVaultActionError extends TaggedErrorClass<WorkspaceVaultActionError>(
-  $I`WorkspaceVaultActionError`
-)(
+export class WorkspaceVaultActionError extends S.TaggedError<WorkspaceVaultActionError>($I`WorkspaceVaultActionError`)(
   "WorkspaceVaultActionError",
   {
     message: S.String,

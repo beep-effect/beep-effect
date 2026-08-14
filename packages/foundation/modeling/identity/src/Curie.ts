@@ -21,7 +21,7 @@ const $I = $IdentityId.create("Curie");
 
 // Internal invariant guard for the literal-preserving `expand`/`contract`
 // overloads: the CURIE/IRI is asserted registered by its literal type, so the
-// unresolved branch is type-level unreachable. Modeled as a TaggedErrorClass
+// unresolved branch is type-level unreachable. Modeled as a S.TaggedError
 // (not a native Error) to satisfy the native-runtime law without an allowlist
 // entry; intentionally not exported (never a caught public failure).
 class CurieCodecInvariantError extends S.TaggedError<CurieCodecInvariantError>(

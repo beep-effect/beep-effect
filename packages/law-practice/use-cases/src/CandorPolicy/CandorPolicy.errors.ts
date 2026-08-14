@@ -6,7 +6,7 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeUseCasesId.create("CandorPolicy/CandorPolicy.errors");
@@ -67,7 +67,7 @@ export type CandorRecordReadReason = typeof CandorRecordReadReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class CandorRecordReadError extends TaggedErrorClass<CandorRecordReadError>($I`CandorRecordReadError`)(
+export class CandorRecordReadError extends S.TaggedError<CandorRecordReadError>($I`CandorRecordReadError`)(
   "CandorRecordReadError",
   {
     message: S.String,

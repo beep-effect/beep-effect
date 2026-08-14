@@ -22,6 +22,7 @@ import {
   compareCoverageRegressionSnapshotsForTesting,
   compareJSDocTotalsForTesting,
   compareKnipFindingsForTesting,
+  coverageDispositionGapsForTesting,
   coverageFullStepsForTesting,
   coveragePackageBaselineFromSummaryForTesting,
   detectQualityProfileForTesting,
@@ -145,6 +146,9 @@ const coverageRegressionBaseline = CoverageRegressionBaseline.make({
   git_sha: "test-sha",
   command: "bun run coverage:baseline:write",
   epsilon: 0.001,
+  minimum: coveragePercentages(0),
+  exemptions: {},
+  follow_ups: {},
   packages: {
     "@beep/existing": coveragePackageBaseline("packages/existing"),
   },
@@ -1790,6 +1794,21 @@ describe("quality task adapter", () => {
             assert.include(Cause.pretty(scopedExit.cause), "schema version 1 requires a full");
           }
 
+          yield* fs.writeFileString(
+            baselinePath,
+            encodeJson({
+              schema_version: 1,
+              generated_at: "2026-07-06T00:00:00.000Z",
+              git_sha: "legacy-sha",
+              command: "bun run coverage:baseline:write",
+              epsilon: 0.001,
+              minimum: { lines: 71, statements: 72, branches: 51, functions: 61 },
+              exemptions: { "@beep/exempt": "Named migration exemption." },
+              follow_ups: { "@beep/debt": "Named migration follow-up." },
+              packages: { "@beep/existing": { path: "." } },
+            })
+          );
+
           yield* runGit(repoRoot, ["init"]);
           yield* runGit(repoRoot, ["config", "user.email", "coverage@example.invalid"]);
           yield* runGit(repoRoot, ["config", "user.name", "Coverage Test"]);
@@ -1801,6 +1820,12 @@ describe("quality task adapter", () => {
             yield* fs.readFileString(baselinePath)
           );
           assert.strictEqual(migrated.schema_version, 2);
+          assert.strictEqual(migrated.minimum.lines, 71);
+          assert.strictEqual(migrated.minimum.statements, 72);
+          assert.strictEqual(migrated.minimum.branches, 51);
+          assert.strictEqual(migrated.minimum.functions, 61);
+          assert.deepStrictEqual(migrated.exemptions, { "@beep/exempt": "Named migration exemption." });
+          assert.deepStrictEqual(migrated.follow_ups, { "@beep/debt": "Named migration follow-up." });
           const migratedPackage = R.get(migrated.packages, "@beep/existing");
           assert.isTrue(O.isSome(migratedPackage));
           if (O.isSome(migratedPackage)) {
@@ -1848,6 +1873,62 @@ describe("quality task adapter", () => {
 
     assert.isNotEmpty(rendered);
     A.forEach(rendered, (line) => assert.notMatch(line, /[\u0000-\u001F\u007F-\u009F]/u));
+  });
+
+  it("enforces tiered minimums independently while allowing named follow-up debt", () => {
+    const policyBaseline = CoverageRegressionBaseline.make({
+      ...coverageRegressionBaseline,
+      minimum: {
+        lines: Percentage.make(70),
+        statements: Percentage.make(70),
+        branches: Percentage.make(50),
+        functions: Percentage.make(60),
+      },
+      follow_ups: {
+        "@beep/debt": "Dedicated follow-up.",
+      },
+      packages: {
+        "@beep/debt": coveragePackageBaseline("packages/debt", 10),
+        "@beep/existing": coveragePackageBaseline("packages/existing", 80),
+      },
+    });
+    const result = compareCoverageRegressionSnapshotsForTesting(
+      policyBaseline,
+      [
+        { packageName: "@beep/debt", baseline: coveragePackageBaseline("packages/debt", 10) },
+        {
+          packageName: "@beep/existing",
+          baseline: CoveragePackageBaseline.make({
+            path: "packages/existing",
+            lines: Percentage.make(65),
+            statements: Percentage.make(65),
+            branches: Percentage.make(45),
+            functions: Percentage.make(55),
+            uncovered: coverageUncovered(0),
+            files: {},
+          }),
+        },
+      ],
+      false
+    );
+
+    expect(
+      A.sort(
+        A.map(result.minimumFailures, (failure) => failure.metric),
+        Order.String
+      )
+    ).toEqual(["branches", "functions", "lines", "statements"]);
+    expect(A.map(result.followUpDebt, (entry) => entry.packageName)).toEqual(["@beep/debt"]);
+  });
+
+  it("requires every workspace package to have coverage or a named exemption", () => {
+    expect(
+      coverageDispositionGapsForTesting(
+        ["@beep/covered", "@beep/exempt", "@beep/missing"],
+        ["@beep/covered"],
+        ["@beep/exempt"]
+      )
+    ).toEqual(["@beep/missing"]);
   });
 
   it("fails when an exact selected coverage owner omits its summary", () => {

@@ -15,9 +15,11 @@ import * as S from "effect/Schema";
 
 const isSerializedEditorState = S.is(SerializedEditorState);
 const encodeSerializedEditorState = S.encodeUnknownResult(SerializedEditorState);
-const runtimeEditorStateValidationError = LexicalDecodeError.new(
-  "Schema-decoded Lexical editor state failed runtime revalidation."
-);
+const runtimeEditorStateValidationError = (cause: unknown): LexicalDecodeError =>
+  LexicalDecodeError.make({
+    cause,
+    message: "Schema-decoded Lexical editor state failed runtime revalidation.",
+  });
 
 const revalidateSerializedEditorState = (
   state: SerializedEditorState

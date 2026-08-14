@@ -1,10 +1,8 @@
-/** @effect-diagnostics nodeBuiltinImport:skip-file */
-import { readFileSync } from "node:fs";
 import { A, P, Str, Struct } from "@beep/utils";
 import { Config, Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import { parse as parseJsonc } from "jsonc-parser";
+import generatedAliasPaths from "./vitest.aliases.generated.json" with { type: "json" };
 import type { Plugin } from "vite";
 import type { ViteUserConfig } from "vitest/config";
 
@@ -14,7 +12,6 @@ type AliasEntry = {
 };
 
 const projectRootDirectory = new URL("./", import.meta.url);
-const rootTsconfigPath = new URL("./tsconfig.json", import.meta.url).pathname;
 const coverageProvider = "v8";
 
 // Vite treats an explicit `.ts` suffix as an exact filename, while the repository
@@ -69,40 +66,6 @@ const coverageThresholds = undefined;
 
 const escapeRegExp = Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-// The root tsconfig is JSONC; typescript@7 (native) no longer exports the JS
-// compiler API (`ts.sys`/`parseConfigFileTextToJson`), so read and parse it
-// with jsonc-parser instead.
-const readFileOrUndefined = (path: string): string | undefined => {
-  try {
-    return readFileSync(path, "utf8");
-  } catch {
-    return undefined;
-  }
-};
-
-const readRootTsconfigPaths = (): Readonly<Record<string, readonly string[]>> => {
-  const fileText = readFileOrUndefined(rootTsconfigPath);
-
-  if (P.isUndefined(fileText)) {
-    return {};
-  }
-
-  const config: unknown = parseJsonc(fileText);
-
-  if (
-    typeof config !== "object" ||
-    P.isNull(config) ||
-    typeof (config as { compilerOptions?: unknown }).compilerOptions !== "object" ||
-    P.isNull((config as { compilerOptions?: unknown }).compilerOptions) ||
-    typeof (config as { compilerOptions: { paths?: unknown } }).compilerOptions.paths !== "object" ||
-    P.isNull((config as { compilerOptions: { paths?: unknown } }).compilerOptions.paths)
-  ) {
-    return {};
-  }
-
-  return (config as { compilerOptions: { paths: Record<string, readonly string[]> } }).compilerOptions.paths;
-};
-
 const toAliasEntry = (find: string, replacement: string): AliasEntry => {
   const absoluteReplacement = new URL(replacement, projectRootDirectory).pathname;
 
@@ -119,7 +82,7 @@ const toAliasEntry = (find: string, replacement: string): AliasEntry => {
   };
 };
 
-const rootTsconfigPathEntries = Struct.entries(readRootTsconfigPaths());
+const rootTsconfigPathEntries = Struct.entries(generatedAliasPaths);
 
 const rootTsconfigAliases = A.flatMap(
   A.sortWith(rootTsconfigPathEntries, ([find]) => find.length, Order.flip(Order.Number)),

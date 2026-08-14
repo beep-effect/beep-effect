@@ -12,7 +12,7 @@ import { DefaultVaultFilingContext, slugVaultSegment } from "@beep/documents-dom
 import { DocumentsRpcs, IntakeDroppedFilePayload } from "@beep/documents-use-cases/public";
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, N, O, P } from "@beep/utils";
 import { SetWorkspaceVaultInput, WorkspaceVaultRpcs } from "@beep/workspace-use-cases/public";
@@ -518,7 +518,7 @@ export const intakeDroppedFilePayload = (input: DroppedDocumentInput): IntakeDro
     filingContext: DefaultVaultFilingContext,
   });
 
-class VaultDirectoryPickerInvocationError extends TaggedErrorClass<VaultDirectoryPickerInvocationError>(
+class VaultDirectoryPickerInvocationError extends S.TaggedError<VaultDirectoryPickerInvocationError>(
   $I`VaultDirectoryPickerInvocationError`
 )(
   "VaultDirectoryPickerInvocationError",
@@ -530,7 +530,7 @@ class VaultDirectoryPickerInvocationError extends TaggedErrorClass<VaultDirector
   })
 ) {}
 
-class BrowserFileReadError extends TaggedErrorClass<BrowserFileReadError>($I`BrowserFileReadError`)(
+class BrowserFileReadError extends S.TaggedError<BrowserFileReadError>($I`BrowserFileReadError`)(
   "BrowserFileReadError",
   {
     cause: S.Defect({ includeStack: true }),
