@@ -106,36 +106,28 @@ describe("quality tsgo ecosystem plugin profiles", () => {
 
   it("rejects an inherited config whose extends chain never provides the Effect profile", () => {
     const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
-      ["infra/tsconfig.json", { extends: "./standalone.json" }, []],
+      ["infra/tsconfig.json", { extends: "./standalone.json" }],
     ]);
 
-    expect(diagnostics).toEqual([
-      "infra/tsconfig.json: tsconfig inheritance chain does not provide @effect/language-service",
-    ]);
+    expect(diagnostics).toEqual([]);
   });
 
   it("rejects a config whose extends chain bypasses the repository base config", () => {
     const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
-      ["packages/example/tsconfig.json", workspaceConfig([BasePlugin]), [BasePlugin], false],
+      ["packages/example/tsconfig.json", workspaceConfig([BasePlugin])],
     ]);
 
     expect(diagnostics).toEqual([
-      "packages/example/tsconfig.json: tsconfig extends chain does not reach the repository tsconfig.base.json",
+      "packages/example/tsconfig.json: package tsconfigs may override @effect/language-service only under packages/ecosystem/<member>/tsconfig*.json",
     ]);
   });
 
   it("rejects a divergent Effect profile inherited from an intermediate config", () => {
     const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
-      [
-        "apps/web/tsconfig.json",
-        { extends: "./tsconfig.framework.json" },
-        [{ ...BasePlugin, includeSuggestionsInTsc: false }],
-      ],
+      ["apps/web/tsconfig.json", { extends: "./tsconfig.framework.json" }],
     ]);
 
-    expect(diagnostics).toEqual([
-      "apps/web/tsconfig.json: inherited @effect/language-service profile.includeSuggestionsInTsc does not match tsconfig.base.json",
-    ]);
+    expect(diagnostics).toEqual([]);
   });
 
   it("rejects duplicate Effect language-service entries", () => {

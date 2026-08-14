@@ -60,9 +60,8 @@ Higher sources outrank lower sources when they conflict.
 ## Constraints
 
 - Entities via `BaseEntity.Class` + persisted descriptors
-  (`packages/shared/domain/src/entity/BaseEntity.ts`); pattern:
-  `packages/shared/domain/src/entities/Organization/Organization.model.ts` +
-  `packages/shared/tables/src/entities/Organization/Organization.table.ts`.
+  (`packages/shared/domain/src/entity/BaseEntity.ts`); table helpers:
+  `packages/shared/tables/src/table/Table.ts`.
   Tables via `EntityTable.pgTableFrom` (`packages/drivers/drizzle`).
 - Turn = aggregate with ordered tagged-union items
   (`Message | ToolCall | ToolResult | ArtifactRef | Activity`). Message

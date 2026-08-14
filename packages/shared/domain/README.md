@@ -4,9 +4,9 @@ Shared-kernel domain language for cross-slice product concepts, values, schemas,
 and pure behavior.
 
 This package contains the shared entity kernel, shared identity vocabulary,
-canonical organization, user, membership, actor provenance language, and shared
-value-object modules. Future exports should be added only when multiple slices
-deliberately agree on the same driver-neutral product meaning.
+actor provenance language, and shared value-object modules. Future exports
+should be added only when multiple slices deliberately agree on the same
+driver-neutral product meaning.
 
 ## Belongs Here
 
@@ -25,12 +25,6 @@ deliberately agree on the same driver-neutral product meaning.
 
 - `@beep/shared-domain`
 - `@beep/shared-domain/*`
-- `VERSION`
-- `Aggregates`
-- `Entities.Membership`
-- `Entities.Organization`
-- `Entities.User`
-- `Values.LocalDate`
 - `Identity.Shared`
 - `BaseEntity`
 - `EntityId`
@@ -50,19 +44,12 @@ language and the encoded side is the persistence row shape.
 
 | Path                                         | Intended role                                          |
 |----------------------------------------------|--------------------------------------------------------|
-| `src/aggregates/index.ts`                    | Shared aggregate roots and aggregate-level vocabulary. |
-| `src/entities/index.ts`                      | Shared identity-bearing concepts.                          |
-| `src/entities/Membership/`                   | Organization membership model and value vocabulary.         |
-| `src/entities/Organization/`                 | Organization model, value vocabulary, and pure behavior. |
-| `src/entities/User/`                         | Human account model.                                       |
 | `src/entity/index.ts`                        | Entity constructor barrel: `BaseEntity`, `EntityId`, `EntityRef`, `Principal`, `primitives`, and `SourceKind`. |
 | `src/entity/primitives.ts`                   | Shared driver-neutral entity primitive schemas.        |
 | `src/identity/index.ts`                      | Shared entity-id modules and identity vocabulary.      |
+| `src/identity/Shared.ts`                     | Cross-slice organization, user, membership, and actor ids. |
 | `src/values/index.ts`                        | Shared value objects.                                  |
 | `src/values/ClaimLifecycle/`                 | Shared claim admission lifecycle vocabulary and transition value object. |
-| `src/values/LocalDate/index.ts`              | Shared `LocalDate` value-object barrel.                |
-| `src/values/LocalDate/LocalDate.model.ts`    | Shared `LocalDate` schema/model.                       |
-| `src/values/LocalDate/LocalDate.behavior.ts` | Pure `LocalDate` behavior.                             |
 
 ## Promotion Records
 

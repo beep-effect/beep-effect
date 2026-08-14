@@ -1,12 +1,11 @@
 # @beep/shared-tables Agent Guide
 
-Shared-kernel persistence boundary proving shared `Membership`,
-`Organization`, and `User` table metadata. Tables-role contract:
+Shared-kernel table compatibility helpers. Tables-role contract:
 `packages/shared/AGENTS.md`.
 
 | Surface | Key exports | Notes |
 | --- | --- | --- |
-| entry module | `Entities`, `DbSchema` | one `Table` per shared entity (`src/entities/*`) |
+| entry module | `Table` | compatibility namespace |
 | `src/table/Table.ts` | `EntityTable` | compatibility re-export for public `EntityTable` type helpers |
 
 ## Laws

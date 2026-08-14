@@ -195,7 +195,7 @@ entry point for MyCase ([GitHub practice-management MCP search](https://github.c
   ingestion scaffold and pffexport-backed export path.
 - Date/time primitives:
   `packages/foundation/modeling/utils/src/DateTime.ts`,
-  `packages/shared/domain/src/values/LocalDate/`,
+  `packages/foundation/modeling/schema/src/LocalDate/index.ts`,
   `packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts`,
   and `packages/foundation/modeling/schema/src/Model/Model.datetime.ts`.
 - NLP/entity extraction foundations:

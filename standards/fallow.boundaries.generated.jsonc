@@ -1190,14 +1190,12 @@
           "@beep/cosmos",
           "@beep/identity",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/cosmos",
           "@beep/identity",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1278,7 +1276,6 @@
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1286,7 +1283,6 @@
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1596,6 +1592,7 @@
           "@beep/epistemic-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/ui"
         ],
         "allowTypeOnly": [
@@ -1605,6 +1602,7 @@
           "@beep/epistemic-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/ui"
         ]
       },
@@ -1779,14 +1777,12 @@
           "@beep/graph-3d",
           "@beep/identity",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/graph-3d",
           "@beep/identity",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2123,7 +2119,6 @@
           "@beep/n3",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2131,7 +2126,6 @@
           "@beep/n3",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2204,14 +2198,12 @@
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2473,7 +2465,6 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2482,7 +2473,6 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2923,14 +2913,12 @@
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -3030,7 +3018,6 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3039,7 +3026,6 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -3064,15 +3050,11 @@
         "from": "@beep/shared-tables",
         "allow": [
           "@beep/drizzle",
-          "@beep/shared-domain",
-          "@beep/shared-tables",
-          "@beep/utils"
+          "@beep/shared-tables"
         ],
         "allowTypeOnly": [
           "@beep/drizzle",
-          "@beep/shared-domain",
-          "@beep/shared-tables",
-          "@beep/utils"
+          "@beep/shared-tables"
         ]
       },
       {

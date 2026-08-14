@@ -16,14 +16,12 @@ import { $MdId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "@beep/utils/Array";
+import { Number as N, Result, Struct } from "effect";
 import { dual, flow, pipe } from "effect/Function";
-import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Struct from "effect/Struct";
 import {
   isUrlDestinationAllowedWithPolicy,
   UserContentImageUrlPolicySpec,
@@ -108,20 +106,78 @@ export class RawNodeSafetyViolation extends S.TaggedClass<RawNodeSafetyViolation
   })
 ) {}
 
+/**
+ * Destination family for a URL-bearing Markdown node.
+ *
+ * **Example** (Check a link destination kind)
+ *
+ * ```ts
+ * import { DestinationKind } from "@beep/md/Md.safe"
+ *
+ * console.log(DestinationKind.is.link("link"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const DestinationKind = LiteralKit(["link", "image"]).pipe(
   $I.annoteSchema("DestinationKind", {
-    description: "",
+    description: "Whether a URL-bearing Markdown node is a link or an image.",
   })
 );
 
+/**
+ * Runtime type for {@link DestinationKind}.
+ *
+ * **Example** (Type a destination kind)
+ *
+ * ```ts
+ * import type { DestinationKind } from "@beep/md/Md.safe"
+ *
+ * const kind: DestinationKind = "link"
+ * console.log(kind)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type DestinationKind = typeof DestinationKind.Type;
 
+/**
+ * HTML tag names that can carry a URL destination.
+ *
+ * **Example** (Check an anchor tag)
+ *
+ * ```ts
+ * import { UrlNodeTag } from "@beep/md/Md.safe"
+ *
+ * console.log(UrlNodeTag.is.a("a"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const UrlNodeTag = LiteralKit(["a", "img", "embed"]).pipe(
   $I.annoteSchema("UrlNodeTag", {
-    description: "",
+    description: "HTML tag that may carry a user-content URL destination.",
   })
 );
 
+/**
+ * Runtime type for {@link UrlNodeTag}.
+ *
+ * **Example** (Type a URL node tag)
+ *
+ * ```ts
+ * import type { UrlNodeTag } from "@beep/md/Md.safe"
+ *
+ * const tag: UrlNodeTag = "a"
+ * console.log(tag)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type UrlNodeTag = typeof UrlNodeTag.Type;
 
 /**

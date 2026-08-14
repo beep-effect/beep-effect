@@ -2284,13 +2284,8 @@
       "version": "0.0.2",
       "dependencies": {
         "@beep/drizzle": "workspace:^",
-        "@beep/shared-domain": "workspace:^",
-        "drizzle-orm": "catalog:",
-        "effect": "catalog:",
       },
       "devDependencies": {
-        "@beep/utils": "workspace:^",
-        "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },
     },

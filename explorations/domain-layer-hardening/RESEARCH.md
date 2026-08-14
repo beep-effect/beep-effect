@@ -104,7 +104,7 @@ Primitives in `packages/foundation/modeling/*` (`@beep/schema`, `@beep/identity`
 4. No temporal validity / bitemporal (`validFrom/validTo`) anywhere.
 5. No domain-event / event-sourcing substrate (`DomainEvent/EventStore`) — NOT FOUND.
 6. No shared cross-field refinement idiom (self-documented gap in `TextAnchor.ts`).
-7. Aggregates near-empty (`packages/shared/domain/src/aggregates/index.ts` is a stub).
+7. Shared-kernel aggregates module retired; identity vocabulary lives in `packages/shared/domain/src/identity/index.ts`.
 8. `ConstraintDecoder`/`Encoder` migration partial; annotation-key duplication smell.
 9. Law-practice rich in nouns, thin in lifecycle/errors/provenance.
 

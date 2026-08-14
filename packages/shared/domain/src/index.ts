@@ -113,12 +113,12 @@ export * as Identity from "./identity/index.ts";
 /**
  * Shared-kernel value objects.
  *
- * **Example** (Format today's local date)
+ * **Example** (Import shared values namespace)
  *
  * ```ts
  * import { Values } from "@beep/shared-domain"
  *
- * console.log(Values.LocalDate.today().toISOString())
+ * console.log(Values.ClaimLifecycle)
  * ```
  *
  * @category value-objects
