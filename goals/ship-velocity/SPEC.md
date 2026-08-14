@@ -206,8 +206,9 @@ be closed, not tolerated.
 
 1. `github_observed_at → agent_actively_fixing_at` p50/p95 (checks, threads), from watch events
    + inbox ACK timestamps. Target: p95 < 60s attached, < 5 min unattached (via takeover).
-2. Required-check failures per merged PR (baseline 79/35 ≈ 2.3) and % failures with a local
-   parity lane (baseline ~63% catchable-but-uncaught). Target: parity ledger → 0 recurring.
+2. Required-check failures per merged PR and % failures with a local parity lane (baselines
+   frozen in `research/metrics-baseline.md`: 73 required-lane failures / 66 merged PRs ≈ 1.11;
+   top-3 lanes = 68.5% catchable-but-uncaught). Target: parity ledger → 0 recurring.
 3. Merge-main-into-branch commits per week (baseline ~42/wk) and hot-file conflict incidents.
 4. Concurrent verify throughput + queue-wait p95 under D1; zero OOM incidents.
 5. Remote-cache eligible hit rate local + CI; verify wall-time p50 cold/warm.
