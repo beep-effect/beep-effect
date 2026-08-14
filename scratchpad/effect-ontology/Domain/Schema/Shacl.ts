@@ -45,9 +45,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Shacl");
  * @category schemas
  * @since 0.0.0
  */
-export const ShaclViolationSeverity = ShaclSeverity.annotate({
-  toArbitrary: () => S.toArbitrary(ShaclSeverity),
-});
+export const ShaclViolationSeverity = ShaclSeverity;
 
 /**
  * Runtime value accepted by {@link ShaclViolationSeverity}.

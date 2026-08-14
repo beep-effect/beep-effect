@@ -11,7 +11,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Struct from "@beep/utils/Struct";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
@@ -47,10 +49,10 @@ export type IdempotencyKey = typeof IdempotencyKey.Type;
  * Only parameters that change the extraction result should be included.
  */
 export const ExtractionParams = S.Struct({
-  maxTokens: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  maxTokens: PosInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   temperature: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   includeConfidence: S.optionalKey(S.Boolean),
-  groundingThreshold: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  groundingThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }).pipe(
   $I.annoteSchema("ExtractionParams", {
     description: "Parameters that affect extraction output",

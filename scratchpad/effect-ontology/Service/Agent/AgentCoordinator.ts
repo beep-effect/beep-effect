@@ -1119,7 +1119,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
 
         return RefinementResult.make({
           graph: currentGraph,
-          iterations: iteration,
+          iterations: NonNegativeInt.make(iteration),
           status,
           validationReport: O.some(lastValidationReport),
           durationMs,

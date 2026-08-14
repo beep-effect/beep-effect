@@ -14,6 +14,7 @@
  * @module Service/SparqlGenerator
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId, CoreVocab } from "@beep/identity";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { SchemaUtils } from "@beep/schema";
@@ -85,7 +86,7 @@ const SparqlResponseSchema = Schema.Struct({
     title: "Explanation",
     description: "Brief explanation of the query logic",
   }),
-  confidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).annotate({
+  confidence: Confidence.annotate({
     title: "Confidence",
     description: "Confidence score between 0 and 1",
   }),

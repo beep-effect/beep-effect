@@ -14,6 +14,7 @@
  * @module Service/GraphRAG
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { Context, Data, Effect, Layer, Schema } from "effect";
 import * as A from "effect/Array";
@@ -233,7 +234,7 @@ const GroundedAnswerSchema = Schema.Struct({
     title: "Citations",
     description: "Entity IDs from the context that support this answer (use exact IDs like 'alice', 'acme_corp')",
   }),
-  confidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).annotate({
+  confidence: Confidence.annotate({
     title: "Confidence",
     description: "Confidence score between 0 and 1 based on how well the context supports the answer",
   }),

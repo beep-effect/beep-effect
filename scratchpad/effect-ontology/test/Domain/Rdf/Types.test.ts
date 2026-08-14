@@ -1,21 +1,22 @@
+import { SafePnLocal as CanonicalSafePnLocal } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import {
   BlankNode,
   Literal,
-  LocalName,
   makeBlankNode,
   makeLiteral,
   makeNamedNode,
   NamedNode,
   Quad,
+  SafePnLocal,
   Triple,
 } from "../../../Domain/Rdf/Types.ts";
 
 describe("effect-ontology RDF types", () => {
   it("derives arbitraries whose values satisfy local adapter schemas", () => {
-    for (const schema of [LocalName, Triple]) {
+    for (const schema of [SafePnLocal, Triple]) {
       const arbitrary = S.toArbitrary(schema)(fc);
 
       fc.assert(
@@ -54,9 +55,10 @@ describe("effect-ontology RDF types", () => {
     expect(recovered.object).toEqual(triple.object);
   });
 
-  it("strengthens local names with the canonical Turtle grammar", () => {
-    expect(LocalName.is("prefLabel")).toBe(true);
-    expect(LocalName.is("contains/slash")).toBe(false);
-    expect(LocalName.is("contains space")).toBe(false);
+  it("re-exports canonical safe Turtle local names without a competing brand", () => {
+    expect(SafePnLocal).toBe(CanonicalSafePnLocal);
+    expect(S.is(SafePnLocal)("prefLabel")).toBe(true);
+    expect(S.is(SafePnLocal)("contains/slash")).toBe(false);
+    expect(S.is(SafePnLocal)("contains space")).toBe(false);
   });
 });

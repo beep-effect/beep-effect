@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
-import { DateTime, Effect } from "effect";
+import { DateTime, Effect, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -245,56 +246,12 @@ export const MentionId = S.String.check(
  */
 export type MentionId = typeof MentionId.Type;
 
-const MentionEvidenceFields = {
+const LegacyMentionEvidence = S.Struct({
   text: S.NonEmptyString,
   startOffset: NonNegativeInt,
   endOffset: NonNegativeInt,
-} as const;
-
-class MentionEvidenceFieldsModel extends S.Class<MentionEvidenceFieldsModel>($I`MentionEvidenceFieldsModel`)(
-  MentionEvidenceFields,
-  $I.annote("MentionEvidenceFieldsModel", {
-    description: "Internal field model for an ordered text-mention span.",
-  })
-) {}
-
-const makeMentionEvidenceArbitrary = (fc: typeof FastCheck) =>
-  fc
-    .record({
-      text: fc.string({ minLength: 1, maxLength: 128 }),
-      startOffset: fc.integer({ min: 0, max: 100_000 }),
-      width: fc.integer({ min: 0, max: 10_000 }),
-    })
-    .map(({ text, startOffset, width }) =>
-      MentionEvidenceFieldsModel.make({
-        text,
-        startOffset: NonNegativeInt.make(startOffset),
-        endOffset: NonNegativeInt.make(startOffset + width),
-      })
-    );
-
-const MentionEvidenceDefinition = MentionEvidenceFieldsModel.check(
-  S.makeFilter(
-    (evidence: MentionEvidenceFieldsModel) =>
-      evidence.endOffset >= evidence.startOffset
-        ? undefined
-        : {
-            path: ["endOffset"],
-            issue: "endOffset must be greater than or equal to startOffset.",
-          },
-    {
-      identifier: $I`MentionEvidenceOffsetOrderCheck`,
-      title: "Mention Evidence Offset Order",
-      description: "A text mention whose exclusive end offset does not precede its start offset.",
-      message: "Mention evidence end offset must be greater than or equal to its start offset.",
-      arbitrary: {
-        candidate: {
-          make: makeMentionEvidenceArbitrary,
-        },
-      },
-    }
-  )
-);
+});
+type LegacyMentionEvidenceValue = typeof LegacyMentionEvidence.Type;
 
 /**
  * Ordered text evidence carried by a core ontology mention.
@@ -308,18 +265,30 @@ const MentionEvidenceDefinition = MentionEvidenceFieldsModel.check(
  *   startOffset: 42,
  *   endOffset: 61
  * })
- * console.log(evidence.startOffset) // 42
+ * console.log(evidence.startChar) // 42
  * ```
  *
- * @invariant `0 <= startOffset <= endOffset`.
+ * @invariant The range is non-empty and `endChar - startChar` equals the UTF-16 width of `quote`.
  * @category value-objects
  * @since 0.0.0
  */
-export const MentionEvidence = MentionEvidenceDefinition.annotate({
-  toArbitrary: () => makeMentionEvidenceArbitrary,
-}).pipe(
+export const MentionEvidence = LegacyMentionEvidence.pipe(
+  S.decodeTo(TextAnchor, {
+    decode: SchemaGetter.transform((evidence: LegacyMentionEvidenceValue): typeof TextAnchor.Encoded => ({
+      quote: evidence.text,
+      startChar: evidence.startOffset,
+      endChar: evidence.endOffset,
+    })),
+    encode: SchemaGetter.transform(
+      (anchor: typeof TextAnchor.Encoded): LegacyMentionEvidenceValue => ({
+        text: anchor.quote,
+        startOffset: NonNegativeInt.make(anchor.startChar),
+        endOffset: NonNegativeInt.make(anchor.endChar),
+      })
+    ),
+  }),
   $I.annoteSchema("MentionEvidence", {
-    description: "Non-empty ordered text span retained as mention evidence.",
+    description: "Legacy mention-evidence ingress decoding to the canonical provenance TextAnchor.",
   }),
   SchemaUtils.withCodecStatics
 );
@@ -332,7 +301,7 @@ export const MentionEvidence = MentionEvidenceDefinition.annotate({
  * import type { MentionEvidence } from "@effect-ontology/Model/CoreOntology.ts"
  *
  * const width = (evidence: MentionEvidence): number =>
- *   evidence.endOffset - evidence.startOffset
+ *   evidence.endChar - evidence.startChar
  * console.log(typeof width) // "function"
  * ```
  *
@@ -368,7 +337,7 @@ const MentionFields = {
  *   confidence: 0.95,
  *   mentionsEntity: "https://example.org/entity/bruce-harrell"
  * })
- * console.log(mention.evidence.text) // "Mayor Bruce Harrell"
+ * console.log(mention.evidence.quote) // "Mayor Bruce Harrell"
  * ```
  *
  * @category entities

@@ -25,7 +25,6 @@ import {
   Quad,
   Subject,
 } from "@beep/rdf";
-import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Rdf/Types");
@@ -44,39 +43,9 @@ export {
   NamedNode,
   ObjectTerm,
   Quad,
+  SafePnLocal,
   Subject,
 };
-
-/**
- * Turtle-safe local component of an RDF name.
- *
- * **Example** (Create a local name)
- *
- * ```ts
- * import { LocalName } from "@effect-ontology/Rdf/Types.ts"
- *
- * console.log(LocalName.fromUnknown("prefLabel"))
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const LocalName = SafePnLocal.pipe(
-  S.brand("LocalName"),
-  $I.annoteSchema("LocalName", {
-    description: "Turtle-safe PN_LOCAL value used as the local component of an IRI.",
-  }),
-  SchemaUtils.withCodecStatics,
-  SchemaUtils.withStatics((schema) => ({ decodeSync: S.decodeSync(schema) }))
-);
-
-/**
- * Runtime value decoded by {@link LocalName}.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type LocalName = typeof LocalName.Type;
 
 /**
  * Graph-independent RDF statement backed by canonical RDF/JS terms.

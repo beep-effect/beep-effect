@@ -19,8 +19,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
-import type { GraphTerm, IRI, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
-import { makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
+import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
+import { IRI, makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
 import type { AssertionId, AssertionStatus } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ClaimRow } from "../Repository/schema.ts";
@@ -151,17 +151,17 @@ export class AssertionError extends Data.TaggedError("AssertionError")<{
  */
 const ASSERTIONS = {
   namespace: "http://effect-ontology.dev/assertions#",
-  Assertion: "http://effect-ontology.dev/assertions#Assertion" as IRI,
-  assertedAt: "http://effect-ontology.dev/assertions#assertedAt" as IRI,
-  curatedBy: "http://effect-ontology.dev/assertions#curatedBy" as IRI,
-  derivedFromClaim: "http://effect-ontology.dev/assertions#derivedFromClaim" as IRI,
-  decision: "http://effect-ontology.dev/assertions#decision" as IRI,
-  Status: "http://effect-ontology.dev/assertions#Status" as IRI,
-  Accepted: "http://effect-ontology.dev/assertions#Accepted" as IRI,
-  Rejected: "http://effect-ontology.dev/assertions#Rejected" as IRI,
-  Pending: "http://effect-ontology.dev/assertions#Pending" as IRI,
-  rejectedAt: "http://effect-ontology.dev/assertions#rejectedAt" as IRI,
-  rejectionReason: "http://effect-ontology.dev/assertions#rejectionReason" as IRI,
+  Assertion: IRI.fromUnknown("http://effect-ontology.dev/assertions#Assertion"),
+  assertedAt: IRI.fromUnknown("http://effect-ontology.dev/assertions#assertedAt"),
+  curatedBy: IRI.fromUnknown("http://effect-ontology.dev/assertions#curatedBy"),
+  derivedFromClaim: IRI.fromUnknown("http://effect-ontology.dev/assertions#derivedFromClaim"),
+  decision: IRI.fromUnknown("http://effect-ontology.dev/assertions#decision"),
+  Status: IRI.fromUnknown("http://effect-ontology.dev/assertions#Status"),
+  Accepted: IRI.fromUnknown("http://effect-ontology.dev/assertions#Accepted"),
+  Rejected: IRI.fromUnknown("http://effect-ontology.dev/assertions#Rejected"),
+  Pending: IRI.fromUnknown("http://effect-ontology.dev/assertions#Pending"),
+  rejectedAt: IRI.fromUnknown("http://effect-ontology.dev/assertions#rejectedAt"),
+  rejectionReason: IRI.fromUnknown("http://effect-ontology.dev/assertions#rejectionReason"),
 } as const;
 
 // =============================================================================
@@ -372,8 +372,8 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
     const toTriples = (assertion: AssertionRow, graphUri?: string) =>
       Effect.sync(() => {
         const quads: Array<Quad> = [];
-        const assertionIri = `${ASSERTIONS.namespace}${assertion.id}` as IRI;
-        const graph = graphUri as IRI | undefined;
+        const assertionIri = IRI.fromUnknown(`${ASSERTIONS.namespace}${assertion.id}`);
+        const graph = P.isUndefined(graphUri) ? undefined : IRI.fromUnknown(graphUri);
 
         // Type assertion
         quads.push(
@@ -390,7 +390,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
           canonicalQuad({
             subject: assertionIri,
             predicate: RDF_SUBJECT,
-            object: assertion.subjectIri as IRI,
+            object: IRI.fromUnknown(assertion.subjectIri),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -399,14 +399,14 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
           canonicalQuad({
             subject: assertionIri,
             predicate: RDF_PREDICATE,
-            object: assertion.predicateIri as IRI,
+            object: IRI.fromUnknown(assertion.predicateIri),
             graph: O.fromNullishOr(graph),
           })
         );
 
         const objectTerm =
           assertion.objectType === "iri"
-            ? (assertion.objectValue as IRI)
+            ? IRI.fromUnknown(assertion.objectValue)
             : canonicalLiteral({ value: assertion.objectValue });
 
         quads.push(
@@ -479,7 +479,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
             canonicalQuad({
               subject: assertionIri,
               predicate: ASSERTIONS.derivedFromClaim,
-              object: `${CLAIMS.namespace}${claimId}` as IRI,
+              object: IRI.fromUnknown(`${CLAIMS.namespace}${claimId}`),
               graph: O.fromNullishOr(graph),
             })
           );

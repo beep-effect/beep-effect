@@ -103,11 +103,17 @@ const filterHttpsUrl = S.makeFilter(
  * @category validation
  * @since 0.0.0
  */
-export const HttpsUrl = S.String.pipe(
-  S.check(filterHttpsUrl),
-  S.brand("HttpsUrl"),
+const HttpsUrlDefinition = S.String.pipe(S.check(filterHttpsUrl), S.brand("HttpsUrl"));
+
+export const HttpsUrl = HttpsUrlDefinition.annotate({
+  toArbitrary: () => (fc) =>
+    fc.uuid().map((id) => S.decodeSync(HttpsUrlDefinition)(`https://example.test/resource/${id}`)),
+}).pipe(
+  SchemaUtils.withCodecStatics,
   $I.annoteSchema("HttpsUrl", {
     description: "An absolute URL string constrained to the https protocol.",
+    toArbitrary: () => (fc) =>
+      fc.uuid().map((id) => S.decodeSync(HttpsUrlDefinition)(`https://example.test/resource/${id}`)),
   })
 );
 

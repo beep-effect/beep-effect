@@ -10,6 +10,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Layer, Schema } from "effect";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -52,12 +53,7 @@ export const DocumentClassification = Schema.Struct({
     description: "2-5 domain tags describing the document topic",
   }),
   /** Complexity score 0-1 */
-  complexityScore: Schema.Finite.check(
-    Schema.isBetween({
-      minimum: 0,
-      maximum: 1,
-    })
-  ).annotate({
+  complexityScore: UnitInterval.annotate({
     description: "Document complexity (0=simple, 1=complex)",
   }),
   /** Entity density estimation */
@@ -224,7 +220,7 @@ Respond with classifications for each document by index.`;
 export const defaultClassification: DocumentClassification = {
   documentType: "unknown" as DocumentType,
   domainTags: [],
-  complexityScore: 0.5,
+  complexityScore: UnitInterval.make(0.5),
   entityDensity: "moderate" as EntityDensity,
   language: O.some("en"),
   title: O.none(),

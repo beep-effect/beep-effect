@@ -17,8 +17,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
-import type { GraphTerm, IRI, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
-import { makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
+import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
+import { IRI, makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
 import type { ClaimFilter } from "../Repository/Claim.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ClaimInsertRow, ClaimRow } from "../Repository/schema.ts";
@@ -257,8 +257,8 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
     const toReifiedTriples = (claim: ClaimRow, graphUri?: string) =>
       Effect.sync(() => {
         const quads: Array<Quad> = [];
-        const claimIri = `${CLAIMS.namespace}${claim.id}` as IRI;
-        const graph = graphUri as IRI | undefined;
+        const claimIri = IRI.fromUnknown(`${CLAIMS.namespace}${claim.id}`);
+        const graph = P.isUndefined(graphUri) ? undefined : IRI.fromUnknown(graphUri);
 
         // Type assertion
         quads.push(
@@ -277,7 +277,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
           canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.claimSubject,
-            object: claim.subjectIri as IRI,
+            object: IRI.fromUnknown(claim.subjectIri),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -286,7 +286,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
           canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.claimPredicate,
-            object: claim.predicateIri as IRI,
+            object: IRI.fromUnknown(claim.predicateIri),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -298,7 +298,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
             canonicalQuad({
               subject: claimIri,
               predicate: CLAIMS.claimObject,
-              object: claim.objectValue as IRI,
+              object: IRI.fromUnknown(claim.objectValue),
               graph: O.fromNullishOr(graph),
             })
           );
@@ -365,7 +365,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
           canonicalQuad({
             subject: claimIri,
             predicate: CLAIMS.statedIn,
-            object: `${CLAIMS.namespace}article/${claim.articleId}` as IRI,
+            object: IRI.fromUnknown(`${CLAIMS.namespace}article/${claim.articleId}`),
             graph: O.fromNullishOr(graph),
           })
         );
@@ -416,7 +416,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
 
         // Evidence
         if (P.isNotNull(claim.evidenceText)) {
-          const evidenceIri = `${claimIri}/evidence` as IRI;
+          const evidenceIri = IRI.fromUnknown(`${claimIri}/evidence`);
 
           quads.push(
             canonicalQuad({

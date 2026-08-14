@@ -10,7 +10,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import type { NonNegativeInt } from "@beep/schema";
-import { HttpsUrl as CanonicalHttpsUrl, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { HttpsUrl, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { identity, Match } from "effect";
 import type * as Brand from "effect/Brand";
 import { dual } from "effect/Function";
@@ -28,20 +28,8 @@ type BrandedGcsBucket = string & Brand.Brand<"GcsBucket">;
 type BrandedGcsObject = string & Brand.Brand<"GcsObject">;
 type BrandedGcsUri = `gs://${string}/${string}` & Brand.Brand<"GcsUri">;
 
-const SecureHttpUrlFromSelf = S.declare((input: unknown): input is CanonicalHttpsUrl =>
-  S.is(CanonicalHttpsUrl)(input)
-).annotate({
-  toArbitrary: () => (fc) =>
-    fc.uuid().map((id) => S.decodeSync(CanonicalHttpsUrl)(`https://example.test/resource/${id}`)),
-});
-
 /**
  * Validated absolute HTTPS resource location.
- *
- * @remarks
- * Canonical URL parsing and protocol enforcement remain owned by
- * `@beep/schema`. The declaration layer contributes a constructive arbitrary
- * so schemas that embed remote locations remain property-test ready.
  *
  * @example
  * ```ts
@@ -55,13 +43,7 @@ const SecureHttpUrlFromSelf = S.declare((input: unknown): input is CanonicalHttp
  * @category identifiers
  * @since 0.0.0
  */
-export const SecureHttpUrl = CanonicalHttpsUrl.pipe(
-  S.decodeTo(SecureHttpUrlFromSelf),
-  $I.annoteSchema("SecureHttpUrl", {
-    description: "Canonical absolute HTTPS URL with a transparent property-testing generator.",
-  }),
-  SchemaUtils.withCodecStatics
-);
+export const SecureHttpUrl = HttpsUrl;
 
 /**
  * Runtime value decoded by {@link SecureHttpUrl}.
@@ -81,7 +63,7 @@ export const SecureHttpUrl = CanonicalHttpsUrl.pipe(
  * @category type-level
  * @since 0.0.0
  */
-export type SecureHttpUrl = typeof SecureHttpUrl.Type;
+export type SecureHttpUrl = HttpsUrl;
 
 const utf8Encoder = new TextEncoder();
 const isNotGcsIpv4Address = P.not((value: string) => gcsIpv4AddressPattern.test(value));

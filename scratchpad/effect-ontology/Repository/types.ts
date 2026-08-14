@@ -8,7 +8,8 @@
  * @module Repository/types
  */
 
-import { SchemaUtils } from "@beep/schema";
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Schema } from "effect";
 
 // =============================================================================
@@ -118,10 +119,10 @@ export const Claim = Schema.Struct({
   assertedAt: Schema.DateTimeUtc,
   deprecatedAt: Schema.NullOr(Schema.DateTimeUtc),
   deprecatedBy: Schema.NullOr(CorrectionId),
-  confidenceScore: Schema.NullOr(Schema.Finite),
+  confidenceScore: Schema.NullOr(Confidence),
   evidenceText: Schema.NullOr(Schema.String),
-  evidenceStartOffset: Schema.NullOr(Schema.Finite),
-  evidenceEndOffset: Schema.NullOr(Schema.Finite),
+  evidenceStartOffset: Schema.NullOr(NonNegativeInt),
+  evidenceEndOffset: Schema.NullOr(NonNegativeInt),
 });
 export type Claim = typeof Claim.Type;
 
@@ -137,10 +138,10 @@ export const ClaimInsert = Schema.Struct({
   rank: ClaimRank.pipe(SchemaUtils.withKeyDefaults("normal" as const)),
   validFrom: Schema.DateTimeUtc.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   validTo: Schema.DateTimeUtc.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  confidenceScore: Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  confidenceScore: Confidence.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   evidenceText: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  evidenceStartOffset: Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  evidenceEndOffset: Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  evidenceStartOffset: NonNegativeInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  evidenceEndOffset: NonNegativeInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
 export type ClaimInsert = typeof ClaimInsert.Type;
 

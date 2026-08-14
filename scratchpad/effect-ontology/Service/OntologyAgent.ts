@@ -354,7 +354,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
               ...(O.isSome(relation.evidence)
                 ? {
                     evidence: {
-                      text: relation.evidence.value.text,
+                      text: relation.evidence.value.quote,
                       startOffset: relation.evidence.value.startChar,
                       endOffset: relation.evidence.value.endChar,
                     },

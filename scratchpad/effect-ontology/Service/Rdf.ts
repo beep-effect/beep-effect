@@ -531,7 +531,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @param iri - IRI string
        * @returns IRI domain type
        */
-      createIri: (iri: string): IRI => iri as IRI,
+      createIri: IRI.fromUnknown,
 
       /**
        * Add entities to store

@@ -15,7 +15,13 @@ import {
   OntologyVersion,
 } from "../../../Domain/Identity.ts";
 import { BatchIdentity, BatchState } from "../../../Domain/Model/BatchWorkflow.ts";
-import { EventId, EventInterval, EventTime, TrackedEvent } from "../../../Domain/Model/CoreOntology.ts";
+import {
+  EventId,
+  EventInterval,
+  EventTime,
+  MentionEvidence,
+  TrackedEvent,
+} from "../../../Domain/Model/CoreOntology.ts";
 import { Entity, EvidenceSpan, Relation, RelationObject } from "../../../Domain/Model/Entity.ts";
 import { ExtractionRun } from "../../../Domain/Model/ExtractionRun.ts";
 import { OntologyContext, PropertyDefinition } from "../../../Domain/Model/Ontology.ts";
@@ -44,6 +50,48 @@ describe("effect-ontology model behavior", () => {
 
     expect(Result.isFailure(span)).toBe(true);
     expect(Result.isFailure(interval)).toBe(true);
+  });
+
+  it("decodes legacy evidence into canonical quote fields and rejects width mismatches", () => {
+    const span = S.decodeSync(EvidenceSpan)({
+      text: "Seattle",
+      startChar: 10,
+      endChar: 17,
+      confidence: 0.9,
+    });
+    const mismatched = S.decodeResult(EvidenceSpan)({
+      text: "Seattle",
+      startChar: 10,
+      endChar: 18,
+    });
+    const legacy = S.encodeSync(EvidenceSpan)(span);
+
+    expect(span.quote).toBe("Seattle");
+    expect(O.getOrThrow(span.confidence)).toBe(0.9);
+    expect(legacy).toEqual({
+      text: "Seattle",
+      startChar: 10,
+      endChar: 17,
+      confidence: 0.9,
+    });
+    expect(Result.isFailure(mismatched)).toBe(true);
+  });
+
+  it("decodes legacy mention evidence to the canonical text-anchor shape", () => {
+    const evidence = MentionEvidence.fromUnknown({
+      text: "Seattle",
+      startOffset: 10,
+      endOffset: 17,
+    });
+
+    expect(evidence.quote).toBe("Seattle");
+    expect(evidence.startChar).toBe(10);
+    expect(evidence.endChar).toBe(17);
+    expect(S.encodeSync(MentionEvidence)(evidence)).toEqual({
+      text: "Seattle",
+      startOffset: 10,
+      endOffset: 17,
+    });
   });
 
   it("keeps relation references distinct from literal strings", () => {

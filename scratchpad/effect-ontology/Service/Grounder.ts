@@ -10,7 +10,9 @@
  * @module Service/Grounder
  */
 
-import {$ScratchpadId} from "@beep/identity";
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { $ScratchpadId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
 import {Context, Effect, Layer, Schema, Stream} from "effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
@@ -33,7 +35,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Grounder");
  */
 const VerificationSchema = Schema.Struct({
   grounded: Schema.Boolean,
-  confidence: Schema.Finite.check(Schema.isBetween({minimum: 0, maximum: 1})),
+  confidence: Confidence,
 }).annotate({
   identifier: "GroundingDecision",
   description: "Indicates whether a triple is grounded in the provided context",
@@ -45,16 +47,13 @@ const VerificationSchema = Schema.Struct({
 const BatchVerificationSchema = Schema.Struct({
   results: Schema.Array(
     Schema.Struct({
-      index: Schema.Finite.annotate({
+      index: NonNegativeInt.annotate({
         description: "Index of the triple in the input list (0-based)",
       }),
       grounded: Schema.Boolean.annotate({
         description: "Whether this triple is supported by the context",
       }),
-      confidence: Schema.Finite.check(Schema.isBetween({
-        minimum: 0,
-        maximum: 1
-      })).annotate({
+      confidence: Confidence.annotate({
         description: "Confidence score from 0 to 1",
       }),
     })
@@ -74,10 +73,7 @@ const EntityVerificationSchema = Schema.Struct({
   typeMatch: Schema.Boolean.annotate({
     description: "Whether the assigned types match the context",
   }),
-  confidence: Schema.Finite.check(Schema.isBetween({
-    minimum: 0,
-    maximum: 1
-  })).annotate({
+  confidence: Confidence.annotate({
     description: "Overall grounding confidence score",
   }),
 }).annotate({
@@ -91,7 +87,7 @@ const EntityVerificationSchema = Schema.Struct({
 const BatchEntityVerificationSchema = Schema.Struct({
   results: Schema.Array(
     Schema.Struct({
-      index: Schema.Finite.annotate({
+      index: NonNegativeInt.annotate({
         description: "Index of the entity in the input list (0-based)",
       }),
       grounded: Schema.Boolean.annotate({
@@ -100,10 +96,7 @@ const BatchEntityVerificationSchema = Schema.Struct({
       typeMatch: Schema.Boolean.annotate({
         description: "Whether the assigned types match the context",
       }),
-      confidence: Schema.Finite.check(Schema.isBetween({
-        minimum: 0,
-        maximum: 1
-      })).annotate({
+      confidence: Confidence.annotate({
         description: "Overall grounding confidence score",
       }),
     })
@@ -469,7 +462,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             const result = HashMap.get(resultsMap, index);
             return {
               grounded: O.match(result, {onNone: () => false, onSome: (value) => value.grounded}),
-              confidence: O.match(result, {onNone: () => 0, onSome: (value) => value.confidence}),
+              confidence: O.match(result, { onNone: () => Confidence.make(0), onSome: (value) => value.confidence }),
               relation: input.relation,
             };
           });
@@ -545,7 +538,10 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                     const result = HashMap.get(resultsMap, index);
                     return {
                       grounded: O.match(result, {onNone: () => false, onSome: (value) => value.grounded}),
-                      confidence: O.match(result, {onNone: () => 0, onSome: (value) => value.confidence}),
+                    confidence: O.match(result, {
+                      onNone: () => Confidence.make(0),
+                      onSome: (value) => value.confidence,
+                    }),
                       relation: input.relation,
                     };
                   });
@@ -692,7 +688,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             return {
               grounded: O.match(result, {onNone: () => false, onSome: (value) => value.grounded}),
               typeMatch: O.match(result, {onNone: () => false, onSome: (value) => value.typeMatch}),
-              confidence: O.match(result, {onNone: () => 0, onSome: (value) => value.confidence}),
+              confidence: O.match(result, { onNone: () => Confidence.make(0), onSome: (value) => value.confidence }),
               entity,
             };
           });
@@ -726,7 +722,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
     verifyRelation: Effect.fn("Grounder.verifyRelation")((input: RelationVerificationInput) =>
       Effect.succeed({
         grounded: true,
-        confidence: 1,
+        confidence: Confidence.make(1),
         relation: input.relation,
       })
     ),
@@ -735,7 +731,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
         Effect.succeed(
           inputs.map((input) => ({
             grounded: true,
-            confidence: 1,
+            confidence: Confidence.make(1),
             relation: input.relation,
           }))
         )
@@ -744,7 +740,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
       relations.pipe(
         Stream.map((input) => ({
           grounded: true,
-          confidence: 1,
+          confidence: Confidence.make(1),
           relation: input.relation,
         }))
       ),
@@ -752,7 +748,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
       Effect.succeed({
         grounded: true,
         typeMatch: true,
-        confidence: 1,
+        confidence: Confidence.make(1),
         entity: input.entity,
       })
     ),
@@ -761,7 +757,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
         entities.map((entity) => ({
           grounded: true,
           typeMatch: true,
-          confidence: 1,
+          confidence: Confidence.make(1),
           entity,
         }))
       )

@@ -8,7 +8,11 @@
  * @module Cluster/ExtractionEntityHandler
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import type { PosInt } from "@beep/schema/Int";
 import { NonNegativeInt } from "@beep/schema/Int";
+import { Percentage } from "@beep/schema/Percentage";
+import type { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Str from "@beep/utils/Str";
 import { thunk0 } from "@beep/utils/thunk";
 import { Chunk, DateTime, Deferred, Duration, Effect, HashMap, Option, Random, Ref, Stream } from "effect";
@@ -80,10 +84,10 @@ const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
 
 const toExtractionParams = (
   params: O.Option<{
-    readonly maxTokens: O.Option<number>;
+    readonly maxTokens: O.Option<PosInt>;
     readonly temperature: O.Option<number>;
     readonly includeConfidence: O.Option<boolean>;
-    readonly groundingThreshold: O.Option<number>;
+    readonly groundingThreshold: O.Option<UnitInterval>;
   }>
 ) =>
   O.match(params, {
@@ -258,7 +262,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
             : A.map(relationArray, (relation) => ({
                 relation,
                 grounded: true,
-                confidence: 1,
+                confidence: Confidence.make(1),
               }));
 
           const entityArray = Chunk.toReadonlyArray(entities);
@@ -391,7 +395,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       if (P.isNull(run)) {
         return {
           status: "pending" as const,
-          progress: O.some(0),
+          progress: O.some(Percentage.make(0)),
           startedAt: O.none<string>(),
           completedAt: O.none<string>(),
           error: O.none<string>(),
@@ -403,7 +407,9 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       const error = P.isTagged(run.status, "Failed") ? O.some(run.status.error.message) : O.none();
       return {
         status: statusName(run.status),
-        progress: O.some(P.isTagged(run.status, "Complete") ? 100 : P.isTagged(run.status, "Running") ? 50 : 0),
+        progress: O.some(
+          Percentage.make(P.isTagged(run.status, "Complete") ? 100 : P.isTagged(run.status, "Running") ? 50 : 0)
+        ),
         startedAt: O.some(DateTime.formatIso(run.createdAt)),
         completedAt,
         error,

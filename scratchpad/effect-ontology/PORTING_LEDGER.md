@@ -55,7 +55,7 @@ scratchpad, moved to its correct upstream path at `Domain/Schema/Shacl.ts`.
 
 | Source | Disposition and target | Boundary, defaults, invariants, arbitrary, and tests |
 | --- | --- | --- |
-| `Identity.ts` | **redesigned** in the same path | Full SHA-256 content identity is distinct from the explicit legacy prefix; GCS, namespace, ontology, document, chunk, run, and batch identities are branded and schema-owned. Static constructors replace free helpers. Explicit bounded/pattern arbitraries; `Identity.test.ts`. |
+| `Identity.ts` | **redesigned** in the same path | Full SHA-256 content identity is distinct from the explicit legacy prefix; HTTPS URLs directly reuse `@beep/schema` `HttpsUrl`; GCS, namespace, ontology, document, chunk, run, and batch identities remain experiment-owned and schema-backed. Explicit bounded/pattern arbitraries; `Identity.test.ts`. |
 | `PathLayout.ts` | **redesigned** in the same path | Reversible path codecs own parsing and construction; run/image/canonical paths reject traversal and non-canonical encodings. Explicit arbitraries and round-trip properties; `PathLayout.test.ts`. |
 | `index.ts` | **ported** in the same path | Namespaced Error, Identity, Model, PathLayout, RDF, and Schema exports preserve family boundaries; package remains quarantined. |
 
@@ -91,9 +91,9 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | --- | --- | --- |
 | `Model/Agent.ts` | **redesigned** | LiteralKit agent/pipeline domains, tagged lifecycle/event values, Option-normalized state, positive termination/checkpoint settings; model arbitrary audit and `Model/Behavior.test.ts`. |
 | `Model/BatchWorkflow.ts` | **redesigned** | Stage-specific data is nested in `BatchState`; transition/progress/terminal behavior is attached to the schema; collections and optional progress context are normalized; model behavior properties. |
-| `Model/CoreOntology.ts` | **redesigned** | Canonical `@beep/rdf` IRI ownership, LiteralKit core vocabulary, content-derived IDs, ordered event intervals, tagged event time, typed domain errors; arbitrary and behavior coverage. |
+| `Model/CoreOntology.ts` | **redesigned** | Canonical `@beep/rdf` IRI ownership and `@beep/provenance` text anchors, LiteralKit core vocabulary, content-derived IDs, ordered event intervals, tagged event time, typed domain errors; historical mention-evidence keys cross one total codec. |
 | `Model/EnrichedContent.ts` | **ported and hardened** | Recognized source types, MIME/content metadata, Option-normalized enrichment fields, non-negative measurements; public arbitrary audit. |
-| `Model/Entity.ts` | **redesigned** | Ordered evidence spans, canonical RDF/IRI types, `RelationObject` tagged values, Option/default collections, schema-owned relation behavior; behavior coverage. |
+| `Model/Entity.ts` | **redesigned** | The sole local evidence extension composes canonical `TextAnchorFields`/`TextAnchorWidthCheck` with optional canonical confidence; legacy `text` ingress is a total codec. RDF/IRI terms and relation objects remain canonical/tagged; behavior coverage includes quote-width and round-trip invariants. |
 | `Model/EntityResolution.ts` | **redesigned** | Tagged mention/resolved nodes and resolution/relation edges, unit-interval confidence, schema-owned complete default config; behavior and arbitrary coverage. |
 | `Model/EntityResolutionGraph.ts` | **ported and hardened** | Non-negative cluster/stat values, canonical IDs/IRIs, normalized collections, graph lookup/statics; consolidated model tests. |
 | `Model/ExtractionRun.ts` | **redesigned** | Tagged run status replaces optional terminal bags; bounded chunking/LLM/concurrency, content identities, durations, normalized audit/output collections; model behavior coverage. |
@@ -110,7 +110,7 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | Source | Disposition and target | Boundary, defaults, invariants, arbitrary, and tests |
 | --- | --- | --- |
 | `Rdf/Types.ts` | **subsumed** by `@beep/rdf` plus a local `Triple` adapter | RDF/JS terms, dataset, prefix map, and constructors are canonical re-exports; graph-free triples convert explicitly to/from quads. Arbitrary and interop tests in `Rdf/Types.test.ts`. |
-| `Rdf/Constants.ts` | **subsumed** by `@beep/rdf/Vocab/*` plus experiment-owned vocabularies | Standard RDF/RDFS/OWL/XSD/SKOS/SHACL/PROV/DCTERMS/Schema.org terms and inventories are imported directly from `@beep/rdf`; this module retains only EXTR, CLAIMS, CORRECTIONS, and CORE NamedNodes. |
+| `Rdf/Constants.ts` | **subsumed** by `@beep/rdf/Vocab/*` plus experiment-owned vocabularies | Available standard RDF/RDFS/OWL/XSD/SKOS/PROV/DCTERMS terms are imported directly; missing terms are constructed from canonical namespaces, while SHACL terms use one local namespace pending a shared owner. This module retains only EXTR, CLAIMS, CORRECTIONS, and CORE NamedNodes. |
 | `Rdf/index.ts` | **ported** | Complete canonical RDF adapter and vocabulary barrel. |
 
 ## Schema modules
@@ -127,7 +127,7 @@ support, and coverage in `test/Domain/Error/All.test.ts`.
 | `Schema/EventSchema.ts` | **redesigned** | Uses Effect v4 `EventGroup`; event payloads use validated models instead of unknown state blobs. |
 | `Schema/Inference.ts` | **ported and hardened** | LiteralKit reasoning/status, non-negative stats, complete collections/options, canonical request/response boundaries; arbitrary audit. |
 | `Schema/JobSchema.ts` | **redesigned** | Tagged jobs, HTTPS webhooks, JSON payloads, content-derived IDs, zero-attempt/default Option retry metadata; source timestamp-concatenation ID helper rejected below. |
-| `Schema/KnowledgeModel.ts` | **redesigned** | Canonical RDF terms, content IDs, ordered spans/temporal intervals, tagged evidence source, non-empty evidence/support, defaults and schema-owned constructors; behavior/arbitrary tests. |
+| `Schema/KnowledgeModel.ts` | **redesigned** | Canonical RDF terms and `@beep/provenance` text anchors, content IDs, ordered temporal intervals, tagged evidence source, non-empty evidence/support, defaults and schema-owned constructors; historical text-span keys cross one total codec. |
 | `Schema/LinkIngestion.ts` | **redesigned** | HTTP(S) links, canonical content/GCS identities, Option metadata, tagged batch results, and response-summary invariant; arbitrary audit. |
 | `Schema/OntologyBrowser.ts` | **ported and hardened** | Canonical ontology/IRI values, normalized labels/collections, non-negative counts; arbitrary audit. |
 | `Schema/OntologyRegistry.ts` | **redesigned** | Canonical identities/storage paths, complete resources/entry defaults, typed JSON codecs, registry lookup statics; arbitrary audit. |

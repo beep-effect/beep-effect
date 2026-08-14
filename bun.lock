@@ -2638,6 +2638,7 @@
         "@beep/ontology": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/pretext": "workspace:^",
+        "@beep/provenance": "workspace:^",
         "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/semantic-web": "workspace:^",

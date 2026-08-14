@@ -8,8 +8,10 @@
  * @module Service/ViolationExplainer
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegNum } from "@beep/schema/Number";
 import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from "effect";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -95,7 +97,7 @@ export class LlmViolationExplanation extends Schema.Class<LlmViolationExplanatio
   /** Affected entity IRIs */
   affectedEntities: Schema.Array(Schema.String),
   /** Confidence in the explanation (0-1) */
-  confidence: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(0.8)),
+  confidence: Confidence.pipe(SchemaUtils.withKeyDefaults(Confidence.make(0.8))),
 }) {
   /**
    * True if this is a critical violation
@@ -113,9 +115,9 @@ export class LlmViolationExplanation extends Schema.Class<LlmViolationExplanatio
  */
 export class BatchExplanationResult extends Schema.Class<BatchExplanationResult>("BatchExplanationResult")({
   explanations: Schema.Array(LlmViolationExplanation),
-  totalViolations: Schema.Finite,
-  explainedCount: Schema.Finite,
-  durationMs: Schema.Finite,
+  totalViolations: NonNegativeInt,
+  explainedCount: NonNegativeInt,
+  durationMs: NonNegNum,
 }) {
   /**
    * True if all violations were explained
@@ -147,7 +149,7 @@ const ExplanationResponseSchema = Schema.Struct({
     title: "Affected Entities",
     description: "IRIs of entities affected by this violation",
   }),
-  confidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).annotate({
+  confidence: Confidence.annotate({
     title: "Confidence",
     description: "Confidence in the explanation accuracy (0-1)",
   }),
@@ -279,8 +281,8 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
 
       return BatchExplanationResult.make({
         explanations: [...explanations],
-        totalViolations: violations.length,
-        explainedCount: explanations.length,
+        totalViolations: NonNegativeInt.make(violations.length),
+        explainedCount: NonNegativeInt.make(explanations.length),
         durationMs,
       });
     });
@@ -298,7 +300,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
         suggestion,
         severity: violation.severity,
         affectedEntities: [violation.focusNode],
-        confidence: 0.6, // Lower confidence for rule-based
+        confidence: Confidence.make(0.6), // Lower confidence for rule-based
       });
     };
 

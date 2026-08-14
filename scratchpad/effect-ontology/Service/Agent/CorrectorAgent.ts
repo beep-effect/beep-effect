@@ -30,8 +30,11 @@
  * @module Service/Agent/CorrectorAgent
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { NonNegNum } from "@beep/schema/Number";
 import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from "effect";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -163,7 +166,7 @@ export class Correction extends Schema.Class<Correction>("Correction")({
   /**
    * Confidence in the correction (0-1)
    */
-  confidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })),
+  confidence: Confidence,
 }) {
   /**
    * Whether this correction should be applied
@@ -198,7 +201,7 @@ export class CorrectionResult extends Schema.Class<CorrectionResult>("Correction
   /**
    * Time taken in milliseconds
    */
-  durationMs: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
+  durationMs: NonNegNum,
 }) {}
 
 /**
@@ -216,22 +219,22 @@ export class BatchCorrectionResult extends Schema.Class<BatchCorrectionResult>("
   /**
    * Total violations processed
    */
-  totalViolations: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  totalViolations: NonNegativeInt,
 
   /**
    * Number of corrections applied
    */
-  correctedCount: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  correctedCount: NonNegativeInt,
 
   /**
    * Number of violations skipped
    */
-  skippedCount: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  skippedCount: NonNegativeInt,
 
   /**
    * Total duration in milliseconds
    */
-  durationMs: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
+  durationMs: NonNegNum,
 }) {
   /**
    * Success rate (corrected / total)
@@ -288,12 +291,7 @@ const CorrectionResponseSchema = Schema.Struct({
     title: "Explanation",
     description: "Why this correction is appropriate",
   }),
-  confidence: Schema.Finite.check(
-    Schema.isBetween({
-      minimum: 0,
-      maximum: 1,
-    })
-  ).annotate({
+  confidence: Confidence.annotate({
     title: "Confidence",
     description: "Confidence in this correction (0-1)",
   }),
@@ -540,7 +538,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
           }
           case "reclassify-entity": {
             if (O.isNone(correction.newType)) return;
-            const typePredicate = N3.DataFactory.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
+            const typePredicate = N3.DataFactory.namedNode(RDF_TYPE.value);
             const oldTypeQuads = store._store.getQuads(focusNode, typePredicate, null, null);
             store._store.removeQuads(oldTypeQuads);
             const newTypeNode = N3.DataFactory.namedNode(correction.newType.value);
@@ -621,7 +619,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
                     focusNode: violation.focusNode,
                     path: O.some(violation.path.value),
                     explanation: `Error: ${error.message}`,
-                    confidence: 0,
+                    confidence: Confidence.make(0),
                   }),
                   applied: false,
                   durationMs: 0,
@@ -636,16 +634,16 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
       const correctedCount = A.filter(results, (result) => result.applied).length;
       const skippedCount = results.length - correctedCount;
       yield* Effect.logInfo("CorrectorAgent.correctAll complete", {
-        totalViolations: results.length,
-        correctedCount,
-        skippedCount,
+        totalViolations: NonNegativeInt.make(results.length),
+        correctedCount: NonNegativeInt.make(correctedCount),
+        skippedCount: NonNegativeInt.make(skippedCount),
         durationMs,
       });
       return BatchCorrectionResult.make({
         results: [...results],
-        totalViolations: results.length,
-        correctedCount,
-        skippedCount,
+        totalViolations: NonNegativeInt.make(results.length),
+        correctedCount: NonNegativeInt.make(correctedCount),
+        skippedCount: NonNegativeInt.make(skippedCount),
         durationMs,
       });
     });

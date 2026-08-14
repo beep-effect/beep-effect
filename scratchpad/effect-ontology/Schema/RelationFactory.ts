@@ -12,12 +12,13 @@
  */
 
 import { SchemaUtils } from "@beep/schema";
-import { UnitInterval } from "@beep/schema/UnitInterval";
 import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import type { EvidenceSpan as EvidenceSpanValue } from "../Domain/Model/Entity.ts";
+import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import type { IRI } from "../Domain/Rdf/Types.ts";
 import { dual2 } from "../Utils/Dual.ts";
@@ -170,39 +171,12 @@ export const makeRelationSchema = dual2(
         ? localNameSchema(asIriArray(datatypeProperties.map((p) => p.id)), "properties")
         : null;
 
-    // Evidence span schema for provenance tracking
-    const EvidenceSpan = S.Struct({
-      text: S.String.annotate({
-        description: "Exact text span expressing this relation",
-      }),
-      startChar: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
-        S.annotate({
-          description: "Character offset start (0-indexed)",
-        })
-      ),
-      endChar: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
-        S.annotate({
-          description: "Character offset end (exclusive)",
-        })
-      ),
-      confidence: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
-        description: "Extraction confidence (0-1)",
-      }),
-    }).annotate({
-      description: "Character-level text evidence for provenance",
-    });
-
     // Create relation schemas discriminated by rangeType
     type RelationOutput = {
       readonly subjectId: string;
       readonly predicate: string;
       readonly object: string | number | boolean;
-      readonly evidence: O.Option<{
-        readonly text: string;
-        readonly startChar: number;
-        readonly endChar: number;
-        readonly confidence: O.Option<number>;
-      }>;
+      readonly evidence: O.Option<EvidenceSpanValue>;
     };
 
     const relationSchemas: Array<S.Codec<RelationOutput, unknown, never, never>> = [];

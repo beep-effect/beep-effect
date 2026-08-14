@@ -10,7 +10,10 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import * as Rdf from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
+import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { ShaclValidationResult } from "@beep/semantic-web/services/shacl-validation";
 import { Context, DateTime, Duration, Effect, HashMap, Layer, MutableHashMap, Order, Ref } from "effect";
@@ -36,6 +39,7 @@ import { RdfBuilder } from "./Rdf.ts";
 import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Shacl");
+const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#";
 
 // Re-export types for backward compatibility
 export { ShaclValidationReport, ShaclViolation, ValidationPolicy };
@@ -442,94 +446,86 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
               const store = new N3.Store();
               const { namedNode } = N3.DataFactory;
               const SH = {
-                NodeShape: namedNode("http://www.w3.org/ns/shacl#NodeShape"),
-                PropertyShape: namedNode("http://www.w3.org/ns/shacl#PropertyShape"),
-                targetClass: namedNode("http://www.w3.org/ns/shacl#targetClass"),
-                property: namedNode("http://www.w3.org/ns/shacl#property"),
-                path: namedNode("http://www.w3.org/ns/shacl#path"),
-                class: namedNode("http://www.w3.org/ns/shacl#class"),
-                datatype: namedNode("http://www.w3.org/ns/shacl#datatype"),
-                nodeKind: namedNode("http://www.w3.org/ns/shacl#nodeKind"),
-                IRI: namedNode("http://www.w3.org/ns/shacl#IRI"),
-                Literal: namedNode("http://www.w3.org/ns/shacl#Literal"),
-                minCount: namedNode("http://www.w3.org/ns/shacl#minCount"),
-                maxCount: namedNode("http://www.w3.org/ns/shacl#maxCount"),
+                NodeShape: namedNode(`${SHACL_NAMESPACE}NodeShape`),
+                PropertyShape: namedNode(`${SHACL_NAMESPACE}PropertyShape`),
+                targetClass: namedNode(`${SHACL_NAMESPACE}targetClass`),
+                property: namedNode(`${SHACL_NAMESPACE}property`),
+                path: namedNode(`${SHACL_NAMESPACE}path`),
+                class: namedNode(`${SHACL_NAMESPACE}class`),
+                datatype: namedNode(`${SHACL_NAMESPACE}datatype`),
+                nodeKind: namedNode(`${SHACL_NAMESPACE}nodeKind`),
+                IRI: namedNode(`${SHACL_NAMESPACE}IRI`),
+                Literal: namedNode(`${SHACL_NAMESPACE}Literal`),
+                minCount: namedNode(`${SHACL_NAMESPACE}minCount`),
+                maxCount: namedNode(`${SHACL_NAMESPACE}maxCount`),
               };
-              const RDF_TYPE = namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type");
-              const OWL_CLASS = namedNode("http://www.w3.org/2002/07/owl#Class");
-              const OWL_OBJECT_PROPERTY = namedNode("http://www.w3.org/2002/07/owl#ObjectProperty");
-              const OWL_DATATYPE_PROPERTY = namedNode("http://www.w3.org/2002/07/owl#DatatypeProperty");
-              const OWL_FUNCTIONAL_PROPERTY = namedNode("http://www.w3.org/2002/07/owl#FunctionalProperty");
-              const OWL_RESTRICTION = namedNode("http://www.w3.org/2002/07/owl#Restriction");
-              const OWL_ON_PROPERTY = namedNode("http://www.w3.org/2002/07/owl#onProperty");
-              const OWL_MIN_CARDINALITY = namedNode("http://www.w3.org/2002/07/owl#minCardinality");
-              const OWL_MAX_CARDINALITY = namedNode("http://www.w3.org/2002/07/owl#maxCardinality");
-              const OWL_CARDINALITY = namedNode("http://www.w3.org/2002/07/owl#cardinality");
-              const RDFS_DOMAIN = namedNode("http://www.w3.org/2000/01/rdf-schema#domain");
-              const RDFS_RANGE = namedNode("http://www.w3.org/2000/01/rdf-schema#range");
-              const RDFS_SUBCLASS_OF = namedNode("http://www.w3.org/2000/01/rdf-schema#subClassOf");
-              const XSD_STRING = namedNode("http://www.w3.org/2001/XMLSchema#string");
+              const rdfType = namedNode(RDF_TYPE.value);
+              const owlClass = namedNode(OWL_CLASS.value);
+              const owlObjectProperty = namedNode(OWL_OBJECT_PROPERTY.value);
+              const owlDatatypeProperty = namedNode(OWL_DATATYPE_PROPERTY.value);
+              const owlFunctionalProperty = namedNode(`${OWL_NAMESPACE}FunctionalProperty`);
+              const owlRestriction = namedNode(`${OWL_NAMESPACE}Restriction`);
+              const owlOnProperty = namedNode(`${OWL_NAMESPACE}onProperty`);
+              const owlMinCardinality = namedNode(`${OWL_NAMESPACE}minCardinality`);
+              const owlMaxCardinality = namedNode(`${OWL_NAMESPACE}maxCardinality`);
+              const owlCardinality = namedNode(`${OWL_NAMESPACE}cardinality`);
+              const rdfsDomain = namedNode(`${RDFS_NAMESPACE}domain`);
+              const rdfsRange = namedNode(`${RDFS_NAMESPACE}range`);
+              const rdfsSubClassOf = namedNode(`${RDFS_NAMESPACE}subClassOf`);
+              const xsdString = namedNode(XSD_STRING.value);
+              const xsdInteger = namedNode(XSD_INTEGER.value);
               const propertyShapeMap = MutableHashMap.empty<string, N3.BlankNode>();
               const makeKey = (classIri: string, propIri: string) => `${classIri}|${propIri}`;
-              const classes = ontologyStore.getQuads(null, RDF_TYPE, OWL_CLASS, null);
+              const classes = ontologyStore.getQuads(null, rdfType, owlClass, null);
               for (const classQuad of classes) {
                 const classIri = classQuad.subject;
                 const shapeIri = namedNode(`${classIri.value}Shape`);
-                store.addQuad(shapeIri, RDF_TYPE, SH.NodeShape);
+                store.addQuad(shapeIri, rdfType, SH.NodeShape);
                 store.addQuad(shapeIri, SH.targetClass, classIri);
-                const propsWithDomain = ontologyStore.getQuads(null, RDFS_DOMAIN, classIri, null);
+                const propsWithDomain = ontologyStore.getQuads(null, rdfsDomain, classIri, null);
                 for (const propQuad of propsWithDomain) {
                   const propIri = propQuad.subject;
-                  const isObjectProp = ontologyStore.getQuads(propIri, RDF_TYPE, OWL_OBJECT_PROPERTY, null).length > 0;
-                  const isDatatypeProp =
-                    ontologyStore.getQuads(propIri, RDF_TYPE, OWL_DATATYPE_PROPERTY, null).length > 0;
+                  const isObjectProp = ontologyStore.getQuads(propIri, rdfType, owlObjectProperty, null).length > 0;
+                  const isDatatypeProp = ontologyStore.getQuads(propIri, rdfType, owlDatatypeProperty, null).length > 0;
                   const isFunctionalProp =
-                    ontologyStore.getQuads(propIri, RDF_TYPE, OWL_FUNCTIONAL_PROPERTY, null).length > 0;
+                    ontologyStore.getQuads(propIri, rdfType, owlFunctionalProperty, null).length > 0;
                   if (isObjectProp) {
                     const propertyShape = N3.DataFactory.blankNode();
                     MutableHashMap.set(propertyShapeMap, makeKey(classIri.value, propIri.value), propertyShape);
                     store.addQuad(shapeIri, SH.property, propertyShape);
                     store.addQuad(propertyShape, SH.path, propIri);
-                    const rangeQuads = ontologyStore.getQuads(propIri, RDFS_RANGE, null, null);
+                    const rangeQuads = ontologyStore.getQuads(propIri, rdfsRange, null, null);
                     if (rangeQuads.length > 0) {
                       store.addQuad(propertyShape, SH.class, rangeQuads[0].object);
                     }
                     store.addQuad(propertyShape, SH.nodeKind, SH.IRI);
                     if (isFunctionalProp) {
-                      store.addQuad(
-                        propertyShape,
-                        SH.maxCount,
-                        N3.DataFactory.literal("1", namedNode("http://www.w3.org/2001/XMLSchema#integer"))
-                      );
+                      store.addQuad(propertyShape, SH.maxCount, N3.DataFactory.literal("1", xsdInteger));
                     }
                   } else if (isDatatypeProp) {
                     const propertyShape = N3.DataFactory.blankNode();
                     MutableHashMap.set(propertyShapeMap, makeKey(classIri.value, propIri.value), propertyShape);
                     store.addQuad(shapeIri, SH.property, propertyShape);
                     store.addQuad(propertyShape, SH.path, propIri);
-                    const rangeQuads = ontologyStore.getQuads(propIri, RDFS_RANGE, null, null);
+                    const rangeQuads = ontologyStore.getQuads(propIri, rdfsRange, null, null);
                     if (rangeQuads.length > 0) {
                       store.addQuad(propertyShape, SH.datatype, rangeQuads[0].object);
                     } else {
-                      store.addQuad(propertyShape, SH.datatype, XSD_STRING);
+                      store.addQuad(propertyShape, SH.datatype, xsdString);
                     }
                     store.addQuad(propertyShape, SH.nodeKind, SH.Literal);
                     if (isFunctionalProp) {
-                      store.addQuad(
-                        propertyShape,
-                        SH.maxCount,
-                        N3.DataFactory.literal("1", namedNode("http://www.w3.org/2001/XMLSchema#integer"))
-                      );
+                      store.addQuad(propertyShape, SH.maxCount, N3.DataFactory.literal("1", xsdInteger));
                     }
                   }
                 }
-                const subClassQuads = ontologyStore.getQuads(classIri, RDFS_SUBCLASS_OF, null, null);
+                const subClassQuads = ontologyStore.getQuads(classIri, rdfsSubClassOf, null, null);
                 for (const subClassQuad of subClassQuads) {
                   const restrictionNode = subClassQuad.object;
                   const isRestriction =
-                    ontologyStore.getQuads(restrictionNode, RDF_TYPE, OWL_RESTRICTION, null).length > 0;
+                    ontologyStore.getQuads(restrictionNode, rdfType, owlRestriction, null).length > 0;
                   if (!isRestriction) continue;
-                  const onPropertyQuads = ontologyStore.getQuads(restrictionNode, OWL_ON_PROPERTY, null, null);
+                  const onPropertyQuads = ontologyStore.getQuads(restrictionNode, owlOnProperty, null, null);
                   if (onPropertyQuads.length === 0) continue;
                   const restrictedPropIri = onPropertyQuads[0].object;
                   const key = makeKey(classIri.value, restrictedPropIri.value);
@@ -542,37 +538,21 @@ export class ShaclService extends Context.Service<ShaclService, ShaclServiceMeth
                     store.addQuad(created, SH.path, restrictedPropIri);
                   }
                   const propertyShapeNode = O.getOrThrow(propertyShape);
-                  const minCardQuads = ontologyStore.getQuads(restrictionNode, OWL_MIN_CARDINALITY, null, null);
+                  const minCardQuads = ontologyStore.getQuads(restrictionNode, owlMinCardinality, null, null);
                   if (minCardQuads.length > 0) {
                     const minValue = minCardQuads[0].object.value;
-                    store.addQuad(
-                      propertyShapeNode,
-                      SH.minCount,
-                      N3.DataFactory.literal(minValue, namedNode("http://www.w3.org/2001/XMLSchema#integer"))
-                    );
+                    store.addQuad(propertyShapeNode, SH.minCount, N3.DataFactory.literal(minValue, xsdInteger));
                   }
-                  const maxCardQuads = ontologyStore.getQuads(restrictionNode, OWL_MAX_CARDINALITY, null, null);
+                  const maxCardQuads = ontologyStore.getQuads(restrictionNode, owlMaxCardinality, null, null);
                   if (maxCardQuads.length > 0) {
                     const maxValue = maxCardQuads[0].object.value;
-                    store.addQuad(
-                      propertyShapeNode,
-                      SH.maxCount,
-                      N3.DataFactory.literal(maxValue, namedNode("http://www.w3.org/2001/XMLSchema#integer"))
-                    );
+                    store.addQuad(propertyShapeNode, SH.maxCount, N3.DataFactory.literal(maxValue, xsdInteger));
                   }
-                  const exactCardQuads = ontologyStore.getQuads(restrictionNode, OWL_CARDINALITY, null, null);
+                  const exactCardQuads = ontologyStore.getQuads(restrictionNode, owlCardinality, null, null);
                   if (exactCardQuads.length > 0) {
                     const exactValue = exactCardQuads[0].object.value;
-                    store.addQuad(
-                      propertyShapeNode,
-                      SH.minCount,
-                      N3.DataFactory.literal(exactValue, namedNode("http://www.w3.org/2001/XMLSchema#integer"))
-                    );
-                    store.addQuad(
-                      propertyShapeNode,
-                      SH.maxCount,
-                      N3.DataFactory.literal(exactValue, namedNode("http://www.w3.org/2001/XMLSchema#integer"))
-                    );
+                    store.addQuad(propertyShapeNode, SH.minCount, N3.DataFactory.literal(exactValue, xsdInteger));
+                    store.addQuad(propertyShapeNode, SH.maxCount, N3.DataFactory.literal(exactValue, xsdInteger));
                   }
                 }
               }

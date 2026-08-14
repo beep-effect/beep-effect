@@ -19,8 +19,8 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type { Entity, Relation } from "../Domain/Model/Entity.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
-import type { GraphTerm, IRI, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
-import { makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
+import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "../Domain/Rdf/Types.ts";
+import { IRI, makeLiteral, makeNamedNode, makeQuad } from "../Domain/Rdf/Types.ts";
 import type { ClaimRank } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import type { CreateClaimInput } from "../Service/Claim.ts";
@@ -319,7 +319,7 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
   // Get evidence from entity mentions (first mention if available)
   const firstMention = A.head(entity.mentions);
   const evidence = O.map(firstMention, (mention) => ({
-    text: mention.text,
+    text: mention.quote,
     startOffset: mention.startChar,
     endOffset: mention.endChar,
   }));
@@ -421,7 +421,7 @@ export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryO
 
   // Get evidence from relation
   const evidence = O.map(relation.evidence, (span) => ({
-    text: span.text,
+    text: span.quote,
     startOffset: span.startChar,
     endOffset: span.endChar,
   }));
@@ -537,8 +537,8 @@ export const knowledgeGraphToClaims = dual3(
 export const claimDataToQuads = dual3(
   (claim: ClaimData, graphUri: string | undefined, extractedAt: string | undefined): ReadonlyArray<Quad> => {
     const quads: Array<Quad> = [];
-    const claimIri = `${CLAIMS.namespace}${claim.claimId}` as IRI;
-    const graph = graphUri as IRI | undefined;
+    const claimIri = IRI.fromUnknown(`${CLAIMS.namespace}${claim.claimId}`);
+    const graph = P.isUndefined(graphUri) ? undefined : IRI.fromUnknown(graphUri);
 
     // Type assertion: claim:id a claims:Claim
     quads.push(
@@ -555,7 +555,7 @@ export const claimDataToQuads = dual3(
       claimQuad({
         subject: claimIri,
         predicate: RDF_SUBJECT,
-        object: claim.subjectIri as IRI,
+        object: IRI.fromUnknown(claim.subjectIri),
         graph,
       })
     );
@@ -565,14 +565,14 @@ export const claimDataToQuads = dual3(
       claimQuad({
         subject: claimIri,
         predicate: RDF_PREDICATE,
-        object: claim.predicateIri as IRI,
+        object: IRI.fromUnknown(claim.predicateIri),
         graph,
       })
     );
 
     // RDF reification: rdf:object (IRI or Literal)
     const objectTerm =
-      claim.objectType === "iri" ? (claim.objectValue as IRI) : claimLiteral({ value: claim.objectValue });
+      claim.objectType === "iri" ? IRI.fromUnknown(claim.objectValue) : claimLiteral({ value: claim.objectValue });
 
     quads.push(
       claimQuad({
@@ -626,14 +626,14 @@ export const claimDataToQuads = dual3(
       claimQuad({
         subject: claimIri,
         predicate: CLAIMS.statedIn,
-        object: `${CLAIMS.namespace}article/${claim.articleId}` as IRI,
+        object: IRI.fromUnknown(`${CLAIMS.namespace}article/${claim.articleId}`),
         graph,
       })
     );
 
     // Evidence
     if (P.isNotUndefined(claim.evidence)) {
-      const evidenceIri = `${claimIri}/evidence` as IRI;
+      const evidenceIri = IRI.fromUnknown(`${claimIri}/evidence`);
 
       quads.push(
         claimQuad({

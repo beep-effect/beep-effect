@@ -10,7 +10,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import { Context, Effect, HashMap, HashSet, Layer, MutableHashMap, Option, Schema } from "effect";
 import * as A from "effect/Array";
@@ -71,20 +73,16 @@ export interface ResolutionStats {
  */
 export class CrossBatchResolverConfig extends Schema.Class<CrossBatchResolverConfig>("CrossBatchResolverConfig")({
   /** Minimum similarity for candidate retrieval (ANN search) */
-  candidateThreshold: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).pipe(
-    SchemaUtils.withKeyDefaults(0.6)
-  ),
+  candidateThreshold: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.6))),
 
   /** Minimum similarity for final resolution decision */
-  resolutionThreshold: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).pipe(
-    SchemaUtils.withKeyDefaults(0.8)
-  ),
+  resolutionThreshold: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.8))),
 
   /** Maximum candidates per entity from ANN search */
-  maxCandidatesPerEntity: Schema.Int.check(Schema.isGreaterThan(0)).pipe(SchemaUtils.withKeyDefaults(20)),
+  maxCandidatesPerEntity: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
 
   /** Maximum candidates from token blocking */
-  maxBlockingCandidates: Schema.Int.check(Schema.isGreaterThan(0)).pipe(SchemaUtils.withKeyDefaults(100)),
+  maxBlockingCandidates: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(100))),
 
   /** Namespace prefix for generated canonical IRIs */
   canonicalNamespace: Schema.String.pipe(SchemaUtils.withKeyDefaults("http://example.org/entities/")),

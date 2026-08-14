@@ -1,3 +1,4 @@
+import { HttpsUrl } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -77,6 +78,7 @@ describe("effect-ontology identity schemas", () => {
   });
 
   it("rejects insecure, ambiguous, reserved, and non-canonical locations", () => {
+    expect(SecureHttpUrl).toBe(HttpsUrl);
     expect(SecureHttpUrl.is("https://example.org/report.pdf")).toBe(true);
     expect(SecureHttpUrl.is("http://example.org/report.pdf")).toBe(false);
     expect(Result.isFailure(S.decodeResult(GcsBucket)("192.168.5.4"))).toBe(true);

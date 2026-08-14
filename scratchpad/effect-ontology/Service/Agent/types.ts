@@ -9,7 +9,9 @@
  * @module Service/Agent/types
  */
 
-import { SchemaUtils } from "@beep/schema";
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegNum } from "@beep/schema/Number";
 import { Data, Duration, Schema } from "effect";
 import * as A from "effect/Array";
 import type * as HashMap from "effect/HashMap";
@@ -133,10 +135,7 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
   /**
    * Priority (lower = higher priority)
    */
-  priority: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)).pipe(
-    Schema.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
-  ),
+  priority: NonNegativeInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {
   /**
    * Create a text extraction task
@@ -152,7 +151,7 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
       text: O.some(text),
       documentId: O.fromUndefinedOr(documentId),
       agentConfig: O.fromUndefinedOr(agentConfig),
-      priority: O.some(1),
+      priority: O.some(NonNegativeInt.make(1)),
     });
   }
 
@@ -160,7 +159,7 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
    * Create a validation task
    */
   static forValidation(taskId: string, graph: unknown): AgentTask {
-    return AgentTask.make({ taskId, graph: O.some(graph), priority: O.some(2) });
+    return AgentTask.make({ taskId, graph: O.some(graph), priority: O.some(NonNegativeInt.make(2)) });
   }
 
   /**
@@ -171,7 +170,7 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
       taskId,
       sourceUrl: O.some(sourceUrl),
       ingestionOptions: O.some(ingestionOptions),
-      priority: O.some(0),
+      priority: O.some(NonNegativeInt.make(0)),
     });
   }
 
@@ -183,7 +182,7 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
       taskId,
       graph: O.some(graph),
       validationReport: O.some(validationReport),
-      priority: O.some(3),
+      priority: O.some(NonNegativeInt.make(3)),
     });
   }
 }
@@ -227,10 +226,7 @@ export class PipelineConfig extends Schema.Class<PipelineConfig>("PipelineConfig
   /**
    * Maximum concurrency (for parallel mode)
    */
-  concurrency: Schema.Int.check(Schema.isGreaterThan(0)).pipe(
-    Schema.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
-  ),
+  concurrency: PosInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Enable detailed tracing
@@ -343,8 +339,8 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
   /**
    * Maximum number of correction iterations
    */
-  maxIterations: Schema.Int.check(Schema.isGreaterThan(0)).annotate({
-    default: 5,
+  maxIterations: PosInt.annotate({
+    default: PosInt.make(5),
   }),
 
   /**
@@ -357,18 +353,12 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
   /**
    * Minimum confidence threshold - stop if correction confidence drops below this
    */
-  minConfidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).pipe(
-    Schema.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
-  ),
+  minConfidence: Confidence.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Emit checkpoint every N iterations
    */
-  checkpointInterval: Schema.Int.check(Schema.isGreaterThan(0)).pipe(
-    Schema.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
-  ),
+  checkpointInterval: PosInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Timeout for the entire refinement loop in milliseconds
@@ -398,7 +388,7 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
    */
   static default(maxIterations: number = 5): RefinementConfig {
     return RefinementConfig.make({
-      maxIterations,
+      maxIterations: PosInt.make(maxIterations),
       stopOnConformance: true,
     });
   }
@@ -408,10 +398,10 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
    */
   static strict(maxIterations: number = 10, minConfidence: number = 0.8): RefinementConfig {
     return RefinementConfig.make({
-      maxIterations,
+      maxIterations: PosInt.make(maxIterations),
       stopOnConformance: true,
-      minConfidence: O.some(minConfidence),
-      checkpointInterval: O.some(2),
+      minConfidence: O.some(Confidence.make(minConfidence)),
+      checkpointInterval: O.some(PosInt.make(2)),
     });
   }
 
@@ -460,7 +450,7 @@ export class RefinementResult extends Schema.Class<RefinementResult>("Refinement
   /**
    * Number of refinement iterations
    */
-  iterations: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  iterations: NonNegativeInt,
 
   /**
    * How the loop terminated
@@ -482,7 +472,7 @@ export class RefinementResult extends Schema.Class<RefinementResult>("Refinement
   /**
    * Total duration in milliseconds
    */
-  durationMs: Schema.Finite.check(Schema.isGreaterThanOrEqualTo(0)),
+  durationMs: NonNegNum,
 
   /**
    * Error message if status is "error"
@@ -574,7 +564,7 @@ export class ExecutionContext extends Schema.Class<ExecutionContext>("ExecutionC
   /**
    * Current iteration (for loop mode)
    */
-  iteration: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+  iteration: NonNegativeInt,
 
   /**
    * Whether tracing is enabled

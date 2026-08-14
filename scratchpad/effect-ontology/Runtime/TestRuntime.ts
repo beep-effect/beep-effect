@@ -17,6 +17,7 @@
  */
 
 import * as Rdf from "@beep/rdf/Rdf";
+import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { BunServices } from "@effect/platform-bun";
 import { ConfigProvider, DateTime, Effect, Layer, ManagedRuntime, Stream } from "effect";
 import * as P from "effect/Predicate";
@@ -131,9 +132,7 @@ export const MockShaclService = (options?: {
       sourceConstraintComponent: Rdf.makeNamedNode("urn:beep:shacl:constraint:test"),
       ...(P.isNotUndefined(violation.value)
         ? {
-            value: S.encodeSync(Rdf.Literal)(
-              Rdf.makeLiteral(violation.value, "http://www.w3.org/2001/XMLSchema#string")
-            ),
+            value: S.encodeSync(Rdf.Literal)(Rdf.makeLiteral(violation.value, XSD_STRING.value)),
           }
         : {}),
       ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: Rdf.makeNamedNode(violation.sourceShape) } : {}),

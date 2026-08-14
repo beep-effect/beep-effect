@@ -99,19 +99,28 @@ describe("effect-ontology schema-owned domain behavior", () => {
     expect(BackgroundJobId.fromContentHash(contentHash)).toBe("job-aaaaaaaaaaaa");
   });
 
-  it("applies retry defaults and rejects reversed evidence spans", () => {
+  it("applies retry defaults and normalizes width-checked evidence spans", () => {
     const metadata = JobMetadataSchema.fromUnknown({
       id: BackgroundJobId.fromContentHash(contentHash),
     });
-    const reversed = S.decodeResult(TextSpan)({
+    const span = S.decodeSync(TextSpan)({
       start: 4,
-      end: 3,
-      text: "x",
+      end: 9,
+      text: "Alice",
+    });
+    const mismatched = S.decodeResult(TextSpan)({
+      start: 4,
+      end: 8,
+      text: "Alice",
     });
 
     expect(metadata.attempts).toBe(0);
     expect(O.isNone(metadata.lastError)).toBe(true);
     expect(O.isNone(metadata.lastAttemptAt)).toBe(true);
-    expect(Result.isFailure(reversed)).toBe(true);
+    expect(span.quote).toBe("Alice");
+    expect(span.startChar).toBe(4);
+    expect(span.endChar).toBe(9);
+    expect(S.encodeSync(TextSpan)(span)).toEqual({ start: 4, end: 9, text: "Alice" });
+    expect(Result.isFailure(mismatched)).toBe(true);
   });
 });
