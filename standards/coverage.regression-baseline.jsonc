@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-14T04:38:34.238Z",
-  "git_sha": "adbdde1ef1630353700c5188cee2d177040ed4ff",
+  "generated_at": "2026-08-14T05:48:47.951Z",
+  "git_sha": "967d779db85e35d4c1400ecf17811e0ca88b4d64",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
@@ -1250,7 +1250,7 @@
       "path": "packages/tooling/library/ai-sync",
       "lines": 83.26,
       "statements": 83.83,
-      "branches": 61.76,
+      "branches": 58.06,
       "functions": 77.57,
       "uncovered": {
         "lines": 41,
@@ -1370,7 +1370,7 @@
         "packages/tooling/library/ai-sync/src/validation.ts": {
           "lines": 87.25,
           "statements": 87.96,
-          "branches": 53.33,
+          "branches": 41.66,
           "functions": 87.23,
           "uncovered": {
             "lines": 13,
@@ -10779,15 +10779,15 @@
     },
     "@beep/infra": {
       "path": "infra",
-      "lines": 59.66,
-      "statements": 59.83,
+      "lines": 61.17,
+      "statements": 61.3,
       "branches": 36.92,
-      "functions": 55.4,
+      "functions": 56.75,
       "uncovered": {
-        "lines": 288,
-        "statements": 294,
+        "lines": 278,
+        "statements": 284,
         "branches": 41,
-        "functions": 66
+        "functions": 64
       },
       "files": {
         "infra/src/AIMetrics.ts": {
@@ -10803,15 +10803,15 @@
           }
         },
         "infra/src/CiFleetController.ts": {
-          "lines": 66.66,
-          "statements": 66.66,
+          "lines": 92.68,
+          "statements": 92.68,
           "branches": 100,
-          "functions": 20,
+          "functions": 60,
           "uncovered": {
-            "lines": 13,
-            "statements": 13,
+            "lines": 3,
+            "statements": 3,
             "branches": 0,
-            "functions": 4
+            "functions": 2
           }
         },
         "infra/src/CiRunners.ts": {
@@ -19092,15 +19092,15 @@
     },
     "@beep/postgres": {
       "path": "packages/drivers/postgres",
-      "lines": 87.69,
-      "statements": 87.46,
-      "branches": 73.91,
-      "functions": 82.87,
+      "lines": 75.76,
+      "statements": 75.41,
+      "branches": 64.59,
+      "functions": 69.31,
       "uncovered": {
-        "lines": 39,
-        "statements": 43,
-        "branches": 36,
-        "functions": 25
+        "lines": 95,
+        "statements": 104,
+        "branches": 57,
+        "functions": 54
       },
       "files": {
         "packages/drivers/postgres/src/Postgres.errors.ts": {
@@ -19140,15 +19140,15 @@
           }
         },
         "packages/drivers/postgres/src/PostgresDrizzle.service.ts": {
-          "lines": 78.78,
-          "statements": 77.14,
-          "branches": 25,
-          "functions": 60,
+          "lines": 41.66,
+          "statements": 40,
+          "branches": 11.11,
+          "functions": 26,
           "uncovered": {
-            "lines": 7,
-            "statements": 8,
-            "branches": 3,
-            "functions": 8
+            "lines": 63,
+            "statements": 69,
+            "branches": 24,
+            "functions": 37
           }
         },
         "packages/drivers/postgres/src/PostgresInterop.models.ts": {
@@ -19437,14 +19437,14 @@
     },
     "@beep/professional-desktop": {
       "path": "apps/professional-desktop",
-      "lines": 71.51,
-      "statements": 70.24,
-      "branches": 63.69,
+      "lines": 71.53,
+      "statements": 70.26,
+      "branches": 64.28,
       "functions": 60.47,
       "uncovered": {
         "lines": 674,
         "statements": 752,
-        "branches": 183,
+        "branches": 180,
         "functions": 453
       },
       "files": {
@@ -19523,12 +19523,12 @@
         "apps/professional-desktop/src/chat/ui/ChatApp.tsx": {
           "lines": 65.21,
           "statements": 62.5,
-          "branches": 50,
+          "branches": 75,
           "functions": 35.71,
           "uncovered": {
             "lines": 8,
             "statements": 9,
-            "branches": 2,
+            "branches": 1,
             "functions": 9
           }
         },
@@ -19595,12 +19595,12 @@
         "apps/professional-desktop/src/chat/ui/Sidebar.tsx": {
           "lines": 68.18,
           "statements": 62.5,
-          "branches": 38.46,
+          "branches": 53.84,
           "functions": 30,
           "uncovered": {
             "lines": 7,
             "statements": 9,
-            "branches": 8,
+            "branches": 6,
             "functions": 7
           }
         },
@@ -21003,15 +21003,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 70.32,
-      "statements": 70.04,
-      "branches": 56.24,
-      "functions": 62.42,
+      "lines": 70.64,
+      "statements": 70.38,
+      "branches": 56.69,
+      "functions": 62.82,
       "uncovered": {
-        "lines": 8281,
-        "statements": 8692,
-        "branches": 4560,
-        "functions": 3057
+        "lines": 8295,
+        "statements": 8704,
+        "branches": 4588,
+        "functions": 3064
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -21543,15 +21543,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts": {
-          "lines": 23.63,
-          "statements": 22.03,
-          "branches": 0,
-          "functions": 0,
+          "lines": 69.35,
+          "statements": 68.18,
+          "branches": 59.52,
+          "functions": 45,
           "uncovered": {
-            "lines": 42,
-            "statements": 46,
-            "branches": 20,
-            "functions": 18
+            "lines": 19,
+            "statements": 21,
+            "branches": 17,
+            "functions": 11
           }
         },
         "packages/tooling/tool/cli/src/commands/Codex/Findings.csv.ts": {
@@ -21591,26 +21591,38 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts": {
-          "lines": 94.23,
-          "statements": 89.65,
+          "lines": 100,
+          "statements": 98.27,
           "branches": 75,
-          "functions": 82.14,
+          "functions": 96.42,
           "uncovered": {
-            "lines": 3,
-            "statements": 6,
+            "lines": 0,
+            "statements": 1,
             "branches": 2,
-            "functions": 5
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts": {
+          "lines": 87.39,
+          "statements": 87.46,
+          "branches": 78,
+          "functions": 81.55,
+          "uncovered": {
+            "lines": 43,
+            "statements": 45,
+            "branches": 33,
+            "functions": 19
           }
         },
         "packages/tooling/tool/cli/src/commands/Codex/Findings.scan.ts": {
-          "lines": 96.15,
-          "statements": 96.42,
-          "branches": 87.5,
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
           "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 1,
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         },
@@ -24231,10 +24243,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts": {
-          "lines": 92.21,
-          "statements": 92.26,
-          "branches": 54.54,
-          "functions": 79.59,
+          "lines": 92.52,
+          "statements": 92.57,
+          "branches": 56.52,
+          "functions": 80,
           "uncovered": {
             "lines": 13,
             "statements": 13,
@@ -25587,15 +25599,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/Printer.ts": {
-          "lines": 69.23,
-          "statements": 75,
-          "branches": 0,
-          "functions": 87.5,
+          "lines": 84.61,
+          "statements": 87.5,
+          "branches": 50,
+          "functions": 100,
           "uncovered": {
-            "lines": 4,
-            "statements": 4,
-            "branches": 2,
-            "functions": 1
+            "lines": 2,
+            "statements": 2,
+            "branches": 1,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/Progress.ts": {
@@ -26676,15 +26688,15 @@
     },
     "@beep/repo-utils": {
       "path": "packages/tooling/library/repo-utils",
-      "lines": 75.76,
-      "statements": 75.14,
-      "branches": 55.23,
-      "functions": 57.05,
+      "lines": 75.7,
+      "statements": 75.08,
+      "branches": 55.13,
+      "functions": 56.7,
       "uncovered": {
-        "lines": 395,
-        "statements": 417,
+        "lines": 398,
+        "statements": 420,
         "branches": 201,
-        "functions": 207
+        "functions": 210
       },
       "files": {
         "packages/tooling/library/repo-utils/src/Dependencies.ts": {
@@ -27324,15 +27336,15 @@
           }
         },
         "packages/tooling/library/repo-utils/src/schemas/BiomeJson.ts": {
-          "lines": 84.61,
-          "statements": 84.61,
-          "branches": 54.54,
-          "functions": 57.14,
+          "lines": 79.41,
+          "statements": 79.41,
+          "branches": 50,
+          "functions": 40,
           "uncovered": {
-            "lines": 4,
-            "statements": 4,
+            "lines": 7,
+            "statements": 7,
             "branches": 5,
-            "functions": 3
+            "functions": 6
           }
         },
         "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts": {
