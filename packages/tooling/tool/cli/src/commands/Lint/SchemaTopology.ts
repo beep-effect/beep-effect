@@ -25,7 +25,6 @@ const LEGACY_CASE_EXPORT_PREFIXES = ["ExpectCT", "XSSProtection"] as const;
 const RETIRED_SUITE_EXPORT_PREFIXES = ["Blockchain", "Dom", "Http", "Location", "Person"] as const;
 const RETIRED_INTERNAL_EXPORT_KEYS = ["./internal/markdown", "./internal/yaml"] as const;
 const PROMOTED_CONCEPT_ROOT_SHIMS = [
-  "CauseTaggedError",
   "DateTimeUtcFromValid",
   "Duration",
   "EntitySchema",
@@ -38,8 +37,6 @@ const PROMOTED_CONCEPT_ROOT_SHIMS = [
   "MappedLiteralKit",
   "Model",
   "Record",
-  "StatusCauseTaggedErrorClass",
-  "TaggedErrorClass",
   "Timestamp",
   "VariantSchema",
 ] as const;

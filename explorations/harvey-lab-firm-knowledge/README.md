@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `research`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -18,12 +18,8 @@ methodology, and a legal-DMS task taxonomy.
 
 ## Next Open Question
 
-Align Q2 (the wedge question) first: is beep's bet against this corpus
-"amortized structural representation" (crowded — Harvey and Engram both claim
-it) or "tracked-changes-aware ingest" (unclaimed, 371-task graded testbed,
-OIP-load-bearing, gated on U4: does `@beep/pandoc-ast` preserve
-`w:ins`/`w:del`)? Full queue: RESEARCH.md §Open Questions (8, from
-verify-completeness §5).
+No blocking question. Reopen at `decompose` only when the corpus-generator or
+DMS-taxonomy gate in [`MAP.md`](./MAP.md) fires.
 
 ## Read This First
 
@@ -37,6 +33,22 @@ verify-completeness §5).
 ## Trail
 
 <Dated one-liners, newest first: what each session did and where it stopped.>
+
+- 2026-08-13 (final ceremony): operator signed off `BRIEF.md` and `MAP.md`;
+  graduated [`effect-native-legal-eval`](../../goals/effect-native-legal-eval/README.md)
+  and [`tracked-changes-ingest-wedge`](../../goals/tracked-changes-ingest-wedge/README.md).
+  Generator/DMS candidates remain MAP re-entry points; both goals preserve the
+  synthetic-first and later-real-data-on-device-only boundary.
+
+- 2026-08-13 (ceremony): drafted `BRIEF.md` and `MAP.md` for the eval and
+  tracked-changes goals. Stage remains `shape`; operator BRIEF review is the
+  gate. Generator and DMS work remain re-entry points.
+
+- 2026-08-13: align closed; tracked-changes-aware ingest selected with U4 as
+  the P0 kill-gate and structural fallback. Synthetic C&H is first; the
+  podman+metered-keys harness runs once for comparison, then the Effect-native
+  eval becomes durable. Two goals advance to shape; generator/DMS remain MAP
+  re-entry points.
 
 - 2026-08-08 (shipping): the packet's two live-defect finds shipped on
   `feat/judge-rubric-lint-and-json-salvage` (beep lint judge-rubric +

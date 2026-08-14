@@ -175,9 +175,6 @@
       "path": "packages/drivers/pretext"
     },
     {
-      "path": "packages/drivers/protobuf"
-    },
-    {
       "path": "packages/drivers/rdf-canonize"
     },
     {
@@ -347,6 +344,9 @@
     },
     {
       "path": "packages/shared/tables"
+    },
+    {
+      "path": "packages/shared/use-cases"
     },
     {
       "path": "packages/tooling/library/ai-metrics"

@@ -7,7 +7,7 @@
 
 import { randomUUID } from "node:crypto";
 import { $TestUtilsId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -534,7 +534,7 @@ export class TestDatabaseInfo extends Context.Service<TestDatabaseInfo, TestData
  * @category error-handling
  * @since 0.0.0
  */
-export class SqlTestHarnessError extends TaggedErrorClass<SqlTestHarnessError>($I`SqlTestHarnessError`)(
+export class SqlTestHarnessError extends S.TaggedError<SqlTestHarnessError>($I`SqlTestHarnessError`)(
   "SqlTestHarnessError",
   {
     cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(

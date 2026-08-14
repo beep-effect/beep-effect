@@ -99,7 +99,7 @@ decompose settlements (11–12):
     the law-practice migration precedent. The candor goal's rung 2 shipped to
     `main` as PR #575 on 2026-08-06, so this goal is **not** the first mover and
     does not pay that cost: the slice's schema is already in the baseline
-    snapshot (`packages/_internal/db-admin/drizzle/20260806031625_law_practice_candor_gate/`,
+    snapshot (`packages/_internal/db-admin/drizzle/20260813130540_baseline/`,
     still the only migration naming `law_practice`), `AcceptedProofManifest.ts`
     already carries three entries for that lane (`:808` `migration.sql`, `:814`
     `snapshot.json`, `:874` the PGlite proof — the migration *target module* at

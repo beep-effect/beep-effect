@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -27,7 +26,7 @@ const $I = $RepoCliId.create("commands/Ci/Ci.errors");
  * @category errors
  * @since 0.0.0
  */
-export class CiCommandError extends TaggedErrorClass<CiCommandError>($I`CiCommandError`)(
+export class CiCommandError extends S.TaggedError<CiCommandError>($I`CiCommandError`)(
   "CiCommandError",
   {
     message: S.String,

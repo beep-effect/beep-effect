@@ -13,10 +13,10 @@
  */
 
 import { ClaimGateResult } from "@beep/epistemic-domain/values";
-import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/semantic-web/rdf";
+import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { ShaclValidationRequest } from "@beep/semantic-web/services/shacl-validation";
-import { RDF_TYPE } from "@beep/semantic-web/vocab/rdf";
-import { XSD_STRING } from "@beep/semantic-web/vocab/xsd";
 import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";

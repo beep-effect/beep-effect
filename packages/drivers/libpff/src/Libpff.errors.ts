@@ -6,7 +6,7 @@
  */
 
 import { $LibpffId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -97,7 +97,7 @@ export class LibpffErrorOptions extends S.Class<LibpffErrorOptions>($I`LibpffErr
  * @category errors
  * @since 0.0.0
  */
-export class LibpffError extends TaggedErrorClass<LibpffError>($I`LibpffError`)(
+export class LibpffError extends S.TaggedError<LibpffError>($I`LibpffError`)(
   "LibpffError",
   {
     cause: S.OptionFromOptionalKey(S.String).pipe(

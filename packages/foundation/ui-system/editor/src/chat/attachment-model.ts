@@ -19,7 +19,7 @@
  */
 
 import { $EditorId } from "@beep/identity";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { ImageMimeType, MimeType } from "@beep/schema/MimeType";
 import { dual, P } from "@beep/utils";
 import { flow, identity, Number as N, Result, SchemaTransformation } from "effect";
@@ -172,7 +172,7 @@ const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
  * @category errors
  * @since 0.0.0
  */
-export class AttachmentTooLarge extends TaggedErrorClass<AttachmentTooLarge>($I`AttachmentTooLarge`)(
+export class AttachmentTooLarge extends S.TaggedError<AttachmentTooLarge>($I`AttachmentTooLarge`)(
   "AttachmentTooLarge",
   {
     filename: S.String.annotateKey({ description: "Original name of the rejected file." }),
@@ -204,9 +204,7 @@ export class AttachmentTooLarge extends TaggedErrorClass<AttachmentTooLarge>($I`
  * @category errors
  * @since 0.0.0
  */
-export class AttachmentInvalidMimeType extends TaggedErrorClass<AttachmentInvalidMimeType>(
-  $I`AttachmentInvalidMimeType`
-)(
+export class AttachmentInvalidMimeType extends S.TaggedError<AttachmentInvalidMimeType>($I`AttachmentInvalidMimeType`)(
   "AttachmentInvalidMimeType",
   {
     filename: S.String.annotateKey({ description: "Original name of the rejected file." }),
@@ -236,7 +234,7 @@ export class AttachmentInvalidMimeType extends TaggedErrorClass<AttachmentInvali
  * @category errors
  * @since 0.0.0
  */
-export class AttachmentPortFailed extends TaggedErrorClass<AttachmentPortFailed>($I`AttachmentPortFailed`)(
+export class AttachmentPortFailed extends S.TaggedError<AttachmentPortFailed>($I`AttachmentPortFailed`)(
   "AttachmentPortFailed",
   {
     message: S.String.annotateKey({ description: "User-safe upload-port failure message." }),

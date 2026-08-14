@@ -630,6 +630,9 @@
       "@beep/repo-cli/test/Docgen": [
         "./packages/tooling/tool/cli/src/test/Docgen.test-kit.ts"
       ],
+      "@beep/repo-cli/test/Knowledge": [
+        "./packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts"
+      ],
       "@beep/repo-cli/test/Laws": [
         "./packages/tooling/tool/cli/src/test/Laws.test-kit.ts"
       ],
@@ -839,9 +842,6 @@
       "@beep/schema/BufferEncoding": [
         "./packages/foundation/modeling/schema/src/BufferEncoding.ts"
       ],
-      "@beep/schema/CauseTaggedError": [
-        "./packages/foundation/modeling/schema/src/CauseTaggedError/index.ts"
-      ],
       "@beep/schema/CommonTextSchemas": [
         "./packages/foundation/modeling/schema/src/CommonTextSchemas.ts"
       ],
@@ -960,14 +960,8 @@
       "@beep/schema/StatusCauseError": [
         "./packages/foundation/modeling/schema/src/StatusCauseError.ts"
       ],
-      "@beep/schema/StatusCauseTaggedErrorClass": [
-        "./packages/foundation/modeling/schema/src/StatusCauseTaggedErrorClass/index.ts"
-      ],
       "@beep/schema/String": [
         "./packages/foundation/modeling/schema/src/String.ts"
-      ],
-      "@beep/schema/TaggedErrorClass": [
-        "./packages/foundation/modeling/schema/src/TaggedErrorClass/index.ts"
       ],
       "@beep/schema/Thunk": [
         "./packages/foundation/modeling/schema/src/Thunk.ts"
@@ -1411,8 +1405,6 @@
       "@beep/documents-use-cases/server": [
         "./packages/documents/use-cases/src/server.ts"
       ],
-      "@beep/protobuf": ["./packages/drivers/protobuf/src/index.ts"],
-      "@beep/protobuf/*": ["./packages/drivers/protobuf/src/*"],
       "@beep/schema/Bytes": [
         "./packages/foundation/modeling/schema/src/Bytes.ts"
       ],
@@ -1919,6 +1911,25 @@
       ],
       "@beep/effect-drizzle/sqlite": [
         "./packages/ecosystem/effect-drizzle/src/sqlite/index.ts"
+      ],
+      "@beep/epistemic-server/ShaclValidation": [
+        "./packages/epistemic/server/src/ShaclValidation/index.ts"
+      ],
+      "@beep/law-practice-server/CandorPromotionGate": [
+        "./packages/law-practice/server/src/CandorPromotionGate/index.ts"
+      ],
+      "@beep/repo-cli/commands/Runners": [
+        "./packages/tooling/tool/cli/src/commands/Runners/index.ts"
+      ],
+      "@beep/shared-use-cases": ["./packages/shared/use-cases/src/index.ts"],
+      "@beep/shared-use-cases/PromotionGate": [
+        "./packages/shared/use-cases/src/PromotionGate/index.ts"
+      ],
+      "@beep/shared-use-cases/public": [
+        "./packages/shared/use-cases/src/public.ts"
+      ],
+      "@beep/shared-use-cases/server": [
+        "./packages/shared/use-cases/src/server.ts"
       ]
     }
   }

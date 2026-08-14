@@ -5,16 +5,23 @@ import {
   fallowAuditNeedsDiffFallbackForTesting,
   fallowCiUploadDiagnosticsForTesting,
 } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
-import { collectGithubCheckLaneWavesForTesting } from "@beep/repo-cli/commands/Quality/Tasks";
+import {
+  collectCoverageChangedFilesForTesting,
+  collectGithubCheckLaneWavesForTesting,
+} from "@beep/repo-cli/commands/Quality/Tasks";
 import {
   baselineEntriesLostByReplacement,
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
+  CoverageScopeOwner,
   CoverageUncoveredCounts,
   collectEffectTsgoDiagnosticLines,
+  compareCoverageRegressionSnapshotsForExpectedPackagesForTesting,
   compareCoverageRegressionSnapshotsForTesting,
   compareJSDocTotalsForTesting,
   compareKnipFindingsForTesting,
+  coverageDispositionGapsForTesting,
+  coverageFullStepsForTesting,
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
@@ -35,6 +42,8 @@ import {
   mergeCoverageBaselinePackagesForTesting,
   normalizeKnipReportForTesting,
   parseQualityTaskInvocation,
+  planCoverageAffectedScope,
+  planCoverageFullShards,
   promotedFallowGithubCheckLaneIdsForTesting,
   QualityTaskFailed,
   QualityTaskGroupFailed,
@@ -110,6 +119,14 @@ const coverageRegressionBaseline = CoverageRegressionBaseline.make({
   git_sha: "test-sha",
   command: "bun run coverage:baseline:write",
   epsilon: 0.001,
+  minimum: {
+    lines: 0,
+    statements: 0,
+    branches: 0,
+    functions: 0,
+  },
+  exemptions: {},
+  follow_ups: {},
   packages: {
     "@beep/existing": coveragePackageBaseline("packages/existing"),
   },
@@ -1216,7 +1233,7 @@ describe("quality task adapter", () => {
           // added on another branch must not break this assertion when the two
           // land together in a merge.
           const policyStepCount = A.length(rootLintPolicyStepsForTesting(tmpDir));
-          expect(logText).toContain(`[beep-cli] lint:policy: running ${policyStepCount} step(s) with concurrency 2`);
+          expect(logText).toContain(`[beep-cli] lint:policy: running ${policyStepCount} step(s) with concurrency 3`);
         })
       )
     ));
@@ -1403,6 +1420,242 @@ describe("quality task adapter", () => {
       []
     );
   });
+
+  it("enforces tiered minimums independently while allowing named follow-up debt", () => {
+    const policyBaseline = CoverageRegressionBaseline.make({
+      ...coverageRegressionBaseline,
+      minimum: {
+        lines: 70,
+        statements: 70,
+        branches: 50,
+        functions: 60,
+      },
+      follow_ups: {
+        "@beep/debt": "Dedicated follow-up.",
+      },
+      packages: {
+        "@beep/debt": coveragePackageBaseline("packages/debt", 10),
+        "@beep/existing": coveragePackageBaseline("packages/existing", 80),
+      },
+    });
+    const result = compareCoverageRegressionSnapshotsForTesting(
+      policyBaseline,
+      [
+        { packageName: "@beep/debt", baseline: coveragePackageBaseline("packages/debt", 10) },
+        {
+          packageName: "@beep/existing",
+          baseline: CoveragePackageBaseline.make({
+            path: "packages/existing",
+            lines: 65,
+            statements: 65,
+            branches: 45,
+            functions: 55,
+          }),
+        },
+      ],
+      false
+    );
+
+    expect(A.map(result.minimumFailures, (failure) => failure.metric).sort()).toEqual([
+      "branches",
+      "functions",
+      "lines",
+      "statements",
+    ]);
+    expect(A.map(result.followUpDebt, (entry) => entry.packageName)).toEqual(["@beep/debt"]);
+  });
+
+  it("requires every workspace package to have coverage or a named exemption", () => {
+    expect(
+      coverageDispositionGapsForTesting(
+        ["@beep/covered", "@beep/exempt", "@beep/missing"],
+        ["@beep/covered"],
+        ["@beep/exempt"]
+      )
+    ).toEqual(["@beep/missing"]);
+  });
+
+  it("fails when an exact selected coverage owner omits its summary", () => {
+    expect(
+      compareCoverageRegressionSnapshotsForExpectedPackagesForTesting(
+        coverageRegressionBaseline,
+        [],
+        ["@beep/existing", "@beep/new"]
+      ).missingActuals
+    ).toEqual(["@beep/existing", "@beep/new"]);
+  });
+
+  it("selects only directly changed coverage owners for an affected coverage run", () => {
+    const owners = [
+      CoverageScopeOwner.make({
+        packageName: "@beep/a",
+        packagePath: "packages/a",
+        hasCoverage: true,
+      }),
+      CoverageScopeOwner.make({
+        packageName: "@beep/b",
+        packagePath: "packages/b",
+        hasCoverage: true,
+      }),
+    ];
+
+    expect(planCoverageAffectedScope(owners, ["packages/b/src/B.ts", "packages/a/test/A.test.ts"])).toEqual({
+      _tag: "selected",
+      packageNames: ["@beep/a", "@beep/b"],
+    });
+  });
+
+  it("selects repo-cli for tracked goal artifacts consumed by its tests", () => {
+    const owners = [
+      CoverageScopeOwner.make({
+        packageName: "@beep/repo-cli",
+        packagePath: "packages/tooling/tool/cli",
+        hasCoverage: true,
+      }),
+    ];
+
+    expect(
+      planCoverageAffectedScope(owners, [
+        "goals/fallow-quality-enforcement/research/feature-matrix.jsonc",
+        "goals/speed-loop/ops/runner-burst/main.tf",
+      ])
+    ).toEqual({ _tag: "selected", packageNames: ["@beep/repo-cli"] });
+  });
+
+  it("collects both sides of a committed cross-package rename", () =>
+    Effect.runPromise(
+      withTempRepo(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const repoRoot = process.cwd();
+          const sourcePath = path.join(repoRoot, "packages/a/test/moved.test.ts");
+          const destinationPath = path.join(repoRoot, "packages/b/test/moved.test.ts");
+
+          yield* runGit(repoRoot, ["init"]);
+          yield* runGit(repoRoot, ["config", "user.email", "coverage-scope@example.test"]);
+          yield* runGit(repoRoot, ["config", "user.name", "Coverage Scope Test"]);
+          yield* fs.makeDirectory(path.dirname(sourcePath), { recursive: true });
+          yield* fs.writeFileString(sourcePath, "export const moved = true;\n");
+          yield* runGit(repoRoot, ["add", "--all"]);
+          yield* runGit(repoRoot, ["commit", "-m", "initial"]);
+          yield* runGit(repoRoot, ["tag", "coverage-base"]);
+          yield* fs.makeDirectory(path.dirname(destinationPath), { recursive: true });
+          yield* fs.rename(sourcePath, destinationPath);
+          yield* runGit(repoRoot, ["add", "--all"]);
+          yield* runGit(repoRoot, ["commit", "-m", "move fixture"]);
+
+          const changedFiles = yield* collectCoverageChangedFilesForTesting(repoRoot, "coverage-base", "HEAD");
+          expect(changedFiles).toEqual(["packages/a/test/moved.test.ts", "packages/b/test/moved.test.ts"]);
+        })
+      )
+    ));
+
+  it("falls back to full coverage for global, unknown, manifest, or shared test-kit inputs", () => {
+    const owners = [
+      CoverageScopeOwner.make({
+        packageName: "@beep/a",
+        packagePath: "packages/a",
+        hasCoverage: false,
+      }),
+      CoverageScopeOwner.make({
+        packageName: "@beep/b",
+        packagePath: "packages/b",
+        hasCoverage: true,
+      }),
+    ];
+
+    expect(planCoverageAffectedScope(owners, ["package.json"])).toMatchObject({ _tag: "full" });
+    expect(
+      planCoverageAffectedScope(owners, ["packages/tooling/tool/cli/src/commands/Quality/Tasks.ts"])
+    ).toMatchObject({ _tag: "full" });
+    expect(planCoverageAffectedScope(owners, ["scripts/coverage-helper.ts"])).toMatchObject({ _tag: "full" });
+    expect(planCoverageAffectedScope(owners, ["packages/a/package.json"])).toMatchObject({ _tag: "full" });
+    expect(planCoverageAffectedScope(owners, ["packages/b/package.json"])).toMatchObject({ _tag: "full" });
+    expect(planCoverageAffectedScope(owners, ["packages/tooling/test-kit/test-utils/src/TestClock.ts"])).toMatchObject({
+      _tag: "full",
+    });
+    expect(
+      planCoverageAffectedScope(owners, [
+        "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
+      ])
+    ).toMatchObject({ _tag: "full" });
+  });
+
+  it("skips affected coverage for docs-only and packages without a coverage task", () => {
+    const owners = [
+      CoverageScopeOwner.make({
+        packageName: "@beep/a",
+        packagePath: "packages/a",
+        hasCoverage: false,
+      }),
+    ];
+
+    expect(planCoverageAffectedScope(owners, ["goals/demo/PLAN.md", "packages/a/src/A.ts"])).toEqual({
+      _tag: "noop",
+    });
+  });
+
+  it("assigns every full-run coverage owner to exactly one stable weighted shard", () => {
+    const packageNames = [
+      "@beep/repo-cli",
+      "@beep/repo-utils",
+      "@beep/lexical-schema",
+      "@beep/professional-desktop",
+      "@beep/a",
+      "@beep/b",
+    ];
+    const shards = planCoverageFullShards(packageNames, 3);
+
+    expect(A.length(shards)).toBe(3);
+    expect(
+      pipe(
+        shards,
+        A.flatMap((shard) => shard.packageNames),
+        A.sort(Order.String)
+      )
+    ).toEqual(A.sort(packageNames, Order.String));
+    expect(planCoverageFullShards(packageNames, 3)).toEqual(shards);
+    expect(A.some(shards, (shard) => A.contains(shard.packageNames, "@beep/repo-cli"))).toBe(true);
+  });
+
+  it("preserves caller Turbo flags while overriding full-coverage shard controls", () =>
+    withEnvVar("CI", "true", () => {
+      const steps = coverageFullStepsForTesting(
+        "/repo",
+        ["@beep/a", "@beep/b", "@beep/c", "@beep/d", "@beep/e"],
+        ["--concurrency", "9", "--force", "--remote-only", "--output-logs=errors-only", "--summarize"]
+      );
+
+      expect(A.map(steps, (step) => step.label)).toEqual([
+        "coverage:prebuild",
+        "coverage:shard-1",
+        "coverage:shard-2",
+        "coverage:shard-3",
+        "coverage:shard-4",
+        "coverage:shard-5",
+      ]);
+      expect(steps[0]?.args).toEqual([
+        "turbo",
+        "run",
+        "build",
+        "--concurrency=4",
+        "--summarize",
+        "--force",
+        "--remote-only",
+        "--output-logs=errors-only",
+      ]);
+      for (const step of A.drop(steps, 1)) {
+        expect(step.args).toContain("--concurrency=1");
+        expect(step.args).toContain("--summarize");
+        expect(step.args).toContain("--force");
+        expect(step.args).toContain("--remote-only");
+        expect(step.args).toContain("--output-logs=errors-only");
+        expect(A.takeRight(step.args, 3)).toEqual(["--", "--fileParallelism=true", "--maxWorkers=2"]);
+        expect(step.args).not.toContain("--concurrency=4");
+        expect(step.args).not.toContain("9");
+      }
+    }));
 
   it("separates a percentage drop caused by deleting covered code from one caused by losing coverage", () => {
     // 50% as 50/100 covered, so 50 lines uncovered.

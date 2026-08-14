@@ -9,7 +9,6 @@
  * @since 0.0.0
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoUtilsId.create("errors/NoSuchFileError");
@@ -31,7 +30,7 @@ const $I = $RepoUtilsId.create("errors/NoSuchFileError");
  * @category error-handling
  * @since 0.0.0
  */
-export class NoSuchFileError extends TaggedErrorClass<NoSuchFileError>($I`NoSuchFileError`)(
+export class NoSuchFileError extends S.TaggedError<NoSuchFileError>($I`NoSuchFileError`)(
   "NoSuchFileError",
   {
     path: S.String,

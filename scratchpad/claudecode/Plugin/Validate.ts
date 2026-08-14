@@ -4,7 +4,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import type * as FileSystem from "effect/FileSystem";
@@ -126,7 +126,7 @@ export declare namespace PluginIssue {
  * @category errors
  * @since 0.0.0
  */
-export class PluginValidationError extends TaggedErrorClass<PluginValidationError>($I`PluginValidationError`)(
+export class PluginValidationError extends S.TaggedError<PluginValidationError>($I`PluginValidationError`)(
   "PluginValidationError",
   { issues: S.Array(PluginIssue) },
   $I.annote("PluginValidationError", {

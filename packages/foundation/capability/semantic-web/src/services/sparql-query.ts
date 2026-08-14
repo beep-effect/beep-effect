@@ -6,11 +6,11 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Dataset, Term } from "@beep/rdf/Rdf";
+import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
-import { Dataset, Term } from "../rdf.ts";
-import { makeSemanticSchemaMetadata } from "../semantic-schema-metadata.ts";
 
 const $I = $SemanticWebId.create("services/sparql-query");
 
@@ -287,7 +287,7 @@ export type SparqlQueryErrorReason = typeof SparqlQueryErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class SparqlQueryError extends TaggedErrorClass<SparqlQueryError>($I`SparqlQueryError`)(
+export class SparqlQueryError extends S.TaggedError<SparqlQueryError>($I`SparqlQueryError`)(
   "SparqlQueryError",
   {
     reason: SparqlQueryErrorReason,

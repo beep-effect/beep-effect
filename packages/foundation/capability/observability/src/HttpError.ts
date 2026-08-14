@@ -3,7 +3,7 @@
  *
  * **Details**
  *
- * Each error class extends `TaggedErrorClass` with a fixed status code, carries
+ * Each error class extends `S.TaggedError` with a fixed status code, carries
  * `ErrorReporter.severity` and `ErrorReporter.attributes` for structured
  * observability, and is transport-safe via Effect Schema.
  *
@@ -27,7 +27,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { makeStatusCauseError, StatusCauseFields, TaggedErrorClass } from "@beep/schema";
+import { makeStatusCauseError, StatusCauseFields } from "@beep/schema";
 import * as HttpStatus from "@beep/schema/HttpStatus";
 import { ErrorReporter } from "effect";
 import { dual } from "effect/Function";
@@ -90,7 +90,7 @@ const statusFields = <Status extends S.Top>(status: Status) =>
  * @category models
  * @since 0.0.0
  */
-export class ClientHttpError extends TaggedErrorClass<ClientHttpError>($I`ClientHttpError`)(
+export class ClientHttpError extends S.TaggedError<ClientHttpError>($I`ClientHttpError`)(
   "ClientHttpError",
   {
     message: S.String,
@@ -126,7 +126,7 @@ export class ClientHttpError extends TaggedErrorClass<ClientHttpError>($I`Client
  * @category models
  * @since 0.0.0
  */
-export class ServerHttpError extends TaggedErrorClass<ServerHttpError>($I`ServerHttpError`)(
+export class ServerHttpError extends S.TaggedError<ServerHttpError>($I`ServerHttpError`)(
   "ServerHttpError",
   {
     message: S.String,
@@ -157,7 +157,7 @@ export class ServerHttpError extends TaggedErrorClass<ServerHttpError>($I`Server
  * @category models
  * @since 0.0.0
  */
-export class BadRequestError extends TaggedErrorClass<BadRequestError>($I`BadRequestError`)(
+export class BadRequestError extends S.TaggedError<BadRequestError>($I`BadRequestError`)(
   "BadRequestError",
   statusFields(HttpStatus.BadRequest),
   $I.annote("BadRequestError", {
@@ -184,7 +184,7 @@ export class BadRequestError extends TaggedErrorClass<BadRequestError>($I`BadReq
  * @category models
  * @since 0.0.0
  */
-export class UnauthorizedError extends TaggedErrorClass<UnauthorizedError>($I`UnauthorizedError`)(
+export class UnauthorizedError extends S.TaggedError<UnauthorizedError>($I`UnauthorizedError`)(
   "UnauthorizedError",
   statusFields(HttpStatus.Unauthorized),
   $I.annote("UnauthorizedError", {
@@ -211,7 +211,7 @@ export class UnauthorizedError extends TaggedErrorClass<UnauthorizedError>($I`Un
  * @category models
  * @since 0.0.0
  */
-export class ForbiddenError extends TaggedErrorClass<ForbiddenError>($I`ForbiddenError`)(
+export class ForbiddenError extends S.TaggedError<ForbiddenError>($I`ForbiddenError`)(
   "ForbiddenError",
   statusFields(HttpStatus.Forbidden),
   $I.annote("ForbiddenError", {
@@ -238,7 +238,7 @@ export class ForbiddenError extends TaggedErrorClass<ForbiddenError>($I`Forbidde
  * @category models
  * @since 0.0.0
  */
-export class NotFoundError extends TaggedErrorClass<NotFoundError>($I`NotFoundError`)(
+export class NotFoundError extends S.TaggedError<NotFoundError>($I`NotFoundError`)(
   "NotFoundError",
   statusFields(HttpStatus.NotFound),
   $I.annote("NotFoundError", {
@@ -265,7 +265,7 @@ export class NotFoundError extends TaggedErrorClass<NotFoundError>($I`NotFoundEr
  * @category models
  * @since 0.0.0
  */
-export class ConflictError extends TaggedErrorClass<ConflictError>($I`ConflictError`)(
+export class ConflictError extends S.TaggedError<ConflictError>($I`ConflictError`)(
   "ConflictError",
   statusFields(HttpStatus.Conflict),
   $I.annote("ConflictError", {
@@ -292,7 +292,7 @@ export class ConflictError extends TaggedErrorClass<ConflictError>($I`ConflictEr
  * @category models
  * @since 0.0.0
  */
-export class UnprocessableEntityError extends TaggedErrorClass<UnprocessableEntityError>($I`UnprocessableEntityError`)(
+export class UnprocessableEntityError extends S.TaggedError<UnprocessableEntityError>($I`UnprocessableEntityError`)(
   "UnprocessableEntityError",
   statusFields(HttpStatus.UnprocessableEntity),
   $I.annote("UnprocessableEntityError", {
@@ -319,7 +319,7 @@ export class UnprocessableEntityError extends TaggedErrorClass<UnprocessableEnti
  * @category models
  * @since 0.0.0
  */
-export class TooManyRequestsError extends TaggedErrorClass<TooManyRequestsError>($I`TooManyRequestsError`)(
+export class TooManyRequestsError extends S.TaggedError<TooManyRequestsError>($I`TooManyRequestsError`)(
   "TooManyRequestsError",
   statusFields(HttpStatus.TooManyRequests),
   $I.annote("TooManyRequestsError", {
@@ -346,7 +346,7 @@ export class TooManyRequestsError extends TaggedErrorClass<TooManyRequestsError>
  * @category models
  * @since 0.0.0
  */
-export class InternalServerErrorError extends TaggedErrorClass<InternalServerErrorError>($I`InternalServerErrorError`)(
+export class InternalServerErrorError extends S.TaggedError<InternalServerErrorError>($I`InternalServerErrorError`)(
   "InternalServerErrorError",
   statusFields(HttpStatus.InternalServerError),
   $I.annote("InternalServerErrorError", {
@@ -373,7 +373,7 @@ export class InternalServerErrorError extends TaggedErrorClass<InternalServerErr
  * @category models
  * @since 0.0.0
  */
-export class BadGatewayError extends TaggedErrorClass<BadGatewayError>($I`BadGatewayError`)(
+export class BadGatewayError extends S.TaggedError<BadGatewayError>($I`BadGatewayError`)(
   "BadGatewayError",
   statusFields(HttpStatus.BadGateway),
   $I.annote("BadGatewayError", {
@@ -400,7 +400,7 @@ export class BadGatewayError extends TaggedErrorClass<BadGatewayError>($I`BadGat
  * @category models
  * @since 0.0.0
  */
-export class ServiceUnavailableError extends TaggedErrorClass<ServiceUnavailableError>($I`ServiceUnavailableError`)(
+export class ServiceUnavailableError extends S.TaggedError<ServiceUnavailableError>($I`ServiceUnavailableError`)(
   "ServiceUnavailableError",
   statusFields(HttpStatus.ServiceUnavailable),
   $I.annote("ServiceUnavailableError", {
@@ -427,7 +427,7 @@ export class ServiceUnavailableError extends TaggedErrorClass<ServiceUnavailable
  * @category models
  * @since 0.0.0
  */
-export class GatewayTimeoutError extends TaggedErrorClass<GatewayTimeoutError>($I`GatewayTimeoutError`)(
+export class GatewayTimeoutError extends S.TaggedError<GatewayTimeoutError>($I`GatewayTimeoutError`)(
   "GatewayTimeoutError",
   statusFields(HttpStatus.GatewayTimeout),
   $I.annote("GatewayTimeoutError", {

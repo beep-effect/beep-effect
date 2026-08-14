@@ -6,7 +6,7 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { HttpStatus } from "@beep/schema/HttpStatus";
 import { O } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
@@ -175,7 +175,7 @@ const M365ErrorFields = {
  * @category errors
  * @since 0.0.0
  */
-export class M365Error extends TaggedErrorClass<M365Error>($I`M365Error`)(
+export class M365Error extends S.TaggedError<M365Error>($I`M365Error`)(
   "M365Error",
   M365ErrorFields,
   $I.annoteClass<S.declare<M365Error>, readonly [S.TaggedStruct<"M365Error", typeof M365ErrorFields>]>("M365Error", {

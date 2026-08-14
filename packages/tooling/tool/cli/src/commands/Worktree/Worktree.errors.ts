@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
@@ -37,7 +36,7 @@ type WorktreeCommandErrorOptions =
  * @category errors
  * @since 0.0.0
  */
-export class WorktreeCommandError extends TaggedErrorClass<WorktreeCommandError>($I`WorktreeCommandError`)(
+export class WorktreeCommandError extends S.TaggedError<WorktreeCommandError>($I`WorktreeCommandError`)(
   "WorktreeCommandError",
   {
     message: S.String,
@@ -91,7 +90,7 @@ export class WorktreeCommandError extends TaggedErrorClass<WorktreeCommandError>
  * @category errors
  * @since 0.0.0
  */
-export class WorktreeDirtyError extends TaggedErrorClass<WorktreeDirtyError>($I`WorktreeDirtyError`)(
+export class WorktreeDirtyError extends S.TaggedError<WorktreeDirtyError>($I`WorktreeDirtyError`)(
   "WorktreeDirtyError",
   {
     message: S.String,
@@ -136,7 +135,7 @@ export class WorktreeDirtyError extends TaggedErrorClass<WorktreeDirtyError>($I`
  * @category errors
  * @since 0.0.0
  */
-export class WorktreeExistsError extends TaggedErrorClass<WorktreeExistsError>($I`WorktreeExistsError`)(
+export class WorktreeExistsError extends S.TaggedError<WorktreeExistsError>($I`WorktreeExistsError`)(
   "WorktreeExistsError",
   {
     message: S.String,

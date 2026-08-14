@@ -10,7 +10,7 @@ import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflic
 import * as Documents from "@beep/documents-domain/identity/Documents";
 import { DmsProvider, RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass, UnknownRecord } from "@beep/schema";
+import { SchemaUtils, UnknownRecord } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -95,7 +95,7 @@ export class SyncConflictSeed extends S.Class<SyncConflictSeed>($I`SyncConflictS
  * @category errors
  * @since 0.0.0
  */
-export class SyncConflictRepositoryNotFound extends TaggedErrorClass<SyncConflictRepositoryNotFound>(
+export class SyncConflictRepositoryNotFound extends S.TaggedError<SyncConflictRepositoryNotFound>(
   $I`SyncConflictRepositoryNotFound`
 )(
   "SyncConflictRepositoryNotFound",
@@ -127,7 +127,7 @@ export class SyncConflictRepositoryNotFound extends TaggedErrorClass<SyncConflic
  * @category errors
  * @since 0.0.0
  */
-export class SyncConflictRepositoryUnavailable extends TaggedErrorClass<SyncConflictRepositoryUnavailable>(
+export class SyncConflictRepositoryUnavailable extends S.TaggedError<SyncConflictRepositoryUnavailable>(
   $I`SyncConflictRepositoryUnavailable`
 )(
   "SyncConflictRepositoryUnavailable",

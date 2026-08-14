@@ -14,7 +14,6 @@ import { Dataset } from "@beep/rdf/Rdf";
 // BrowserWorkerImportGraph.test.ts guards exactly this.
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import * as S from "effect/Schema";
 import { ParseTurtleRequest, ParseTurtleResult } from "./Session.ports.ts";
 import { OntologySnapshot } from "./Session.projections.ts";
@@ -366,7 +365,7 @@ export const decodeWorkerResult: (input: unknown) => Result.Result<WorkerResult,
  * @category errors
  * @since 0.0.0
  */
-export class OntologyWorkerUndecodableCommand extends TaggedErrorClass<OntologyWorkerUndecodableCommand>(
+export class OntologyWorkerUndecodableCommand extends S.TaggedError<OntologyWorkerUndecodableCommand>(
   $I`OntologyWorkerUndecodableCommand`
 )(
   "OntologyWorkerUndecodableCommand",

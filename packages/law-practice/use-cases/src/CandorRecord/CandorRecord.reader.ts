@@ -15,24 +15,15 @@ import type { CandorRecordRepositoryShape } from "./CandorRecord.ports.ts";
 
 const readerFromRepository = (repository: CandorRecordRepositoryShape): CandorRecordReaderShape =>
   CandorRecordReaderShape.make({
-    dispositionsForFiling: Effect.fn("CandorRecord.dispositionsForFiling")(function* (scope: CandorFilingScope) {
+    snapshotForFiling: Effect.fn("CandorRecord.snapshotForFiling")(function* (scope: CandorFilingScope) {
       return yield* repository
-        .listDispositions(scope)
+        .readSnapshot(scope)
         .pipe(
           Effect.mapError((cause) =>
             CandorRecordReadError.fromReason(
-              "dispositions-unavailable",
-              `Recorded dispositions could not be read: ${cause.reason}`
+              "snapshot-unavailable",
+              `Recorded candor snapshot could not be read: ${cause.reason}`
             )
-          )
-        );
-    }),
-    eventsForFiling: Effect.fn("CandorRecord.eventsForFiling")(function* (scope: CandorFilingScope) {
-      return yield* repository
-        .listEvents(scope)
-        .pipe(
-          Effect.mapError((cause) =>
-            CandorRecordReadError.fromReason("events-unavailable", `Recorded events could not be read: ${cause.reason}`)
           )
         );
     }),
@@ -49,7 +40,7 @@ const readerFromRepository = (repository: CandorRecordRepositoryShape): CandorRe
  *
  * **Details**
  *
- * The gate deliberately depends on the two reads it performs rather than on the
+ * The gate deliberately depends on one protected snapshot rather than on the
  * whole repository, which is what lets the rung-1 proof run against in-memory
  * fixtures without standing up a database. This layer is the single place the
  * narrow seam is mapped onto the durable surface, so the two never drift.

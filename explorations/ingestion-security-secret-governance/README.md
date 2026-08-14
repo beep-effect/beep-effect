@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -43,6 +43,10 @@ license + port discipline, the external research citation, and the composed
 6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-08-13: packet closed `graduated`; its five gated candidates remain
+  re-entry points. When `ingestion-secret-scrub` ships, reopen at `decompose`
+  and apply each candidate's additional proof gate.
 
 - 2026-07-14: graduate — shape ratified the appetite and all nine policy blocks
   as drafted after all eight align decisions locked;

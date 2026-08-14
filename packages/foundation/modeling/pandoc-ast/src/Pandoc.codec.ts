@@ -6,7 +6,7 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { CauseTaggedError, SchemaUtils } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { A, dual, flow, O, P, R, Struct } from "@beep/utils";
 import { Effect, Match, SchemaGetter, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
@@ -238,8 +238,12 @@ const PandocJsonObjectFromString = S.fromJsonString(PandocJsonObject);
  * @category errors
  * @since 0.0.0
  */
-export class PandocDecodeError extends CauseTaggedError<PandocDecodeError>($I`PandocDecodeError`)(
+export class PandocDecodeError extends S.TaggedError<PandocDecodeError>($I`PandocDecodeError`)(
   "PandocDecodeError",
+  {
+    message: S.String,
+    cause: S.Defect({ includeStack: true }),
+  },
   $I.annote("PandocDecodeError", {
     description: "Typed failure raised when a Pandoc semantic or lossless JSON payload cannot be decoded.",
   })
@@ -1084,7 +1088,11 @@ const decodePandocJsonStringInternal = flow(decodeWireFromString, Effect.flatMap
  * @since 0.0.0
  */
 export const decodePandocJsonStrict = (input: unknown): Effect.Effect<PandocDocument, PandocDecodeError> =>
-  decodePandocJsonInternal(input).pipe(PandocDecodeError.mapError("Pandoc JSON failed strict semantic decoding."));
+  decodePandocJsonInternal(input).pipe(
+    Effect.mapError((cause) =>
+      PandocDecodeError.make({ cause, message: "Pandoc JSON failed strict semantic decoding." })
+    )
+  );
 
 /**
  * Backward-compatible alias for {@link decodePandocJsonStrict}.
@@ -1126,7 +1134,9 @@ export const decodePandocJson = decodePandocJsonStrict;
  */
 export const decodePandocJsonStringStrict = (input: unknown): Effect.Effect<PandocDocument, PandocDecodeError> =>
   decodePandocJsonStringInternal(input).pipe(
-    PandocDecodeError.mapError("Pandoc JSON string failed strict semantic decoding.")
+    Effect.mapError((cause) =>
+      PandocDecodeError.make({ cause, message: "Pandoc JSON string failed strict semantic decoding." })
+    )
   );
 
 /**
@@ -1549,7 +1559,9 @@ const decodePandocJsonLosslessInternal = (input: unknown): Effect.Effect<PandocL
  * @since 0.0.0
  */
 export const decodePandocJsonLossless = (input: unknown): Effect.Effect<PandocLosslessDocument, PandocDecodeError> =>
-  decodePandocJsonLosslessInternal(input).pipe(PandocDecodeError.mapError("Pandoc JSON failed lossless decoding."));
+  decodePandocJsonLosslessInternal(input).pipe(
+    Effect.mapError((cause) => PandocDecodeError.make({ cause, message: "Pandoc JSON failed lossless decoding." }))
+  );
 
 /**
  * Decodes a Pandoc JSON string into the exact lossless envelope.
@@ -1573,7 +1585,9 @@ export const decodePandocJsonStringLossless = (
 ): Effect.Effect<PandocLosslessDocument, PandocDecodeError> =>
   decodeJsonObjectFromString(input).pipe(
     Effect.flatMap(decodePandocJsonLosslessInternal),
-    PandocDecodeError.mapError("Pandoc JSON string failed lossless decoding.")
+    Effect.mapError((cause) =>
+      PandocDecodeError.make({ cause, message: "Pandoc JSON string failed lossless decoding." })
+    )
   );
 
 /**

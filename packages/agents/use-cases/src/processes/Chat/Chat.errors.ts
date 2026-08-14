@@ -6,7 +6,6 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 
@@ -29,7 +28,7 @@ const $I = $AgentsUseCasesId.create("processes/Chat/Chat.errors");
  * @category errors
  * @since 0.0.0
  */
-export class ChatActionError extends TaggedErrorClass<ChatActionError>($I`ChatActionError`)(
+export class ChatActionError extends S.TaggedError<ChatActionError>($I`ChatActionError`)(
   "ChatActionError",
   {
     message: S.String,

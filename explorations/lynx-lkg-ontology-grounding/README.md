@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `align`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -17,11 +17,9 @@ is valuable for beep-effect's semantic/KG work.
 
 ## Next Open Question
 
-Which of the five shortlist opportunities
-([`research/05-value-assessment.md`](./research/05-value-assessment.md) §5)
-advance, and in what order? Recommended leads: #1 attributed multi-claim span
-annotation (AnnotationUnit reshaped onto `EvidenceSpan`/`TextAnchorFields`)
-and #2 `lkg.ttl` (CC-BY-4.0, 12.7KB) as the first real VETTED vendor slice.
+No blocking question. Reopen at `decompose` when semantic-foundation M4 fires
+the SHACL candidate or a multilingual consumer supplies its competency
+question.
 
 ## Read This First
 
@@ -33,6 +31,20 @@ and #2 `lkg.ttl` (CC-BY-4.0, 12.7KB) as the first real VETTED vendor slice.
 6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-08-13 (final ceremony): operator signed off `BRIEF.md` and `MAP.md`;
+  graduated [`attributed-multi-claim-span`](../../goals/attributed-multi-claim-span/README.md)
+  with lexicog CQ authoring included. SHACL and language discipline remain
+  gated MAP re-entry points.
+
+- 2026-08-13 (ceremony): drafted `BRIEF.md` and `MAP.md`; span annotation is
+  the lead, SHACL remains M4-gated, language discipline is a re-entry, and
+  lexicog CQ authoring is included. Stage remains `shape` for operator review.
+
+- 2026-08-13: align closed with all five questions resolved; stage advanced to
+  `shape`. Span annotation leads, SHACL waits behind M4, multilingual work is a
+  re-entry, `lkg.ttl` routes through document-structure ontologies, ELI is
+  reference-only, and lexicog receives a competency question.
 
 - 2026-08-06: research complete — 5-agent opus workflow landed reports 01-05 +
   SOURCES.md (~834k subagent tokens; first launch lost to a session-limit

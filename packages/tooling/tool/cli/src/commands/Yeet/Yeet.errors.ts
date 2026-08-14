@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
@@ -38,7 +37,7 @@ type YeetCommandErrorOptions =
  * @category errors
  * @since 0.0.0
  */
-export class YeetCommandError extends TaggedErrorClass<YeetCommandError>($I`YeetCommandError`)(
+export class YeetCommandError extends S.TaggedError<YeetCommandError>($I`YeetCommandError`)(
   "YeetCommandError",
   {
     message: S.String,

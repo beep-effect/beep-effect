@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "spar-document-annotation-wire",
+    "title": "SPAR Document Annotation Wire",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/spar-document-annotation-wire",
+  "lifecycle": "active",
+  "mission": "Generate pinned SPAR terms and ship typed OA/PROV document annotations plus the Md-to-DOCO section fold.",
+  "statusNote": "Graduated third from document-structure-ontologies.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/document-structure-ontologies",
+    "graduated": "2026-08-13"
+  },
+  "dependencies": [
+    "goals/patent-document-schema",
+    "goals/document-ast-pattern-classification"
+  ],
+  "blockedBy": ["goals/document-ast-pattern-classification"],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/spar-document-annotation-wire/README.md",
+    "goals/spar-document-annotation-wire/SPEC.md",
+    "goals/spar-document-annotation-wire/PLAN.md",
+    "goals/spar-document-annotation-wire/GOAL.md",
+    "goals/spar-document-annotation-wire/research/SOURCES.md",
+    "explorations/document-structure-ontologies/BRIEF.md",
+    "explorations/document-structure-ontologies/MAP.md",
+    "explorations/document-structure-ontologies/DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/document-structure-ontologies/research/SOURCES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/spar-document-annotation-wire/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Research", "status": "pending" },
+    { "id": "P1", "name": "Implement", "status": "pending" },
+    { "id": "P2", "name": "Verify", "status": "pending" },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/spar-document-annotation-wire/GOAL.md)\" -le 4000",
+    "jq . goals/spar-document-annotation-wire/ops/manifest.json",
+    "rg -n \"spar-document-annotation-wire|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/spar-document-annotation-wire",
+    "git diff --check -- goals/spar-document-annotation-wire",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Exact upstream artifacts, licenses, or notices cannot be pinned.",
+    "The implementation would hand-edit generator-owned output.",
+    "The work would absorb patent, taxonomy, or MCP scope."
+  ]
+}

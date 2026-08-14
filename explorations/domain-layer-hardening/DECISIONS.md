@@ -1,5 +1,13 @@
 # Decisions
 
+## 2026-08-13 — Park with the roadmap-paused kernel goal
+
+**Decision:** Park this packet while `goals/domain-kernel-hardening` remains
+roadmap-paused.
+
+**Resume trigger:** That goal unpauses. Packets 2–7 must receive a fresh align
+and shape pass on resume because the domain layer will have drifted.
+
 <!--
 Stage 2 (align). One branch-closing question at a time, recommended answer
 first. Log every resolution with WHY; keep manifest openQuestions in sync.

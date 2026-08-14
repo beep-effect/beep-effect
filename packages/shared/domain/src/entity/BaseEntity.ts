@@ -6,7 +6,6 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
@@ -20,7 +19,7 @@ import type * as EntityId from "./EntityId.ts";
 
 const $I = $SharedDomainId.create("entity/BaseEntity");
 
-class BaseEntityAttachmentError extends TaggedErrorClass<BaseEntityAttachmentError>($I`BaseEntityAttachmentError`)(
+class BaseEntityAttachmentError extends S.TaggedError<BaseEntityAttachmentError>($I`BaseEntityAttachmentError`)(
   "BaseEntityAttachmentError",
   {
     message: S.String,

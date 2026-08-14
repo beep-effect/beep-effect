@@ -6,7 +6,7 @@
  */
 
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, flow } from "effect";
 import * as S from "effect/Schema";
 
@@ -27,9 +27,7 @@ const $I = $DocumentsUseCasesId.create("aggregates/Document/Document.errors");
  * @category errors
  * @since 0.0.0
  */
-export class FilingDecisionUnavailable extends TaggedErrorClass<FilingDecisionUnavailable>(
-  $I`FilingDecisionUnavailable`
-)(
+export class FilingDecisionUnavailable extends S.TaggedError<FilingDecisionUnavailable>($I`FilingDecisionUnavailable`)(
   "FilingDecisionUnavailable",
   {
     reason: S.NonEmptyString,
@@ -54,7 +52,7 @@ export class FilingDecisionUnavailable extends TaggedErrorClass<FilingDecisionUn
  * @category errors
  * @since 0.0.0
  */
-export class DocumentMaterializationFailed extends TaggedErrorClass<DocumentMaterializationFailed>(
+export class DocumentMaterializationFailed extends S.TaggedError<DocumentMaterializationFailed>(
   $I`DocumentMaterializationFailed`
 )(
   "DocumentMaterializationFailed",
@@ -125,9 +123,7 @@ export type DocumentIntakeError = typeof DocumentIntakeError.Type;
  * @category errors
  * @since 0.0.0
  */
-export class DocumentIntakeActionError extends TaggedErrorClass<DocumentIntakeActionError>(
-  $I`DocumentIntakeActionError`
-)(
+export class DocumentIntakeActionError extends S.TaggedError<DocumentIntakeActionError>($I`DocumentIntakeActionError`)(
   "DocumentIntakeActionError",
   {
     message: S.String,

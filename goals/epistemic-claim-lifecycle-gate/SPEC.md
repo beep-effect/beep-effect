@@ -80,7 +80,7 @@ Exact packages and role-files (role-suffix order:
 | Slice composition / Layer surface | `packages/epistemic/server/src/...` | server tier | NET-NEW (thin) |
 | Bounded SHACL engine | `@beep/semantic-web/services/shacl-validation` (`ShaclValidationService`, `ShaclValidationResult`, `ShaclValidationViolation`) | engine brick | HAVE |
 | Provenance vocabulary | `@beep/rdf/Vocab/Prov` (the `@beep/semantic-web/services/provenance` projection service was retired unconsumed, 2026-08) | PROV-O | HAVE |
-| Evidence selector reference | `@beep/semantic-web/evidence` (`EvidenceAnchor`, `TextPositionSelector`, `TextQuoteSelector`) | offset shape reference | HAVE |
+| Evidence selector reference | `@beep/rdf/Evidence` (`EvidenceAnchor`, `TextPositionSelector`, `TextQuoteSelector`) | offset shape reference | HAVE |
 
 The `use-cases` and `server` tiers are **new tiers inside the existing
 epistemic slice**, not new slices and not `knowledge-law/*` packages. Follow the

@@ -35,6 +35,7 @@ export {
 } from "@beep/repo-cli/commands/Quality/Quality.schemas";
 export * from "@beep/repo-cli/commands/Quality/Tasks";
 export * from "../commands/Quality/internal/CoverageRegression.ts";
+export * from "../commands/Quality/internal/CoverageScope.ts";
 export * from "../commands/Quality/internal/FallowEnvelope.schema.ts";
 export * from "../commands/Quality/internal/FlakeQuarantine.ts";
 export { githubCheckChangesetStatusLane, githubCheckLanePlan } from "../commands/Quality/internal/GithubChecks.ts";

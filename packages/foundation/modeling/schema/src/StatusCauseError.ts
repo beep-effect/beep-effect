@@ -20,10 +20,10 @@ const $I = $SchemaId.create("StatusCauseError");
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { TaggedErrorClass } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { StatusCauseFields } from "@beep/schema/StatusCauseError"
  *
- * class AppError extends TaggedErrorClass<AppError>()("AppError", StatusCauseFields) {}
+ * class AppError extends S.TaggedError<AppError>()("AppError", StatusCauseFields) {}
  *
  * const error = AppError.make({
  *   message: "not found",
@@ -191,10 +191,10 @@ const buildStatusCauseErrorBuilder = <Input extends StatusCauseInput, Error>(
  * **Example** (Build dual error constructor)
  *
  * ```ts
- * import { TaggedErrorClass } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import { StatusCauseFields, makeStatusCauseError } from "@beep/schema/StatusCauseError"
  *
- * class AppError extends TaggedErrorClass<AppError>()("AppError", StatusCauseFields) {}
+ * class AppError extends S.TaggedError<AppError>()("AppError", StatusCauseFields) {}
  *
  * const build = makeStatusCauseError(AppError)
  * const err = build({

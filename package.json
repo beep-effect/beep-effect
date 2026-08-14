@@ -301,7 +301,6 @@
     "eslint-plugin-tsdoc": "catalog:",
     "fallow": "catalog:",
     "inspeffct": "catalog:",
-    "jsonc-parser": "catalog:",
     "knip": "catalog:",
     "lefthook": "catalog:",
     "micromark": "catalog:",
@@ -333,6 +332,7 @@
     "hono": "^4.13.0",
     "js-yaml": "5.2.2",
     "minimatch": "10.2.5",
+    "nanoid": "^3.3.18",
     "postcss": "^8.5.23",
     "sharp": "catalog:",
     "tar": "catalog:"
@@ -400,6 +400,7 @@
     "inspeffct:span": "mkdir -p \"$(git rev-parse --show-toplevel)/.beep\" && inspeffct span --data \"$(git rev-parse --show-toplevel)/.beep/inspeffct.db\"",
     "inspeffct:trace": "mkdir -p \"$(git rev-parse --show-toplevel)/.beep\" && inspeffct trace --data \"$(git rev-parse --show-toplevel)/.beep/inspeffct.db\"",
     "inspeffct:traces": "mkdir -p \"$(git rev-parse --show-toplevel)/.beep\" && inspeffct traces --data \"$(git rev-parse --show-toplevel)/.beep/inspeffct.db\"",
+    "infra:prepare-gha-runners": "bun run --cwd infra/node_modules/@pulumi/gharunners postinstall",
     "jsdoc:inventory": "bun run beep quality jsdoc-inventory",
     "knip": "knip-bun",
     "lint": "beep-cli lint",
@@ -410,7 +411,7 @@
     "op": "op run --env-file=.env --",
     "pkg:verify": "beep-cli quality package-verify",
     "pkg:verify:quick": "beep-cli quality package-verify --quick",
-    "postinstall": "lefthook install",
+    "postinstall": "lefthook install && bun run infra:prepare-gha-runners",
     "prepare": "node scripts/prune-tsgo-backups.mjs && effect-tsgo patch",
     "purge": "bun run beep purge",
     "quality:dev": "bun run beep quality dev",
@@ -440,6 +441,7 @@
     "packages/foundation/primitive/*",
     "packages/foundation/ui-system/*",
     "packages/shared/domain",
+    "packages/shared/use-cases",
     "packages/shared/tables",
     "packages/tooling/library/*",
     "packages/tooling/policy-pack/*",
@@ -524,7 +526,6 @@
     "packages/drivers/ecfr",
     "packages/drivers/uspto-mcp",
     "packages/drivers/pacer",
-    "packages/drivers/protobuf",
     "packages/drivers/tailscale",
     "packages/drivers/pretext",
     "packages/drivers/graph-3d",
@@ -537,6 +538,7 @@
     "brace-expansion": "^5.0.9",
     "fast-uri": "^3.1.5",
     "hono": "^4.13.0",
+    "nanoid": "^3.3.18",
     "postcss": "^8.5.23"
   }
 }

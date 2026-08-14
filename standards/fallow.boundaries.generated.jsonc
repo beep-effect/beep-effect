@@ -576,12 +576,6 @@
         ]
       },
       {
-        "name": "@beep/protobuf",
-        "patterns": [
-          "packages/drivers/protobuf/src/**"
-        ]
-      },
-      {
         "name": "@beep/provenance",
         "patterns": [
           "packages/foundation/modeling/provenance/src/**"
@@ -681,6 +675,12 @@
         "name": "@beep/shared-tables",
         "patterns": [
           "packages/shared/tables/src/**"
+        ]
+      },
+      {
+        "name": "@beep/shared-use-cases",
+        "patterns": [
+          "packages/shared/use-cases/src/**"
         ]
       },
       {
@@ -901,6 +901,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -913,6 +914,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -1542,6 +1544,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1561,6 +1564,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1612,6 +1616,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1623,6 +1628,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1910,6 +1916,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -1932,6 +1939,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -2573,6 +2581,7 @@
           "@beep/pglite",
           "@beep/practice-kg-mcp",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2583,6 +2592,7 @@
           "@beep/pglite",
           "@beep/practice-kg-mcp",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2700,15 +2710,6 @@
           "@beep/workspace-domain",
           "@beep/workspace-server",
           "@beep/workspace-use-cases"
-        ]
-      },
-      {
-        "from": "@beep/protobuf",
-        "allow": [
-          "@beep/protobuf"
-        ],
-        "allowTypeOnly": [
-          "@beep/protobuf"
         ]
       },
       {
@@ -3070,6 +3071,21 @@
           "@beep/shared-domain",
           "@beep/shared-tables",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/shared-use-cases",
+        "allow": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-use-cases",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-use-cases",
+          "@beep/test-utils"
         ]
       },
       {

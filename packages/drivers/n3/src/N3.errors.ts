@@ -6,7 +6,7 @@
  */
 
 import { $N3Id } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $N3Id.create("N3.errors");
@@ -71,7 +71,7 @@ export type N3TurtleCodecErrorReason = typeof N3TurtleCodecErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class N3TurtleCodecError extends TaggedErrorClass<N3TurtleCodecError>($I`N3TurtleCodecError`)(
+export class N3TurtleCodecError extends S.TaggedError<N3TurtleCodecError>($I`N3TurtleCodecError`)(
   "N3TurtleCodecError",
   {
     reason: N3TurtleCodecErrorReason,

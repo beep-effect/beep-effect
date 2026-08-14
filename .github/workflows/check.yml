@@ -116,12 +116,12 @@ jobs:
             uses_turbo: "false"
             install_typos: "false"
     env:
-      # PRs receive the repository read token; main pushes receive the
-      # turbo-cache-write environment's trusted write token.
-      TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
-      TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
-      TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
+      # Pull requests stay local-only even when repository secrets are
+      # available. Trusted main pushes receive read-write remote-cache access.
+      TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
       DATABASE_URL: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
       DATABASE_URL_UNPOOLED: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
       EMAIL_RESEND_API_KEY: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -248,7 +248,12 @@ jobs:
 
       - name: Append Turbo summary
         if: matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()
-        run: bun run beep ci append-turbo-summary
+        run: |
+          if [[ "${{ matrix.id }}" == "coverage" ]]; then
+            bun run beep ci append-turbo-summary --all
+          else
+            bun run beep ci append-turbo-summary
+          fi
 
       - name: Append Turbo summary (docgen affected)
         if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.docgen_mode == 'affected' && always()
@@ -332,10 +337,10 @@ jobs:
     permissions:
       contents: read
     env:
-      TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
-      TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
-      TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
+      TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+      TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -442,10 +447,10 @@ jobs:
         id: fallow
         shell: bash
         env:
-          TURBO_API: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
-          TURBO_TOKEN: ${{ vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
-          TURBO_TEAM: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
-          TURBO_CACHE: ${{ vars.TURBO_API && secrets.TURBO_TOKEN && (github.event_name == 'push' && 'local:rw,remote:rw' || 'local:rw,remote:r') || 'local:rw' }}
+          TURBO_API: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_API || '' }}
+          TURBO_TOKEN: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && vars.TURBO_TEAM || '' }}
+          TURBO_CACHE: ${{ github.event_name == 'push' && vars.TURBO_API && secrets.TURBO_TOKEN && 'local:rw,remote:rw' || 'local:rw' }}
         run: |
           # Lane body (blocking audit/dead-code, advisory sweep, status.md
           # accounting, envelope existence) lives in the beep CLI; envelope

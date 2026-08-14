@@ -124,11 +124,12 @@
     "**/plugins.ts"
   ],
   "ignoreDependencies": [
-    // brace-expansion, fast-uri, hono: root `dependencies` entries that exist solely to back
-    // the security-pin `overrides` in package.json; nothing imports them at root.
+    // brace-expansion, fast-uri, hono, nanoid: root `dependencies` entries that exist solely to
+    // back the security-pin `overrides` in package.json; nothing imports them at root.
     "brace-expansion",
     "fast-uri",
     "hono",
+    "nanoid",
     "@effect/vitest",
     "@effect/language-service",
     "babel-plugin-annotate-pure-calls",

@@ -6,7 +6,7 @@
  */
 
 import { $CosmosId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { P } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -71,7 +71,7 @@ export type CosmosDriverErrorReason = typeof CosmosDriverErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class CosmosDriverError extends TaggedErrorClass<CosmosDriverError>($I`CosmosDriverError`)(
+export class CosmosDriverError extends S.TaggedError<CosmosDriverError>($I`CosmosDriverError`)(
   "CosmosDriverError",
   {
     reason: CosmosDriverErrorReason,

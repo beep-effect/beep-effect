@@ -11,8 +11,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { IRI, URI } from "@beep/rdf";
-import type { TaggedErrorClassFromFields } from "@beep/schema";
-import { FilePath, NonNegativeInt, SchemaUtils, TaggedErrorClass, URLStr } from "@beep/schema";
+import { FilePath, NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
 import type { Cause } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -667,6 +666,12 @@ export type OptionalMilliseconds = typeof OptionalMilliseconds.Type;
 type OntologyTaggedError<Tag extends string, Fields extends S.Struct.Fields> = Cause.YieldableError &
   S.Schema.Type<S.TaggedStruct<Tag, Fields>>;
 
+type OntologyTaggedErrorClass<Tag extends string, Fields extends S.Struct.Fields> = S.Class<
+  OntologyTaggedError<Tag, Fields>,
+  S.TaggedStruct<Tag, Fields>,
+  Cause.YieldableError
+>;
+
 type OntologyErrorCodecStatics<Self> = {
   readonly is: (input: unknown) => input is Self;
   readonly fromUnknown: (input: unknown) => Self;
@@ -677,8 +682,8 @@ type OntologyErrorCodecStatics<Self> = {
  * Builds a schema-backed ontology error class with schema-derived capabilities.
  *
  * @remarks
- * `TaggedErrorClass` supplies class-safe arbitrary and equivalence annotations;
- * this helper keeps identity scoping and the structural self type consistent
+ * `S.TaggedError` supplies the upstream tagged-error class semantics; this
+ * helper keeps identity scoping and the structural self type consistent
  * across the experimental error families.
  *
  * @example
@@ -713,11 +718,11 @@ export const makeOntologyErrorClass = {
     tag: Tag,
     fields: Fields,
     annotations: S.Annotations.Declaration<OntologyTaggedError<Tag, Fields>, readonly [S.TaggedStruct<Tag, Fields>]>
-  ): TaggedErrorClassFromFields<OntologyTaggedError<Tag, Fields>, Tag, Fields> &
+  ): OntologyTaggedErrorClass<Tag, Fields> &
     OntologyErrorCodecStatics<OntologyTaggedError<Tag, Fields>> => {
     type Self = OntologyTaggedError<Tag, Fields>;
     const makeInstance = (input: S.Schema.Type<S.TaggedStruct<Tag, Fields>>): Self => ErrorClass.make(input as never);
-    const ErrorClass = TaggedErrorClass<Self>(identifier)<Tag, Fields>(tag, fields, {
+    const ErrorClass = S.TaggedError<Self>(identifier)<Tag, Fields>(tag, fields, {
       ...annotations,
       toArbitrary:
         ([from]) =>
@@ -725,7 +730,7 @@ export const makeOntologyErrorClass = {
           arbitrary: from.arbitrary.map(makeInstance),
           terminal: from.terminal?.map(makeInstance),
         }),
-    });
+    }) as OntologyTaggedErrorClass<Tag, Fields>;
     const ServiceFreeErrorClass = ErrorClass as typeof ErrorClass & S.ConstraintDecoder<Self>;
     return SchemaUtils.withStatics(ErrorClass, () => ({
       is: S.is(ErrorClass),
@@ -875,7 +880,7 @@ const BaseErrorDefinition = S.Union([BaseError, NotImplemented]).pipe(S.toTagged
 export const BaseDomainError = BaseErrorDefinition.pipe(
   $I.annoteSchema("BaseDomainError", {
     description: "Tagged union of shared fallback and implementation-status errors.",
-    toArbitrary: () => S.toArbitrary(BaseErrorDefinition),
+  toArbitrary: () => S.toArbitrary(BaseErrorDefinition),
   })
 );
 
