@@ -510,7 +510,7 @@ const attachEntityIdStatics = <
   const TResource extends string,
   const TEntityType extends string,
   const TBrand extends string,
-  const Schema extends S.Codec<EntityIdValueFor<TBrand>, number, never, never>,
+  const Schema extends S.Codec<EntityIdValueFor<TBrand>, number>,
 >(
   schema: Schema,
   statics: EntityIdStatics<Slice, Name, TTableName, TResource, TEntityType, TBrand>
