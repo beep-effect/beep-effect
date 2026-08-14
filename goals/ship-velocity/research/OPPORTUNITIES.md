@@ -24,3 +24,11 @@ session/machine ids.
 - Biome's pre-commit lane strict-parses staged `.json` research artifacts and its auto-fix
   mangled one raw model-output file; evidence files now land as fenced markdown. Prevention
   candidate: research/ artifact extensions exempt from code-parser lanes.
+- Verify on this branch failed build/check with TS2307 on `@beep/shared-use-cases/PromotionGate`:
+  the main merge moved `bun.lock` + subpath exports and no `bun install` followed — the known
+  stale-node_modules phantom class, now with a fresh receipt. A failure capsule (A-track) should
+  classify "lockfile/exports moved since last install" before blaming source.
+- The same verdict's repair hint said "Inspect the OSV finding" while the OSV lane logged
+  `No issues found` exit 0 — a live misattributed-composite-hint receipt (see
+  `research/c7-opportunities.md` finding 3; capsule work must derive hints from the failing
+  sublane, not the composite).
