@@ -30,7 +30,6 @@
     "audit": "bun run --if-present beep:audit"
   },
   "devDependencies": {
-    "@effect/vitest": "catalog:",
     "@types/node": "catalog:"
   },
   "exports": {

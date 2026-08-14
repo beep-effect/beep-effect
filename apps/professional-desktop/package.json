@@ -111,6 +111,7 @@
     "decode-named-character-reference": "catalog:",
     "gl-bench": "catalog:",
     "jsdom": "catalog:",
+    "lexical": "catalog:",
     "react-grab": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"

@@ -6,54 +6,6 @@
  */
 
 /**
- * Shared domain package version.
- *
- * **Example** (Import and check VERSION)
- *
- * ```ts
- * import { VERSION } from "@beep/shared-domain"
- *
- * const packageVersion = VERSION
- *
- * console.log(packageVersion === "0.0.0") // true
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const VERSION = "0.0.0" as const;
-
-/**
- * Shared-kernel aggregate concepts.
- *
- * **Example** (Import Aggregates namespace)
- *
- * ```ts
- * import { Aggregates } from "@beep/shared-domain"
- *
- * console.log(Aggregates)
- * ```
- *
- * @category aggregates
- * @since 0.0.0
- */
-export * as Aggregates from "./aggregates/index.ts";
-/**
- * Shared-kernel entity concepts.
- *
- * **Example** (Log organization table name)
- *
- * ```ts
- * import { Entities } from "@beep/shared-domain"
- *
- * console.log(Entities.Organization.Model.definition.tableName)
- * ```
- *
- * @category entities
- * @since 0.0.0
- */
-export * as Entities from "./entities/index.ts";
-/**
  * Product-facing persisted entity base constructor.
  *
  * **Example** (Inspect createdAt column name)

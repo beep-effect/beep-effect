@@ -187,21 +187,6 @@ export * as Epistemic from "./Epistemic.ts";
  */
 export * as LawPractice from "./LawPractice.ts";
 /**
- * Shared entity-id registry namespace.
- *
- * **Example** (Log OrganizationId table name)
- *
- * ```ts
- * import * as Shared from "@beep/shared-domain/identity/Shared"
- *
- * console.log(Shared.OrganizationId.tableName)
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export * as Shared from "./Shared.ts";
-/**
  * Workspace entity-id registry namespace.
  *
  * **Example** (Log WorkspaceId table name)
