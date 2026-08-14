@@ -15,6 +15,7 @@ import * as PgEffectSessionMigrator from "drizzle-orm/pg-core/effect";
 import { Context, Effect, flow, Layer, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Statement from "effect/unstable/sql/Statement";
 import { PostgresError } from "./Postgres.errors.ts";
 import type * as Pg from "@effect/sql-pg/PgClient";
 import type { MigrationConfig, MigrationMeta } from "drizzle-orm/migrator";
@@ -264,6 +265,57 @@ export class MigrationBundleEntry extends S.Class<MigrationBundleEntry>($I`Migra
   })
 ) {}
 
+const migrationNameEquivalence = S.toEquivalence(MigrationBundleEntryName);
+const MigrationBundleLegacyNames = S.NonEmptyArray(MigrationBundleEntryName)
+  .check(
+    S.makeFilter(
+      (names: ReadonlyArray<string>) => A.length(A.dedupeWith(migrationNameEquivalence)(names)) === A.length(names),
+      {
+        identifier: $I`MigrationBundleLegacyNamesUniqueItemsCheck`,
+        title: "Unique legacy migration names",
+        description: "One compatibility set must not repeat a legacy journal name.",
+        message: "Legacy migration names must be unique within a compatibility set.",
+      }
+    )
+  )
+  .pipe(
+    $I.annoteSchema("MigrationBundleLegacyNames", {
+      description: "Non-empty unique legacy journal names that jointly prove one canonical migration was applied.",
+    })
+  );
+
+/**
+ * A complete legacy journal-name set that proves one canonical bundle entry
+ * was already applied before a migration-history re-baseline.
+ *
+ * **Example** (Declare a re-baseline compatibility set)
+ *
+ * ```ts
+ * import { MigrationBundleLegacyNameSet } from "@beep/postgres"
+ *
+ * const compatibility = MigrationBundleLegacyNameSet.make({
+ *   canonicalName: "20260813130540_baseline",
+ *   legacyNames: ["20260725222615_baseline"]
+ * })
+ * console.log(compatibility.legacyNames.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MigrationBundleLegacyNameSet extends S.Class<MigrationBundleLegacyNameSet>(
+  $I`MigrationBundleLegacyNameSet`
+)(
+  {
+    canonicalName: MigrationBundleEntryName,
+    legacyNames: MigrationBundleLegacyNames,
+  },
+  $I.annote("MigrationBundleLegacyNameSet", {
+    description:
+      "Canonical migration name plus the complete legacy journal-name set required to skip its re-baselined SQL.",
+  })
+) {}
+
 /**
  * Configuration accepted by {@link migrateBundle}.
  *
@@ -284,6 +336,7 @@ export class MigrationBundleEntry extends S.Class<MigrationBundleEntry>($I`Migra
  */
 export class MigrationBundleConfig extends S.Class<MigrationBundleConfig>($I`MigrationBundleConfig`)(
   {
+    legacyNameSets: MigrationBundleLegacyNameSet.pipe(S.Array, S.optionalKey),
     migrations: S.Array(MigrationBundleEntry),
     migrationsSchema: S.optionalKey(S.String),
     migrationsTable: S.optionalKey(S.String),
@@ -292,6 +345,200 @@ export class MigrationBundleConfig extends S.Class<MigrationBundleConfig>($I`Mig
     description: "An in-memory Drizzle migration bundle and optional journal location.",
   })
 ) {}
+
+const MigrationJournalShapeRow = S.Struct({ exists: S.Boolean, hasName: S.Boolean }).pipe(
+  $I.annoteSchema("MigrationJournalShapeRow", {
+    description: "Information-schema projection used to detect a current or legacy Drizzle journal.",
+  })
+);
+const MigrationJournalNameRow = S.Struct({ name: S.NullOr(S.String) }).pipe(
+  $I.annoteSchema("MigrationJournalNameRow", {
+    description: "Current Drizzle journal-name row decoded from a migration table.",
+  })
+);
+const MigrationJournalCreatedAtText = S.String.check(
+  S.isPattern(/^\d{4,}$/u, {
+    identifier: $I`MigrationJournalCreatedAtTextCheck`,
+    title: "Legacy migration created-at text",
+    description: "Legacy Drizzle created_at values must be decimal integers with a millisecond suffix.",
+    message: "Expected a decimal legacy migration timestamp.",
+  })
+).pipe(
+  $I.annoteSchema("MigrationJournalCreatedAtText", {
+    description: "Text projection of a legacy Drizzle journal created_at bigint.",
+  })
+);
+const LegacyMigrationJournalRow = S.Struct({
+  createdAt: MigrationJournalCreatedAtText,
+  hash: S.String,
+}).pipe(
+  $I.annoteSchema("LegacyMigrationJournalRow", {
+    description: "Version-zero Drizzle journal row used for a fail-closed name upgrade.",
+  })
+);
+type LegacyMigrationJournalRow = typeof LegacyMigrationJournalRow.Type;
+const decodeJournalMillis = S.decodeUnknownEffect(S.FiniteFromString.check(S.isInt()));
+const migrationMillisEquivalence = S.toEquivalence(S.Int);
+
+const migrationMetaFromLegacyName = (name: string, hash = ""): MigrationMeta => ({
+  bps: true,
+  folderMillis: formatToMillis(Str.slice(0, 14)(name)),
+  hash,
+  name,
+  sql: A.empty<string>(),
+});
+
+const failMigrationJournal = (message: string): PostgresError =>
+  PostgresError.fromUnknown("migrateBundle", undefined, { message });
+
+const requireUniqueMigrationCandidate = (
+  candidates: ReadonlyArray<MigrationMeta>,
+  row: LegacyMigrationJournalRow
+): Effect.Effect<MigrationMeta, PostgresError> =>
+  A.match(candidates, {
+    onEmpty: () =>
+      Effect.fail(
+        failMigrationJournal(
+          `Legacy migration journal row ${row.createdAt} does not match the current bundle or a declared compatibility name.`
+        )
+      ),
+    onNonEmpty: ([candidate, ...remaining]) =>
+      A.isReadonlyArrayEmpty(remaining)
+        ? Effect.succeed(candidate)
+        : Effect.fail(
+            failMigrationJournal(
+              `Legacy migration journal row ${row.createdAt} is ambiguous; rebuild the database or provide an unambiguous migration history.`
+            )
+          ),
+  });
+
+const resolveLegacyMigrationJournalRow = Effect.fn("Postgres.resolveLegacyMigrationJournalRow")(function* (
+  row: LegacyMigrationJournalRow,
+  candidates: ReadonlyArray<MigrationMeta>
+) {
+  const normalizedMillis = `${Str.slice(0, -3)(row.createdAt)}000`;
+  const createdAtMillis = yield* decodeJournalMillis(normalizedMillis).pipe(
+    Effect.mapError(() =>
+      failMigrationJournal(`Legacy migration journal row ${row.createdAt} has an invalid timestamp.`)
+    )
+  );
+  const millisMatches = A.filter(candidates, (candidate) =>
+    migrationMillisEquivalence(candidate.folderMillis, createdAtMillis)
+  );
+  const matches = A.isReadonlyArrayNonEmpty(millisMatches)
+    ? A.length(millisMatches) === 1
+      ? millisMatches
+      : A.filter(millisMatches, (candidate) => Str.Equivalence(candidate.hash, row.hash))
+    : A.filter(candidates, (candidate) => Str.Equivalence(candidate.hash, row.hash));
+  const resolved = yield* requireUniqueMigrationCandidate(matches, row);
+  return { ...resolved, hash: row.hash } satisfies MigrationMeta;
+});
+
+const migrationMetaNameEquivalence = (left: MigrationMeta, right: MigrationMeta): boolean =>
+  migrationNameEquivalence(left.name, right.name);
+
+const readMigrationJournalState = Effect.fn("Postgres.readMigrationJournalState")(
+  function* <TSchema extends Record<string, unknown>, TRelations extends AnyRelations>(
+    db: PostgresDrizzleDatabase<TSchema, TRelations>,
+    migrationsSchema: string,
+    migrationsTable: string,
+    migrations: ReadonlyArray<MigrationMeta>,
+    legacyNameSets: ReadonlyArray<MigrationBundleLegacyNameSet>
+  ) {
+    const sql = db.$client.withoutTransforms();
+    const shapeRows = yield* sql`
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = ${migrationsSchema} AND table_name = ${migrationsTable}
+      ) AS exists,
+      EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = ${migrationsSchema}
+          AND table_name = ${migrationsTable}
+          AND column_name = 'name'
+      ) AS "hasName"
+    `;
+    const shape = yield* S.decodeUnknownEffect(S.Array(MigrationJournalShapeRow))(shapeRows).pipe(
+      Effect.flatMap((rows) =>
+        A.head(rows).pipe(
+          O.match({
+            onNone: () => Effect.fail(failMigrationJournal("Postgres returned no migration journal shape row.")),
+            onSome: Effect.succeed,
+          })
+        )
+      )
+    );
+    if (!shape.exists) {
+      return [A.empty<string>(), A.empty<MigrationMeta>()] as const;
+    }
+    if (!shape.hasName) {
+      const legacyRows = yield* sql`
+        SELECT hash, created_at::text AS "createdAt"
+        FROM ${Statement.identifier(migrationsSchema)}.${Statement.identifier(migrationsTable)}
+        ORDER BY id
+      `;
+      const decodedRows = yield* S.decodeUnknownEffect(S.Array(LegacyMigrationJournalRow))(legacyRows);
+      const legacyCandidates = pipe(
+        legacyNameSets,
+        A.flatMap((entry) => entry.legacyNames),
+        A.dedupeWith(migrationNameEquivalence),
+        A.map((name) => migrationMetaFromLegacyName(name))
+      );
+      const candidates = A.dedupeWith(A.appendAll(migrations, legacyCandidates), migrationMetaNameEquivalence);
+      const resolved = yield* Effect.forEach(decodedRows, (row) => resolveLegacyMigrationJournalRow(row, candidates), {
+        concurrency: 1,
+      });
+      const currentNames = A.map(migrations, (migration) => migration.name);
+      const upgradeMigrations = A.filter(
+        resolved,
+        (migration) => !A.containsWith(migrationNameEquivalence)(currentNames, migration.name)
+      );
+      return [A.map(resolved, (migration) => migration.name), upgradeMigrations] as const;
+    }
+    const nameRows = yield* sql`
+      SELECT name
+      FROM ${Statement.identifier(migrationsSchema)}.${Statement.identifier(migrationsTable)}
+      ORDER BY id
+    `;
+    const decodedNames = yield* S.decodeUnknownEffect(S.Array(MigrationJournalNameRow))(nameRows);
+    return [A.getSomes(A.map(decodedNames, (row) => O.fromNullishOr(row.name))), A.empty<MigrationMeta>()] as const;
+  },
+  Effect.mapError((cause) => PostgresError.fromUnknown("migrateBundle", cause))
+);
+
+const reconcileLegacyMigrationNames = Effect.fn("Postgres.reconcileLegacyMigrationNames")(function* (
+  migrations: ReadonlyArray<MigrationMeta>,
+  legacyNameSets: ReadonlyArray<MigrationBundleLegacyNameSet>,
+  journalNames: ReadonlyArray<string>
+) {
+  const reconciled = yield* Effect.forEach(
+    migrations,
+    Effect.fn(function* (migration) {
+      const compatibility = A.findFirst(legacyNameSets, (entry) =>
+        migrationNameEquivalence(entry.canonicalName, migration.name)
+      );
+      if (O.isNone(compatibility) || A.containsWith(migrationNameEquivalence)(journalNames, migration.name)) {
+        return O.some(migration);
+      }
+      const matchedLegacyNames = A.filter(compatibility.value.legacyNames, (name) =>
+        A.containsWith(migrationNameEquivalence)(journalNames, name)
+      );
+      if (A.isReadonlyArrayEmpty(matchedLegacyNames)) {
+        return O.some(migration);
+      }
+      if (A.length(matchedLegacyNames) === A.length(compatibility.value.legacyNames)) {
+        return O.none<MigrationMeta>();
+      }
+      return yield* PostgresError.fromUnknown("migrateBundle", undefined, {
+        message: `Refusing a partial legacy migration history for ${migration.name}; apply the complete pre-baseline history or rebuild the database.`,
+      });
+    }),
+    { concurrency: 1 }
+  );
+  return A.getSomes(reconciled);
+});
 
 // Mirrors drizzle-orm readMigrationFiles (migrator.js) field-for-field so
 // in-memory journal rows stay byte-identical to folder-derived ones:
@@ -369,13 +616,34 @@ export const migrateBundle: {
           A.map(migrationMetaFromBundleEntry)
         ),
       })),
-      Effect.flatMap(({ config: decoded, migrations }) =>
-        runPgEffectMigrations(db, migrations, {
-          migrationsFolder: InMemoryBundleFolderSentinel,
-          ...O.getSomesStruct({
-            migrationsSchema: O.fromUndefinedOr(decoded.migrationsSchema),
-            migrationsTable: O.fromUndefinedOr(decoded.migrationsTable),
-          }),
+      Effect.flatMap(
+        Effect.fn(function* ({ config: decoded, migrations }) {
+          const legacyNameSets = pipe(
+            decoded.legacyNameSets,
+            O.fromUndefinedOr,
+            O.getOrElse(() => A.empty<MigrationBundleLegacyNameSet>())
+          );
+          const migrationsSchema = pipe(
+            decoded.migrationsSchema,
+            O.fromUndefinedOr,
+            O.getOrElse(() => "drizzle")
+          );
+          const migrationsTable = pipe(
+            decoded.migrationsTable,
+            O.fromUndefinedOr,
+            O.getOrElse(() => "__drizzle_migrations")
+          );
+          const [journalNames, upgradeMigrations] = A.isReadonlyArrayEmpty(legacyNameSets)
+            ? [A.empty<string>(), A.empty<MigrationMeta>()]
+            : yield* readMigrationJournalState(db, migrationsSchema, migrationsTable, migrations, legacyNameSets);
+          const reconciledMigrations = A.isReadonlyArrayEmpty(legacyNameSets)
+            ? migrations
+            : yield* reconcileLegacyMigrationNames(migrations, legacyNameSets, journalNames);
+          return yield* runPgEffectMigrations(db, A.appendAll(upgradeMigrations, reconciledMigrations), {
+            migrationsFolder: InMemoryBundleFolderSentinel,
+            migrationsSchema,
+            migrationsTable,
+          });
         })
       )
     )

@@ -53,3 +53,28 @@ Record receipts at the moment friction happens; redact for the public repo.
   with registry integrity, frozen-install to verify, run both audit lanes.
   Advisory-feed failures mid-publish are recurring; the repair should be a
   one-command ritual, not lockfile surgery.
+
+## 2026-08-14 — merged P2 IMDS hook is undeployable: bash `${...}` parses as HCL in the bridge
+
+- What: answering "does anything need a deploy", ran `pulumi preview --stack
+  production --diff` on beep-ci-runners. The plan hard-fails on every
+  runner config's `userdata_post_install` (#708): the hook script's bash
+  expansions (`${runner_uid}`, `${runner_dir}`, `${hook_armed}`) reach the
+  terraform-module bridge's generated `pulumi.tf.json` unescaped, and
+  Terraform JSON syntax parses string values as templates — each `${...}`
+  becomes `Error: Invalid reference` ("a reference to a resource type must
+  be followed by at least one attribute access"), 10x, one per runner
+  config. The whole stack plan aborts, which also blocks the pending #700
+  CiTurboCache `integrationUri` updates (2 resources) from deploying.
+- Evidence: `pulumi preview` exit 1, `error: Preview failed: Plan failed`
+  after `~ 2 to update, 61 unchanged`; errors anchored on
+  `pulumi.tf.json` lines 144–168 `userdata_post_install` in
+  `module.ci-fleet-controller`. Source: `infra/src/CiFleetController.ts`
+  lines 81–106 (TS `\${...}` escapes produce literal bash `${...}`).
+- Prevention: escape Terraform-side as `$${...}` (TS template literal
+  `$\${...}`) so the rendered template hands bash `${...}` back; add a
+  test asserting module-bound userdata contains no unescaped `${` (the
+  #708 tests validated TS string content but never round-tripped through
+  an HCL template parse, so review + CI stayed green on an undeployable
+  artifact). Longer term: a plan/preview smoke lane for infra-touching PRs
+  would have caught this pre-merge.

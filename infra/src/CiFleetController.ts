@@ -12,10 +12,11 @@
 
 import { $InfraId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { O } from "@beep/utils";
+import { O, Str } from "@beep/utils";
 import * as aws from "@pulumi/aws";
 import * as ghaRunners from "@pulumi/gharunners";
 import * as pulumi from "@pulumi/pulumi";
+import { flow } from "effect";
 import * as S from "effect/Schema";
 import { withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.ts";
 
@@ -54,6 +55,74 @@ const runnerToolbeltPostInstall = `(
   logger -t beep-ci-toolbelt "installed git unzip zip jq for heavy lanes"
 )
 `;
+
+// CSF-003 rework: a per-job ACTIONS_RUNNER_HOOK_JOB_STARTED hook installs the
+// uid-scoped IMDS DROP after the agent has registered (JIT config happens as
+// root at boot; the agent's own traffic is GitHub HTTPS long-poll, never IMDS
+// once running) but before any job step executes. The hook process runs as
+// runnerRunAs with no CAP_NET_ADMIN, so the privilege transition is explicit:
+// a wrapper execs the root-owned installer through a sudoers entry scoped to
+// exactly that one non-writable script. Re-invocation from a malicious step is
+// harmless — the installer is idempotent and only re-asserts the DROP. Every
+// firewall prerequisite and hook invocation fails CLOSED before job steps can
+// run. A missing runner directory leaves the hook visibly unarmed for Gate E
+// to reject during deployment; the whole snippet stays subshell-scoped for the
+// same inline-user-data reason as the toolbelt above.
+const imdsJobHookPostInstall = `(
+  set -eu
+  dnf install -y iptables-nft
+  command -v iptables >/dev/null 2>&1
+  iptables --version | grep -Fq 'nf_tables'
+  iptables -m owner --help >/dev/null 2>&1
+  logger -t beep-imds-hook "verified iptables-nft with OWNER match support"
+  install -d -m 0755 /opt/beep
+  cat > /opt/beep/imds-job-started.sh <<'BEEP_IMDS_DROP'
+#!/usr/bin/env bash
+set -eu
+runner_uid="$(id -u ${runnerRunAs})"
+iptables -C OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "\${runner_uid}" -j DROP 2>/dev/null \\
+  || iptables -A OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "\${runner_uid}" -j DROP
+if command -v ip6tables >/dev/null 2>&1; then
+  ip6tables -C OUTPUT -d fd00:ec2::254/128 -m owner --uid-owner "\${runner_uid}" -j DROP 2>/dev/null \\
+    || ip6tables -A OUTPUT -d fd00:ec2::254/128 -m owner --uid-owner "\${runner_uid}" -j DROP
+fi
+logger -t beep-imds-hook "installed per-job IMDS DROP for uid \${runner_uid}"
+BEEP_IMDS_DROP
+  chmod 0755 /opt/beep/imds-job-started.sh
+  printf '#!/usr/bin/env bash\\nexec sudo /opt/beep/imds-job-started.sh\\n' > /opt/beep/imds-job-started-hook.sh
+  chmod 0755 /opt/beep/imds-job-started-hook.sh
+  printf '${runnerRunAs} ALL=(root) NOPASSWD: /opt/beep/imds-job-started.sh\\n' > /etc/sudoers.d/beep-imds-hook
+  chmod 0440 /etc/sudoers.d/beep-imds-hook
+  visudo -cf /etc/sudoers.d/beep-imds-hook
+  hook_armed=false
+  for runner_dir in /opt/actions-runner /home/${runnerRunAs}/actions-runner; do
+    if [ -d "\${runner_dir}" ]; then
+      printf 'ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/beep/imds-job-started-hook.sh\\n' >> "\${runner_dir}/.env"
+      chown ${runnerRunAs}:${runnerRunAs} "\${runner_dir}/.env"
+      logger -t beep-imds-hook "armed ACTIONS_RUNNER_HOOK_JOB_STARTED in \${runner_dir}/.env"
+      hook_armed=true
+      break
+    fi
+  done
+  if [ "\${hook_armed}" = false ]; then
+    logger -t beep-imds-hook "runner directory not found; per-job IMDS hook NOT armed"
+  fi
+)
+`;
+
+// The terraform-module bridge writes module inputs into `pulumi.tf.json`, and
+// Terraform's JSON syntax parses every string value as an HCL template: a
+// literal bash `${...}` (or `%{...}`) plans as an HCL reference and fails the
+// whole stack with "Invalid reference". `$${` / `%%{` render back to `${` /
+// `%{` in the instance's user-data, so the scripts run byte-identical. The
+// callback replacer is load-bearing: in a plain replacement string, `$$`
+// collapses to `$` and the escape silently becomes a no-op.
+const escapeHclTemplateSequences = flow(
+  Str.replaceAllWith(/\$\{/gu, () => "$${"),
+  Str.replaceAll("%{", "%%{")
+);
+
+const runnerPostInstall = escapeHclTemplateSequences(runnerToolbeltPostInstall + imdsJobHookPostInstall);
 
 const awsArnPattern = /^arn:aws[a-z-]*:[a-z0-9-]+:[a-z0-9-]*:[0-9]*:.+$/u;
 const ssmParameterArnPattern = /^arn:aws[a-z-]*:ssm:[a-z0-9-]+:[0-9]*:parameter\/.+$/u;
@@ -272,26 +341,32 @@ type CiFleetControllerArgs = {
  *
  * **Gotchas**
  *
- * The host IMDS credential-theft mitigation (CSF-003) is NOT wired here. A
- * post-install `iptables` OWNER-match DROP on the `runnerRunAs` uid was deployed
- * and rolled back the same day after the worker failed to register
- * (`runner-start-failed`), which the Gate E probe caught before any heavy-lane
- * cutover. The original attribution blamed the DROP starving the agent, but the
- * toolbelt post-install later reproduced the identical failure with no firewall
- * at all: the module inlines `userdata_post_install` into its user-data script,
- * and a leaked `set -u` kills the runner-start section on its own unset
- * variables — so the DROP's specific culpability is unproven and the rework
- * must retest it with subshell-scoped options. A uid DROP still cannot separate
- * the agent from job steps when both share one uid, and a blanket DROP would
- * additionally sever the root config-time IMDS the runner needs for JIT
- * registration. The rework is a per-job
- * `ACTIONS_RUNNER_HOOK_JOB_STARTED` hook that installs the DROP after the agent
- * is running but before a job's steps, re-validated through Gate E before
- * redeploy. Until then the controls that bound credential theft are the layers
- * that remain live: IMDSv2 with hop limit 1 (blocks unprivileged containers), a
- * minimal permissions-boundary-capped instance-profile role, the ephemeral
- * one-job-one-VM lifecycle, and JIT config that keeps no registration token on
- * the instance.
+ * The host IMDS credential-theft mitigation (CSF-003) is wired as a per-job
+ * `ACTIONS_RUNNER_HOOK_JOB_STARTED` hook (`imdsJobHookPostInstall`) that
+ * installs the uid-scoped `iptables` OWNER-match DROP after the agent has
+ * registered but before any job step runs. History that shaped it: the
+ * original post-install DROP was deployed and rolled back the same day after
+ * the worker failed to register (`runner-start-failed`) — but the toolbelt
+ * post-install later reproduced the identical failure with no firewall at
+ * all, because the module inlines `userdata_post_install` into its user-data
+ * script and a leaked `set -u` kills the runner-start section on its own
+ * unset variables. The DROP's culpability was never proven; the retest must
+ * keep every snippet subshell-scoped, and no failure story about the hook is
+ * believed until reproduced in that form. The hook design accounts for the
+ * two structural constraints the rollback exposed: agent and steps share one
+ * uid (so the DROP lands per-job, when the agent no longer needs IMDS), and
+ * root's config-time IMDS for JIT registration stays open (uid-scoped rule).
+ * Privilege transition is explicit — the hook wrapper execs the root-owned
+ * installer through a sudoers entry scoped to exactly that script. Boot first
+ * installs `iptables-nft` and verifies the nft backend plus OWNER match before
+ * writing or wiring the hook. The installer and wrapper propagate failures so
+ * GitHub's job-start hook fails closed before any job step can run. A missing
+ * runner directory leaves the hook unarmed for the Gate E IMDSv2 token-PUT
+ * probe to reject during deployment; no live deployment proof is claimed here.
+ * Deploys are gated on Gate E plus the full guest-isolation red-team re-run on
+ * a live ephemeral worker; the always-on layers remain IMDSv2 hop limit 1, the
+ * permissions-boundary-capped instance role, the ephemeral one-job-one-VM
+ * lifecycle, and JIT config that keeps no registration token on the instance.
  *
  * Reliability semantics for the one-job-one-VM fleet: `job_retry` rescues a
  * job whose runner died between launch and pickup (spot reclaim, boot
@@ -509,7 +584,7 @@ export class CiFleetController extends pulumi.ComponentResource {
         runner_name_prefix: "beep-ci-",
         runner_os: "linux",
         runner_run_as: runnerRunAs,
-        userdata_post_install: runnerToolbeltPostInstall,
+        userdata_post_install: runnerPostInstall,
         runners_ebs_optimized: true,
         runners_lambda_zip: args.config.runnersLambdaZip,
         // Concurrency cap, not a budget: each ephemeral VM lives exactly one

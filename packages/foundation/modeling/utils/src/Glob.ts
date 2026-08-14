@@ -385,7 +385,8 @@ const scanDirectory = (
   ignoreMatchers: ReadonlyArray<PathMatcher>,
   options: ResolvedGlobOptions
 ): Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError> =>
-  readdirSync(absoluteDirectoryPath, { withFileTypes: true }).pipe(
+  optionOnNotFound(readdirSync(absoluteDirectoryPath, { withFileTypes: true })).pipe(
+    Effect.map(O.getOrElse(A.empty<NodeDirent>)),
     Effect.flatMap((entries) =>
       Effect.forEach(
         entries,

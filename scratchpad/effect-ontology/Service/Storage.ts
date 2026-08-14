@@ -1,3 +1,8 @@
+import type { PathSafetyError } from "@beep/file-processing/PathSafety";
+import {
+  resolvePathWithinCanonicalRoot,
+  writeFileWithinCanonicalRootAtomically,
+} from "@beep/file-processing/PathSafety";
 import { $ScratchpadId } from "@beep/identity";
 import { Storage } from "@google-cloud/storage";
 import { Context, Data, Effect, FileSystem, Layer, Path } from "effect";
@@ -7,10 +12,44 @@ import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import { SystemError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { ConfigService } from "./Config.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Storage");
+
+const localStorageAbsoluteKeyPattern = /^(?:[\\/]|[A-Za-z]:[\\/])/u;
+const localStorageDotSegmentPattern = /(?:^|[\\/])\.{1,2}(?:[\\/]|$)/u;
+
+const LocalStorageKey = S.NonEmptyString.check(
+  S.makeFilterGroup(
+    [
+      S.makeFilter((value: string) => !localStorageAbsoluteKeyPattern.test(value), {
+        identifier: $I`LocalStorageKeyRelativeCheck`,
+        title: "Local Storage Key Is Relative",
+        description: "A local storage key without a POSIX, UNC, or Windows drive root.",
+        message: "Local storage key must be relative to the configured storage root.",
+      }),
+      S.makeFilter((value: string) => !localStorageDotSegmentPattern.test(value), {
+        identifier: $I`LocalStorageKeyDotSegmentCheck`,
+        title: "Local Storage Key Has No Dot Segments",
+        description: "A local storage key without current-directory or parent-directory path segments.",
+        message: 'Local storage key must not contain "." or ".." path segments.',
+      }),
+    ],
+    {
+      identifier: $I`LocalStorageKeyChecks`,
+      title: "Local Storage Key",
+      description: "A non-empty, relative local storage key without dot path segments.",
+    }
+  )
+).pipe(
+  $I.annoteSchema("LocalStorageKey", {
+    description: "A non-empty, relative local storage key without current-directory or parent-directory segments.",
+  })
+);
+
+const isLocalStorageKey = S.is(LocalStorageKey);
 
 /**
  * Result of getWithGeneration - includes content and version for optimistic locking
@@ -284,24 +323,89 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
 
 // --- Local Filesystem Implementation ---
 
+/**
+ * Local filesystem security boundary.
+ *
+ * Caller-controlled keys are validated and resolved against a pinned canonical
+ * root before each adapter operation. Traversal, absolute keys, stable symlink
+ * escapes, and root or prefix replacement that resolves outside the pinned
+ * boundary fail closed.
+ *
+ * This portable path-based adapter does not defend against another principal
+ * renaming path components between resolution and use. Deployments must ensure
+ * that untrusted principals cannot mutate the configured root's parent entry or
+ * any directory beneath the root while an operation is running.
+ */
 const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageConfigValue) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const basePath = config.localPath ?? "./output";
   const globalPrefix = config.pathPrefix ?? "";
-  const resolvePath = (key: string) => (key.startsWith("/") ? key : path.join(basePath, globalPrefix, key));
-  const ensureDir = (filePath: string) => fs.makeDirectory(path.dirname(filePath), { recursive: true });
+  yield* fs.makeDirectory(basePath, { recursive: true });
+  const canonicalBasePath = yield* fs.realPath(basePath);
+  const prefixCandidate = P.isTruthy(globalPrefix) ? globalPrefix : ".";
+  const resolveStorageRoot = () =>
+    resolvePathWithinCanonicalRoot({
+      canonicalRoot: canonicalBasePath,
+      candidate: prefixCandidate,
+    });
+  const prefixedRoot = yield* resolveStorageRoot();
+  yield* fs.makeDirectory(prefixedRoot, { recursive: true });
+  const canonicalRoot = yield* resolveStorageRoot();
+  const resolveContainedPath = (candidate: string) =>
+    resolvePathWithinCanonicalRoot({
+      canonicalRoot,
+      candidate,
+    }).pipe(Effect.provideService(FileSystem.FileSystem, fs), Effect.provideService(Path.Path, path));
   const localKvError = (method: string, key: string) => (cause: unknown) =>
     new KeyValueStore.KeyValueStoreError({ method, key, message: String(cause), cause });
+  const localPathError = (method: string, key: string) => (cause: PathSafetyError | SystemError) =>
+    new SystemError({
+      _tag: "InvalidData",
+      module: "KeyValueStore",
+      method,
+      pathOrDescriptor: key,
+      description: cause.message,
+    });
+  const validateKey = Effect.fnUntraced(function* (key: string) {
+    if (path.isAbsolute(key) || !isLocalStorageKey(key)) {
+      return yield* new SystemError({
+        _tag: "InvalidData",
+        module: "KeyValueStore",
+        method: "resolvePath",
+        pathOrDescriptor: key,
+        description: 'Local storage keys must be non-empty, relative, and contain no "." or ".." path segments.',
+      });
+    }
+  });
+  const resolvePath = Effect.fnUntraced(function* (key: string) {
+    yield* validateKey(key);
+    return yield* resolveContainedPath(key);
+  });
+  const writePath = Effect.fnUntraced(function* (method: string, key: string, bytes: Uint8Array) {
+    yield* validateKey(key);
+    yield* writeFileWithinCanonicalRootAtomically({
+      canonicalRoot,
+      candidate: key,
+      bytes,
+    }).pipe(
+      Effect.provideService(FileSystem.FileSystem, fs),
+      Effect.provideService(Path.Path, path),
+      Effect.catchTag("PathSafetyError", (cause) => Effect.fail(localPathError(method, key)(cause)))
+    );
+  });
 
   const walkDirRecursive = Effect.fn("Storage.walkDirRecursive")(function* (
     currentDir: string,
     relativePath: string
-  ): Effect.fn.Return<Array<string>, PlatformError> {
+  ): Effect.fn.Return<Array<string>, PlatformError | SystemError> {
     const entries = yield* fs.readDirectory(currentDir).pipe(Effect.orElseSucceed(() => []));
     const results: Array<string> = [];
     for (const entry of entries) {
-      const fullPath = path.join(currentDir, entry);
+      const entryPath = path.join(currentDir, entry);
+      const fullPath = yield* resolveContainedPath(entryPath).pipe(
+        Effect.mapError(localPathError("walkDirRecursive", entryPath))
+      );
       const entryRelativePath = P.isTruthy(relativePath) ? `${relativePath}/${entry}` : entry;
       const stat = yield* fs.stat(fullPath).pipe(Effect.option);
       if (O.isNone(stat)) continue;
@@ -317,43 +421,46 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   const impl = KeyValueStore.make({
     get: (key) =>
       Effect.gen(function* () {
-        const resolved = resolvePath(key);
+        const resolved = yield* resolvePath(key);
         if (!(yield* fs.exists(resolved))) return undefined;
         return yield* fs.readFileString(resolved);
       }).pipe(Effect.mapError(localKvError("get", key))),
     getUint8Array: (key) =>
       Effect.gen(function* () {
-        const resolved = resolvePath(key);
+        const resolved = yield* resolvePath(key);
         if (!(yield* fs.exists(resolved))) return undefined;
         return yield* fs.readFile(resolved);
       }).pipe(Effect.mapError(localKvError("getUint8Array", key))),
     set: (key, value) =>
       Effect.gen(function* () {
-        const resolved = resolvePath(key);
-        yield* ensureDir(resolved);
-        if (typeof value === "string") {
-          yield* fs.writeFileString(resolved, value);
-        } else {
-          yield* fs.writeFile(resolved, value);
-        }
+        const bytes = P.isString(value) ? new TextEncoder().encode(value) : value;
+        yield* writePath("set", key, bytes);
       }).pipe(Effect.mapError(localKvError("set", key))),
     remove: (key) =>
       Effect.gen(function* () {
-        const resolved = resolvePath(key);
+        const resolved = yield* resolvePath(key);
         if (yield* fs.exists(resolved)) yield* fs.remove(resolved);
       }).pipe(Effect.mapError(localKvError("remove", key))),
     clear: Effect.gen(function* () {
-      const root = path.join(basePath, globalPrefix);
-      if (yield* fs.exists(root)) yield* fs.remove(root, { recursive: true });
-      yield* fs.makeDirectory(root, { recursive: true });
+      const checkedRoot = yield* resolveContainedPath(".");
+      if (!(yield* fs.exists(checkedRoot))) {
+        yield* fs.makeDirectory(checkedRoot, { recursive: true });
+        return;
+      }
+      const entries = yield* fs.readDirectory(checkedRoot);
+      for (const entry of entries) {
+        const entryPath = path.join(checkedRoot, entry);
+        const checkedEntry = yield* resolveContainedPath(entryPath);
+        yield* fs.remove(checkedEntry, { recursive: true });
+      }
     }).pipe(Effect.mapError(localKvError("clear", globalPrefix))),
     size: Effect.gen(function* () {
-      const root = path.join(basePath, globalPrefix);
-      if (!(yield* fs.exists(root))) return 0;
-      const files = yield* walkDirRecursive(root, "");
+      const checkedRoot = yield* resolveContainedPath(".");
+      if (!(yield* fs.exists(checkedRoot))) return 0;
+      const files = yield* walkDirRecursive(checkedRoot, "");
       let totalSize = 0;
       for (const file of files) {
-        const stat = yield* fs.stat(path.join(root, file));
+        const stat = yield* fs.stat(yield* resolvePath(file));
         totalSize += Number(stat.size);
       }
       return totalSize;
@@ -363,12 +470,14 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   return {
     ...impl,
     list: Effect.fn("Storage.local.list")(function* (prefix: string) {
-      const dir = path.join(basePath, globalPrefix, prefix);
+      const dir = yield* (P.isTruthy(prefix) ? resolvePath(prefix) : resolveContainedPath(".")).pipe(
+        Effect.mapError(localPathError("list", prefix))
+      );
       if (!(yield* fs.exists(dir))) return [];
       return yield* walkDirRecursive(dir, "");
     }),
     getWithGeneration: Effect.fn("Storage.local.getWithGeneration")(function* (key: string) {
-      const resolved = resolvePath(key);
+      const resolved = yield* resolvePath(key).pipe(Effect.mapError(localPathError("getWithGeneration", key)));
       if (!(yield* fs.exists(resolved))) return O.none();
       const content = yield* fs.readFileString(resolved);
       const stat = yield* fs.stat(resolved);
@@ -383,7 +492,7 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       value: string,
       expectedGeneration: string
     ) {
-      const resolved = resolvePath(key);
+      const resolved = yield* resolvePath(key).pipe(Effect.mapError(localPathError("setIfGenerationMatch", key)));
       if (yield* fs.exists(resolved)) {
         const stat = yield* fs.stat(resolved);
         const currentGeneration = O.match(stat.mtime, {
@@ -394,8 +503,7 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
           return yield* new GenerationMismatchError({ key, expectedGeneration, actualGeneration: currentGeneration });
         }
       }
-      yield* ensureDir(resolved);
-      yield* fs.writeFileString(resolved, value);
+      yield* writePath("setIfGenerationMatch", key, new TextEncoder().encode(value));
     }),
     getSignedUrl: (_key: string) => Effect.succeed(O.none()),
     supportsSignedUrls: false,

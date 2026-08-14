@@ -45,7 +45,7 @@ replacement, two-axis `asOf(validAt, knownAt)`, and restart/migration proof.
 | Gate verdict and current rejection gap | `packages/epistemic/domain/src/values/ClaimGate/ClaimGateResult.model.ts`; `packages/epistemic/use-cases/src/ClaimGate/ClaimGate.service.ts`; `packages/epistemic/use-cases/src/ClaimLifecycle/ClaimLifecycle.service.ts` | **REUSE / EXTEND**; rejected currently returns unchanged |
 | Shared lifecycle | `packages/shared/domain/src/values/ClaimLifecycle/ClaimLifecycle.model.ts` | **REUSE UNCHANGED** |
 | Provenance anchors | `packages/foundation/modeling/provenance/src/TextAnchor.ts` | **REUSE** |
-| PROV-O lineage vocabulary | `packages/foundation/capability/semantic-web/src/prov.ts`; `packages/foundation/capability/semantic-web/src/vocab/prov.ts` | **REUSE / EXTEND** |
+| PROV-O lineage vocabulary | `packages/foundation/modeling/rdf/src/Prov.ts`; `packages/foundation/modeling/rdf/src/Vocab/Prov.ts` | **REUSE / EXTEND** |
 | Package identity composers and epistemic IDs | `packages/foundation/modeling/identity/src/packages.ts`; `packages/shared/domain/src/identity/Epistemic` | **REUSE** |
 | Existing epistemic table pattern | `packages/epistemic/tables/src/entities/UsageRecord/UsageRecord.table.ts`; `packages/epistemic/tables/src/Schema.ts` | **REUSE pattern** |
 | Server composition / transaction owner | `packages/epistemic/server/src/Layer.ts` | **EXTEND** with server-owned repositories and transactions |

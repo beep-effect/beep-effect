@@ -64,6 +64,34 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string
   ["goals/speed-loop/ops/runner-burst/", "@beep/repo-cli"],
 ];
 
+// Seconds observed in the correctness-green Coverage Regression run for PR
+// #707 (run 31766791221, job 94664247028). These measured long poles account
+// for roughly 60% of the package test time and override the older profile
+// below; retaining the older map for the tail avoids replacing evidence with
+// estimates for packages whose live duration remained small.
+const COVERAGE_LIVE_TASK_WEIGHT_SECONDS: Readonly<Record<string, number>> = {
+  "@beep/db-admin": 88.16,
+  "@beep/dock": 66.52,
+  "@beep/documents-server": 69.82,
+  "@beep/editor": 57.06,
+  "@beep/epistemic-server": 47.49,
+  "@beep/epistemic-use-cases": 48.28,
+  "@beep/law-practice-server": 103.9,
+  "@beep/lexical-schema": 87.89,
+  "@beep/lint-rules": 42.2,
+  "@beep/nlp": 49.24,
+  "@beep/nlp-processing": 48.09,
+  "@beep/observability": 85.07,
+  "@beep/ontology-client": 54.64,
+  "@beep/professional-desktop": 279.09,
+  "@beep/repo-ai-metrics": 79.94,
+  "@beep/repo-cli": 720.62,
+  "@beep/repo-utils": 605.03,
+  "@beep/schema": 83.53,
+  "@beep/test-utils": 49.55,
+  "@beep/wink": 48.1,
+} as const;
+
 // Seconds observed in the accepted zero-cache Coverage Regression run for
 // PR #684 (run 31727475076, job 94539333691). Unlisted packages use the
 // conservative default below. The weights influence placement only; every
@@ -321,7 +349,8 @@ type MutableCoverageShard = {
 
 const coverageTaskWeightSeconds = (packageName: string): number =>
   pipe(
-    O.fromUndefinedOr(COVERAGE_TASK_WEIGHT_SECONDS[packageName]),
+    O.fromUndefinedOr(COVERAGE_LIVE_TASK_WEIGHT_SECONDS[packageName]),
+    O.orElse(() => O.fromUndefinedOr(COVERAGE_TASK_WEIGHT_SECONDS[packageName])),
     O.getOrElse(() => DEFAULT_COVERAGE_TASK_WEIGHT_SECONDS)
   );
 

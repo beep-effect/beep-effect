@@ -778,17 +778,17 @@ const withFirstSeen = (root: AiMetricsCanonicalRoot, firstSeenAtEpochMillis: num
     worktreeIdHash: root.worktreeIdHash,
   });
 
-const legacyRegistrySharesSaltedIdentity = (
+const legacyRegistryAllSaltedIdentitiesMatch = (
   existing: AiMetricsIdentityRegistry,
   instances: ReadonlyArray<AiMetricsSourceInstance>,
   root: AiMetricsCanonicalRoot
 ): boolean =>
-  A.some(
+  A.every(
     existing.roots,
     (existingRoot) =>
       Eq.equals(existingRoot.rootId, root.rootId) || Eq.equals(existingRoot.worktreeIdHash, root.worktreeIdHash)
-  ) ||
-  A.some(existing.sourceInstances, (existingInstance) =>
+  ) &&
+  A.every(existing.sourceInstances, (existingInstance) =>
     A.some(instances, (instance) => Eq.equals(existingInstance.homeDirHash, instance.homeDirHash))
   );
 
@@ -870,7 +870,7 @@ const mergeAndPersistRegistry = Effect.fnUntraced(function* (args: {
   const existingNamespaceMatches = pipe(
     existing.hashSaltNamespaceId,
     O.map(Eq.equals(hashSaltNamespaceId)),
-    O.getOrElse(() => legacyRegistrySharesSaltedIdentity(existing, instances, root))
+    O.getOrElse(() => legacyRegistryAllSaltedIdentitiesMatch(existing, instances, root))
   );
   if (existingPopulated && (!Eq.equals(existing.hashSaltStatus, hashSaltStatus) || !existingNamespaceMatches)) {
     return yield* AiMetricsIdentityRegistryError.make({
