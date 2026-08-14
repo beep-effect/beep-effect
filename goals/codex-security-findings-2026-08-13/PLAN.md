@@ -2,9 +2,10 @@
 
 ## Status
 
-Status: `active`. Validation and lane partitioning are complete. Six bounded
-remediations are locally complete, one
-finding was already fixed, and six CI trust-boundary findings remain blocked on
+Status: `active`. Validation and lane partitioning are complete for all 15
+findings. Three bounded remediations are merged, two are open and unmerged
+under hosted monitoring, three more have prepared unmerged fixes, one finding
+was already fixed, and six CI trust-boundary findings remain blocked on
 architecture and external deployment proof.
 
 ## Phases
@@ -12,14 +13,14 @@ architecture and external deployment proof.
 | Phase              | Status      | Goal                                                    | Exit criteria                                                                                                                                                  |
 | ------------------ | ----------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | P0 bootstrap       | complete    | Create feature branch and packet scaffold.              | Branch and launcher exist; packet JSON parses.                                                                                                                 |
-| P1 capture         | complete    | Capture all live findings via the signed-in CSV export. | 13 IDs reconcile: 6 High, 4 Medium, 1 Low, 2 Informational.                                                                                                    |
-| P2 validate        | complete    | Reproduce each report at current HEAD.                  | All 13 items have a strict verdict, disposition, rationale, and owner surface.                                                                                 |
-| P3 lane-partition  | complete    | Group shared root causes and disjoint paths.            | Nine lanes record the shared CI roots and disjoint bounded fixes.                                                                                              |
-| P4 remediate       | in-progress | Fix all real findings with focused checks.              | Six bounded fixes are locally complete; six CI findings await runner admission/workload-identity architecture and external evidence.                          |
-| P5 repo-proof      | in-progress | Run packet validation and Yeet repair/verify.           | All 42 items are fixed/pending commit; refreshed baseline and aggregate proof are green, and two final compatibility reviewers returned zero suggestions.        |
-| P6 publish         | in-progress | Publish one intentional PR through Yeet.                | Execute only the ordered CSF-002, CSF-007, CSF-010 publication scope; exact branch head pushed and PR opened.                                                   |
+| P1 capture | complete | Capture the full signed-in CSV snapshot. | 15 IDs reconcile: 6 High, 5 Medium, 1 Low, 3 Informational. |
+| P2 validate        | complete    | Validate captured reports at current HEAD.              | All 15 findings have verdicts, dispositions, rationales, and owners.                                                                                          |
+| P3 lane-partition  | complete    | Assign findings to disjoint root-cause lanes.           | L1-L11 preserve the original order and cover all 15 findings exactly once.                                                                                    |
+| P4 remediate       | in-progress | Fix all real findings with focused checks.              | Three fixes are merged, two are open/unmerged, three are prepared/unmerged, and six CI findings await architecture/external evidence.                         |
+| P5 repo-proof      | in-progress | Run packet validation and Yeet repair/verify.           | CSF-009/014 passed full Yeet 21/21; CSF-013 full Yeet is running; remaining exact-branch proof is still required.                                             |
+| P6 publish         | in-progress | Publish intentional PRs through Yeet.                   | PRs #681/#685/#688 are merged; #696/#697 are open and monitoring; CSF-012/013/015 remain prepared but unmerged.                                              |
 | P7 monitor         | pending     | Close hosted checks and actionable reviews.             | PR green and mergeable.                                                                                                                                        |
-| P8 merge-and-close | pending     | Merge and close captured findings.                      | PR merged; all 13 IDs resolved.                                                                                                                                |
+| P8 merge-and-close | pending | Merge and close captured findings. | Required PRs merged; all 15 IDs resolved. |
 | P9 close           | pending     | Record evidence, reflection, and lifecycle.             | Packet set to `completed-retained` in the same closeout PR state.                                                                                              |
 
 ## Execution Rules
@@ -30,9 +31,10 @@ architecture and external deployment proof.
 - Keep global files and ledgers serialized.
 - Use focused tests first, then package checks, then Yeet.
 - Never stage ignored raw evidence.
-- Publication is executing only in the ordered `CSF-002` then `CSF-007` then
-  `CSF-010` sequence; every other finding remains held without new user
-  authorization.
+- PRs #681, #685, and #688 are merged. PRs #696 and #697 are open, unmerged,
+  and under hosted monitoring; do not claim hosted green. CSF-012, CSF-013, and
+  CSF-015 remain prepared but unmerged. Keep the six runner findings held
+  without the required architecture and external proof.
 
 ## Active Architecture Stop
 
@@ -90,6 +92,25 @@ boundary.
 - Exact-candidate proof is refreshed after each quality-review repair round;
   the earlier Yeet result is not treated as proof for later edits.
 
+## Refreshed Finding Evidence
+
+- CSF-014 is confirmed and fixed on its prepared branch: pull-request-capable
+  lanes use local-only Turbo caching and receive no reusable Turbo credential;
+  the trusted push build retains remote read/write caching. Focused tests passed
+  2/2 alongside repo-cli check, lint, changeset parse, and diff proof. Full Yeet
+  verify passed 21/21 on the exact current base; the pushed PR #696 is open and
+  unmerged under hosted monitoring, with hosted green not yet claimed.
+- CSF-009 passed full Yeet verify 21/21 on the exact current base; the pushed PR
+  #697 is open and unmerged under hosted monitoring, with hosted green not yet
+  claimed.
+- CSF-013 has current main merged into its prepared branch and focused 7/7
+  proof. Full Yeet is running; no hosted or deployment result is claimed.
+- CSF-015 is confirmed and fixed on its prepared branch: canonical PathSafety
+  confinement and re-resolution cover every key/root operation, including
+  prefix-directory swaps and root/clear symlink cases. The effect-ontology
+  check, focused tests (6/6), Biome, diff, changeset, and frozen install passed.
+  Full experiment lint remains inherited red in unrelated files.
+
 ## Packet Verification
 
 ```sh
@@ -97,7 +118,7 @@ test "$(wc -m < goals/codex-security-findings-2026-08-13/GOAL.md)" -le 4000
 jq . goals/codex-security-findings-2026-08-13/ops/manifest.json
 jq . goals/codex-security-findings-2026-08-13/ops/triage.json
 bun -e 'import { decodeCodexTriageLedger } from "./packages/tooling/tool/cli/src/commands/Codex/Findings.triage.schemas.ts"; import { Effect } from "effect"; const input = await Bun.file("goals/codex-security-findings-2026-08-13/ops/triage.json").json(); await Effect.runPromise(decodeCodexTriageLedger(input))'
-test "$(find goals/codex-security-findings-2026-08-13/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = 13
+test "$(find goals/codex-security-findings-2026-08-13/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')" = 15
 bun run beep goals index --check
 bun run beep goals doctor
 bun run beep yeet repair

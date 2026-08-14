@@ -2,10 +2,11 @@
 
 Repo root: the current working directory. Do not assume an absolute path.
 
-Outcome: fix and close the 13 Codex Cloud security findings captured on
-2026-08-13 for `kriegcloud/beep-effect`: 6 High, 4 Medium, 1 Low, 2 Informational.
-Ship one Yeet-driven PR to mergeable, merge it, then resolve the exact captured
-Codex IDs until no packet-applicable finding remains open.
+Outcome: fix and close the 15 Codex Cloud security findings captured on
+2026-08-13 for `kriegcloud/beep-effect`: 6 High, 5 Medium, 1 Low, 3 Informational.
+Ship the remaining fixes through Yeet-driven mergeable PRs, merge them, then
+resolve the exact captured Codex IDs until no packet-applicable finding remains
+open.
 
 Read first:
 
@@ -28,19 +29,28 @@ Scope:
 - Out: accepted risk, raw evidence in git, Codex Create PR/patch buttons,
   unrelated cleanup, weakened quality/security gates.
 
-Current position: P2/P3 are complete. CSF-002, CSF-007, CSF-009, CSF-010,
-CSF-012, and CSF-013 are locally complete. CSF-011 was already fixed.
-The quality ledger contains 42 reviewer and gate items, all fixed with the
-commit pending. Post-merge baseline regeneration and the 15-lane aggregate
-audit are green. The final refresh used `origin/main` `642331b86c` and merge
-HEAD `8337a21710`; two compatibility reviewers returned literal
-`0 changes suggested`. Further review rounds are closed, and narrow publication
-is executing for `CSF-002` then `CSF-007` then `CSF-010`.
+Current position: P2/P3 are complete for all 15 findings. PRs #681 (`CSF-002`),
+#685 (`CSF-007`), and #688 (`CSF-010`) are merged. CSF-009 PR #697 and CSF-014
+PR #696 passed full Yeet verify 21/21, are pushed, and are open/unmerged under
+hosted monitoring; hosted green is not yet claimed. CSF-012, CSF-013, and
+CSF-015 have prepared fixes but are not merged. CSF-013 has focused 7/7 proof
+after merging current main into its branch, and full Yeet is running. CSF-011
+was already fixed. The prior 13-finding quality ledger contains 42 repaired reviewer and
+gate items; focused proof for CSF-014 and CSF-015 is recorded in their finding
+records. Post-merge baseline regeneration and the 15-lane aggregate audit are
+green. The final refresh used `origin/main` `642331b86c` and merge HEAD
+`8337a21710`; two compatibility reviewers returned literal `0 changes
+suggested`.
 CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008 remain confirmed
 `remediate` items blocked on runner admission/workload-identity architecture
 and external GitHub organization runner-group/AWS deployment proof.
 
 Rules:
+
+<!-- codex-findings-refresh:start -->
+Refresh reconciliation complete: all 15 records are validated and lane-assigned;
+the original 13 records retain their prior triage and proof.
+<!-- codex-findings-refresh:end -->
 
 1. Default every item to `remediate`; use `already-fixed` or `false-positive`
    only with strict current-HEAD proof in the finding and triage ledger.
@@ -51,12 +61,12 @@ Rules:
 4. Keep raw report bodies ignored under `raw/`. Tracked records may contain only
    sanitized metadata, summaries, decisions, changed files, and proof.
 5. Run focused tests, affected package checks, packet validation, then Yeet
-   repair/verify. Publish one intentional PR and monitor through mergeable.
-6. After merge, close only the exact 13-ID allowlist in Codex as Already fixed
+   repair/verify. Publish intentional narrow PRs and monitor through mergeable.
+6. After merge, close only the exact 15-ID allowlist in Codex as Already fixed
    (or the evidence-backed invalid reason) and verify zero packet-open findings.
-7. Execute publication only for the ordered `CSF-002` then `CSF-007` then
-   `CSF-010` sequence; do not publish any other finding without new
-   authorization.
+7. Treat PRs #681, #685, and #688 as merged; treat PRs #696 and #697 as open,
+   unmerged, and under hosted monitoring. Do not claim hosted green or merge
+   for them, and do not publish held findings without new authorization.
 
 Stop if the signed-in CSV export is unavailable, tracked evidence contains secret
 or raw-path material, a fix needs an out-of-packet architecture decision, or the

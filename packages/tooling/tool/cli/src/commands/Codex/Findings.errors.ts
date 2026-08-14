@@ -47,6 +47,12 @@ export const CodexIngestFailureReason = LiteralKit([
   "csv-duplicate-finding",
   "capture-date-unknown",
   "ledger-unreadable",
+  "mode-conflict",
+  "packet-missing",
+  "refresh-identity-drift",
+  "refresh-metadata-drift",
+  "refresh-packet-unreadable",
+  "refresh-removal",
   "auth-expired",
   "short-read",
   "inbox-ambiguous",
@@ -82,6 +88,7 @@ export type CodexIngestFailureReason = typeof CodexIngestFailureReason.Type;
 export const CodexPacketWriteFailureReason = LiteralKit([
   "packet-exists",
   "path-escape",
+  "packet-changed",
   "staging-failed",
   "commit-failed",
 ]).pipe(

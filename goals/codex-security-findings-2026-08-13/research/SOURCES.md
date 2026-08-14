@@ -15,7 +15,7 @@
 - Codex Cloud Security UI:
   `https://chatgpt.com/codex/cloud/security/findings/`, captured on 2026-08-13
   through the operator's signed-in Chrome session.
-- The UI's signed-in `Export findings as CSV` control supplied the 13-record
+- The UI's signed-in `Export findings as CSV` control supplied the 15-record full-snapshot
   batch. `beep codex findings ingest` normalized it; the export itself was never
   copied into the repository.
 

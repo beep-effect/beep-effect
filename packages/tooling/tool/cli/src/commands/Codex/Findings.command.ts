@@ -23,6 +23,12 @@ import { decodeCodexFindingsCsv } from "./Findings.csv.ts";
 import { CodexFindingsIngestError, CodexFindingsRedactionError } from "./Findings.errors.ts";
 import { defaultPacketSlug, planPacket, priorIdsOfEntries } from "./Findings.normalize.ts";
 import { renderPacketDocuments } from "./Findings.packet.ts";
+import {
+  loadCodexRefreshLedgerSource,
+  priorIdsOfRefreshSource,
+  refreshCodexFindingsPacket,
+  validateCodexFindingsIngestModes,
+} from "./Findings.refresh.ts";
 import { describeSensitiveHits, scanSensitiveUnknown } from "./Findings.scan.ts";
 import { decodeCodexTriageLedger } from "./Findings.triage.schemas.ts";
 import { writePacket } from "./Findings.write.ts";
@@ -113,10 +119,13 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
   readonly date: O.Option<string>;
   readonly branch: O.Option<string>;
   readonly expectedCount: O.Option<number>;
+  readonly refresh: boolean;
   readonly force: boolean;
   readonly dryRun: boolean;
   readonly json: boolean;
 }) {
+  yield* validateCodexFindingsIngestModes({ refresh: options.refresh, force: options.force });
+
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(
@@ -186,11 +195,19 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
   // Must match the slug planPacket will derive, or prior identifiers would be
   // read from the wrong packet; both sides go through the same helper.
   const provisionalSlug = O.getOrElse(options.slug, () => defaultPacketSlug(capturedAt));
-  const priorIds = yield* readPriorIds(path.join(repoRoot, "goals", provisionalSlug));
+  const refreshSource = options.refresh
+    ? O.some(yield* loadCodexRefreshLedgerSource({ repoRoot, slug: provisionalSlug }))
+    : O.none();
+  const priorIds = O.isSome(refreshSource)
+    ? priorIdsOfRefreshSource(refreshSource.value)
+    : yield* readPriorIds(path.join(repoRoot, "goals", provisionalSlug));
+  const plannedBranch = O.getOrElse(options.branch, () =>
+    O.isSome(refreshSource) ? refreshSource.value.ledger.meta.branch : undefined
+  );
 
   const plan = yield* planPacket(payload, {
     slug: O.getOrUndefined(options.slug),
-    branch: O.getOrUndefined(options.branch),
+    branch: plannedBranch,
     capturedAt,
     expectedCount: O.getOrUndefined(options.expectedCount),
     priorIds,
@@ -206,19 +223,33 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
     rawPayloadJson: `${encodePayload(payload)}\n`,
   });
 
-  const outcome = yield* writePacket({
-    repoRoot,
-    slug: plan.slug,
-    documents,
-    dryRun: options.dryRun,
-    force: options.force,
-  });
+  const writeResult = O.isSome(refreshSource)
+    ? yield* refreshCodexFindingsPacket({
+        repoRoot,
+        slug: plan.slug,
+        source: refreshSource.value,
+        plan,
+        documents,
+        dryRun: options.dryRun,
+      }).pipe(Effect.map((outcome) => ({ outcome, reconciliation: O.some(outcome.reconciliation) })))
+    : {
+        outcome: yield* writePacket({
+          repoRoot,
+          slug: plan.slug,
+          documents,
+          dryRun: options.dryRun,
+          force: options.force,
+        }),
+        reconciliation: O.none(),
+      };
+  const { outcome, reconciliation } = writeResult;
 
   // The packet is already promoted, so a failed index regeneration must not
   // fail the ingest — but it must not be silent either, or `goals/INDEX.md`
   // goes stale while the run reports success.
   const indexRegenerated =
     options.dryRun ||
+    (O.isSome(reconciliation) && A.isReadonlyArrayEmpty(reconciliation.value.appendedIds)) ||
     (yield* writePortfolioIndex().pipe(
       Effect.as(true),
       Effect.orElseSucceed(() => false)
@@ -244,6 +275,7 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
       severityCounts: plan.severityCounts,
       files: A.length(outcome.written),
       indexRegenerated,
+      ...(O.isSome(reconciliation) ? { refresh: reconciliation.value } : {}),
     },
     [
       `✓ export   ${A.length(plan.records)} findings   ${severities}`,
@@ -254,8 +286,17 @@ export const runCodexFindingsIngest = Effect.fnUntraced(function* (options: {
             `! raw      ${A.length(outcome.reportedEvidence)} report body/bodies carry sensitive-shaped text (ignored, untracked): ${A.join(outcome.reportedEvidence, ", ")}`,
           ]),
       outcome.committed
-        ? `✓ packet   ${outcome.packetPath}  (${A.length(outcome.written)} files)`
-        : `• dry run  ${outcome.packetPath} not written  (${A.length(outcome.written)} files planned)`,
+        ? `✓ packet   ${outcome.packetPath}  (${A.length(outcome.written)} files updated)`
+        : options.dryRun
+          ? `• dry run  ${outcome.packetPath} not written  (${A.length(outcome.written)} files planned)`
+          : O.isSome(reconciliation) && reconciliation.value.status === "no-new-findings"
+            ? `✓ refresh  ${outcome.packetPath} already reconciled; no new findings`
+            : `• packet  ${outcome.packetPath} unchanged`,
+      ...(O.isSome(reconciliation) && A.isReadonlyArrayNonEmpty(reconciliation.value.appendedIds)
+        ? [
+            `✓ refresh  preserved ${reconciliation.value.priorCount} prior records; appended ${A.join(reconciliation.value.appendedIds, ", ")}`,
+          ]
+        : A.empty<string>()),
       ...(indexRegenerated
         ? A.empty<string>()
         : ["! index    goals/INDEX.md could not be regenerated; run `beep goals index`"]),
@@ -281,6 +322,9 @@ const expectedCountFlag = Flag.integer("expected-count").pipe(
   Flag.optional,
   Flag.withDescription("Finding total the dashboard reported, used to fail closed on a partial export")
 );
+const refreshFlag = Flag.boolean("refresh").pipe(
+  Flag.withDescription("Append unseen findings to an existing packet while preserving prior triage and CSF prose")
+);
 
 const findingsIngestCommand = Command.make(
   "ingest",
@@ -290,6 +334,7 @@ const findingsIngestCommand = Command.make(
     date: dateFlag,
     branch: branchFlag,
     expectedCount: expectedCountFlag,
+    refresh: refreshFlag,
     force: forceFlag("Replace an existing packet, discarding its hand-written triage prose"),
     dryRun: dryRunFlag("Report the packet that would be written without touching the filesystem"),
     json: jsonFlag,
@@ -301,12 +346,13 @@ const findingsIngestCommand = Command.make(
       date: flags.date,
       branch: flags.branch,
       expectedCount: flags.expectedCount,
+      refresh: flags.refresh,
       force: flags.force,
       dryRun: flags.dryRun,
       json: flags.json,
     });
   })
-).pipe(Command.withDescription("Bootstrap a goal packet from a signed-in Codex findings CSV export"));
+).pipe(Command.withDescription("Capture or refresh a goal packet from a signed-in Codex findings CSV export"));
 
 /**
  * `beep codex findings` — capture-to-packet commands.
@@ -326,6 +372,7 @@ export const findingsCommand = Command.make("findings", {}, () =>
   printLines([
     "Codex findings commands:",
     "- bun run beep codex findings ingest --from <export.csv>",
+    "- bun run beep codex findings ingest --refresh --from <full-export.csv>",
     "",
     "Export the CSV from the signed-in findings view first:",
     `  ${SOURCE_URL}`,

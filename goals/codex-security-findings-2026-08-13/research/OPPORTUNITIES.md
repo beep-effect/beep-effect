@@ -195,3 +195,55 @@
 - Prevention: update the scoped docgen planner to emit the current Turbo flag
   spelling, and keep a contract test that executes the generated command
   against the repository-pinned Turbo version.
+
+## 2026-08-13 — Yeet install preflight exhausted the shared temp filesystem
+
+- Work: rerun exact-head Yeet verification for the isolated semantic-delta
+  remediation after attributing an unrelated unit-test failure.
+- Evidence: the detached clean-HEAD install stopped with `ENOSPC` while copying
+  a generated dependency artifact. A subsequent external temp cleanup removed
+  several disposable worktree directories, although their committed branches
+  remained recoverable from repository metadata.
+- Prevention: check required free space before creating the detached install
+  worktree, place large verification worktrees on the repository filesystem
+  when `/tmp` is capacity-constrained, and never clean active uncommitted temp
+  worktrees without first preserving their scoped diffs.
+
+## 2026-08-13 — Review threads arrived after the first hosted closeout snapshot
+
+- Work: close every review comment on the semantic-delta security pull request
+  after pushing the first requested repair.
+- Evidence: the first hosted snapshot contained one OpenClaw thread, which was
+  repaired, replied to, and resolved. A later paginated GraphQL refresh found
+  three newer Codex threads, including two P1 findings, even though the flat
+  check summary already showed the automated review checks as successful.
+- Prevention: after every review-fix push, repeat the paginated GraphQL thread
+  inventory after automated reviewers finish, then run it again immediately
+  before declaring merge readiness; never infer zero comments from check
+  conclusions or a prior thread snapshot.
+
+## 2026-08-13 — Focused semantic-delta proof omitted the Fallow complexity gate
+
+- Work: prove the review-thread repairs for the semantic-delta security pull
+  request before pushing its refreshed head.
+- Evidence: 64 focused tests plus package check, lint, ESLint, Biome, and an
+  independent zero-finding review were green, but full Yeet stopped in its
+  pre-push wave because Fallow attributed five complexity findings to the new
+  non-executing command-surface parser. Security, SAST, Nix, and the remaining
+  preflight checks passed; heavy lanes correctly did not start.
+- Prevention: when a review repair introduces a parser or evaluator, run the
+  changed-scope Fallow audit during the focused loop and decompose reported
+  hotspots before the authoritative Yeet proof.
+
+## 2026-08-13 — Package checks omitted Effect diagnostics in changed tests
+
+- Work: rerun full Yeet after simplifying the semantic-delta provenance
+  parser and clearing its Fallow findings.
+- Evidence: the focused Knowledge tests, repo-cli check, lint, ESLint, Biome,
+  and Fallow audit passed, then the global test TypeScript lane rejected two
+  native JSON fixture encoders with `preferSchemaOverJson`. Build and all
+  preceding full-proof lanes were green; later test and documentation lanes
+  did not start after the hard check failure.
+- Prevention: include `bun run beep quality test-tsgo` in focused proof when a
+  repair changes package test files, because the owning package check does not
+  cover every repository Effect diagnostic applied to tests.

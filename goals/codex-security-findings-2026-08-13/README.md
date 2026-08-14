@@ -9,8 +9,8 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 ## Mission
 
 Capture, validate, remediate, and close every open Codex Cloud security finding
-for `kriegcloud/beep-effect` in the 13-finding batch captured on 2026-08-13.
-Ship the fixes through one Yeet-driven PR, close the exact captured findings, and
+for `kriegcloud/beep-effect` in the 15-finding batch captured on 2026-08-13.
+Ship the fixes through Yeet-driven PRs, close the exact captured findings, and
 leave no packet-applicable finding open.
 
 ## Launch
@@ -33,30 +33,37 @@ leave no packet-applicable finding open.
 
 ## Current Phase
 
-`P4 remediate` / `P5 verify and publish` - all 13 findings are validated and
-partitioned. Six bounded remediations are locally complete, and CSF-011 was
-already fixed on current HEAD. The
-quality ledger now contains 42 reviewer and gate
-items, all repaired with the fix commit pending. The post-merge aggregate audit
-and refreshed coverage baseline are green, and two final compatibility
-reviewers returned literal `0 changes suggested`. Further review rounds are
-closed by user direction, and publication is executing for the narrow
-`CSF-002` then `CSF-007` then `CSF-010` sequence. CSF-001, CSF-003, CSF-004, CSF-005,
-CSF-006, and CSF-008 remain confirmed and blocked on runner
-admission/workload-identity architecture and external
-GitHub organization runner-group/AWS deployment proof.
+<!-- codex-findings-refresh:start -->
+Refresh reconciliation complete: all 15 records are validated and lane-assigned;
+the original 13 records retain their prior triage and proof.
+<!-- codex-findings-refresh:end -->
+
+`P4 remediate` / `P5 repo-proof` / `P6 publish` - all 15 findings are validated
+and partitioned. PRs #681 (`CSF-002`), #685 (`CSF-007`), and #688 (`CSF-010`)
+are merged. CSF-009 and CSF-014 passed full Yeet verify 21/21 on their exact
+current bases and are pushed as open, unmerged PRs #697 and #696 under hosted
+monitoring; hosted green is not yet claimed. CSF-012, CSF-013, and CSF-015 have
+prepared fixes but are not merged. CSF-011 was already fixed on current HEAD. The prior
+13-finding quality ledger contains 42 repaired reviewer and gate items; focused
+proof for the two refreshed findings is recorded in their CSF records.
+CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008 remain confirmed and
+held on runner admission/workload-identity architecture and external GitHub
+organization runner-group/AWS deployment proof.
 
 The CI-fleet P2/P3 implementation landed through #666, #673, and #674, but the
 six runner-admission findings still lack publishable external organization and
-deployment evidence. CSF-009 and CSF-012 gaps are closed but remain held unless
-the user later expands the publication sequence. CSF-013 is source-fixed and
-mock-proven only; this packet does not claim a Pulumi deployment.
+deployment evidence. CSF-009 and CSF-014 are open and unmerged under hosted
+monitoring. CSF-012, CSF-013, and CSF-015 remain prepared but unmerged. The
+CSF-013 branch has current main merged and focused 7/7 proof; full Yeet is
+running. It remains source/mock proof only, and this packet does not claim a
+Pulumi deployment.
 
 ## Findings at a glance
 
-6 High, 4 Medium, 1 Low, 2 Informational findings: 12 `remediate` and 1
-`already-fixed`. Six remediation findings are locally complete and six are
-architecture/deployment-blocked.
+6 High, 5 Medium, 1 Low, 3 Informational findings: 14 `remediate` and 1
+`already-fixed`. Three remediation findings are merged, two are open and
+unmerged under hosted monitoring, three more have prepared unmerged fixes, and
+six are architecture/deployment-blocked.
 Accepted risk is unavailable.
 
 ## Local proof status
@@ -97,10 +104,16 @@ The parsed changeset contains patch entries for `@beep/ai-sync` and
 `@beep/infra`. `@beep/repo-cli` is intentionally omitted because it is ignored
 by the repository Changesets configuration.
 
+The CSF-014 and CSF-015 branches each carry a narrow no-release changeset.
+CSF-014 passed full Yeet verify 21/21, was pushed, and is open as unmerged PR
+#696 under hosted monitoring. CSF-015 focused proof is green, while its
+experiment-wide lint command remains inherited red in unrelated files.
+
 ## Notes
 
 - Raw report bodies remain untracked under `raw/`; tracked files are sanitized.
 - Do not use Codex's Create PR or patch-apply controls.
-- Publication is executing only for `CSF-002` then `CSF-007` then `CSF-010`;
-  every other finding remains held without new user authorization.
+- PRs #681, #685, and #688 are merged. CSF-009 PR #697 and CSF-014 PR #696 are
+  open, unmerged, and under hosted monitoring. CSF-012, CSF-013, and CSF-015
+  remain prepared but unmerged; the six runner findings remain held.
 - Browser closure is post-merge and must match the captured Codex ID allowlist.

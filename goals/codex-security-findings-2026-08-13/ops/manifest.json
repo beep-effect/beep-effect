@@ -10,19 +10,19 @@
   },
   "packetPath": "goals/codex-security-findings-2026-08-13",
   "lifecycle": "active",
-  "statusNote": "P4 and P5 remain in progress: all 42 quality items are fixed pending commit, the refreshed schema-v2 baseline and 15-lane aggregate audit are green, and two final compatibility reviewers returned literal 0 changes suggested. Further review rounds are closed by user direction. P6 publication is executing only for CSF-002 then CSF-007 then CSF-010; six runner findings lack external evidence and CSF-013 has no deployment proof.",
+  "statusNote": "P2 and P3 are complete for all 15 findings. P4, P5, and P6 remain in progress: PRs #681 (CSF-002), #685 (CSF-007), and #688 (CSF-010) are merged. CSF-009 PR #697 and CSF-014 PR #696 passed full Yeet verify 21/21 and are open/unmerged under hosted monitoring; hosted green is not yet claimed. CSF-012, CSF-013, and CSF-015 are prepared but unmerged. CSF-013 has focused 7/7 proof after merging current main into its branch and full Yeet is running; no deployment proof is claimed. Six runner findings lack external evidence.",
   "blockedBy": [
     "Runner admission and workload-identity architecture for CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008.",
-    "External GitHub organization runner-group/AWS deployment proof must pass before runner-finding closeout; publication outside the ordered CSF-002, CSF-007, CSF-010 sequence requires new user authorization."
+    "External GitHub organization runner-group/AWS deployment proof must pass before runner-finding closeout; prepared but unmerged findings require their remaining publication proof."
   ],
-  "mission": "Remediate and close the 13 Codex Cloud security findings captured on 2026-08-13.",
+  "mission": "Remediate and close the 15 Codex Cloud security findings captured on 2026-08-13.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Not achieved until the work ships as a Yeet-driven mergeable PR, is merged, and the exact 13 Codex findings are resolved with zero packet-applicable open findings.",
+    "statement": "Not achieved until the remaining work ships through Yeet-driven mergeable PRs, those PRs are merged, and the exact 15 Codex findings are resolved with zero packet-applicable open findings.",
     "grandfathered": false
   },
   "branch": "codex/security-findings-2026-08-13",
@@ -60,23 +60,23 @@
     "rawCaptureTracked": false
   },
   "catalog": {
-    "expectedCount": 13,
-    "capturedCount": 13,
+    "expectedCount": 15,
+    "capturedCount": 15,
     "severityCountsKnown": true,
     "severityCounts": {
       "High": 6,
-      "Medium": 4,
+      "Medium": 5,
       "Low": 1,
-      "Informational": 2
+      "Informational": 3
     },
     "dispositionCounts": {
-      "remediate": 12,
+      "remediate": 14,
       "already-fixed": 1,
       "false-positive": 0,
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "P2 and P3 are complete. All 42 quality items are fixed pending commit; refreshed baseline proof, the 15-lane aggregate audit, and final zero-suggestion compatibility review are green. Publication is executing only for CSF-002, CSF-007, and CSF-010. CSF-009/012 remain held, CSF-013 has no Pulumi deployment claim, and six CI trust-boundary findings still lack external evidence."
+    "note": "P2 and P3 are complete for all 15 findings: 14 remediate and 1 already-fixed. PRs #681, #685, and #688 are merged. CSF-009 PR #697 and CSF-014 PR #696 are open/unmerged under hosted monitoring after full Yeet verify 21/21; hosted green is not yet claimed. CSF-012, CSF-013, and CSF-015 remain prepared but unmerged. Six CI trust-boundary findings remain held; CSF-013 has focused 7/7 source/mock proof and full Yeet running, with no Pulumi deployment claim."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -155,7 +155,7 @@
     "jq . goals/codex-security-findings-2026-08-13/ops/manifest.json",
     "jq . goals/codex-security-findings-2026-08-13/ops/triage.json",
     "bun -e 'import { decodeCodexTriageLedger } from \"./packages/tooling/tool/cli/src/commands/Codex/Findings.triage.schemas.ts\"; import { Effect } from \"effect\"; const input = await Bun.file(\"goals/codex-security-findings-2026-08-13/ops/triage.json\").json(); await Effect.runPromise(decodeCodexTriageLedger(input))'",
-    "test \"$(find goals/codex-security-findings-2026-08-13/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 13",
+    "test \"$(find goals/codex-security-findings-2026-08-13/findings -maxdepth 1 -name 'CSF-*.md' | wc -l | tr -d ' ')\" = 15",
     "bun run beep goals index --check",
     "bun run beep goals doctor",
     "bun run beep yeet repair",
