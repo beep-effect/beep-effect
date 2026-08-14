@@ -144,6 +144,7 @@ export class BakeConfig extends S.Class<BakeConfig>($I`BakeConfig`)(
  * const report = BakeReport.make({
  *   amiId: "ami-0123456789abcdef0",
  *   lockfileSha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ *   bunArchiveSha256: Sha256Hex.make("951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f"),
  *   bunVersion: "1.2.20",
  *   baseAmiId: "ami-0fedcba9876543210",
  *   priorPin: O.none(),
@@ -161,6 +162,7 @@ export class BakeReport extends S.Class<BakeReport>($I`BakeReport`)(
   {
     amiId: S.NonEmptyString,
     lockfileSha256: Sha256Hex,
+    bunArchiveSha256: Sha256Hex,
     bunVersion: S.NonEmptyString,
     baseAmiId: S.NonEmptyString,
     priorPin: S.OptionFromOptionalKey(S.NonEmptyString),
@@ -223,6 +225,7 @@ export class BakePlanStep extends S.Class<BakePlanStep>($I`BakePlanStep`)(
  *
  * const plan = BakePlan.make({
  *   lockfileSha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ *   bunArchiveSha256: Sha256Hex.make("951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f"),
  *   bunVersion: "1.2.20",
  *   gitRevision: "0123456789abcdef0123456789abcdef01234567",
  *   requiredFlags: ["--region"],
@@ -238,6 +241,7 @@ export class BakePlanStep extends S.Class<BakePlanStep>($I`BakePlanStep`)(
 export class BakePlan extends S.Class<BakePlan>($I`BakePlan`)(
   {
     lockfileSha256: Sha256Hex,
+    bunArchiveSha256: Sha256Hex,
     bunVersion: S.NonEmptyString,
     gitRevision: S.NonEmptyString,
     requiredFlags: S.Array(S.NonEmptyString),
@@ -278,9 +282,12 @@ export const BakePlanJson = JsonStringCodec(BakePlan);
  *   amiId: "ami-0123456789abcdef0",
  *   expectedLockfileSha256: digest,
  *   actualLockfileSha256: O.some(digest),
+ *   expectedBunArchiveSha256: digest,
+ *   actualBunArchiveSha256: O.some(digest),
  *   expectedBunVersion: "1.2.20",
  *   actualBunVersion: O.some("1.2.20"),
  *   lockfileMatches: true,
+ *   bunArchiveMatches: true,
  *   bunVersionMatches: true,
  *   fresh: true,
  * })
@@ -295,13 +302,18 @@ export class BakeCheckReport extends S.Class<BakeCheckReport>($I`BakeCheckReport
     amiId: S.NonEmptyString,
     expectedLockfileSha256: Sha256Hex,
     actualLockfileSha256: S.OptionFromOptionalKey(Sha256Hex),
+    expectedBunArchiveSha256: Sha256Hex,
+    actualBunArchiveSha256: S.OptionFromOptionalKey(Sha256Hex),
     expectedBunVersion: S.NonEmptyString,
     actualBunVersion: S.OptionFromOptionalKey(S.NonEmptyString),
     lockfileMatches: S.Boolean,
+    bunArchiveMatches: S.Boolean,
     bunVersionMatches: S.Boolean,
     fresh: S.Boolean,
   },
-  $I.annote("BakeCheckReport", { description: "Dual-key freshness result for the controller's live runner AMI pin." })
+  $I.annote("BakeCheckReport", {
+    description: "Lockfile, Bun release archive, and Bun version freshness result for the live runner AMI pin.",
+  })
 ) {}
 
 /**

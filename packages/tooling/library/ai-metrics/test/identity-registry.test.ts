@@ -342,6 +342,38 @@ describe("@beep/repo-ai-metrics identity registry", () => {
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
 
+  it.effect("refuses a legacy registry when only one of its salted identities matches", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const pathApi = yield* Path.Path;
+        const clonePath = pathApi.join(tmpDir, "clone");
+        const otherClonePath = pathApi.join(tmpDir, "other-clone");
+        const dataRoot = pathApi.join(tmpDir, "store");
+        const homeDir = pathApi.join(tmpDir, "home");
+        const otherHomeDir = pathApi.join(tmpDir, "other-home");
+        const registryPath = pathApi.join(dataRoot, "identity/registry.json");
+        yield* makeClone(clonePath);
+        yield* makeClone(otherClonePath, { originUrl: "git@github.com:beep-effect/other.git" });
+
+        const current = yield* upsertRoot(dataRoot, clonePath, homeDir);
+        const unrelated = yield* upsertRoot(pathApi.join(tmpDir, "other-store"), otherClonePath, otherHomeDir);
+        const legacy = AiMetricsIdentityRegistry.make({
+          generatedAtEpochMillis: current.generatedAtEpochMillis,
+          hashSaltStatus: current.hashSaltStatus,
+          registryVersion: current.registryVersion,
+          roots: A.appendAll(current.roots, unrelated.roots),
+          sourceInstances: A.appendAll(current.sourceInstances, unrelated.sourceInstances),
+        });
+        yield* writeText(registryPath, yield* identityRegistryToJson(legacy));
+
+        const failure = yield* upsertRoot(dataRoot, clonePath, homeDir).pipe(Effect.flip);
+
+        expect(failure._tag).toBe("AiMetricsIdentityRegistryError");
+        expect(failure.message).toContain("hash-salt namespaces");
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
   it.effect("refuses a legacy registry when only the salt-independent repository identity matches", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {

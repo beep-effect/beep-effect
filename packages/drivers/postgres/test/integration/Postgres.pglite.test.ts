@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import {
+  MigrationBundleLegacyNameSet,
   makeDrizzle,
   makeDrizzleLayer,
   migrate,
@@ -13,11 +14,13 @@ import { makePgliteIntegrationGate, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect, layer } from "@effect/vitest";
+import { formatToMillis } from "drizzle-orm/migrator.utils";
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { Effect, Layer, pipe } from "effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Str from "effect/String";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import * as Statement from "effect/unstable/sql/Statement";
 
@@ -249,6 +252,182 @@ if (!shouldRunPgliteIntegration) {
           }).pipe(Effect.flip);
 
           expect(invalidNameError._tag).toBe("PostgresError");
+        }),
+        120_000
+      );
+
+      it.effect(
+        "skips a re-baseline only after the complete legacy journal is present",
+        Effect.fnUntraced(function* () {
+          const info = yield* TestDatabaseInfo;
+          const db = yield* makeDrizzle();
+          const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+          const migrationsSchema = pipe(
+            info.schema,
+            O.getOrElse(() => "drizzle")
+          );
+          const firstLegacy = {
+            name: "20260101000000_legacy_first",
+            sql: "CREATE TABLE legacy_rebaseline_probe (id integer PRIMARY KEY);\n",
+          };
+          const secondLegacy = {
+            name: "20260101000001_legacy_second",
+            sql: "ALTER TABLE legacy_rebaseline_probe ADD COLUMN prior_value text;\n",
+          };
+          const canonicalBaseline = {
+            name: "20260101000002_canonical_baseline",
+            sql: "CREATE TABLE legacy_rebaseline_probe (id integer PRIMARY KEY, prior_value text);\n",
+          };
+          const compatibility = MigrationBundleLegacyNameSet.make({
+            canonicalName: canonicalBaseline.name,
+            legacyNames: [firstLegacy.name, secondLegacy.name],
+          });
+
+          yield* migrateBundle(db, { migrations: [firstLegacy, secondLegacy], migrationsSchema });
+          yield* migrateBundle(db, {
+            legacyNameSets: [compatibility],
+            migrations: [
+              canonicalBaseline,
+              {
+                name: "20260101000003_after_rebaseline",
+                sql: "ALTER TABLE legacy_rebaseline_probe ADD COLUMN current_value text;\n",
+              },
+            ],
+            migrationsSchema,
+          });
+
+          const columns = yield* sql<{ readonly column_name: string }>`
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'legacy_rebaseline_probe'
+            ORDER BY ordinal_position
+          `;
+          expect(A.map(columns, (row) => row.column_name)).toEqual(["id", "prior_value", "current_value"]);
+          const journalNames = yield* sql<{ readonly name: string }>`
+            SELECT name FROM ${Statement.identifier(migrationsSchema)}.__drizzle_migrations ORDER BY id
+          `;
+          expect(
+            A.takeRight(
+              A.map(journalNames, (row) => row.name),
+              3
+            )
+          ).toEqual([firstLegacy.name, secondLegacy.name, "20260101000003_after_rebaseline"]);
+        }),
+        120_000
+      );
+
+      it.effect(
+        "upgrades a complete version-zero legacy journal before skipping a re-baseline",
+        Effect.fnUntraced(function* () {
+          const info = yield* TestDatabaseInfo;
+          const db = yield* makeDrizzle();
+          const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+          const migrationsSchema = pipe(
+            info.schema,
+            O.getOrElse(() => "drizzle")
+          );
+          const migrationsTable = "__drizzle_migrations_v0_rebaseline";
+          const firstLegacy = {
+            name: "20260103000000_legacy_first",
+            sql: "CREATE TABLE legacy_v0_rebaseline_probe (id integer PRIMARY KEY);\n",
+          };
+          const secondLegacy = {
+            name: "20260103000001_legacy_second",
+            sql: "ALTER TABLE legacy_v0_rebaseline_probe ADD COLUMN prior_value text;\n",
+          };
+          const canonicalBaseline = {
+            name: "20260103000002_canonical_baseline",
+            sql: "CREATE TABLE legacy_v0_rebaseline_probe (id integer PRIMARY KEY, prior_value text);\n",
+          };
+
+          yield* sql`CREATE SCHEMA IF NOT EXISTS ${Statement.identifier(migrationsSchema)}`;
+          yield* sql`
+            CREATE TABLE ${Statement.identifier(migrationsSchema)}.${Statement.identifier(migrationsTable)} (
+              id serial PRIMARY KEY,
+              hash text NOT NULL,
+              created_at bigint
+            )
+          `;
+          yield* sql`CREATE TABLE legacy_v0_rebaseline_probe (id integer PRIMARY KEY)`;
+          yield* sql`ALTER TABLE legacy_v0_rebaseline_probe ADD COLUMN prior_value text`;
+          yield* sql`
+            INSERT INTO ${Statement.identifier(migrationsSchema)}.${Statement.identifier(migrationsTable)}
+              (hash, created_at)
+            VALUES
+              (
+                ${createHash("sha256").update(firstLegacy.sql).digest("hex")},
+                ${formatToMillis(Str.slice(0, 14)(firstLegacy.name))}
+              ),
+              (
+                ${createHash("sha256").update(secondLegacy.sql).digest("hex")},
+                ${formatToMillis(Str.slice(0, 14)(secondLegacy.name))}
+              )
+          `;
+
+          yield* migrateBundle(db, {
+            legacyNameSets: [
+              MigrationBundleLegacyNameSet.make({
+                canonicalName: canonicalBaseline.name,
+                legacyNames: [firstLegacy.name, secondLegacy.name],
+              }),
+            ],
+            migrations: [
+              canonicalBaseline,
+              {
+                name: "20260103000003_after_rebaseline",
+                sql: "ALTER TABLE legacy_v0_rebaseline_probe ADD COLUMN current_value text;\n",
+              },
+            ],
+            migrationsSchema,
+            migrationsTable,
+          });
+
+          const journalNames = yield* sql<{ readonly name: string }>`
+            SELECT name
+            FROM ${Statement.identifier(migrationsSchema)}.${Statement.identifier(migrationsTable)}
+            ORDER BY id
+          `;
+          expect(A.map(journalNames, (row) => row.name)).toEqual([
+            firstLegacy.name,
+            secondLegacy.name,
+            "20260103000003_after_rebaseline",
+          ]);
+        }),
+        120_000
+      );
+
+      it.effect(
+        "refuses a partial legacy journal instead of applying a conflicting baseline",
+        Effect.fnUntraced(function* () {
+          const info = yield* TestDatabaseInfo;
+          const db = yield* makeDrizzle();
+          const migrationsSchema = pipe(
+            info.schema,
+            O.getOrElse(() => "drizzle")
+          );
+          const firstLegacy = {
+            name: "20260102000000_legacy_first",
+            sql: "CREATE TABLE partial_rebaseline_probe (id integer PRIMARY KEY);\n",
+          };
+          const canonicalBaseline = {
+            name: "20260102000002_canonical_baseline",
+            sql: "CREATE TABLE partial_rebaseline_probe (id integer PRIMARY KEY);\n",
+          };
+          yield* migrateBundle(db, { migrations: [firstLegacy], migrationsSchema });
+
+          const failure = yield* migrateBundle(db, {
+            legacyNameSets: [
+              MigrationBundleLegacyNameSet.make({
+                canonicalName: canonicalBaseline.name,
+                legacyNames: [firstLegacy.name, "20260102000001_legacy_second"],
+              }),
+            ],
+            migrations: [canonicalBaseline],
+            migrationsSchema,
+          }).pipe(Effect.flip);
+
+          expect(failure._tag).toBe("PostgresError");
+          expect(O.getOrElse(failure.message, () => "")).toContain("partial legacy migration history");
         }),
         120_000
       );

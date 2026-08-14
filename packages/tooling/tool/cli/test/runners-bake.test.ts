@@ -32,6 +32,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
 const digest = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+const bunArchiveDigest = Sha256Hex.make("951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f");
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const encoder = new TextEncoder();
 
@@ -63,6 +64,7 @@ const report = (priorPin: O.Option<string>) =>
   BakeReport.make({
     amiId: "ami-0123456789abcdef0",
     lockfileSha256: digest,
+    bunArchiveSha256: bunArchiveDigest,
     bunVersion: "1.3.14",
     baseAmiId: "ami-0fedcba9876543210",
     priorPin,
@@ -75,6 +77,7 @@ const report = (priorPin: O.Option<string>) =>
 const makePlan = () =>
   BakePlan.make({
     lockfileSha256: digest,
+    bunArchiveSha256: bunArchiveDigest,
     bunVersion: "1.3.14",
     gitRevision: "0123456789abcdef0123456789abcdef01234567",
     requiredFlags: ["--subnet", "--security-group", "--instance-profile"],
@@ -87,9 +90,12 @@ const checkReport = (fresh: boolean) =>
     amiId: "ami-0123456789abcdef0",
     expectedLockfileSha256: digest,
     actualLockfileSha256: fresh ? O.some(digest) : O.none(),
+    expectedBunArchiveSha256: bunArchiveDigest,
+    actualBunArchiveSha256: fresh ? O.some(bunArchiveDigest) : O.none(),
     expectedBunVersion: "1.3.14",
     actualBunVersion: fresh ? O.some("1.3.14") : O.some("1.3.13"),
     lockfileMatches: fresh,
+    bunArchiveMatches: fresh,
     bunVersionMatches: fresh,
     fresh,
   });
@@ -185,6 +191,7 @@ describe("runner bake schemas", () => {
 
       const plan = BakePlan.make({
         lockfileSha256: digest,
+        bunArchiveSha256: bunArchiveDigest,
         bunVersion: "1.3.14",
         gitRevision: "0123456789abcdef0123456789abcdef01234567",
         requiredFlags: ["--subnet"],
@@ -345,7 +352,7 @@ describe("runner bake planning and argv", () => {
                           onNone: () => stubHandle('{"Images":[]}'),
                           onSome: (currentPlan) =>
                             stubHandle(
-                              `{"Images":[{"Tags":[{"Key":"beep-ci:lockfile-sha256","Value":"${currentPlan.lockfileSha256}"},{"Key":"beep-ci:bun-version","Value":"${currentPlan.bunVersion}"}]}]}`
+                              `{"Images":[{"Tags":[{"Key":"beep-ci:lockfile-sha256","Value":"${currentPlan.lockfileSha256}"},{"Key":"beep-ci:bun-archive-sha256","Value":"${currentPlan.bunArchiveSha256}"},{"Key":"beep-ci:bun-version","Value":"${currentPlan.bunVersion}"}]}]}`
                             ),
                         })
                       )
@@ -510,7 +517,9 @@ describe("runner bake planning and argv", () => {
         return yield* Effect.flip(service.plan);
       }).pipe(provideScopedLayer(testLayer));
 
-      expect(error.message).toBe("Refusing to bake while bun.lock or .bun-version has uncommitted changes.");
+      expect(error.message).toBe(
+        "Refusing to bake while bun.lock, .bun-version, or .bun-linux-x64.sha256 has uncommitted changes."
+      );
       expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
     })
   );
@@ -520,6 +529,7 @@ describe("runner bake planning and argv", () => {
       BakeLocalInputs.make({
         repoRoot: "/repo",
         lockfileSha256: digest,
+        bunArchiveSha256: bunArchiveDigest,
         bunVersion: "1.3.14",
         gitRevision: "0123456789abcdef0123456789abcdef01234567",
       })
@@ -527,6 +537,15 @@ describe("runner bake planning and argv", () => {
     expect(script).toContain("set -euo pipefail");
     expect(script).toContain("shutdown -P +350");
     expect(script).toContain("dnf install -y git unzip zip jq docker libicu");
+    expect(script).toContain("https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-linux-x64.zip");
+    expect(script).toContain(
+      "951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f' /tmp/bun-linux-x64.zip"
+    );
+    expect(script).toContain("sha256sum --check --strict -");
+    expect(script.indexOf("sha256sum --check --strict -")).toBeLessThan(
+      script.indexOf("install -o ec2-user -g ec2-user -m 0755")
+    );
+    expect(script).not.toContain("bun.sh/install");
     expect(script).toContain("bun install --cwd /tmp/beep-effect --frozen-lockfile");
     expect(script).toContain("git -C /tmp/beep-effect checkout --detach 0123456789abcdef0123456789abcdef01234567");
     expect(script).toContain(`= "${digest}"`);

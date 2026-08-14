@@ -107,6 +107,7 @@ const encodeBlockDeviceMappings = S.encodeEffect(S.fromJsonString(S.Array(AwsBlo
  * const inputs = BakeLocalInputs.make({
  *   repoRoot: "/work/beep-effect",
  *   lockfileSha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ *   bunArchiveSha256: Sha256Hex.make("951ee2aee855f08595aeec6225226a298d3fea83a3dcd6465c09cbccdf7e848f"),
  *   bunVersion: "1.2.20",
  *   gitRevision: "0123456789abcdef0123456789abcdef01234567",
  * })
@@ -120,11 +121,12 @@ export class BakeLocalInputs extends S.Class<BakeLocalInputs>($I`BakeLocalInputs
   {
     repoRoot: S.NonEmptyString,
     lockfileSha256: Sha256Hex,
+    bunArchiveSha256: Sha256Hex,
     bunVersion: S.NonEmptyString,
     gitRevision: S.NonEmptyString,
   },
   $I.annote("BakeLocalInputs", {
-    description: "Repository root, revision, lock digest, and Bun version used by a bake.",
+    description: "Repository root, revision, lock digest, Bun archive digest, and Bun version used by a bake.",
   })
 ) {}
 
@@ -212,7 +214,15 @@ const runGitRevision = Effect.fn("Runners.gitRevision")(function* (
 const assertBakeInputsClean = Effect.fn("Runners.assertBakeInputsClean")(function* (
   repoRoot: string
 ): Effect.fn.Return<void, RunnersCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const args = ["status", "--porcelain=v1", "--untracked-files=all", "--", "bun.lock", ".bun-version"];
+  const args = [
+    "status",
+    "--porcelain=v1",
+    "--untracked-files=all",
+    "--",
+    "bun.lock",
+    ".bun-version",
+    ".bun-linux-x64.sha256",
+  ];
   const result = yield* runCaptured({
     command: "git",
     args,
@@ -229,7 +239,7 @@ const assertBakeInputsClean = Effect.fn("Runners.assertBakeInputsClean")(functio
   }
   if (!Str.isEmpty(result.output)) {
     return yield* RunnersCommandError.make({
-      message: "Refusing to bake while bun.lock or .bun-version has uncommitted changes.",
+      message: "Refusing to bake while bun.lock, .bun-version, or .bun-linux-x64.sha256 has uncommitted changes.",
     });
   }
 });
@@ -244,6 +254,7 @@ const loadLocalInputs = Effect.fn("Runners.loadLocalInputs")(function* (): Effec
   const repoRoot = yield* findRepoRoot().pipe(RunnersCommandError.mapError("Failed to locate the repository root."));
   const lockfilePath = path.join(repoRoot, "bun.lock");
   const bunVersionPath = path.join(repoRoot, ".bun-version");
+  const bunArchiveSha256Path = path.join(repoRoot, ".bun-linux-x64.sha256");
   yield* assertBakeInputsClean(repoRoot);
   const lockfileSha256 = yield* hashFileSha256(lockfilePath, (cause) =>
     runnersError(`Failed to hash ${lockfilePath}.`, cause)
@@ -254,8 +265,14 @@ const loadLocalInputs = Effect.fn("Runners.loadLocalInputs")(function* (): Effec
   const bunVersion = yield* S.decodeEffect(BunVersion)(rawBunVersion).pipe(
     RunnersCommandError.mapError(`${bunVersionPath} must contain an exact Bun semantic version.`)
   );
+  const rawBunArchiveSha256 = yield* fs
+    .readFileString(bunArchiveSha256Path)
+    .pipe(Effect.map(Str.trim), RunnersCommandError.mapError(`Failed to read ${bunArchiveSha256Path}.`));
+  const bunArchiveSha256 = yield* S.decodeEffect(Sha256Hex)(rawBunArchiveSha256).pipe(
+    RunnersCommandError.mapError(`${bunArchiveSha256Path} must contain one SHA-256 digest.`)
+  );
   const gitRevision = yield* runGitRevision(repoRoot);
-  return BakeLocalInputs.make({ repoRoot, lockfileSha256, bunVersion, gitRevision });
+  return BakeLocalInputs.make({ repoRoot, lockfileSha256, bunArchiveSha256, bunVersion, gitRevision });
 });
 
 const parseAws = <A, I>(
@@ -287,9 +304,16 @@ shutdown -P +350
 trap 'shutdown -P now' EXIT
 dnf install -y git unzip zip jq docker libicu
 systemctl enable --now docker
-install -d -o ec2-user -g ec2-user /home/ec2-user/.bun
-sudo -u ec2-user env HOME=/home/ec2-user BUN_INSTALL=/home/ec2-user/.bun bash -c \
-  'curl -fsSL https://bun.sh/install | bash -s -- bun-v${inputs.bunVersion}'
+install -d -o ec2-user -g ec2-user /home/ec2-user/.bun /home/ec2-user/.bun/bin
+curl --fail --location --proto '=https' --tlsv1.2 --retry 3 \
+  --output /tmp/bun-linux-x64.zip \
+  'https://github.com/oven-sh/bun/releases/download/bun-v${inputs.bunVersion}/bun-linux-x64.zip'
+printf '%s  %s\n' '${inputs.bunArchiveSha256}' /tmp/bun-linux-x64.zip | sha256sum --check --strict -
+rm -rf /tmp/bun-linux-x64
+unzip -q /tmp/bun-linux-x64.zip -d /tmp/bun-linux-x64
+install -o ec2-user -g ec2-user -m 0755 \
+  /tmp/bun-linux-x64/bun-linux-x64/bun /home/ec2-user/.bun/bin/bun
+rm -rf /tmp/bun-linux-x64 /tmp/bun-linux-x64.zip
 git clone --filter=blob:none https://github.com/beep-effect/beep-effect.git /tmp/beep-effect
 git -C /tmp/beep-effect checkout --detach ${inputs.gitRevision}
 test "$(sha256sum /tmp/beep-effect/bun.lock | cut -d ' ' -f 1)" = "${inputs.lockfileSha256}"
@@ -329,6 +353,7 @@ const imageTags = (
     config.tags,
     R.set("beep-ci", "runner"),
     R.set("beep-ci:lockfile-sha256", inputs.lockfileSha256),
+    R.set("beep-ci:bun-archive-sha256", inputs.bunArchiveSha256),
     R.set("beep-ci:bun-version", inputs.bunVersion),
     R.set("App", "ci-runners"),
     R.set("ManagedBy", "beep-runners-bake"),
@@ -545,6 +570,7 @@ const makePlan = Effect.fn("Runners.plan")(function* () {
   const inputs = yield* loadLocalInputs();
   return BakePlan.make({
     lockfileSha256: inputs.lockfileSha256,
+    bunArchiveSha256: inputs.bunArchiveSha256,
     bunVersion: inputs.bunVersion,
     gitRevision: inputs.gitRevision,
     requiredFlags: ["--region", "--subnet", "--security-group", "--instance-profile"],
@@ -553,7 +579,7 @@ const makePlan = Effect.fn("Runners.plan")(function* () {
       "beep-ci:bake=true",
       "AssociatePublicIpAddress=true",
       "shutdown -P backstop",
-      "lockfile-sha256 + bun-version staleness key",
+      "lockfile-sha256 + bun-archive-sha256 + bun-version staleness key",
       "unconditional instance termination",
     ],
     steps: [
@@ -590,11 +616,17 @@ const checkBake = Effect.fn("Runners.check")(function* (region: string) {
   );
   const rawLockfile = tagValue(tags, "beep-ci:lockfile-sha256");
   const actualLockfileSha256 = pipe(rawLockfile, O.flatMap(S.decodeUnknownOption(Sha256Hex)));
+  const rawBunArchive = tagValue(tags, "beep-ci:bun-archive-sha256");
+  const actualBunArchiveSha256 = pipe(rawBunArchive, O.flatMap(S.decodeUnknownOption(Sha256Hex)));
   const actualBunVersion = tagValue(tags, "beep-ci:bun-version");
-  const lockfileEquivalence = S.toEquivalence(Sha256Hex);
+  const sha256Equivalence = S.toEquivalence(Sha256Hex);
   const lockfileMatches = pipe(
     actualLockfileSha256,
-    O.exists((actual) => lockfileEquivalence(actual, inputs.lockfileSha256))
+    O.exists((actual) => sha256Equivalence(actual, inputs.lockfileSha256))
+  );
+  const bunArchiveMatches = pipe(
+    actualBunArchiveSha256,
+    O.exists((actual) => sha256Equivalence(actual, inputs.bunArchiveSha256))
   );
   const bunVersionMatches = pipe(
     actualBunVersion,
@@ -604,11 +636,14 @@ const checkBake = Effect.fn("Runners.check")(function* (region: string) {
     amiId,
     expectedLockfileSha256: inputs.lockfileSha256,
     actualLockfileSha256,
+    expectedBunArchiveSha256: inputs.bunArchiveSha256,
+    actualBunArchiveSha256,
     expectedBunVersion: inputs.bunVersion,
     actualBunVersion,
     lockfileMatches,
+    bunArchiveMatches,
     bunVersionMatches,
-    fresh: lockfileMatches && bunVersionMatches,
+    fresh: lockfileMatches && bunArchiveMatches && bunVersionMatches,
   });
 });
 
@@ -633,6 +668,7 @@ const bakeImage = Effect.fn("Runners.bake")(function* (config: BakeConfig, repor
   const report = BakeReport.make({
     amiId,
     lockfileSha256: inputs.lockfileSha256,
+    bunArchiveSha256: inputs.bunArchiveSha256,
     bunVersion: inputs.bunVersion,
     baseAmiId,
     priorPin,
