@@ -149,6 +149,55 @@ describe("identity-registry lint command", { concurrent: false }, () => {
   );
 
   it(
+    "reports an export-only orphan whose compose slug is already gone",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
+            const registryContent = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
+            yield* fs.writeFileString(
+              IDENTITY_REGISTRY_PATH,
+              Str.concat(registryContent, "export const $GhostId = composers.$GhostId;\n")
+            );
+
+            const composeOnlyContent = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
+            yield* fs.writeFileString(
+              IDENTITY_REGISTRY_PATH,
+              Str.replace('"widget"', '"widget",\n  "phantom"')(composeOnlyContent)
+            );
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(
+              A.some(
+                errorLines,
+                (line) =>
+                  P.isString(line) &&
+                  Str.startsWith("@beep/ghost [orphan-registration]")(line) &&
+                  !Str.includes("$I.compose(...)")(line)
+              )
+            ).toBe(true);
+            expect(
+              A.some(
+                errorLines,
+                (line) =>
+                  P.isString(line) &&
+                  Str.startsWith("@beep/phantom [orphan-registration]")(line) &&
+                  Str.includes("$I.compose(...)")(line) &&
+                  !Str.includes("export $")(line)
+              )
+            ).toBe(true);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    LINT_TIMEOUT
+  );
+
+  it(
     "reports workspace packages missing from the registry",
     () =>
       Effect.runPromise(

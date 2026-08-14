@@ -144,6 +144,31 @@ Post-refactor evidence: focused vitest 20/20; `turbo run check
 origin/main --check` reports `introduced: 0` (6 inherited-adjacent remain,
 non-blocking); biome clean on all touched files.
 
+## Hosted Coverage Regression Fix (2026-08-14 Fable session)
+
+The hosted Coverage Regression lane (a different runtime than local verify)
+caught the new identity-removal code under the per-file baseline floors:
+`IdentityRegistration.ts` branches 45.71<64.28, functions 79.41<100, lines
+83.92<98.33, statements 80<98.36; `Lint/IdentityRegistry.ts` branches
+76.47<78.72. Fixed with tests, not baseline weakening:
+
+- New `test/identity-registration-removal.test.ts` (8 tests): removal of
+  compose slug + typed export, manual casing alias removal, no-op on absent
+  slug, composer/export slug getters, missing-registration filter, accessor
+  pattern, and the missing-identity-workspace error path. TSMorphService
+  requires the fixture to look like a repo (bun.lock + owning tsconfig.json
+  inside a temp working directory) — temp files outside the resolved repo
+  root are refused by scope validation.
+- `lint-identity-registry.test.ts` gained export-only and compose-only
+  orphan cases (covers both single-surface ternary branches).
+- Registry fixtures must bind exports via the merged `composers.` object —
+  `registeredIdentityExportSlugs` intentionally ignores other initializer
+  roots, matching the report-11 registry design.
+
+Post-fix package coverage: IdentityRegistration branches 85.71 / functions
+100 / lines 99.1 / statements 99.16; IdentityRegistry branches 80.39 — all
+floors met; 1601/1601 package tests green.
+
 ## Open Items / Known Gaps
 
 - The exact two focused test files pass directly, but two attempts to route the
