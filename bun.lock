@@ -1526,6 +1526,7 @@
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/provenance": "workspace:^",
+        "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/semantic-web": "workspace:^",
         "@beep/shared-domain": "workspace:^",

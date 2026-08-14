@@ -1,22 +1,7 @@
-import {
-  AbsoluteIRI as RdfAbsoluteIRI,
-  IRI as RdfIRI,
-  IRIReference as RdfIRIReference,
-  RelativeIRIReference as RdfRelativeIRIReference,
-} from "@beep/rdf/Iri";
-import { AbsoluteIRI, IRI, IRIReference, RelativeIRIReference } from "@beep/semantic-web/iri";
+import { AbsoluteIRI, IRI, IRIReference, RelativeIRIReference } from "@beep/rdf/Iri";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
-
-describe("@beep/semantic-web IRI compatibility re-export", () => {
-  it("exposes the RDF IRI schemas without wrapping them", () => {
-    expect(IRI).toBe(RdfIRI);
-    expect(AbsoluteIRI).toBe(RdfAbsoluteIRI);
-    expect(IRIReference).toBe(RdfIRIReference);
-    expect(RelativeIRIReference).toBe(RdfRelativeIRIReference);
-  });
-});
 
 describe("IRI", () => {
   it("accepts representative internationalized and relative forms through the facade", () => {

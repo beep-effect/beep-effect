@@ -1,11 +1,9 @@
-import * as WebAnnotationAdapters from "@beep/semantic-web/adapters/web-annotation";
-import * as EvidenceModule from "@beep/semantic-web/evidence";
-import { EvidenceAnchor } from "@beep/semantic-web/evidence";
-import * as JsonLdModule from "@beep/semantic-web/jsonld";
-import * as ProvModule from "@beep/semantic-web/prov";
-import { getSemanticSchemaMetadata } from "@beep/semantic-web/semantic-schema-metadata";
-import * as CanonicalizationServiceModule from "@beep/semantic-web/services/canonicalization";
-import * as ShaclValidationServiceModule from "@beep/semantic-web/services/shacl-validation";
+import * as WebAnnotationAdapters from "@beep/rdf/Adapters/WebAnnotation";
+import * as EvidenceModule from "@beep/rdf/Evidence";
+import { EvidenceAnchor } from "@beep/rdf/Evidence";
+import * as JsonLdModule from "@beep/rdf/JsonLd";
+import * as ProvModule from "@beep/rdf/Prov";
+import { getSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
@@ -29,16 +27,6 @@ const auditModules = [
     exclude: new Set(["ProvO", "ProvRecord"]),
     exports: ProvModule,
     name: "prov",
-  },
-  {
-    exclude: new Set(["CanonicalizationAlgorithm"]),
-    exports: CanonicalizationServiceModule,
-    name: "services/canonicalization",
-  },
-  {
-    exclude: new Set(["ShaclSeverity"]),
-    exports: ShaclValidationServiceModule,
-    name: "services/shacl-validation",
   },
   {
     exclude: new Set(["WebAnnotationSelector"]),

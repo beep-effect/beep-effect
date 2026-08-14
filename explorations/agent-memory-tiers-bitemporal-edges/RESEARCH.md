@@ -254,7 +254,7 @@ All paths verified via `ls`/`rg` on 2026-06-29 (working tree, branch
   missing durable *disposition* (not a missing rejected concept). Do not claim
   `rg rejected|superseded` returns zero; that hides the existing gate semantics.
 - **PROV-O substrate (richer than agentmemory's flat KV).**
-  `packages/foundation/capability/semantic-web/src/prov.ts` (`@beep/semantic-web`,
+  `packages/foundation/modeling/rdf/src/Prov.ts` (`@beep/rdf`,
   `@beep/semantic-web/prov`) exports `ObjectRef` (IRI/CURIE/local, brandable),
   the public `ProvDateTime` / `ProvDateTimeEncoded` schemas (lines 120/165;
   ISO-8601 + `DateTime.make`-parseable). **Correction:** there is NO exported

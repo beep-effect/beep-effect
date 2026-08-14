@@ -255,7 +255,7 @@ graph authority.
 | BeepGraph need | Status in beep-effect | Path |
 |----------------|-----------------------|------|
 | RDF value models (IRI/Quad/Dataset, OWL/PROV vocab) | **Live** | `packages/foundation/modeling/rdf/src/Rdf.ts`, `Vocab/Owl.ts` |
-| PROV-O provenance + bounded SHACL | **Live** | `packages/foundation/capability/semantic-web/src/prov.ts`, `adapters/shacl-engine.ts` |
+| PROV-O provenance + bounded SHACL | **Live** | `packages/foundation/modeling/rdf/src/Prov.ts`, `packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts` |
 | Epistemic authority (claims/evidence/lifecycle) | **Live (domain only)** | `packages/epistemic/domain/src/entities/{CandidateClaim,Evidence,Activity}`, `values/ClaimLifecycle` |
 | Ontology authoring over Effect Schema → JSON-LD/Turtle | **Specced, blocked** | `goals/ontology-modeling-foundation/SPEC.md` (`@beep/ontology`, retired) |
 | EventLog → graph projection | **Specced** | `goals/knowledge-workspace/00-event-sourced-graph.md` |

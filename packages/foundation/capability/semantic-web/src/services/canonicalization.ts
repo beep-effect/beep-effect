@@ -6,11 +6,11 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
+import { Dataset } from "@beep/rdf/Rdf";
+import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
 import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex, TaggedErrorClass } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
-import { Dataset } from "../rdf.ts";
-import { makeSemanticSchemaMetadata } from "../semantic-schema-metadata.ts";
 import type { Effect } from "effect";
 
 const $I = $SemanticWebId.create("services/canonicalization");
