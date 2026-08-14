@@ -10,7 +10,7 @@
 
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { N3ParseTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
+import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
 import type { BlankNode as BlankNodeType, GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
 import {
   IRI,
@@ -24,7 +24,7 @@ import * as CanonicalRdf from "@beep/rdf/Rdf";
 import { DCTERMS_NAMESPACE } from "@beep/rdf/Vocab/Dcterms";
 import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
-import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import type { Scope } from "effect";
 import { Chunk, Context, Duration, Effect, Layer } from "effect";
@@ -49,6 +49,10 @@ const PROV_GENERATED_AT_TIME = makeCanonicalNamedNode(`${PROV_NAMESPACE}generate
 const DCTERMS_SOURCE = makeCanonicalNamedNode(`${DCTERMS_NAMESPACE}source`);
 const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
 const XSD_DECIMAL = makeCanonicalNamedNode(`${XSD_NAMESPACE}decimal`);
+const RDF_STATEMENT = makeCanonicalNamedNode(`${RDF_NAMESPACE}Statement`);
+const RDF_SUBJECT = makeCanonicalNamedNode(`${RDF_NAMESPACE}subject`);
+const RDF_PREDICATE = makeCanonicalNamedNode(`${RDF_NAMESPACE}predicate`);
+const RDF_OBJECT = makeCanonicalNamedNode(`${RDF_NAMESPACE}object`);
 
 interface RdfConstructionPrefixes {
   readonly rdf: string;
@@ -975,13 +979,10 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
         }),
 
       /**
-       * Add a triple with confidence annotation using RDF-star
+       * Add a triple with a canonical RDF reification confidence annotation
        *
-       * Uses N3.js quoted triple support to create:
-       * - The original triple (subject predicate object)
-       * - A confidence annotation triple using the original as subject
-       *
-       * RDF-star syntax: <<:subject :predicate :object>> ex:confidence "0.95"^^xsd:double
+       * Uses standard RDF reification so the result remains representable by
+       * the canonical `@beep/rdf` Dataset and serializable by `@beep/n3`.
        */
       addTripleWithConfidence: (
         store: RdfStore,
@@ -1017,16 +1018,24 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             // Add the original quad to the store
             n3Store.addQuad(originalQuad);
 
-            // Create confidence annotation using RDF-star (quoted triple as subject)
-            // The N3.DataFactory.quad() can accept a Quad as subject for RDF-star
-            const confidenceQuad = N3.DataFactory.quad(
-              originalQuad, // Quoted triple as subject (RDF-star)
-              N3.DataFactory.namedNode(EXTR.confidence.value),
-              N3.DataFactory.literal(confidence.toString(), N3.DataFactory.namedNode(XSD_DOUBLE.value)),
-              graphNode
-            );
-
-            n3Store.addQuad(confidenceQuad);
+            const statementNode = N3.DataFactory.blankNode();
+            n3Store.addQuads([
+              N3.DataFactory.quad(
+                statementNode,
+                N3.DataFactory.namedNode(RDF_TYPE.value),
+                n3NamedNode(RDF_STATEMENT.value),
+                graphNode
+              ),
+              N3.DataFactory.quad(statementNode, n3NamedNode(RDF_SUBJECT.value), subjectNode, graphNode),
+              N3.DataFactory.quad(statementNode, n3NamedNode(RDF_PREDICATE.value), predicateNode, graphNode),
+              N3.DataFactory.quad(statementNode, n3NamedNode(RDF_OBJECT.value), objectNode, graphNode),
+              N3.DataFactory.quad(
+                statementNode,
+                N3.DataFactory.namedNode(EXTR.confidence.value),
+                N3.DataFactory.literal(confidence.toString(), N3.DataFactory.namedNode(XSD_DOUBLE.value)),
+                graphNode
+              ),
+            ]);
           },
           catch: (error) =>
             RdfError.make({
@@ -1181,39 +1190,33 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @returns Turtle string
        */
       toTurtle: (store: RdfStore) =>
-        Effect.callback<string, SerializationFailed>((resume) => {
-          const writer = new N3.Writer({
-            format: "text/turtle",
-            prefixes: config.rdf.prefixes,
-          });
-          backend(store).forEach((quad) => {
-            writer.addQuad(quad);
-          });
-          writer.end((error, result) =>
-            resume(
-              P.isTruthy(error)
-                ? Effect.fail(
-                    SerializationFailed.make({
-                      message: `Turtle serialization failed: ${error}`,
-                      cause: O.some(error),
-                      format: O.some("Turtle"),
-                    })
-                  )
-                : Effect.succeed(result)
-            )
-          );
-        }).pipe(
-          Effect.timeoutOrElse({
-            duration: Duration.seconds(30),
-            orElse: () =>
-              Effect.fail(
-                SerializationFailed.make({
-                  message: "Turtle serialization timed out after 30 seconds",
-                  format: O.some("Turtle"),
-                })
-              ),
-          })
-        ),
+        turtleCodec
+          .serialize(
+            N3SerializeTurtleRequest.make({
+              dataset: rdfStoreToDataset(store),
+              prefixes: config.rdf.prefixes,
+            })
+          )
+          .pipe(
+            Effect.map(({ source }) => source),
+            Effect.mapError((error) =>
+              SerializationFailed.make({
+                message: `Turtle serialization failed: ${error.message}`,
+                cause: O.some(error),
+                format: O.some("Turtle"),
+              })
+            ),
+            Effect.timeoutOrElse({
+              duration: Duration.seconds(30),
+              orElse: () =>
+                Effect.fail(
+                  SerializationFailed.make({
+                    message: "Turtle serialization timed out after 30 seconds",
+                    format: O.some("Turtle"),
+                  })
+                ),
+            })
+          ),
 
       /**
        * Serialize store to TriG format with named graphs

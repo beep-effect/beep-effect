@@ -18,6 +18,36 @@ import type { Pattern, PatternElement } from "@beep/nlp/Core/Pattern";
 
 const $I = $WinkId.create("Wink/WinkPattern");
 
+/**
+ * Canonical schema for arrays returned by Wink string-valued accessors.
+ *
+ * **Example** (Decode accessor output)
+ *
+ * ```ts
+ * import { WinkStringArray } from "@beep/wink"
+ * import * as S from "effect/Schema"
+ *
+ * const values = S.decodeSync(WinkStringArray)(["sentence", "tokens"])
+ * console.log(values.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const WinkStringArray = S.Array(S.String).pipe(
+  $I.annoteSchema("WinkStringArray", {
+    description: "Array of strings returned by Wink NLP accessors.",
+  })
+);
+
+/**
+ * Runtime value decoded by {@link WinkStringArray} for Wink string-valued accessors.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WinkStringArray = typeof WinkStringArray.Type;
+
 const renderPatternElement = Match.type<PatternElement>().pipe(
   Match.tagsExhaustive({
     EntityPatternElement: ({ value }) => A.join(value, "|"),

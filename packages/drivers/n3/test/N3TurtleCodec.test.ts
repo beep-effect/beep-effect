@@ -1,6 +1,7 @@
 import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
-import { makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
-import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
+import { XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import { Writer } from "n3";
@@ -50,6 +51,32 @@ describe("N3TurtleCodec", () => {
       expect(parsed.prefixes).toEqual({ "": "https://example.test/" });
       expect(serialized.source).toContain("@prefix :");
       expect(serialized.source).toContain(":alice");
+    }, provideScopedLayer(N3TurtleCodecLive))
+  );
+
+  it.effect(
+    "serializes standard RDF reification datasets",
+    Effect.fnUntraced(function* () {
+      const subject = makeNamedNode("https://example.test/alice");
+      const predicate = makeNamedNode("https://example.test/name");
+      const object = makeLiteral("Alice", XSD_STRING.value);
+      const statement = makeBlankNode("confidence-statement");
+      const dataset = makeDataset([
+        makeQuad(subject, predicate, object),
+        makeQuad(statement, makeNamedNode(`${RDF_NAMESPACE}type`), makeNamedNode(`${RDF_NAMESPACE}Statement`)),
+        makeQuad(statement, makeNamedNode(`${RDF_NAMESPACE}subject`), subject),
+        makeQuad(statement, makeNamedNode(`${RDF_NAMESPACE}predicate`), predicate),
+        makeQuad(statement, makeNamedNode(`${RDF_NAMESPACE}object`), object),
+        makeQuad(statement, makeNamedNode("https://example.test/confidence"), makeLiteral("0.8", XSD_DOUBLE.value)),
+      ]);
+      const codec = yield* N3TurtleCodec;
+      const serialized = yield* codec.serialize(
+        N3SerializeTurtleRequest.make({ dataset, prefixes: { rdf: RDF_NAMESPACE } })
+      );
+
+      expect(serialized.source).toContain("rdf:Statement");
+      expect(serialized.source).toContain("rdf:subject");
+      expect(serialized.source).toContain("0.8");
     }, provideScopedLayer(N3TurtleCodecLive))
   );
 

@@ -41,7 +41,7 @@ describe("RdfBuilder", () => {
       })
     );
 
-    it.effect("serializes only canonically branded confidence values", () =>
+    it.effect("serializes canonically branded confidence as RDF reification", () =>
       Effect.gen(function* () {
         const rdf = yield* RdfBuilder;
         const store = yield* rdf.createStore;
@@ -54,15 +54,37 @@ describe("RdfBuilder", () => {
           },
           Confidence.make(0.8)
         );
-        const serialized = yield* Effect.exit(rdf.toTurtle(store));
+        const serialized = yield* rdf.toTurtle(store);
 
-        assert.strictEqual(rdfStoreSize(store), 2);
-        assert.isTrue(Exit.isSuccess(serialized));
-        if (Exit.isSuccess(serialized)) {
-          assert.include(serialized.value, "0.8");
-        }
+        assert.strictEqual(rdfStoreSize(store), 6);
+        assert.include(serialized, "rdf:Statement");
+        assert.include(serialized, "rdf:subject");
+        assert.include(serialized, "rdf:predicate");
+        assert.include(serialized, "rdf:object");
+        assert.include(serialized, "0.8");
         assert.strictEqual(Reflect.ownKeys(store).length, 2);
         assert.isFalse("_store" in store);
+      })
+    );
+
+    it.effect("maps unsupported named graphs to SerializationFailed", () =>
+      Effect.gen(function* () {
+        const rdf = yield* RdfBuilder;
+        const store = yield* rdf.createStore;
+        yield* rdf.addTripleWithConfidence(
+          store,
+          {
+            subject: "https://example.org/subject",
+            predicate: "https://example.org/predicate",
+            object: "value",
+          },
+          Confidence.make(0.8),
+          "https://example.org/graph"
+        );
+        const error = yield* rdf.toTurtle(store).pipe(Effect.flip);
+
+        assert.strictEqual(error._tag, "SerializationFailed");
+        assert.include(error.message, "default graph");
       })
     );
   });

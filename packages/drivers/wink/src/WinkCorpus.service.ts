@@ -19,6 +19,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { loadBM25Vectorizer, normalizeTokenText } from "./internal/bm25.ts";
 import { ascendingNumber, ascendingString, descendingNumber } from "./internal/order.ts";
+import { WinkStringArray } from "./Wink.models.ts";
 import { WinkEngine } from "./Wink.service.ts";
 import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts";
 import { WinkSimilarity } from "./WinkSimilarity.service.ts";
@@ -219,11 +220,6 @@ const sanitizeLimit = (value: number | undefined, fallback: number): number =>
 
 const toCorpusIdOption = (corpusId: string | undefined): O.Option<string> => O.fromNullishOr(corpusId);
 
-const WinkStringArray = S.Array(S.String).pipe(
-  $I.annoteSchema("WinkStringArray", {
-    description: "Array of strings returned by wink vectorizer accessors.",
-  })
-);
 const WinkNumberArray = S.Array(S.Finite).pipe(
   $I.annoteSchema("WinkNumberArray", {
     description: "Array of finite numeric values returned by wink vectorizer accessors.",

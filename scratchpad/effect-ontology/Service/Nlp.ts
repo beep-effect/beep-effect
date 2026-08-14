@@ -16,6 +16,7 @@ import { IRI } from "@beep/rdf";
 import { PosInt } from "@beep/schema/Int";
 import { WinkTokenizationError } from "@beep/wink/Wink.errors";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
+import { WinkStringArray } from "@beep/wink/Wink.models";
 import { WinkEngine } from "@beep/wink/Wink.service";
 import { WinkCorpusManager } from "@beep/wink/WinkCorpus.service";
 import { Context, Duration, Effect, Layer, Order, Schedule } from "effect";
@@ -128,8 +129,6 @@ export class NlpIndexError extends S.TaggedError<NlpIndexError>($I`NlpIndexError
     description: "Failure caused by an invalid ontology index or its backing canonical Wink query.",
   })
 ) {}
-
-const WinkStringArray = S.Array(S.String);
 
 const decodeWinkStrings = (value: unknown, operation: string, text: string) =>
   S.decodeUnknownEffect(WinkStringArray)(value).pipe(
