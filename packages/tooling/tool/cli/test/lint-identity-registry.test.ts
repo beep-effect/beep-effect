@@ -116,8 +116,32 @@ describe("identity-registry lint command", { concurrent: false }, () => {
 
             const logLines = yield* TestConsole.logLines;
             expect(logLines).toContain(
-              "[lint:identity-registry] OK: 2 workspace packages registered; no local root composers."
+              "[lint:identity-registry] OK: 2 workspace packages registered; no orphan or local root composers."
             );
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    LINT_TIMEOUT
+  );
+
+  it(
+    "reports composer and export registrations with no live workspace owner",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget", "retired-widget"] });
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(
+              A.some(
+                errorLines,
+                (line) => P.isString(line) && Str.startsWith("@beep/retired-widget [orphan-registration]")(line)
+              )
+            ).toBe(true);
           })
         ).pipe(provideScopedLayer(testLayer))
       ),
