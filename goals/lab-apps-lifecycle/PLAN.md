@@ -2,13 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `active` — P0 complete 2026-08-14 (census ratified, geometry designed,
+gate entry list ratified below); P1 next.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Census ratification and geometry schema design | pending | Re-verify the registration-surface census (`research/02` §19, `research/05` §7) against the live tree; design the `RegistrationSurface` geometry schema and the labs identity-segment mechanism (SPEC D6/D8); ratify the exact gate-scoping entry list from `research/04`. | Geometry schema reviewed (schema-first skill loaded); census deltas recorded in `research/`; gate entry list ratified in this plan. |
+| P0 Census ratification and geometry schema design | complete | Re-verify the registration-surface census (`research/02` §19, `research/05` §7) against the live tree; design the `RegistrationSurface` geometry schema and the labs identity-segment mechanism (SPEC D6/D8); ratify the exact gate-scoping entry list from `research/04`. | Geometry schema reviewed (schema-first skill loaded); census deltas recorded in `research/`; gate entry list ratified in this plan. |
 | P1 Implement delete-package with doctor mode | pending | `beep delete-package` per `research/05` §9 (phases 0–10): dependents scan + refuse table, plan/dry-run/check, identity remove + orphan lint, workspace-literal remove, tsconfig-sync, lockfile, baseline regen, changeset policy. Doctor proves against a synthetic residue fixture built from the #680 classes (SPEC Track A); any matching live residue found at P1 time is swept in the same PR as a bonus. | Track A acceptance boxes in SPEC pass; PR mergeable via yeet. |
 | P2 Implement apps/labs substrate and v1 variants | pending | One-time `apps/labs/*` glob + gate scoping PR; lab manifest schema + `beep labs list`; vite + service AppKinds (nextjs reused); GLOSSARY "lab app"; promotion runbook; scaffold the trustgraph-ts workbench lab shell. | Track B acceptance boxes (except tauri + round-trip) pass; PRs mergeable via yeet. |
 | P3 Tauri lab variant (spike then land) | pending | Toolchain/CI spike (rust on runners, portless semantics for the webview, professional-desktop overlap), then land tauri as a lab AppKind on the existing templates. | Spike outcome recorded; tauri lab scaffolds and typechecks; PR mergeable. |
@@ -19,6 +20,32 @@ Status: `pending`
 Phase ids MUST match `ops/manifest.json` `phases[]` exactly. Each implement
 phase (P1, P2, P3) ships as its own PR through yeet with the packet slug in
 the PR title; P5 covers whatever residue closes the packet.
+
+## P0 Outcomes (ratified 2026-08-14)
+
+- **Census ratified:** `research/10-p0-census-ratification.md` recheck of
+  every `research/02` §19 row and the `research/05` §7 derived-vs-committed
+  table against the live tree, with deltas (retired-driver residue gone,
+  `@beep/protobuf` removed by #690, `@beep/ontology` live-name/retired-name
+  collision, fallow/vitest two-level app-glob gaps). The closed ten-kind
+  geometry surface list is that report's final table.
+- **Geometry designed:** `research/11-registration-geometry-design.md` —
+  `RegistrationSurface` ten-kind tagged union + `RegistrationGeometryService`
+  (forward/inverse/inspect), homed as a new `RegistrationGeometry` module
+  (P1 creates it) under `packages/tooling/tool/cli/src/internal/cli/`;
+  `dependentsOf` via inverted dependency index + E1/E15 scans. Holdout
+  resolutions adopted per SPEC D5 ("by hand" + generated-labs-segment
+  holdout clause): (A) labs excluded from root solution refs by path,
+  (B) path-aware changeset-status wrapper in repo CLI, (C) generated
+  contiguous labs identity segment + export block in `packages.ts`.
+- **Gate entry list ratified:** the one-time P2 scoping set is exactly the
+  fourteen edits in `research/12-p0-gate-scoping-ratified.md` (8 mechanical,
+  2 trivial, 4 needs-design, all design-bounded by report 11) plus that
+  report's explicit no-edit ratifications. Per-lab create/delete must not
+  grow it.
+- **Standards drafts archived** (not landed) at
+  `history/p0-standards-drafts/` — GLOSSARY/DECISIONS/doctrine land in P2
+  per SPEC Target Surfaces.
 
 ## P6 Closeout Checklist
 
