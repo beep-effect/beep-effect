@@ -226,6 +226,20 @@ repo has no branch-protection config file — `required: true` in
 `CI_LANE_DESCRIPTORS` is the repo's own model of the server-side ruleset, not the
 ruleset itself. Confirming the two against each other is its own small task.
 
+**Resolution (2026-08-13, terminal).** Current source separates three modes that
+the incident report had conflated: local `beep lint policy` is deliberately
+changed-scope, hosted `beep lint policy` is deliberately full-scope because
+`CI=true`, and root `bun run lint` constructs the full policy battery. Commit
+`642331b86c` (PR #678) made the changed-scope contract explicit at plan
+construction: a scoped step is omitted when its relevant file set is empty,
+while `files === undefined` still emits the full step. Its focused plan tests
+cover source-file forwarding, docs-only omission, absence of empty include
+values, and full-scope step inventory. The old PR #575 observation has no
+retained execution trace capable of distinguishing a warm Turbo replay from an
+obsolete pre-fix planner, so assigning a deeper root cause now would be
+speculation. The current regression boundary is executable and the historical
+ambiguity is closed as non-reproducible, not carried as another build item.
+
 ### Two publish papercuts, with the parse-time fix named
 
 Both are refinements of retained #8's ship-porcelain item, recorded because each has
@@ -288,6 +302,13 @@ Cost paid: the preflight-tier advice this packet's family already ships — run
 `goals doctor`, `lint policy`, `lint schema-first` standalone before a heavy
 verify — is currently unusable for docs-only branches, which is the branch shape
 most likely to want a cheap preflight.
+
+**Resolution (2026-08-13, fixed).** PR #678 implemented the skip-empty choice in
+`scopedRepoCliStep`/`scopedLawStep`. The focused docs-only test proves that all
+seven naturally scoped steps are absent and no empty argument is constructed;
+the full-scope inventory test proves hosted/full execution still emits them.
+The apparent local/hosted divergence is therefore explained by the intended
+mode selection above, and the actual empty-`--include` defect no longer exists.
 
 ### Meta: these receipts had nowhere to go at the moment of friction
 

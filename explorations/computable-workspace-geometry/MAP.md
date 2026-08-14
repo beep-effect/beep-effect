@@ -27,7 +27,7 @@ Capability cites (what already exists and moves or is consumed):
   (typed services, centralized technical errors, test layers, no product
   vocabulary).
 
-## Goal 2 — `thread-virtualization` (coordination-gated)
+## Goal 2 — [`thread-virtualization`](../../goals/thread-virtualization/README.md) (GRADUATED 2026-08-13)
 
 Exact-height virtualization for the thread renderer in the editor stack.
 **Gate:** coordinate with the beep-effect6 write lane, secure an explicit
@@ -37,8 +37,9 @@ client. **Gate status 2026-07-14:** the beep-effect6 write-gate on
 `apps/professional-desktop` shell surfaces was RELEASED (owner confirmation;
 lane rotated off desktop) for
 [`goals/dock-substrate-landing`](../../goals/dock-substrate-landing/README.md);
-the editor-stack (thread renderer) surface is distinct — re-confirm ownership
-when opening this packet.
+the editor-stack (thread renderer) surface is distinct. **Gate resolved
+2026-08-13:** the operator confirmed ownership clear for the thread renderer
+surface and authorized the goal scaffold.
 
 ## Goal 3 — `dock-substrate-landing` (OPENED 2026-07-14)
 

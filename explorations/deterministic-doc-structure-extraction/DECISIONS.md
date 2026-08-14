@@ -3,6 +3,12 @@
 All decisions below closed at the 2026-07-14 align gate. `LOCKED` means the
 shape pass must carry the answer forward without reopening it.
 
+## 2026-08-13 — Packet graduation and re-entry
+
+**Decision:** Close the packet as `graduated`. The four gated MAP rows remain
+re-entry points; acceptance of the `law-doc-structure-oa-slice` first slice
+reopens the packet at `decompose` under the repository convention.
+
 ## 2026-07-14 — Q1 LOCKED: What does this packet own?
 
 **Question:** Which document-recognition concerns belong here, and which are

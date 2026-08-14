@@ -3,7 +3,7 @@
 ## Status
 
 Stage: `graduate`
-Status: `active`
+Status: `graduated`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -19,11 +19,10 @@ kit for deterministic agent metadata retrieval.
 
 ## Next Open Question
 
-`identity-iri-fold` is graduated at
-[`goals/identity-iri-fold`](../../goals/identity-iri-fold/README.md), with its
-`identity-iri-core` dependency satisfied by the completed-retained PR #289.
-The next open question is held: `identity-iri-fibered` stays behind the fold
-until the fold/projection surface and FOLIO migration contracts land.
+None. [`identity-iri-fibered`](../../goals/identity-iri-fibered/README.md)
+now carries the full ratified MAP row and records the semantic-web PR2+PR3
+cleanup blockers as text because they have no goal packets. A future candidate
+reopens this exploration at `decompose`.
 
 ## Read This First
 
@@ -38,6 +37,13 @@ until the fold/projection surface and FOLIO migration contracts land.
 
 ## Trail
 
+- 2026-08-13 (ceremony): scaffolded `identity-iri-fibered` with the full MAP
+  scope, discrete-case/post-move/test-dev constraints, and textual PR2+PR3
+  blockedBy notes; cross-linked manifests and graduated the exploration.
+
+- 2026-08-13: recorded that the fold merged via PR #536 and the fibered
+  trigger fired; fibered ratified as one goal blockedBy the semantic-web
+  PR2+PR3 cleanups; scaffold queued for the ceremony PR.
 - 2026-07-31: pre-execution grill closed three branches ahead of the fold
   build — fold packaging superseded to a split surface (`$I.key`/`$I.class`
   composer methods in `@beep/identity`; `Ontology.fold` + projections in

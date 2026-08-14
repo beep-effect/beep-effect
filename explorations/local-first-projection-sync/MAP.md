@@ -9,6 +9,11 @@
 | Additional projector families | gated | Add another rebuildable target family only when a real consumer proves isolation and promotion needs. | Core cycle complete; explicit target owner |
 | Future graph projection | gated; separate approval | Add a rebuildable, driver-isolated, non-authoritative graph target under an approved license and topology. | Core cycle; SSPL/license review; graph-specific goal |
 
+The three gated rows are re-entry points under the repository's
+reopen-at-`decompose` convention. Reopen when a candidate trigger fires:
+multi-window delivery evidence, an owner for a second projector family, or an
+approved graph projection after SSPL review.
+
 ## Sequencing
 
 1. `effect-v4-workflow-engine-spike` must land its persistence adapter and crash

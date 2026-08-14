@@ -126,8 +126,10 @@ ratchets hold at zero — keep-green only, no new clicks past zero.
 - **Graph-&-ask** over the Postgres projection (per intake D6). A dedicated
   graph DB enters only if traversal benchmarks fail targets, behind the
   existing port. `docs/BEEPGRAPH_ARCHITECTURE.md` remains a proposal.
-- **Wave-1 exploration graduations** into freed lane slots:
-  [`uspto-patent-driver-depth`](../explorations/uspto-patent-driver-depth/),
+- **Wave-1 freed lane slots** (the `uspto-patent-driver-depth` graduation
+  already happened 2026-08-13): schedule its active goal packets
+  [`goals/uspto-prosecution-read`](../goals/uspto-prosecution-read/) and
+  [`goals/uspto-ptmnfee2-ingest`](../goals/uspto-ptmnfee2-ingest/), plus
   [`citation-grounding-hallucination-guard`](../explorations/citation-grounding-hallucination-guard/).
 - **`semantic-foundation` M2** (classification schemes) and **M3**
   (docketing and party roles).

@@ -175,8 +175,9 @@ from source schemas and proves schema codec plus compact encode/decode
 stability.
 `ServicesAndSurface.test.ts` derives semantic-web RDF datasets and
 canonicalization DTOs from source schemas and proves encoded-boundary stability.
-`JsonLd.test.ts` derives JSON-LD context/literal/frame DTOs from source schemas
-and proves encoded-boundary stability beside exact document/RDF fixtures.
+The since-retired semantic-web JSON-LD pilot derived context/literal/frame DTOs
+from source schemas and proved encoded-boundary stability beside exact
+document/RDF fixtures; its review artifact remains as the historical record.
 `Form.test.ts` derives values from a schema produced by
 `FormBuilder.buildSchema(...)` and proves encoded-boundary stability.
 `agent-effectiveness-command.test.ts` derives agent-effectiveness report values

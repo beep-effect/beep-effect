@@ -1,5 +1,22 @@
 # Decisions
 
+## 2026-08-13 — Hub graduation and re-entry routing
+
+**Decision:** Close this hub as `graduated`. The
+[`patent-citation-candor-gate`](../../goals/patent-citation-candor-gate/README.md)
+and
+[`legal-position-relator-runtime`](../../goals/legal-position-relator-runtime/README.md)
+wedges completed. The
+[`patent-drafting-episode-ledger`](../patent-drafting-episode-ledger/README.md)
+align gate closed the same day with all six questions resolved.
+
+The Lynx ELI temporal/FRBR donor profile routes to the future
+`legal-rule-time-identity` goal, which opens only on operator call. The approved
+`uspto-patent-driver-depth` deep wedge remains QUEUED as a re-entry point. Its
+accumulating trigger includes the episode-ledger Q5 public-USPTO benchmark path
+over `uspto-prosecution-read` data. When that trigger fires, reopen this hub at
+`decompose` rather than spawning the goal directly.
+
 <!--
 Stage 2. The grilling log. One entry per resolved branch-closing question,
 newest last. Unresolved questions live in ops/manifest.json `openQuestions`

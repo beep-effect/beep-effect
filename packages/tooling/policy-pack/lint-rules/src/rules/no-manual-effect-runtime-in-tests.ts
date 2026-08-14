@@ -81,8 +81,6 @@ const LEGACY_BASELINE = HashMap.fromIterable<string, number>([
   ["packages/foundation/capability/observability/test/OtlpPacketLab.test.ts", 2],
   ["packages/foundation/capability/observability/test/PhaseProfiler.test.ts", 2],
   ["packages/foundation/capability/semantic-web/test/CanonicalizationSecurity.test.ts", 1],
-  ["packages/foundation/capability/semantic-web/test/JsonLd.test.ts", 13],
-  ["packages/foundation/capability/semantic-web/test/Provenance.test.ts", 1],
   ["packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts", 9],
   ["packages/foundation/modeling/lexical/test/Lexical.codec.test.ts", 6],
   ["packages/foundation/modeling/pandoc-ast/test/integration/Pandoc.integration.test.ts", 1],

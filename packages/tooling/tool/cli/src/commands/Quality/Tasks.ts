@@ -47,6 +47,7 @@ import {
   compareCoverageRegressionBaseline,
   writeCoverageRegressionBaseline,
 } from "./internal/CoverageRegression.ts";
+import { CoverageScopeOwner, planCoverageAffectedScope, planCoverageFullShards } from "./internal/CoverageScope.ts";
 import {
   detectNoLocationTs2589Flake,
   FLAKE_QUARANTINE_ARTIFACT_RELATIVE_PATH,
@@ -109,6 +110,14 @@ const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 // tuning; the 16GB-survival value was 2.
 const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
+// Match the fleet's accepted Turbo concurrency. Five concurrent Vitest
+// coverage processes made the isolated repo-cli long pole slower than the
+// 20-minute job charter on live fleet hardware.
+const COVERAGE_FULL_SHARD_COUNT = 4;
+// Each shard owns one Turbo task at a time, but Vitest otherwise sizes its
+// worker pool from the whole 8-vCPU host. Bound each pool so four shards cannot
+// oversubscribe the runner and starve repo-cli's intentionally sequential suite.
+const COVERAGE_FULL_VITEST_MAX_WORKERS_ARG = "--maxWorkers=2";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
 const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
@@ -169,7 +178,9 @@ type RootAuditSelectionState = {
 
 type CoverageTaskOptions = {
   readonly args: ReadonlyArray<string>;
+  readonly expectedPackageNames: ReadonlyArray<string>;
   readonly scoped: boolean;
+  readonly skip: boolean;
   readonly writeBaseline: boolean;
 };
 
@@ -525,10 +536,117 @@ const parseCoverageTaskOptions = (args: ReadonlyArray<string>): CoverageTaskOpti
   const stripped = stripPassthroughDelimiter(args);
   return {
     args: coverageTurboArgs(stripped),
+    expectedPackageNames: A.empty<string>(),
     scoped: A.some(stripped, isExplicitTurboAffectedOrScopeArg),
+    skip: false,
     writeBaseline: A.some(stripped, isCoverageWriteBaselineArg),
   };
 };
+
+const isCoverageAffectedArg = (arg: string): boolean => arg === "--affected";
+const withoutCoverageAffectedArg: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
+  (arg) => !isCoverageAffectedArg(arg)
+);
+
+const isCoverageFullOwnedBooleanArg = (arg: string): boolean =>
+  arg === "--only" || Str.startsWith("--only=")(arg) || arg === "--summarize" || Str.startsWith("--summarize=")(arg);
+
+const isCoverageFullOwnedValueArg = (arg: string): boolean =>
+  arg === "--concurrency" || arg === "--filter" || arg === "--since";
+
+const isCoverageFullOwnedArg = (arg: string): boolean =>
+  isCoverageAffectedArg(arg) ||
+  isCoverageFullOwnedBooleanArg(arg) ||
+  isCoverageFullOwnedValueArg(arg) ||
+  isTurboConcurrencyArg(arg) ||
+  isExplicitTurboScopeArg(arg);
+
+const coverageFullPassthroughArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const passthrough: Array<string> = [];
+  let skipValue = false;
+
+  for (const arg of args) {
+    if (skipValue && !Str.startsWith("--")(arg)) {
+      skipValue = false;
+      continue;
+    }
+    skipValue = false;
+    if (isCoverageFullOwnedValueArg(arg)) {
+      skipValue = true;
+      continue;
+    }
+    if (!isCoverageFullOwnedArg(arg)) {
+      passthrough.push(arg);
+    }
+  }
+
+  return passthrough;
+};
+
+const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOptions")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
+  const parsed = parseCoverageTaskOptions(args);
+  if (!A.some(args, isCoverageAffectedArg)) {
+    return parsed;
+  }
+  if (A.some(args, (arg) => isExplicitTurboScopeArg(arg))) {
+    return yield* QualityTaskConfigurationError.new(
+      "Affected coverage cannot be combined with --filter or --since; let the coverage planner choose exact owners or a full fallback."
+    );
+  }
+
+  const base = yield* configStringOption("TURBO_SCM_BASE").pipe(
+    Effect.flatMap(
+      O.match({
+        onNone: () => QualityTaskConfigurationError.new("Affected coverage requires TURBO_SCM_BASE."),
+        onSome: Effect.succeed,
+      })
+    )
+  );
+  const changedFiles = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
+    QualityTaskConfigurationError.mapError(`Failed to collect affected coverage files from ${base}...HEAD.`)
+  );
+  const path = yield* Path.Path;
+  const owners = yield* workspaceTaskOwners(repoRoot);
+  const scopeOwners = A.map(owners, (owner) =>
+    CoverageScopeOwner.make({
+      hasCoverage: ownerDefinesScript("coverage")(owner),
+      packageName: owner.packageName,
+      packagePath: pipe(path.relative(repoRoot, owner.packageDir), Str.replace(/\\/gu, "/")),
+    })
+  );
+  const scope = planCoverageAffectedScope(scopeOwners, changedFiles);
+  const passthroughArgs = withoutCoverageAffectedArg(args);
+
+  return yield* Match.value(scope).pipe(
+    Match.discriminatorsExhaustive("_tag")({
+      full: ({ reasons }) =>
+        Console.log(`[beep-cli] coverage:affected: full fallback (${A.join(reasons, "; ")})`).pipe(
+          Effect.as(parseCoverageTaskOptions(passthroughArgs))
+        ),
+      selected: ({ packageNames }) =>
+        Console.log(`[beep-cli] coverage:affected: selected ${A.join(packageNames, ", ")}`).pipe(
+          Effect.as({
+            args: coverageTurboArgs([...passthroughArgs, ...A.map(packageNames, (name) => `--filter=${name}`)]),
+            expectedPackageNames: packageNames,
+            scoped: true,
+            skip: false,
+            writeBaseline: parsed.writeBaseline,
+          })
+        ),
+      noop: () =>
+        Effect.succeed({
+          args: A.empty<string>(),
+          expectedPackageNames: A.empty<string>(),
+          scoped: true,
+          skip: true,
+          writeBaseline: parsed.writeBaseline,
+        }),
+    })
+  );
+});
 
 const isLintFixAggregateArg = (arg: string): boolean => A.some(LINT_FIX_AGGREGATE_ARGS, (name) => name === arg);
 
@@ -943,7 +1061,8 @@ const runStepWithQuarantine = Effect.fn("QualityTasks.runStepWithQuarantine")(fu
 
 const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingStepFailures")(function* (
   label: string,
-  steps: ReadonlyArray<QualityTaskStep>
+  steps: ReadonlyArray<QualityTaskStep>,
+  concurrency = 1
 ) {
   if (A.isReadonlyArrayEmpty(steps)) {
     return A.empty<QualityTaskFailed>();
@@ -968,7 +1087,7 @@ const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingSte
         ),
         Effect.map(([, outcome]) => outcome)
       ),
-    { concurrency: 1 }
+    { concurrency }
   );
   yield* O.match(artifactCwd, {
     onNone: () => Effect.void,
@@ -980,9 +1099,10 @@ const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingSte
 
 const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(function* (
   label: string,
-  steps: ReadonlyArray<QualityTaskStep>
+  steps: ReadonlyArray<QualityTaskStep>,
+  concurrency = 1
 ) {
-  const failures = yield* collectStreamingStepFailures(label, steps);
+  const failures = yield* collectStreamingStepFailures(label, steps, concurrency);
   yield* failQualityTaskFailures(label, failures);
 });
 
@@ -1190,6 +1310,31 @@ const coverageStep = (cwd: string, options: CoverageTaskOptions) =>
       ...coverageEnvironment(),
       ...(options.writeBaseline ? { VITEST_COVERAGE_REPORT_ONLY: "1" } : {}),
     },
+  });
+
+const coverageFullShardStep = (
+  cwd: string,
+  index: number,
+  packageNames: ReadonlyArray<string>,
+  passthroughArgs: ReadonlyArray<string>
+) =>
+  QualityTaskStep.make({
+    label: `coverage:shard-${index}`,
+    command: "bunx",
+    args: turboRunArgs(
+      ["coverage"],
+      [
+        "--only",
+        "--concurrency=1",
+        "--summarize",
+        ...passthroughArgs,
+        ...A.map(packageNames, (packageName) => `--filter=${packageName}`),
+        "--",
+        COVERAGE_FULL_VITEST_MAX_WORKERS_ARG,
+      ]
+    ),
+    cwd,
+    env: coverageEnvironment(),
   });
 
 const bunRunStep = (cwd: string, label: string, args: ReadonlyArray<string>) =>
@@ -1761,26 +1906,102 @@ export const rootQualityStepsForTesting: {
     rootStepsFor(repoRoot, invocation)
 );
 
+const coverageFullSteps = (
+  repoRoot: string,
+  packageNames: ReadonlyArray<string>,
+  args: ReadonlyArray<string>
+): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] => {
+  const passthroughArgs = coverageFullPassthroughArgs(args);
+  const shards = planCoverageFullShards(packageNames, COVERAGE_FULL_SHARD_COUNT);
+
+  return [
+    turboStep(repoRoot, "coverage:prebuild", ["build"], [CI_TURBO_CONCURRENCY_ARG, "--summarize", ...passthroughArgs]),
+    ...A.map(shards, (shard) => coverageFullShardStep(repoRoot, shard.index, shard.packageNames, passthroughArgs)),
+  ];
+};
+
+/**
+ * Build the prebuild and weighted shard steps for a full hosted coverage run.
+ *
+ * **Example** (Preserve caller cache controls)
+ *
+ * ```ts
+ * import { coverageFullStepsForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const steps = coverageFullStepsForTesting("/repo", ["@beep/schema"], ["--remote-only"])
+ * console.log(steps[0]?.args)
+ * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @param packageNames - Coverage-owning workspace package names.
+ * @param args - Parsed Turbo arguments supplied by the caller.
+ * @returns One prebuild step followed by the weighted coverage shard steps.
+ * @category testing
+ * @since 0.0.0
+ */
+export const coverageFullStepsForTesting: {
+  (
+    packageNames: ReadonlyArray<string>,
+    args: ReadonlyArray<string>
+  ): (repoRoot: string) => readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>];
+  (
+    repoRoot: string,
+    packageNames: ReadonlyArray<string>,
+    args: ReadonlyArray<string>
+  ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>];
+} = dual(3, coverageFullSteps);
+
+const runFullShardedCoverage = Effect.fn("QualityTasks.runFullShardedCoverage")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+) {
+  const owners = yield* workspaceTaskOwners(repoRoot);
+  const packageNames = pipe(
+    owners,
+    A.filter(ownerDefinesScript("coverage")),
+    A.map((owner) => owner.packageName)
+  );
+  if (A.isReadonlyArrayEmpty(packageNames)) {
+    return yield* QualityTaskConfigurationError.new("No workspace packages define coverage.");
+  }
+
+  const [prebuildStep, ...shardSteps] = coverageFullSteps(repoRoot, packageNames, args);
+  yield* Console.log(
+    `[beep-cli] coverage:full: prebuild once, then ${A.length(shardSteps)} weighted in-job shard(s) at aggregate concurrency ${COVERAGE_FULL_SHARD_COUNT}`
+  );
+  yield* runStep(prebuildStep);
+  yield* runStreamingStepGroup("coverage:full", shardSteps, COVERAGE_FULL_SHARD_COUNT);
+});
+
 const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
 ) {
-  const options = parseCoverageTaskOptions(args);
+  const options = yield* resolveCoverageTaskOptions(repoRoot, args);
   if (!options.writeBaseline && configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1")) {
     return yield* QualityTaskConfigurationError.new(
       "VITEST_COVERAGE_REPORT_ONLY is only supported for coverage baseline regeneration. Run `bun run coverage:baseline:write` to regenerate the baseline, or unset it for the coverage gate."
     );
   }
 
-  yield* cleanCoverageRegressionOutputs(repoRoot);
-  yield* runStep(coverageStep(repoRoot, options));
-
-  if (options.writeBaseline) {
-    yield* writeCoverageRegressionBaseline(repoRoot, options.scoped);
+  if (options.skip) {
+    yield* Console.log("[beep-cli] coverage:affected: no coverage-bearing inputs changed");
     return;
   }
 
-  yield* compareCoverageRegressionBaseline(repoRoot, options.scoped);
+  yield* cleanCoverageRegressionOutputs(repoRoot);
+  if (isCi() && !options.scoped && !options.writeBaseline) {
+    yield* runFullShardedCoverage(repoRoot, options.args);
+  } else {
+    yield* runStep(coverageStep(repoRoot, options));
+  }
+
+  if (options.writeBaseline) {
+    yield* writeCoverageRegressionBaseline(repoRoot, options.scoped, options.expectedPackageNames);
+    return;
+  }
+
+  yield* compareCoverageRegressionBaseline(repoRoot, options.scoped, options.expectedPackageNames);
 });
 
 const readPackageJson = Effect.fn("QualityTasks.readPackageJson")(function* (packageDir: string) {
@@ -2153,6 +2374,15 @@ export const runQualityTaskStreamingStepGroupForTesting = runQualityTaskStreamin
  * @since 0.0.0
  */
 export const collectLintFixChangedFilesForTesting = collectExistingWorkingTreeChangedFiles;
+
+/**
+ * Collect committed and dirty changed paths using the same rename-safe scope as
+ * affected coverage. Exposed for focused integration tests.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const collectCoverageChangedFilesForTesting = collectChangedFiles;
 
 /**
  * Build the root lint fix changed-file step. Exposed for focused unit tests.

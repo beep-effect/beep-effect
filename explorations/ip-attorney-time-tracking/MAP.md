@@ -20,6 +20,11 @@ explicitly marked NET-NEW.
 
 ## Goal Gates
 
+The five queued candidates are re-entry points under the repository's
+reopen-at-`decompose` convention. Reopen when the applicable external trigger
+fires: Tom's task set or M365 consent, a client mandate, a demonstrated PST
+need, or enough Slice-1 data for the profitability view.
+
 | Goal | Gate condition |
 | --- | --- |
 | [`law-time-capture-spine`](../../goals/law-time-capture-spine/README.md) | **Passed 2026-07-14:** shape sign-off ratified the appetite, success criteria, retention policy, and first-goal slug. Tom supplies the initial native prosecution task set from real matters during goal P0. |
