@@ -38,7 +38,6 @@
  */
 
 import { $SchemaId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { Effect, Number as N, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -89,7 +88,7 @@ type RemoteHostResolver = (hostname: string) => Effect.Effect<ReadonlyArray<stri
  * @category errors
  * @since 0.0.0
  */
-export class BlockedHostError extends TaggedErrorClass<BlockedHostError>($I`BlockedHostError`)(
+export class BlockedHostError extends S.TaggedError<BlockedHostError>($I`BlockedHostError`)(
   "BlockedHostError",
   {
     host: S.String.annotateKey({

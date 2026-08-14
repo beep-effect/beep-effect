@@ -8,7 +8,7 @@
 import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { deriveSessionGraphPartitions, graphPartitionIri, Session } from "@beep/ontology-domain/aggregates/Session";
 import { makeDataset, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
-import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import {
   SparqlConstructResult,
   SparqlQueryRequest,
@@ -243,7 +243,7 @@ export class RunOntologySparqlResult extends S.Class<RunOntologySparqlResult>($I
  * @category errors
  * @since 0.0.0
  */
-export class OntologySparqlError extends TaggedErrorClass<OntologySparqlError>($I`OntologySparqlError`)(
+export class OntologySparqlError extends S.TaggedError<OntologySparqlError>($I`OntologySparqlError`)(
   "OntologySparqlError",
   {
     reason: LiteralKit(["profileMismatch", "engineFailed"]).pipe(

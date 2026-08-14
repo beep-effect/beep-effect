@@ -5,7 +5,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { CauseTaggedError } from "@beep/schema";
 import { P } from "@beep/utils";
 import { Context, Effect, Result } from "effect";
 import { dual } from "effect/Function";
@@ -106,7 +105,7 @@ export const CommandJsonOutput: Context.Reference<(text: string) => Effect.Effec
  * ```ts
  * import { CliJsonError } from "@beep/repo-cli/internal/cli/Json"
  *
- * const error = CliJsonError.new("Failed to encode JSON")("boom")
+ * const error = CliJsonError.make({ cause: "boom", message: "Failed to encode JSON" })
  *
  * console.log(error)
  * ```
@@ -114,9 +113,12 @@ export const CommandJsonOutput: Context.Reference<(text: string) => Effect.Effec
  * @category errors
  * @since 0.0.0
  */
-export class CliJsonError extends CauseTaggedError<CliJsonError>($I`CliJsonError`)(
+export class CliJsonError extends S.TaggedError<CliJsonError>($I`CliJsonError`)(
   "CliJsonError",
-  {},
+  {
+    message: S.String,
+    cause: S.Defect({ includeStack: true }),
+  },
   $I.annote("CliJsonError", {
     description: "Failure raised when a repo-cli command cannot encode a JSON payload.",
   })
@@ -126,7 +128,7 @@ export class CliJsonError extends CauseTaggedError<CliJsonError>($I`CliJsonError
  * Encode an arbitrary JSON-compatible command payload for terminal output.
  *
  * The encode failure is left on the error channel unmapped so each caller can
- * attach its own tagged error (for example `CliJsonError.mapError(...)` or
+ * attach its own tagged error (for example `Effect.mapError(...)` or
  * `DomainError.newCause(...)`) without this module picking a winner.
  *
  * **Example** (Encode a payload and tag the failure)
@@ -136,7 +138,11 @@ export class CliJsonError extends CauseTaggedError<CliJsonError>($I`CliJsonError
  * import { CliJsonError, encodeCommandJson } from "@beep/repo-cli/internal/cli/Json"
  *
  * const encoded = Effect.runSync(
- *   encodeCommandJson({ ok: true }).pipe(CliJsonError.mapError("Failed to encode command JSON output."))
+ *   encodeCommandJson({ ok: true }).pipe(
+ *     Effect.mapError((cause) =>
+ *       CliJsonError.make({ cause, message: "Failed to encode command JSON output." })
+ *     )
+ *   )
  * )
  *
  * console.log(encoded) // {"ok":true}
@@ -268,7 +274,9 @@ export const formatJsonValue = (value: unknown): string =>
 export const printCommandJson = Effect.fn("RepoCli.Json.printCommandJson")(function* (
   value: unknown
 ): Effect.fn.Return<void, CliJsonError> {
-  const encoded = yield* encodeCommandJson(value).pipe(CliJsonError.mapError("Failed to encode command JSON output."));
+  const encoded = yield* encodeCommandJson(value).pipe(
+    Effect.mapError((cause) => CliJsonError.make({ cause, message: "Failed to encode command JSON output." }))
+  );
   const write = yield* CommandJsonOutput;
   yield* write(`${encoded}\n`);
 });

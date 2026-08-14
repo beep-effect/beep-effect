@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "identity-iri-fibered",
+    "title": "Identity IRI Fibered",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/identity-iri-fibered",
+  "lifecycle": "active",
+  "mission": "Ship the discrete Fibered kit, exact IdentityRegistry, byte-identical JSDoc migration, post-move SHACL projection, and test/dev store Layers.",
+  "statusNote": "Scaffolded after identity-iri-fold merged. Implementation is blocked by semantic-web PR2 cleanup and semantic-web PR3 cleanup; neither cleanup has a goal packet, so landed-content evidence must clear both text blockers.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/identity-as-iri",
+    "graduated": "2026-08-13"
+  },
+  "dependencies": ["goals/identity-iri-core", "goals/identity-iri-fold"],
+  "blockedBy": [
+    "semantic-web PR2 cleanup (no goal packet; require landed-content evidence)",
+    "semantic-web PR3 cleanup (no goal packet; require landed-content evidence)"
+  ],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/identity-iri-fibered/README.md",
+    "goals/identity-iri-fibered/SPEC.md",
+    "goals/identity-iri-fibered/PLAN.md",
+    "goals/identity-iri-fibered/GOAL.md",
+    "goals/identity-iri-fibered/research/SOURCES.md",
+    "explorations/identity-as-iri/BRIEF.md",
+    "explorations/identity-as-iri/MAP.md",
+    "explorations/identity-as-iri/DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/identity-as-iri/research/SOURCES.md",
+    "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
+    "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/identity-iri-fibered/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Blocker and contract audit", "status": "pending" },
+    { "id": "P1", "name": "Implement full MAP row", "status": "pending" },
+    { "id": "P2", "name": "Verify", "status": "pending" },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/identity-iri-fibered/GOAL.md)\" -le 4000",
+    "jq . goals/identity-iri-fibered/ops/manifest.json",
+    "rg -n \"identity-iri-fibered|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/identity-iri-fibered",
+    "git diff --check -- goals/identity-iri-fibered",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Either semantic-web PR2 or PR3 cleanup lacks landed-content evidence.",
+    "The post-move SHACL contract layer cannot be identified.",
+    "The discrete case would require version/coherence machinery.",
+    "Store work would become a production technology decision."
+  ]
+}

@@ -9,7 +9,7 @@ import { $LangExtractId } from "@beep/identity";
 import { ExtractionExample, ExtractionTarget } from "@beep/langextract/Target";
 import { DocumentId } from "@beep/nlp/Core";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
@@ -95,7 +95,7 @@ export type LangExtractErrorReason = typeof LangExtractErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class LangExtractError extends TaggedErrorClass<LangExtractError>($I`LangExtractError`)(
+export class LangExtractError extends S.TaggedError<LangExtractError>($I`LangExtractError`)(
   "LangExtractError",
   {
     details: S.optionalKey(S.Record(S.String, S.String)),

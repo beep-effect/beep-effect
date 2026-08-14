@@ -9,7 +9,6 @@ import { $OntologyUseCasesId } from "@beep/identity/packages";
 import { Dataset, PrefixMap } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 
@@ -173,7 +172,7 @@ export type TurtleCodecErrorReason = typeof TurtleCodecErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class TurtleCodecError extends TaggedErrorClass<TurtleCodecError>($I`TurtleCodecError`)(
+export class TurtleCodecError extends S.TaggedError<TurtleCodecError>($I`TurtleCodecError`)(
   "TurtleCodecError",
   {
     reason: TurtleCodecErrorReason,
@@ -393,7 +392,7 @@ export type OntologyFileStoreErrorReason = typeof OntologyFileStoreErrorReason.T
  * @category errors
  * @since 0.0.0
  */
-export class OntologyFileStoreError extends TaggedErrorClass<OntologyFileStoreError>($I`OntologyFileStoreError`)(
+export class OntologyFileStoreError extends S.TaggedError<OntologyFileStoreError>($I`OntologyFileStoreError`)(
   "OntologyFileStoreError",
   {
     reason: OntologyFileStoreErrorReason,

@@ -3,10 +3,10 @@
   "exploration": {
     "slug": "agent-governance-control-plane",
     "title": "Agent Governance Control Plane",
-    "status": "active",
+    "status": "parked",
     "stage": "capture",
     "openQuestions": [
-      "Which parts belong in repo-wide law and existing operator skills, and which still justify a separately shaped governance capability?"
+      "Resume when agentic-governance-laws hits a wall that needs the full role-authority and expiring-exception protocol."
     ],
     "sources": [],
     "links": {
@@ -15,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-07-14",
-    "updated": "2026-07-14"
+    "updated": "2026-08-13"
   }
 }

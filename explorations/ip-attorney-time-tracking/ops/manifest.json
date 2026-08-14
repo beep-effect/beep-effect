@@ -3,7 +3,7 @@
   "exploration": {
     "slug": "ip-attorney-time-tracking",
     "title": "IP Attorney Time Tracking",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
     "openQuestions": [],
     "links": {
@@ -12,7 +12,7 @@
       "supersededBy": null
     },
     "created": "2026-06-18",
-    "updated": "2026-07-14",
+    "updated": "2026-08-13",
     "sources": ["research/SOURCES.md"]
   }
 }

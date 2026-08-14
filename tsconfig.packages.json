@@ -91,16 +91,10 @@
       "path": "packages/drivers/cosmos"
     },
     {
-      "path": "packages/drivers/courtlistener"
-    },
-    {
       "path": "packages/drivers/discord"
     },
     {
       "path": "packages/drivers/doc-text"
-    },
-    {
-      "path": "packages/drivers/dol"
     },
     {
       "path": "packages/drivers/drizzle"
@@ -116,9 +110,6 @@
     },
     {
       "path": "packages/drivers/face-detection"
-    },
-    {
-      "path": "packages/drivers/federal-register"
     },
     {
       "path": "packages/drivers/ffmpeg"
@@ -182,9 +173,6 @@
     },
     {
       "path": "packages/drivers/pretext"
-    },
-    {
-      "path": "packages/drivers/protobuf"
     },
     {
       "path": "packages/drivers/rdf-canonize"
@@ -356,6 +344,9 @@
     },
     {
       "path": "packages/shared/tables"
+    },
+    {
+      "path": "packages/shared/use-cases"
     },
     {
       "path": "packages/tooling/library/ai-metrics"

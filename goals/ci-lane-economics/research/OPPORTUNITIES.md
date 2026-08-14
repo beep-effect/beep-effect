@@ -1,0 +1,298 @@
+# ci-lane-economics — friction and opportunity ledger
+
+Record receipts at the moment friction happens (what you were doing, the
+evidence, what would have prevented it). Redact for the public repo.
+
+## Seed context (2026-08-13, from the split)
+
+- Pre-cache hosted p50s: Lint ~43.6m, Test Unit ~23m, Property Laws ~22.4m.
+- The ~9-minute type-graph import inside vitest re-pays per heavy-import
+  suite; caching cannot fix it — per-slice sharding is the lever.
+- Fleet Docgen/Lint hangs from the runMain success-exit class are FIXED
+  (#673); do not let historical hang data pollute the census.
+
+## 2026-08-13 — the lane-timings collector stops before the census boundary
+
+- **Doing:** building the P0 cache-warm census from the Check workflow after
+  the #673/#674 rollout boundary.
+- **Evidence:** `bun run beep ci lane-timings --help` can select only the most
+  recent 1-100 runs. It cannot select a workflow, event, time/SHA boundary, or
+  required contexts, and its rows omit run event/SHA plus Turbo task hit counts.
+  The census therefore required separate Actions run/job/log API joins; one
+  unquoted `?filter=all` endpoint also triggered zsh glob expansion before the
+  call reached `gh`.
+- **Would have prevented it:** make `ci lane-timings` accept workflow,
+  since/until, event, and job-name filters; carry run metadata into every row;
+  and parse the final Turbo `Cached: X cached, Y total` line for lanes declared
+  `uses_turbo: "true"`. The collector should emit the percentile and flake
+  populations separately so later packets do not rebuild this join ad hoc.
+
+## 2026-08-13 — required-context metadata drifted from the live ruleset
+
+- **Doing:** reconciling the P0 lane table with the repo-local CI lane registry.
+- **Evidence:** live ruleset `10240248` returns 16 required contexts and omits
+  `JSDoc Ratchet`, while `CiLane.ts` marked that visible lane `required: true`
+  and its test described a frozen 17-context set.
+- **Would have prevented it:** generate or periodically verify the descriptor's
+  `required` flags against the live ruleset, with an explicit offline snapshot
+  and provenance date rather than hand-maintained metadata.
+
+## 2026-08-13 — raw phase edits accept invalid status tokens until schema proof
+
+- **Doing:** advancing the packet from P1 into P2 after signing the placement
+  decision.
+- **Evidence:** `jq` accepted `"in_progress"`, but the canonical
+  `GoalPhaseStatus` is `"in-progress"`. The mistake surfaced as two failures
+  only after the five-minute repo-CLI test lane reached the tracked-manifest
+  census.
+- **Would have prevented it:** a schema-aware goal phase-transition command, or
+  running `bun run beep goals doctor` immediately after every raw manifest
+  status edit and before any broad test lane.
+
+## 2026-08-13 — Yeet repair hint contradicted its structured failed sublane
+
+- **Doing:** attributing the first full publish proof failure after the P0/P1
+  packet update and initial P2 CI changes.
+- **Evidence:** the structured proof result identified only `quality:lint` as
+  failed and showed SAST passing, but the terminal repair hint classified the
+  failure as SAST. A direct goal-index check then identified the actual lint
+  failure: `goals/INDEX.md` had not been regenerated after the manifest phase
+  changes.
+- **Would have prevented it:** derive the repair hint from Yeet's structured
+  failed-sublane result before applying broad output fingerprints, and have the
+  manifest writer regenerate or explicitly name the goal-index follow-up.
+
+## 2026-08-13 — Bun cannot directly refresh a transitive-only package
+
+- **Doing:** clearing a newly revised Nano ID advisory that appeared between
+  two Yeet publication attempts.
+- **Evidence:** `bun update nanoid` added Nano ID 6 as a root dependency while
+  leaving PostCSS on vulnerable Nano ID 3.3.17; refreshing or temporarily
+  adding/removing the package also restored the stale transitive lock entry.
+  The minimal repair was a one-line lock resolution to 3.3.18 using the npm
+  registry integrity, proven by frozen install and the repository security
+  lane.
+- **Would have prevented it:** a documented repo command for refreshing one
+  transitive resolution without adding a root dependency, or a package-manager
+  mode that accepts a transitive package plus exact version and preserves it
+  after the temporary root edge is removed.
+
+## 2026-08-13 — trusted file dependency installed without its build artifact
+
+- **Doing:** completing the clean-HEAD Yeet proof after the CI lane changes.
+- **Evidence:** a fresh frozen install left the trusted file dependency
+  `@pulumi/gharunners` without its ignored `bin/` output. Both the package Check
+  task and the independent test-tsgo census then resolved generated TypeScript
+  source under the repository's stricter compiler policy and failed. Running
+  the dependency's own postinstall produced its intended JavaScript and
+  declarations, after which both infra typecheck shapes passed.
+- **Would have prevented it:** make the root install lifecycle explicitly run
+  the generated SDK's postinstall; do not rely on Bun to execute lifecycle
+  scripts for a trusted `file:` dependency nested under a workspace.
+
+## 2026-08-13 — a failed matrix job cannot be retried while its workflow is running
+
+- **Doing:** recovering the first P2 hosted admission wave after `Test
+  Integration` lost its GitHub-hosted runner.
+- **Evidence:** PR #684 attempt-one run `31723283969`, job `94525310886`,
+  received the runner shutdown signal after 10m25s; the verification step was
+  cancelled and four Turbo tasks exited 137. A targeted job-rerun API call then
+  returned `403: The workflow run containing this job is already running`, so
+  recovery had to wait for unrelated long-running matrix jobs to finish. The
+  accepted targeted retry, job `94533388363`, then reproduced the shutdown on a
+  different hosted runner after 11m21s total / 8m05s of Turbo work, firing the
+  packet's hosted-placement rollback.
+- **Would have prevented it:** give required lanes independently rerunnable
+  workflow boundaries, or add an external closeout retry policy that recognizes
+  the runner-shutdown signature and retries the failed job once the workflow is
+  terminal without laundering the failed attempt into duration percentiles.
+
+## 2026-08-13 — retrying an obsolete run cancels the current-head matrix
+
+- **Doing:** closing PR #684 after rolling `Test Integration` back from the
+  GitHub-hosted experiment to `beep-ec2-heavy`.
+- **Evidence:** current-head run `31726953139` started for the rollback commit,
+  but a targeted retry of pre-rollback run `31723283969` was accepted at
+  17:42:22Z. The shared workflow concurrency group began cancelling every
+  current-head job during checkout at 17:42:24Z, leaving a wall of red checks
+  with no source task having run. Cancelling the obsolete retry was required
+  before publishing a fresh exact-head run.
+- **Would have prevented it:** scope retry automation to the PR's current head
+  SHA and refuse stale-run reruns; alternatively include the head SHA in the
+  concurrency key so a stale diagnostic retry cannot evict current-head proof.
+
+## 2026-08-13 — concurrent checkout proofs contaminated local lane timings
+
+- **Doing:** running the exact-head full Yeet proof to establish correctness
+  and collect clean local task weights for the P2 Coverage redesign.
+- **Evidence:** five independent checkout proofs were simultaneously running
+  the test-tsgo census on the same host. The exact-head proof finished green,
+  but its CPU-bound wall times were resource-contended and therefore are not
+  representative performance weights.
+- **Would have prevented it:** a host-wide quality concurrency lease or
+  fleet-aware local scheduler that serializes heavyweight proof phases across
+  sibling checkouts while allowing unrelated lightweight work to continue.
+
+## 2026-08-13 — local coverage timing hid fleet contention
+
+- **Doing:** admitting the five-shard Coverage Regression redesign on the live
+  32-GB fleet runner after its complete local proof passed.
+- **Evidence:** PR #698 job `94583467537` passed all 124 package comparisons but
+  took 22m18s. Its 43-second prebuild was not the bottleneck: four mixed shards
+  took 14m59s-15m54s while the isolated `@beep/repo-cli` shard stretched from
+  its 12m48 baseline weight to 20m16s under five simultaneous Vitest coverage
+  processes.
+- **Would have prevented it:** a fleet-parity performance runner for admission
+  tests, or a coverage planner invariant that caps aggregate shard concurrency
+  at the runner's already accepted Turbo concurrency.
+
+## 2026-08-13 — review-fix proof omitted a blocking Effect law
+
+- **Doing:** publishing the final review fixes for the P2 Coverage redesign.
+- **Evidence:** two consecutive `yeet repair --tier review-fix` passes completed
+  green, but the hosted Lint Policy job then found one introduced `effect-fn`
+  violation in `Ci.command.ts`: an `Effect.forEach` callback directly returned
+  `Effect.gen`. The focused `bun run beep laws effect-fn --check` caught the
+  corrected shape immediately.
+- **Would have prevented it:** include every blocking hosted policy law in the
+  review-fix tier, or report excluded blocking sublanes explicitly before the
+  tier can be treated as publish-ready proof.
+
+## 2026-08-13 — cold hosted build failed once but passed clean reproduction
+
+- **Doing:** admitting the four-shard Coverage shape after PR cache access was
+  changed to local-only on main.
+- **Evidence:** exact-head job `94603831042` failed during its prebuild with
+  transient `@beep/nlp` TypeScript/Effect diagnostics after 17 of 52 tasks. A
+  fresh detached clone of the same commit then completed the full local-only
+  root build with 128/128 tasks, zero cache hits, in 1m11s.
+- **Would have prevented it:** make cold-build repeatability a first-class CI
+  probe and automatically retry this diagnostic signature once before
+  classifying it as a deterministic source failure.
+
+## 2026-08-13 — Turbo concurrency did not bound Vitest worker fan-out
+
+- **Doing:** admitting the four-shard Coverage Regression candidate on the
+  existing eight-vCPU fleet runner.
+- **Evidence:** PR #698 job `94608048289` took 24m10s and failed. Three mixed
+  shards passed in 15m30s-16m46s; the shard containing `@beep/repo-cli` took
+  19m13s and failed ten explicit 5-second timeout tests plus one 1-second
+  timing assertion. Although each shard used Turbo concurrency one, every
+  package-local Vitest process could still size its worker pool from the whole
+  host, oversubscribing four co-resident shards.
+- **Would have prevented it:** treat subprocess worker pools as part of the
+  lane's aggregate concurrency budget and pass an explicit per-shard Vitest
+  worker cap derived from host vCPUs divided by shard count.
+
+## 2026-08-13 — cold hosted prebuild flaked a second time
+
+- **Doing:** admitting the two-worker four-shard Coverage Regression candidate
+  on PR #698.
+- **Evidence:** run `31753283207`, job `94623544457`, failed after 1m26s when
+  the cold prebuild reported `thunk.ts is not a module` and missing exports
+  after five successful tasks. A clean detached worktree at exact merge ref
+  `c72c8e1ab3` then passed all 128 forced build tasks with zero cache hits in
+  1m03s. Targeted retry job `94625871718` passed the same prebuild.
+- **Would have prevented it:** make cold-build repeatability a first-class CI
+  probe and retry this known impossible-diagnostic signature once before
+  classifying it as a deterministic source failure.
+
+## 2026-08-13 — uniform two-worker cap preserved correctness but missed time
+
+- **Doing:** admitting the two-worker four-shard Coverage Regression candidate
+  on the existing eight-vCPU fleet runner.
+- **Evidence:** targeted retry job `94625871718` passed every test and compared
+  all 124 package summaries, but took 23m23s. Its cold prebuild took 3m38s and
+  the four shards took 15m32s, 16m58s, 17m26s, and 18m23s. The cap removed the
+  prior repo-cli timeouts but left insufficient CPU throughput for the charter.
+- **Would have prevented it:** a fleet-parity capacity model that includes the
+  cold prebuild and tests a small bounded worker-cap curve instead of treating
+  host-vCPU equality as the only safe candidate.
+
+## 2026-08-13 — uniform three-worker cap added contention without throughput
+
+- **Doing:** admitting the four-shard, three-worker Coverage Regression
+  candidate on PR #707.
+- **Evidence:** run `31759003628`, job `94641084512`, failed after 23m08s. The
+  cold prebuild took 3m30s; the three mixed shards passed in 16m05s, 16m32s,
+  and 17m16s, while the repo-cli shard failed after 18m16s when a bounded-work
+  assertion measured 1026.30ms against its 1000ms ceiling. There was no OOM or
+  runner shutdown. The repo-cli Vitest config disables file parallelism, so
+  raising `maxWorkers` could not shorten its 728.76 seconds of serial imports.
+- **Would have prevented it:** profile the long pole's Vitest configuration and
+  phase breakdown before raising a uniform worker cap; explicitly parallelize
+  the serial file-import boundary under a bounded coverage-only worker pool.
+
+## 2026-08-13 — root lint-fix did not accept file paths
+
+- **Doing:** formatting the focused Coverage Regression implementation files.
+- **Evidence:** `bun run lint:fix -- <two paths>` routed the paths to Turbo as
+  task names and exited with `Missing tasks in project`; no files were changed.
+- **Would have prevented it:** expose or document a canonical file-scoped
+  formatter entrypoint distinct from the root task-oriented lint-fix command.
+
+## 2026-08-13 — stale zero-cache flags became mutually exclusive
+
+- **Doing:** running the forced local full-path proof for the five-shard
+  coverage candidate.
+- **Evidence:** Turbo 2.10 rejected `--force --remote-only` before executing a
+  task because cache configuration cannot be combined with `force`; the prior
+  proof recipe had treated both as compatible zero-cache controls.
+- **Would have prevented it:** keep one canonical forced-execution recipe in
+  the packet or CLI and validate it against the pinned Turbo version.
+
+## 2026-08-13 — main advanced across an expensive local proof
+
+- **Doing:** proving and preparing the five-shard PR #707 revision for
+  publication.
+- **Evidence:** `origin/main` advanced from `ddc8a873b1` to `5ca003a342` while
+  the forced full coverage proof ran, including a concurrent edit to this
+  ledger. Rebasing therefore required additive conflict resolution and made
+  the successful old-base proof non-authoritative for the final head.
+- **Would have prevented it:** refresh and pin the intended merge base
+  immediately before expensive proof, and serialize writes to the active
+  packet ledger while an admission candidate is being closed out.
+
+## 2026-08-13 — main advanced again between verification and publish
+
+- **Doing:** publishing the fully verified five-shard PR #707 revision.
+- **Evidence:** Yeet reused the exact full proof but refused publication because
+  `origin/main` advanced from `5ca003a342` to `9c621da122` and overlapped the
+  coverage task test. The landed commit also edited all three active packet
+  evidence files, requiring another additive rebase and making the completed
+  proof non-authoritative for the final head.
+- **Would have prevented it:** serialize the final proof/publish window for an
+  active packet, or have the publisher pin and atomically lease-check the base
+  before starting the expensive proof.
+
+## 2026-08-13 — rebased cold prebuild hit transient TS2589
+
+- **Doing:** repeating the forced full-coverage proof after rebasing PR #707
+  onto the newly advanced main.
+- **Evidence:** the zero-cache prebuild stopped after nine seconds when
+  `@beep/box` reported `TS2589: Type instantiation is excessively deep and
+  possibly infinite`; an immediate focused `@beep/box` build passed in under
+  one second without a source change. A retry moved the same failure to
+  `@beep/xai` after 60 successful tasks; its immediate focused build also
+  passed. A process census showed a sibling checkout simultaneously running
+  many Vitest workers and a high-CPU tsgo check on the shared host.
+- **Would have prevented it:** retry this known transient compiler-depth
+  signature once at the failed package boundary before discarding an otherwise
+  admissible full-path proof.
+
+## 2026-08-14 — wall-clock perf assertion still flakes under capped coverage shards
+
+- **Doing:** babysitting PR #695 (unrelated refactor) through the post-#698
+  sharded Coverage Regression lane.
+- **Evidence:** run `31757037521` job `94634965992`: `coverage:shard-1`
+  (`--maxWorkers=2`) failed only
+  `test/qa-command.test.ts > JudgeCheck JSON extraction > stays bounded on
+  pathological balanced-object output` — `expected 1050.17 to be less than
+  1000`; 1513 of 1519 passed. The worker cap fixed the 5-second timeout class
+  but a 1000ms wall-clock bound still sits within instrumentation jitter, so
+  any root-file-touching PR can draw this flake. Rerun attributed as
+  environment-only, not content.
+- **Would have prevented it:** exempt wall-clock performance assertions from
+  the coverage runtime (env-guard them off when coverage instrumentation is
+  active) or express the bound relative to an in-run calibration constant
+  instead of absolute milliseconds.

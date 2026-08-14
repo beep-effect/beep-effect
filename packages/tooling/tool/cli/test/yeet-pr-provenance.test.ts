@@ -57,10 +57,12 @@ describe("Yeet PR provenance", () => {
     const isBranch = S.is(PrProvenanceBranch);
 
     expect(isBranch("feat/evil`payload-->still-branch")).toBe(true);
+    expect(isBranch("feat/a]b")).toBe(true);
     for (const invalid of [
       "",
       "-option",
       "branch with spaces",
+      "feat/a[b",
       "feature\\windows",
       "feature//double",
       "feature/../escape",

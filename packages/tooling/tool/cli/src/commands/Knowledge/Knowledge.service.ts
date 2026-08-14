@@ -25,6 +25,7 @@ import {
   resolveGitMergeBase,
   writeGitArchive,
 } from "../../internal/repo-run/GitExec.ts";
+import { KnowledgeCommandSurface } from "./Knowledge.command-surface.ts";
 import {
   KNOWLEDGE_HISTORY_REMEDIATION,
   KnowledgeOperationalError,
@@ -62,6 +63,7 @@ import type { Crypto } from "effect/Crypto";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CapturedStreams } from "../../internal/process/StepExec.ts";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
+import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";
 import type { KnowledgeInlineSpan, KnowledgeRefsReport, KnowledgeTreeOracle } from "./Knowledge.refs.ts";
 import type { KnowledgeCommandProbeResult } from "./Knowledge.schemas.ts";
 
@@ -85,6 +87,7 @@ const NORMALIZATION_VERSION = "knowledge-normalization/v1";
 const FINDING_ID_PREFIX = "knowledge-finding/v1:";
 const INDEX_PATH = "goals/INDEX.md";
 const COMMAND_PREFIX = "bun run beep";
+const COMMAND_INPUT_ROW_PREFIX = "command/v1";
 const SEMANTIC_DELTA_DIGEST_FAILURE = "Failed to compute a semantic-delta SHA-256 digest.";
 const PROBE_STREAM_MAX_CHARS = 1024 * 1024;
 const PROBE_DIAGNOSTIC_MAX_CHARS = 2048;
@@ -130,6 +133,7 @@ const sanitizeProbeDiagnostic = (input: string, currentCheckoutRoot = "", archiv
     Str.replace(ANSI_ESCAPE_PATTERN, ""),
     Str.replace(OTHER_ESCAPE_PATTERN, ""),
     Str.replace(DISALLOWED_DIAGNOSTIC_CONTROL_PATTERN, ""),
+    Str.replace(FORMAT_CHARACTER_PATTERN, ""),
     Str.replace(POSIX_ABSOLUTE_PATH_PATTERN, "<absolute-path>"),
     Str.replace(WINDOWS_ABSOLUTE_PATH_PATTERN, "<absolute-path>"),
     sanitizeSensitiveText,
@@ -137,7 +141,7 @@ const sanitizeProbeDiagnostic = (input: string, currentCheckoutRoot = "", archiv
   );
 
 const sanitizePublicFindingText = (input: string): string =>
-  pipe(sanitizeProbeDiagnostic(input), Str.replace(FORMAT_CHARACTER_PATTERN, ""), Str.replace(/\n+/gu, " "), Str.trim);
+  pipe(sanitizeProbeDiagnostic(input), Str.replace(/\n+/gu, " "), Str.trim);
 
 /**
  * Everything the scanner may read from one side of a comparison.
@@ -150,16 +154,21 @@ const sanitizePublicFindingText = (input: string): string =>
  *
  * **Gotchas**
  *
- * Only the two probe operations may fail with {@link KnowledgeProbeBootError}, and only that error is
- * survivable: it reports that the current-checkout probe could not start against that oracle's archive
+ * Only current-checkout runtime probes may fail with {@link KnowledgeProbeBootError}, and only that
+ * error is survivable: it reports that current code could not start against that oracle's archive
  * data, which the scanner treats as lost coverage on the base side and as an operational failure on
- * the HEAD side. Every other failure of every operation fails the whole comparison closed.
+ * the HEAD side. Static command-surface derivation always fails the whole comparison closed.
  *
  * @see {@link KnowledgePairedOracleInput} for the two-sided input that carries rename lineage.
  * @category services
  * @since 0.0.0
  */
 export interface KnowledgeArchiveOracle {
+  readonly commandTree: Effect.Effect<KnowledgeStaticCommandTree, KnowledgeOperationalError>;
+  readonly currentCommandTree: Effect.Effect<
+    KnowledgeStaticCommandTree,
+    KnowledgeOperationalError | KnowledgeProbeBootError
+  >;
   readonly indexBytes: Effect.Effect<KnowledgeIndexBytes, KnowledgeOperationalError | KnowledgeProbeBootError>;
   readonly probeCommands: (
     commands: ReadonlyArray<ReadonlyArray<string>>
@@ -491,6 +500,17 @@ const commandProbeResults = Effect.fn("Knowledge.commandProbeResults")(function*
   return results;
 });
 
+const staticCommandProbeResults = (
+  tree: KnowledgeStaticCommandTree,
+  occurrences: ReadonlyArray<KnowledgeCommandOccurrence>
+): ReadonlyArray<KnowledgeCommandProbeResult> =>
+  A.map(occurrences, (occurrence) => {
+    const [status, canonicalPath] = KnowledgeCommandSurface.resolveStaticCommand(tree, occurrence.words);
+    return status === "resolved"
+      ? KnowledgeCommandResolved.make({ canonicalPath })
+      : KnowledgeCommandUnknown.make({ canonicalPath });
+  });
+
 const commandCandidatesFromResults = Effect.fn("Knowledge.commandCandidatesFromResults")(function* (
   occurrences: ReadonlyArray<KnowledgeCommandOccurrence>,
   results: ReadonlyArray<KnowledgeCommandProbeResult>
@@ -521,14 +541,6 @@ const commandCandidatesFromResults = Effect.fn("Knowledge.commandCandidatesFromR
     );
   }
   return candidates;
-});
-
-const commandCandidates = Effect.fn("Knowledge.commandCandidates")(function* (
-  oracle: KnowledgeArchiveOracle,
-  occurrences: ReadonlyArray<KnowledgeCommandOccurrence>
-) {
-  const results = yield* commandProbeResults(oracle, occurrences);
-  return yield* commandCandidatesFromResults(occurrences, results);
 });
 
 const indexCandidate = Effect.fn("Knowledge.indexCandidate")(function* (
@@ -590,7 +602,15 @@ const probeCandidatesForSide = Effect.fn("Knowledge.probeCandidatesForSide")(fun
   oracle: KnowledgeArchiveOracle,
   side: KnowledgeProbeSideInput
 ) {
-  const candidates = yield* commandCandidates(oracle, side.commands);
+  // Derive provenance first so unsupported archive syntax always fails closed rather than hiding
+  // behind a degradable runtime boot failure. The runtime result is intentionally discarded: it
+  // preserves base-data boot/degradation semantics, while the static tree owns base attribution.
+  const commandTree = yield* oracle.commandTree;
+  yield* commandProbeResults(oracle, side.commands);
+  const candidates = yield* commandCandidatesFromResults(
+    side.commands,
+    staticCommandProbeResults(commandTree, side.commands)
+  );
   const index = yield* indexCandidate(oracle, side.indexDocumentId);
   return O.match(index, {
     onNone: () => candidates,
@@ -651,6 +671,16 @@ const probeBothSides = Effect.fn("Knowledge.probeBothSides")(function* (
   base: KnowledgeProbeSideInput,
   head: KnowledgeProbeSideInput
 ) {
+  const [currentTree, headStaticTree] = yield* Effect.all([input.head.currentCommandTree, input.head.commandTree]).pipe(
+    Effect.catchTag("KnowledgeProbeBootError", (error) =>
+      Effect.fail(KnowledgeOperationalError.make({ message: sanitizeProbeDiagnostic(error.message) }))
+    )
+  );
+  if (!KnowledgeCommandSurface.staticCommandNodeEquivalent(currentTree, headStaticTree)) {
+    return yield* KnowledgeOperationalError.make({
+      message: "Static command surface provenance does not match the current-checkout command tree.",
+    });
+  }
   // HEAD runs first because both sides execute the current checkout's code. Its command probe receives
   // the union of base and HEAD inputs, so a current-code defect in a base-only command fails as the
   // branch author's operational error before a base-data-only incompatibility may degrade coverage.
@@ -756,6 +786,8 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * import type { KnowledgeArchiveOracle } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
  *
  * const emptyArchive: KnowledgeArchiveOracle = {
+ *   commandTree: Effect.die("unused under skipped policy"),
+ *   currentCommandTree: Effect.die("unused under skipped policy"),
  *   indexBytes: Effect.succeed(
  *     KnowledgeIndexBytes.make({ expected: new Uint8Array(), archived: new Uint8Array() })
  *   ),
@@ -767,7 +799,7 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * const report = scanKnowledgePair({
  *   base: emptyArchive,
  *   head: emptyArchive,
- *   probePolicy: "enabled",
+ *   probePolicy: "skipped-untrusted-context",
  *   renames: [],
  * })
  *
@@ -870,7 +902,12 @@ import { Command } from "effect/unstable/cli"
 import { rootCommand } from ${JSON.stringify(rootCommandModule)}
 
 const input = await Bun.file(${JSON.stringify(inputPath)}).text()
-const commands = input === "" ? [] : input.split("\\n").map((line) => line.split("\\t"))
+// This file is scratch-owned. Its writer prepends one structural field to every row, making an empty
+// file zero commands and a prefix-only row the root command without trusting archive data.
+const commands = input === "" ? [] : input.split("\\n").map((line) => {
+  const [, ...words] = line.split("\\t")
+  return words
+})
 const children = (command) => command.subcommands.flatMap((group) => group.commands)
 const resolve = (words) => {
   let command = rootCommand
@@ -898,7 +935,7 @@ const program = Effect.gen(function*() {
       )
       if (Result.isFailure(help) && help.failure?._tag !== "ShowHelp") yield* Effect.fail(help.failure)
     }
-    results.push(result.status + "\\t" + result.canonicalPath.join("\\t"))
+    results.push([result.status, ...result.canonicalPath].join("\\t"))
   }
   process.stdout.write(results.join("\\n"))
 })
@@ -985,11 +1022,18 @@ const runArchiveProcess = Effect.fn("Knowledge.runArchiveProcess")(function* (
   env: Readonly<Record<string, string>>,
   scriptPath: string,
   bunfigPath: string,
-  tsconfigPath: string
+  tsconfigPath: string,
+  envFilePath: string
 ) {
   const result = yield* runCapturedStreams({
     command: runtimeExecutable,
-    args: [`--config=${bunfigPath}`, `--tsconfig-override=${tsconfigPath}`, "--no-env-file", scriptPath],
+    args: [
+      `--config=${bunfigPath}`,
+      `--tsconfig-override=${tsconfigPath}`,
+      "--no-env-file",
+      `--env-file=${envFilePath}`,
+      scriptPath,
+    ],
     cwd: archiveRoot,
     env,
     extendEnv: false,
@@ -1101,12 +1145,16 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
   const env = yield* makeHermeticEnv(scratchRoot);
   const bunfigPath = path.join(scratchRoot, "bunfig.toml");
   const tsconfigPath = path.join(scratchRoot, "tsconfig.json");
+  const envFilePath = path.resolve(scratchRoot, "empty.env");
   yield* fs
     .writeFileString(bunfigPath, "# Semantic-delta probes intentionally ignore archive-local Bun configuration.\n")
     .pipe(KnowledgeOperationalError.mapError("Failed to write the semantic-delta Bun configuration."));
   yield* fs
     .writeFileString(tsconfigPath, "{}\n")
     .pipe(KnowledgeOperationalError.mapError("Failed to write the semantic-delta TypeScript configuration."));
+  yield* fs
+    .writeFileString(envFilePath, "")
+    .pipe(KnowledgeOperationalError.mapError("Failed to write the semantic-delta empty environment file."));
   yield* fs
     .symlink(path.join(currentCheckoutRoot, "node_modules"), path.join(scratchRoot, "node_modules"))
     .pipe(KnowledgeOperationalError.mapError("Failed to link installed dependencies into an archive scratch root."));
@@ -1125,7 +1173,7 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
       .writeFileString(
         inputPath,
         A.join(
-          A.map(commands, (words) => A.join(words, "\t")),
+          A.map(commands, (words) => A.join(A.prepend(words, COMMAND_INPUT_ROW_PREFIX), "\t")),
           "\n"
         )
       )
@@ -1142,10 +1190,34 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
       env,
       scriptPath,
       bunfigPath,
-      tsconfigPath
+      tsconfigPath,
+      envFilePath
     );
     return yield* decodeCommandProbeOutput(result, A.length(commands), currentCheckoutRoot, archiveRoot, scratchRoot);
   });
+
+  const currentCommandTree = Effect.gen(function* () {
+    const scriptPath = path.join(scratchRoot, "command-tree-probe.ts");
+    yield* fs
+      .writeFileString(
+        scriptPath,
+        KnowledgeCommandSurface.commandTreeProbeSource(path.join(currentCheckoutRoot, ROOT_COMMAND_MODULE))
+      )
+      .pipe(KnowledgeOperationalError.mapError("Failed to write current-checkout command tree probe."));
+    const result = yield* runArchiveProcess(
+      "command tree",
+      runtimeExecutable,
+      currentCheckoutRoot,
+      archiveRoot,
+      scratchRoot,
+      env,
+      scriptPath,
+      bunfigPath,
+      tsconfigPath,
+      envFilePath
+    );
+    return yield* KnowledgeCommandSurface.decodeCurrentCommandTree(result.stdout);
+  }).pipe(Effect.provide(runtime));
 
   const indexBytes = Effect.gen(function* () {
     const scriptPath = path.join(scratchRoot, "index-probe.ts");
@@ -1161,7 +1233,8 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
       env,
       scriptPath,
       bunfigPath,
-      tsconfigPath
+      tsconfigPath,
+      envFilePath
     );
     const expected = textEncoder.encode(result.stdout);
     const archived = trackedPathExists(trackedEntries, INDEX_PATH) ? yield* readBytes(INDEX_PATH) : new Uint8Array();
@@ -1169,6 +1242,8 @@ export const makeKnowledgeArchiveOracle = Effect.fn("Knowledge.makeArchiveOracle
   }).pipe(Effect.provide(runtime));
 
   return {
+    commandTree: KnowledgeCommandSurface.buildStaticCommandTree(archiveRoot).pipe(Effect.provide(runtime)),
+    currentCommandTree,
     trackedEntries,
     readBytes: (repoPath: string) => readBytes(repoPath).pipe(Effect.provide(runtime)),
     probeCommands: (commands: ReadonlyArray<ReadonlyArray<string>>) =>

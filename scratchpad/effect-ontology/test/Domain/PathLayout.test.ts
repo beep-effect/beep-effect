@@ -75,7 +75,7 @@ const batchId = BatchId.make("batch-deadbeefcafe");
 const namespace = Namespace.make("legal");
 
 describe("effect-ontology storage path layout", () => {
-  it("derives warning-free arbitraries whose values satisfy every public path schema", () => {
+  it("derives arbitraries whose values satisfy every public path schema", () => {
     for (const schema of storagePathSchemas) {
       const arbitrary = S.toArbitrary(schema)(fc);
       fc.assert(

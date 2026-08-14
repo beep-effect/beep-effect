@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
 import { Effect, flow, pipe, Result } from "effect";
 import * as O from "effect/Option";
@@ -438,7 +438,7 @@ export class HtmlPolicyIssue extends S.Class<HtmlPolicyIssue>($I`HtmlPolicyIssue
  * @category errors
  * @since 0.0.0
  */
-export class HtmlPolicyError extends TaggedErrorClass<HtmlPolicyError>($I`HtmlPolicyError`)(
+export class HtmlPolicyError extends S.TaggedError<HtmlPolicyError>($I`HtmlPolicyError`)(
   "HtmlPolicyError",
   {
     issues: S.NonEmptyArray(HtmlPolicyIssue),

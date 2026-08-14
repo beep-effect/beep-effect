@@ -271,7 +271,7 @@ single-provider plan for a multi-provider one.
 
 **Supporting capability:**
 - Typed-error convention `TaggedErrorClass` from `@beep/schema`
-  (`packages/foundation/modeling/schema/src/TaggedErrorClass/`) — the structured
+  (`packages/foundation/modeling/schema/src/index.ts/`) — the structured
   `api_key_required`/`ProviderApiKeyMissing` error must be a `TaggedErrorClass`,
   not a bare throw.
 - `LiteralKit` + `S.toTaggedUnion` (driver error-reason enums, e.g.

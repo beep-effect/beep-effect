@@ -9,8 +9,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import type { TaggedErrorClassFromFields } from "@beep/schema";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Milliseconds, OptionalMilliseconds } from "./Base.ts";
@@ -33,11 +32,10 @@ const makeCircuitOpenError = (
   input: S.Schema.Type<S.TaggedStruct<"CircuitOpenError", typeof CircuitOpenErrorFields>>
 ): CircuitOpenError => CircuitOpenError.make(input as never);
 
-const CircuitOpenErrorBase: TaggedErrorClassFromFields<
-  CircuitOpenError,
+const CircuitOpenErrorBase = S.TaggedError<CircuitOpenError>($I`CircuitOpenError`)(
   "CircuitOpenError",
-  typeof CircuitOpenErrorFields
-> = TaggedErrorClass<CircuitOpenError>($I`CircuitOpenError`)("CircuitOpenError", CircuitOpenErrorFields, {
+  CircuitOpenErrorFields,
+  {
   ...$I.annote("CircuitOpenError", {
     description: "Failure raised when a circuit breaker rejects work while open.",
   }),
@@ -47,7 +45,8 @@ const CircuitOpenErrorBase: TaggedErrorClassFromFields<
       arbitrary: from.arbitrary.map(makeCircuitOpenError),
       terminal: from.terminal?.map(makeCircuitOpenError),
     }),
-});
+  }
+);
 
 /**
  * Failure raised when a circuit breaker rejects work while open.
@@ -91,7 +90,7 @@ export class CircuitOpenError extends CircuitOpenErrorBase {
 
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(this);
 
-  static readonly is = S.is(CircuitOpenError)
+  static readonly is = S.is(CircuitOpenError);
 }
 
 /**
@@ -146,8 +145,10 @@ const makeRateLimitError = (
   input: S.Schema.Type<S.TaggedStruct<"RateLimitError", typeof RateLimitErrorFields>>
 ): RateLimitError => RateLimitError.make(input as never);
 
-const RateLimitErrorBase: TaggedErrorClassFromFields<RateLimitError, "RateLimitError", typeof RateLimitErrorFields> =
-  TaggedErrorClass<RateLimitError>($I`RateLimitError`)("RateLimitError", RateLimitErrorFields, {
+const RateLimitErrorBase = S.TaggedError<RateLimitError>($I`RateLimitError`)(
+  "RateLimitError",
+  RateLimitErrorFields,
+  {
     ...$I.annote("RateLimitError", {
       description: "Failure raised when a token, request, or concurrency quota is exhausted.",
     }),
@@ -157,7 +158,8 @@ const RateLimitErrorBase: TaggedErrorClassFromFields<RateLimitError, "RateLimitE
         arbitrary: from.arbitrary.map(makeRateLimitError),
         terminal: from.terminal?.map(makeRateLimitError),
       }),
-  });
+  }
+);
 
 /**
  * Failure raised when a token, request, or concurrency quota is exhausted.
@@ -220,7 +222,7 @@ const CircuitErrorDefinition = S.Union([CircuitOpenError, RateLimitError]).pipe(
 export const CircuitError = CircuitErrorDefinition.pipe(
   $I.annoteSchema("CircuitError", {
     description: "Exhaustive tagged union of circuit-open and rate-limit failures.",
-    toArbitrary: () => S.toArbitrary(CircuitErrorDefinition),
+  toArbitrary: () => S.toArbitrary(CircuitErrorDefinition),
   })
 );
 

@@ -122,7 +122,7 @@ First Wave 3 pilots completed for
 `packages/foundation/capability/file-processing/test/FileProcessing.test.ts`,
 `packages/foundation/capability/nlp/test/Graph/Schema.test.ts`,
 `packages/foundation/capability/nlp/test/PatternCore.test.ts`,
-`packages/foundation/capability/semantic-web/test/JsonLd.test.ts`,
+the since-removed semantic-web JSON-LD test suite,
 `packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts`,
 `packages/shared/domain/test/LocalDate.test.ts`,
 `packages/shared/domain/test/Organization.test.ts`,
@@ -228,6 +228,8 @@ class-local decoder statics pilots in
   - [x] Pilot `@beep/semantic-web` JSON-LD: added a property test deriving
         JSON-LD context, literal, and frame DTOs from source schemas and
         proving encoded-boundary stability beside exact document/RDF fixtures.
+        (The JSON-LD surface and its test suite were later removed from the
+        package as unconsumed; the pilot's findings stand.)
   - [x] Pilot secure header options: added property tests deriving COEP/COOP/CORP
         option values from their source schemas and proving the rendered header
         name/value semantics.

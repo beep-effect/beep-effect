@@ -67,6 +67,14 @@ export * from "./derived-storage.ts";
  */
 export * from "./duckdb.ts";
 /**
+ * Recursive file inventory traversal shared by AI metrics storage workflows.
+ * Examples live on the owning declarations in `./file-inventory.ts`.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./file-inventory.ts";
+/**
  * The durable forwarder workflow that discovers sources, ingests transcripts,
  * writes derived storage, and exports spans in one pass. Examples live on the
  * owning declarations in `./forwarder.ts`.

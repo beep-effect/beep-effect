@@ -11,6 +11,18 @@
     {
       "name": "@beep/sandbox",
       "rationale": "Retired workspace package with historical pending changesets retained until release cleanup drains them."
+    },
+    {
+      "name": "@beep/courtlistener",
+      "rationale": "VERSION-only driver deleted by goals/honest-repo-signal. Historical crispening/docgen changesets retained until release cleanup drains them. Recreate only with a real surface; see goals/honest-repo-signal/research/FOLLOW-UPS.md."
+    },
+    {
+      "name": "@beep/dol",
+      "rationale": "VERSION-only driver deleted by goals/honest-repo-signal. Historical crispening/docgen changesets retained until release cleanup drains them. Recreate only with a real surface; see goals/honest-repo-signal/research/FOLLOW-UPS.md."
+    },
+    {
+      "name": "@beep/federal-register",
+      "rationale": "VERSION-only driver deleted by goals/honest-repo-signal. Historical crispening/docgen changesets retained until release cleanup drains them. Recreate only with a real surface; see goals/honest-repo-signal/research/FOLLOW-UPS.md."
     }
   ]
 }

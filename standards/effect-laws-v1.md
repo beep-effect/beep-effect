@@ -15,7 +15,7 @@ Compact, enforceable laws for this codebase. Keep agent-facing files terse; keep
 4. No `any`, type assertions, `@ts-ignore`, or non-null assertions.
 5. No runtime `typeof ... === ...`; use `effect/Predicate` guards.
 6. No native `Object/Map/Set/Date` in domain logic.
-7. No native `Error` in production source; use `TaggedErrorClass` from `@beep/schema` for typed errors, and record intentional low-level runtime exceptions in the allowlist.
+7. No native `Error` in production source; extend `S.TaggedError` from `effect/Schema` directly for typed errors, and record intentional low-level runtime exceptions in the allowlist.
 8. No `node:path` in runtime source; use `Path.Path` service APIs.
 9. No native `fetch` in runtime source; use `effect/unstable/http` and provide platform client layers.
 10. No native `Array.prototype.sort`; use `A.sort` with explicit `Order`.

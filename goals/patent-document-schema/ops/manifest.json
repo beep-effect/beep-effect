@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "patent-document-schema",
+    "title": "Patent Document Schema",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/patent-document-schema",
+  "lifecycle": "active",
+  "mission": "Ship schema-first patent-document structure in @beep/law-practice-domain with the practice-KG claims batch as first consumer.",
+  "statusNote": "Graduated first from document-structure-ontologies on 2026-08-13; later campaign goals must not widen this packet.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/document-structure-ontologies",
+    "graduated": "2026-08-13"
+  },
+  "dependencies": [],
+  "blockedBy": [],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via Yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/patent-document-schema/README.md",
+    "goals/patent-document-schema/SPEC.md",
+    "goals/patent-document-schema/PLAN.md",
+    "goals/patent-document-schema/GOAL.md",
+    "goals/patent-document-schema/research/SOURCES.md",
+    "explorations/document-structure-ontologies/BRIEF.md",
+    "explorations/document-structure-ontologies/MAP.md",
+    "explorations/document-structure-ontologies/DECISIONS.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/document-structure-ontologies/research/SOURCES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/patent-document-schema/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Research", "status": "pending" },
+    { "id": "P1", "name": "Implement", "status": "pending" },
+    { "id": "P2", "name": "Verify", "status": "pending" },
+    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
+    { "id": "P4", "name": "Close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/patent-document-schema/GOAL.md)\" -le 4000",
+    "jq . goals/patent-document-schema/ops/manifest.json",
+    "rg -n \"patent-document-schema|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/patent-document-schema",
+    "git diff --check -- goals/patent-document-schema",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The implementation requires rhetoric tags in syntax ASTs or a foundation-level jurisdictional patent package.",
+    "Normative sources materially contradict the ratified schema.",
+    "The first consumer requires widening unrelated sibling contracts."
+  ]
+}

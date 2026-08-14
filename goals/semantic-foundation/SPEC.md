@@ -65,9 +65,10 @@ cannot widen non-goals without a dated `SPEC.md` change.
   the existing `mergeVocab` extension point and `https://ns.beep.sh/`
   authority.
 - `packages/foundation/capability/semantic-web/src/services/shacl-validation.ts`
-  and `packages/foundation/capability/semantic-web/src/adapters/shacl-engine.ts`
-  (`@beep/semantic-web`) - bounded SHACL contract remains unchanged; M4 authors
-  intake/ClaimGate shapes against it.
+  (`@beep/semantic-web`) and the bounded validator now at
+  `packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts`
+  (`@beep/epistemic-server`) - bounded SHACL contract remains unchanged; M4
+  authors intake/ClaimGate shapes against it.
 
 ## Constraints
 

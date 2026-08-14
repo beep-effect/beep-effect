@@ -9,6 +9,12 @@
 | optional | `court-name-fuzzy-ranking` | Add evidence-calibrated alternative ranking without changing core resolver determinism. | `court-string-resolver` | Gated by representative calibration fixtures and a metric-specific acceptance threshold. |
 | optional | `court-vocabulary-skos-projection` | Generate a SKOS view from the canonical vocabulary. | `court-reporter-vocabulary` | Gated by a named consumer; derived only, never a second taxonomy. |
 
+`court-string-resolver` is the packet's re-entry point under the repository's
+reopen-at-`decompose` convention. Reopen when
+`court-reporter-vocabulary` proves the versioned artifact, stable-ID
+lifecycle, and compatibility contract. Fuzzy ranking and SKOS remain gated
+follow-on notes rather than independent reopen triggers.
+
 ## Sequencing
 
 `court-reporter-vocabulary` is the first vertical slice because every resolver
@@ -47,7 +53,7 @@ proposed lifecycle/version policy before that policy is accepted for graduation.
 | Existing court inference values | `packages/law-practice/domain/src/values/CourtInference/CourtInference.model.ts` (`CourtInference`, `CourtLevel`, `CourtJurisdiction`) | Reuse only as a lossy derived projection; richer collision-free vocabulary and migration are **NET-NEW**. |
 | Stable IDs and canonical vocabulary | `packages/law-practice/domain/src/values/` | Established value-object home/pattern; `CourtId`, `ReporterId`, source-faithful schemas, lifecycle rules, and public lookups are **NET-NEW**. |
 | Pure resolver | `packages/law-practice/domain/` | Correct driver-neutral semantic home per `standards/architecture/03-driver-boundaries.md`; resolver/result schemas and parity suite are **NET-NEW**. |
-| Hosted CourtListener wrapper | `packages/drivers/courtlistener/`; `standards/architecture/03-driver-boundaries.md` | Future external boundary only; not used by either core goal. |
+| Hosted CourtListener wrapper | `@beep/courtlistener/`; `standards/architecture/03-driver-boundaries.md` | Future external boundary only; not used by either core goal. |
 | Family routing | `standards/architecture/07-non-slice-families.md` | Confirms tooling owns repo automation, domain owns product meaning, and static datasets are not a service. |
 
 **Honest net-new inventory:** two sync targets; deterministic courts-db source

@@ -5,12 +5,11 @@ import {
   summarizeCause,
   summarizeExit,
 } from "@beep/observability";
-import { TaggedErrorClass } from "@beep/schema";
 import { Cause, Exit } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
-class TestCauseError extends TaggedErrorClass<TestCauseError>()("TestCauseError", {
+class TestCauseError extends S.TaggedError<TestCauseError>()("TestCauseError", {
   message: S.String,
 }) {}
 

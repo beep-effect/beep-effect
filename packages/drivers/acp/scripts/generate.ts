@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { $AcpId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { make as makeJsonSchemaGenerator } from "@effect/openapi-generator/JsonSchemaGenerator";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
@@ -22,7 +21,7 @@ const GENERATED_META_ID = '$AcpId.create("_generated/meta.gen")';
 const $I = $AcpId.create("scripts/generate");
 const schemaNameOrder = Order.make<string>((left, right) => Str.localeCompare(right)(left));
 
-class GenerateCommandError extends TaggedErrorClass<GenerateCommandError>($I`GenerateCommandError`)(
+class GenerateCommandError extends S.TaggedError<GenerateCommandError>($I`GenerateCommandError`)(
   "GenerateCommandError",
   {
     message: S.String,
@@ -85,7 +84,7 @@ class TextReplacement extends S.Class<TextReplacement>($I`TextReplacement`)(
   })
 ) {}
 
-class AcpGeneratorOutputError extends TaggedErrorClass<AcpGeneratorOutputError>($I`AcpGeneratorOutputError`)(
+class AcpGeneratorOutputError extends S.TaggedError<AcpGeneratorOutputError>($I`AcpGeneratorOutputError`)(
   "AcpGeneratorOutputError",
   {
     message: S.String,

@@ -6,7 +6,7 @@
  */
 
 import { $TailscaleId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $TailscaleId.create("Tailscale.errors");
@@ -64,7 +64,7 @@ const commandContextFields = {
  * @category errors
  * @since 0.0.0
  */
-export class TailscaleCommandSpawnError extends TaggedErrorClass<TailscaleCommandSpawnError>(
+export class TailscaleCommandSpawnError extends S.TaggedError<TailscaleCommandSpawnError>(
   $I`TailscaleCommandSpawnError`
 )(
   "TailscaleCommandSpawnError",
@@ -103,7 +103,7 @@ export class TailscaleCommandSpawnError extends TaggedErrorClass<TailscaleComman
  * @category errors
  * @since 0.0.0
  */
-export class TailscaleCommandOutputError extends TaggedErrorClass<TailscaleCommandOutputError>(
+export class TailscaleCommandOutputError extends S.TaggedError<TailscaleCommandOutputError>(
   $I`TailscaleCommandOutputError`
 )(
   "TailscaleCommandOutputError",
@@ -143,9 +143,7 @@ export class TailscaleCommandOutputError extends TaggedErrorClass<TailscaleComma
  * @category errors
  * @since 0.0.0
  */
-export class TailscaleCommandExitError extends TaggedErrorClass<TailscaleCommandExitError>(
-  $I`TailscaleCommandExitError`
-)(
+export class TailscaleCommandExitError extends S.TaggedError<TailscaleCommandExitError>($I`TailscaleCommandExitError`)(
   "TailscaleCommandExitError",
   {
     ...commandContextFields,
@@ -189,7 +187,7 @@ export class TailscaleCommandExitError extends TaggedErrorClass<TailscaleCommand
  * @category errors
  * @since 0.0.0
  */
-export class TailscaleCommandTimeoutError extends TaggedErrorClass<TailscaleCommandTimeoutError>(
+export class TailscaleCommandTimeoutError extends S.TaggedError<TailscaleCommandTimeoutError>(
   $I`TailscaleCommandTimeoutError`
 )(
   "TailscaleCommandTimeoutError",
@@ -284,9 +282,7 @@ export type TailscaleCommandError = typeof TailscaleCommandError.Type;
  * @category errors
  * @since 0.0.0
  */
-export class TailscaleStatusParseError extends TaggedErrorClass<TailscaleStatusParseError>(
-  $I`TailscaleStatusParseError`
-)(
+export class TailscaleStatusParseError extends S.TaggedError<TailscaleStatusParseError>($I`TailscaleStatusParseError`)(
   "TailscaleStatusParseError",
   {
     cause: S.Defect({ includeStack: true }).annotateKey({

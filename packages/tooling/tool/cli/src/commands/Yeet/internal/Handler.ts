@@ -34,7 +34,7 @@ import {
   runArtifactPathForContext as runOutputPathForContext,
 } from "./ArtifactPaths.ts";
 import { appendYeetAttemptJournalEvent, YeetAttemptFinished, YeetAttemptStarted } from "./AttemptJournal.ts";
-import { PrCloseoutOptions, runPrCloseout } from "./Closeout.ts";
+import { PrCloseoutOptions, PrCloseoutReportJson, runPrCloseout } from "./Closeout.ts";
 import {
   collectStagedPublishPaths,
   collectUnstagedTrackedPaths,
@@ -56,7 +56,6 @@ import {
   executeStepWithArtifacts,
   failWithIssueArtifacts,
   publishResult,
-  renderJson,
   writeIssueArtifacts,
   writeTextFile,
 } from "./IssueArtifacts.ts";
@@ -99,6 +98,7 @@ import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
+import type { PrCloseoutReport } from "./Closeout.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState } from "./Verdict.ts";
 
@@ -761,6 +761,36 @@ const runStatusMode = Effect.fn("Yeet.runStatusMode")(function* (
   return yield* emptyPlanResult(context);
 });
 
+// Encoded through the artifact schema so Option fields (reviewedHeadSha) land
+// in the optional-key form `yeet status` decodes, not as raw Option objects.
+const writePrCloseoutReport = Effect.fn("Yeet.writePrCloseoutReport")(function* (
+  context: RepoRunContext,
+  report: PrCloseoutReport
+): Effect.fn.Return<string, YeetCommandError, FileSystem.FileSystem | Path.Path> {
+  const reportPath = yield* runOutputPathForContext(context, "pr-closeout.json");
+  const json = yield* PrCloseoutReportJson.encode(report).pipe(
+    Effect.mapError(YeetCommandError.new("Failed to encode yeet PR closeout report."))
+  );
+  yield* writeTextFile(reportPath, `${json}\n`);
+  return reportPath;
+});
+
+/**
+ * Expose the closeout artifact writer to focused tests.
+ *
+ * **Example** (Reference the closeout artifact writer)
+ *
+ * ```ts
+ * import { writePrCloseoutReportForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof writePrCloseoutReportForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const writePrCloseoutReportForTesting = writePrCloseoutReport;
+
 const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
   context: RepoRunContext,
   options: YeetRunOptions
@@ -782,8 +812,7 @@ const runCloseoutMode = Effect.fn("Yeet.runCloseoutMode")(function* (
       resolveThreads: options.resolveThreads,
     })
   );
-  const reportPath = yield* runOutputPathForContext(context, "pr-closeout.json");
-  yield* writeTextFile(reportPath, `${yield* renderJson(report)}\n`);
+  const reportPath = yield* writePrCloseoutReport(context, report);
   yield* Console.log(`[yeet] PR closeout report written to ${reportPath}`);
   if (options.summary) {
     yield* printOperatorStatusSummary(context, true);

@@ -106,12 +106,14 @@ export type UpdateOperator = typeof UpdateOperator.Encoded;
 
 const ErrorBrand: unique symbol = Symbol("codemode.error")
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const createErrorValue = (name: ErrorConstructorName, message: string): SafeObject => {
   const value = Object.assign(SafeObject.make(Object.create(null)), { name, message })
   Object.defineProperty(value, ErrorBrand, { value: name })
   return value
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const createAggregateErrorValue = (errors: Array<unknown>, message: string): SafeObject =>
   Object.assign(createErrorValue("AggregateError", message), { errors })
 
@@ -121,6 +123,7 @@ export const errorBrandName = (value: unknown): ErrorConstructorName | undefined
   return S.is(ErrorConstructorName)(name) ? name : undefined;
 };
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const boundedData = (value: unknown, label: string): unknown => copyIn(value, label, true)
 
 export const coerceToString = (value: unknown): string => {
@@ -160,6 +163,7 @@ export const coerceToNumber = (value: unknown): number => {
   return P.isNotNull(value) && P.isObjectKeyword(value) ? Number.NaN : Number(value)
 }
 
+// @effect-diagnostics-next-line missingPipeableSignature:off -- Scratchpad prototype API preserves its established call shape.
 export const invokeCoercion = (ref: CoercionFunction, args: Array<unknown>, node: AstNode): unknown => {
   const withoutArguments = A.isArrayEmpty(args)
   const raw = args[0]

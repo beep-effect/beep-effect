@@ -8,7 +8,7 @@
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
@@ -35,7 +35,7 @@ const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.repos
  * @category repositories
  * @since 0.0.0
  */
-export class WorkItemRepositoryNotFound extends TaggedErrorClass<WorkItemRepositoryNotFound>(
+export class WorkItemRepositoryNotFound extends S.TaggedError<WorkItemRepositoryNotFound>(
   $I`WorkItemRepositoryNotFound`
 )(
   "WorkItemRepositoryNotFound",
@@ -71,7 +71,7 @@ export class WorkItemRepositoryNotFound extends TaggedErrorClass<WorkItemReposit
  * @category repositories
  * @since 0.0.0
  */
-export class WorkItemRepositoryConflict extends TaggedErrorClass<WorkItemRepositoryConflict>(
+export class WorkItemRepositoryConflict extends S.TaggedError<WorkItemRepositoryConflict>(
   $I`WorkItemRepositoryConflict`
 )(
   "WorkItemRepositoryConflict",
@@ -105,7 +105,7 @@ export class WorkItemRepositoryConflict extends TaggedErrorClass<WorkItemReposit
  * @category repositories
  * @since 0.0.0
  */
-export class WorkItemRepositoryUnavailable extends TaggedErrorClass<WorkItemRepositoryUnavailable>(
+export class WorkItemRepositoryUnavailable extends S.TaggedError<WorkItemRepositoryUnavailable>(
   $I`WorkItemRepositoryUnavailable`
 )(
   "WorkItemRepositoryUnavailable",

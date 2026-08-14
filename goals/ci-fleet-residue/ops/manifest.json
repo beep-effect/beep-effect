@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ci-fleet-residue",
+    "title": "CI Fleet Residue",
+    "status": "active",
+    "created": "2026-08-13",
+    "updated": "2026-08-13",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ci-fleet-residue",
+  "lifecycle": "active",
+  "statusNote": "Split from ci-fleet-endgame on 2026-08-13: P4 baked AMI plus the arc's deferred hardening and tooling residue.",
+  "mission": "Retire the fleet endgame's deferred residue - baked AMI, spot posture, IMDS job-hook isolation with red-team re-run, and the yeet closeout writer bug - each as its own scoped PR.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "goal": "goals/ci-fleet-endgame",
+    "graduated": "2026-08-13",
+    "note": "P4 and the accepted-risk residue recorded in the P2/P3 statusNotes and the packet ledger."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until every item ships (or is re-deferred with a dated decision) through PRs driven to mergeable via /yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ci-fleet-residue/README.md",
+    "goals/ci-fleet-residue/SPEC.md",
+    "goals/ci-fleet-residue/PLAN.md",
+    "goals/ci-fleet-residue/GOAL.md",
+    "goals/ci-fleet-endgame/research/runner-endgame-decision-record.md"
+  ],
+  "researchReports": [],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ci-fleet-residue/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Lockfile-keyed baked AMI",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Spot posture revert",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "CSF-003 IMDS job hook and red-team re-run",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet closeout writer encoding fix",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/ci-fleet-residue/GOAL.md)\" -le 4000",
+    "jq . goals/ci-fleet-residue/ops/manifest.json",
+    "bun run beep goals doctor",
+    "git diff --check -- goals/ci-fleet-residue"
+  ],
+  "stopConditions": [
+    "A change would weaken fork-PR, cache-write, IAM, egress, or teardown rails.",
+    "Spot revert while the interruption tripwire lacks a monitored week of baseline.",
+    "The IMDS hook fails Gate E - roll back and record, never force through."
+  ]
+}

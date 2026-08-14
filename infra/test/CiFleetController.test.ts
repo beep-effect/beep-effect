@@ -1,8 +1,9 @@
-import { CiFleetControllerPulumiConfigValues, makeCiFleetControllerConfig } from "@beep/infra";
-import * as O from "@beep/utils/Option";
-import { Result } from "effect";
+import { CiFleetController, CiFleetControllerPulumiConfigValues, makeCiFleetControllerConfig } from "@beep/infra";
+import { O, Str } from "@beep/utils";
+import { assert, describe, expect, it } from "@effect/vitest";
+import * as pulumi from "@pulumi/pulumi";
+import { Effect, MutableHashMap, Result } from "effect";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const validConfigValues = {
   githubAppIdSsmParameterArn: "arn:aws:ssm:us-east-1:123456789012:parameter/github/app/id",
@@ -17,6 +18,17 @@ const validConfigValues = {
 };
 
 const decodeConfigValues = S.decodeUnknownResult(CiFleetControllerPulumiConfigValues);
+const isString = S.is(S.String);
+
+const assertSubstringBefore = (text: string, before: string, after: string): void => {
+  const beforeIndex = Str.indexOf(before)(text);
+  const afterIndex = Str.indexOf(after)(text);
+  assert.isTrue(O.isSome(beforeIndex));
+  assert.isTrue(O.isSome(afterIndex));
+  if (O.isSome(beforeIndex) && O.isSome(afterIndex)) {
+    assert.isTrue(beforeIndex.value < afterIndex.value);
+  }
+};
 
 describe("@beep/infra CiFleetController", () => {
   it("accepts AWS ARNs and rejects malformed values", () => {
@@ -129,4 +141,76 @@ describe("@beep/infra CiFleetController", () => {
   it("rejects malformed controller AMI ids", () => {
     expect(Result.isFailure(decodeConfigValues({ ...validConfigValues, amiId: "latest" }))).toBe(true);
   });
+
+  it.effect(
+    "provisions and verifies iptables-nft before wiring the fail-closed per-job hook",
+    Effect.fnUntraced(function* () {
+      const modulePostInstall = MutableHashMap.empty<string, string>();
+
+      yield* Effect.acquireUseRelease(
+        Effect.tryPromise(() =>
+          pulumi.runtime.setMocks(
+            {
+              call: () => ({ accountId: "123456789012", partition: "aws" }),
+              newResource: (args) => {
+                const postInstall = args.inputs.userdata_post_install;
+                if (args.type === "ghaRunners:index:Module" && isString(postInstall)) {
+                  MutableHashMap.set(modulePostInstall, args.name, postInstall);
+                }
+                return { id: `${args.name}-id`, state: args.inputs };
+              },
+            },
+            "beep-effect",
+            "test"
+          )
+        ),
+        () =>
+          Effect.sync(() => {
+            new CiFleetController("ci-fleet-controller-test", {
+              config: makeCiFleetControllerConfig(
+                CiFleetControllerPulumiConfigValues.make({
+                  ...validConfigValues,
+                  amiId: "ami-07a5b367e8dc8bd92",
+                })
+              ),
+              region: "us-east-1",
+              subnetIds: ["subnet-abc"],
+              vpcId: "vpc-123",
+              workerSecurityGroupId: "sg-456",
+            });
+          }),
+        () => Effect.tryPromise(() => pulumi.runtime.disconnect())
+      );
+
+      const captured = MutableHashMap.get(modulePostInstall, "ci-fleet-controller-test");
+      assert.isTrue(O.isSome(captured));
+      if (O.isNone(captured)) {
+        return;
+      }
+
+      const postInstall = captured.value;
+      assert.isTrue(Str.includes("(\n  set -eu\n  dnf install -y iptables-nft")(postInstall));
+      assertSubstringBefore(postInstall, "dnf install -y iptables-nft", "command -v iptables");
+      assertSubstringBefore(postInstall, "command -v iptables", "iptables --version | grep -Fq 'nf_tables'");
+      assertSubstringBefore(postInstall, "iptables -m owner --help", "cat > /opt/beep/imds-job-started.sh");
+      assertSubstringBefore(
+        postInstall,
+        "cat > /opt/beep/imds-job-started.sh",
+        "ACTIONS_RUNNER_HOOK_JOB_STARTED=/opt/beep/imds-job-started-hook.sh"
+      );
+      assert.isTrue(Str.includes("#!/usr/bin/env bash\nset -eu\nrunner_uid=")(postInstall));
+      assert.isTrue(Str.includes("exec sudo /opt/beep/imds-job-started.sh")(postInstall));
+      assert.isTrue(Str.includes("ec2-user ALL=(root) NOPASSWD: /opt/beep/imds-job-started.sh")(postInstall));
+      assert.isTrue(
+        Str.includes('iptables -C OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "${runner_uid}" -j DROP')(
+          postInstall
+        )
+      );
+      assert.isTrue(
+        Str.includes('|| iptables -A OUTPUT -d 169.254.169.254/32 -m owner --uid-owner "${runner_uid}" -j DROP')(
+          postInstall
+        )
+      );
+    })
+  );
 });

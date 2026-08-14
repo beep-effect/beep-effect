@@ -1,30 +1,32 @@
+import { WebAnnotation } from "@beep/rdf/Adapters/WebAnnotation";
 import { Dataset, makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { getSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
 import * as SemanticWeb from "@beep/semantic-web";
-import { ShaclValidationServiceLive } from "@beep/semantic-web/adapters/shacl-engine";
-import { WebAnnotation } from "@beep/semantic-web/adapters/web-annotation";
+import * as CanonicalizationServiceModule from "@beep/semantic-web/services/canonicalization";
 import {
   CanonicalizationService,
   CanonicalizeDatasetRequest,
   FingerprintDatasetRequest,
 } from "@beep/semantic-web/services/canonicalization";
+import * as ShaclValidationServiceModule from "@beep/semantic-web/services/shacl-validation";
 import {
   ShaclNodeShape,
   ShaclPropertyShape,
   ShaclValidationRequest,
-  ShaclValidationService,
 } from "@beep/semantic-web/services/shacl-validation";
 import {
   SparqlQueryRequest,
   SparqlQueryService,
   UnsupportedSparqlQueryServiceLive,
 } from "@beep/semantic-web/services/sparql-query";
-import { RDF_TYPE } from "@beep/semantic-web/vocab/rdf";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Order, pipe } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -66,20 +68,54 @@ const FingerprintDatasetRequestArbitrary = S.toArbitrary(FingerprintDatasetReque
 const runCanonicalization = <A, E>(effect: Effect.Effect<A, E, CanonicalizationService>) =>
   Effect.runPromise(effect.pipe(provideScopedLayer(CanonicalizationServiceLive), Effect.orDie));
 
-const runShacl = <A, E>(effect: Effect.Effect<A, E, ShaclValidationService>) =>
-  Effect.runPromise(effect.pipe(provideScopedLayer(ShaclValidationServiceLive), Effect.orDie));
-
 const runSparql = <A, E>(effect: Effect.Effect<A, E, SparqlQueryService>) =>
   Effect.runPromise(effect.pipe(provideScopedLayer(UnsupportedSparqlQueryServiceLive), Effect.orDie));
 
 describe("Services and Surface", () => {
-  it("keeps the package root surface curated to the IRI family", () => {
-    expect(pipe(Object.keys(SemanticWeb), A.sort(Order.String))).toEqual([
-      "AbsoluteIRI",
-      "IRI",
-      "IRIReference",
-      "RelativeIRIReference",
-    ]);
+  it("keeps the package root surface curated to the service contracts", () => {
+    const surface = pipe(Object.keys(SemanticWeb), A.sort(Order.String));
+    expect(surface).toEqual(
+      expect.arrayContaining(["CanonicalizationService", "ShaclValidationService", "SparqlQueryService"])
+    );
+    // Model families live in @beep/rdf; the legacy re-exports must not return.
+    expect(surface).not.toEqual(expect.arrayContaining(["IRI"]));
+    expect(surface).not.toEqual(expect.arrayContaining(["Dataset"]));
+    expect(surface).not.toEqual(expect.arrayContaining(["ProvBundle"]));
+  });
+
+  it("audits semantic schema metadata coverage for the service contract families", () => {
+    const auditModules = [
+      {
+        exclude: ["CanonicalizationAlgorithm"],
+        exports: CanonicalizationServiceModule,
+        name: "services/canonicalization",
+      },
+      {
+        exclude: ["ShaclSeverity"],
+        exports: ShaclValidationServiceModule,
+        name: "services/shacl-validation",
+      },
+    ];
+
+    for (const moduleAudit of auditModules) {
+      const schemaEntries = pipe(
+        Object.entries(moduleAudit.exports),
+        A.filter(
+          ([name, value]) => /^[A-Z]/.test(name) && S.isSchema(value) && !pipe(moduleAudit.exclude, A.contains(name))
+        )
+      );
+
+      expect(schemaEntries.length, moduleAudit.name).toBeGreaterThan(0);
+
+      for (const [name, schema] of schemaEntries) {
+        const metadata = getSemanticSchemaMetadata(schema);
+        expect(O.isSome(metadata), `${moduleAudit.name}.${name}`).toBe(true);
+        expect(
+          O.map(metadata, (m) => m.canonicalName),
+          `${moduleAudit.name}.${name}`
+        ).toEqual(O.some(name));
+      }
+    }
   });
 
   it(
@@ -269,45 +305,6 @@ describe("Services and Surface", () => {
 
       expect(leftFingerprint.fingerprint).toBe(rightFingerprint.fingerprint);
       expect(leftFingerprint.canonicalText).toBe(rightFingerprint.canonicalText);
-    })
-  );
-
-  it.effect("validates bounded SHACL-inspired shapes and truncates when max results is reached", () =>
-    Effect.gen(function* () {
-      const result = yield* Effect.promise(() =>
-        Promise.resolve(
-          runShacl(
-            Effect.gen(function* () {
-              const service = yield* ShaclValidationService;
-              return yield* service.validate(
-                decodeUnknownSync(ShaclValidationRequest)({
-                  dataset: yield* S.encodeEffect(Dataset)(dataset),
-                  maxResults: 1,
-                  shapes: [
-                    {
-                      properties: [
-                        {
-                          minCount: 1,
-                          path: makeNamedNode("https://schema.org/knows"),
-                        },
-                        {
-                          datatype: makeNamedNode(XSD_STRING.value),
-                          path: makeNamedNode("https://schema.org/name"),
-                        },
-                      ],
-                      targetClass: makeNamedNode("https://schema.org/Person"),
-                    },
-                  ],
-                })
-              );
-            })
-          )
-        )
-      );
-
-      expect(result.conforms).toBe(false);
-      expect(result.truncated).toBe(true);
-      expect(result.violations).toHaveLength(1);
     })
   );
 

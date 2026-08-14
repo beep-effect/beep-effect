@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Goals/Goals.errors");
@@ -26,7 +25,7 @@ const $I = $RepoCliId.create("commands/Goals/Goals.errors");
  * @category errors
  * @since 0.0.0
  */
-export class GoalPacketNotFoundError extends TaggedErrorClass<GoalPacketNotFoundError>($I`GoalPacketNotFoundError`)(
+export class GoalPacketNotFoundError extends S.TaggedError<GoalPacketNotFoundError>($I`GoalPacketNotFoundError`)(
   "GoalPacketNotFoundError",
   {
     slug: S.String,
@@ -65,7 +64,7 @@ export class GoalPacketNotFoundError extends TaggedErrorClass<GoalPacketNotFound
  * @category errors
  * @since 0.0.0
  */
-export class GoalManifestInvalidError extends TaggedErrorClass<GoalManifestInvalidError>($I`GoalManifestInvalidError`)(
+export class GoalManifestInvalidError extends S.TaggedError<GoalManifestInvalidError>($I`GoalManifestInvalidError`)(
   "GoalManifestInvalidError",
   {
     slug: S.String,
@@ -104,9 +103,7 @@ export class GoalManifestInvalidError extends TaggedErrorClass<GoalManifestInval
  * @category errors
  * @since 0.0.0
  */
-export class GoalReadmeStatusLineError extends TaggedErrorClass<GoalReadmeStatusLineError>(
-  $I`GoalReadmeStatusLineError`
-)(
+export class GoalReadmeStatusLineError extends S.TaggedError<GoalReadmeStatusLineError>($I`GoalReadmeStatusLineError`)(
   "GoalReadmeStatusLineError",
   {
     slug: S.String,
@@ -148,7 +145,7 @@ export class GoalReadmeStatusLineError extends TaggedErrorClass<GoalReadmeStatus
  * @category errors
  * @since 0.0.0
  */
-export class GoalsGitError extends TaggedErrorClass<GoalsGitError>($I`GoalsGitError`)(
+export class GoalsGitError extends S.TaggedError<GoalsGitError>($I`GoalsGitError`)(
   "GoalsGitError",
   {
     message: S.String,
@@ -176,7 +173,7 @@ export class GoalsGitError extends TaggedErrorClass<GoalsGitError>($I`GoalsGitEr
  * @category errors
  * @since 0.0.0
  */
-export class GoalStatusInputError extends TaggedErrorClass<GoalStatusInputError>($I`GoalStatusInputError`)(
+export class GoalStatusInputError extends S.TaggedError<GoalStatusInputError>($I`GoalStatusInputError`)(
   "GoalStatusInputError",
   {
     message: S.String,

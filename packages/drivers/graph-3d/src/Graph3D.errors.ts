@@ -6,7 +6,7 @@
  */
 
 import { $Graph3dId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { P } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -76,7 +76,7 @@ export type Graph3DDriverErrorReason = typeof Graph3DDriverErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class Graph3DDriverError extends TaggedErrorClass<Graph3DDriverError>($I`Graph3DDriverError`)(
+export class Graph3DDriverError extends S.TaggedError<Graph3DDriverError>($I`Graph3DDriverError`)(
   "Graph3DDriverError",
   {
     reason: Graph3DDriverErrorReason,

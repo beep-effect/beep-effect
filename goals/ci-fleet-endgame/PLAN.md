@@ -9,28 +9,24 @@ Status: `active`
 The module deploy is hours-scale, not a weeks-scale program. It comes first;
 the performance layer follows on its own track without becoming subordinate.
 
-P1 through P3 are complete: the controller cutover landed in #666, the cache
-service activation landed in #673, and read-only PR consumption landed in
-#674. The remaining execution order is **P4 → P5 → P6**; phase ids and names
-remain stable because the charter, signed decision record, and prior commits
-cite them.
+P2 cutover is gated on P3 and P4 landing first. Execution order is therefore
+**P1 → P3 → P4 → P2 → P5 → P6**; phase ids and names remain stable because the
+charter, signed decision record, and prior commits cite them.
 
-The retired manual burst workers were non-ephemeral. Across the many jobs served
-during a TTL, they accumulated a warm Turbo cache, warm bun store, and reused
-checkout. One-job-one-VM workers discard all three after every job. Cutting over
-before a remote cache exists would make every heavy job start cold: the security
-and cost wins are real, but they would land alongside a speed loss. The manual
-launcher is no longer an available break-glass bridge; CSF-002 supersedes that
-part of the original fleet decision while preserving teardown for cleanup.
+The manual burst workers are non-ephemeral. Across the many jobs served during
+a TTL, they accumulate a warm Turbo cache, warm bun store, and reused checkout.
+One-job-one-VM workers discard all three after every job. Cutting over before a
+remote cache exists would make every heavy job start cold: the security and
+cost wins are real, but they would land alongside a speed loss.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Ratify + docs | complete | Graduate the signed decision record and bind decisions 57–63. | Active packet exists with co-primary charter and adoption contract. |
 | P1 Bridge spike + deploy | complete | Mint the repo-scoped GitHub App, spike the Pulumi terraform-module bridge, and deploy a non-serving shadow label. | Module deploys through Pulumi, or the recorded fallback condition justifies a minimal Terraform root. |
-| P2 Cutover | complete | Serve `beep-ec2-heavy` with ephemeral one-job-one-VM workers while the manual launcher remains retired. | Landed in #666: 11/11 pickup gate, re-queue-to-fresh-runner proven live, burst registrations 75 → 6, and PR waves around 20 minutes. The full guest-isolation red-team rerun remains with the CSF-003 IMDS work. |
-| P3 Cache | complete | Ship trusted-write/PR-read-only asymmetric Turbo cache access. | Cache activation landed in #673 and PR read-only consumption landed in #674; PR jobs receive no write token. |
-| P4 Baked AMI | pending | Ship lockfile-keyed worker images with the complete hosted toolbelt. | Setup floor and cross-runner tool-cache poisoning are removed. |
-| P5 Performance + ops | pending | Ratchet resource weight, shard where measured, and expose pickup/cost/RSS/wall-time telemetry. | No required job waits 20 minutes and evidence supports ongoing right-sizing. |
+| P2 Cutover | complete | Serve `beep-ec2-heavy` with ephemeral one-job-one-VM workers and demote manual burst scripts to break-glass. | Live worker passes lifecycle, teardown, trust, and red-team acceptance; heavy-lane wall time does not regress against the burst baseline. Landed 2026-08-11 (#666): 11/11 pickup gate, re-queue-to-fresh-runner proven live, burst registrations 75 → 6, PR waves ~20 min. Residue: the full guest-isolation red-team suite re-run on a live ephemeral worker stays open with the CSF-003 IMDS rework. |
+| P3 Cache | complete | Ship trusted-write/PR-read-only asymmetric Turbo cache access. | Real PR jobs consume cache without obtaining write authority. Shipped 2026-08-13 (#673 infra + #674 CI wiring): 10/10 probe matrix including read-token PUT denial and direct-invoke HMAC rejection; first write-enabled main wave seeded 750 artifacts. Turbo-level PR hit rates are the opening datum of the ci-lane-economics P0 census. |
+| P4 Baked AMI | superseded | Ship lockfile-keyed worker images with the complete hosted toolbelt. | Continues as `goals/ci-fleet-residue` P0 (2026-08-13 split). |
+| P5 Performance + ops | superseded | Ratchet resource weight, shard where measured, and expose pickup/cost/RSS/wall-time telemetry. | Continues as `goals/ci-lane-economics` (2026-08-13 split); P6 stays gated on its 20-minute outcome so this packet closes citing both charter halves. |
 | P6 Yeet + close | pending | Drive the final PR mergeable, reflect, and close the packet. | Required checks green, zero unresolved threads, reflection valid, lifecycle completed-retained. |
 
 ### Why the asymmetric cache needs the ephemeral worker
@@ -56,8 +52,10 @@ a business-hours schedule is the affordable shape, not a 24/7 pool.
 
 ## Immediate next action
 
-P1 through P3 are complete. Next ship P4's baked AMI, then use P5 evidence to
-right-size and shard the required lanes before the P6 closeout.
+None in this packet. P0–P3 are complete; P4 and P5 continue in
+`goals/ci-fleet-residue` and `goals/ci-lane-economics` respectively. P6 (final
+close) fires when ci-lane-economics delivers the 20-minute outcome, so the
+closeout reflection can cite both charter halves with evidence.
 
 ## Verification commands
 

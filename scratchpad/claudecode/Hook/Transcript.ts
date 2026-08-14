@@ -68,6 +68,6 @@ export const readTranscript = (
       .pipe(Effect.mapError((cause) => TranscriptReadError.make({ path, cause })));
     const lines = pipe(content, Str.split("\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
     return yield* Effect.forEach(lines, (line) =>
-      S.decodeUnknownEffect(JsonValue)(line).pipe(Effect.mapError((cause) => TranscriptReadError.make({ path, cause })))
+      S.decodeEffect(JsonValue)(line).pipe(Effect.mapError((cause) => TranscriptReadError.make({ path, cause })))
     );
   });

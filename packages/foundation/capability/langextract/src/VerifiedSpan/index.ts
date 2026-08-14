@@ -7,7 +7,7 @@
 import { $LangExtractId } from "@beep/identity";
 import { MAX_EXTRACTION_CANDIDATES } from "@beep/langextract/Extraction";
 import { isUtf16Boundary, TextAnchor } from "@beep/provenance/TextAnchor";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, flow, identity } from "effect";
 import * as Eq from "effect/Equal";
@@ -308,7 +308,7 @@ export type VerifiedSpanErrorReason = typeof VerifiedSpanErrorReason.Type;
  * @category errors
  * @since 0.0.0
  */
-export class VerifiedSpanError extends TaggedErrorClass<VerifiedSpanError>($I`VerifiedSpanError`)(
+export class VerifiedSpanError extends S.TaggedError<VerifiedSpanError>($I`VerifiedSpanError`)(
   "VerifiedSpanError",
   {
     candidateIndex: S.optionalKey(NonNegativeInt),

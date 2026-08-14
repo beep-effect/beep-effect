@@ -2161,6 +2161,14 @@
     },
     {
       "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
+      "symbol": "DmsMirrorDisconnectReason",
+      "kind": "literal-kit",
+      "owner": "@beep/documents-use-cases",
+      "identity": "DmsMirrorDisconnectReason",
+      "description": "Why a DMS mirror adapter reports the provider as disconnected."
+    },
+    {
+      "file": "packages/documents/use-cases/src/aggregates/Sync/DmsMirror.ts",
       "symbol": "DmsMirrorProbe",
       "kind": "schema-class",
       "owner": "@beep/documents-use-cases",
@@ -12021,334 +12029,6 @@
       "description": "Dataset fingerprint request."
     },
     {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "CompactJsonLdIriRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "CompactJsonLdIriRequest",
-      "description": "Compact JSON-LD IRI request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "CompactJsonLdIriResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "CompactJsonLdIriResult",
-      "description": "Compact JSON-LD IRI result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "ExpandJsonLdTermRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ExpandJsonLdTermRequest",
-      "description": "Expand JSON-LD term request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "ExpandJsonLdTermResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ExpandJsonLdTermResult",
-      "description": "Expand JSON-LD term result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "JsonLdContextError",
-      "kind": "tagged-error",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdContextError",
-      "description": "Typed JSON-LD context service error."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "JsonLdContextErrorReason",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdContextErrorReason",
-      "description": "JSON-LD context error reason."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "MergeJsonLdContextsRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "MergeJsonLdContextsRequest",
-      "description": "Merge JSON-LD contexts request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-      "symbol": "NormalizeJsonLdContextRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "NormalizeJsonLdContextRequest",
-      "description": "Normalize JSON-LD context request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "CompactJsonLdDocumentRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "CompactJsonLdDocumentRequest",
-      "description": "Compact JSON-LD document request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "ExpandJsonLdDocumentRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ExpandJsonLdDocumentRequest",
-      "description": "Expand JSON-LD document request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "FlattenJsonLdDocumentRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "FlattenJsonLdDocumentRequest",
-      "description": "Flatten JSON-LD document request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "FrameJsonLdDocumentRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "FrameJsonLdDocumentRequest",
-      "description": "Frame JSON-LD document request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdDocumentError",
-      "kind": "tagged-error",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdDocumentError",
-      "description": "Typed JSON-LD document service error."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdDocumentErrorReason",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdDocumentErrorReason",
-      "description": "JSON-LD document error reason."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdDocumentLoaderPolicy",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdDocumentLoaderPolicy",
-      "description": "Bounded JSON-LD document loader policy."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdDocumentNormalizationProfile",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdDocumentNormalizationProfile",
-      "description": "JSON-LD document normalization profile."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdDocumentResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdDocumentResult",
-      "description": "JSON-LD document result wrapper."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdFromRdfRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdFromRdfRequest",
-      "description": "RDF to JSON-LD request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdToRdfRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdToRdfRequest",
-      "description": "JSON-LD to RDF request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "JsonLdToRdfResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdToRdfResult",
-      "description": "JSON-LD to RDF result wrapper."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-      "symbol": "NormalizeJsonLdDocumentRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "NormalizeJsonLdDocumentRequest",
-      "description": "Normalize JSON-LD document request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdByteChunkStream",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdByteChunkStream",
-      "description": "JSON-LD UTF-8 byte chunk stream."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamMode",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamMode",
-      "description": "Streaming adapter mode."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamParseError",
-      "kind": "tagged-error",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamParseError",
-      "description": "Typed streaming parse error."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamParseErrorReason",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamParseErrorReason",
-      "description": "Streaming parse error reason."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamParseInput",
-      "kind": "tagged-union",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamParseInput",
-      "description": "Streaming parse input union."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamParseRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamParseRequest",
-      "description": "Streaming parse request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdStreamParseResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamParseResult",
-      "description": "Streaming parse result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-parse.ts",
-      "symbol": "JsonLdTextChunkStream",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdTextChunkStream",
-      "description": "JSON-LD UTF-8 text chunk stream."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
-      "symbol": "JsonLdStreamSerializeError",
-      "kind": "tagged-error",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamSerializeError",
-      "description": "Typed streaming serialize error."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
-      "symbol": "JsonLdStreamSerializeErrorReason",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamSerializeErrorReason",
-      "description": "Streaming serialize error reason."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
-      "symbol": "JsonLdStreamSerializeRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamSerializeRequest",
-      "description": "Streaming serialize request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
-      "symbol": "JsonLdStreamSerializeResult",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "JsonLdStreamSerializeResult",
-      "description": "Streaming serialize result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "BoundedProvenanceProjection",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "BoundedProvenanceProjection",
-      "description": "Bounded provenance projection result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ExportProvenanceRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ExportProvenanceRequest",
-      "description": "Provenance export request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ProjectProvenanceRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ProjectProvenanceRequest",
-      "description": "Provenance projection request."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ProvenanceExportProfile",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "ProvenanceExportProfile",
-      "description": "Provenance export profile."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ProvenanceServiceError",
-      "kind": "tagged-error",
-      "owner": "@beep/semantic-web",
-      "identity": "ProvenanceServiceError",
-      "description": "Typed provenance service error."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ProvenanceServiceErrorReason",
-      "kind": "literal-kit",
-      "owner": "@beep/semantic-web",
-      "identity": "ProvenanceServiceErrorReason",
-      "description": "Provenance service error reason."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "ProvenanceSummary",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "ProvenanceSummary",
-      "description": "Provenance summary result."
-    },
-    {
-      "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-      "symbol": "SummarizeProvenanceRequest",
-      "kind": "schema-class",
-      "owner": "@beep/semantic-web",
-      "identity": "SummarizeProvenanceRequest",
-      "description": "Provenance summary request."
-    },
-    {
       "file": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
       "symbol": "ShaclNodeShape",
       "kind": "schema-class",
@@ -14075,6 +13755,22 @@
       "owner": "@beep/identity"
     },
     {
+      "file": "packages/foundation/modeling/identity/src/Id.ts",
+      "symbol": "IdentityInterpolationError",
+      "kind": "tagged-error",
+      "owner": "@beep/identity",
+      "identity": "@beep/identity/errors/IdentityInterpolationError",
+      "description": "Identity template tags do not allow interpolations."
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Id.ts",
+      "symbol": "IdentitySegmentCountError",
+      "kind": "tagged-error",
+      "owner": "@beep/identity",
+      "identity": "@beep/identity/errors/IdentitySegmentCountError",
+      "description": "Identity template tags must use a single literal segment."
+    },
+    {
       "file": "packages/foundation/modeling/identity/src/Vocab.ts",
       "symbol": "VocabEntry",
       "kind": "schema-class",
@@ -14183,6 +13879,14 @@
       "owner": "@beep/lexical-schema",
       "identity": "LexicalCompatibilityResult",
       "description": "Lossless Lexical wire plus an optional strict semantic state and compatibility diagnostics."
+    },
+    {
+      "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+      "symbol": "LexicalDecodeError",
+      "kind": "tagged-error",
+      "owner": "@beep/lexical-schema",
+      "identity": "LexicalDecodeError",
+      "description": "Typed failure raised when a Lexical semantic or wire payload cannot be decoded."
     },
     {
       "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
@@ -15750,6 +15454,14 @@
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+      "symbol": "PandocDecodeError",
+      "kind": "tagged-error",
+      "owner": "@beep/pandoc-ast",
+      "identity": "PandocDecodeError",
+      "description": "Typed failure raised when a Pandoc semantic or lossless JSON payload cannot be decoded."
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
       "symbol": "PandocJsonFromString",
       "kind": "codec",
       "owner": "@beep/pandoc-ast",
@@ -15779,6 +15491,14 @@
       "owner": "@beep/pandoc-ast",
       "identity": "DocumentToPandocResult",
       "description": "Result of mapping an @beep/md document to Pandoc."
+    },
+    {
+      "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+      "symbol": "PandocMappingError",
+      "kind": "tagged-error",
+      "owner": "@beep/pandoc-ast",
+      "identity": "PandocMappingError",
+      "description": "Typed failure raised when a Pandoc and Md compatibility projection cannot be completed."
     },
     {
       "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
@@ -16840,6 +16560,14 @@
     },
     {
       "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
+      "symbol": "MakeQuadOptionsInput",
+      "kind": "schema-class",
+      "owner": "@beep/rdf",
+      "identity": "MakeQuadOptionsInput",
+      "description": "In-memory object and optional graph input accepted by makeQuad."
+    },
+    {
+      "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
       "symbol": "NamedNode",
       "kind": "schema-class",
       "owner": "@beep/rdf",
@@ -17096,12 +16824,6 @@
       "file": "packages/foundation/modeling/schema/src/CardinalDirection/CardinalDirection.schema.ts",
       "symbol": "Schema",
       "kind": "literal-kit",
-      "owner": "@beep/schema"
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/CauseTaggedError/CauseTaggedError.errors.ts",
-      "symbol": "CauseTaggedError",
-      "kind": "tagged-error",
       "owner": "@beep/schema"
     },
     {
@@ -17721,7 +17443,9 @@
       "file": "packages/foundation/modeling/schema/src/CsvError/CsvError.errors.ts",
       "symbol": "CsvError",
       "kind": "tagged-error",
-      "owner": "@beep/schema"
+      "owner": "@beep/schema",
+      "identity": "CsvError",
+      "description": "Raised when CSV parsing, header validation, or formatting fails."
     },
     {
       "file": "packages/foundation/modeling/schema/src/CsvParser/CsvParser.parser.ts",
@@ -19413,6 +19137,46 @@
       "description": "A branded kebab-case string."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralKitEnumMappingCoverageError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "LiteralKitEnumMappingCoverageError",
+      "description": "A manual LiteralKit enum mapping did not exactly match the provided literal set."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralKitEnumMappingDuplicateLiteralError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "LiteralKitEnumMappingDuplicateLiteralError",
+      "description": "The same source literal appeared more than once in a manual LiteralKit enum mapping."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralKitKeyCollisionError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "LiteralKitKeyCollisionError",
+      "description": "Different literals encoded to the same LiteralKit helper key."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralKitTaggedUnionLiteralError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "LiteralKitTaggedUnionLiteralError",
+      "description": "LiteralKit.toTaggedUnion only supports literals that can be used as object property keys."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralNotInSetError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "LiteralNotInSetError",
+      "description": "Error thrown when an input value is not found in the provided literals array."
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/LocalDate/LocalDate.schema.ts",
       "symbol": "LocalDate",
       "kind": "schema-class",
@@ -19448,7 +19212,9 @@
       "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
       "symbol": "MappedLiteralDuplicateError",
       "kind": "tagged-error",
-      "owner": "@beep/schema"
+      "owner": "@beep/schema",
+      "identity": "MappedLiteralDuplicateError",
+      "description": "Thrown when mapped literal entries are not one-to-one."
     },
     {
       "file": "packages/foundation/modeling/schema/src/Markdown.ts",
@@ -19572,7 +19338,9 @@
       "file": "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts",
       "symbol": "ParserOptionsError",
       "kind": "tagged-error",
-      "owner": "@beep/schema"
+      "owner": "@beep/schema",
+      "identity": "ParserOptionsError",
+      "description": "Raised when CSV parser options cannot be decoded or normalized."
     },
     {
       "file": "packages/foundation/modeling/schema/src/PascalStr.ts",
@@ -19874,11 +19642,123 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "CoreError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "CoreError",
+      "description": "A core error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "CrossOriginEmbedderPolicyError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "CrossOriginEmbedderPolicyError",
+      "description": "A cross-origin embedder policy error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "CrossOriginOpenerPolicyError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "CrossOriginOpenerPolicyError",
+      "description": "A cross-origin opener policy error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "CrossOriginResourcePolicyError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "CrossOriginResourcePolicyError",
+      "description": "A cross-origin resource policy error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "CspError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "CspError",
+      "description": "A CSP error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "ExpectCtError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "ExpectCtError",
+      "description": "An Expect-CT error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "ForceHttpsRedirectError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "ForceHttpsRedirectError",
+      "description": "A force HTTPS redirect error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "FrameGuardError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "FrameGuardError",
+      "description": "A frame guard error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "NoOpenError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "NoOpenError",
+      "description": "A no open error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "NoSniffError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "NoSniffError",
+      "description": "A no sniff error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "PermissionsPolicyError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "PermissionsPolicyError",
+      "description": "A permissions policy error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "PermittedCrossDomainPoliciesError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "PermittedCrossDomainPoliciesError",
+      "description": "A permitted cross-domain policies error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "ReferrerPolicyError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "ReferrerPolicyError",
+      "description": "A referrer policy error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
       "symbol": "SecureHeaderError",
       "kind": "tagged-union",
       "owner": "@beep/schema",
       "identity": "SecureHeaderError",
       "description": "A secure header error."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
+      "symbol": "XssProtectionError",
+      "kind": "tagged-error",
+      "owner": "@beep/schema",
+      "identity": "XssProtectionError",
+      "description": "An XSS protection error."
     },
     {
       "file": "packages/foundation/modeling/schema/src/SecureHeaderOptions/SecureHeaderOptions.schema.ts",
@@ -19900,9 +19780,7 @@
       "file": "packages/foundation/modeling/schema/src/SemanticVersion.ts",
       "symbol": "SemanticVersion",
       "kind": "schema-const",
-      "owner": "@beep/schema",
-      "identity": "SemanticVersion",
-      "description": "A semantic version string in the format x.y.z"
+      "owner": "@beep/schema"
     },
     {
       "file": "packages/foundation/modeling/schema/src/Semver.ts",
@@ -20325,7 +20203,7 @@
     {
       "file": "packages/foundation/modeling/utils/src/Glob.ts",
       "symbol": "GlobError",
-      "kind": "schema-const",
+      "kind": "tagged-error",
       "owner": "@beep/utils",
       "identity": "GlobError",
       "description": "An error that occurs during glob pattern matching."
@@ -20355,7 +20233,7 @@
     {
       "file": "packages/foundation/modeling/utils/src/Struct.ts",
       "symbol": "EmptyStructError",
-      "kind": "schema-const",
+      "kind": "tagged-error",
       "owner": "@beep/utils",
       "identity": "EmptyStructError",
       "description": "Invariant violation thrown when a struct expected to have at least one string key is empty."
@@ -24706,9 +24584,7 @@
       "file": "packages/shared/domain/src/entity/Principal.ts",
       "symbol": "Principal",
       "kind": "tagged-union",
-      "owner": "@beep/shared-domain",
-      "identity": "Principal",
-      "description": "Principal actor reference used by shared-kernel persisted entity fields."
+      "owner": "@beep/shared-domain"
     },
     {
       "file": "packages/shared/domain/src/entity/Principal.ts",
@@ -24746,9 +24622,7 @@
       "file": "packages/shared/domain/src/entity/SourceKind.ts",
       "symbol": "SourceKind",
       "kind": "literal-kit",
-      "owner": "@beep/shared-domain",
-      "identity": "SourceKind",
-      "description": "Canonical denormalized source of persisted entity data."
+      "owner": "@beep/shared-domain"
     },
     {
       "file": "packages/shared/domain/src/entity/primitives.ts",
@@ -25301,6 +25175,14 @@
       "owner": "@beep/repo-ai-metrics",
       "identity": "AiMetricsParquetExportMode",
       "description": "Parquet export mode for one AI metrics derived storage write."
+    },
+    {
+      "file": "packages/tooling/library/ai-metrics/src/file-inventory.ts",
+      "symbol": "AiMetricsFileInventoryError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-ai-metrics",
+      "identity": "AiMetricsFileInventoryError",
+      "description": "Failure to inspect a file or read a directory in an AI metrics storage tree."
     },
     {
       "file": "packages/tooling/library/ai-metrics/src/forwarder.ts",
@@ -29471,6 +29353,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts",
+      "symbol": "AiMetricsCommandError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "AiMetricsCommandError",
+      "description": "User-facing failure raised by the AI metrics CLI command suite."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts",
       "symbol": "AiMetricsProgramError",
       "kind": "tagged-union",
       "owner": "@beep/repo-cli",
@@ -32628,6 +32518,38 @@
       "description": "Summary of terse Effect style migration results."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts",
+      "symbol": "EcosystemPolarityError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "EcosystemPolarityError",
+      "description": "An ecosystem package could not be discovered, read, or decoded for polarity linting."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts",
+      "symbol": "EcosystemPolarityOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "EcosystemPolarityOptions",
+      "description": "Optional changed-file scope for the ecosystem dependency-polarity lint."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts",
+      "symbol": "EcosystemPolaritySummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "EcosystemPolaritySummary",
+      "description": "Members, source files, and violations observed by the ecosystem-polarity lint."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/EcosystemPolarity.ts",
+      "symbol": "EcosystemPolarityViolation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "EcosystemPolarityViolation",
+      "description": "A forbidden repo-internal runtime edge in an ecosystem member."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Lint/JudgeRubric.ts",
       "symbol": "JudgeRubricDrift",
       "kind": "schema-class",
@@ -35409,7 +35331,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "PrProvenance",
-      "description": "Origin and paste-ready resume command recorded in a Yeet pull request body."
+      "description": "Local origin and paste-ready resume command detected for a Yeet publish invocation."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
@@ -35418,6 +35340,14 @@
       "owner": "@beep/repo-cli",
       "identity": "PrProvenanceHarness",
       "description": "Harness that originated a Yeet pull request publish invocation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts",
+      "symbol": "PublicPrProvenance",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PublicPrProvenance",
+      "description": "Public, non-resumable provenance appended to a Yeet pull request body."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts",
@@ -36024,6 +35954,14 @@
       "owner": "@beep/repo-cli",
       "identity": "CliReportedExit",
       "description": "Silent non-zero process exit requested after command output was rendered."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Json.ts",
+      "symbol": "CliJsonError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "CliJsonError",
+      "description": "Failure raised when a repo-cli command cannot encode a JSON payload."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",

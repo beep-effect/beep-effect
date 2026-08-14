@@ -138,12 +138,6 @@
         ]
       },
       {
-        "name": "@beep/courtlistener",
-        "patterns": [
-          "packages/drivers/courtlistener/src/**"
-        ]
-      },
-      {
         "name": "@beep/data",
         "patterns": [
           "packages/foundation/primitive/data/src/**"
@@ -201,12 +195,6 @@
         "name": "@beep/documents-use-cases",
         "patterns": [
           "packages/documents/use-cases/src/**"
-        ]
-      },
-      {
-        "name": "@beep/dol",
-        "patterns": [
-          "packages/drivers/dol/src/**"
         ]
       },
       {
@@ -297,12 +285,6 @@
         "name": "@beep/fc-runs",
         "patterns": [
           "packages/tooling/test-kit/fc-runs/src/**"
-        ]
-      },
-      {
-        "name": "@beep/federal-register",
-        "patterns": [
-          "packages/drivers/federal-register/src/**"
         ]
       },
       {
@@ -594,12 +576,6 @@
         ]
       },
       {
-        "name": "@beep/protobuf",
-        "patterns": [
-          "packages/drivers/protobuf/src/**"
-        ]
-      },
-      {
         "name": "@beep/provenance",
         "patterns": [
           "packages/foundation/modeling/provenance/src/**"
@@ -699,6 +675,12 @@
         "name": "@beep/shared-tables",
         "patterns": [
           "packages/shared/tables/src/**"
+        ]
+      },
+      {
+        "name": "@beep/shared-use-cases",
+        "patterns": [
+          "packages/shared/use-cases/src/**"
         ]
       },
       {
@@ -919,6 +901,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -931,6 +914,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -1218,15 +1202,6 @@
         ]
       },
       {
-        "from": "@beep/courtlistener",
-        "allow": [
-          "@beep/courtlistener"
-        ],
-        "allowTypeOnly": [
-          "@beep/courtlistener"
-        ]
-      },
-      {
         "from": "@beep/data",
         "allow": [
           "@beep/data",
@@ -1419,15 +1394,6 @@
         ]
       },
       {
-        "from": "@beep/dol",
-        "allow": [
-          "@beep/dol"
-        ],
-        "allowTypeOnly": [
-          "@beep/dol"
-        ]
-      },
-      {
         "from": "@beep/drizzle",
         "allow": [
           "@beep/drizzle",
@@ -1578,6 +1544,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1597,6 +1564,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1648,6 +1616,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1659,6 +1628,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/provenance",
+          "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
@@ -1706,15 +1676,6 @@
         ],
         "allowTypeOnly": [
           "@beep/fc-runs"
-        ]
-      },
-      {
-        "from": "@beep/federal-register",
-        "allow": [
-          "@beep/federal-register"
-        ],
-        "allowTypeOnly": [
-          "@beep/federal-register"
         ]
       },
       {
@@ -1955,6 +1916,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -1977,6 +1939,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-use-cases",
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
@@ -2618,6 +2581,7 @@
           "@beep/pglite",
           "@beep/practice-kg-mcp",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2628,6 +2592,7 @@
           "@beep/pglite",
           "@beep/practice-kg-mcp",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2745,15 +2710,6 @@
           "@beep/workspace-domain",
           "@beep/workspace-server",
           "@beep/workspace-use-cases"
-        ]
-      },
-      {
-        "from": "@beep/protobuf",
-        "allow": [
-          "@beep/protobuf"
-        ],
-        "allowTypeOnly": [
-          "@beep/protobuf"
         ]
       },
       {
@@ -3115,6 +3071,21 @@
           "@beep/shared-domain",
           "@beep/shared-tables",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/shared-use-cases",
+        "allow": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-use-cases",
+          "@beep/test-utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/shared-use-cases",
+          "@beep/test-utils"
         ]
       },
       {

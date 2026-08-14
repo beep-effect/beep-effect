@@ -8,7 +8,6 @@
 
 import { YOUTUBE_WATCH_EVENT, YouTubeWatchRequest } from "@beep/editor/youtube-embed";
 import { $ProfessionalDesktopId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
 import { O, thunkNull, thunkUndefined } from "@beep/utils";
 import { useAtom, useAtomMount } from "@effect/atom-react";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -22,7 +21,7 @@ const $I = $ProfessionalDesktopId.create("chat/ui/YouTubeWatchOpener");
 
 const hasTauriRuntime = (): boolean => "__TAURI_INTERNALS__" in globalThis;
 
-class YouTubeWatchOpenFailed extends TaggedErrorClass<YouTubeWatchOpenFailed>($I`YouTubeWatchOpenFailed`)(
+class YouTubeWatchOpenFailed extends S.TaggedError<YouTubeWatchOpenFailed>($I`YouTubeWatchOpenFailed`)(
   "YouTubeWatchOpenFailed",
   {
     request: YouTubeWatchRequest.annotateKey({

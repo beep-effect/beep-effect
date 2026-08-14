@@ -9,8 +9,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import type { TaggedErrorClassFromFields } from "@beep/schema";
-import { NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as Duration from "effect/Duration";
 import * as S from "effect/Schema";
 import {
@@ -90,11 +89,10 @@ const makeImageTimeoutError = (
   input: S.Schema.Type<S.TaggedStruct<"ImageTimeoutError", typeof ImageTimeoutErrorFields>>
 ): ImageTimeoutError => ImageTimeoutError.make(input as never);
 
-const ImageTimeoutErrorBase: TaggedErrorClassFromFields<
-  ImageTimeoutError,
+const ImageTimeoutErrorBase = S.TaggedError<ImageTimeoutError>($I`ImageTimeoutError`)(
   "ImageTimeoutError",
-  typeof ImageTimeoutErrorFields
-> = TaggedErrorClass<ImageTimeoutError>($I`ImageTimeoutError`)("ImageTimeoutError", ImageTimeoutErrorFields, {
+  ImageTimeoutErrorFields,
+  {
   ...$I.annote("ImageTimeoutError", {
     description: "Image download that exceeded its configured deadline.",
   }),
@@ -104,7 +102,8 @@ const ImageTimeoutErrorBase: TaggedErrorClassFromFields<
       arbitrary: from.arbitrary.map(makeImageTimeoutError),
       terminal: from.terminal?.map(makeImageTimeoutError),
     }),
-});
+  }
+);
 
 /**
  * Image download that exceeded its configured deadline.
@@ -287,7 +286,7 @@ const ImageErrorDefinition = S.Union([
 export const ImageError = ImageErrorDefinition.pipe(
   $I.annoteSchema("ImageError", {
     description: "Exhaustive tagged union of image-operation failures.",
-    toArbitrary: () => S.toArbitrary(ImageErrorDefinition),
+  toArbitrary: () => S.toArbitrary(ImageErrorDefinition),
   })
 );
 

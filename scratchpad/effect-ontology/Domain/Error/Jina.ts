@@ -9,8 +9,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import type { TaggedErrorClassFromFields } from "@beep/schema";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as Duration from "effect/Duration";
 import * as S from "effect/Schema";
 import {
@@ -85,11 +84,10 @@ const makeJinaRateLimitError = (
   input: S.Schema.Type<S.TaggedStruct<"JinaRateLimitError", typeof JinaRateLimitErrorFields>>
 ): JinaRateLimitError => JinaRateLimitError.make(input as never);
 
-const JinaRateLimitErrorBase: TaggedErrorClassFromFields<
-  JinaRateLimitError,
+const JinaRateLimitErrorBase = S.TaggedError<JinaRateLimitError>($I`JinaRateLimitError`)(
   "JinaRateLimitError",
-  typeof JinaRateLimitErrorFields
-> = TaggedErrorClass<JinaRateLimitError>($I`JinaRateLimitError`)("JinaRateLimitError", JinaRateLimitErrorFields, {
+  JinaRateLimitErrorFields,
+  {
   ...$I.annote("JinaRateLimitError", {
     description: "Jina Reader request rejected because the API quota was exhausted.",
   }),
@@ -99,7 +97,8 @@ const JinaRateLimitErrorBase: TaggedErrorClassFromFields<
       arbitrary: from.arbitrary.map(makeJinaRateLimitError),
       terminal: from.terminal?.map(makeJinaRateLimitError),
     }),
-});
+  }
+);
 
 /**
  * Jina Reader request rejected because the API quota was exhausted.
@@ -248,7 +247,7 @@ const JinaErrorDefinition = S.Union([JinaApiError, JinaRateLimitError, JinaParse
 export const JinaError = JinaErrorDefinition.pipe(
   $I.annoteSchema("JinaError", {
     description: "Exhaustive tagged union of Jina Reader failures.",
-    toArbitrary: () => S.toArbitrary(JinaErrorDefinition),
+  toArbitrary: () => S.toArbitrary(JinaErrorDefinition),
   })
 );
 

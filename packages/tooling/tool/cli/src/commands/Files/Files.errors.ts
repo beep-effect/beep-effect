@@ -6,7 +6,6 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
 import { Effect, Runtime } from "effect";
 import { dual } from "effect/Function";
@@ -38,7 +37,7 @@ class PlatformErrorOptions extends S.Class<PlatformErrorOptions>($I`PlatformErro
  * @category error-handling
  * @since 0.0.0
  */
-export class FilesCommandError extends TaggedErrorClass<FilesCommandError>($I`FilesCommandError`)(
+export class FilesCommandError extends S.TaggedError<FilesCommandError>($I`FilesCommandError`)(
   "FilesCommandError",
   {
     message: S.String,

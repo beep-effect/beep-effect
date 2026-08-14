@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Random, Ref } from "effect";
 import * as O from "effect/Option";
@@ -548,7 +548,7 @@ export class AiMetricsConfigSnapshotResult extends S.Class<AiMetricsConfigSnapsh
  * @category errors
  * @since 0.0.0
  */
-export class AiMetricsConfigSnapshotError extends TaggedErrorClass<AiMetricsConfigSnapshotError>(
+export class AiMetricsConfigSnapshotError extends S.TaggedError<AiMetricsConfigSnapshotError>(
   $I`AiMetricsConfigSnapshotError`
 )(
   "AiMetricsConfigSnapshotError",

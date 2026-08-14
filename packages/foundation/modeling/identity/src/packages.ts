@@ -97,6 +97,7 @@ const generatedComposers = $I.compose(
 
   // Shared Kernel Slice Packages
   "shared-domain",
+  "shared-use-cases",
   "shared-tables",
 
   "oip-web",
@@ -147,16 +148,12 @@ const generatedComposers = $I.compose(
   "m365",
   "m365-mcp",
   "govinfo",
-  "federal-register",
   "ecfr",
-  "dol",
-  "courtlistener",
   "api-transport",
   "mcp-kit",
   "uspto-mcp",
   "pacer",
   "fc-runs",
-  "protobuf",
   "cosmos",
   "epistemic-server",
   "epistemic-tables",
@@ -175,7 +172,6 @@ const generatedComposers = $I.compose(
   "shacl",
   "storybook",
   "tsgo-shim",
-  "doc-text",
   "doc-text",
   "documents-tables",
   "tailscale",
@@ -462,6 +458,23 @@ export const $TestUtilsId = composers.$TestUtilsId;
  * @since 0.0.0
  */
 export const $SharedDomainId = composers.$SharedDomainId;
+
+/**
+ * Identity composer for the `@beep/shared-use-cases` package.
+ *
+ * **Example** (Make a shared use-case contract ID)
+ *
+ * ```ts
+ * import { $SharedUseCasesId } from "@beep/identity/packages"
+ *
+ * const id = $SharedUseCasesId.make("PromotionGate")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $SharedUseCasesId: Identity.IdentityComposer<"@beep/shared-use-cases"> = composers.$SharedUseCasesId;
 
 /**
  * Identity composer for the `@beep/shared-tables` package.
@@ -1711,23 +1724,6 @@ export const $M365McpId: Identity.IdentityComposer<"@beep/m365-mcp"> = composers
 export const $GovinfoId: Identity.IdentityComposer<"@beep/govinfo"> = composers.$GovinfoId;
 
 /**
- * Identity composer for `@beep/federal-register`.
- *
- * **Example** (Make Federal Register package ID)
- *
- * ```ts
- * import { $FederalRegisterId } from "@beep/identity"
- *
- * const id = $FederalRegisterId.make("FederalRegister")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $FederalRegisterId: Identity.IdentityComposer<"@beep/federal-register"> = composers.$FederalRegisterId;
-
-/**
  * Identity composer for `@beep/ecfr`.
  *
  * **Example** (Make eCFR package ID)
@@ -1743,40 +1739,6 @@ export const $FederalRegisterId: Identity.IdentityComposer<"@beep/federal-regist
  * @since 0.0.0
  */
 export const $EcfrId: Identity.IdentityComposer<"@beep/ecfr"> = composers.$EcfrId;
-
-/**
- * Identity composer for `@beep/dol`.
- *
- * **Example** (Make DOL package ID)
- *
- * ```ts
- * import { $DolId } from "@beep/identity"
- *
- * const id = $DolId.make("Dol")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $DolId: Identity.IdentityComposer<"@beep/dol"> = composers.$DolId;
-
-/**
- * Identity composer for `@beep/courtlistener`.
- *
- * **Example** (Make CourtListener package ID)
- *
- * ```ts
- * import { $CourtlistenerId } from "@beep/identity"
- *
- * const id = $CourtlistenerId.make("Courtlistener")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $CourtlistenerId: Identity.IdentityComposer<"@beep/courtlistener"> = composers.$CourtlistenerId;
 
 /**
  * Identity composer for `@beep/api-transport`.
@@ -1862,23 +1824,6 @@ export const $PacerId: Identity.IdentityComposer<"@beep/pacer"> = composers.$Pac
  * @since 0.0.0
  */
 export const $FcRunsId: Identity.IdentityComposer<"@beep/fc-runs"> = composers.$FcRunsId;
-
-/**
- * Identity composer for `@beep/protobuf`.
- *
- * **Example** (Make Protobuf package ID)
- *
- * ```typescript
- * import { $ProtobufId } from "@beep/identity"
- *
- * const id = $ProtobufId.make("Protobuf")
- * void id
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const $ProtobufId: Identity.IdentityComposer<"@beep/protobuf"> = composers.$ProtobufId;
 
 /**
  * Identity composer for `@beep/cosmos`.

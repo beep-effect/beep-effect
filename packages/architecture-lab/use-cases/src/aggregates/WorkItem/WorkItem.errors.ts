@@ -8,7 +8,7 @@
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.errors");
@@ -54,7 +54,7 @@ export const WORK_ITEM_ACTION_UNAVAILABLE_REASON = "WorkItem service is unavaila
  * @category errors
  * @since 0.0.0
  */
-export class WorkItemNotFound extends TaggedErrorClass<WorkItemNotFound>($I`WorkItemNotFound`)(
+export class WorkItemNotFound extends S.TaggedError<WorkItemNotFound>($I`WorkItemNotFound`)(
   "WorkItemNotFound",
   {
     workItemId: DomainWorkItem.WorkItemId,
@@ -86,7 +86,7 @@ export class WorkItemNotFound extends TaggedErrorClass<WorkItemNotFound>($I`Work
  * @category errors
  * @since 0.0.0
  */
-export class WorkItemConflict extends TaggedErrorClass<WorkItemConflict>($I`WorkItemConflict`)(
+export class WorkItemConflict extends S.TaggedError<WorkItemConflict>($I`WorkItemConflict`)(
   "WorkItemConflict",
   {
     workItemId: DomainWorkItem.WorkItemId.annotateKey({
@@ -123,7 +123,7 @@ export class WorkItemConflict extends TaggedErrorClass<WorkItemConflict>($I`Work
  * @category errors
  * @since 0.0.0
  */
-export class WorkItemActionRejected extends TaggedErrorClass<WorkItemActionRejected>($I`WorkItemActionRejected`)(
+export class WorkItemActionRejected extends S.TaggedError<WorkItemActionRejected>($I`WorkItemActionRejected`)(
   "WorkItemActionRejected",
   {
     workItemId: DomainWorkItem.WorkItemId.annotateKey({
@@ -155,7 +155,7 @@ export class WorkItemActionRejected extends TaggedErrorClass<WorkItemActionRejec
  * @category errors
  * @since 0.0.0
  */
-export class WorkItemActionFailed extends TaggedErrorClass<WorkItemActionFailed>($I`WorkItemActionFailed`)(
+export class WorkItemActionFailed extends S.TaggedError<WorkItemActionFailed>($I`WorkItemActionFailed`)(
   "WorkItemActionFailed",
   {
     reason: S.NonEmptyString.annotateKey({

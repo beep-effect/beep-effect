@@ -26,21 +26,21 @@ import { failWithReportedExit } from "./ExitCodeError.ts";
  *
  * **Details**
  *
- * Spread into a `TaggedErrorClass` field definition to inherit the common
+ * Spread into a `S.TaggedError` field definition to inherit the common
  * `message` + optional `command` / `exitCode` / `cause` shape; add
  * group-specific fields (for example `path` or `file`) alongside the spread.
  *
- * **Example** (Spread into TaggedErrorClass)
+ * **Example** (Spread into S.TaggedError)
  *
  * ```ts
  * import { $RepoCliId } from "@beep/identity/packages"
- * import { TaggedErrorClass } from "@beep/schema"
+ * import * as S from "effect/Schema"
  * import * as S from "effect/Schema"
  * import { commandErrorFields } from "@beep/repo-cli/internal/cli/CommandErrorFields"
  *
  * const $I = $RepoCliId.create("commands/Example/Example.errors")
  *
- * class ExampleCommandError extends TaggedErrorClass<ExampleCommandError>($I`ExampleCommandError`)(
+ * class ExampleCommandError extends S.TaggedError<ExampleCommandError>($I`ExampleCommandError`)(
  *   "ExampleCommandError",
  *   { ...commandErrorFields, path: S.optionalKey(S.String) },
  *   $I.annote("ExampleCommandError", { description: "Example failure." })

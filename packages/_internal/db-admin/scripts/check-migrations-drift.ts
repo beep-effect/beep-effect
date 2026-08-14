@@ -1,50 +1,84 @@
 /**
  * Fails when the drizzle-kit schema surface (`src/schema.ts`) has changed
- * without a committed migration: copies `drizzle/` to a scratch dir, runs
- * `drizzle-kit generate` against it, and errors if a new migration folder
- * appears. Non-destructive — the real `drizzle/` folder is never written.
+ * without a committed migration. The real `drizzle/` folder is never written.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
-import { cpSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { $ } from "bun";
-import { Data, HashSet } from "effect";
+import { BunRuntime } from "@effect/platform-bun";
+import * as BunServices from "@effect/platform-bun/BunServices";
+import { Console, Effect, FileSystem, HashSet, Layer, Path } from "effect";
+import * as A from "effect/Array";
+import * as S from "effect/Schema";
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
-class MigrationsDriftError extends Data.TaggedError("MigrationsDriftError")<{
-  readonly message: string;
-  readonly newFolders: ReadonlyArray<string>;
-}> {}
+class MigrationsDriftError extends S.TaggedError<MigrationsDriftError>()("MigrationsDriftError", {
+  message: S.String,
+  newFolders: S.Array(S.String),
+}) {}
 
-const packageRoot = join(import.meta.dirname, "..");
-const drizzleFolder = join(packageRoot, "drizzle");
-const scratch = mkdtempSync(join(tmpdir(), "db-admin-migrations-drift-"));
+class MigrationGenerationError extends S.TaggedError<MigrationGenerationError>()("MigrationGenerationError", {
+  exitCode: S.Int,
+  message: S.String,
+}) {}
 
-try {
-  cpSync(drizzleFolder, scratch, { recursive: true });
-  const before = HashSet.fromIterable(readdirSync(scratch));
+const program = Effect.scoped(
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+    const packageRoot = path.resolve(import.meta.dirname, "..");
+    const drizzleFolder = path.join(packageRoot, "drizzle");
+    const scratchRoot = yield* fs.makeTempDirectoryScoped({ prefix: "db-admin-migrations-drift-" });
+    const scratch = path.join(scratchRoot, "drizzle");
+    yield* fs.copy(drizzleFolder, scratch);
+    const before = HashSet.fromIterable(yield* fs.readDirectory(scratch));
 
-  await $`bunx --bun drizzle-kit generate --dialect postgresql --schema ./src/schema.ts --out ${scratch} --name drift_check`
-    .cwd(packageRoot)
-    .quiet();
-
-  const newFolders = readdirSync(scratch).filter((entry) => !HashSet.has(before, entry));
-  if (newFolders.length > 0) {
-    for (const folder of newFolders) {
-      // build-script stdout, not application logging
-      // @effect-diagnostics-next-line globalConsole:off
-      console.error(`--- pending migration ${folder} ---`);
-      // @effect-diagnostics-next-line globalConsole:off
-      console.error(readFileSync(join(scratch, folder, "migration.sql"), "utf8"));
+    const exitCode = yield* spawner.exitCode(
+      ChildProcess.make(
+        "bunx",
+        [
+          "--bun",
+          "drizzle-kit",
+          "generate",
+          "--dialect",
+          "postgresql",
+          "--schema",
+          "./src/schema.ts",
+          "--out",
+          scratch,
+          "--name",
+          "drift_check",
+        ],
+        { cwd: packageRoot, stderr: "inherit", stdout: "ignore" }
+      )
+    );
+    if (exitCode !== 0) {
+      return yield* MigrationGenerationError.make({
+        exitCode,
+        message: `drizzle-kit generate failed with exit code ${exitCode}`,
+      });
     }
-    throw new MigrationsDriftError({
-      message:
-        "db-admin schema changed without a migration. Run `bun run generate -- --name <slug>` in packages/_internal/db-admin, review the SQL, and commit the new drizzle folder.",
-      newFolders,
-    });
-  }
-} finally {
-  rmSync(scratch, { recursive: true, force: true });
-}
+
+    const newFolders = A.filter(yield* fs.readDirectory(scratch), (entry) => !HashSet.has(before, entry));
+    if (A.isReadonlyArrayNonEmpty(newFolders)) {
+      yield* Effect.forEach(
+        newFolders,
+        Effect.fnUntraced(function* (folder) {
+          yield* Console.error(`--- pending migration ${folder} ---`);
+          yield* Console.error(yield* fs.readFileString(path.join(scratch, folder, "migration.sql")));
+        }),
+        { discard: true }
+      );
+      return yield* MigrationsDriftError.make({
+        message:
+          "db-admin schema changed without a migration. Run `bun run generate -- --name <slug>` in packages/_internal/db-admin, review the SQL, and commit the new drizzle folder.",
+        newFolders,
+      });
+    }
+  })
+);
+
+const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))));
+
+BunRuntime.runMain(main);

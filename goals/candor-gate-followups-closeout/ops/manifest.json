@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "candor-gate-followups-closeout",
+    "title": "Candor Gate Follow-Ups Closeout",
+    "status": "completed-retained",
+    "created": "2026-08-13",
+    "updated": "2026-08-14",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/candor-gate-followups-closeout",
+  "lifecycle": "completed-retained",
+  "statusNote": "All six claimed items reached terminal implementation or evidence-backed disposition in merged PR #699; follow-up PR #706 records the terminal lifecycle and reflection omitted before that merge.",
+  "mission": "Retire every parked candor-gate follow-up through implementation or evidence-backed no-build disposition, explain the Lint Policy divergence, and leave no owned residue.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "goal": "goals/patent-citation-candor-gate",
+    "graduated": "2026-08-13",
+    "note": "Direct successor claiming README Unowned Follow-Ons 1-5 and the closeout handoff's Lint Policy divergence."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until every claimed item has an observable implementation or evidence-backed no-build disposition and the PR is driven to mergeable via /yeet.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "standards/ARCHITECTURE.md",
+    "goals/candor-gate-followups-closeout/README.md",
+    "goals/candor-gate-followups-closeout/SPEC.md",
+    "goals/candor-gate-followups-closeout/PLAN.md",
+    "goals/candor-gate-followups-closeout/GOAL.md",
+    "goals/candor-gate-followups-closeout/research/SOURCES.md",
+    "goals/candor-gate-followups-closeout/research/DECISIONS.md",
+    "goals/patent-citation-candor-gate/README.md",
+    "goals/patent-citation-candor-gate/research/01-gate-shape-check.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/DECISIONS.md",
+    "research/01-identity-authority.md",
+    "research/02-query-plan-evidence.md",
+    "research/03-test-crypto-audit.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/candor-gate-followups-closeout/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Re-verify and decide",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement and evidence-dispose",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify and review",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "complete"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "complete"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/candor-gate-followups-closeout/GOAL.md)\" -le 4000",
+    "jq . goals/candor-gate-followups-closeout/ops/manifest.json",
+    "bun run beep goals doctor",
+    "git diff --check -- goals/candor-gate-followups-closeout",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "A proposed identity conversion cannot be proved from primary USPTO and WIPO sources.",
+    "A gate integration would compute legal judgment or weaken fail-closed behavior.",
+    "A database index is proposed without representative-volume planner evidence.",
+    "Verification requires unnamed credentials, cost, destructive state, or policy approval."
+  ]
+}

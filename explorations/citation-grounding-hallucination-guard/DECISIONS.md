@@ -1,5 +1,14 @@
 # Citation Grounding & Hallucination Guard — Decisions
 
+## 2026-08-13 — Packet graduation and guard re-entry
+
+**Decision:** Close the packet as `graduated`. `citation-ground-before-cite`
+reopens this packet at `decompose` only after both
+`citation-verified-span-substrate` and `citation-extraction-engine` land. The
+reopened shape gate decides align Q7: qualifier-aware stance-layer placement
+and the minimum qualifiers for claim comparison, using
+[`research/2026-07-25-academia-corpus-mining-note.md`](./research/2026-07-25-academia-corpus-mining-note.md).
+
 <!--
 Historical Stage 2 (ALIGN) seed, pre-drafted 2026-06-29 from RESEARCH.md +
 CAPTURE.md. These open recommendations are preserved as the pre-align record;
@@ -142,8 +151,9 @@ grounding verifies *any* quote against *any* source and is not legal-specific.
 (`packages/law-practice/*`), sibling to `law-practice-office-action-spike` /
 `ip-law-knowledge-graph`, keeping citation/IP vocab out of epistemic/shared.
 (3) The **hosted lookup wrap** (if/when Q4's lane is built) lands in the existing
-`@beep/courtlistener` driver skeleton (`packages/drivers/courtlistener`, MIT,
-currently `VERSION`-only). All three **compose** `@beep/epistemic-domain`
+`@beep/courtlistener` driver (deleted 2026-08-13; recreate from
+`goals/honest-repo-signal/research/FOLLOW-UPS.md` if the hosted lookup
+lane is pulled). All three **compose** `@beep/epistemic-domain`
 `EvidenceSpan` + `@beep/provenance` `TextAnchor` via public surface, never by
 forking.
 

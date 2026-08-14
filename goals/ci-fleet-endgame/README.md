@@ -44,11 +44,9 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 through P3 are complete. The ephemeral cutover landed in #666, cache
-activation landed in #673, and read-only PR consumption landed in #674.
-Execution now moves to P4's baked AMI. CSF-002 supersedes the earlier
-break-glass-retention plan: the non-ephemeral launcher remains retired, and only
-its cleanup teardown path remains available.
+P0-P3 are complete; the asymmetric cache is live (#673/#674). P4 and P5 are
+superseded into `goals/ci-fleet-residue` and `goals/ci-lane-economics`; only
+P6 (final close, gated on the lane-economics 20-minute outcome) remains here.
 
 ## Binding decisions
 

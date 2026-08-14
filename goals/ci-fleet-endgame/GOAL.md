@@ -23,17 +23,16 @@ inside the existing infra program; use a minimal Terraform root only at the
 recorded bridge-failure tripwire. Preserve existing VPC, IAM, egress, flow-log,
 reaper, AMI-pinning, fork-PR, and cache-write boundaries.
 
-Sequence strictly:
+State (2026-08-13): P0-P3 are complete — the fleet serves `beep-ec2-heavy`
+one-job-one-VM and the asymmetric Turbo cache is live (#673/#674). P4 and P5
+are superseded: the baked AMI continues in `goals/ci-fleet-residue` and the
+20-minute outcome in `goals/ci-lane-economics`. Do NOT execute P3, P4, or P5
+from this packet.
 
-1. Module bridge spike and non-serving shadow deploy.
-2. Cut over `beep-ec2-heavy`; keep the non-ephemeral manual launch path
-   retired, with teardown retained only for cleanup.
-3. Ship trusted-write/PR-read-only asymmetric Turbo cache.
-4. Ship the lockfile-keyed baked AMI.
-5. Use pickup, cost, infra-success, peak-RSS, and wall-time evidence to
-   right-size and shard until no required job waits 20 minutes.
-6. Drive the PR mergeable through Yeet, write the closeout reflection, and
-   flip the packet lifecycle.
+The only remaining work here is P6: once ci-lane-economics delivers the
+20-minute outcome, drive the final PR mergeable through Yeet, write the
+closeout reflection citing both charter halves, and flip the packet
+lifecycle to completed-retained.
 
 Use the authorized 1Password vault named `BEEP_CI`; route each
 required secret through a complete `op://BEEP_CI/<item>/<field>` reference.

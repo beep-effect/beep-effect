@@ -37,6 +37,7 @@ import { Effect, Exit, FileSystem, Path, Ref } from "effect";
 import * as A from "effect/Array";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { TUnsafe } from "@beep/types";
@@ -44,6 +45,32 @@ import type { Layer } from "effect";
 
 const emptyHash = AiSyncContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 const previousHash = AiSyncContentHash.make("0000000000000000000000000000000000000000000000000000000000000000");
+const requiredClaudeRepoDenyPermissions: ReadonlyArray<string> = [
+  "Bash(git push --force:*)",
+  "Bash(git push -f:*)",
+  "Bash(git push --force-with-lease:*)",
+  "Bash(git push --mirror:*)",
+  "Bash(git stash clear:*)",
+  "Bash(git stash drop:*)",
+  "Bash(git stash pop:*)",
+  "Bash(git worktree prune:*)",
+  "Bash(git worktree remove --force:*)",
+  "Bash(bun run beep worktree remove --force:*)",
+  "Bash(git clean:*)",
+  "Bash(git reset --hard:*)",
+  "Bash(git checkout .)",
+  "Bash(git checkout -- .)",
+  "Bash(gh pr merge --admin:*)",
+  "Bash(gh repo delete:*)",
+  "Edit(**/.github/workflows/**)",
+  "Edit(**/docs/_internal/**)",
+  "Edit(**/.claude/settings.json)",
+];
+const repoSafeClaudePermissions = {
+  allow: ["Bash(gh pr view:*)"],
+  defaultMode: "default",
+  deny: requiredClaudeRepoDenyPermissions,
+};
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
@@ -311,11 +338,93 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
           );
           assert.include(driftedCodexApproval.message, 'approval_policy must be "on-request"');
 
-          yield* writeText(claudePath, '{"enabledMcpjsonServers":["codegraph"]}');
+          yield* writeText(
+            codexPath,
+            'approval_policy = "on-request"\nsandbox_mode = "workspace-write"\n\n[sandbox_workspace_write]\nnetwork_access = true\nwritable_roots = ["/tmp/outside"]\n'
+          );
+          assert.strictEqual(
+            (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".codex/config.toml" })).schemaId,
+            "codex-config"
+          );
+          const unsafeWorkspaceWrite = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" })
+          );
+          assert.include(
+            unsafeWorkspaceWrite.message,
+            "sandbox_workspace_write.network_access must be false or omitted"
+          );
+          assert.include(
+            unsafeWorkspaceWrite.message,
+            "sandbox_workspace_write.writable_roots must be empty or omitted"
+          );
+
+          yield* writeText(
+            codexPath,
+            'approval_policy = "on-request"\nsandbox_mode = "workspace-write"\n\n[sandbox_workspace_write]\nnetwork_access = false\nwritable_roots = []\n'
+          );
+          yield* validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".codex/config.toml" });
+
+          yield* writeText(
+            claudePath,
+            yield* encodeJson({
+              permissions: { allow: ["Bash(gh pr view:*)"], deny: requiredClaudeRepoDenyPermissions },
+            })
+          );
           const implicitClaudeMode = yield* Effect.flip(
             validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
           );
           assert.include(implicitClaudeMode.message, 'permissions.defaultMode must be explicitly set to "default"');
+
+          const missingForcePushDeny = A.filter(
+            requiredClaudeRepoDenyPermissions,
+            (permission) => !Equal.equals(permission, "Bash(git push --force:*)")
+          );
+          yield* writeText(
+            claudePath,
+            yield* encodeJson({
+              permissions: { ...repoSafeClaudePermissions, deny: missingForcePushDeny },
+            })
+          );
+          assert.strictEqual(
+            (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
+            "claude-settings"
+          );
+          const missingCriticalDeny = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+          );
+          assert.include(missingCriticalDeny.message, "missing required deny rule: Bash(git push --force:*)");
+
+          const unexpectedDeny = "Bash(git branch -D:*)";
+          yield* writeText(
+            claudePath,
+            yield* encodeJson({
+              permissions: {
+                ...repoSafeClaudePermissions,
+                deny: A.append(requiredClaudeRepoDenyPermissions, unexpectedDeny),
+              },
+            })
+          );
+          const driftedDenyDomain = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+          );
+          assert.include(
+            driftedDenyDomain.message,
+            `unexpected deny rule outside exact repository policy: ${unexpectedDeny}`
+          );
+
+          yield* writeText(
+            claudePath,
+            yield* encodeJson({
+              permissions: {
+                ...repoSafeClaudePermissions,
+                allow: ["Bash(git push:*)"],
+              },
+            })
+          );
+          const directPushGrant = yield* Effect.flip(
+            validateRepoSafetyPolicy({ repoRoot: tmpDir, config: ".claude/settings.json" })
+          );
+          assert.include(directPushGrant.message, "unapproved auto-approved Bash rule: Bash(git push:*)");
 
           yield* Effect.forEach(
             [
@@ -337,7 +446,10 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
             Effect.fn(function* (permission) {
               yield* writeText(
                 claudePath,
-                yield* encodeJson({ permissions: { allow: [permission] }, enabledMcpjsonServers: ["codegraph"] })
+                yield* encodeJson({
+                  permissions: { ...repoSafeClaudePermissions, allow: [permission] },
+                  enabledMcpjsonServers: ["codegraph"],
+                })
               );
               assert.strictEqual(
                 (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
@@ -357,7 +469,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
             Effect.fn(function* (defaultMode) {
               yield* writeText(
                 claudePath,
-                yield* encodeJson({ permissions: { allow: ["Bash(gh pr view:*)"], defaultMode } })
+                yield* encodeJson({ permissions: { ...repoSafeClaudePermissions, defaultMode } })
               );
               assert.strictEqual(
                 (yield* validateRepoConfig({ repoRoot: tmpDir, config: ".claude/settings.json" })).schemaId,
@@ -375,7 +487,12 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
           yield* writeText(codexPath, 'approval_policy = "on-request"\nsandbox_mode = "workspace-write"\n');
           yield* writeText(
             claudePath,
-            '{"permissions":{"defaultMode":"default","allow":["Bash(gh pr view:*)","Bash(gh pr checks:*)","Bash(gh run view:*)"]}}'
+            yield* encodeJson({
+              permissions: {
+                ...repoSafeClaudePermissions,
+                allow: ["Bash(gh pr view:*)", "Bash(gh pr checks:*)", "Bash(gh run view:*)"],
+              },
+            })
           );
 
           const safeResults = yield* validateDogfoodConfigs(tmpDir);
@@ -389,6 +506,52 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
   );
 
   it.effect(
+    "keeps check and audit cache keys coupled to repository safety configs",
+    Effect.fn(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..", "..");
+      const turboText = yield* fs.readFileString(path.join(repoRoot, "packages/tooling/library/ai-sync/turbo.json"));
+      const turboConfig = yield* S.decodeEffect(S.fromJsonString(S.Record(S.String, S.Unknown)))(turboText);
+      const tasks = R.get(turboConfig, "tasks").pipe(
+        O.flatMap(S.decodeUnknownOption(S.Record(S.String, S.Unknown))),
+        O.getOrThrow
+      );
+      const configInputs = ["$TURBO_ROOT$/.codex/config.toml", "$TURBO_ROOT$/.claude/settings.json"];
+
+      A.forEach(["check", "audit"], (taskName) => {
+        const task = R.get(tasks, taskName).pipe(
+          O.flatMap(S.decodeUnknownOption(S.Struct({ inputs: S.Array(S.String) }))),
+          O.getOrThrow
+        );
+        assert.deepEqual(A.intersection(task.inputs, configInputs), configInputs);
+      });
+    })
+  );
+
+  it.effect(
+    "keeps checked-in Claude grants inside the exact 46-value allow domain",
+    Effect.fn(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..", "..", "..");
+      const settingsText = yield* fs.readFileString(path.join(repoRoot, ".claude/settings.json"));
+      const settings = yield* S.decodeEffect(
+        S.fromJsonString(
+          S.Struct({
+            permissions: S.Struct({ allow: S.Array(S.String) }),
+          })
+        )
+      )(settingsText);
+
+      assert.lengthOf(settings.permissions.allow, 46);
+      assert.notInclude(settings.permissions.allow, "Bash(git push:*)");
+      assert.include(settings.permissions.allow, "Bash(bun run beep yeet publish:*)");
+      yield* validateRepoSafetyPolicy({ repoRoot, config: ".claude/settings.json" });
+    })
+  );
+
+  it.effect(
     "reads each mandatory config exactly once during combined validation",
     Effect.fn(function* () {
       yield* withTempDirectory(
@@ -398,7 +561,7 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/ai-sync", (it) => {
           const codexPath = path.join(tmpDir, ".codex/config.toml");
           const claudePath = path.join(tmpDir, ".claude/settings.json");
           yield* writeText(codexPath, 'approval_policy = "on-request"\nsandbox_mode = "workspace-write"\n');
-          yield* writeText(claudePath, '{"permissions":{"defaultMode":"default","allow":["Bash(gh pr view:*)"]}}');
+          yield* writeText(claudePath, yield* encodeJson({ permissions: repoSafeClaudePermissions }));
 
           const readPaths = yield* Ref.make(A.empty<string>());
           const countingFs: FileSystem.FileSystem = {

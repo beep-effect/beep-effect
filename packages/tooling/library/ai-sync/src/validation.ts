@@ -24,6 +24,29 @@ const decodeCodexToml = decodeTomlTextAs(CodexConfig);
 const decodeClaudeMcpJson = decodeJsonTextAs(ClaudeMcpJson);
 const decodeClaudeSettingsJson = decodeJsonTextAs(ClaudeSettings);
 
+class CodexRepoWorkspaceWritePolicy extends S.Class<CodexRepoWorkspaceWritePolicy>($I`CodexRepoWorkspaceWritePolicy`)(
+  {
+    network_access: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    writable_roots: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("CodexRepoWorkspaceWritePolicy", {
+    description: "Checked-in Codex workspace-write egress and external writable-root policy.",
+  })
+) {}
+
+class CodexRepoSafetyPolicy extends S.Class<CodexRepoSafetyPolicy>($I`CodexRepoSafetyPolicy`)(
+  {
+    approval_policy: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    sandbox_mode: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    sandbox_workspace_write: CodexRepoWorkspaceWritePolicy.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("CodexRepoSafetyPolicy", {
+    description: "Repository safety-policy projection of Codex config, separate from native schema validation.",
+  })
+) {}
+
+const decodeCodexRepoSafetyPolicy = decodeTomlTextAs(CodexRepoSafetyPolicy);
+
 const ClaudeRepoPermissionMode = LiteralKit([
   "default",
   "acceptEdits",
@@ -41,9 +64,10 @@ class ClaudeRepoPermissions extends S.Class<ClaudeRepoPermissions>($I`ClaudeRepo
   {
     allow: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     defaultMode: ClaudeRepoPermissionMode.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    deny: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("ClaudeRepoPermissions", {
-    description: "Checked-in Claude approval mode and Bash allowlist inspected by the repository safety policy.",
+    description: "Checked-in Claude approval mode, Bash allowlist, and deny rules inspected by the repo policy.",
   })
 ) {}
 
@@ -83,7 +107,6 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
   "Bash(bunx --bun vitest run:*)",
   "Bash(git add:*)",
   "Bash(git commit:*)",
-  "Bash(git push:*)",
   "Bash(git fetch:*)",
   "Bash(git rebase:*)",
   "Bash(git switch:*)",
@@ -109,11 +132,40 @@ const ApprovedClaudeRepoBashPermission = LiteralKit([
 ]).pipe(
   $I.annoteSchema("ApprovedClaudeRepoBashPermission", {
     description:
-      "Exact 47-value Bash grant domain approved for this repository, including named read-only GitHub queries and intentional Git and Yeet publication commands.",
+      "Exact 46-value Bash grant domain approved for this repository, including named read-only GitHub queries and intentional Yeet publication commands.",
   })
 );
 
 const isApprovedClaudeRepoBashPermission = S.is(ApprovedClaudeRepoBashPermission);
+
+const RequiredClaudeRepoDenyPermission = LiteralKit([
+  "Bash(git push --force:*)",
+  "Bash(git push -f:*)",
+  "Bash(git push --force-with-lease:*)",
+  "Bash(git push --mirror:*)",
+  "Bash(git stash clear:*)",
+  "Bash(git stash drop:*)",
+  "Bash(git stash pop:*)",
+  "Bash(git worktree prune:*)",
+  "Bash(git worktree remove --force:*)",
+  "Bash(bun run beep worktree remove --force:*)",
+  "Bash(git clean:*)",
+  "Bash(git reset --hard:*)",
+  "Bash(git checkout .)",
+  "Bash(git checkout -- .)",
+  "Bash(gh pr merge --admin:*)",
+  "Bash(gh repo delete:*)",
+  "Edit(**/.github/workflows/**)",
+  "Edit(**/docs/_internal/**)",
+  "Edit(**/.claude/settings.json)",
+]).pipe(
+  $I.annoteSchema("RequiredClaudeRepoDenyPermission", {
+    description:
+      "Exact 19-value Claude deny domain required to block destructive Git, admin, deletion, and protected-file operations.",
+  })
+);
+
+const isRequiredClaudeRepoDenyPermission = S.is(RequiredClaudeRepoDenyPermission);
 
 const unapprovedClaudeBashPermission = (permission: string): boolean =>
   (permission === "Bash" || Str.startsWith("Bash(")(permission)) && !isApprovedClaudeRepoBashPermission(permission);
@@ -150,12 +202,24 @@ const codexSettingSafetyFinding = (
   });
 
 const validateCodexRepoSafetyPolicy = (content: string) =>
-  decodeCodexToml(content).pipe(
+  decodeCodexRepoSafetyPolicy(content).pipe(
     Effect.mapError(validationError(".codex/config.toml", "codex-config")),
     Effect.flatMap((config) => {
+      const networkAccessFinding = config.sandbox_workspace_write.pipe(
+        O.flatMap((workspaceWrite) => workspaceWrite.network_access),
+        O.filter((networkAccess) => networkAccess),
+        O.as("sandbox_workspace_write.network_access must be false or omitted")
+      );
+      const writableRootsFinding = config.sandbox_workspace_write.pipe(
+        O.flatMap((workspaceWrite) => workspaceWrite.writable_roots),
+        O.filter(A.isReadonlyArrayNonEmpty),
+        O.as("sandbox_workspace_write.writable_roots must be empty or omitted")
+      );
       const findings = A.getSomes([
-        codexSettingSafetyFinding("approval_policy", "on-request", config.approval_policy),
-        codexSettingSafetyFinding("sandbox_mode", "workspace-write", config.sandbox_mode),
+        codexSettingSafetyFinding("approval_policy", "on-request", O.getOrUndefined(config.approval_policy)),
+        codexSettingSafetyFinding("sandbox_mode", "workspace-write", O.getOrUndefined(config.sandbox_mode)),
+        networkAccessFinding,
+        writableRootsFinding,
       ]);
 
       return A.match(findings, {
@@ -168,13 +232,24 @@ const validateCodexRepoSafetyPolicy = (content: string) =>
 const validateClaudeRepoSafetyPolicy = (content: string) =>
   decodeClaudeRepoPermissionPolicy(content).pipe(
     Effect.mapError((cause) =>
-      repoSafetyPolicyError(".claude/settings.json", "unable to decode the permissions allowlist", cause)
+      repoSafetyPolicyError(".claude/settings.json", "unable to decode the permissions policy", cause)
     ),
     Effect.flatMap((settings) => {
       const allowedPermissions = O.flatMap(settings.permissions, (permissions) => permissions.allow).pipe(
         O.getOrElse(A.empty<string>)
       );
+      const deniedPermissions = O.flatMap(settings.permissions, (permissions) => permissions.deny).pipe(
+        O.getOrElse(A.empty<string>)
+      );
       const unapprovedPermissions = A.filter(allowedPermissions, unapprovedClaudeBashPermission);
+      const missingRequiredDenyPermissions = A.filter(
+        RequiredClaudeRepoDenyPermission.Options,
+        (permission) => !A.contains(deniedPermissions, permission)
+      );
+      const unexpectedDenyPermissions = A.filter(
+        deniedPermissions,
+        (permission) => !isRequiredClaudeRepoDenyPermission(permission)
+      );
       const defaultModeFinding = codexSettingSafetyFinding(
         "permissions.defaultMode",
         "default",
@@ -183,10 +258,15 @@ const validateClaudeRepoSafetyPolicy = (content: string) =>
           O.getOrUndefined
         )
       );
-      const findings = A.appendAll(
+      const findings = A.flatten([
         A.map(unapprovedPermissions, (permission) => `unapproved auto-approved Bash rule: ${permission}`),
-        O.toArray(defaultModeFinding)
-      );
+        A.map(missingRequiredDenyPermissions, (permission) => `missing required deny rule: ${permission}`),
+        A.map(
+          unexpectedDenyPermissions,
+          (permission) => `unexpected deny rule outside exact repository policy: ${permission}`
+        ),
+        O.toArray(defaultModeFinding),
+      ]);
       return A.match(findings, {
         onEmpty: () => Effect.void,
         onNonEmpty: (messages) => Effect.fail(repoSafetyPolicyError(".claude/settings.json", A.join(messages, "; "))),
@@ -316,10 +396,13 @@ export const validateRepoConfig = Effect.fn("AiSync.validateRepoConfig")(functio
  * **Details**
  *
  * Codex must use exactly `on-request` approvals and `workspace-write`
- * sandboxing. Claude must explicitly set `permissions.defaultMode` to
+ * sandboxing, disable workspace-write network access, and grant no additional
+ * writable roots. Claude must explicitly set `permissions.defaultMode` to
  * `default`, and every Bash allow entry must belong to the repository's exact
- * 47-value grant domain. Named read-only GitHub queries and intentional Git and
- * Yeet publication commands remain approved members of that domain.
+ * 46-value grant domain. Its deny rules must exactly cover the repository's
+ * 19-value destructive-operation domain without out-of-policy additions. Named
+ * read-only GitHub queries and intentional Yeet publication commands remain
+ * approved members of the allow domain; direct Git pushes require approval.
  *
  * **Example** (Reject ambient agent authority)
  *
