@@ -118,13 +118,18 @@ const COVERAGE_FULL_SHARD_COUNT = 8;
 const COVERAGE_FULL_TWO_WORKER_PACKAGE_NAMES = ["@beep/repo-cli", "@beep/repo-utils"] as const;
 // repo-cli deliberately disables file parallelism for ordinary package runs,
 // but serial imports consumed 728.76 seconds in the rejected live coverage
-// candidate. Full coverage uses isolated Vitest workers, so enable file
-// parallelism only on this orchestrated path; a two-worker local probe passed
-// all 90 files in 200.86 seconds with identical coverage.
+// candidate. Full coverage and full baseline regeneration share this shard
+// worker shape so V8 instrumentation remains comparable. Scoped baseline
+// writes retain the two-worker shape used by the long-pole packages.
 const COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG = "--fileParallelism=true";
 const COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG = "--maxWorkers=2";
 const COVERAGE_FULL_VITEST_MIXED_MAX_WORKERS_ARG = "--maxWorkers=1";
 const COVERAGE_FULL_VITEST_WORKER_CAP = 10;
+const COVERAGE_SCOPED_BASELINE_VITEST_ARGS = [
+  "--",
+  COVERAGE_FULL_VITEST_FILE_PARALLELISM_ARG,
+  COVERAGE_FULL_VITEST_LONG_POLE_MAX_WORKERS_ARG,
+] as const;
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const DEFAULT_COVERAGE_FAST_CHECK_SEED = "20260708";
 const COVERAGE_NODE_OPTIONS_ARG = "--no-experimental-webstorage";
@@ -556,7 +561,11 @@ const withoutCoverageAffectedArg: (args: ReadonlyArray<string>) => ReadonlyArray
 );
 
 const isCoverageFullOwnedBooleanArg = (arg: string): boolean =>
-  arg === "--only" || Str.startsWith("--only=")(arg) || arg === "--summarize" || Str.startsWith("--summarize=")(arg);
+  arg === COVERAGE_WRITE_BASELINE_ARG ||
+  arg === "--only" ||
+  Str.startsWith("--only=")(arg) ||
+  arg === "--summarize" ||
+  Str.startsWith("--summarize=")(arg);
 
 const isCoverageFullOwnedValueArg = (arg: string): boolean =>
   arg === "--concurrency" || arg === "--filter" || arg === "--since";
@@ -1311,7 +1320,10 @@ const coverageStep = (cwd: string, options: CoverageTaskOptions) =>
   QualityTaskStep.make({
     label: options.writeBaseline ? "coverage:baseline" : "coverage:ratchet",
     command: "bunx",
-    args: turboRunArgs(["coverage"], options.args),
+    args: turboRunArgs(
+      ["coverage"],
+      options.writeBaseline ? [...options.args, ...COVERAGE_SCOPED_BASELINE_VITEST_ARGS] : options.args
+    ),
     cwd,
     env: {
       ...coverageEnvironment(),
@@ -1323,7 +1335,8 @@ const coverageFullShardStep = (
   cwd: string,
   index: number,
   packageNames: ReadonlyArray<string>,
-  passthroughArgs: ReadonlyArray<string>
+  passthroughArgs: ReadonlyArray<string>,
+  writeBaseline: boolean
 ) =>
   QualityTaskStep.make({
     label: `coverage:shard-${index}`,
@@ -1344,7 +1357,10 @@ const coverageFullShardStep = (
       ]
     ),
     cwd,
-    env: coverageEnvironment(),
+    env: {
+      ...coverageEnvironment(),
+      ...(writeBaseline ? { VITEST_COVERAGE_REPORT_ONLY: "1" } : {}),
+    },
   });
 
 const bunRunStep = (cwd: string, label: string, args: ReadonlyArray<string>) =>
@@ -1921,12 +1937,15 @@ const coverageFullSteps = (
   packageNames: ReadonlyArray<string>,
   args: ReadonlyArray<string>
 ): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] => {
+  const writeBaseline = A.some(args, isCoverageWriteBaselineArg);
   const passthroughArgs = coverageFullPassthroughArgs(args);
   const shards = planCoverageFullShards(packageNames, COVERAGE_FULL_SHARD_COUNT);
 
   return [
     turboStep(repoRoot, "coverage:prebuild", ["build"], [CI_TURBO_CONCURRENCY_ARG, "--summarize", ...passthroughArgs]),
-    ...A.map(shards, (shard) => coverageFullShardStep(repoRoot, shard.index, shard.packageNames, passthroughArgs)),
+    ...A.map(shards, (shard) =>
+      coverageFullShardStep(repoRoot, shard.index, shard.packageNames, passthroughArgs, writeBaseline)
+    ),
   ];
 };
 
@@ -2000,7 +2019,7 @@ const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(functi
   }
 
   yield* cleanCoverageRegressionOutputs(repoRoot);
-  if (isCi() && !options.scoped && !options.writeBaseline) {
+  if (!options.scoped && (isCi() || options.writeBaseline)) {
     yield* runFullShardedCoverage(repoRoot, options.args);
   } else {
     yield* runStep(coverageStep(repoRoot, options));

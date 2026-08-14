@@ -14,9 +14,10 @@
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { profilePhase } from "@beep/observability";
-import { migrateBundle, PostgresDrizzle } from "@beep/postgres";
+import { MigrationBundleLegacyNameSet, migrateBundle, PostgresDrizzle } from "@beep/postgres";
 import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { migrationBundle } from "./Migrations.gen.ts";
 import type { PostgresError } from "@beep/postgres";
@@ -25,6 +26,36 @@ const $I = $ProfessionalDesktopId.create("runtime/Migrations");
 
 // Default schema for the Professional Desktop Drizzle migration journal.
 const migrationsSchema = "drizzle" as const;
+const legacyPreBaselineNames = A.make(
+  "20260512000000_architecture_lab_work_item",
+  "20260512001000_architecture_lab_worker_archetype",
+  "20260613000000_workspace_thread_domain",
+  "20260613000010_epistemic_usage_record",
+  "20260708000000_workspace_vault_config",
+  "20260711000000_documents_sync_state",
+  "20260725222615_baseline",
+  "20260726000000_epistemic_bitemporal_edge",
+  "20260726210000_epistemic_execution_ledger",
+  "20260730042420_epistemic_contradiction_triage",
+  "20260730043536_epistemic_evidence_verification",
+  "20260801021411_usage_record_optional_activity",
+  "20260806031625_law_practice_candor_gate",
+  "20260807061034_law_practice_legal_position"
+);
+const legacyNameSets = [
+  MigrationBundleLegacyNameSet.make({
+    canonicalName: "20260813130540_baseline",
+    legacyNames: legacyPreBaselineNames,
+  }),
+  MigrationBundleLegacyNameSet.make({
+    canonicalName: "20260813143745_baseline-functions",
+    legacyNames: legacyPreBaselineNames,
+  }),
+  MigrationBundleLegacyNameSet.make({
+    canonicalName: "20260814001821_law_practice_st13_office_identity",
+    legacyNames: ["20260813173652_law_practice_st13_office_identity"],
+  }),
+];
 
 const PostgresSchemaName = S.NonEmptyString.pipe(
   S.check(
@@ -91,7 +122,7 @@ export const migrateProfessionalDesktopDatabase = Effect.fn("professional_deskto
   const db = yield* PostgresDrizzle;
   const schema = ProfessionalDesktopMigrationOptions.make(options).migrationsSchema;
 
-  yield* migrateBundle(db, { migrations: migrationBundle, migrationsSchema: schema });
+  yield* migrateBundle(db, { legacyNameSets, migrations: migrationBundle, migrationsSchema: schema });
 });
 
 /**

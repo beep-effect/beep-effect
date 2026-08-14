@@ -54,6 +54,39 @@ layer(TestLayer)("Workspaces", (it) => {
     );
 
     it.effect(
+      "should ignore generated coverage directories while resolving workspaces",
+      Effect.fn(function* () {
+        const fs = yield* Fs.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectory();
+        const packageDir = pathApi.join(tmpDir, "packages", "pkg-a");
+        const coverageDir = pathApi.join(packageDir, "coverage");
+
+        const workspaces = yield* Effect.acquireUseRelease(
+          Effect.gen(function* () {
+            yield* fs.makeDirectory(coverageDir, { recursive: true });
+            yield* fs.writeFileString(
+              pathApi.join(tmpDir, "package.json"),
+              '{ "name": "root", "workspaces": ["packages/*", "packages/*/coverage"] }'
+            );
+            yield* fs.writeFileString(
+              pathApi.join(packageDir, "package.json"),
+              '{ "name": "@mock/pkg-a", "version": "1.0.0" }'
+            );
+            yield* fs.writeFileString(
+              pathApi.join(coverageDir, "package.json"),
+              '{ "name": "@generated/coverage-artifact", "version": "1.0.0" }'
+            );
+          }),
+          () => resolveWorkspaceDirs(tmpDir),
+          () => fs.remove(tmpDir, { recursive: true })
+        );
+
+        expect(HashMap.has(workspaces, "@mock/pkg-a")).toBe(true);
+        expect(HashMap.has(workspaces, "@generated/coverage-artifact")).toBe(false);
+      })
+    );
+
+    it.effect(
       "should fail with NoSuchFileError for missing root",
       Effect.fn(function* () {
         const result = yield* resolveWorkspaceDirs("/nonexistent/root").pipe(

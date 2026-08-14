@@ -21,6 +21,7 @@
     "@beep/dock": "workspace:^",
     "@beep/dock-react": "workspace:^",
     "@beep/drizzle": "workspace:^",
+    "@beep/file-processing": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/md": "workspace:^",
     "@beep/ontology": "workspace:^",
