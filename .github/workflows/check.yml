@@ -215,6 +215,25 @@ jobs:
           # goals/one-round-loop/history/p0-parity-evidence.md). This case
           # block carries only GitHub-context orchestration: the
           # event-dependent shape flags each lane receives.
+          #
+          # Orphaned lane grandchildren (stuck bun wrappers, daemon sockets)
+          # inherit this step's stdio pipes, and the runner does not end a
+          # step until those pipes close — so a lane can print success, exit,
+          # and still wedge the job for its full timeout (ship-velocity SPEC
+          # A7; proven on Docgen run 31797064763). Run each lane in its own
+          # session and reap the entire process group once the lane process
+          # finishes, success and failure alike.
+          run_lane() {
+            setsid bun run beep "$@" < /dev/null &
+            local pgid=$!
+            local status=0
+            wait "$pgid" || status=$?
+            kill -TERM -- "-$pgid" 2>/dev/null || true
+            sleep 2
+            kill -KILL -- "-$pgid" 2>/dev/null || true
+            return "$status"
+          }
+
           shape_args=()
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
@@ -225,23 +244,23 @@ jobs:
 
           case "${{ matrix.id }}" in
             lint|check|test-unit|test-integration|coverage)
-              bun run beep ci lane "${{ matrix.id }}" "${shape_args[@]}"
+              run_lane ci lane "${{ matrix.id }}" "${shape_args[@]}"
               ;;
             lint-policy|codegen|ecosystem)
-              bun run beep ci lane "${{ matrix.id }}"
+              run_lane ci lane "${{ matrix.id }}"
               ;;
             repo-sanity)
               if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                bun run beep ci lane repo-sanity --changeset-status
+                run_lane ci lane repo-sanity --changeset-status
               else
-                bun run beep ci lane repo-sanity
+                run_lane ci lane repo-sanity
               fi
               ;;
             docgen)
               if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                bun run beep ci lane docgen --mode "${{ steps.lane-gate.outputs.docgen_mode }}" --base "origin/${GITHUB_BASE_REF:-main}" --head HEAD
+                run_lane ci lane docgen --mode "${{ steps.lane-gate.outputs.docgen_mode }}" --base "origin/${GITHUB_BASE_REF:-main}" --head HEAD
               else
-                bun run beep ci lane docgen --mode full
+                run_lane ci lane docgen --mode full
               fi
               ;;
           esac
