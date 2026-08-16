@@ -90,12 +90,19 @@ describe("delete-package registration geometry", () => {
               path.join(repoRoot, ".changeset", "orphan-courtlistener.md"),
               '---\n"@beep/courtlistener": patch\n---\n\nStale pending bump.\n'
             );
+            yield* fs.writeFileString(
+              path.join(repoRoot, ".changeset", "delete-courtlistener.md"),
+              "---\n{}\n---\n\nNo release: remove `@beep/courtlistener` from the workspace.\n"
+            );
 
             const observations = yield* inspectTargetAtRoot(repoRoot, target);
             const byId = (id: string) => A.findFirst(observations, (item) => item.surfaceId === id);
 
             expect(O.getOrThrow(byId("jsdoc-inventory")).status).toBe("residue");
-            expect(O.getOrThrow(byId("pending-changesets")).status).toBe("residue");
+            const pendingChangesets = O.getOrThrow(byId("pending-changesets"));
+            expect(pendingChangesets.status).toBe("residue");
+            expect(pendingChangesets.evidence).toContain(".changeset/orphan-courtlistener.md");
+            expect(pendingChangesets.evidence).not.toContain(".changeset/delete-courtlistener.md");
             expect(O.getOrThrow(byId("identity-segment")).status).toBe("residue");
             expect(O.getOrThrow(byId("runtime-artifacts")).status).toBe("residue");
           })

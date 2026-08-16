@@ -56,10 +56,13 @@ private `RegistrationGeometry` module (ten-kind `RegistrationSurface` union,
 forward/inverse/inspect service, `dependentsOf` with identity-accessor
 scanning), identity removal + orphan-composer lint, and 28 tests including
 the synthetic #680 residue fixture. Implementation record:
-`history/p1-implementation-notes.md`. Track A acceptance boxes pass via the
-synthetic fixture and refuse-table tests; the LIVE zero-consumer
-create→delete round-trip is deliberately deferred to P4's First Vertical
-Slice, which the SPEC designates as that proof's gate.
+`history/p1-implementation-notes.md`. Track A acceptance boxes all pass:
+the synthetic #680 fixture and refuse-table tests in CI, and the LIVE
+zero-consumer create→delete round-trip executed 2026-08-16
+(`history/p1-track-a-round-trip.md`) — which caught and fixed one doctor
+bug (the pending-changeset probe flagged its own `{}` deletion note as
+residue). P4's First Vertical Slice remains the separate Track B lab
+round-trip gate.
 
 ## P6 Closeout Checklist
 
