@@ -1,9 +1,10 @@
 import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
-import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
+import { makeBlankNode, makeDataset, makeLiteral, makeNamedNode, makeQuad, PrefixMap } from "@beep/rdf/Rdf";
 import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
+import * as S from "effect/Schema";
 import { Writer } from "n3";
 import { vi } from "vitest";
 import type * as N3 from "n3";
@@ -70,9 +71,8 @@ describe("N3TurtleCodec", () => {
         makeQuad(statement, makeNamedNode("https://example.test/confidence"), makeLiteral("0.8", XSD_DOUBLE.value)),
       ]);
       const codec = yield* N3TurtleCodec;
-      const serialized = yield* codec.serialize(
-        N3SerializeTurtleRequest.make({ dataset, prefixes: { rdf: RDF_NAMESPACE } })
-      );
+      const prefixes = yield* S.decodeEffect(PrefixMap)({ rdf: RDF_NAMESPACE });
+      const serialized = yield* codec.serialize(N3SerializeTurtleRequest.make({ dataset, prefixes }));
 
       expect(serialized.source).toContain("rdf:Statement");
       expect(serialized.source).toContain("rdf:subject");

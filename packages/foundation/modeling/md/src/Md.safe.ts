@@ -563,7 +563,13 @@ const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<Do
         length: N.isGreaterThan(1),
       })
     ),
-    A.flatMap(A.map(flow(Struct.pick(["identifier", "path"]), DuplicateFootnoteDefinitionSafetyViolation.make)))
+    // `make` on a class schema calls `new this(...)`, so it cannot be passed as
+    // a detached reference — the lambda is what keeps the receiver bound.
+    A.flatMap(
+      A.map(
+        flow(Struct.pick(["identifier", "path"]), (fields) => DuplicateFootnoteDefinitionSafetyViolation.make(fields))
+      )
+    )
   );
 
 /**

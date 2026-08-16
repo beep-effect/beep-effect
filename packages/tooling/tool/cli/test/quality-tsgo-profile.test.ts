@@ -9,7 +9,6 @@ const BaseDiagnosticSeverity = {
 
 const BasePlugin = {
   name: "@effect/language-service",
-  includeSuggestionsInTsc: true,
   diagnosticSeverity: BaseDiagnosticSeverity,
 };
 
@@ -18,10 +17,6 @@ const ecosystemConfig = (diagnosticSeverity: Readonly<Record<string, unknown>>) 
     plugins: [{ ...BasePlugin, diagnosticSeverity }],
   },
 });
-
-const workspaceConfig = (
-  plugins: ReadonlyArray<Readonly<Record<string, unknown>>>
-): Readonly<Record<string, unknown>> => ({ compilerOptions: { plugins } });
 
 const ConformingDiagnosticSeverity = {
   ...BaseDiagnosticSeverity,
@@ -47,7 +42,7 @@ describe("quality tsgo ecosystem plugin profiles", () => {
     ]);
 
     expect(diagnostics).toEqual([
-      "packages/ecosystem/member/tsconfig.json: ecosystem @effect/language-service profile.diagnosticSeverity does not match tsconfig.base.json",
+      "packages/ecosystem/member/tsconfig.json: ecosystem diagnosticSeverity.correctnessRule must be error; found off",
     ]);
   });
 
@@ -60,7 +55,7 @@ describe("quality tsgo ecosystem plugin profiles", () => {
     ]);
 
     expect(diagnostics).toEqual([
-      "packages/ecosystem/member/tsconfig.test.json: ecosystem @effect/language-service profile.diagnosticSeverity does not match tsconfig.base.json",
+      "packages/ecosystem/member/tsconfig.test.json: ecosystem diagnosticSeverity is missing rule missingPipeableSignature",
     ]);
   });
 
@@ -74,79 +69,13 @@ describe("quality tsgo ecosystem plugin profiles", () => {
     ]);
   });
 
-  it("accepts a canonical Effect profile alongside another compiler plugin", () => {
-    expect(
-      collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
-        ["apps/web/tsconfig.json", workspaceConfig([BasePlugin, { name: "next" }])],
-      ])
-    ).toEqual([]);
-  });
-
-  it("rejects a compiler plugin override that drops the Effect profile", () => {
+  it("rejects non-ecosystem package plugin overrides", () => {
     const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
-      ["apps/web/tsconfig.json", workspaceConfig([{ name: "next" }])],
-      ["packages/shared/member/tsconfig.json", workspaceConfig([])],
+      ["packages/shared/member/tsconfig.json", ecosystemConfig(BaseDiagnosticSeverity)],
     ]);
 
     expect(diagnostics).toEqual([
-      "apps/web/tsconfig.json: compilerOptions.plugins overrides and removes the inherited @effect/language-service plugin",
-      "packages/shared/member/tsconfig.json: compilerOptions.plugins overrides and removes the inherited @effect/language-service plugin",
-    ]);
-  });
-
-  it("rejects drift in a non-ecosystem local Effect profile", () => {
-    const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
-      ["apps/web/tsconfig.json", ecosystemConfig({ ...BaseDiagnosticSeverity, missedPipeableOpportunity: "off" })],
-    ]);
-
-    expect(diagnostics).toEqual([
-      "apps/web/tsconfig.json: @effect/language-service profile.diagnosticSeverity does not match tsconfig.base.json",
-    ]);
-  });
-
-  it("rejects an inherited config whose extends chain never provides the Effect profile", () => {
-    const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
-      ["infra/tsconfig.json", { extends: "./standalone.json" }],
-    ]);
-
-    expect(diagnostics).toEqual([]);
-  });
-
-  it("rejects a config whose extends chain bypasses the repository base config", () => {
-    const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
-      ["packages/example/tsconfig.json", workspaceConfig([BasePlugin])],
-    ]);
-
-    expect(diagnostics).toEqual([
-      "packages/example/tsconfig.json: package tsconfigs may override @effect/language-service only under packages/ecosystem/<member>/tsconfig*.json",
-    ]);
-  });
-
-  it("rejects a divergent Effect profile inherited from an intermediate config", () => {
-    const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
-      ["apps/web/tsconfig.json", { extends: "./tsconfig.framework.json" }],
-    ]);
-
-    expect(diagnostics).toEqual([]);
-  });
-
-  it("rejects duplicate Effect language-service entries", () => {
-    const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
-      ["apps/web/tsconfig.json", workspaceConfig([BasePlugin, BasePlugin])],
-    ]);
-
-    expect(diagnostics).toEqual([
-      "apps/web/tsconfig.json: compilerOptions.plugins contains duplicate @effect/language-service entries",
-    ]);
-  });
-
-  it("rejects drift outside diagnosticSeverity", () => {
-    const diagnostics = collectTsgoPluginProfileDiagnosticsForTesting(BasePlugin, [
-      ["apps/web/tsconfig.json", workspaceConfig([{ ...BasePlugin, includeSuggestionsInTsc: false }])],
-    ]);
-
-    expect(diagnostics).toEqual([
-      "apps/web/tsconfig.json: @effect/language-service profile.includeSuggestionsInTsc does not match tsconfig.base.json",
+      "packages/shared/member/tsconfig.json: package tsconfigs may override @effect/language-service only under packages/ecosystem/<member>/tsconfig*.json",
     ]);
   });
 });

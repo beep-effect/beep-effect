@@ -8,8 +8,8 @@
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
 import { FilePath, WindowsDrivePath, WindowsUncPath } from "@beep/schema/FilePath";
+import { SchemaGetter } from "effect";
 import * as S from "effect/Schema";
-import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 
 const $I = $WorkspaceDomainId.create("entities/Workspace/Workspace.values");
