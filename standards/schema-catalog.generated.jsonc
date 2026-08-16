@@ -8447,6 +8447,14 @@
       "description": "One timestamped Drizzle migration and its byte-exact SQL content."
     },
     {
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "symbol": "MigrationBundleLegacyNameSet",
+      "kind": "schema-class",
+      "owner": "@beep/postgres",
+      "identity": "MigrationBundleLegacyNameSet",
+      "description": "Canonical migration name plus the complete legacy journal-name set required to skip its re-baselined SQL."
+    },
+    {
       "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
       "symbol": "PgErrorCode",
       "kind": "literal-kit",
@@ -21623,7 +21631,9 @@
       "file": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
       "symbol": "ActFramePreconditions",
       "kind": "schema-const",
-      "owner": "@beep/law-practice-domain"
+      "owner": "@beep/law-practice-domain",
+      "identity": "ActFramePreconditions",
+      "description": "The preconditions a recorded act frame states, with distinct element labels."
     },
     {
       "file": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
@@ -21677,7 +21687,9 @@
       "file": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
       "symbol": "PositionTransitions",
       "kind": "schema-const",
-      "owner": "@beep/law-practice-domain"
+      "owner": "@beep/law-practice-domain",
+      "identity": "PositionTransitions",
+      "description": "The position transitions a recorded act frame creates or terminates, with distinct element labels."
     },
     {
       "file": "packages/law-practice/domain/src/entities/CandorDisposition/CandorDisposition.model.ts",
@@ -30286,6 +30298,22 @@
       "description": "Reason a generated packet could not be written."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+      "symbol": "CodexFindingsRefreshReconciliation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CodexFindingsRefreshReconciliation",
+      "description": "Observable result of preserving prior packet work and appending unseen findings."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+      "symbol": "CodexRefreshLedgerSource",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CodexRefreshLedgerSource",
+      "description": "Decoded existing ledger plus its original bytes for refresh concurrency checks."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.scan.ts",
       "symbol": "SensitiveTextCode",
       "kind": "literal-kit",
@@ -30892,6 +30920,38 @@
       "owner": "@beep/repo-cli",
       "identity": "TsMorphMutationKind",
       "description": "Supported AST mutation categories required by create-package."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "DeletePackageManifest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DeletePackageManifest",
+      "description": "Minimal package manifest fields required by deletion preflight."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "DeletePackagePolicy",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DeletePackagePolicy",
+      "description": "Decoded delete-package flags and preflight facts consumed by refusal policy."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "DeletePackageRefusal",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DeletePackageRefusal",
+      "description": "One classified delete-package preflight refusal."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "DeletePackageRefusalKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DeletePackageRefusalKind",
+      "description": "Closed hard and soft refusal reasons emitted before deletion."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
@@ -33566,10 +33626,10 @@
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
       "symbol": "CoverageComparisonFailure",
-      "kind": "schema-class",
+      "kind": "tagged-union",
       "owner": "@beep/repo-cli",
       "identity": "CoverageComparisonFailure",
-      "description": "One metric that dropped below its committed baseline for one package."
+      "description": "Tagged coverage regression reason for a baseline drop or newly uncovered file."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
@@ -33581,11 +33641,19 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "symbol": "CoverageFileBaseline",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CoverageFileBaseline",
+      "description": "Coverage metrics for one repo-relative source file in a workspace package."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
       "symbol": "CoveragePackageBaseline",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "CoveragePackageBaseline",
-      "description": "Committed coverage percentages for one workspace package."
+      "description": "Committed package coverage totals with required per-file provenance."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
@@ -34463,7 +34531,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "BakeCheckReport",
-      "description": "Dual-key freshness result for the controller's live runner AMI pin."
+      "description": "Lockfile, Bun release archive, and Bun version freshness result for the live runner AMI pin."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
@@ -34511,7 +34579,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "BakeLocalInputs",
-      "description": "Repository root, revision, lock digest, and Bun version used by a bake."
+      "description": "Repository root, revision, lock digest, Bun archive digest, and Bun version used by a bake."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
@@ -36330,6 +36398,190 @@
       "owner": "@beep/repo-cli",
       "identity": "JsoncModification",
       "description": "A comment-preserving JSONC modification request (content, JSON path, value, array-insertion flag)."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.errors.ts",
+      "symbol": "RegistrationGeometryError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationGeometryError",
+      "description": "Typed failure to resolve, plan, inspect, or apply registration geometry."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "AuthoredReferenceSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AuthoredReferenceSurface",
+      "description": "An explicit target reference requiring a modeled edit or operator review."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "DataResourceSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DataResourceSurface",
+      "description": "Manifest-owned destructive state requiring ownership proof and explicit consent."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "DependentHit",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DependentHit",
+      "description": "One classified manifest, import, path, packet, baseline, or historical hit."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "DependentHitKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DependentHitKind",
+      "description": "Classification of one reverse-dependency or residue hit."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "DependentsReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DependentsReport",
+      "description": "Deterministic reverse-dependency closure plus import and authored-reference evidence."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "DerivedRebuildSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DerivedRebuildSurface",
+      "description": "Committed outputs replaced by a named reconstructive writer."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "GeneratedInventorySurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GeneratedInventorySurface",
+      "description": "A writer-owned inventory whose target membership is derivable and probeable."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "HistoricalRecordSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "HistoricalRecordSurface",
+      "description": "Historical evidence classified and preserved rather than pruned."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "IdentitySegmentSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "IdentitySegmentSurface",
+      "description": "A package identity compose argument and its exported composer accessor."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "OwnedTreeSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "OwnedTreeSurface",
+      "description": "A target-owned directory whose tracked and ignored contents share its lifecycle."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "PendingChangesetSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PendingChangesetSurface",
+      "description": "Pending changeset keys and retired-name policy for one package name."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationObservation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationObservation",
+      "description": "Declared-versus-actual result for one registration surface."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationObservationStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationObservationStatus",
+      "description": "Doctor status for one declared surface."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationOperation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationOperation",
+      "description": "One deterministic forward or inverse operation derived from a surface."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationOperationKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationOperationKind",
+      "description": "Closed operation kinds emitted by a registration plan."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationPlan",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationPlan",
+      "description": "Serializable package registration plan produced before any mutation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationSurface",
+      "kind": "tagged-union",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationSurface",
+      "description": "One declared registration surface interpreted by create, delete, and doctor."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationSurfaceKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationSurfaceKind",
+      "description": "Closed kinds of package-lifecycle registration surfaces."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationTarget",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationTarget",
+      "description": "Resolved workspace identity used to instantiate registration geometry."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationWriter",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationWriter",
+      "description": "Named writer or preservation policy that owns a registration surface."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RuntimeArtifactSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RuntimeArtifactSurface",
+      "description": "Ignored or local artifacts that must be absent after deletion."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "WorkspaceLiteralSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "WorkspaceLiteralSurface",
+      "description": "An exact workspace-array member removed only when it is not a covering glob."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/cli/RunMode.ts",

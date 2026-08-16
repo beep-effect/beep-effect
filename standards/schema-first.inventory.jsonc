@@ -1,22 +1,12 @@
 {
   "version": 1,
-  "generatedOn": "2026-08-14",
+  "generatedOn": "2026-08-16",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
     "infra/{src,test}/**/*.ts"
   ],
   "entries": [
-    {
-      "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 14,
-      "owner": "@beep/epistemic-server",
-      "reason": "Fixture-driven integration coverage of the bounded SHACL validator behind the claim gate; schema-derived property coverage for these request/dataset schemas already lives in packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts."
-    },
     {
       "file": "apps/oip-web/src/content/OipSeo.ts",
       "symbol": "oipTwitterHandle",
@@ -238,12 +228,38 @@
       "reason": "Mixed in-memory state: customEntities and instanceId are already modeled by WinkEngineState, while nlp is the live wink-nlp runtime object."
     },
     {
+      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
+      "symbol": "EdgeVersionSourceColumns",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
+      "symbol": "EdgeVersionTargetColumns",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
+    },
+    {
       "file": "packages/epistemic/server/src/GovernedEgress/GovernedEgress.layer.ts",
       "symbol": "GovernedEgressLiveOptions",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/epistemic-server",
       "reason": "Mixed governed-egress layer wiring: baseFetch is a live transport function, while grant is already schema-backed by GovernedEgressOptions; the options are assembled in-process and never decoded or persisted."
+    },
+    {
+      "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 14,
+      "owner": "@beep/epistemic-server",
+      "reason": "Fixture-driven integration coverage of the bounded SHACL validator behind the claim gate; schema-derived property coverage for these request/dataset schemas already lives in packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts."
     },
     {
       "file": "packages/epistemic/server/test/integration/ContradictionTriage.p0.pglite.test.ts",
@@ -264,22 +280,6 @@
       "line": 87,
       "owner": "@beep/epistemic-server",
       "reason": "Repository integration suite uses fixed schema-decoded fixtures to prove atomic review, races, temporal queries, and restart behavior; schema-derived arbitrary round-trips live with the owning domain and use-case models."
-    },
-    {
-      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
-      "symbol": "EdgeVersionSourceColumns",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/epistemic-domain",
-      "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
-    },
-    {
-      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
-      "symbol": "EdgeVersionTargetColumns",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/epistemic-domain",
-      "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
     },
     {
       "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",

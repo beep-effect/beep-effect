@@ -35,19 +35,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement delete-package with doctor mode: `beep delete-package` per
-`research/05` §9 phases 0–10 on the ratified `RegistrationSurface`
-geometry (`research/11-registration-geometry-design.md`), with the
-synthetic #680 residue fixture proving `--check`/doctor.
+P2 Implement apps/labs substrate and v1 variants: the one-time
+`apps/labs/*` glob + gate-scoping PR (exactly the fourteen ratified edits
+in `research/12-p0-gate-scoping-ratified.md`), the lab manifest schema +
+`beep labs list`, vite + service AppKinds, GLOSSARY "lab app", the
+promotion runbook, and the trustgraph-ts workbench lab shell.
 
 ## Latest Evidence
 
-P0 complete 2026-08-14: census ratification
-(`research/10-p0-census-ratification.md`), geometry design
-(`research/11-registration-geometry-design.md`), and the ratified
-fourteen-edit gate-scoping list
-(`research/12-p0-gate-scoping-ratified.md`); P0 standards drafts archived
-at [`history/p0-standards-drafts/`](./history/p0-standards-drafts/) for P2.
+P1 complete 2026-08-16 (PR #723, `e97f73be44`): `beep delete-package` with
+doctor mode on the `RegistrationGeometry` substrate, identity removal +
+orphan-composer lint, and the synthetic #680 residue fixture — see
+[`history/p1-implementation-notes.md`](./history/p1-implementation-notes.md).
+P0 complete 2026-08-14 (PR #722): census ratification, geometry design, and
+the ratified gate-scoping list under [`research/`](./research/).
 
 ## Notes
 
