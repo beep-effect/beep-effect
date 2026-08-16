@@ -1377,6 +1377,14 @@
     },
     {
       "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.errors.ts",
+      "symbol": "ProfessionalRuntimePromotionBlocked",
+      "kind": "tagged-error",
+      "owner": "@beep/agents-use-cases",
+      "identity": "ProfessionalRuntimePromotionBlocked",
+      "description": "A consulted vertical policy refused candidate output promotion for the subject."
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.errors.ts",
       "symbol": "ProfessionalRuntimeValidationError",
       "kind": "tagged-error",
       "owner": "@beep/agents-use-cases",
@@ -2530,40 +2538,35 @@
       "symbol": "AcpProcessExitedError",
       "kind": "tagged-error",
       "owner": "@beep/acp",
-      "identity": "AcpProcessExitedError",
-      "description": "Failure raised when an ACP process exits before the protocol completes."
+      "identity": "AcpProcessExitedError"
     },
     {
       "file": "packages/drivers/acp/src/Acp.errors.ts",
       "symbol": "AcpProtocolParseError",
       "kind": "tagged-error",
       "owner": "@beep/acp",
-      "identity": "AcpProtocolParseError",
-      "description": "Failure raised when ACP wire data cannot be encoded or decoded."
+      "identity": "AcpProtocolParseError"
     },
     {
       "file": "packages/drivers/acp/src/Acp.errors.ts",
       "symbol": "AcpRequestError",
       "kind": "tagged-error",
       "owner": "@beep/acp",
-      "identity": "AcpRequestError",
-      "description": "JSON-RPC request failure returned by an ACP peer."
+      "identity": "AcpRequestError"
     },
     {
       "file": "packages/drivers/acp/src/Acp.errors.ts",
       "symbol": "AcpSpawnError",
       "kind": "tagged-error",
       "owner": "@beep/acp",
-      "identity": "AcpSpawnError",
-      "description": "Failure raised when an ACP child process cannot be spawned."
+      "identity": "AcpSpawnError"
     },
     {
       "file": "packages/drivers/acp/src/Acp.errors.ts",
       "symbol": "AcpTransportError",
       "kind": "tagged-error",
       "owner": "@beep/acp",
-      "identity": "AcpTransportError",
-      "description": "Failure raised by the ACP transport boundary."
+      "identity": "AcpTransportError"
     },
     {
       "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
@@ -2594,8 +2597,7 @@
       "symbol": "AiProviderCliError",
       "kind": "tagged-error",
       "owner": "@beep/ai-provider-cli",
-      "identity": "AiProviderCliError",
-      "description": "Redacted technical failure emitted by Claude or Codex CLI status probes."
+      "identity": "AiProviderCliError"
     },
     {
       "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
@@ -2826,8 +2828,7 @@
       "symbol": "BoxError",
       "kind": "tagged-error",
       "owner": "@beep/box",
-      "identity": "BoxError",
-      "description": "Sanitized technical failure raised by the Box driver boundary."
+      "identity": "BoxError"
     },
     {
       "file": "packages/drivers/box/src/Box.errors.ts",
@@ -3530,8 +3531,7 @@
       "symbol": "DrizzleError",
       "kind": "tagged-error",
       "owner": "@beep/drizzle",
-      "identity": "DrizzleError",
-      "description": "Technical Drizzle driver failure scoped to a driver operation."
+      "identity": "DrizzleError"
     },
     {
       "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
@@ -3562,8 +3562,7 @@
       "symbol": "DuckDbError",
       "kind": "tagged-error",
       "owner": "@beep/duckdb",
-      "identity": "DuckDbError",
-      "description": "Technical DuckDB driver failure scoped to a driver operation."
+      "identity": "DuckDbError"
     },
     {
       "file": "packages/drivers/duckdb/src/DuckDb.errors.ts",
@@ -3618,8 +3617,7 @@
       "symbol": "EcfrError",
       "kind": "tagged-error",
       "owner": "@beep/ecfr",
-      "identity": "EcfrError",
-      "description": "Redacted technical failure raised by the eCFR REST API driver boundary."
+      "identity": "EcfrError"
     },
     {
       "file": "packages/drivers/ecfr/src/Ecfr.errors.ts",
@@ -3834,8 +3832,7 @@
       "symbol": "FaceDetectionError",
       "kind": "tagged-error",
       "owner": "@beep/face-detection",
-      "identity": "FaceDetectionError",
-      "description": "Technical ONNX face detection driver failure scoped to a driver operation."
+      "identity": "FaceDetectionError"
     },
     {
       "file": "packages/drivers/face-detection/src/FaceDetection.errors.ts",
@@ -5542,8 +5539,7 @@
       "symbol": "GovinfoError",
       "kind": "tagged-error",
       "owner": "@beep/govinfo",
-      "identity": "GovinfoError",
-      "description": "Redacted technical failure raised by the GovInfo REST API driver boundary."
+      "identity": "GovinfoError"
     },
     {
       "file": "packages/drivers/govinfo/src/Govinfo.errors.ts",
@@ -5574,24 +5570,21 @@
       "symbol": "FailureBadRequest",
       "kind": "tagged-error",
       "owner": "@beep/govinfo",
-      "identity": "FailureBadRequest",
-      "description": "Bad-request failure returned when GovInfo rejects the submitted search payload."
+      "identity": "FailureBadRequest"
     },
     {
       "file": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
       "symbol": "FailureInternalServerError",
       "kind": "tagged-error",
       "owner": "@beep/govinfo",
-      "identity": "FailureInternalServerError",
-      "description": "Internal-server-error failure returned when GovInfo reports an unexpected server-side error."
+      "identity": "FailureInternalServerError"
     },
     {
       "file": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
       "symbol": "FailureNotFound",
       "kind": "tagged-error",
       "owner": "@beep/govinfo",
-      "identity": "FailureNotFound",
-      "description": "Not-found failure returned when the GovInfo search route or resource is unavailable."
+      "identity": "FailureNotFound"
     },
     {
       "file": "packages/drivers/govinfo/src/domain/values/CollectionContainer/CollectionContainer.model.ts",
@@ -6997,8 +6990,7 @@
       "symbol": "OnePasswordCliError",
       "kind": "tagged-error",
       "owner": "@beep/onepassword-cli",
-      "identity": "OnePasswordCliError",
-      "description": "Redacted technical failure emitted by the 1Password CLI driver."
+      "identity": "OnePasswordCliError"
     },
     {
       "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.errors.ts",
@@ -8117,8 +8109,7 @@
       "symbol": "PgliteError",
       "kind": "tagged-error",
       "owner": "@beep/pglite",
-      "identity": "PgliteError",
-      "description": "Technical PGlite driver failure scoped to a driver operation."
+      "identity": "PgliteError"
     },
     {
       "file": "packages/drivers/phoenix/src/Phoenix.config.ts",
@@ -8373,8 +8364,7 @@
       "symbol": "PostgresError",
       "kind": "tagged-error",
       "owner": "@beep/postgres",
-      "identity": "PostgresError",
-      "description": "Technical Postgres driver failure scoped to a driver operation."
+      "identity": "PostgresError"
     },
     {
       "file": "packages/drivers/postgres/src/Postgres.errors.ts",
@@ -8399,6 +8389,14 @@
       "owner": "@beep/postgres",
       "identity": "MigrationBundleEntry",
       "description": "One timestamped Drizzle migration and its byte-exact SQL content."
+    },
+    {
+      "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+      "symbol": "MigrationBundleLegacyNameSet",
+      "kind": "schema-class",
+      "owner": "@beep/postgres",
+      "identity": "MigrationBundleLegacyNameSet",
+      "description": "Canonical migration name plus the complete legacy journal-name set required to skip its re-baselined SQL."
     },
     {
       "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
@@ -8921,8 +8919,7 @@
       "symbol": "UsptoError",
       "kind": "tagged-error",
       "owner": "@beep/uspto",
-      "identity": "UsptoError",
-      "description": "Redacted technical failure raised inside the USPTO driver boundary."
+      "identity": "UsptoError"
     },
     {
       "file": "packages/drivers/uspto/src/Uspto.errors.ts",
@@ -22207,6 +22204,14 @@
       "description": "Citing application identified by a canonical WIPO ST.13 patent application number."
     },
     {
+      "file": "packages/law-practice/domain/src/values/CitingApplicationIdentity/CitingApplicationIdentity.model.ts",
+      "symbol": "WipoSt13OfficeCode",
+      "kind": "literal-kit",
+      "owner": "@beep/law-practice-domain",
+      "identity": "WipoSt13OfficeCode",
+      "description": "Known non-U.S. WIPO ST.3 office code recorded with an observed ST.13 citing application."
+    },
+    {
       "file": "packages/law-practice/domain/src/values/ComponentSpan/ComponentSpan.models.ts",
       "symbol": "AnnotationComponentSpan",
       "kind": "schema-class",
@@ -22983,6 +22988,22 @@
       "description": "Treaty-series citation (#309): T.I.A.S. No. 1502, 1155 U.N.T.S. 331."
     },
     {
+      "file": "packages/law-practice/server/src/CandorPromotionGate/CandorPromotionGate.ports.ts",
+      "symbol": "CandorPromotionSubjectResolutionError",
+      "kind": "tagged-error",
+      "owner": "@beep/law-practice-server",
+      "identity": "CandorPromotionSubjectResolutionError",
+      "description": "The law-practice adapter could not resolve an opaque promotion subject to a filing scope."
+    },
+    {
+      "file": "packages/law-practice/server/src/CandorPromotionGate/CandorPromotionGate.ports.ts",
+      "symbol": "CandorPromotionSubjectResolutionReason",
+      "kind": "literal-kit",
+      "owner": "@beep/law-practice-server",
+      "identity": "CandorPromotionSubjectResolutionReason",
+      "description": "Bounded operational reason a promotion subject could not map to a candor filing scope."
+    },
+    {
       "file": "packages/law-practice/server/src/PracticeKg.claims.ts",
       "symbol": "PracticeKgClaimsError",
       "kind": "tagged-error",
@@ -23200,7 +23221,7 @@
       "kind": "literal-kit",
       "owner": "@beep/law-practice-use-cases",
       "identity": "CandorRecordReadReason",
-      "description": "Machine-readable reason the recorded events or dispositions could not be read."
+      "description": "Machine-readable reason the protected candor-record snapshot could not be read."
     },
     {
       "file": "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.ports.ts",
@@ -23217,6 +23238,14 @@
       "owner": "@beep/law-practice-use-cases",
       "identity": "CandorRecordReaderShape",
       "description": "Append-and-read-only service shape over the recorded candor material of one filing."
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.ports.ts",
+      "symbol": "CandorRecordSnapshot",
+      "kind": "schema-class",
+      "owner": "@beep/law-practice-use-cases",
+      "identity": "CandorRecordSnapshot",
+      "description": "Transactionally consistent candor events and dispositions for one filing."
     },
     {
       "file": "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.values.ts",
@@ -23240,7 +23269,7 @@
       "kind": "schema-class",
       "owner": "@beep/law-practice-use-cases",
       "identity": "UncoveredEvent",
-      "description": "One AI-discovered citation event the gate declines to treat as covered, with its reason."
+      "description": "One recorded citation event the gate declines to treat as covered, with its reason."
     },
     {
       "file": "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.values.ts",
@@ -23248,7 +23277,7 @@
       "kind": "literal-kit",
       "owner": "@beep/law-practice-use-cases",
       "identity": "UncoveredReason",
-      "description": "Fail-closed reason one AI-discovered citation event is not covered by an attorney judgment."
+      "description": "Fail-closed reason one recorded citation event is not covered by an attorney judgment."
     },
     {
       "file": "packages/law-practice/use-cases/src/CandorRecord/CandorRecord.ports.ts",
@@ -24737,6 +24766,38 @@
       "description": "Array of Rule"
     },
     {
+      "file": "packages/shared/use-cases/src/PromotionGate/PromotionGate.schema.ts",
+      "symbol": "PromotionBlockReason",
+      "kind": "brand",
+      "owner": "@beep/shared-use-cases",
+      "identity": "PromotionBlockReason",
+      "description": "Opaque sanitized reason code for a blocked candidate promotion."
+    },
+    {
+      "file": "packages/shared/use-cases/src/PromotionGate/PromotionGate.schema.ts",
+      "symbol": "PromotionGateRequest",
+      "kind": "schema-class",
+      "owner": "@beep/shared-use-cases",
+      "identity": "PromotionGateRequest",
+      "description": "Trusted candidate-promotion subject bound to the tenant whose policy must clear."
+    },
+    {
+      "file": "packages/shared/use-cases/src/PromotionGate/PromotionGate.schema.ts",
+      "symbol": "PromotionSubjectRef",
+      "kind": "schema-class",
+      "owner": "@beep/shared-use-cases",
+      "identity": "PromotionSubjectRef",
+      "description": "Opaque kind/id reference consulted before candidate output promotion."
+    },
+    {
+      "file": "packages/shared/use-cases/src/PromotionGate/PromotionGate.schema.ts",
+      "symbol": "PromotionTenantRef",
+      "kind": "brand",
+      "owner": "@beep/shared-use-cases",
+      "identity": "PromotionTenantRef",
+      "description": "Opaque tenant reference used to prevent cross-tenant promotion decisions."
+    },
+    {
       "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
       "symbol": "AgentEffectivenessAiMetricsSection",
       "kind": "schema-class",
@@ -26141,8 +26202,7 @@
       "symbol": "AiSyncError",
       "kind": "tagged-error",
       "owner": "@beep/ai-sync",
-      "identity": "AiSyncError",
-      "description": "Typed operational error for AI sync generation, drift checks, transforms, and validation."
+      "identity": "AiSyncError"
     },
     {
       "file": "packages/tooling/library/ai-sync/src/models.ts",
@@ -30062,6 +30122,22 @@
       "description": "Reason a generated packet could not be written."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+      "symbol": "CodexFindingsRefreshReconciliation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CodexFindingsRefreshReconciliation",
+      "description": "Observable result of preserving prior packet work and appending unseen findings."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+      "symbol": "CodexRefreshLedgerSource",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CodexRefreshLedgerSource",
+      "description": "Decoded existing ledger plus its original bytes for refresh concurrency checks."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Codex/Findings.scan.ts",
       "symbol": "SensitiveTextCode",
       "kind": "literal-kit",
@@ -30668,6 +30744,38 @@
       "owner": "@beep/repo-cli",
       "identity": "TsMorphMutationKind",
       "description": "Supported AST mutation categories required by create-package."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "DeletePackageManifest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DeletePackageManifest",
+      "description": "Minimal package manifest fields required by deletion preflight."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "DeletePackagePolicy",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DeletePackagePolicy",
+      "description": "Decoded delete-package flags and preflight facts consumed by refusal policy."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "DeletePackageRefusal",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DeletePackageRefusal",
+      "description": "One classified delete-package preflight refusal."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "DeletePackageRefusalKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DeletePackageRefusalKind",
+      "description": "Closed hard and soft refusal reasons emitted before deletion."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
@@ -32057,7 +32165,7 @@
       "kind": "tagged-error",
       "owner": "@beep/repo-cli",
       "identity": "KnowledgeProbeBootError",
-      "description": "An archive-local probe that exited non-zero before emitting structured output."
+      "description": "A current-checkout probe over archive data that exited before emitting structured output."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
@@ -32253,7 +32361,7 @@
       "kind": "tagged-union",
       "owner": "@beep/repo-cli",
       "identity": "KnowledgeCommandProbeResult",
-      "description": "Resolved or unknown archive-local command-tree result."
+      "description": "Resolved or unknown current-checkout command-tree result for archive data."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
@@ -32261,7 +32369,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "KnowledgeCommandResolved",
-      "description": "A structurally resolved archive-local beep command path whose help action was probed."
+      "description": "A structurally resolved current-checkout beep command path whose help action was probed."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
@@ -32333,7 +32441,7 @@
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
       "identity": "KnowledgeProbePolicy",
-      "description": "Whether archive-local command and index probes were allowed to execute, and ran."
+      "description": "Whether current-checkout command and index probes ran against archive data."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.schemas.ts",
@@ -33342,10 +33450,10 @@
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
       "symbol": "CoverageComparisonFailure",
-      "kind": "schema-class",
+      "kind": "tagged-union",
       "owner": "@beep/repo-cli",
       "identity": "CoverageComparisonFailure",
-      "description": "One metric that dropped below its committed baseline for one package."
+      "description": "Tagged coverage regression reason for a baseline drop or newly uncovered file."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
@@ -33357,11 +33465,19 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
+      "symbol": "CoverageFileBaseline",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CoverageFileBaseline",
+      "description": "Coverage metrics for one repo-relative source file in a workspace package."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
       "symbol": "CoveragePackageBaseline",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "CoveragePackageBaseline",
-      "description": "Committed coverage percentages for one workspace package."
+      "description": "Committed package coverage totals with required per-file provenance."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
@@ -33386,6 +33502,30 @@
       "owner": "@beep/repo-cli",
       "identity": "CoverageUncoveredCounts",
       "description": "Absolute uncovered counts per metric for one workspace package."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+      "symbol": "CoverageAffectedScope",
+      "kind": "union",
+      "owner": "@beep/repo-cli",
+      "identity": "CoverageAffectedScope",
+      "description": "Safe coverage execution scope derived from pull-request changed files."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+      "symbol": "CoverageFullShard",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CoverageFullShard",
+      "description": "Deterministic least-loaded coverage shard derived from hosted task weights."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts",
+      "symbol": "CoverageScopeOwner",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CoverageScopeOwner",
+      "description": "Workspace path and coverage capability used by pull-request scope planning."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/FallowEnvelope.schema.ts",
@@ -34152,6 +34292,118 @@
       "owner": "@beep/repo-cli",
       "identity": "StarredRepo",
       "description": "One starred repository row returned by the GitHub API."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.errors.ts",
+      "symbol": "RunnersCommandError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "RunnersCommandError",
+      "description": "Failure raised by the runner AMI bake command family."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "AwsConsoleOutputResponse",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AwsConsoleOutputResponse",
+      "description": "AWS CLI instance console-output response subset."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "AwsCreateImageResponse",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AwsCreateImageResponse",
+      "description": "AWS CLI create-image response subset."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "AwsDescribeImagesResponse",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AwsDescribeImagesResponse",
+      "description": "AWS CLI describe-images response subset."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "AwsGetParameterResponse",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AwsGetParameterResponse",
+      "description": "AWS CLI SSM get-parameter response subset."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "AwsRunInstancesResponse",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AwsRunInstancesResponse",
+      "description": "AWS CLI run-instances response subset."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "AwsTag",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AwsTag",
+      "description": "Key/value tag emitted by the AWS CLI."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "BakeCheckReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BakeCheckReport",
+      "description": "Lockfile, Bun release archive, and Bun version freshness result for the live runner AMI pin."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "BakeConfig",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BakeConfig",
+      "description": "Resolved AWS placement and tagging configuration for a temporary runner AMI bake instance."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "BakeMode",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "BakeMode",
+      "description": "Planning, freshness-check, or image-creation runner bake mode."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "BakePlan",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BakePlan",
+      "description": "AWS-free execution plan for the runner AMI bake workflow."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "BakePlanStep",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BakePlanStep",
+      "description": "Named argv-only operation in the runner bake plan."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
+      "symbol": "BakeReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BakeReport",
+      "description": "Machine-readable provenance and activation recipe for a successfully baked runner AMI."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+      "symbol": "BakeLocalInputs",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BakeLocalInputs",
+      "description": "Repository root, revision, lock digest, Bun archive digest, and Bun version used by a bake."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
@@ -35970,6 +36222,190 @@
       "owner": "@beep/repo-cli",
       "identity": "JsoncModification",
       "description": "A comment-preserving JSONC modification request (content, JSON path, value, array-insertion flag)."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.errors.ts",
+      "symbol": "RegistrationGeometryError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationGeometryError",
+      "description": "Typed failure to resolve, plan, inspect, or apply registration geometry."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "AuthoredReferenceSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AuthoredReferenceSurface",
+      "description": "An explicit target reference requiring a modeled edit or operator review."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "DataResourceSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DataResourceSurface",
+      "description": "Manifest-owned destructive state requiring ownership proof and explicit consent."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "DependentHit",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DependentHit",
+      "description": "One classified manifest, import, path, packet, baseline, or historical hit."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "DependentHitKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DependentHitKind",
+      "description": "Classification of one reverse-dependency or residue hit."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "DependentsReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DependentsReport",
+      "description": "Deterministic reverse-dependency closure plus import and authored-reference evidence."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "DerivedRebuildSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DerivedRebuildSurface",
+      "description": "Committed outputs replaced by a named reconstructive writer."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "GeneratedInventorySurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GeneratedInventorySurface",
+      "description": "A writer-owned inventory whose target membership is derivable and probeable."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "HistoricalRecordSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "HistoricalRecordSurface",
+      "description": "Historical evidence classified and preserved rather than pruned."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "IdentitySegmentSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "IdentitySegmentSurface",
+      "description": "A package identity compose argument and its exported composer accessor."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "OwnedTreeSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "OwnedTreeSurface",
+      "description": "A target-owned directory whose tracked and ignored contents share its lifecycle."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "PendingChangesetSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PendingChangesetSurface",
+      "description": "Pending changeset keys and retired-name policy for one package name."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationObservation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationObservation",
+      "description": "Declared-versus-actual result for one registration surface."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationObservationStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationObservationStatus",
+      "description": "Doctor status for one declared surface."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationOperation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationOperation",
+      "description": "One deterministic forward or inverse operation derived from a surface."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationOperationKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationOperationKind",
+      "description": "Closed operation kinds emitted by a registration plan."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationPlan",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationPlan",
+      "description": "Serializable package registration plan produced before any mutation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationSurface",
+      "kind": "tagged-union",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationSurface",
+      "description": "One declared registration surface interpreted by create, delete, and doctor."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationSurfaceKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationSurfaceKind",
+      "description": "Closed kinds of package-lifecycle registration surfaces."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationTarget",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationTarget",
+      "description": "Resolved workspace identity used to instantiate registration geometry."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RegistrationWriter",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "RegistrationWriter",
+      "description": "Named writer or preservation policy that owns a registration surface."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "RuntimeArtifactSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RuntimeArtifactSurface",
+      "description": "Ignored or local artifacts that must be absent after deletion."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "WorkspaceLiteralSurface",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "WorkspaceLiteralSurface",
+      "description": "An exact workspace-array member removed only when it is not a covering glob."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/cli/RunMode.ts",

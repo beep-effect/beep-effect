@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-14T16:49:53.886Z",
+  "generatedAt": "2026-08-16T21:21:20.207Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 59,
     "publicModules": 2467,
-    "publicExports": 16239,
+    "publicExports": 16241,
     "openModules": 397,
     "openExports": 135,
     "missingExportExamples": 4,
@@ -34969,7 +34969,7 @@
         "srcDir": "src",
         "sourceFileCount": 191,
         "publicModuleCount": 189,
-        "publicExportCount": 1411
+        "publicExportCount": 1413
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -38523,7 +38523,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 7,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -43312,8 +43312,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.refresh.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
-          "line": 237,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-237-validatecodexfindingsingestmodes",
+          "line": 242,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-242-validatecodexfindingsingestmodes",
           "currentTags": [
             "@param",
             "@returns",
@@ -43337,8 +43337,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.refresh.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
-          "line": 308,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-308-loadcodexrefreshledgersource",
+          "line": 313,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-313-loadcodexrefreshledgersource",
           "currentTags": [
             "@param",
             "@returns",
@@ -43362,8 +43362,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.refresh.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
-          "line": 1231,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-1231-refreshcodexfindingspacket",
+          "line": 1236,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-1236-refreshcodexfindingspacket",
           "currentTags": [
             "@param",
             "@returns",
@@ -43387,8 +43387,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.refresh.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
-          "line": 1303,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-1303-prioridsofrefreshsource",
+          "line": 1308,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-1308-prioridsofrefreshsource",
           "currentTags": [
             "@param",
             "@returns",
@@ -63350,8 +63350,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts",
-          "line": 176,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-command-ts-176-runbakecommandfortesting",
+          "line": 175,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-command-ts-175-runbakecommandfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -63372,8 +63372,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts",
-          "line": 236,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-command-ts-236-runnerscommand",
+          "line": 235,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-command-ts-235-runnerscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -63504,8 +63504,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 118,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-118-bakeconfig",
+          "line": 119,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-119-bakeconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -63526,8 +63526,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 161,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-161-bakereport",
+          "line": 165,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-165-bakereport",
           "currentTags": [
             "@category",
             "@since"
@@ -63548,8 +63548,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 192,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-192-bakereportjson",
+          "line": 196,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-196-bakereportjson",
           "currentTags": [
             "@category",
             "@since"
@@ -63570,8 +63570,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 209,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-209-bakeplanstep",
+          "line": 213,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-213-bakeplanstep",
           "currentTags": [
             "@category",
             "@since"
@@ -63592,8 +63592,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 241,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-241-bakeplan",
+          "line": 245,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-245-bakeplan",
           "currentTags": [
             "@category",
             "@since"
@@ -63614,8 +63614,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 268,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-268-bakeplanjson",
+          "line": 272,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-272-bakeplanjson",
           "currentTags": [
             "@category",
             "@since"
@@ -63636,8 +63636,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 300,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-300-bakecheckreport",
+          "line": 304,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-304-bakecheckreport",
           "currentTags": [
             "@category",
             "@since"
@@ -63658,8 +63658,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 333,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-333-bakecheckreportjson",
+          "line": 337,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-337-bakecheckreportjson",
           "currentTags": [
             "@category",
             "@since"
@@ -63680,8 +63680,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 351,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-351-awsgetparameterresponse",
+          "line": 355,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-355-awsgetparameterresponse",
           "currentTags": [
             "@internal",
             "@category",
@@ -63703,8 +63703,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 372,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-372-awsruninstancesresponse",
+          "line": 376,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-376-awsruninstancesresponse",
           "currentTags": [
             "@internal",
             "@category",
@@ -63726,8 +63726,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 393,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-393-awscreateimageresponse",
+          "line": 397,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-397-awscreateimageresponse",
           "currentTags": [
             "@internal",
             "@category",
@@ -63749,8 +63749,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 414,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-414-awstag",
+          "line": 418,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-418-awstag",
           "currentTags": [
             "@internal",
             "@category",
@@ -63772,8 +63772,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 437,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-437-awsdescribeimagesresponse",
+          "line": 441,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-441-awsdescribeimagesresponse",
           "currentTags": [
             "@internal",
             "@category",
@@ -63795,8 +63795,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 459,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-459-awsconsoleoutputresponse",
+          "line": 463,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-463-awsconsoleoutputresponse",
           "currentTags": [
             "@internal",
             "@category",
@@ -63818,8 +63818,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 120,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-120-bakelocalinputs",
+          "line": 129,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-129-bakelocalinputs",
           "currentTags": [
             "@category",
             "@since"
@@ -63840,8 +63840,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 148,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-148-runnersserviceshape",
+          "line": 157,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-157-runnersserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -63862,8 +63862,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 169,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-169-runnersservice",
+          "line": 178,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-178-runnersservice",
           "currentTags": [
             "@category",
             "@since"
@@ -63884,8 +63884,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 715,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-715-runnersservicelive",
+          "line": 823,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-823-runnersservicelive",
           "currentTags": [
             "@category",
             "@since"
@@ -63906,8 +63906,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 731,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-731-writebakereportfortesting",
+          "line": 839,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-839-writebakereportfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -63928,8 +63928,54 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 747,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-747-makebakescriptfortesting",
+          "line": 855,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-855-makebakescriptfortesting",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "pendingWhileNotFoundForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Runners/Runners.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+          "line": 873,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-873-pendingwhilenotfoundfortesting",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "readPostedConsoleForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Runners/Runners.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
+          "line": 894,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-894-readpostedconsolefortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -63950,8 +63996,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 763,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-763-runawsfortesting",
+          "line": 910,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-910-runawsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -64034,12 +64080,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  BakeLocalInputs,\n  makeBakeScriptForTesting,\n  RunnersService,\n  RunnersServiceLive,\n  runAwsForTesting,\n  writeBakeReportForTesting,\n} from \"./Runners.service.ts\";",
+          "symbolName": "export {\n  BakeLocalInputs,\n  makeBakeScriptForTesting,\n  pendingWhileNotFoundForTesting,\n  RunnersService,\n  RunnersServiceLive,\n  readPostedConsoleForTesting,\n  runAwsForTesting,\n  writeBakeReportForTesting,\n} from \"./Runners.service.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Runners/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/index.ts",
           "line": 53,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-index-ts-53-export-bakelocalinputs-makebakescriptfortesting-runnersservice-runnersservicelive-runawsfortesting-writebakereportfortesting-from-runners-service-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-index-ts-53-export-bakelocalinputs-makebakescriptfortesting-pendingwhilenotfoundfortesting-runnersservice-runnersservicelive-readpostedconsolefortesting-runawsfortesting-writebakereportfortesting-from-runners-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -64060,8 +64106,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Runners/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/index.ts",
-          "line": 67,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-index-ts-67-export-type-runnersserviceshape-from-runners-service-ts",
+          "line": 69,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-index-ts-69-export-type-runnersserviceshape-from-runners-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -266721,8 +266767,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 221,
-          "anchor": "infra-src-cifleetcontroller-ts-221-cifleetcontrollerpulumiconfigvalues",
+          "line": 227,
+          "anchor": "infra-src-cifleetcontroller-ts-227-cifleetcontrollerpulumiconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -266745,8 +266791,8 @@
           "exportKind": "type",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 249,
-          "anchor": "infra-src-cifleetcontroller-ts-249-cifleetcontrollerpulumiconfigvalues",
+          "line": 255,
+          "anchor": "infra-src-cifleetcontroller-ts-255-cifleetcontrollerpulumiconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -266767,8 +266813,8 @@
           "exportKind": "class",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 257,
-          "anchor": "infra-src-cifleetcontroller-ts-257-cifleetcontrollerconfig",
+          "line": 263,
+          "anchor": "infra-src-cifleetcontroller-ts-263-cifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -266791,8 +266837,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 283,
-          "anchor": "infra-src-cifleetcontroller-ts-283-makecifleetcontrollerconfig",
+          "line": 289,
+          "anchor": "infra-src-cifleetcontroller-ts-289-makecifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -266815,8 +266861,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 307,
-          "anchor": "infra-src-cifleetcontroller-ts-307-loadcifleetcontrollerconfig",
+          "line": 313,
+          "anchor": "infra-src-cifleetcontroller-ts-313-loadcifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -266839,8 +266885,8 @@
           "exportKind": "class",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 416,
-          "anchor": "infra-src-cifleetcontroller-ts-416-cifleetcontroller",
+          "line": 422,
+          "anchor": "infra-src-cifleetcontroller-ts-422-cifleetcontroller",
           "currentTags": [
             "@category",
             "@since"

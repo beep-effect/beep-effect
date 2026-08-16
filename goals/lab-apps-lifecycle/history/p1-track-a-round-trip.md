@@ -46,6 +46,34 @@ deletion note does not).
 | exact-name `rg "delete-probe"` over package.json, bun.lock, tsconfig.json, tsconfig.packages.json, syncpack.config.ts, knip.jsonc, turbo.json, lefthook.yml, identity `packages.ts`, `standards/*.jsonc` | zero hits |
 | `git status` | only the intentional artifacts (probe fix, regression test, `{}` deletion changeset) |
 
+## Baseline regeneration (phase 9 writers, run live post-delete)
+
+Review correctly noted `--skip-baselines` left the regeneration outcome
+unproven. Every writer `runBaselineWriters` invokes was then executed
+against the post-delete tree (identical state to an in-command phase 9):
+
+| Writer | Exit |
+| --- | --- |
+| `beep fallow boundaries --write` | 0 |
+| `bun run fallow:health:baseline:write` | 1 — baseline WRITTEN (tightened, 75 rows pruned from main-drift), but the health run exits non-zero while pre-existing findings remain |
+| `bun run fallow:dead-code:baseline:write` | 0 |
+| `beep quality jsdoc-inventory` | 0 |
+| `beep lint schema-first --write` | 0 |
+| `beep lint package-test-typecheck --write-baseline` | 0 |
+| `beep lint schema-catalog --write` | 0 |
+| `beep quality knip --write-baseline` | 0 |
+| `beep coverage -- --affected --write-baseline` (scoped; full run blocked by the machine-local shard flake, CI runs the full lane) | 0 |
+
+Post-regeneration `rg "delete-probe" standards/` is empty: no baseline ever
+admitted the probe, and regeneration leaves them probe-free. The refreshed
+baselines (main-drift catch-up the writers produced) ship with this PR.
+
+**Known follow-up:** the `fallow:health:baseline:write` finding-based exit 1
+means an un-skipped `delete-package` would fail its phase 9 at that step on
+any tree with pre-existing health findings, even though the baseline write
+succeeds. `runBaselineWriters` should tolerate that writer's finding exit
+(or invoke it in a write-only mode) — small fix for the next repo-cli PR.
+
 ## Notes
 
 - `--skip-baselines` was used because the full local

@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-14T17:20:21.118Z",
-  "git_sha": "280d1f4a819178216c14d6335507ff8ba25021bb",
+  "generated_at": "2026-08-16T21:30:42.760Z",
+  "git_sha": "48b0a590d66961b237a532c61a2358e6529660d6",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
@@ -21003,15 +21003,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 70.85,
-      "statements": 70.55,
-      "branches": 56.73,
-      "functions": 63.15,
+      "lines": 70.88,
+      "statements": 70.58,
+      "branches": 56.79,
+      "functions": 63.18,
       "uncovered": {
         "lines": 8454,
-        "statements": 8894,
+        "statements": 8895,
         "branches": 4690,
-        "functions": 3133
+        "functions": 3134
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -23751,10 +23751,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts": {
-          "lines": 80.98,
-          "statements": 81.15,
+          "lines": 80.85,
+          "statements": 81.02,
           "branches": 65.71,
-          "functions": 75.57,
+          "functions": 75.19,
           "uncovered": {
             "lines": 58,
             "statements": 59,
@@ -24255,8 +24255,8 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Runners/Runners.command.ts": {
-          "lines": 89.47,
-          "statements": 87.17,
+          "lines": 89.18,
+          "statements": 86.84,
           "branches": 86.36,
           "functions": 78.94,
           "uncovered": {
@@ -24291,15 +24291,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts": {
-          "lines": 92.52,
-          "statements": 92.57,
-          "branches": 56.52,
-          "functions": 80,
+          "lines": 93.71,
+          "statements": 93.36,
+          "branches": 71.42,
+          "functions": 82.81,
           "uncovered": {
             "lines": 13,
-            "statements": 13,
+            "statements": 14,
             "branches": 10,
-            "functions": 10
+            "functions": 11
           }
         },
         "packages/tooling/tool/cli/src/commands/Runners/index.ts": {
@@ -25239,10 +25239,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Provenance.ts": {
-          "lines": 69.44,
-          "statements": 69.72,
+          "lines": 68.86,
+          "statements": 69.15,
           "branches": 68.75,
-          "functions": 68.42,
+          "functions": 66.66,
           "uncovered": {
             "lines": 33,
             "statements": 33,
@@ -25695,9 +25695,9 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts": {
-          "lines": 85.59,
-          "statements": 83.01,
-          "branches": 61.4,
+          "lines": 85.71,
+          "statements": 83.2,
+          "branches": 62.06,
           "functions": 68.42,
           "uncovered": {
             "lines": 34,
