@@ -246,3 +246,19 @@ Record receipts at the moment friction happens; redact for the public repo.
 - Prevention: the rollback recipe is `pulumi config set
   ciFleetController:amiId <prior> && pulumi up --refresh --yes` — never
   trust a no-diff preview on secret-valued resources without refresh.
+
+## 2026-08-16 — greptile score parsing collides with score-shaped prose
+
+- What: PR #727's closeout gate reported "greptile 4/5" while the live
+  summary comment says "Confidence Score: 5/5" with zero issues. The
+  summary body also contains "1/5" and "3/5" as PROSE (Greptile describing
+  goals/INDEX.md's phase-completion count moving 1/5 -> 3/5), and Greptile
+  edits its summary in place after re-reviews — so any parser that greps
+  N/5 patterns or caches an earlier fetch reads a wrong score on exactly
+  the PRs whose diffs mention phase counts.
+- Evidence: issue comment 5309682378 contains {1/5, 3/5, 5/5}; repeated
+  `yeet closeout` runs kept reporting 4/5 (a value not present in the
+  final body) after the in-place re-score.
+- Prevention: anchor the closeout parser to the "Confidence Score:"
+  heading, never a bare N/5 match, and re-fetch on updated_at rather than
+  trusting a prior parse of an in-place-edited comment.
