@@ -2,15 +2,16 @@
 
 ## Status
 
-Status: `active` — P0 complete 2026-08-14 (census ratified, geometry designed,
-gate entry list ratified below); P1 next.
+Status: `active` — P0 complete 2026-08-14 (PR #722); P1 complete 2026-08-16
+(PR #723, delete-package + registration geometry merged as `e97f73be44`);
+P2 next.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Census ratification and geometry schema design | complete | Re-verify the registration-surface census (`research/02` §19, `research/05` §7) against the live tree; design the `RegistrationSurface` geometry schema and the labs identity-segment mechanism (SPEC D6/D8); ratify the exact gate-scoping entry list from `research/04`. | Geometry schema reviewed (schema-first skill loaded); census deltas recorded in `research/`; gate entry list ratified in this plan. |
-| P1 Implement delete-package with doctor mode | pending | `beep delete-package` per `research/05` §9 (phases 0–10): dependents scan + refuse table, plan/dry-run/check, identity remove + orphan lint, workspace-literal remove, tsconfig-sync, lockfile, baseline regen, changeset policy. Doctor proves against a synthetic residue fixture built from the #680 classes (SPEC Track A); any matching live residue found at P1 time is swept in the same PR as a bonus. | Track A acceptance boxes in SPEC pass; PR mergeable via yeet. |
+| P1 Implement delete-package with doctor mode | complete | `beep delete-package` per `research/05` §9 (phases 0–10): dependents scan + refuse table, plan/dry-run/check, identity remove + orphan lint, workspace-literal remove, tsconfig-sync, lockfile, baseline regen, changeset policy. Doctor proves against a synthetic residue fixture built from the #680 classes (SPEC Track A); any matching live residue found at P1 time is swept in the same PR as a bonus. | Track A acceptance boxes in SPEC pass; PR mergeable via yeet. |
 | P2 Implement apps/labs substrate and v1 variants | pending | One-time `apps/labs/*` glob + gate scoping PR; lab manifest schema + `beep labs list`; vite + service AppKinds (nextjs reused); GLOSSARY "lab app"; promotion runbook; scaffold the trustgraph-ts workbench lab shell. | Track B acceptance boxes (except tauri + round-trip) pass; PRs mergeable via yeet. |
 | P3 Tauri lab variant (spike then land) | pending | Toolchain/CI spike (rust on runners, portless semantics for the webview, professional-desktop overlap), then land tauri as a lab AppKind on the existing templates. | Spike outcome recorded; tauri lab scaffolds and typechecks; PR mergeable. |
 | P4 Verify create/delete round-trip | pending | Run the First Vertical Slice: vite lab scaffold → serve → delete → doctor green, clean tree. | Round-trip evidence recorded in `history/`; doctor green. |
@@ -46,6 +47,19 @@ the PR title; P5 covers whatever residue closes the packet.
 - **Standards drafts archived** (not landed) at
   `history/p0-standards-drafts/` — GLOSSARY/DECISIONS/doctrine land in P2
   per SPEC Target Surfaces.
+
+## P1 Outcome (merged 2026-08-16)
+
+PR #723 (`e97f73be44`): `beep delete-package` with dry-run/check/doctor and
+the full §9.4 refuse table (`--force` never overrides dependents), the
+private `RegistrationGeometry` module (ten-kind `RegistrationSurface` union,
+forward/inverse/inspect service, `dependentsOf` with identity-accessor
+scanning), identity removal + orphan-composer lint, and 28 tests including
+the synthetic #680 residue fixture. Implementation record:
+`history/p1-implementation-notes.md`. Track A acceptance boxes pass via the
+synthetic fixture and refuse-table tests; the LIVE zero-consumer
+create→delete round-trip is deliberately deferred to P4's First Vertical
+Slice, which the SPEC designates as that proof's gate.
 
 ## P6 Closeout Checklist
 
