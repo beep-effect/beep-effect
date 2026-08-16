@@ -18,7 +18,7 @@
   "scripts": {
     "audit": "bun run --if-present beep:audit",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json",
+    "beep:build": "tsc -p tsconfig.json",
     "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests && bun run beep:check:stories",
     "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",

@@ -887,7 +887,23 @@ const planPackageReferenceSync = Effect.fn(function* (
     const computedResolvedTargetSet = HashSet.fromIterable(computedResolvedTargets);
 
     const extraTargets = A.filter(existingResolvedTargets, (target) => !HashSet.has(computedResolvedTargetSet, target));
-    const finalTargets = [...computedResolvedTargets, ...extraTargets];
+    // References are derived from the declared dependency closure and nothing
+    // else. An existing reference with no backing dependency lets `tsc -b`
+    // build (write) a package Turbo never ordered — the torn-dist TS2306 race
+    // class — so undeclared references are pruned, never preserved. Declare
+    // the dependency or drop the reference.
+    const finalTargets = computedResolvedTargets;
+
+    if (!A.isArrayEmpty(extraTargets)) {
+      const sourcePath = toPosixPath(path.relative(rootDir, sourceOwnerTsconfigPath));
+      const prunedList = A.join(
+        A.map(extraTargets, (targetPath) => toPosixPath(path.relative(rootDir, targetPath))),
+        ", "
+      );
+      yield* Console.log(
+        `[tsconfig-sync] ${sourcePath}: pruning ${extraTargets.length} reference(s) with no declared dependency: ${prunedList}`
+      );
+    }
 
     const finalRefPaths = A.map(finalTargets, (targetPath) => normalizeRelativeRef(sourceDir, targetPath, path));
     const currentResolvedRefPaths = A.map(existingResolvedTargets, (targetPath) =>
@@ -917,9 +933,9 @@ const planPackageReferenceSync = Effect.fn(function* (
     if (verbose) {
       const sourcePath = toPosixPath(path.relative(rootDir, sourceOwnerTsconfigPath));
       const computedCount = computedResolvedTargets.length;
-      const preservedCount = extraTargets.length;
+      const prunedCount = extraTargets.length;
       yield* Console.log(
-        `[verbose] ${sourcePath}: computed ${computedCount} ref(s), preserved ${preservedCount} existing ref(s)`
+        `[verbose] ${sourcePath}: computed ${computedCount} ref(s), pruned ${prunedCount} existing ref(s)`
       );
     }
   }

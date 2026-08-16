@@ -29,6 +29,7 @@
     "@beep/pretext": "workspace:^",
     "@beep/rdf": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/test-utils": "workspace:^",
     "@beep/utils": "workspace:^",
     "@effect/ai-anthropic": "catalog:",
     "@effect/ai-openai": "catalog:",
