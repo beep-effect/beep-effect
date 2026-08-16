@@ -30,6 +30,7 @@
     "./commands/Codex": "./src/commands/Codex/index.ts",
     "./commands/Corpus": "./src/commands/Corpus/index.ts",
     "./commands/CreatePackage": "./src/commands/CreatePackage/index.ts",
+    "./commands/DeletePackage": "./src/commands/DeletePackage/index.ts",
     "./commands/Docgen": "./src/commands/Docgen/index.ts",
     "./commands/Docs": "./src/commands/Docs/index.ts",
     "./commands/Fallow": "./src/commands/Fallow/index.ts",
@@ -62,6 +63,7 @@
     "./commands/*": "./src/commands/*.ts",
     "./internal/*": null,
     "./test/*": "./src/test/*.test-kit.ts",
+    "./test/DeletePackage": "./src/test/DeletePackage.test-kit.ts",
     "./bin": null
   },
   "files": [
@@ -90,6 +92,7 @@
       "./commands/Codex": "./dist/commands/Codex/index.js",
       "./commands/Corpus": "./dist/commands/Corpus/index.js",
       "./commands/CreatePackage": "./dist/commands/CreatePackage/index.js",
+      "./commands/DeletePackage": "./dist/commands/DeletePackage/index.js",
       "./commands/Docgen": "./dist/commands/Docgen/index.js",
       "./commands/Docs": "./dist/commands/Docs/index.js",
       "./commands/Fallow": "./dist/commands/Fallow/index.js",
@@ -121,6 +124,7 @@
       "./commands/Yeet/internal/*": null,
       "./internal/*": null,
       "./test/*": null,
+      "./test/DeletePackage": null,
       "./bin": null
     }
   },

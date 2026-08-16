@@ -9,7 +9,8 @@ import { DomainError, getWorkspaceDir, resolveWorkspaceDirs, TSMorphService } fr
 import { A, Str, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
-import { SyntaxKind } from "ts-morph";
+import { Project, SyntaxKind } from "ts-morph";
+import type { CallExpression, SourceFile, VariableDeclaration } from "ts-morph";
 
 /**
  * Workspace package name for the identity composer package.
@@ -78,16 +79,17 @@ const typedIdentityExportBlock = (packageName: string): string => {
     "/**",
     ` * Identity composer for \`@beep/${packageName}\`.`,
     " *",
-    " * @example",
-    " * ```typescript",
+    " * **Example** (Make package ID)",
+    " *",
+    " * ```ts",
     ` * import { ${accessorName} } from "@beep/identity"`,
     " *",
     ` * const id = ${accessorName}.make("${exampleName}")`,
     " * void id",
     " * ```",
     " *",
-    " * @since 0.0.0",
     " * @category configuration",
+    " * @since 0.0.0",
     " */",
     `export const ${accessorName}: Identity.IdentityComposer<"@beep/${packageName}"> = composers.${accessorName};`,
   ]);
@@ -163,6 +165,83 @@ const ensureIdentityPackageRegistration = Effect.fn(function* (identityPackagesF
     }
   });
 });
+
+const composeCallExpressions = (sourceFile: SourceFile): ReadonlyArray<CallExpression> =>
+  A.flatMap(sourceFile.getVariableDeclarations(), (declaration) =>
+    pipe(
+      O.fromNullishOr(declaration.getInitializerIfKind(SyntaxKind.CallExpression)),
+      O.filter((call) => Str.endsWith(".compose")(call.getExpression().getText())),
+      O.toArray
+    )
+  );
+
+const removeComposeSlugArguments = (call: CallExpression, packageName: string): void => {
+  const arguments_ = call.getArguments();
+  for (let index = A.length(arguments_) - 1; index >= 0; index -= 1) {
+    const literal = pipe(
+      A.get(arguments_, index),
+      O.flatMap((argument) => O.fromNullishOr(argument.asKind(SyntaxKind.StringLiteral)))
+    );
+    if (O.isSome(literal) && Str.equivalence(literal.value.getLiteralText(), packageName)) call.removeArgument(index);
+  }
+};
+
+const isAccessorExportFor = (
+  declaration: VariableDeclaration,
+  packageName: string,
+  mechanicalAccessor: string
+): boolean => {
+  const declarationText = declaration.getText();
+  return (
+    Str.equivalence(declaration.getName(), mechanicalAccessor) ||
+    Str.includes(`IdentityComposer<"@beep/${packageName}">`)(declarationText) ||
+    Str.includes(`composers.${mechanicalAccessor}`)(declarationText)
+  );
+};
+
+const removeAccessorExportStatements = (sourceFile: SourceFile, packageName: string): void => {
+  const mechanicalAccessor = toIdentityAccessorName(packageName);
+  for (const declaration of sourceFile.getVariableDeclarations()) {
+    const statement = declaration.getVariableStatement();
+    if (statement === undefined || !statement.isExported()) continue;
+    if (isAccessorExportFor(declaration, packageName, mechanicalAccessor)) statement.remove();
+  }
+};
+
+/**
+ * Remove a package segment and every dedicated identity export from `@beep/identity`.
+ *
+ * **Details**
+ *
+ * The removal visits every `$I.compose(...)` declaration so it also supports the
+ * generated labs group when that P2 writer lands. Dedicated exports and manual
+ * casing aliases are removed by their package identity or composer initializer.
+ *
+ * **Example** (Build an identity removal effect)
+ *
+ * ```ts
+ * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
+ * import { Effect } from "effect"
+ *
+ * const program = CreatePackageIdentityRegistration.removeIdentityPackageRegistration(
+ *   "packages/foundation/modeling/identity/src/packages.ts",
+ *   "example"
+ * )
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+const removeIdentityPackageRegistration = Effect.fn("IdentityRegistration.removeIdentityPackageRegistration")(
+  function* (identityPackagesFilePath: string, packageName: string) {
+    const tsMorphService = yield* TSMorphService;
+    return yield* tsMorphService.updateSourceFile(identityPackagesFilePath, (sourceFile) => {
+      for (const call of composeCallExpressions(sourceFile)) removeComposeSlugArguments(call, packageName);
+      removeAccessorExportStatements(sourceFile, packageName);
+    });
+  }
+);
 
 /**
  * Check whether `@beep/identity` needs a package composer registration.
@@ -245,6 +324,77 @@ const missingIdentityRegistrations = (
     packageNames,
     (name) => !Str.includes(`"${name}"`)(registryContent) || !accessorExportPattern(name).test(registryContent)
   );
+
+/**
+ * Read every string-literal argument text from one call expression.
+ *
+ * @param call - Call expression whose arguments are inspected.
+ * @returns The literal texts of the call's string-literal arguments.
+ * @category getters
+ * @since 0.0.0
+ */
+const stringLiteralArgumentTexts = (call: CallExpression): ReadonlyArray<string> =>
+  A.flatMap(call.getArguments(), (argument) =>
+    pipe(
+      O.fromNullishOr(argument.asKind(SyntaxKind.StringLiteral)),
+      O.map((literal) => literal.getLiteralText()),
+      O.toArray
+    )
+  );
+
+/**
+ * Read composer slugs declared by every `$I.compose(...)` group in registry source.
+ *
+ * @param registryContent - Current text of the identity `packages.ts` file.
+ * @returns Sorted composer slugs found across every compose group.
+ * @category getters
+ * @since 0.0.0
+ */
+const registeredIdentityComposerSlugs = (registryContent: string): ReadonlyArray<string> => {
+  const project = new Project({ useInMemoryFileSystem: true });
+  const sourceFile = project.createSourceFile("packages.ts", registryContent);
+  return A.sort(A.flatMap(composeCallExpressions(sourceFile), stringLiteralArgumentTexts), Order.String);
+};
+
+/**
+ * Read package slugs represented by dedicated exported identity composers.
+ *
+ * @param registryContent - Current text of the identity `packages.ts` file.
+ * @returns Sorted package slugs inferred from the dedicated composer exports.
+ * @category getters
+ * @since 0.0.0
+ */
+const registeredIdentityExportSlugs = (registryContent: string): ReadonlyArray<string> => {
+  const project = new Project({ useInMemoryFileSystem: true });
+  const sourceFile = project.createSourceFile("packages.ts", registryContent);
+  const composerSlugs = registeredIdentityComposerSlugs(registryContent);
+  let slugs = A.empty<string>();
+  for (const declaration of sourceFile.getVariableDeclarations()) {
+    const statement = declaration.getVariableStatement();
+    if (statement === undefined || !statement.isExported()) continue;
+    const initializer = declaration.getInitializer();
+    if (initializer === undefined || !Str.startsWith("composers.$")(initializer.getText())) continue;
+    const typedSlug = pipe(
+      O.fromNullishOr(declaration.getTypeNode()),
+      O.map((node) => node.getText().match(/IdentityComposer<"@beep\/([^"]+)">/)),
+      O.flatMap(O.fromNullishOr),
+      O.flatMap((match) => O.fromNullishOr(match[1]))
+    );
+    const matchedComposer = A.findFirst(composerSlugs, (slug) =>
+      accessorExportPattern(slug).test(`export const ${declaration.getName()}`)
+    );
+    const inferredSlug = pipe(Str.slice(1, -2)(declaration.getName()), Str.kebabCase);
+    slugs = A.append(
+      slugs,
+      pipe(
+        typedSlug,
+        O.orElse(() => matchedComposer),
+        O.getOrElse(() => inferredSlug)
+      )
+    );
+  }
+  return A.sort(slugs, Order.String);
+};
 
 /**
  * Enumerate every `@beep/*` workspace package as `[slug, directory]` entries,
@@ -341,7 +491,10 @@ export const CreatePackageIdentityRegistration = {
   ensureIdentityPackageRegistration,
   identityPackageRegistrationNeeded,
   missingIdentityRegistrations,
+  registeredIdentityComposerSlugs,
+  registeredIdentityExportSlugs,
   registerMissingWorkspaceIdentityPackages,
+  removeIdentityPackageRegistration,
   resolveIdentityPackagesFilePath,
   toIdentityAccessorName,
   typedIdentityExportBlock,

@@ -202,6 +202,31 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
         detail: `Add "${slug}" to $I.compose(...) and a dedicated \`export const $${Str.pascalCase(slug)}Id\` in ${identityPackagesFilePath}. ${FIX_HINT}`,
       })
   );
+  const liveSlugs = HashSet.fromIterable(slugs);
+  const composerSlugs = HashSet.fromIterable(
+    CreatePackageIdentityRegistration.registeredIdentityComposerSlugs(registryContent)
+  );
+  const exportSlugs = HashSet.fromIterable(
+    CreatePackageIdentityRegistration.registeredIdentityExportSlugs(registryContent)
+  );
+  const orphanSlugs = A.sort(
+    A.fromIterable(HashSet.difference(HashSet.union(composerSlugs, exportSlugs), liveSlugs)),
+    Order.String
+  );
+  const orphanViolations = A.map(orphanSlugs, (slug) => {
+    const surfaces = A.filter(
+      [
+        HashSet.has(composerSlugs, slug) ? "$I.compose(...)" : Str.empty,
+        HashSet.has(exportSlugs, slug) ? `export $${Str.pascalCase(slug)}Id` : Str.empty,
+      ],
+      Str.isNonEmpty
+    );
+    return IdentityRegistryViolation.make({
+      kind: "orphan-registration",
+      subject: `@beep/${slug}`,
+      detail: `Remove ${A.join(surfaces, " and ")} from ${identityPackagesFilePath}; no live workspace owns this composer.`,
+    });
+  });
 
   const project = new Project({ skipAddingFilesFromTsConfig: true });
   let localRootViolations = A.empty<IdentityRegistryViolation>();
@@ -228,7 +253,7 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
     }
   }
 
-  const violations = A.appendAll(completenessViolations, localRootViolations);
+  const violations = A.appendAll(A.appendAll(completenessViolations, orphanViolations), localRootViolations);
 
   if (A.isReadonlyArrayNonEmpty(violations)) {
     yield* Console.error(`[lint:identity-registry] found ${A.length(violations)} violation(s).`);
@@ -241,7 +266,7 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
   }
 
   yield* Console.log(
-    `[lint:identity-registry] OK: ${A.length(slugs)} workspace packages registered; no local root composers.`
+    `[lint:identity-registry] OK: ${A.length(slugs)} workspace packages registered; no orphan or local root composers.`
   );
 });
 
@@ -267,6 +292,6 @@ export const lintIdentityRegistryCommand = Command.make(
   runIdentityRegistryLint
 ).pipe(
   Command.withDescription(
-    "Check that every @beep/* workspace package is registered in @beep/identity and no package builds local root composers"
+    "Check that @beep/* workspace packages and identity composers agree exactly and no package builds local root composers"
   )
 );

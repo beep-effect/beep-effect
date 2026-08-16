@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-14T13:50:20.751Z",
-  "git_sha": "88c68925505e574d5157b52b206455767857c799",
+  "generated_at": "2026-08-16T20:01:44.096Z",
+  "git_sha": "2581236f87b7ca91d028046d52b76ed06d355e3d",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
@@ -21039,15 +21039,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 70.74,
-      "statements": 70.48,
-      "branches": 56.73,
-      "functions": 62.99,
+      "lines": 70.85,
+      "statements": 70.55,
+      "branches": 56.74,
+      "functions": 63.16,
       "uncovered": {
-        "lines": 8302,
-        "statements": 8711,
-        "branches": 4583,
-        "functions": 3067
+        "lines": 8454,
+        "statements": 8894,
+        "branches": 4691,
+        "functions": 3133
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -22071,14 +22071,62 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityRegistration.ts": {
-          "lines": 98.33,
-          "statements": 98.36,
-          "branches": 64.28,
+          "lines": 100,
+          "statements": 100,
+          "branches": 88.57,
           "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 5,
+            "lines": 0,
+            "statements": 0,
+            "branches": 4,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts": {
+          "lines": 54.79,
+          "statements": 51.83,
+          "branches": 36.36,
+          "functions": 45,
+          "uncovered": {
+            "lines": 99,
+            "statements": 118,
+            "branches": 63,
+            "functions": 22
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.policy.ts": {
+          "lines": 94.11,
+          "statements": 94.73,
+          "branches": 87.5,
+          "functions": 92.85,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 2,
+            "functions": 2
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/DeletePackage/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         },
@@ -23163,10 +23211,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts": {
-          "lines": 92.39,
-          "statements": 91.48,
-          "branches": 78.72,
-          "functions": 88.88,
+          "lines": 92.92,
+          "statements": 92.07,
+          "branches": 80.39,
+          "functions": 90,
           "uncovered": {
             "lines": 7,
             "statements": 8,
@@ -25658,6 +25706,78 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.errors.ts": {
+          "lines": 50,
+          "statements": 50,
+          "branches": 100,
+          "functions": 33.33,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.plan.ts": {
+          "lines": 69.23,
+          "statements": 70,
+          "branches": 100,
+          "functions": 61.29,
+          "uncovered": {
+            "lines": 12,
+            "statements": 12,
+            "branches": 0,
+            "functions": 12
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.probes.ts": {
+          "lines": 85.59,
+          "statements": 83.01,
+          "branches": 61.4,
+          "functions": 68.42,
+          "uncovered": {
+            "lines": 34,
+            "statements": 45,
+            "branches": 44,
+            "functions": 24
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.service.ts": {
+          "lines": 73.33,
+          "statements": 73.33,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 0,
+            "functions": 4
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/internal/cli/RunMode.ts": {
           "lines": 100,
           "statements": 100,
@@ -26019,6 +26139,18 @@
           }
         },
         "packages/tooling/tool/cli/src/test/CreatePackage.test-kit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/test/DeletePackage.test-kit.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

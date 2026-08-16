@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-14T02:59:57.042Z",
+  "generatedAt": "2026-08-16T19:43:58.584Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -62,21 +62,21 @@
   },
   "totals": {
     "packages": 130,
-    "cleanPackages": 67,
+    "cleanPackages": 68,
     "packagesWithoutPublicSrcSurface": 3,
-    "packagesNeedingRemediation": 60,
-    "publicModules": 2519,
-    "publicExports": 16127,
+    "packagesNeedingRemediation": 59,
+    "publicModules": 2510,
+    "publicExports": 16136,
     "openModules": 397,
-    "openExports": 143,
-    "missingExportExamples": 10,
+    "openExports": 135,
+    "missingExportExamples": 4,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
     "exampleImportFindings": 0,
     "unsafeExampleFindings": 0,
-    "schemaAnnotationFindings": 4,
+    "schemaAnnotationFindings": 0,
     "undescribed-see": 12,
     "multiple-description-paragraphs": 514,
     "leading-blank": 0,
@@ -8230,7 +8230,7 @@
       "packageName": "@beep/workspace-tables",
       "packagePath": "packages/workspace/tables",
       "topoOrder": 8,
-      "status": "needs-remediation",
+      "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 19,
@@ -8245,8 +8245,8 @@
       },
       "counts": {
         "openModules": 0,
-        "openExports": 6,
-        "missingExportExamples": 6,
+        "openExports": 0,
+        "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
@@ -8768,15 +8768,13 @@
           "exportKind": "const",
           "filePath": "src/entities/CandidateDraft/CandidateDraft.table.ts",
           "repoPath": "packages/workspace/tables/src/entities/CandidateDraft/CandidateDraft.table.ts",
-          "line": 35,
-          "anchor": "packages-workspace-tables-src-entities-candidatedraft-candidatedraft-table-ts-35-table-name",
+          "line": 43,
+          "anchor": "packages-workspace-tables-src-entities-candidatedraft-candidatedraft-table-ts-43-table-name",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -8785,7 +8783,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./CandidateDraft.table.ts\";",
@@ -8836,15 +8834,13 @@
           "exportKind": "const",
           "filePath": "src/entities/CandidateProject/CandidateProject.table.ts",
           "repoPath": "packages/workspace/tables/src/entities/CandidateProject/CandidateProject.table.ts",
-          "line": 35,
-          "anchor": "packages-workspace-tables-src-entities-candidateproject-candidateproject-table-ts-35-table-name",
+          "line": 43,
+          "anchor": "packages-workspace-tables-src-entities-candidateproject-candidateproject-table-ts-43-table-name",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -8853,7 +8849,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./CandidateProject.table.ts\";",
@@ -8992,15 +8988,13 @@
           "exportKind": "const",
           "filePath": "src/entities/Message/Message.table.ts",
           "repoPath": "packages/workspace/tables/src/entities/Message/Message.table.ts",
-          "line": 35,
-          "anchor": "packages-workspace-tables-src-entities-message-message-table-ts-35-table-name",
+          "line": 43,
+          "anchor": "packages-workspace-tables-src-entities-message-message-table-ts-43-table-name",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -9009,7 +9003,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Message.converters.ts\";",
@@ -9170,15 +9164,13 @@
           "exportKind": "const",
           "filePath": "src/entities/Thread/Thread.table.ts",
           "repoPath": "packages/workspace/tables/src/entities/Thread/Thread.table.ts",
-          "line": 35,
-          "anchor": "packages-workspace-tables-src-entities-thread-thread-table-ts-35-table-name",
+          "line": 43,
+          "anchor": "packages-workspace-tables-src-entities-thread-thread-table-ts-43-table-name",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -9187,7 +9179,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Thread.converters.ts\";",
@@ -9348,15 +9340,13 @@
           "exportKind": "const",
           "filePath": "src/entities/Turn/Turn.table.ts",
           "repoPath": "packages/workspace/tables/src/entities/Turn/Turn.table.ts",
-          "line": 35,
-          "anchor": "packages-workspace-tables-src-entities-turn-turn-table-ts-35-table-name",
+          "line": 43,
+          "anchor": "packages-workspace-tables-src-entities-turn-turn-table-ts-43-table-name",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -9365,7 +9355,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Turn.converters.ts\";",
@@ -9526,15 +9516,13 @@
           "exportKind": "const",
           "filePath": "src/entities/Workspace/Workspace.table.ts",
           "repoPath": "packages/workspace/tables/src/entities/Workspace/Workspace.table.ts",
-          "line": 35,
-          "anchor": "packages-workspace-tables-src-entities-workspace-workspace-table-ts-35-table-name",
+          "line": 43,
+          "anchor": "packages-workspace-tables-src-entities-workspace-workspace-table-ts-43-table-name",
           "currentTags": [
             "@category",
             "@since"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -9543,7 +9531,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Workspace.converters.ts\";",
@@ -38145,9 +38133,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 186,
-        "publicModuleCount": 184,
-        "publicExportCount": 1393
+        "sourceFileCount": 191,
+        "publicModuleCount": 189,
+        "publicExportCount": 1411
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -38907,6 +38895,28 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/commands/Codex/Findings.refresh.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 6,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/commands/Codex/Findings.scan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.scan.ts",
           "line": 1,
@@ -39210,6 +39220,94 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/DeletePackage/DeletePackage.policy.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.policy.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-policy-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-schemas-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 6,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/DeletePackage/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/index.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-index-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 3,
           "remediationStatus": "resolved"
         },
         {
@@ -42429,7 +42527,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 25,
+          "exportCount": 26,
           "remediationStatus": "open"
         }
       ],
@@ -45676,8 +45774,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
-          "line": 57,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-command-ts-57-capturedatefromfilename",
+          "line": 65,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-command-ts-65-capturedatefromfilename",
           "currentTags": [
             "@param",
             "@returns",
@@ -45700,8 +45798,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
-          "line": 110,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-command-ts-110-runcodexfindingsingest",
+          "line": 406,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-command-ts-406-runcodexfindingsingest",
           "currentTags": [
             "@param",
             "@returns",
@@ -45724,8 +45822,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.command.ts",
-          "line": 325,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-command-ts-325-findingscommand",
+          "line": 477,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-command-ts-477-findingscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -45968,8 +46066,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.errors.ts",
-          "line": 66,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-66-codexingestfailurereason",
+          "line": 72,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-72-codexingestfailurereason",
           "currentTags": [
             "@category",
             "@since"
@@ -45990,8 +46088,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Codex/Findings.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.errors.ts",
-          "line": 82,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-82-codexpacketwritefailurereason",
+          "line": 88,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-88-codexpacketwritefailurereason",
           "currentTags": [
             "@category",
             "@since"
@@ -46012,8 +46110,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Codex/Findings.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.errors.ts",
-          "line": 99,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-99-codexpacketwritefailurereason",
+          "line": 106,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-106-codexpacketwritefailurereason",
           "currentTags": [
             "@category",
             "@since"
@@ -46034,8 +46132,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Findings.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.errors.ts",
-          "line": 120,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-120-codexfindingsingesterror",
+          "line": 127,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-127-codexfindingsingesterror",
           "currentTags": [
             "@category",
             "@since"
@@ -46056,8 +46154,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Findings.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.errors.ts",
-          "line": 218,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-218-codexfindingsredactionerror",
+          "line": 225,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-225-codexfindingsredactionerror",
           "currentTags": [
             "@category",
             "@since"
@@ -46078,8 +46176,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Codex/Findings.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.errors.ts",
-          "line": 253,
-          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-253-codexpacketwriteerror",
+          "line": 260,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-errors-ts-260-codexpacketwriteerror",
           "currentTags": [
             "@category",
             "@since"
@@ -46314,6 +46412,149 @@
           "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.packet.ts",
           "line": 740,
           "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-packet-ts-740-renderpacketdocuments",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CodexRefreshLedgerSource",
+          "exportKind": "class",
+          "filePath": "src/commands/Codex/Findings.refresh.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+          "line": 126,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-126-codexrefreshledgersource",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CodexFindingsRefreshReconciliation",
+          "exportKind": "class",
+          "filePath": "src/commands/Codex/Findings.refresh.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+          "line": 159,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-159-codexfindingsrefreshreconciliation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "validateCodexFindingsIngestModes",
+          "exportKind": "const",
+          "filePath": "src/commands/Codex/Findings.refresh.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+          "line": 237,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-237-validatecodexfindingsingestmodes",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "loadCodexRefreshLedgerSource",
+          "exportKind": "const",
+          "filePath": "src/commands/Codex/Findings.refresh.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+          "line": 308,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-308-loadcodexrefreshledgersource",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "refreshCodexFindingsPacket",
+          "exportKind": "const",
+          "filePath": "src/commands/Codex/Findings.refresh.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+          "line": 1231,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-1231-refreshcodexfindingspacket",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "priorIdsOfRefreshSource",
+          "exportKind": "const",
+          "filePath": "src/commands/Codex/Findings.refresh.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Codex/Findings.refresh.ts",
+          "line": 1303,
+          "anchor": "packages-tooling-tool-cli-src-commands-codex-findings-refresh-ts-1303-prioridsofrefreshsource",
           "currentTags": [
             "@param",
             "@returns",
@@ -48379,6 +48620,249 @@
           "repoPath": "packages/tooling/tool/cli/src/commands/CreatePackage/index.ts",
           "line": 14,
           "anchor": "packages-tooling-tool-cli-src-commands-createpackage-index-ts-14-export-from-createpackage-command-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "deletePackageCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/DeletePackage/DeletePackage.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts",
+          "line": 508,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-command-ts-508-deletepackagecommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeletePackagePolicyEvaluation",
+          "exportKind": "const",
+          "filePath": "src/commands/DeletePackage/DeletePackage.policy.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.policy.ts",
+          "line": 136,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-policy-ts-136-deletepackagepolicyevaluation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeletePackagePolicy",
+          "exportKind": "class",
+          "filePath": "src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "line": 43,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-schemas-ts-43-deletepackagepolicy",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeletePackageRefusalKind",
+          "exportKind": "const",
+          "filePath": "src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "line": 78,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-schemas-ts-78-deletepackagerefusalkind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeletePackageRefusalKind",
+          "exportKind": "type",
+          "filePath": "src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "line": 99,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-schemas-ts-99-deletepackagerefusalkind",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeletePackageRefusal",
+          "exportKind": "const",
+          "filePath": "src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "line": 142,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-schemas-ts-142-deletepackagerefusal",
+          "currentTags": [
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeletePackageRefusal",
+          "exportKind": "type",
+          "filePath": "src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "line": 156,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-schemas-ts-156-deletepackagerefusal",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DeletePackageManifest",
+          "exportKind": "class",
+          "filePath": "src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+          "line": 173,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-deletepackage-schemas-ts-173-deletepackagemanifest",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./DeletePackage.command.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/DeletePackage/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/index.ts",
+          "line": 14,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-index-ts-14-export-from-deletepackage-command-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./DeletePackage.policy.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/DeletePackage/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/index.ts",
+          "line": 21,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-index-ts-21-export-from-deletepackage-policy-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./DeletePackage.schemas.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/DeletePackage/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/DeletePackage/index.ts",
+          "line": 28,
+          "anchor": "packages-tooling-tool-cli-src-commands-deletepackage-index-ts-28-export-from-deletepackage-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -57611,8 +58095,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/IdentityRegistry.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts",
-          "line": 260,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-identityregistry-ts-260-lintidentityregistrycommand",
+          "line": 285,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-identityregistry-ts-285-lintidentityregistrycommand",
           "currentTags": [
             "@category",
             "@since"
@@ -65987,8 +66471,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Root.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Root.ts",
-          "line": 64,
-          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-64-rootcommand",
+          "line": 65,
+          "anchor": "packages-tooling-tool-cli-src-commands-root-ts-65-rootcommand",
           "currentTags": [
             "@internal",
             "@category",
@@ -66208,8 +66692,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 160,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-160-bakereport",
+          "line": 161,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-161-bakereport",
           "currentTags": [
             "@category",
             "@since"
@@ -66230,8 +66714,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 190,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-190-bakereportjson",
+          "line": 192,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-192-bakereportjson",
           "currentTags": [
             "@category",
             "@since"
@@ -66252,8 +66736,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 207,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-207-bakeplanstep",
+          "line": 209,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-209-bakeplanstep",
           "currentTags": [
             "@category",
             "@since"
@@ -66274,8 +66758,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 238,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-238-bakeplan",
+          "line": 241,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-241-bakeplan",
           "currentTags": [
             "@category",
             "@since"
@@ -66296,8 +66780,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 264,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-264-bakeplanjson",
+          "line": 268,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-268-bakeplanjson",
           "currentTags": [
             "@category",
             "@since"
@@ -66318,8 +66802,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 293,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-293-bakecheckreport",
+          "line": 300,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-300-bakecheckreport",
           "currentTags": [
             "@category",
             "@since"
@@ -66340,8 +66824,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 321,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-321-bakecheckreportjson",
+          "line": 333,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-333-bakecheckreportjson",
           "currentTags": [
             "@category",
             "@since"
@@ -66362,8 +66846,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 339,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-339-awsgetparameterresponse",
+          "line": 351,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-351-awsgetparameterresponse",
           "currentTags": [
             "@internal",
             "@category",
@@ -66385,8 +66869,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 360,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-360-awsruninstancesresponse",
+          "line": 372,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-372-awsruninstancesresponse",
           "currentTags": [
             "@internal",
             "@category",
@@ -66408,8 +66892,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 381,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-381-awscreateimageresponse",
+          "line": 393,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-393-awscreateimageresponse",
           "currentTags": [
             "@internal",
             "@category",
@@ -66431,8 +66915,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 402,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-402-awstag",
+          "line": 414,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-414-awstag",
           "currentTags": [
             "@internal",
             "@category",
@@ -66454,8 +66938,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 425,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-425-awsdescribeimagesresponse",
+          "line": 437,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-437-awsdescribeimagesresponse",
           "currentTags": [
             "@internal",
             "@category",
@@ -66477,8 +66961,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts",
-          "line": 447,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-447-awsconsoleoutputresponse",
+          "line": 459,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-schemas-ts-459-awsconsoleoutputresponse",
           "currentTags": [
             "@internal",
             "@category",
@@ -66500,8 +66984,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 119,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-119-bakelocalinputs",
+          "line": 120,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-120-bakelocalinputs",
           "currentTags": [
             "@category",
             "@since"
@@ -66522,8 +67006,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 146,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-146-runnersserviceshape",
+          "line": 148,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-148-runnersserviceshape",
           "currentTags": [
             "@category",
             "@since"
@@ -66544,8 +67028,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 167,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-167-runnersservice",
+          "line": 169,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-169-runnersservice",
           "currentTags": [
             "@category",
             "@since"
@@ -66566,8 +67050,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 679,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-679-runnersservicelive",
+          "line": 715,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-715-runnersservicelive",
           "currentTags": [
             "@category",
             "@since"
@@ -66588,8 +67072,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 695,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-695-writebakereportfortesting",
+          "line": 731,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-731-writebakereportfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -66610,8 +67094,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 711,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-711-makebakescriptfortesting",
+          "line": 747,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-747-makebakescriptfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -66632,8 +67116,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Runners/Runners.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts",
-          "line": 727,
-          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-727-runawsfortesting",
+          "line": 763,
+          "anchor": "packages-tooling-tool-cli-src-commands-runners-runners-service-ts-763-runawsfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -73251,12 +73735,34 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  /**\n   * Human-first docgen command group.\n   *\n   * @category cli-commands\n   * @since 0.0.0\n   */\n  docgenCommand,\n} from \"./commands/Docgen/index.ts\";",
+          "symbolName": "export { deletePackageCommand } from \"./commands/DeletePackage/index.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
           "line": 111,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-111-export-human-first-docgen-command-group-category-cli-commands-since-0-0-0-docgencommand-from-commands-docgen-index-ts",
+          "anchor": "packages-tooling-tool-cli-src-index-ts-111-export-deletepackagecommand-from-commands-deletepackage-index-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export {\n  /**\n   * Human-first docgen command group.\n   *\n   * @category cli-commands\n   * @since 0.0.0\n   */\n  docgenCommand,\n} from \"./commands/Docgen/index.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/index.ts",
+          "line": 118,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-118-export-human-first-docgen-command-group-category-cli-commands-since-0-0-0-docgencommand-from-commands-docgen-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73277,8 +73783,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 126,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-126-export-command-first-docs-discovery-command-tree-category-cli-commands-since-0-0-0-docscommand-from-commands-docs-index-ts",
+          "line": 133,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-133-export-command-first-docs-discovery-command-tree-category-cli-commands-since-0-0-0-docscommand-from-commands-docs-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73299,8 +73805,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 141,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-141-export-fallow-quality-tooling-command-group-category-cli-commands-since-0-0-0-fallowcommand-from-commands-fallow-index-ts",
+          "line": 148,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-148-export-fallow-quality-tooling-command-group-category-cli-commands-since-0-0-0-fallowcommand-from-commands-fallow-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73321,8 +73827,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 156,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-156-export-dataset-file-curation-command-group-category-cli-commands-since-0-0-0-filescommand-from-commands-files-index-ts",
+          "line": 163,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-163-export-dataset-file-curation-command-group-category-cli-commands-since-0-0-0-filescommand-from-commands-files-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73343,8 +73849,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 171,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-171-export-image-and-video-curation-command-group-category-cli-commands-since-0-0-0-imagecommand-from-commands-image-index-ts",
+          "line": 178,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-178-export-image-and-video-curation-command-group-category-cli-commands-since-0-0-0-imagecommand-from-commands-image-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73365,8 +73871,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 186,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-186-export-knowledge-surface-verification-command-group-category-cli-commands-since-0-0-0-knowledgecommand-from-commands-knowledge-index-ts",
+          "line": 193,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-193-export-knowledge-surface-verification-command-group-category-cli-commands-since-0-0-0-knowledgecommand-from-commands-knowledge-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73387,8 +73893,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 201,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-201-export-effect-laws-command-group-category-cli-commands-since-0-0-0-lawscommand-from-commands-laws-index-ts",
+          "line": 208,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-208-export-effect-laws-command-group-category-cli-commands-since-0-0-0-lawscommand-from-commands-laws-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73409,8 +73915,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 216,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-216-export-lint-policy-command-group-category-cli-commands-since-0-0-0-lintcommand-from-commands-lint-index-ts",
+          "line": 223,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-223-export-lint-policy-command-group-category-cli-commands-since-0-0-0-lintcommand-from-commands-lint-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73431,8 +73937,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 231,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-231-export-purge-command-for-removing-root-workspace-build-artifacts-category-cli-commands-since-0-0-0-purgecommand-from-commands-purge-index-ts",
+          "line": 238,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-238-export-purge-command-for-removing-root-workspace-build-artifacts-category-cli-commands-since-0-0-0-purgecommand-from-commands-purge-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73453,8 +73959,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 246,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-246-export-recorded-ui-verification-command-group-category-cli-commands-since-0-0-0-qacommand-from-commands-qa-index-ts",
+          "line": 253,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-253-export-recorded-ui-verification-command-group-category-cli-commands-since-0-0-0-qacommand-from-commands-qa-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73475,8 +73981,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 261,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-261-export-repository-operational-quality-command-group-category-cli-commands-since-0-0-0-qualitycommand-from-commands-quality-index-ts",
+          "line": 268,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-268-export-repository-operational-quality-command-group-category-cli-commands-since-0-0-0-qualitycommand-from-commands-quality-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73497,8 +74003,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 276,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-276-export-root-cli-command-that-composes-subcommands-category-cli-commands-since-0-0-0-rootcommand-from-commands-root-ts",
+          "line": 283,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-283-export-root-cli-command-that-composes-subcommands-category-cli-commands-since-0-0-0-rootcommand-from-commands-root-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73519,8 +74025,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 291,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-291-export-runnerscommand-from-commands-runners-index-ts",
+          "line": 298,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-298-export-runnerscommand-from-commands-runners-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73541,8 +74047,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 298,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-298-export-official-data-sync-command-for-checked-in-generated-typescript-modules-category-cli-commands-since-0-0-0-syncdatatotscommand-from-commands-syncdatatots-index-ts",
+          "line": 305,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-305-export-official-data-sync-command-for-checked-in-generated-typescript-modules-category-cli-commands-since-0-0-0-syncdatatotscommand-from-commands-syncdatatots-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73563,8 +74069,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 313,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-313-export-dependency-topological-sort-command-category-cli-commands-since-0-0-0-toposortcommand-from-commands-toposort-index-ts",
+          "line": 320,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-320-export-dependency-topological-sort-command-category-cli-commands-since-0-0-0-toposortcommand-from-commands-toposort-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73585,8 +74091,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 328,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-328-export-tsconfig-sync-command-for-workspace-tsconfig-references-and-root-aliases-category-cli-commands-since-0-0-0-tsconfigsynccommand-from-commands-tsconfigsync-index-ts",
+          "line": 335,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-335-export-tsconfig-sync-command-for-workspace-tsconfig-references-and-root-aliases-category-cli-commands-since-0-0-0-tsconfigsynccommand-from-commands-tsconfigsync-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73607,8 +74113,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 343,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-343-export-version-sync-command-for-detecting-and-fixing-version-drift-category-cli-commands-since-0-0-0-versionsynccommand-from-commands-versionsync-index-ts",
+          "line": 350,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-350-export-version-sync-command-for-detecting-and-fixing-version-drift-category-cli-commands-since-0-0-0-versionsynccommand-from-commands-versionsync-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73629,8 +74135,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 358,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-358-export-sibling-git-worktree-management-command-category-cli-commands-since-0-0-0-worktreecommand-from-commands-worktree-index-ts",
+          "line": 365,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-365-export-sibling-git-worktree-management-command-category-cli-commands-since-0-0-0-worktreecommand-from-commands-worktree-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -73651,8 +74157,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/index.ts",
-          "line": 373,
-          "anchor": "packages-tooling-tool-cli-src-index-ts-373-export-yeet-quality-feedback-and-publish-command-category-cli-commands-since-0-0-0-yeetcommand-from-commands-yeet-index-ts",
+          "line": 380,
+          "anchor": "packages-tooling-tool-cli-src-index-ts-380-export-yeet-quality-feedback-and-publish-command-category-cli-commands-since-0-0-0-yeetcommand-from-commands-yeet-index-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -76099,8 +76605,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 386,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-386-validaterepoconfig",
+          "line": 385,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-385-validaterepoconfig",
           "currentTags": [
             "@effects",
             "@category",
@@ -76122,8 +76628,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 427,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-427-validatereposafetypolicy",
+          "line": 426,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-426-validatereposafetypolicy",
           "currentTags": [
             "@effects",
             "@category",
@@ -76145,8 +76651,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 468,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-468-validatedogfoodconfig",
+          "line": 467,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-467-validatedogfoodconfig",
           "currentTags": [
             "@effects",
             "@category",
@@ -76168,8 +76674,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 496,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-496-validatedogfoodconfigs",
+          "line": 495,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-495-validatedogfoodconfigs",
           "currentTags": [
             "@effects",
             "@category",
@@ -76191,8 +76697,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 522,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-522-defaultreporoot",
+          "line": 521,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-521-defaultreporoot",
           "currentTags": [
             "@effects",
             "@category",
@@ -76214,8 +76720,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 550,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-550-validatecurrentcheckoutdogfood",
+          "line": 549,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-549-validatecurrentcheckoutdogfood",
           "currentTags": [
             "@effects",
             "@category",
@@ -76237,8 +76743,8 @@
           "exportKind": "const",
           "filePath": "src/validation.ts",
           "repoPath": "packages/tooling/library/ai-sync/src/validation.ts",
-          "line": 579,
-          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-579-validatecurrentcheckoutdogfoodconfigs",
+          "line": 578,
+          "anchor": "packages-tooling-library-ai-sync-src-validation-ts-578-validatecurrentcheckoutdogfoodconfigs",
           "currentTags": [
             "@effects",
             "@category",
@@ -85637,7 +86143,7 @@
         "srcDir": "src",
         "sourceFileCount": 208,
         "publicModuleCount": 208,
-        "publicExportCount": 574
+        "publicExportCount": 576
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -85647,7 +86153,7 @@
       },
       "counts": {
         "openModules": 9,
-        "openExports": 6,
+        "openExports": 4,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
@@ -85656,7 +86162,7 @@
         "malformedConditionalTagFindings": 0,
         "exampleImportFindings": 0,
         "unsafeExampleFindings": 0,
-        "schemaAnnotationFindings": 4,
+        "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
           "undescribed-see": 7,
           "multiple-description-paragraphs": 9,
@@ -85739,7 +86245,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 15,
+          "exportCount": 17,
           "remediationStatus": "resolved"
         },
         {
@@ -90777,27 +91283,41 @@
           "malformedConditionalTags": [],
           "exampleImportViolations": [],
           "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [
-            {
-              "rule": "missing-schema-annotation",
-              "detail": "Exported schemas should carry $I.annote, $I.annoteClass, or $I.annoteSchema metadata."
-            },
-            {
-              "rule": "missing-schema-runtime-type-alias",
-              "detail": "Exported non-class schema ActFramePreconditions should have an exported same-name runtime type alias."
-            }
-          ],
+          "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ActFramePreconditions",
+          "exportKind": "type",
+          "filePath": "src/entities/ActFrame/ActFrame.values.ts",
+          "repoPath": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
+          "line": 514,
+          "anchor": "packages-law-practice-domain-src-entities-actframe-actframe-values-ts-514-actframepreconditions",
+          "currentTags": [
+            "@see",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "PositionTransitions",
           "exportKind": "const",
           "filePath": "src/entities/ActFrame/ActFrame.values.ts",
           "repoPath": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
-          "line": 515,
-          "anchor": "packages-law-practice-domain-src-entities-actframe-actframe-values-ts-515-positiontransitions",
+          "line": 530,
+          "anchor": "packages-law-practice-domain-src-entities-actframe-actframe-values-ts-530-positiontransitions",
           "currentTags": [
             "@category",
             "@since"
@@ -90808,19 +91328,33 @@
           "malformedConditionalTags": [],
           "exampleImportViolations": [],
           "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [
-            {
-              "rule": "missing-schema-annotation",
-              "detail": "Exported schemas should carry $I.annote, $I.annoteClass, or $I.annoteSchema metadata."
-            },
-            {
-              "rule": "missing-schema-runtime-type-alias",
-              "detail": "Exported non-class schema PositionTransitions should have an exported same-name runtime type alias."
-            }
-          ],
+          "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PositionTransitions",
+          "exportKind": "type",
+          "filePath": "src/entities/ActFrame/ActFrame.values.ts",
+          "repoPath": "packages/law-practice/domain/src/entities/ActFrame/ActFrame.values.ts",
+          "line": 545,
+          "anchor": "packages-law-practice-domain-src-entities-actframe-actframe-values-ts-545-positiontransitions",
+          "currentTags": [
+            "@see",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./ActFrame.behavior.ts\";",
@@ -90849,9 +91383,12 @@
           "exportKind": "re-export",
           "filePath": "src/entities/ActFrame/index.ts",
           "repoPath": "packages/law-practice/domain/src/entities/ActFrame/index.ts",
-          "line": 16,
-          "anchor": "packages-law-practice-domain-src-entities-actframe-index-ts-16-export-from-actframe-model-ts",
-          "currentTags": [],
+          "line": 22,
+          "anchor": "packages-law-practice-domain-src-entities-actframe-index-ts-22-export-from-actframe-model-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
           "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
@@ -90868,8 +91405,8 @@
           "exportKind": "re-export",
           "filePath": "src/entities/ActFrame/index.ts",
           "repoPath": "packages/law-practice/domain/src/entities/ActFrame/index.ts",
-          "line": 23,
-          "anchor": "packages-law-practice-domain-src-entities-actframe-index-ts-23-export-from-actframe-values-ts",
+          "line": 29,
+          "anchor": "packages-law-practice-domain-src-entities-actframe-index-ts-29-export-from-actframe-values-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -115682,8 +116219,8 @@
           "exportKind": "class",
           "filePath": "src/processes/ProfessionalRuntime/ProfessionalRuntime.errors.ts",
           "repoPath": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.errors.ts",
-          "line": 72,
-          "anchor": "packages-agents-use-cases-src-processes-professionalruntime-professionalruntime-errors-ts-72-professionalruntimepromotionblocked",
+          "line": 71,
+          "anchor": "packages-agents-use-cases-src-processes-professionalruntime-professionalruntime-errors-ts-71-professionalruntimepromotionblocked",
           "currentTags": [
             "@category",
             "@since"
@@ -172785,9 +173322,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 18,
-        "publicModuleCount": 18,
-        "publicExportCount": 52
+        "sourceFileCount": 4,
+        "publicModuleCount": 4,
+        "publicExportCount": 40
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -172827,50 +173364,6 @@
       "modules": [
         {
           "docKind": "packageDocumentation",
-          "filePath": "src/adapters/web-annotation.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/adapters/web-annotation.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-adapters-web-annotation-ts-1-module",
-          "currentTags": [
-            "@since",
-            "@packageDocumentation"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/evidence.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/evidence.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-evidence-ts-1-module",
-          "currentTags": [
-            "@since",
-            "@packageDocumentation"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/index.ts",
           "line": 1,
@@ -172888,121 +173381,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/iri.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/iri.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-iri-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/jsonld.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/jsonld.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-jsonld-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/prov.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/prov.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-prov-ts-1-module",
-          "currentTags": [
-            "@since",
-            "@packageDocumentation"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/rdf.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/rdf.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-rdf-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/semantic-schema-metadata.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/semantic-schema-metadata.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-semantic-schema-metadata-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
+          "exportCount": 3,
           "remediationStatus": "resolved"
         },
         {
@@ -173070,289 +173449,16 @@
           "documentationShapeViolations": [],
           "exportCount": 14,
           "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/uri.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/uri.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-uri-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/vocab/oa.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/oa.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-oa-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/vocab/owl.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/owl.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-owl-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/vocab/prov.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/prov.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-prov-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/vocab/rdf.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/rdf.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-rdf-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/vocab/rdfs.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/rdfs.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-rdfs-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
-        },
-        {
-          "docKind": "packageDocumentation",
-          "filePath": "src/vocab/xsd.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/xsd.ts",
-          "line": 1,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-xsd-ts-1-module",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "exportCount": 1,
-          "remediationStatus": "resolved"
         }
       ],
       "exports": [
         {
-          "symbolName": "export * from \"@beep/rdf/Adapters/WebAnnotation\";",
-          "exportKind": "re-export",
-          "filePath": "src/adapters/web-annotation.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/adapters/web-annotation.ts",
-          "line": 14,
-          "anchor": "packages-foundation-capability-semantic-web-src-adapters-web-annotation-ts-14-export-from-beep-rdf-adapters-webannotation",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"@beep/rdf/Evidence\";",
-          "exportKind": "re-export",
-          "filePath": "src/evidence.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/evidence.ts",
-          "line": 14,
-          "anchor": "packages-foundation-capability-semantic-web-src-evidence-ts-14-export-from-beep-rdf-evidence",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"./iri.ts\";",
+          "symbolName": "export * from \"./services/canonicalization.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/foundation/capability/semantic-web/src/index.ts",
-          "line": 13,
-          "anchor": "packages-foundation-capability-semantic-web-src-index-ts-13-export-from-iri-ts",
-          "currentTags": [
-            "@since",
-            "@category"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"@beep/rdf/Iri\";",
-          "exportKind": "re-export",
-          "filePath": "src/iri.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/iri.ts",
-          "line": 9,
-          "anchor": "packages-foundation-capability-semantic-web-src-iri-ts-9-export-from-beep-rdf-iri",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"@beep/rdf/JsonLd\";",
-          "exportKind": "re-export",
-          "filePath": "src/jsonld.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/jsonld.ts",
-          "line": 9,
-          "anchor": "packages-foundation-capability-semantic-web-src-jsonld-ts-9-export-from-beep-rdf-jsonld",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"@beep/rdf/Prov\";",
-          "exportKind": "re-export",
-          "filePath": "src/prov.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/prov.ts",
-          "line": 14,
-          "anchor": "packages-foundation-capability-semantic-web-src-prov-ts-14-export-from-beep-rdf-prov",
+          "line": 17,
+          "anchor": "packages-foundation-capability-semantic-web-src-index-ts-17-export-from-services-canonicalization-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -173369,14 +173475,13 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"@beep/rdf/Rdf\";",
+          "symbolName": "export * from \"./services/shacl-validation.ts\";",
           "exportKind": "re-export",
-          "filePath": "src/rdf.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/rdf.ts",
-          "line": 9,
-          "anchor": "packages-foundation-capability-semantic-web-src-rdf-ts-9-export-from-beep-rdf-rdf",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/semantic-web/src/index.ts",
+          "line": 24,
+          "anchor": "packages-foundation-capability-semantic-web-src-index-ts-24-export-from-services-shacl-validation-ts",
           "currentTags": [
-            "@packageDocumentation",
             "@category",
             "@since"
           ],
@@ -173392,14 +173497,13 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"@beep/rdf/SemanticSchemaMetadata\";",
+          "symbolName": "export * from \"./services/sparql-query.ts\";",
           "exportKind": "re-export",
-          "filePath": "src/semantic-schema-metadata.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/semantic-schema-metadata.ts",
-          "line": 9,
-          "anchor": "packages-foundation-capability-semantic-web-src-semantic-schema-metadata-ts-9-export-from-beep-rdf-semanticschemametadata",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/foundation/capability/semantic-web/src/index.ts",
+          "line": 31,
+          "anchor": "packages-foundation-capability-semantic-web-src-index-ts-31-export-from-services-sparql-query-ts",
           "currentTags": [
-            "@packageDocumentation",
             "@category",
             "@since"
           ],
@@ -174214,167 +174318,6 @@
           "line": 397,
           "anchor": "packages-foundation-capability-semantic-web-src-services-sparql-query-ts-397-unsupportedsparqlqueryservicelive",
           "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"@beep/rdf/Uri\";",
-          "exportKind": "re-export",
-          "filePath": "src/uri.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/uri.ts",
-          "line": 9,
-          "anchor": "packages-foundation-capability-semantic-web-src-uri-ts-9-export-from-beep-rdf-uri",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"@beep/rdf/Vocab/Oa\";",
-          "exportKind": "re-export",
-          "filePath": "src/vocab/oa.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/oa.ts",
-          "line": 9,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-oa-ts-9-export-from-beep-rdf-vocab-oa",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"@beep/rdf/Vocab/Owl\";",
-          "exportKind": "re-export",
-          "filePath": "src/vocab/owl.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/owl.ts",
-          "line": 9,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-owl-ts-9-export-from-beep-rdf-vocab-owl",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"@beep/rdf/Vocab/Prov\";",
-          "exportKind": "re-export",
-          "filePath": "src/vocab/prov.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/prov.ts",
-          "line": 9,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-prov-ts-9-export-from-beep-rdf-vocab-prov",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"@beep/rdf/Vocab/Rdf\";",
-          "exportKind": "re-export",
-          "filePath": "src/vocab/rdf.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/rdf.ts",
-          "line": 9,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-rdf-ts-9-export-from-beep-rdf-vocab-rdf",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"@beep/rdf/Vocab/Rdfs\";",
-          "exportKind": "re-export",
-          "filePath": "src/vocab/rdfs.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/rdfs.ts",
-          "line": 9,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-rdfs-ts-9-export-from-beep-rdf-vocab-rdfs",
-          "currentTags": [
-            "@packageDocumentation",
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "export * from \"@beep/rdf/Vocab/Xsd\";",
-          "exportKind": "re-export",
-          "filePath": "src/vocab/xsd.ts",
-          "repoPath": "packages/foundation/capability/semantic-web/src/vocab/xsd.ts",
-          "line": 9,
-          "anchor": "packages-foundation-capability-semantic-web-src-vocab-xsd-ts-9-export-from-beep-rdf-vocab-xsd",
-          "currentTags": [
-            "@packageDocumentation",
             "@category",
             "@since"
           ],
@@ -176318,8 +176261,8 @@
           "exportKind": "const",
           "filePath": "src/Glob.ts",
           "repoPath": "packages/foundation/modeling/utils/src/Glob.ts",
-          "line": 549,
-          "anchor": "packages-foundation-modeling-utils-src-glob-ts-549-layer",
+          "line": 550,
+          "anchor": "packages-foundation-modeling-utils-src-glob-ts-550-layer",
           "currentTags": [
             "@category",
             "@since"
@@ -232549,8 +232492,8 @@
           "exportKind": "class",
           "filePath": "src/runtime/Migrations.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Migrations.ts",
-          "line": 58,
-          "anchor": "apps-professional-desktop-src-runtime-migrations-ts-58-professionaldesktopmigrationoptions",
+          "line": 89,
+          "anchor": "apps-professional-desktop-src-runtime-migrations-ts-89-professionaldesktopmigrationoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -232571,8 +232514,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Migrations.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Migrations.ts",
-          "line": 88,
-          "anchor": "apps-professional-desktop-src-runtime-migrations-ts-88-migrateprofessionaldesktopdatabase",
+          "line": 119,
+          "anchor": "apps-professional-desktop-src-runtime-migrations-ts-119-migrateprofessionaldesktopdatabase",
           "currentTags": [
             "@effects",
             "@category",
@@ -232594,8 +232537,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Migrations.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Migrations.ts",
-          "line": 118,
-          "anchor": "apps-professional-desktop-src-runtime-migrations-ts-118-sidecarreadymarker",
+          "line": 149,
+          "anchor": "apps-professional-desktop-src-runtime-migrations-ts-149-sidecarreadymarker",
           "currentTags": [
             "@category",
             "@since"
@@ -232616,8 +232559,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Migrations.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Migrations.ts",
-          "line": 136,
-          "anchor": "apps-professional-desktop-src-runtime-migrations-ts-136-migrateonboot",
+          "line": 167,
+          "anchor": "apps-professional-desktop-src-runtime-migrations-ts-167-migrateonboot",
           "currentTags": [
             "@effects",
             "@category",
@@ -235588,8 +235531,8 @@
           "exportKind": "const",
           "filePath": "src/entities/Contradiction/Contradiction.behavior.ts",
           "repoPath": "packages/epistemic/domain/src/entities/Contradiction/Contradiction.behavior.ts",
-          "line": 56,
-          "anchor": "packages-epistemic-domain-src-entities-contradiction-contradiction-behavior-ts-56-hasvalidseals",
+          "line": 55,
+          "anchor": "packages-epistemic-domain-src-entities-contradiction-contradiction-behavior-ts-55-hasvalidseals",
           "currentTags": [
             "@returns",
             "@category",
@@ -269923,8 +269866,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 152,
-          "anchor": "infra-src-cifleetcontroller-ts-152-cifleetcontrollerpulumiconfigvalues",
+          "line": 221,
+          "anchor": "infra-src-cifleetcontroller-ts-221-cifleetcontrollerpulumiconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -269947,8 +269890,8 @@
           "exportKind": "type",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 180,
-          "anchor": "infra-src-cifleetcontroller-ts-180-cifleetcontrollerpulumiconfigvalues",
+          "line": 249,
+          "anchor": "infra-src-cifleetcontroller-ts-249-cifleetcontrollerpulumiconfigvalues",
           "currentTags": [
             "@category",
             "@since"
@@ -269969,8 +269912,8 @@
           "exportKind": "class",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 188,
-          "anchor": "infra-src-cifleetcontroller-ts-188-cifleetcontrollerconfig",
+          "line": 257,
+          "anchor": "infra-src-cifleetcontroller-ts-257-cifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -269993,8 +269936,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 214,
-          "anchor": "infra-src-cifleetcontroller-ts-214-makecifleetcontrollerconfig",
+          "line": 283,
+          "anchor": "infra-src-cifleetcontroller-ts-283-makecifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -270017,8 +269960,8 @@
           "exportKind": "const",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 238,
-          "anchor": "infra-src-cifleetcontroller-ts-238-loadcifleetcontrollerconfig",
+          "line": 307,
+          "anchor": "infra-src-cifleetcontroller-ts-307-loadcifleetcontrollerconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -270041,8 +269984,8 @@
           "exportKind": "class",
           "filePath": "src/CiFleetController.ts",
           "repoPath": "infra/src/CiFleetController.ts",
-          "line": 341,
-          "anchor": "infra-src-cifleetcontroller-ts-341-cifleetcontroller",
+          "line": 416,
+          "anchor": "infra-src-cifleetcontroller-ts-416-cifleetcontroller",
           "currentTags": [
             "@category",
             "@since"
@@ -290053,8 +289996,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/BiomeJson.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/BiomeJson.ts",
-          "line": 61,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-biomejson-ts-61-renderbiomejson",
+          "line": 60,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-biomejson-ts-60-renderbiomejson",
           "currentTags": [
             "@effects",
             "@category",
@@ -406967,7 +406910,7 @@
         "srcDir": "src",
         "sourceFileCount": 7,
         "publicModuleCount": 7,
-        "publicExportCount": 42
+        "publicExportCount": 43
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -407090,7 +407033,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 9,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -407409,8 +407352,8 @@
           "exportKind": "type",
           "filePath": "src/PostgresDrizzle.service.ts",
           "repoPath": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
-          "line": 50,
-          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-50-postgresdrizzledatabase",
+          "line": 51,
+          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-51-postgresdrizzledatabase",
           "currentTags": [
             "@category",
             "@since"
@@ -407431,8 +407374,8 @@
           "exportKind": "type",
           "filePath": "src/PostgresDrizzle.service.ts",
           "repoPath": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
-          "line": 73,
-          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-73-postgresdrizzleconfig",
+          "line": 74,
+          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-74-postgresdrizzleconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -407453,8 +407396,8 @@
           "exportKind": "class",
           "filePath": "src/PostgresDrizzle.service.ts",
           "repoPath": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
-          "line": 93,
-          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-93-postgresdrizzle",
+          "line": 94,
+          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-94-postgresdrizzle",
           "currentTags": [
             "@category",
             "@since"
@@ -407475,8 +407418,8 @@
           "exportKind": "const",
           "filePath": "src/PostgresDrizzle.service.ts",
           "repoPath": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
-          "line": 110,
-          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-110-makedrizzle",
+          "line": 111,
+          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-111-makedrizzle",
           "currentTags": [
             "@category",
             "@since"
@@ -407497,8 +407440,8 @@
           "exportKind": "const",
           "filePath": "src/PostgresDrizzle.service.ts",
           "repoPath": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
-          "line": 136,
-          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-136-makedrizzlelayer",
+          "line": 137,
+          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-137-makedrizzlelayer",
           "currentTags": [
             "@category",
             "@since"
@@ -407519,8 +407462,8 @@
           "exportKind": "const",
           "filePath": "src/PostgresDrizzle.service.ts",
           "repoPath": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
-          "line": 208,
-          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-208-migrate",
+          "line": 209,
+          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-209-migrate",
           "currentTags": [
             "@category",
             "@since"
@@ -407541,8 +407484,30 @@
           "exportKind": "class",
           "filePath": "src/PostgresDrizzle.service.ts",
           "repoPath": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
-          "line": 257,
-          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-257-migrationbundleentry",
+          "line": 258,
+          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-258-migrationbundleentry",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "MigrationBundleLegacyNameSet",
+          "exportKind": "class",
+          "filePath": "src/PostgresDrizzle.service.ts",
+          "repoPath": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+          "line": 306,
+          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-306-migrationbundlelegacynameset",
           "currentTags": [
             "@category",
             "@since"
@@ -407563,8 +407528,8 @@
           "exportKind": "class",
           "filePath": "src/PostgresDrizzle.service.ts",
           "repoPath": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
-          "line": 285,
-          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-285-migrationbundleconfig",
+          "line": 337,
+          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-337-migrationbundleconfig",
           "currentTags": [
             "@category",
             "@since"
@@ -407585,8 +407550,8 @@
           "exportKind": "const",
           "filePath": "src/PostgresDrizzle.service.ts",
           "repoPath": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
-          "line": 345,
-          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-345-migratebundle",
+          "line": 592,
+          "anchor": "packages-drivers-postgres-src-postgresdrizzle-service-ts-592-migratebundle",
           "currentTags": [
             "@category",
             "@since"
