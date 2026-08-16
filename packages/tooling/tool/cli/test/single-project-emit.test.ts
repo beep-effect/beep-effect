@@ -1,8 +1,10 @@
+import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
 import { describe, expect, it } from "vitest";
+import type { PlatformError } from "effect/PlatformError";
 
 // A package's build may write only its own package directory. `tsc -b` is a
 // subgraph builder: it rebuilds every project in the tsconfig reference
@@ -16,7 +18,7 @@ const collectWorkspaceManifests = Effect.fnUntraced(function* (rootDir: string) 
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const manifests: Array<string> = [];
-  const walk = Effect.fnUntraced(function* (dir: string): Effect.fn.Return<void, unknown, FileSystem.FileSystem> {
+  const walk = Effect.fnUntraced(function* (dir: string): Effect.fn.Return<void, PlatformError, FileSystem.FileSystem> {
     const entries = yield* fs.readDirectory(dir);
     for (const entry of entries) {
       if (Str.equivalence(entry, "node_modules") || Str.startsWith(".")(entry)) {
@@ -66,26 +68,29 @@ const findRepoRoot = Effect.fnUntraced(function* () {
   return rootDir;
 });
 
+const collectViolations = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const rootDir = yield* findRepoRoot();
+  const manifests = yield* collectWorkspaceManifests(rootDir);
+  expect(manifests.length).toBeGreaterThan(100);
+  const offending: Array<string> = [];
+  for (const manifest of manifests) {
+    const raw = yield* fs.readFileString(manifest);
+    const build = buildScriptOf(raw);
+    if (O.isSome(build) && violatesSingleProjectEmit(build.value)) {
+      offending.push(`${path.relative(rootDir, manifest)}: ${build.value}`);
+    }
+  }
+  return offending;
+});
+
 describe("single-project emit law", () => {
-  it("no beep:build script uses the subgraph builder or --force", async () => {
-    const violations = await Effect.runPromise(
+  it("no beep:build script uses the subgraph builder or --force", () =>
+    Effect.runPromise(
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const rootDir = yield* findRepoRoot();
-        const manifests = yield* collectWorkspaceManifests(rootDir);
-        expect(manifests.length).toBeGreaterThan(100);
-        const offending: Array<string> = [];
-        for (const manifest of manifests) {
-          const raw = yield* fs.readFileString(manifest);
-          const build = buildScriptOf(raw);
-          if (O.isSome(build) && violatesSingleProjectEmit(build.value)) {
-            offending.push(`${path.relative(rootDir, manifest)}: ${build.value}`);
-          }
-        }
-        return offending;
-      }).pipe(Effect.provide(NodeServices.layer))
-    );
-    expect(A.join(violations, "\n")).toBe("");
-  });
+        const violations = yield* collectViolations();
+        expect(A.join(violations, "\n")).toBe("");
+      }).pipe(provideScopedLayer(NodeServices.layer))
+    ));
 });
