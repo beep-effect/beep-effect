@@ -373,6 +373,9 @@ rm -rf /tmp/bun-linux-x64
 unzip -q /tmp/bun-linux-x64.zip -d /tmp/bun-linux-x64
 install -o ec2-user -g ec2-user -m 0755 \
   /tmp/bun-linux-x64/bun-linux-x64/bun /home/ec2-user/.bun/bin/bun
+ln -sfn bun /home/ec2-user/.bun/bin/bunx
+chown -h ec2-user:ec2-user /home/ec2-user/.bun/bin/bunx
+/home/ec2-user/.bun/bin/bunx --version
 rm -rf /tmp/bun-linux-x64 /tmp/bun-linux-x64.zip
 git clone --filter=blob:none ${BAKE_CLONE_URL} /tmp/beep-effect
 git -C /tmp/beep-effect checkout --detach ${inputs.gitRevision}
