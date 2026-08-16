@@ -53,7 +53,7 @@ const violatesSingleProjectEmit = (script: string): boolean =>
 
 const buildScriptOf = (raw: string): O.Option<string> => {
   const parsed = JSON.parse(raw) as { readonly scripts?: Readonly<Record<string, string>> };
-  return O.fromNullishOr(parsed.scripts?.["beep:build"], undefined);
+  return O.fromNullishOr(parsed.scripts?.["beep:build"]);
 };
 
 const findRepoRoot = Effect.fnUntraced(function* () {
