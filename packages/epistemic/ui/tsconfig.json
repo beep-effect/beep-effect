@@ -30,9 +30,6 @@
       "path": "../../foundation/modeling/provenance/tsconfig.json"
     },
     {
-      "path": "../config/tsconfig.json"
-    },
-    {
       "path": "../../foundation/modeling/utils/tsconfig.json"
     }
   ]
