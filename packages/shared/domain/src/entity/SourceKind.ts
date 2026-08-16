@@ -37,7 +37,7 @@ type SourceKindSchemaBase = typeof SourceKindWithStatics;
 export interface SourceKindSchema extends SourceKindSchemaBase {}
 
 /**
- * Denormalized source facet used by BaseEntity rows and audit filters.
+ * Denormalized source facet used by ProductEntity rows and audit filters.
  *
  * **Example** (Check is.Agent predicate)
  *

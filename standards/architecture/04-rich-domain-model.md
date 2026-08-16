@@ -151,7 +151,6 @@ configuration.
 ````ts
 import { $IamDomainId } from "@beep/identity"
 import { LiteralKit } from "@beep/schema"
-import * as Model from "@beep/schema/Model"
 import { Effect } from "effect"
 import * as S from "effect/Schema"
 import { ActorId } from "@beep/iam-domain/entities/Actor"

@@ -86,7 +86,7 @@ export paths with ripgrep / `repo-symbol-discovery` before composing.
 - **HAVE — governance kit** (`packages/workspace/domain/src/entities/`):
   `CandidateTask`, `ApprovalGate`, `ContextPacket`, `EmailArtifact` (with source
   spans). **The L3 candidate-only / approval-gate spine.**
-- **HAVE — connector abstraction** (`packages/shared/domain/src/identity/Shared.ts`,
+- **HAVE — connector abstraction** (`packages/shared/domain/src/identity/Shared`,
   `.../entity/Principal.ts`, `.../entity/SourceKind.ts`): `ConnectorAccountId`,
   `ConnectorAccountPrincipal`, `SourceKind.Connector` — first-class connector
   actor for provenance/audit.

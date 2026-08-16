@@ -1,4 +1,4 @@
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { CandidateDraft as CandidateDraftModel } from "@beep/workspace-domain/entities/CandidateDraft";
 import { CandidateProject as CandidateProjectModel } from "@beep/workspace-domain/entities/CandidateProject";
 import { Message as MessageModel } from "@beep/workspace-domain/entities/Message";
@@ -51,9 +51,8 @@ describe("WorkspaceTables", () => {
   it("materializes CandidateDraft metadata without executing a live database", () => {
     const config = getTableConfig(CandidateDraft.Table);
 
-    expect(CandidateDraft.Table.definition.tableName).toBe("workspace_candidate_draft");
-    expect(CandidateDraft.Table.definition.entityId.entityType).toBe("WorkspaceCandidateDraft");
-    expect(CandidateDraft.Table.entitySchema).toBe(CandidateDraftModel);
+    expect(CandidateDraft.TABLE_NAME).toBe("workspace_candidate_draft");
+    expect(CandidateDraftModel.sql.tableName).toBe("workspace_candidate_draft");
     expect(config.name).toBe("workspace_candidate_draft");
     expectBaseProjectionColumns(CandidateDraft.Table);
   });
@@ -61,9 +60,8 @@ describe("WorkspaceTables", () => {
   it("materializes CandidateProject metadata without executing a live database", () => {
     const config = getTableConfig(CandidateProject.Table);
 
-    expect(CandidateProject.Table.definition.tableName).toBe("workspace_candidate_project");
-    expect(CandidateProject.Table.definition.entityId.entityType).toBe("WorkspaceCandidateProject");
-    expect(CandidateProject.Table.entitySchema).toBe(CandidateProjectModel);
+    expect(CandidateProject.TABLE_NAME).toBe("workspace_candidate_project");
+    expect(CandidateProjectModel.sql.tableName).toBe("workspace_candidate_project");
     expect(config.name).toBe("workspace_candidate_project");
     expectBaseProjectionColumns(CandidateProject.Table);
   });
@@ -85,27 +83,31 @@ describe("WorkspaceTables", () => {
 
   it("materializes Thread, Turn, and Message metadata without executing a live database", () => {
     expect(getTableConfig(Thread.Table).name).toBe("workspace_thread");
-    expect(Thread.Table.entitySchema).toBe(ThreadModel);
+    expect(Thread.TABLE_NAME).toBe("workspace_thread");
+    expect(ThreadModel.sql.tableName).toBe("workspace_thread");
     expect(getColumns(Thread.Table).workspaceId.name).toBe("workspace_id");
 
     expect(getTableConfig(Turn.Table).name).toBe("workspace_turn");
-    expect(Turn.Table.entitySchema).toBe(TurnModel);
+    expect(Turn.TABLE_NAME).toBe("workspace_turn");
+    expect(TurnModel.sql.tableName).toBe("workspace_turn");
     expect(getColumns(Turn.Table).parentTurnId.name).toBe("parent_turn_id");
     expect(getColumns(Turn.Table).items.columnType).toBe("PgJsonb");
 
     expect(getTableConfig(Message.Table).name).toBe("workspace_message");
-    expect(Message.Table.entitySchema).toBe(MessageModel);
+    expect(Message.TABLE_NAME).toBe("workspace_message");
+    expect(MessageModel.sql.tableName).toBe("workspace_message");
     expect(getColumns(Message.Table).content.columnType).toBe("PgJsonb");
     expect(getColumns(Message.Table).role.name).toBe("role");
 
     expect(getTableConfig(Workspace.Table).name).toBe("workspace_workspace");
-    expect(Workspace.Table.entitySchema).toBe(WorkspaceModel);
+    expect(Workspace.TABLE_NAME).toBe("workspace_workspace");
+    expect(WorkspaceModel.sql.tableName).toBe("workspace_workspace");
     expect(getColumns(Workspace.Table).vaultRootPath.name).toBe("vault_root_path");
   });
 
   it("round-trips Thread, Turn, and Message rows through the converters", () => {
     const thread = S.decodeUnknownSync(ThreadModel)({
-      ...baseEntityFixtureInput("WorkspaceThread", 10),
+      ...productEntityFixtureInput("WorkspaceThread", 10),
       title: "Matter intake",
       workspaceId: 2,
     });
@@ -117,7 +119,7 @@ describe("WorkspaceTables", () => {
     expect(Thread.fromThreadRow({ ...threadInsert, id: 10 }).title).toBe("Matter intake");
 
     const message = S.decodeUnknownSync(MessageModel)({
-      ...baseEntityFixtureInput("WorkspaceMessage", 20),
+      ...productEntityFixtureInput("WorkspaceMessage", 20),
       content: { _tag: "document", children: [] },
       role: "user",
       threadId: 10,
@@ -130,7 +132,7 @@ describe("WorkspaceTables", () => {
     expect(Message.fromMessageRow({ ...messageInsert, id: 20 }).role).toBe("user");
 
     const turn = S.decodeUnknownSync(TurnModel)({
-      ...baseEntityFixtureInput("WorkspaceTurn", 30),
+      ...productEntityFixtureInput("WorkspaceTurn", 30),
       items: [{ itemType: "message", messageId: 20 }],
       parentTurnId: null,
       threadId: 10,
@@ -155,7 +157,7 @@ describe("WorkspaceTables", () => {
 
   it("round-trips Workspace rows through the converters", () => {
     const workspace = S.decodeUnknownSync(WorkspaceModel)({
-      ...baseEntityFixtureInput("WorkspaceWorkspace", 40),
+      ...productEntityFixtureInput("WorkspaceWorkspace", 40),
       fixtureKey: "workspace.default",
       name: "Default Workspace",
       organizationFixtureKey: "organization.default",

@@ -6,13 +6,13 @@
  */
 import { $WorkspaceDomainId } from "@beep/identity/packages";
 import { UnknownRecord } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Workspace from "@beep/shared-domain/identity/Workspace";
 import { CandidateLifecycle } from "@beep/workspace-domain/values";
 import * as S from "effect/Schema";
 
 const $I = $WorkspaceDomainId.create("entities/CandidateTask/CandidateTask.model");
+const CandidateTaskEntity = ProductEntity.make(Workspace.CandidateTaskId);
 
 /**
  * Candidate task proposed by an agent.
@@ -22,39 +22,27 @@ const $I = $WorkspaceDomainId.create("entities/CandidateTask/CandidateTask.model
  * ```ts
  * import { CandidateTask } from "@beep/workspace-domain"
  *
- * console.log(CandidateTask.definition.entityId.tableName)
+ * console.log(CandidateTask.sql.tableName)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class CandidateTask extends BaseEntity.Class<CandidateTask>($I`CandidateTask`)(
-  Workspace.CandidateTaskId,
+export class CandidateTask extends CandidateTaskEntity.Entity<CandidateTask>(CandidateTaskEntity.tableName)(
   {
-    fields: {
-      fixtureKey: S.NonEmptyString.annotateKey({
-        description: "Stable fixture key for the candidate task.",
-      }),
-      lifecycle: CandidateLifecycle.annotateKey({
-        description: "Lifecycle state for the candidate task.",
-      }),
-      snapshot: UnknownRecord.annotateKey({
-        description: "Opaque runtime proof snapshot for the candidate task.",
-      }),
-    },
-    persisted: {
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      lifecycle: EntitySchema.persist.literal({
-        columnName: "lifecycle",
-      }),
-      snapshot: EntitySchema.persist.jsonb({
-        columnName: "snapshot",
-      }),
-    },
+    fixtureKey: S.NonEmptyString.annotateKey({
+      description: "Stable fixture key for the candidate task.",
+    }).pipe(CandidateTaskEntity.pg.text(), CandidateTaskEntity.pg.columnName("fixture_key")),
+    lifecycle: CandidateLifecycle.annotateKey({
+      description: "Lifecycle state for the candidate task.",
+    }).pipe(CandidateTaskEntity.pg.text()),
+    snapshot: UnknownRecord.annotateKey({
+      description: "Opaque runtime proof snapshot for the candidate task.",
+    }).pipe(CandidateTaskEntity.pg.jsonb()),
+    ...CandidateTaskEntity.identityFields,
   },
   $I.annote("CandidateTask", {
     description: "Candidate task proposed by an agent.",
-  })
+  }),
+  CandidateTaskEntity.entityExtras
 ) {}

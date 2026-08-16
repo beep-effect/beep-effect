@@ -672,6 +672,14 @@ describe("runner bake planning and argv", () => {
       script.indexOf("install -o ec2-user -g ec2-user -m 0755")
     );
     expect(script).not.toContain("bun.sh/install");
+    // The release zip ships only the bun binary; the bake must create the
+    // bunx symlink itself and prove it executes, or CI lanes spawning
+    // `bunx turbo` die with ENOENT on the baked image (main run 31968744160).
+    expect(script).toContain("ln -sfn bun /home/ec2-user/.bun/bin/bunx");
+    expect(script).toContain("/home/ec2-user/.bun/bin/bunx --version");
+    expect(script.indexOf("ln -sfn bun /home/ec2-user/.bun/bin/bunx")).toBeLessThan(
+      script.indexOf("git clone --filter=blob:none")
+    );
     expect(script).toContain("bun install --cwd /tmp/beep-effect --frozen-lockfile");
     expect(script).toContain("git -C /tmp/beep-effect checkout --detach 0123456789abcdef0123456789abcdef01234567");
     expect(script).toContain(`= "${digest}"`);

@@ -12,6 +12,7 @@
  *
  * ```ts
  * import * as CandidateClaim from "@beep/epistemic-tables/entities/CandidateClaim"
+ * import { getTableName } from "drizzle-orm"
  *
  * console.log(CandidateClaim.toCandidateClaimInsert)
  * ```
@@ -28,7 +29,7 @@ export * from "./CandidateClaim.converters.ts";
  * ```ts
  * import * as CandidateClaim from "@beep/epistemic-tables/entities/CandidateClaim"
  *
- * console.log(CandidateClaim.Table.definition.entityId.entityType)
+ * console.log(getTableName(CandidateClaim.Table))
  * ```
  *
  * @category tables

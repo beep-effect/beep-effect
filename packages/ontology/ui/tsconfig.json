@@ -25,12 +25,6 @@
     },
     {
       "path": "../use-cases/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/modeling/lexical/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/ui-system/editor/tsconfig.json"
     }
   ]
 }

@@ -31,7 +31,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 55,
+      "line": 54,
       "owner": "@beep/professional-desktop",
       "reason": "Sidecar registration regression decodes fixed contradiction RPC envelopes to prove handler wiring; schema-derived arbitrary coverage lives with the domain and use-case schemas."
     },
@@ -71,7 +71,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 32,
+      "line": 36,
       "owner": "@beep/db-admin",
       "reason": "Migration regression decodes fixed fixture rows to prove the documents-sync target SQL and unique-index enforcement; schema-derived arbitrary round-trips for the Sync* entities live with the domain model tests (packages/documents/domain/test/Sync*.test.ts)."
     },
@@ -81,7 +81,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 32,
+      "line": 36,
       "owner": "@beep/db-admin",
       "reason": "Migration regression decodes fixed fixture rows to prove the epistemic-edge target SQL, the constraint/index name catalog, and the open-head backstop; schema-derived arbitrary round-trips for the EdgeVersion entity live with the domain model tests."
     },
@@ -261,9 +261,25 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 82,
+      "line": 87,
       "owner": "@beep/epistemic-server",
       "reason": "Repository integration suite uses fixed schema-decoded fixtures to prove atomic review, races, temporal queries, and restart behavior; schema-derived arbitrary round-trips live with the owning domain and use-case models."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
+      "symbol": "EdgeVersionSourceColumns",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
+      "symbol": "EdgeVersionTargetColumns",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
     },
     {
       "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",

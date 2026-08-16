@@ -6,274 +6,14 @@
  */
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, SchemaUtils, UnknownRecord } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
-import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { Tuple } from "effect";
 import * as S from "effect/Schema";
+import { TurnItems } from "./Turn.values.ts";
 
 const $I = $WorkspaceDomainId.create("entities/Turn/Turn.model");
-
-/**
- * Message item in a turn aggregate.
- *
- * **Example** (Decode message item)
- *
- * ```ts
- * import { MessageItem } from "@beep/workspace-domain/entities/Turn"
- * import * as S from "effect/Schema"
- *
- * const item = S.decodeUnknownSync(MessageItem)({
- *   itemType: "message",
- *   messageId: 1,
- * })
- * console.log(item.itemType)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class MessageItem extends S.Class<MessageItem>($I`MessageItem`)(
-  {
-    itemType: S.tag("message"),
-    messageId: WorkspaceIdentity.MessageId,
-  },
-  $I.annote("MessageItem", {
-    description: "Ordered turn item referencing persisted md-aligned message content.",
-  })
-) {}
-
-/**
- * Tool call item in a turn aggregate.
- *
- * **Example** (Decode tool call item)
- *
- * ```ts
- * import { ToolCallItem } from "@beep/workspace-domain/entities/Turn"
- * import * as S from "effect/Schema"
- *
- * const item = S.decodeUnknownSync(ToolCallItem)({
- *   itemType: "tool_call",
- *   name: "search",
- *   payload: { query: "open approval gates" },
- *   toolCallId: "tool-call-1",
- * })
- * console.log(item.name)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ToolCallItem extends S.Class<ToolCallItem>($I`ToolCallItem`)(
-  {
-    itemType: S.tag("tool_call"),
-    name: S.NonEmptyString,
-    payload: UnknownRecord,
-    toolCallId: S.NonEmptyString,
-  },
-  $I.annote("ToolCallItem", {
-    description: "Ordered turn item recording a tool invocation request.",
-  })
-) {}
-
-/**
- * Tool result item in a turn aggregate.
- *
- * **Example** (Decode tool result item)
- *
- * ```ts
- * import { ToolResultItem } from "@beep/workspace-domain/entities/Turn"
- * import * as S from "effect/Schema"
- *
- * const item = S.decodeUnknownSync(ToolResultItem)({
- *   itemType: "tool_result",
- *   payload: { count: 2 },
- *   toolCallId: "tool-call-1",
- * })
- * console.log(item.toolCallId)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ToolResultItem extends S.Class<ToolResultItem>($I`ToolResultItem`)(
-  {
-    itemType: S.tag("tool_result"),
-    payload: UnknownRecord,
-    toolCallId: S.NonEmptyString,
-  },
-  $I.annote("ToolResultItem", {
-    description: "Ordered turn item recording the result of a tool invocation.",
-  })
-) {}
-
-/**
- * Artifact reference item in a turn aggregate.
- *
- * **Example** (Decode artifact ref item)
- *
- * ```ts
- * import { ArtifactRefItem } from "@beep/workspace-domain/entities/Turn"
- * import * as S from "effect/Schema"
- *
- * const item = S.decodeUnknownSync(ArtifactRefItem)({
- *   artifactId: 1,
- *   itemType: "artifact_ref",
- * })
- * console.log(item.itemType)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ArtifactRefItem extends S.Class<ArtifactRefItem>($I`ArtifactRefItem`)(
-  {
-    artifactId: WorkspaceIdentity.EmailArtifactId,
-    itemType: S.tag("artifact_ref"),
-  },
-  $I.annote("ArtifactRefItem", {
-    description: "Ordered turn item referencing a workspace artifact.",
-  })
-) {}
-
-/**
- * Activity reference item in a turn aggregate.
- *
- * **Example** (Decode activity item)
- *
- * ```ts
- * import { ActivityItem } from "@beep/workspace-domain/entities/Turn"
- * import * as S from "effect/Schema"
- *
- * const item = S.decodeUnknownSync(ActivityItem)({
- *   activityId: 1,
- *   itemType: "activity",
- * })
- * console.log(item.activityId)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ActivityItem extends S.Class<ActivityItem>($I`ActivityItem`)(
-  {
-    activityId: EpistemicIdentity.ActivityId,
-    itemType: S.tag("activity"),
-  },
-  $I.annote("ActivityItem", {
-    description: "Ordered turn item linking runtime provenance activity.",
-  })
-) {}
-
-const TurnItemTag = LiteralKit(["message", "tool_call", "tool_result", "artifact_ref", "activity"]);
-
-/**
- * Ordered typed item held by a turn aggregate.
- *
- * **Example** (Decode turn item union)
- *
- * ```ts
- * import { TurnItem } from "@beep/workspace-domain/entities/Turn"
- * import * as S from "effect/Schema"
- *
- * const item = S.decodeUnknownSync(TurnItem)({
- *   itemType: "tool_call",
- *   name: "search",
- *   payload: {},
- *   toolCallId: "tool-call-1",
- * })
- * console.log(item.itemType)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const TurnItem = TurnItemTag.mapMembers(
-  Tuple.evolve([() => MessageItem, () => ToolCallItem, () => ToolResultItem, () => ArtifactRefItem, () => ActivityItem])
-)
-  .pipe(S.toTaggedUnion("itemType"))
-  .annotate(
-    $I.annote("TurnItem", {
-      description: "Ordered typed item held by a turn aggregate.",
-    })
-  );
-
-/**
- * Runtime type for {@link TurnItem}.
- *
- * **Example** (Annotate turn item type)
- *
- * ```ts
- * import type { TurnItem } from "@beep/workspace-domain/entities/Turn"
- *
- * const item: TurnItem = {
- *   itemType: "tool_result",
- *   payload: { ok: true },
- *   toolCallId: "tool-call-1",
- * }
- * console.log(item.itemType)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type TurnItem = typeof TurnItem.Type;
-
-/**
- * Ordered turn item list.
- *
- * **Example** (Decode turn items list)
- *
- * ```ts
- * import { TurnItems } from "@beep/workspace-domain/entities/Turn"
- * import * as S from "effect/Schema"
- *
- * const items = S.decodeUnknownSync(TurnItems)([
- *   { itemType: "message", messageId: 1 },
- *   {
- *     itemType: "tool_call",
- *     name: "search",
- *     payload: { query: "thread context" },
- *     toolCallId: "tool-call-1",
- *   },
- * ])
- * console.log(items.length)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const TurnItems = S.NonEmptyArray(TurnItem).pipe(
-  $I.annoteSchema("TurnItems", {
-    description: "Non-empty ordered list of typed items held by a turn aggregate.",
-  })
-);
-
-/**
- * Runtime type for {@link TurnItems}.
- *
- * **Example** (Annotate turn items type)
- *
- * ```ts
- * import type { TurnItems } from "@beep/workspace-domain/entities/Turn"
- *
- * const items: TurnItems = [
- *   {
- *     itemType: "tool_call",
- *     name: "search",
- *     payload: { query: "thread context" },
- *     toolCallId: "tool-call-1",
- *   },
- * ]
- * console.log(items[0]?.itemType)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type TurnItems = typeof TurnItems.Type;
+const TurnEntity = ProductEntity.make(WorkspaceIdentity.TurnId);
 
 /**
  * Workspace turn aggregate with parent-turn lineage for branching.
@@ -283,48 +23,38 @@ export type TurnItems = typeof TurnItems.Type;
  * ```ts
  * import { Turn } from "@beep/workspace-domain"
  *
- * console.log(Turn.definition.entityId.tableName)
+ * console.log(Turn.sql.tableName)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class Turn extends BaseEntity.Class<Turn>($I`Turn`)(
-  WorkspaceIdentity.TurnId,
+export class Turn extends TurnEntity.Entity<Turn>(TurnEntity.tableName)(
   {
-    fields: {
-      items: TurnItems.annotateKey({
-        description: "Non-empty ordered items held by the turn aggregate.",
-      }),
-      parentTurnId: S.OptionFromNullOr(WorkspaceIdentity.TurnId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    items: TurnItems.annotateKey({
+      description: "Non-empty ordered items held by the turn aggregate.",
+    }).pipe(TurnEntity.pg.jsonb()),
+    parentTurnId: S.OptionFromNullOr(WorkspaceIdentity.TurnId)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
         description: "Optional parent turn lineage; encodes absent roots as SQL/wire null.",
-      }),
-      threadId: WorkspaceIdentity.ThreadId.annotateKey({
-        description: "Thread containing the turn.",
-      }),
-      turnIndex: NonNegativeInt.annotateKey({
-        description: "Zero-based turn ordering index within the thread.",
-      }),
-    },
-    persisted: {
-      items: EntitySchema.persist.jsonb({
-        columnName: "items",
-      }),
-      parentTurnId: EntitySchema.persist.entityId({
-        columnName: "parent_turn_id",
-        indexHints: [EntitySchema.IndexHint.btree],
-      }),
-      threadId: EntitySchema.persist.entityId({
-        columnName: "thread_id",
-        indexHints: [EntitySchema.IndexHint.btree, EntitySchema.IndexHint.lookup],
-      }),
-      turnIndex: EntitySchema.persist.int({
-        columnName: "turn_index",
-        indexHints: [EntitySchema.IndexHint.btree],
-      }),
-    },
+      })
+      .pipe(TurnEntity.pg.integer(), TurnEntity.pg.columnName("parent_turn_id")),
+    threadId: WorkspaceIdentity.ThreadId.annotateKey({
+      description: "Thread containing the turn.",
+    }).pipe(TurnEntity.pg.integer(), TurnEntity.pg.columnName("thread_id")),
+    turnIndex: NonNegativeInt.annotateKey({
+      description: "Zero-based turn ordering index within the thread.",
+    }).pipe(TurnEntity.pg.integer(), TurnEntity.pg.columnName("turn_index")),
+    ...TurnEntity.identityFields,
   },
   $I.annote("Turn", {
     description: "Workspace turn aggregate with parent-turn lineage for branching.",
-  })
+  }),
+  (columns) => [
+    TurnEntity.Table.index("workspace_turn_parent_turn_id_btree_idx", [columns.parentTurnId]),
+    TurnEntity.Table.index("workspace_turn_thread_id_btree_idx", [columns.threadId]),
+    TurnEntity.Table.index("workspace_turn_turn_index_btree_idx", [columns.turnIndex]),
+    ...TurnEntity.entityExtras(columns),
+  ]
 ) {}

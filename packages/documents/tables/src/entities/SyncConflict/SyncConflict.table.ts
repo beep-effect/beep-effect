@@ -7,7 +7,8 @@
  */
 
 import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
+import { getTableName } from "drizzle-orm";
 
 /**
  * Drizzle table projection for documents SyncConflict entities.
@@ -30,7 +31,7 @@ import { EntityTable } from "@beep/drizzle";
  * @category tables
  * @since 0.0.0
  */
-export const syncConflictTable = EntityTable.pgTableFrom(DomainSyncConflict.SyncConflict);
+export const syncConflictTable = toPgTable(DomainSyncConflict.SyncConflict);
 
 /**
  * Physical Postgres table name derived from the SyncConflict entity definition.
@@ -51,4 +52,4 @@ export const syncConflictTable = EntityTable.pgTableFrom(DomainSyncConflict.Sync
  * @category tables
  * @since 0.0.0
  */
-export const SYNC_CONFLICT_TABLE_NAME = syncConflictTable.definition.tableName;
+export const SYNC_CONFLICT_TABLE_NAME = getTableName(syncConflictTable);

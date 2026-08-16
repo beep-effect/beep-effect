@@ -6,11 +6,12 @@
  * @since 0.0.0
  */
 
-import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { Context } from "effect";
 import * as S from "effect/Schema";
+import type * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import type { Effect } from "effect";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository");
@@ -23,10 +24,11 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository"
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerRepositoryNotFound } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const error = WorkerRepositoryNotFound.make({
- *   workerId: S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ *   workerId: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  * })
  *
  * console.log(error._tag) // "WorkerRepositoryNotFound"
@@ -38,7 +40,7 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.repository"
 export class WorkerRepositoryNotFound extends S.TaggedError<WorkerRepositoryNotFound>($I`WorkerRepositoryNotFound`)(
   "WorkerRepositoryNotFound",
   {
-    workerId: DomainWorker.WorkerId,
+    workerId: ArchitectureLabIdentity.WorkerId,
   },
   $I.annote("WorkerRepositoryNotFound", {
     title: "Worker repository not found",
@@ -56,10 +58,11 @@ export class WorkerRepositoryNotFound extends S.TaggedError<WorkerRepositoryNotF
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { WorkerRepositoryConflict } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const error = WorkerRepositoryConflict.make({
- *   workerId: S.decodeUnknownSync(DomainWorker.WorkerId)(1),
+ *   workerId: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1),
  *   reason: "duplicate id"
  * })
  *
@@ -72,7 +75,7 @@ export class WorkerRepositoryNotFound extends S.TaggedError<WorkerRepositoryNotF
 export class WorkerRepositoryConflict extends S.TaggedError<WorkerRepositoryConflict>($I`WorkerRepositoryConflict`)(
   "WorkerRepositoryConflict",
   {
-    workerId: DomainWorker.WorkerId,
+    workerId: ArchitectureLabIdentity.WorkerId,
     reason: S.NonEmptyString.annotateKey({
       description: "Non-empty repository conflict diagnostic.",
     }),
@@ -128,6 +131,7 @@ export class WorkerRepositoryUnavailable extends S.TaggedError<WorkerRepositoryU
  *   WorkerRepositoryError,
  *   WorkerRepositoryUnavailable,
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  *
  * const isRepositoryError = WorkerRepositoryError.is
  *
@@ -187,10 +191,11 @@ export type WorkerRepositoryError = typeof WorkerRepositoryError.Type;
  *   WorkerRepositoryNotFound,
  *   type WorkerRepositoryShape
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  *
- * const id = S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ * const id = S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  * const worker = DomainWorker.create(
  *   DomainWorker.CreateWorkerInput.make({
  *     id,
@@ -217,7 +222,7 @@ export interface WorkerRepositoryShape {
     worker: DomainWorker.Worker
   ) => Effect.Effect<DomainWorker.Worker, WorkerRepositoryConflict | WorkerRepositoryUnavailable>;
   readonly get: (
-    id: DomainWorker.WorkerId
+    id: ArchitectureLabIdentity.WorkerId
   ) => Effect.Effect<DomainWorker.Worker, WorkerRepositoryNotFound | WorkerRepositoryUnavailable>;
   readonly list: Effect.Effect<ReadonlyArray<DomainWorker.Worker>, WorkerRepositoryUnavailable>;
 }

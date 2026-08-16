@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
 const $I = $LawPracticeDomainId.create("entities/PriorArtReference/PriorArtReference.model");
+const PriorArtReferenceEntity = ProductEntity.make(LawPractice.PriorArtReferenceId);
 
 /**
  * Prior-art reference entity cited by an office action.
@@ -50,39 +50,26 @@ const $I = $LawPracticeDomainId.create("entities/PriorArtReference/PriorArtRefer
  * @category entities
  * @since 0.0.0
  */
-export class PriorArtReference extends BaseEntity.Class<PriorArtReference>($I`PriorArtReference`)(
-  LawPractice.PriorArtReferenceId,
+export class PriorArtReference extends PriorArtReferenceEntity.Entity<PriorArtReference>(
+  PriorArtReferenceEntity.tableName
+)(
   {
-    fields: {
-      documentNumber: LawPracticeText.annotateKey({
-        description: "Examiner-cited prior-art document number.",
-      }),
-      fixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Stable fixture key for the prior-art reference.",
-      }),
-      officeActionFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the office action that cited this prior art.",
-      }),
-      title: LawPracticeText.annotateKey({
-        description: "Human-readable prior-art reference title.",
-      }),
-    },
-    persisted: {
-      documentNumber: EntitySchema.persist.text({
-        columnName: "document_number",
-      }),
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      officeActionFixtureKey: EntitySchema.persist.text({
-        columnName: "office_action_fixture_key",
-      }),
-      title: EntitySchema.persist.text({
-        columnName: "title",
-      }),
-    },
+    documentNumber: LawPracticeText.annotateKey({
+      description: "Examiner-cited prior-art document number.",
+    }).pipe(PriorArtReferenceEntity.pg.text(), PriorArtReferenceEntity.pg.columnName("document_number")),
+    fixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Stable fixture key for the prior-art reference.",
+    }).pipe(PriorArtReferenceEntity.pg.text(), PriorArtReferenceEntity.pg.columnName("fixture_key")),
+    officeActionFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the office action that cited this prior art.",
+    }).pipe(PriorArtReferenceEntity.pg.text(), PriorArtReferenceEntity.pg.columnName("office_action_fixture_key")),
+    title: LawPracticeText.annotateKey({
+      description: "Human-readable prior-art reference title.",
+    }).pipe(PriorArtReferenceEntity.pg.text()),
+    ...PriorArtReferenceEntity.identityFields,
   },
   $I.annote("PriorArtReference", {
     description: "Prior-art reference entity cited by an office action.",
-  })
+  }),
+  PriorArtReferenceEntity.entityExtras
 ) {}

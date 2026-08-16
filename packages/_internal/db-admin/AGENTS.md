@@ -8,7 +8,9 @@
   (hand-written SQL through `generate:custom` — snapshot-less folders are
   invisible to drizzle-kit's chain). `migrations:check` in `beep:check` fails
   on schema-vs-migration drift. Every table must be re-exported FLAT from
-  `src/schema.ts` (drizzle-kit scans one export level deep). Treat drizzle
+  `src/schema.ts` (drizzle-kit scans one export level deep). Entity models own
+  their effect-drizzle column metadata; tables packages project them with
+  `toPgTable`, and db-admin only aggregates those concrete table exports. Treat drizzle
   catalog bumps as toolchain changes: rerun `migrations:check` and the desktop
   `codegen:check` immediately. After landing a migration, re-sync the desktop
   bundle: `bun run --cwd apps/professional-desktop codegen`.

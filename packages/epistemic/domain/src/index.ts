@@ -13,28 +13,13 @@
  * ```ts
  * import { Activity } from "@beep/epistemic-domain"
  *
- * console.log(Activity.definition.entityId.tableName)
+ * console.log(Activity.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
 export * from "./entities/index.ts";
-/**
- * Epistemic slice-local identity exports.
- *
- * **Example** (Log ContradictionCandidateId table name)
- *
- * ```ts
- * import { Identity } from "@beep/epistemic-domain"
- *
- * console.log(Identity.Epistemic.ContradictionCandidateId.tableName)
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export * as Identity from "./identity/index.ts";
 /**
  * Epistemic value model exports.
  *

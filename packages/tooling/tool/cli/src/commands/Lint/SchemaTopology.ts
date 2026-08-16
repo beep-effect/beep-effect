@@ -27,7 +27,6 @@ const RETIRED_INTERNAL_EXPORT_KEYS = ["./internal/markdown", "./internal/yaml"] 
 const PROMOTED_CONCEPT_ROOT_SHIMS = [
   "DateTimeUtcFromValid",
   "Duration",
-  "EntitySchema",
   "FilePath",
   "Fn",
   "Glob",
@@ -35,10 +34,8 @@ const PROMOTED_CONCEPT_ROOT_SHIMS = [
   "LiteralKit",
   "LocalDate",
   "MappedLiteralKit",
-  "Model",
   "Record",
   "Timestamp",
-  "VariantSchema",
 ] as const;
 
 /**

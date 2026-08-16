@@ -6,20 +6,20 @@ import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@bee
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const candidate = S.decodeUnknownSync(CandidateClaim)({
-  ...baseEntityFixtureInput("EpistemicCandidateClaim", 1),
+  ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
   fixtureKey: "claim.patentability",
   lifecycle: "candidate",
   snapshot: {},
 });
 
 const evidence: Evidence = S.decodeUnknownSync(Evidence)({
-  ...baseEntityFixtureInput("EpistemicEvidence", 10),
+  ...productEntityFixtureInput("EpistemicEvidence", 10),
   artifactFixtureKey: "artifact.office-action",
   spanFixtureKey: "span.claim-1",
   span: { startChar: 0, endChar: 14, quote: "a claimed fact", confidence: 0.92 },

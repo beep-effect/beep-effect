@@ -6,11 +6,11 @@
  */
 import { EpistemicFixtureKey, EvidenceSpan } from "@beep/epistemic-domain/values";
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 
 const $I = $EpistemicDomainId.create("entities/Evidence/Evidence.model");
+const EvidenceEntity = ProductEntity.make(Epistemic.EvidenceId);
 
 /**
  * Source span evidence reference. Carries the ported v3 {@link EvidenceSpan}
@@ -52,31 +52,21 @@ const $I = $EpistemicDomainId.create("entities/Evidence/Evidence.model");
  * @category entities
  * @since 0.0.0
  */
-export class Evidence extends BaseEntity.Class<Evidence>($I`Evidence`)(
-  Epistemic.EvidenceId,
+export class Evidence extends EvidenceEntity.Entity<Evidence>(EvidenceEntity.tableName)(
   {
-    fields: {
-      artifactFixtureKey: EpistemicFixtureKey.annotateKey({
-        description: "Stable fixture key for the source artifact.",
-      }),
-      spanFixtureKey: EpistemicFixtureKey.annotateKey({
-        description: "Stable fixture key for the evidence span.",
-      }),
-      span: EvidenceSpan.annotateKey({ description: "Char-offset evidence span persisted with the evidence row." }),
-    },
-    persisted: {
-      artifactFixtureKey: EntitySchema.persist.text({
-        columnName: "artifact_fixture_key",
-      }),
-      spanFixtureKey: EntitySchema.persist.text({
-        columnName: "span_fixture_key",
-      }),
-      span: EntitySchema.persist.jsonb({
-        columnName: "span",
-      }),
-    },
+    artifactFixtureKey: EpistemicFixtureKey.annotateKey({
+      description: "Stable fixture key for the source artifact.",
+    }).pipe(EvidenceEntity.pg.text(), EvidenceEntity.pg.columnName("artifact_fixture_key")),
+    spanFixtureKey: EpistemicFixtureKey.annotateKey({
+      description: "Stable fixture key for the evidence span.",
+    }).pipe(EvidenceEntity.pg.text(), EvidenceEntity.pg.columnName("span_fixture_key")),
+    span: EvidenceSpan.annotateKey({
+      description: "Char-offset evidence span persisted with the evidence row.",
+    }).pipe(EvidenceEntity.pg.jsonb()),
+    ...EvidenceEntity.identityFields,
   },
   $I.annote("Evidence", {
     description: "Source span evidence reference.",
-  })
+  }),
+  EvidenceEntity.entityExtras
 ) {}

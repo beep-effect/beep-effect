@@ -27,10 +27,10 @@
       "path": "../../foundation/ui-system/ui/tsconfig.json"
     },
     {
-      "path": "../../foundation/modeling/provenance/tsconfig.json"
+      "path": "../../shared/domain/tsconfig.json"
     },
     {
-      "path": "../config/tsconfig.json"
+      "path": "../../foundation/modeling/provenance/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/utils/tsconfig.json"

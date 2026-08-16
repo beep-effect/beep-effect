@@ -36,3 +36,31 @@ session/machine ids.
   packages (@beep/ui, @beep/box, @beep/xai) in one run — the environmental native-compiler flake
   class, live receipt for the SPEC's TS2589 class-aware arbitration item; the verdict again
   surfaced the misattributed OSV hint alongside it.
+- `yeet status` on the metrics-baseline PR flagged `goals-doctor (baseline)` stale because
+  `goals/ship-velocity/PLAN.md` had a newer mtime than `goals/goals-doctor.baseline.jsonc`;
+  running the prescribed `beep goals doctor --write-baseline` produced zero content change —
+  the gate compares timestamps, not content, so any packet-doc edit forces a no-op regen step.
+  Prevention candidate: staleness gates on derived baselines should compare content hashes
+  (or the doctor's finding-key set) before prescribing a regen.
+- CORRECTED after an AWS-side audit (an earlier revision of this receipt called it a 2-day
+  fleet wedge — wrong): there was NO fleet outage 2026-08-14→16. It was ~5h of job-level flake
+  churn on 08-14 (Docgen silent-hang timeouts + genuine Coverage/TI reds → operator cancel
+  waves), then ~48h of ZERO workflow_job demand over the weekend (every webhook delivered 201,
+  every scale-up invocation succeeded, zero RunInstances because nothing was queued), with
+  stale cancelled/red check runs on PR pages reading as "queued for 2 days". Recovery was
+  plain operator re-runs on the unchanged old AMI. The real gap is observational: nothing
+  distinguishes "healthy scale-to-zero idle" from "starved", and stale PR check rows
+  masquerade as live state. Prevention: a queue-age probe (alarm only when a job is genuinely
+  queued beyond a bound — not when idle), and monitor `--summary` labeling check rows with
+  their run's age/attempt so a Friday red isn't read as a live Sunday hang. SPEC A1's watch
+  stream carries both.
+- Post-#718 baked-AMI activation broke every heavy lane in ~70s: the bake installs only the
+  `bun` binary from the release zip (`bun-linux-x64.zip` has no `bunx`; the official installer
+  creates that symlink, the bake never ran it), the setup action's baked fast path skips
+  oven-sh/setup-bun (which would have created it), and the CI CLI spawns `bunx turbo ...` →
+  ENOENT (main run 31968744160, all 5 heavy jobs; fleet-lane-probe 31969468654 caught it
+  within 2 minutes — the canary worked). The gap: the bake proved the `bun` binary but never
+  asserted the full spawn surface CI actually uses. Fixed by `ln -sfn bun .../bunx` +
+  `bunx --version` proof in the bake script and a self-heal in the fast path for
+  already-activated images. Pattern for A5/bake-style gates: verify the consumer's exact argv
+  surface, not the artifact's existence.

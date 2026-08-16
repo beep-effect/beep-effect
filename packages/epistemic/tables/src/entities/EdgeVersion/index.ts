@@ -12,6 +12,7 @@
  *
  * ```ts
  * import * as EdgeVersion from "@beep/epistemic-tables/entities/EdgeVersion"
+ * import { getTableName } from "drizzle-orm"
  *
  * console.log(EdgeVersion.toEdgeVersionInsert)
  * ```
@@ -28,7 +29,7 @@ export * from "./EdgeVersion.converters.ts";
  * ```ts
  * import * as EdgeVersion from "@beep/epistemic-tables/entities/EdgeVersion"
  *
- * console.log(EdgeVersion.Table.definition.entityId.entityType)
+ * console.log(getTableName(EdgeVersion.Table))
  * ```
  *
  * @category tables

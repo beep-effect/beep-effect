@@ -11,7 +11,7 @@ import {
 } from "@beep/agents-use-cases/public";
 import { ProviderInstance } from "@beep/agents-use-cases/server";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
@@ -28,7 +28,7 @@ const isProviderUnauthenticated = S.is(ProviderUnauthenticated);
 
 const makeInstance = (kind: Domain.ProviderKind = "claude"): Domain.ProviderInstance =>
   S.decodeUnknownSync(Domain.ProviderInstance)({
-    ...baseEntityFixtureInput("AgentsProviderInstance", 1),
+    ...productEntityFixtureInput("AgentsProviderInstance", 1),
     binaryPath: kind === "claude" ? "/usr/bin/claude" : "/usr/bin/codex",
     envVars: {},
     homePath: null,

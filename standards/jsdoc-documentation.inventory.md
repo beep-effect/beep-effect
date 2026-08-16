@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-16T21:21:20.207Z
+Generated: 2026-08-16T19:43:58.584Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 68 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 59 |
-| publicModules | 2467 |
-| publicExports | 16241 |
+| publicModules | 2510 |
+| publicExports | 16136 |
 | openModules | 397 |
 | openExports | 135 |
 | missingExportExamples | 4 |
@@ -62,25 +62,25 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 5 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | clean | 3 | 7 | 0 | 0 |
 | 6 | `@beep/root` | `.` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 7 | `@beep/pacer` | `packages/drivers/pacer` | needs-remediation | 13 | 89 | 12 | 0 |
-| 8 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 19 | 42 | 0 | 0 |
+| 8 | `@beep/workspace-tables` | `packages/workspace/tables` | clean | 19 | 48 | 0 | 0 |
 | 9 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 9 | 62 | 8 | 4 |
 | 10 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 22 | 80 | 1 | 0 |
 | 11 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 13 | 46 | 2 | 0 |
-| 12 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 41 | 263 | 3 | 2 |
+| 12 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 100 | 339 | 3 | 2 |
 | 13 | `@beep/discord` | `packages/drivers/discord` | clean | 4 | 15 | 0 | 0 |
 | 14 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 15 | `@beep/gov-legal-mcp` | `packages/drivers/gov-legal-mcp` | needs-remediation | 8 | 38 | 6 | 0 |
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 189 | 1413 | 46 | 10 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 189 | 1411 | 46 | 10 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 86 | 0 | 0 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
 | 23 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 12 | 46 | 1 | 0 |
 | 24 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 25 | 145 | 13 | 0 |
 | 25 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 8 | 1 |
-| 26 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 207 | 568 | 9 | 4 |
+| 26 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 208 | 576 | 9 | 4 |
 | 27 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | clean | 9 | 82 | 0 | 0 |
 | 28 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | clean | 26 | 129 | 0 | 0 |
 | 29 | `@beep/ontology-config` | `packages/ontology/config` | needs-remediation | 7 | 19 | 1 | 0 |
@@ -109,14 +109,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 52 | `@beep/ontology-domain` | `packages/ontology/domain` | clean | 6 | 41 | 0 | 0 |
 | 53 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 5 | 119 | 4 | 4 |
 | 54 | `@beep/langextract` | `packages/foundation/capability/langextract` | clean | 7 | 50 | 0 | 0 |
-| 55 | `@beep/shared-tables` | `packages/shared/tables` | clean | 11 | 14 | 0 | 0 |
+| 55 | `@beep/shared-tables` | `packages/shared/tables` | clean | 9 | 12 | 0 | 0 |
 | 56 | `@beep/scratchpad` | `scratchpad` | needs-remediation | 65 | 807 | 51 | 36 |
 | 57 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 8 | 252 | 4 | 0 |
 | 58 | `@beep/practice-kg-mcp` | `apps/practice-kg-mcp` | clean | 6 | 11 | 0 | 0 |
 | 59 | `@beep/tailscale` | `packages/drivers/tailscale` | clean | 5 | 29 | 0 | 0 |
 | 60 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 30 | 108 | 4 | 0 |
 | 61 | `@beep/epistemic-ui` | `packages/epistemic/ui` | clean | 5 | 12 | 0 | 0 |
-| 62 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 28 | 62 | 0 | 0 |
+| 62 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 30 | 64 | 0 | 0 |
 | 63 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 4 | 40 | 0 | 0 |
 | 64 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 207 | 4 | 1 |
 | 65 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 22 | 325 | 0 | 0 |
@@ -126,7 +126,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 69 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 70 | `@beep/graph-3d` | `packages/drivers/graph-3d` | needs-remediation | 7 | 17 | 2 | 0 |
 | 71 | `@beep/identity` | `packages/foundation/modeling/identity` | clean | 6 | 201 | 0 | 0 |
-| 72 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 4 | 17 | 0 | 0 |
+| 72 | `@beep/drizzle` | `packages/drivers/drizzle` | clean | 3 | 11 | 0 | 0 |
 | 73 | `@beep/ontology-ui` | `packages/ontology/ui` | clean | 15 | 28 | 0 | 0 |
 | 74 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 3 | 10 | 2 | 0 |
 | 75 | `@beep/box` | `packages/drivers/box` | clean | 103 | 676 | 0 | 0 |
@@ -136,7 +136,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 79 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 312 | 13 | 0 |
 | 80 | `@beep/anthropic` | `packages/drivers/anthropic` | clean | 5 | 29 | 0 | 0 |
 | 81 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 56 | 183 | 25 | 0 |
-| 82 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 53 | 240 | 8 | 2 |
+| 82 | `@beep/epistemic-domain` | `packages/epistemic/domain` | needs-remediation | 54 | 236 | 8 | 2 |
 | 83 | `@beep/ontology-client` | `packages/ontology/client` | clean | 3 | 89 | 0 | 0 |
 | 84 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | clean | 18 | 64 | 0 | 0 |
 | 85 | `@beep/firecrawl` | `packages/drivers/firecrawl` | clean | 5 | 267 | 0 | 0 |
@@ -148,8 +148,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 91 | `@beep/runpod` | `packages/drivers/runpod` | clean | 6 | 179 | 0 | 0 |
 | 92 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | needs-remediation | 2 | 5 | 1 | 0 |
 | 93 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 675 | 18 | 0 |
-| 94 | `@beep/documents-domain` | `packages/documents/domain` | clean | 24 | 96 | 0 | 0 |
-| 95 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 255 | 1660 | 24 | 1 |
+| 94 | `@beep/documents-domain` | `packages/documents/domain` | clean | 26 | 82 | 0 | 0 |
+| 95 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 236 | 1494 | 24 | 1 |
 | 96 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 23 | 51 | 8 | 4 |
 | 97 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 22 | 215 | 1 | 1 |
 | 98 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | clean | 4 | 16 | 0 | 0 |
@@ -177,10 +177,10 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 120 | `@beep/documents-tables` | `packages/documents/tables` | clean | 15 | 40 | 0 | 0 |
 | 121 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 71 | 1 | 0 |
 | 122 | `@beep/postgres` | `packages/drivers/postgres` | clean | 7 | 43 | 0 | 0 |
-| 123 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 52 | 0 | 0 |
+| 123 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | clean | 15 | 48 | 0 | 0 |
 | 124 | `@beep/pretext` | `packages/drivers/pretext` | needs-remediation | 6 | 36 | 6 | 0 |
 | 125 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 4 | 22 | 1 | 0 |
-| 126 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 28 | 86 | 4 | 0 |
+| 126 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 28 | 87 | 4 | 0 |
 | 127 | `@beep/qa-capture` | `packages/tooling/library/qa-capture` | needs-remediation | 11 | 155 | 10 | 0 |
 | 128 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 12 | 0 | 0 |
 | 129 | `@beep/documents-use-cases` | `packages/documents/use-cases` | clean | 23 | 119 | 0 | 0 |
@@ -787,8 +787,8 @@ Module findings:
 - `src/values/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/values/GrantSet/GrantSet.model.ts:282` `addGrant` (const) - 1 documentation section/link violation(s)
-- `src/values/GrantSet/GrantSet.model.ts:496` `evaluateExecutionRequest` (const) - 1 documentation section/link violation(s)
+- `src/values/GrantSet/GrantSet.model.ts:281` `addGrant` (const) - 1 documentation section/link violation(s)
+- `src/values/GrantSet/GrantSet.model.ts:495` `evaluateExecutionRequest` (const) - 1 documentation section/link violation(s)
 
 ### @beep/ecfr
 
@@ -823,10 +823,10 @@ Module findings:
 - `src/OpenClaw.ts:1` (packageDocumentation) - 1 documentation section/link violation(s)
 
 Export findings:
-- `src/CiFleetController.ts:227` `CiFleetControllerPulumiConfigValues` (const) - missing @example
-- `src/CiFleetController.ts:263` `CiFleetControllerConfig` (class) - missing @example
-- `src/CiFleetController.ts:289` `makeCiFleetControllerConfig` (const) - missing @example
-- `src/CiFleetController.ts:313` `loadCiFleetControllerConfig` (const) - missing @example
+- `src/CiFleetController.ts:221` `CiFleetControllerPulumiConfigValues` (const) - missing @example
+- `src/CiFleetController.ts:257` `CiFleetControllerConfig` (class) - missing @example
+- `src/CiFleetController.ts:283` `makeCiFleetControllerConfig` (const) - missing @example
+- `src/CiFleetController.ts:307` `loadCiFleetControllerConfig` (const) - missing @example
 - `src/OpenClaw.ts:402` `OpenClawExpectedIdentity` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:572` `OpenClawDeploymentConfig` (class) - 1 documentation section/link violation(s)
 - `src/OpenClaw.ts:769` `OpenClawBackupConfig` (class) - 1 documentation section/link violation(s)

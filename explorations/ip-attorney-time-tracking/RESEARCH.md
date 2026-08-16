@@ -197,7 +197,7 @@ entry point for MyCase ([GitHub practice-management MCP search](https://github.c
   `packages/foundation/modeling/utils/src/DateTime.ts`,
   `packages/shared/domain/src/values/LocalDate/`,
   `packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts`,
-  and `packages/foundation/modeling/schema/src/Model/Model.datetime.ts`.
+  and `packages/foundation/modeling/schema/src/index.ts`.
 - NLP/entity extraction foundations:
   `packages/drivers/nlp-mcp/README.md`,
   `packages/drivers/wink/README.md`, and

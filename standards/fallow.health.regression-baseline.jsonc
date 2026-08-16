@@ -273,19 +273,6 @@
         "count": 1
       }
     },
-    "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.factory.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
-    "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.shape.ts": {
-      "complexity_high": {
-        "count": 1
-      },
-      "crap_high": {
-        "count": 1
-      }
-    },
     "packages/foundation/modeling/schema/src/Graph/Graph.shared.ts": {
       "complexity_high": {
         "count": 1
@@ -306,14 +293,6 @@
     },
     "packages/foundation/modeling/schema/src/SchemaUtils/withStatics.ts": {
       "complexity_moderate": {
-        "count": 1
-      }
-    },
-    "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts": {
-      "complexity_moderate": {
-        "count": 1
-      },
-      "crap_moderate": {
         "count": 1
       }
     },

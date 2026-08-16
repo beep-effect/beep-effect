@@ -91,7 +91,7 @@
         "../../packages/ontology/use-cases/src/aggregates/Session/worker.ts"
       ],
       "@beep/shared-domain/identity/Workspace": [
-        "../../packages/shared/domain/src/identity/Workspace.ts"
+        "../../packages/shared/domain/src/identity/Workspace/index.ts"
       ],
       "@beep/test-utils": [
         "../../packages/tooling/test-kit/test-utils/src/index.ts"

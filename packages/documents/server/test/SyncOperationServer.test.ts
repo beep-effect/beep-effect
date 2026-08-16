@@ -1,5 +1,4 @@
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import { VaultRelPath } from "@beep/documents-domain/values/Sync";
 import {
   makeInMemorySyncOperationRepository,
@@ -16,8 +15,10 @@ import {
   SyncOperationSeed,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { NonNegativeInt } from "@beep/schema";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { baseEntityFixtureInput, fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
@@ -67,7 +68,7 @@ const mirror = { provider: "box", workspaceId } as const;
 const queuedInput = ListQueuedSyncOperationsInput.make(mirror);
 
 const detachedOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperation)({
-  ...baseEntityFixtureInput(DomainSyncOperation.SyncOperationId.entityType, 99),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, 99),
   attemptCount: 0,
   idempotencyKey: "ghost:uploadFile:1",
   inputContentDigest: null,

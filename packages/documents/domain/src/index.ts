@@ -51,13 +51,6 @@ export * as Aggregates from "./aggregates/index.ts";
  */
 export * as Entities from "./entities/index.ts";
 /**
- * Identity namespace exports.
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export * as Identity from "./identity/index.ts";
-/**
  * Value-object namespace exports.
  *
  * @category value-objects

@@ -37,6 +37,13 @@ export { SchemaAssemblyError, schema } from "./schema.ts";
  * @since 0.0.0
  */
 export { toPgTable } from "./table.ts";
+/**
+ * PostgreSQL column metadata types retained by downstream declaration emit.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type { Bigint, Integer, Jsonb, Serial, Text } from "./Column.ts";
 /** PostgreSQL kit configuration and result types.
  * @category type-level
  * @since 0.0.0

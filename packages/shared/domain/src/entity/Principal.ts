@@ -8,7 +8,7 @@
 import { $SharedDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import * as Shared from "../identity/Shared.ts";
+import * as Shared from "../identity/Shared/index.ts";
 
 const $I = $SharedDomainId.create("entity/Principal");
 const SystemComponentBase = LiteralKit(["Runtime", "Sync", "Migration", "Policy", "Generator"]);
@@ -257,7 +257,7 @@ type PrincipalSchemaBase = typeof PrincipalBase;
 export interface PrincipalSchema extends PrincipalSchemaBase {}
 
 /**
- * Tagged union used by every BaseEntity field that names an actor.
+ * Tagged union used by every ProductEntity field that names an actor.
  *
  * **Example** (Decode system principal)
  *

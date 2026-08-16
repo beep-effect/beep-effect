@@ -36,8 +36,8 @@ import { Atom } from "effect/unstable/reactivity";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { ContradictionTriageView } from "./ContradictionTriageView.tsx";
 import type { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
-import type { ContradictionCandidateId } from "@beep/epistemic-domain/identity/Epistemic";
 import type { ContradictionResolutionProposal } from "@beep/epistemic-domain/values/Contradiction";
+import type { ContradictionCandidateId } from "@beep/shared-domain/identity/Epistemic";
 import type { JSX } from "react";
 import type { ContradictionTriageTab, ContradictionTriageViewProps } from "./ContradictionTriageView.tsx";
 

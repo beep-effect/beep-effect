@@ -13,7 +13,7 @@
  * ```ts
  * import { Model } from "@beep/shared-domain/entities/User"
  *
- * console.log(Model.definition.entityId.tableName)
+ * console.log(Model.sql.tableName)
  * ```
  *
  * @category models

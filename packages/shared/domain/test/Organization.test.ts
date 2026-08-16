@@ -1,8 +1,6 @@
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as Organization from "@beep/shared-domain/entities/Organization";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import { fcRuns } from "@beep/test-utils";
-import { A } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
 import * as O from "effect/Option";
@@ -108,46 +106,37 @@ describe("Organization", () => {
     })
   );
 
-  it("materializes schema-first descriptors for the entity and table layers", () => {
-    const definition = Organization.Model.definition;
-
-    expect(A.filter(Object.keys(definition.fields), (key) => key in definition.persisted)).toEqual([
-      "createdAt",
-      "createdByPrincipal",
-      "orgId",
-      "rowVersion",
-      "schemaVersion",
-      "source",
-      "updatedAt",
-      "updatedByPrincipal",
+  it("materializes product-entity variants for the organization model", () => {
+    expect(Organization.Model.sql.tableName).toBe(Shared.OrganizationId.tableName);
+    expect(Object.keys(Organization.Model.insert.fields)).not.toContain("id");
+    expect(Object.keys(Organization.Model.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(Organization.Model.insert.fields)).toContain("publicId");
+    expect(Object.keys(Organization.Model.update.fields)).toContain("id");
+    expect(Object.keys(Organization.Model.update.fields)).toContain("rowVersion");
+    expect(Object.keys(Organization.Model.update.fields)).not.toContain("publicId");
+    expect(Object.keys(Organization.Model.jsonCreate.fields)).toEqual([
       "legalName",
       "licenseTier",
       "name",
       "parentOrgId",
       "settings",
       "slug",
-      "entityType",
-      "id",
-      "publicId",
     ]);
-    expect(definition.persisted.slug.indexHints?.[0]?.kind).toBe("unique");
-    expect(definition.persisted.licenseTier.storageKind).toBe("literal");
-    expect(definition.persisted.licenseTier.indexHints?.[0]?.kind).toBe("lookup");
-    expect(definition.persisted.settings.storageKind).toBe("jsonb");
-    expect(EntitySchema.selectedRowFieldShape("parentOrgId", definition.fields.parentOrgId).allowsNull).toBe(true);
+    expect(Object.keys(Organization.Model.jsonUpdate.fields)).toEqual([
+      "legalName",
+      "licenseTier",
+      "name",
+      "parentOrgId",
+      "settings",
+      "slug",
+    ]);
   });
 
   it.effect(
-    "extends BaseEntity through the Organization schema definition",
+    "extends ProductEntity through the Organization schema definition",
     Effect.fnUntraced(function* () {
       const organization = yield* decodeOrganization(organizationInput);
 
-      expect(Organization.Model.definition.entityId).toBe(Shared.OrganizationId);
-      expect(Organization.Model.definition.persisted.id.valueStrategy).toBe("generatedOnInsert");
-      expect(Organization.Model.definition.persisted.publicId.columnName).toBe("public_id");
-      expect(Organization.Model.definition.persisted.publicId.indexHints?.[0]?.kind).toBe("unique");
-      expect(Organization.Model.definition.persisted.orgId.storageKind).toBe("entityId");
-      expect(EntitySchema.columnNameFor("slug", Organization.Model.definition.persisted.slug)).toBe("slug");
       expect(Organization.Model.fields.slug).toBeDefined();
       expect(organization.name).toBe("Acme");
       expect(O.isNone(organization.parentOrgId)).toBe(true);

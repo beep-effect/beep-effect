@@ -52,8 +52,8 @@ the first packet that actually consumes them (see the exploration MAP).
 
 ## Target Surfaces
 
-- `packages/shared/domain/src/entity/BaseEntity.ts` (soft-delete fields + persisted).
-- `packages/foundation/modeling/schema/src/DomainModel.ts` (retire/deprecate).
+- `packages/shared/domain/src/entity/ProductEntity.ts` (soft-delete fields + persisted).
+- `packages/foundation/modeling/schema/src/index.ts` (retire/deprecate).
 - Tests + docgen examples for any new/changed exported behavior.
 
 ## Constraints

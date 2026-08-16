@@ -1,7 +1,7 @@
 # P0 activation evidence — first live bake and the activation set
 
-Status: bake **COMPLETE** 2026-08-14; activation set ships with this PR;
-deploy + live probes follow the merge.
+Status: **ACTIVATED AND VALIDATED** 2026-08-16. Bake, activation set, and
+review hardening merged in #718; deploy, probes, and rollback proof below.
 
 ## Bake report (attempt 18 — the activated image)
 
@@ -68,8 +68,35 @@ the console before EC2 posted it and terminated good instances.
 
 ## Ops residue
 
-- `beep-ci-bake` managed policy and the launcher's bake grants are
-  hand-managed IAM — fold into IaC with the fleet.
-- `beep-ci-bake-instance` role/instance-profile and the policy's PassRole
-  statement are vestigial (guardrails force identity-less bake guests) —
-  delete on next IAM touch.
+- `beep-ci-bake` managed policy (v4) on the launcher is REQUIRED for future
+  bakes and remains hand-managed IAM — fold into IaC with the fleet.
+- RESOLVED 2026-08-16: the vestigial `beep-ci-bake-instance`
+  role/instance-profile were deleted and the policy's PassRole statement
+  dropped in v4 (see the post-merge validation section below).
+
+## Post-merge validation (2026-08-16)
+
+- Deploy: `pulumi up` applied in 53s — SSM `/beep-ci/controller/runner-ami-id`
+  now serves `ami-07fb13d84a42d3584`; marker-gated toolbelt user-data live.
+- Probe 1 (run 31969468654, pre-#725 head): FAILED on `Failed to spawn bunx`
+  — the discovery run for the baked image's missing bunx symlink, fixed in
+  parallel as #725 (bake writes the symlink; setup action self-heals it).
+- Probe 2 (run 31971776803, healed main): PASSED end-to-end —
+  `baked runner repair: created missing bunx symlink`, then
+  `Baked fast path: true` (bun 1.3.14, lockfile 6c946550...), full
+  test-integration lane green on a baked worker.
+- Freshness: `beep runners bake --check` against main HEAD reports
+  `fresh: yes` on the live pin.
+- Rollback proof: reverting the pin and running plain `pulumi preview`
+  reports NO diff — `aws.ssm.Parameter` values are pulumi secrets and their
+  diffs are suppressed without refresh. With `--refresh` the revert plans
+  exactly `runner-ami update [diff: ~value,version]` (2 to update). The
+  rollback recipe is therefore:
+  `pulumi config set ciFleetController:amiId ami-07a5b367e8dc8bd92 &&
+  pulumi up --refresh --yes` — never trust a no-diff preview on
+  secret-valued resources.
+- Cleanup: superseded `ami-076e22e205ce6a512` and `ami-012c2a9252a1bbd6f`
+  deregistered with snapshots; IAM finalized (`beep-ci-bake` policy v4
+  drops PassRole; `beep-ci-bake-instance` role/profile deleted; the
+  launcher's `beep-ci-bake` managed policy remains REQUIRED for future
+  bakes and should move into IaC).

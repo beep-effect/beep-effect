@@ -6,15 +6,14 @@
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { NonNegativeInt, SchemaUtils, UnknownRecord } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import * as BaseEntitySchema from "@beep/shared-domain/entity/BaseEntity";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import { Principal } from "@beep/shared-domain/entity/Principal";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("entities/UsageRecord/UsageRecord.model");
+const UsageRecordEntity = ProductEntity.make(Epistemic.UsageRecordId);
 const UsageModelName = S.NonEmptyString.pipe(
   $I.annoteSchema("UsageModelName", {
     description: "Non-empty model name recorded for usage attribution.",
@@ -69,67 +68,62 @@ const UsageProviderName = S.NonEmptyString.pipe(
  * @category entities
  * @since 0.0.0
  */
-export class UsageRecord extends BaseEntity.Class<UsageRecord>($I`UsageRecord`)(
-  Epistemic.UsageRecordId,
+export class UsageRecord extends UsageRecordEntity.Entity<UsageRecord>(UsageRecordEntity.tableName)(
   {
-    fields: {
-      activityId: Epistemic.ActivityId.pipe(S.OptionFromNullOr).annotateKey({
+    activityId: Epistemic.ActivityId.pipe(S.OptionFromNullOr)
+      .annotateKey({
         description: "Optional persisted provenance Activity link; encoded absence is SQL and JSON null.",
-      }),
-      actor: Principal,
-      costUsdApproxMicros: NonNegativeInt.pipe(S.OptionFromNullOr),
-      credentialReference: OnePasswordReference.pipe(S.OptionFromNullOr),
-      inputTokens: NonNegativeInt.pipe(S.OptionFromNullOr),
-      latencyMillis: NonNegativeInt.pipe(S.OptionFromNullOr),
-      metadata: UnknownRecord,
-      model: UsageModelName.annotateKey({ description: "Provider model name recorded for usage attribution." }),
-      outputTokens: NonNegativeInt.pipe(S.OptionFromNullOr),
-      provider: UsageProviderName.annotateKey({ description: "Provider name recorded for usage attribution." }),
-      totalTokens: NonNegativeInt.pipe(S.OptionFromNullOr),
-      unitCount: NonNegativeInt.pipe(S.OptionFromNullOr),
-    },
-    persisted: {
-      activityId: EntitySchema.persist.entityId({
-        columnName: "activity_id",
-      }),
-      actor: EntitySchema.persist.jsonb({
-        columnName: "actor",
-      }),
-      costUsdApproxMicros: EntitySchema.persist.int({
-        columnName: "cost_usd_approx_micros",
-      }),
-      credentialReference: EntitySchema.persist.text({
-        columnName: "credential_reference",
-      }),
-      inputTokens: EntitySchema.persist.int({
-        columnName: "input_tokens",
-      }),
-      latencyMillis: EntitySchema.persist.int({
-        columnName: "latency_millis",
-      }),
-      metadata: EntitySchema.persist.jsonb({
-        columnName: "metadata",
-      }),
-      model: EntitySchema.persist.text({
-        columnName: "model",
-      }),
-      outputTokens: EntitySchema.persist.int({
-        columnName: "output_tokens",
-      }),
-      provider: EntitySchema.persist.text({
-        columnName: "provider",
-      }),
-      totalTokens: EntitySchema.persist.int({
-        columnName: "total_tokens",
-      }),
-      unitCount: EntitySchema.persist.int({
-        columnName: "unit_count",
-      }),
-    },
+      })
+      .pipe(UsageRecordEntity.pg.integer(), UsageRecordEntity.pg.columnName("activity_id")),
+    actor: Principal.pipe(UsageRecordEntity.pg.jsonb()),
+    costUsdApproxMicros: NonNegativeInt.pipe(
+      S.OptionFromNullOr,
+      UsageRecordEntity.pg.integer(),
+      UsageRecordEntity.pg.columnName("cost_usd_approx_micros")
+    ),
+    credentialReference: OnePasswordReference.pipe(
+      S.OptionFromNullOr,
+      UsageRecordEntity.pg.text(),
+      UsageRecordEntity.pg.columnName("credential_reference")
+    ),
+    inputTokens: NonNegativeInt.pipe(
+      S.OptionFromNullOr,
+      UsageRecordEntity.pg.integer(),
+      UsageRecordEntity.pg.columnName("input_tokens")
+    ),
+    latencyMillis: NonNegativeInt.pipe(
+      S.OptionFromNullOr,
+      UsageRecordEntity.pg.integer(),
+      UsageRecordEntity.pg.columnName("latency_millis")
+    ),
+    metadata: UnknownRecord.pipe(UsageRecordEntity.pg.jsonb()),
+    model: UsageModelName.annotateKey({ description: "Provider model name recorded for usage attribution." }).pipe(
+      UsageRecordEntity.pg.text()
+    ),
+    outputTokens: NonNegativeInt.pipe(
+      S.OptionFromNullOr,
+      UsageRecordEntity.pg.integer(),
+      UsageRecordEntity.pg.columnName("output_tokens")
+    ),
+    provider: UsageProviderName.annotateKey({ description: "Provider name recorded for usage attribution." }).pipe(
+      UsageRecordEntity.pg.text()
+    ),
+    totalTokens: NonNegativeInt.pipe(
+      S.OptionFromNullOr,
+      UsageRecordEntity.pg.integer(),
+      UsageRecordEntity.pg.columnName("total_tokens")
+    ),
+    unitCount: NonNegativeInt.pipe(
+      S.OptionFromNullOr,
+      UsageRecordEntity.pg.integer(),
+      UsageRecordEntity.pg.columnName("unit_count")
+    ),
+    ...UsageRecordEntity.identityFields,
   },
   $I.annote("UsageRecord", {
     description: "Append-only usage attribution record linked to an epistemic Activity.",
-  })
+  }),
+  UsageRecordEntity.entityExtras
 ) {}
 
 /**
@@ -175,7 +169,7 @@ export class UsageRecord extends BaseEntity.Class<UsageRecord>($I`UsageRecord`)(
  */
 export class TurnFinalizationUsageAppend extends S.Class<TurnFinalizationUsageAppend>($I`TurnFinalizationUsageAppend`)(
   {
-    ...BaseEntitySchema.fields,
+    ...ProductEntity.fields,
     ...UsageRecord.fields,
     entityType: S.tag(Epistemic.UsageRecordId.entityType),
     id: Epistemic.UsageRecordId,

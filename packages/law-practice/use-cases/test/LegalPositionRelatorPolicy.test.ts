@@ -32,7 +32,7 @@ import {
   LegalPositionRelatorPolicyLive,
 } from "@beep/law-practice-use-cases/LegalPositionRelatorPolicy";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, Equal } from "effect";
 import * as A from "effect/Array";
@@ -112,7 +112,7 @@ type RelatorOptions = {
 
 /** One encoded stored relation, as a record store would hand it over. */
 const relatorInput = (options: RelatorOptions) => ({
-  ...baseEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, options.id),
+  ...productEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, options.id),
   assertingInterpreter: { kind: "User", userId: 1 },
   bearer: roleInput(options.bearer[0], options.bearer[1]),
   content: { description: ACT, polarity: options.polarity },

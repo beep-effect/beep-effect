@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
 
 const $I = $LawPracticeDomainId.create("entities/OfficeAction/OfficeAction.model");
+const OfficeActionEntity = ProductEntity.make(LawPractice.OfficeActionId);
 
 /**
  * USPTO office action entity for a patent asset under examination.
@@ -50,39 +50,24 @@ const $I = $LawPracticeDomainId.create("entities/OfficeAction/OfficeAction.model
  * @category entities
  * @since 0.0.0
  */
-export class OfficeAction extends BaseEntity.Class<OfficeAction>($I`OfficeAction`)(
-  LawPractice.OfficeActionId,
+export class OfficeAction extends OfficeActionEntity.Entity<OfficeAction>(OfficeActionEntity.tableName)(
   {
-    fields: {
-      applicationNumber: LawPracticeText.annotateKey({
-        description: "Application number text extracted from the office action.",
-      }),
-      fixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Stable fixture key for the office action.",
-      }),
-      matterFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the matter this office action belongs to.",
-      }),
-      patentAssetFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the patent asset examined by this office action.",
-      }),
-    },
-    persisted: {
-      applicationNumber: EntitySchema.persist.text({
-        columnName: "application_number",
-      }),
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      matterFixtureKey: EntitySchema.persist.text({
-        columnName: "matter_fixture_key",
-      }),
-      patentAssetFixtureKey: EntitySchema.persist.text({
-        columnName: "patent_asset_fixture_key",
-      }),
-    },
+    applicationNumber: LawPracticeText.annotateKey({
+      description: "Application number text extracted from the office action.",
+    }).pipe(OfficeActionEntity.pg.text(), OfficeActionEntity.pg.columnName("application_number")),
+    fixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Stable fixture key for the office action.",
+    }).pipe(OfficeActionEntity.pg.text(), OfficeActionEntity.pg.columnName("fixture_key")),
+    matterFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the matter this office action belongs to.",
+    }).pipe(OfficeActionEntity.pg.text(), OfficeActionEntity.pg.columnName("matter_fixture_key")),
+    patentAssetFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the patent asset examined by this office action.",
+    }).pipe(OfficeActionEntity.pg.text(), OfficeActionEntity.pg.columnName("patent_asset_fixture_key")),
+    ...OfficeActionEntity.identityFields,
   },
   $I.annote("OfficeAction", {
     description: "USPTO office action entity for a patent asset under examination.",
-  })
+  }),
+  OfficeActionEntity.entityExtras
 ) {}

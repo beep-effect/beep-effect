@@ -11,7 +11,6 @@ import {
   ContradictionReceipt,
 } from "@beep/epistemic-domain/entities/Contradiction";
 import { EdgeVersion, unflattenEdgeSource, unflattenEdgeTarget } from "@beep/epistemic-domain/entities/EdgeVersion";
-import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic";
 import {
   BeliefVersionRef,
   ContradictionAssessment,
@@ -56,6 +55,7 @@ import {
 import { PostgresDrizzle } from "@beep/postgres";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
+import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import { A, O } from "@beep/utils";
 import { and, count, desc, eq, getColumns, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { DateTime, Effect, Match, Order, pipe, Semaphore } from "effect";

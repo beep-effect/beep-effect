@@ -70,6 +70,7 @@
     "@beep/identity": "workspace:^",
     "@beep/postgres": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/shared-domain": "workspace:^",
     "@beep/utils": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"

@@ -20,6 +20,7 @@ import {
   SyncOperationRepositoryUnavailable,
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { extractPostgresDiagnostics, PostgresDrizzle, PostgresErrorCodeByName } from "@beep/postgres";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
@@ -37,7 +38,7 @@ const decodeSyncOperation = S.decodeUnknownSync(DomainSyncOperation.SyncOperatio
 /**
  * Build a full SyncOperation entity from an enqueue seed and an assigned id.
  *
- * BaseEntity bookkeeping fields mirrors the repository's application-write
+ * ProductEntity audit fields mirror the repository's application-write
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */
@@ -46,7 +47,7 @@ const syncOperationFromSeed = (id: number, seed: SyncOperationSeed): DomainSyncO
     attemptCount: seed.attemptCount,
     createdAt: 0,
     createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: DomainSyncOperation.SyncOperationId.entityType,
+    entityType: DocumentsIdentity.SyncOperationId.entityType,
     id,
     idempotencyKey: seed.idempotencyKey,
     inputContentDigest: O.getOrNull(seed.inputContentDigest),
@@ -107,7 +108,7 @@ const duplicateIdempotencyKeyConflict = (idempotencyKey: string): SyncOperationR
 export const makeInMemorySyncOperationRepository = Effect.fn("Documents.SyncOperationRepository.makeInMemory")(
   function* () {
     const { counter, snapshot, store } = yield* makeEntityStore(
-      HashMap.empty<DomainSyncOperation.SyncOperationId, DomainSyncOperation.SyncOperation>()
+      HashMap.empty<DocumentsIdentity.SyncOperationId, DomainSyncOperation.SyncOperation>()
     );
 
     return SyncOperationRepository.of({

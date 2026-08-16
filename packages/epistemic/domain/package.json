@@ -39,8 +39,6 @@
     "./entities/Evidence": "./src/entities/Evidence/index.ts",
     "./entities/EvidenceVerification": "./src/entities/EvidenceVerification/index.ts",
     "./entities/UsageRecord": "./src/entities/UsageRecord/index.ts",
-    "./identity": "./src/identity/index.ts",
-    "./identity/Epistemic": "./src/identity/Epistemic.ts",
     "./values": "./src/values/index.ts",
     "./values/ClaimDispositionStatus": "./src/values/ClaimDispositionStatus/index.ts",
     "./values/Contradiction": "./src/values/Contradiction/index.ts",
@@ -79,8 +77,10 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/effect-drizzle": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "drizzle-orm": "catalog:"
   }
 }

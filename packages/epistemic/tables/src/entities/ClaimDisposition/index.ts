@@ -12,6 +12,7 @@
  *
  * ```ts
  * import * as ClaimDisposition from "@beep/epistemic-tables/entities/ClaimDisposition"
+ * import { getTableName } from "drizzle-orm"
  *
  * console.log(ClaimDisposition.toClaimDispositionInsert)
  * ```
@@ -28,7 +29,7 @@ export * from "./ClaimDisposition.converters.ts";
  * ```ts
  * import * as ClaimDisposition from "@beep/epistemic-tables/entities/ClaimDisposition"
  *
- * console.log(ClaimDisposition.Table.definition.entityId.entityType)
+ * console.log(getTableName(ClaimDisposition.Table))
  * ```
  *
  * @category tables

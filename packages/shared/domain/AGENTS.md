@@ -8,9 +8,9 @@ bar (see `packages/shared/AGENTS.md`).
 
 | Surface | Key exports | Notes |
 | --- | --- | --- |
-| entry module | `Aggregates`, `Entities`, `BaseEntity`, `EntityId`, `EntityRef`, `Principal`, `SourceKind`, `Identity`, `Values` | package root |
+| entry module | `Aggregates`, `Entities`, `ProductEntity`, `EntityId`, `EntityRef`, `Principal`, `SourceKind`, `Identity`, `Values` | package root |
 | `src/entities/` | `Organization` | shared identity-bearing concepts |
-| `src/entity/` | `BaseEntity`, `EntityId`, `EntityRef`, `Principal`, `primitives`, `SourceKind` | shared entity constructor barrel + driver-neutral primitive schemas |
+| `src/entity/` | `ProductEntity`, `EntityId`, `EntityRef`, `Principal`, `primitives`, `SourceKind` | shared product-entity kit and primitive schemas |
 | `src/identity/` | `Shared` | shared entity-id modules and identity vocabulary |
 | `src/values/` | `LocalDate` | shared value-object barrel |
 
@@ -30,7 +30,7 @@ bar (see `packages/shared/AGENTS.md`).
 - Domain stays pure and driver-neutral.
 - Domain may depend only on allowed shared-kernel language and foundation
   primitive/modeling packages.
-- Persisted entity models use `BaseEntity.Class` from
-  `@beep/shared-domain/entity/BaseEntity` for shared product
-  invariants and `@beep/schema/EntitySchema` persisted descriptors for
-  storage-neutral persistence metadata.
+- Persisted entity models call `ProductEntity.make(EntityId)` and declare SQL
+  metadata through effect-drizzle fields. Identity definitions stay in
+  `src/identity/`; concrete tables are projected with `toPgTable` in tables
+  packages.

@@ -147,7 +147,7 @@ locked ruling suspends fence 1 for this file). Fold into the "non-schema
 signals" reason once the detector fix lands; no standing exception language
 change needed beyond that.
 
-### Attempt 2 — `DateTimeInsert` (`packages/foundation/modeling/schema/src/Model/Model.datetime.ts:133-138,159`)
+### Attempt 2 — `DateTimeInsert` (`packages/foundation/modeling/schema/src/index.ts:133-138,159`)
 
 `export interface DateTimeInsert extends VariantSchema.Field<{ select: ...;
 insert: Overridable<...>; json: ... }> {}` then `export const DateTimeInsert:
@@ -289,7 +289,7 @@ UploadAvatarField, UploadBoxField, UploadField — each individually verified by
 ## Files touched (all reverted, `git status --short` clean for each)
 
 - `packages/drivers/duckdb/src/DuckDb.service.ts` (Attempt 1, reverted)
-- `packages/foundation/modeling/schema/src/Model/Model.datetime.ts` (Attempt 2, reverted)
+- `packages/foundation/modeling/schema/src/index.ts` (Attempt 2, reverted)
 - `packages/drivers/acp/src/AcpAgent.service.ts` (Attempt 3, reverted)
 
 No `standards/*.jsonc`, no repo-wide commands, no commits. Compile checks used

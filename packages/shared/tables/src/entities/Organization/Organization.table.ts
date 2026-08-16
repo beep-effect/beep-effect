@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { Organization } from "@beep/shared-domain/entities";
 
 /**
@@ -30,4 +30,4 @@ import { Organization } from "@beep/shared-domain/entities";
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(Organization.Model);
+export const Table = toPgTable(Organization.Model);

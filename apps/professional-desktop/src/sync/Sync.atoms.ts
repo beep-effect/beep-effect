@@ -6,7 +6,6 @@
  */
 
 import { chatProtocolLayerAtom } from "@beep/agents-client";
-import { SyncConflictId } from "@beep/documents-domain/entities/SyncConflict";
 import {
   MarkVaultSyncConflictReviewedPayload,
   VaultSyncRpcs,
@@ -15,6 +14,7 @@ import {
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability";
 import { LiteralKit } from "@beep/schema";
+import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
 import { Effect, Semaphore, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";

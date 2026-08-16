@@ -22,7 +22,7 @@ export * from "./Organization.behavior.ts";
  * ```ts
  * import { Model } from "@beep/shared-domain/entities/Organization"
  *
- * console.log(Model.definition.entityId.tableName)
+ * console.log(Model.sql.tableName)
  * ```
  *
  * @category models

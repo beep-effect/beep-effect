@@ -19,6 +19,7 @@ import {
   SyncConflictRepositoryUnavailable,
 } from "@beep/documents-use-cases/entities/SyncConflict/server";
 import { PostgresDrizzle } from "@beep/postgres";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { A, N } from "@beep/utils";
 import { and, asc, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
@@ -32,7 +33,7 @@ const decodeSyncConflict = S.decodeUnknownSync(DomainSyncConflict.SyncConflict);
 /**
  * Build a full SyncConflict entity from a drift seed and an assigned id.
  *
- * BaseEntity bookkeeping fields mirrors the repository's application-write
+ * ProductEntity audit fields mirror the repository's application-write
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */
@@ -41,7 +42,7 @@ const syncConflictFromSeed = (id: number, seed: SyncConflictSeed): DomainSyncCon
     conflictKind: seed.conflictKind,
     createdAt: 0,
     createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: DomainSyncConflict.SyncConflictId.entityType,
+    entityType: DocumentsIdentity.SyncConflictId.entityType,
     id,
     localRelPath: O.getOrNull(seed.localRelPath),
     orgId: 1,
@@ -97,7 +98,7 @@ const matchesRemoteEvent =
 export const makeInMemorySyncConflictRepository = Effect.fn("Documents.SyncConflictRepository.makeInMemory")(
   function* () {
     const { counter, snapshot, store } = yield* makeEntityStore(
-      HashMap.empty<DomainSyncConflict.SyncConflictId, DomainSyncConflict.SyncConflict>()
+      HashMap.empty<DocumentsIdentity.SyncConflictId, DomainSyncConflict.SyncConflict>()
     );
 
     return SyncConflictRepository.of({

@@ -6,9 +6,8 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import { Principal } from "@beep/shared-domain/entity/Principal";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as S from "effect/Schema";
 import {
@@ -20,6 +19,7 @@ import {
 } from "./CorrectionDelta.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/CorrectionDelta/CorrectionDelta.model");
+const CorrectionDeltaEntity = ProductEntity.make(LawPractice.CorrectionDeltaId);
 
 /**
  * One appended record of a correction to a recorded interpretation.
@@ -70,65 +70,43 @@ const $I = $LawPracticeDomainId.create("entities/CorrectionDelta/CorrectionDelta
  * @category entities
  * @since 0.0.0
  */
-export class CorrectionDelta extends BaseEntity.Class<CorrectionDelta>($I`CorrectionDelta`)(
-  LawPractice.CorrectionDeltaId,
+export class CorrectionDelta extends CorrectionDeltaEntity.Entity<CorrectionDelta>(CorrectionDeltaEntity.tableName)(
   {
-    fields: {
-      candidateRouting: CandidateRouting.pipe(
-        SchemaUtils.withConstantDefault<CandidateRouting>("contradiction-candidate-input")
-      ).annotateKey({
+    candidateRouting: CandidateRouting.pipe(
+      SchemaUtils.withConstantDefault<CandidateRouting>("contradiction-candidate-input")
+    )
+      .annotateKey({
         description: "Whether the difference stays an unresolved candidate input; unresolved is the default.",
-      }),
-      correctedElements: S.NonEmptyArray(CorrectedElement).annotateKey({
+      })
+      .pipe(CorrectionDeltaEntity.pg.text(), CorrectionDeltaEntity.pg.columnName("candidate_routing")),
+    correctedElements: S.NonEmptyArray(CorrectedElement)
+      .annotateKey({
         description: "Elements this correction touched, one pointer each, never one document pointer per record.",
-      }),
-      frame: LawPractice.ActFrameId.annotateKey({
-        description: "Recorded act frame whose elements this correction addresses.",
-      }),
-      reviewer: Principal.annotateKey({
-        description: "Principal whose review this record attributes, including when no action was taken.",
-      }),
-      reviewerAction: ReviewerAction.annotateKey({
-        description: "What the reviewer did about the correction, recorded and never derived from the findings.",
-      }),
-      stage: CorrectionStage.annotateKey({
-        description: "Which of interpretation, qualification, or assessment is being corrected.",
-      }),
-      supersedes: S.OptionFromNullOr(LawPractice.CorrectionDeltaId).pipe(SchemaUtils.withNoneDefault).annotateKey({
-        description: "Earlier correction this one replaces; absent for the first correction in a chain.",
-      }),
-      validatorReport: ValidatorReport.annotateKey({
-        description: "Transcribed validator report at two severities, recorded and never re-executed.",
-      }),
-    },
-    persisted: {
-      candidateRouting: EntitySchema.persist.literal({
-        columnName: "candidate_routing",
-      }),
-      correctedElements: EntitySchema.persist.jsonb({
-        columnName: "corrected_elements",
-      }),
-      frame: EntitySchema.persist.entityId({
-        columnName: "frame",
-      }),
-      reviewer: EntitySchema.persist.jsonb({
-        columnName: "reviewer",
-      }),
-      reviewerAction: EntitySchema.persist.literal({
-        columnName: "reviewer_action",
-      }),
-      stage: EntitySchema.persist.literal({
-        columnName: "stage",
-      }),
-      supersedes: EntitySchema.persist.entityId({
-        columnName: "supersedes",
-      }),
-      validatorReport: EntitySchema.persist.jsonb({
-        columnName: "validator_report",
-      }),
-    },
+      })
+      .pipe(CorrectionDeltaEntity.pg.jsonb(), CorrectionDeltaEntity.pg.columnName("corrected_elements")),
+    frame: LawPractice.ActFrameId.annotateKey({
+      description: "Recorded act frame whose elements this correction addresses.",
+    }).pipe(CorrectionDeltaEntity.pg.integer()),
+    reviewer: Principal.annotateKey({
+      description: "Principal whose review this record attributes, including when no action was taken.",
+    }).pipe(CorrectionDeltaEntity.pg.jsonb()),
+    reviewerAction: ReviewerAction.annotateKey({
+      description: "What the reviewer did about the correction, recorded and never derived from the findings.",
+    }).pipe(CorrectionDeltaEntity.pg.text(), CorrectionDeltaEntity.pg.columnName("reviewer_action")),
+    stage: CorrectionStage.annotateKey({
+      description: "Which of interpretation, qualification, or assessment is being corrected.",
+    }).pipe(CorrectionDeltaEntity.pg.text()),
+    supersedes: S.OptionFromNullOr(LawPractice.CorrectionDeltaId)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Earlier correction this one replaces; absent for the first correction in a chain." })
+      .pipe(CorrectionDeltaEntity.pg.integer()),
+    validatorReport: ValidatorReport.annotateKey({
+      description: "Transcribed validator report at two severities, recorded and never re-executed.",
+    }).pipe(CorrectionDeltaEntity.pg.jsonb(), CorrectionDeltaEntity.pg.columnName("validator_report")),
+    ...CorrectionDeltaEntity.identityFields,
   },
   $I.annote("CorrectionDelta", {
     description: "One appended correction to a recorded interpretation, per element, with its review on the record.",
-  })
+  }),
+  CorrectionDeltaEntity.entityExtras
 ) {}

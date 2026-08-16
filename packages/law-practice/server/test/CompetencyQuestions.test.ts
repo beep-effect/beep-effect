@@ -64,7 +64,7 @@ import {
 } from "@beep/law-practice-use-cases/LegalPositionRelatorPolicy";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as Shared from "@beep/shared-domain/identity/Shared";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, Equal, Layer } from "effect";
 import * as A from "effect/Array";
@@ -246,7 +246,7 @@ const OVERLAPPING_SCOPE = {
 };
 
 const frameInput = (id: number, overrides: Record<string, unknown>) => ({
-  ...baseEntityFixtureInput(LawPractice.ActFrameId.entityType, id),
+  ...productEntityFixtureInput(LawPractice.ActFrameId.entityType, id),
   interpreter: attorney,
   orgId: ORG,
   preconditions: [],
@@ -295,7 +295,7 @@ const ASSIGNMENT_FRAME_INPUT = frameInput(ASSIGNMENT_FRAME, {
 });
 
 const exerciseInput = (id: number, frame: number, overrides: Record<string, unknown>) => ({
-  ...baseEntityFixtureInput(LawPractice.PowerExerciseId.entityType, id),
+  ...productEntityFixtureInput(LawPractice.PowerExerciseId.entityType, id),
   attemptedAt: 1_700_000_000_000 + id,
   frame,
   orgId: ORG,
@@ -387,7 +387,7 @@ const relatorInput = (
     readonly scope: typeof LESSEE_SCOPE;
   }
 ) => ({
-  ...baseEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, id),
+  ...productEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, id),
   assertingInterpreter: attorney,
   bearer: role(options.bearer[0], options.bearer[1], options.designation),
   content: { description: options.description, polarity: options.polarity },
@@ -463,7 +463,7 @@ const CLAIM_TO_REFRAIN_INPUT = relatorInput(CLAIM_TO_REFRAIN, {
 });
 
 const SCREENED_CANDIDATE_INPUT = {
-  ...baseEntityFixtureInput(LawPractice.LegalOppositionCandidateId.entityType, SCREENED_CANDIDATE),
+  ...productEntityFixtureInput(LawPractice.LegalOppositionCandidateId.entityType, SCREENED_CANDIDATE),
   candidate: {
     act: ENTER,
     overlappingScope: OVERLAPPING_SCOPE,
@@ -492,7 +492,7 @@ const SCREENED_CANDIDATE_INPUT = {
  * the value rather than inheriting it.
  */
 const FIRST_CORRECTION_INPUT = {
-  ...baseEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, FIRST_CORRECTION),
+  ...productEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, FIRST_CORRECTION),
   candidateRouting: "contradiction-candidate-input",
   correctedElements: [
     {
@@ -525,7 +525,7 @@ const FIRST_CORRECTION_INPUT = {
 
 /** A second reading of the same clause, appended rather than written over. */
 const SECOND_CORRECTION_INPUT = {
-  ...baseEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, SECOND_CORRECTION),
+  ...productEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, SECOND_CORRECTION),
   candidateRouting: "resolved-no-candidate",
   correctedElements: [
     {

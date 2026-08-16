@@ -12,7 +12,6 @@
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("entities/IdsSubmissionFact/IdsSubmissionFact.values");
@@ -22,7 +21,7 @@ const IdsStatementTypeBase = LiteralKit(["e1-foreign-citation", "e2-no-prior-kno
 const IdsOfficeTreatmentStateBase = LiteralKit(["considered", "not-considered", "partially-considered"]);
 
 const optionalDate = (description: string) =>
-  S.OptionFromNullOr(EntitySchema.DateTimeFromMillis).pipe(SchemaUtils.withNoneDefault).annotateKey({ description });
+  S.OptionFromNullOr(S.DateTimeUtcFromMillis).pipe(SchemaUtils.withNoneDefault).annotateKey({ description });
 
 const optionalText = (description: string) =>
   S.OptionFromNullOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({ description });

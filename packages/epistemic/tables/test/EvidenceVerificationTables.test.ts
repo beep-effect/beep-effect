@@ -1,5 +1,9 @@
 import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
-import { EvidenceVerification as EvidenceVerificationModel } from "@beep/epistemic-domain/entities/EvidenceVerification";
+import {
+  EvidenceVerification as EvidenceVerificationModel,
+  hasValidManifestationKey,
+  manifestationKeyFor,
+} from "@beep/epistemic-domain/entities/EvidenceVerification";
 import { EvidenceVerificationManifestation } from "@beep/epistemic-domain/values/EvidenceVerification";
 import { DbSchema, Entities } from "@beep/epistemic-tables";
 import * as EvidenceVerification from "@beep/epistemic-tables/entities/EvidenceVerification";
@@ -10,7 +14,7 @@ import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -37,7 +41,7 @@ const verifiedAnchor = TextAnchorVerificationReceipt.make({
   }),
 });
 const evidenceId = Epistemic.EvidenceId.make(4);
-const manifestationKey = Result.getOrThrow(EvidenceVerificationModel.manifestationKeyFor(evidenceId, verifiedAnchor));
+const manifestationKey = Result.getOrThrow(manifestationKeyFor(evidenceId, verifiedAnchor));
 const sourceMutatedAnchor = TextAnchorVerificationReceipt.make({
   anchor: verifiedAnchor.anchor,
   source: SourceTextIdentity.make({
@@ -54,7 +58,7 @@ const quoteMutatedAnchor = TextAnchorVerificationReceipt.make({
 });
 
 const input = {
-  ...baseEntityFixtureInput("EpistemicEvidenceVerification", 7),
+  ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
   evidenceId,
   manifestationKey,
   verifiedAnchor: Result.getOrThrow(S.encodeUnknownResult(TextAnchorVerificationReceipt)(verifiedAnchor)),
@@ -62,7 +66,7 @@ const input = {
 const evidenceFor = (id: Epistemic.EvidenceId, anchor: TextAnchor) =>
   Result.getOrThrow(
     S.decodeUnknownResult(Evidence)({
-      ...baseEntityFixtureInput("EpistemicEvidence", id),
+      ...productEntityFixtureInput("EpistemicEvidence", id),
       artifactFixtureKey: `artifact:evidence-verification-${id}`,
       createdAt: 0,
       id,
@@ -78,8 +82,7 @@ const evidence = evidenceFor(evidenceId, verifiedAnchor.anchor);
 
 describe("EvidenceVerificationTable", () => {
   it("projects the immutable sidecar column shape", () => {
-    expect(EvidenceVerification.Table.entitySchema).toBe(EvidenceVerificationModel);
-    expect(EvidenceVerification.Table.definition.tableName).toBe("epistemic_evidence_verification");
+    expect(EvidenceVerificationModel.sql.tableName).toBe("epistemic_evidence_verification");
     expect(getTableConfig(EvidenceVerification.Table).name).toBe("epistemic_evidence_verification");
     expect(R.map(getColumns(EvidenceVerification.Table), (column) => column.name)).toStrictEqual({
       createdAt: "created_at",
@@ -117,10 +120,10 @@ describe("EvidenceVerificationTable", () => {
       fc.property(S.toArbitrary(EvidenceVerificationManifestation)(fc), (manifestation) => {
         const verification = Result.getOrThrow(
           S.decodeUnknownResult(EvidenceVerificationModel)({
-            ...baseEntityFixtureInput("EpistemicEvidenceVerification", 7),
+            ...productEntityFixtureInput("EpistemicEvidenceVerification", 7),
             evidenceId: manifestation.evidenceId,
             manifestationKey: Result.getOrThrow(
-              EvidenceVerificationModel.manifestationKeyFor(manifestation.evidenceId, manifestation.verifiedAnchor)
+              manifestationKeyFor(manifestation.evidenceId, manifestation.verifiedAnchor)
             ),
             verifiedAnchor: Result.getOrThrow(
               S.encodeUnknownResult(TextAnchorVerificationReceipt)(manifestation.verifiedAnchor)
@@ -153,10 +156,7 @@ describe("EvidenceVerificationTable", () => {
     const insert = Result.getOrThrow(EvidenceVerification.toEvidenceVerificationInsert(verification, evidence));
     const tamperedVerification = EvidenceVerificationModel.make({
       ...verification,
-      manifestationKey: EvidenceVerificationModel.manifestationKeyFor(
-        Epistemic.EvidenceId.make(5),
-        verifiedAnchor
-      ).pipe(Result.getOrThrow),
+      manifestationKey: manifestationKeyFor(Epistemic.EvidenceId.make(5), verifiedAnchor).pipe(Result.getOrThrow),
     });
 
     expect("id" in insert).toBe(false);
@@ -166,7 +166,7 @@ describe("EvidenceVerificationTable", () => {
 
     const decoded = Result.getOrThrow(EvidenceVerification.fromEvidenceVerificationRow({ ...insert, id: 7 }));
     expect(decoded.id).toBe(7);
-    expect(Result.getOrThrow(decoded.hasValidManifestationKey())).toBe(true);
+    expect(Result.getOrThrow(hasValidManifestationKey(decoded))).toBe(true);
     expect(decoded.verifiedAnchor.anchor.quote).toBe("controlling fact");
     expect(Result.isFailure(EvidenceVerification.toEvidenceVerificationInsert(tamperedVerification, evidence))).toBe(
       true
@@ -216,9 +216,7 @@ describe("EvidenceVerificationTable", () => {
 
     const mismatchedAnchorVerification = EvidenceVerificationModel.make({
       ...verification,
-      manifestationKey: Result.getOrThrow(
-        EvidenceVerificationModel.manifestationKeyFor(evidenceId, quoteMutatedAnchor)
-      ),
+      manifestationKey: Result.getOrThrow(manifestationKeyFor(evidenceId, quoteMutatedAnchor)),
       verifiedAnchor: quoteMutatedAnchor,
     });
     expect(
@@ -229,9 +227,7 @@ describe("EvidenceVerificationTable", () => {
     const mismatchedEvidenceVerification = EvidenceVerificationModel.make({
       ...verification,
       evidenceId: otherEvidenceId,
-      manifestationKey: Result.getOrThrow(
-        EvidenceVerificationModel.manifestationKeyFor(otherEvidenceId, verifiedAnchor)
-      ),
+      manifestationKey: Result.getOrThrow(manifestationKeyFor(otherEvidenceId, verifiedAnchor)),
     });
     expect(
       Result.isFailure(EvidenceVerification.toEvidenceVerificationInsert(mismatchedEvidenceVerification, evidence))
@@ -249,9 +245,7 @@ describe("EvidenceVerificationTable", () => {
   it("uses the manifestation schema as the digest input contract", () => {
     const manifestation = EvidenceVerificationManifestation.make({ evidenceId, verifiedAnchor });
     expect(manifestation.evidenceId).toBe(4);
-    expect(Result.getOrThrow(EvidenceVerificationModel.manifestationKeyFor(evidenceId, verifiedAnchor))).toBe(
-      manifestationKey
-    );
+    expect(Result.getOrThrow(manifestationKeyFor(evidenceId, verifiedAnchor))).toBe(manifestationKey);
   });
 
   it("rejects a verification created before its referenced evidence", () => {

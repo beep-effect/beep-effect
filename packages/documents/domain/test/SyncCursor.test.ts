@@ -1,5 +1,6 @@
 import * as SyncCursor from "@beep/documents-domain/entities/SyncCursor";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
@@ -24,7 +25,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
 };
 
 const freshCursorRow = {
-  ...baseEntityFixtureInput(SyncCursor.SyncCursorId.entityType, 1),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncCursorId.entityType, 1),
   lastError: null,
   lastEventId: null,
   provider: "box",
@@ -35,11 +36,19 @@ const freshCursorRow = {
 
 describe("SyncCursor entity", () => {
   it("wires SyncCursor to the documents identity", () => {
-    expect(SyncCursor.SyncCursor.definition.entityId.tableName).toBe("documents_sync_cursor");
-    expect(SyncCursor.SyncCursor.definition.entityId.entityType).toBe("DocumentsSyncCursor");
-    expect(SyncCursor.SyncCursor.definition.persisted.streamPosition.columnName).toBe("stream_position");
-    expect(SyncCursor.SyncCursor.definition.persisted.lastEventId.columnName).toBe("last_event_id");
-    expect(SyncCursor.SyncCursor.definition.persisted.workspaceId.storageKind).toBe("entityId");
+    expect(SyncCursor.SyncCursor.sql.tableName).toBe(DocumentsIdentity.SyncCursorId.tableName);
+    expect(Object.keys(SyncCursor.SyncCursor.insert.fields)).not.toContain("id");
+    expect(Object.keys(SyncCursor.SyncCursor.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(SyncCursor.SyncCursor.update.fields)).toContain("id");
+    expect(Object.keys(SyncCursor.SyncCursor.update.fields)).toContain("rowVersion");
+    expect(Object.keys(SyncCursor.SyncCursor.jsonCreate.fields)).toEqual([
+      "lastError",
+      "lastEventId",
+      "provider",
+      "status",
+      "streamPosition",
+      "workspaceId",
+    ]);
   });
 
   it("decodes and encodes a fresh cursor row", () => {

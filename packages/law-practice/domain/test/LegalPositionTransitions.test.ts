@@ -11,7 +11,7 @@ import {
   PriorityBasis,
   ValidatorReport,
 } from "@beep/law-practice-domain";
-import { assertSchemaArbitraryDecodesToSelf, baseEntityFixtureInput } from "@beep/test-utils";
+import { assertSchemaArbitraryDecodesToSelf, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -53,7 +53,7 @@ const transition = (label: string, kind: string, polarity: "act" | "omission") =
 });
 
 const actFrameInput = (overrides: Record<string, unknown>) => ({
-  ...baseEntityFixtureInput("LawPracticeActFrame", 1),
+  ...productEntityFixtureInput("LawPracticeActFrame", 1),
   act: { description: "assign the lease", polarity: "act" },
   creates: [transition("assignee-claim", "claim", "omission")],
   derivationKind: { kinds: ["create", "extinguish"] },
@@ -75,7 +75,7 @@ const actFrameInput = (overrides: Record<string, unknown>) => ({
 const systemPrincipal = { component: "Runtime", kind: "System" };
 
 const powerExerciseInput = (result: Record<string, unknown>) => ({
-  ...baseEntityFixtureInput("LawPracticePowerExercise", 2),
+  ...productEntityFixtureInput("LawPracticePowerExercise", 2),
   attemptedAt: 1_700_000_000_000,
   authorityBasis: {
     claimedRole: {
@@ -101,7 +101,7 @@ const undisposed = {
 };
 
 const correctionDeltaInput = (overrides: Record<string, unknown>) => ({
-  ...baseEntityFixtureInput("LawPracticeCorrectionDelta", 3),
+  ...productEntityFixtureInput("LawPracticeCorrectionDelta", 3),
   candidateRouting: "contradiction-candidate-input",
   correctedElements: [
     { element: { label: "no-objection", part: "precondition" }, source: norm("cl. 4.2", "within ten days") },

@@ -63,7 +63,7 @@
   },
   "dependencies": {
     "@beep/agents-domain": "workspace:^",
-    "@beep/drizzle": "workspace:^",
+    "@beep/effect-drizzle": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },

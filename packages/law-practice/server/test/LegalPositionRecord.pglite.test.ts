@@ -40,9 +40,9 @@ import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import {
-  baseEntityFixtureInput,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
+  productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { describe, expect, layer } from "@effect/vitest";
@@ -119,7 +119,7 @@ const transition = (label: string, kind: string) => ({
 
 const frameFixture = (seed: number, org: number) =>
   S.decodeUnknownEffect(ActFrame)({
-    ...baseEntityFixtureInput(LawPractice.ActFrameId.entityType, seed),
+    ...productEntityFixtureInput(LawPractice.ActFrameId.entityType, seed),
     orgId: org,
     act: { description: "assign the lease", polarity: "act" },
     creates: [transition("assignee-claim", "claim")],
@@ -140,7 +140,7 @@ const frameFixture = (seed: number, org: number) =>
 
 const exerciseFixture = (seed: number, frame: number, org: number) =>
   S.decodeUnknownEffect(PowerExercise)({
-    ...baseEntityFixtureInput(LawPractice.PowerExerciseId.entityType, seed),
+    ...productEntityFixtureInput(LawPractice.PowerExerciseId.entityType, seed),
     orgId: org,
     attemptedAt: 1_700_000_000_000 + seed,
     authorityBasis: {
@@ -161,7 +161,7 @@ const exerciseFixture = (seed: number, frame: number, org: number) =>
 
 const correctionFixture = (seed: number, frame: number, org: number) =>
   S.decodeUnknownEffect(CorrectionDelta)({
-    ...baseEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, seed),
+    ...productEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, seed),
     orgId: org,
     candidateRouting: "contradiction-candidate-input",
     correctedElements: [
@@ -180,7 +180,7 @@ const correctionFixture = (seed: number, frame: number, org: number) =>
 
 const relatorFixture = (seed: number, positionKind: string, polarity: string, exercise: number, org: number) =>
   S.decodeUnknownEffect(LegalPositionRelator)({
-    ...baseEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, seed),
+    ...productEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, seed),
     orgId: org,
     assertingInterpreter: { kind: "User", userId: 1 },
     bearer: roleInput("lessee", 1),
@@ -194,7 +194,7 @@ const relatorFixture = (seed: number, positionKind: string, polarity: string, ex
 
 const candidateFixture = (seed: number, relators: ReadonlyArray<number>, org: number) =>
   S.decodeUnknownEffect(LegalOppositionCandidate)({
-    ...baseEntityFixtureInput(LawPractice.LegalOppositionCandidateId.entityType, seed),
+    ...productEntityFixtureInput(LawPractice.LegalOppositionCandidateId.entityType, seed),
     orgId: org,
     candidate: { act: ACT, overlappingScope: scopeInput, relators },
     priorityBasis: null,

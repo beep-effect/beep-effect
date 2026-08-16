@@ -58,13 +58,6 @@ export * as Entities from "./entities/index.ts";
  */
 export * as Worker from "./entities/Worker/index.ts";
 /**
- * Identity namespace exports for the architecture lab domain package.
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export * as Identity from "./identity/index.ts";
-/**
  * Value-object namespace exports for the architecture lab domain package.
  *
  * @category value-objects

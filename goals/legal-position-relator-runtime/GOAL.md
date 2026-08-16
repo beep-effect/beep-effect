@@ -22,7 +22,7 @@ Scope:
 
 - In: `packages/law-practice/domain`, `packages/law-practice/use-cases`, and
   the EntityId registrations in
-  `packages/shared/domain/src/identity/LawPractice.ts`; rung 2 adds
+  `packages/shared/domain/src/identity/LawPractice`; rung 2 adds
   `law-practice/tables`, `law-practice/server`, and the slice's **second**
   db-admin migration (+ PGlite test + `AcceptedProofManifest`).
 - Out: the epistemic and agents slices' vocabularies and SPECs, any new

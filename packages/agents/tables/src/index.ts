@@ -30,7 +30,7 @@ export const VERSION = "0.0.0" as const;
  * ```ts
  * import { Entities } from "@beep/agents-tables"
  *
- * console.log(Entities.ProviderInstance.providerInstanceTable.definition.tableName)
+ * console.log(Entities.ProviderInstance.PROVIDER_INSTANCE_TABLE_NAME)
  * ```
  *
  * @category tables

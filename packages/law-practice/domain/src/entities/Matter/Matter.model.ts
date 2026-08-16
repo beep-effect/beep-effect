@@ -5,13 +5,13 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.ts";
 import { MatterType } from "./Matter.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Matter/Matter.model");
+const MatterEntity = ProductEntity.make(LawPractice.MatterId);
 
 /**
  * Legal matter entity grouping prosecution work for one legal client.
@@ -46,39 +46,24 @@ const $I = $LawPracticeDomainId.create("entities/Matter/Matter.model");
  * @category entities
  * @since 0.0.0
  */
-export class Matter extends BaseEntity.Class<Matter>($I`Matter`)(
-  LawPractice.MatterId,
+export class Matter extends MatterEntity.Entity<Matter>(MatterEntity.tableName)(
   {
-    fields: {
-      displayName: LawPracticeText.annotateKey({
-        description: "Human-readable matter display name.",
-      }),
-      fixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Stable fixture key for the matter.",
-      }),
-      legalClientFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the legal client this matter belongs to.",
-      }),
-      matterType: MatterType.annotateKey({
-        description: "Matter type.",
-      }),
-    },
-    persisted: {
-      displayName: EntitySchema.persist.text({
-        columnName: "display_name",
-      }),
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      legalClientFixtureKey: EntitySchema.persist.text({
-        columnName: "legal_client_fixture_key",
-      }),
-      matterType: EntitySchema.persist.literal({
-        columnName: "matter_type",
-      }),
-    },
+    displayName: LawPracticeText.annotateKey({
+      description: "Human-readable matter display name.",
+    }).pipe(MatterEntity.pg.text(), MatterEntity.pg.columnName("display_name")),
+    fixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Stable fixture key for the matter.",
+    }).pipe(MatterEntity.pg.text(), MatterEntity.pg.columnName("fixture_key")),
+    legalClientFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the legal client this matter belongs to.",
+    }).pipe(MatterEntity.pg.text(), MatterEntity.pg.columnName("legal_client_fixture_key")),
+    matterType: MatterType.annotateKey({
+      description: "Matter type.",
+    }).pipe(MatterEntity.pg.text(), MatterEntity.pg.columnName("matter_type")),
+    ...MatterEntity.identityFields,
   },
   $I.annote("Matter", {
     description: "Legal matter entity grouping prosecution work for one legal client.",
-  })
+  }),
+  MatterEntity.entityExtras
 ) {}

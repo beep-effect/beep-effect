@@ -48,8 +48,8 @@ import * as Str from "effect/String";
 import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import { EvidenceSourcePanel } from "./EvidenceSourcePanel.tsx";
 import type { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction";
-import type { ContradictionCandidateId } from "@beep/epistemic-domain/identity/Epistemic";
 import type { ContradictionResolutionProposal } from "@beep/epistemic-domain/values/Contradiction";
+import type { ContradictionCandidateId } from "@beep/shared-domain/identity/Epistemic";
 import type { RpcClientError } from "effect/unstable/rpc";
 import type { JSX } from "react";
 

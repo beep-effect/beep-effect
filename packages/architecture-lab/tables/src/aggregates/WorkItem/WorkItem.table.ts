@@ -7,9 +7,9 @@
  */
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
-import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import * as DomainWorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
 import { $ArchitectureLabTablesId } from "@beep/identity/packages";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { pipe, Result } from "effect";
 import * as O from "effect/Option";
@@ -65,7 +65,7 @@ export const workItemTable = pgTable(WORK_ITEM_TABLE_NAME, {
   id: text("id").primaryKey().$type<DomainWorkItem.WorkItemId>(),
   title: text("title").notNull().$type<DomainWorkItem.WorkItemTitle>(),
   status: text("status").notNull().$type<DomainWorkItem.WorkItemStatus>(),
-  assigneeId: integer("assignee_id").$type<DomainWorker.WorkerId>(),
+  assigneeId: integer("assignee_id").$type<ArchitectureLabIdentity.WorkerId>(),
   priority: text("priority").$type<DomainWorkPriority.WorkPriority>(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -82,7 +82,7 @@ export const workItemTable = pgTable(WORK_ITEM_TABLE_NAME, {
  *   WorkItemStatus,
  *   WorkItemTitle
  * } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import { WorkerId } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { WorkPriority } from "@beep/architecture-lab-domain/values/WorkPriority"
  * import type { WorkItemRow } from "@beep/architecture-lab-tables/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -116,7 +116,7 @@ export type WorkItemRow = typeof workItemTable.$inferSelect;
  *   WorkItemStatus,
  *   WorkItemTitle
  * } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import { WorkerId } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { WorkPriority } from "@beep/architecture-lab-domain/values/WorkPriority"
  * import type { WorkItemInsert } from "@beep/architecture-lab-tables/aggregates/WorkItem"
  * import * as S from "effect/Schema"
@@ -142,7 +142,7 @@ class WorkItemInsertRow extends S.Class<WorkItemInsertRow>($I`WorkItemInsertRow`
     id: DomainWorkItem.WorkItemId,
     title: DomainWorkItem.WorkItemTitle,
     status: DomainWorkItem.WorkItemStatus,
-    assigneeId: S.NullOr(DomainWorker.WorkerId),
+    assigneeId: S.NullOr(ArchitectureLabIdentity.WorkerId),
     priority: S.NullOr(DomainWorkPriority.WorkPriority),
   },
   $I.annote("WorkItemInsertRow", {
@@ -156,7 +156,7 @@ class WorkItemSelectedRow extends S.Class<WorkItemSelectedRow>($I`WorkItemSelect
     id: DomainWorkItem.WorkItemId,
     title: DomainWorkItem.WorkItemTitle,
     status: DomainWorkItem.WorkItemStatus,
-    assigneeId: S.NullOr(DomainWorker.WorkerId),
+    assigneeId: S.NullOr(ArchitectureLabIdentity.WorkerId),
     priority: S.NullOr(DomainWorkPriority.WorkPriority),
     createdAt: S.Date,
     updatedAt: S.Date,
@@ -181,7 +181,7 @@ const decodeWorkItemSelectedRow = S.decodeUnknownResult(WorkItemSelectedRow);
  *   WorkItemId,
  *   WorkItemTitle
  * } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import { WorkerId } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { WorkPriority } from "@beep/architecture-lab-domain/values/WorkPriority"
  * import { toWorkItemInsert } from "@beep/architecture-lab-tables/aggregates/WorkItem"
  * import * as O from "effect/Option"
@@ -230,7 +230,7 @@ export const toWorkItemInsert = (workItem: DomainWorkItem.WorkItem): WorkItemIns
  *   WorkItemStatus,
  *   WorkItemTitle
  * } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import { WorkerId } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { WorkPriority } from "@beep/architecture-lab-domain/values/WorkPriority"
  * import { fromWorkItemRow, type WorkItemRow } from "@beep/architecture-lab-tables/aggregates/WorkItem"
  * import * as O from "effect/Option"
