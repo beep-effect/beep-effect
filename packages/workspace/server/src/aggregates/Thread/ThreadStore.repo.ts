@@ -34,10 +34,10 @@ const THREAD_TABLE_NAME = "workspace_thread" as const;
 const TURN_TABLE_NAME = "workspace_turn" as const;
 const MESSAGE_TABLE_NAME = "workspace_message" as const;
 
-const encodeWorkspaceId = S.encodeSync(WorkspaceIdentity.WorkspaceId);
-const encodeThreadId = S.encodeSync(WorkspaceIdentity.ThreadId);
-const encodeTurnId = S.encodeSync(WorkspaceIdentity.TurnId);
-const encodeMessageId = S.encodeSync(WorkspaceIdentity.MessageId);
+const encodeWorkspaceId = WorkspaceIdentity.WorkspaceId.encodeSync;
+const encodeThreadId = WorkspaceIdentity.ThreadId.encodeSync;
+const encodeTurnId = WorkspaceIdentity.TurnId.encodeSync;
+const encodeMessageId = WorkspaceIdentity.MessageId.encodeSync;
 const encodeDocument = S.encodeSync(Document);
 
 const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
@@ -87,7 +87,7 @@ const makeThreadEntity = (
   publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.ThreadId>,
   timestamps: EntityTimestamps
 ): Thread =>
-  S.decodeUnknownSync(Thread)({
+  Thread.decodeUnknownSync({
     ...baseEntityRecord("WorkspaceThread", input.id, publicId, timestamps),
     title: input.title,
     workspaceId: input.workspaceId,
@@ -98,7 +98,7 @@ const makeTurnEntity = (
   publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.TurnId>,
   timestamps: EntityTimestamps
 ): Turn =>
-  S.decodeUnknownSync(Turn)({
+  Turn.decodeUnknownSync({
     ...baseEntityRecord("WorkspaceTurn", input.id, publicId, timestamps),
     items: [{ itemType: "message", messageId: input.messageId }],
     parentTurnId: input.parentTurnId,
@@ -111,7 +111,7 @@ const makeMessageEntity = (
   publicId: PublicEntityId.PublicEntityIdFor<typeof WorkspaceIdentity.MessageId>,
   timestamps: EntityTimestamps
 ): Message =>
-  S.decodeUnknownSync(Message)({
+  Message.decodeUnknownSync({
     ...baseEntityRecord("WorkspaceMessage", input.id, publicId, timestamps),
     content: encodeDocument(input.content),
     role: input.role,

@@ -8,18 +8,17 @@
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
 import { FilePath, WindowsDrivePath, WindowsUncPath } from "@beep/schema/FilePath";
-import { SchemaGetter } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 
 const $I = $WorkspaceDomainId.create("entities/Workspace/Workspace.values");
 
-const isFilePath = S.is(FilePath);
 const isAbsoluteWindowsDrivePath = (value: string): boolean =>
   WindowsDrivePath.is(value) && /^[A-Za-z]:[\\/]/u.test(value);
 
 const isAbsoluteVaultRootPath = (value: string): boolean =>
-  isFilePath(value) && (Str.startsWith("/")(value) || isAbsoluteWindowsDrivePath(value) || WindowsUncPath.is(value));
+  FilePath.is(value) && (Str.startsWith("/")(value) || isAbsoluteWindowsDrivePath(value) || WindowsUncPath.is(value));
 
 const WorkspaceVaultRootPathChecks = S.makeFilter(isAbsoluteVaultRootPath, {
   identifier: $I`WorkspaceVaultRootPathAbsoluteCheck`,

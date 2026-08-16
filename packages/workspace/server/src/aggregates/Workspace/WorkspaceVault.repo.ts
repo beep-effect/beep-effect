@@ -21,7 +21,7 @@ import type { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Wor
 
 const WORKSPACE_TABLE_NAME = "workspace_workspace" as const;
 
-const encodeWorkspaceId = S.encodeSync(WorkspaceIdentity.WorkspaceId);
+const encodeWorkspaceId = WorkspaceIdentity.WorkspaceId.encodeSync;
 
 const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
 

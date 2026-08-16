@@ -57,7 +57,7 @@ describe("codec group statics", () => {
     expect(Direct.decodeUnknownSync("7")).toBe(7);
     expect(Branded.decodeUnknownSync("docs")).toBe("docs");
     expect(Branded.is("docs")).toBe(true);
-    expect(Branded.encodeSync("docs")).toBe("docs");
+    expect(Branded.encodeUnknownSync(Branded.decodeUnknownSync("docs"))).toBe("docs");
   });
 
   it("attached sync statics agree with the raw schema codecs over schema-derived samples", () => {
@@ -141,16 +141,10 @@ describe("codec group statics", () => {
       expect(yield* Effect.tryPromise(() => PromiseCount.encodeUnknownPromise(42))).toBe("42");
 
       const failedDecode = yield* Effect.result(
-        Effect.tryPromise({
-          try: () => PromiseCount.decodeUnknownPromise(invalidEncoded),
-          catch: (cause) => cause,
-        })
+        Effect.tryPromise(() => PromiseCount.decodeUnknownPromise(invalidEncoded))
       );
       const failedEncode = yield* Effect.result(
-        Effect.tryPromise({
-          try: () => PromiseCount.encodeUnknownPromise(invalidDecoded),
-          catch: (cause) => cause,
-        })
+        Effect.tryPromise(() => PromiseCount.encodeUnknownPromise(invalidDecoded))
       );
       expect(Result.isFailure(failedDecode)).toBe(true);
       expect(Result.isFailure(failedEncode)).toBe(true);

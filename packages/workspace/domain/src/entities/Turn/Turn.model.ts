@@ -327,4 +327,6 @@ export class Turn extends BaseEntity.Class<Turn>($I`Turn`)(
   $I.annote("Turn", {
     description: "Workspace turn aggregate with parent-turn lineage for branching.",
   })
-) {}
+) {
+  static readonly decodeUnknownSync = S.decodeUnknownSync(Turn);
+}

@@ -51,4 +51,6 @@ export class Thread extends BaseEntity.Class<Thread>($I`Thread`)(
   $I.annote("Thread", {
     description: "Durable workspace conversation thread.",
   })
-) {}
+) {
+  static readonly decodeUnknownSync = S.decodeUnknownSync(Thread);
+}

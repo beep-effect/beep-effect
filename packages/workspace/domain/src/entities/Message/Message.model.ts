@@ -11,6 +11,7 @@ import { LiteralKit } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import * as S from "effect/Schema";
 
 const $I = $WorkspaceDomainId.create("entities/Message/Message.model");
 
@@ -103,4 +104,6 @@ export class Message extends BaseEntity.Class<Message>($I`Message`)(
   $I.annote("Message", {
     description: "Md-aligned message content in a workspace turn.",
   })
-) {}
+) {
+  static readonly decodeUnknownSync = S.decodeUnknownSync(Message);
+}

@@ -124,6 +124,11 @@ describe("EntityId", () => {
       expect(DocumentId.equivalence(cast(1), cast(1))).toBe(true);
       expect(DocumentId.equivalence(cast(1), cast(2))).toBe(false);
       expect(yield* decodeEffect(DocumentId)(1)).toBe(1);
+      const decoded = DocumentId.decodeUnknownSync(1);
+      expect(DocumentId.encodeSync(decoded)).toBe(1);
+      expect(DocumentId.is(decoded)).toBe(true);
+      const asAny: EntityId.Any = DocumentId;
+      expect(asAny.tableName).toBe("shared_document");
     })
   );
 
