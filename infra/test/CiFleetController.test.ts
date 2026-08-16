@@ -189,6 +189,15 @@ describe("@beep/infra CiFleetController", () => {
       }
 
       const postInstall = captured.value;
+      // The toolbelt install must stay marker-gated and fail open: the baked
+      // image stamps /etc/beep-ci/baked-runner, an unbaked boot installs.
+      assert.isTrue(Str.includes("if [ -f /etc/beep-ci/baked-runner ]; then")(postInstall));
+      assertSubstringBefore(
+        postInstall,
+        "if [ -f /etc/beep-ci/baked-runner ]; then",
+        "dnf install -y git unzip zip jq"
+      );
+      assertSubstringBefore(postInstall, "baked runner image; toolbelt already present", "else");
       assert.isTrue(Str.includes("(\n  set -eu\n  dnf install -y iptables-nft")(postInstall));
       assertSubstringBefore(postInstall, "dnf install -y iptables-nft", "command -v iptables");
       assertSubstringBefore(postInstall, "command -v iptables", "iptables --version | grep -Fq 'nf_tables'");

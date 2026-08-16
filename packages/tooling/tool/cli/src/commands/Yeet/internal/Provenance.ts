@@ -27,6 +27,7 @@ import {
   Duration,
   Effect,
   FileSystem,
+  flow,
   Order,
   Path,
   pipe,
@@ -414,19 +415,20 @@ export const resumeCommandFor: {
 
 const encodePublicPrProvenanceJson = S.encodeUnknownResult(S.fromJsonString(PublicPrProvenance));
 
-const escapeHtmlText = (value: string): string =>
-  pipe(
-    value,
-    Str.replaceAll("&", "&amp;"),
-    Str.replaceAll("<", "&lt;"),
-    Str.replaceAll(">", "&gt;"),
-    Str.replaceAll("`", "&#96;"),
-    Str.replaceAll("\r", "&#13;"),
-    Str.replaceAll("\n", "&#10;")
-  );
+const escapeHtmlText = flow(
+  Str.replaceAll("&", "&amp;"),
+  Str.replaceAll("<", "&lt;"),
+  Str.replaceAll(">", "&gt;"),
+  Str.replaceAll("`", "&#96;"),
+  Str.replaceAll("\r", "&#13;"),
+  Str.replaceAll("\n", "&#10;")
+);
 
-const escapeHtmlCommentJson = (value: string): string =>
-  pipe(value, Str.replaceAll("&", "\\u0026"), Str.replaceAll("<", "\\u003c"), Str.replaceAll(">", "\\u003e"));
+const escapeHtmlCommentJson = flow(
+  Str.replaceAll("&", "\\u0026"),
+  Str.replaceAll("<", "\\u003c"),
+  Str.replaceAll(">", "\\u003e")
+);
 
 /**
  * Render provenance as the trailing Markdown section of a pull request body.
