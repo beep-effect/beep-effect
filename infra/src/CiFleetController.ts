@@ -43,16 +43,22 @@ const runnerRunAs = "ec2-user";
 
 // The module's own user-data installs only docker and libicu, and the pinned
 // AL2023 image ships without git, unzip, zip, or jq — setup-bun dies exit-127
-// without unzip and checkout needs git. The P4 baked AMI later absorbs this
-// into the image. The module INLINES this snippet into its single user-data
+// without unzip and checkout needs git. A baked image (`beep runners bake`)
+// carries the toolbelt and stamps /etc/beep-ci/baked-runner; the marker check
+// makes this snippet a no-op there and fails OPEN (missing marker means the
+// per-boot install resumes). The module INLINES this snippet into its single user-data
 // bash script, so shell options must stay subshell-scoped: a leaked `set -u`
 // kills the downstream runner-start section on its own unset variables
 // (`SEGMENT: unbound variable`, runner-start-failed) — which is also the
 // failure signature the rolled-back IMDS DROP produced.
 const runnerToolbeltPostInstall = `(
   set -eu
-  dnf install -y git unzip zip jq
-  logger -t beep-ci-toolbelt "installed git unzip zip jq for heavy lanes"
+  if [ -f /etc/beep-ci/baked-runner ]; then
+    logger -t beep-ci-toolbelt "baked runner image; toolbelt already present"
+  else
+    dnf install -y git unzip zip jq
+    logger -t beep-ci-toolbelt "installed git unzip zip jq for heavy lanes"
+  fi
 )
 `;
 

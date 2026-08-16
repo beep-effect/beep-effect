@@ -184,13 +184,18 @@ const ingestFailure = (
   message: string,
   cause?: unknown
 ): CodexFindingsIngestError =>
-  CodexFindingsIngestError.make({ reason, message, ...(cause === undefined ? {} : { cause }) });
+  cause === undefined
+    ? CodexFindingsIngestError.make({ reason, message })
+    : CodexFindingsIngestError.make({ reason, message, cause });
 
 const packetFailure = (
   reason: "commit-failed" | "packet-changed" | "path-escape" | "staging-failed",
   message: string,
   cause?: unknown
-): CodexPacketWriteError => CodexPacketWriteError.make({ reason, message, ...(cause === undefined ? {} : { cause }) });
+): CodexPacketWriteError =>
+  cause === undefined
+    ? CodexPacketWriteError.make({ reason, message })
+    : CodexPacketWriteError.make({ reason, message, cause });
 
 const valuesAreUnique = (values: ReadonlyArray<string>): boolean => A.length(A.dedupe(values)) === A.length(values);
 

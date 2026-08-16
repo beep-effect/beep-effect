@@ -53,8 +53,10 @@ export {
 export {
   BakeLocalInputs,
   makeBakeScriptForTesting,
+  pendingWhileNotFoundForTesting,
   RunnersService,
   RunnersServiceLive,
+  readPostedConsoleForTesting,
   runAwsForTesting,
   writeBakeReportForTesting,
 } from "./Runners.service.ts";

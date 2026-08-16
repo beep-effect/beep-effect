@@ -16,6 +16,7 @@ import {
   DateTime,
   Effect,
   FileSystem,
+  flow,
   Inspectable,
   Match,
   MutableHashMap,
@@ -129,15 +130,15 @@ const CoverageSummaryRawFilePath = S.NonEmptyString.check(
 
 const isCoverageSummaryRawFilePath = S.is(CoverageSummaryRawFilePath);
 
-const sanitizeCoverageDiagnostic = (input: string): string =>
-  pipe(
-    input,
-    Str.replace(DISALLOWED_COVERAGE_CONTROL_PATTERN, "�"),
-    Str.truncate(COVERAGE_DIAGNOSTIC_CONTENT_MAX_CHARS)
-  );
+const sanitizeCoverageDiagnostic = flow(
+  Str.replace(DISALLOWED_COVERAGE_CONTROL_PATTERN, "�"),
+  Str.truncate(COVERAGE_DIAGNOSTIC_CONTENT_MAX_CHARS)
+);
 
-const coverageDiagnosticFragment = (input: string): string =>
-  pipe(input, Str.replace(DISALLOWED_COVERAGE_CONTROL_PATTERN, "�"), Str.truncate(COVERAGE_PATH_FRAGMENT_MAX_CHARS));
+const coverageDiagnosticFragment = flow(
+  Str.replace(DISALLOWED_COVERAGE_CONTROL_PATTERN, "�"),
+  Str.truncate(COVERAGE_PATH_FRAGMENT_MAX_CHARS)
+);
 
 type CoverageRegressionError = QualityTaskConfigurationError | DomainError;
 
