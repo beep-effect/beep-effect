@@ -1930,6 +1930,12 @@
       ],
       "@beep/shared-use-cases/server": [
         "./packages/shared/use-cases/src/server.ts"
+      ],
+      "@beep/repo-cli/commands/DeletePackage": [
+        "./packages/tooling/tool/cli/src/commands/DeletePackage/index.ts"
+      ],
+      "@beep/repo-cli/test/DeletePackage": [
+        "./packages/tooling/tool/cli/src/test/DeletePackage.test-kit.ts"
       ]
     }
   }
