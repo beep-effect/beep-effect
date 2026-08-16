@@ -322,3 +322,119 @@ evidence, what would have prevented it). Redact for the public repo.
 - **Would have prevented it:** require the generated goal-index check on main
   before merge, or regenerate `goals/INDEX.md` in the PR that adds a packet
   manifest so unrelated successors do not inherit the drift.
+
+## 2026-08-14 — eight-shard correctness merged before timing admission
+
+- **Doing:** admitting PR #716's bounded eight-shard Coverage Regression shape
+  against the packet's 20-minute live-fleet ceiling.
+- **Evidence:** job `94695402310` passed every check without timeout, shutdown,
+  or OOM, but took 22m18s. The PR merged externally 2m52s after the job ended,
+  before the rejected timing result was written into the packet.
+- **Would have prevented it:** require the packet's timing-admission decision
+  before merging performance-governed changes, even when correctness is green.
+
+## 2026-08-14 — checkout ownership changed during successor closeout
+
+- **Doing:** publishing and monitoring the verified eight-shard successor from
+  its feature branch.
+- **Evidence:** the normal checkout was switched to unrelated runner work while
+  the coverage branch was published, merged as #716, and deleted. Reconstructing
+  the exact result required hosted PR state plus reflog evidence before the next
+  candidate could start safely.
+- **Would have prevented it:** serialize branch ownership through Yeet closeout,
+  or reserve an explicit execution worktree for the performance admission loop.
+
+## 2026-08-14 — nested worktree broke fixed-depth TypeScript resolution
+
+- **Doing:** isolating the nine-shard candidate from unrelated work in the
+  normal checkout, then running the focused repo-cli package typecheck.
+- **Evidence:** a worktree nested under the repository made fixed-depth config
+  paths resolve source from the parent checkout and emitted unrelated missing
+  Node and `Float16Array` types; the candidate's 105 focused tests and Biome
+  check passed in the same location.
+- **Would have prevented it:** create execution worktrees as sibling checkouts,
+  or make root/config resolution derive from the current Git common directory
+  instead of assuming a fixed package depth.
+
+## 2026-08-14 — scoped repair rewrote an unrelated inherited finding
+
+- **Doing:** running the canonical Yeet repair pass for the nine-shard
+  successor's five-file change set.
+- **Evidence:** the terse-effect writer scanned outside the candidate scope and
+  rewrote one inherited helper in `PostgresDrizzle.service.ts`; the same pass
+  reported other inherited manual findings but did not rewrite them. The
+  unrelated change had to be identified and removed before verification.
+- **Would have prevented it:** constrain repair writers to the declared Yeet
+  change set, or require explicit opt-in before a repair tier edits clean paths.
+
+## 2026-08-14 — bundled Actions inspector depended on a broken Python shim
+
+- **Doing:** classifying PR #719's terminal Coverage Regression failure with
+  the repository's GitHub Actions inspection workflow.
+- **Evidence:** the bundled `inspect_pr_checks.py` entrypoint stopped before
+  reading the PR because its `python` command resolved through an invalid
+  application shim; direct authenticated `gh run view --log-failed` remained
+  usable.
+- **Would have prevented it:** ship the inspector with a verified interpreter
+  entrypoint or preflight the configured Python shim before routing CI
+  diagnosis through it.
+
+## 2026-08-14 — Node coverage Glob shim ignored static scan roots
+
+- **Doing:** admitting the nine-shard Coverage Regression candidate on PR
+  #719.
+- **Evidence:** run `31794013295`, job `94746974171`, failed after 22m26s.
+  The Node coverage shim recursively walked the complete repository for every
+  `Bun.Glob`, including statically rooted architecture and workspace patterns.
+  Concurrent scoped Biome directories disappeared during those unrelated
+  walks, producing `ENOENT` in repo-cli and an opaque glob failure in
+  repo-utils; the same scans consumed hundreds of seconds.
+- **Would have prevented it:** derive the scan root and maximum non-recursive
+  depth from each glob pattern, and treat a directory that disappears during a
+  recursive walk as an empty branch.
+
+## 2026-08-14 — local full-shard replay depended on implicit CI state
+
+- **Doing:** replaying the repaired nine-shard Coverage Regression path before
+  publication.
+- **Evidence:** the root coverage command without `CI=true` silently selected
+  the ordinary unsharded ratchet even with full-run arguments; its banner was
+  the only indication, and the run had to be cancelled after 38 seconds. The
+  same command with CI state selected `coverage:full` and nine queues.
+- **Would have prevented it:** expose an explicit local full-sharded flag or
+  dedicated replay command instead of making the execution shape depend on an
+  implicit environment variable.
+
+## 2026-08-14 — stale project reference raced the cold coverage prebuild
+
+- **Doing:** admitting the repaired nine-shard Coverage Regression head on PR
+  #719.
+- **Evidence:** run `31799253491`, job `94763099702`, failed after 1m27s when
+  `@beep/ontology-config` reported `thunk.ts is not a module` and cascading
+  missing `@beep/utils` exports. The exact merge ref then passed all 128 forced
+  build tasks with zero cache hits in 1m03s. Its cold task trace showed
+  `@beep/ontology-config` starting beside `@beep/utils`; an unused Schema
+  project reference made that early task recursively build
+  Schema -> Data -> Utils outside Turbo's package dependency order.
+- **Repair proof:** with the stale reference removed, the same forced,
+  zero-cache, concurrency-four build passed 128/128 tasks in 56.2s. The
+  `@beep/ontology-config` task completed without recursing into Schema, Data,
+  or Utils while Turbo continued scheduling those packages itself.
+- **Would have prevented it:** keep package project references aligned with
+  actual workspace dependencies so Turbo is the sole cross-package build
+  scheduler and no independent `tsc -b` process writes the same referenced
+  projects concurrently.
+
+## 2026-08-14 — repaired long pole kept an unnecessary worker while the mixed tail missed admission
+
+- **Doing:** admitting the repaired nine-shard Coverage Regression head on PR
+  #719 against the under-20-minute live-fleet ceiling.
+- **Evidence:** run `31802039933`, job `94772037908`, passed every coverage
+  test and all 127 baseline comparisons in 21m39s. The repaired repo-utils
+  shard drained in 2m15s, repo-cli in 13m48s, and the seven mixed queues
+  controlled wall time at 14m55s-16m44s. Repo-utils still held two workers
+  while the measured bottleneck lacked enough independent queues.
+- **Would have prevented it:** reallocate worker capacity after the
+  infrastructure repair's first live profile—one repo-utils worker plus an
+  eighth mixed queue preserves the aggregate cap while targeting the actual
+  tail.
