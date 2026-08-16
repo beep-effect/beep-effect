@@ -691,6 +691,76 @@ describe("tsconfig-sync", () => {
   );
 
   it(
+    "prunes package references with no declared dependency and reports them as drift",
+    () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            const rootDir = process.cwd();
+
+            yield* bootstrapRootConfig(rootDir, {
+              workspaces: ["packages/foundation/*/*", "packages/example-domain", "packages/example-orphan"],
+              references: ["packages/foundation/modeling/identity"],
+              paths: {
+                "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
+                "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
+              },
+              syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
+            });
+            yield* bootstrapWorkspace(rootDir, {
+              relativeDir: "packages/foundation/modeling/identity",
+              packageName: "@beep/identity",
+            });
+            yield* bootstrapWorkspace(rootDir, {
+              relativeDir: "packages/example-orphan",
+              packageName: "@beep/example-orphan",
+            });
+            // The undeclared orphan reference is exactly the torn-dist race
+            // enabler: tsc -b would build the orphan while Turbo, seeing no
+            // dependency edge, schedules the orphan's own build concurrently.
+            yield* bootstrapWorkspace(rootDir, {
+              relativeDir: "packages/example-domain",
+              packageName: "@beep/example-domain",
+              dependencies: {
+                "@beep/identity": "workspace:*",
+              },
+              references: ["../foundation/modeling/identity/tsconfig.json", "../example-orphan/tsconfig.json"],
+            });
+
+            const drift = yield* syncTsconfigAtRoot(rootDir, {
+              mode: "check",
+              filter: "@beep/example-domain",
+              verbose: false,
+            }).pipe(
+              Effect.match({
+                onFailure: (error) => error,
+                onSuccess: () => undefined,
+              })
+            );
+            expect(drift?._tag).toBe("TsconfigSyncDriftError");
+
+            const syncResult = yield* syncTsconfigAtRoot(rootDir, {
+              mode: "sync",
+              filter: "@beep/example-domain",
+              verbose: false,
+            });
+            const referenceChanges = A.filter(syncResult.changes, (change) => change.section === "package-references");
+            expect(referenceChanges).toHaveLength(1);
+
+            const refs = decodeTsconfigReferences(
+              yield* readJsoncFile(path.join(rootDir, "packages", "example-domain", "tsconfig.json"))
+            );
+            expect(A.map(refs.references, (entry) => entry.path)).toEqual([
+              "../foundation/modeling/identity/tsconfig.json",
+            ]);
+          })
+        )
+      ),
+    20_000
+  );
+
+  it(
     "treats lint-only docgen formatting drift as sync drift",
     () =>
       Effect.runPromise(
