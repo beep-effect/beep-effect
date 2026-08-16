@@ -8,11 +8,11 @@
 import { EpistemicFixtureKey } from "@beep/epistemic-domain/values";
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { UnknownRecord } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 
 const $I = $EpistemicDomainId.create("entities/Activity/Activity.model");
+const ActivityEntity = ProductEntity.make(Epistemic.ActivityId);
 
 /**
  * Provenance activity captured for an epistemic runtime proof.
@@ -45,25 +45,16 @@ const $I = $EpistemicDomainId.create("entities/Activity/Activity.model");
  * @category entities
  * @since 0.0.0
  */
-export class Activity extends BaseEntity.Class<Activity>($I`Activity`)(
-  Epistemic.ActivityId,
+export class Activity extends ActivityEntity.Entity<Activity>(ActivityEntity.tableName)(
   {
-    fields: {
-      fixtureKey: EpistemicFixtureKey.annotateKey({
-        description: "Stable fixture key for the provenance activity.",
-      }),
-      snapshot: UnknownRecord,
-    },
-    persisted: {
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      snapshot: EntitySchema.persist.jsonb({
-        columnName: "snapshot",
-      }),
-    },
+    fixtureKey: EpistemicFixtureKey.annotateKey({
+      description: "Stable fixture key for the provenance activity.",
+    }).pipe(ActivityEntity.pg.text(), ActivityEntity.pg.columnName("fixture_key")),
+    snapshot: UnknownRecord.pipe(ActivityEntity.pg.jsonb()),
+    ...ActivityEntity.identityFields,
   },
   $I.annote("Activity", {
     description: "Provenance activity produced by the runtime proof.",
-  })
+  }),
+  ActivityEntity.entityExtras
 ) {}

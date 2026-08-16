@@ -6,40 +6,24 @@
  */
 
 import {
-  BeliefVersionRef,
   CanonicalContradictionBeliefPair,
   ContradictionAssessment,
   ContradictionCandidateDigest,
   ContradictionCandidateKey,
   ContradictionDispositionDecision,
   ContradictionMatchBasis,
-  ContradictionProposalContent,
   ContradictionReceiptKey,
-  contradictionCandidateDigest,
-  contradictionCandidateKey,
-  contradictionEvidenceDigest,
-  contradictionProposalDigest,
 } from "@beep/epistemic-domain/values/Contradiction";
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import { Principal } from "@beep/shared-domain/entity/Principal";
-import { identity, pipe, Result } from "effect";
-import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
+import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as S from "effect/Schema";
-import * as Epistemic from "../../identity/Epistemic.ts";
-import type { ContradictionCandidateContent } from "@beep/epistemic-domain/values/Contradiction";
 
 const $I = $EpistemicDomainId.create("entities/Contradiction/Contradiction.model");
-const beliefVersionRefEquivalence = S.toEquivalence(BeliefVersionRef);
-
-const proposalTargetsPair = (
-  pair: CanonicalContradictionBeliefPair,
-  proposal: ContradictionAssessment["proposals"][number]
-): boolean =>
-  beliefVersionRefEquivalence(proposal.losingBelief, pair.left) ||
-  beliefVersionRefEquivalence(proposal.losingBelief, pair.right);
+const CandidateEntity = ProductEntity.make(Epistemic.ContradictionCandidateId);
+const ReceiptEntity = ProductEntity.make(Epistemic.ContradictionReceiptId);
+const DispositionEntity = ProductEntity.make(Epistemic.ContradictionDispositionId);
 
 /**
  * Immutable, evidence-backed proposal that two exact belief versions
@@ -50,141 +34,51 @@ const proposalTargetsPair = (
  * ```ts
  * import { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradiction"
  *
- * console.log(ContradictionCandidate.definition.entityId.tableName)
+ * console.log(ContradictionCandidate.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export class ContradictionCandidate extends BaseEntity.Class<ContradictionCandidate>($I`ContradictionCandidate`)(
-  Epistemic.ContradictionCandidateId,
+export class ContradictionCandidate extends CandidateEntity.Entity<ContradictionCandidate>(CandidateEntity.tableName)(
   {
-    fields: {
-      candidateKey: ContradictionCandidateKey.annotateKey({
-        description: "Order-independent duplicate-suppression key for the pair and match basis.",
-      }),
-      candidateDigest: ContradictionCandidateDigest.annotateKey({
-        description: "Collision guard over the complete immutable candidate payload.",
-      }),
-      assessment: ContradictionAssessment.annotateKey({
-        description: "Detector confidence and explicit proposals presented for human review.",
-      }),
-      matchBasis: ContradictionMatchBasis.annotateKey({
-        description: "Evidence references and detector revision forming the exact match basis.",
-      }),
-      pair: CanonicalContradictionBeliefPair.annotateKey({
-        description: "Canonical pair of immutable belief-version references.",
-      }),
-      recordedAt: EntitySchema.DateTimeFromMillis.annotateKey({
-        description: "Transaction-time instant when this candidate first became known.",
-      }),
-      validFrom: EntitySchema.DateTimeFromMillis.annotateKey({
-        description: "Inclusive valid-time lower bound of the detected contradiction.",
-      }),
-      validTo: EntitySchema.DateTimeFromMillis.pipe(S.OptionFromNullOr).annotateKey({
+    candidateKey: ContradictionCandidateKey.annotateKey({
+      description: "Order-independent duplicate-suppression key for the pair and match basis.",
+    }).pipe(CandidateEntity.pg.text(), CandidateEntity.pg.columnName("candidate_key")),
+    candidateDigest: ContradictionCandidateDigest.annotateKey({
+      description: "Collision guard over the complete immutable candidate payload.",
+    }).pipe(CandidateEntity.pg.text(), CandidateEntity.pg.columnName("candidate_digest")),
+    assessment: ContradictionAssessment.annotateKey({
+      description: "Detector confidence and explicit proposals presented for human review.",
+    }).pipe(CandidateEntity.pg.jsonb()),
+    matchBasis: ContradictionMatchBasis.annotateKey({
+      description: "Evidence references and detector revision forming the exact match basis.",
+    }).pipe(CandidateEntity.pg.jsonb(), CandidateEntity.pg.columnName("match_basis")),
+    pair: CanonicalContradictionBeliefPair.annotateKey({
+      description: "Canonical pair of immutable belief-version references.",
+    }).pipe(CandidateEntity.pg.jsonb(), CandidateEntity.pg.columnName("belief_pair")),
+    recordedAt: S.DateTimeUtcFromMillis.annotateKey({
+      description: "Transaction-time instant when this candidate first became known.",
+    }).pipe(CandidateEntity.pg.bigint("number"), CandidateEntity.pg.columnName("recorded_at")),
+    validFrom: S.DateTimeUtcFromMillis.annotateKey({
+      description: "Inclusive valid-time lower bound of the detected contradiction.",
+    }).pipe(CandidateEntity.pg.bigint("number"), CandidateEntity.pg.columnName("valid_from")),
+    validTo: S.DateTimeUtcFromMillis.pipe(S.OptionFromNullOr)
+      .annotateKey({
         description: "Exclusive valid-time upper bound; absent while the contradiction remains temporally applicable.",
-      }),
-    },
-    persisted: {
-      candidateKey: EntitySchema.persist.text({
-        columnName: "candidate_key",
-      }),
-      candidateDigest: EntitySchema.persist.text({
-        columnName: "candidate_digest",
-      }),
-      assessment: EntitySchema.persist.jsonb({
-        columnName: "assessment",
-      }),
-      matchBasis: EntitySchema.persist.jsonb({
-        columnName: "match_basis",
-      }),
-      pair: EntitySchema.persist.jsonb({
-        columnName: "belief_pair",
-      }),
-      recordedAt: EntitySchema.persist.timestampMillis({
-        columnName: "recorded_at",
-        indexHints: [EntitySchema.IndexHint.btree],
-      }),
-      validFrom: EntitySchema.persist.timestampMillis({
-        columnName: "valid_from",
-        indexHints: [EntitySchema.IndexHint.btree],
-      }),
-      validTo: EntitySchema.persist.timestampMillis({
-        columnName: "valid_to",
-      }),
-    },
+      })
+      .pipe(CandidateEntity.pg.bigint("number"), CandidateEntity.pg.columnName("valid_to")),
+    ...CandidateEntity.identityFields,
   },
   $I.annote("ContradictionCandidate", {
     description: "Immutable evidence-backed proposal that two exact belief versions contradict.",
-  })
-) {
-  /**
-   * Recompute every digest and key sealing this immutable candidate.
-   *
-   * **Example** (Validate candidate seals)
-   *
-   * ```ts
-   * import type { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradiction"
-   * import * as Result from "effect/Result"
-   *
-   * const acceptsCandidate = (candidate: ContradictionCandidate): boolean =>
-   *   Result.getOrThrow(candidate.hasValidSeals())
-   * ```
-   *
-   * @returns A non-throwing result containing `true` only when the evidence
-   * digest, candidate key, every proposal digest, and candidate payload digest
-   * all seal the exact values carried by this row.
-   * @category validation
-   * @since 0.0.0
-   */
-  readonly hasValidSeals = (): Result.Result<boolean, S.SchemaError> => {
-    const proposalSeals = pipe(
-      this.assessment.proposals,
-      A.map((proposal) =>
-        Result.map(
-          contradictionProposalDigest(
-            ContradictionProposalContent.make({
-              fact: proposal.fact,
-              losingBelief: proposal.losingBelief,
-              proposalId: proposal.proposalId,
-              rationale: proposal.rationale,
-              validFrom: proposal.validFrom,
-              validTo: proposal.validTo,
-            })
-          ),
-          (digest) => Eq.equals(digest, proposal.proposalDigest)
-        )
-      ),
-      Result.all
-    );
-
-    const candidateContent = {
-      assessment: this.assessment,
-      matchBasis: this.matchBasis,
-      pair: this.pair,
-      validFrom: this.validFrom,
-      validTo: this.validTo,
-    } satisfies ContradictionCandidateContent;
-
-    return Result.flatMap(proposalSeals, (validProposalSeals) =>
-      Result.map(contradictionCandidateDigest(candidateContent), (candidateDigest) =>
-        A.every(
-          [
-            Eq.equals(
-              contradictionEvidenceDigest(this.matchBasis.leftEvidenceIds, this.matchBasis.rightEvidenceIds),
-              this.matchBasis.evidenceDigest
-            ),
-            Eq.equals(contradictionCandidateKey(this.pair, this.matchBasis), this.candidateKey),
-            A.every(this.assessment.proposals, (proposal) => proposalTargetsPair(this.pair, proposal)),
-            ...validProposalSeals,
-            Eq.equals(candidateDigest, this.candidateDigest),
-          ],
-          identity
-        )
-      )
-    );
-  };
-}
+  }),
+  (columns) => [
+    CandidateEntity.Table.index("epistemic_contradiction_candidate_recorded_at_btree_idx", [columns.recordedAt]),
+    CandidateEntity.Table.index("epistemic_contradiction_candidate_valid_from_btree_idx", [columns.validFrom]),
+    ...CandidateEntity.entityExtras(columns),
+  ]
+) {}
 
 /**
  * Durable receipt proving a submission was observed even when its candidate
@@ -195,48 +89,35 @@ export class ContradictionCandidate extends BaseEntity.Class<ContradictionCandid
  * ```ts
  * import { ContradictionReceipt } from "@beep/epistemic-domain/entities/Contradiction"
  *
- * console.log(ContradictionReceipt.definition.entityId.tableName)
+ * console.log(ContradictionReceipt.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export class ContradictionReceipt extends BaseEntity.Class<ContradictionReceipt>($I`ContradictionReceipt`)(
-  Epistemic.ContradictionReceiptId,
+export class ContradictionReceipt extends ReceiptEntity.Entity<ContradictionReceipt>(ReceiptEntity.tableName)(
   {
-    fields: {
-      candidateId: Epistemic.ContradictionCandidateId.annotateKey({
-        description: "Canonical candidate this submission resolved to.",
-      }),
-      receiptKey: ContradictionReceiptKey.annotateKey({
-        description: "Caller-owned idempotency key for this submission receipt.",
-      }),
-      receivedAt: EntitySchema.DateTimeFromMillis.annotateKey({
-        description: "Transaction-time instant when the submission was received.",
-      }),
-      receivedBy: Principal.annotateKey({
-        description: "Principal responsible for the submitted candidate.",
-      }),
-    },
-    persisted: {
-      candidateId: EntitySchema.persist.entityId({
-        columnName: "candidate_id",
-        indexHints: [EntitySchema.IndexHint.btree],
-      }),
-      receiptKey: EntitySchema.persist.text({
-        columnName: "receipt_key",
-      }),
-      receivedAt: EntitySchema.persist.timestampMillis({
-        columnName: "received_at",
-      }),
-      receivedBy: EntitySchema.persist.jsonb({
-        columnName: "received_by",
-      }),
-    },
+    candidateId: Epistemic.ContradictionCandidateId.annotateKey({
+      description: "Canonical candidate this submission resolved to.",
+    }).pipe(ReceiptEntity.pg.integer(), ReceiptEntity.pg.columnName("candidate_id")),
+    receiptKey: ContradictionReceiptKey.annotateKey({
+      description: "Caller-owned idempotency key for this submission receipt.",
+    }).pipe(ReceiptEntity.pg.text(), ReceiptEntity.pg.columnName("receipt_key")),
+    receivedAt: S.DateTimeUtcFromMillis.annotateKey({
+      description: "Transaction-time instant when the submission was received.",
+    }).pipe(ReceiptEntity.pg.bigint("number"), ReceiptEntity.pg.columnName("received_at")),
+    receivedBy: Principal.annotateKey({
+      description: "Principal responsible for the submitted candidate.",
+    }).pipe(ReceiptEntity.pg.jsonb(), ReceiptEntity.pg.columnName("received_by")),
+    ...ReceiptEntity.identityFields,
   },
   $I.annote("ContradictionReceipt", {
     description: "Durable receipt for a contradiction submission, including duplicate submissions.",
-  })
+  }),
+  (columns) => [
+    ReceiptEntity.Table.index("epistemic_contradiction_receipt_candidate_id_btree_idx", [columns.candidateId]),
+    ...ReceiptEntity.entityExtras(columns),
+  ]
 ) {}
 
 /**
@@ -247,46 +128,37 @@ export class ContradictionReceipt extends BaseEntity.Class<ContradictionReceipt>
  * ```ts
  * import { ContradictionDisposition } from "@beep/epistemic-domain/entities/Contradiction"
  *
- * console.log(ContradictionDisposition.definition.entityId.tableName)
+ * console.log(ContradictionDisposition.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export class ContradictionDisposition extends BaseEntity.Class<ContradictionDisposition>($I`ContradictionDisposition`)(
-  Epistemic.ContradictionDispositionId,
+export class ContradictionDisposition extends DispositionEntity.Entity<ContradictionDisposition>(
+  DispositionEntity.tableName
+)(
   {
-    fields: {
-      candidateId: Epistemic.ContradictionCandidateId.annotateKey({
-        description: "Contradiction candidate resolved by this disposition.",
-      }),
-      decision: ContradictionDispositionDecision.annotateKey({
-        description: "Typed rejection or completed supersession outcome.",
-      }),
-      resolvedAt: EntitySchema.DateTimeFromMillis.annotateKey({
-        description: "Transaction-time instant when the human disposition was recorded.",
-      }),
-      resolvedBy: Principal.annotateKey({
-        description: "Principal who decided the contradiction disposition.",
-      }),
-    },
-    persisted: {
-      candidateId: EntitySchema.persist.entityId({
-        columnName: "candidate_id",
-        indexHints: [EntitySchema.IndexHint.unique],
-      }),
-      decision: EntitySchema.persist.jsonb({
-        columnName: "decision",
-      }),
-      resolvedAt: EntitySchema.persist.timestampMillis({
-        columnName: "resolved_at",
-      }),
-      resolvedBy: EntitySchema.persist.jsonb({
-        columnName: "resolved_by",
-      }),
-    },
+    candidateId: Epistemic.ContradictionCandidateId.annotateKey({
+      description: "Contradiction candidate resolved by this disposition.",
+    }).pipe(DispositionEntity.pg.integer(), DispositionEntity.pg.columnName("candidate_id")),
+    decision: ContradictionDispositionDecision.annotateKey({
+      description: "Typed rejection or completed supersession outcome.",
+    }).pipe(DispositionEntity.pg.jsonb()),
+    resolvedAt: S.DateTimeUtcFromMillis.annotateKey({
+      description: "Transaction-time instant when the human disposition was recorded.",
+    }).pipe(DispositionEntity.pg.bigint("number"), DispositionEntity.pg.columnName("resolved_at")),
+    resolvedBy: Principal.annotateKey({
+      description: "Principal who decided the contradiction disposition.",
+    }).pipe(DispositionEntity.pg.jsonb(), DispositionEntity.pg.columnName("resolved_by")),
+    ...DispositionEntity.identityFields,
   },
   $I.annote("ContradictionDisposition", {
     description: "Append-only human disposition rejecting a contradiction or recording its atomic supersession.",
-  })
+  }),
+  (columns) => [
+    DispositionEntity.Table.uniqueIndex("epistemic_contradiction_disposition_candidate_id_unique_idx", [
+      columns.candidateId,
+    ]),
+    ...DispositionEntity.entityExtras(columns),
+  ]
 ) {}

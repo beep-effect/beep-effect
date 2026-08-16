@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { EvidenceVerification } from "@beep/epistemic-domain/entities/EvidenceVerification";
+import { EvidenceVerification, hasValidManifestationKey } from "@beep/epistemic-domain/entities/EvidenceVerification";
 import { EvidenceSpan } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { DateTime, Result, SchemaIssue } from "effect";
 import * as Eq from "effect/Equal";
@@ -53,7 +53,7 @@ const decodeEvidenceVerificationRow = S.decodeUnknownResult(EvidenceVerification
 const validateManifestationKey = (
   verification: EvidenceVerification
 ): Result.Result<EvidenceVerification, S.SchemaError> =>
-  Result.flatMap(verification.hasValidManifestationKey(), (isValid) =>
+  Result.flatMap(hasValidManifestationKey(verification), (isValid) =>
     isValid
       ? Result.succeed(verification)
       : Result.fail(

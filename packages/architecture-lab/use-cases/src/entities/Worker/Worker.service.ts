@@ -38,11 +38,12 @@ import type { WorkerUseCasesShape } from "./Worker.use-cases.ts";
  *   WorkerRepositoryNotFound,
  *   toWorkerActionError
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const publicError = toWorkerActionError(
  *   WorkerRepositoryNotFound.make({
- *     workerId: S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ *     workerId: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  *   })
  * )
  *
@@ -79,11 +80,12 @@ export const toWorkerActionError: (error: WorkerRepositoryError) => WorkerAction
  *   makeWorkerUseCases,
  *   type WorkerRepositoryShape
  * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const id = S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ * const id = S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  * const worker = DomainWorker.create(
  *   DomainWorker.CreateWorkerInput.make({
  *     id,

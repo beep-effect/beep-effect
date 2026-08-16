@@ -94,14 +94,18 @@ describe("@beep/workspace-domain", () => {
       fcRuns(25)
     ));
 
-  it("wires Workspace to the workspace BaseEntity identity", () => {
-    expect(WorkspaceEntity.definition.entityId).toBe(WorkspaceIdentity.WorkspaceId);
-    expect(WorkspaceEntity.definition.entityId.tableName).toBe("workspace_workspace");
-    expect(WorkspaceEntity.definition.entityId.entityType).toBe("WorkspaceWorkspace");
-    expect(WorkspaceEntity.definition.persisted.id.storageKind).toBe("entityId");
-    expect(WorkspaceEntity.definition.persisted.ownerPrincipalFixtureKey.columnName).toBe(
-      "owner_principal_fixture_key"
-    );
+  it("wires Workspace to the workspace ProductEntity identity", () => {
+    expect(WorkspaceEntity.sql.tableName).toBe(WorkspaceIdentity.WorkspaceId.tableName);
+    expect(WorkspaceIdentity.WorkspaceId.entityType).toBe("WorkspaceWorkspace");
+    expect(Object.keys(WorkspaceEntity.insert.fields)).not.toContain("id");
+    expect(Object.keys(WorkspaceEntity.update.fields)).toContain("id");
+    expect(Object.keys(WorkspaceEntity.jsonCreate.fields)).toEqual([
+      "fixtureKey",
+      "name",
+      "organizationFixtureKey",
+      "ownerPrincipalFixtureKey",
+      "vaultRootPath",
+    ]);
   });
 
   it("decodes and constructs a Workspace row", () => {
@@ -171,14 +175,12 @@ describe("@beep/workspace-domain", () => {
   });
 
   it("wires Thread, Turn, and Message to workspace identities", () => {
-    expect(Thread.definition.entityId).toBe(WorkspaceIdentity.ThreadId);
-    expect(Thread.definition.entityId.tableName).toBe("workspace_thread");
-    expect(Turn.definition.entityId).toBe(WorkspaceIdentity.TurnId);
-    expect(Turn.definition.entityId.tableName).toBe("workspace_turn");
-    expect(Turn.definition.persisted.parentTurnId.columnName).toBe("parent_turn_id");
-    expect(Message.definition.entityId).toBe(WorkspaceIdentity.MessageId);
-    expect(Message.definition.entityId.tableName).toBe("workspace_message");
-    expect(Message.definition.persisted.content.storageKind).toBe("jsonb");
+    expect(Thread.sql.tableName).toBe(WorkspaceIdentity.ThreadId.tableName);
+    expect(Turn.sql.tableName).toBe(WorkspaceIdentity.TurnId.tableName);
+    expect(Message.sql.tableName).toBe(WorkspaceIdentity.MessageId.tableName);
+    expect(Object.keys(Thread.jsonCreate.fields)).toEqual(["title", "workspaceId"]);
+    expect(Object.keys(Turn.jsonCreate.fields)).toEqual(["items", "parentTurnId", "threadId", "turnIndex"]);
+    expect(Object.keys(Message.jsonCreate.fields)).toEqual(["content", "role", "threadId", "turnId"]);
   });
 
   it("decodes thread branching and md-aligned message content", () => {

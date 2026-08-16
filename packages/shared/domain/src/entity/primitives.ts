@@ -1,5 +1,5 @@
 /**
- * Shared-domain primitive schemas used by BaseEntity and entity schemas.
+ * Shared-domain primitive schemas used by ProductEntity and entity schemas.
  *
  * @packageDocumentation
  * @since 0.0.0

@@ -6,6 +6,13 @@
  */
 
 /**
+ * Contradiction-candidate behavior exports.
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * from "./Contradiction.behavior.ts";
+/**
  * Contradiction-candidate entity model exports.
  *
  * @category entities

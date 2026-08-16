@@ -46,28 +46,13 @@ export * as Aggregates from "./aggregates/index.ts";
  * ```ts
  * import { Entities } from "@beep/shared-domain"
  *
- * console.log(Entities.Organization.Model.definition.tableName)
+ * console.log(Entities.Organization.Model.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
 export * as Entities from "./entities/index.ts";
-/**
- * Product-facing persisted entity base constructor.
- *
- * **Example** (Inspect createdAt column name)
- *
- * ```ts
- * import { BaseEntity } from "@beep/shared-domain"
- *
- * console.log(BaseEntity.BaseEntity.definition.persisted.createdAt.columnName)
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export * as BaseEntity from "./entity/BaseEntity.ts";
 /**
  * Entity identifier constructor namespace.
  *
@@ -113,6 +98,13 @@ export * as EntityRef from "./entity/EntityRef.ts";
  * @since 0.0.0
  */
 export * as Principal from "./entity/Principal.ts";
+/**
+ * Effect-drizzle product entity kit.
+ *
+ * @category factories
+ * @since 0.0.0
+ */
+export * as ProductEntity from "./entity/ProductEntity.ts";
 /**
  * URL-safe public entity identifier constructor namespace.
  *

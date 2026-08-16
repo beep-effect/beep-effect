@@ -73,12 +73,13 @@
     }
   },
   "dependencies": {
-    "@beep/drizzle": "workspace:^",
+    "@beep/effect-drizzle": "workspace:^",
     "@beep/epistemic-domain": "workspace:^",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/shared-domain": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"

@@ -2,20 +2,20 @@ import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
 import { EpistemicServerLive } from "@beep/epistemic-server/layer";
 import { ClaimGate } from "@beep/epistemic-use-cases/ClaimGate";
 import { ClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const candidate = S.decodeUnknownSync(CandidateClaim)({
-  ...baseEntityFixtureInput("EpistemicCandidateClaim", 1),
+  ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
   fixtureKey: "claim.patentability",
   lifecycle: "candidate",
   snapshot: {},
 });
 
 const evidence = S.decodeUnknownSync(Evidence)({
-  ...baseEntityFixtureInput("EpistemicEvidence", 2),
+  ...productEntityFixtureInput("EpistemicEvidence", 2),
   artifactFixtureKey: "artifact.office-action",
   spanFixtureKey: "span.claim-1",
   span: { startChar: 0, endChar: 14, quote: "a claimed fact", confidence: 0.9 },

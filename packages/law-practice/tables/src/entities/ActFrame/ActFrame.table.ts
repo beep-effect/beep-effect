@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { ActFrame } from "@beep/law-practice-domain/entities/ActFrame";
 
 /**
@@ -28,11 +28,12 @@ import { ActFrame } from "@beep/law-practice-domain/entities/ActFrame";
  *
  * ```ts
  * import { ActFrame } from "@beep/law-practice-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(ActFrame.Table.definition.tableName) // "law_practice_act_frame"
+ * console.log(getTableName(ActFrame.Table)) // "law_practice_act_frame"
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(ActFrame);
+export const Table = toPgTable(ActFrame);

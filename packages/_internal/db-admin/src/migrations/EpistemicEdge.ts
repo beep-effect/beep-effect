@@ -7,6 +7,7 @@
  */
 
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
+import { getTableName } from "drizzle-orm";
 import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 
 /**
@@ -36,10 +37,10 @@ export const EpistemicEdgeMigrationTarget: DbAdminMigrationTarget = DbAdminMigra
   name: "epistemic-edge",
   schemaName: "epistemic",
   tables: [
-    EpistemicDbSchema.candidateClaim.definition.tableName,
-    EpistemicDbSchema.evidence.definition.tableName,
-    EpistemicDbSchema.edgeVersion.definition.tableName,
-    EpistemicDbSchema.claimDisposition.definition.tableName,
+    getTableName(EpistemicDbSchema.candidateClaim),
+    getTableName(EpistemicDbSchema.evidence),
+    getTableName(EpistemicDbSchema.edgeVersion),
+    getTableName(EpistemicDbSchema.claimDisposition),
   ],
   drizzleSchema: {
     candidateClaim: EpistemicDbSchema.candidateClaim,

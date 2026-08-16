@@ -5,8 +5,7 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as S from "effect/Schema";
 import {
@@ -17,6 +16,7 @@ import {
 } from "./PowerExercise.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/PowerExercise/PowerExercise.model");
+const PowerExerciseEntity = ProductEntity.make(LawPractice.PowerExerciseId);
 
 /**
  * One attempt to exercise a power, recorded whether or not it worked.
@@ -71,51 +71,32 @@ const $I = $LawPracticeDomainId.create("entities/PowerExercise/PowerExercise.mod
  * @category entities
  * @since 0.0.0
  */
-export class PowerExercise extends BaseEntity.Class<PowerExercise>($I`PowerExercise`)(
-  LawPractice.PowerExerciseId,
+export class PowerExercise extends PowerExerciseEntity.Entity<PowerExercise>(PowerExerciseEntity.tableName)(
   {
-    fields: {
-      attemptedAt: EntitySchema.DateTimeFromMillis.annotateKey({
-        description: "Time the act was attempted, recorded for audit and never used to establish effect.",
-      }),
-      authorityBasis: AssertedAuthorityBasis.annotateKey({
-        description: "Authority claimed for the act: role, norm, cited power, and conferring exercise.",
-      }),
-      frame: LawPractice.ActFrameId.annotateKey({
-        description: "Recorded act frame this attempt instantiates.",
-      }),
-      preconditionAssertions: S.Array(PreconditionAssertion).annotateKey({
+    attemptedAt: S.DateTimeUtcFromMillis.annotateKey({
+      description: "Time the act was attempted, recorded for audit and never used to establish effect.",
+    }).pipe(PowerExerciseEntity.pg.bigint("number"), PowerExerciseEntity.pg.columnName("attempted_at")),
+    authorityBasis: AssertedAuthorityBasis.annotateKey({
+      description: "Authority claimed for the act: role, norm, cited power, and conferring exercise.",
+    }).pipe(PowerExerciseEntity.pg.jsonb(), PowerExerciseEntity.pg.columnName("authority_basis")),
+    frame: LawPractice.ActFrameId.annotateKey({
+      description: "Recorded act frame this attempt instantiates.",
+    }).pipe(PowerExerciseEntity.pg.integer()),
+    preconditionAssertions: S.Array(PreconditionAssertion)
+      .annotateKey({
         description: "What was asserted about the frame's conditions on this occasion; unlisted ones are unaddressed.",
-      }),
-      result: ExerciseResult.annotateKey({
-        description: "Required record of what was determined about the attempt, on two axes plus a disposition.",
-      }),
-      slotAssignments: S.Array(ActFrameSlotAssignment).annotateKey({
-        description: "Parties recorded as filling the frame's slots on this occasion.",
-      }),
-    },
-    persisted: {
-      attemptedAt: EntitySchema.persist.timestampMillis({
-        columnName: "attempted_at",
-      }),
-      authorityBasis: EntitySchema.persist.jsonb({
-        columnName: "authority_basis",
-      }),
-      frame: EntitySchema.persist.entityId({
-        columnName: "frame",
-      }),
-      preconditionAssertions: EntitySchema.persist.jsonb({
-        columnName: "precondition_assertions",
-      }),
-      result: EntitySchema.persist.jsonb({
-        columnName: "result",
-      }),
-      slotAssignments: EntitySchema.persist.jsonb({
-        columnName: "slot_assignments",
-      }),
-    },
+      })
+      .pipe(PowerExerciseEntity.pg.jsonb(), PowerExerciseEntity.pg.columnName("precondition_assertions")),
+    result: ExerciseResult.annotateKey({
+      description: "Required record of what was determined about the attempt, on two axes plus a disposition.",
+    }).pipe(PowerExerciseEntity.pg.jsonb()),
+    slotAssignments: S.Array(ActFrameSlotAssignment)
+      .annotateKey({ description: "Parties recorded as filling the frame's slots on this occasion." })
+      .pipe(PowerExerciseEntity.pg.jsonb(), PowerExerciseEntity.pg.columnName("slot_assignments")),
+    ...PowerExerciseEntity.identityFields,
   },
   $I.annote("PowerExercise", {
     description: "One recorded attempt to exercise a power, kept on the record whether or not it took effect.",
-  })
+  }),
+  PowerExerciseEntity.entityExtras
 ) {}

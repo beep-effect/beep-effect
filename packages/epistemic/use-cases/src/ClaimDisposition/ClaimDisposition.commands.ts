@@ -12,7 +12,6 @@
 
 import { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
-import * as BaseEntitySchema from "@beep/shared-domain/entity/BaseEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as S from "effect/Schema";
 
@@ -63,7 +62,6 @@ const $I = $EpistemicUseCasesId.create("ClaimDisposition/ClaimDisposition.comman
  */
 export class ClaimDispositionAppend extends S.Class<ClaimDispositionAppend>($I`ClaimDispositionAppend`)(
   {
-    ...BaseEntitySchema.fields,
     ...ClaimDisposition.fields,
     entityType: S.tag(Epistemic.ClaimDispositionId.entityType),
     id: Epistemic.ClaimDispositionId,

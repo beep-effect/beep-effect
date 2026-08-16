@@ -22,7 +22,7 @@ import {
 } from "@beep/epistemic-use-cases/EdgeAuthority";
 import * as Pglite from "@beep/pglite";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
-import { baseEntityFixtureInput, makePgliteIntegrationGate, provideScopedLayer } from "@beep/test-utils";
+import { makePgliteIntegrationGate, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -98,7 +98,7 @@ const writeHistory = Effect.fnUntraced(function* () {
     .values(
       toCandidateClaimInsert(
         decodeClaim({
-          ...baseEntityFixtureInput("EpistemicCandidateClaim", 1),
+          ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
           fixtureKey: "claim.restart",
           lifecycle: "candidate",
           snapshot: {},
@@ -111,7 +111,7 @@ const writeHistory = Effect.fnUntraced(function* () {
     .values(
       toEvidenceInsert(
         decodeEvidence({
-          ...baseEntityFixtureInput("EpistemicEvidence", 1),
+          ...productEntityFixtureInput("EpistemicEvidence", 1),
           artifactFixtureKey: "artifact.restart",
           span: { confidence: 0.9, endChar: 14, quote: "a claimed fact", startChar: 0 },
           spanFixtureKey: "span.restart",
@@ -160,7 +160,7 @@ const writeHistory = Effect.fnUntraced(function* () {
   const outcome = yield* resolver.resolve(
     decodeOutcomeInput({
       claim: {
-        ...baseEntityFixtureInput("EpistemicCandidateClaim", claimRow.id),
+        ...productEntityFixtureInput("EpistemicCandidateClaim", claimRow.id),
         fixtureKey: "claim.restart",
         lifecycle: "candidate",
         snapshot: {},

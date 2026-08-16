@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import {
   ContradictionCandidate,
   ContradictionDisposition,
@@ -25,14 +25,15 @@ import {
  *
  * ```ts
  * import { candidateTable } from "@beep/epistemic-tables/entities/Contradiction"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(candidateTable.definition.tableName)
+ * console.log(getTableName(candidateTable))
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const candidateTable = EntityTable.pgTableFrom(ContradictionCandidate);
+export const candidateTable = toPgTable(ContradictionCandidate);
 
 /**
  * PGLite/Postgres table for contradiction-submission receipts.
@@ -47,14 +48,15 @@ export const candidateTable = EntityTable.pgTableFrom(ContradictionCandidate);
  *
  * ```ts
  * import { receiptTable } from "@beep/epistemic-tables/entities/Contradiction"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(receiptTable.definition.tableName)
+ * console.log(getTableName(receiptTable))
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const receiptTable = EntityTable.pgTableFrom(ContradictionReceipt);
+export const receiptTable = toPgTable(ContradictionReceipt);
 
 /**
  * PGLite/Postgres table for contradiction dispositions.
@@ -68,11 +70,12 @@ export const receiptTable = EntityTable.pgTableFrom(ContradictionReceipt);
  *
  * ```ts
  * import { dispositionTable } from "@beep/epistemic-tables/entities/Contradiction"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(dispositionTable.definition.tableName)
+ * console.log(getTableName(dispositionTable))
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const dispositionTable = EntityTable.pgTableFrom(ContradictionDisposition);
+export const dispositionTable = toPgTable(ContradictionDisposition);

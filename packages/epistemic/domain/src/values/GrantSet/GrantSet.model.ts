@@ -20,7 +20,6 @@
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { A } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -154,7 +153,7 @@ export class FrozenGrantSet extends S.Class<FrozenGrantSet>($I`FrozenGrantSet`)(
     policyRevision: PolicyRevision.annotateKey({
       description: "Policy revision the set was frozen under.",
     }),
-    frozenAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    frozenAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Instant the set was sealed; part of the digest input.",
     }),
     digest: GrantSetDigest.annotateKey({
@@ -315,7 +314,7 @@ export const addGrant: {
  */
 export class GrantSetDigestInput extends S.Class<GrantSetDigestInput>($I`GrantSetDigestInput`)(
   {
-    frozenAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    frozenAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Instant the set was sealed.",
     }),
     grants: S.Array(ExecutionGrant).annotateKey({

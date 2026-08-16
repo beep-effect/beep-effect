@@ -5,7 +5,8 @@ import {
   syncCursorTable,
   toSyncCursorInsert,
 } from "@beep/documents-tables/entities/SyncCursor";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -25,7 +26,7 @@ const indexConfigNamed = (name: string) =>
   );
 
 const activeCursorRow = {
-  ...baseEntityFixtureInput(DomainSyncCursor.SyncCursorId.entityType, 30),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncCursorId.entityType, 30),
   lastError: null,
   lastEventId: "evt-1",
   provider: "box",
@@ -40,9 +41,7 @@ describe("SyncCursor table", () => {
 
     expect(getTableConfig(syncCursorTable).name).toBe("documents_sync_cursor");
     expect(SYNC_CURSOR_TABLE_NAME).toBe("documents_sync_cursor");
-    expect(syncCursorTable.definition).toBe(DomainSyncCursor.SyncCursor.definition);
-    expect(syncCursorTable.definition.entityId.entityType).toBe("DocumentsSyncCursor");
-    expect(syncCursorTable.entitySchema).toBe(DomainSyncCursor.SyncCursor);
+    expect(DomainSyncCursor.SyncCursor.sql.tableName).toBe("documents_sync_cursor");
     expect(columns.id.primary).toBe(true);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.lastError.name).toBe("last_error");

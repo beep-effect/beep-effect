@@ -5,14 +5,14 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { PartyKind } from "../../values/PartyKind/index.ts";
 import { LawPracticeText } from "../LawPracticeEntity.fields.ts";
 import { PartyReference } from "./Party.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Party/Party.model");
+const PartyEntity = ProductEntity.make(LawPractice.PartyId);
 
 /**
  * One legal person a position can be held by or against.
@@ -51,33 +51,21 @@ const $I = $LawPracticeDomainId.create("entities/Party/Party.model");
  * @category entities
  * @since 0.0.0
  */
-export class Party extends BaseEntity.Class<Party>($I`Party`)(
-  LawPractice.PartyId,
+export class Party extends PartyEntity.Entity<Party>(PartyEntity.tableName)(
   {
-    fields: {
-      displayName: LawPracticeText.annotateKey({
-        description: "Human-readable name for the party, recorded for display and never used as identity.",
-      }),
-      kind: PartyKind.annotateKey({
-        description: "Whether the party is a natural person or a juristic one.",
-      }),
-      reference: PartyReference.annotateKey({
-        description: "Opaque text reference to the existing law-practice record this party is.",
-      }),
-    },
-    persisted: {
-      displayName: EntitySchema.persist.text({
-        columnName: "display_name",
-      }),
-      kind: EntitySchema.persist.literal({
-        columnName: "kind",
-      }),
-      reference: EntitySchema.persist.jsonb({
-        columnName: "reference",
-      }),
-    },
+    displayName: LawPracticeText.annotateKey({
+      description: "Human-readable name for the party, recorded for display and never used as identity.",
+    }).pipe(PartyEntity.pg.text(), PartyEntity.pg.columnName("display_name")),
+    kind: PartyKind.annotateKey({
+      description: "Whether the party is a natural person or a juristic one.",
+    }).pipe(PartyEntity.pg.text()),
+    reference: PartyReference.annotateKey({
+      description: "Opaque text reference to the existing law-practice record this party is.",
+    }).pipe(PartyEntity.pg.jsonb()),
+    ...PartyEntity.identityFields,
   },
   $I.annote("Party", {
     description: "One legal person a position can be held by or against, referencing an existing record by text.",
-  })
+  }),
+  PartyEntity.entityExtras
 ) {}

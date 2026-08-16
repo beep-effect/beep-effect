@@ -9,7 +9,7 @@ import { toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { EdgeAsOfQuery, RecordEdgeFact, SupersedeEdgeFact } from "@beep/epistemic-use-cases/EdgeAuthority";
 import * as Pglite from "@beep/pglite";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
-import { baseEntityFixtureInput, makePgliteIntegrationGate, provideScopedLayer } from "@beep/test-utils";
+import { makePgliteIntegrationGate, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -220,7 +220,7 @@ const runFirstScope = Effect.fnUntraced(function* () {
     .values([
       toCandidateClaimInsert(
         decodeClaim({
-          ...baseEntityFixtureInput("EpistemicCandidateClaim", 801),
+          ...productEntityFixtureInput("EpistemicCandidateClaim", 801),
           fixtureKey: "claim-a",
           lifecycle: "candidate",
           snapshot: {},
@@ -228,7 +228,7 @@ const runFirstScope = Effect.fnUntraced(function* () {
       ),
       toCandidateClaimInsert(
         decodeClaim({
-          ...baseEntityFixtureInput("EpistemicCandidateClaim", 802),
+          ...productEntityFixtureInput("EpistemicCandidateClaim", 802),
           fixtureKey: "claim-b",
           lifecycle: "candidate",
           snapshot: {},
@@ -241,7 +241,7 @@ const runFirstScope = Effect.fnUntraced(function* () {
     .values([
       toEvidenceInsert(
         decodeEvidence({
-          ...baseEntityFixtureInput("EpistemicEvidence", 801),
+          ...productEntityFixtureInput("EpistemicEvidence", 801),
           artifactFixtureKey: "contradiction-p0.source-a",
           span: { confidence: 0.95, endChar: 8, quote: "amount A", startChar: 0 },
           spanFixtureKey: "span-a",
@@ -249,7 +249,7 @@ const runFirstScope = Effect.fnUntraced(function* () {
       ),
       toEvidenceInsert(
         decodeEvidence({
-          ...baseEntityFixtureInput("EpistemicEvidence", 802),
+          ...productEntityFixtureInput("EpistemicEvidence", 802),
           artifactFixtureKey: "contradiction-p0.source-b",
           span: { confidence: 0.94, endChar: 8, quote: "amount B", startChar: 0 },
           spanFixtureKey: "span-b",

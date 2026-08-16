@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic";
 import {
   ContradictionAssessment,
   ContradictionBeliefPair,
@@ -18,11 +17,11 @@ import {
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { SourceKind } from "@beep/shared-domain/entity/SourceKind";
+import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import { DateTime, Effect, identity, Order } from "effect";
@@ -50,7 +49,7 @@ class SubmitContradictionCandidateStruct extends S.Class<SubmitContradictionCand
     receiptKey: ContradictionReceiptKey.annotateKey({
       description: "Caller-owned idempotency key for this individual submission.",
     }),
-    recordedAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    recordedAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Transaction-time instant when the candidate became known.",
     }),
     receivedBy: Principal.annotateKey({
@@ -62,10 +61,10 @@ class SubmitContradictionCandidateStruct extends S.Class<SubmitContradictionCand
     schemaVersion: SemanticVersion.annotateKey({
       description: "Schema version stamped on the candidate and receipt.",
     }),
-    validFrom: EntitySchema.DateTimeFromMillis.annotateKey({
+    validFrom: S.DateTimeUtcFromMillis.annotateKey({
       description: "Inclusive valid-time lower bound of the detected contradiction.",
     }),
-    validTo: EntitySchema.DateTimeFromMillis.pipe(S.OptionFromNullOr).annotateKey({
+    validTo: S.DateTimeUtcFromMillis.pipe(S.OptionFromNullOr).annotateKey({
       description: "Exclusive valid-time upper bound; absent while temporally open.",
     }),
   },
@@ -262,7 +261,7 @@ export class ListContradictionCandidates extends S.Class<ListContradictionCandid
     disposition: ContradictionDispositionFilter.annotateKey({
       description: "Disposition state to include.",
     }),
-    knownAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    knownAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Transaction-time instant at which candidate state is asked.",
     }),
     limit: ContradictionCandidatePageLimit.annotateKey({
@@ -274,7 +273,7 @@ export class ListContradictionCandidates extends S.Class<ListContradictionCandid
     orgId: Shared.OrganizationId.annotateKey({
       description: "Organization whose candidates may be returned.",
     }),
-    validAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    validAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Valid-time instant at which contradiction applicability is asked.",
     }),
   },
@@ -290,7 +289,7 @@ export class ListContradictionCandidates extends S.Class<ListContradictionCandid
  *
  * ```ts
  * import { GetContradictionCandidate } from "@beep/epistemic-use-cases/public"
- * import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic"
+ * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  * import { DateTime } from "effect"
  *
  * const at = DateTime.makeUnsafe(0)
@@ -311,10 +310,10 @@ export class GetContradictionCandidate extends S.Class<GetContradictionCandidate
     candidateId: Epistemic.ContradictionCandidateId.annotateKey({
       description: "Candidate whose expanded persisted state is requested.",
     }),
-    knownAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    knownAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Transaction-time instant at which candidate state is requested.",
     }),
-    validAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    validAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Valid-time instant at which contradiction applicability is requested.",
     }),
   },
@@ -335,7 +334,7 @@ export class GetContradictionCandidate extends S.Class<GetContradictionCandidate
  *
  * ```ts
  * import { GetExpandedContradictionCandidate } from "@beep/epistemic-use-cases/server"
- * import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic"
+ * import * as Epistemic from "@beep/shared-domain/identity/Epistemic"
  * import * as Shared from "@beep/shared-domain/identity/Shared"
  * import { DateTime } from "effect"
  *
@@ -367,7 +366,7 @@ export class GetExpandedContradictionCandidate extends S.Class<GetExpandedContra
     ).annotateKey({
       description: "Optional candidate-bound evidence id used to narrow verification expansion.",
     }),
-    knownAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    knownAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Transaction-time instant at which candidate state is requested.",
     }),
     orgId: Shared.OrganizationId.annotateKey({
@@ -376,7 +375,7 @@ export class GetExpandedContradictionCandidate extends S.Class<GetExpandedContra
     sourceScopeRef: SourceTextIdentity.fields.scopeRef.annotateKey({
       description: "Authenticated source scope allowed to contribute verification metadata.",
     }),
-    validAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    validAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Valid-time instant at which contradiction applicability is requested.",
     }),
   },

@@ -15,7 +15,6 @@
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as S from "effect/Schema";
@@ -442,7 +441,7 @@ export class ExecutionGrant extends S.Class<ExecutionGrant>($I`ExecutionGrant`)(
     policyRevision: PolicyRevision.annotateKey({
       description: "Policy revision the grant was issued under.",
     }),
-    expiresAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    expiresAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Instant after which the grant no longer authorizes anything.",
     }),
   },

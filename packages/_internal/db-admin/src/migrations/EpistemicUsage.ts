@@ -7,6 +7,7 @@
  */
 
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
+import { TABLE_NAME as USAGE_RECORD_TABLE_NAME } from "@beep/epistemic-tables/entities/UsageRecord";
 import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 
 /**
@@ -26,7 +27,7 @@ import { DbAdminMigrationTarget } from "./ArchitectureLab.ts";
 export const EpistemicUsageMigrationTarget: DbAdminMigrationTarget = DbAdminMigrationTarget.make({
   name: "epistemic-usage",
   schemaName: "epistemic",
-  tables: [EpistemicDbSchema.usageRecord.definition.tableName],
+  tables: [USAGE_RECORD_TABLE_NAME],
   drizzleSchema: {
     usageRecord: EpistemicDbSchema.usageRecord,
   },

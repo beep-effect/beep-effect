@@ -13,7 +13,7 @@
  * ```ts
  * import { CandidateDraft } from "@beep/workspace-tables/entities"
  *
- * console.log(CandidateDraft.Table.definition.tableName)
+ * console.log(CandidateDraft.TABLE_NAME)
  * ```
  *
  * @category tables
@@ -28,7 +28,7 @@ export * as CandidateDraft from "./CandidateDraft/index.ts";
  * ```ts
  * import { CandidateProject } from "@beep/workspace-tables/entities"
  *
- * console.log(CandidateProject.Table.definition.tableName)
+ * console.log(CandidateProject.TABLE_NAME)
  * ```
  *
  * @category tables
@@ -43,7 +43,7 @@ export * as CandidateProject from "./CandidateProject/index.ts";
  * ```ts
  * import { Message } from "@beep/workspace-tables/entities"
  *
- * console.log(Message.Table.definition.tableName)
+ * console.log(Message.TABLE_NAME)
  * ```
  *
  * @category tables
@@ -58,7 +58,7 @@ export * as Message from "./Message/index.ts";
  * ```ts
  * import { Thread } from "@beep/workspace-tables/entities"
  *
- * console.log(Thread.Table.definition.tableName)
+ * console.log(Thread.TABLE_NAME)
  * ```
  *
  * @category tables
@@ -73,7 +73,7 @@ export * as Thread from "./Thread/index.ts";
  * ```ts
  * import { Turn } from "@beep/workspace-tables/entities"
  *
- * console.log(Turn.Table.definition.tableName)
+ * console.log(Turn.TABLE_NAME)
  * ```
  *
  * @category tables

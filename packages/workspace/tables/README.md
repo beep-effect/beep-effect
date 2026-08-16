@@ -11,7 +11,7 @@ initiative's product-slice proof for `CandidateDraft` and `CandidateProject`.
 - Workspace slice table metadata projected from workspace domain entity schemas.
 - Read-model and table shapes when they are workspace product language.
 - Metadata-only Drizzle table definitions created with
-  `EntityTable.pgTableFrom(entity)`.
+  `toPgTable(entity)` from `@beep/effect-drizzle/pg`.
 
 ## Does Not Belong Here
 

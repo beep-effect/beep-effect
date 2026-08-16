@@ -155,7 +155,37 @@ export type AnyIdentityComposer = typeof AnyIdentityComposer.Type;
  * @category entity-ids
  * @since 0.0.0
  */
-export * as Agents from "./Agents.ts";
+export * as Agents from "./Agents/index.ts";
+/**
+ * Architecture Lab entity-id registry namespace.
+ *
+ * **Example** (Log WorkerId table name)
+ *
+ * ```ts
+ * import * as ArchitectureLab from "@beep/shared-domain/identity/ArchitectureLab"
+ *
+ * console.log(ArchitectureLab.WorkerId.tableName)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export * as ArchitectureLab from "./ArchitectureLab/index.ts";
+/**
+ * Documents entity-id registry namespace.
+ *
+ * **Example** (Log SyncItemId table name)
+ *
+ * ```ts
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
+ *
+ * console.log(Documents.SyncItemId.tableName)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export * as Documents from "./Documents/index.ts";
 /**
  * Epistemic entity-id registry namespace.
  *
@@ -170,7 +200,7 @@ export * as Agents from "./Agents.ts";
  * @category entity-ids
  * @since 0.0.0
  */
-export * as Epistemic from "./Epistemic.ts";
+export * as Epistemic from "./Epistemic/index.ts";
 /**
  * Law-practice entity-id registry namespace.
  *
@@ -185,7 +215,7 @@ export * as Epistemic from "./Epistemic.ts";
  * @category entity-ids
  * @since 0.0.0
  */
-export * as LawPractice from "./LawPractice.ts";
+export * as LawPractice from "./LawPractice/index.ts";
 /**
  * Shared entity-id registry namespace.
  *
@@ -200,7 +230,7 @@ export * as LawPractice from "./LawPractice.ts";
  * @category entity-ids
  * @since 0.0.0
  */
-export * as Shared from "./Shared.ts";
+export * as Shared from "./Shared/index.ts";
 /**
  * Workspace entity-id registry namespace.
  *
@@ -215,4 +245,4 @@ export * as Shared from "./Shared.ts";
  * @category entity-ids
  * @since 0.0.0
  */
-export * as Workspace from "./Workspace.ts";
+export * as Workspace from "./Workspace/index.ts";

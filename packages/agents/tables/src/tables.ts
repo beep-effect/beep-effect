@@ -45,9 +45,7 @@ export const DbSchema: DbSchemaShape = {
  * import { DbSchema, type DbSchema as DbSchemaType } from "@beep/agents-tables/tables"
  *
  * const schema: DbSchemaType = DbSchema
- * const tableName: "agents_provider_instance" = schema.providerInstance.definition.tableName
- *
- * console.log(tableName)
+ * console.log(schema.providerInstance)
  * ```
  *
  * @category tables

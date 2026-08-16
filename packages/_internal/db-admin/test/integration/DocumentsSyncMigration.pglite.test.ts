@@ -1,15 +1,19 @@
 import { fileURLToPath } from "node:url";
 import { inspect } from "node:util";
 import { DocumentsDbSchema } from "@beep/db-admin/schema";
+import { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
+import { SyncCursor } from "@beep/documents-domain/entities/SyncCursor";
+import { SyncItem } from "@beep/documents-domain/entities/SyncItem";
+import { SyncOperation } from "@beep/documents-domain/entities/SyncOperation";
 import { fromSyncConflictRow, toSyncConflictInsert } from "@beep/documents-tables/entities/SyncConflict";
 import { fromSyncCursorRow, toSyncCursorInsert } from "@beep/documents-tables/entities/SyncCursor";
 import { fromSyncItemRow, toSyncItemInsert } from "@beep/documents-tables/entities/SyncItem";
 import { fromSyncOperationRow, toSyncOperationInsert } from "@beep/documents-tables/entities/SyncOperation";
 import { makeDrizzle, migrate } from "@beep/postgres";
 import {
-  baseEntityFixtureInput,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
+  productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -29,13 +33,13 @@ const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url)
 const makeMigrationProofLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
-const decodeSyncItem = S.decodeUnknownEffect(DocumentsDbSchema.syncItem.entitySchema);
-const decodeSyncOperation = S.decodeUnknownEffect(DocumentsDbSchema.syncOperation.entitySchema);
-const decodeSyncCursor = S.decodeUnknownEffect(DocumentsDbSchema.syncCursor.entitySchema);
-const decodeSyncConflict = S.decodeUnknownEffect(DocumentsDbSchema.syncConflict.entitySchema);
+const decodeSyncItem = S.decodeUnknownEffect(SyncItem);
+const decodeSyncOperation = S.decodeUnknownEffect(SyncOperation);
+const decodeSyncCursor = S.decodeUnknownEffect(SyncCursor);
+const decodeSyncConflict = S.decodeUnknownEffect(SyncConflict);
 
 const syncOperationFixture = (id: number, publicId: string) => ({
-  ...baseEntityFixtureInput(DocumentsDbSchema.syncOperation.definition.entityId.entityType, id),
+  ...productEntityFixtureInput("DocumentsSyncOperation", id),
   attemptCount: 0,
   idempotencyKey: "sync-item-1:uploadFile:4",
   inputContentDigest: "abc123",
@@ -70,7 +74,7 @@ if (!shouldRunPgliteIntegration) {
           yield* migrate(db, { migrationsFolder, migrationsSchema });
 
           const syncItem = yield* decodeSyncItem({
-            ...baseEntityFixtureInput(DocumentsDbSchema.syncItem.definition.entityId.entityType, 1),
+            ...productEntityFixtureInput("DocumentsSyncItem", 1),
             contentDigest: "abc123",
             contentSizeBytes: 2048,
             itemKind: "file",
@@ -88,7 +92,7 @@ if (!shouldRunPgliteIntegration) {
           });
           const syncOperation = yield* decodeSyncOperation(syncOperationFixture(1, "documents_sync_operation_a1"));
           const syncCursor = yield* decodeSyncCursor({
-            ...baseEntityFixtureInput(DocumentsDbSchema.syncCursor.definition.entityId.entityType, 1),
+            ...productEntityFixtureInput("DocumentsSyncCursor", 1),
             lastError: null,
             lastEventId: "evt-1",
             provider: "box",
@@ -97,7 +101,7 @@ if (!shouldRunPgliteIntegration) {
             workspaceId: 2,
           });
           const syncConflict = yield* decodeSyncConflict({
-            ...baseEntityFixtureInput(DocumentsDbSchema.syncConflict.definition.entityId.entityType, 1),
+            ...productEntityFixtureInput("DocumentsSyncConflict", 1),
             conflictKind: "remoteEdit",
             localRelPath: "matters/client-default/complaint.pdf",
             provider: "box",

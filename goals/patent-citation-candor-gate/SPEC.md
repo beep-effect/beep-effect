@@ -262,7 +262,7 @@ Higher sources outrank lower sources when they conflict.
   representable from rung 1.
 - Disposition authorship is recorded; practitioner authority is not
   enforced. The author is the `Principal` every entity already carries
-  (`createdByPrincipal`, `packages/shared/domain/src/entity/BaseEntity.ts`),
+  (`createdByPrincipal`, `packages/shared/domain/src/entity/ProductEntity.ts`),
   a union discriminating `User` / `Agent` / `ServiceAccount` / `System`.
   Fail closed on that discriminator: only a `User`-kind principal's
   disposition covers an event, so an agent can never dispose its own
@@ -401,7 +401,7 @@ Always binding (both rungs):
       as a deliberate, owner-directed scope widening rather than drift.
       Otherwise audited 2026-08-06: the diff
       is 75 files, and every path outside `goals/patent-citation-candor-gate/`,
-      `packages/law-practice/`, `packages/shared/domain/src/identity/LawPractice.ts`,
+      `packages/law-practice/`, `packages/shared/domain/src/identity/LawPractice`,
       and `packages/_internal/db-admin/` is either machine-generated or
       gate-required, none discretionary —
       `apps/professional-desktop/src/runtime/Migrations.gen.ts`, `goals/INDEX.md`,

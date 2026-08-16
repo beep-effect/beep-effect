@@ -13,7 +13,7 @@
  * ```ts
  * import * as Thread from "@beep/workspace-domain/entities/Thread"
  *
- * console.log(Thread.Thread.definition.entityId.entityType)
+ * console.log(Thread.Thread.sql.tableName)
  * ```
  *
  * @category models

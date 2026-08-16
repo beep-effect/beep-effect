@@ -46,7 +46,7 @@ replacement, two-axis `asOf(validAt, knownAt)`, and restart/migration proof.
 | Shared lifecycle | `packages/shared/domain/src/values/ClaimLifecycle/ClaimLifecycle.model.ts` | **REUSE UNCHANGED** |
 | Provenance anchors | `packages/foundation/modeling/provenance/src/TextAnchor.ts` | **REUSE** |
 | PROV-O lineage vocabulary | `packages/foundation/modeling/rdf/src/Prov.ts`; `packages/foundation/modeling/rdf/src/Vocab/Prov.ts` | **REUSE / EXTEND** |
-| Package identity composers and epistemic IDs | `packages/foundation/modeling/identity/src/packages.ts`; `packages/shared/domain/src/identity/Epistemic.ts` | **REUSE** |
+| Package identity composers and epistemic IDs | `packages/foundation/modeling/identity/src/packages.ts`; `packages/shared/domain/src/identity/Epistemic` | **REUSE** |
 | Existing epistemic table pattern | `packages/epistemic/tables/src/entities/UsageRecord/UsageRecord.table.ts`; `packages/epistemic/tables/src/Schema.ts` | **REUSE pattern** |
 | Server composition / transaction owner | `packages/epistemic/server/src/Layer.ts` | **EXTEND** with server-owned repositories and transactions |
 | Migration owner and PGlite precedent | `packages/_internal/db-admin/src/migrations/EpistemicUsage.ts`; `packages/_internal/db-admin/test/integration/ArchitectureLabMigration.pglite.test.ts` | **REUSE / EXTEND** |

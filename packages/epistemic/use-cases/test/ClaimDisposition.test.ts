@@ -5,7 +5,7 @@ import {
   makeClaimGateOutcomeResolver,
 } from "@beep/epistemic-use-cases/ClaimDisposition";
 import { makeClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
@@ -33,7 +33,7 @@ const inMemoryClaimDispositions: Layer.Layer<ClaimDispositionRepository> = Layer
 );
 
 const claimInput = (id: number, fixtureKey: string) => ({
-  ...baseEntityFixtureInput("EpistemicCandidateClaim", id),
+  ...productEntityFixtureInput("EpistemicCandidateClaim", id),
   fixtureKey,
   lifecycle: "candidate",
   snapshot: {},

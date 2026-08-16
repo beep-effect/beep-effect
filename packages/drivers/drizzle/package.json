@@ -59,7 +59,6 @@
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
-    "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

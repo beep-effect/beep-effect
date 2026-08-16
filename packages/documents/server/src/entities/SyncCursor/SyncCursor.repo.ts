@@ -18,6 +18,7 @@ import {
   SyncCursorRepositoryUnavailable,
 } from "@beep/documents-use-cases/entities/SyncCursor/server";
 import { PostgresDrizzle } from "@beep/postgres";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import { A, N } from "@beep/utils";
 import { and, eq } from "drizzle-orm";
 import { Effect, HashMap, pipe, Ref } from "effect";
@@ -33,7 +34,7 @@ const decodeSyncCursor = S.decodeUnknownSync(DomainSyncCursor.SyncCursor);
 /**
  * Build a full SyncCursor entity from an upsert seed and an assigned id.
  *
- * BaseEntity bookkeeping fields mirrors the repository's application-write
+ * ProductEntity audit fields mirror the repository's application-write
  * posture: system principal audit fields, epoch timestamps, and a
  * sequence-shaped public id derived from the table name.
  */
@@ -41,7 +42,7 @@ const syncCursorFromSeed = (id: number, seed: SyncCursorSeed): DomainSyncCursor.
   decodeSyncCursor({
     createdAt: 0,
     createdByPrincipal: SYSTEM_PRINCIPAL,
-    entityType: DomainSyncCursor.SyncCursorId.entityType,
+    entityType: DocumentsIdentity.SyncCursorId.entityType,
     id,
     lastError: O.getOrNull(seed.lastError),
     lastEventId: O.getOrNull(seed.lastEventId),
@@ -104,7 +105,7 @@ const matchesMirror = (input: MirrorScope) => (cursor: DomainSyncCursor.SyncCurs
  */
 export const makeInMemorySyncCursorRepository = Effect.fn("Documents.SyncCursorRepository.makeInMemory")(function* () {
   const { counter, snapshot, store } = yield* makeEntityStore(
-    HashMap.empty<DomainSyncCursor.SyncCursorId, DomainSyncCursor.SyncCursor>()
+    HashMap.empty<DocumentsIdentity.SyncCursorId, DomainSyncCursor.SyncCursor>()
   );
 
   return SyncCursorRepository.of({

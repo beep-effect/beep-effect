@@ -7,8 +7,7 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import { SchemaUtils } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as S from "effect/Schema";
 import { CitingApplicationIdentity } from "../../values/CitingApplicationIdentity/index.ts";
@@ -21,6 +20,7 @@ import {
 } from "./PatentCitationEvent.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/PatentCitationEvent/PatentCitationEvent.model");
+const PatentCitationEventEntity = ProductEntity.make(LawPractice.PatentCitationEventId);
 
 /**
  * One observed occurrence of a patent reference cited against a filing.
@@ -67,72 +67,49 @@ const $I = $LawPracticeDomainId.create("entities/PatentCitationEvent/PatentCitat
  * @category entities
  * @since 0.0.0
  */
-export class PatentCitationEvent extends BaseEntity.Class<PatentCitationEvent>($I`PatentCitationEvent`)(
-  LawPractice.PatentCitationEventId,
+export class PatentCitationEvent extends PatentCitationEventEntity.Entity<PatentCitationEvent>(
+  PatentCitationEventEntity.tableName
+)(
   {
-    fields: {
-      actor: PatentCitationActor.annotateKey({
-        description: "Party the observed source attributes the citation act to.",
-      }),
-      citingApplication: CitingApplicationIdentity.annotateKey({
-        description: "Filing the reference is recorded as being cited against.",
-      }),
-      discovery: PatentCitationDiscovery.annotateKey({
-        description: "Tagged provenance describing how this occurrence came to be recorded.",
-      }),
-      grounding: TextAnchorVerificationReceipt.annotateKey({
-        description:
-          "Persisted anchor and exact source identity from the observation's verification; re-verification is required before any current claim.",
-      }),
-      observedAt: EntitySchema.DateTimeFromMillis.annotateKey({
-        description: "Time the occurrence was observed, recorded for audit and never used to establish currency.",
-      }),
-      possibleDuplicateOf: S.OptionFromNullOr(LawPractice.PatentCitationEventId)
-        .pipe(SchemaUtils.withNoneDefault)
-        .annotateKey({
-          description: "Suspected duplicate of another event, recorded and never resolved; makes this event uncovered.",
-        }),
-      quarantine: S.OptionFromNullOr(PatentCitationQuarantine).pipe(SchemaUtils.withNoneDefault).annotateKey({
-        description: "Explicit quarantine marker layered beside the evidence, never rewriting it.",
-      }),
-      reference: PatentReference.annotateKey({
-        description: "Parsed patent document reference this occurrence names.",
-      }),
-      supersedes: S.OptionFromNullOr(ObservationVersionRef).pipe(SchemaUtils.withNoneDefault).annotateKey({
+    actor: PatentCitationActor.annotateKey({
+      description: "Party the observed source attributes the citation act to.",
+    }).pipe(PatentCitationEventEntity.pg.text()),
+    citingApplication: CitingApplicationIdentity.annotateKey({
+      description: "Filing the reference is recorded as being cited against.",
+    }).pipe(PatentCitationEventEntity.pg.jsonb(), PatentCitationEventEntity.pg.columnName("citing_application")),
+    discovery: PatentCitationDiscovery.annotateKey({
+      description: "Tagged provenance describing how this occurrence came to be recorded.",
+    }).pipe(PatentCitationEventEntity.pg.jsonb()),
+    grounding: TextAnchorVerificationReceipt.annotateKey({
+      description:
+        "Persisted anchor and exact source identity from the observation's verification; re-verification is required before any current claim.",
+    }).pipe(PatentCitationEventEntity.pg.jsonb()),
+    observedAt: S.DateTimeUtcFromMillis.annotateKey({
+      description: "Time the occurrence was observed, recorded for audit and never used to establish currency.",
+    }).pipe(PatentCitationEventEntity.pg.bigint("number"), PatentCitationEventEntity.pg.columnName("observed_at")),
+    possibleDuplicateOf: S.OptionFromNullOr(LawPractice.PatentCitationEventId)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Suspected duplicate of another event, recorded and never resolved; makes this event uncovered.",
+      })
+      .pipe(PatentCitationEventEntity.pg.integer(), PatentCitationEventEntity.pg.columnName("possible_duplicate_of")),
+    quarantine: S.OptionFromNullOr(PatentCitationQuarantine)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Explicit quarantine marker layered beside the evidence, never rewriting it." })
+      .pipe(PatentCitationEventEntity.pg.jsonb()),
+    reference: PatentReference.annotateKey({
+      description: "Parsed patent document reference this occurrence names.",
+    }).pipe(PatentCitationEventEntity.pg.jsonb()),
+    supersedes: S.OptionFromNullOr(ObservationVersionRef)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
         description: "Declared reference to the exact prior observation version this observation replaces.",
-      }),
-    },
-    persisted: {
-      actor: EntitySchema.persist.literal({
-        columnName: "actor",
-      }),
-      citingApplication: EntitySchema.persist.jsonb({
-        columnName: "citing_application",
-      }),
-      discovery: EntitySchema.persist.jsonb({
-        columnName: "discovery",
-      }),
-      grounding: EntitySchema.persist.jsonb({
-        columnName: "grounding",
-      }),
-      observedAt: EntitySchema.persist.timestampMillis({
-        columnName: "observed_at",
-      }),
-      possibleDuplicateOf: EntitySchema.persist.entityId({
-        columnName: "possible_duplicate_of",
-      }),
-      quarantine: EntitySchema.persist.jsonb({
-        columnName: "quarantine",
-      }),
-      reference: EntitySchema.persist.jsonb({
-        columnName: "reference",
-      }),
-      supersedes: EntitySchema.persist.jsonb({
-        columnName: "supersedes",
-      }),
-    },
+      })
+      .pipe(PatentCitationEventEntity.pg.jsonb()),
+    ...PatentCitationEventEntity.identityFields,
   },
   $I.annote("PatentCitationEvent", {
     description: "One observed, source-versioned occurrence of a patent reference cited against a filing.",
-  })
+  }),
+  PatentCitationEventEntity.entityExtras
 ) {}

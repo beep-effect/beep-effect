@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
 
 /**
@@ -22,11 +22,12 @@ import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
  *
  * ```ts
  * import { EdgeVersion } from "@beep/epistemic-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(EdgeVersion.Table.definition.tableName)
+ * console.log(getTableName(EdgeVersion.Table))
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(EdgeVersion);
+export const Table = toPgTable(EdgeVersion);

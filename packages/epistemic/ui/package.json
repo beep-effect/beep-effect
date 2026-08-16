@@ -61,6 +61,7 @@
     "@beep/epistemic-use-cases": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/shared-domain": "workspace:^",
     "@beep/ui": "workspace:^",
     "@effect/atom-react": "catalog:",
     "@phosphor-icons/react": "catalog:",

@@ -10,7 +10,6 @@
 //   docker rm -f beep-contradiction-pg
 import { fileURLToPath } from "node:url";
 import { ContradictionCandidate } from "@beep/epistemic-domain/entities/Contradiction";
-import * as Epistemic from "@beep/epistemic-domain/identity/Epistemic";
 import {
   BeliefVersionRef,
   ContradictionAssessment,
@@ -44,6 +43,7 @@ import { PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
+import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedEpistemic from "@beep/shared-domain/identity/Epistemic";
 import * as Shared from "@beep/shared-domain/identity/Shared";
 import { systemPrincipal as systemPrincipalInput } from "@beep/test-utils";

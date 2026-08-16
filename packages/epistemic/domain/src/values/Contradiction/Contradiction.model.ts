@@ -8,7 +8,6 @@
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { TrimmedNonEmptyText } from "@beep/schema/CommonTextSchemas";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import { PosInt } from "@beep/schema/Int";
 import { JsonObject } from "@beep/schema/Json";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
@@ -809,10 +808,10 @@ class ContradictionResolutionProposalStruct extends S.Class<ContradictionResolut
     rationale: ContradictionProposalRationale.annotateKey({
       description: "Detector-supplied rationale presented to the reviewer.",
     }),
-    validFrom: EntitySchema.DateTimeFromMillis.annotateKey({
+    validFrom: S.DateTimeUtcFromMillis.annotateKey({
       description: "Inclusive valid-time lower bound of the proposed replacement.",
     }),
-    validTo: EntitySchema.DateTimeFromMillis.pipe(S.OptionFromNullOr).annotateKey({
+    validTo: S.DateTimeUtcFromMillis.pipe(S.OptionFromNullOr).annotateKey({
       description: "Exclusive valid-time upper bound of the replacement, when known.",
     }),
   },
@@ -1346,10 +1345,10 @@ export class ContradictionProposalContent extends S.Class<ContradictionProposalC
     rationale: ContradictionProposalRationale.annotateKey({
       description: "Detector-supplied rationale covered by the proposal digest.",
     }),
-    validFrom: EntitySchema.DateTimeFromMillis.annotateKey({
+    validFrom: S.DateTimeUtcFromMillis.annotateKey({
       description: "Inclusive valid-time lower bound covered by the proposal digest.",
     }),
-    validTo: EntitySchema.DateTimeFromMillis.pipe(S.OptionFromNullOr).annotateKey({
+    validTo: S.DateTimeUtcFromMillis.pipe(S.OptionFromNullOr).annotateKey({
       description: "Exclusive valid-time upper bound covered by the proposal digest, when known.",
     }),
   },
@@ -1432,10 +1431,10 @@ class ContradictionCandidateContentStruct extends S.Class<ContradictionCandidate
     pair: CanonicalContradictionBeliefPair.annotateKey({
       description: "Canonical conflicting belief pair covered by the candidate digest.",
     }),
-    validFrom: EntitySchema.DateTimeFromMillis.annotateKey({
+    validFrom: S.DateTimeUtcFromMillis.annotateKey({
       description: "Inclusive valid-time lower bound covered by the candidate digest.",
     }),
-    validTo: EntitySchema.DateTimeFromMillis.pipe(S.OptionFromNullOr).annotateKey({
+    validTo: S.DateTimeUtcFromMillis.pipe(S.OptionFromNullOr).annotateKey({
       description: "Exclusive valid-time upper bound covered by the candidate digest, when known.",
     }),
   },

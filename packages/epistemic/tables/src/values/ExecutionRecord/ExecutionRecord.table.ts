@@ -2,8 +2,8 @@
  * Execution ledger table metadata: the write-ahead decision chain and the
  * post-settlement outcome records.
  *
- * These are deliberately raw `pgTable` projections, not `EntityTable.pgTableFrom`
- * over a `BaseEntity` model: `BaseEntity` bakes in `row_version`, `updated_at`,
+ * These are deliberately raw `pgTable` declarations, not ProductEntity
+ * projections: the product kit includes `row_version`, `updated_at`,
  * and `updated_by_principal` — update vocabulary that would be a lie in the
  * schema of rows that must never mutate. The append-only guards that make the
  * ledger trustworthy — the chain primary key, the outcome-per-decision primary

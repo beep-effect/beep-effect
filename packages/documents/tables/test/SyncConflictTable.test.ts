@@ -5,7 +5,8 @@ import {
   syncConflictTable,
   toSyncConflictInsert,
 } from "@beep/documents-tables/entities/SyncConflict";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -25,7 +26,7 @@ const indexConfigNamed = (name: string) =>
   );
 
 const mappedDriftRow = {
-  ...baseEntityFixtureInput(DomainSyncConflict.SyncConflictId.entityType, 40),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncConflictId.entityType, 40),
   conflictKind: "remoteEdit",
   localRelPath: "matters/client-default/complaint.pdf",
   provider: "box",
@@ -43,9 +44,7 @@ describe("SyncConflict table", () => {
 
     expect(getTableConfig(syncConflictTable).name).toBe("documents_sync_conflict");
     expect(SYNC_CONFLICT_TABLE_NAME).toBe("documents_sync_conflict");
-    expect(syncConflictTable.definition).toBe(DomainSyncConflict.SyncConflict.definition);
-    expect(syncConflictTable.definition.entityId.entityType).toBe("DocumentsSyncConflict");
-    expect(syncConflictTable.entitySchema).toBe(DomainSyncConflict.SyncConflict);
+    expect(DomainSyncConflict.SyncConflict.sql.tableName).toBe("documents_sync_conflict");
     expect(columns.id.primary).toBe(true);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.conflictKind.name).toBe("conflict_kind");

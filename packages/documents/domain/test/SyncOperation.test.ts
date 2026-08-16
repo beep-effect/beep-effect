@@ -1,5 +1,6 @@
 import * as SyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
@@ -24,7 +25,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
 };
 
 const uploadRow = {
-  ...baseEntityFixtureInput(SyncOperation.SyncOperationId.entityType, 1),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, 1),
   attemptCount: 0,
   idempotencyKey: "sync-item-1:uploadFile:1",
   inputContentDigest: "abc123",
@@ -42,11 +43,13 @@ const uploadRow = {
 
 describe("SyncOperation entity", () => {
   it("wires SyncOperation to the documents identity", () => {
-    expect(SyncOperation.SyncOperation.definition.entityId.tableName).toBe("documents_sync_operation");
-    expect(SyncOperation.SyncOperation.definition.entityId.entityType).toBe("DocumentsSyncOperation");
-    expect(SyncOperation.SyncOperation.definition.persisted.idempotencyKey.columnName).toBe("idempotency_key");
-    expect(SyncOperation.SyncOperation.definition.persisted.operationType.columnName).toBe("operation_type");
-    expect(SyncOperation.SyncOperation.definition.persisted.syncItemId.storageKind).toBe("entityId");
+    expect(SyncOperation.SyncOperation.sql.tableName).toBe(DocumentsIdentity.SyncOperationId.tableName);
+    expect(Object.keys(SyncOperation.SyncOperation.insert.fields)).not.toContain("id");
+    expect(Object.keys(SyncOperation.SyncOperation.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(SyncOperation.SyncOperation.update.fields)).toContain("id");
+    expect(Object.keys(SyncOperation.SyncOperation.update.fields)).toContain("rowVersion");
+    expect(Object.keys(SyncOperation.SyncOperation.jsonCreate.fields)).toHaveLength(13);
+    expect(Object.keys(SyncOperation.SyncOperation.jsonUpdate.fields)).toHaveLength(13);
   });
 
   it("decodes and encodes a full upload outbox row", () => {

@@ -6,13 +6,13 @@
  */
 import { $AgentsDomainId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as Agents from "@beep/shared-domain/identity/Agents";
 import * as S from "effect/Schema";
 import { AuthSnapshot, BinaryPath, EnvVars, HomePath, InstanceLabel, ProviderKind } from "./ProviderInstance.values.ts";
 
 const $I = $AgentsDomainId.create("entities/ProviderInstance/ProviderInstance.model");
+const ProviderInstanceEntity = ProductEntity.make(Agents.ProviderInstanceId);
 
 /**
  * Persisted provider CLI instance: a labeled binary + HOME/env configuration
@@ -30,58 +30,45 @@ const $I = $AgentsDomainId.create("entities/ProviderInstance/ProviderInstance.mo
  * ```ts
  * import { ProviderInstance } from "@beep/agents-domain"
  *
- * console.log(ProviderInstance.definition.entityId.entityType)
+ * console.log(ProviderInstance.sql.tableName)
  * ```
  *
  * @category entities
  * @since 0.0.0
  */
-export class ProviderInstance extends BaseEntity.Class<ProviderInstance>($I`ProviderInstance`)(
-  Agents.ProviderInstanceId,
+export class ProviderInstance extends ProviderInstanceEntity.Entity<ProviderInstance>(ProviderInstanceEntity.tableName)(
   {
-    fields: {
-      binaryPath: BinaryPath.annotateKey({
-        description: "Filesystem path to the provider CLI binary.",
-      }),
-      envVars: EnvVars.pipe(SchemaUtils.withConstantDefault<EnvVars>({})).annotateKey({
+    binaryPath: BinaryPath.annotateKey({
+      description: "Filesystem path to the provider CLI binary.",
+    }).pipe(ProviderInstanceEntity.pg.text(), ProviderInstanceEntity.pg.columnName("binary_path")),
+    envVars: EnvVars.pipe(SchemaUtils.withConstantDefault<EnvVars>({}))
+      .annotateKey({
         description: "Extra token-safe child-process environment; defaults to empty at construction.",
-      }),
-      homePath: S.OptionFromNullOr(HomePath).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      })
+      .pipe(ProviderInstanceEntity.pg.jsonb(), ProviderInstanceEntity.pg.columnName("env_vars")),
+    homePath: S.OptionFromNullOr(HomePath)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
         description: "Optional isolated HOME directory; encodes absence as SQL/wire null.",
-      }),
-      kind: ProviderKind.annotateKey({
-        description: "Provider CLI kind this instance delegates to.",
-      }),
-      label: InstanceLabel.annotateKey({
-        description: "Display label for the instance.",
-      }),
-      lastProbe: S.OptionFromNullOr(AuthSnapshot).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      })
+      .pipe(ProviderInstanceEntity.pg.text(), ProviderInstanceEntity.pg.columnName("home_path")),
+    kind: ProviderKind.annotateKey({
+      description: "Provider CLI kind this instance delegates to.",
+    }).pipe(ProviderInstanceEntity.pg.text()),
+    label: InstanceLabel.annotateKey({
+      description: "Display label for the instance.",
+    }).pipe(ProviderInstanceEntity.pg.text()),
+    lastProbe: S.OptionFromNullOr(AuthSnapshot)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
         description: "Latest auth-probe snapshot; encodes absence as SQL/wire null.",
-      }),
-    },
-    persisted: {
-      binaryPath: EntitySchema.persist.text({
-        columnName: "binary_path",
-      }),
-      envVars: EntitySchema.persist.jsonb({
-        columnName: "env_vars",
-      }),
-      homePath: EntitySchema.persist.text({
-        columnName: "home_path",
-      }),
-      kind: EntitySchema.persist.literal({
-        columnName: "kind",
-      }),
-      label: EntitySchema.persist.text({
-        columnName: "label",
-      }),
-      lastProbe: EntitySchema.persist.jsonb({
-        columnName: "last_probe",
-      }),
-    },
+      })
+      .pipe(ProviderInstanceEntity.pg.jsonb(), ProviderInstanceEntity.pg.columnName("last_probe")),
+    ...ProviderInstanceEntity.identityFields,
   },
   $I.annote("ProviderInstance", {
     description:
       "Persisted provider CLI instance holding binary, HOME, and env configuration plus the latest auth-probe snapshot; never provider tokens.",
-  })
+  }),
+  ProviderInstanceEntity.entityExtras
 ) {}

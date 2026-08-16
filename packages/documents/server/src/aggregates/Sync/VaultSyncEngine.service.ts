@@ -88,6 +88,7 @@ import type {
   MarkConflictReviewedInput,
 } from "@beep/documents-use-cases/aggregates/Sync/server";
 import type { UnknownRecord } from "@beep/schema";
+import type * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultSyncEngine.service");
@@ -1008,7 +1009,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
     });
 
   const recordPushSuccess = Effect.fn($I`recordPushSuccess`)(function* (
-    itemsByIdRef: Ref.Ref<HashMap.HashMap<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>>,
+    itemsByIdRef: Ref.Ref<HashMap.HashMap<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>>,
     pushRecordsRef: Ref.Ref<ReadonlyArray<PushRecord>>,
     operation: DomainSyncOperation.SyncOperation,
     item: DomainSyncItem.SyncItem,
@@ -1040,7 +1041,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
   });
 
   const recordPushFailure = Effect.fn($I`recordPushFailure`)(function* (
-    itemsByIdRef: Ref.Ref<HashMap.HashMap<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>>,
+    itemsByIdRef: Ref.Ref<HashMap.HashMap<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>>,
     operation: DomainSyncOperation.SyncOperation,
     item: DomainSyncItem.SyncItem,
     error: DmsMirrorUnavailable
@@ -1074,7 +1075,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
    */
   const runOperation = Effect.fn($I`runOperation`)(function* (
     input: SyncOnceInput,
-    itemsByIdRef: Ref.Ref<HashMap.HashMap<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>>,
+    itemsByIdRef: Ref.Ref<HashMap.HashMap<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>>,
     pushRecordsRef: Ref.Ref<ReadonlyArray<PushRecord>>,
     operation: DomainSyncOperation.SyncOperation
   ) {
@@ -1408,7 +1409,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
    */
   const reviveFailedOperations = Effect.fn($I`reviveFailedOperations`)(function* (
     input: SyncOnceInput,
-    itemsById: HashMap.HashMap<DomainSyncItem.SyncItemId, DomainSyncItem.SyncItem>
+    itemsById: HashMap.HashMap<DocumentsIdentity.SyncItemId, DomainSyncItem.SyncItem>
   ) {
     const failed = yield* operationRepository.listByStatus(
       ListSyncOperationsByStatusInput.make({
@@ -1555,7 +1556,7 @@ export const makeVaultSyncEngine = Effect.fn($I`makeVaultSyncEngine`)(function* 
 
   const requeueReviewedConflictItem = Effect.fn($I`requeueReviewedConflictItem`)(function* (
     workspaceId: WorkspaceIdentity.WorkspaceId,
-    syncItemId: DomainSyncItem.SyncItemId
+    syncItemId: DocumentsIdentity.SyncItemId
   ) {
     const items = yield* itemRepository.listByWorkspace(
       ListSyncItemsByWorkspaceInput.make({ provider: BOX_PROVIDER, workspaceId })

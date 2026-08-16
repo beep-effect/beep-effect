@@ -13,7 +13,7 @@
  * ```ts
  * import { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition"
  *
- * console.log(ClaimDisposition.definition.entityId.tableName)
+ * console.log(ClaimDisposition.sql.tableName)
  * ```
  *
  * @category entities

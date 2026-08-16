@@ -5,7 +5,8 @@ import {
   syncOperationTable,
   toSyncOperationInsert,
 } from "@beep/documents-tables/entities/SyncOperation";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
@@ -25,7 +26,7 @@ const indexConfigNamed = (name: string) =>
   );
 
 const uploadRow = {
-  ...baseEntityFixtureInput(DomainSyncOperation.SyncOperationId.entityType, 20),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncOperationId.entityType, 20),
   attemptCount: 0,
   idempotencyKey: "sync-item-1:uploadFile:4",
   inputContentDigest: "abc123",
@@ -47,9 +48,7 @@ describe("SyncOperation table", () => {
 
     expect(getTableConfig(syncOperationTable).name).toBe("documents_sync_operation");
     expect(SYNC_OPERATION_TABLE_NAME).toBe("documents_sync_operation");
-    expect(syncOperationTable.definition).toBe(DomainSyncOperation.SyncOperation.definition);
-    expect(syncOperationTable.definition.entityId.entityType).toBe("DocumentsSyncOperation");
-    expect(syncOperationTable.entitySchema).toBe(DomainSyncOperation.SyncOperation);
+    expect(DomainSyncOperation.SyncOperation.sql.tableName).toBe("documents_sync_operation");
     expect(columns.id.primary).toBe(true);
     expect(columns.id.columnType).toBe("PgSerial");
     expect(columns.attemptCount.name).toBe("attempt_count");

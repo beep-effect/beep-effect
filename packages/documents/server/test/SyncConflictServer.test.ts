@@ -1,5 +1,4 @@
 import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import {
   makeInMemorySyncConflictRepository,
   SyncConflictRepositoryInMemoryLayer,
@@ -11,6 +10,7 @@ import {
   SyncConflictRepositoryNotFound,
   SyncConflictSeed,
 } from "@beep/documents-use-cases/entities/SyncConflict/server";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";

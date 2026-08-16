@@ -33,6 +33,9 @@
       "path": "../../foundation/modeling/utils/tsconfig.json"
     },
     {
+      "path": "../../shared/domain/tsconfig.json"
+    },
+    {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"
     }
   ]

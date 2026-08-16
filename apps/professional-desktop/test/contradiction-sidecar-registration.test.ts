@@ -28,11 +28,10 @@ import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import { NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
-import { baseEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
+import { productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, flow, Layer } from "effect";
@@ -52,7 +51,7 @@ const proposalId = Str.repeat(64)("f");
 const proposalDigest = Str.repeat(64)("1");
 const manifestationKey = Str.repeat(64)("2");
 const sourceDigest = SourceTextDigest.make(`sha256:${Str.repeat(64)("3")}`);
-const instant = flow(S.decodeUnknownResult(EntitySchema.DateTimeFromMillis), Result.getOrThrow);
+const instant = flow(S.decodeUnknownResult(S.DateTimeUtcFromMillis), Result.getOrThrow);
 const decodeCandidate = flow(S.decodeUnknownResult(ContradictionCandidate), Result.getOrThrow);
 const decodeEdgeVersion = flow(S.decodeUnknownResult(EdgeVersion), Result.getOrThrow);
 const decodeEvidence = flow(S.decodeUnknownResult(Evidence), Result.getOrThrow);
@@ -69,7 +68,7 @@ const leftBeliefRef = {
 } as const;
 
 const candidate = decodeCandidate({
-  ...baseEntityFixtureInput("EpistemicContradictionCandidate", 1),
+  ...productEntityFixtureInput("EpistemicContradictionCandidate", 1),
   assessment: {
     confidence: 0.95,
     proposals: [
@@ -109,7 +108,7 @@ const candidate = decodeCandidate({
 
 const makeBelief = (id: number, logicalKey: string) =>
   decodeEdgeVersion({
-    ...baseEntityFixtureInput("EpistemicEdgeVersion", id),
+    ...productEntityFixtureInput("EpistemicEdgeVersion", id),
     evidenceScope: null,
     expiredAt: null,
     fact: { amount: id === 1 ? "100" : "150" },
@@ -136,7 +135,7 @@ const makeBelief = (id: number, logicalKey: string) =>
 
 const makeEvidence = (id: number) =>
   decodeEvidence({
-    ...baseEntityFixtureInput("EpistemicEvidence", id),
+    ...productEntityFixtureInput("EpistemicEvidence", id),
     artifactFixtureKey: `artifact:source-${id}`,
     span: {
       confidence: 0.95,
@@ -171,7 +170,7 @@ const makeSourceIdentity = Effect.fn("test.makeSourceIdentity")(function* (
 
 const makeExpanded = (verifiedAnchor: TextAnchorVerificationReceipt): ContradictionCandidateExpandedDetail => {
   const verification = decodeVerification({
-    ...baseEntityFixtureInput("EpistemicEvidenceVerification", 1),
+    ...productEntityFixtureInput("EpistemicEvidenceVerification", 1),
     evidenceId: leftEvidence.id,
     manifestationKey,
     verifiedAnchor,

@@ -6,21 +6,6 @@
  */
 
 /**
- * Product-facing persisted entity base constructor.
- *
- * **Example** (Access createdAt column name)
- *
- * ```ts
- * import { BaseEntity } from "@beep/shared-domain/entity"
- *
- * console.log(BaseEntity.BaseEntity.definition.persisted.createdAt.columnName)
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export * as BaseEntity from "./BaseEntity.ts";
-/**
  * Entity identifier constructor namespace.
  *
  * **Example** (Access EntityIdValue export)
@@ -65,6 +50,13 @@ export * as EntityRef from "./EntityRef.ts";
  * @since 0.0.0
  */
 export * as Principal from "./Principal.ts";
+/**
+ * Effect-drizzle product entity kit.
+ *
+ * @category factories
+ * @since 0.0.0
+ */
+export * as ProductEntity from "./ProductEntity.ts";
 /**
  * URL-safe public entity identifier constructor namespace.
  *

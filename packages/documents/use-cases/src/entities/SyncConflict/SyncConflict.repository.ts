@@ -7,10 +7,10 @@
  */
 
 import * as DomainSyncConflict from "@beep/documents-domain/entities/SyncConflict";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import { DmsProvider, RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import { SchemaUtils, UnknownRecord } from "@beep/schema";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -19,7 +19,7 @@ import type { Effect } from "effect";
 const $I = $DocumentsUseCasesId.create("entities/SyncConflict/SyncConflict.repository");
 
 /**
- * Creation input for one remote-drift record, excluding BaseEntity bookkeeping fields.
+ * Creation input for one remote-drift record, excluding ProductEntity audit fields.
  *
  * **Example** (Make remote-edit seed)
  *
@@ -72,7 +72,7 @@ export class SyncConflictSeed extends S.Class<SyncConflictSeed>($I`SyncConflictS
     }),
   },
   $I.annote("SyncConflictSeed", {
-    description: "Creation input for one remote-drift record, excluding BaseEntity bookkeeping fields.",
+    description: "Creation input for one remote-drift record, excluding ProductEntity audit fields.",
   })
 ) {}
 
@@ -82,7 +82,7 @@ export class SyncConflictSeed extends S.Class<SyncConflictSeed>($I`SyncConflictS
  * **Example** (Construct not-found error)
  *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { SyncConflictRepositoryNotFound } from "@beep/documents-use-cases/entities/SyncConflict/server"
  * import * as S from "effect/Schema"
  *
@@ -184,7 +184,7 @@ export class ListOpenSyncConflictsInput extends S.Class<ListOpenSyncConflictsInp
  * **Example** (Build mark-reviewed input)
  *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { MarkSyncConflictReviewedInput } from "@beep/documents-use-cases/entities/SyncConflict/server"
  * import * as S from "effect/Schema"
  *

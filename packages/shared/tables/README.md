@@ -31,21 +31,18 @@ database access remains banned.
 | Export | Role |
 | --- | --- |
 | `@beep/shared-tables` | Entry point exposing shared concrete table namespaces. |
-| `Entities.Membership` | Shared Membership table metadata projected with `EntityTable.pgTableFrom(Membership.Model)`. |
-| `Entities.Organization` | Shared Organization table metadata projected with `EntityTable.pgTableFrom(Organization.Model)`. |
-| `Entities.User` | Shared User table metadata projected with `EntityTable.pgTableFrom(User.Model)`. |
+| `Entities.Membership` | Shared Membership table metadata projected with `toPgTable(Membership.Model)`. |
+| `Entities.Organization` | Shared Organization table metadata projected with `toPgTable(Organization.Model)`. |
+| `Entities.User` | Shared User table metadata projected with `toPgTable(User.Model)`. |
 | `DbSchema` | Metadata-only aggregate for exported shared tables. |
-| `@beep/shared-tables/table/Table` | Compatibility subpath re-exporting `@beep/drizzle` `EntityTable` type helpers. |
 
 Generic schema-derived projection now lives in-tree at
 `@beep/effect-drizzle` (member root
 `packages/ecosystem/effect-drizzle/**`). It graduated from `scratchpad/bsl`
 (PR #651). `@beep/drizzle` keeps execution (the SQL service, transactions, and
-error normalization) permanently. Shared and slice tables keep their existing
-`@beep/drizzle` `EntityTable` projection patterns until the future beep-adoption
-packet; BaseEntity parity is explicitly outside this graduation packet. Shared
-table packages publish concrete shared product table metadata; they do not own
-a separate SQL DSL or a domain-to-persistence mapping layer.
+error normalization) permanently. Shared and slice tables use `toPgTable` and
+publish concrete product table metadata; they do not own a separate SQL DSL or
+a domain-to-persistence mapping layer.
 
 ## Development
 

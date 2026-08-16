@@ -728,7 +728,8 @@ export function makeModelClass(
  *
  * The identifier's final segment becomes a snake-case table name. Field
  * schemas drive model variants, Drizzle column metadata, automatic EntityId
- * references, and optional table extras from one declaration.
+ * references, and optional table extras from one declaration. Pass annotations
+ * as the second argument and table extras as the third when both are needed.
  *
  * **Gotchas**
  *
@@ -756,14 +757,16 @@ export function Model<Self = never, const Identifier extends string = string>(
     ValidateDerivedSqlName<Identifier, "Model identifier derives an invalid PostgreSQL table name">
 ): <const F extends FieldsInput>(
   fields: F & ValidateFields<F>,
-  annotationsOrExtras?: Annotations.Annotations | TableExtras.Callback<F>
+  annotationsOrExtras?: Annotations.Annotations | TableExtras.Callback<F>,
+  extras?: TableExtras.Callback<F>
 ) => [Self] extends [never] ? MissingSelfGeneric : ModelClass<Self, F>;
 export function Model(identifier: string): unknown {
   return (
     fields: FieldsInput,
-    annotationsOrExtras?: Annotations.Annotations | TableExtras.Callback<FieldsInput>
+    annotationsOrExtras?: Annotations.Annotations | TableExtras.Callback<FieldsInput>,
+    declaredExtras?: TableExtras.Callback<FieldsInput>
   ): object => {
-    const extras = isFunction(annotationsOrExtras) ? annotationsOrExtras : undefined;
+    const extras = isFunction(annotationsOrExtras) ? annotationsOrExtras : declaredExtras;
     const annotations = isFunction(annotationsOrExtras) ? undefined : annotationsOrExtras;
     return makeModelClass(identifier, fields, annotations, extras);
   };

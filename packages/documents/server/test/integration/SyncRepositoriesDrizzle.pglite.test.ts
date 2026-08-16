@@ -1,7 +1,6 @@
 import { fileURLToPath } from "node:url";
 import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import { RemoteItemId, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { makeDrizzleSyncConflictRepository } from "@beep/documents-server/entities/SyncConflict";
 import { makeDrizzleSyncCursorRepository } from "@beep/documents-server/entities/SyncCursor";
@@ -30,6 +29,7 @@ import {
 } from "@beep/documents-use-cases/entities/SyncOperation/server";
 import { makeDrizzle, makeDrizzleLayer, migrate, NativePgClient } from "@beep/postgres";
 import { NonNegativeInt } from "@beep/schema";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer, TestDatabaseInfo } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";

@@ -11,6 +11,7 @@ import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem";
 import { DmsProvider, RemoteItemId, SyncItemKind, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -20,7 +21,7 @@ import type * as O from "effect/Option";
 const $I = $DocumentsUseCasesId.create("entities/SyncItem/SyncItem.repository");
 
 /**
- * Creation input for one sync-tracking row, excluding BaseEntity bookkeeping fields.
+ * Creation input for one sync-tracking row, excluding ProductEntity audit fields.
  *
  * **Example** (Making a SyncItem seed)
  *
@@ -91,7 +92,7 @@ export class SyncItemSeed extends S.Class<SyncItemSeed>($I`SyncItemSeed`)(
     }),
   },
   $I.annote("SyncItemSeed", {
-    description: "Creation input for one sync-tracking row, excluding BaseEntity bookkeeping fields.",
+    description: "Creation input for one sync-tracking row, excluding ProductEntity audit fields.",
   })
 ) {}
 
@@ -141,12 +142,12 @@ export class SyncItemRepositoryConflict extends S.TaggedError<SyncItemRepository
  * **Example** (Building a not-found error)
  *
  * ```ts
- * import * as DomainSyncItem from "@beep/documents-domain/entities/SyncItem"
  * import { SyncItemRepositoryNotFound } from "@beep/documents-use-cases/entities/SyncItem/server"
+ * import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents"
  * import * as S from "effect/Schema"
  *
  * const error = SyncItemRepositoryNotFound.make({
- *   syncItemId: S.decodeUnknownSync(DomainSyncItem.SyncItemId)(1)
+ *   syncItemId: S.decodeUnknownSync(DocumentsIdentity.SyncItemId)(1)
  * })
  * console.log(error._tag)
  * ```
@@ -159,7 +160,7 @@ export class SyncItemRepositoryNotFound extends S.TaggedError<SyncItemRepository
 )(
   "SyncItemRepositoryNotFound",
   {
-    syncItemId: DomainSyncItem.SyncItemId.annotateKey({
+    syncItemId: DocumentsIdentity.SyncItemId.annotateKey({
       description: "SyncItem identity that could not be found.",
     }),
   },

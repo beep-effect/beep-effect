@@ -16,6 +16,7 @@
  * @since 0.0.0
  */
 
+import { workerTable } from "@beep/architecture-lab-tables/entities/Worker";
 import { DbSchema as ArchitectureLabDbSchema } from "@beep/architecture-lab-tables/tables";
 import { DbSchema as DocumentsDbSchema } from "@beep/documents-tables/tables";
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
@@ -78,7 +79,7 @@ export const architectureLabWorkItemTable: typeof ArchitectureLabDbSchema.workIt
  * @category configuration
  * @since 0.0.0
  */
-export const architectureLabWorkerTable: typeof ArchitectureLabDbSchema.worker = ArchitectureLabDbSchema.worker;
+export const architectureLabWorkerTable: typeof workerTable = workerTable;
 
 /**
  * Workspace workspace table (drizzle-kit generate surface).
@@ -266,8 +267,9 @@ export const epistemicExecutionOutcomeTable: typeof EpistemicDbSchema.executionO
  *
  * ```ts
  * import { epistemicContradictionCandidateTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(epistemicContradictionCandidateTable.definition.tableName)
+ * console.log(getTableName(epistemicContradictionCandidateTable))
  * // "epistemic_contradiction_candidate"
  * ```
  *
@@ -284,8 +286,9 @@ export const epistemicContradictionCandidateTable: typeof EpistemicDbSchema.cont
  *
  * ```ts
  * import { epistemicContradictionReceiptTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(epistemicContradictionReceiptTable.definition.tableName)
+ * console.log(getTableName(epistemicContradictionReceiptTable))
  * // "epistemic_contradiction_receipt"
  * ```
  *
@@ -302,8 +305,9 @@ export const epistemicContradictionReceiptTable: typeof EpistemicDbSchema.contra
  *
  * ```ts
  * import { epistemicContradictionDispositionTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(epistemicContradictionDispositionTable.definition.tableName)
+ * console.log(getTableName(epistemicContradictionDispositionTable))
  * // "epistemic_contradiction_disposition"
  * ```
  *
@@ -320,8 +324,9 @@ export const epistemicContradictionDispositionTable: typeof EpistemicDbSchema.co
  *
  * ```ts
  * import { epistemicEvidenceVerificationTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(epistemicEvidenceVerificationTable.definition.tableName)
+ * console.log(getTableName(epistemicEvidenceVerificationTable))
  * // "epistemic_evidence_verification"
  * ```
  *
@@ -402,8 +407,9 @@ export const documentsSyncConflictTable: typeof DocumentsDbSchema.syncConflict =
  *
  * ```ts
  * import { lawPracticePatentCitationEventTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(lawPracticePatentCitationEventTable.definition.tableName)
+ * console.log(getTableName(lawPracticePatentCitationEventTable))
  * // "law_practice_patent_citation_event"
  * ```
  *
@@ -420,8 +426,9 @@ export const lawPracticePatentCitationEventTable: typeof LawPracticeDbSchema.pat
  *
  * ```ts
  * import { lawPracticeCandorDispositionTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(lawPracticeCandorDispositionTable.definition.tableName)
+ * console.log(getTableName(lawPracticeCandorDispositionTable))
  * // "law_practice_candor_disposition"
  * ```
  *
@@ -438,8 +445,9 @@ export const lawPracticeCandorDispositionTable: typeof LawPracticeDbSchema.cando
  *
  * ```ts
  * import { lawPracticeIdsSubmissionFactTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(lawPracticeIdsSubmissionFactTable.definition.tableName)
+ * console.log(getTableName(lawPracticeIdsSubmissionFactTable))
  * // "law_practice_ids_submission_fact"
  * ```
  *
@@ -456,8 +464,9 @@ export const lawPracticeIdsSubmissionFactTable: typeof LawPracticeDbSchema.idsSu
  *
  * ```ts
  * import { lawPracticeLegalPositionRelatorTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(lawPracticeLegalPositionRelatorTable.definition.tableName)
+ * console.log(getTableName(lawPracticeLegalPositionRelatorTable))
  * // "law_practice_legal_position_relator"
  * ```
  *
@@ -474,8 +483,9 @@ export const lawPracticeLegalPositionRelatorTable: typeof LawPracticeDbSchema.le
  *
  * ```ts
  * import { lawPracticeActFrameTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(lawPracticeActFrameTable.definition.tableName)
+ * console.log(getTableName(lawPracticeActFrameTable))
  * // "law_practice_act_frame"
  * ```
  *
@@ -491,8 +501,9 @@ export const lawPracticeActFrameTable: typeof LawPracticeDbSchema.actFrame = Law
  *
  * ```ts
  * import { lawPracticePowerExerciseTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(lawPracticePowerExerciseTable.definition.tableName)
+ * console.log(getTableName(lawPracticePowerExerciseTable))
  * // "law_practice_power_exercise"
  * ```
  *
@@ -509,8 +520,9 @@ export const lawPracticePowerExerciseTable: typeof LawPracticeDbSchema.powerExer
  *
  * ```ts
  * import { lawPracticeCorrectionDeltaTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(lawPracticeCorrectionDeltaTable.definition.tableName)
+ * console.log(getTableName(lawPracticeCorrectionDeltaTable))
  * // "law_practice_correction_delta"
  * ```
  *
@@ -527,8 +539,9 @@ export const lawPracticeCorrectionDeltaTable: typeof LawPracticeDbSchema.correct
  *
  * ```ts
  * import { lawPracticeLegalOppositionCandidateTable } from "@beep/db-admin/schema"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(lawPracticeLegalOppositionCandidateTable.definition.tableName)
+ * console.log(getTableName(lawPracticeLegalOppositionCandidateTable))
  * // "law_practice_legal_opposition_candidate"
  * ```
  *

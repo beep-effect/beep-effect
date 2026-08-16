@@ -62,8 +62,10 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/effect-drizzle": "workspace:^",
     "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "drizzle-orm": "catalog:"
   }
 }

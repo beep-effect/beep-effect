@@ -174,18 +174,6 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "domain",
     stage: "core",
-    path: "packages/architecture-lab/domain/src/identity/index.ts",
-    writer: "ts-morph",
-  }),
-  AcceptedProofFile.make({
-    role: "domain",
-    stage: "core",
-    path: "packages/architecture-lab/domain/src/identity/ArchitectureLab.ts",
-    writer: "template",
-  }),
-  AcceptedProofFile.make({
-    role: "domain",
-    stage: "core",
     path: "packages/architecture-lab/domain/src/entities/index.ts",
     writer: "ts-morph",
   }),
@@ -199,6 +187,18 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     role: "domain",
     stage: "core",
     path: "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "domain",
+    stage: "core",
+    path: "packages/architecture-lab/domain/src/entities/Worker/Worker.values.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "domain",
+    stage: "core",
+    path: "packages/architecture-lab/domain/src/entities/Worker/Worker.behavior.ts",
     writer: "template",
   }),
   AcceptedProofFile.make({

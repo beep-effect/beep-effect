@@ -15,9 +15,9 @@ import { toLegalPositionRelatorInsert } from "@beep/law-practice-tables/entities
 import { toPowerExerciseInsert } from "@beep/law-practice-tables/entities/PowerExercise";
 import { makeDrizzle, migrate } from "@beep/postgres";
 import {
-  baseEntityFixtureInput,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
+  productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -124,7 +124,7 @@ const relatorInput = (
   counterparty: string,
   bearerPlayer: number
 ) => ({
-  ...baseEntityFixtureInput("LawPracticeLegalPositionRelator", id),
+  ...productEntityFixtureInput("LawPracticeLegalPositionRelator", id),
   assertingInterpreter: { kind: "User", userId: 1 },
   bearer: roleInput(bearer, bearerPlayer),
   content: { description: ACT, polarity },
@@ -136,7 +136,7 @@ const relatorInput = (
 });
 
 const frameInput = {
-  ...baseEntityFixtureInput("LawPracticeActFrame", 1),
+  ...productEntityFixtureInput("LawPracticeActFrame", 1),
   act: { description: "assign the lease", polarity: "act" },
   creates: [transition("assignee-claim", "claim")],
   derivationKind: { kinds: ["create", "extinguish"] },
@@ -158,7 +158,7 @@ const frameInput = {
 // fail against, because an attempt nobody has ruled on is exactly the record a
 // party would most want gone.
 const exerciseInput = {
-  ...baseEntityFixtureInput("LawPracticePowerExercise", 1),
+  ...productEntityFixtureInput("LawPracticePowerExercise", 1),
   attemptedAt: 1_700_000_000_000,
   authorityBasis: {
     claimedRole: roleInput("lessee", 1),
@@ -177,7 +177,7 @@ const exerciseInput = {
 };
 
 const correctionInput = {
-  ...baseEntityFixtureInput("LawPracticeCorrectionDelta", 1),
+  ...productEntityFixtureInput("LawPracticeCorrectionDelta", 1),
   candidateRouting: "contradiction-candidate-input",
   correctedElements: [
     { element: { label: "no-objection", part: "precondition" }, source: norm("cl. 4.2", "within ten days") },
@@ -194,7 +194,7 @@ const correctionInput = {
 };
 
 const candidateInput = {
-  ...baseEntityFixtureInput("LawPracticeLegalOppositionCandidate", 1),
+  ...productEntityFixtureInput("LawPracticeLegalOppositionCandidate", 1),
   candidate: { act: ACT, overlappingScope: scopeInput, relators: [RELATOR_PRIVILEGE_ID, RELATOR_CLAIM_ID] },
   priorityBasis: null,
   verdictFamily: null,

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDisposition";
 
 /**
@@ -15,11 +15,12 @@ import { ClaimDisposition } from "@beep/epistemic-domain/entities/ClaimDispositi
  *
  * ```ts
  * import { ClaimDisposition } from "@beep/epistemic-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(ClaimDisposition.Table.definition.tableName)
+ * console.log(getTableName(ClaimDisposition.Table))
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(ClaimDisposition);
+export const Table = toPgTable(ClaimDisposition);
