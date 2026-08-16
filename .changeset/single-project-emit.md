@@ -124,4 +124,4 @@
 "@beep/xai": patch
 ---
 
-Compile each package as a single project (tsc -p, never tsc -b/--force) so a build can only write its own directory, and back every tsconfig project reference with a declared dependency; undeclared references are now pruned by tsconfig-sync and fail its required check.
+Compile each package's build as a single project (`tsc -p`, never `tsc -b`/`--force` in `beep:build` or scaffolds) so a build can only write its own directory, and back every tsconfig project reference with a declared dependency; undeclared references are now pruned by tsconfig-sync and fail its required check. The `beep:check` lane still runs `tsgo -b` and gets the same single-project treatment in a follow-up.

@@ -40,32 +40,47 @@ const collectWorkspaceManifests = Effect.fnUntraced(function* (rootDir: string) 
   return manifests;
 });
 
+const usesTypescriptCompiler = (script: string): boolean =>
+  Str.includes("tsc ")(script) || Str.includes("tsgo ")(script);
+
+const usesSubgraphBuilder = (script: string): boolean =>
+  Str.includes(" -b ")(script) || Str.includes("--force")(script);
+
+const violatesSingleProjectEmit = (script: string): boolean =>
+  usesTypescriptCompiler(script) && usesSubgraphBuilder(script);
+
+const buildScriptOf = (raw: string): O.Option<string> => {
+  const parsed = JSON.parse(raw) as { readonly scripts?: Readonly<Record<string, string>> };
+  return O.fromNullishOr(parsed.scripts?.["beep:build"], undefined);
+};
+
+const findRepoRoot = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let rootDir = path.resolve(process.cwd());
+  while (!(yield* fs.exists(path.join(rootDir, "turbo.json")))) {
+    const parent = path.dirname(rootDir);
+    expect(parent).not.toBe(rootDir);
+    rootDir = parent;
+  }
+  return rootDir;
+});
+
 describe("single-project emit law", () => {
   it("no beep:build script uses the subgraph builder or --force", async () => {
     const violations = await Effect.runPromise(
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        let rootDir = path.resolve(process.cwd());
-        while (!(yield* fs.exists(path.join(rootDir, "turbo.json")))) {
-          const parent = path.dirname(rootDir);
-          expect(parent).not.toBe(rootDir);
-          rootDir = parent;
-        }
+        const rootDir = yield* findRepoRoot();
         const manifests = yield* collectWorkspaceManifests(rootDir);
         expect(manifests.length).toBeGreaterThan(100);
         const offending: Array<string> = [];
         for (const manifest of manifests) {
           const raw = yield* fs.readFileString(manifest);
-          const parsed = JSON.parse(raw) as { readonly scripts?: Readonly<Record<string, string>> };
-          const build = O.fromNullishOr(parsed.scripts?.["beep:build"], undefined);
-          if (O.isNone(build)) {
-            continue;
-          }
-          const script = build.value;
-          const usesTsc = Str.includes("tsc ")(script) || Str.includes("tsgo ")(script);
-          if (usesTsc && (Str.includes(" -b ")(script) || Str.includes("--force")(script))) {
-            offending.push(`${path.relative(rootDir, manifest)}: ${script}`);
+          const build = buildScriptOf(raw);
+          if (O.isSome(build) && violatesSingleProjectEmit(build.value)) {
+            offending.push(`${path.relative(rootDir, manifest)}: ${build.value}`);
           }
         }
         return offending;
