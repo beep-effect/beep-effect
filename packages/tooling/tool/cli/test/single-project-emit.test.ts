@@ -48,8 +48,13 @@ const usesTypescriptCompiler = (script: string): boolean =>
 const usesSubgraphBuilder = (script: string): boolean =>
   Str.includes(" -b ")(script) || Str.includes("--force")(script);
 
+// `rm -rf dist` breaks single-project emit differently: the incremental
+// tsbuildinfo survives outside dist, so `tsc -p` sees an up-to-date build,
+// emits nothing, and the babel step dies on the missing directory.
+const deletesOwnEmit = (script: string): boolean => Str.includes("rm -rf dist")(script);
+
 const violatesSingleProjectEmit = (script: string): boolean =>
-  usesTypescriptCompiler(script) && usesSubgraphBuilder(script);
+  (usesTypescriptCompiler(script) && usesSubgraphBuilder(script)) || deletesOwnEmit(script);
 
 const buildScriptOf = (raw: string): O.Option<string> => {
   const parsed = JSON.parse(raw) as { readonly scripts?: Readonly<Record<string, string>> };
