@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/ci-fleet-residue",
   "lifecycle": "active",
-  "statusNote": "Split from ci-fleet-endgame on 2026-08-13. P3 shipped 2026-08-13 (#686). P2 hook deployed 2026-08-14 and validated live (Gate E + red-team, run 31779611279). P0 activated 2026-08-16 (#718 + #725, pin ami-07fb13d84a42d3584, baked fast path probed live). Remaining: P1 revert from 2026-08-18, then P4 close.",
+  "statusNote": "Split from ci-fleet-endgame on 2026-08-13. P3 shipped 2026-08-13 (#686). P2 hook deployed 2026-08-14 and validated live (Gate E + red-team, run 31779611279). P0 activated 2026-08-16 (#718 + #725, pin ami-07fb13d84a42d3584, baked fast path probed live). P1 revert deployed 2026-08-16 after a calm window-close measurement; interruption tripwire monitored through 2026-08-23, then P4 close.",
   "mission": "Retire the fleet endgame's deferred residue - baked AMI, spot posture, IMDS job-hook isolation with red-team re-run, and the yeet closeout writer bug - each as its own scoped PR.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -54,7 +54,7 @@
     {
       "id": "P1",
       "name": "Spot posture revert",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

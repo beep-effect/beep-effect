@@ -46,3 +46,26 @@ One line in `infra/src/CiFleetController.ts`:
 Deploy via the documented pulumi recipe (op-read passphrase, `aws login`
 browser auth); gate on live probes, not the config diff. Arm the
 interruption tripwire and monitor for a week after deploy.
+
+## Decision (2026-08-16): REVERT EXECUTED — window-close measurement calm
+
+Operator call, ~7 hours before the 2026-08-18 date on a date-granular
+gate: the measurement window's data (6d18h of on-demand operation) was
+already collected, and the skipped hours are the quietest CI window of
+the week. Measurement at decision time:
+
+- 528 total runs since 2026-08-11; 20 with `run_attempt > 1`.
+- Attribution: the hosted lane-exit wedge and its operator cancel/reruns
+  (receipted in OPPORTUNITIES.md; most from the 2026-08-14 PR #718
+  closeout), one repo-utils glob-timeout flake (rerun green), and
+  supersede cancels. Zero capacity-class events — interruptions are
+  impossible on-demand, which is the point of the baseline: post-revert,
+  interruption re-runs surface as runner-lost-mid-job with EC2
+  "Service initiated" terminations, distinguishable against this noise
+  floor.
+- Revert: `instance_target_capacity_type` returns to `"spot"` (one line,
+  `infra/src/CiFleetController.ts`), allocation stays
+  price-capacity-optimized, termination watcher stays on.
+- Tripwire re-armed: >2 interruption-attributed re-runs/week returns the
+  longest lanes to on-demand. Monitor through 2026-08-23 with the same
+  recipe, attributing before counting.
