@@ -68,11 +68,11 @@ the console before EC2 posted it and terminated good instances.
 
 ## Ops residue
 
-- `beep-ci-bake` managed policy and the launcher's bake grants are
-  hand-managed IAM — fold into IaC with the fleet.
-- `beep-ci-bake-instance` role/instance-profile and the policy's PassRole
-  statement are vestigial (guardrails force identity-less bake guests) —
-  delete on next IAM touch.
+- `beep-ci-bake` managed policy (v4) on the launcher is REQUIRED for future
+  bakes and remains hand-managed IAM — fold into IaC with the fleet.
+- RESOLVED 2026-08-16: the vestigial `beep-ci-bake-instance`
+  role/instance-profile were deleted and the policy's PassRole statement
+  dropped in v4 (see the post-merge validation section below).
 
 ## Post-merge validation (2026-08-16)
 
