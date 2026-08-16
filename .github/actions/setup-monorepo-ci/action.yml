@@ -50,6 +50,13 @@ runs:
             && [ "$baked_archive" = "$checkout_archive" ]; then
             hit=true
             echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
+            # The release zip ships only the bun binary; images baked before
+            # the bake script created bunx (ami-07fb13d84a42d3584 and older)
+            # lack the symlink and every `bunx turbo` spawn dies with ENOENT.
+            if [ ! -e "$HOME/.bun/bin/bunx" ]; then
+              ln -s bun "$HOME/.bun/bin/bunx"
+              echo "baked runner repair: created missing bunx symlink"
+            fi
             echo "baked runner fast path: bun $baked_bun, lockfile $baked_lock, archive $baked_archive"
           else
             echo "baked runner stale (lock $baked_lock vs $checkout_lock, bun $baked_bun vs $checkout_bun, archive $baked_archive vs $checkout_archive); using full setup"
