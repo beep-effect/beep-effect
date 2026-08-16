@@ -228,6 +228,22 @@
       "reason": "Mixed in-memory state: customEntities and instanceId are already modeled by WinkEngineState, while nlp is the live wink-nlp runtime object."
     },
     {
+      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
+      "symbol": "EdgeVersionSourceColumns",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
+    },
+    {
+      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
+      "symbol": "EdgeVersionTargetColumns",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/epistemic-domain",
+      "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
+    },
+    {
       "file": "packages/epistemic/server/src/GovernedEgress/GovernedEgress.layer.ts",
       "symbol": "GovernedEgressLiveOptions",
       "kind": "exported-interface",
@@ -264,22 +280,6 @@
       "line": 87,
       "owner": "@beep/epistemic-server",
       "reason": "Repository integration suite uses fixed schema-decoded fixtures to prove atomic review, races, temporal queries, and restart behavior; schema-derived arbitrary round-trips live with the owning domain and use-case models."
-    },
-    {
-      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
-      "symbol": "EdgeVersionSourceColumns",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/epistemic-domain",
-      "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
-    },
-    {
-      "file": "packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.behavior.ts",
-      "symbol": "EdgeVersionTargetColumns",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/epistemic-domain",
-      "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
     },
     {
       "file": "packages/epistemic/server/test/integration/EdgeAuthority.pg.test.ts",
