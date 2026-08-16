@@ -103,6 +103,13 @@ export {
   createPackageCommand,
 } from "./commands/CreatePackage/index.ts";
 /**
+ * Complete package deletion and registration-residue doctor command.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export { deletePackageCommand } from "./commands/DeletePackage/index.ts";
+/**
  * Human-first docgen command group.
  *
  * @category cli-commands

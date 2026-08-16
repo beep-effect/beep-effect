@@ -9,8 +9,11 @@ import {
   BakeReportJson,
   DEFAULT_RUNNER_BASE_AMI_PARAMETER,
   makeBakeScriptForTesting,
+  pendingWhileNotFoundForTesting,
+  RunnersCommandError,
   RunnersService,
   RunnersServiceLive,
+  readPostedConsoleForTesting,
   resolveBakeMode,
   runAwsForTesting,
   runBakeCommandForTesting,
@@ -80,7 +83,7 @@ const makePlan = () =>
     bunArchiveSha256: bunArchiveDigest,
     bunVersion: "1.3.14",
     gitRevision: "0123456789abcdef0123456789abcdef01234567",
-    requiredFlags: ["--subnet", "--security-group", "--instance-profile"],
+    requiredFlags: ["--subnet", "--security-group"],
     invariants: ["beep-ci=runner"],
     steps: [BakePlanStep.make({ name: "resolve-base-ami", argv: ["aws", "ssm", "get-parameter"] })],
   });
@@ -114,12 +117,12 @@ const bakeOptions = () => ({
   report: O.none<string>(),
 });
 
-const bakeConfig = () =>
+const bakeConfig = (instanceProfile: O.Option<string> = O.none()) =>
   BakeConfig.make({
     region: "us-east-1",
     subnetId: "subnet-0123456789abcdef0",
     securityGroupId: "sg-0123456789abcdef0",
-    instanceProfile: "beep-runners-bake",
+    instanceProfile,
     bakeTimestamp: 1786640400000,
   });
 
@@ -133,7 +136,8 @@ const argumentAfter = (argv: ReadonlyArray<string>, flag: string): O.Option<stri
 
 const makeBakeSpawner = (
   commands: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>,
-  consoleOutput: string
+  consoleOutput: string,
+  git: { readonly remotes?: string; readonly contains?: string } = {}
 ): ChildProcessSpawner.ChildProcessSpawner["Service"] =>
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) {
@@ -142,7 +146,15 @@ const makeBakeSpawner = (
     const argv = [command.command, ...command.args];
     const output = Match.value(command.command).pipe(
       Match.when("git", () =>
-        Effect.succeed(stubHandle(A.contains(command.args, "status") ? "" : "0123456789abcdef0123456789abcdef01234567"))
+        Effect.succeed(
+          A.contains(command.args, "status")
+            ? stubHandle("")
+            : A.contains(command.args, "remote")
+              ? stubHandle(git.remotes ?? "origin\thttps://github.com/beep-effect/beep-effect.git (fetch)")
+              : A.contains(command.args, "--contains")
+                ? stubHandle(git.contains ?? "  origin/main")
+                : stubHandle("0123456789abcdef0123456789abcdef01234567")
+        )
       ),
       Match.when("aws", () =>
         Match.value(command.args).pipe(
@@ -268,7 +280,7 @@ describe("runner bake planning and argv", () => {
       yield* runWithStubService(true, { ...bakeOptions(), check: true });
       yield* runWithStubService(true, bakeOptions());
       expect(yield* TestConsole.logLines).toStrictEqual([
-        "lockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\ngit revision: 0123456789abcdef0123456789abcdef01234567\nrequired flags: --subnet, --security-group, --instance-profile\nresolve-base-ami: aws ssm get-parameter",
+        "lockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\ngit revision: 0123456789abcdef0123456789abcdef01234567\nrequired flags: --subnet, --security-group\nresolve-base-ami: aws ssm get-parameter",
         "AMI: ami-0123456789abcdef0\nlockfile: fresh\nbun version: fresh\nfresh: yes",
         "baked AMI: ami-0123456789abcdef0\nbase AMI: ami-0fedcba9876543210\nlockfile sha256: e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\nbun version: 1.3.14\npin: cd infra/ci-runners && pulumi config set ciFleetController:amiId ami-0123456789abcdef0 --stack production",
       ]);
@@ -295,10 +307,8 @@ describe("runner bake planning and argv", () => {
       );
       expect(missingSecurityGroup.message).toBe("runners bake: --security-group is required.");
 
-      const missingInstanceProfile = yield* Effect.flip(
-        runWithStubService(true, { ...bakeOptions(), instanceProfile: O.none() })
-      );
-      expect(missingInstanceProfile.message).toBe("runners bake: --instance-profile is required.");
+      // --instance-profile is optional: launcher guardrails deny profiled launches.
+      yield* runWithStubService(true, { ...bakeOptions(), instanceProfile: O.none() });
     })
   );
 
@@ -383,12 +393,7 @@ describe("runner bake planning and argv", () => {
         return { check, currentPlan };
       }).pipe(provideScopedLayer(testLayer));
 
-      expect(currentPlan.requiredFlags).toStrictEqual([
-        "--region",
-        "--subnet",
-        "--security-group",
-        "--instance-profile",
-      ]);
+      expect(currentPlan.requiredFlags).toStrictEqual(["--region", "--subnet", "--security-group"]);
       expect(A.map(currentPlan.steps, (step) => step.name)).toStrictEqual([
         "resolve-base-ami",
         "launch-bake-instance",
@@ -411,7 +416,8 @@ describe("runner bake planning and argv", () => {
       Effect.fnUntraced(function* (tmpDir) {
         const path = yield* Path.Path;
         const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-        const consoleOutput = yield* S.encodeEffect(S.StringFromBase64)("BEEP_RUNNERS_BAKE_COMPLETE\n");
+        // AWS CLI v2 hands back get-console-output's Output already decoded.
+        const consoleOutput = "BEEP_RUNNERS_BAKE_COMPLETE";
         const spawner = makeBakeSpawner(commands, consoleOutput);
         const testLayer = RunnersServiceLive.pipe(
           Layer.provide(
@@ -443,6 +449,11 @@ describe("runner bake planning and argv", () => {
             O.exists(Str.startsWith('{"ResourceType":"instance","Tags":['))
           )
         ).toBe(true);
+        expect(A.contains("--iam-instance-profile")(runInstances)).toBe(false);
+        // Only the bake mode ships the revision to a guest clone, and it must
+        // prove reachability against the canonical remote before AWS calls.
+        expect(A.some(captured, A.contains("--contains"))).toBe(true);
+        expect(A.some(captured, A.contains("remote"))).toBe(true);
         expect(argumentAfter(runInstances, "--block-device-mappings")).toStrictEqual(
           O.some(
             '[{"DeviceName":"/dev/xvda","Ebs":{"DeleteOnTermination":true,"Encrypted":true,"Iops":3000,"Throughput":250,"VolumeSize":100,"VolumeType":"gp3"}}]'
@@ -464,13 +475,70 @@ describe("runner bake planning and argv", () => {
     )
   );
 
-  it.effect("terminates the temporary instance when bake verification fails", () =>
+  it.effect("maps propagation NotFound errors into the pending retry signal", () =>
+    Effect.gen(function* () {
+      // A just-created EC2 resource can 404 on describe until propagation
+      // completes; that class must fold into the pending-state retry.
+      const pending = yield* Effect.flip(
+        pendingWhileNotFoundForTesting({
+          self: Effect.fail(
+            RunnersCommandError.make({
+              message:
+                "aws failed: An error occurred (InvalidInstanceID.NotFound) when calling the DescribeInstances operation: The instance ID 'i-bake' does not exist",
+            })
+          ),
+          resource: "i-bake",
+          notFoundCode: "InvalidInstanceID.NotFound",
+        })
+      );
+      expect(pending._tag).toBe("AwsResourcePending");
+
+      const passthrough = yield* Effect.flip(
+        pendingWhileNotFoundForTesting({
+          self: Effect.fail(RunnersCommandError.make({ message: "AccessDenied" })),
+          resource: "i-bake",
+          notFoundCode: "InvalidInstanceID.NotFound",
+        })
+      );
+      expect(passthrough._tag).toBe("RunnersCommandError");
+    })
+  );
+
+  it.effect("classifies an unposted post-stop console read as pending", () =>
+    Effect.gen(function* () {
+      // EC2 posts a stopped instance's console minutes after the stop; an
+      // empty read is the propagation window, never a bake verdict.
+      const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+      const pending = yield* Effect.flip(
+        readPostedConsoleForTesting("us-east-1", "i-bake").pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, makeBakeSpawner(commands, ""))
+        )
+      );
+      expect(pending._tag).toBe("AwsResourcePending");
+
+      // A partial publication (boot noise, no marker either way) is the same
+      // propagation window: the narrating script writes from its first
+      // command, so nonempty is not terminal.
+      const partial = yield* Effect.flip(
+        readPostedConsoleForTesting("us-east-1", "i-bake").pipe(
+          Effect.provideService(
+            ChildProcessSpawner.ChildProcessSpawner,
+            makeBakeSpawner(commands, "cloud-init boot noise without any marker")
+          )
+        )
+      );
+      expect(partial._tag).toBe("AwsResourcePending");
+    })
+  );
+
+  it.effect("refuses to bake when no remote points at the canonical repository", () =>
     withTempDirectory(
       Effect.fnUntraced(function* (tmpDir) {
         const path = yield* Path.Path;
         const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
-        const consoleOutput = yield* S.encodeEffect(S.StringFromBase64)("bake failed\n");
-        const spawner = makeBakeSpawner(commands, consoleOutput);
+        const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", {
+          remotes: "fork\thttps://github.com/someone/beep-effect-fork.git (fetch)",
+        });
         const testLayer = RunnersServiceLive.pipe(
           Layer.provide(
             Layer.mergeAll(
@@ -484,6 +552,62 @@ describe("runner bake planning and argv", () => {
         const error = yield* Effect.gen(function* () {
           const service = yield* RunnersService;
           return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
+        }).pipe(provideScopedLayer(testLayer));
+        expect(error.message).toContain("No Git remote points at github.com/beep-effect/beep-effect");
+        // The guard must refuse before any AWS call reaches the spawner.
+        expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
+      })
+    )
+  );
+
+  it.effect("refuses to bake a revision reachable only from a fork remote", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const path = yield* Path.Path;
+        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+        const spawner = makeBakeSpawner(commands, "BEEP_RUNNERS_BAKE_COMPLETE", { contains: "  fork/feature" });
+        const testLayer = RunnersServiceLive.pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+              NodeFileSystem.layer,
+              NodePath.layer,
+              NodeCrypto.layer
+            )
+          )
+        );
+        const error = yield* Effect.gen(function* () {
+          const service = yield* RunnersService;
+          return yield* Effect.flip(service.bake(bakeConfig(), O.some(path.join(tmpDir, "bake-report.json"))));
+        }).pipe(provideScopedLayer(testLayer));
+        expect(error.message).toContain("is not reachable from any github.com/beep-effect/beep-effect remote branch");
+        expect(A.some(yield* Ref.get(commands), A.contains("aws"))).toBe(false);
+      })
+    )
+  );
+
+  it.effect("terminates the temporary instance when bake verification fails", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const path = yield* Path.Path;
+        const commands = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>(A.empty());
+        const consoleOutput = "BEEP_RUNNERS_BAKE_FAILED line 5: false";
+        const spawner = makeBakeSpawner(commands, consoleOutput);
+        const testLayer = RunnersServiceLive.pipe(
+          Layer.provide(
+            Layer.mergeAll(
+              Layer.succeed(ChildProcessSpawner.ChildProcessSpawner, spawner),
+              NodeFileSystem.layer,
+              NodePath.layer,
+              NodeCrypto.layer
+            )
+          )
+        );
+        const error = yield* Effect.gen(function* () {
+          const service = yield* RunnersService;
+          return yield* Effect.flip(
+            service.bake(bakeConfig(O.some("beep-runners-bake")), O.some(path.join(tmpDir, "bake-report.json")))
+          );
         }).pipe(provideScopedLayer(testLayer));
 
         expect(error.message).toContain("stopped without the BEEP_RUNNERS_BAKE_COMPLETE success marker");
@@ -535,6 +659,8 @@ describe("runner bake planning and argv", () => {
       })
     );
     expect(script).toContain("set -euo pipefail");
+    expect(script).toContain("exec >> /dev/console 2>&1");
+    expect(script).toContain("BEEP_RUNNERS_BAKE_FAILED line ${LINENO}: ${BASH_COMMAND}");
     expect(script).toContain("shutdown -P +350");
     expect(script).toContain("dnf install -y git unzip zip jq docker libicu");
     expect(script).toContain("https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-linux-x64.zip");
@@ -550,9 +676,14 @@ describe("runner bake planning and argv", () => {
     expect(script).toContain("git -C /tmp/beep-effect checkout --detach 0123456789abcdef0123456789abcdef01234567");
     expect(script).toContain(`= "${digest}"`);
     expect(script).toContain(`'1.3.14' > /etc/beep-ci/bun-version`);
+    expect(script).toContain(`'${bunArchiveDigest}' > /etc/beep-ci/bun-archive.sha256`);
     expect(script).toContain("touch /etc/beep-ci/baked-runner");
     expect(script).toContain("rm -rf /tmp/beep-effect /root/.cache /home/ec2-user/.cache");
-    expect(script).toContain("cloud-init clean --logs --machine-id");
+    // AL2023's cloud-init lacks the newer --machine-id flag; the reset is
+    // explicit so first boot regenerates a fresh machine identity.
+    expect(script).toContain("cloud-init clean --logs\n");
+    expect(script).toContain("truncate -s 0 /etc/machine-id");
+    expect(script).toContain("rm -f /var/lib/dbus/machine-id");
     expect(script).toContain("rm -rf /var/lib/cloud/instances/* /var/log/cloud-init*.log");
     expect(script).toContain("BEEP_RUNNERS_BAKE_COMPLETE");
     expect(script).toContain("trap - EXIT");

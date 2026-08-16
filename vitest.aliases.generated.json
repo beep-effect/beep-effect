@@ -1742,5 +1742,11 @@
   "@beep/shared-tables/table": ["./packages/shared/tables/src/table/index.ts"],
   "@beep/shared-tables/table/Table": [
     "./packages/shared/tables/src/table/Table.ts"
+  ],
+  "@beep/repo-cli/commands/DeletePackage": [
+    "./packages/tooling/tool/cli/src/commands/DeletePackage/index.ts"
+  ],
+  "@beep/repo-cli/test/DeletePackage": [
+    "./packages/tooling/tool/cli/src/test/DeletePackage.test-kit.ts"
   ]
 }

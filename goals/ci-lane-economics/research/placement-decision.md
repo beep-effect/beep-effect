@@ -31,7 +31,7 @@ required context.
 | Docgen | fleet | fleet | 13.4m | Retain; `uses_turbo: false`, so there is no cache-backed re-fit case. |
 | Codegen Drift | hosted | hosted | 3.3m | Retain. |
 | Repo Sanity | hosted | hosted | 4.1m | Retain. |
-| Coverage Regression | fleet | fleet | 29.5m | Keep one fleet placement. Use exact directly changed coverage owners on PRs with an explicit full fallback; prebuild once and run eight stable weighted in-job shards with coverage-only file parallelism. Give the two measured long poles two workers and the six mixed shards one each. |
+| Coverage Regression | fleet | fleet | 29.5m | Keep one fleet placement. Use exact directly changed coverage owners on PRs with an explicit full fallback; prebuild once and run ten stable weighted in-job shards with coverage-only file parallelism. Give repo-cli two workers; give repo-utils and the eight mixed shards one each. |
 | Knip | hosted | hosted | 3.1m | Retain. |
 | Commitlint | hosted | hosted | 1.8m | Retain. |
 | Secret Scanning | hosted | hosted | 1.0m | Retain. |
@@ -49,9 +49,9 @@ required context.
   the conservative upper bound because this decision adds no fleet work.
 - Absolute ceiling: **$200/month** remains a hard stop. No Coverage shard may
   add a VM until its per-wave and monthly projection is recorded here. The
-  successor uses eight package queues inside the existing one-job/one-VM
-  boundary while preserving the merged candidate's aggregate cap of 10 Vitest
-  workers, so it adds no job, VM, or projected monthly spend.
+  successor uses ten package queues inside the existing one-job/one-VM
+  boundary with an aggregate cap of 11 Vitest workers, so it adds no job, VM,
+  or projected monthly spend.
 
 The census measures job wall time rather than controller boot/billing time.
 The failed hosted admission creates no standing fleet delta: retaining the
@@ -121,6 +121,48 @@ pre-packet placement cannot raise the approved projection.
   3m21s-5m59s; and all 126 baseline packages accepted by the ratchet. There was
   no test failure, shutdown, or OOM. This accepts local correctness/resource
   behavior; only the live fleet job may accept timing.
+- PR #716 run `31777323977`, job `94695402310`, accepted the eight-shard
+  candidate's correctness but rejected its timing at 22m18s. The 3m30s
+  prebuild was followed by isolated long-pole shards at 11m01s and 13m08s,
+  while the six mixed shards controlled the tail at 15m51s-17m27s. No test,
+  ratchet, shutdown, or OOM failure occurred. The next candidate adds one
+  mixed queue and one bounded worker, yielding nine shards with aggregate
+  Vitest fan-out 11; reject it if the complete hosted job remains at or above
+  20 minutes or correctness/resource behavior regresses.
+- The nine-shard candidate passed its forced local full path on exact base
+  `a10825dd01`: a 54-second, 130-package zero-cache prebuild; nine green
+  zero-cache shards at 3m09s-6m00s; and all 127 baseline packages accepted by
+  the ratchet. The complete path took 6m55s with no test failure, shutdown, or
+  OOM. This accepts local correctness/resource behavior; only the live fleet
+  job may accept timing.
+- PR #719's first nine-shard job `94746974171` failed after 22m26s. Its 3m35s
+  zero-cache prebuild passed, seven mixed shards passed in 15m37s-17m30s, and
+  no runner shutdown or OOM occurred. The isolated repo-utils and repo-cli
+  shards exposed one shared Node coverage `Bun.Glob` shim defect: statically
+  rooted patterns still scanned the whole repository and raced teardown of
+  temporary Biome directories. Bounding scans to their static roots and
+  treating disappearing directories as empty branches made the exact failing
+  coverage files pass in 4.74s and 7.79s. Exclude the failed attempt from the
+  percentiles and require a fresh full-path proof plus live admission on the
+  repaired nine-shard head.
+- The repaired nine-shard head passed that forced local full path on exact base
+  `a10825dd01`: a 24-second, 128-task zero-cache prebuild; nine green zero-cache
+  shards at 31s-6m07s; and all 127 baseline packages accepted by the ratchet.
+  The complete summary window took 6m31s. This re-accepts local
+  correctness/resource behavior; only the next live fleet job may accept
+  timing.
+- PR #719 run `31802039933`, job `94772037908`, passed the repaired nine-shard
+  design and all 127 baseline comparisons without shutdown/OOM, but the job
+  took 21m39s. The 3m38s prebuild was followed by repo-utils at 2m15s,
+  repo-cli at 13m48s, and seven mixed queues at 14m55s-16m44s. Reject the
+  timing result and exclude it from the accepted P3 population. The successor
+  moves repo-utils to one worker and adds an eighth one-worker mixed queue,
+  preserving aggregate fan-out at 11 while targeting the measured tail.
+- The ten-shard successor passed its forced local full path with remote cache
+  disabled: a 17.2-second zero-cache prebuild, ten green zero-cache shards at
+  57s-4m08s, and all 127 baseline packages accepted by the ratchet. The
+  complete summary window took 4m26s. This accepts local correctness/resource
+  behavior; only the next live fleet job may accept timing.
 
 ## P2 live admission evidence
 
@@ -135,3 +177,7 @@ pre-packet placement cannot raise the approved projection.
 | `31753283207` attempt 2 / `94625871718` | `beep-ec2-heavy` | Passed after 23m23s | The two-worker cap eliminated the contention-sensitive failures and compared all 124 packages. The 3m38s prebuild plus four green shards at 15m32s-18m23s still exceeded the charter. | Reject the uniform two-worker timing admission; exclude it from the accepted P3 population and admit the smallest bounded increase, three workers per shard. |
 | `31759003628` / `94641084512` | `beep-ec2-heavy` | Failed after 23m08s | The 3m30s prebuild led into three green shards at 16m05s-17m16s. The repo-cli shard failed after 18m16s when a bounded-work assertion measured 1026.30ms against 1000ms; no OOM or runner shutdown occurred. | Reject the uniform three-worker admission and exclude it from duration percentiles. Enable file parallelism only for full coverage, restore two workers, and use five weighted shards to reduce the mixed-shard long poles. |
 | `31766791221` / `94664247028` | `beep-ec2-heavy` | Passed after 23m14s | The file-parallel five-shard design passed every test and compared all 126 baseline packages without shutdown/OOM. A 3m39s zero-cache prebuild preceded green shards at 12m03s-18m15s; the complete verification step took 22m00s. | Accept correctness but reject timing. Exclude it from the accepted P3 population; preserve its aggregate worker cap while splitting the three mixed queues into six independently draining queues. |
+| `31777323977` / `94695402310` | `beep-ec2-heavy` | Passed after 22m18s | The eight-shard design passed every check and the complete ratchet without shutdown/OOM. Its 3m30s prebuild preceded isolated long-pole shards at 11m01s and 13m08s, but the six mixed queues drained in 15m51s-17m27s and controlled wall time. | Accept correctness but reject timing. Exclude it from the accepted P3 population; split the mixed tail into seven queues with one additional bounded worker. |
+| `31794013295` / `94746974171` | `beep-ec2-heavy` | Failed after 22m26s | The 3m35s prebuild passed 128/128 tasks and seven mixed shards passed in 15m37s-17m30s. The repo-utils and repo-cli shards failed because the Node coverage Glob shim repeatedly traversed unrelated repository paths and raced temporary-directory teardown; no runner shutdown or OOM occurred. | Reject correctness and timing, exclude the attempt from duration percentiles, repair the shared test infrastructure, and require a fresh nine-shard admission. |
+| `31799253491` / `94763099702` | `beep-ec2-heavy` | Failed after 1m27s | The cold prebuild repeated the impossible `thunk.ts is not a module` cascade before any shard started. The exact merge ref passed 128/128 forced build tasks with zero cache hits in 1m03s; its trace showed `@beep/ontology-config` recursively building Schema -> Data -> Utils beside Turbo's own `@beep/utils` task because of an unused project reference. After that reference was removed, the same forced zero-cache build passed 128/128 tasks in 56.2s without the nested Schema -> Data -> Utils build. | Exclude from duration percentiles, remove the stale project reference so Turbo owns cross-package ordering, and require a fresh live admission. |
+| `31802039933` / `94772037908` | `beep-ec2-heavy` | Passed after 21m39s | The repaired nine-shard design passed all tests and compared all 127 baseline packages. Its 3m38s zero-cache prebuild preceded repo-utils at 2m15s, repo-cli at 13m48s, and mixed queues at 14m55s-16m44s; no shutdown or OOM occurred. | Accept correctness but reject timing. Exclude it from the accepted P3 population; move repo-utils to one worker and use the recovered worker for an eighth mixed queue without raising aggregate fan-out above 11. |

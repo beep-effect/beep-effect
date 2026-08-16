@@ -5,7 +5,7 @@
     "title": "Lab Apps Lifecycle",
     "status": "active",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-08-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lab-apps-lifecycle",
@@ -49,6 +49,9 @@
     "research/04-governance-gates.md",
     "research/05-deletion-prior-art.md",
     "research/06-goals-packet-conventions.md",
+    "research/10-p0-census-ratification.md",
+    "research/11-registration-geometry-design.md",
+    "research/12-p0-gate-scoping-ratified.md",
     "goals/speed-loop/research/r3-package-deletions.md"
   ],
   "agentLaunchers": [
@@ -64,7 +67,7 @@
     {
       "id": "P0",
       "name": "Census ratification and geometry schema design",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",

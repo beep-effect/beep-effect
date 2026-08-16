@@ -41,6 +41,7 @@ const makeTempDirectory: (prefix: string) => TestEffect<string> = Effect.fn("Glo
 });
 const writeText = (path: string, content: string): TestEffect<void> =>
   withFileSystem((fs) => fs.writeFileString(path, content));
+const chmodPath = (path: string, mode: number): TestEffect<void> => withFileSystem((fs) => fs.chmod(path, mode));
 const removePath = (path: string) => withFileSystem((fs) => fs.remove(path, { recursive: true }));
 const makeSymlink = (target: string, path: string) => withFileSystem((fs) => fs.symlink(target, path));
 
@@ -146,6 +147,26 @@ describe("@beep/utils Glob", () => {
 
         expect(results).toEqual(["src/index.ts"]);
       })
+    ));
+
+  it("does not traverse unrelated directories for a statically rooted pattern", () =>
+    runTest(
+      Effect.acquireUseRelease(
+        acquireFixture,
+        (fixture) =>
+          Effect.gen(function* () {
+            const unrelated = joinPath(fixture.dir, "unrelated");
+            yield* makeDirectory(joinPath(unrelated, "nested"));
+            const results = yield* Effect.acquireUseRelease(
+              chmodPath(unrelated, 0),
+              () => runGlob("src/**/*.ts", { cwd: fixture.dir }),
+              () => chmodPath(unrelated, 0o700)
+            );
+
+            expect(results).toEqual(["src/errors/problem.ts", "src/index.ts", "src/nested/deep.ts"]);
+          }),
+        (fixture) => fixture.cleanup
+      )
     ));
 
   it("supports absolute paths and directory matches when nodir is false", () =>
