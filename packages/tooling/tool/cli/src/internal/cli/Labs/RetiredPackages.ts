@@ -60,7 +60,7 @@ const decodeRegistryJson = S.decodeEffect(S.fromJsonString(RetiredPackagesRegist
  * Read the retired-package name set from the registry; a missing registry file
  * decodes to the empty set.
  *
- * @category readers
+ * @category utilities
  * @since 0.0.0
  */
 export const readRetiredPackageNames = Effect.fnUntraced(function* (repoRoot: string) {
