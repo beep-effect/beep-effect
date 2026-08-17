@@ -572,6 +572,62 @@ describe("create-package --lab", { concurrent: false }, () => {
   );
 
   it(
+    "scaffolds a tauri lab with a compilable crate icon and the labs portless devUrl",
+    () =>
+      Effect.runPromise(
+        withLabsFixture(LabsRootConfig, (context) =>
+          Effect.gen(function* () {
+            const { fs, path, rootDir } = context;
+
+            yield* runCreatePackageCommand([
+              "probe-tauri",
+              "--type",
+              "app",
+              "--app-kind",
+              "tauri",
+              "--lab",
+              "--description",
+              "Tauri lab probe",
+            ]);
+
+            const packageDir = path.join(rootDir, "apps", "labs", "probe-tauri");
+            const manifest = decodeGeneratedPackageManifest(yield* readJsonFile(path.join(packageDir, "package.json")));
+            expect(manifest.scripts.dev).toBe(
+              "portless probe-tauri.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'"
+            );
+            expect(manifest.scripts["dev:tauri"]).toBe("tauri dev");
+            expectNoPackageCeremony(manifest);
+
+            // The icon is a generated file, not an optional extra:
+            // `tauri::generate_context!()` opens `src-tauri/icons/icon.png` while
+            // the macro expands, and no `bundle.icon` value avoids that — `[]` and
+            // `bundle.active: false` both still fail. Assert the PNG signature, since
+            // a Handlebars string round-trip would corrupt these high bytes.
+            const iconBytes = yield* fs.readFile(path.join(packageDir, "src-tauri", "icons", "icon.png"));
+            expect(A.take(A.fromIterable(iconBytes), 8)).toStrictEqual([
+              0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+            ]);
+            expect(iconBytes.length).toBeGreaterThan(1024);
+
+            const tauriConf = yield* fs.readFileString(path.join(packageDir, "src-tauri", "tauri.conf.json"));
+            expect(tauriConf).toContain(`"icon": ["icons/icon.png"]`);
+            // Labs serve on the `.labs.beep` route; a `<name>.beep` devUrl would
+            // point the webview at a host the lab's dev script never serves.
+            expect(tauriConf).toContain(`"devUrl": "http://probe-tauri.labs.beep.localhost:1355"`);
+            expect(tauriConf).not.toContain("probe-tauri.beep.localhost");
+
+            const labManifest = yield* decodeManifestAt(context, "probe-tauri");
+            expect(labManifest.disposition).toBe("active");
+
+            const registry = yield* readIdentityRegistry(context);
+            expect(registry).toContain('const generatedLabComposers = $I.compose("probe-tauri");');
+          })
+        )
+      ),
+    CreatePackageLabTestTimeoutMs
+  );
+
+  it(
     "rebuilds the labs identity segment sorted when a second lab is created",
     () =>
       Effect.runPromise(
@@ -628,9 +684,6 @@ describe("create-package --lab", { concurrent: false }, () => {
             expect(yield* runRefusal(["probe-lab", "--lab", "--description", "x"])).toContain(
               "--lab is only valid with --type app"
             );
-            expect(
-              yield* runRefusal(["probe-lab", "--type", "app", "--app-kind", "tauri", "--lab", "--description", "x"])
-            ).toContain("deferred to lab-apps P3");
             expect(
               yield* runRefusal([
                 "probe-lab",

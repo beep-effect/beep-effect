@@ -42,6 +42,40 @@ export class TemplateSpec extends S.Class<TemplateSpec>($I`TemplateSpec`)(
 ) {}
 
 /**
+ * Mapping between a verbatim template asset and its output file path.
+ *
+ * **Details**
+ *
+ * Assets are copied byte-for-byte rather than rendered, because some generated
+ * files cannot be expressed as text: a Tauri crate will not compile without a
+ * real `src-tauri/icons/icon.png`, since `tauri::generate_context!()` opens the
+ * icon at macro-expansion time. Handlebars templates are string-rendered, so
+ * binary payloads need this separate, non-rendering path.
+ *
+ * **Example** (Validate StaticAssetSpec with Schema)
+ *
+ * ```ts
+ * import { StaticAssetSpec } from "@beep/repo-cli/commands/CreatePackage"
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { assetName: "assets/tauri-icon.png", outputPath: "src-tauri/icons/icon.png" }
+ * console.log(S.is(StaticAssetSpec)(candidate)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class StaticAssetSpec extends S.Class<StaticAssetSpec>($I`StaticAssetSpec`)(
+  {
+    assetName: S.String,
+    outputPath: S.String,
+  },
+  $I.annote("StaticAssetSpec", {
+    description: "Mapping between a verbatim template asset and its output file path.",
+  })
+) {}
+
+/**
  * Rendered template output.
  *
  * **Example** (Validate RenderedTemplate with Schema)

@@ -2,6 +2,7 @@ import {
   createFileGenerationPlanService,
   FileGenerationPlanInput,
   GenerationAction,
+  PlannedAsset,
   PlannedFile,
   PlannedSymlink,
 } from "@beep/repo-cli/test/CreatePackage";
@@ -43,6 +44,9 @@ describe("packages/tooling/tool/cli schema-first models", () => {
     });
 
     expect(decoded.symlinks).toEqual([]);
+    // Assets default the same way, so every scaffold that emits no binary
+    // artifact keeps its plan input unchanged.
+    expect(decoded.assets).toEqual([]);
   });
 
   it("uses tagged-union helpers for GenerationAction", () => {
@@ -54,6 +58,7 @@ describe("packages/tooling/tool/cli schema-first models", () => {
     const summary = GenerationAction.match(action, {
       mkdir: ({ relativePath }) => `mkdir:${relativePath}`,
       "write-file": ({ relativePath }) => `write:${relativePath}`,
+      "copy-asset": ({ relativePath, sourcePath }) => `copy:${sourcePath}->${relativePath}`,
       symlink: ({ relativePath, target }) => `symlink:${relativePath}->${target}`,
     });
 
@@ -70,6 +75,12 @@ describe("packages/tooling/tool/cli schema-first models", () => {
           PlannedFile.make({ relativePath: "src/index.ts", content: "export {};\n" }),
           PlannedFile.make({ relativePath: "docs/index.md", content: "# docs\n" }),
         ],
+        assets: [
+          PlannedAsset.make({
+            relativePath: "src-tauri/icons/icon.png",
+            sourcePath: "/tmp/templates/assets/tauri-icon.png",
+          }),
+        ],
         symlinks: [PlannedSymlink.make({ relativePath: "CLAUDE.md", target: "AGENTS.md" })],
       })
     );
@@ -78,7 +89,11 @@ describe("packages/tooling/tool/cli schema-first models", () => {
 
     expect(preview).toContain("write docs/index.md");
     expect(preview).toContain("write src/index.ts");
+    expect(preview).toContain("copy src-tauri/icons/icon.png");
     expect(preview).toContain("symlink CLAUDE.md -> AGENTS.md");
+    // An asset's parent directories join the mkdir set like any other entry, so
+    // a nested asset path does not need its directories declared by hand.
+    expect(preview).toContain("mkdir src-tauri/icons");
   });
 
   it("exposes toTaggedUnion helpers for VersionSyncOptions", () => {

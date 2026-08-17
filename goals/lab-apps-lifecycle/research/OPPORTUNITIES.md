@@ -110,3 +110,87 @@ Numbers are STABLE IDS — never renumber to express priority.
    another module's floor, so a correct change to one looks like a regression in
    the other. Worth deciding whether `tsconfig-sync` should cover that path
    directly.
+
+6. **A generated artifact's real build was never run by any gate, so a
+   non-compiling crate shipped undetected.** — `unowned`
+
+   *Doing:* P3's tauri spike — minting a tauri lab and a non-lab tauri app and
+   running every gate against each.
+
+   *Evidence:* `create-package --app-kind tauri` emitted a `src-tauri` crate
+   that fails `cargo check` with exit 101: `tauri::generate_context!()` opens
+   `src-tauri/icons/icon.png` at macro-expansion time, and the template emitted
+   `"icon": []` with no icons directory. Neither an empty icon array nor
+   `bundle.active: false` avoids it; only a real PNG does (101 → 101 → 0). The
+   defect predates this packet and applies to the non-lab AppKind too. It
+   survived because `beep:check`, `beep:lint` and `beep:test` — the three gates
+   the SPEC names, and everything the Labs lane runs — are tsgo, biome and
+   vitest. Nothing anywhere compiles a generated crate, so all three were green
+   against a package whose headline command (`dev:tauri`) panicked on first use.
+
+   *Would have prevented it:* an acceptance lane that runs each AppKind's
+   *native* build, not just its TypeScript gates — this is receipt 1's
+   per-variant lane extended one step, from "does it typecheck" to "does the
+   thing it generates actually build". Generalizes past tauri: any future kind
+   whose output has a non-TS toolchain (wasm, native addons, protobuf codegen)
+   inherits the same blind spot.
+
+   *Second-order:* the gates a SPEC enumerates become the definition of
+   correctness, and anything outside them is invisible regardless of how
+   central it is to the artifact. The three-gate formula was written for
+   TypeScript packages and silently carried over to a variant that is half
+   Rust. Worth asking, when adding any AppKind, which of its failure modes the
+   standard gate list cannot see.
+
+7. **Binary generated files had no path through the generator at all.** —
+   `queued` (addressed in P3; recorded for the general case)
+
+   *Doing:* fixing receipt 6 by making the icon a generated file.
+
+   *Evidence:* `create-package`'s entire pipeline was string-typed —
+   `TemplateSpec` → Handlebars → `PlannedFile.content: S.String` →
+   `writeFile(absolutePath, content: string)`. A PNG cannot survive that path;
+   a string round-trip corrupts its high bytes. Adding one required a parallel
+   verbatim-copy path (`StaticAssetSpec` → `PlannedAsset` → a `copy-asset`
+   generation action) rather than a template entry.
+
+   *Would have prevented it:* nothing — this is a legitimate capability gap
+   rather than a mistake, recorded so the next binary artifact (favicons, fonts,
+   signing certs, seed fixtures) reuses the asset path instead of rediscovering
+   that templates are text-only. The new tests assert PNG signature bytes rather
+   than file existence, because existence passes even when the bytes are
+   mangled.
+
+8. **A configured workstation cannot reproduce the coverage ratchet, because
+   production code branches on environment the baseline was generated
+   without.** — `unowned`
+
+   *Doing:* running the coverage ratchet locally before publishing, precisely
+   because `yeet verify` never runs `coverage` (the #742 lesson).
+
+   *Evidence:* a full-package repo-cli coverage run reports
+   `Quality/Tasks.ts` branches 64.48 → 63.63, uncovered 103 → 104, which is a
+   genuine ratchet failure by the `fileMetricRegressed` rule. It is not
+   introduced: **clean `main` with zero branch changes reproduces the identical
+   numbers**, and #743's own Coverage Regression lane passed in CI. The cause is
+   `resolveTurboCachePlan` (added by #743), which branches on `TURBO_API`,
+   `TURBO_TOKEN`, `TURBO_TEAM` and `TURBO_CACHE`. All four are set on a
+   remote-read-configured workstation; `check.yml` supplies them only on push
+   events, so PR runs — and the baseline those runs generated — take the other
+   branch. #743's own commit message names the hazard from the opposite side:
+   those tests' "green was conditional on the machine being unconfigured".
+
+   *Would have prevented it:* generating and comparing the baseline under a
+   pinned environment, so the ratchet compares like with like — e.g. the
+   coverage task clearing or fixing the turbo quad, the way a fixed
+   `BEEP_FC_SEED` already makes the property lane environment-independent. As
+   it stands the local ratchet check is only sound for files whose branches do
+   not read configuration, and a developer cannot tell which those are without
+   reading the source.
+
+   *Second-order:* this is the mirror image of receipt 5. There, a *missing*
+   fixture config made local behavior diverge from production; here a *present*
+   workstation config makes local behavior diverge from CI. Both are the same
+   underlying defect class — a gate whose result depends on ambient
+   configuration that nobody declared — and both cost an attribution
+   investigation before any code could be written.

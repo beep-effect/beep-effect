@@ -210,8 +210,10 @@ Track B — labs:
 - [ ] The first real lab (trustgraph/ts workbench shell, D13) is scaffolded
       on the substrate and typechecks (porting its internals is NOT gated
       here — the scaffold proof is).
-- [ ] Tauri lab variant lands in P3 on the same AppKind abstraction with a
-      recorded toolchain/CI spike outcome.
+- [x] Tauri lab variant lands in P3 on the same AppKind abstraction with a
+      recorded toolchain/CI spike outcome. (2026-08-17 — spike and per-variant
+      gate evidence in `PLAN.md` § P3 Outcome; the labs lane invokes no cargo,
+      so the variant costs zero Rust time in CI.)
 - [ ] `standards/architecture/GLOSSARY.md` gains "lab app".
 
 ## First Vertical Slice
