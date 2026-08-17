@@ -9,13 +9,13 @@
  * @since 0.0.0
  */
 
-import {Clock, Console, DateTime, Effect} from "effect";
+import { Clock, Console, DateTime, Duration, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import {Command, Flag} from "effect/unstable/cli";
-import {LinkIngestionService} from "../../Service/LinkIngestionService.ts";
-import {withErrorHandler} from "../ErrorHandler.ts";
+import { Command, Flag } from "effect/unstable/cli";
+import { LinkIngestionService } from "../../Service/LinkIngestionService.ts";
+import { withErrorHandler } from "../ErrorHandler.ts";
 
 // =============================================================================
 // Command Options
@@ -56,7 +56,7 @@ const listPendingHandler = Effect.fn("listPendingHandler")(function* (ontology: 
   yield* Console.log("Listing pending/failed links...");
   yield* Console.log("");
   const links = yield* ingestion.list({
-    ...(O.isSome(ontology) ? {ontologyId: ontology.value} : {}),
+    ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
     status: "pending",
     limit,
   });
@@ -79,8 +79,8 @@ const listPendingHandler = Effect.fn("listPendingHandler")(function* (ontology: 
 
 const listPendingCommand = Command.make(
   "list-pending",
-  {ontology: ontologyOption, limit: limitOption},
-  ({limit, ontology}) => withErrorHandler(listPendingHandler(ontology, limit))
+  { ontology: ontologyOption, limit: limitOption },
+  ({ limit, ontology }) => withErrorHandler(listPendingHandler(ontology, limit))
 ).pipe(Command.withDescription("List pending and failed links"));
 
 // =============================================================================
@@ -99,7 +99,7 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
     yield* Console.log("(dry-run mode - no changes will be made)");
     yield* Console.log("");
     const staleLinks = yield* ingestion.list({
-      ...(O.isSome(ontology) ? {ontologyId: ontology.value} : {}),
+      ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
       status: "pending",
       limit: 1000,
     });
@@ -118,7 +118,7 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
     }
     return;
   }
-  const result = yield* ingestion.cleanupStaleLinks(minutes, ontologyId);
+  const result = yield* ingestion.cleanupStaleLinks(Duration.minutes(minutes), ontologyId);
   if (result.cleaned === 0) {
     yield* Console.log("No stale links found.");
   } else {
@@ -129,12 +129,8 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
 
 const cleanupStaleCommand = Command.make(
   "cleanup-stale",
-  {ontology: ontologyOption, minutes: minutesOption, dryRun: dryRunOption},
-  ({
-     dryRun,
-     minutes,
-     ontology
-   }) => withErrorHandler(cleanupStaleHandler(ontology, minutes, dryRun))
+  { ontology: ontologyOption, minutes: minutesOption, dryRun: dryRunOption },
+  ({ dryRun, minutes, ontology }) => withErrorHandler(cleanupStaleHandler(ontology, minutes, dryRun))
 ).pipe(Command.withDescription("Mark stale pending links as failed"));
 
 // =============================================================================
@@ -158,7 +154,7 @@ const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (linkId: string) 
   yield* Console.log(`  Key Entities: ${link.keyEntities?.join(", ") || "(none)"}`);
 });
 
-const reEnrichCommand = Command.make("re-enrich", {linkId: linkIdOption}, ({linkId}) =>
+const reEnrichCommand = Command.make("re-enrich", { linkId: linkIdOption }, ({ linkId }) =>
   withErrorHandler(reEnrichHandler(linkId))
 ).pipe(Command.withDescription("Re-run enrichment on a specific link"));
 
@@ -170,7 +166,7 @@ const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: 
   const ingestion = yield* LinkIngestionService;
   yield* Console.log("Finding failed links to re-enrich...");
   const links = yield* ingestion.list({
-    ...(O.isSome(ontology) ? {ontologyId: ontology.value} : {}),
+    ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
     status: "failed",
     limit,
   });
@@ -204,8 +200,8 @@ const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: 
 
 const reEnrichAllCommand = Command.make(
   "re-enrich-all",
-  {ontology: ontologyOption, limit: limitOption},
-  ({limit, ontology}) => withErrorHandler(reEnrichAllHandler(ontology, limit))
+  { ontology: ontologyOption, limit: limitOption },
+  ({ limit, ontology }) => withErrorHandler(reEnrichAllHandler(ontology, limit))
 ).pipe(Command.withDescription("Re-enrich all failed links"));
 
 // =============================================================================

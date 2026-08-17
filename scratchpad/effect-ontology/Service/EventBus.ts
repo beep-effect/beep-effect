@@ -38,24 +38,28 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EventBus");
  * Job with metadata for processing
  *
  *
- * **Example** (Use the JobWithMetadata contract)
+ * **Example** (Attach queue metadata)
  *
  * ```ts
- * import type { JobWithMetadata } from "@effect-ontology/Service/EventBus"
+ * import * as S from "effect/Schema"
+ * import { JobWithMetadata } from "@effect-ontology/Service/EventBus"
  *
- * const acceptsJobWithMetadata = (_value: JobWithMetadata): void => undefined
- *
- * console.log(acceptsJobWithMetadata)
+ * console.log(S.is(JobWithMetadata)({ id: "queue-1", attempts: -1 })) // false
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface JobWithMetadata {
-  readonly job: BackgroundJob;
-  readonly id: string;
-  readonly attempts: number;
-}
+export class JobWithMetadata extends S.Class<JobWithMetadata>($I`JobWithMetadata`)(
+  {
+    job: BackgroundJob,
+    id: S.NonEmptyString,
+    attempts: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Queue attempts must be non-negative." })),
+  },
+  $I.annote("JobWithMetadata", {
+    description: "A schema-backed background job paired with queue identity and retry attempts.",
+  })
+) {}
 
 /**
  * Runtime schema for a canonical event entry from the journal.
@@ -95,6 +99,26 @@ export type EventEntry = OntologyEventEntryValue;
 /**
  * EventBusService interface for event publishing and job queuing
  *
+ * **Example** (Implement an in-memory event bus boundary)
+ *
+ * ```ts
+ * import type { EventBusServiceMethods } from "@effect-ontology/Service/EventBus"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ * import * as Stream from "effect/Stream"
+ *
+ * const service: EventBusServiceMethods = {
+ *   publishCurationEvent: () => Effect.void,
+ *   publishExtractionEvent: () => Effect.void,
+ *   enqueueJob: () => Effect.succeed("job-1"),
+ *   takeJob: Effect.succeed(O.none()),
+ *   processJob: () => Effect.succeed(O.none()),
+ *   subscribeEvents: Effect.succeed(Stream.empty),
+ *   pendingJobCount: Effect.succeed(0),
+ *   shutdown: Effect.void
+ * }
+ * console.log(Effect.isEffect(service.takeJob)) // true
+ * ```
  *
  * @category type-level
  * @since 0.0.0

@@ -29,10 +29,7 @@ import { withErrorHandler } from "../ErrorHandler.ts";
 // Command Options
 // =============================================================================
 
-const batchIdOption = Flag.string("batch-id").pipe(
-  Flag.withAlias("b"),
-  Flag.withDescription("Batch ID to analyze")
-);
+const batchIdOption = Flag.string("batch-id").pipe(Flag.withAlias("b"), Flag.withDescription("Batch ID to analyze"));
 const TypeCountOrder = Order.mapInput(Order.flip(Order.Number), (entry: readonly [string, number]) => entry[1]);
 
 const manifestOption = Flag.file("manifest").pipe(

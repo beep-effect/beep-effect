@@ -50,8 +50,8 @@ export { ExtractionWorkflow } from "./Service/ExtractionWorkflow.ts";
 export { NlpService } from "./Service/Nlp.ts";
 export { OntologyService } from "./Service/Ontology.ts";
 // New Phase 3 Services
-export { type LinkedRelation, type LinkingResult, RelationLinker } from "./Service/RelationLinker.ts";
-export { type SimilarityResult, SimilarityScorer } from "./Service/SimilarityScorer.ts";
+export { LinkedRelation, LinkingResult, RelationLinker } from "./Service/RelationLinker.ts";
+export { SimilarityResult, SimilarityScorer } from "./Service/SimilarityScorer.ts";
 // Telemetry (OpenTelemetry integration)
 export * as Telemetry from "./Telemetry/index.ts";
 // Entity Resolution Workflow

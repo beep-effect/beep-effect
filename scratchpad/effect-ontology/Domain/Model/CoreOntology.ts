@@ -316,15 +316,6 @@ export const MentionEvidence = LegacyMentionEvidence.pipe(
  */
 export type MentionEvidence = typeof MentionEvidence.Type;
 
-const MentionFields = {
-  id: MentionId,
-  evidence: MentionEvidence,
-  confidence: Confidence,
-  mentionsEntity: IRI,
-  sourceDocument: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
-  extractedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-};
-
 /**
  * Text evidence linking a source span to a tracked entity or event.
  *
@@ -351,7 +342,14 @@ const MentionFields = {
  * @since 0.0.0
  */
 export class Mention extends S.Class<Mention>($I`Mention`)(
-  MentionFields,
+  {
+    id: MentionId,
+    evidence: MentionEvidence,
+    confidence: Confidence,
+    mentionsEntity: IRI,
+    sourceDocument: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
+    extractedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
+  },
   $I.annote("Mention", {
     description: "Confidence-scored source evidence referring to a tracked entity or event.",
   })
@@ -415,20 +413,6 @@ export const CanonicalEntityId = S.String.check(
  */
 export type CanonicalEntityId = typeof CanonicalEntityId.Type;
 
-const TrackedEntityFields = {
-  id: CanonicalEntityId,
-  iri: IRI,
-  name: S.NonEmptyString,
-  description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-  types: S.NonEmptyArray(IRI),
-  attributes: Attributes.pipe(SchemaUtils.withKeyDefaults({})),
-  groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
-  resolutionConfidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
-  mergedFrom: S.Array(IRI).pipe(SchemaUtils.withEmptyArrayDefaults<IRI>()),
-  location: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
-  externalIds: S.Record(S.String, S.NonEmptyString).pipe(SchemaUtils.withKeyDefaults({})),
-};
-
 /**
  * Persistent canonical entity tracked across source documents.
  *
@@ -451,7 +435,19 @@ const TrackedEntityFields = {
  * @since 0.0.0
  */
 export class TrackedEntity extends S.Class<TrackedEntity>($I`TrackedEntity`)(
-  TrackedEntityFields,
+  {
+    id: CanonicalEntityId,
+    iri: IRI,
+    name: S.NonEmptyString,
+    description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    types: S.NonEmptyArray(IRI),
+    attributes: Attributes.pipe(SchemaUtils.withKeyDefaults({})),
+    groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
+    resolutionConfidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
+    mergedFrom: S.Array(IRI).pipe(SchemaUtils.withEmptyArrayDefaults<IRI>()),
+    location: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
+    externalIds: S.Record(S.String, S.NonEmptyString).pipe(SchemaUtils.withKeyDefaults({})),
+  },
   $I.annote("TrackedEntity", {
     description: "Persistent canonical entity with ontology types, confidence, merges, and links.",
   })
@@ -537,11 +533,6 @@ export const EventId = S.String.check(
  */
 export type EventId = typeof EventId.Type;
 
-const ParticipantFields = {
-  entityIri: IRI,
-  role: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
-};
-
 /**
  * Tracked entity participating in an event, with an optional ontology role.
  *
@@ -561,19 +552,20 @@ const ParticipantFields = {
  * @since 0.0.0
  */
 export class Participant extends S.Class<Participant>($I`Participant`)(
-  ParticipantFields,
+  {
+    entityIri: IRI,
+    role: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
+  },
   $I.annote("Participant", {
     description: "Entity participation in an event with an optional ontology-defined role.",
   })
 ) {}
 
-const EventIntervalFields = {
-  start: S.DateTimeUtcFromString,
-  end: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-};
-
 class EventIntervalFieldsModel extends S.Class<EventIntervalFieldsModel>($I`EventIntervalFieldsModel`)(
-  EventIntervalFields,
+  {
+    start: S.DateTimeUtcFromString,
+    end: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
+  },
   $I.annote("EventIntervalFieldsModel", {
     description: "Internal field model for a start and optional end instant.",
   })
@@ -706,17 +698,6 @@ export const EventTime = EventTimeDefinition.pipe(
  */
 export type EventTime = typeof EventTime.Type;
 
-const TrackedEventFields = {
-  id: EventId,
-  iri: IRI,
-  types: S.NonEmptyArray(IRI),
-  time: EventTime.pipe(SchemaUtils.withKeyDefaults(EventTime.cases.Unspecified.make({}))),
-  participants: S.Array(Participant).pipe(SchemaUtils.withEmptyArrayDefaults<Participant>()),
-  location: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
-  attributes: Attributes.pipe(SchemaUtils.withKeyDefaults({})),
-  groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
-};
-
 /**
  * Persistent ontology-typed occurrence involving tracked entities.
  *
@@ -738,7 +719,16 @@ const TrackedEventFields = {
  * @since 0.0.0
  */
 export class TrackedEvent extends S.Class<TrackedEvent>($I`TrackedEvent`)(
-  TrackedEventFields,
+  {
+    id: EventId,
+    iri: IRI,
+    types: S.NonEmptyArray(IRI),
+    time: EventTime.pipe(SchemaUtils.withKeyDefaults(EventTime.cases.Unspecified.make({}))),
+    participants: S.Array(Participant).pipe(SchemaUtils.withEmptyArrayDefaults<Participant>()),
+    location: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
+    attributes: Attributes.pipe(SchemaUtils.withKeyDefaults({})),
+    groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
+  },
   $I.annote("TrackedEvent", {
     description: "Persistent ontology-typed event with explicit time, participants, location, and confidence.",
   })

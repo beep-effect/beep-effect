@@ -54,29 +54,6 @@ export const ResolutionMethod = LiteralKit(["exact", "similarity", "containment"
  */
 export type ResolutionMethod = typeof ResolutionMethod.Type;
 
-const MentionRecordFields = {
-  id: EntityId.annotateKey({
-    description: "Identifier assigned by the original extraction event.",
-  }),
-  mention: S.NonEmptyString.annotateKey({
-    description: "Exact non-empty source mention.",
-  }),
-  types: S.NonEmptyArray(IRI).annotateKey({
-    description: "Ontology classes assigned by extraction.",
-  }),
-  attributes: Attributes.pipe(
-    SchemaUtils.withKeyDefaults({}),
-    S.annotateKey({ description: "Property values preserved from extraction." })
-  ),
-  chunkIndex: NonNegativeInt.annotateKey({
-    description: "Zero-based source chunk index.",
-  }),
-  confidence: S.OptionFromOptionalKey(Confidence).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Extraction confidence when measured." })
-  ),
-};
-
 /**
  * Immutable evidence node preserving one original extraction event.
  *
@@ -103,7 +80,28 @@ const MentionRecordFields = {
  */
 export class MentionRecord extends S.TaggedClass<MentionRecord>($I`MentionRecord`)(
   "MentionRecord",
-  MentionRecordFields,
+  {
+    id: EntityId.annotateKey({
+      description: "Identifier assigned by the original extraction event.",
+    }),
+    mention: S.NonEmptyString.annotateKey({
+      description: "Exact non-empty source mention.",
+    }),
+    types: S.NonEmptyArray(IRI).annotateKey({
+      description: "Ontology classes assigned by extraction.",
+    }),
+    attributes: Attributes.pipe(
+      SchemaUtils.withKeyDefaults({}),
+      S.annotateKey({ description: "Property values preserved from extraction." })
+    ),
+    chunkIndex: NonNegativeInt.annotateKey({
+      description: "Zero-based source chunk index.",
+    }),
+    confidence: S.OptionFromOptionalKey(Confidence).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Extraction confidence when measured." })
+    ),
+  },
   $I.annote("MentionRecord", {
     description: "Immutable extraction-evidence node with chunk provenance.",
   })
@@ -111,26 +109,6 @@ export class MentionRecord extends S.TaggedClass<MentionRecord>($I`MentionRecord
   /** Schema-derived mention-record guard. */
   static readonly is = S.is(MentionRecord);
 }
-
-const ResolvedEntityFields = {
-  canonicalId: EntityId.annotateKey({
-    description: "Stable canonical identifier assigned to the resolved cluster.",
-  }),
-  mention: S.NonEmptyString.annotateKey({
-    description: "Preferred mention selected for the resolved cluster.",
-  }),
-  types: S.NonEmptyArray(IRI).annotateKey({
-    description: "Merged ontology class IRIs.",
-  }),
-  attributes: Attributes.pipe(
-    SchemaUtils.withKeyDefaults({}),
-    S.annotateKey({ description: "Merged property values for the resolved cluster." })
-  ),
-  externalIds: S.Record(S.String, S.NonEmptyString).pipe(
-    SchemaUtils.withKeyDefaults({}),
-    S.annotateKey({ description: "External knowledge-base identifiers by namespace." })
-  ),
-};
 
 /**
  * Canonical entity produced by clustering immutable mention records.
@@ -155,7 +133,25 @@ const ResolvedEntityFields = {
  */
 export class ResolvedEntity extends S.TaggedClass<ResolvedEntity>($I`ResolvedEntity`)(
   "ResolvedEntity",
-  ResolvedEntityFields,
+  {
+    canonicalId: EntityId.annotateKey({
+      description: "Stable canonical identifier assigned to the resolved cluster.",
+    }),
+    mention: S.NonEmptyString.annotateKey({
+      description: "Preferred mention selected for the resolved cluster.",
+    }),
+    types: S.NonEmptyArray(IRI).annotateKey({
+      description: "Merged ontology class IRIs.",
+    }),
+    attributes: Attributes.pipe(
+      SchemaUtils.withKeyDefaults({}),
+      S.annotateKey({ description: "Merged property values for the resolved cluster." })
+    ),
+    externalIds: S.Record(S.String, S.NonEmptyString).pipe(
+      SchemaUtils.withKeyDefaults({}),
+      S.annotateKey({ description: "External knowledge-base identifiers by namespace." })
+    ),
+  },
   $I.annote("ResolvedEntity", {
     description: "Canonical entity aggregating one or more immutable mention records.",
   })
@@ -210,15 +206,6 @@ export const ERNode = ERNodeDefinition.pipe(
  */
 export type ERNode = typeof ERNode.Type;
 
-const ResolutionEdgeFields = {
-  confidence: Confidence.annotateKey({
-    description: "Similarity or resolution confidence that justified the edge.",
-  }),
-  method: ResolutionMethod.annotateKey({
-    description: "Evidence strategy that justified the edge.",
-  }),
-};
-
 /**
  * Directed edge from an immutable mention record to its canonical entity.
  *
@@ -240,25 +227,18 @@ const ResolutionEdgeFields = {
  */
 export class ResolutionEdge extends S.TaggedClass<ResolutionEdge>($I`ResolutionEdge`)(
   "ResolutionEdge",
-  ResolutionEdgeFields,
+  {
+    confidence: Confidence.annotateKey({
+      description: "Similarity or resolution confidence that justified the edge.",
+    }),
+    method: ResolutionMethod.annotateKey({
+      description: "Evidence strategy that justified the edge.",
+    }),
+  },
   $I.annote("ResolutionEdge", {
     description: "Resolution evidence connecting one mention record to a canonical entity.",
   })
 ) {}
-
-const RelationEdgeFields = {
-  predicate: IRI.annotateKey({
-    description: "Ontology property IRI relating two canonical entities.",
-  }),
-  grounded: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(false),
-    S.annotateKey({ description: "Whether source grounding verified this relation." })
-  ),
-  confidence: S.OptionFromOptionalKey(Confidence).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Grounding confidence when verification was performed." })
-  ),
-};
 
 /**
  * Ontology relation edge between two canonical entities.
@@ -280,7 +260,19 @@ const RelationEdgeFields = {
  */
 export class RelationEdge extends S.TaggedClass<RelationEdge>($I`RelationEdge`)(
   "RelationEdge",
-  RelationEdgeFields,
+  {
+    predicate: IRI.annotateKey({
+      description: "Ontology property IRI relating two canonical entities.",
+    }),
+    grounded: S.Boolean.pipe(
+      SchemaUtils.withKeyDefaults(false),
+      S.annotateKey({ description: "Whether source grounding verified this relation." })
+    ),
+    confidence: S.OptionFromOptionalKey(Confidence).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Grounding confidence when verification was performed." })
+    ),
+  },
   $I.annote("RelationEdge", {
     description: "Ontology relation between two canonical resolved entities.",
   })
@@ -329,37 +321,6 @@ export const EREdge = EREdgeDefinition.pipe(
  */
 export type EREdge = typeof EREdge.Type;
 
-const EntityResolutionConfigFields = {
-  similarityThreshold: UnitInterval.pipe(
-    SchemaUtils.withKeyDefaults(UnitInterval.make(0.7)),
-    S.annotateKey({ description: "Minimum overall score accepted for clustering." })
-  ),
-  mentionWeight: UnitInterval.pipe(
-    SchemaUtils.withKeyDefaults(UnitInterval.make(0.5)),
-    S.annotateKey({ description: "Contribution of mention-string similarity." })
-  ),
-  typeWeight: UnitInterval.pipe(
-    SchemaUtils.withKeyDefaults(UnitInterval.make(0.3)),
-    S.annotateKey({ description: "Contribution of ontology-type overlap." })
-  ),
-  neighborWeight: UnitInterval.pipe(
-    SchemaUtils.withKeyDefaults(UnitInterval.make(0.2)),
-    S.annotateKey({ description: "Contribution of graph-neighbor similarity." })
-  ),
-  embeddingWeight: UnitInterval.pipe(
-    SchemaUtils.withKeyDefaults(UnitInterval.make(0)),
-    S.annotateKey({ description: "Contribution of vector similarity; zero disables it." })
-  ),
-  requireTypeOverlap: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(true),
-    S.annotateKey({ description: "Whether candidates must share an ontology type." })
-  ),
-  typeOverlapRatio: UnitInterval.pipe(
-    SchemaUtils.withKeyDefaults(UnitInterval.make(0.5)),
-    S.annotateKey({ description: "Minimum type-overlap ratio when overlap is required." })
-  ),
-};
-
 /**
  * Tunable policy for deterministic entity clustering.
  *
@@ -382,7 +343,36 @@ const EntityResolutionConfigFields = {
  * @since 0.0.0
  */
 export class EntityResolutionConfig extends S.Class<EntityResolutionConfig>($I`EntityResolutionConfig`)(
-  EntityResolutionConfigFields,
+  {
+    similarityThreshold: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0.7)),
+      S.annotateKey({ description: "Minimum overall score accepted for clustering." })
+    ),
+    mentionWeight: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0.5)),
+      S.annotateKey({ description: "Contribution of mention-string similarity." })
+    ),
+    typeWeight: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0.3)),
+      S.annotateKey({ description: "Contribution of ontology-type overlap." })
+    ),
+    neighborWeight: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0.2)),
+      S.annotateKey({ description: "Contribution of graph-neighbor similarity." })
+    ),
+    embeddingWeight: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0)),
+      S.annotateKey({ description: "Contribution of vector similarity; zero disables it." })
+    ),
+    requireTypeOverlap: S.Boolean.pipe(
+      SchemaUtils.withKeyDefaults(true),
+      S.annotateKey({ description: "Whether candidates must share an ontology type." })
+    ),
+    typeOverlapRatio: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0.5)),
+      S.annotateKey({ description: "Minimum type-overlap ratio when overlap is required." })
+    ),
+  },
   $I.annote("EntityResolutionConfig", {
     description: "Schema-defaulted policy controlling entity clustering and similarity evidence.",
   })

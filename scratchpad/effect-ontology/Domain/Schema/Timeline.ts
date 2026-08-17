@@ -64,32 +64,32 @@ const PositiveIntQuery = S.FiniteFromString.pipe(
   })
 );
 
-const TimelineRangeFields = S.Struct({
+const TimelineRangeDefinition = S.Struct({
   from: S.DateTimeUtcFromString.annotateKey({
     description: "Inclusive UTC range start.",
   }),
   to: S.DateTimeUtcFromString.annotateKey({
     description: "Inclusive UTC range end.",
   }),
-});
-
-const TimelineRangeDefinition = TimelineRangeFields.check(
-  S.makeFilter(
-    (range) =>
-      DateTime.toEpochMillis(range.from) <= DateTime.toEpochMillis(range.to)
-        ? undefined
-        : {
-            path: ["to"],
-            issue: "Timeline range end must not precede its start.",
-          },
-    {
-      identifier: $I`TimelineRangeOrderCheck`,
-      title: "Ordered Timeline Range",
-      description: "A UTC query range whose end is not before its start.",
-      message: "Timeline range end must be greater than or equal to its start.",
-    }
+})
+  .check(
+    S.makeFilter(
+      (range) =>
+        DateTime.toEpochMillis(range.from) <= DateTime.toEpochMillis(range.to)
+          ? undefined
+          : {
+              path: ["to"],
+              issue: "Timeline range end must not precede its start.",
+            },
+      {
+        identifier: $I`TimelineRangeOrderCheck`,
+        title: "Ordered Timeline Range",
+        description: "A UTC query range whose end is not before its start.",
+        message: "Timeline range end must be greater than or equal to its start.",
+      }
+    )
   )
-).pipe(SchemaUtils.withCodecStatics);
+  .pipe(SchemaUtils.withCodecStatics);
 
 const TimelineRangeFromSelf = S.declare((input: unknown): input is typeof TimelineRangeDefinition.Type =>
   TimelineRangeDefinition.is(input)
@@ -98,7 +98,7 @@ const TimelineRangeFromSelf = S.declare((input: unknown): input is typeof Timeli
     fc
       .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
       .map(([from, duration]) =>
-        TimelineRangeFields.make({
+        TimelineRangeDefinition.make({
           from: DateTime.makeUnsafe(from),
           to: DateTime.makeUnsafe(from + duration),
         })

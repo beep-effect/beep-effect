@@ -412,7 +412,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
           relation: input.relation,
         };
       }),
-      verifyRelationBatch: Effect.fn(
+      verifyRelationBatch: Effect.fn("Grounder.verifyRelationBatch")(
         function* (context: string, inputs: ReadonlyArray<RelationVerificationInput>) {
           if (inputs.length === 0) {
             return [];
@@ -579,7 +579,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
           entity: input.entity,
         };
       }),
-      verifyEntityBatch: Effect.fn(
+      verifyEntityBatch: Effect.fn("Grounder.verifyEntityBatch")(
         function* (context: string, entities: ReadonlyArray<Entity>) {
           if (entities.length === 0) {
             return [];

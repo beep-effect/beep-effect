@@ -12,15 +12,15 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import * as Struct from "@beep/utils/Struct";
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Command from "effect/unstable/cli/Command";
-import * as Flag from "effect/unstable/cli/Flag"
+import * as Flag from "effect/unstable/cli/Flag";
 import { ErrorMessage, OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize } from "../../Service/Rdf.ts";
 import { Reasoner, ReasoningConfig } from "../../Service/Reasoner.ts";
@@ -33,10 +33,7 @@ const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Inference");
 // Options
 // =============================================================================
 
-const inputOption = Flag.file("input").pipe(
-  Flag.withAlias("i"),
-  Flag.withDescription("Input Turtle file path")
-);
+const inputOption = Flag.file("input").pipe(Flag.withAlias("i"), Flag.withDescription("Input Turtle file path"));
 
 const outputOption = Flag.string("output").pipe(
   Flag.withAlias("o"),

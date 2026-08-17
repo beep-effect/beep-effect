@@ -47,18 +47,6 @@ const EmbeddingVector = S.NonEmptyArray(S.Finite)
     })
   );
 
-const ElementEmbeddingFields = {
-  iri: IRI.annotateKey({
-    description: "IRI of the embedded ontology class or property.",
-  }),
-  text: S.NonEmptyString.annotateKey({
-    description: "Normalized semantic text supplied to the embedding model.",
-  }),
-  embedding: EmbeddingVector.annotateKey({
-    description: "Finite vector returned by the embedding model.",
-  }),
-};
-
 /**
  * Embedding and source text for one ontology class or property.
  *
@@ -81,7 +69,17 @@ const ElementEmbeddingFields = {
  * @since 0.0.0
  */
 export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedding`)(
-  ElementEmbeddingFields,
+  {
+    iri: IRI.annotateKey({
+      description: "IRI of the embedded ontology class or property.",
+    }),
+    text: S.NonEmptyString.annotateKey({
+      description: "Normalized semantic text supplied to the embedding model.",
+    }),
+    embedding: EmbeddingVector.annotateKey({
+      description: "Finite vector returned by the embedding model.",
+    }),
+  },
   $I.annote("ElementEmbedding", {
     description: "Semantic text and finite embedding vector for one ontology element.",
   })
@@ -126,41 +124,39 @@ export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedd
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(ElementEmbedding);
 }
 
-const OntologyEmbeddingsFields = {
-  ontologyUri: GcsUri.annotateKey({
-    description: "Canonical GCS URI of the ontology represented by this artifact.",
-  }),
-  version: ContentHash.annotateKey({
-    description: "Full content digest of the ontology bytes.",
-  }),
-  model: S.NonEmptyString.annotateKey({
-    description: "Embedding-model identifier used to compute every vector.",
-  }),
-  dimension: NonNegativeInt.check(
-    S.isGreaterThan(0, {
-      identifier: $I`EmbeddingDimensionPositiveCheck`,
-      title: "Positive Embedding Dimension",
-      description: "An embedding dimension must be a positive integer.",
-      message: "Embedding dimension must be greater than zero.",
-    })
-  ).annotateKey({
-    description: "Expected vector length for every embedded element.",
-  }),
-  createdAt: S.DateTimeUtcFromString.annotateKey({
-    description: "UTC instant at which the artifact was computed.",
-  }),
-  classes: S.Array(ElementEmbedding).pipe(
-    SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
-    S.annotateKey({ description: "Embeddings for ontology class definitions." })
-  ),
-  properties: S.Array(ElementEmbedding).pipe(
-    SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
-    S.annotateKey({ description: "Embeddings for ontology property definitions." })
-  ),
-};
-
 class OntologyEmbeddingsFieldsModel extends S.Class<OntologyEmbeddingsFieldsModel>($I`OntologyEmbeddingsFieldsModel`)(
-  OntologyEmbeddingsFields,
+  {
+    ontologyUri: GcsUri.annotateKey({
+      description: "Canonical GCS URI of the ontology represented by this artifact.",
+    }),
+    version: ContentHash.annotateKey({
+      description: "Full content digest of the ontology bytes.",
+    }),
+    model: S.NonEmptyString.annotateKey({
+      description: "Embedding-model identifier used to compute every vector.",
+    }),
+    dimension: NonNegativeInt.check(
+      S.isGreaterThan(0, {
+        identifier: $I`EmbeddingDimensionPositiveCheck`,
+        title: "Positive Embedding Dimension",
+        description: "An embedding dimension must be a positive integer.",
+        message: "Embedding dimension must be greater than zero.",
+      })
+    ).annotateKey({
+      description: "Expected vector length for every embedded element.",
+    }),
+    createdAt: S.DateTimeUtcFromString.annotateKey({
+      description: "UTC instant at which the artifact was computed.",
+    }),
+    classes: S.Array(ElementEmbedding).pipe(
+      SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
+      S.annotateKey({ description: "Embeddings for ontology class definitions." })
+    ),
+    properties: S.Array(ElementEmbedding).pipe(
+      SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
+      S.annotateKey({ description: "Embeddings for ontology property definitions." })
+    ),
+  },
   $I.annote("OntologyEmbeddingsFieldsModel", {
     description: "Internal field model for a versioned ontology-embedding artifact.",
   })

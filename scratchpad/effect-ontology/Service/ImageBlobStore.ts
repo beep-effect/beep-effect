@@ -12,6 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { getSomesStruct } from "@beep/utils/Option";
+import type { Duration } from "effect";
 import { Context, DateTime, Effect, Layer, MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -93,7 +94,7 @@ export interface ImageBlobStoreService {
    */
   readonly getSignedUrl: (
     hash: string,
-    expiresInSeconds?: number
+    expiresIn?: Duration.Duration
   ) => Effect.Effect<O.Option<string>, SystemError | PlatformError>;
 
   /**
@@ -141,10 +142,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
         getBytes: (hash: string) =>
           storage.getUint8Array(PathLayout.image.original(imagePathHash(hash))).pipe(Effect.map(O.fromUndefinedOr)),
 
-        hasBytes: (hash: string) =>
-          storage
-            .getUint8Array(PathLayout.image.original(imagePathHash(hash)))
-            .pipe(Effect.map((bytes) => bytes !== undefined)),
+        hasBytes: (hash: string) => storage.has(PathLayout.image.original(imagePathHash(hash))),
 
         putMetadata: Effect.fn("ImageBlobStore.putMetadata")(function* (asset: ImageAsset) {
           const json = yield* ImageAsset.encodeJsonStringEffect(asset);
@@ -200,16 +198,16 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
           const paths = yield* storage.list("assets/images/");
           const hashes = MutableHashSet.empty<string>();
           for (const path of paths) {
-            const match = Str.match(/^assets\/images\/([^/]+)\//)(path);
-            if (O.isSome(match) && match.value[1] !== undefined) {
-              MutableHashSet.add(hashes, match.value[1]);
+            const hash = O.flatMap(Str.match(/^assets\/images\/([^/]+)\//)(path), (match) => A.get(match, 1));
+            if (O.isSome(hash)) {
+              MutableHashSet.add(hashes, hash.value);
             }
           }
           return A.fromIterable(hashes);
         }),
 
-        getSignedUrl: (hash: string, expiresInSeconds?: number) =>
-          storage.getSignedUrl(PathLayout.image.original(imagePathHash(hash)), expiresInSeconds),
+        getSignedUrl: (hash: string, expiresIn?: Duration.Duration) =>
+          storage.getSignedUrl(PathLayout.image.original(imagePathHash(hash)), expiresIn),
 
         supportsSignedUrls: storage.supportsSignedUrls,
       };

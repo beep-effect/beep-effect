@@ -1,9 +1,8 @@
 import { $ScratchpadId } from "@beep/identity";
 import { assert, describe, it } from "@effect/vitest";
-import { Context, Effect, Fiber, Layer } from "effect";
+import { Cause, Context, Effect, Exit, Fiber, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as TestClock from "effect/testing/TestClock";
 import { InferenceRunResponse } from "../../Domain/Schema/Inference.ts";
 import { EventBridgeLive, EventBridgeService } from "../../Runtime/EventBridge.ts";
 import { EventBroadcastHubMemory } from "../../Runtime/EventBroadcastRouter.ts";
@@ -66,19 +65,20 @@ const EventBridgeTest = EventBridgeLive.pipe(
 describe("EventBridge", () => {
   it.layer(EventBridgeTest)("with scoped event services", (it) => {
     it.effect(
-      "surfaces a typed runtime failure after the event stream retry budget",
+      "preserves interruption when the event stream shuts down",
       Effect.fnUntraced(function* () {
         const bridge = yield* EventBridgeService;
         const eventBus = yield* EventBusService;
         const handle = yield* bridge.start;
-        const observed = yield* handle.await.pipe(Effect.flip, Effect.forkScoped);
+        const observed = yield* handle.await.pipe(Effect.exit, Effect.forkScoped);
 
         yield* eventBus.shutdown;
-        yield* TestClock.adjust("2 seconds");
 
-        const error = yield* Fiber.join(observed);
-        assert.strictEqual(error._tag, "EventBridgeError");
-        assert.strictEqual(error.phase, "runtime");
+        const exit = yield* Fiber.join(observed);
+        assert.isTrue(Exit.isFailure(exit));
+        if (Exit.isFailure(exit)) {
+          assert.isTrue(Cause.hasInterruptsOnly(exit.cause));
+        }
       })
     );
   });

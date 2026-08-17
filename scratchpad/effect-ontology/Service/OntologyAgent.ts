@@ -19,7 +19,7 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import type { SparqlQueryProfile, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
-import { Chunk, Context, DateTime, Duration, Effect, Layer, Match, MutableHashMap, Result } from "effect";
+import { Chunk, Context, DateTime, Duration, Effect, Inspectable, Layer, Match, MutableHashMap, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -558,7 +558,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const reasoningResult = yield* reasoner.reason(store, effectiveReasoningConfig).pipe(
             Effect.catch((error) =>
               Effect.logWarning("Reasoning failed, continuing with unaugmented graph", {
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               }).pipe(
                 Effect.map(() => ({
                   inferredTripleCount: NonNegativeInt.make(0),
@@ -655,7 +655,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             Effect.catch((error) =>
               // Log reasoning error but continue with validation on raw graph
               Effect.logWarning("Reasoning failed, continuing with unaugmented graph", {
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               }).pipe(
                 Effect.map(() => ({
                   inferredTripleCount: 0,
@@ -935,12 +935,13 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             : Str.startsWith("CONSTRUCT")(normalizedQuery) || Str.startsWith("DESCRIBE")(normalizedQuery)
               ? "construct"
               : "select";
+          const dataset = yield* rdfStoreToDataset(dataStore);
           const execution = yield* sparqlService
             .execute(
               SparqlQueryRequest.make({
                 query: sparqlResult.sparql,
                 profile,
-                dataset: rdfStoreToDataset(dataStore),
+                dataset,
               })
             )
             .pipe(Effect.result);

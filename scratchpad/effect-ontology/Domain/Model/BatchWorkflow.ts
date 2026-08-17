@@ -15,13 +15,11 @@ import { BatchId, DocumentId, GcsUri, OntologyVersion } from "../Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/BatchWorkflow");
 
-const DocumentFailureFields = {
-  code: S.NonEmptyString,
-  message: S.NonEmptyString,
-};
-
 class DocumentFailure extends S.Class<DocumentFailure>($I`DocumentFailure`)(
-  DocumentFailureFields,
+  {
+    code: S.NonEmptyString,
+    message: S.NonEmptyString,
+  },
   $I.annote("DocumentFailure", {
     description: "Stable code and diagnostic for one failed batch document.",
   })
@@ -157,33 +155,29 @@ export class BatchIdentity extends S.Class<BatchIdentity>($I`BatchIdentity`)(
   })
 ) {}
 
-const BatchFailureFields = {
-  code: S.NonEmptyString,
-  message: S.NonEmptyString,
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: false })).pipe(SchemaUtils.withNoneDefault),
-};
-
 class BatchFailure extends S.Class<BatchFailure>($I`BatchFailure`)(
-  BatchFailureFields,
+  {
+    code: S.NonEmptyString,
+    message: S.NonEmptyString,
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: false })).pipe(SchemaUtils.withNoneDefault),
+  },
   $I.annote("BatchFailure", {
     description: "Stable failure code, user-facing diagnostic, and optional defect cause.",
   })
 ) {}
 
-const BatchCompletionStatsFields = {
-  documentsProcessed: NonNegativeInt,
-  documentsSucceeded: NonNegativeInt,
-  documentsFailed: NonNegativeInt,
-  entitiesExtracted: NonNegativeInt,
-  relationsExtracted: NonNegativeInt,
-  claimsExtracted: NonNegativeInt,
-  clustersResolved: NonNegativeInt,
-  triplesIngested: NonNegativeInt,
-  totalDurationMs: S.DurationFromMillis,
-};
-
 class BatchCompletionStats extends S.Class<BatchCompletionStats>($I`BatchCompletionStats`)(
-  BatchCompletionStatsFields,
+  {
+    documentsProcessed: NonNegativeInt,
+    documentsSucceeded: NonNegativeInt,
+    documentsFailed: NonNegativeInt,
+    entitiesExtracted: NonNegativeInt,
+    relationsExtracted: NonNegativeInt,
+    claimsExtracted: NonNegativeInt,
+    clustersResolved: NonNegativeInt,
+    triplesIngested: NonNegativeInt,
+    totalDurationMs: S.DurationFromMillis,
+  },
   $I.annote("BatchCompletionStats", {
     description: "Non-negative completion counts and elapsed duration for a batch.",
   })

@@ -527,14 +527,14 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
                 agentId: agent.metadata.id,
                 failedAt,
                 duration: Duration.zero,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
                 retryable: false,
               });
               yield* Ref.update(eventsRef, (events) => [...events, failedEvent]);
               yield* invokeHook(execution.onEvent, failedEvent);
               return yield* AgentExecutionError.make({
                 agentId: agent.metadata.id,
-                message: String(error),
+                message: Inspectable.toStringUnknown(error),
                 cause: O.some(error),
                 retryable: false,
               });

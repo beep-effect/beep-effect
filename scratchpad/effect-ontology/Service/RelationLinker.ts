@@ -11,10 +11,11 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import type { IRI } from "@beep/rdf";
+import { IRI } from "@beep/rdf";
 import { Chunk, Context, Effect, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
@@ -26,58 +27,60 @@ const $I = $ScratchpadId.create("effect-ontology/Service/RelationLinker");
  * Linked relation with canonical IDs
  *
  *
- * **Example** (Use the LinkedRelation contract)
+ * **Example** (Reject incomplete linked-relation data)
  *
  * ```ts
- * import type { LinkedRelation } from "@effect-ontology/Service/RelationLinker"
+ * import * as S from "effect/Schema"
+ * import { LinkedRelation } from "@effect-ontology/Service/RelationLinker"
  *
- * const acceptsLinkedRelation = (_value: LinkedRelation): void => undefined
- *
- * console.log(acceptsLinkedRelation)
+ * console.log(S.is(LinkedRelation)({})) // false
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface LinkedRelation {
-  /** Original relation */
-  readonly original: Relation;
-  /** Canonical subject ID (resolved via ERG) */
-  readonly canonicalSubjectId: EntityId;
-  /** Canonical predicate (unchanged) */
-  readonly canonicalPredicate: IRI;
-  /**
-   * Canonical object (resolved via ERG if entity reference, unchanged if literal)
-   */
-  readonly canonicalObject: RelationObject;
-  /** Whether subject was remapped */
-  readonly subjectRemapped: boolean;
-  /** Whether object was remapped (false for literals) */
-  readonly objectRemapped: boolean;
-}
+export class LinkedRelation extends S.Class<LinkedRelation>($I`LinkedRelation`)(
+  {
+    original: Relation,
+    canonicalSubjectId: EntityId,
+    canonicalPredicate: IRI,
+    canonicalObject: RelationObject,
+    subjectRemapped: S.Boolean,
+    objectRemapped: S.Boolean,
+  },
+  $I.annote("LinkedRelation", {
+    description: "Original relation paired with its canonicalized subject, predicate, object, and remapping flags.",
+  })
+) {}
 
 /**
  * Result of linking a batch of relations
  *
  *
- * **Example** (Use the LinkingResult contract)
+ * **Example** (Create an empty linking result)
  *
  * ```ts
- * import type { LinkingResult } from "@effect-ontology/Service/RelationLinker"
+ * import { Chunk } from "effect"
+ * import { LinkingResult } from "@effect-ontology/Service/RelationLinker"
  *
- * const acceptsLinkingResult = (_value: LinkingResult): void => undefined
- *
- * console.log(acceptsLinkingResult)
+ * console.log(LinkingResult.make({ linkedRelations: Chunk.empty(), remappedCount: 0, literalObjectCount: 0 }))
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface LinkingResult {
-  readonly linkedRelations: Chunk.Chunk<LinkedRelation>;
-  readonly remappedCount: number;
-  readonly literalObjectCount: number;
-}
+export class LinkingResult extends S.Class<LinkingResult>($I`LinkingResult`)(
+  {
+    linkedRelations: S.Chunk(LinkedRelation),
+    remappedCount: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Remapped count must be non-negative." })),
+    literalObjectCount: S.Int.check(
+      S.isGreaterThanOrEqualTo(0, { message: "Literal-object count must be non-negative." })
+    ),
+  },
+  $I.annote("LinkingResult", {
+    description: "Canonicalized relations and non-negative remapping and literal-object counts.",
+  })
+) {}
 
 /**
  * RelationLinker - Service for canonicalizing relations

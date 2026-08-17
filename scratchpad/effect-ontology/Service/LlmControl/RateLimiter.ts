@@ -14,7 +14,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Effect, Layer, Ref, Semaphore } from "effect";
+import { Clock, Context, Duration, Effect, Layer, Number as N, Ref, Semaphore } from "effect";
 import { CircuitOpenError, RateLimitError } from "../../Domain/Error/Circuit.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/RateLimiter");
@@ -90,8 +90,8 @@ export interface RateLimiterConfig {
   readonly maxConcurrent: number;
   /** Failures before circuit opens */
   readonly failureThreshold: number;
-  /** Recovery timeout in milliseconds */
-  readonly recoveryTimeoutMs: number;
+  /** Delay before an open circuit may enter half-open state. */
+  readonly recoveryTimeout: Duration.Duration;
   /** Successes in half_open before closing */
   readonly successThreshold: number;
 }
@@ -104,7 +104,7 @@ const DEFAULT_CONFIG: RateLimiterConfig = {
   tokensPerMinute: 100_000,
   maxConcurrent: 5,
   failureThreshold: 5,
-  recoveryTimeoutMs: 120_000,
+  recoveryTimeout: Duration.minutes(2),
   successThreshold: 2,
 };
 
@@ -163,9 +163,9 @@ export class CentralRateLimiterService extends Context.Service<
     /**
      * Get time until rate limit resets
      *
-     * @returns Milliseconds until counters reset
+     * @returns Duration until counters reset
      */
-    readonly getResetTime: Effect.Effect<number>;
+    readonly getResetTime: Effect.Effect<Duration.Duration>;
 
     /**
      * Force circuit breaker state (for testing/recovery)
@@ -184,6 +184,9 @@ export class CentralRateLimiterService extends Context.Service<
  * Create rate limiter with configuration
  */
 const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiterConfig = DEFAULT_CONFIG) {
+  const rateWindow = Duration.minutes(1);
+  const rateWindowMillis = Duration.toMillis(rateWindow);
+  const recoveryTimeoutMillis = Duration.toMillis(config.recoveryTimeout);
   const initialTime = yield* Clock.currentTimeMillis;
   const state = yield* Ref.make<RateLimiterState>({
     requestsThisMinute: 0,
@@ -196,7 +199,7 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
   const semaphore = yield* Semaphore.make(config.maxConcurrent);
   const maybeResetCounters = (now: number) =>
     Ref.update(state, (s) =>
-      now - s.lastReset > 60000
+      now - s.lastReset > rateWindowMillis
         ? {
             ...s,
             requestsThisMinute: 0,
@@ -211,10 +214,10 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
       const current = yield* Ref.get(state);
       if (current.circuitState === "open") {
         const elapsed = now - current.lastReset;
-        if (elapsed < config.recoveryTimeoutMs) {
+        if (elapsed < recoveryTimeoutMillis) {
           const error = yield* CircuitOpenError.decodeUnknownEffect({
-            resetTimeoutMs: config.recoveryTimeoutMs,
-            retryAfterMs: config.recoveryTimeoutMs - elapsed,
+            resetTimeoutMs: recoveryTimeoutMillis,
+            retryAfterMs: recoveryTimeoutMillis - elapsed,
           }).pipe(Effect.orDie);
           return yield* error;
         }
@@ -229,7 +232,7 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
       yield* maybeResetCounters(now);
       const updated = yield* Ref.get(state);
       if (updated.requestsThisMinute >= config.requestsPerMinute) {
-        const msUntilReset = 60000 - (now - updated.lastReset);
+        const msUntilReset = rateWindowMillis - (now - updated.lastReset);
         const error = yield* RateLimitError.decodeUnknownEffect({
           reason: "requests",
           retryAfterMs: msUntilReset,
@@ -237,7 +240,7 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
         return yield* error;
       }
       if (updated.tokensThisMinute + estimatedTokens > config.tokensPerMinute) {
-        const msUntilReset = 60000 - (now - updated.lastReset);
+        const msUntilReset = rateWindowMillis - (now - updated.lastReset);
         const error = yield* RateLimitError.decodeUnknownEffect({
           reason: "tokens",
           retryAfterMs: msUntilReset,
@@ -282,7 +285,7 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
       const s = yield* Ref.get(state);
       const now = Number(yield* Clock.currentTimeMillis);
       const elapsed = now - s.lastReset;
-      return Math.max(0, 60000 - elapsed);
+      return Duration.millis(N.max(0, rateWindowMillis - elapsed));
     }),
     setCircuitState: (circuitState: CircuitState) =>
       Ref.update(state, (s) => ({

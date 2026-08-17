@@ -13,7 +13,7 @@ import {
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Storage } from "@google-cloud/storage";
-import { Clock, Context, Effect, FileSystem, Inspectable, Layer, Match, MutableHashMap, Path } from "effect";
+import { Clock, Context, Duration, Effect, FileSystem, Inspectable, Layer, Match, MutableHashMap, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
@@ -159,12 +159,12 @@ export interface StorageServiceMethods extends KeyValueStore.KeyValueStore {
   /**
    * Get a signed URL for direct access to the object (GCS only)
    * @param key - Object key
-   * @param expiresInSeconds - URL expiry time (default: 3600 = 1 hour)
+   * @param expiresIn - URL expiry duration (default: one hour)
    * @returns Signed URL or None if not supported (e.g., local storage)
    */
   readonly getSignedUrl: (
     key: string,
-    expiresInSeconds?: number
+    expiresIn?: Duration.Duration
   ) => Effect.Effect<O.Option<string>, SystemError | PlatformError>;
 
   /**
@@ -419,8 +419,8 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
           return handleError("setIfGenerationMatch", key, e);
         },
       }),
-    getSignedUrl: Effect.fn("getSignedUrl")(function* (key: string, expiresInSeconds: number = 3600) {
-      const expires = (yield* Clock.currentTimeMillis) + expiresInSeconds * 1000;
+    getSignedUrl: Effect.fn("getSignedUrl")(function* (key: string, expiresIn: Duration.Duration = Duration.hours(1)) {
+      const expires = (yield* Clock.currentTimeMillis) + Duration.toMillis(expiresIn);
       const file = bucket.file(toPath(key));
       const [exists] = yield* tryStoragePromise("getSignedUrl", key, () => file.exists());
       if (!exists) return O.none();

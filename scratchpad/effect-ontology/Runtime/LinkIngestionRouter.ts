@@ -55,6 +55,18 @@ class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError>($I`Batc
 /**
  * Owns background link-status finalizers for the lifetime of the HTTP server layer.
  *
+ * **Example** (Provide background task ownership)
+ *
+ * ```ts
+ * import { LinkIngestionBackgroundTasks } from "@effect-ontology/Runtime/LinkIngestionRouter"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const tasks = yield* LinkIngestionBackgroundTasks
+ *   yield* tasks.fork(Effect.logInfo("Finalizing link status"))
+ * }).pipe(Effect.provide(LinkIngestionBackgroundTasks.Default))
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -87,7 +99,7 @@ export class LinkIngestionBackgroundTasks extends Context.Service<LinkIngestionB
  * @category services
  * @since 0.0.0
  */
-const LinkIngestionRoutes = HttpRouter.addAll([
+export const LinkIngestionRouter = HttpRouter.addAll([
   HttpRouter.route(
     "POST",
     "/v1/ontologies/:ontologyId/batches/from-links",
@@ -248,5 +260,3 @@ const LinkIngestionRoutes = HttpRouter.addAll([
     )
   ),
 ]);
-
-export const LinkIngestionRouter = LinkIngestionRoutes;

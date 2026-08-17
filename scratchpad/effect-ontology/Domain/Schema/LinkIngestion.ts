@@ -4,17 +4,17 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import {$ScratchpadId} from "@beep/identity";
-import {HttpUrl} from "@beep/ontology/Ontology.models";
-import {LiteralKit, NonNegativeInt, PosInt, SchemaUtils} from "@beep/schema";
-import {Match} from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import { HttpUrl } from "@beep/ontology/Ontology.models";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { Match } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import {ContentHash, GcsUri, OntologyName} from "../Identity.ts";
+import { ContentHash, GcsUri, OntologyName } from "../Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/LinkIngestion");
 
-export {HttpUrl};
+export { HttpUrl };
 
 const SourceType = LiteralKit(["news", "blog", "press_release", "official", "academic", "unknown"])
   .annotate({
@@ -41,14 +41,12 @@ const SourceType = LiteralKit(["news", "blog", "press_release", "official", "aca
  * @category schemas
  * @since 0.0.0
  */
-export const LinkStatus = LiteralKit(["pending", "enriched", "processing", "processed", "failed", "skipped"])
-  .pipe(
-    SchemaUtils.withEffectCodecStatics,
-    $I.annoteSchema("LinkStatus", {
-      toArbitrary: () => (fc) => fc.constantFrom("pending", "enriched", "processing", "processed", "failed", "skipped"),
-      description: "Lifecycle statuses used when listing ingested links.",
-    })
-  );
+export const LinkStatus = LiteralKit(["pending", "enriched", "processing", "processed", "failed", "skipped"]).pipe(
+  $I.annoteSchema("LinkStatus", {
+    toArbitrary: () => (fc) => fc.constantFrom("pending", "enriched", "processing", "processed", "failed", "skipped"),
+    description: "Lifecycle statuses used when listing ingested links.",
+  })
+);
 
 /**
  * Decoded link lifecycle status.
@@ -344,8 +342,7 @@ class BatchIngestSummary extends S.Class<BatchIngestSummary>($I`BatchIngestSumma
   $I.annote("BatchIngestSummary", {
     description: "Non-negative counts summarizing a batch-ingestion result collection.",
   })
-) {
-}
+) {}
 
 const summarizeBatchResults = (results: ReadonlyArray<BatchIngestResult>): BatchIngestSummary => {
   const success = A.length(A.filter(results, BatchIngestResult.guards.success));
@@ -360,7 +357,7 @@ const summarizeBatchResults = (results: ReadonlyArray<BatchIngestResult>): Batch
   });
 };
 
-const BatchIngestResponseFields = S.Struct({
+const BatchIngestResponseDefinition = S.Struct({
   results: S.Array(BatchIngestResult).pipe(
     SchemaUtils.withEmptyArrayDefaults<BatchIngestResult>(),
     S.annotateKey({
@@ -370,7 +367,30 @@ const BatchIngestResponseFields = S.Struct({
   summary: BatchIngestSummary.annotateKey({
     description: "Counts that must exactly summarize the result collection.",
   }),
-});
+}).check(
+  S.makeFilter(
+    ({ results, summary }) =>
+      matchBatchSummaryConsistency({
+        actual: summary,
+        expected: summarizeBatchResults(results),
+      }),
+    {
+      identifier: $I`BatchIngestSummaryConsistencyCheck`,
+      title: "Batch Ingest Summary Consistency",
+      description: "A response whose total and per-status counts exactly summarize its results.",
+      message: "Batch ingest summary must exactly match the result collection.",
+      arbitrary: {
+        candidate: {
+          make: (fc) =>
+            fc.array(S.toArbitrary(BatchIngestResult)(fc), { maxLength: 32 }).map((results) => ({
+              results,
+              summary: summarizeBatchResults(results),
+            })),
+        },
+      },
+    }
+  )
+);
 
 const BatchSummaryComparison = S.Struct({
   actual: BatchIngestSummary,
@@ -379,7 +399,7 @@ const BatchSummaryComparison = S.Struct({
 
 const matchBatchSummaryConsistency = Match.type<typeof BatchSummaryComparison.Type>().pipe(
   Match.when(
-    ({actual, expected}) =>
+    ({ actual, expected }) =>
       expected.total === actual.total &&
       expected.success === actual.success &&
       expected.duplicate === actual.duplicate &&
@@ -390,31 +410,6 @@ const matchBatchSummaryConsistency = Match.type<typeof BatchSummaryComparison.Ty
     path: ["summary"],
     issue: "Batch summary counts must exactly match the tagged result collection.",
   }))
-);
-
-const BatchIngestResponseDefinition = BatchIngestResponseFields.check(
-  S.makeFilter(
-    ({results, summary}) =>
-      matchBatchSummaryConsistency({
-        actual: summary,
-        expected: summarizeBatchResults(results)
-      }),
-    {
-      identifier: $I`BatchIngestSummaryConsistencyCheck`,
-      title: "Batch Ingest Summary Consistency",
-      description: "A response whose total and per-status counts exactly summarize its results.",
-      message: "Batch ingest summary must exactly match the result collection.",
-      arbitrary: {
-        candidate: {
-          make: (fc) =>
-            fc.array(S.toArbitrary(BatchIngestResult)(fc), {maxLength: 32}).map((results) => ({
-              results,
-              summary: summarizeBatchResults(results),
-            })),
-        },
-      },
-    }
-  )
 );
 
 /**
@@ -434,7 +429,7 @@ const BatchIngestResponseDefinition = BatchIngestResponseFields.check(
  */
 export const BatchIngestResponse = BatchIngestResponseDefinition.annotate({
   toArbitrary: () => (fc) =>
-    fc.array(S.toArbitrary(BatchIngestResult)(fc), {maxLength: 32}).map((results) => ({
+    fc.array(S.toArbitrary(BatchIngestResult)(fc), { maxLength: 32 }).map((results) => ({
       results,
       summary: summarizeBatchResults(results),
     })),
@@ -521,8 +516,7 @@ export class ListLinksQuery extends S.Class<ListLinksQuery>($I`ListLinksQuery`)(
   $I.annote("ListLinksQuery", {
     description: "Link-list query with Option-normalized filters and schema-owned pagination defaults.",
   })
-) {
-}
+) {}
 
 /**
  * Compact projection of one ingested link.
@@ -554,41 +548,40 @@ export class LinkSummary extends S.Class<LinkSummary>($I`LinkSummary`)(
     }),
     sourceUri: S.OptionFromNullishOr(HttpUrl).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({description: "Optional original HTTP(S) source URL."})
+      S.annotateKey({ description: "Optional original HTTP(S) source URL." })
     ),
     sourceType: S.OptionFromNullishOr(SourceType).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({description: "Optional source classification."})
+      S.annotateKey({ description: "Optional source classification." })
     ),
     headline: S.OptionFromNullishOr(S.NonEmptyString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({description: "Optional extracted headline."})
+      S.annotateKey({ description: "Optional extracted headline." })
     ),
     organization: S.OptionFromNullishOr(S.NonEmptyString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({description: "Optional attributed organization."})
+      S.annotateKey({ description: "Optional attributed organization." })
     ),
     status: LinkStatus.annotateKey({
       description: "Current ingestion lifecycle status.",
     }),
     wordCount: S.OptionFromNullishOr(NonNegativeInt).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({description: "Optional non-negative extracted word count."})
+      S.annotateKey({ description: "Optional non-negative extracted word count." })
     ),
     fetchedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({description: "Optional UTC fetch instant."})
+      S.annotateKey({ description: "Optional UTC fetch instant." })
     ),
     enrichedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({description: "Optional UTC enrichment instant."})
+      S.annotateKey({ description: "Optional UTC enrichment instant." })
     ),
   },
   $I.annote("LinkSummary", {
     description: "Compact ingested-link projection with canonical content identity and normalized optional metadata.",
   })
-) {
-}
+) {}
 
 /**
  * Paginated response listing ingested links.
@@ -615,18 +608,17 @@ export class ListLinksResponse extends S.Class<ListLinksResponse>($I`ListLinksRe
   {
     links: S.Array(LinkSummary).pipe(
       SchemaUtils.withEmptyArrayDefaults<LinkSummary>(),
-      S.annotateKey({description: "Current page of link summaries."})
+      S.annotateKey({ description: "Current page of link summaries." })
     ),
-    total: NonNegativeInt.annotateKey({description: "Total matching link count."}),
-    limit: PosInt.annotateKey({description: "Positive requested page size."}),
-    offset: NonNegativeInt.annotateKey({description: "Non-negative page offset."}),
-    hasMore: S.Boolean.annotateKey({description: "Whether another result page follows."}),
+    total: NonNegativeInt.annotateKey({ description: "Total matching link count." }),
+    limit: PosInt.annotateKey({ description: "Positive requested page size." }),
+    offset: NonNegativeInt.annotateKey({ description: "Non-negative page offset." }),
+    hasMore: S.Boolean.annotateKey({ description: "Whether another result page follows." }),
   },
   $I.annote("ListLinksResponse", {
     description: "Paginated link-list response with constrained counts and an always-present result collection.",
   })
-) {
-}
+) {}
 
 /**
  * Detailed projection of one ingested link and its processing metadata.

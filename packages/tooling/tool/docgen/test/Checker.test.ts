@@ -61,6 +61,78 @@ const failureTest = <A>(
   );
 
 describe("Checker", () => {
+  describe("kind-aware example enforcement", () => {
+    it.layer(
+      makeTestLayer(
+        `
+/**
+ * Returns a stable value.
+ *
+ * @since 1.0.0
+ */
+export const stableValue = 1
+        `,
+        { enforceExamples: true }
+      )
+    )("value-level exports", (it) => {
+      it.effect(
+        "rejects a value-level export without an Example",
+        Effect.fnUntraced(function* () {
+          const constants = yield* Parser.parseConstants;
+          const errors = yield* Checker.checkConstants(constants);
+
+          expect(errors).toHaveLength(1);
+          expect(errors[0]).toContain("Missing examples");
+        })
+      );
+    });
+
+    it.layer(
+      makeTestLayer(
+        `
+/**
+ * Pure compile-time shape for a named value.
+ *
+ * @since 1.0.0
+ */
+export interface NamedValue { readonly name: string }
+
+/**
+ * Pure compile-time identifier.
+ *
+ * @since 1.0.0
+ */
+export type Identifier = string
+
+/**
+ * Compile-time declarations grouped under one name.
+ *
+ * @since 1.0.0
+ */
+export namespace Contracts {
+  /**
+   * Nested compile-time identifier.
+   *
+   * @since 1.0.0
+   */
+  export type NestedIdentifier = string
+}
+        `,
+        { enforceExamples: true }
+      )
+    )("pure type-level exports", (it) => {
+      it.effect(
+        "accepts interfaces, type aliases, and namespaces without Examples",
+        Effect.fnUntraced(function* () {
+          const module = yield* Parser.parseModule;
+          const errors = yield* Checker.checkModule(module);
+
+          expect(errors).toEqual([]);
+        })
+      );
+    });
+  });
+
   describe("checkFunctions", () => {
     failureTest(
       "should raise an error if `@since` tag is missing",

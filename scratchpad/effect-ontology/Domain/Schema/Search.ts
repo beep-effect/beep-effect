@@ -14,12 +14,10 @@ import { ArticleSummary, ClaimRank, ClaimWithRank } from "./Timeline.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Search");
 
-const SearchDateRangeFields = S.Struct({
+const SearchDateRangeDefinition = S.Struct({
   from: S.DateTimeUtcFromString.annotateKey({ description: "Inclusive UTC range start." }),
   to: S.DateTimeUtcFromString.annotateKey({ description: "Inclusive UTC range end." }),
-});
-
-const SearchDateRangeDefinition = SearchDateRangeFields.check(
+}).check(
   S.makeFilter(
     (range) =>
       DateTime.toEpochMillis(range.from) <= DateTime.toEpochMillis(range.to)
@@ -44,7 +42,7 @@ const SearchDateRangeFromSelf = S.declare((input: unknown): input is typeof Sear
     fc
       .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
       .map(([from, duration]) =>
-        SearchDateRangeFields.make({
+        SearchDateRangeDefinition.make({
           from: DateTime.makeUnsafe(from),
           to: DateTime.makeUnsafe(from + duration),
         })

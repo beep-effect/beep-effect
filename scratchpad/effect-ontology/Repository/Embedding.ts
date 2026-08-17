@@ -29,7 +29,7 @@ import * as S from "effect/Schema";
 const $I = $ScratchpadId.create("effect-ontology/Repository/Embedding");
 
 import { PostgresDrizzle } from "@beep/postgres";
-import { and, eq, sql as drizzleSql } from "drizzle-orm";
+import { and, sql as drizzleSql, eq } from "drizzle-orm";
 import { SqlClient } from "effect/unstable/sql";
 import type { EmbeddingRow } from "./schema.ts";
 import { Embeddings, embeddings } from "./schema.ts";

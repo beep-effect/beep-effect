@@ -233,7 +233,7 @@ describe("Services and Surface", () => {
         const service = yield* CanonicalizationService;
         const encodedDataset = yield* S.encodeEffect(Dataset)(dataset);
         const canonicalized = yield* service.canonicalize(
-          decodeUnknownSync(CanonicalizeDatasetRequest)({
+          yield* S.decodeUnknownEffect(CanonicalizeDatasetRequest)({
             algorithm: "rdfc-1.0",
             dataset: encodedDataset,
           })
@@ -242,7 +242,7 @@ describe("Services and Surface", () => {
         expect(pipe(canonicalized.canonicalText, Str.split("\n"))).toHaveLength(2);
 
         const fingerprint = yield* service.fingerprint(
-          decodeUnknownSync(FingerprintDatasetRequest)({
+          yield* S.decodeUnknownEffect(FingerprintDatasetRequest)({
             algorithm: "rdfc-1.0",
             dataset: encodedDataset,
           })
@@ -273,24 +273,28 @@ describe("Services and Surface", () => {
         ]);
 
         const [leftRequest, rightRequest] = yield* Effect.all(
-          [S.encodeEffect(Dataset)(left), S.encodeEffect(Dataset)(right)],
+          [
+            S.encodeEffect(Dataset)(left).pipe(
+              Effect.flatMap((encoded) =>
+                S.decodeUnknownEffect(FingerprintDatasetRequest)({
+                  algorithm: "rdfc-1.0",
+                  dataset: encoded,
+                })
+              )
+            ),
+            S.encodeEffect(Dataset)(right).pipe(
+              Effect.flatMap((encoded) =>
+                S.decodeUnknownEffect(FingerprintDatasetRequest)({
+                  algorithm: "rdfc-1.0",
+                  dataset: encoded,
+                })
+              )
+            ),
+          ],
           { concurrency: "unbounded" }
         );
         const [leftFingerprint, rightFingerprint] = yield* Effect.all(
-          [
-            service.fingerprint(
-              decodeUnknownSync(FingerprintDatasetRequest)({
-                algorithm: "rdfc-1.0",
-                dataset: leftRequest,
-              })
-            ),
-            service.fingerprint(
-              decodeUnknownSync(FingerprintDatasetRequest)({
-                algorithm: "rdfc-1.0",
-                dataset: rightRequest,
-              })
-            ),
-          ],
+          [service.fingerprint(leftRequest), service.fingerprint(rightRequest)],
           { concurrency: "unbounded" }
         );
 
@@ -305,7 +309,7 @@ describe("Services and Surface", () => {
         const service = yield* SparqlQueryService;
         const error = yield* service
           .execute(
-            decodeUnknownSync(SparqlQueryRequest)({
+            yield* S.decodeUnknownEffect(SparqlQueryRequest)({
               dataset: yield* S.encodeEffect(Dataset)(dataset),
               profile: "select",
               query: "SELECT * WHERE { ?s ?p ?o }",
@@ -315,7 +319,7 @@ describe("Services and Surface", () => {
 
         expect(error.message).toBe("No SPARQL engine is wired into the v1 semantic-web package.");
 
-        const annotation = decodeUnknownSync(WebAnnotation)({
+        const annotation = yield* S.decodeUnknownEffect(WebAnnotation)({
           id: "https://example.com/annotations/1",
           target: {
             selector: {

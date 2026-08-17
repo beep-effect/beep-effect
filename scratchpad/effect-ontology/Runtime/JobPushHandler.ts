@@ -204,7 +204,7 @@ export const JobPushRouter = HttpRouter.addAll([
             },
             { status: 400 }
           ),
-        onSuccess: Effect.fn(
+        onSuccess: Effect.fn("JobPushHandler.onSuccess")(
           function* (body) {
             const messageId = body.message.messageId;
 

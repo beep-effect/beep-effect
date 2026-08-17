@@ -10,25 +10,21 @@
  * @since 0.0.0
  */
 
-import {$ScratchpadId} from "@beep/identity";
-import type {IRI} from "@beep/rdf";
-import {NonNegativeInt} from "@beep/schema";
-import {UnitInterval} from "@beep/schema/UnitInterval";
-import * as Tuple from "effect/Tuple";
-import {HashMap, HashSet, MutableHashMap, Order, pipe} from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import type { IRI } from "@beep/rdf";
+import { NonNegativeInt } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as A from "@beep/utils/Array";
-import * as O from "effect/Option";
 import { thunk0 } from "@beep/utils/thunk";
+import { HashMap, HashSet, MutableHashMap, Order, pipe } from "effect";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type {Relation} from "../Domain/Model/Entity.ts";
-import {
-  Entity,
-  KnowledgeGraph,
-  RelationObject
-} from "../Domain/Model/Entity.ts";
-import {EntityId} from "../Domain/Model/shared.ts";
-import {dual2} from "../Utils/Dual.ts";
+import * as Tuple from "effect/Tuple";
+import type { Relation } from "../Domain/Model/Entity.ts";
+import { Entity, KnowledgeGraph, RelationObject } from "../Domain/Model/Entity.ts";
+import { EntityId } from "../Domain/Model/shared.ts";
+import { dual2 } from "../Utils/Dual.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/Merge");
 
@@ -60,9 +56,9 @@ const $I = $ScratchpadId.create("effect-ontology/Workflow/Merge");
  */
 export class MergeConflict extends S.Class<MergeConflict>($I`MergeConflict`)(
   {
-    entityId: EntityId.annotateKey({description: "Entity whose attributes conflict."}),
-    property: S.NonEmptyString.annotateKey({description: "Entity property with conflicting values."}),
-    values: S.Array(S.Unknown).annotateKey({description: "Conflicting values observed for the property."}),
+    entityId: EntityId.annotateKey({ description: "Entity whose attributes conflict." }),
+    property: S.NonEmptyString.annotateKey({ description: "Entity property with conflicting values." }),
+    values: S.Array(S.Unknown).annotateKey({ description: "Conflicting values observed for the property." }),
     chunkIndexes: S.Array(NonNegativeInt).annotateKey({
       description: "Source chunk indexes that contributed conflicting values.",
     }),
@@ -70,8 +66,7 @@ export class MergeConflict extends S.Class<MergeConflict>($I`MergeConflict`)(
   $I.annote("MergeConflict", {
     description: "Conflicting entity-property values and the source chunks that produced them.",
   })
-) {
-}
+) {}
 
 /**
  * Order instance for Entity (by id)
@@ -91,10 +86,10 @@ const RelationOrder: Order.Order<Relation> = Order.combine(
     Order.mapInput(Order.String, (r: Relation) => r.predicate),
     Order.mapInput(Order.String, (relation: Relation) =>
       RelationObject.match(relation.object, {
-        EntityReference: ({value}) => `entity:${value}`,
-        Text: ({value}) => `text:${value}`,
-        Number: ({value}) => `number:${value}`,
-        Boolean: ({value}) => `boolean:${value}`,
+        EntityReference: ({ value }) => `entity:${value}`,
+        Text: ({ value }) => `text:${value}`,
+        Number: ({ value }) => `number:${value}`,
+        Boolean: ({ value }) => `boolean:${value}`,
       })
     )
   )
@@ -160,14 +155,19 @@ const selectBestTypes = (
       }
     }
     // Limit to top 3 even if multiple have same frequency
-    return ensureNonEmpty(A.slice(selectedTypes, {start: 0, end: 3}));
+    return ensureNonEmpty(A.slice(selectedTypes, { start: 0, end: 3 }));
   } else {
     // No clear majority: take top 2-3 most frequent
     // Prefer keeping 1-2 types for clarity
-    return ensureNonEmpty(pipe(A.slice(sortedTypes, {
-      start: 0,
-      end: 2
-    }), A.map(Tuple.get(0))));
+    return ensureNonEmpty(
+      pipe(
+        A.slice(sortedTypes, {
+          start: 0,
+          end: 2,
+        }),
+        A.map(Tuple.get(0))
+      )
+    );
   }
 };
 
@@ -221,7 +221,7 @@ export const mergeGraphs = dual2((a: KnowledgeGraph, b: KnowledgeGraph): Knowled
     const existing = HashMap.get(entityMap, entity.id);
     if (O.isSome(existing)) {
       // Merge attributes: union with preference for non-empty values
-      const mergedAttributes = {...existing.value.attributes, ...entity.attributes};
+      const mergedAttributes = { ...existing.value.attributes, ...entity.attributes };
       // Select best types using frequency voting (instead of union)
       const mergedTypes = selectBestTypes(existing.value.types, entity.types);
       // Keep longest mention
@@ -338,9 +338,7 @@ export const mergeGraphsWithConflicts = dual2(
                 property: key,
                 values: [existingValue.value, value],
                 chunkIndexes: A.sort(
-                  A.fromIterable(
-                    HashSet.fromIterable(A.getSomes([existing.value.chunkIndex, entity.chunkIndex]))
-                  ),
+                  A.fromIterable(HashSet.fromIterable(A.getSomes([existing.value.chunkIndex, entity.chunkIndex]))),
                   Order.Number
                 ),
               })
@@ -349,7 +347,7 @@ export const mergeGraphsWithConflicts = dual2(
         }
 
         // Merge attributes: union with preference for non-empty values
-        const mergedAttributes = {...existing.value.attributes, ...entity.attributes};
+        const mergedAttributes = { ...existing.value.attributes, ...entity.attributes };
         // Select best types using frequency voting (instead of union)
         const mergedTypes = selectBestTypes(existing.value.types, entity.types);
         // Keep longest mention

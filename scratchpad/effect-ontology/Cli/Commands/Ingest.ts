@@ -10,20 +10,20 @@
  */
 
 import { NonNegativeInt } from "@beep/schema/Int";
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as Path from "effect/Path";
-import * as Random from "effect/Random";
-import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
 import * as Str from "effect/String";
 import * as Argument from "effect/unstable/cli/Argument";
-import * as Flag from "effect/unstable/cli/Flag";
 import * as Command from "effect/unstable/cli/Command";
+import * as Flag from "effect/unstable/cli/Flag";
 import {
   BatchId,
   ContentHash,

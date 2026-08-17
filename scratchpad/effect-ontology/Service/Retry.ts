@@ -68,37 +68,6 @@ const RetryPolicyInvariantCheck = S.makeFilter(
   }
 );
 
-const RetryPolicyFields = S.Struct({
-  attemptTimeout: PositiveDuration.pipe(
-    SchemaUtils.withKeyDefaults(Duration.seconds(60)),
-    S.annotateKey({ description: "Maximum duration allowed for one attempt." })
-  ),
-  overallTimeout: PositiveDuration.pipe(
-    SchemaUtils.withKeyDefaults(Duration.minutes(5)),
-    S.annotateKey({ description: "Maximum duration allowed for all attempts and retry delays." })
-  ),
-  initialDelay: PositiveDuration.pipe(
-    SchemaUtils.withKeyDefaults(Duration.seconds(1)),
-    S.annotateKey({ description: "Delay before the first retry." })
-  ),
-  maxDelay: PositiveDuration.pipe(
-    SchemaUtils.withKeyDefaults(Duration.seconds(30)),
-    S.annotateKey({ description: "Upper bound applied to exponential retry delays." })
-  ),
-  maxAttempts: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(3)),
-    S.annotateKey({ description: "Maximum number of attempts, including the initial attempt." })
-  ),
-  serviceName: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("LanguageModel"),
-    S.annotateKey({ description: "Stable service name attached to retry diagnostics." })
-  ),
-  jitter: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(true),
-    S.annotateKey({ description: "Whether retry delays receive random jitter to avoid synchronized retries." })
-  ),
-});
-
 /**
  * Validated retry policy with per-attempt and overall deadlines.
  *
@@ -127,7 +96,36 @@ const RetryPolicyFields = S.Struct({
  * @since 0.0.0
  */
 export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)(
-  RetryPolicyFields.pipe(S.check(RetryPolicyInvariantCheck)),
+  S.Struct({
+    attemptTimeout: PositiveDuration.pipe(
+      SchemaUtils.withKeyDefaults(Duration.seconds(60)),
+      S.annotateKey({ description: "Maximum duration allowed for one attempt." })
+    ),
+    overallTimeout: PositiveDuration.pipe(
+      SchemaUtils.withKeyDefaults(Duration.minutes(5)),
+      S.annotateKey({ description: "Maximum duration allowed for all attempts and retry delays." })
+    ),
+    initialDelay: PositiveDuration.pipe(
+      SchemaUtils.withKeyDefaults(Duration.seconds(1)),
+      S.annotateKey({ description: "Delay before the first retry." })
+    ),
+    maxDelay: PositiveDuration.pipe(
+      SchemaUtils.withKeyDefaults(Duration.seconds(30)),
+      S.annotateKey({ description: "Upper bound applied to exponential retry delays." })
+    ),
+    maxAttempts: PosInt.pipe(
+      SchemaUtils.withKeyDefaults(PosInt.make(3)),
+      S.annotateKey({ description: "Maximum number of attempts, including the initial attempt." })
+    ),
+    serviceName: S.NonEmptyString.pipe(
+      SchemaUtils.withKeyDefaults("LanguageModel"),
+      S.annotateKey({ description: "Stable service name attached to retry diagnostics." })
+    ),
+    jitter: S.Boolean.pipe(
+      SchemaUtils.withKeyDefaults(true),
+      S.annotateKey({ description: "Whether retry delays receive random jitter to avoid synchronized retries." })
+    ),
+  }).pipe(S.check(RetryPolicyInvariantCheck)),
   $I.annote("RetryPolicy", {
     description: "Validated exponential-backoff policy with compatible attempt and overall deadlines.",
   })

@@ -10,10 +10,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import {$ScratchpadId} from "@beep/identity";
-import {LiteralKit} from "@beep/schema";
+import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
-import {ErrorMessage, Milliseconds, OptionalErrorCause} from "./Base.ts";
+import { ErrorMessage, Milliseconds, OptionalErrorCause } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Auth");
 
@@ -31,13 +31,12 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Auth");
  * @category errors
  * @since 0.0.0
  */
-export const AuthenticationReason = LiteralKit(["missing", "invalid", "disabled", "expired"])
-  .pipe(
-    $I.annoteSchema("AuthenticationReason", {
-      toArbitrary: () => (fc) => fc.constantFrom("missing", "invalid", "disabled", "expired"),
-      description: "Closed reason code explaining an authentication rejection.",
-    })
-  );
+export const AuthenticationReason = LiteralKit(["missing", "invalid", "disabled", "expired"]).pipe(
+  $I.annoteSchema("AuthenticationReason", {
+    toArbitrary: () => (fc) => fc.constantFrom("missing", "invalid", "disabled", "expired"),
+    description: "Closed reason code explaining an authentication rejection.",
+  })
+);
 
 /**
  * Runtime reason accepted by {@link AuthenticationReason}.
@@ -98,8 +97,7 @@ export class TicketExpiredError extends S.TaggedError<TicketExpiredError>($I`Tic
   $I.annote("TicketExpiredError", {
     description: "Authentication failure caused by an expired one-time ticket.",
   })
-) {
-}
+) {}
 
 /**
  * Indicates that a one-time ticket is unknown or has already been consumed.
@@ -135,8 +133,7 @@ export class TicketNotFoundError extends S.TaggedError<TicketNotFoundError>($I`T
   $I.annote("TicketNotFoundError", {
     description: "Authentication failure for an unknown or previously consumed ticket.",
   })
-) {
-}
+) {}
 
 /**
  * General authentication rejection with a machine-readable reason.
@@ -171,8 +168,7 @@ export class AuthenticationError extends S.TaggedError<AuthenticationError>($I`A
   $I.annote("AuthenticationError", {
     description: "General authentication rejection with a closed reason code.",
   })
-) {
-}
+) {}
 
 /**
  * Indicates that API-key verification failed.
@@ -209,8 +205,7 @@ export class InvalidApiKeyError extends S.TaggedError<InvalidApiKeyError>($I`Inv
   $I.annote("InvalidApiKeyError", {
     description: "API-key verification failure that never carries the secret key.",
   })
-) {
-}
+) {}
 
 const AuthErrorDefinition = S.Union([
   TicketExpiredError,

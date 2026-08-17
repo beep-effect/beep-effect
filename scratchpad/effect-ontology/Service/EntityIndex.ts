@@ -12,7 +12,7 @@
 
 import { NonNegativeInt } from "@beep/schema/Int";
 import { EpochMillis } from "@beep/schema/Timestamp";
-import { Cause, Clock, Context, Effect, HashMap, HashSet, Layer, Order, Ref } from "effect";
+import { Clock, Context, Effect, HashMap, HashSet, Inspectable, Layer, Order, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -536,8 +536,8 @@ export const makePersistentEntityIndex = dual3(
           Effect.tap(() =>
             Effect.logInfo("EntityIndex persisted", { path: blobPath, entityCount: serialized.entities.length })
           ),
-          Effect.catchCause((cause) =>
-            Effect.logWarning("Failed to persist EntityIndex", { cause: Cause.pretty(cause) })
+          Effect.catch((error) =>
+            Effect.logWarning("Failed to persist EntityIndex", { error: Inspectable.toStringUnknown(error) })
           )
         );
       });
@@ -619,9 +619,7 @@ export const PersistentEntityIndexLayer: Layer.Layer<
     const storage = yield* StorageService;
     const embeddingSvc = yield* EmbeddingService;
 
-    const indexPath = O.getOrUndefined(config.embedding.entityIndexPath);
-
-    if (P.isUndefined(indexPath)) {
+    if (O.isNone(config.embedding.entityIndexPath)) {
       // No persistence path configured - return stub that logs but does nothing
       yield* Effect.logDebug("PersistentEntityIndex: disabled (no EMBEDDING_ENTITY_INDEX_PATH set)");
 
@@ -655,6 +653,7 @@ export const PersistentEntityIndexLayer: Layer.Layer<
     }
 
     // Persistence enabled
+    const indexPath = config.embedding.entityIndexPath.value;
     yield* Effect.logInfo("PersistentEntityIndex: GCS-backed persistence enabled", { indexPath });
     return yield* makePersistentEntityIndex(storage, embeddingSvc, indexPath);
   })

@@ -773,15 +773,18 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
       );
       return parts.filter((p) => p !== "").join("\n");
     };
-    const getEntityContext = (store: RdfStore, focusNode: string): string => {
-      const quads = rdfStoreQuads(store, { subject: makeNamedNode(focusNode) });
+    const getEntityContext = Effect.fn("CorrectorAgent.getEntityContext")(function* (
+      store: RdfStore,
+      focusNode: string
+    ) {
+      const quads = yield* rdfStoreQuads(store, { subject: makeNamedNode(focusNode) });
       if (A.isReadonlyArrayEmpty(quads)) return "";
       const lines = A.map(quads, (q) => {
         const obj = q.object.termType === "Literal" ? `"${q.object.value}"` : `<${q.object.value}>`;
         return `<${q.subject.value}> <${q.predicate.value}> ${obj} .`;
       });
       return A.join(lines, "\n");
-    };
+    });
     const generateCorrection = Effect.fn("CorrectorAgent.generateCorrection")(function* (
       violation: ShaclValidationViolation,
       store: RdfStore,
@@ -793,7 +796,16 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
         path: O.some(violation.path.value),
         strategy,
       });
-      const entityContext = getEntityContext(store, violation.focusNode);
+      const entityContext = yield* getEntityContext(store, violation.focusNode).pipe(
+        Effect.mapError((error) =>
+          CorrectionError.make({
+            message: `Failed to read correction context: ${error.message}`,
+            violation,
+            strategy,
+            cause: O.some(error),
+          })
+        )
+      );
       const prompt = buildCorrectionPrompt(violation, strategy, entityContext, ontologyContext);
       const response = yield* generateObjectWithFeedback({
         prompt,
@@ -826,10 +838,18 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
       const focusNode = makeNamedNode(correction.focusNode);
       const predicate = makeNamedNode(correction.path);
       if (O.isSome(correction.originalValue)) {
-        const oldQuads = rdfStoreQuads(store, {
+        const oldQuads = yield* rdfStoreQuads(store, {
           subject: focusNode,
           predicate,
-        });
+        }).pipe(
+          Effect.mapError((error) =>
+            CorrectionApplicationError.make({
+              message: `Failed to read values for correction: ${error.message}`,
+              correction,
+              cause: O.some(error),
+            })
+          )
+        );
         rdfStoreRemoveQuads(store, oldQuads);
       }
       const newObject = makeLiteral(`${correction.newValue}`, XSD_STRING.value);
@@ -846,10 +866,18 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
     ) {
       const focusNode = makeNamedNode(correction.focusNode);
       const typePredicate = makeNamedNode(RDF_TYPE.value);
-      const oldTypeQuads = rdfStoreQuads(store, {
+      const oldTypeQuads = yield* rdfStoreQuads(store, {
         subject: focusNode,
         predicate: typePredicate,
-      });
+      }).pipe(
+        Effect.mapError((error) =>
+          CorrectionApplicationError.make({
+            message: `Failed to read types for reclassification: ${error.message}`,
+            correction,
+            cause: O.some(error),
+          })
+        )
+      );
       rdfStoreRemoveQuads(store, oldTypeQuads);
       const newTypeNode = makeNamedNode(correction.newType);
       rdfStoreAddQuad(store, makeQuad(focusNode, typePredicate, newTypeNode));
@@ -858,23 +886,24 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
         newType: correction.newType,
       });
     });
-    const applyCorrectionByStrategy: (correction: Correction) => (store: RdfStore) => Effect.Effect<void> =
-      Correction.match({
-        "generate-value": (correction) => (store: RdfStore) => applyValueCorrection(correction, store),
-        "coerce-datatype": (correction) => (store: RdfStore) => applyValueCorrection(correction, store),
-        "remove-excess": (correction) => () =>
-          Effect.logWarning("CorrectorAgent: remove-excess requires manual review", {
-            focusNode: correction.focusNode,
-            path: correction.path,
-          }),
-        "reclassify-entity": (correction) => (store: RdfStore) => applyReclassification(correction, store),
-        "reformat-value": (correction) => (store: RdfStore) => applyValueCorrection(correction, store),
-        skip: (correction) => () =>
-          Effect.logDebug("CorrectorAgent: Skipped correction", {
-            focusNode: correction.focusNode,
-            reason: correction.explanation,
-          }),
-      });
+    const applyCorrectionByStrategy: (
+      correction: Correction
+    ) => (store: RdfStore) => Effect.Effect<void, CorrectionApplicationError> = Correction.match({
+      "generate-value": (correction) => (store: RdfStore) => applyValueCorrection(correction, store),
+      "coerce-datatype": (correction) => (store: RdfStore) => applyValueCorrection(correction, store),
+      "remove-excess": (correction) => () =>
+        Effect.logWarning("CorrectorAgent: remove-excess requires manual review", {
+          focusNode: correction.focusNode,
+          path: correction.path,
+        }),
+      "reclassify-entity": (correction) => (store: RdfStore) => applyReclassification(correction, store),
+      "reformat-value": (correction) => (store: RdfStore) => applyValueCorrection(correction, store),
+      skip: (correction) => () =>
+        Effect.logDebug("CorrectorAgent: Skipped correction", {
+          focusNode: correction.focusNode,
+          reason: correction.explanation,
+        }),
+    });
     const applyCorrection = Effect.fn("CorrectorAgent.applyCorrection")(function* (
       correction: Correction,
       store: RdfStore

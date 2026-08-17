@@ -1,7 +1,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Exit, Layer } from "effect";
+import { ConfigProvider, Effect, Layer } from "effect";
 import { isRdfStore, RdfBuilder, rdfStoreApplyRules, rdfStoreSize, rdfStoreToDataset } from "../../Service/Rdf.ts";
 
 const RdfBuilderTest = RdfBuilder.Default.pipe(
@@ -21,11 +21,11 @@ describe("RdfBuilder", () => {
       "validates strings at the canonical IRI construction boundary",
       Effect.fnUntraced(function* () {
         const rdf = yield* RdfBuilder;
-        const valid = rdf.createIri("https://example.org/resource");
-        const invalid = yield* Effect.exit(Effect.sync(() => rdf.createIri("not an iri")));
+        const valid = yield* rdf.createIri("https://example.org/resource");
+        const invalid = yield* Effect.flip(rdf.createIri("not an iri"));
 
         assert.isTrue(IRI.is(valid));
-        assert.isTrue(Exit.isFailure(invalid));
+        assert.strictEqual(invalid._tag, "RdfError");
       })
     );
 
@@ -39,7 +39,8 @@ describe("RdfBuilder", () => {
 
         assert.strictEqual(rdfStoreSize(reparsed), 1);
         assert.isFalse("_store" in reparsed);
-        assert.strictEqual(rdfStoreToDataset(reparsed).quads.length, 1);
+        const dataset = yield* rdfStoreToDataset(reparsed);
+        assert.strictEqual(dataset.quads.length, 1);
       })
     );
 

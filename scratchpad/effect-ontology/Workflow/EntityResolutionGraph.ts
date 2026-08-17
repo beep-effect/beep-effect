@@ -14,7 +14,7 @@ import type { IRI } from "@beep/rdf";
 import { NodeIndex } from "@beep/schema/Graph";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { DateTime, Effect, Graph, HashMap, HashSet, MutableHashMap, MutableHashSet, Order } from "effect";
+import { DateTime, Effect, Graph, HashMap, HashSet, MutableHashMap, MutableHashSet, Number as N, Order } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -230,13 +230,12 @@ export const clusterEntities = dual3(
               const entityB = entities[j];
 
               // Compute embedding similarity if available
-              const embeddingSim =
-                MutableHashMap.has(embeddingMap, entityA.id) && MutableHashMap.has(embeddingMap, entityB.id)
-                  ? embeddingService.cosineSimilarity(
-                      O.getOrThrow(MutableHashMap.get(embeddingMap, entityA.id)),
-                      O.getOrThrow(MutableHashMap.get(embeddingMap, entityB.id))
-                    )
-                  : undefined;
+              const embeddingSim = O.getOrUndefined(
+                O.map(
+                  O.all([MutableHashMap.get(embeddingMap, entityA.id), MutableHashMap.get(embeddingMap, entityB.id)]),
+                  ([embeddingA, embeddingB]) => embeddingService.cosineSimilarity(embeddingA, embeddingB)
+                )
+              );
 
               // Check merge condition - pure sync computation
               if (shouldConsiderMerge(entityA, entityB, relations, config, embeddingSim, undefined)) {
@@ -288,28 +287,41 @@ export const clusterEntities = dual3(
       const components = Graph.connectedComponents(similarityGraph);
 
       // Map NodeIndex clusters back to EntityCluster
-      const clusters = components.map((component) => {
-        const clusterEntities = component.map((nodeIdx) => O.getOrThrow(Graph.getNode(similarityGraph, nodeIdx)));
+      const clusters = A.getSomes(
+        A.map(components, (component) => {
+          const clusterEntities = A.getSomes(A.map(component, (nodeIdx) => Graph.getNode(similarityGraph, nodeIdx)));
 
-        // Find minimum similarity and methods within this cluster
-        const clusterEntityIds = HashSet.fromIterable(clusterEntities.map((e) => e.id));
-        const clusterEdges = edgeData.filter(
-          (ed) => HashSet.has(clusterEntityIds, ed.source) && HashSet.has(clusterEntityIds, ed.target)
-        );
+          // Find minimum similarity and methods within this cluster
+          const clusterEntityIds = HashSet.fromIterable(A.map(clusterEntities, (entity) => entity.id));
+          const clusterEdges = A.filter(
+            edgeData,
+            (ed) => HashSet.has(clusterEntityIds, ed.source) && HashSet.has(clusterEntityIds, ed.target)
+          );
 
-        const minSimilarity = UnitInterval.make(
-          clusterEdges.length > 0 ? Math.min(...clusterEdges.map((ed) => ed.edge.similarity)) : 1
-        );
+          const minSimilarity = UnitInterval.make(
+            A.match(clusterEdges, {
+              onEmpty: () => 1,
+              onNonEmpty: (edges) => A.reduce(edges, 1, (minimum, edge) => N.min(minimum, edge.edge.similarity)),
+            })
+          );
 
-        const methods = A.fromIterable(HashSet.fromIterable(clusterEdges.map((ed) => ed.edge.method)));
-        const firstClusterEntity = O.getOrThrow(A.head(clusterEntities));
-
-        return EntityClusterModel.make({
-          entities: [firstClusterEntity, ...A.drop(clusterEntities, 1)],
-          minSimilarity,
-          methods: methods.length > 0 ? [methods[0], ...methods.slice(1)] : ["exact"],
-        });
-      });
+          const methods = A.fromIterable(HashSet.fromIterable(A.map(clusterEdges, (edge) => edge.edge.method)));
+          return A.match(clusterEntities, {
+            onEmpty: O.none,
+            onNonEmpty: (entities) =>
+              O.some(
+                EntityClusterModel.make({
+                  entities,
+                  minSimilarity,
+                  methods: A.match(methods, {
+                    onEmpty: () => ["exact"],
+                    onNonEmpty: (values) => values,
+                  }),
+                })
+              ),
+          });
+        })
+      );
 
       const embeddingEntries: Array<readonly [EntityId, readonly [number, ...Array<number>]]> = [];
       for (const [entityId, embedding] of embeddingMap) {
@@ -458,13 +470,13 @@ export const buildEntityResolutionGraph = dual2(
           });
         } else if (O.isSome(canonicalEntity)) {
           // Compute embedding similarity if available
-          const embeddingSim =
-            HashMap.has(embeddingMap, entity.id) && HashMap.has(embeddingMap, canonicalId)
-              ? embeddingService.cosineSimilarity(
-                  O.getOrThrow(HashMap.get(embeddingMap, entity.id)),
-                  O.getOrThrow(HashMap.get(embeddingMap, canonicalId))
-                )
-              : undefined;
+          const embeddingSim = O.getOrUndefined(
+            O.map(
+              O.all([HashMap.get(embeddingMap, entity.id), HashMap.get(embeddingMap, canonicalId)]),
+              ([entityEmbedding, canonicalEmbedding]) =>
+                embeddingService.cosineSimilarity(entityEmbedding, canonicalEmbedding)
+            )
+          );
 
           // Compute similarity between this entity and canonical (with embedding)
           const similarity = computeEntitySimilarity(

@@ -15,6 +15,7 @@ import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { Context, Effect, HashSet, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -22,7 +23,7 @@ import * as Str from "effect/String";
 const $I = $ScratchpadId.create("effect-ontology/Repository/EntityRegistry");
 
 import { PostgresDrizzle } from "@beep/postgres";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, sql as drizzleSql, eq, inArray } from "drizzle-orm";
 import { SqlClient } from "effect/unstable/sql";
 import type {
   CanonicalEntityInsertRow,
@@ -247,29 +248,20 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
       const insertCanonicalEntity = Effect.fn("insertCanonicalEntity")(function* (
         entity: CanonicalEntityInsertRow
       ): Effect.fn.Return<CanonicalEntityRow, DrizzleError> {
-        const result = yield* normalizeQueryError(sql`
-          INSERT INTO canonical_entities (ontology_id, iri, canonical_mention,
-                                          types, embedding, merge_count,
-                                          confidence_avg)
-          VALUES (${entity.ontologyId ?? "default"},
-                  ${entity.iri},
-                  ${entity.canonicalMention},
-                  ${entity.types}::text[],
-                  ${formatVector(entity.embedding)}::vector,
-                  ${entity.mergeCount ?? 1},
-                  ${entity.confidenceAvg ?? null}) RETURNING id,
-                    ontology_id as "ontologyId",
-                    iri,
-                    canonical_mention as "canonicalMention",
-                    types,
-                    embedding::text as embedding,
-                    merge_count as "mergeCount",
-                    confidence_avg as "confidenceAvg",
-                    first_seen_at as "firstSeenAt",
-                    last_seen_at as "lastSeenAt",
-                    created_at as "createdAt",
-                    updated_at as "updatedAt"
-        `);
+        const result = yield* normalizeQueryError(
+          drizzle
+            .insert(canonicalEntities)
+            .values({
+              ontologyId: O.getOrElse(O.fromUndefinedOr(entity.ontologyId), () => "default"),
+              iri: entity.iri,
+              canonicalMention: entity.canonicalMention,
+              types: A.fromIterable(O.getOrElse(O.fromUndefinedOr(entity.types), A.empty)),
+              embedding: formatVector(entity.embedding),
+              mergeCount: O.getOrElse(O.fromNullishOr(entity.mergeCount), () => 1),
+              confidenceAvg: O.getOrNull(O.fromNullishOr(entity.confidenceAvg)),
+            })
+            .returning()
+        );
         const [row] = yield* decodeOneCanonicalEntitySqlRow(result);
         return row;
       });
@@ -398,28 +390,41 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
           confidenceAvg?: number;
         }
       ) {
-        yield* normalizeQueryError(sql`
-          UPDATE canonical_entities
-          SET merge_count    = COALESCE(${updates.mergeCount ?? null}, merge_count),
-              confidence_avg = COALESCE(${updates.confidenceAvg ?? null}, confidence_avg),
-              last_seen_at   = NOW(),
-              updated_at     = NOW()
-          WHERE ontology_id = ${ontologyId} AND id = ${id}
-        `);
+        yield* normalizeQueryError(
+          drizzle
+            .update(canonicalEntities)
+            .set({
+              lastSeenAt: drizzleSql`NOW()`,
+              updatedAt: drizzleSql`NOW()`,
+              ...O.getOrElse(
+                O.map(O.fromUndefinedOr(updates.mergeCount), (mergeCount) => ({ mergeCount })),
+                () => ({})
+              ),
+              ...O.getOrElse(
+                O.map(O.fromUndefinedOr(updates.confidenceAvg), (confidenceAvg) => ({
+                  confidenceAvg: drizzleSql`${confidenceAvg}`,
+                })),
+                () => ({})
+              ),
+            })
+            .where(and(eq(canonicalEntities.ontologyId, ontologyId), eq(canonicalEntities.id, id)))
+        );
       });
 
       /**
        * Update last seen timestamp
        */
-      const touchCanonicalEntity = (ontologyId: string, id: CanonicalEntityId) =>
+      const touchCanonicalEntity = Effect.fn("touchCanonicalEntity")((ontologyId: string, id: CanonicalEntityId) =>
         normalizeQueryError(
-          sql`
-            UPDATE canonical_entities
-            SET last_seen_at = NOW(),
-                updated_at = NOW()
-            WHERE ontology_id = ${ontologyId} AND id = ${id}
-          `
-        );
+          drizzle
+            .update(canonicalEntities)
+            .set({
+              lastSeenAt: drizzleSql`NOW()`,
+              updatedAt: drizzleSql`NOW()`,
+            })
+            .where(and(eq(canonicalEntities.ontologyId, ontologyId), eq(canonicalEntities.id, id)))
+        )
+      );
 
       /**
        * Count total canonical entities
@@ -441,36 +446,30 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
       const insertAlias = Effect.fn("insertAlias")(function* (
         alias: EntityAliasInsertRow
       ): Effect.fn.Return<EntityAliasRow, DrizzleError> {
-        const embeddingValue = P.isNotNullish(alias.embedding) ? formatVector(alias.embedding) : null;
-        const result = yield* normalizeQueryError(sql`
-          INSERT INTO entity_aliases (ontology_id, canonical_entity_id, mention,
-                                      mention_normalized, embedding,
-                                      resolution_method, resolution_confidence,
-                                      first_batch_id, source_article_id)
-          VALUES (${alias.ontologyId ?? "default"},
-                  ${alias.canonicalEntityId},
-                  ${alias.mention},
-                  ${alias.mentionNormalized},
-                  ${embeddingValue}::vector,
-                  ${alias.resolutionMethod},
-                  ${alias.resolutionConfidence},
-                  ${alias.firstBatchId ?? null},
-                  ${alias.sourceArticleId ?? null}) ON CONFLICT (ontology_id, mention_normalized) DO
-          UPDATE SET
-            canonical_entity_id = EXCLUDED.canonical_entity_id,
-            resolution_confidence = GREATEST(entity_aliases.resolution_confidence, EXCLUDED.resolution_confidence)
-            RETURNING id,
-            ontology_id as "ontologyId",
-            canonical_entity_id as "canonicalEntityId",
-            mention,
-            mention_normalized as "mentionNormalized",
-            embedding::text as embedding,
-            resolution_method as "resolutionMethod",
-            resolution_confidence as "resolutionConfidence",
-            first_batch_id as "firstBatchId",
-            source_article_id as "sourceArticleId",
-            created_at as "createdAt"
-        `);
+        const embeddingValue = O.map(O.fromNullishOr(alias.embedding), formatVector).pipe(O.getOrNull);
+        const result = yield* normalizeQueryError(
+          drizzle
+            .insert(entityAliases)
+            .values({
+              ontologyId: O.getOrElse(O.fromUndefinedOr(alias.ontologyId), () => "default"),
+              canonicalEntityId: alias.canonicalEntityId,
+              mention: alias.mention,
+              mentionNormalized: alias.mentionNormalized,
+              embedding: embeddingValue,
+              resolutionMethod: alias.resolutionMethod,
+              resolutionConfidence: alias.resolutionConfidence,
+              firstBatchId: O.getOrNull(O.fromNullishOr(alias.firstBatchId)),
+              sourceArticleId: O.getOrNull(O.fromNullishOr(alias.sourceArticleId)),
+            })
+            .onConflictDoUpdate({
+              target: [entityAliases.ontologyId, entityAliases.mentionNormalized],
+              set: {
+                canonicalEntityId: drizzleSql`excluded.canonical_entity_id`,
+                resolutionConfidence: drizzleSql`GREATEST(${entityAliases.resolutionConfidence}, excluded.resolution_confidence)`,
+              },
+            })
+            .returning()
+        );
         const [row] = yield* decodeOneEntityAliasSqlRow(result);
         return row;
       });

@@ -70,57 +70,6 @@ export const SourceType = LiteralKit(["news", "blog", "press_release", "official
  */
 export type SourceType = typeof SourceType.Type;
 
-const EnrichedContentFields = {
-  headline: S.NonEmptyString.annotateKey({
-    description: "Main title extracted from or generated for the source.",
-  }),
-  description: S.NonEmptyString.annotateKey({
-    description: "Short summary of the source's principal content.",
-  }),
-  sourceType: SourceType.annotateKey({
-    description: "Classification assigned to the source.",
-  }),
-  publishedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Original publication instant when the source provides one.",
-    })
-  ),
-  author: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Attributed author when one can be identified.",
-    })
-  ),
-  organization: S.OptionFromNullishOr(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Publishing organization when one can be identified.",
-    })
-  ),
-  keyEntities: S.Array(S.NonEmptyString).pipe(
-    SchemaUtils.withEmptyArrayDefaults<string>(),
-    S.annotateKey({
-      description: "Prominent named entities detected in the source.",
-    })
-  ),
-  topics: S.Array(S.NonEmptyString).pipe(
-    SchemaUtils.withEmptyArrayDefaults<string>(),
-    S.annotateKey({
-      description: "Topic labels assigned to the source.",
-    })
-  ),
-  language: LanguageCode.pipe(
-    SchemaUtils.withKeyDefaults("en"),
-    S.annotateKey({
-      description: "Detected ISO 639-1 language code, defaulting to English.",
-    })
-  ),
-  wordCount: NonNegativeInt.annotateKey({
-    description: "Approximate number of words in the source.",
-  }),
-};
-
 /**
  * AI-derived metadata for one ingested content source.
  *
@@ -153,7 +102,56 @@ const EnrichedContentFields = {
  * @since 0.0.0
  */
 export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent`)(
-  EnrichedContentFields,
+  {
+    headline: S.NonEmptyString.annotateKey({
+      description: "Main title extracted from or generated for the source.",
+    }),
+    description: S.NonEmptyString.annotateKey({
+      description: "Short summary of the source's principal content.",
+    }),
+    sourceType: SourceType.annotateKey({
+      description: "Classification assigned to the source.",
+    }),
+    publishedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Original publication instant when the source provides one.",
+      })
+    ),
+    author: S.OptionFromNullishOr(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Attributed author when one can be identified.",
+      })
+    ),
+    organization: S.OptionFromNullishOr(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Publishing organization when one can be identified.",
+      })
+    ),
+    keyEntities: S.Array(S.NonEmptyString).pipe(
+      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.annotateKey({
+        description: "Prominent named entities detected in the source.",
+      })
+    ),
+    topics: S.Array(S.NonEmptyString).pipe(
+      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.annotateKey({
+        description: "Topic labels assigned to the source.",
+      })
+    ),
+    language: LanguageCode.pipe(
+      SchemaUtils.withKeyDefaults("en"),
+      S.annotateKey({
+        description: "Detected ISO 639-1 language code, defaulting to English.",
+      })
+    ),
+    wordCount: NonNegativeInt.annotateKey({
+      description: "Approximate number of words in the source.",
+    }),
+  },
   $I.annote("EnrichedContent", {
     description: "Normalized AI-derived metadata for search, filtering, provenance, and display.",
   })
@@ -211,48 +209,6 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
   }
 }
 
-const JinaContentFields = {
-  url: URLStr.annotateKey({
-    description: "Original URL fetched by the reader.",
-  }),
-  title: S.NonEmptyString.annotateKey({
-    description: "Page title reported or extracted by the reader.",
-  }),
-  content: S.String.annotateKey({
-    description: "Cleaned Markdown content returned by the reader.",
-  }),
-  length: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Reader-reported character count when available.",
-    })
-  ),
-  description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Page metadata description when available.",
-    })
-  ),
-  publishedDate: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Publication date text reported by the remote page.",
-    })
-  ),
-  siteName: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "OpenGraph or metadata site name when available.",
-    })
-  ),
-  image: S.OptionFromOptionalKey(URLStr).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Featured-image URL when provided by the page.",
-    })
-  ),
-};
-
 /**
  * Cleaned page content returned by a Jina-compatible reader.
  *
@@ -280,7 +236,47 @@ const JinaContentFields = {
  * @since 0.0.0
  */
 export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
-  JinaContentFields,
+  {
+    url: URLStr.annotateKey({
+      description: "Original URL fetched by the reader.",
+    }),
+    title: S.NonEmptyString.annotateKey({
+      description: "Page title reported or extracted by the reader.",
+    }),
+    content: S.String.annotateKey({
+      description: "Cleaned Markdown content returned by the reader.",
+    }),
+    length: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Reader-reported character count when available.",
+      })
+    ),
+    description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Page metadata description when available.",
+      })
+    ),
+    publishedDate: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Publication date text reported by the remote page.",
+      })
+    ),
+    siteName: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "OpenGraph or metadata site name when available.",
+      })
+    ),
+    image: S.OptionFromOptionalKey(URLStr).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Featured-image URL when provided by the page.",
+      })
+    ),
+  },
   $I.annote("JinaContent", {
     description: "Normalized cleaned Markdown response returned by a remote content reader.",
   })

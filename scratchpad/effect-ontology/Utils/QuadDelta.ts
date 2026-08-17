@@ -19,6 +19,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type { RdfError } from "../Domain/Error/Rdf.ts";
 import type { RdfStore } from "../Service/Rdf.ts";
 import { rdfStoreAllQuads } from "../Service/Rdf.ts";
 import { dual2 } from "./Dual.ts";
@@ -106,13 +107,13 @@ export class QuadDelta extends S.Class<QuadDelta>($I`QuadDelta`)(
  * @since 0.0.0
  */
 export const computeQuadDelta: {
-  (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta>;
-  (enriched: RdfStore): (original: RdfStore) => Effect.Effect<QuadDelta>;
+  (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta, RdfError>;
+  (enriched: RdfStore): (original: RdfStore) => Effect.Effect<QuadDelta, RdfError>;
 } = dual2(
-  (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta> =>
-    Effect.sync(() => {
-      const originalQuads = rdfStoreAllQuads(original);
-      const enrichedQuads = rdfStoreAllQuads(enriched);
+  (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta, RdfError> =>
+    Effect.gen(function* () {
+      const originalQuads = yield* rdfStoreAllQuads(original);
+      const enrichedQuads = yield* rdfStoreAllQuads(enriched);
 
       // Build set of serialized original quads for O(1) lookup
       const originalSet = MutableHashSet.empty<string>();

@@ -18,8 +18,9 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema/Int";
-import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import {
+  ShaclValidationError,
   ShaclValidationRequest,
   ShaclValidationResult,
   ShaclValidationService,
@@ -317,11 +318,27 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
         shapesStore: RdfStore
       ) {
         const start = yield* DateTime.now;
+        const dataset = yield* rdfStoreToDataset(dataStore).pipe(
+          Effect.mapError((cause) =>
+            ShaclValidationError.make({
+              message: `Failed to convert data graph: ${cause.message}`,
+              reason: "engineFailure",
+            })
+          )
+        );
+        const shapesDataset = yield* rdfStoreToDataset(shapesStore).pipe(
+          Effect.mapError((cause) =>
+            ShaclValidationError.make({
+              message: `Failed to convert shapes graph: ${cause.message}`,
+              reason: "engineFailure",
+            })
+          )
+        );
         const report = yield* validationService.validate(
           ShaclValidationRequest.make({
-            dataset: rdfStoreToDataset(dataStore),
+            dataset,
             shapes: [],
-            shapesDataset: O.some(rdfStoreToDataset(shapesStore)),
+            shapesDataset: O.some(shapesDataset),
           })
         );
         const end = yield* DateTime.now;
@@ -472,15 +489,13 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
                   if (onPropertyQuads.length === 0) continue;
                   const restrictedPropIri = onPropertyQuads[0].object;
                   const key = makeKey(classIri.value, restrictedPropIri.value);
-                  let propertyShape = MutableHashMap.get(propertyShapeMap, key);
-                  if (O.isNone(propertyShape)) {
-                    const created = N3.DataFactory.blankNode();
-                    MutableHashMap.set(propertyShapeMap, key, created);
-                    propertyShape = O.some(created);
-                    store.addQuad(shapeIri, SH.property, created);
-                    store.addQuad(created, SH.path, restrictedPropIri);
-                  }
-                  const propertyShapeNode = O.getOrThrow(propertyShape);
+                  const propertyShapeNode = O.getOrElse(MutableHashMap.get(propertyShapeMap, key), () => {
+                    const propertyShape = N3.DataFactory.blankNode();
+                    MutableHashMap.set(propertyShapeMap, key, propertyShape);
+                    store.addQuad(shapeIri, SH.property, propertyShape);
+                    store.addQuad(propertyShape, SH.path, restrictedPropIri);
+                    return propertyShape;
+                  });
                   const minCardQuads = ontologyN3.getQuads(restrictionNode, owlMinCardinality, null, null);
                   if (minCardQuads.length > 0) {
                     const minValue = minCardQuads[0].object.value;

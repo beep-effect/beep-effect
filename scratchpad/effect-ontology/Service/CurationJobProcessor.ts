@@ -16,6 +16,7 @@ import { $ScratchpadId } from "@beep/identity";
 import type { Fiber } from "effect";
 import { Clock, Context, Duration, Effect, Layer, Match, Schedule } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { EventBusError } from "../Domain/Error/EventBus.ts";
 import type { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
@@ -32,6 +33,15 @@ const $I = $ScratchpadId.create("effect-ontology/Service/CurationJobProcessor");
 /**
  * Combined error type for job processing
  *
+ * **Example** (Inspect a job-processing failure)
+ *
+ * ```ts
+ * import { EventBusError } from "@effect-ontology/Error/EventBus"
+ * import type { JobProcessorError } from "@effect-ontology/Service/CurationJobProcessor"
+ *
+ * const error: JobProcessorError = EventBusError.make({ method: "takeJob", message: "Queue unavailable." })
+ * console.log(error._tag) // "EventBusError"
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -42,24 +52,27 @@ export type JobProcessorError = DrizzleError | AnyEmbeddingError | EventBusError
  * Job processing statistics
  *
  *
- * **Example** (Use the JobProcessingStats contract)
+ * **Example** (Create job processing statistics)
  *
  * ```ts
- * import type { JobProcessingStats } from "@effect-ontology/Service/CurationJobProcessor"
+ * import { JobProcessingStats } from "@effect-ontology/Service/CurationJobProcessor"
  *
- * const acceptsJobProcessingStats = (_value: JobProcessingStats): void => undefined
- *
- * console.log(acceptsJobProcessingStats)
+ * console.log(JobProcessingStats.make({ jobsProcessed: 2, errors: 0, durationMs: 5 }).jobsProcessed) // 2
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface JobProcessingStats {
-  readonly jobsProcessed: number;
-  readonly errors: number;
-  readonly durationMs: number;
-}
+export class JobProcessingStats extends S.Class<JobProcessingStats>($I`JobProcessingStats`)(
+  {
+    jobsProcessed: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Processed jobs must be non-negative." })),
+    errors: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Job errors must be non-negative." })),
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0, { message: "Job duration must be non-negative." })),
+  },
+  $I.annote("JobProcessingStats", {
+    description: "Non-negative processed-job, error, and elapsed-millisecond counters.",
+  })
+) {}
 
 type JobMeta = { readonly id: string; readonly attempts: number };
 

@@ -497,9 +497,7 @@ const auditDeclaration = (
 ): void => {
   auditedDeclarations += 1;
   const isTypeOnlyDeclaration =
-    ts.isInterfaceDeclaration(statement) ||
-    ts.isTypeAliasDeclaration(statement) ||
-    ts.isModuleDeclaration(statement);
+    ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement) || ts.isModuleDeclaration(statement);
   addFinding(
     relativePath,
     symbol,

@@ -81,18 +81,6 @@ export const SubmitJobSource = SubmitJobSourceDefinition.pipe(
  */
 export type SubmitJobSource = typeof SubmitJobSource.Type;
 
-const SubmitJobRequestFields = {
-  source: SubmitJobSource.annotateKey({
-    description: "The single validated source from which extraction reads content.",
-  }),
-  config: S.OptionFromOptionalKey(RunConfig).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({
-      description: "Optional run-configuration override; absence delegates policy to the server.",
-    })
-  ),
-};
-
 /**
  * Request to submit one extraction job.
  *
@@ -119,7 +107,17 @@ const SubmitJobRequestFields = {
  * @since 0.0.0
  */
 export class SubmitJobRequest extends S.Class<SubmitJobRequest>($I`SubmitJobRequest`)(
-  SubmitJobRequestFields,
+  {
+    source: SubmitJobSource.annotateKey({
+      description: "The single validated source from which extraction reads content.",
+    }),
+    config: S.OptionFromOptionalKey(RunConfig).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Optional run-configuration override; absence delegates policy to the server.",
+      })
+    ),
+  },
   $I.annote("SubmitJobRequest", {
     description: "Extraction submission containing one discriminated source and an optional configuration override.",
   })
@@ -230,21 +228,6 @@ export const JobErrorType = LiteralKit(["expected", "defect", "interrupted", "ti
  */
 export type JobErrorType = typeof JobErrorType.Type;
 
-const JobProgressFields = {
-  chunksTotal: NonNegativeInt.annotateKey({
-    description: "Total chunks planned for the job.",
-  }),
-  chunksProcessed: NonNegativeInt.annotateKey({
-    description: "Chunks whose extraction work has completed.",
-  }),
-  entitiesExtracted: NonNegativeInt.annotateKey({
-    description: "Entities extracted so far.",
-  }),
-  relationsExtracted: NonNegativeInt.annotateKey({
-    description: "Relations extracted so far.",
-  }),
-};
-
 /**
  * Non-negative progress counters for an extraction job.
  *
@@ -268,23 +251,34 @@ const JobProgressFields = {
  * @since 0.0.0
  */
 export class JobProgress extends S.Class<JobProgress>($I`JobProgress`)(
-  JobProgressFields,
+  {
+    chunksTotal: NonNegativeInt.annotateKey({
+      description: "Total chunks planned for the job.",
+    }),
+    chunksProcessed: NonNegativeInt.annotateKey({
+      description: "Chunks whose extraction work has completed.",
+    }),
+    entitiesExtracted: NonNegativeInt.annotateKey({
+      description: "Entities extracted so far.",
+    }),
+    relationsExtracted: NonNegativeInt.annotateKey({
+      description: "Relations extracted so far.",
+    }),
+  },
   $I.annote("JobProgress", {
     description: "Non-negative chunk, entity, and relation progress counters for one extraction job.",
   })
 ) {}
 
-const JobFailureFields = {
-  message: S.NonEmptyString.annotateKey({
-    description: "Non-empty human-readable explanation of the terminal failure.",
-  }),
-  type: JobErrorType.annotateKey({
-    description: "Coarse origin category for the terminal failure.",
-  }),
-};
-
 class JobFailure extends S.Class<JobFailure>($I`JobFailure`)(
-  JobFailureFields,
+  {
+    message: S.NonEmptyString.annotateKey({
+      description: "Non-empty human-readable explanation of the terminal failure.",
+    }),
+    type: JobErrorType.annotateKey({
+      description: "Coarse origin category for the terminal failure.",
+    }),
+  },
   $I.annote("JobFailure", {
     description: "Nested diagnostic available only on a failed extraction job.",
   })

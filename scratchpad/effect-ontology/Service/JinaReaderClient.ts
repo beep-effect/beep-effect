@@ -134,13 +134,14 @@ const JinaApiResponse = S.Struct({
 /**
  * Simple sliding window rate limiter
  */
-const makeRateLimiter = (maxRequests: number, windowMs: number = 60_000) => {
+const makeRateLimiter = (maxRequests: number, window: Duration.Duration = Duration.minutes(1)) => {
+  const windowMillis = Duration.toMillis(window);
   let timestamps: Array<number> = [];
 
   const acquire = Effect.gen(function* () {
     while (true) {
       const now = yield* Clock.currentTimeMillis;
-      timestamps = A.filter(timestamps, (timestamp) => now - timestamp < windowMs);
+      timestamps = A.filter(timestamps, (timestamp) => now - timestamp < windowMillis);
 
       const oldestTimestamp = timestamps[0];
       if (timestamps.length < maxRequests || P.isUndefined(oldestTimestamp)) {
@@ -148,7 +149,7 @@ const makeRateLimiter = (maxRequests: number, windowMs: number = 60_000) => {
         return;
       }
 
-      yield* Effect.sleep(Duration.millis(windowMs - (now - oldestTimestamp) + 10));
+      yield* Effect.sleep(Duration.millis(windowMillis - (now - oldestTimestamp) + 10));
     }
   });
 

@@ -721,17 +721,17 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
      *
      * Marks them as "failed" so they can be retried via re-enrich.
      *
-     * @param olderThanMinutes - Links pending/processing longer than this will be marked failed
+     * @param olderThan - Links pending/processing longer than this will be marked failed
      * @param ontologyId - Optional ontology scope
      * @returns Count of cleaned up links
      */
     const cleanupStaleLinks = (
-      olderThanMinutes: number,
+      olderThan: Duration.Duration,
       ontologyId?: string
     ): Effect.Effect<{ cleaned: number }, LinkIngestionError> =>
       Effect.gen(function* () {
         const cutoffDate = DateTime.toDateUtc(
-          DateTime.makeUnsafe((yield* Clock.currentTimeMillis) - olderThanMinutes * 60 * 1000)
+          DateTime.makeUnsafe((yield* Clock.currentTimeMillis) - Duration.toMillis(olderThan))
         );
 
         // Build condition: status in (pending, processing) AND updatedAt < cutoff
@@ -750,7 +750,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
           .update(ingestedLinks)
           .set({
             status: "failed",
-            errorMessage: `Stale: not processed within ${olderThanMinutes} minutes`,
+            errorMessage: `Stale: not processed within ${Duration.format(olderThan)}`,
             updatedAt: now,
           })
           .where(condition)
@@ -768,7 +768,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         if (results.length > 0) {
           yield* Effect.logInfo("Cleaned up stale links", {
             count: results.length,
-            olderThanMinutes,
+            olderThan: Duration.format(olderThan),
             ontologyId,
           });
         }

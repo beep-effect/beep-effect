@@ -11,6 +11,8 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -20,13 +22,15 @@ import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import { CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
 import { ConfigService } from "./Config.ts";
-import type { EmbeddingCircuitBreakerService, EmbeddingProviderId } from "./EmbeddingCircuitBreaker.ts";
-import { EmbeddingCircuitBreaker } from "./EmbeddingCircuitBreaker.ts";
+import type { EmbeddingCircuitBreakerService } from "./EmbeddingCircuitBreaker.ts";
+import { EmbeddingCircuitBreaker, EmbeddingProviderId } from "./EmbeddingCircuitBreaker.ts";
 import type { Embedding, EmbeddingProviderMethods, EmbeddingRequest } from "./EmbeddingProvider.ts";
 import { cosineSimilarity, EmbeddingProvider } from "./EmbeddingProvider.ts";
 import { EmbeddingRateLimiter, EmbeddingRateLimiterVoyage } from "./EmbeddingRateLimiter.ts";
 import { NomicNlpService } from "./NomicNlp.ts";
 import { makeVoyageProvider, VoyageModel } from "./VoyageEmbeddingProvider.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingFallback");
 
 // =============================================================================
 // Types
@@ -36,48 +40,54 @@ import { makeVoyageProvider, VoyageModel } from "./VoyageEmbeddingProvider.ts";
  * Fallback chain configuration
  *
  *
- * **Example** (Use the FallbackChainConfig contract)
+ * **Example** (Create a fallback chain)
  *
  * ```ts
- * import type { FallbackChainConfig } from "@effect-ontology/Service/EmbeddingFallback"
+ * import { FallbackChainConfig } from "@effect-ontology/Service/EmbeddingFallback"
  *
- * const acceptsFallbackChainConfig = (_value: FallbackChainConfig): void => undefined
- *
- * console.log(acceptsFallbackChainConfig)
+ * console.log(FallbackChainConfig.make({ providers: ["voyage", "nomic"], logFallbacks: true }).providers.length) // 2
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface FallbackChainConfig {
-  /** Order of providers to try */
-  readonly providers: ReadonlyArray<EmbeddingProviderId>;
-  /** Whether to log provider switches */
-  readonly logFallbacks: boolean;
-}
+export class FallbackChainConfig extends S.Class<FallbackChainConfig>($I`FallbackChainConfig`)(
+  {
+    providers: S.Array(EmbeddingProviderId),
+    logFallbacks: S.Boolean,
+  },
+  $I.annote("FallbackChainConfig", {
+    description: "Ordered embedding providers and fallback-switch logging policy.",
+  })
+) {}
 
 /**
  * Active provider tracking for observability
  *
  *
- * **Example** (Use the ActiveProviderInfo contract)
+ * **Example** (Create active-provider state)
  *
  * ```ts
- * import type { ActiveProviderInfo } from "@effect-ontology/Service/EmbeddingFallback"
+ * import * as O from "effect/Option"
+ * import { ActiveProviderInfo } from "@effect-ontology/Service/EmbeddingFallback"
  *
- * const acceptsActiveProviderInfo = (_value: ActiveProviderInfo): void => undefined
- *
- * console.log(acceptsActiveProviderInfo)
+ * const info = ActiveProviderInfo.make({ currentProvider: "voyage", fallbackCount: 0 })
+ * console.log(O.isNone(info.lastFallbackReason)) // true
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface ActiveProviderInfo {
-  readonly currentProvider: EmbeddingProviderId;
-  readonly fallbackCount: number;
-  readonly lastFallbackReason: string | null;
-}
+export class ActiveProviderInfo extends S.Class<ActiveProviderInfo>($I`ActiveProviderInfo`)(
+  {
+    currentProvider: EmbeddingProviderId,
+    fallbackCount: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Fallback count must be non-negative." })),
+    lastFallbackReason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("ActiveProviderInfo", {
+    description: "Current embedding provider, fallback count, and optional last fallback reason.",
+  })
+) {}
 
 // =============================================================================
 // Default Configuration
@@ -97,10 +107,10 @@ export interface ActiveProviderInfo {
  * @category constants
  * @since 0.0.0
  */
-export const DEFAULT_FALLBACK_CHAIN: FallbackChainConfig = {
+export const DEFAULT_FALLBACK_CHAIN = FallbackChainConfig.make({
   providers: ["voyage", "nomic"],
   logFallbacks: true,
-};
+});
 
 // =============================================================================
 // Service
@@ -165,11 +175,12 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
     const nomicNlp = yield* NomicNlpService;
 
     // Track which provider is currently active
-    const activeProviderRef = yield* Ref.make<ActiveProviderInfo>({
-      currentProvider: "voyage",
-      fallbackCount: 0,
-      lastFallbackReason: null,
-    });
+    const activeProviderRef = yield* Ref.make(
+      ActiveProviderInfo.make({
+        currentProvider: "voyage",
+        fallbackCount: 0,
+      })
+    );
 
     // Create Voyage provider if API key is configured
     const voyageApiKey = O.getOrNull(config.embedding.voyageApiKey);
@@ -253,11 +264,12 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
           // Log fallback and update tracking
           return Ref.update(
             activeProviderRef,
-            (info): ActiveProviderInfo => ({
-              currentProvider: "nomic",
-              fallbackCount: info.fallbackCount + 1,
-              lastFallbackReason: reason,
-            })
+            (info): ActiveProviderInfo =>
+              ActiveProviderInfo.make({
+                currentProvider: "nomic",
+                fallbackCount: info.fallbackCount + 1,
+                lastFallbackReason: O.some(reason),
+              })
           ).pipe(
             Effect.tap(() =>
               Effect.logWarning(

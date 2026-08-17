@@ -29,12 +29,13 @@ import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_WAS_GENERATED_BY } from "@beep/rdf/
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import type { Scope } from "effect";
-import { Chunk, Context, Duration, Effect, Layer, Match, MutableHashSet, Result } from "effect";
+import { Chunk, Context, Duration, Effect, Layer, Match, MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as N3 from "n3";
 import { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Error/Rdf.ts";
@@ -234,11 +235,11 @@ export const rdfStoreSize = (store: RdfStore): number => backend(store).size;
  * @since 0.0.0
  */
 export const rdfStoreQuads: {
-  (pattern: QuadPattern): (store: RdfStore) => ReadonlyArray<Quad>;
-  (store: RdfStore, pattern: QuadPattern): ReadonlyArray<Quad>;
-} = dual(2, (store: RdfStore, pattern: QuadPattern): ReadonlyArray<Quad> => {
+  (pattern: QuadPattern): (store: RdfStore) => Effect.Effect<ReadonlyArray<Quad>, RdfError>;
+  (store: RdfStore, pattern: QuadPattern): Effect.Effect<ReadonlyArray<Quad>, RdfError>;
+} = dual(2, (store: RdfStore, pattern: QuadPattern): Effect.Effect<ReadonlyArray<Quad>, RdfError> => {
   const n3Store = backend(store);
-  return A.map(
+  return Effect.forEach(
     n3Store.getQuads(
       domainTermToN3Term(pattern.subject ?? null),
       domainTermToN3Term(pattern.predicate ?? null),
@@ -263,7 +264,8 @@ export const rdfStoreQuads: {
  * @category services
  * @since 0.0.0
  */
-export const rdfStoreAllQuads = (store: RdfStore): ReadonlyArray<Quad> => rdfStoreQuads(store, {});
+export const rdfStoreAllQuads = (store: RdfStore): Effect.Effect<ReadonlyArray<Quad>, RdfError> =>
+  rdfStoreQuads(store, {});
 
 /**
  *  Add one canonical quad to a mutable workflow store.
@@ -390,49 +392,43 @@ export interface QuadPattern {
 /**
  * Internal: Convert N3 Term to the canonical RDF object-term union
  */
-const n3TermToDomainTerm = (term: N3.Term): ObjectTerm => {
-  if (term.termType === "NamedNode") {
-    return makeNamedNode(term.value);
-  } else if (term.termType === "BlankNode") {
-    return makeBlankNode(term.value);
-  } else if (term.termType === "Literal") {
-    return makeLiteral(term.value, term.datatype.value, P.isTruthy(term.language) ? { language: term.language } : {});
-  }
-  return Result.fail(
-    RdfError.make({
-      message: `Unsupported N3 object term type: ${term.termType}`,
-      cause: O.none(),
-    })
-  ).pipe(Result.getOrThrowWith((error) => error));
-};
+const unsupportedN3Term = (position: "subject" | "object", termType: string): RdfError =>
+  RdfError.make({
+    message: `Unsupported N3 ${position} term type: ${termType}`,
+    cause: O.none(),
+  });
+
+const n3TermToDomainTerm = Match.type<N3.Quad_Object>().pipe(
+  Match.when({ termType: "NamedNode" }, (term) => Effect.succeed(makeNamedNode(term.value))),
+  Match.when({ termType: "BlankNode" }, (term) => Effect.succeed(makeBlankNode(term.value))),
+  Match.when({ termType: "Literal" }, (term) =>
+    Effect.succeed(
+      makeLiteral(term.value, term.datatype.value, P.isTruthy(term.language) ? { language: term.language } : {})
+    )
+  ),
+  Match.when({ termType: "Variable" }, (term) => Effect.fail(unsupportedN3Term("object", term.termType))),
+  Match.exhaustive
+);
 
 /**
  * Internal: Convert N3 Quad to domain Quad
  */
 const n3SubjectToDomainSubject = Match.type<N3.Quad_Subject>().pipe(
-  Match.when({ termType: "NamedNode" }, (term) => makeNamedNode(term.value)),
-  Match.when({ termType: "BlankNode" }, (term) => makeBlankNode(term.value)),
-  Match.orElse((term) =>
-    Result.fail(
-      RdfError.make({
-        message: `Unsupported N3 subject term type: ${term.termType}`,
-        cause: O.none(),
-      })
-    ).pipe(Result.getOrThrowWith((error) => error))
-  )
+  Match.when({ termType: "NamedNode" }, (term) => Effect.succeed(makeNamedNode(term.value))),
+  Match.when({ termType: "BlankNode" }, (term) => Effect.succeed(makeBlankNode(term.value))),
+  Match.when({ termType: "Variable" }, (term) => Effect.fail(unsupportedN3Term("subject", term.termType))),
+  Match.exhaustive
 );
 
-const n3QuadToDomainQuad = (n3Quad: N3.Quad): Quad => {
-  const subject = n3SubjectToDomainSubject(n3Quad.subject);
-
+const n3QuadToDomainQuad = Effect.fn("Rdf.n3QuadToDomainQuad")(function* (n3Quad: N3.Quad) {
+  const subject = yield* n3SubjectToDomainSubject(n3Quad.subject);
   const predicate = makeNamedNode(n3Quad.predicate.value);
-
-  const object = n3TermToDomainTerm(n3Quad.object);
+  const object = yield* n3TermToDomainTerm(n3Quad.object);
 
   return n3Quad.graph.termType === "NamedNode"
     ? makeQuad(subject, predicate, { object, graph: makeNamedNode(n3Quad.graph.value) })
     : makeQuad(subject, predicate, object);
-};
+});
 
 const canonicalSubjectToN3 = (term: CanonicalRdf.Subject): N3.Quad_Subject =>
   CanonicalRdf.Subject.match(term, {
@@ -477,8 +473,12 @@ const canonicalQuadToN3 = (quad: CanonicalRdf.Quad): N3.Quad =>
  * @category services
  * @since 0.0.0
  */
-export const rdfStoreToDataset = (store: RdfStore): CanonicalRdf.Dataset =>
-  CanonicalRdf.makeDataset(A.map(backend(store).getQuads(null, null, null, null), n3QuadToDomainQuad));
+export const rdfStoreToDataset = Effect.fn("Rdf.rdfStoreToDataset")(function* (
+  store: RdfStore
+): Effect.fn.Return<CanonicalRdf.Dataset, RdfError> {
+  const quads = yield* Effect.forEach(backend(store).getQuads(null, null, null, null), n3QuadToDomainQuad);
+  return CanonicalRdf.makeDataset(quads);
+});
 
 /**
  * Internal: Convert domain term to N3 Term for querying
@@ -605,7 +605,7 @@ export interface RdfBuilderShape {
    */
   readonly parseTriG: (trig: string) => Effect.Effect<RdfStore, ParsingFailed, never>;
   readonly queryStore: (store: RdfStore, pattern: QuadPattern) => Effect.Effect<Chunk.Chunk<Quad>, RdfError, never>;
-  readonly createIri: (iri: string) => IRI;
+  readonly createIri: (iri: string) => Effect.Effect<IRI, RdfError>;
   readonly addEntities: (
     store: RdfStore,
     entities: Iterable<Entity>,
@@ -911,15 +911,17 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             // Query N3 store
             const n3Quads = n3Store.getQuads(n3Subject, n3Predicate, n3Object, n3Graph);
 
-            // Convert N3 quads to domain quads
-            return Chunk.fromIterable(n3Quads.map(n3QuadToDomainQuad));
+            return n3Quads;
           },
           catch: (error) =>
             RdfError.make({
               message: `Failed to query store: ${error}`,
               cause: O.some(error),
             }),
-        }),
+        }).pipe(
+          Effect.flatMap((quads) => Effect.forEach(quads, n3QuadToDomainQuad)),
+          Effect.map(Chunk.fromIterable)
+        ),
 
       /**
        * Create IRI from string
@@ -929,7 +931,15 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @param iri - IRI string
        * @returns IRI domain type
        */
-      createIri: IRI.fromUnknown,
+      createIri: (iri: string) =>
+        S.decodeEffect(IRI)(iri).pipe(
+          Effect.mapError((cause) =>
+            RdfError.make({
+              message: "Invalid IRI.",
+              cause: O.some(cause),
+            })
+          )
+        ),
 
       /**
        * Add entities to store
@@ -1370,15 +1380,14 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @returns Turtle string
        */
       toTurtle: (store: RdfStore) =>
-        Effect.try({
-          try: () => rdfStoreToDataset(store),
-          catch: (error) =>
+        rdfStoreToDataset(store).pipe(
+          Effect.mapError((error) =>
             SerializationFailed.make({
-              message: `Failed to convert RDF store to canonical Dataset: ${error}`,
+              message: `Failed to convert RDF store to canonical Dataset: ${error.message}`,
               cause: O.some(error),
               format: O.some("Turtle"),
-            }),
-        }).pipe(
+            })
+          ),
           Effect.flatMap((dataset) =>
             turtleCodec
               .serialize(
@@ -1496,14 +1505,17 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             const n3Store = backend(store);
             const graphNode = N3.DataFactory.namedNode(graphIri);
             const n3Quads = n3Store.getQuads(null, null, null, graphNode);
-            return Chunk.fromIterable(n3Quads.map(n3QuadToDomainQuad));
+            return n3Quads;
           },
           catch: (error) =>
             RdfError.make({
               message: `Failed to get quads from graph ${graphIri}: ${error}`,
               cause: O.some(error),
             }),
-        }),
+        }).pipe(
+          Effect.flatMap((quads) => Effect.forEach(quads, n3QuadToDomainQuad)),
+          Effect.map(Chunk.fromIterable)
+        ),
 
       /**
        * Copy quads between graphs

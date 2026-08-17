@@ -9,29 +9,26 @@
  * @since 0.0.0
  */
 
-import {IRI} from "@beep/rdf/Iri";
-import {PosInt} from "@beep/schema/Int";
+import { IRI } from "@beep/rdf/Iri";
+import { PosInt } from "@beep/schema/Int";
+import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as Result from "effect/Result";
-import * as Console from "effect/Console";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
-import {RdfBuilder} from "../../Service/Rdf.ts";
-import {WikidataClient} from "../../Service/WikidataClient.ts";
-import {withErrorHandler} from "../ErrorHandler.ts";
+import { RdfBuilder } from "../../Service/Rdf.ts";
+import { WikidataClient } from "../../Service/WikidataClient.ts";
+import { withErrorHandler } from "../ErrorHandler.ts";
 
 // =============================================================================
 // Command Options
 // =============================================================================
 
-const entityIriOption = Flag.string("entity-id").pipe(
-  Flag.withAlias("e"),
-  Flag.withDescription("Entity IRI to link")
-);
+const entityIriOption = Flag.string("entity-id").pipe(Flag.withAlias("e"), Flag.withDescription("Entity IRI to link"));
 
 const wikidataIdOption = Flag.string("wikidata-id").pipe(
   Flag.withAlias("w"),
@@ -86,7 +83,7 @@ const linkHandler = Effect.fn("linkHandler")(function* (
   if (O.isSome(search)) {
     yield* Console.log(`Searching Wikidata for: "${search.value}"`);
     yield* Console.log("");
-    const candidates = yield* wikidata.searchEntities(search.value, {limit: PosInt.make(limit)});
+    const candidates = yield* wikidata.searchEntities(search.value, { limit: PosInt.make(limit) });
     if (A.isReadonlyArrayEmpty(candidates)) {
       yield* Console.log("No candidates found.");
       return;
@@ -197,6 +194,6 @@ export const linkCommand = Command.make(
     search: searchOption,
     wikidataId: wikidataIdOption,
   },
-  ({dryRun, entityIri, graph, limit, output, search, wikidataId}) =>
+  ({ dryRun, entityIri, graph, limit, output, search, wikidataId }) =>
     withErrorHandler(linkHandler(entityIri, wikidataId, graph, output, search, limit, dryRun))
 ).pipe(Command.withDescription("Create owl:sameAs links between local entities and Wikidata"));

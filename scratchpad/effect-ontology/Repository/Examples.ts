@@ -15,7 +15,6 @@ import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Unknown } from "@beep/schema/Unknown";
 import { Context, Effect, Layer, SchemaTransformation } from "effect";
 import * as P from "effect/Predicate";
 
@@ -393,64 +392,31 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
      */
     const create = Effect.fn("ExamplesRepository.create")(function* (
       input: CreateExampleInputInput
-    ): Effect.fn.Return<LlmExampleRow, DrizzleError | S.SchemaError> {
+    ): Effect.fn.Return<LlmExampleRow, DrizzleError> {
       const resolvedInput = CreateExampleInput.make(input);
-      const vectorStr = formatVector(resolvedInput.embedding);
-      const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
-      const expectedOutputJson = yield* encodeJson(resolvedInput.expectedOutput);
-      const promptMessagesJson = yield* O.match(O.fromUndefinedOr(resolvedInput.promptMessages), {
-        onNone: () => Effect.succeed(null),
-        onSome: encodeJson,
-      });
-
-      const result = yield* normalizeQueryError(sql`
-          INSERT INTO llm_examples (
-            ontology_id, example_type, source,
-            input_text, target_class, target_predicate,
-            evidence_text, evidence_start_offset, evidence_end_offset,
-            expected_output, prompt_messages, explanation,
-            embedding, is_negative, negative_pattern, created_by
-          )
-          VALUES (
-            ${resolvedInput.ontologyId},
-            ${resolvedInput.exampleType},
-            ${resolvedInput.source},
-            ${resolvedInput.inputText},
-            ${resolvedInput.targetClass ?? null},
-            ${resolvedInput.targetPredicate ?? null},
-            ${resolvedInput.evidenceText ?? null},
-            ${resolvedInput.evidenceStartOffset ?? null},
-            ${resolvedInput.evidenceEndOffset ?? null},
-            ${expectedOutputJson}::jsonb,
-            ${promptMessagesJson}::jsonb,
-            ${resolvedInput.explanation ?? null},
-            ${vectorStr}::vector,
-            ${resolvedInput.isNegative},
-            ${resolvedInput.negativePattern ?? null},
-            ${resolvedInput.createdBy ?? null}
-          )
-          RETURNING id,
-                    ontology_id as "ontologyId",
-                    example_type as "exampleType",
-                    source,
-                    input_text as "inputText",
-                    target_class as "targetClass",
-                    target_predicate as "targetPredicate",
-                    evidence_text as "evidenceText",
-                    evidence_start_offset as "evidenceStartOffset",
-                    evidence_end_offset as "evidenceEndOffset",
-                    expected_output as "expectedOutput",
-                    prompt_messages as "promptMessages",
-                    explanation,
-                    embedding::text as embedding,
-                    is_negative as "isNegative",
-                    negative_pattern as "negativePattern",
-                    usage_count as "usageCount",
-                    success_rate as "successRate",
-                    created_at as "createdAt",
-                    created_by as "createdBy",
-                    is_active as "isActive"
-        `);
+      const result = yield* normalizeQueryError(
+        drizzle
+          .insert(llmExamples)
+          .values({
+            ontologyId: resolvedInput.ontologyId,
+            exampleType: resolvedInput.exampleType,
+            source: resolvedInput.source,
+            inputText: resolvedInput.inputText,
+            targetClass: O.getOrNull(O.fromUndefinedOr(resolvedInput.targetClass)),
+            targetPredicate: O.getOrNull(O.fromUndefinedOr(resolvedInput.targetPredicate)),
+            evidenceText: O.getOrNull(O.fromUndefinedOr(resolvedInput.evidenceText)),
+            evidenceStartOffset: O.getOrNull(O.fromUndefinedOr(resolvedInput.evidenceStartOffset)),
+            evidenceEndOffset: O.getOrNull(O.fromUndefinedOr(resolvedInput.evidenceEndOffset)),
+            expectedOutput: resolvedInput.expectedOutput,
+            promptMessages: O.getOrNull(O.fromUndefinedOr(resolvedInput.promptMessages)),
+            explanation: O.getOrNull(O.fromUndefinedOr(resolvedInput.explanation)),
+            embedding: formatVector(resolvedInput.embedding),
+            isNegative: resolvedInput.isNegative,
+            negativePattern: O.getOrNull(O.fromUndefinedOr(resolvedInput.negativePattern)),
+            createdBy: O.getOrNull(O.fromUndefinedOr(resolvedInput.createdBy)),
+          })
+          .returning()
+      );
       const [row] = yield* decodeOneLlmExampleRow(result);
       return row;
     });

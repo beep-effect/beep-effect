@@ -470,16 +470,14 @@ export const ClaimRank = ClaimRankDefinition.pipe(
  */
 export type ClaimRank = typeof ClaimRank.Type;
 
-const TemporalIntervalFields = S.Struct({
+const TemporalIntervalDefinition = S.Struct({
   from: S.DateTimeUtcFromString.annotateKey({
     description: "Inclusive UTC validity start.",
   }),
   to: S.DateTimeUtcFromString.annotateKey({
     description: "Exclusive UTC validity end.",
   }),
-});
-
-const TemporalIntervalDefinition = TemporalIntervalFields.check(
+}).check(
   S.makeFilter(
     (interval) =>
       DateTime.toEpochMillis(interval.from) <= DateTime.toEpochMillis(interval.to)
@@ -510,7 +508,7 @@ const TemporalIntervalFromSelf = S.declare((input: unknown): input is typeof Tem
         })
       )
       .map(([from, duration]) =>
-        TemporalIntervalFields.make({
+        TemporalIntervalDefinition.make({
           from: DateTime.makeUnsafe(from),
           to: DateTime.makeUnsafe(from + duration),
         })

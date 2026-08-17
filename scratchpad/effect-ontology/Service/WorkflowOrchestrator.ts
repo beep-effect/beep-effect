@@ -359,8 +359,8 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
 
     const manifestKey = stripGsPrefix(manifestUri);
     const manifestRaw = yield* storage
-      .get(manifestKey)
-      .pipe(Effect.flatMap((opt) => expectValue(O.fromNullishOr(opt), manifestKey)));
+      .getOption(manifestKey)
+      .pipe(Effect.flatMap((content) => expectValue(content, manifestKey)));
     const manifest = yield* parseManifest(manifestRaw);
 
     // Validate ontology consistency between manifest and config
@@ -504,30 +504,29 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
 
       // Load enriched manifest to get DocumentMetadata with provenance fields
       const enrichedManifestKey = stripGsPrefix(preprocessingResult.enrichedManifestUri);
-      const enrichedManifestRaw = yield* storage.get(enrichedManifestKey).pipe(
-        Effect.flatMap((opt) => expectValue(O.fromNullishOr(opt), enrichedManifestKey)),
+      const enrichedManifest = yield* storage.getOption(enrichedManifestKey).pipe(
+        Effect.flatMap(
+          O.match({
+            onNone: () => Effect.succeed(O.none()),
+            onSome: (content) => EnrichedManifest.decodeFromString(content).pipe(Effect.map(O.some)),
+          })
+        ),
         Effect.catch(
           Effect.fnUntraced(function* (error) {
-            yield* Effect.logWarning("Failed to load enriched manifest, falling back to basic manifest", {
+            yield* Effect.logWarning("Failed to load or decode enriched manifest, falling back to basic manifest", {
               batchId,
               enrichedManifestUri: preprocessingResult.enrichedManifestUri,
               error: Inspectable.toStringUnknown(error),
             });
-            // Return null to signal fallback
-            return null;
+            return O.none();
           })
         )
       );
 
-      // Parse enriched manifest or use basic manifest as fallback
-      const enrichedManifest = P.isNotNull(enrichedManifestRaw)
-        ? yield* EnrichedManifest.decodeFromString(enrichedManifestRaw)
-        : null;
-
       yield* Effect.logInfo("Starting extraction stage", {
         batchId,
         documentCount: manifest.documents.length,
-        usingEnrichedManifest: enrichedManifest !== null,
+        usingEnrichedManifest: O.isSome(enrichedManifest),
       });
 
       currentStage = "extracting";
@@ -564,7 +563,9 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
           );
 
           // Look up DocumentMetadata from enriched manifest if available
-          const docMetadata = enrichedManifest?.documents.find((d) => d.documentId === doc.documentId);
+          const docMetadata = O.flatMap(enrichedManifest, (metadata) =>
+            A.findFirst(metadata.documents, (candidate) => candidate.documentId === doc.documentId)
+          );
 
           // Execute extraction with error handling per document
           const result = yield* makeStreamingExtractionActivity({
@@ -575,10 +576,10 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             ontologyId: manifest.ontologyId,
             targetNamespace: manifest.targetNamespace,
             ontologyEmbeddingsUri: payload.ontologyEmbeddingsUri,
-            eventTime: O.flatMap(O.fromNullishOr(docMetadata), (metadata) => metadata.eventTime),
-            publishedAt: O.flatMap(O.fromNullishOr(docMetadata), (metadata) => metadata.publishedAt),
-            title: O.flatMap(O.fromNullishOr(docMetadata), (metadata) => metadata.title),
-            language: O.map(O.fromNullishOr(docMetadata), (metadata) => metadata.language),
+            eventTime: O.flatMap(docMetadata, (metadata) => metadata.eventTime),
+            publishedAt: O.flatMap(docMetadata, (metadata) => metadata.publishedAt),
+            title: O.flatMap(docMetadata, (metadata) => metadata.title),
+            language: O.map(docMetadata, (metadata) => metadata.language),
           }).execute.pipe(
             Effect.map(
               (
@@ -948,25 +949,25 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
     return yield* runWorkflow.pipe(
       Effect.onError(
         Effect.fnUntraced(function* (cause) {
-        const failedAt = yield* DateTime.now;
-        const failedState = BatchState.cases.Failed.make({
-          batchId,
-          ontologyId: manifest.ontologyId,
-          manifestUri,
-          ontologyVersion,
-          createdAt: workflowStart,
-          updatedAt: failedAt,
-          failedAt,
-          failedInStage: currentStage,
-          error: {
-            code: "WORKFLOW_FAILED",
-            message: Cause.pretty(cause),
-            cause: O.some(Cause.squash(cause)),
-          },
-          lastSuccessfulStage: O.fromNullishOr(lastSuccessfulStage),
-        });
+          const failedAt = yield* DateTime.now;
+          const failedState = BatchState.cases.Failed.make({
+            batchId,
+            ontologyId: manifest.ontologyId,
+            manifestUri,
+            ontologyVersion,
+            createdAt: workflowStart,
+            updatedAt: failedAt,
+            failedAt,
+            failedInStage: currentStage,
+            error: {
+              code: "WORKFLOW_FAILED",
+              message: Cause.pretty(cause),
+              cause: O.some(Cause.squash(cause)),
+            },
+            lastSuccessfulStage: O.fromNullishOr(lastSuccessfulStage),
+          });
 
-        yield* emitState(failedState);
+          yield* emitState(failedState);
         })
       )
     );

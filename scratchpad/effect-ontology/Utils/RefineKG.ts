@@ -64,8 +64,9 @@ export const refineKnowledgeGraph = dual2((kg: KnowledgeGraph, erg: EntityResolu
   // 1. Merge Entities
   for (const entity of kg.entities) {
     const canonicalId = canonicalMap[entity.id] ?? entity.id;
+    const existing = MutableHashMap.get(entityMap, canonicalId);
 
-    if (!MutableHashMap.has(entityMap, canonicalId)) {
+    if (O.isNone(existing)) {
       // First time seeing this canonical entity
       // If the ID changed, update it.
       const newEntity = canonicalId === entity.id ? entity : Entity.make({ ...entity, id: EntityId.make(canonicalId) });
@@ -73,12 +74,10 @@ export const refineKnowledgeGraph = dual2((kg: KnowledgeGraph, erg: EntityResolu
       MutableHashMap.set(entityMap, canonicalId, newEntity);
     } else {
       // Merge into existing canonical entity
-      const existing = O.getOrThrow(MutableHashMap.get(entityMap, canonicalId));
-
-      const uniqueTypes = A.fromIterable(MutableHashSet.fromIterable([...existing.types, ...entity.types]));
-      const mergedTypes = S.NonEmptyArray(IRI).make([existing.types[0], ...A.drop(uniqueTypes, 1)]);
+      const uniqueTypes = A.fromIterable(MutableHashSet.fromIterable([...existing.value.types, ...entity.types]));
+      const mergedTypes = S.NonEmptyArray(IRI).make([existing.value.types[0], ...A.drop(uniqueTypes, 1)]);
       // Merge attributes (last write wins, or maybe preserve all? For now: simple merge)
-      const mergedAttributes = { ...existing.attributes, ...entity.attributes };
+      const mergedAttributes = { ...existing.value.attributes, ...entity.attributes };
 
       // Preserve tracking info from 'best' entity?
       // Or just keep existing. For provenance, we might want to track all chunk indices?
@@ -88,7 +87,7 @@ export const refineKnowledgeGraph = dual2((kg: KnowledgeGraph, erg: EntityResolu
         entityMap,
         canonicalId,
         Entity.make({
-          ...existing,
+          ...existing.value,
           types: mergedTypes,
           attributes: mergedAttributes,
         })

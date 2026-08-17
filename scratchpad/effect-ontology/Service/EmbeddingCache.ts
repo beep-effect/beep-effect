@@ -12,7 +12,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { PosInt, SchemaUtils } from "@beep/schema";
 import { EpochMillis } from "@beep/schema/Timestamp";
-import { Clock, Context, Duration, Effect, HashMap, Layer, Ref } from "effect";
+import { Clock, Context, Duration, Effect, HashMap, Inspectable, Layer, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -174,17 +174,17 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
           if (HashMap.size(map) < config.maxEntries) return map;
 
           // Find the LRU entry
-          let lruKey: string | null = null;
+          let lruKey = O.none<string>();
           let lruTime = Infinity;
 
           for (const [key, entry] of map) {
             if (entry.lastAccessedAt < lruTime) {
               lruTime = entry.lastAccessedAt;
-              lruKey = key;
+              lruKey = O.some(key);
             }
           }
 
-          return P.isNotNull(lruKey) ? HashMap.remove(map, lruKey) : map;
+          return O.match(lruKey, { onNone: () => map, onSome: (key) => HashMap.remove(map, key) });
         };
 
         return {
@@ -391,17 +391,17 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
   const evictLRU = (map: HashMap.HashMap<string, CacheEntry>): HashMap.HashMap<string, CacheEntry> => {
     if (HashMap.size(map) < config.maxEntries) return map;
 
-    let lruKey: string | null = null;
+    let lruKey = O.none<string>();
     let lruTime = Infinity;
 
     for (const [key, entry] of map) {
       if (entry.lastAccessedAt < lruTime) {
         lruTime = entry.lastAccessedAt;
-        lruKey = key;
+        lruKey = O.some(key);
       }
     }
 
-    return P.isNotNull(lruKey) ? HashMap.remove(map, lruKey) : map;
+    return O.match(lruKey, { onNone: () => map, onSome: (key) => HashMap.remove(map, key) });
   };
 
   // Load embedding from GCS
@@ -450,7 +450,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
       Effect.catch((error) =>
         Effect.logWarning("Failed to persist embedding to storage", {
           hash,
-          error: String(error),
+          error: Inspectable.toStringUnknown(error),
         })
       )
     );
@@ -639,9 +639,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
     const config = yield* ConfigService;
     const storage = yield* StorageService;
 
-    const cachePath = O.getOrUndefined(config.embedding.cachePath);
-
-    if (P.isUndefined(cachePath)) {
+    if (O.isNone(config.embedding.cachePath)) {
       // No persistence path configured - return in-memory only
       yield* Effect.logDebug("Embedding cache: in-memory only (no EMBEDDING_CACHE_PATH set)");
       const cache = yield* Ref.make(HashMap.empty<string, CacheEntry>());
@@ -655,15 +653,15 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
 
       const evictLRU = (map: HashMap.HashMap<string, CacheEntry>): HashMap.HashMap<string, CacheEntry> => {
         if (HashMap.size(map) < cacheConfig.maxEntries) return map;
-        let lruKey: string | null = null;
+        let lruKey = O.none<string>();
         let lruTime = Infinity;
         for (const [key, entry] of map) {
           if (entry.lastAccessedAt < lruTime) {
             lruTime = entry.lastAccessedAt;
-            lruKey = key;
+            lruKey = O.some(key);
           }
         }
-        return P.isNotNull(lruKey) ? HashMap.remove(map, lruKey) : map;
+        return O.match(lruKey, { onNone: () => map, onSome: (key) => HashMap.remove(map, key) });
       };
 
       return {
@@ -724,6 +722,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
     }
 
     // Persistence enabled - create persistent cache
+    const cachePath = config.embedding.cachePath.value;
     yield* Effect.logInfo("Embedding cache: GCS-backed persistence enabled", { cachePath });
     const cacheConfig = EmbeddingCacheConfig.make({
       ttl: config.embedding.cacheTtl,

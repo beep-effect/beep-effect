@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
+import { Duration, Effect } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
@@ -100,7 +100,7 @@ export const ImageRouter = HttpRouter.addAll([
 
       // Try to get signed URL for direct GCS access (1 hour expiry)
       if (blobStore.supportsSignedUrls) {
-        const signedUrlOpt = yield* blobStore.getSignedUrl(hash, 3600);
+        const signedUrlOpt = yield* blobStore.getSignedUrl(hash, Duration.hours(1));
         if (O.isSome(signedUrlOpt)) {
           // Redirect to signed URL - client downloads directly from GCS
           return HttpServerResponse.empty({

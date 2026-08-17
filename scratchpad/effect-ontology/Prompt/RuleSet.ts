@@ -8,7 +8,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
-import { HashMap, Match, pipe, Result, Tuple } from "effect";
+import { HashMap, Match, pipe, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { flow } from "effect/Function";
@@ -345,8 +345,11 @@ export const RuleSet = ExtractionStage.mapMembers(
  */
 export type RuleSet = typeof RuleSet.Type;
 
-const makeExtractionRule = (input: unknown): ExtractionRule =>
-  pipe(ExtractionRule.decodeUnknownResult(input), Result.getOrThrow);
+const makeExtractionRule = (input: typeof ExtractionRule.Encoded): ExtractionRule =>
+  ExtractionRule.make({
+    ...input,
+    counterExample: O.fromUndefinedOr(input.counterExample),
+  });
 
 const previewValues = <Value>(values: ReadonlyArray<Value>, render: (value: Value) => string): string =>
   pipe(values, A.take(5), A.map(render), A.join(", "));

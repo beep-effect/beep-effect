@@ -13,20 +13,7 @@
 
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import {
-  Cause,
-  Chunk,
-  Duration,
-  Effect,
-  Exit,
-  HashSet,
-  Inspectable,
-  Layer,
-  Number as N,
-  pipe,
-  Result,
-  Stream,
-} from "effect";
+import { Cause, Chunk, Duration, Effect, Exit, HashSet, Inspectable, Layer, Number as N, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -115,7 +102,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
      * @param concurrency - Max parallel extraction tasks (default: from config)
      * @returns Effect yielding merged KnowledgeGraph
      */
-    extract: Effect.fn(
+    extract: Effect.fn("ExtractionWorkflow.extract")(
       function* (text: string, config: RunConfig, concurrency?: number) {
         // Create extraction run from text hash
         const run = yield* runService.createRun(text, config).pipe(
@@ -524,12 +511,12 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
             Effect.fnUntraced(function* (exit): Effect.fn.Return<Chunk.Chunk<KnowledgeGraph>, ExtractionError> {
               if (Exit.isSuccess(exit)) return Chunk.of(exit.value);
               const cause = exit.cause;
-              if (Result.isSuccess(Cause.findDefect(cause))) {
-                yield* Effect.logError("Defect in chunk processing", {
+              yield* Effect.when(
+                Effect.logError("Defect in chunk processing", {
                   defect: Cause.pretty(cause),
-                });
-                return yield* Effect.failCause(cause);
-              }
+                }),
+                Effect.succeed(Cause.hasDies(cause))
+              );
               return yield* Effect.failCause(
                 Cause.map(cause, (error) =>
                   ExtractionError.is(error)
