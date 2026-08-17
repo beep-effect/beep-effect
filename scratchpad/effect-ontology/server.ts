@@ -16,7 +16,7 @@
  */
 
 import { BunHttpServer, BunRuntime, BunServices } from "@effect/platform-bun";
-import { Cause, Config, Effect, Layer } from "effect";
+import { Config, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import { ClusterWorkflowEngine, SingleRunner } from "effect/unstable/cluster";
 import { WorkflowEngine } from "effect/unstable/workflow";
@@ -209,28 +209,22 @@ const server = Effect.gen(function* () {
   // Warm up caches from GCS (runs in background, doesn't block startup)
   yield* Effect.forkDetach(warmUpCaches);
 
-  // Register SIGTERM handler for Cloud Run
-  process.on("SIGTERM", () => {
-    BunRuntime.runMain(
-      Effect.gen(function* () {
-        yield* Effect.logInfo("Received SIGTERM, initiating graceful shutdown");
+  yield* Effect.logInfo(`Server starting on port ${port}`);
+  yield* Layer.build(ServerLive);
+
+  // BunRuntime.runMain owns SIGINT/SIGTERM handling and interrupts this main
+  // fiber. Keep the server layer in the surrounding scope so request draining
+  // completes before its resources are released.
+  return yield* Effect.never.pipe(
+    Effect.onInterrupt(
+      Effect.fnUntraced(function* () {
+        yield* Effect.logInfo("Received termination signal, initiating graceful shutdown");
         yield* shutdown.initiateShutdown;
         yield* shutdown.drain;
         yield* Effect.logInfo("Graceful shutdown complete");
-        return yield* Effect.sync(() => process.exit(0));
-      }).pipe(
-        Effect.catchCause((cause) =>
-          Effect.gen(function* () {
-            yield* Effect.logError("Shutdown failed", { cause: Cause.pretty(cause) });
-            return yield* Effect.sync(() => process.exit(1));
-          })
-        )
-      )
-    );
-  });
-
-  yield* Effect.logInfo(`Server starting on port ${port}`);
-  return yield* Layer.launch(ServerLive);
+      })
+    )
+  );
 });
 
 // One ShutdownService instance: SIGTERM drain and HTTP middleware share the same

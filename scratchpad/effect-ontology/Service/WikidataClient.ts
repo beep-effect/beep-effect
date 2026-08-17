@@ -261,9 +261,10 @@ export class SearchOptions extends S.Class<SearchOptions>($I`SearchOptions`)(
  * **Example** (Configure a Wikidata search)
  *
  * ```ts
+ * import { PosInt } from "@beep/schema/Int"
  * import type { SearchOptionsInput } from "@effect-ontology/Service/WikidataClient"
  *
- * const options: SearchOptionsInput = { limit: 5 }
+ * const options: SearchOptionsInput = { limit: PosInt.make(5) }
  * console.log(options)
  * ```
  *

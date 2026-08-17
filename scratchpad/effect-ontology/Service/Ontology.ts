@@ -482,10 +482,10 @@ export const parseOntologyFromStore: {
           const label = O.orElse(getFirst(labels, id), () => getFirst(prefLabels, id));
           if (O.isSome(label)) {
             finalClasses.push(
-              ClassDefinition.fromUnknown({
+              yield* S.decodeUnknownEffect(ClassDefinition)({
                 id: IRI.make(id),
                 label: label.value,
-                comment: O.some(O.getOrElse(getFirst(comments, id), () => "")),
+                comment: getFirst(comments, id),
                 // properties field expects IRI[], coerce from string[]
                 properties: asIriArray(getOrEmpty(classProperties, id)),
                 prefLabels: getOrEmpty(prefLabels, id),
@@ -513,10 +513,10 @@ export const parseOntologyFromStore: {
         const label = O.orElse(getFirst(labels, id), () => getFirst(prefLabels, id));
         if (O.isSome(label)) {
           finalProperties.push(
-            PropertyDefinition.fromUnknown({
+            yield* S.decodeUnknownEffect(PropertyDefinition)({
               id: IRI.make(id),
               label: label.value,
-              comment: O.some(O.getOrElse(getFirst(comments, id), () => "")),
+              comment: getFirst(comments, id),
               // domain/range expect string[] (full IRIs as strings)
               domain: asIriArray(getOrEmpty(domains, id)),
               range: asIriArray(getOrEmpty(ranges, id)),

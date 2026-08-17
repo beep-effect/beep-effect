@@ -166,9 +166,10 @@ export class SimilaritySearchOptions extends S.Class<SimilaritySearchOptions>($I
  * **Example** (Configure similarity search)
  *
  * ```ts
+ * import { PosInt } from "@beep/schema/Int"
  * import type { SimilaritySearchOptionsInput } from "@effect-ontology/Repository/Embedding"
  *
- * const options: SimilaritySearchOptionsInput = { limit: 10 }
+ * const options: SimilaritySearchOptionsInput = { limit: PosInt.make(10) }
  * console.log(options)
  * ```
  *
@@ -210,9 +211,10 @@ export class HybridSearchOptions extends S.Class<HybridSearchOptions>($I`HybridS
  * **Example** (Configure hybrid search)
  *
  * ```ts
+ * import { PosInt } from "@beep/schema/Int"
  * import type { HybridSearchOptionsInput } from "@effect-ontology/Repository/Embedding"
  *
- * const options: HybridSearchOptionsInput = { limit: 10 }
+ * const options: HybridSearchOptionsInput = { limit: PosInt.make(10) }
  * console.log(options)
  * ```
  *

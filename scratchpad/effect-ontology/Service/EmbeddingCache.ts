@@ -106,9 +106,10 @@ export class EmbeddingCacheConfig extends S.Class<EmbeddingCacheConfig>($I`Embed
  * **Example** (Configure an embedding cache)
  *
  * ```ts
+ * import { PosInt } from "@beep/schema/Int"
  * import type { EmbeddingCacheConfigInput } from "@effect-ontology/Service/EmbeddingCache"
  *
- * const config: EmbeddingCacheConfigInput = { maxEntries: 100 }
+ * const config: EmbeddingCacheConfigInput = { maxEntries: PosInt.make(100) }
  * console.log(config)
  * ```
  *

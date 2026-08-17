@@ -20,6 +20,7 @@ import { ContentHash, GcsUri } from "../Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/OntologyEmbeddings");
 const utf8Encoder = new TextEncoder();
+const encodeUtf8 = (text: string): Uint8Array => utf8Encoder.encode(text);
 
 const EmbeddingVector = S.NonEmptyArray(S.Finite)
   .annotate({
@@ -214,7 +215,7 @@ const OntologyEmbeddingsDefinition = OntologyEmbeddingsFieldsModel.check(
 );
 
 const computeOntologyVersion = flow(
-  utf8Encoder.encode,
+  encodeUtf8,
   Sha256HexFromBytes.decodeEffect,
   Effect.withSpan("OntologyEmbeddings.computeVersion")
 );

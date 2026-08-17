@@ -211,7 +211,11 @@ export const clusterEntities = dual3(
       };
 
       // Compute edges using a Stream to allow yielding/concurrency
-      const edgeData: Array<{ source: EntityId; target: EntityId; edge: SimilarityEdge }> = [];
+      const edgeData: Array<{
+        source: EntityId;
+        target: EntityId;
+        edge: SimilarityEdge;
+      }> = [];
 
       // We process entities in chunks to avoid blocking the event loop
       // Using Effect.forEach with concurrency allows other fibers to run
@@ -249,7 +253,10 @@ export const clusterEntities = dual3(
                 edgeData.push({
                   source: entityA.id,
                   target: entityB.id,
-                  edge: SimilarityEdge.make({ similarity: UnitInterval.make(similarity), method }),
+                  edge: SimilarityEdge.make({
+                    similarity: UnitInterval.make(similarity),
+                    method,
+                  }),
                 });
               }
             }
@@ -399,156 +406,158 @@ const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
  * @since 0.0.0
  */
 export const buildEntityResolutionGraph = dual2(
-  (kg: KnowledgeGraph, config: EntityResolutionConfig): Effect.Effect<EntityResolutionGraph, never, EmbeddingService> =>
-    Effect.gen(function* () {
-      const embeddingService = yield* EmbeddingService;
-      // Phase 1: Create MentionRecord nodes from entities (preserve provenance)
-      const mentionRecords = kg.entities.map((e, idx) =>
-        MentionRecord.make({
-          id: e.id,
-          mention: e.mention,
-          types: e.types,
-          attributes: { ...e.attributes },
-          chunkIndex: O.getOrElse(e.chunkIndex, () => NonNegativeInt.make(idx)),
-        })
-      );
+  Effect.fn(function* (
+    kg: KnowledgeGraph,
+    config: EntityResolutionConfig
+  ): Effect.fn.Return<EntityResolutionGraph, never, EmbeddingService> {
+    const embeddingService = yield* EmbeddingService;
+    // Phase 1: Create MentionRecord nodes from entities (preserve provenance)
+    const mentionRecords = kg.entities.map((e, idx) =>
+      MentionRecord.make({
+        id: e.id,
+        mention: e.mention,
+        types: e.types,
+        attributes: { ...e.attributes },
+        chunkIndex: O.getOrElse(e.chunkIndex, () => NonNegativeInt.make(idx)),
+      })
+    );
 
-      // Build entity lookup for similarity computation
-      const entityById = MutableHashMap.empty<string, Entity>();
-      for (const e of kg.entities) {
-        MutableHashMap.set(entityById, e.id, e);
+    // Build entity lookup for similarity computation
+    const entityById = MutableHashMap.empty<string, Entity>();
+    for (const e of kg.entities) {
+      MutableHashMap.set(entityById, e.id, e);
+    }
+
+    // Phase 2: Cluster similar entities using graph-based algorithm
+    const clusteringResult = yield* clusterEntities(kg.entities, kg.relations, config);
+    const clusters = clusteringResult.clusters;
+    const embeddingMap = clusteringResult.embeddingMap;
+
+    // Phase 3: Create ResolvedEntity for each cluster
+    const resolvedEntities = clusters.map((cluster) => mergeClusterToResolved(cluster));
+
+    // Phase 4: Build canonical ID mapping and compute per-entity resolution info
+    const canonicalMap: Record<string, EntityId> = {};
+    const resolutionInfoMap = MutableHashMap.empty<string, EntityResolutionInfo>();
+
+    clusters.forEach((cluster, clusterIdx) => {
+      const resolvedEntity = resolvedEntities[clusterIdx];
+      const canonicalId = resolvedEntity.canonicalId;
+      const canonicalEntity = MutableHashMap.get(entityById, canonicalId);
+
+      for (const entity of cluster.entities) {
+        canonicalMap[entity.id] = canonicalId;
+
+        // Compute actual similarity and method for this entity to canonical
+        if (entity.id === canonicalId) {
+          // Entity IS the canonical - perfect match
+          MutableHashMap.set(resolutionInfoMap, entity.id, {
+            entityId: entity.id,
+            similarity: UnitInterval.make(1.0),
+            method: "exact",
+          });
+        } else if (O.isSome(canonicalEntity)) {
+          // Compute embedding similarity if available
+          const embeddingSim =
+            HashMap.has(embeddingMap, entity.id) && HashMap.has(embeddingMap, canonicalId)
+              ? embeddingService.cosineSimilarity(
+                  O.getOrThrow(HashMap.get(embeddingMap, entity.id)),
+                  O.getOrThrow(HashMap.get(embeddingMap, canonicalId))
+                )
+              : undefined;
+
+          // Compute similarity between this entity and canonical (with embedding)
+          const similarity = computeEntitySimilarity(
+            entity,
+            canonicalEntity.value,
+            kg.relations,
+            config,
+            embeddingSim,
+            undefined
+          );
+          const method = detectResolutionMethod(entity, canonicalEntity.value, kg.relations);
+
+          MutableHashMap.set(resolutionInfoMap, entity.id, {
+            entityId: entity.id,
+            similarity: UnitInterval.make(similarity),
+            method,
+          });
+        }
+      }
+    });
+
+    // Phase 5: Build Effect Graph (two-tier: MentionRecords → ResolvedEntities)
+    const entityIndex: Record<string, NodeIndex> = {};
+    const resolvedIndexes = MutableHashMap.empty<string, Graph.NodeIndex>();
+
+    const graph = Graph.directed<ERNode, EREdge>((mutable) => {
+      // Add ResolvedEntity nodes first
+      for (const re of resolvedEntities) {
+        const idx = Graph.addNode(mutable, re);
+        MutableHashMap.set(resolvedIndexes, re.canonicalId, idx);
       }
 
-      // Phase 2: Cluster similar entities using graph-based algorithm
-      const clusteringResult = yield* clusterEntities(kg.entities, kg.relations, config);
-      const clusters = clusteringResult.clusters;
-      const embeddingMap = clusteringResult.embeddingMap;
+      // Add MentionRecord nodes + ResolutionEdges with REAL similarity scores
+      for (const mr of mentionRecords) {
+        const mrIdx = Graph.addNode(mutable, mr);
+        entityIndex[mr.id] = NodeIndex.make(mrIdx);
 
-      // Phase 3: Create ResolvedEntity for each cluster
-      const resolvedEntities = clusters.map((cluster) => mergeClusterToResolved(cluster));
+        const canonicalId = canonicalMap[mr.id];
+        if (P.isTruthy(canonicalId)) {
+          const reIdx = MutableHashMap.get(resolvedIndexes, canonicalId);
+          const resolutionInfo = MutableHashMap.get(resolutionInfoMap, mr.id);
 
-      // Phase 4: Build canonical ID mapping and compute per-entity resolution info
-      const canonicalMap: Record<string, EntityId> = {};
-      const resolutionInfoMap = MutableHashMap.empty<string, EntityResolutionInfo>();
-
-      clusters.forEach((cluster, clusterIdx) => {
-        const resolvedEntity = resolvedEntities[clusterIdx];
-        const canonicalId = resolvedEntity.canonicalId;
-        const canonicalEntity = MutableHashMap.get(entityById, canonicalId);
-
-        for (const entity of cluster.entities) {
-          canonicalMap[entity.id] = canonicalId;
-
-          // Compute actual similarity and method for this entity to canonical
-          if (entity.id === canonicalId) {
-            // Entity IS the canonical - perfect match
-            MutableHashMap.set(resolutionInfoMap, entity.id, {
-              entityId: entity.id,
-              similarity: UnitInterval.make(1.0),
-              method: "exact",
-            });
-          } else if (O.isSome(canonicalEntity)) {
-            // Compute embedding similarity if available
-            const embeddingSim =
-              HashMap.has(embeddingMap, entity.id) && HashMap.has(embeddingMap, canonicalId)
-                ? embeddingService.cosineSimilarity(
-                    O.getOrThrow(HashMap.get(embeddingMap, entity.id)),
-                    O.getOrThrow(HashMap.get(embeddingMap, canonicalId))
-                  )
-                : undefined;
-
-            // Compute similarity between this entity and canonical (with embedding)
-            const similarity = computeEntitySimilarity(
-              entity,
-              canonicalEntity.value,
-              kg.relations,
-              config,
-              embeddingSim,
-              undefined
+          if (O.isSome(reIdx) && O.isSome(resolutionInfo)) {
+            Graph.addEdge(
+              mutable,
+              mrIdx,
+              reIdx.value,
+              ResolutionEdge.make({
+                confidence: resolutionInfo.value.similarity,
+                method: resolutionInfo.value.method,
+              })
             );
-            const method = detectResolutionMethod(entity, canonicalEntity.value, kg.relations);
-
-            MutableHashMap.set(resolutionInfoMap, entity.id, {
-              entityId: entity.id,
-              similarity: UnitInterval.make(similarity),
-              method,
-            });
           }
         }
-      });
+      }
 
-      // Phase 5: Build Effect Graph (two-tier: MentionRecords → ResolvedEntities)
-      const entityIndex: Record<string, NodeIndex> = {};
-      const resolvedIndexes = MutableHashMap.empty<string, Graph.NodeIndex>();
+      // Add RelationEdges between ResolvedEntities (canonicalized)
+      for (const rel of kg.relations) {
+        const sourceCanonical = canonicalMap[rel.subjectId];
+        const targetCanonical = RelationObject.guards.EntityReference(rel.object)
+          ? canonicalMap[rel.object.value]
+          : undefined;
 
-      const graph = Graph.directed<ERNode, EREdge>((mutable) => {
-        // Add ResolvedEntity nodes first
-        for (const re of resolvedEntities) {
-          const idx = Graph.addNode(mutable, re);
-          MutableHashMap.set(resolvedIndexes, re.canonicalId, idx);
-        }
+        if (P.isTruthy(sourceCanonical) && P.isNotUndefined(targetCanonical)) {
+          const sourceIdx = MutableHashMap.get(resolvedIndexes, sourceCanonical);
+          const targetIdx = MutableHashMap.get(resolvedIndexes, targetCanonical);
 
-        // Add MentionRecord nodes + ResolutionEdges with REAL similarity scores
-        for (const mr of mentionRecords) {
-          const mrIdx = Graph.addNode(mutable, mr);
-          entityIndex[mr.id] = NodeIndex.make(mrIdx);
-
-          const canonicalId = canonicalMap[mr.id];
-          if (P.isTruthy(canonicalId)) {
-            const reIdx = MutableHashMap.get(resolvedIndexes, canonicalId);
-            const resolutionInfo = MutableHashMap.get(resolutionInfoMap, mr.id);
-
-            if (O.isSome(reIdx) && O.isSome(resolutionInfo)) {
-              Graph.addEdge(
-                mutable,
-                mrIdx,
-                reIdx.value,
-                ResolutionEdge.make({
-                  confidence: resolutionInfo.value.similarity,
-                  method: resolutionInfo.value.method,
-                })
-              );
-            }
+          if (O.isSome(sourceIdx) && O.isSome(targetIdx)) {
+            Graph.addEdge(
+              mutable,
+              sourceIdx.value,
+              targetIdx.value,
+              RelationEdge.make({
+                predicate: rel.predicate,
+                grounded: false, // TODO: integrate with Grounder
+              })
+            );
           }
         }
+      }
+    });
 
-        // Add RelationEdges between ResolvedEntities (canonicalized)
-        for (const rel of kg.relations) {
-          const sourceCanonical = canonicalMap[rel.subjectId];
-          const targetCanonical = RelationObject.guards.EntityReference(rel.object)
-            ? canonicalMap[rel.object.value]
-            : undefined;
-
-          if (P.isTruthy(sourceCanonical) && P.isNotUndefined(targetCanonical)) {
-            const sourceIdx = MutableHashMap.get(resolvedIndexes, sourceCanonical);
-            const targetIdx = MutableHashMap.get(resolvedIndexes, targetCanonical);
-
-            if (O.isSome(sourceIdx) && O.isSome(targetIdx)) {
-              Graph.addEdge(
-                mutable,
-                sourceIdx.value,
-                targetIdx.value,
-                RelationEdge.make({
-                  predicate: rel.predicate,
-                  grounded: false, // TODO: integrate with Grounder
-                })
-              );
-            }
-          }
-        }
-      });
-
-      return EntityResolutionGraphModel.make({
-        graph,
-        entityIndex,
-        canonicalMap,
-        createdAt: DateTime.nowUnsafe(),
-        stats: EntityResolutionStats.make({
-          mentionCount: NonNegativeInt.make(mentionRecords.length),
-          resolvedCount: NonNegativeInt.make(resolvedEntities.length),
-          relationCount: NonNegativeInt.make(kg.relations.length),
-          clusterCount: NonNegativeInt.make(clusters.length),
-        }),
-      });
-    })
+    return EntityResolutionGraphModel.make({
+      graph,
+      entityIndex,
+      canonicalMap,
+      createdAt: DateTime.nowUnsafe(),
+      stats: EntityResolutionStats.make({
+        mentionCount: NonNegativeInt.make(mentionRecords.length),
+        resolvedCount: NonNegativeInt.make(resolvedEntities.length),
+        relationCount: NonNegativeInt.make(kg.relations.length),
+        clusterCount: NonNegativeInt.make(clusters.length),
+      }),
+    });
+  })
 );

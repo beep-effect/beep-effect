@@ -72,7 +72,6 @@ export const VoyageModel = LiteralKit([
   "voyage-multilingual-2",
   "voyage-law-2",
 ]).pipe(
-  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("VoyageModel", {
     description: "Voyage embedding models with known output dimensions.",
   })
@@ -573,7 +572,7 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
         ),
       onSome: Effect.succeed,
     });
-    const model = yield* VoyageModel.decodeUnknownEffect(config.embedding.voyageModel).pipe(
+    const model = yield* S.decodeUnknownEffect(VoyageModel)(config.embedding.voyageModel).pipe(
       Effect.mapError((cause) =>
         EmbeddingError.make({
           message: `Unsupported Voyage embedding model: ${config.embedding.voyageModel}`,

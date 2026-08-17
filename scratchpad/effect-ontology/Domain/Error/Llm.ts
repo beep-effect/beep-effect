@@ -85,7 +85,9 @@ export class LlmTimeout extends S.TaggedError<LlmTimeout>($I`LlmTimeout`)(
   $I.annote("LlmTimeout", {
     description: "LLM call failure caused by exceeding a configured deadline.",
   })
-) {}
+) {
+  static readonly is = S.is(LlmTimeout);
+}
 
 /**
  * Indicates that an LLM provider rejected work because of a rate limit.
@@ -120,7 +122,9 @@ export class LlmRateLimit extends S.TaggedError<LlmRateLimit>($I`LlmRateLimit`)(
   $I.annote("LlmRateLimit", {
     description: "LLM request rejected because the provider rate limit was exhausted.",
   })
-) {}
+) {
+  static readonly is = S.is(LlmRateLimit);
+}
 
 /**
  * Indicates that an LLM response could not be interpreted.

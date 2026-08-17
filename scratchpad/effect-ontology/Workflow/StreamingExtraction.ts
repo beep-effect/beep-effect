@@ -30,7 +30,6 @@ import {
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { LlmRateLimit, LlmTimeout } from "../Domain/Error/Llm.ts";
@@ -45,6 +44,7 @@ import { ExtractionRunService, ExtractionRunServiceDefault } from "../Service/Ex
 import { ExtractionWorkflow } from "../Service/ExtractionWorkflow.ts";
 import type { RelationVerificationInput } from "../Service/Grounder.ts";
 import { Grounder } from "../Service/Grounder.ts";
+import type { TextChunk } from "../Service/Nlp.ts";
 import { NlpService } from "../Service/Nlp.ts";
 import { OntologyService } from "../Service/Ontology.ts";
 import { StorageServiceLive } from "../Service/Storage.ts";
@@ -68,7 +68,7 @@ const isSystemicError = (error: unknown): boolean => {
   // Unwrap ExtractionError if present
   const cause = ExtractionError.is(error) ? O.getOrElse(error.cause, () => error) : error;
 
-  if (S.is(LlmRateLimit)(cause) || S.is(LlmTimeout)(cause)) {
+  if (LlmRateLimit.is(cause) || LlmTimeout.is(cause)) {
     return true;
   }
 
@@ -115,8 +115,8 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
      * @param concurrency - Max parallel extraction tasks (default: from config)
      * @returns Effect yielding merged KnowledgeGraph
      */
-    extract: (text: string, config: RunConfig, concurrency?: number) =>
-      Effect.gen(function* () {
+    extract: Effect.fn(
+      function* (text: string, config: RunConfig, concurrency?: number) {
         // Create extraction run from text hash
         const run = yield* runService.createRun(text, config).pipe(
           Effect.mapError((error) =>
@@ -179,7 +179,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
         );
 
         // Short-circuit if no chunks
-        if (chunks.length === 0) {
+        if (A.isReadonlyArrayEmpty(chunks)) {
           yield* Effect.logWarning("No chunks generated from text", {
             stage: "chunking",
             textLength: text.length,
@@ -191,10 +191,10 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
         }
 
         // Phase 2-5: Process chunks in parallel with bounded concurrency (unordered for max throughput)
-        const graphFragments = yield* Stream.fromIterable(chunks).pipe(
+        return yield* Stream.fromIterable(chunks).pipe(
           Stream.mapEffect(
-            (chunk) =>
-              Effect.gen(function* () {
+            Effect.fnUntraced(
+              function* (chunk: TextChunk) {
                 yield* Effect.logDebug("Processing chunk", {
                   stage: "chunk-processing",
                   chunkIndex: chunk.index,
@@ -246,8 +246,8 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       candidateClassCount: Chunk.size(classes),
                     })
                   ),
-                  Effect.catch((error) =>
-                    Effect.gen(function* () {
+                  Effect.catch(
+                    Effect.fnUntraced(function* (error) {
                       yield* Effect.logWarning("Hybrid search failed, using ontology fallback", {
                         stage: "hybrid-class-retrieval",
                         chunkIndex: chunk.index,
@@ -255,7 +255,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       });
                       const ctx = yield* ontology.ontology;
                       const classes = yield* Effect.forEach(A.take(ctx.classes, 100), (value) =>
-                        S.decodeUnknownEffect(ClassDefinition)(value)
+                        ClassDefinition.decodeUnknownEffect(value)
                       );
                       return Chunk.fromIterable(classes);
                     })
@@ -489,56 +489,58 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                   }),
                 ]);
                 return fragment;
-              }).pipe(
-                Effect.withSpan(`chunk-${chunk.index}-processing`, {
-                  attributes: {
-                    [LlmAttributes.CHUNK_INDEX]: chunk.index,
-                    [LlmAttributes.CHUNK_TEXT_LENGTH]: chunk.text.length,
-                  },
-                }),
-                Effect.catch((error) => {
-                  if (isSystemicError(error)) {
-                    return Effect.fail(error);
-                  }
-                  return Effect.gen(function* () {
-                    yield* Effect.logError("Chunk processing failed (content error - skipping)", {
-                      stage: "chunk-processing",
-                      chunkIndex: chunk.index,
-                      error: renderUnknownError(error),
-                      errorType: unknownErrorType(error),
-                      isSystemic: false,
+              },
+              (effect, chunk) =>
+                effect.pipe(
+                  Effect.withSpan(`chunk-${chunk.index}-processing`, {
+                    attributes: {
+                      [LlmAttributes.CHUNK_INDEX]: chunk.index,
+                      [LlmAttributes.CHUNK_TEXT_LENGTH]: chunk.text.length,
+                    },
+                  }),
+                  Effect.catch((error) => {
+                    if (isSystemicError(error)) {
+                      return Effect.fail(error);
+                    }
+                    return Effect.gen(function* () {
+                      yield* Effect.logError("Chunk processing failed (content error - skipping)", {
+                        stage: "chunk-processing",
+                        chunkIndex: chunk.index,
+                        error: renderUnknownError(error),
+                        errorType: unknownErrorType(error),
+                        isSystemic: false,
+                      });
+                      yield* Effect.annotateCurrentSpan("chunk.failed", true);
+                      yield* Effect.annotateCurrentSpan("chunk.error_type", unknownErrorType(error));
+                      return KnowledgeGraph.make({ entities: [], relations: [] });
                     });
-                    yield* Effect.annotateCurrentSpan("chunk.failed", true);
-                    yield* Effect.annotateCurrentSpan("chunk.error_type", unknownErrorType(error));
-                    return KnowledgeGraph.make({ entities: [], relations: [] });
-                  });
-                }),
-                Effect.exit
-              ),
+                  }),
+                  Effect.exit
+                )
+            ),
             { concurrency: effectiveConcurrency, unordered: true }
           ),
           Stream.mapEffect(
-            (exit): Effect.Effect<Chunk.Chunk<KnowledgeGraph>, ExtractionError> =>
-              Effect.gen(function* () {
-                if (Exit.isSuccess(exit)) return Chunk.of(exit.value);
-                const cause = exit.cause;
-                if (Result.isSuccess(Cause.findDefect(cause))) {
-                  yield* Effect.logWarning("Defect in chunk processing", {
-                    defect: Cause.pretty(cause),
-                  });
-                  return Chunk.empty<KnowledgeGraph>();
-                }
-                return yield* Effect.failCause(
-                  Cause.map(cause, (error) =>
-                    S.is(ExtractionError)(error)
-                      ? error
-                      : ExtractionError.make({
-                          message: "Unexpected chunk processing failure",
-                          cause: O.some(error),
-                        })
-                  )
-                );
-              })
+            Effect.fnUntraced(function* (exit): Effect.fn.Return<Chunk.Chunk<KnowledgeGraph>, ExtractionError> {
+              if (Exit.isSuccess(exit)) return Chunk.of(exit.value);
+              const cause = exit.cause;
+              if (Result.isSuccess(Cause.findDefect(cause))) {
+                yield* Effect.logWarning("Defect in chunk processing", {
+                  defect: Cause.pretty(cause),
+                });
+                return Chunk.empty<KnowledgeGraph>();
+              }
+              return yield* Effect.failCause(
+                Cause.map(cause, (error) =>
+                  ExtractionError.is(error)
+                    ? error
+                    : ExtractionError.make({
+                        message: "Unexpected chunk processing failure",
+                        cause: O.some(error),
+                      })
+                )
+              );
+            })
           ),
           Stream.flatMap((graphs) => Stream.fromIterable(graphs)),
           Stream.buffer({ capacity: effectiveConcurrency * 2 }),
@@ -566,26 +568,27 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
           ),
           Effect.withSpan("graph-merge")
         );
-
-        return graphFragments;
-      }).pipe(
-        Effect.mapError(
-          (error: unknown): ExtractionError =>
-            ExtractionError.is(error)
-              ? error
-              : ExtractionError.make({
-                  message: `Streaming extraction failed: ${renderUnknownError(error)}`,
-                  cause: O.some(error),
-                  text: O.some(text),
-                })
-        ),
-        Effect.withSpan("extraction-pipeline", {
-          attributes: {
-            "extraction.type": "streaming",
-          },
-        }),
-        Effect.provideService(ConfigService, configService)
-      ),
+      },
+      (effect, text) =>
+        effect.pipe(
+          Effect.mapError(
+            (error: unknown): ExtractionError =>
+              ExtractionError.is(error)
+                ? error
+                : ExtractionError.make({
+                    message: `Streaming extraction failed: ${renderUnknownError(error)}`,
+                    cause: O.some(error),
+                    text: O.some(text),
+                  })
+          ),
+          Effect.withSpan("extraction-pipeline", {
+            attributes: {
+              "extraction.type": "streaming",
+            },
+          }),
+          Effect.provideService(ConfigService, configService)
+        )
+    ),
   };
 });
 

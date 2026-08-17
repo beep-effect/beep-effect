@@ -296,7 +296,9 @@ const OntologyEventEntryDefinition = S.Union([
  * **Example** (Inspect canonical ontology event cases)
  * ```ts
  * import { OntologyEventEntry } from "@effect-ontology/Schema/EventSchema"
- * console.log(Object.keys(OntologyEventEntry.cases).length) // 8
+ * import * as S from "effect/Schema"
+ *
+ * console.log(typeof S.is(OntologyEventEntry)) // "function"
  * ```
  *
  * @category events

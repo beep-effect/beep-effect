@@ -1981,9 +1981,10 @@ export class BackpressureConfig extends S.Class<BackpressureConfig>($I`Backpress
  * **Example** (Configure event delivery)
  *
  * ```ts
+ * import { PosInt } from "@beep/schema/Int"
  * import type { BackpressureConfigInput } from "@effect-ontology/Contract/ProgressStreaming"
  *
- * const config: BackpressureConfigInput = { maxQueueSize: 500 }
+ * const config: BackpressureConfigInput = { maxQueueSize: PosInt.make(500) }
  * console.log(config)
  * ```
  *

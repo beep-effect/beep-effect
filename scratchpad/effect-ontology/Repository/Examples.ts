@@ -252,9 +252,10 @@ export class ExampleRetrievalOptions extends S.Class<ExampleRetrievalOptions>($I
  * **Example** (Configure example retrieval)
  *
  * ```ts
+ * import { PosInt } from "@beep/schema/Int"
  * import type { ExampleRetrievalOptionsInput } from "@effect-ontology/Repository/Examples"
  *
- * const options: ExampleRetrievalOptionsInput = { k: 3 }
+ * const options: ExampleRetrievalOptionsInput = { k: PosInt.make(3) }
  * console.log(options)
  * ```
  *

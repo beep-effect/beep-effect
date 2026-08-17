@@ -414,7 +414,7 @@ export const ClassDefinition = ClassDefinitionModel.annotate({
   $I.annoteSchema("ClassDefinition", {
     description: "OWL or RDFS class metadata normalized for lookup and semantic search.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withEffectCodecStatics
 );
 
 /**

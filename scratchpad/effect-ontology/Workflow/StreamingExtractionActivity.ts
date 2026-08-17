@@ -171,7 +171,7 @@ const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Sche
 const computeContentHash = Effect.fn("StreamingExtractionActivity.computeContentHash")(function* (content: string) {
   const crypto = yield* Crypto.Crypto;
   const digest = yield* crypto.digest("SHA-256", textEncoder.encode(content));
-  return yield* S.decodeEffect(ContentHash)(Encoding.encodeHex(digest));
+  return yield* ContentHash.decodeEffect(Encoding.encodeHex(digest));
 });
 
 /** Extracts the ontology name component from a storage URI path. */
@@ -483,7 +483,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       const graphPath = PathLayout.document.graph(input.documentId);
       yield* storage.set(graphPath, trigContent);
 
-      const graphUri = yield* S.decodeEffect(GcsUri)(`gs://${bucket}/${graphPath}`);
+      const graphUri = yield* GcsUri.decodeEffect(`gs://${bucket}/${graphPath}`);
 
       // Note: Claims are persisted only after SHACL validation passes,
       // via makeClaimPersistenceActivity in WorkflowOrchestrator.
