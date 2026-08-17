@@ -39,8 +39,10 @@ the C5 metric correction and the new C7 item below.
 - ~~A7 monitor hardening quick items (`yeet reply` exit code, cursor persistence, registration
   backoff).~~ Done 2026-08-16 (reply exits non-zero on any `failed` outcome; comment cursors
   persist through a versioned `monitor-comments.json`; comment-poll failures degrade without
-  cancelling the check watch; bounded post-push check-registration backoff. The lane
-  success-exit hang was already closed on main by the `run_lane` process-group reap in #718.)
+  cancelling the check watch; bounded post-push check-registration backoff. Correction
+  2026-08-17: the lane success-exit hang was **not** closed by the `run_lane` process-group reap
+  in #718 — it recurred with #718 active (Lint Policy job 95354812245); see the ledger receipt
+  and the capture-seam fix in #748.)
 
 ## P2 — Backpressure engine
 

@@ -39,13 +39,12 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
-- [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — capture
-  (2026-08-17): from-scratch re-eval of the oppold-corpus pipeline — salvage
-  restoration with a no-loss bar, T-Box-guided ingestion (composing with
-  semantic-foundation M1), dedupe/prune, mail-extraction repair,
-  fidelity-verified conversion, per-step self-evaluation, enrichment survey.
-  Gates practice-kg bundle v2, not the live v1 front. First align question:
-  restoration inventory (salvage sits on a removable drive).
+- [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — align
+  (2026-08-17): restoration bar **v2** ratified after an 8-lane adversarial
+  review corrected the census (three recycle volumes, raw f-recyclebin
+  trees, the collector's 5,986-error ledger, exFAT reality, mail-first
+  ordering, one-pass copy-while-hashing). Gates practice-kg bundle v2. Next:
+  bound the remaining capture bullets, then the BRIEF.
 - [`packet-system-redesign`](./packet-system-redesign/README.md) —
   graduated 2026-08-17: MAP ratified with amendments (live index-guard
   capability cited; apps/labs as the React candidate's presumptive home).
@@ -73,15 +72,18 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   single-user parity. First goal graduated:
   [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md).
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
-  decompose-stage: BRIEF ratified with amendments 2026-08-17 (first consumer
-  = approval-gate disposition reference; first fixture = admit the repo's own
-  pinned arrangement; admission-local vocabularies). Next gate: MAP draft +
-  operator MAP review.
+  graduated 2026-08-17: MAP ratified with five adversarial amendments
+  (restricted fixture; closed chat-arrangement component set with repair and
+  filing as candidates two/three; enumerated kits + assurance-floor table;
+  envelope+components digest; referential integrity).
+  [`goals/model-arrangement-admission-core`](../goals/model-arrangement-admission-core/README.md)
+  scaffolded paused (queue goal); eval-harness and enforcement stay gated.
 - [`epistemic-belief-view-revision`](./epistemic-belief-view-revision/README.md) —
-  decompose-stage: BRIEF ratified with amendments 2026-08-17 (adds the
-  scope-wide EdgeAuthority read as the one server-side addition; as-of
-  queryability required of every policy input). Next gate: MAP draft +
-  operator MAP review.
+  graduated 2026-08-17: MAP ratified with four adversarial amendments
+  (digest-encoding v1 + expiredAt-projection replay fix; indexed capped
+  scope read; same-policy delta; law propagated to the glossary).
+  [`goals/belief-view-engine`](../goals/belief-view-engine/README.md)
+  scaffolded paused (queue goal); materialization stays gated.
 - **Gold-Intake cohort** (opened 2026-06-29, all at `research`-complete) — 13 new exploration
   packets reconciled from the 219-nugget gold-intake corpus; full matrix +
   provenance in [`_gold-intake/ROUTING.md`](./_gold-intake/ROUTING.md) /

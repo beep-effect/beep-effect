@@ -3,14 +3,12 @@
   "exploration": {
     "slug": "epistemic-belief-view-revision",
     "title": "Epistemic Belief View Revision",
-    "status": "active",
-    "stage": "decompose",
-    "openQuestions": [
-      "Draft MAP.md (candidate goal packets, dependencies, capability composition, first vertical slice) for operator MAP review."
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/belief-view-engine"],
       "docs": [],
       "supersededBy": null
     },
