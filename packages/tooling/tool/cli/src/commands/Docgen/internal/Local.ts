@@ -808,6 +808,40 @@ const runStepWithStallWatchdog = Effect.fn("DocgenLocal.runStepWithStallWatchdog
   yield* Console.log(`docgen:local: ${label} retry succeeded after the first attempt stalled.`);
 });
 
+/**
+ * Run one docgen child under the stall watchdog.
+ *
+ * **Details**
+ *
+ * Exposed so the stall path can be exercised directly. It only triggers against
+ * a child that outlives its budget, which no production call reproduces on
+ * demand, and the budgets the real callers use are deliberately measured in
+ * tens of minutes.
+ *
+ * **Example** (Bound a child that exits normally)
+ *
+ * ```ts
+ * import { runDocgenStepWithStallWatchdogForTesting } from "@beep/repo-cli/test/Docgen"
+ * import { Duration } from "effect"
+ *
+ * const step = runDocgenStepWithStallWatchdogForTesting("probe", "true", [], "/repo", {
+ *   first: Duration.seconds(5),
+ *   retry: Duration.seconds(5)
+ * })
+ * console.log(step)
+ * ```
+ *
+ * @param label - Operator-facing step label.
+ * @param command - Executable to spawn.
+ * @param args - Arguments passed to the executable.
+ * @param repoRoot - Working directory for the child.
+ * @param budget - First-attempt and retry ceilings.
+ * @returns An effect completing when the step exits, failing if both attempts stall.
+ * @category testing
+ * @since 0.0.0
+ */
+export const runDocgenStepWithStallWatchdogForTesting = runStepWithStallWatchdog;
+
 const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan: DocgenLocalPlan, repoRoot: string) {
   const dryRunOutput = yield* collectStepOutput(
     "turbo dry-run",

@@ -35,11 +35,6 @@ const program = Effect.scoped(
 // explicitly on success.
 BunRuntime.runMain(program, {
   teardown: (exit, onExit) => {
-    // Announce reaching teardown. "✓ Docs generation succeeded!" only proves the
-    // program finished its work, not that the process got to exit -- and when a
-    // docgen lane stalls, telling those two apart is the whole question. One
-    // terse stderr line per invocation makes the distinction visible in CI.
-    process.stderr.write(`[docgen] teardown: ${Exit.isSuccess(exit) ? "success" : "failure"}, exiting\n`);
     Runtime.defaultTeardown(exit, onExit);
     if (Exit.isSuccess(exit)) {
       process.exit(0);
