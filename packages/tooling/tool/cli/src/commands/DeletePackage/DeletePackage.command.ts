@@ -44,6 +44,7 @@ import { DeletePackageDataResource } from "./internal/DataResource.ts";
 import type {
   DependentsReport,
   RegistrationGeometryServiceShape,
+  RegistrationObservation,
   RegistrationPlan,
 } from "../../internal/cli/RegistrationGeometry/index.ts";
 
@@ -626,24 +627,33 @@ const runCheckMode = Effect.fn("DeletePackage.runCheckMode")(function* (
   );
 });
 
+// Post-apply doctor residue lines: every non-clean observation prints before the reported failure.
+const reportResidueObservations = (observations: ReadonlyArray<RegistrationObservation>) =>
+  Effect.forEach(
+    A.filter(observations, (item) => !Str.equivalence(item.status, "clean")),
+    (item) => Console.error(`[delete-package] residue ${item.surfaceId}: ${A.join(item.evidence, ", ")}`),
+    { discard: true }
+  );
+
+// The accepted consent-required lab data-resource observation carries the
+// manual DROP SCHEMA step; surface it so the manual step is never silent.
+const reportConsentRequiredObservations = (observations: ReadonlyArray<RegistrationObservation>) =>
+  Effect.forEach(
+    A.filter(observations, (item) => Str.equivalence(item.status, "consent-required")),
+    (item) => Console.log(`[delete-package] data-resource ${item.surfaceId}: ${A.join(item.evidence, ", ")}`),
+    { discard: true }
+  );
+
 const runApplyMode = Effect.fn("DeletePackage.runApplyMode")(function* (
   geometry: RegistrationGeometryServiceShape,
   plan: RegistrationPlan
 ) {
   const observations = yield* geometry.apply(plan);
   if (!DeletePackagePolicyEvaluation.doctorIsClean(plan.target, observations)) {
-    for (const item of observations) {
-      if (!Str.equivalence(item.status, "clean"))
-        yield* Console.error(`[delete-package] residue ${item.surfaceId}: ${A.join(item.evidence, ", ")}`);
-    }
+    yield* reportResidueObservations(observations);
     return yield* failWithReportedExit("delete-package: post-apply doctor found residue.");
   }
-  // The accepted consent-required lab data-resource observation carries the
-  // manual DROP SCHEMA step; surface it so the manual step is never silent.
-  for (const item of observations) {
-    if (Str.equivalence(item.status, "consent-required"))
-      yield* Console.log(`[delete-package] data-resource ${item.surfaceId}: ${A.join(item.evidence, ", ")}`);
-  }
+  yield* reportConsentRequiredObservations(observations);
   yield* Console.log(`[delete-package] complete: ${plan.target.packageName} removed with zero declared residue.`);
 });
 

@@ -400,220 +400,89 @@ const STORIES_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
   STORIES_DIRECTORY_TSCONFIG_TEMPLATE_SPEC,
 ];
 
-const NEXTJS_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
-  TemplateSpec.make({
-    templateName: "app-next-tsconfig.json.hbs",
-    outputPath: "tsconfig.json",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-next-env.d.ts.hbs",
-    outputPath: "next-env.d.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-next.config.ts.hbs",
-    outputPath: "next.config.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-src-app-globals.css.hbs",
-    outputPath: "src/app/globals.css",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-src-app-layout.tsx.hbs",
-    outputPath: "src/app/layout.tsx",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-src-app-page.tsx.hbs",
-    outputPath: "src/app/page.tsx",
-  }),
-  TemplateSpec.make({ templateName: "LICENSE.hbs", outputPath: "LICENSE" }),
-  TemplateSpec.make({ templateName: "app-real-README.md.hbs", outputPath: "README.md" }),
-  TemplateSpec.make({ templateName: "app-real-AGENTS.md.hbs", outputPath: "AGENTS.md" }),
-  TemplateSpec.make({
-    templateName: "app-next-vitest.config.ts.hbs",
-    outputPath: "vitest.config.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-test-app.test.tsx.hbs",
-    outputPath: "test/app.test.tsx",
-  }),
+// [templateName, outputPath] data pair backing one TemplateSpec.
+type TemplateSpecPair = readonly [templateName: string, outputPath: string];
+
+// Expand [templateName, outputPath] data pairs into TemplateSpec values.
+const templateSpecsFrom = (pairs: ReadonlyArray<TemplateSpecPair>): ReadonlyArray<TemplateSpec> =>
+  A.map(pairs, ([templateName, outputPath]) => TemplateSpec.make({ templateName, outputPath }));
+
+// LICENSE/README/AGENTS docs shared by every real app scaffold.
+const REAL_APP_DOC_TEMPLATE_PAIRS: ReadonlyArray<TemplateSpecPair> = [
+  ["LICENSE.hbs", "LICENSE"],
+  ["app-real-README.md.hbs", "README.md"],
+  ["app-real-AGENTS.md.hbs", "AGENTS.md"],
 ];
 
-const TAURI_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
-  TemplateSpec.make({
-    templateName: "app-tauri-tsconfig.json.hbs",
-    outputPath: "tsconfig.json",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-index.html.hbs",
-    outputPath: "index.html",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-src-App.tsx.hbs",
-    outputPath: "src/App.tsx",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-src-main.tsx.hbs",
-    outputPath: "src/main.tsx",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-vite.config.ts.hbs",
-    outputPath: "vite.config.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-vitest.config.ts.hbs",
-    outputPath: "vitest.config.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-test-App.test.tsx.hbs",
-    outputPath: "test/App.test.tsx",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-src-tauri-Cargo.toml.hbs",
-    outputPath: "src-tauri/Cargo.toml",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-src-tauri-build.rs.hbs",
-    outputPath: "src-tauri/build.rs",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-src-tauri-tauri.conf.json.hbs",
-    outputPath: "src-tauri/tauri.conf.json",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-src-tauri-capabilities-default.json.hbs",
-    outputPath: "src-tauri/capabilities/default.json",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-src-tauri-src-main.rs.hbs",
-    outputPath: "src-tauri/src/main.rs",
-  }),
-  TemplateSpec.make({
-    templateName: "app-tauri-src-tauri-src-lib.rs.hbs",
-    outputPath: "src-tauri/src/lib.rs",
-  }),
-  TemplateSpec.make({ templateName: "LICENSE.hbs", outputPath: "LICENSE" }),
-  TemplateSpec.make({ templateName: "app-real-README.md.hbs", outputPath: "README.md" }),
-  TemplateSpec.make({ templateName: "app-real-AGENTS.md.hbs", outputPath: "AGENTS.md" }),
-];
+const NEXTJS_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
+  ["app-next-tsconfig.json.hbs", "tsconfig.json"],
+  ["app-next-next-env.d.ts.hbs", "next-env.d.ts"],
+  ["app-next-next.config.ts.hbs", "next.config.ts"],
+  ["app-next-src-app-globals.css.hbs", "src/app/globals.css"],
+  ["app-next-src-app-layout.tsx.hbs", "src/app/layout.tsx"],
+  ["app-next-src-app-page.tsx.hbs", "src/app/page.tsx"],
+  ...REAL_APP_DOC_TEMPLATE_PAIRS,
+  ["app-next-vitest.config.ts.hbs", "vitest.config.ts"],
+  ["app-next-test-app.test.tsx.hbs", "test/app.test.tsx"],
+]);
 
-const NEXTJS_LAB_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
-  TemplateSpec.make({
-    templateName: "app-next-tsconfig.json.hbs",
-    outputPath: "tsconfig.json",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-lab-tsconfig.next.json.hbs",
-    outputPath: "tsconfig.next.json",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-next-env.d.ts.hbs",
-    outputPath: "next-env.d.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-lab-next.config.ts.hbs",
-    outputPath: "next.config.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-lab-postcss.config.mjs.hbs",
-    outputPath: "postcss.config.mjs",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-lab-src-app-globals.css.hbs",
-    outputPath: "src/app/globals.css",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-src-app-layout.tsx.hbs",
-    outputPath: "src/app/layout.tsx",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-src-app-page.tsx.hbs",
-    outputPath: "src/app/page.tsx",
-  }),
-  TemplateSpec.make({ templateName: "LICENSE.hbs", outputPath: "LICENSE" }),
-  TemplateSpec.make({ templateName: "app-real-README.md.hbs", outputPath: "README.md" }),
-  TemplateSpec.make({ templateName: "app-real-AGENTS.md.hbs", outputPath: "AGENTS.md" }),
-  TemplateSpec.make({
-    templateName: "app-next-vitest.config.ts.hbs",
-    outputPath: "vitest.config.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-next-test-app.test.tsx.hbs",
-    outputPath: "test/app.test.tsx",
-  }),
-];
+const TAURI_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
+  ["app-tauri-tsconfig.json.hbs", "tsconfig.json"],
+  ["app-tauri-index.html.hbs", "index.html"],
+  ["app-tauri-src-App.tsx.hbs", "src/App.tsx"],
+  ["app-tauri-src-main.tsx.hbs", "src/main.tsx"],
+  ["app-tauri-vite.config.ts.hbs", "vite.config.ts"],
+  ["app-tauri-vitest.config.ts.hbs", "vitest.config.ts"],
+  ["app-tauri-test-App.test.tsx.hbs", "test/App.test.tsx"],
+  ["app-tauri-src-tauri-Cargo.toml.hbs", "src-tauri/Cargo.toml"],
+  ["app-tauri-src-tauri-build.rs.hbs", "src-tauri/build.rs"],
+  ["app-tauri-src-tauri-tauri.conf.json.hbs", "src-tauri/tauri.conf.json"],
+  ["app-tauri-src-tauri-capabilities-default.json.hbs", "src-tauri/capabilities/default.json"],
+  ["app-tauri-src-tauri-src-main.rs.hbs", "src-tauri/src/main.rs"],
+  ["app-tauri-src-tauri-src-lib.rs.hbs", "src-tauri/src/lib.rs"],
+  ...REAL_APP_DOC_TEMPLATE_PAIRS,
+]);
 
-const VITE_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
-  TemplateSpec.make({
-    templateName: "app-vite-tsconfig.json.hbs",
-    outputPath: "tsconfig.json",
-  }),
-  TemplateSpec.make({
-    templateName: "app-vite-index.html.hbs",
-    outputPath: "index.html",
-  }),
-  TemplateSpec.make({
-    templateName: "app-vite-src-App.tsx.hbs",
-    outputPath: "src/App.tsx",
-  }),
-  TemplateSpec.make({
-    templateName: "app-vite-src-main.tsx.hbs",
-    outputPath: "src/main.tsx",
-  }),
-  TemplateSpec.make({
-    templateName: "app-vite-src-styles-globals.css.hbs",
-    outputPath: "src/styles/globals.css",
-  }),
-  TemplateSpec.make({
-    templateName: "app-vite-vite.config.ts.hbs",
-    outputPath: "vite.config.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-vite-vitest.config.ts.hbs",
-    outputPath: "vitest.config.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-vite-test-App.test.tsx.hbs",
-    outputPath: "test/App.test.tsx",
-  }),
-  TemplateSpec.make({ templateName: "LICENSE.hbs", outputPath: "LICENSE" }),
-  TemplateSpec.make({ templateName: "app-real-README.md.hbs", outputPath: "README.md" }),
-  TemplateSpec.make({ templateName: "app-real-AGENTS.md.hbs", outputPath: "AGENTS.md" }),
-];
+const NEXTJS_LAB_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
+  ["app-next-tsconfig.json.hbs", "tsconfig.json"],
+  ["app-next-lab-tsconfig.next.json.hbs", "tsconfig.next.json"],
+  ["app-next-next-env.d.ts.hbs", "next-env.d.ts"],
+  ["app-next-lab-next.config.ts.hbs", "next.config.ts"],
+  ["app-next-lab-postcss.config.mjs.hbs", "postcss.config.mjs"],
+  ["app-next-lab-src-app-globals.css.hbs", "src/app/globals.css"],
+  ["app-next-src-app-layout.tsx.hbs", "src/app/layout.tsx"],
+  ["app-next-src-app-page.tsx.hbs", "src/app/page.tsx"],
+  ...REAL_APP_DOC_TEMPLATE_PAIRS,
+  ["app-next-vitest.config.ts.hbs", "vitest.config.ts"],
+  ["app-next-test-app.test.tsx.hbs", "test/app.test.tsx"],
+]);
+
+const VITE_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
+  ["app-vite-tsconfig.json.hbs", "tsconfig.json"],
+  ["app-vite-index.html.hbs", "index.html"],
+  ["app-vite-src-App.tsx.hbs", "src/App.tsx"],
+  ["app-vite-src-main.tsx.hbs", "src/main.tsx"],
+  ["app-vite-src-styles-globals.css.hbs", "src/styles/globals.css"],
+  ["app-vite-vite.config.ts.hbs", "vite.config.ts"],
+  ["app-vite-vitest.config.ts.hbs", "vitest.config.ts"],
+  ["app-vite-test-App.test.tsx.hbs", "test/App.test.tsx"],
+  ...REAL_APP_DOC_TEMPLATE_PAIRS,
+]);
 
 const VITE_LAB_POSTCSS_TEMPLATE_SPEC = TemplateSpec.make({
   templateName: "app-vite-postcss.config.mjs.hbs",
   outputPath: "postcss.config.mjs",
 });
 
-const SERVICE_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
-  TemplateSpec.make({
-    templateName: "app-service-tsconfig.json.hbs",
-    outputPath: "tsconfig.json",
-  }),
-  TemplateSpec.make({
-    templateName: "app-service-src-Api.ts.hbs",
-    outputPath: "src/Api.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-service-src-runtime-Layer.ts.hbs",
-    outputPath: "src/runtime/Layer.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-service-src-main.ts.hbs",
-    outputPath: "src/main.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-service-test-health.test.ts.hbs",
-    outputPath: "test/health.test.ts",
-  }),
-  TemplateSpec.make({
-    templateName: "app-service-vitest.config.ts.hbs",
-    outputPath: "vitest.config.ts",
-  }),
-  TemplateSpec.make({ templateName: "LICENSE.hbs", outputPath: "LICENSE" }),
-  TemplateSpec.make({ templateName: "app-real-README.md.hbs", outputPath: "README.md" }),
-  TemplateSpec.make({ templateName: "app-real-AGENTS.md.hbs", outputPath: "AGENTS.md" }),
-];
+const SERVICE_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
+  ["app-service-tsconfig.json.hbs", "tsconfig.json"],
+  ["app-service-src-Api.ts.hbs", "src/Api.ts"],
+  ["app-service-src-runtime-Layer.ts.hbs", "src/runtime/Layer.ts"],
+  ["app-service-src-main.ts.hbs", "src/main.ts"],
+  ["app-service-test-health.test.ts.hbs", "test/health.test.ts"],
+  ["app-service-vitest.config.ts.hbs", "vitest.config.ts"],
+  ...REAL_APP_DOC_TEMPLATE_PAIRS,
+]);
 
 /**
  * Decoded scaffold-mode selector threaded through template, file, directory,
@@ -1777,6 +1646,218 @@ const generateEcosystemPackageJson = Effect.fn("CreatePackage.generateEcosystemP
   return `${json}\n`;
 });
 
+// ── Manifest builders ─────────────────────────────────────────────────────
+
+// Shared identity/repository fields for every generated package.json manifest.
+const baseManifestFor = (name: string, description: string, packagePath: string) => ({
+  name: `@beep/${name}`,
+  version: "0.0.0",
+  type: "module",
+  private: true,
+  license: "MIT",
+  description,
+  homepage: `https://github.com/beep-effect/beep-effect/tree/main/${packagePath}`,
+  repository: {
+    type: "git",
+    url: "git@github.com:beep-effect/beep-effect.git",
+    directory: packagePath,
+  },
+});
+
+type BaseManifest = ReturnType<typeof baseManifestFor>;
+
+// Inputs shared by the per-app-kind manifest builders.
+type AppManifestContext = {
+  readonly baseManifest: BaseManifest;
+  readonly portlessLabel: string;
+  readonly lab: boolean;
+};
+
+// Portless-wrapped dev script for app manifests.
+const portlessDev = (portlessLabel: string, command: string): string => `portless ${portlessLabel} ${command}`;
+
+// Portless-wrapped strict-port Vite dev script (vite and tauri web shells).
+const portlessViteDev = (portlessLabel: string, defaultPort: string): string =>
+  portlessDev(portlessLabel, `sh -c 'vite --host 127.0.0.1 --port "\${PORT:-${defaultPort}}" --strictPort'`);
+
+// Script table shared by every real app manifest; kind-specific entries layer on top.
+const appBaseScripts = (dev: string, build: string) => ({
+  audit: "bun run --if-present beep:audit",
+  codegen: "echo 'no codegen needed'",
+  dev,
+  "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
+  "beep:build": build,
+  "beep:check": "tsgo -b tsconfig.json",
+  "beep:lint": "biome check .",
+  "beep:lint:fix": "biome check . --write",
+  "beep:test": "bunx --bun vitest run",
+  build: "bun run beep:build",
+  check: "bun run beep:check",
+  coverage: "bunx vitest run --coverage",
+  lint: "bun run beep:lint",
+  "lint:fix": "bun run beep:lint:fix",
+  test: "bun run beep:test",
+});
+
+// Lab-only workspace dependencies layered onto Next.js lab app manifests.
+const NEXTJS_LAB_DEPENDENCIES: Readonly<Record<string, string>> = {
+  "@beep/identity": "workspace:^",
+  "@beep/repo-configs": "workspace:^",
+  "@beep/schema": "workspace:^",
+  "@beep/ui": "workspace:^",
+  "@beep/utils": "workspace:^",
+  effect: "catalog:",
+};
+
+// Lab-only workspace dependencies layered onto Vite lab app manifests.
+const VITE_LAB_DEPENDENCIES: Readonly<Record<string, string>> = {
+  "@beep/identity": "workspace:^",
+  "@beep/schema": "workspace:^",
+  "@beep/ui": "workspace:^",
+  "@beep/utils": "workspace:^",
+  effect: "catalog:",
+};
+
+// Lab-conditional dependency fragment (empty outside lab mode).
+const labDependenciesFor = (
+  lab: boolean,
+  dependencies: Readonly<Record<string, string>>
+): Readonly<Record<string, string>> => (lab ? dependencies : {});
+
+// Dev-dependency table shared by React-flavored app manifests.
+const REACT_APP_DEV_DEPENDENCIES = {
+  "@effect/vitest": "catalog:",
+  "@testing-library/dom": "catalog:",
+  "@testing-library/react": "catalog:",
+  "@types/node": "catalog:",
+  "@types/react": "catalog:",
+  "@types/react-dom": "catalog:",
+  jsdom: "catalog:",
+  typescript: "catalog:",
+};
+
+// Vite-stack additions layered onto the React app dev dependencies.
+const VITE_APP_DEV_DEPENDENCIES = {
+  ...REACT_APP_DEV_DEPENDENCIES,
+  "@vitejs/plugin-react": "catalog:",
+  vite: "catalog:",
+};
+
+// package.json manifest for a Next.js app workspace.
+const nextjsAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
+  ...baseManifest,
+  scripts: {
+    ...appBaseScripts(portlessDev(portlessLabel, "next dev --turbopack"), "next build --turbopack"),
+    start: "next start",
+  },
+  dependencies: {
+    next: "catalog:",
+    react: "catalog:",
+    "react-dom": "catalog:",
+    ...labDependenciesFor(lab, NEXTJS_LAB_DEPENDENCIES),
+  },
+  devDependencies: REACT_APP_DEV_DEPENDENCIES,
+});
+
+// package.json manifest for a Vite app workspace.
+const viteAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
+  ...baseManifest,
+  scripts: appBaseScripts(portlessViteDev(portlessLabel, "5173"), "vite build"),
+  dependencies: {
+    react: "catalog:",
+    "react-dom": "catalog:",
+    ...labDependenciesFor(lab, VITE_LAB_DEPENDENCIES),
+  },
+  devDependencies: VITE_APP_DEV_DEPENDENCIES,
+});
+
+// package.json manifest for a service app workspace.
+const serviceAppManifest = ({ baseManifest, portlessLabel }: AppManifestContext) => ({
+  ...baseManifest,
+  scripts: appBaseScripts(portlessDev(portlessLabel, "sh -c 'bun --watch src/main.ts'"), "tsgo -b tsconfig.json"),
+  dependencies: {
+    "@beep/identity": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "@beep/utils": "workspace:^",
+    "@effect/platform-bun": "catalog:",
+    effect: "catalog:",
+  },
+  devDependencies: {
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    typescript: "catalog:",
+  },
+});
+
+// package.json manifest for a Tauri app workspace.
+const tauriAppManifest = ({ baseManifest, portlessLabel }: AppManifestContext) => ({
+  ...baseManifest,
+  scripts: {
+    ...appBaseScripts(portlessViteDev(portlessLabel, "1420"), "vite build"),
+    "dev:tauri": "tauri dev",
+  },
+  dependencies: {
+    "@tauri-apps/api": "catalog:",
+    react: "catalog:",
+    "react-dom": "catalog:",
+  },
+  devDependencies: {
+    ...VITE_APP_DEV_DEPENDENCIES,
+    "@tauri-apps/cli": "catalog:",
+  },
+});
+
+// App kinds that emit a dedicated app manifest; runtime-proof falls through to the package manifest.
+const appManifestBuilderFor = (kind: AppKind): O.Option<(ctx: AppManifestContext) => unknown> =>
+  Match.value(kind).pipe(
+    Match.when("nextjs", () => O.some(nextjsAppManifest)),
+    Match.when("vite", () => O.some(viteAppManifest)),
+    Match.when("service", () => O.some(serviceAppManifest)),
+    Match.when("tauri", () => O.some(tauriAppManifest)),
+    Match.when("runtime-proof", () => O.none()),
+    Match.exhaustive
+  );
+
+// Encode a manifest object to its pretty package.json payload with trailing newline.
+const encodeManifestJson = (manifest: unknown): Effect.Effect<string, DomainError | S.SchemaError> =>
+  Effect.map(encodePackageJsonCanonicalPrettyEffect(manifest), (json) => `${json}\n`);
+
+// beep:check lane for library/tool packages (stories tsconfig adds a stories lane).
+const packageCheckScript = (withStoriesTsconfig: boolean): string =>
+  withStoriesTsconfig
+    ? "tsgo -b tsconfig.json && bun run beep:check:tests && bun run beep:check:stories"
+    : "tsgo -b tsconfig.json && bun run beep:check:tests";
+
+// Script table for library/tool package manifests.
+const packageScripts = (rootRelative: string, withStoriesTsconfig: boolean) => ({
+  audit: "bun run --if-present beep:audit",
+  babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
+  "beep:audit":
+    "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
+  "beep:build": "tsc -p tsconfig.json && bun run babel",
+  "beep:check": packageCheckScript(withStoriesTsconfig),
+  "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
+  ...(withStoriesTsconfig ? { "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit" } : {}),
+  "beep:lint": "biome check .",
+  "beep:lint:fix": "biome check . --write",
+  "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
+  "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
+  build: "bun run beep:build",
+  check: "bun run beep:check",
+  coverage: "bunx vitest run --coverage --exclude=test/integration/**",
+  docgen: `bun run ${rootRelative}packages/tooling/tool/docgen/src/bin.ts`,
+  lint: "bun run beep:lint",
+  "lint:fix": "bun run beep:lint:fix",
+  test: "bun run beep:test",
+  "test:integration": "bun run beep:test:integration",
+});
+
+// Dependency table for library/tool package manifests (tools also get platform-node).
+const packageDependencies = (type: PackageType): Readonly<Record<string, string>> => ({
+  effect: "catalog:",
+  ...(packageTypeEquivalence(type, "tool") ? { "@effect/platform-node": "catalog:" } : {}),
+});
+
 /**
  * Build a pretty-printed `package.json` string for a new package.
  *
@@ -1808,250 +1889,18 @@ const generatePackageJson: (
 ) => Effect.Effect<string, DomainError | S.SchemaError> = Effect.fn(
   function* (name, type, description, packagePath, packageMetadata, shape, portlessLabel, ecosystemEffectPeerVersion) {
     const { appKind, lab, withStoriesTsconfig } = shape;
-    const rootRelative = toRootRelative(packagePath);
-    const babelScript = "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps";
-    const baseManifest = {
-      name: `@beep/${name}`,
-      version: "0.0.0",
-      type: "module",
-      private: true,
-      license: "MIT",
-      description,
-      homepage: `https://github.com/beep-effect/beep-effect/tree/main/${packagePath}`,
-      repository: {
-        type: "git",
-        url: "git@github.com:beep-effect/beep-effect.git",
-        directory: packagePath,
-      },
-    };
+    const baseManifest = baseManifestFor(name, description, packagePath);
 
-    if (appKindIs(appKind, "nextjs")) {
-      const labDependencies = lab
-        ? {
-            "@beep/identity": "workspace:^",
-            "@beep/repo-configs": "workspace:^",
-            "@beep/schema": "workspace:^",
-            "@beep/ui": "workspace:^",
-            "@beep/utils": "workspace:^",
-            effect: "catalog:",
-          }
-        : {};
-      const pkg = {
-        ...baseManifest,
-        scripts: {
-          audit: "bun run --if-present beep:audit",
-          codegen: "echo 'no codegen needed'",
-          dev: `portless ${portlessLabel} next dev --turbopack`,
-          "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-          "beep:build": "next build --turbopack",
-          start: "next start",
-          "beep:check": "tsgo -b tsconfig.json",
-          "beep:lint": "biome check .",
-          "beep:lint:fix": "biome check . --write",
-          "beep:test": "bunx --bun vitest run",
-          build: "bun run beep:build",
-          check: "bun run beep:check",
-          coverage: "bunx vitest run --coverage",
-          lint: "bun run beep:lint",
-          "lint:fix": "bun run beep:lint:fix",
-          test: "bun run beep:test",
-        },
-        dependencies: {
-          next: "catalog:",
-          react: "catalog:",
-          "react-dom": "catalog:",
-          ...labDependencies,
-        },
-        devDependencies: {
-          "@effect/vitest": "catalog:",
-          "@testing-library/dom": "catalog:",
-          "@testing-library/react": "catalog:",
-          "@types/node": "catalog:",
-          "@types/react": "catalog:",
-          "@types/react-dom": "catalog:",
-          jsdom: "catalog:",
-          typescript: "catalog:",
-        },
-      };
-
-      const json = yield* encodePackageJsonCanonicalPrettyEffect(pkg);
-      return `${json}\n`;
+    const appManifest = pipe(
+      appKind,
+      O.flatMap(appManifestBuilderFor),
+      O.map((build) => build({ baseManifest, lab, portlessLabel }))
+    );
+    if (O.isSome(appManifest)) {
+      return yield* encodeManifestJson(appManifest.value);
     }
 
-    if (appKindIs(appKind, "vite")) {
-      const labDependencies = lab
-        ? {
-            "@beep/identity": "workspace:^",
-            "@beep/schema": "workspace:^",
-            "@beep/ui": "workspace:^",
-            "@beep/utils": "workspace:^",
-            effect: "catalog:",
-          }
-        : {};
-      const pkg = {
-        ...baseManifest,
-        scripts: {
-          audit: "bun run --if-present beep:audit",
-          codegen: "echo 'no codegen needed'",
-          dev: `portless ${portlessLabel} sh -c 'vite --host 127.0.0.1 --port "\${PORT:-5173}" --strictPort'`,
-          "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-          "beep:build": "vite build",
-          "beep:check": "tsgo -b tsconfig.json",
-          "beep:lint": "biome check .",
-          "beep:lint:fix": "biome check . --write",
-          "beep:test": "bunx --bun vitest run",
-          build: "bun run beep:build",
-          check: "bun run beep:check",
-          coverage: "bunx vitest run --coverage",
-          lint: "bun run beep:lint",
-          "lint:fix": "bun run beep:lint:fix",
-          test: "bun run beep:test",
-        },
-        dependencies: {
-          react: "catalog:",
-          "react-dom": "catalog:",
-          ...labDependencies,
-        },
-        devDependencies: {
-          "@effect/vitest": "catalog:",
-          "@testing-library/dom": "catalog:",
-          "@testing-library/react": "catalog:",
-          "@types/node": "catalog:",
-          "@types/react": "catalog:",
-          "@types/react-dom": "catalog:",
-          "@vitejs/plugin-react": "catalog:",
-          jsdom: "catalog:",
-          typescript: "catalog:",
-          vite: "catalog:",
-        },
-      };
-
-      const json = yield* encodePackageJsonCanonicalPrettyEffect(pkg);
-      return `${json}\n`;
-    }
-
-    if (appKindIs(appKind, "service")) {
-      const pkg = {
-        ...baseManifest,
-        scripts: {
-          audit: "bun run --if-present beep:audit",
-          codegen: "echo 'no codegen needed'",
-          dev: `portless ${portlessLabel} sh -c 'bun --watch src/main.ts'`,
-          "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-          "beep:build": "tsgo -b tsconfig.json",
-          "beep:check": "tsgo -b tsconfig.json",
-          "beep:lint": "biome check .",
-          "beep:lint:fix": "biome check . --write",
-          "beep:test": "bunx --bun vitest run",
-          build: "bun run beep:build",
-          check: "bun run beep:check",
-          coverage: "bunx vitest run --coverage",
-          lint: "bun run beep:lint",
-          "lint:fix": "bun run beep:lint:fix",
-          test: "bun run beep:test",
-        },
-        dependencies: {
-          "@beep/identity": "workspace:^",
-          "@beep/schema": "workspace:^",
-          "@beep/utils": "workspace:^",
-          "@effect/platform-bun": "catalog:",
-          effect: "catalog:",
-        },
-        devDependencies: {
-          "@effect/vitest": "catalog:",
-          "@types/node": "catalog:",
-          typescript: "catalog:",
-        },
-      };
-
-      const json = yield* encodePackageJsonCanonicalPrettyEffect(pkg);
-      return `${json}\n`;
-    }
-
-    if (appKindIs(appKind, "tauri")) {
-      const pkg = {
-        ...baseManifest,
-        scripts: {
-          audit: "bun run --if-present beep:audit",
-          codegen: "echo 'no codegen needed'",
-          dev: `portless ${portlessLabel} sh -c 'vite --host 127.0.0.1 --port "\${PORT:-1420}" --strictPort'`,
-          "dev:tauri": "tauri dev",
-          "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
-          "beep:build": "vite build",
-          "beep:check": "tsgo -b tsconfig.json",
-          "beep:lint": "biome check .",
-          "beep:lint:fix": "biome check . --write",
-          "beep:test": "bunx --bun vitest run",
-          build: "bun run beep:build",
-          check: "bun run beep:check",
-          coverage: "bunx vitest run --coverage",
-          lint: "bun run beep:lint",
-          "lint:fix": "bun run beep:lint:fix",
-          test: "bun run beep:test",
-        },
-        dependencies: {
-          "@tauri-apps/api": "catalog:",
-          react: "catalog:",
-          "react-dom": "catalog:",
-        },
-        devDependencies: {
-          "@effect/vitest": "catalog:",
-          "@tauri-apps/cli": "catalog:",
-          "@testing-library/dom": "catalog:",
-          "@testing-library/react": "catalog:",
-          "@types/node": "catalog:",
-          "@types/react": "catalog:",
-          "@types/react-dom": "catalog:",
-          "@vitejs/plugin-react": "catalog:",
-          jsdom: "catalog:",
-          typescript: "catalog:",
-          vite: "catalog:",
-        },
-      };
-
-      const json = yield* encodePackageJsonCanonicalPrettyEffect(pkg);
-      return `${json}\n`;
-    }
-
-    const dependencies: Record<string, string> = {
-      effect: "catalog:",
-    };
-
-    if (packageTypeEquivalence(type, "tool")) {
-      dependencies["@effect/platform-node"] = "catalog:";
-    }
-
-    const checkScript = withStoriesTsconfig
-      ? "tsgo -b tsconfig.json && bun run beep:check:tests && bun run beep:check:stories"
-      : "tsgo -b tsconfig.json && bun run beep:check:tests";
-    const storyCheckScripts = withStoriesTsconfig
-      ? {
-          "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit",
-        }
-      : {};
-
-    const scripts = {
-      audit: "bun run --if-present beep:audit",
-      babel: babelScript,
-      "beep:audit":
-        "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-      "beep:build": "tsc -p tsconfig.json && bun run babel",
-      "beep:check": checkScript,
-      "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
-      ...storyCheckScripts,
-      "beep:lint": "biome check .",
-      "beep:lint:fix": "biome check . --write",
-      "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
-      "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
-      build: "bun run beep:build",
-      check: "bun run beep:check",
-      coverage: "bunx vitest run --coverage --exclude=test/integration/**",
-      docgen: `bun run ${rootRelative}packages/tooling/tool/docgen/src/bin.ts`,
-      lint: "bun run beep:lint",
-      "lint:fix": "bun run beep:lint:fix",
-      test: "bun run beep:test",
-      "test:integration": "bun run beep:test:integration",
-    };
+    const scripts = packageScripts(toRootRelative(packagePath), withStoriesTsconfig);
 
     const ecosystemMetadata = pipe(
       packageMetadata,
@@ -2066,7 +1915,7 @@ const generatePackageJson: (
       );
     }
 
-    const pkg = {
+    return yield* encodeManifestJson({
       ...baseManifest,
       ...(O.isSome(packageMetadata)
         ? {
@@ -2092,14 +1941,11 @@ const generatePackageJson: (
         },
       },
       scripts,
-      dependencies,
+      dependencies: packageDependencies(type),
       devDependencies: {
         "@types/node": "catalog:",
         "@effect/vitest": "catalog:",
       },
-    };
-
-    const json = yield* encodePackageJsonCanonicalPrettyEffect(pkg);
-    return `${json}\n`;
+    });
   }
 );
