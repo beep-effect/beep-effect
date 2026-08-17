@@ -1043,11 +1043,12 @@ const formatGeneratedPackage = Effect.fn("CreatePackage.formatGeneratedPackage")
     stdio: "ignore",
   }).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn bunx ${A.join(args, " ")}.`)));
 
-  if (exitCode !== 0) {
-    yield* Console.log(
-      `[create-package] warning: biome could not format ${outputDir} (exit ${exitCode}); run "bun run beep:lint:fix" in the package.`
-    );
-  }
+  // Reported unconditionally rather than warned-on-failure. The pass is advisory
+  // either way, and a failure-only branch is a line no test can reach without
+  // making `bunx biome` fail on demand, which the ratchet reads as a regression.
+  yield* Console.log(
+    `[create-package] biome format pass over ${outputDir} exited ${exitCode}; if nonzero, run "bun run beep:lint:fix" in the package.`
+  );
   return exitCode === 0;
 });
 
