@@ -810,21 +810,27 @@
           "@beep/agents-client",
           "@beep/agents-domain",
           "@beep/agents-use-cases",
+          "@beep/identity",
           "@beep/md",
           "@beep/observability",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/workspace-use-cases"
         ],
         "allowTypeOnly": [
           "@beep/agents-client",
           "@beep/agents-domain",
           "@beep/agents-use-cases",
+          "@beep/identity",
           "@beep/md",
           "@beep/observability",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/workspace-use-cases"
         ]
       },
       {
@@ -1496,6 +1502,7 @@
         "from": "@beep/epistemic-client",
         "allow": [
           "@beep/epistemic-client",
+          "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
           "@beep/schema",
@@ -1503,6 +1510,7 @@
         ],
         "allowTypeOnly": [
           "@beep/epistemic-client",
+          "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/identity",
           "@beep/schema",
@@ -1555,6 +1563,7 @@
           "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
           "@beep/file-processing",
+          "@beep/identity",
           "@beep/mcp-kit",
           "@beep/observability",
           "@beep/pglite",
@@ -1575,6 +1584,7 @@
           "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
           "@beep/file-processing",
+          "@beep/identity",
           "@beep/mcp-kit",
           "@beep/observability",
           "@beep/pglite",
@@ -2388,7 +2398,8 @@
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/shacl",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/api-transport",
@@ -2402,7 +2413,8 @@
           "@beep/rdf-canonize",
           "@beep/semantic-web",
           "@beep/shacl",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -2437,7 +2449,8 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
@@ -2448,7 +2461,8 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -2563,13 +2577,15 @@
           "@beep/identity",
           "@beep/phoenix",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/phoenix",
           "@beep/schema",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -3005,6 +3021,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/scratchpad",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3020,6 +3037,7 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/scratchpad",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },

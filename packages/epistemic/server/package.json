@@ -14,7 +14,7 @@
   "scripts": {
     "audit": "bun run --if-present beep:audit",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-    "beep:build": "tsc -b tsconfig.json",
+    "beep:build": "tsc -p tsconfig.json",
     "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:lint": "biome check .",
@@ -59,6 +59,7 @@
     "@beep/epistemic-tables": "workspace:^",
     "@beep/epistemic-use-cases": "workspace:^",
     "@beep/file-processing": "workspace:^",
+    "@beep/identity": "workspace:^",
     "@beep/mcp-kit": "workspace:^",
     "@beep/observability": "workspace:^",
     "@beep/postgres": "workspace:^",
