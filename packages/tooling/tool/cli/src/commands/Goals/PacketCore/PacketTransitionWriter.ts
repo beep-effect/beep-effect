@@ -11,7 +11,11 @@
  * projection only after every append lands. A stream that moved, forked, or
  * broke between plan and commit refuses the failing append — events already
  * appended by the same commit remain as a valid linear chain (never a fork
- * or corruption) — and the caller re-plans against reality.
+ * or corruption) — and the caller re-plans against reality. Operator
+ * risk-tier overrides plan through the same guard: `planRiskTierOverride`
+ * drafts the `risk-tier-overridden` event (refusing on streamless packets,
+ * whose overrides would otherwise have no record), and `commit` lands it
+ * exactly like a status transition.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -27,16 +31,25 @@ import {
   PacketDerivedState,
   PacketEvent,
   PacketRevision,
+  PacketRiskTier,
   PacketStage,
   PacketStageOrdinal,
   PacketStatusToken,
   PacketTip,
+  RiskTierOverrideReason,
   StoredPacketEvent,
 } from "./PacketCore.schemas.ts";
 import { packetEventDigest, packetEventFileName } from "./PacketDigest.ts";
-import { PacketEventStore, PacketEventStoreLive, PacketStreamLocator } from "./PacketEventStore.ts";
+import {
+  foldUnambiguousStream,
+  PacketEventStore,
+  PacketEventStoreLive,
+  PacketStreamLocator,
+} from "./PacketEventStore.ts";
 import { foldPacketEvents, projectPacketTrace, renderPacketTraceFile } from "./PacketFold.ts";
 import type { PacketCasConflictError } from "./PacketCore.errors.ts";
+import type { PacketEventId } from "./PacketCore.schemas.ts";
+import type { PacketStreamListing } from "./PacketEventStore.ts";
 
 const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketTransitionWriter");
 
@@ -112,6 +125,108 @@ export class PacketTransitionRequest extends S.Class<PacketTransitionRequest>($I
 ) {}
 
 /**
+ * One requested operator risk-tier override against a packet stream.
+ *
+ * **Details**
+ *
+ * Overrides are operator-only, recorded, and challengeable: `reason` is the
+ * recorded, disputable rationale. Unlike a status transition — which falls
+ * back to the manifest on a streamless packet — an override exists only as a
+ * stream event, so planning one against a packet without `ops/events/`
+ * refuses instead of degrading to a no-op. `genesisStatus` (plus the
+ * optional stage/ordinal pair) seeds the genesis event when the override is
+ * the stream's first write.
+ *
+ * **Example** (Construct an override request)
+ *
+ * ```ts
+ * import { PacketRiskTierOverrideRequest, PacketStreamLocator } from "@beep/repo-cli/test/Goals"
+ *
+ * const request = PacketRiskTierOverrideRequest.make({
+ *   locator: PacketStreamLocator.make({ packet: "demo", root: "goals", packetPath: "goals/demo" }),
+ *   tier: "full",
+ *   reason: "touches the release pipeline",
+ *   genesisStatus: "active",
+ *   actor: "operator",
+ *   at: "2026-08-17T00:00:00.000Z",
+ * })
+ * console.log(request.tier) // "full"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PacketRiskTierOverrideRequest extends S.Class<PacketRiskTierOverrideRequest>(
+  $I`PacketRiskTierOverrideRequest`
+)(
+  S.Struct({
+    locator: PacketStreamLocator,
+    tier: PacketRiskTier,
+    reason: RiskTierOverrideReason,
+    genesisStatus: PacketStatusToken,
+    genesisStage: S.optionalKey(PacketStage),
+    genesisOrdinal: S.optionalKey(PacketStageOrdinal),
+    actor: S.String,
+    at: S.String,
+  }).check(PacketTransitionGenesisPairCheck),
+  $I.annote("PacketRiskTierOverrideRequest", {
+    description: "One requested operator risk-tier override with its recorded reason and genesis fallback.",
+  })
+) {}
+
+/**
+ * Union of the requests a guarded-writer plan can carry.
+ *
+ * **Example** (A status transition is a plan request)
+ *
+ * ```ts
+ * import { PacketPlanRequest, PacketStreamLocator, PacketTransitionRequest } from "@beep/repo-cli/test/Goals"
+ * import * as S from "effect/Schema"
+ *
+ * const request = PacketTransitionRequest.make({
+ *   locator: PacketStreamLocator.make({ packet: "demo", root: "goals", packetPath: "goals/demo" }),
+ *   status: "paused",
+ *   previousStatus: "active",
+ *   actor: "operator",
+ *   at: "2026-08-17T00:00:00.000Z",
+ * })
+ * console.log(S.is(PacketPlanRequest)(request)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PacketPlanRequest = S.Union([PacketTransitionRequest, PacketRiskTierOverrideRequest]).pipe(
+  $I.annoteSchema("PacketPlanRequest", {
+    description: "Requests a guarded-writer plan can carry: status transition or risk-tier override.",
+  })
+);
+
+/**
+ * Request carried by a guarded-writer plan.
+ *
+ * **Example** (Annotate a plan request)
+ *
+ * ```ts
+ * import { PacketStreamLocator, PacketTransitionRequest } from "@beep/repo-cli/test/Goals"
+ * import type { PacketPlanRequest } from "@beep/repo-cli/test/Goals"
+ *
+ * const request: PacketPlanRequest = PacketTransitionRequest.make({
+ *   locator: PacketStreamLocator.make({ packet: "demo", root: "goals", packetPath: "goals/demo" }),
+ *   status: "paused",
+ *   previousStatus: "active",
+ *   actor: "operator",
+ *   at: "2026-08-17T00:00:00.000Z",
+ * })
+ * console.log(request.locator.packet)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PacketPlanRequest = typeof PacketPlanRequest.Type;
+
+/**
  * The exact effect of one transition, computed without writing.
  *
  * **Example** (Inspect a plan's shape)
@@ -140,7 +255,7 @@ export class PacketTransitionRequest extends S.Class<PacketTransitionRequest>($I
  */
 export class PacketTransitionPlan extends S.Class<PacketTransitionPlan>($I`PacketTransitionPlan`)(
   {
-    request: PacketTransitionRequest,
+    request: PacketPlanRequest,
     streamPresent: S.Boolean,
     currentRevision: PacketRevision,
     currentTip: S.optionalKey(PacketTip),
@@ -207,6 +322,16 @@ export interface PacketTransitionWriterShape {
    * @since 0.0.0
    */
   readonly plan: (request: PacketTransitionRequest) => Effect.Effect<PacketTransitionPlan, PacketStreamError>;
+  /**
+   * Fold the live stream and compute the exact events an operator risk-tier
+   * override would append. Writes nothing; refuses on a streamless packet
+   * because the stream is the override's only record.
+   *
+   * @since 0.0.0
+   */
+  readonly planRiskTierOverride: (
+    request: PacketRiskTierOverrideRequest
+  ) => Effect.Effect<PacketTransitionPlan, PacketStreamError>;
 }
 
 /**
@@ -234,6 +359,28 @@ const streamErrorFromSchema =
   (error: S.SchemaError): PacketStreamError =>
     PacketStreamError.new(packet, `${context}: ${error.message}`);
 
+type DraftBase = {
+  readonly events: ReadonlyArray<PacketEvent>;
+  readonly seq: number;
+  readonly parent: O.Option<PacketEventId>;
+};
+
+// Both drafters append exactly one event past the drafted base; the CAS
+// envelope (sequence, expected revision, parent digest, actor, timestamp) is
+// identical either way — only the body differs.
+const draftAppendedEvent = (request: PacketPlanRequest, base: DraftBase, body: PacketEvent["body"]): PacketEvent =>
+  PacketEvent.make({
+    schemaVersion: "packet-event/v1",
+    packet: request.locator.packet,
+    root: request.locator.root,
+    seq: base.seq + 1,
+    expectedRevision: base.seq,
+    at: request.at,
+    actor: request.actor,
+    ...optionalProp("parent", base.parent),
+    body,
+  });
+
 const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(function* () {
   const store = yield* PacketEventStore;
   const fs = yield* FileSystem.FileSystem;
@@ -241,12 +388,14 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
 
   const tracePathFor = (packetPath: string): string => path.join(packetPath, ...PACKET_TRACE_SEGMENTS);
 
-  const draftEvents: (
-    request: PacketTransitionRequest,
-    derived: PacketDerivedState
-  ) => Effect.Effect<ReadonlyArray<PacketEvent>, PacketStreamError> = Effect.fnUntraced(function* (
-    request: PacketTransitionRequest,
-    derived: PacketDerivedState
+  const draftBase: (
+    request: PacketPlanRequest,
+    derived: PacketDerivedState,
+    genesisStatus: PacketStatusToken
+  ) => Effect.Effect<DraftBase, PacketStreamError> = Effect.fnUntraced(function* (
+    request: PacketPlanRequest,
+    derived: PacketDerivedState,
+    genesisStatus: PacketStatusToken
   ) {
     let events = A.empty<PacketEvent>();
     let seq = derived.revision;
@@ -265,7 +414,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
         actor: request.actor,
         body: {
           type: "packet-created",
-          status: request.previousStatus,
+          status: genesisStatus,
           ...optionalProp("stage", O.fromUndefinedOr(request.genesisStage)),
           ...optionalProp("ordinal", O.fromUndefinedOr(request.genesisOrdinal)),
         },
@@ -278,23 +427,45 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
         )
       );
     }
+    return { events, seq, parent };
+  });
+
+  const draftEvents: (
+    request: PacketTransitionRequest,
+    derived: PacketDerivedState
+  ) => Effect.Effect<ReadonlyArray<PacketEvent>, PacketStreamError> = Effect.fnUntraced(function* (
+    request: PacketTransitionRequest,
+    derived: PacketDerivedState
+  ) {
+    const base = yield* draftBase(request, derived, request.previousStatus);
     // The stream is the system of record for its own history: when it already
     // derives a status (e.g. a retry after a partial failure left the manifest
     // behind), that derived status is the accurate `previous`, not the
     // caller's manifest snapshot.
     const previous = derived.status ?? request.previousStatus;
-    const statusSet = PacketEvent.make({
-      schemaVersion: "packet-event/v1",
-      packet: request.locator.packet,
-      root: request.locator.root,
-      seq: seq + 1,
-      expectedRevision: seq,
-      at: request.at,
-      actor: request.actor,
-      ...optionalProp("parent", parent),
-      body: { type: "status-set", status: request.status, previous },
+    const statusSet = draftAppendedEvent(request, base, { type: "status-set", status: request.status, previous });
+    return A.append(base.events, statusSet);
+  });
+
+  const draftOverrideEvents: (
+    request: PacketRiskTierOverrideRequest,
+    derived: PacketDerivedState
+  ) => Effect.Effect<ReadonlyArray<PacketEvent>, PacketStreamError> = Effect.fnUntraced(function* (
+    request: PacketRiskTierOverrideRequest,
+    derived: PacketDerivedState
+  ) {
+    const base = yield* draftBase(request, derived, request.genesisStatus);
+    const previous = pipe(
+      O.fromUndefinedOr(derived.riskTierOverride),
+      O.map((override) => override.tier)
+    );
+    const overridden = draftAppendedEvent(request, base, {
+      type: "risk-tier-overridden",
+      tier: request.tier,
+      ...optionalProp("previous", previous),
+      reason: request.reason,
     });
-    return A.append(events, statusSet);
+    return A.append(base.events, overridden);
   });
 
   const storedDrafts: (
@@ -314,6 +485,46 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     return stored;
   });
 
+  type GuardedStream = {
+    readonly listing: PacketStreamListing;
+    readonly derived: PacketDerivedState;
+  };
+
+  const foldGuardedStream: (locator: PacketStreamLocator) => Effect.Effect<GuardedStream, PacketStreamError> =
+    Effect.fnUntraced(function* (locator: PacketStreamLocator) {
+      const listing = yield* store.list(locator);
+      const derived = yield* foldUnambiguousStream(locator, listing);
+      return { listing, derived };
+    });
+
+  const sealedPlan: (
+    request: PacketPlanRequest,
+    stream: GuardedStream,
+    events: ReadonlyArray<PacketEvent>,
+    tracePath: string
+  ) => Effect.Effect<PacketTransitionPlan, PacketStreamError> = Effect.fnUntraced(function* (
+    request: PacketPlanRequest,
+    stream: GuardedStream,
+    events: ReadonlyArray<PacketEvent>,
+    tracePath: string
+  ) {
+    const drafts = yield* storedDrafts(request.locator.packet, events);
+    const derivedAfter = foldPacketEvents({
+      packet: request.locator.packet,
+      root: request.locator.root,
+      events: A.appendAll(stream.listing.events, drafts),
+    });
+    return PacketTransitionPlan.make({
+      request,
+      streamPresent: true,
+      currentRevision: stream.derived.revision,
+      ...optionalProp("currentTip", O.fromUndefinedOr(stream.derived.tip)),
+      events,
+      derivedAfter,
+      tracePath,
+    });
+  });
+
   const plan = Effect.fn("PacketTransitionWriter.plan")(function* (request: PacketTransitionRequest) {
     const tracePath = tracePathFor(request.locator.packetPath);
     const streamPresent = yield* store.hasStream(request.locator.packetPath);
@@ -326,40 +537,25 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
         tracePath,
       });
     }
-    const listing = yield* store.list(request.locator);
-    if (A.isReadonlyArrayNonEmpty(listing.issues)) {
+    const stream = yield* foldGuardedStream(request.locator);
+    const events = yield* draftEvents(request, stream.derived);
+    return yield* sealedPlan(request, stream, events, tracePath);
+  });
+
+  const planRiskTierOverride = Effect.fn("PacketTransitionWriter.planRiskTierOverride")(function* (
+    request: PacketRiskTierOverrideRequest
+  ) {
+    const tracePath = tracePathFor(request.locator.packetPath);
+    const streamPresent = yield* store.hasStream(request.locator.packetPath);
+    if (!streamPresent) {
       return yield* PacketStreamError.new(
         request.locator.packet,
-        `stream has ${A.length(listing.issues)} integrity issue(s); run \`bun run beep explore --check\` and repair before transitioning.`
+        "packet has no event stream (ops/events/); a risk-tier override is recorded only in the stream, so opt in before overriding."
       );
     }
-    const derived = foldPacketEvents({
-      packet: request.locator.packet,
-      root: request.locator.root,
-      events: listing.events,
-    });
-    if (A.isReadonlyArrayNonEmpty(derived.forks)) {
-      return yield* PacketStreamError.new(
-        request.locator.packet,
-        "stream is forked (two children of one parent); repair the fork before transitioning."
-      );
-    }
-    const events = yield* draftEvents(request, derived);
-    const drafts = yield* storedDrafts(request.locator.packet, events);
-    const derivedAfter = foldPacketEvents({
-      packet: request.locator.packet,
-      root: request.locator.root,
-      events: A.appendAll(listing.events, drafts),
-    });
-    return PacketTransitionPlan.make({
-      request,
-      streamPresent: true,
-      currentRevision: derived.revision,
-      ...optionalProp("currentTip", O.fromUndefinedOr(derived.tip)),
-      events,
-      derivedAfter,
-      tracePath,
-    });
+    const stream = yield* foldGuardedStream(request.locator);
+    const events = yield* draftOverrideEvents(request, stream.derived);
+    return yield* sealedPlan(request, stream, events, tracePath);
   });
 
   const commit = Effect.fn("PacketTransitionWriter.commit")(function* (transitionPlan: PacketTransitionPlan) {
@@ -394,7 +590,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     });
   });
 
-  return PacketTransitionWriter.of({ plan, commit });
+  return PacketTransitionWriter.of({ commit, plan, planRiskTierOverride });
 });
 
 /**

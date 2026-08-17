@@ -1,0 +1,15 @@
+{
+  "actor": "fixture",
+  "at": "2026-08-17T12:10:00.000Z",
+  "body": {
+    "reason": "fixture: initial operator override",
+    "tier": "standard",
+    "type": "risk-tier-overridden"
+  },
+  "expectedRevision": 2,
+  "packet": "risk-override",
+  "parent": "7aaaecfd176bd9bc19789ba324adbdeabec91f3517cec1eba8189cba3986ac0f",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 3
+}

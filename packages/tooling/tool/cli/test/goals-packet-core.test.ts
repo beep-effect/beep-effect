@@ -32,6 +32,7 @@ const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(L
 const FIXTURES_ROOT = new URL("./fixtures/packet-core", import.meta.url).pathname;
 const GOLDEN_PATH = `${FIXTURES_ROOT}/golden-linear`;
 const FORKED_PATH = `${FIXTURES_ROOT}/forked`;
+const RISK_OVERRIDE_PATH = `${FIXTURES_ROOT}/risk-override`;
 
 type EventBody = PacketEvent["body"];
 
@@ -157,6 +158,78 @@ describe("foldPacketEvents", () => {
   );
 
   it(
+    "derives the last risk-tier override on the linear prefix, with its challenge surface",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const events = yield* chainEvents("demo", [
+            { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
+            {
+              body: { type: "risk-tier-overridden", tier: "standard", reason: "initial routing" },
+              at: "2026-08-17T00:01:00.000Z",
+            },
+            {
+              body: { type: "risk-tier-overridden", tier: "full", previous: "standard", reason: "scope grew" },
+              at: "2026-08-17T00:02:00.000Z",
+            },
+          ]);
+          const derived = foldPacketEvents({ packet: "demo", root: "goals", events });
+          expect(derived.riskTierOverride?.tier).toBe("full");
+          expect(derived.riskTierOverride?.reason).toBe("scope grew");
+          expect(derived.riskTierOverride?.actor).toBe("test");
+          expect(derived.riskTierOverride?.at).toBe("2026-08-17T00:02:00.000Z");
+        })
+      ),
+    20_000
+  );
+
+  it(
+    "keeps only the pre-fork risk-tier override when the stream forks",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const events = yield* chainEvents("demo", [
+            { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
+            {
+              body: { type: "risk-tier-overridden", tier: "standard", reason: "initial routing" },
+              at: "2026-08-17T00:01:00.000Z",
+            },
+            {
+              body: { type: "risk-tier-overridden", tier: "full", previous: "standard", reason: "post-fork claim" },
+              at: "2026-08-17T00:02:00.000Z",
+            },
+          ]);
+          // A sibling of the seq-3 override forks the chain at seq 2's children:
+          // the standard override at seq 2 sits on the unambiguous prefix and
+          // must survive, while the full override past the fork must not derive.
+          const parentId = storedIdAt(events, 1);
+          const sibling = PacketEvent.make({
+            schemaVersion: "packet-event/v1",
+            packet: "demo",
+            root: "goals",
+            seq: 3,
+            ...(parentId === undefined ? {} : { parent: parentId }),
+            expectedRevision: 2,
+            at: "2026-08-17T00:01:30.000Z",
+            actor: "test",
+            body: { type: "status-set", status: "paused", previous: "active" },
+          });
+          const siblingId = yield* packetEventDigest(sibling);
+          const withFork = A.append(
+            events,
+            StoredPacketEvent.make({ id: siblingId, fileName: packetEventFileName(sibling, siblingId), event: sibling })
+          );
+          const derived = foldPacketEvents({ packet: "demo", root: "goals", events: withFork });
+          expect(A.length(derived.forks)).toBe(1);
+          expect(derived.revision).toBe(2);
+          expect(derived.riskTierOverride?.tier).toBe("standard");
+          expect(derived.riskTierOverride?.reason).toBe("initial routing");
+        })
+      ),
+    20_000
+  );
+
+  it(
     "reports two children of one parent as a first-class fork verdict",
     () =>
       Effect.runPromise(
@@ -256,6 +329,38 @@ describe("golden replay (committed fixture)", () => {
           expect(renderedTrace).toBe(expectedTrace);
 
           const expectedDerived = yield* fs.readFileString(`${GOLDEN_PATH}/expected-derived.json`);
+          const encodedDerived = yield* S.encodeUnknownEffect(PacketDerivedState)(derived);
+          expect(canonicalJsonTextPretty(encodedDerived)).toBe(expectedDerived);
+        }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  it(
+    "folds the committed risk-override stream to the committed derived state and trace, byte-for-byte",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const store = yield* PacketEventStore;
+          const listing = yield* store.list(
+            PacketStreamLocator.make({ packet: "risk-override", root: "goals", packetPath: RISK_OVERRIDE_PATH })
+          );
+          expect(listing.issues).toStrictEqual([]);
+          expect(A.length(listing.events)).toBe(4);
+
+          const derived = foldPacketEvents({ packet: "risk-override", root: "goals", events: listing.events });
+          expect(derived.revision).toBe(4);
+          expect(derived.riskTierOverride?.tier).toBe("full");
+          expect(derived.riskTierOverride?.reason).toBe("fixture: raised after scope review");
+          expect(derived.forks).toStrictEqual([]);
+          expect(derived.issues).toStrictEqual([]);
+
+          const expectedTrace = yield* fs.readFileString(`${RISK_OVERRIDE_PATH}/expected-trace.json`);
+          const renderedTrace = yield* renderPacketTraceFile(projectPacketTrace(derived));
+          expect(renderedTrace).toBe(expectedTrace);
+
+          const expectedDerived = yield* fs.readFileString(`${RISK_OVERRIDE_PATH}/expected-derived.json`);
           const encodedDerived = yield* S.encodeUnknownEffect(PacketDerivedState)(derived);
           expect(canonicalJsonTextPretty(encodedDerived)).toBe(expectedDerived);
         }).pipe(provideScopedLayer(testLayer))

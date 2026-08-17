@@ -110,8 +110,9 @@ export type PacketRoot = typeof PacketRoot.Type;
  *
  * `packet-created` is the genesis event a stream starts with (recording where
  * the packet already stood when it opted in), `stage-entered` records a stage
- * transition with its ordinal, and `status-set` records a lifecycle-status
- * transition through the guarded writer.
+ * transition with its ordinal, `status-set` records a lifecycle-status
+ * transition through the guarded writer, and `risk-tier-overridden` records
+ * an operator override of the packet's risk tier.
  *
  * **Example** (Check event-type membership)
  *
@@ -124,9 +125,14 @@ export type PacketRoot = typeof PacketRoot.Type;
  * @category models
  * @since 0.0.0
  */
-export const PacketEventType = LiteralKit(["packet-created", "stage-entered", "status-set"]).pipe(
+export const PacketEventType = LiteralKit([
+  "packet-created",
+  "stage-entered",
+  "status-set",
+  "risk-tier-overridden",
+]).pipe(
   $I.annoteSchema("PacketEventType", {
-    description: "Packet-event v1 vocabulary: genesis, stage transition, status transition.",
+    description: "Packet-event v1 vocabulary: genesis, stage transition, status transition, risk-tier override.",
   })
 );
 
@@ -489,6 +495,67 @@ export const PacketStageOrdinal = S.Int.check(
  */
 export type PacketStageOrdinal = typeof PacketStageOrdinal.Type;
 
+/**
+ * Packet risk tiers in the ratified Light/Standard/Full routing vocabulary.
+ *
+ * **Details**
+ *
+ * The tier decides how much design/approval ceremony a packet's changes
+ * deserve. Tier *computation* from change trees is gated design-gate scope
+ * (parent MAP candidate 2); this core ships only the tier vocabulary and the
+ * operator-only override record.
+ *
+ * **Example** (Enumerate risk tiers)
+ *
+ * ```ts
+ * import { PacketRiskTier } from "@beep/repo-cli/test/Goals"
+ *
+ * console.log(PacketRiskTier.Options) // ["light", "standard", "full"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PacketRiskTier = LiteralKit(["light", "standard", "full"]).pipe(
+  $I.annoteSchema("PacketRiskTier", {
+    description: "Packet risk tier in the Light/Standard/Full routing vocabulary.",
+  })
+);
+
+/**
+ * Packet risk tier value.
+ *
+ * **Example** (Annotate a risk tier)
+ *
+ * ```ts
+ * import type { PacketRiskTier } from "@beep/repo-cli/test/Goals"
+ *
+ * const tier: PacketRiskTier = "standard"
+ * console.log(tier)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PacketRiskTier = typeof PacketRiskTier.Type;
+
+/**
+ * Guard for {@link PacketRiskTier} membership.
+ *
+ * **Example** (Validate CLI input)
+ *
+ * ```ts
+ * import { isPacketRiskTier } from "@beep/repo-cli/test/Goals"
+ *
+ * console.log(isPacketRiskTier("standard")) // true
+ * console.log(isPacketRiskTier("extreme")) // false
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const isPacketRiskTier = S.is(PacketRiskTier);
+
 const PacketCreatedBodyStagePairCheck = S.makeFilter(
   (body: { readonly stage?: PacketStage; readonly ordinal?: PacketStageOrdinal }) =>
     (body.stage === undefined) === (body.ordinal === undefined),
@@ -586,6 +653,80 @@ export class StatusSetBody extends S.Class<StatusSetBody>($I`StatusSetBody`)(
 ) {}
 
 /**
+ * Recorded, challengeable reason attached to every risk-tier override.
+ *
+ * **Details**
+ *
+ * Non-empty by construction so the challenge surface can never be blank —
+ * enforced on the event body that is recorded and on the writer request that
+ * drafts it.
+ *
+ * **Example** (Validate an override reason)
+ *
+ * ```ts
+ * import { RiskTierOverrideReason } from "@beep/repo-cli/test/Goals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(RiskTierOverrideReason)("touches the release pipeline")) // true
+ * console.log(S.is(RiskTierOverrideReason)("")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RiskTierOverrideReason = S.String.check(
+  S.isMinLength(1, {
+    identifier: $I`RiskTierOverrideReasonLengthCheck`,
+    title: "Risk Tier Override Reason Length",
+    description: "Every risk-tier override records a non-empty operator reason.",
+    message: "Expected a non-empty override reason",
+  })
+).pipe(
+  $I.annoteSchema("RiskTierOverrideReason", {
+    description: "Non-empty recorded reason for an operator risk-tier override.",
+  })
+);
+
+/**
+ * Operator risk-tier override event body.
+ *
+ * **Details**
+ *
+ * Overrides are operator-only, recorded, and challengeable: the body carries
+ * the operator's non-empty `reason` so a later reader can dispute it, and
+ * `previous` names the override it replaces (absent on the first override).
+ * A later override event supersedes an earlier one; the event chain itself
+ * is the challenge surface.
+ *
+ * **Example** (Construct a risk-tier override body)
+ *
+ * ```ts
+ * import { RiskTierOverriddenBody } from "@beep/repo-cli/test/Goals"
+ *
+ * const body = RiskTierOverriddenBody.make({
+ *   type: "risk-tier-overridden",
+ *   tier: "full",
+ *   reason: "touches the release pipeline",
+ * })
+ * console.log(body.tier) // "full"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RiskTierOverriddenBody extends S.Class<RiskTierOverriddenBody>($I`RiskTierOverriddenBody`)(
+  {
+    type: S.Literal("risk-tier-overridden"),
+    tier: PacketRiskTier,
+    previous: S.optionalKey(PacketRiskTier),
+    reason: RiskTierOverrideReason,
+  },
+  $I.annote("RiskTierOverriddenBody", {
+    description: "Operator risk-tier override body: new tier, replaced override, recorded reason.",
+  })
+) {}
+
+/**
  * Typed union of packet-event v1 bodies, discriminated by `type`.
  *
  * **Example** (Decode a body from its wire shape)
@@ -601,7 +742,12 @@ export class StatusSetBody extends S.Class<StatusSetBody>($I`StatusSetBody`)(
  * @category models
  * @since 0.0.0
  */
-export const PacketEventBody = S.Union([PacketCreatedBody, StageEnteredBody, StatusSetBody]).pipe(
+export const PacketEventBody = S.Union([
+  PacketCreatedBody,
+  StageEnteredBody,
+  StatusSetBody,
+  RiskTierOverriddenBody,
+]).pipe(
   $I.annoteSchema("PacketEventBody", {
     description: "Packet-event v1 body union discriminated by the type field.",
   })
@@ -624,6 +770,24 @@ export const PacketEventBody = S.Union([PacketCreatedBody, StageEnteredBody, Sta
  * @since 0.0.0
  */
 export type PacketEventBody = typeof PacketEventBody.Type;
+
+const PacketEventTimestamp = S.String.check(
+  S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/, {
+    identifier: $I`PacketEventAtPatternCheck`,
+    title: "Packet Event Timestamp Pattern",
+    description: "Event timestamps are ISO-8601 date-time strings.",
+    message: "Expected an ISO-8601 date-time string",
+  })
+);
+
+const PacketEventActor = S.String.check(
+  S.isMinLength(1, {
+    identifier: $I`PacketEventActorLengthCheck`,
+    title: "Packet Event Actor Length",
+    description: "The recording actor is a non-empty string.",
+    message: "Expected a non-empty actor",
+  })
+);
 
 const PacketEventGenesisParentCheck = S.makeFilter(
   (event: { readonly seq: number; readonly parent?: PacketEventId }) =>
@@ -695,22 +859,8 @@ export class PacketEvent extends S.Class<PacketEvent>($I`PacketEvent`)(
     ),
     parent: S.optionalKey(PacketEventId),
     expectedRevision: PacketRevision,
-    at: S.String.check(
-      S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/, {
-        identifier: $I`PacketEventAtPatternCheck`,
-        title: "Packet Event Timestamp Pattern",
-        description: "Event timestamps are ISO-8601 date-time strings.",
-        message: "Expected an ISO-8601 date-time string",
-      })
-    ),
-    actor: S.String.check(
-      S.isMinLength(1, {
-        identifier: $I`PacketEventActorLengthCheck`,
-        title: "Packet Event Actor Length",
-        description: "The recording actor is a non-empty string.",
-        message: "Expected a non-empty actor",
-      })
-    ),
+    at: PacketEventTimestamp,
+    actor: PacketEventActor,
     body: PacketEventBody,
   }).check(PacketEventGenesisParentCheck, PacketEventCasRevisionCheck),
   $I.annote("PacketEvent", {
@@ -921,6 +1071,44 @@ export class PacketChainIssue extends S.Class<PacketChainIssue>($I`PacketChainIs
 ) {}
 
 /**
+ * Currently effective operator risk-tier override of one packet stream.
+ *
+ * **Details**
+ *
+ * Derived from the last `risk-tier-overridden` event on the unambiguous
+ * linear prefix. The challenge surface travels with it: the recorded reason,
+ * actor, and timestamp of the override that is in effect.
+ *
+ * **Example** (Construct an override state)
+ *
+ * ```ts
+ * import { PacketRiskTierOverrideState } from "@beep/repo-cli/test/Goals"
+ *
+ * const override = PacketRiskTierOverrideState.make({
+ *   tier: "full",
+ *   reason: "touches the release pipeline",
+ *   actor: "operator",
+ *   at: "2026-08-17T00:00:00.000Z",
+ * })
+ * console.log(override.tier) // "full"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PacketRiskTierOverrideState extends S.Class<PacketRiskTierOverrideState>($I`PacketRiskTierOverrideState`)(
+  {
+    tier: PacketRiskTier,
+    reason: S.String,
+    actor: PacketEventActor,
+    at: PacketEventTimestamp,
+  },
+  $I.annote("PacketRiskTierOverrideState", {
+    description: "Effective operator risk-tier override: tier plus its recorded reason, actor, and timestamp.",
+  })
+) {}
+
+/**
  * Deterministic derived state of one packet stream.
  *
  * **Details**
@@ -960,16 +1148,26 @@ export class PacketDerivedState extends S.Class<PacketDerivedState>($I`PacketDer
     furthestStage: S.optionalKey(PacketStage),
     furthestOrdinal: S.optionalKey(PacketStageOrdinal),
     resumeStage: S.optionalKey(PacketStage),
+    riskTierOverride: S.optionalKey(PacketRiskTierOverrideState),
     forks: S.Array(PacketForkVerdict),
     issues: S.Array(PacketChainIssue),
   },
   $I.annote("PacketDerivedState", {
-    description: "Deterministic derived state of one packet stream (D3 stage derivations, tip, forks, issues).",
+    description:
+      "Deterministic derived state of one packet stream (D3 stage derivations, tip, risk-tier override, forks, issues).",
   })
 ) {}
 
 /**
  * Current packet-trace projector version.
+ *
+ * **Details**
+ *
+ * The version bumps only when the projector renders different bytes for a
+ * previously valid stream. Additive derivations that stay absent on old
+ * streams (for example the risk-tier override) keep the version: streams
+ * containing the new event types do not decode under older projectors at
+ * all, so no two projector versions ever disagree about the same stream.
  *
  * **Example** (Read the projector version)
  *
