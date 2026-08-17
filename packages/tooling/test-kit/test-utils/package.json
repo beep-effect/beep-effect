@@ -40,7 +40,7 @@
     "coverage": "bunx vitest run --coverage",
     "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:check": "tsgo -p tsconfig.check.json",
     "beep:test": "bunx --bun vitest run --exclude=test/integration/**",
     "beep:test:integration": "TESTCONTAINERS_RYUK_DISABLED=true bunx --bun vitest run test/integration",
     "beep:lint": "biome check .",

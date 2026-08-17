@@ -356,6 +356,10 @@ const PACKAGE_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
     outputPath: "tsconfig.test.json",
   }),
   TemplateSpec.make({
+    templateName: "tsconfig.check.json.hbs",
+    outputPath: "tsconfig.check.json",
+  }),
+  TemplateSpec.make({
     templateName: "src-index.ts.hbs",
     outputPath: "src/index.ts",
   }),
@@ -395,6 +399,10 @@ const NEXTJS_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
     outputPath: "tsconfig.json",
   }),
   TemplateSpec.make({
+    templateName: "tsconfig.check.json.hbs",
+    outputPath: "tsconfig.check.json",
+  }),
+  TemplateSpec.make({
     templateName: "app-next-next-env.d.ts.hbs",
     outputPath: "next-env.d.ts",
   }),
@@ -431,6 +439,10 @@ const TAURI_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
   TemplateSpec.make({
     templateName: "app-tauri-tsconfig.json.hbs",
     outputPath: "tsconfig.json",
+  }),
+  TemplateSpec.make({
+    templateName: "tsconfig.check.json.hbs",
+    outputPath: "tsconfig.check.json",
   }),
   TemplateSpec.make({
     templateName: "app-tauri-index.html.hbs",
@@ -516,6 +528,7 @@ const PACKAGE_FILES = [
   "package.json",
   "tsconfig.json",
   "tsconfig.test.json",
+  "tsconfig.check.json",
   "src/index.ts",
   "test/.gitkeep",
   "LICENSE",
@@ -533,6 +546,7 @@ const STORIES_TSCONFIG_FILES = [STORIES_TSCONFIG_FILE, STORIES_DIRECTORY_TSCONFI
 const NEXTJS_APP_FILES = [
   "package.json",
   "tsconfig.json",
+  "tsconfig.check.json",
   "next-env.d.ts",
   "next.config.ts",
   "src/app/globals.css",
@@ -549,6 +563,7 @@ const NEXTJS_APP_FILES = [
 const TAURI_APP_FILES = [
   "package.json",
   "tsconfig.json",
+  "tsconfig.check.json",
   "index.html",
   "src/App.tsx",
   "src/main.tsx",
@@ -1468,7 +1483,7 @@ const generatePackageJson: (
           "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
           "beep:build": "next build --turbopack",
           start: "next start",
-          "beep:check": "tsgo -b tsconfig.json",
+          "beep:check": "tsgo -p tsconfig.check.json",
           "beep:lint": "biome check .",
           "beep:lint:fix": "biome check . --write",
           "beep:test": "bunx --bun vitest run",
@@ -1510,7 +1525,7 @@ const generatePackageJson: (
           "dev:tauri": "tauri dev",
           "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
           "beep:build": "vite build",
-          "beep:check": "tsgo -b tsconfig.json",
+          "beep:check": "tsgo -p tsconfig.check.json",
           "beep:lint": "biome check .",
           "beep:lint:fix": "biome check . --write",
           "beep:test": "bunx --bun vitest run",
@@ -1554,8 +1569,8 @@ const generatePackageJson: (
     }
 
     const checkScript = withStoriesTsconfig
-      ? "tsgo -b tsconfig.json && bun run beep:check:tests && bun run beep:check:stories"
-      : "tsgo -b tsconfig.json && bun run beep:check:tests";
+      ? "tsgo -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories"
+      : "tsgo -p tsconfig.check.json && bun run beep:check:tests";
     const storyCheckScripts = withStoriesTsconfig
       ? {
           "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit",

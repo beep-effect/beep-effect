@@ -14,7 +14,7 @@
     "test:property": "bun run beep:test",
     "coverage": "bunx vitest run --coverage",
     "beep:build": "tsc -p tsconfig.json",
-    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
     "beep:check:tests": "tsgo -p test/tsconfig.json --noEmit",
     "beep:test": "bunx --bun vitest run",
     "beep:lint": "biome check .",
