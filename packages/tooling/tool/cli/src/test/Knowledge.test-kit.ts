@@ -6,6 +6,7 @@
  */
 
 export {
+  applyKnowledgeRefsCheck,
   renderKnowledgeRefsCheckSection,
   renderKnowledgeSemanticDeltaHumanReport,
 } from "../commands/Knowledge/Knowledge.command.ts";

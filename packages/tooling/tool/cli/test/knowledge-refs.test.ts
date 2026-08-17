@@ -1,4 +1,5 @@
 import {
+  applyKnowledgeRefsCheck,
   classifyKnowledgeRef,
   encodeKnowledgeRefsReportJson,
   extractKnowledgeHostAnchors,
@@ -14,11 +15,12 @@ import { renderKnowledgeRefsCheckSection } from "@beep/repo-cli/test/Knowledge";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Crypto, Effect, Encoding, HashSet, Layer } from "effect";
+import { Crypto, Effect, Encoding, Exit, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 import type {
   KnowledgeRefClassificationInput,
   KnowledgeRefObservation,
@@ -485,6 +487,31 @@ describe("knowledge refs check gate", () => {
       expect(O.isNone(knowledgeRefsCheckFailure(report))).toBe(true);
       expect(renderKnowledgeRefsCheckSection(report)).toBe("check: 0 live gated observation(s)");
     })
+  );
+
+  it.effect("the check applicator logs the section and fails on live debt", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        ".claude/skills/demo/SKILL.md":
+          "Run it from /home/example/checkouts/beep-effect and sync the mirror at ~/mirrors/firecrawl.\n",
+      });
+      const exit = yield* Effect.exit(applyKnowledgeRefsCheck(report, { json: false }));
+      expect(Exit.isFailure(exit)).toBe(true);
+      const logs = yield* TestConsole.logLines;
+      expect(A.some(logs, (line) => Str.startsWith("check: 2 live gated observation(s)")(Str.trim(String(line))))).toBe(
+        true
+      );
+    }).pipe(Effect.provide(TestConsole.layer))
+  );
+
+  it.effect("the check applicator skips the section under json when the census is debt-free", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        ".claude/skills/demo/SKILL.md": "Memory lives under ~/.claude/memory today.\n",
+      });
+      yield* applyKnowledgeRefsCheck(report, { json: true });
+      expect(yield* TestConsole.logLines).toEqual([]);
+    }).pipe(Effect.provide(TestConsole.layer))
   );
 
   it.effect("a Downloads descendant is live debt in the check section", () =>

@@ -366,6 +366,43 @@ export const renderKnowledgeRefsCheckSection = (report: KnowledgeRefsReport): st
   return A.join([`check: ${A.length(debt)} live gated observation(s)`, ...A.map(debt, renderObservation)], "\n");
 };
 
+/**
+ * Prints the `--check` section unless JSON is requested, then fails when live host-path debt exists.
+ *
+ * **Example** (A debt-free report does not fail)
+ *
+ * ```ts
+ * import { applyKnowledgeRefsCheck } from "@beep/repo-cli/commands/Knowledge/Knowledge.command"
+ * import { KnowledgeRefsReport } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ * import { Effect } from "effect"
+ *
+ * const report = KnowledgeRefsReport.make({
+ *   treeish: "HEAD",
+ *   commit: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4",
+ *   observations: [],
+ *   skipped: [],
+ * })
+ *
+ * console.log(Effect.isEffect(applyKnowledgeRefsCheck(report, { json: true }))) // true
+ * ```
+ *
+ * @internal
+ * @param report - Census produced for the tree under test.
+ * @param options.json - When true, skip the human check section; JSON already carried the census.
+ * @returns An effect that logs the section and fails on live gated observations.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const applyKnowledgeRefsCheck = Effect.fn("KnowledgeCommand.applyRefsCheck")(function* (
+  report: KnowledgeRefsReport,
+  options: { readonly json: boolean }
+) {
+  if (!options.json) {
+    yield* Console.log(renderKnowledgeRefsCheckSection(report));
+  }
+  yield* O.match(knowledgeRefsCheckFailure(report), { onNone: () => Effect.void, onSome: Effect.fail });
+});
+
 const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
   readonly tree: string;
   readonly surface: KnowledgeRefSurfaceFilter;
@@ -383,10 +420,7 @@ const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
     yield* Console.log(renderRefsReport(report, options.surface));
   }
   if (options.check) {
-    if (!options.json) {
-      yield* Console.log(renderKnowledgeRefsCheckSection(report));
-    }
-    yield* O.match(knowledgeRefsCheckFailure(report), { onNone: () => Effect.void, onSome: Effect.fail });
+    yield* applyKnowledgeRefsCheck(report, { json: options.json });
   }
 });
 
