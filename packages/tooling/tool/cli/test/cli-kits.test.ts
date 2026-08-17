@@ -18,6 +18,7 @@ import {
   renderProgressBar,
   resolveRunMode,
   runModeFlagsConflict,
+  shouldRenderFailureCause,
   unknownRecordKeys,
   unknownRecordProperty,
   validateDirectory,
@@ -30,6 +31,33 @@ import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
 const toError = (cause: unknown) => new Error(String(cause));
+
+describe("internal/cli/FailureRendering", () => {
+  it("stays quiet by default so causes do not leak transcript paths", () => {
+    expect(shouldRenderFailureCause([])).toBe(false);
+    expect(shouldRenderFailureCause(["ai-metrics", "forwarder", "run"])).toBe(false);
+  });
+
+  it("opts in on --verbose anywhere in argv", () => {
+    expect(shouldRenderFailureCause(["--verbose"])).toBe(true);
+    expect(shouldRenderFailureCause(["ai-metrics", "--verbose", "run"])).toBe(true);
+  });
+
+  it("opts in on a verbose --log-level in either spelling", () => {
+    expect(shouldRenderFailureCause(["--log-level", "debug"])).toBe(true);
+    expect(shouldRenderFailureCause(["--log-level", "trace"])).toBe(true);
+    expect(shouldRenderFailureCause(["--log-level=debug"])).toBe(true);
+    expect(shouldRenderFailureCause(["--log-level=trace"])).toBe(true);
+  });
+
+  it("stays quiet for non-verbose levels and malformed flags", () => {
+    expect(shouldRenderFailureCause(["--log-level", "info"])).toBe(false);
+    expect(shouldRenderFailureCause(["--log-level=warn"])).toBe(false);
+    // Trailing `--log-level` with no value must not read past the end of argv.
+    expect(shouldRenderFailureCause(["run", "--log-level"])).toBe(false);
+    expect(shouldRenderFailureCause(["--log-levels=debug"])).toBe(false);
+  });
+});
 
 describe("internal/cli/RunMode", () => {
   it("decodes the shared run-mode literals", () => {

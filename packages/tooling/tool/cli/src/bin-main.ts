@@ -8,6 +8,7 @@
  * @since 0.0.0
  */
 
+import { shouldRenderFailureCause } from "./internal/cli/FailureRendering.ts";
 import { LINT_POLICY_SUBCOMMANDS } from "./internal/cli/LintRouting.ts";
 
 const LINT_POLICY_SUBCOMMAND_NAMES: ReadonlyArray<string> = LINT_POLICY_SUBCOMMANDS;
@@ -117,8 +118,21 @@ const renderCliFailure = (exit: import("effect").Exit.Exit<unknown, unknown>) =>
     return;
   }
 
+  // Print the message, then the full cause. Previously this returned right after
+  // the message, so every typed error rendered as one bare sentence with no
+  // errno, path, or stack at ANY log level including --log-level debug. That is
+  // why the ai-metrics parquet-export regression sat unexplained for a month
+  // behind `Failed to read transcript input.`, and why the forwarder's systemd
+  // unit -- which captures 2000 bytes of stderr into status/latest.json -- had
+  // nothing useful to capture.
+  //
+  // The cause is appended rather than substituted so the common case still leads
+  // with the human-readable line.
   if (P.hasProperty(error, "message") && P.isString(error.message)) {
     process.stderr.write(`${error.message}\n`);
+    if (shouldRenderFailureCause(argv)) {
+      process.stderr.write(`${Cause.pretty(exit.cause)}\n`);
+    }
     return;
   }
 

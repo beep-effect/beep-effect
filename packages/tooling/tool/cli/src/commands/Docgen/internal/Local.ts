@@ -10,7 +10,7 @@ import { verifyDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Console, Effect, flow, Order, pipe } from "effect";
+import { Console, Duration, Effect, flow, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -480,22 +480,55 @@ const runStep = Effect.fn("DocgenLocal.runStep")(function* (
   label: string,
   command: string,
   args: ReadonlyArray<string>,
-  cwd: string
+  cwd: string,
+  options?: { readonly forceKillAfter?: Duration.Input | undefined }
 ) {
   const cmdTxt = commandText(command, args);
-  yield* Console.log(`[docgen:local] ${label}: ${cmdTxt}`);
-  const exitCode = yield* runToExit({
-    command,
-    args,
-    cwd,
-    stdio: "inherit",
-  }).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn ${cmdTxt}.`)));
+  const forceKillAfter = options?.forceKillAfter;
+  yield* Console.log(`[docgen:local] ${label}: started: ${cmdTxt}`);
+  // Log the return, not just the start. A step that prints a start line and
+  // then goes quiet is indistinguishable from a slow one in a CI log, which is
+  // exactly how the hosted Docgen lane's post-turbo stall read for an hour
+  // (run 31991634069: 2m8s of real work, then 56 minutes of silence).
+  const [elapsed, exitCode] = yield* Effect.timed(
+    runToExit({
+      command,
+      args,
+      cwd,
+      stdio: "inherit",
+      ...(P.isUndefined(forceKillAfter) ? {} : { forceKillAfter }),
+    })
+  ).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn ${cmdTxt}.`)));
+  yield* Console.log(`[docgen:local] ${label}: exited ${exitCode} after ${Duration.format(elapsed)}`);
 
   if (exitCode !== 0) {
     return yield* DomainError.make({
       message: `${label} failed with exit code ${exitCode}.`,
     });
   }
+});
+
+// Dump the processes that outlived a step we had to abandon. Without this a
+// stall reports only "it hung"; with it the next occurrence says whether turbo
+// itself is wedged, whether docgen children survived, or whether the tree is
+// already gone and the parent simply never observed the exit.
+const logSurvivingProcesses = Effect.fn("DocgenLocal.logSurvivingProcesses")(function* (
+  reason: string,
+  repoRoot: string
+) {
+  const dump = yield* runCapturedStreams({
+    command: "sh",
+    args: ["-c", "ps -eo pid,ppid,etimes,stat,args | grep -E '(turbo|bun|node)' | grep -v grep | head -40"],
+    cwd: repoRoot,
+  }).pipe(Effect.option);
+
+  yield* pipe(
+    dump,
+    O.match({
+      onNone: () => Console.log(`docgen:local: ${reason}: surviving-process dump unavailable`),
+      onSome: (result) => Console.log(`docgen:local: ${reason}: surviving processes:\n${Str.trim(result.stdout)}`),
+    })
+  );
 });
 
 const collectStepOutput = Effect.fn("DocgenLocal.collectStepOutput")(function* (
@@ -687,7 +720,11 @@ const verifyPackageProofManifest = (pkg: DocgenWorkspacePackage) =>
   );
 
 const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot: string) {
-  yield* runStep("full docgen", "bun", ["run", "docgen"], repoRoot);
+  // The full proof shells out to `bunx turbo run docgen && bun run docs:aggregate`,
+  // so it carries the same stall exposure as the scoped path plus the resident
+  // `bunx` wrapper the scoped path deliberately avoids. Its budget is much
+  // larger because a cold full proof legitimately runs for tens of minutes.
+  yield* runStepWithStallWatchdog("full docgen", "bun", ["run", "docgen"], repoRoot, fullDocgenStepBudget);
 });
 
 // Spawn the turbo binary directly: `bunx turbo` leaves a resident bun wrapper
@@ -696,6 +733,114 @@ const runFullDocgen = Effect.fn("DocgenLocal.runFullDocgen")(function* (repoRoot
 const turboBinaryPath = (repoRoot: string): string => `${repoRoot}/node_modules/.bin/turbo`;
 
 const directTurboArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string> => A.drop(turboArgs, 1);
+
+// Turbo has been observed on the hosted fleet to run every task to completion,
+// print its summary, and then never exit: the Docgen lane burned its whole
+// 60-minute budget after 2m8s of real work (run 31991634069, and again on the
+// following push). The parent then sits in `runToExit` waiting on a child that
+// is already done, so the CLI's exit-on-success teardown never gets to run --
+// the stall is mid-program, not at exit, which is why the existing
+// `Exit.isSuccess -> process.exit(0)` fixes in bin-main.ts and the docgen bin
+// cannot help.
+//
+// By the time turbo wedges, every task has succeeded and its output is on disk
+// and in .turbo/cache, so abandoning it and retrying costs seconds: the retry
+// is a full cache hit. That turns an unrecoverable 60-minute stall into a
+// recoverable blip. The budget is ~7x the observed CI runtime so a genuinely
+// slow run is never cut short.
+//
+// This has NOT been reproduced off-runner -- the same command with the same
+// zero-cache conditions finishes locally in 108s -- so treat it as containment
+// for a fleet-specific stall, not as a root-cause fix.
+type DocgenStepBudget = {
+  readonly first: Duration.Duration;
+  readonly retry: Duration.Duration;
+};
+
+// Scoped runs took 2m8s on the fleet before wedging, so ~7x headroom.
+const scopedDocgenStepBudget: DocgenStepBudget = {
+  first: Duration.minutes(15),
+  retry: Duration.minutes(10),
+};
+
+// A cold full proof walks every package in the monorepo. Its budget has to
+// clear a legitimately long run by a wide margin -- killing honest work would
+// be far worse than the stall this guards against.
+const fullDocgenStepBudget: DocgenStepBudget = {
+  first: Duration.minutes(45),
+  retry: Duration.minutes(30),
+};
+
+// Abandoning the step closes the child's scope, which signals the process
+// group and then waits for the exit event. Without an escalation the wait is
+// unbounded against a child ignoring SIGTERM, and the budgets above would not
+// actually reclaim anything.
+const docgenStepForceKillAfter = Duration.seconds(20);
+
+const runStepWithStallWatchdog = Effect.fn("DocgenLocal.runStepWithStallWatchdog")(function* (
+  label: string,
+  command: string,
+  args: ReadonlyArray<string>,
+  repoRoot: string,
+  budget: DocgenStepBudget
+) {
+  const attempt = (attemptLabel: string) =>
+    runStep(attemptLabel, command, args, repoRoot, { forceKillAfter: docgenStepForceKillAfter });
+
+  const first = yield* Effect.timeoutOption(attempt(label), budget.first);
+  if (O.isSome(first)) {
+    return;
+  }
+
+  yield* Console.log(
+    `docgen:local: ${label} never returned within ${Duration.format(budget.first)}; abandoning it and retrying once against the warm cache.`
+  );
+  yield* logSurvivingProcesses(`after abandoning ${label}`, repoRoot);
+
+  const retry = yield* Effect.timeoutOption(attempt(`${label} (retry)`), budget.retry);
+  if (O.isNone(retry)) {
+    yield* logSurvivingProcesses(`after the ${label} retry also stalled`, repoRoot);
+    return yield* DomainError.make({
+      message: `${label} never returned within ${Duration.format(budget.retry)} on retry; see the surviving-process dump above.`,
+    });
+  }
+
+  yield* Console.log(`docgen:local: ${label} retry succeeded after the first attempt stalled.`);
+});
+
+/**
+ * Run one docgen child under the stall watchdog.
+ *
+ * **Details**
+ *
+ * Exposed so the stall path can be exercised directly. It only triggers against
+ * a child that outlives its budget, which no production call reproduces on
+ * demand, and the budgets the real callers use are deliberately measured in
+ * tens of minutes.
+ *
+ * **Example** (Bound a child that exits normally)
+ *
+ * ```ts
+ * import { runDocgenStepWithStallWatchdogForTesting } from "@beep/repo-cli/test/Docgen"
+ * import { Duration } from "effect"
+ *
+ * const step = runDocgenStepWithStallWatchdogForTesting("probe", "true", [], "/repo", {
+ *   first: Duration.seconds(5),
+ *   retry: Duration.seconds(5)
+ * })
+ * console.log(step)
+ * ```
+ *
+ * @param label - Operator-facing step label.
+ * @param command - Executable to spawn.
+ * @param args - Arguments passed to the executable.
+ * @param repoRoot - Working directory for the child.
+ * @param budget - First-attempt and retry ceilings.
+ * @returns An effect completing when the step exits, failing if both attempts stall.
+ * @category testing
+ * @since 0.0.0
+ */
+export const runDocgenStepWithStallWatchdogForTesting = runStepWithStallWatchdog;
 
 const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan: DocgenLocalPlan, repoRoot: string) {
   const dryRunOutput = yield* collectStepOutput(
@@ -714,19 +859,36 @@ const runScopedDocgen = Effect.fn("DocgenLocal.runScopedDocgen")(function* (plan
     return;
   }
 
-  const proofStatuses = yield* Effect.forEach(packages, verifyPackageProofManifest, {
-    concurrency: localParallel(plan.parallel),
-  });
+  const [proofElapsed, proofStatuses] = yield* Effect.timed(
+    Effect.forEach(packages, verifyPackageProofManifest, {
+      concurrency: localParallel(plan.parallel),
+    })
+  );
   yield* Console.log(`docgen:local: proof manifests: ${renderProofStatusList(proofStatuses)}`);
+  yield* Console.log(
+    `docgen:local: verified ${A.length(proofStatuses)} proof manifest(s) in ${Duration.format(proofElapsed)}`
+  );
 
   if (A.every(proofStatuses, (status) => status.status === "current")) {
     yield* Console.log(`docgen:local: reused ${A.length(proofStatuses)} current package proof manifest(s)`);
   } else {
     yield* checkPackageDocumentation(packages, plan.parallel);
-    yield* runStep("turbo docgen", turboBinaryPath(repoRoot), directTurboArgs(plan.turboArgs), repoRoot);
+    yield* runStepWithStallWatchdog(
+      "turbo docgen",
+      turboBinaryPath(repoRoot),
+      directTurboArgs(plan.turboArgs),
+      repoRoot,
+      scopedDocgenStepBudget
+    );
   }
 
-  yield* aggregatePackages(packages);
+  // Previously nothing was logged between turbo's own summary and the first
+  // "aggregated" line, so a stall in between was invisible.
+  yield* Console.log(`docgen:local: aggregating ${A.length(packages)} package(s) into docs/generated`);
+  const [aggregateElapsed] = yield* Effect.timed(aggregatePackages(packages));
+  yield* Console.log(
+    `docgen:local: aggregated ${A.length(packages)} package(s) in ${Duration.format(aggregateElapsed)}`
+  );
 });
 
 /**

@@ -148,7 +148,15 @@ describe("commands/Lint fast-path allowlist binding", () => {
   );
 });
 
-describe("internal/cli LintRouting dependency-free boundary", () => {
+// Every module bin-main.ts imports eagerly is paid on every `beep` invocation
+// before the fast paths run, so each one is held to the same zero-import
+// contract as LintRouting.ts and enumerated in the allowlist below.
+const PRE_FAST_PATH_MODULES: ReadonlyArray<string> = [
+  "internal/cli/FailureRendering.ts",
+  "internal/cli/LintRouting.ts",
+];
+
+describe("internal/cli dependency-free boundary", () => {
   // bin-main.ts pays every eager import on every `beep` invocation before its
   // fast-path branches run; routing data hidden behind a heavier module cost
   // ~1.1s/415MB of startup (the round-1 ARCH-BOUNDARY-01 regression). Existing
@@ -157,14 +165,16 @@ describe("internal/cli LintRouting dependency-free boundary", () => {
   // boundary at the source level — a timing assertion would be
   // environment-sensitive.
   it.effect(
-    "LintRouting stays import-free and bin-main keeps an explicit pre-fast-path module-load allowlist",
+    "pre-fast-path modules stay import-free and bin-main keeps an explicit module-load allowlist",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const tsMorph = yield* TSMorphService;
       const repoRoot = yield* findRepoRoot();
       const sourceDir = path.join(repoRoot, "packages/tooling/tool/cli/src");
-      const routingSource = yield* fs.readFileString(path.join(sourceDir, "internal/cli/LintRouting.ts"));
+      const preFastPathSources = yield* Effect.forEach(PRE_FAST_PATH_MODULES, (module) =>
+        Effect.map(fs.readFileString(path.join(sourceDir, module)), (source) => ({ module, source }))
+      );
       const binMainSource = yield* fs.readFileString(path.join(sourceDir, "bin-main.ts"));
       const request = yield* decodeProjectInspectionRequest({
         entrypoint: {
@@ -179,20 +189,24 @@ describe("internal/cli LintRouting dependency-free boundary", () => {
       });
 
       yield* tsMorph.inspectProject(request, ({ project }) => {
-        expect(inspectModuleLoads(project, routingSource, false)).toEqual([]);
-
-        const routingMutations = [
+        const dependencyFreeMutations = [
           'import { x } from "heavy";',
           'import x = require("heavy");',
           'export { x } from "heavy";',
           'const dynamic = import ("heavy");',
           'const required = require("heavy");',
         ];
-        for (const mutation of routingMutations) {
-          expect(inspectModuleLoads(project, `${mutation}\n${routingSource}`, false), mutation).not.toEqual([]);
+        for (const { module, source } of preFastPathSources) {
+          expect(inspectModuleLoads(project, source, false), module).toEqual([]);
+          for (const mutation of dependencyFreeMutations) {
+            expect(inspectModuleLoads(project, `${mutation}\n${source}`, false), `${module}: ${mutation}`).not.toEqual(
+              []
+            );
+          }
         }
 
         expect(inspectModuleLoads(project, binMainSource, true)).toEqual([
+          "import:./internal/cli/FailureRendering.ts",
           "import:./internal/cli/LintRouting.ts",
           "import():@beep/utils",
           "import():effect",

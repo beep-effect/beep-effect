@@ -6,6 +6,7 @@
  */
 
 export * from "../internal/cli/CommandErrorFields.ts";
+export * from "../internal/cli/FailureRendering.ts";
 export * from "../internal/cli/Flags.ts";
 export * from "../internal/cli/FsGuards.ts";
 export * from "../internal/cli/Json.ts";
