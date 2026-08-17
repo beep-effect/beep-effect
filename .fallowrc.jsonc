@@ -9,6 +9,8 @@
     "packages/**/src/*/index.ts",
     "infra/src/internal/*-entry.ts",
     "apps/*/src/main.tsx",
+    // The `service` AppKind's entry point; peer of the labs-depth glob below.
+    "apps/*/src/main.ts",
     "apps/*/src/index.ts",
     "apps/*/next.config.ts",
     "apps/*/vite.config.ts",
@@ -33,6 +35,8 @@
     // be added to ignorePatterns (lab-apps-lifecycle D2, ratified row 13).
     // Canonical labs path module: packages/tooling/tool/cli/src/internal/cli/Labs.
     "apps/labs/*/src/main.tsx",
+    // `service` labs emit src/main.ts, not main.tsx (ratified row 13).
+    "apps/labs/*/src/main.ts",
     "apps/labs/*/src/index.ts",
     "apps/labs/*/next.config.ts",
     "apps/labs/*/vite.config.ts",
