@@ -2,8 +2,8 @@
 
 ## Status
 
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
 Align closed 2026-08-17: three-tier identity-assurance floor, the conservative
 requalification matrix, and the five-status immutable disposition semantics

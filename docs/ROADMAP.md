@@ -220,6 +220,8 @@ resume trigger) lives in
 | [`secure-document-delivery`](../goals/secure-document-delivery/README.md) | An approved-document delivery consumer ships in the portal. |
 | [`effect-v4-workflow-engine-spike`](../goals/effect-v4-workflow-engine-spike/README.md) | A workflow consumer demands it; spike only. |
 | [`voice-composer-slice`](../goals/voice-composer-slice/README.md) | Voice capture re-enters the product bet. |
+| [`belief-view-engine`](../goals/belief-view-engine/README.md) | Scaffolded paused 2026-08-17 (queue goal, adversarially reviewed spec); a lane slot frees or an epistemic consumer pulls it. |
+| [`model-arrangement-admission-core`](../goals/model-arrangement-admission-core/README.md) | Scaffolded paused 2026-08-17 (queue goal, adversarially reviewed spec); a lane slot frees or the approval-gate consumer pulls it. |
 
 The eight rows above (beyond domain-kernel-hardening) were graduated
 2026-07-14 and saw zero execution; the 2026-08-17 re-eval moved them here
