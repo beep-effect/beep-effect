@@ -36,5 +36,5 @@ canonical model.
 
 - Metered baseline execution requires explicit operator approval and complete
   cost/cleanup evidence.
-- C&H remains on-demand and synthetic; OIP data stays on-device only.
+- C&H remains on-demand and synthetic; OIP data stays out of the repo.
 - U4 is a real kill-gate, not a research checkbox.

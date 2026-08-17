@@ -708,6 +708,12 @@
         ]
       },
       {
+        "name": "@beep/trustgraph-workbench",
+        "patterns": [
+          "apps/labs/trustgraph-workbench/src/**"
+        ]
+      },
+      {
         "name": "@beep/tsgo-shim",
         "patterns": [
           "tools/tsgo-shim/src/**"
@@ -3194,6 +3200,17 @@
           "@beep/test-utils",
           "@beep/tika",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/trustgraph-workbench",
+        "allow": [
+          "@beep/trustgraph-workbench",
+          "@beep/ui"
+        ],
+        "allowTypeOnly": [
+          "@beep/trustgraph-workbench",
+          "@beep/ui"
         ]
       },
       {

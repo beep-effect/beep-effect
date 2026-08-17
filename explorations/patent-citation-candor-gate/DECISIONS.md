@@ -31,9 +31,7 @@ Therasense but-for materiality standard — to draw the "what the system must
 never compute" boundary precisely → `research/02-candor-legal-frame.md`. On
 top of both lanes, `RESEARCH.md` is authored as the canonical stage-1
 synthesis and index (`explorations/README.md` stage contract) before the
-packet advances to align; all three land together in PR 2. No client or
-pre-publication material touches any cloud model (standing OIP
-confidentiality rule).
+packet advances to align; all three land together in PR 2. All sources for these lanes are public; no client material was used.
 
 **Rationale:** The campaign corpus was ontology/KG-focused and never covered
 IDS/candor legal practice; the cluster's hardest caution ("the system must not

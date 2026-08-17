@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "lab-manifest/v1",
+  "purpose": "TrustGraph knowledge-graph workbench lab shell (D13 first-wave port)",
+  "created": "2026-08-17",
+  "disposition": "active"
+}

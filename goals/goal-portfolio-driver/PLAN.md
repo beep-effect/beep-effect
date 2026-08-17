@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active`
+`paused` — see README revisit gate (2026-08-17)
 
 ## P0 — Harden
 

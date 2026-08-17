@@ -112,11 +112,11 @@ today is `isWellOrdered`).
 
 ## Q4: Vendor/auth — depend on the hosted CourtListener Citation Lookup API in v1, or ship local-only?
 
-**Recommended:** **Local-only for v1** on the privilege-safe path; the hosted
-CourtListener lookup is an **opt-in, non-privileged enrichment/verification
-lane** gated behind an explicit privilege flag and deferred past the local
-slices. Run the BSD-data + clean-room TS parser **locally** so privileged
-document text never leaves the box. When the hosted lane is enabled, the token
+**Recommended:** **Own parser for v1** on the grounding path; the hosted
+CourtListener lookup is an **opt-in enrichment/verification lane**, deferred
+past the exact-slice grounding step. Run the BSD-data + clean-room TS parser in
+process so grounding resolves against the document actually in hand — a remote
+lookup cannot supply an exact slice. When the hosted lane is enabled, the token
 is a managed secret (`Authorization: Token <token>` — literal Token, **NOT**
 Bearer) via `Config.redacted`, and the factual rate/cost constraints (60 valid
 cites/min, 250/request, char cap = **min(client cap, 64k)** given the
@@ -126,9 +126,9 @@ field behind a **`wait_until` / `wait_util` compatibility codec** and confirm
 against a real 429 before trusting either spelling.
 
 **Rationale:** RESEARCH is explicit that the hosted lookup **leaks document text
-off-box** ("unacceptable for privileged legal text") and was **membership-gated
-as of 2026-05-07**, and that it only matches **full case citations** (not
-statutes/journals/id/supra) — so it cannot be the privilege-safe primary engine.
+off-box** and was **membership-gated as of 2026-05-07**, and that it only
+matches **full case citations** (not statutes/journals/id/supra) — so it cannot
+be the primary engine.
 The factual rate/cost limits are non-copyrightable and safe to encode, but the
 field spelling and per-citation status wire type (int vs string) are **open
 verification items**, so the decoder must tolerate both spellings. The local
@@ -321,14 +321,21 @@ candidates through for later cleanup.
 
 **Question:** Is CourtListener a v1 parsing or verification dependency?
 
-**Answer:** No. V1 is local-only and privileged text never leaves the box. A
-later opt-in `@beep/courtlistener` enrichment lane may send explicitly
-non-privileged text using managed `Token` auth, a 60-citations/minute rate
-bound, a 250-citations/request bound, and audit metadata. It verifies or
-enriches; it is never the parser or grounding truth.
+**Answer:** No. V1 does its own extraction. A later opt-in
+`@beep/courtlistener` enrichment lane may call out using managed `Token` auth,
+a 60-citations/minute rate bound, a 250-citations/request bound, and audit
+metadata. It verifies or enriches; it is never the parser or grounding truth.
 
-**Rationale:** Local extraction is the only safe default for privileged legal
-documents. Hosted results cannot replace raw-source equality.
+**Rationale:** Hosted results cannot replace raw-source equality — grounding
+must resolve to an exact slice of the document actually in hand, which no
+remote lookup can supply. This is a correctness constraint on *grounding*, not
+a restriction on provider use elsewhere.
+
+**Language revised 2026-08-17:** the original wording framed this as a
+confidentiality rule ("local-only", "privileged text never leaves the box").
+That framing was over-broad and was being read as a repo-wide ban on hosted
+providers. The technical decision is unchanged; the confidentiality framing is
+withdrawn.
 
 **Rejected:** Hosted lookup as parser, automatic fallback, or privileged-text
 processor; Bearer auth; treating a hosted match as grounding proof.

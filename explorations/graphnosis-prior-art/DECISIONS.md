@@ -92,8 +92,8 @@ including ad-hoc tool calls and egress points added after any planner was writte
 binary sensitive/not classification; a graded taxonomy only if evidence demands it. Planners may
 consult the classifier advisorily; enforcement is at egress.
 
-**Rationale:** This is trained-skills ts-23 mapped onto the standing OIP rule (pre-publication
-patent text never reaches cloud AI) — made mechanical instead of procedural. Planner-side was
+**Rationale:** This is trained-skills ts-23 made mechanical instead of procedural: egress
+classification is a capability the product can offer per matter, not a blanket prohibition. Planner-side was
 rejected because it covers only planned paths and requires the planner to model every egress.
 Both-plus-graded-taxonomy was rejected as scope: taxonomy debate before any enforcement exists
 ships nothing. Recommendation given: egress binary first; accepted.

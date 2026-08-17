@@ -1,0 +1,32 @@
+{
+  "ideas": [
+    {
+      "text": "Treat this month's .ai/.svg illustrator deliveries as the figure node and register STEP/DWG only as a witness alignment, never as the thing you draw from.",
+      "rationale": "An attacker who wants the tool unused will ship a STEP-first three.js viewer: DWG outnumbers STEP 4:1 and Tom's living work is the 175 .ai files he edited this month, so the 'source CAD' screen becomes a museum he never opens on a privileged matter. Invert by making the illustrator sheet the PatentAsset child and the engineering file a hash-linked witness you snap numerals onto."
+    },
+    {
+      "text": "Rehydrate outline-only illustrator PDFs into a selectable-text SVG+XMP numeral layer that ClaimMaster can finally ingest.",
+      "rationale": "A competitor who wants a malpractice-looking 'clean' audit will rasterize pretty callouts with no text layer; ClaimMaster and Patent Bots report bijection while the filed PDF is mute ink, and opposing counsel later argues the numerals were never in the drawing. Invert by not writing another auditor — emit the missing text layer so the tools he already pays for see the same graph your MCP does."
+    },
+    {
+      "text": "Put unpublished CAD and its projections on privilege-red edges that no PriorArtReference or citation MCP tool is allowed to traverse.",
+      "rationale": "An attacker who wants the client to lose rights will let a local agent 'find similar parts' walk from a STEP body into the prior-art subgraph and paste unpublished geometry into a memo that gets filed or produced. Invert with a typed, enforced graph cut: Matter/CAD/projection nodes are unreachable from public-citation queries even though they share the same store."
+    },
+    {
+      "text": "Build the missing content-addressed Matter evidence locker and make every figure link a hash, not a path.",
+      "rationale": "An attacker who wants a silent wrong-figure filing exploits the current intake black hole: the app keeps a filename, the blob is gone, Tom numbers a stale SVG from disk and files it. Invert with an append-only, Matter-scoped blob store so 'link CAD' means pin this SHA to this PatentAsset revision and you can always read that exact byte back."
+    },
+    {
+      "text": "Classify ink as a numeral only if that integer already exists in this PatentAsset's spec numeral set — closed world, everything else is decoration.",
+      "rationale": "An attacker who wants 37 CFR 1.84(p) poisoned will parse the 552 SVGs and pull sheet numbers, years, and revision triangles in as parts, then write them into the spec to 'complete the bijection.' Invert: the spec's existing numeral inventory is the only alphabet; unknown integers stay unlabeled ink until Tom admits them."
+    },
+    {
+      "text": "Harvest AutoCAD names first — blocks, layers, attributes, paper-space layouts — and refuse to load a mesh before those names are graph entities.",
+      "rationale": "An attacker who wants Tom embarrassed in front of a client will let occt/three.js open a 13.8 GB DWG, number a title-block north arrow as part 42, and drop xrefs so the 'invention' is a paper-space viewport of the wrong assembly. Invert: the first artifact is an onomastic index into Matter/Claim space; vertices are a later projection of names he already linked."
+    },
+    {
+      "text": "Capability-token every sidecar hidden-line job per Matter and shred WASM heaps, Python temp, and GPU buffers before the process dies.",
+      "rationale": "An attacker who wants a privilege breach without a cloud call will run two matters against the one compiled sidecar and let Matter B's agent read Matter A's STEP from /tmp, swap, or a leftover occt-import-js heap. Invert: no job starts without a Matter capability; no derived SVG or build123d HLR output is visible to any other Matter's MCP session."
+    }
+  ]
+}

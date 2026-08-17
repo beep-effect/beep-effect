@@ -1,5 +1,11 @@
 # Agentic CAD for IP / Patent Practice — Tool Landscape & Buyer's Guide
 
+> **Status (2026-08-17): superseded in part.** This report is repo-agnostic tool
+> discovery optimised for 3D solids. A corpus census of the practice's real files
+> (837 AutoCAD DWG vs 201 STEP; 86 of 175 Illustrator sheets carrying extractable
+> `FIG. n` text) reframed the packet around the 2D figure and its numeral graph.
+> See `../SPEC.md` and `SOURCES.md`. The tool evaluations below remain useful.
+
 **Audience:** a solo intellectual-property / patent attorney evaluating AI/LLM-driven CAD
 tools to adopt.
 **Inspiration anchor:** [adam.new](https://adam.new) — text-to-parametric-3D CAD (YC W25; $4.1M

@@ -14,8 +14,8 @@ criteria, and neutral-band outcomes.
 
 Do not retain the Python harness, make the baseline routine CI, add the bulk
 corpus to normal gates, implement tracked changes, or use client/OIP material.
-Any later real data room stays on-device only and out of telemetry, remote
-evaluation, cloud models, and C&H mounts.
+Any later real data room stays out of the repo, out of telemetry, and out of
+shared C&H mounts.
 
 Prove a small C&H fixture and record the one comparable baseline; then publish
 through Yeet and close with a reflection.

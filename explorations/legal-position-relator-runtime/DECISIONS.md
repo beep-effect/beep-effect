@@ -45,9 +45,7 @@ happens in this lane — both stay `study` unless source-fidelity, beep-fit,
 novelty, and license handling all pass →
 `research/02-position-relator-legal-frame.md`. On top of both lanes,
 `RESEARCH.md` is authored as the canonical stage-1 synthesis before the
-packet advances to align; all three land together in PR 2. No client or
-pre-publication material touches any cloud model (standing OIP
-confidentiality rule).
+packet advances to align; all three land together in PR 2. All sources for these lanes are public; no client material was used.
 
 **Rationale:** The campaign corpus verified the ten nuggets but the wedge's
 hardest boundaries — correlativity as schema invariant, relator identity,

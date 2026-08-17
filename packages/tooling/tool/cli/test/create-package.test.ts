@@ -402,6 +402,17 @@ type TempRepoCommandContext = {
   readonly rootDir: string;
 };
 
+// See create-package-lab.test.ts: without a root biome config the fixture gets
+// biome's default tab indentation, which desynchronizes generated JSON from the
+// repo's canonical two-space renderer.
+const TestRootBiomeConfig = {
+  formatter: { enabled: true, lineWidth: 120, indentStyle: "space", indentWidth: 2 },
+  json: {
+    formatter: { indentStyle: "space", indentWidth: 2, trailingCommas: "none", lineWidth: 80 },
+    parser: { allowComments: true },
+  },
+} as const;
+
 const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootConfigOptions) {
   const path = yield* Path.Path;
 
@@ -426,6 +437,7 @@ const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootC
   yield* writeJsonFile(path.join(rootDir, "tsconfig.packages.json"), {
     references: A.map(options.references, (referencePath) => ({ path: referencePath })),
   });
+  yield* writeJsonFile(path.join(rootDir, "biome.json"), TestRootBiomeConfig);
   yield* writeSyncpackConfig(path.join(rootDir, "syncpack.config.ts"), options.syncpackSources);
 });
 

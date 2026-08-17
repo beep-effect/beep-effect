@@ -39,13 +39,21 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — capture
+  (2026-08-17): from-scratch re-eval of the oppold-corpus pipeline — salvage
+  restoration with a no-loss bar, T-Box-guided ingestion (composing with
+  semantic-foundation M1), dedupe/prune, mail-extraction repair,
+  fidelity-verified conversion, per-step self-evaluation, enrichment survey.
+  Gates practice-kg bundle v2, not the live v1 front. First align question:
+  restoration inventory (salvage sits on a removable drive).
 - [`packet-system-redesign`](./packet-system-redesign/README.md) —
-  decompose-stage: operator signed off [`BRIEF.md`](./packet-system-redesign/BRIEF.md)
-  on 2026-08-13; [`MAP.md`](./packet-system-redesign/MAP.md) now proposes the
-  single colocated packet-core, design/approval gate, projection migration,
-  evidence closure, and gated React v2 packets app. D8 keeps one core behind
-  existing CLI groups; D9 self-hosts the first advisory slice; D12 leaves KSA
-  owning static HTML v1. Next: operator MAP review; no goals exist yet.
+  graduated 2026-08-17: MAP ratified with amendments (live index-guard
+  capability cited; apps/labs as the React candidate's presumptive home).
+  [`goals/packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
+  scaffolded as the sole promised-now candidate; design gate + projection
+  migration gate on the core fold contract stabilizing, evidence closure on
+  observed self-hosting friction, React v2 on KSA static-v1 daily-use
+  evidence. Fired gates reopen the packet at decompose.
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
   graduate-stage, still active: spine graduated 2026-08-13 to
   [`goals/skill-contract-kernel/`](../goals/skill-contract-kernel/README.md)
@@ -65,11 +73,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   single-user parity. First goal graduated:
   [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md).
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
-  align-stage: ratify identity assurance, requalification policy, and scoped
-  human dispositions for exact, digest-bound model arrangements.
+  decompose-stage: BRIEF ratified with amendments 2026-08-17 (first consumer
+  = approval-gate disposition reference; first fixture = admit the repo's own
+  pinned arrangement; admission-local vocabularies). Next gate: MAP draft +
+  operator MAP review.
 - [`epistemic-belief-view-revision`](./epistemic-belief-view-revision/README.md) —
-  align-stage: ratify contention grouping, selection/abstention policy, and
-  replayable belief-view materialization over a new cross-lineage authority query.
+  decompose-stage: BRIEF ratified with amendments 2026-08-17 (adds the
+  scope-wide EdgeAuthority read as the one server-side addition; as-of
+  queryability required of every policy input). Next gate: MAP draft +
+  operator MAP review.
 - **Gold-Intake cohort** (opened 2026-06-29, all at `research`-complete) — 13 new exploration
   packets reconciled from the 219-nugget gold-intake corpus; full matrix +
   provenance in [`_gold-intake/ROUTING.md`](./_gold-intake/ROUTING.md) /
@@ -169,6 +181,25 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   proposal machinery; decide the A/B guidance-degraded-session question at
   unpark.
 
+- [`legal-inference-policy`](./legal-inference-policy/README.md) — parked
+  2026-08-17 at capture (born from academia wave-2 routing): derivation-DAG'd,
+  predicate-gated inference policy over the epistemic edge substrate; resume
+  when KG inference/completion work is pulled onto the roadmap.
+- [`ontology-curation-governance`](./ontology-curation-governance/README.md)
+  — parked 2026-08-17 at capture (academia wave-2, two high-priority
+  findings): consequence-visible accept/decline/quarantine review for
+  ontology curation, no direct generated writes; resume when curation/review
+  UX work is pulled.
+- [`evidence-source-policy-calibration`](./evidence-source-policy-calibration/README.md)
+  — parked 2026-08-17 at capture (academia wave-2): separate typed confidence
+  signals (source/extractor/validator/reviewer) instead of one collapsed
+  score; resume when an epistemic consumer needs calibrated multi-signal
+  confidence.
+- [`ontology-lifecycle-qa`](./ontology-lifecycle-qa/README.md) — parked
+  2026-08-17 at capture (academia wave-2): versioned induced shapes with
+  triple-level witnesses, SHACL lifecycle QA; resume when shape-induction
+  lifecycle work is pulled.
+
 - [`academia-corpus-mining`](./academia-corpus-mining/README.md) — parked
   2026-07-25 at align-complete with all 15 high-priority routes dispatched:
   443 canonical Academia.edu papers mined in tiers (T1 triage of all 443,
@@ -221,7 +252,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`tracked-changes-ingest-wedge`](../goals/tracked-changes-ingest-wedge/README.md).
   The former owns one external-harness baseline; the latter starts with U4 as
   a kill-gate and retains the structural fallback. Synthetic C&H is first;
-  later real OIP data is on-device only. Generator/DMS rungs remain MAP
+  later real OIP data stays out of the repo. Generator/DMS rungs remain MAP
   re-entry points.
 - [`document-structure-ontologies`](./document-structure-ontologies/README.md)
   — graduated 2026-08-13 after live capability verification and four-goal

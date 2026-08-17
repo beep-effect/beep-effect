@@ -2,8 +2,8 @@
 
 ## Problem
 
-Approval-gated professional documents need a revocable, privilege-safe local
-delivery path. Today the product can authorize and fetch authoritative provider
+Approval-gated professional documents need a revocable, auditable delivery
+path. Today the product can authorize and fetch authoritative provider
 documents, but it lacks a narrow boundary that can hand one approved document to
 the desktop without exposing origin URLs, provider or matter identifiers, or PDF
 bytes through renderer-visible state, browser history, referrers, or caches.

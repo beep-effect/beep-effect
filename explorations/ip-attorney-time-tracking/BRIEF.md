@@ -24,8 +24,8 @@ authoritative record: preserve local evidence, draft candidate durations and
 narratives, let Tom correct and approve them, and preview what will cross the
 boundary.
 
-That assistance must remain privilege-safe and visibly under attorney control.
-Local-first is necessary but insufficient: passive collection can still become
+That assistance must remain visibly under attorney control. The real risk here
+is surveillance, not provider choice: passive collection can still become
 surveillance, and retained mail or document content can enlarge the sensitive
 data footprint. The product therefore needs explicit consent, metadata-first
 capture, narrow purpose-bound content access, inspect/correct/reject/delete

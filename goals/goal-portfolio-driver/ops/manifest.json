@@ -3,15 +3,15 @@
   "initiative": {
     "id": "goal-portfolio-driver",
     "title": "Goal Portfolio Driver",
-    "status": "active",
+    "status": "paused",
     "created": "2026-07-14",
-    "updated": "2026-07-16",
+    "updated": "2026-08-17",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/goal-portfolio-driver",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Drain every locked portfolio goal through merged PR evidence and completed-retained lifecycle status.",
-  "statusNote": "P0 hardening is active; P1 will derive and lock the portfolio queue.",
+  "statusNote": "Paused 2026-08-17 pending the driver-revisit gate: (1) exploration portfolio wrap-up complete and (2) goals/packet-control-plane-core closed. Rationale (operator): an autonomous drain is only trustworthy once feedback is fast (the 2026-08 CI campaign took pipelines and local checks from hours to minutes — that leg is paid) and packet state is trustworthy (guarded writers, derived truth, fork detection, advisory-mode evidence — the control plane's job). The 2026-07-14 locked 25-packet queue is stale and must be relocked from derived state at revisit, not resumed.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {

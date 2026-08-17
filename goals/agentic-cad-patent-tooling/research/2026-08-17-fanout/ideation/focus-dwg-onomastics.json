@@ -1,0 +1,23 @@
+{
+  "sketch": "On DWG intake the Tauri sidecar first persists the file in a new matter-scoped, content-addressed local blob store (the missing read-back path) and runs a named-object extract instead of tessellation. A local LibreDWG or ODA→DXF→ezdxf walker emits an Effect Schema of BlockName | LayerName | Attrib | Xref | LayoutName, each carrying file hash and AutoCAD handle. Those strings become CadName candidate nodes on the existing Matter / PatentAsset / Claim graph, attached only by bitemporal epistemic edges at confidence=extracted so Tom can confirm or reject without rewriting history. The MCP server already exposes that graph, so a local agent can list CadNames for a live matter, align them to claim terms, and emit a figure-plan plus numeral-map JSON that later 1.84 audits can consume even when the drawing has no text layer. Three.js meshes stay an optional downstream projection of a name, never the part’s identity. Success is Tom opening a privileged matter, seeing harvested names beside claim 1, and editing the numeral map before any illustrator is hired.",
+  "load_bearing_risk": "The 837 DWGs’ named objects are invention-semantic (HOUSING, IMPELLER) rather than CAD noise (0, Defpoints, *U12, Layer1, COPY OF COPY). If the corpus is mostly dumb linework—as many patent-figure DWGs are—the graph fills with unlinkable junk and the wedge dies.",
+  "first_step": "This week: write a one-shot local Python walker over ~20 matter-tagged DWGs from the 837-file corpus, dump unique block/layer/ATTRIB/xref/layout strings, and hand-label semantic-vs-noise hit rate. Kill or pivot if the semantic fraction is too low to link to claims.",
+  "children": [
+    {
+      "text": "Run the same onomastic harvest on the 552 SVG + 175 .ai files edited this month (layer names, object IDs, live text), not just DWG.",
+      "why": "Those are the files Tom actually touches for figures; if DWG names are junk, the live artwork may still carry the partition."
+    },
+    {
+      "text": "In the same walker, harvest TEXT/MTEXT strings that look like reference numerals and emit a 37 CFR 1.84 bijection skeleton.",
+      "why": "ClaimMaster/Patent Bots only work with a text layer; this creates that layer as graph data even when the PDF delivery is outlines."
+    },
+    {
+      "text": "Embed CadNames against claim terms on the local 2×R9700 box and auto-draft the missing disclosure→figure-plan + numeral map.",
+      "why": "That plan is the unsold 80% of the attorney’s figure thinking and the only value that can beat $170–240 illustrator fees."
+    },
+    {
+      "text": "Promote paper-space layout names to FIG. n PatentAsset sheet stubs the agent fills with candidate parts and numeral slots.",
+      "why": "Layouts are already the draftsman’s sheet decomposition; they give the figure plan a native spine without generating geometry."
+    }
+  ]
+}

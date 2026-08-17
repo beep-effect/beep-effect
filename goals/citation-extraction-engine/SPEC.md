@@ -132,7 +132,7 @@ An extension may be adopted only when:
 1. its source and incorporated material are license-compatible and attributed;
 2. tests or reproducible fixtures define its behavior;
 3. it represents a coherent legal or evidence concept in the target schemas;
-4. it preserves local-only deterministic execution, exact source fidelity, and
+4. it preserves deterministic execution, exact source fidelity, and
    bounded regex/runtime behavior; and
 5. it does not create parallel truth for a canonical or prerequisite concept.
 

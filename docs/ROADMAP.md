@@ -1,10 +1,13 @@
 # Roadmap
 
-Freshness: 2026-07-27. Amended for the first-user delivery decision: the
-[`practice-kg-mcp`](../goals/practice-kg-mcp/README.md) packet is Lane 1's
-live front for the week (details under Lane 1); prior reconciliation was
-2026-07-14 after the goals portfolio consolidation (PR #401) and
-agent-effectiveness-pulse wave 1 (PR #400).
+Freshness: 2026-08-17. Re-eval after the exploration-portfolio closeout:
+Lane 3 finished its entire scope and hands its slot to
+[`packet-control-plane-core`](../goals/packet-control-plane-core/README.md);
+[`agentic-cad-patent-tooling`](../goals/agentic-cad-patent-tooling/README.md)
+queues in Lane 1 behind the practice-kg-mcp handoff; the eight zero-execution
+goals graduated 2026-07-14 move to the parked/queue section under the
+portfolio-as-queue doctrine. Prior freshness: 2026-07-27 (first-user delivery
+decision); 2026-07-14 (portfolio consolidation, PR #401).
 This file supersedes the *frame* of
 [`docs/mirror/2026-07-08-roadmap.md`](./mirror/2026-07-08-roadmap.md) (which
 remains a dated personal snapshot). Where the two disagree, this file wins.
@@ -43,12 +46,30 @@ At most three concurrent implementation lanes. A **lane slot** frees only
 when a lane finishes (or retires) its listed scope — Lane 3 frees its slot
 when its last packet closes, not one slot per packet.
 
-Execution note: the active-portfolio drain is driven autonomously by
-[`goal-portfolio-driver`](../goals/goal-portfolio-driver/README.md), which
-locked a dependency-ordered queue of the 25 active packets on 2026-07-14
-(NOW lanes first). The lane cap above refers to these thematic program
-lanes; the driver's two worktree edit lanes are execution slots, not
-program lanes. Priority stays owned by this file; lifecycle stays owned by
+**Accelerator principle (2026-08-17):** goals that accelerate or improve the
+quality of other goal packets run in the **Machinery lane in parallel** —
+never as a serial phase ahead of product work. A packet claims accelerator
+status only by passing two tests: the **named-consumer test** (it names the
+specific goals it accelerates, and how) and the **payback-before-horizon
+test** (the acceleration lands before its consumer goals would finish
+anyway). The 2026-08 CI campaign is the proof case: pipelines and local
+checks went from hours to minutes with faster backpressure, and its named
+consumer is every subsequent goal — most concretely the paused
+goal-portfolio-driver, which is uneconomic at hours-per-iteration.
+
+**The one finish-first goal (2026-08-17):**
+[`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
+is the single accelerator that should *finish before the rest* — it is the
+trust substrate for autonomous execution. The dependency chain is explicit:
+CI speed (paid) + control-plane state truth (this goal) → the
+goal-portfolio-driver revisit.
+
+Execution note: [`goal-portfolio-driver`](../goals/goal-portfolio-driver/README.md)
+is **paused (2026-08-17)** pending its revisit gate — exploration wrap-up
+complete + packet-control-plane-core closed. Its 2026-07-14 locked 25-packet
+queue is stale and will be relocked from control-plane derived state at
+revisit; until then the portfolio drains through ordinary operator-driven
+sessions. Priority stays owned by this file; lifecycle stays owned by
 `goals/INDEX.md`.
 
 ### Lane 1 — Product
@@ -79,7 +100,21 @@ gate (P7 Close follows as packet closeout, outside the portal path):
    for the NEXT horizon.
 3. **P6 M365 write + dual DMS.**
 
-**Queued behind handoff (Phase 2, per practice-kg-mcp SPEC D-7):** a starter
+**Queued behind handoff (added 2026-08-17):**
+[`agentic-cad-patent-tooling`](../goals/agentic-cad-patent-tooling/README.md)
+P1 — the reference-numeral / figure graph extracted from the practice's own
+Illustrator artwork (86 of 175 sheets carry live `FIG. n` text). Same Tom
+delivery surface: P1's numeral rows land where the practice-kg MCP can serve
+them, so it composes with the live front instead of competing. Draft-quality
+figures; the illustrator stays the last mile.
+
+**Corpus gate (2026-08-17):** practice-kg **bundle v2** is gated on the
+[`oppold-corpus-overhaul`](../explorations/oppold-corpus-overhaul/README.md)
+exploration's exit — the next expensive pipeline run happens once, at
+maximum quality (T-Box-guided ingestion, salvage integrated, dedupe/prune,
+fidelity-verified conversions). The live v1 front is explicitly NOT gated.
+
+**Also queued behind handoff (Phase 2, per practice-kg-mcp SPEC D-7):** a starter
 stack distribution packet (revives
 [`stack-installer`](../explorations/stack-installer/)) — generic .mcpb bundles
 + FOLIO MCP wiring + curated, license-cleared skills pack for the firms
@@ -96,23 +131,28 @@ clean; it does not consume a lane slot.
 
 Only packets that directly feed Lane 1:
 
-- [`file-processing-capability`](../goals/file-processing-capability/README.md) (3/7)
 - [`agentic-professional-runtime`](../goals/agentic-professional-runtime/README.md) (3/5)
-- [`semantic-foundation`](../goals/semantic-foundation/README.md) (0/6) — scoped to
+- [`semantic-foundation`](../goals/semantic-foundation/README.md) (1/6) — scoped to
   **M1 Intake-Serving Semantic Seed** and **M4 ClaimGate Shapes** (feeds
   intake P4). Feeder research phases are now R1–R4; M2/M3 queue in NEXT.
 
-### Lane 3 — Harness & metrics
+[`file-processing-capability`](../goals/file-processing-capability/README.md)
+completed and retired from this lane (2026-08-17 re-eval).
 
-Harness observability, hygiene, and the v1-blocking metrics durability gate:
+### Lane 3 — Machinery
 
-- [`harness-otel-adoption`](../goals/harness-otel-adoption/README.md) (0/4)
-- [`harness-hygiene-mechanical`](../goals/harness-hygiene-mechanical/README.md) (0/4)
-- [`ai-metrics-stack`](../goals/ai-metrics-stack/README.md) (6/8), **P7f
-  Forwarder Durability** — v1-blocking and gates P7e; evidence is recorded in
-  the [packet manifest](../goals/ai-metrics-stack/ops/manifest.json).
+The previous Harness & metrics scope closed whole:
+[`harness-otel-adoption`](../goals/harness-otel-adoption/README.md),
+[`harness-hygiene-mechanical`](../goals/harness-hygiene-mechanical/README.md),
+and [`ai-metrics-stack`](../goals/ai-metrics-stack/README.md) are all
+completed-retained (2026-08-17 re-eval). The freed slot goes to:
 
-The previous finish-then-retire members all closed during 2026-07-11–14.
+- [`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
+  (1/6) — the packet system's event fold, guarded writers, and derived
+  projections. It is the instrument that makes the *next* roadmap re-eval
+  mechanical (derived pulse: what can start, what is blocked, what awaits the
+  operator), scaffolded 2026-08-17 from the ratified packet-system-redesign MAP
+  with proofs pre-specified. Self-hosts in advisory mode per D9.
 
 ### Maintenance rule (always allowed, any packet, any lane state)
 
@@ -162,9 +202,30 @@ ratchets hold at zero — keep-green only, no new clicks past zero.
 
 ## Parked packets — resume conditions
 
+**Queue doctrine (2026-08-17):** the parked portfolio is the deliberate work
+queue — research-backed packets held for lane capacity, a firing gate, or a
+model-capability jump — ordered by this file when a slot frees. Parked is not
+a soft kill. The exploration side of the queue (14 packets, each with a named
+resume trigger) lives in
+[`explorations/ATLAS.md`](../explorations/ATLAS.md).
+
 | Packet | Resumes when |
 | --- | --- |
 | [`domain-kernel-hardening`](../goals/domain-kernel-hardening/README.md) | Before KG tables scale — opens with PRD P2 librarian. |
+| [`hybrid-retrieval-fusion-core`](../goals/hybrid-retrieval-fusion-core/README.md) | A retrieval consumer lands (intake P5, or belief-view RRF follow-on). |
+| [`law-doc-structure-oa-slice`](../goals/law-doc-structure-oa-slice/README.md) | Intake P4 needs OA structure; wave-2 routed findings seed it. |
+| [`law-time-capture-spine`](../goals/law-time-capture-spine/README.md) | The Tom task-set ask is driven (P0 dependency). |
+| [`ingestion-secret-scrub`](../goals/ingestion-secret-scrub/README.md) | First real ingestion of sensitive material; gates the ingestion-security queue. |
+| [`projection-dispatch-core`](../goals/projection-dispatch-core/README.md) | A second projection consumer exists (packet-control-plane-core may supply it). |
+| [`secure-document-delivery`](../goals/secure-document-delivery/README.md) | An approved-document delivery consumer ships in the portal. |
+| [`effect-v4-workflow-engine-spike`](../goals/effect-v4-workflow-engine-spike/README.md) | A workflow consumer demands it; spike only. |
+| [`voice-composer-slice`](../goals/voice-composer-slice/README.md) | Voice capture re-enters the product bet. |
+
+The eight rows above (beyond domain-kernel-hardening) were graduated
+2026-07-14 and saw zero execution; the 2026-08-17 re-eval moved them here
+explicitly rather than leaving them implied-active. Their manifests stay
+`active` (they are executable); this file owns the fact that they are queued,
+not in flight.
 
 Completed packets record their own reopening triggers; deleted packets' living
 visions were re-captured under `explorations/`:

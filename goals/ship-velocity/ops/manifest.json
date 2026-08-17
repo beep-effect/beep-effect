@@ -5,12 +5,12 @@
     "title": "Ship Velocity",
     "status": "active",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-08-17",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/ship-velocity",
   "lifecycle": "active",
-  "statusNote": "P0 ratification: packet landed with the 9-lane fan-out evidence and ADHD backpressure designs; next actions are the P0 decision notes and the P1 instant wins.",
+  "statusNote": "P0 and P1 complete. P0: packet landed, metrics baseline frozen (research/metrics-baseline.md), both in-flight branches landed; the C2/E2/E6 decision notes ride their implementation PRs by design. P1 shipped 2026-08-16..17 as four PRs: #737 B1 same-argv lanes, #736 E1 publish regenerates the derived goals INDEX, #738 A7 monitor hardening, #743 C1 remote-read cache posture. Next actions are P2's backpressure engine, starting with A1's watch stream and the failure capsules the seven misattributed-repair-hint receipts now argue for.",
   "mission": "Agents ship correct code faster: sub-minute failure backpressure into the owning session, local verify that near-guarantees the 16 required remote checks, readable+warm Turbo cache in every checkout, memory-aware concurrent verify/publish, and no derived-file merge treadmill.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -57,17 +57,17 @@
     {
       "id": "P0",
       "name": "Ratify and baseline",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Instant wins",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Backpressure engine",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
@@ -94,7 +94,7 @@
   "stopConditions": [
     "Any backpressure enforcement (hook deny, Stop veto, poison-pill) deadlocks a session or checkout - severity gates and waives must ship with the enforcement, never after.",
     "Admission/auto-heal/takeover would mutate state it cannot attribute (foreign lease, malformed lock, baseline regeneration) - fail loud and stop.",
-    "PR remote-cache reads or path-filtered required checks proceed without their recorded operator decision note.",
+    "PR remote-cache reads (C2), the INDEX end-state change (E2), or path-filtered required checks (E6) proceed without their recorded operator decision note.",
     "A parity change weakens a security lane (gitleaks pinning, OSV, fork isolation) to make local green easier."
   ]
 }
