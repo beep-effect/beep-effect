@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-17T02:38:40.043Z",
-  "git_sha": "cb0ee563557d035c0847435e2a0534d6b7fab228",
+  "generated_at": "2026-08-17T06:52:17.425Z",
+  "git_sha": "f0eb392a4e4350dba4f2d6eb6f065a577e3ffdc2",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
@@ -20007,15 +20007,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 71.41,
-      "statements": 71.12,
-      "branches": 57.67,
-      "functions": 63.77,
+      "lines": 71.48,
+      "statements": 71.2,
+      "branches": 57.75,
+      "functions": 63.95,
       "uncovered": {
-        "lines": 8456,
-        "statements": 8894,
+        "lines": 8459,
+        "statements": 8898,
         "branches": 4677,
-        "functions": 3148
+        "functions": 3152
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -20391,10 +20391,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Architecture/internal/PackageShell.ts": {
-          "lines": 86.81,
-          "statements": 87.37,
+          "lines": 86.95,
+          "statements": 87.61,
           "branches": 82.5,
-          "functions": 84.21,
+          "functions": 84.61,
           "uncovered": {
             "lines": 12,
             "statements": 13,
@@ -20451,15 +20451,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts": {
-          "lines": 59.66,
-          "statements": 58.94,
+          "lines": 61.95,
+          "statements": 61.34,
           "branches": 63.46,
-          "functions": 58.13,
+          "functions": 63.21,
           "uncovered": {
-            "lines": 73,
-            "statements": 78,
+            "lines": 70,
+            "statements": 75,
             "branches": 19,
-            "functions": 36
+            "functions": 32
           }
         },
         "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts": {
@@ -20979,14 +20979,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts": {
-          "lines": 91.38,
-          "statements": 91.68,
-          "branches": 79.34,
-          "functions": 98.59,
+          "lines": 91.64,
+          "statements": 92.11,
+          "branches": 79.02,
+          "functions": 98.97,
           "uncovered": {
-            "lines": 33,
-            "statements": 33,
-            "branches": 57,
+            "lines": 35,
+            "statements": 35,
+            "branches": 60,
             "functions": 1
           }
         },
@@ -21087,15 +21087,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts": {
-          "lines": 65.32,
-          "statements": 63.33,
-          "branches": 52.21,
-          "functions": 52.3,
+          "lines": 65.1,
+          "statements": 63.15,
+          "branches": 54.12,
+          "functions": 47.88,
           "uncovered": {
-            "lines": 95,
-            "statements": 110,
-            "branches": 54,
-            "functions": 31
+            "lines": 97,
+            "statements": 112,
+            "branches": 50,
+            "functions": 37
           }
         },
         "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.policy.ts": {
@@ -22251,10 +22251,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts": {
-          "lines": 94.35,
-          "statements": 93.65,
-          "branches": 82.14,
-          "functions": 93.33,
+          "lines": 94.69,
+          "statements": 94.07,
+          "branches": 81.48,
+          "functions": 95.65,
           "uncovered": {
             "lines": 7,
             "statements": 8,
@@ -22815,14 +22815,14 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts": {
-          "lines": 68.68,
-          "statements": 69.33,
-          "branches": 64.7,
-          "functions": 73.55,
+          "lines": 68.73,
+          "statements": 69.37,
+          "branches": 64.48,
+          "functions": 73.66,
           "uncovered": {
             "lines": 217,
             "statements": 222,
-            "branches": 102,
+            "branches": 103,
             "functions": 64
           }
         },
@@ -22899,10 +22899,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts": {
-          "lines": 84.9,
-          "statements": 86.88,
+          "lines": 85.71,
+          "statements": 87.5,
           "branches": 83.33,
-          "functions": 75.75,
+          "functions": 76.47,
           "uncovered": {
             "lines": 8,
             "statements": 8,
@@ -24279,9 +24279,9 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/MonitorLoop.ts": {
-          "lines": 45.79,
-          "statements": 43.69,
-          "branches": 36.84,
+          "lines": 44.23,
+          "statements": 42.24,
+          "branches": 33.33,
           "functions": 31.11,
           "uncovered": {
             "lines": 58,
@@ -24351,10 +24351,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/PublishScope.ts": {
-          "lines": 77.61,
-          "statements": 77.72,
+          "lines": 78.15,
+          "statements": 78.36,
           "branches": 51.8,
-          "functions": 84.78,
+          "functions": 86.27,
           "uncovered": {
             "lines": 45,
             "statements": 45,
