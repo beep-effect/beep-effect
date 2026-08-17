@@ -11,6 +11,7 @@ import { Unknown } from "@beep/schema/Unknown";
 import { pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -44,17 +45,12 @@ const extractLocalNameFromIri = (iri: string): string =>
     O.getOrElse(() => iri)
   );
 
-const optionText =
-  (fallback: string) =>
-  (value: O.Option<string>): string =>
-    O.getOrElse(value, () => fallback);
+const optionText = (fallback: string): ((value: O.Option<string>) => string) => O.getOrElse(() => fallback);
 
-const renderUnknownJson = (value: unknown): string =>
-  pipe(
-    value,
-    Unknown.encodeUnknownResultFromJsonString,
-    Result.getOrElse(() => "null")
-  );
+const renderUnknownJson: (value: unknown) => string = flow(
+  Unknown.encodeUnknownResultFromJsonString,
+  Result.getOrElse(() => "null")
+);
 
 /** Optional string collection used by ontology prompt context fields. */
 const OptionalStrings = S.Array(S.String).pipe(

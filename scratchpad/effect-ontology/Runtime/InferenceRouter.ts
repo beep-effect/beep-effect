@@ -12,9 +12,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Context, Effect, Layer, Random, Ref } from "effect";
+import { Clock, Context, Effect, HashMap, Layer, Random, Ref } from "effect";
 import * as A from "effect/Array";
-import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";

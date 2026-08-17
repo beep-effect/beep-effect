@@ -341,7 +341,7 @@ const messageFromUnknown = Match.type<unknown>().pipe(
 const causeFromUnknown = Match.type<unknown>().pipe(
   Match.withReturnType<O.Option<ErrorMessage>>(),
   Match.when(P.isError, (error) => O.fromNullishOr(error.cause).pipe(O.map(messageFromUnknown))),
-  Match.orElse(() => O.none<ErrorMessage>())
+  Match.orElse(O.none<ErrorMessage>)
 );
 
 const makeGeneric = (input: unknown): ActivityGenericError =>

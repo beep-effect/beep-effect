@@ -111,12 +111,12 @@ const createManifest = Effect.fn(function* (request: BatchRequest) {
       const sizeBytes = yield* O.match(doc.sizeBytes, {
         onSome: Effect.succeed,
         onNone: () =>
-          storage.get(stripGsPrefix(doc.sourceUri)).pipe(
+          storage.getOption(stripGsPrefix(doc.sourceUri)).pipe(
             Effect.map((content) =>
-              O.match(O.fromNullishOr(content), {
-                onNone: () => NonNegativeInt.make(0),
-                onSome: (content) => NonNegativeInt.make(new TextEncoder().encode(content).length),
-              })
+              O.getOrElse(
+                O.map(content, (value) => NonNegativeInt.make(new TextEncoder().encode(value).length)),
+                () => NonNegativeInt.make(0)
+              )
             )
           ),
       });

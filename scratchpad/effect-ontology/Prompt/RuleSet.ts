@@ -11,6 +11,7 @@ import { SchemaUtils } from "@beep/schema";
 import { HashMap, Match, pipe, Result, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -22,12 +23,10 @@ import { ExtractionRule, ExtractionStage, RuleExample, RuleSeverity } from "./Ex
 
 const $I = $ScratchpadId.create("effect-ontology/Prompt/RuleSet");
 
-const buildCaseInsensitiveIriMap = (iris: ReadonlyArray<IRI>): HashMap.HashMap<string, IRI> =>
-  pipe(
-    iris,
-    A.map((iri) => Tuple.make(Str.toLowerCase(iri), iri)),
-    HashMap.fromIterable
-  );
+const buildCaseInsensitiveIriMap: (iris: ReadonlyArray<IRI>) => HashMap.HashMap<string, IRI> = flow(
+  A.map((iri) => Tuple.make(Str.toLowerCase(iri), iri)),
+  HashMap.fromIterable
+);
 
 const AllowedIriKind = S.Literals(["classes", "objectProperties", "datatypeProperties", "entityIds"]).pipe(
   $I.annoteSchema("AllowedIriKind", {

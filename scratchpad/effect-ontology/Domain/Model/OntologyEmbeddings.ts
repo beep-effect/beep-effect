@@ -7,11 +7,10 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
+import { Effect, Number as N } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
-import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
-import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -123,6 +122,8 @@ export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedd
 
     return pipe(A.of(label), A.appendAll(O.toArray(description)), A.appendAll(O.toArray(aliasSentence)), A.join(". "));
   }
+
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ElementEmbedding);
 }
 
 const OntologyEmbeddingsFields = {
@@ -262,7 +263,7 @@ export const OntologyEmbeddings = OntologyEmbeddingsDefinition.annotate({
   $I.annoteSchema("OntologyEmbeddings", {
     description: "Versioned ontology embedding artifact with uniform finite vector dimensions.",
   }),
-  SchemaUtils.withCodecStatics,
+  SchemaUtils.withEffectCodecStatics,
   SchemaUtils.withStatics(() => ({
     computeVersion: computeOntologyVersion,
     storagePathFor: embeddingsPathFromOntology,
@@ -302,6 +303,7 @@ const OntologyEmbeddingsJsonDefinition = OntologyEmbeddings.pipe(S.fromJsonStrin
  * @since 0.0.0
  */
 export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("OntologyEmbeddingsJson", {
     description: "JSON string codec for versioned ontology-embedding artifacts.",
     toArbitrary: () => S.toArbitrary(OntologyEmbeddingsJsonDefinition),

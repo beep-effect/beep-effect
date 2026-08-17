@@ -840,7 +840,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           return O.none<OntologyEntry>();
         }
         const registry = registryOpt.value;
-        return yield* registry.resolveToEntry(identifier).pipe(Effect.orElseSucceed(() => O.none<OntologyEntry>()));
+        return yield* registry.resolveToEntry(identifier).pipe(Effect.orElseSucceed(O.none<OntologyEntry>));
       }),
       hasRegistry: Effect.succeed(O.isSome(registryOpt)),
       generateVersion: Effect.fn("OntologyService.generateVersion")(function* (

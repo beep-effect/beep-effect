@@ -767,6 +767,12 @@ export class EnrichedManifest extends S.Class<EnrichedManifest>($I`EnrichedManif
   })
 ) {
   static readonly decodeFromString = S.decodeEffect(S.fromJsonString(this));
+
+  static readonly encodeEffectFromJsonStringFormatted = S.encodeEffect(
+    S.fromJsonString(EnrichedManifest, {
+      space: 2,
+    })
+  );
 }
 
 /**

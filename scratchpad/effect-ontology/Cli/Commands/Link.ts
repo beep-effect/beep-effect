@@ -11,11 +11,10 @@
 
 import { IRI } from "@beep/rdf";
 import { PosInt } from "@beep/schema/Int";
-import { Console, Effect, FileSystem } from "effect";
+import { Console, Effect, FileSystem, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { Command, Flag as Options } from "effect/unstable/cli";
 import { RdfBuilder } from "../../Service/Rdf.ts";

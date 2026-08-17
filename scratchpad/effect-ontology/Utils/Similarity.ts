@@ -50,9 +50,9 @@ export const getNeighbors = dual2(
     for (const relation of relations) {
       const objectEntityId = RelationObject.match(relation.object, {
         EntityReference: ({ value }) => O.some(value),
-        Text: () => O.none(),
-        Number: () => O.none(),
-        Boolean: () => O.none(),
+        Text: O.none,
+        Number: O.none,
+        Boolean: O.none,
       });
 
       // Entity is subject → object is outgoing neighbor (if it's an entity reference)

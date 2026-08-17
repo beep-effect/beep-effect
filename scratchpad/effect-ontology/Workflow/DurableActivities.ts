@@ -673,8 +673,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
               shapesPath,
               ontologyUri: input.ontologyUri,
             });
-            const parsed = yield* rdf.parseTurtle(shapesContent);
-            return parsed;
+            return yield* rdf.parseTurtle(shapesContent);
           }
           yield* Effect.logInfo("Validation: Auto-generating SHACL shapes from ontology", {
             activity: "validation",
@@ -726,7 +725,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       yield* storage.set(validationGraphPath, resolvedGraph);
 
       const reportPath = PathLayout.batch.validationReport(input.batchId);
-      const reportJson = yield* S.encodeEffect(S.fromJsonString(ShaclValidationReport, { space: 2 }))(report);
+      const reportJson = yield* ShaclValidationReport.encodeEffectFromJsonString(report, { space: 2 });
       yield* storage.set(reportPath, reportJson);
 
       const end = yield* DateTime.now;
@@ -801,8 +800,8 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
       );
 
       const stats = yield* parseTurtleStats(validatedGraph).pipe(
-        Effect.catch((error) =>
-          Effect.gen(function* () {
+        Effect.catch(
+          Effect.fnUntraced(function* (error) {
             yield* Effect.logError("Ingestion: Failed to parse validated graph for stats", {
               activity: "ingestion",
               batchId: input.batchId,
@@ -839,7 +838,11 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
         const existingGraphOpt = yield* storage.getWithGeneration(namespaceCanonicalPath);
 
         let mergedGraph: string;
-        const mergedStats = { existingTriples: 0, newTriples: newTripleCount, addedTriples: 0 };
+        const mergedStats = {
+          existingTriples: 0,
+          newTriples: newTripleCount,
+          addedTriples: 0,
+        };
         let generation: string | undefined;
 
         if (O.isSome(existingGraphOpt)) {
@@ -1192,10 +1195,13 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
             claimsTotal: persistResult.claimsTotal,
           });
 
-          return { persisted: persistResult.claimsInserted, documentId: docMeta.documentId };
+          return {
+            persisted: persistResult.claimsInserted,
+            documentId: docMeta.documentId,
+          };
         }).pipe(
-          Effect.catch((error) =>
-            Effect.gen(function* () {
+          Effect.catch(
+            Effect.fnUntraced(function* (error) {
               yield* Effect.logWarning("Failed to persist claims for document", {
                 batchId: input.batchId,
                 graphUri,
@@ -1796,7 +1802,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
           Effect.gen(function* () {
             const text = ElementEmbedding.buildText(cls.label, cls.definition ?? cls.comment, cls.altLabels ?? []);
             const emb = yield* embedding.embed(text, "search_document");
-            return yield* S.decodeUnknownEffect(ElementEmbedding)({
+            return yield* ElementEmbedding.decodeUnknownEffect({
               iri: cls.id,
               text,
               embedding: A.fromIterable(emb),
@@ -1812,7 +1818,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
           Effect.gen(function* () {
             const text = ElementEmbedding.buildText(prop.label, prop.comment, []);
             const emb = yield* embedding.embed(text, "search_document");
-            return yield* S.decodeUnknownEffect(ElementEmbedding)({
+            return yield* ElementEmbedding.decodeUnknownEffect({
               iri: prop.id,
               text,
               embedding: A.fromIterable(emb),
@@ -1827,7 +1833,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       // 7. Build OntologyEmbeddings blob
       // Use actual provider model from metadata, not hardcoded fallback
       const ontologyUri = GcsUri.fromUnknown(input.ontologyUri);
-      const embeddingsBlob = yield* S.decodeUnknownEffect(OntologyEmbeddings)({
+      const embeddingsBlob = yield* OntologyEmbeddings.decodeUnknownEffect({
         ontologyUri,
         version: ContentHash.make(version),
         model: O.getOrElse(input.model, () => providerMetadata.modelId),
@@ -1838,7 +1844,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       });
 
       // 8. Serialize and store
-      const embeddingsJson = yield* S.encodeEffect(OntologyEmbeddingsJson)(embeddingsBlob);
+      const embeddingsJson = yield* OntologyEmbeddingsJson.encodeEffect(embeddingsBlob);
       const embeddingsPath = stripGsPrefix(OntologyEmbeddings.storagePathFor(ontologyUri));
       yield* storage.set(embeddingsPath, embeddingsJson);
 
@@ -2283,7 +2289,10 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
             const verifiedPair: VerifiedPair = {
               entityA: pair.entityA,
               entityB: pair.entityB,
-              sameEntity: O.match(llmResult, { onNone: () => false, onSome: (value) => value.sameEntity }),
+              sameEntity: O.match(llmResult, {
+                onNone: () => false,
+                onSome: (value) => value.sameEntity,
+              }),
               confidence: O.match(llmResult, {
                 onNone: () => Confidence.make(0),
                 onSome: (value) => value.confidence,
@@ -2433,7 +2442,11 @@ const PREVIEW_SIZE = 4096;
  * Build classification prompt for a batch of document previews
  */
 const buildClassificationPrompt = (
-  previews: ReadonlyArray<{ index: number; preview: string; contentType: string }>
+  previews: ReadonlyArray<{
+    index: number;
+    preview: string;
+    contentType: string;
+  }>
 ): string => {
   const docSummaries = previews
     .map(({ contentType, index, preview }) => `Document ${index} (${contentType}):\n"""${preview.slice(0, 1500)}"""`)
@@ -2513,7 +2526,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
       const manifestContent = yield* storage
         .get(manifestPath)
         .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), manifestPath)));
-      const manifest = yield* S.decodeEffect(S.fromJsonString(BatchManifest))(manifestContent).pipe(
+      const manifest = yield* BatchManifest.decodeEffectFromJsonString(manifestContent).pipe(
         Effect.mapError((e) => notFoundError("BatchManifest", `Parse error: ${e}`))
       );
 
@@ -2741,9 +2754,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
 
       // 8. Write enriched manifest to storage
       const enrichedManifestPath = PathLayout.batch.enrichedManifest(input.batchId);
-      const enrichedManifestJson = yield* S.encodeEffect(S.fromJsonString(EnrichedManifest, { space: 2 }))(
-        enrichedManifest
-      );
+      const enrichedManifestJson = yield* EnrichedManifest.encodeEffectFromJsonStringFormatted(enrichedManifest);
       yield* storage.set(enrichedManifestPath, enrichedManifestJson);
 
       yield* Effect.logInfo("Preprocessing activity complete", {

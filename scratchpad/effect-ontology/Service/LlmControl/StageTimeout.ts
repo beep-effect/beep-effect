@@ -7,7 +7,9 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import { getSomesStruct } from "@beep/utils/Option";
 import { Context, Duration, Effect, Fiber, Layer } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/StageTimeout");
@@ -296,22 +298,18 @@ export const StageTimeoutServiceLive = Layer.succeed(StageTimeoutService, makeSt
 export const StageTimeoutServiceTest = (
   overrides: Partial<Record<TimedStage, StageTimeoutConfigInput>> = {}
 ): Layer.Layer<StageTimeoutService> => {
+  const makeTimeoutOverride = (input: StageTimeoutConfigInput): StageTimeoutConfig => StageTimeoutConfig.make(input);
+  const decodedOverrides = getSomesStruct({
+    chunking: O.map(O.fromUndefinedOr(overrides.chunking), makeTimeoutOverride),
+    entity_extraction: O.map(O.fromUndefinedOr(overrides.entity_extraction), makeTimeoutOverride),
+    relation_extraction: O.map(O.fromUndefinedOr(overrides.relation_extraction), makeTimeoutOverride),
+    grounding: O.map(O.fromUndefinedOr(overrides.grounding), makeTimeoutOverride),
+    entity_verification: O.map(O.fromUndefinedOr(overrides.entity_verification), makeTimeoutOverride),
+    serialization: O.map(O.fromUndefinedOr(overrides.serialization), makeTimeoutOverride),
+  });
   const timeouts: Record<TimedStage, StageTimeoutConfig> = {
     ...STAGE_TIMEOUTS,
-    ...(overrides.chunking === undefined ? {} : { chunking: StageTimeoutConfig.make(overrides.chunking) }),
-    ...(overrides.entity_extraction === undefined
-      ? {}
-      : { entity_extraction: StageTimeoutConfig.make(overrides.entity_extraction) }),
-    ...(overrides.relation_extraction === undefined
-      ? {}
-      : { relation_extraction: StageTimeoutConfig.make(overrides.relation_extraction) }),
-    ...(overrides.grounding === undefined ? {} : { grounding: StageTimeoutConfig.make(overrides.grounding) }),
-    ...(overrides.entity_verification === undefined
-      ? {}
-      : { entity_verification: StageTimeoutConfig.make(overrides.entity_verification) }),
-    ...(overrides.serialization === undefined
-      ? {}
-      : { serialization: StageTimeoutConfig.make(overrides.serialization) }),
+    ...decodedOverrides,
   };
   return Layer.succeed(StageTimeoutService, makeStageTimeoutService(timeouts));
 };

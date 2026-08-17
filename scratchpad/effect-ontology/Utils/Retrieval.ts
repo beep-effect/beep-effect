@@ -13,16 +13,12 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { HashMap, MutableHashMap, MutableHashSet, Order, Tuple } from "effect";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
-import * as HashMap from "effect/HashMap";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Tuple from "effect/Tuple";
 import { dual2, dual3 } from "./Dual.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Utils/Retrieval");
@@ -367,7 +363,7 @@ export const expandQueryWithOntology = dual3(
         if (policy.includeAltLabels) {
           pipe(
             O.fromUndefinedOr(cls.altLabels),
-            O.getOrElse(() => A.empty<string>()),
+            O.getOrElse(A.empty<string>),
             A.forEach((alt) => {
               addTerm(alt, policy.synonymWeight, "altLabel");
             })
@@ -378,7 +374,7 @@ export const expandQueryWithOntology = dual3(
         if (policy.includeBroader) {
           pipe(
             O.fromUndefinedOr(cls.broader),
-            O.getOrElse(() => A.empty<string>()),
+            O.getOrElse(A.empty<string>),
             A.forEach((broader) => {
               addTerm(broader, policy.hierarchyWeight, "broader");
             })
@@ -389,7 +385,7 @@ export const expandQueryWithOntology = dual3(
         if (policy.includeNarrower) {
           pipe(
             O.fromUndefinedOr(cls.narrower),
-            O.getOrElse(() => A.empty<string>()),
+            O.getOrElse(A.empty<string>),
             A.forEach((narrower) => {
               addTerm(narrower, policy.hierarchyWeight, "narrower");
             })
@@ -404,7 +400,7 @@ export const expandQueryWithOntology = dual3(
         if (policy.includeAltLabels) {
           pipe(
             O.fromUndefinedOr(property.altLabels),
-            O.getOrElse(() => A.empty<string>()),
+            O.getOrElse(A.empty<string>),
             A.forEach((alt) => {
               addTerm(alt, policy.synonymWeight, "altLabel");
             })

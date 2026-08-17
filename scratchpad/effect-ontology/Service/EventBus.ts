@@ -12,8 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
-import { Clock, Context, DateTime, Effect, Layer, Queue, Ref, Stream } from "effect";
-import * as Duration from "effect/Duration";
+import { Clock, Context, DateTime, Duration, Effect, Layer, Queue, Ref, Stream } from "effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";

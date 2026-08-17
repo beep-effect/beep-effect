@@ -17,8 +17,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
-import { Clock, Duration, Effect, Ref } from "effect";
-import * as N from "effect/Number";
+import { Clock, Duration, Effect, Number as N, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CircuitOpenError } from "../Domain/Error/Circuit.ts";

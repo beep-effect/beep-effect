@@ -51,7 +51,7 @@ const makeTicketService = Effect.gen(function* () {
           ? Effect.succeed(O.none<TicketRecord>())
           : S.decodeEffect(TicketRecordJson)(content).pipe(Effect.map(O.some))
       ),
-      Effect.orElseSucceed(() => O.none<TicketRecord>())
+      Effect.orElseSucceed(O.none<TicketRecord>)
     );
 
   const removeStoredTicket = (ticket: string) => storage.remove(ticketStorageKey(ticket)).pipe(Effect.ignore);
