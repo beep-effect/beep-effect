@@ -5,8 +5,8 @@
  * Implements the 6-phase pipeline: chunking, retrieval, entity extraction,
  * property scoping, relation extraction, and merge.
  *
- * @since 2.0.0
- * @module Workflow/StreamingExtraction
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import {NonNegativeInt} from "@beep/schema/Int";
@@ -574,14 +574,14 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
  * Implements the 6-phase pipeline: chunking, retrieval, entity extraction,
  * property scoping, relation extraction, and merge.
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 /**
  * ExtractionWorkflow Implementation Layer
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const ExtractionWorkflowLive = Layer.effect(ExtractionWorkflow, makeExtractionWorkflow).pipe(
   Layer.provideMerge(ConfigServiceDefault),
@@ -602,7 +602,7 @@ export const ExtractionWorkflowLive = Layer.effect(ExtractionWorkflow, makeExtra
  *
  * Alias for ExtractionWorkflowLive, following the Effect.Service convention.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const ExtractionWorkflowDefault = ExtractionWorkflowLive;

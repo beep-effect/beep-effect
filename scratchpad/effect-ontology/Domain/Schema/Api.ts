@@ -1,8 +1,9 @@
 /**
  * Extraction API request and lifecycle-response schemas.
  *
- * @remarks
- * Input sources and job lifecycle payloads are discriminated so illegal
+ * **Details**
+ *
+ * * Input sources and job lifecycle payloads are discriminated so illegal
  * combinations are unrepresentable. Optional configuration is normalized to
  * `Option` at the schema boundary.
  *
@@ -37,11 +38,12 @@ const SubmitJobSourceDefinition = S.TaggedUnion({
 /**
  * Exactly one source of content for a submitted extraction job.
  *
- * @remarks
- * The nested `value` object makes source-specific data available only after
+ * **Details**
+ *
+ * * The nested `value` object makes source-specific data available only after
  * matching on `_tag`; callers never correlate two optional fields.
  *
- * @example
+ * **Example** (Use SubmitJobSource)
  * ```ts
  * import { SubmitJobSource } from "@effect-ontology/Schema/Api.ts"
  *
@@ -53,7 +55,7 @@ const SubmitJobSourceDefinition = S.TaggedUnion({
  *
  * @invariant Every value carries exactly one non-empty inline document or one
  * HTTPS remote location.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export const SubmitJobSource = SubmitJobSourceDefinition.pipe(
@@ -66,7 +68,7 @@ export const SubmitJobSource = SubmitJobSourceDefinition.pipe(
 /**
  * Runtime value decoded by {@link SubmitJobSource}.
  *
- * @example
+ * **Example** (Use SubmitJobSource)
  * ```ts
  * import type { SubmitJobSource } from "@effect-ontology/Schema/Api.ts"
  *
@@ -94,12 +96,13 @@ const SubmitJobRequestFields = {
 /**
  * Request to submit one extraction job.
  *
- * @remarks
- * Upstream represented `text` and `url` as independent optional properties.
+ * **Details**
+ *
+ * * Upstream represented `text` and `url` as independent optional properties.
  * This model uses {@link SubmitJobSource} to enforce the documented
  * exactly-one-source rule and normalizes omitted configuration to `Option`.
  *
- * @example
+ * **Example** (Use SubmitJobRequest)
  * ```ts
  * import { SubmitJobRequest, SubmitJobSource } from "@effect-ontology/Schema/Api.ts"
  *
@@ -112,7 +115,7 @@ const SubmitJobRequestFields = {
  * ```
  *
  * @invariant A request always carries one valid content source.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class SubmitJobRequest extends S.Class<SubmitJobRequest>($I`SubmitJobRequest`)(
@@ -128,7 +131,7 @@ export class SubmitJobRequest extends S.Class<SubmitJobRequest>($I`SubmitJobRequ
    * @returns An Effect that succeeds with a complete request or fails with a
    * schema parse error.
    *
-   * @example
+   * **Example** (Use JobStatus)
    * ```ts
    * import { Effect } from "effect"
    * import { SubmitJobRequest } from "@effect-ontology/Schema/Api.ts"
@@ -151,7 +154,7 @@ export class SubmitJobRequest extends S.Class<SubmitJobRequest>($I`SubmitJobRequ
 /**
  * Closed extraction-job lifecycle domain.
  *
- * @example
+ * **Example** (Use JobStatus)
  * ```ts
  * import { JobStatus } from "@effect-ontology/Schema/Api.ts"
  *
@@ -174,7 +177,7 @@ export const JobStatus = LiteralKit(["pending", "running", "completed", "failed"
 /**
  * Runtime value accepted by {@link JobStatus}.
  *
- * @example
+ * **Example** (Use JobStatus)
  * ```ts
  * import type { JobStatus } from "@effect-ontology/Schema/Api.ts"
  *
@@ -190,7 +193,7 @@ export type JobStatus = typeof JobStatus.Type;
 /**
  * Coarse failure-origin category exposed by the extraction API.
  *
- * @example
+ * **Example** (Use JobErrorType)
  * ```ts
  * import { JobErrorType } from "@effect-ontology/Schema/Api.ts"
  *
@@ -213,7 +216,7 @@ export const JobErrorType = LiteralKit(["expected", "defect", "interrupted", "ti
 /**
  * Runtime value accepted by {@link JobErrorType}.
  *
- * @example
+ * **Example** (Use JobErrorType)
  * ```ts
  * import type { JobErrorType } from "@effect-ontology/Schema/Api.ts"
  *
@@ -244,7 +247,7 @@ const JobProgressFields = {
 /**
  * Non-negative progress counters for an extraction job.
  *
- * @example
+ * **Example** (Use JobProgress)
  * ```ts
  * import * as S from "effect/Schema"
  * import { JobProgress } from "@effect-ontology/Schema/Api.ts"
@@ -259,7 +262,7 @@ const JobProgressFields = {
  * ```
  *
  * @invariant Every counter is a non-negative integer.
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class JobProgress extends S.Class<JobProgress>($I`JobProgress`)(
@@ -327,11 +330,12 @@ const JobStatusResponseDefinition = S.Union([
 /**
  * Extraction-job status response discriminated by lifecycle state.
  *
- * @remarks
- * Completion timestamps and failure details occur only in terminal variants,
+ * **Details**
+ *
+ * * Completion timestamps and failure details occur only in terminal variants,
  * replacing the upstream optional-field bag.
  *
- * @example
+ * **Example** (Use JobStatusResponse)
  * ```ts
  * import { JobStatusResponse } from "@effect-ontology/Schema/Api.ts"
  *
@@ -340,7 +344,7 @@ const JobStatusResponseDefinition = S.Union([
  *
  * @invariant Failed responses always include a non-empty diagnostic and an
  * error category; non-failed responses cannot carry failure data.
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export const JobStatusResponse = JobStatusResponseDefinition.pipe(
@@ -353,7 +357,7 @@ export const JobStatusResponse = JobStatusResponseDefinition.pipe(
 /**
  * Runtime value decoded by {@link JobStatusResponse}.
  *
- * @example
+ * **Example** (Use JobStatusResponse)
  * ```ts
  * import type { JobStatusResponse } from "@effect-ontology/Schema/Api.ts"
  *

@@ -10,8 +10,8 @@
  * 3. Validate SPARQL syntax
  * 4. Apply query correction if needed
  *
- * @since 2.0.0
- * @module Service/SparqlGenerator
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -35,8 +35,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SparqlGenerator");
 /**
  * Error: Failed to generate SPARQL query
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class SparqlGenerationError extends Data.TaggedError("SparqlGenerationError")<{
   readonly message: string;
@@ -47,8 +47,8 @@ export class SparqlGenerationError extends Data.TaggedError("SparqlGenerationErr
 /**
  * Error: SPARQL syntax is invalid
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class SparqlSyntaxError extends Data.TaggedError("SparqlSyntaxError")<{
   readonly message: string;
@@ -59,8 +59,8 @@ export class SparqlSyntaxError extends Data.TaggedError("SparqlSyntaxError")<{
 /**
  * Error: SPARQL correction failed
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class SparqlCorrectionError extends Data.TaggedError("SparqlCorrectionError")<{
   readonly message: string;
@@ -104,8 +104,8 @@ type SparqlResponse = typeof SparqlResponseSchema.Type;
  * Provides methods to translate natural language questions to SPARQL queries
  * using LLM with ontology schema context for grounding.
  *
- * @example
- * ```typescript
+ * **Example** (Use SparqlGenerator)
+ * ```ts
  * Effect.gen(function*() {
  *   const generator = yield* SparqlGenerator
  *   const ontology = yield* OntologyService.ontology
@@ -120,8 +120,8 @@ type SparqlResponse = typeof SparqlResponseSchema.Type;
  * })
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`SparqlGenerator`, {
   make: Effect.gen(function* () {

@@ -4,8 +4,8 @@
  * Orchestrates entity reconciliation against Wikidata with automatic linking
  * for high-confidence matches and queueing for human review of uncertain matches.
  *
- * @since 2.0.0
- * @module Service/ReconciliationService
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -162,7 +162,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
           return {
             entityIri,
             label,
-            decision: "skipped" as const,
+            decision: "skipped",
             candidates: [],
           };
         }
@@ -178,7 +178,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
           return {
             entityIri,
             label,
-            decision: "no_match" as const,
+            decision: "no_match",
             candidates: [],
           };
         }
@@ -198,7 +198,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
           return {
             entityIri,
             label,
-            decision: "auto_linked" as const,
+            decision: "auto_linked",
             candidates,
             bestMatch,
           };
@@ -214,7 +214,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
           return {
             entityIri,
             label,
-            decision: "queued" as const,
+            decision: "queued",
             candidates,
             bestMatch,
             verificationTaskId: taskId,
@@ -229,7 +229,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
           return {
             entityIri,
             label,
-            decision: "no_match" as const,
+            decision: "no_match",
             candidates,
             bestMatch,
           };

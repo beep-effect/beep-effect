@@ -4,8 +4,8 @@
  * HTTP endpoints for standalone RDFS reasoning on RDF graphs.
  * Provides synchronous inference with delta computation.
  *
- * @since 2.0.0
- * @module Runtime/InferenceRouter
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Effect, Random } from "effect";
@@ -44,8 +44,8 @@ const generateJobId = Random.nextInt.pipe(Effect.map((value) => `infer-${Math.ab
  * - POST /v1/inference/run - Run RDFS reasoning on a graph
  * - GET /v1/inference/:id - Get inference job result
  *
- * @since 2.0.0
- * @category Routers
+ * @since 0.0.0
+ * @category endpoints
  */
 export const InferenceRouter = HttpRouter.addAll([
   HttpRouter.route(
@@ -78,7 +78,7 @@ export const InferenceRouter = HttpRouter.addAll([
             // Parse input graph
             const originalStore = yield* rdfBuilder.parseTurtle(request.inputGraph).pipe(
               Effect.mapError((e) => ({
-                _tag: "ParseError" as const,
+                _tag: "ParseError",
                 message: `Failed to parse input graph: ${e.message}`,
               }))
             );
@@ -98,7 +98,7 @@ export const InferenceRouter = HttpRouter.addAll([
               .reasonCopy(originalStore, config)
               .pipe(
                 Effect.mapError((e) => ({
-                  _tag: "ReasoningError" as const,
+                  _tag: "ReasoningError",
                   message: e.message,
                 }))
               );

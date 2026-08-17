@@ -70,11 +70,12 @@ type CanonicalEvidenceSpanEncoded = typeof CanonicalEvidenceSpan.Encoded;
 /**
  * Character-level provenance for text supporting an extracted fact.
  *
- * @remarks
- * Offsets use W3C Web Annotation text-position semantics: `startChar` is
+ * **Details**
+ *
+ * * Offsets use W3C Web Annotation text-position semantics: `startChar` is
  * inclusive and `endChar` is exclusive.
  *
- * @example
+ * **Example** (Use EvidenceSpan)
  * ```ts
  * import { EvidenceSpan } from "@effect-ontology/Model/Entity.ts"
  *
@@ -125,7 +126,7 @@ export const EvidenceSpan = LegacyEvidenceSpan.pipe(
 /**
  * Runtime value decoded by {@link EvidenceSpan}.
  *
- * @example
+ * **Example** (Use EvidenceSpan)
  * ```ts
  * import type { EvidenceSpan } from "@effect-ontology/Model/Entity.ts"
  *
@@ -191,12 +192,13 @@ const EntityFields = {
 /**
  * Entity extracted from text and classified by an ontology.
  *
- * @remarks
- * Provenance absence is represented with `Option`, collections receive
+ * **Details**
+ *
+ * * Provenance absence is represented with `Option`, collections receive
  * schema-level defaults, and ontology types are non-empty. The class remains
  * immutable; enrichment creates a new value through `Entity.make`.
  *
- * @example
+ * **Example** (Use Entity)
  * ```ts
  * import * as S from "effect/Schema"
  * import { Entity } from "@effect-ontology/Model/Entity.ts"
@@ -230,12 +232,13 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
 /**
  * Canonical nested value carried by the object position of a relation.
  *
- * @remarks
- * The upstream model guessed whether a string was an entity reference by
+ * **Details**
+ *
+ * * The upstream model guessed whether a string was an entity reference by
  * matching its spelling. This tagged union makes entity references and literal
  * text distinct before business logic sees them.
  *
- * @example
+ * **Example** (Use RelationObject)
  * ```ts
  * import { EntityId } from "@effect-ontology/Model/shared.ts"
  * import { RelationObject } from "@effect-ontology/Model/Entity.ts"
@@ -272,7 +275,7 @@ export const RelationObject = S.TaggedUnion({
 /**
  * Runtime value decoded by {@link RelationObject}.
  *
- * @example
+ * **Example** (Use RelationObject)
  * ```ts
  * import type { RelationObject } from "@effect-ontology/Model/Entity.ts"
  *
@@ -304,7 +307,7 @@ const RelationFields = {
 /**
  * Ontology relation between an extracted subject and a typed object value.
  *
- * @example
+ * **Example** (Use Relation)
  * ```ts
  * import { EntityId, IRI } from "@effect-ontology/Model/shared.ts"
  * import { Relation, RelationObject } from "@effect-ontology/Model/Entity.ts"
@@ -334,7 +337,7 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
   /**
    * Whether the object is an explicit entity reference.
    *
-   * @example
+   * **Example** (Use Entity)
    * ```ts
    * import { EntityId, IRI } from "@effect-ontology/Model/shared.ts"
    * import { Relation, RelationObject } from "@effect-ontology/Model/Entity.ts"
@@ -361,7 +364,7 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
    * @param that - Relation to compare with this value.
    * @returns `true` when subject, predicate, and object are structurally equal.
    *
-   * @example
+   * **Example** (Use return)
    * ```ts
    * import { Equal } from "effect"
    * import { EntityId, IRI } from "@effect-ontology/Model/shared.ts"
@@ -390,7 +393,7 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
    *
    * @returns A deterministic hash consistent with relation equality.
    *
-   * @example
+   * **Example** (Use KnowledgeGraphFields)
    * ```ts
    * import { Hash } from "effect"
    * import { EntityId, IRI } from "@effect-ontology/Model/shared.ts"
@@ -433,7 +436,7 @@ const KnowledgeGraphFields = {
 /**
  * Complete entity-and-relation extraction result.
  *
- * @example
+ * **Example** (Use KnowledgeGraph)
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -465,7 +468,7 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
    * @param id - Stable entity identifier to locate.
    * @returns The matching entity, or `Option.none()` when it is absent.
    *
-   * @example
+   * **Example** (Use getEntity)
    * ```ts
    * import * as O from "effect/Option"
    * import { EntityId } from "@effect-ontology/Model/shared.ts"
@@ -485,7 +488,7 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
    * @param subjectId - Stable identifier of the relation subject.
    * @returns Relations whose subject equals `subjectId`, preserving graph order.
    *
-   * @example
+   * **Example** (Use getRelationsFrom)
    * ```ts
    * import { EntityId } from "@effect-ontology/Model/shared.ts"
    * import { KnowledgeGraph } from "@effect-ontology/Model/Entity.ts"
@@ -504,7 +507,7 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
    * @param entityId - Stable identifier of the referenced entity.
    * @returns Entity-reference relations targeting `entityId`, preserving graph order.
    *
-   * @example
+   * **Example** (Use getRelationsTo)
    * ```ts
    * import { EntityId } from "@effect-ontology/Model/shared.ts"
    * import { KnowledgeGraph } from "@effect-ontology/Model/Entity.ts"

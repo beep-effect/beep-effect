@@ -4,8 +4,8 @@
  * Effect.Cache wrapper around ClaimRepository for frequently accessed queries.
  * Caches single claim lookups and subject-based queries with TTL.
  *
- * @since 2.0.0
- * @module Repository/CachedClaim
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -40,8 +40,8 @@ const SUBJECT_CACHE_TTL = Duration.hours(1);
  * Wraps ClaimRepository with Effect.Cache for hot-path queries.
  * Maintains same interface as ClaimRepository.
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class CachedClaimRepository extends Context.Service<CachedClaimRepository>()($I`CachedClaimRepository`, {
   make: Effect.gen(function* () {
@@ -165,7 +165,7 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
 /**
  * Layer that provides CachedClaimRepository
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const CachedClaimRepositoryLayer = CachedClaimRepository.Default;

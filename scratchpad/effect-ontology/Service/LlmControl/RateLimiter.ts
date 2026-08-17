@@ -7,8 +7,8 @@
  * - 5 max concurrent requests
  * - Circuit breaker: opens after 5 failures, recovers after 120s
  *
- * @since 2.0.0
- * @module Service/LlmControl/RateLimiter
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -87,8 +87,8 @@ const DEFAULT_CONFIG: RateLimiterConfig = {
  * - Concurrent request limiting with semaphore
  * - Circuit breaker pattern for cascading failure protection
  *
- * @example
- * ```typescript
+ * **Example** (Use CentralRateLimiterService)
+ * ```ts
  * Effect.gen(function*() {
  *   const limiter = yield* CentralRateLimiterService
  *

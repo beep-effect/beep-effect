@@ -11,8 +11,8 @@
  * - runs/{runId}/outputs/{filename} - Output artifacts
  * - runs/key-index.json - Idempotency key lookup index
  *
- * @since 2.0.0
- * @module Service/ExtractionRun
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import {createHash} from "node:crypto";

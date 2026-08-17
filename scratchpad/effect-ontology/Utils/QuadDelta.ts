@@ -4,8 +4,8 @@
  * Computes the delta (new triples) between an original RDF store
  * and an enriched store after reasoning/inference operations.
  *
- * @since 2.0.0
- * @module Utils/QuadDelta
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { Quad } from "@beep/rdf/Rdf";
@@ -45,8 +45,8 @@ const serializeQuad = (quad: Quad): string => {
 /**
  * Delta result containing new quads and statistics
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface QuadDelta {
   /** Quads present in enriched but not in original */
@@ -65,14 +65,14 @@ export interface QuadDelta {
  * Returns quads that exist in the enriched store but not in the original.
  * Uses set difference on serialized quad strings for efficiency.
  *
- * @example
- * ```typescript
+ * **Example** (Use computeQuadDelta)
+ * ```ts
  * const delta = yield* computeQuadDelta(originalStore, enrichedStore)
  * console.log(`Inferred ${delta.deltaCount} new triples`)
  * ```
  *
- * @since 2.0.0
- * @category Functions
+ * @since 0.0.0
+ * @category mapping
  */
 export const computeQuadDelta = dual2(
   (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta> =>
@@ -110,8 +110,8 @@ export const computeQuadDelta = dual2(
  * Useful for understanding which reasoning rules contributed
  * to the inferred triples.
  *
- * @since 2.0.0
- * @category Functions
+ * @since 0.0.0
+ * @category mapping
  */
 export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string, ReadonlyArray<Quad>> => {
   let grouped = HashMap.empty<string, ReadonlyArray<Quad>>();
@@ -128,8 +128,8 @@ export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string,
 /**
  * Filters delta to only include type inferences (rdf:type triples).
  *
- * @since 2.0.0
- * @category Functions
+ * @since 0.0.0
+ * @category filtering
  */
 export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<Quad> =>
   A.filter(delta.newQuads, (quad) => quad.predicate.value === RDF_TYPE.value);
@@ -137,8 +137,8 @@ export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<Quad> =>
 /**
  * Creates a summary of the delta for logging/telemetry.
  *
- * @since 2.0.0
- * @category Functions
+ * @since 0.0.0
+ * @category mapping
  */
 export const summarizeDelta = (
   delta: QuadDelta

@@ -8,8 +8,8 @@
  * - Key named entities and topics
  * - Author and organization attribution
  *
- * @example
- * ```typescript
+ * **Example** (Use $I)
+ * ```ts
  * Effect.gen(function*() {
  *   const enricher = yield* ContentEnrichmentAgent
  *   const jinaContent = yield* JinaReaderClient.fetchUrl("https://example.com/article")
@@ -18,8 +18,8 @@
  * })
  * ```
  *
- * @since 2.0.0
- * @module Service/ContentEnrichmentAgent
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -42,8 +42,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ContentEnrichmentAgent"
 /**
  * Error: Failed to enrich content
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class ContentEnrichmentError extends Data.TaggedError("ContentEnrichmentError")<{
   readonly message: string;

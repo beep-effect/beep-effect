@@ -3,8 +3,8 @@
  *
  * Manage durable workflows, cleanup stale links, and re-enrich pending content.
  *
- * @since 2.0.0
- * @module Cli/Commands/Workflow
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Console, Effect } from "effect";

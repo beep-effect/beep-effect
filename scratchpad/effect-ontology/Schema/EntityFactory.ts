@@ -7,8 +7,8 @@
  * This schema ensures entity consistency by requiring unique IDs that will
  * be used in Stage 2 for relation extraction.
  *
- * @module Schema/EntityFactory
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { IRI } from "@beep/rdf";
@@ -92,8 +92,8 @@ const localNameSchema = (
  * @param datatypeProperties - Optional array of datatype properties to constrain attribute keys
  * @returns Entity schema for LLM structured output
  *
- * @example
- * ```typescript
+ * **Example** (Use makeEntitySchema)
+ * ```ts
  * const schema = makeEntitySchema([
  *   new ClassDefinition({ id: "http://schema.org/Person", label: "Person", ... }),
  *   new ClassDefinition({ id: "http://schema.org/Organization", label: "Organization", ... })
@@ -115,7 +115,7 @@ const localNameSchema = (
  * ```
  *
  * @category constructors
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeEntitySchema = dual2(
   (classes: ReadonlyArray<ClassDefinition>, datatypeProperties: ReadonlyArray<PropertyDefinition>) => {
@@ -234,8 +234,8 @@ CRITICAL RULES:
 /**
  * Type helpers
  *
- * @category type utilities
- * @since 2.0.0
+ * @category type-level
+ * @since 0.0.0
  */
 export type EntityGraphSchema = ReturnType<typeof makeEntitySchema>;
 

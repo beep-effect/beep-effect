@@ -5,8 +5,8 @@
  * Handles embedding updates, prompt cache maintenance, and other background tasks.
  * Uses EventBusService for job queue integration.
  *
- * @since 2.0.0
- * @module Service/CurationJobProcessor
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";

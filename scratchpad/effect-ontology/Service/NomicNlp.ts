@@ -185,7 +185,7 @@ export const NomicNlpServiceLive = Layer.effect(
  *
  * Uses NomicNlpServiceLive with default configuration.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const NomicNlpServiceDefault = NomicNlpServiceLive;
 
@@ -194,7 +194,7 @@ export const NomicNlpServiceDefault = NomicNlpServiceLive;
  *
  * Uses EMBEDDING_TRANSFORMERS_MODEL_ID from config (or ConfigService.embedding.transformersModelId).
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const NomicNlpConfigFromConfigService: Layer.Layer<NomicNlpConfig, never, ConfigService> = Layer.effect(
   NomicNlpConfig,
@@ -213,7 +213,7 @@ export const NomicNlpConfigFromConfigService: Layer.Layer<NomicNlpConfig, never,
  * Reads embedding model settings from environment:
  * - EMBEDDING_TRANSFORMERS_MODEL_ID (default: "Xenova/nomic-embed-text-v1")
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const NomicNlpServiceFromConfig: Layer.Layer<NomicNlpService, never, ConfigService> = NomicNlpServiceLive.pipe(
   Layer.provideMerge(NomicNlpConfigFromConfigService)

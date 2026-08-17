@@ -1,8 +1,9 @@
 /**
  * Exact storage-path schemas and constructors for effect-ontology artifacts.
  *
- * @remarks
- * Every dynamic segment is validated by its owning schema, every persisted
+ * **Details**
+ *
+ * * Every dynamic segment is validated by its owning schema, every persisted
  * filename is finite, and all paths use stable POSIX separators. Parsing is
  * total and returns `Result`; trusted construction is colocated on each path
  * schema and cannot emit a path outside that schema.
@@ -100,11 +101,12 @@ const makeImageHashPathSchema = <const Name extends string, const Suffix extends
 /**
  * Safe, single storage-key segment for owner identifiers.
  *
- * @remarks
- * The constrained alphabet rules out separators, dot traversal, control
+ * **Details**
+ *
+ * * The constrained alphabet rules out separators, dot traversal, control
  * characters, and ambiguous empty segments at the ingress boundary.
  *
- * @example
+ * **Example** (Use StoragePathSegment)
  * ```ts
  * import { StoragePathSegment } from "@effect-ontology/PathLayout.ts"
  *
@@ -140,7 +142,7 @@ export const StoragePathSegment = S.String.check(
 /**
  * Runtime value decoded by {@link StoragePathSegment}.
  *
- * @example
+ * **Example** (Use StoragePathSegment)
  * ```ts
  * import { StoragePathSegment, type StoragePathSegment as Segment } from "@effect-ontology/PathLayout.ts"
  *
@@ -171,7 +173,7 @@ const OntologyFilePathParts = S.TemplateLiteralParser([
 /**
  * Versioned Turtle ontology object path.
  *
- * @example
+ * **Example** (Use OntologyFilePath)
  * ```ts
  * import { ContentHash, Namespace, OntologyName } from "@effect-ontology/Identity.ts"
  * import { OntologyFilePath } from "@effect-ontology/PathLayout.ts"
@@ -218,7 +220,7 @@ export const OntologyFilePath = S.TemplateLiteral([
 /**
  * Runtime value decoded by {@link OntologyFilePath}.
  *
- * @example
+ * **Example** (Use OntologyFilePath)
  * ```ts
  * import { type OntologyFilePath } from "@effect-ontology/PathLayout.ts"
  *
@@ -234,7 +236,7 @@ export type OntologyFilePath = typeof OntologyFilePath.Type;
 /**
  * Tuple decoded from the ontology-file path parser.
  *
- * @example
+ * **Example** (Use OntologyFilePathTuple)
  * ```ts
  * import { type OntologyFilePathTuple } from "@effect-ontology/PathLayout.ts"
  *
@@ -250,7 +252,7 @@ export type OntologyFilePathTuple = typeof OntologyFilePathParts.Type;
 /**
  * Encoded representation accepted by {@link OntologyFilePath}.
  *
- * @example
+ * **Example** (Use OntologyFilePathEncoded)
  * ```ts
  * import { type OntologyFilePathEncoded } from "@effect-ontology/PathLayout.ts"
  *
@@ -266,7 +268,7 @@ export type OntologyFilePathEncoded = typeof OntologyFilePath.Encoded;
 /**
  * Mutable ontology manifest path used to resolve the latest version.
  *
- * @example
+ * **Example** (Use OntologyManifestPath)
  * ```ts
  * import { Namespace, OntologyName } from "@effect-ontology/Identity.ts"
  * import { OntologyManifestPath } from "@effect-ontology/PathLayout.ts"
@@ -301,7 +303,7 @@ export const OntologyManifestPath = S.TemplateLiteral([
 /**
  * Runtime value decoded by {@link OntologyManifestPath}.
  *
- * @example
+ * **Example** (Use OntologyManifestPath)
  * ```ts
  * import { type OntologyManifestPath } from "@effect-ontology/PathLayout.ts"
  *
@@ -317,7 +319,7 @@ export type OntologyManifestPath = typeof OntologyManifestPath.Type;
 /**
  * Batch workflow status path.
  *
- * @example
+ * **Example** (Use BatchStatusPath)
  * ```ts
  * import { BatchId } from "@effect-ontology/Identity.ts"
  * import { BatchStatusPath } from "@effect-ontology/PathLayout.ts"
@@ -337,7 +339,7 @@ export const BatchStatusPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchStatusPath}.
  *
- * @example
+ * **Example** (Use BatchStatusPath)
  * ```ts
  * import { type BatchStatusPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: BatchStatusPath) => path
@@ -351,7 +353,7 @@ export type BatchStatusPath = typeof BatchStatusPath.Type;
 /**
  * Batch input manifest path.
  *
- * @example
+ * **Example** (Use BatchManifestPath)
  * ```ts
  * import { BatchId } from "@effect-ontology/Identity.ts"
  * import { BatchManifestPath } from "@effect-ontology/PathLayout.ts"
@@ -371,7 +373,7 @@ export const BatchManifestPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchManifestPath}.
  *
- * @example
+ * **Example** (Use BatchManifestPath)
  * ```ts
  * import { type BatchManifestPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: BatchManifestPath) => path
@@ -385,7 +387,7 @@ export type BatchManifestPath = typeof BatchManifestPath.Type;
 /**
  * Batch entity-resolution graph path.
  *
- * @example
+ * **Example** (Use BatchResolutionPath)
  * ```ts
  * import { BatchId } from "@effect-ontology/Identity.ts"
  * import { BatchResolutionPath } from "@effect-ontology/PathLayout.ts"
@@ -405,7 +407,7 @@ export const BatchResolutionPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchResolutionPath}.
  *
- * @example
+ * **Example** (Use BatchResolutionPath)
  * ```ts
  * import { type BatchResolutionPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: BatchResolutionPath) => path
@@ -419,7 +421,7 @@ export type BatchResolutionPath = typeof BatchResolutionPath.Type;
 /**
  * Batch SHACL-validated graph path.
  *
- * @example
+ * **Example** (Use BatchValidationGraphPath)
  * ```ts
  * import { BatchId } from "@effect-ontology/Identity.ts"
  * import { BatchValidationGraphPath } from "@effect-ontology/PathLayout.ts"
@@ -439,7 +441,7 @@ export const BatchValidationGraphPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchValidationGraphPath}.
  *
- * @example
+ * **Example** (Use BatchValidationGraphPath)
  * ```ts
  * import { type BatchValidationGraphPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: BatchValidationGraphPath) => path
@@ -453,7 +455,7 @@ export type BatchValidationGraphPath = typeof BatchValidationGraphPath.Type;
 /**
  * Batch SHACL validation report path.
  *
- * @example
+ * **Example** (Use BatchValidationReportPath)
  * ```ts
  * import { BatchId } from "@effect-ontology/Identity.ts"
  * import { BatchValidationReportPath } from "@effect-ontology/PathLayout.ts"
@@ -473,7 +475,7 @@ export const BatchValidationReportPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchValidationReportPath}.
  *
- * @example
+ * **Example** (Use BatchValidationReportPath)
  * ```ts
  * import { type BatchValidationReportPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: BatchValidationReportPath) => path
@@ -487,7 +489,7 @@ export type BatchValidationReportPath = typeof BatchValidationReportPath.Type;
 /**
  * Batch canonical graph path.
  *
- * @example
+ * **Example** (Use BatchCanonicalPath)
  * ```ts
  * import { BatchId } from "@effect-ontology/Identity.ts"
  * import { BatchCanonicalPath } from "@effect-ontology/PathLayout.ts"
@@ -507,7 +509,7 @@ export const BatchCanonicalPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchCanonicalPath}.
  *
- * @example
+ * **Example** (Use BatchCanonicalPath)
  * ```ts
  * import { type BatchCanonicalPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: BatchCanonicalPath) => path
@@ -521,7 +523,7 @@ export type BatchCanonicalPath = typeof BatchCanonicalPath.Type;
 /**
  * Batch preprocessing enriched-manifest path.
  *
- * @example
+ * **Example** (Use BatchEnrichedManifestPath)
  * ```ts
  * import { BatchId } from "@effect-ontology/Identity.ts"
  * import { BatchEnrichedManifestPath } from "@effect-ontology/PathLayout.ts"
@@ -541,7 +543,7 @@ export const BatchEnrichedManifestPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchEnrichedManifestPath}.
  *
- * @example
+ * **Example** (Use BatchEnrichedManifestPath)
  * ```ts
  * import { type BatchEnrichedManifestPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: BatchEnrichedManifestPath) => path
@@ -555,7 +557,7 @@ export type BatchEnrichedManifestPath = typeof BatchEnrichedManifestPath.Type;
 /**
  * Batch ingest manifest path.
  *
- * @example
+ * **Example** (Use BatchIngestManifestPath)
  * ```ts
  * import { BatchId } from "@effect-ontology/Identity.ts"
  * import { BatchIngestManifestPath } from "@effect-ontology/PathLayout.ts"
@@ -575,7 +577,7 @@ export const BatchIngestManifestPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchIngestManifestPath}.
  *
- * @example
+ * **Example** (Use BatchIngestManifestPath)
  * ```ts
  * import { type BatchIngestManifestPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: BatchIngestManifestPath) => path
@@ -589,7 +591,7 @@ export type BatchIngestManifestPath = typeof BatchIngestManifestPath.Type;
 /**
  * Batch final ingest output path.
  *
- * @example
+ * **Example** (Use BatchFinalOutputPath)
  * ```ts
  * import { BatchId } from "@effect-ontology/Identity.ts"
  * import { BatchFinalOutputPath } from "@effect-ontology/PathLayout.ts"
@@ -609,7 +611,7 @@ export const BatchFinalOutputPath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchFinalOutputPath}.
  *
- * @example
+ * **Example** (Use BatchFinalOutputPath)
  * ```ts
  * import { type BatchFinalOutputPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: BatchFinalOutputPath) => path
@@ -623,7 +625,7 @@ export type BatchFinalOutputPath = typeof BatchFinalOutputPath.Type;
 /**
  * Batch inference-enriched graph path.
  *
- * @example
+ * **Example** (Use BatchInferencePath)
  * ```ts
  * import { BatchId } from "@effect-ontology/Identity.ts"
  * import { BatchInferencePath } from "@effect-ontology/PathLayout.ts"
@@ -643,7 +645,7 @@ export const BatchInferencePath = makeBatchPathSchema(
 
 /** Runtime value decoded by {@link BatchInferencePath}.
  *
- * @example
+ * **Example** (Use BatchInferencePath)
  * ```ts
  * import { type BatchInferencePath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: BatchInferencePath) => path
@@ -657,7 +659,7 @@ export type BatchInferencePath = typeof BatchInferencePath.Type;
 /**
  * Document metadata path.
  *
- * @example
+ * **Example** (Use DocumentMetadataPath)
  * ```ts
  * import { DocumentId } from "@effect-ontology/Identity.ts"
  * import { DocumentMetadataPath } from "@effect-ontology/PathLayout.ts"
@@ -677,7 +679,7 @@ export const DocumentMetadataPath = makeDocumentPathSchema(
 
 /** Runtime value decoded by {@link DocumentMetadataPath}.
  *
- * @example
+ * **Example** (Use DocumentMetadataPath)
  * ```ts
  * import { type DocumentMetadataPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: DocumentMetadataPath) => path
@@ -691,7 +693,7 @@ export type DocumentMetadataPath = typeof DocumentMetadataPath.Type;
 /**
  * Normalized document input path.
  *
- * @example
+ * **Example** (Use DocumentInputPath)
  * ```ts
  * import { DocumentId } from "@effect-ontology/Identity.ts"
  * import { DocumentInputPath } from "@effect-ontology/PathLayout.ts"
@@ -711,7 +713,7 @@ export const DocumentInputPath = makeDocumentPathSchema(
 
 /** Runtime value decoded by {@link DocumentInputPath}.
  *
- * @example
+ * **Example** (Use DocumentInputPath)
  * ```ts
  * import { type DocumentInputPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: DocumentInputPath) => path
@@ -725,7 +727,7 @@ export type DocumentInputPath = typeof DocumentInputPath.Type;
 /**
  * Extracted document RDF graph path.
  *
- * @example
+ * **Example** (Use DocumentGraphPath)
  * ```ts
  * import { DocumentId } from "@effect-ontology/Identity.ts"
  * import { DocumentGraphPath } from "@effect-ontology/PathLayout.ts"
@@ -745,7 +747,7 @@ export const DocumentGraphPath = makeDocumentPathSchema(
 
 /** Runtime value decoded by {@link DocumentGraphPath}.
  *
- * @example
+ * **Example** (Use DocumentGraphPath)
  * ```ts
  * import { type DocumentGraphPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: DocumentGraphPath) => path
@@ -763,7 +765,7 @@ const RunMetadataPathParts = S.TemplateLiteralParser(["runs/", DocumentId, "/met
 /**
  * Extraction-run metadata path.
  *
- * @example
+ * **Example** (Use RunMetadataPath)
  * ```ts
  * import { DocumentId } from "@effect-ontology/Identity.ts"
  * import { RunMetadataPath } from "@effect-ontology/PathLayout.ts"
@@ -792,7 +794,7 @@ export const RunMetadataPath = S.TemplateLiteral(["runs/", DocumentId, "/metadat
 
 /** Runtime value decoded by {@link RunMetadataPath}.
  *
- * @example
+ * **Example** (Use RunMetadataPath)
  * ```ts
  * import { type RunMetadataPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: RunMetadataPath) => path
@@ -806,7 +808,7 @@ export type RunMetadataPath = typeof RunMetadataPath.Type;
 /**
  * Extraction-run normalized input path.
  *
- * @example
+ * **Example** (Use RunInputPath)
  * ```ts
  * import { DocumentId } from "@effect-ontology/Identity.ts"
  * import { RunInputPath } from "@effect-ontology/PathLayout.ts"
@@ -829,7 +831,7 @@ export const RunInputPath = S.TemplateLiteral(["runs/", DocumentId, "/input/docu
 
 /** Runtime value decoded by {@link RunInputPath}.
  *
- * @example
+ * **Example** (Use RunInputPath)
  * ```ts
  * import { type RunInputPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: RunInputPath) => path
@@ -866,11 +868,12 @@ const RunChunkPathParts = S.TemplateLiteralParser([
 /**
  * Extraction-run input chunk path.
  *
- * @remarks
- * The whole-path check rejects alternate numeric spellings such as `01`,
+ * **Details**
+ *
+ * * The whole-path check rejects alternate numeric spellings such as `01`,
  * `+1`, fractions, and exponents even when JavaScript could parse them.
  *
- * @example
+ * **Example** (Use RunChunkPath)
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { DocumentId } from "@effect-ontology/Identity.ts"
@@ -907,7 +910,7 @@ export const RunChunkPath = S.TemplateLiteral(["runs/", DocumentId, "/input/chun
 
 /** Runtime value decoded by {@link RunChunkPath}.
  *
- * @example
+ * **Example** (Use RunChunkPath)
  * ```ts
  * import { type RunChunkPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: RunChunkPath) => path
@@ -928,11 +931,12 @@ const RunOutputPathParts = S.TemplateLiteralParser(["runs/", DocumentId, "/outpu
 /**
  * Exact extraction-run artifact path.
  *
- * @remarks
- * Unlike the upstream free-form filename slot, this schema accepts only
+ * **Details**
+ *
+ * * Unlike the upstream free-form filename slot, this schema accepts only
  * filenames owned by {@link OutputType}.
  *
- * @example
+ * **Example** (Use RunOutputPath)
  * ```ts
  * import { DocumentId } from "@effect-ontology/Identity.ts"
  * import { RunOutputPath } from "@effect-ontology/PathLayout.ts"
@@ -966,7 +970,7 @@ export const RunOutputPath = S.TemplateLiteral(["runs/", DocumentId, "/outputs/"
 
 /** Runtime value decoded by {@link RunOutputPath}.
  *
- * @example
+ * **Example** (Use RunOutputPath)
  * ```ts
  * import { type RunOutputPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: RunOutputPath) => path
@@ -980,7 +984,7 @@ export type RunOutputPath = typeof RunOutputPath.Type;
 /**
  * Supported derived image size.
  *
- * @example
+ * **Example** (Use ImageVariantSize)
  * ```ts
  * import { ImageVariantSize } from "@effect-ontology/PathLayout.ts"
  *
@@ -1003,7 +1007,7 @@ export const ImageVariantSize = LiteralKit(["thumb", "medium"])
 /**
  * Runtime value decoded by {@link ImageVariantSize}.
  *
- * @example
+ * **Example** (Use ImageVariantSize)
  * ```ts
  * import { ImageVariantSize, type ImageVariantSize as VariantSize } from "@effect-ontology/PathLayout.ts"
  *
@@ -1019,7 +1023,7 @@ export type ImageVariantSize = typeof ImageVariantSize.Type;
 /**
  * Aggregate kind that owns an image manifest.
  *
- * @example
+ * **Example** (Use ImageOwnerType)
  * ```ts
  * import { ImageOwnerType } from "@effect-ontology/PathLayout.ts"
  *
@@ -1042,7 +1046,7 @@ export const ImageOwnerType = LiteralKit(["link", "document"])
 /**
  * Runtime value decoded by {@link ImageOwnerType}.
  *
- * @example
+ * **Example** (Use ImageOwnerType)
  * ```ts
  * import { ImageOwnerType, type ImageOwnerType as OwnerType } from "@effect-ontology/PathLayout.ts"
  *
@@ -1058,7 +1062,7 @@ export type ImageOwnerType = typeof ImageOwnerType.Type;
 /**
  * Original image bytes path.
  *
- * @example
+ * **Example** (Use ImageOriginalPath)
  * ```ts
  * import { ContentHash } from "@effect-ontology/Identity.ts"
  * import { ImageOriginalPath } from "@effect-ontology/PathLayout.ts"
@@ -1078,7 +1082,7 @@ export const ImageOriginalPath = makeImageHashPathSchema(
 
 /** Runtime value decoded by {@link ImageOriginalPath}.
  *
- * @example
+ * **Example** (Use ImageOriginalPath)
  * ```ts
  * import { type ImageOriginalPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: ImageOriginalPath) => path
@@ -1092,7 +1096,7 @@ export type ImageOriginalPath = typeof ImageOriginalPath.Type;
 /**
  * Image metadata document path.
  *
- * @example
+ * **Example** (Use ImageMetadataPath)
  * ```ts
  * import { ContentHash } from "@effect-ontology/Identity.ts"
  * import { ImageMetadataPath } from "@effect-ontology/PathLayout.ts"
@@ -1112,7 +1116,7 @@ export const ImageMetadataPath = makeImageHashPathSchema(
 
 /** Runtime value decoded by {@link ImageMetadataPath}.
  *
- * @example
+ * **Example** (Use ImageMetadataPath)
  * ```ts
  * import { type ImageMetadataPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: ImageMetadataPath) => path
@@ -1126,7 +1130,7 @@ export type ImageMetadataPath = typeof ImageMetadataPath.Type;
 /**
  * Optional image-label document path.
  *
- * @example
+ * **Example** (Use ImageLabelsPath)
  * ```ts
  * import { ContentHash } from "@effect-ontology/Identity.ts"
  * import { ImageLabelsPath } from "@effect-ontology/PathLayout.ts"
@@ -1146,7 +1150,7 @@ export const ImageLabelsPath = makeImageHashPathSchema(
 
 /** Runtime value decoded by {@link ImageLabelsPath}.
  *
- * @example
+ * **Example** (Use ImageLabelsPath)
  * ```ts
  * import { type ImageLabelsPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: ImageLabelsPath) => path
@@ -1160,7 +1164,7 @@ export type ImageLabelsPath = typeof ImageLabelsPath.Type;
 /**
  * Derived JPEG image variant path.
  *
- * @example
+ * **Example** (Use ImageVariantPath)
  * ```ts
  * import { ContentHash } from "@effect-ontology/Identity.ts"
  * import { ImageVariantPath } from "@effect-ontology/PathLayout.ts"
@@ -1190,7 +1194,7 @@ export const ImageVariantPath = S.TemplateLiteral([
 
 /** Runtime value decoded by {@link ImageVariantPath}.
  *
- * @example
+ * **Example** (Use ImageVariantPath)
  * ```ts
  * import { type ImageVariantPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: ImageVariantPath) => path
@@ -1204,7 +1208,7 @@ export type ImageVariantPath = typeof ImageVariantPath.Type;
 /**
  * Base path containing all images associated with an owner.
  *
- * @example
+ * **Example** (Use ImageOwnerBasePath)
  * ```ts
  * import { ImageOwnerBasePath, StoragePathSegment } from "@effect-ontology/PathLayout.ts"
  *
@@ -1236,7 +1240,7 @@ export const ImageOwnerBasePath = S.TemplateLiteral([
 
 /** Runtime value decoded by {@link ImageOwnerBasePath}.
  *
- * @example
+ * **Example** (Use ImageOwnerBasePath)
  * ```ts
  * import { type ImageOwnerBasePath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: ImageOwnerBasePath) => path
@@ -1250,7 +1254,7 @@ export type ImageOwnerBasePath = typeof ImageOwnerBasePath.Type;
 /**
  * Owner image-manifest path.
  *
- * @example
+ * **Example** (Use ImageManifestPath)
  * ```ts
  * import { ImageManifestPath, StoragePathSegment } from "@effect-ontology/PathLayout.ts"
  *
@@ -1282,7 +1286,7 @@ export const ImageManifestPath = S.TemplateLiteral([
 
 /** Runtime value decoded by {@link ImageManifestPath}.
  *
- * @example
+ * **Example** (Use ImageManifestPath)
  * ```ts
  * import { type ImageManifestPath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: ImageManifestPath) => path
@@ -1296,7 +1300,7 @@ export type ImageManifestPath = typeof ImageManifestPath.Type;
 /**
  * Namespace-level canonical entities graph path.
  *
- * @example
+ * **Example** (Use CanonicalNamespacePath)
  * ```ts
  * import { Namespace } from "@effect-ontology/Identity.ts"
  * import { CanonicalNamespacePath } from "@effect-ontology/PathLayout.ts"
@@ -1319,7 +1323,7 @@ export const CanonicalNamespacePath = S.TemplateLiteral(["canonical/", Namespace
 
 /** Runtime value decoded by {@link CanonicalNamespacePath}.
  *
- * @example
+ * **Example** (Use CanonicalNamespacePath)
  * ```ts
  * import { type CanonicalNamespacePath } from "@effect-ontology/PathLayout.ts"
  * const accept = (path: CanonicalNamespacePath) => path
@@ -1333,13 +1337,14 @@ export type CanonicalNamespacePath = typeof CanonicalNamespacePath.Type;
 /**
  * Unified constructors and total parsers for storage paths.
  *
- * @remarks
- * Builders delegate to the owning schema statics. Parser functions return
+ * **Details**
+ *
+ * * Builders delegate to the owning schema statics. Parser functions return
  * `Result` so untrusted object keys never throw synchronously. Image hashes
  * use complete content identity, and owner IDs must already be validated
  * {@link StoragePathSegment} values.
  *
- * @example
+ * **Example** (Use PathLayout)
  * ```ts
  * import { BatchId, DocumentId } from "@effect-ontology/Identity.ts"
  * import { PathLayout } from "@effect-ontology/PathLayout.ts"
@@ -1402,28 +1407,28 @@ export {
   /**
    * Registered output artifact filenames colocated with path construction.
    *
-   * @example
+   * **Example** (Use PathLayout)
    * ```ts
    * import { OutputFilename } from "@effect-ontology/PathLayout.ts"
    *
    * console.log(OutputFilename.Enum.graphJsonld) // "graph.jsonld"
    * ```
    *
-   * @category re-exports
+   * @category models
    * @since 0.0.0
    */
   OutputFilename,
   /**
    * Closed output artifact taxonomy used by run-path constructors.
    *
-   * @example
+   * **Example** (Use PathLayout)
    * ```ts
    * import { OutputType } from "@effect-ontology/PathLayout.ts"
    *
    * console.log(OutputType.filename("rdf-jsonld")) // "graph.jsonld"
    * ```
    *
-   * @category re-exports
+   * @category models
    * @since 0.0.0
    */
   OutputType,

@@ -4,8 +4,8 @@
  * PostgreSQL schema for claims, articles, corrections, conflicts, and batch runs.
  * Matches the SQL migration at `src/Runtime/Persistence/migrations/001_claims_schema.sql`.
  *
- * @since 2.0.0
- * @module Repository/schema
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import {
@@ -34,8 +34,8 @@ import {
  * @param dimension - Vector dimension (e.g., 512, 768, 1024)
  * @returns Drizzle custom type for pgvector
  *
- * @since 2.0.0
- * @category Custom Types
+ * @since 0.0.0
+ * @category tables
  */
 export const vectorN = (dimension: number) =>
   customType<{ data: ReadonlyArray<number>; driverData: string }>({
@@ -56,8 +56,8 @@ export const vectorN = (dimension: number) =>
  * Custom type for pgvector embedding columns (768-dimensional).
  * Used by Nomic embed text v1.5 (default dimension).
  *
- * @since 2.0.0
- * @category Custom Types
+ * @since 0.0.0
+ * @category tables
  */
 const vector768 = vectorN(768);
 
@@ -65,24 +65,24 @@ const vector768 = vectorN(768);
  * Custom type for pgvector embedding columns (512-dimensional).
  * Used by Voyage-3-lite.
  *
- * @since 2.0.0
- * @category Custom Types
+ * @since 0.0.0
+ * @category tables
  */
 
 /**
  * Custom type for pgvector embedding columns (1024-dimensional).
  * Used by Voyage-3, Voyage-code-3, Voyage-law-2.
  *
- * @since 2.0.0
- * @category Custom Types
+ * @since 0.0.0
+ * @category tables
  */
 
 /**
  * Custom type for pgvector embedding columns (256-dimensional).
  * Used for Matryoshka representation learning (truncated embeddings).
  *
- * @since 2.0.0
- * @category Custom Types
+ * @since 0.0.0
+ * @category tables
  */
 
 // =============================================================================
@@ -596,7 +596,7 @@ export type LinkBatchItemInsertRow = typeof linkBatchItems.$inferInsert;
  * Stores curated examples for few-shot prompting. Examples are scoped per-ontology
  * and support hybrid retrieval (vector similarity + lexical search).
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const llmExamples = pgTable(
   "llm_examples",
@@ -655,7 +655,7 @@ export type LlmExampleInsertRow = typeof llmExamples.$inferInsert;
 /**
  * Entity type enum for embeddings
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const embeddingEntityTypeEnum = pgEnum("embedding_entity_type", ["class", "entity", "claim", "example"]);
 
@@ -671,7 +671,7 @@ export const embeddingEntityTypeEnum = pgEnum("embedding_entity_type", ["class",
  * - tsvector for BM25-like full-text search
  * - RRF fusion via hybrid_search() function
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const embeddings = pgTable(
   "embeddings",

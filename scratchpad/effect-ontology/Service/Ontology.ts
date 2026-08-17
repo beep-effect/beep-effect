@@ -5,8 +5,8 @@
  * Parses OWL/RDFS ontologies and exposes classes and properties.
  * Backend-agnostic: works with any RDF engine via RdfService.
  *
- * @since 2.0.0
- * @module Service/Ontology
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { createHash } from "node:crypto";
@@ -509,8 +509,8 @@ export const parseOntologyFromStore = dual3(
  * Loads ontology from file, parses using RdfService, and extracts classes/properties
  * using RdfService queries. Backend-agnostic: works with any RDF engine.
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class OntologyService extends Context.Service<OntologyService>()($I`OntologyService`, {
   make: Effect.gen(function* () {

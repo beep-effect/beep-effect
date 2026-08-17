@@ -12,8 +12,8 @@
  * 5. Relation Extraction - LLM-based relation extraction
  * 6. Grounding - Filter relations by embedding similarity (≥0.8)
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";

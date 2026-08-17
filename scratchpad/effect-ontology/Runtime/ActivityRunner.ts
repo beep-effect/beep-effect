@@ -8,8 +8,8 @@
  * - ACTIVITY_NAME: "extraction" | "resolution" | "validation" | "ingestion"
  * - ACTIVITY_PAYLOAD: JSON string containing activity input
  *
- * @since 2.0.0
- * @module Runtime/ActivityRunner
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { BunRuntime, BunServices } from "@effect/platform-bun";

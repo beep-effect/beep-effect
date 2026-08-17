@@ -1,8 +1,9 @@
 /**
  * Schema-backed event-bus, Pub/Sub, and dead-letter failures.
  *
- * @remarks
- * Operational defects decode to `Option`, and exhausted retry counts are
+ * **Details**
+ *
+ * * Operational defects decode to `Option`, and exhausted retry counts are
  * constrained to finite non-negative integers.
  *
  * @packageDocumentation
@@ -18,7 +19,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/EventBus");
 /**
  * Failure raised by a generic event-bus operation.
  *
- * @example
+ * **Example** (Use EventBusError)
  * ```ts
  * import { EventBusError } from "@effect-ontology/Error/EventBus.ts"
  *
@@ -51,7 +52,7 @@ export const EventBusError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link EventBusError}.
  *
- * @example
+ * **Example** (Use EventBusError)
  * ```ts
  * import { EventBusError, type EventBusError as Failure } from "@effect-ontology/Error/EventBus.ts"
  *
@@ -67,7 +68,7 @@ export type EventBusError = typeof EventBusError.Type;
 /**
  * Failure raised by a Cloud Pub/Sub topic operation.
  *
- * @example
+ * **Example** (Use PubSubError)
  * ```ts
  * import { PubSubError } from "@effect-ontology/Error/EventBus.ts"
  *
@@ -107,7 +108,7 @@ export const PubSubError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link PubSubError}.
  *
- * @example
+ * **Example** (Use PubSubError)
  * ```ts
  * import { PubSubError, type PubSubError as Failure } from "@effect-ontology/Error/EventBus.ts"
  *
@@ -127,7 +128,7 @@ export type PubSubError = typeof PubSubError.Type;
 /**
  * Indicates that a queued job exhausted its retry budget.
  *
- * @example
+ * **Example** (Use DeadLetterError)
  * ```ts
  * import { DeadLetterError } from "@effect-ontology/Error/EventBus.ts"
  *
@@ -169,7 +170,7 @@ export const DeadLetterError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link DeadLetterError}.
  *
- * @example
+ * **Example** (Use DeadLetterError)
  * ```ts
  * import { DeadLetterError, type DeadLetterError as DeadLetter } from "@effect-ontology/Error/EventBus.ts"
  *
@@ -192,7 +193,7 @@ const AnyEventBusErrorDefinition = S.Union([EventBusError, PubSubError, DeadLett
 /**
  * Exhaustive tagged union of event-bus failures.
  *
- * @example
+ * **Example** (Use AnyEventBusError)
  * ```ts
  * import { AnyEventBusError, EventBusError } from "@effect-ontology/Error/EventBus.ts"
  *
@@ -213,7 +214,7 @@ export const AnyEventBusError = AnyEventBusErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link AnyEventBusError}.
  *
- * @example
+ * **Example** (Use AnyEventBusError)
  * ```ts
  * import { EventBusError, type AnyEventBusError } from "@effect-ontology/Error/EventBus.ts"
  *

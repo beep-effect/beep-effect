@@ -6,8 +6,8 @@
  * - Normalization and canonicalization
  * - Token-based operations
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 import * as Str from "@beep/utils/Str";
 import * as A from "effect/Array";

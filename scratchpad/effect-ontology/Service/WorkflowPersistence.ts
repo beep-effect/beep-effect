@@ -4,7 +4,7 @@
  * Bridges our existing GCS-backed StorageService to @effect/experimental Persistence.
  * This reuses our existing infrastructure for workflow state durability.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 
 import { Effect, Layer } from "effect";

@@ -4,8 +4,8 @@
  * RDF abstraction layer using N3.js as the backend.
  * Provides backend-agnostic RDF operations for parsing, querying, and serialization.
  *
- * @since 2.0.0
- * @module Service/Rdf
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -130,7 +130,7 @@ type N3Store = N3.Store;
  * `@beep/rdf` Dataset; this wrapper exists only for mutation-heavy legacy
  * reasoning workflows until those workflows are ported to immutable datasets.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 const RdfStoreBrand: unique symbol = Symbol.for("@beep/scratchpad/effect-ontology/RdfStore");
 
@@ -238,7 +238,7 @@ export const rdfStoreApplyRules = Effect.fn("RdfStore.applyRules")(function* (
  *
  * null values act as wildcards (match anything).
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface QuadPattern {
   readonly subject?: IRI | Subject | null;
@@ -356,12 +356,12 @@ const domainTermToN3Term = (
  *
  * Explicitly typed to avoid inference issues with transitive @rdfjs/types dependency.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 /**
  * Options for adding triples to a store with optional named graph
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface AddTriplesOptions {
   /** Optional named graph URI - triples go to default graph if not specified */
@@ -384,7 +384,7 @@ export interface AddTriplesOptions {
  *
  * Captures information about the extraction run for audit purposes.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface ExtractionMetadata {
   /** Graph URI where metadata triples will be added (typically the provenance graph) */
@@ -413,7 +413,7 @@ export interface RdfBuilderShape {
    * @param trig - TriG RDF string
    * @returns Effect yielding RdfStore or ParsingFailed
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly parseTriG: (trig: string) => Effect.Effect<RdfStore, ParsingFailed, never>;
   readonly queryStore: (store: RdfStore, pattern: QuadPattern) => Effect.Effect<Chunk.Chunk<Quad>, RdfError, never>;
@@ -447,7 +447,7 @@ export interface RdfBuilderShape {
    * @param confidence - Confidence score between 0 and 1
    * @param graphUri - Optional named graph URI
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly addTripleWithConfidence: (
     store: RdfStore,
@@ -458,7 +458,7 @@ export interface RdfBuilderShape {
   /**
    * Generate core:Mention RDF triples from entity evidence spans
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly generateMentionTriples: (
     store: RdfStore,
@@ -486,7 +486,7 @@ export interface RdfBuilderShape {
    * @param store - RdfStore to serialize
    * @returns TriG string
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly toTriG: (store: RdfStore) => Effect.Effect<string, SerializationFailed, never>;
   /**
@@ -498,7 +498,7 @@ export interface RdfBuilderShape {
    * @param store - RdfStore to query
    * @returns Array of graph IRIs
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly getGraphs: (store: RdfStore) => Effect.Effect<Array<IRI>, RdfError, never>;
   /**
@@ -508,7 +508,7 @@ export interface RdfBuilderShape {
    * @param graphIri - Named graph IRI
    * @returns Chunk of Quad objects from the graph
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly getQuadsFromGraph: (store: RdfStore, graphIri: IRI) => Effect.Effect<Chunk.Chunk<Quad>, RdfError, never>;
   /**
@@ -522,7 +522,7 @@ export interface RdfBuilderShape {
    * @param targetGraph - Target graph IRI
    * @returns Number of quads copied
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly copyGraphQuads: (
     store: RdfStore,
@@ -539,7 +539,7 @@ export interface RdfBuilderShape {
    * @param graphIri - Graph IRI to delete
    * @returns Number of quads deleted
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly deleteGraph: (store: RdfStore, graphIri: IRI) => Effect.Effect<number, RdfError, never>;
   /**
@@ -553,7 +553,7 @@ export interface RdfBuilderShape {
    * @param source - Store to merge from (unchanged)
    * @returns Number of new quads added
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly mergeStores: (target: RdfStore, source: RdfStore) => Effect.Effect<number, RdfError, never>;
   /**
@@ -565,7 +565,7 @@ export interface RdfBuilderShape {
    * @param source - Store to clone
    * @returns New RdfStore with same quads
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly cloneStore: (source: RdfStore) => Effect.Effect<RdfStore, RdfError, never>;
   readonly validate: (
@@ -587,8 +587,8 @@ export interface RdfBuilderShape {
  * - `toTurtle`: Serialize to Turtle with prefixes
  * - `validate`: SHACL validation placeholder
  *
- * @example
- * ```typescript
+ * **Example** (Use RdfBuilder)
+ * ```ts
  * Effect.gen(function*() {
  *   const store = yield* RdfBuilder.makeStore
  *   yield* RdfBuilder.addEntities(store, entities)
@@ -598,8 +598,8 @@ export interface RdfBuilderShape {
  * }).pipe(Effect.scoped, Effect.provide(RdfBuilder.Default))
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
   make: Effect.gen(function* () {
@@ -854,7 +854,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @param canonicalMap - Map of mentionId -> canonicalId
        * @returns Effect completing when links are added
        *
-       * @since 2.0.0
+       * @since 0.0.0
        */
       addSameAsLinks: (store: RdfStore, canonicalMap: Record<string, string>) =>
         Effect.try({
@@ -900,7 +900,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @param metadata - Extraction metadata
        * @returns Effect completing when metadata is added
        *
-       * @since 2.0.0
+       * @since 0.0.0
        */
       addExtractionMetadata: (store: RdfStore, metadata: ExtractionMetadata) =>
         Effect.try({
@@ -1058,8 +1058,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * @param options - Optional mention URI and source document URI
        * @returns Effect completing when triples are added
        *
-       * @example
-       * ```typescript
+       * **Example** (Use generateMentionTriples)
+       * ```ts
        * yield* rdf.generateMentionTriples(store, entityUri, {
        *   text: "Mayor Bruce Harrell",
        *   startChar: 42,
@@ -1068,7 +1068,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * }, { sourceUri: "gs://bucket/doc.txt" })
        * ```
        *
-       * @since 2.0.0
+       * @since 0.0.0
        */
       generateMentionTriples: (
         store: RdfStore,

@@ -53,7 +53,7 @@ const ElementEmbeddingFields = {
 /**
  * Embedding and source text for one ontology class or property.
  *
- * @example
+ * **Example** (Use ElementEmbedding)
  * ```ts
  * import * as O from "effect/Option"
  * import { ElementEmbedding } from "@effect-ontology/Model/OntologyEmbeddings.ts"
@@ -88,7 +88,7 @@ export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedd
    * @param altLabels Alternative labels in preferred display order.
    * @returns Period-delimited semantic text suitable for embedding.
    *
-   * @example
+   * **Example** (Use OntologyEmbeddingsFields)
    * ```ts
    * import * as O from "effect/Option"
    * import { ElementEmbedding } from "@effect-ontology/Model/OntologyEmbeddings.ts"
@@ -218,13 +218,14 @@ const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
 /**
  * Versioned embedding artifact for one ontology.
  *
- * @remarks
- * The schema enforces one vector dimension across all class and property
+ * **Details**
+ *
+ * * The schema enforces one vector dimension across all class and property
  * embeddings. `computeVersion` produces a full SHA-256 digest through the
  * repository crypto service instead of the upstream module's truncated
  * synchronous hash.
  *
- * @example
+ * **Example** (Use OntologyEmbeddings)
  * ```ts
  * import { Effect } from "effect"
  * import { GcsUri } from "@effect-ontology/Identity.ts"
@@ -259,7 +260,7 @@ export const OntologyEmbeddings = OntologyEmbeddingsDefinition.annotate({
 /**
  * Runtime value decoded by {@link OntologyEmbeddings}.
  *
- * @example
+ * **Example** (Use OntologyEmbeddings)
  * ```ts
  * import type { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings.ts"
  *
@@ -277,7 +278,7 @@ const OntologyEmbeddingsJsonDefinition = OntologyEmbeddings.pipe(S.fromJsonStrin
 /**
  * JSON-text codec for {@link OntologyEmbeddings}.
  *
- * @example
+ * **Example** (Use OntologyEmbeddingsJson)
  * ```ts
  * import * as S from "effect/Schema"
  * import { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings.ts"
@@ -298,7 +299,7 @@ export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
 /**
  * Runtime value decoded by {@link OntologyEmbeddingsJson}.
  *
- * @example
+ * **Example** (Use OntologyEmbeddingsJson)
  * ```ts
  * import type { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings.ts"
  *

@@ -16,8 +16,8 @@
  * - SSE streaming to frontends
  * - Checkpoint/resume support
  *
- * @example
- * ```typescript
+ * **Example** (Use AgentCoordinator)
+ * ```ts
  * Effect.gen(function*() {
  *   const coordinator = yield* AgentCoordinator
  *
@@ -35,8 +35,8 @@
  * })
  * ```
  *
- * @since 2.0.0
- * @module Service/Agent/AgentCoordinator
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import {$ScratchpadId} from "@beep/identity";
@@ -99,8 +99,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Agent/AgentCoordinator"
 /**
  * Options for pipeline execution
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ExecutionOptions {
   /**
@@ -127,8 +127,8 @@ export interface ExecutionOptions {
 /**
  * Result of pipeline execution
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ExecutionResult {
   readonly state: PipelineState;
@@ -146,8 +146,8 @@ export interface ExecutionResult {
  * Coordinates the execution of multiple agents in configurable patterns.
  * Manages agent registration, pipeline execution, and event collection.
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`AgentCoordinator`, {
   make: Effect.gen(function* () {

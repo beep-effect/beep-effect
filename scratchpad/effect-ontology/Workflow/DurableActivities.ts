@@ -12,7 +12,7 @@
  * Note: These activities require WorkflowEngine and WorkflowInstance context.
  * For standalone execution (e.g., ActivityRunner), use Activities.ts instead.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -893,7 +893,7 @@ export type ClaimPersistenceInput = typeof ClaimPersistenceInput.Type;
  * 3. Convert to claims using knowledgeGraphToClaims
  * 4. Persist to PostgreSQL via ClaimPersistenceService
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
   Activity.make({
@@ -1082,7 +1082,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
  * 4. Update registry with new/merged entities
  * 5. Return resolution statistics
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInput) =>
   Activity.make({
@@ -1231,7 +1231,7 @@ export type InferenceOutput = typeof InferenceOutput.Type;
  * 5. Save enriched graph
  * 6. Return statistics
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeInferenceActivity = (input: InferenceInput) =>
   Activity.make({
@@ -1729,7 +1729,7 @@ const VERIFICATION_BATCH_SIZE = 5;
  * - Catch false negatives from pure string/embedding matching
  * - Improve recall for entities with very different surface forms
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
   Activity.make({
@@ -2019,7 +2019,7 @@ Respond with classifications for each document by index.`;
  * - Computes chunking strategies and priorities
  * - Creates EnrichedManifest for downstream processing
  *
- * @since 2.3.0
+ * @since 0.0.0
  */
 export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
   Activity.make({

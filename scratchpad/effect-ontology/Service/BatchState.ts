@@ -1,10 +1,11 @@
-import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, Layer, Option, PubSub, Schema } from "effect";
-import { KeyValueStore, Persistence } from "effect/unstable/persistence";
-import type { BatchId } from "../Domain/Identity.ts";
-import { BatchState } from "../Domain/Model/BatchWorkflow.ts";
-import { PathLayout } from "../Domain/PathLayout.ts";
-import { StorageService } from "./Storage.ts";
+import {$ScratchpadId} from "@beep/identity";
+import {Context, Effect, Layer, Option, PubSub, Schema} from "effect";
+import {KeyValueStore, Persistence} from "effect/unstable/persistence";
+import {flow} from "effect/Function";
+import type {BatchId} from "../Domain/Identity.ts";
+import {BatchState} from "../Domain/Model/BatchWorkflow.ts";
+import {PathLayout} from "../Domain/PathLayout.ts";
+import {StorageService} from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/BatchState");
 
@@ -48,10 +49,11 @@ export const getBatchStateFromStore = Effect.fn(function* (batchId: BatchId) {
     onNone: () => Effect.succeed(Option.none<BatchState>()),
     // decodeState uses Schema.fromJsonString, which handles JSON parsing directly
     // No need for explicit JSON.parse - avoids double parse overhead
-    onSome: (json) =>
-      decodeState(json).pipe(
+    onSome:
+      flow(
+        decodeState,
         Effect.asSome,
-        Effect.orElseSucceed(() => Option.none<BatchState>())
+        Effect.orElseSucceed(Option.none<BatchState>)
       ),
   });
 });

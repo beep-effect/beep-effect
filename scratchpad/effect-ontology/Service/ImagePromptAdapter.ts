@@ -5,8 +5,8 @@
  * Converts ImageRef[] to ImageForPrompt[] with base64 encoding,
  * and provides helpers for building @effect/ai Prompt.Part[].
  *
- * @since 2.0.0
- * @module Service/ImagePromptAdapter
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -72,8 +72,8 @@ const getExtension = (mediaType: string): string => {
  *
  * Prepares images for LLM multimodal prompts.
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface ImagePromptAdapterService {
   /**
@@ -123,8 +123,8 @@ export interface ImagePromptAdapterService {
 /**
  * ImagePromptAdapter service tag
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, ImagePromptAdapterService>()(
   $I`ImagePromptAdapter`
@@ -132,8 +132,8 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
   /**
    * Live implementation
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Live = Layer.effect(
     ImagePromptAdapter,
@@ -233,8 +233,8 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
   /**
    * Default layer with all dependencies
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Default = ImagePromptAdapter.Live.pipe(
     Layer.provide(ImageBlobStore.Live),
@@ -254,8 +254,8 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
  * @param images - Images to convert
  * @returns Array of Prompt.FilePart objects
  *
- * @since 2.0.0
- * @category Utilities
+ * @since 0.0.0
+ * @category utilities
  */
 export const imagesToPromptParts = (images: ReadonlyArray<ImageForPrompt>): ReadonlyArray<Prompt.FilePart> =>
   A.map(images, (img, index) =>
@@ -275,8 +275,8 @@ export const imagesToPromptParts = (images: ReadonlyArray<ImageForPrompt>): Read
  * @param images - Images to include (optional)
  * @returns Array of UserMessagePart objects
  *
- * @since 2.0.0
- * @category Utilities
+ * @since 0.0.0
+ * @category utilities
  */
 export const buildMultimodalContent = dual2(
   (text: string, images: ReadonlyArray<ImageForPrompt> | undefined): ReadonlyArray<Prompt.UserMessagePart> => {

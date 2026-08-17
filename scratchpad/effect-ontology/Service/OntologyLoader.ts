@@ -4,8 +4,8 @@
  * The v4 port keeps ontology loading, indexing, and search in the canonical
  * `OntologyService`; this adapter preserves the former loader service surface.
  *
- * @since 2.0.0
- * @module Service/OntologyLoader
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -17,8 +17,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/OntologyLoader");
 const makeOntologyLoader = Effect.gen(function* () {
   const ontology = yield* OntologyService;
   return {
-    searchClasses: ontology.searchClasses,
-  } as const;
+      searchClasses: ontology.searchClasses,
+    };
 });
 
 export class OntologyLoader extends Context.Service<OntologyLoader>()($I`OntologyLoader`, {

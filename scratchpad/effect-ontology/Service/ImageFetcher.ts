@@ -4,8 +4,8 @@
  * Downloads images from URLs with timeout/retry handling,
  * computes content hashes, and validates content types.
  *
- * @since 2.0.0
- * @module Service/ImageFetcher
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -110,8 +110,8 @@ export interface ImageFetchOptions {
  *
  * Downloads images from URLs and prepares them for storage.
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface ImageFetcherService {
   /**
@@ -210,15 +210,15 @@ const inferContentTypeFromUrl = (url: string): string | undefined => {
 /**
  * ImageFetcher service tag
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherService>()($I`ImageFetcher`) {
   /**
    * Live implementation
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Live = Layer.effect(
     ImageFetcher,
@@ -438,8 +438,8 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
   /**
    * Default layer with HttpClient
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Default = ImageFetcher.Live.pipe(Layer.provide(FetchHttpClient.layer));
 }

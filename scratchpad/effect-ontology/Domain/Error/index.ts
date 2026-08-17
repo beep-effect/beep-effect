@@ -1,8 +1,9 @@
 /**
  * Public schema-backed error surface for the effect-ontology experiment.
  *
- * @remarks
- * Every family exposes individually discriminated failures plus an exhaustive
+ * **Details**
+ *
+ * * Every family exposes individually discriminated failures plus an exhaustive
  * tagged-union schema with arbitrary generation for future property tests.
  *
  * @packageDocumentation
@@ -11,7 +12,7 @@
 /**
  * Activity execution, timeout, cancellation, and defect failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { ActivityTimeoutError } from "@effect-ontology/Error/index.ts"
  * console.log(ActivityTimeoutError)
@@ -24,7 +25,7 @@ export * from "./Activity.ts";
 /**
  * Authentication and authorization failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { AuthenticationReason } from "@effect-ontology/Error/index.ts"
  * console.log(AuthenticationReason.Options)
@@ -37,7 +38,7 @@ export * from "./Auth.ts";
 /**
  * Shared error fields, constraints, and class construction.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { ErrorMessage } from "@effect-ontology/Error/index.ts"
  * console.log(ErrorMessage.is("Request failed.")) // true
@@ -50,7 +51,7 @@ export * from "./Base.ts";
 /**
  * Circuit-breaker and rate-limit failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { CircuitOpenError } from "@effect-ontology/Error/index.ts"
  * console.log(CircuitOpenError)
@@ -63,7 +64,7 @@ export * from "./Circuit.ts";
 /**
  * Embedding-provider and vector-shape failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { EmbeddingError } from "@effect-ontology/Error/index.ts"
  * console.log(EmbeddingError)
@@ -76,7 +77,7 @@ export * from "./Embedding.ts";
 /**
  * Event publication, subscription, serialization, and handler failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { EventBusError } from "@effect-ontology/Error/index.ts"
  * console.log(EventBusError)
@@ -89,7 +90,7 @@ export * from "./EventBus.ts";
 /**
  * Extraction pipeline and output failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { ExtractionError } from "@effect-ontology/Error/index.ts"
  * console.log(ExtractionError)
@@ -102,7 +103,7 @@ export * from "./Extraction.ts";
 /**
  * Image discovery, fetch, validation, and storage failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { ImageFetchError } from "@effect-ontology/Error/index.ts"
  * console.log(ImageFetchError)
@@ -115,7 +116,7 @@ export * from "./Image.ts";
 /**
  * Jina API, parsing, timeout, and throttling failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { JinaApiError } from "@effect-ontology/Error/index.ts"
  * console.log(JinaApiError)
@@ -128,7 +129,7 @@ export * from "./Jina.ts";
 /**
  * Language-model provider and response failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { LlmError } from "@effect-ontology/Error/index.ts"
  * console.log(LlmError)
@@ -141,7 +142,7 @@ export * from "./Llm.ts";
 /**
  * Ontology lookup, load, parse, and validation failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { OntologyError } from "@effect-ontology/Error/index.ts"
  * console.log(OntologyError)
@@ -154,7 +155,7 @@ export * from "./Ontology.ts";
 /**
  * RDF parsing, serialization, graph, term, and query failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { RdfError } from "@effect-ontology/Error/index.ts"
  * console.log(RdfError)
@@ -167,7 +168,7 @@ export * from "./Rdf.ts";
 /**
  * SHACL generation and validation failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { ValidationPolicySeverity } from "@effect-ontology/Error/index.ts"
  * console.log(ValidationPolicySeverity.Options)
@@ -180,7 +181,7 @@ export * from "./Shacl.ts";
 /**
  * Workflow transition, suspension, activity, and terminal failures.
  *
- * @example
+ * **Example** (Use index)
  * ```ts
  * import { WorkflowError } from "@effect-ontology/Error/index.ts"
  * console.log(WorkflowError)

@@ -5,8 +5,8 @@
  * ontology versions, document and run identifiers, Google Cloud Storage
  * locations, and their construction helpers at both runtime and compile time.
  *
- * @since 0.0.0
  * @packageDocumentation
+ * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
 import type { NonNegativeInt } from "@beep/schema";
@@ -109,12 +109,13 @@ const GcsObjectName = S.String.check(
 /**
  * Legacy 16-character prefix of a SHA-256 digest.
  *
- * @remarks
- * The upstream module treated this 64-bit prefix as content identity. The v4
+ * **Details**
+ *
+ * * The upstream module treated this 64-bit prefix as content identity. The v4
  * experiment accepts it only at explicit ingress boundaries and never expands
  * it back into a full digest.
  *
- * @example
+ * **Example** (Use LegacyContentHashPrefix)
  * ```ts
  * import { LegacyContentHashPrefix } from "@effect-ontology/Identity.ts"
  *
@@ -150,7 +151,7 @@ export const LegacyContentHashPrefix = S.String.check(
 /**
  * Runtime value decoded by {@link LegacyContentHashPrefix}.
  *
- * @example
+ * **Example** (Use LegacyContentHashPrefix)
  * ```ts
  * import {
  *   LegacyContentHashPrefix,
@@ -169,12 +170,13 @@ export type LegacyContentHashPrefix = typeof LegacyContentHashPrefix.Type;
 /**
  * Canonical full SHA-256 content identity.
  *
- * @remarks
- * Content identity is deliberately independent from semantic identifiers and
+ * **Details**
+ *
+ * * Content identity is deliberately independent from semantic identifiers and
  * storage locations. Use {@link LegacyContentHashPrefix} only for upstream
  * compatibility.
  *
- * @example
+ * **Example** (Use ContentHash)
  * ```ts
  * import { ContentHash } from "@effect-ontology/Identity.ts"
  *
@@ -207,7 +209,7 @@ export const ContentHash = Sha256Hex.annotate({
 /**
  * Runtime value decoded by {@link ContentHash}.
  *
- * @example
+ * **Example** (Use ContentHash)
  * ```ts
  * import { ContentHash, type ContentHash as ContentHashValue } from "@effect-ontology/Identity.ts"
  *
@@ -225,14 +227,15 @@ export type ContentHash = typeof ContentHash.Type;
 /**
  * Branded idempotency key represented by a complete lowercase SHA-256 digest.
  *
- * @remarks
- * This schema validates only the canonical 64-character digest representation.
+ * **Details**
+ *
+ * * This schema validates only the canonical 64-character digest representation.
  * The caller remains responsible for hashing a stable, unambiguous encoding of
  * every input that affects the idempotent operation.
  *
  * The schema inherits its property-based generator from {@link Sha256Hex}.
  *
- * @example
+ * **Example** (Use IdempotencyKey)
  * ```ts
  * import * as S from "effect/Schema"
  * import { IdempotencyKey } from "@effect-ontology/Identity.ts"
@@ -263,7 +266,7 @@ export const IdempotencyKey = Sha256Hex.annotate({
 /**
  * Runtime value type decoded by {@link IdempotencyKey}. {@inheritDoc IdempotencyKey}
  *
- * @example
+ * **Example** (Use IdempotencyKey)
  * ```ts
  * import { IdempotencyKey, type IdempotencyKey as IdempotencyKeyValue } from "@effect-ontology/Identity.ts"
  *
@@ -281,8 +284,9 @@ export type IdempotencyKey = typeof IdempotencyKey.Type;
 /**
  * Branded Google Cloud Storage bucket name in the portable 3-63 character form.
  *
- * @remarks
- * The schema enforces locally decidable GCS naming rules: the allowed lowercase
+ * **Details**
+ *
+ * * The schema enforces locally decidable GCS naming rules: the allowed lowercase
  * character set, alphanumeric endpoints, the 3-63 character range,
  * non-IPv4 form, the reserved `goog` prefix, and the explicitly documented
  * `google` and `g00gle` spellings.
@@ -291,7 +295,7 @@ export type IdempotencyKey = typeof IdempotencyKey.Type;
  * availability. Those provider-maintained checks require a GCS API call and
  * are intentionally outside this pure schema.
  *
- * @example
+ * **Example** (Use GcsBucketEncoded)
  * ```ts
  * import { GcsBucket } from "@effect-ontology/Identity.ts"
  *
@@ -319,11 +323,12 @@ const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => GcsBuc
 /**
  * Portable Google Cloud Storage bucket name.
  *
- * @remarks
- * Enforces every locally decidable provider rule while leaving global
+ * **Details**
+ *
+ * * Enforces every locally decidable provider rule while leaving global
  * availability and provider-maintained close-spelling checks to the GCS API.
  *
- * @example
+ * **Example** (Use GcsBucket)
  * ```ts
  * import { GcsBucket } from "@effect-ontology/Identity.ts"
  *
@@ -350,7 +355,7 @@ export const GcsBucket = GcsBucketEncoded.pipe(
 /**
  * Runtime value type decoded by {@link GcsBucket}. {@inheritDoc GcsBucket}
  *
- * @example
+ * **Example** (Use GcsBucket)
  * ```ts
  * import { GcsBucket, type GcsBucket as GcsBucketValue } from "@effect-ontology/Identity.ts"
  *
@@ -366,13 +371,14 @@ export type GcsBucket = typeof GcsBucket.Type;
 /**
  * Branded `gs://` URI containing a valid {@link GcsBucket} and GCS object name.
  *
- * @remarks
- * The object-name component follows flat-namespace rules: 1-1,024 UTF-8 bytes,
+ * **Details**
+ *
+ * * The object-name component follows flat-namespace rules: 1-1,024 UTF-8 bytes,
  * no carriage-return or line-feed characters, no dot-only names, and no
  * reserved ACME challenge prefix. Hierarchical-namespace segment limits are
  * bucket configuration constraints and are not represented by this schema.
  *
- * @example
+ * **Example** (Use GcsUriEncoded)
  * ```ts
  * import * as S from "effect/Schema"
  * import { GcsUri } from "@effect-ontology/Identity.ts"
@@ -401,11 +407,12 @@ const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => S.is(GcsUriE
 /**
  * Validated Google Cloud Storage URI.
  *
- * @remarks
- * Both the bucket and object components are decoded by their own schemas;
+ * **Details**
+ *
+ * * Both the bucket and object components are decoded by their own schemas;
  * existence, permissions, and namespace configuration remain provider checks.
  *
- * @example
+ * **Example** (Use GcsUri)
  * ```ts
  * import { GcsUri } from "@effect-ontology/Identity.ts"
  *
@@ -447,7 +454,7 @@ export const GcsUri = GcsUriEncoded.pipe(
 /**
  * Runtime value type decoded by {@link GcsUri}. {@inheritDoc GcsUri}
  *
- * @example
+ * **Example** (Use GcsUri)
  * ```ts
  * import { GcsUri, type GcsUri as GcsUriValue } from "@effect-ontology/Identity.ts"
  *
@@ -495,13 +502,14 @@ const GcsObjectChecks = S.makeFilterGroup(
 /**
  * Branded canonical GCS object path without boundary or consecutive slashes.
  *
- * @remarks
- * This schema narrows the provider-valid object-name space used by
+ * **Details**
+ *
+ * * This schema narrows the provider-valid object-name space used by
  * {@link GcsUri}. It preserves ordinary slash-separated pseudo-directories but
  * rejects leading, trailing, and consecutive slashes so one logical path has
  * one textual representation.
  *
- * @example
+ * **Example** (Use GcsObjectEncoded)
  * ```ts
  * import { GcsObject } from "@effect-ontology/Identity.ts"
  *
@@ -525,11 +533,12 @@ const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => S.is(G
 /**
  * Canonical slash-separated GCS object path.
  *
- * @remarks
- * Retains provider-valid object names while removing leading, trailing, and
+ * **Details**
+ *
+ * * Retains provider-valid object names while removing leading, trailing, and
  * consecutive slashes so each application path has one textual form.
  *
- * @example
+ * **Example** (Use GcsObject)
  * ```ts
  * import { GcsObject } from "@effect-ontology/Identity.ts"
  *
@@ -554,7 +563,7 @@ export const GcsObject = GcsObjectEncoded.pipe(
 /**
  * Runtime value type decoded by {@link GcsObject}. {@inheritDoc GcsObject}
  *
- * @example
+ * **Example** (Use GcsObject)
  * ```ts
  * import { GcsObject, type GcsObject as GcsObjectValue } from "@effect-ontology/Identity.ts"
  *
@@ -572,7 +581,7 @@ export type GcsObject = typeof GcsObject.Type;
 /**
  * Branded lowercase ontology namespace identifier.
  *
- * @example
+ * **Example** (Use Namespace)
  * ```ts
  * import { Namespace } from "@effect-ontology/Identity.ts"
  *
@@ -610,7 +619,7 @@ export const Namespace = S.String.check(
 /**
  * Runtime value type decoded by {@link Namespace}. {@inheritDoc Namespace}
  *
- * @example
+ * **Example** (Use Namespace)
  * ```ts
  * import { Namespace, type Namespace as NamespaceValue } from "@effect-ontology/Identity.ts"
  *
@@ -626,7 +635,7 @@ export type Namespace = typeof Namespace.Type;
 /**
  * Branded lowercase ontology name.
  *
- * @example
+ * **Example** (Use OntologyName)
  * ```ts
  * import { OntologyName } from "@effect-ontology/Identity.ts"
  *
@@ -664,7 +673,7 @@ export const OntologyName = S.String.check(
 /**
  * Runtime value type decoded by {@link OntologyName}. {@inheritDoc OntologyName}
  *
- * @example
+ * **Example** (Use OntologyName)
  * ```ts
  * import { OntologyName, type OntologyName as OntologyNameValue } from "@effect-ontology/Identity.ts"
  *
@@ -680,12 +689,13 @@ export type OntologyName = typeof OntologyName.Type;
 /**
  * Branded ontology version in `namespace/name@content-hash` form.
  *
- * @remarks
- * The component schemas remain the source of truth: namespace and ontology
+ * **Details**
+ *
+ * * The component schemas remain the source of truth: namespace and ontology
  * naming rules come from {@link Namespace} and {@link OntologyName}, while the
  * version fingerprint uses the complete {@link ContentHash}.
  *
- * @example
+ * **Example** (Use OntologyVersion)
  * ```ts
  * import * as S from "effect/Schema"
  * import { OntologyVersion } from "@effect-ontology/Identity.ts"
@@ -723,7 +733,7 @@ export const OntologyVersion = S.TemplateLiteral([Namespace, "/", OntologyName, 
 /**
  * Runtime value type decoded by {@link OntologyVersion}. {@inheritDoc OntologyVersion}
  *
- * @example
+ * **Example** (Use OntologyVersion)
  * ```ts
  * import { OntologyVersion, type OntologyVersion as OntologyVersionValue } from "@effect-ontology/Identity.ts"
  *
@@ -741,12 +751,13 @@ export type OntologyVersion = typeof OntologyVersion.Type;
 /**
  * Branded deterministic document identifier in `doc-<12-hex>` form.
  *
- * @remarks
- * The 12-character suffix carries 48 bits from a content digest. Collisions
+ * **Details**
+ *
+ * * The 12-character suffix carries 48 bits from a content digest. Collisions
  * therefore require explicit handling when identifiers span large or
  * adversarial document sets.
  *
- * @example
+ * **Example** (Use DocumentId)
  * ```ts
  * import { DocumentId } from "@effect-ontology/Identity.ts"
  *
@@ -786,7 +797,7 @@ export const DocumentId = S.String.check(
 /**
  * Runtime value type decoded by {@link DocumentId}. {@inheritDoc DocumentId}
  *
- * @example
+ * **Example** (Use DocumentId)
  * ```ts
  * import { DocumentId, type DocumentId as DocumentIdValue } from "@effect-ontology/Identity.ts"
  *
@@ -802,7 +813,7 @@ export type DocumentId = typeof DocumentId.Type;
 /**
  * Branded chunk identifier combining a document identifier and canonical index.
  *
- * @example
+ * **Example** (Use ChunkId)
  * ```ts
  * import { ChunkId } from "@effect-ontology/Identity.ts"
  *
@@ -843,7 +854,7 @@ export const ChunkId = S.String.check(
 /**
  * Runtime value type decoded by {@link ChunkId}. {@inheritDoc ChunkId}
  *
- * @example
+ * **Example** (Use ChunkId)
  * ```ts
  * import { ChunkId, type ChunkId as ChunkIdValue } from "@effect-ontology/Identity.ts"
  *
@@ -859,11 +870,12 @@ export type ChunkId = typeof ChunkId.Type;
 /**
  * Document-identifier schema reused for extraction-run correlation.
  *
- * @remarks
- * This is intentionally an alias at the type level rather than a distinct
+ * **Details**
+ *
+ * * This is intentionally an alias at the type level rather than a distinct
  * brand: an extraction run and its source document share the same identifier.
  *
- * @example
+ * **Example** (Use ExtractionRunId)
  * ```ts
  * import { ExtractionRunId } from "@effect-ontology/Identity.ts"
  *
@@ -886,7 +898,7 @@ export const ExtractionRunId = DocumentId.annotate({
 /**
  * Runtime value type decoded by {@link ExtractionRunId}. {@inheritDoc ExtractionRunId}
  *
- * @example
+ * **Example** (Use ExtractionRunId)
  * ```ts
  * import { ExtractionRunId, type ExtractionRunId as ExtractionRunIdValue } from "@effect-ontology/Identity.ts"
  *
@@ -902,7 +914,7 @@ export type ExtractionRunId = typeof ExtractionRunId.Type;
 /**
  * Branded deterministic batch identifier in `batch-<12-hex>` form.
  *
- * @example
+ * **Example** (Use BatchId)
  * ```ts
  * import { BatchId } from "@effect-ontology/Identity.ts"
  *
@@ -942,7 +954,7 @@ export const BatchId = S.String.check(
 /**
  * Runtime value type decoded by {@link BatchId}. {@inheritDoc BatchId}
  *
- * @example
+ * **Example** (Use BatchId)
  * ```ts
  * import { BatchId, type BatchId as BatchIdValue } from "@effect-ontology/Identity.ts"
  *

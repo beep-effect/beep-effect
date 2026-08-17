@@ -3,8 +3,8 @@
  *
  * Effect-native knowledge extraction framework
  *
- * @since 2.0.0
- * @module index
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 // Domain (pure types, no service dependencies)

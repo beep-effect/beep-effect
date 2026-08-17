@@ -1,8 +1,9 @@
 /**
  * Document classification, adaptive chunking, and enriched manifest schemas.
  *
- * @remarks
- * Classification-derived behavior is colocated with the schemas that own its
+ * **Details**
+ *
+ * * Classification-derived behavior is colocated with the schemas that own its
  * finite domains. Defaults are constructor and decoding defaults, so workflow
  * code receives complete preprocessing options and collections.
  *
@@ -22,14 +23,14 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/DocumentMetadata"
 /**
  * Structural and editorial classification of a source document.
  *
- * @example
+ * **Example** (Use DocumentType)
  * ```ts
  * import { DocumentType } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
  * console.log(DocumentType.is.transcript("transcript")) // true
  * ```
  *
- * @category literals
+ * @category schemas
  * @since 0.0.0
  */
 export const DocumentType = LiteralKit([
@@ -66,7 +67,7 @@ export const DocumentType = LiteralKit([
 /**
  * Runtime value accepted by {@link DocumentType}.
  *
- * @example
+ * **Example** (Use DocumentType)
  * ```ts
  * import type { DocumentType } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -82,14 +83,14 @@ export type DocumentType = typeof DocumentType.Type;
 /**
  * Coarse estimate of named-entity density in source text.
  *
- * @example
+ * **Example** (Use EntityDensity)
  * ```ts
  * import { EntityDensity } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
  * console.log(EntityDensity.is.dense("dense")) // true
  * ```
  *
- * @category literals
+ * @category schemas
  * @since 0.0.0
  */
 export const EntityDensity = LiteralKit(["sparse", "moderate", "dense"])
@@ -105,7 +106,7 @@ export const EntityDensity = LiteralKit(["sparse", "moderate", "dense"])
 /**
  * Runtime value accepted by {@link EntityDensity}.
  *
- * @example
+ * **Example** (Use EntityDensity)
  * ```ts
  * import type { EntityDensity } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -133,7 +134,7 @@ const ChunkingStrategyDefinition = LiteralKit([
 /**
  * Runtime value accepted by {@link ChunkingStrategy}.
  *
- * @example
+ * **Example** (Use ChunkingStrategy)
  * ```ts
  * import type { ChunkingStrategy } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -149,11 +150,12 @@ export type ChunkingStrategy = typeof ChunkingStrategyDefinition.Type;
 /**
  * Strategy used to divide a document into extraction chunks.
  *
- * @remarks
- * `recommend` owns the source selection behavior and `parameters` performs a
+ * **Details**
+ *
+ * * `recommend` owns the source selection behavior and `parameters` performs a
  * total lookup in the strategy registry.
  *
- * @example
+ * **Example** (Use ChunkingStrategy)
  * ```ts
  * import { ComplexityScore, ChunkingStrategy } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -165,7 +167,7 @@ export type ChunkingStrategy = typeof ChunkingStrategyDefinition.Type;
  * console.log(strategy) // "speaker_aware"
  * ```
  *
- * @category literals
+ * @category schemas
  * @since 0.0.0
  */
 export const ChunkingStrategy = ChunkingStrategyDefinition.pipe(
@@ -251,7 +253,7 @@ const SentenceOverlap = NonNegativeInt.check(
 /**
  * Concrete parameters for one chunking strategy.
  *
- * @example
+ * **Example** (Use ChunkingParams)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ChunkingParams } from "@effect-ontology/Schema/DocumentMetadata.ts"
@@ -292,7 +294,7 @@ export class ChunkingParams extends S.Class<ChunkingParams>($I`ChunkingParams`)(
 /**
  * Complete immutable parameter registry for {@link ChunkingStrategy}.
  *
- * @example
+ * **Example** (Use defaultChunkingParams)
  * ```ts
  * import { defaultChunkingParams } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -367,11 +369,12 @@ const ClassificationBatchSize = PosInt.check(
 /**
  * Feature controls for document preprocessing.
  *
- * @remarks
- * Every boolean and batch-size setting has a schema-owned default. A chunking
+ * **Details**
+ *
+ * * Every boolean and batch-size setting has a schema-owned default. A chunking
  * override is represented as `Option`, so callers never inspect undefined.
  *
- * @example
+ * **Example** (Use PreprocessingOptions)
  * ```ts
  * import { PreprocessingOptions } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -405,7 +408,7 @@ export class PreprocessingOptions extends S.Class<PreprocessingOptions>($I`Prepr
 /**
  * Canonical fully-enabled preprocessing configuration.
  *
- * @example
+ * **Example** (Use defaultPreprocessingOptions)
  * ```ts
  * import { defaultPreprocessingOptions } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -422,12 +425,13 @@ const languageCodePattern = /^[a-z]{2}$/;
 /**
  * Syntactically valid lowercase ISO 639-1 language-code representation.
  *
- * @remarks
- * The schema validates the two-letter representation. Registry membership is
+ * **Details**
+ *
+ * * The schema validates the two-letter representation. Registry membership is
  * intentionally delegated to any language-detection adapter that owns an
  * authoritative ISO catalog.
  *
- * @example
+ * **Example** (Use LanguageCode)
  * ```ts
  * import { LanguageCode } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -460,7 +464,7 @@ export const LanguageCode = S.String.check(
 /**
  * Runtime value decoded by {@link LanguageCode}.
  *
- * @example
+ * **Example** (Use LanguageCode)
  * ```ts
  * import { LanguageCode, type LanguageCode as LanguageCodeValue } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -476,7 +480,7 @@ export type LanguageCode = typeof LanguageCode.Type;
 /**
  * Finite document-complexity score in the closed unit interval.
  *
- * @example
+ * **Example** (Use ComplexityScore)
  * ```ts
  * import { ComplexityScore } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -499,7 +503,7 @@ export const ComplexityScore = UnitInterval.annotate({
 /**
  * Runtime value decoded by {@link ComplexityScore}.
  *
- * @example
+ * **Example** (Use ComplexityScore)
  * ```ts
  * import { ComplexityScore, type ComplexityScore as ComplexityScoreValue } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -565,12 +569,13 @@ const recommendChunkingStrategy = (
 /**
  * Complete preprocessing metadata for one source document.
  *
- * @remarks
- * The class owns pure token estimation, priority calculation, and fallback
+ * **Details**
+ *
+ * * The class owns pure token estimation, priority calculation, and fallback
  * construction as statics. Optional title and real-world timestamps are
  * normalized to `Option`; tag collections always exist.
  *
- * @example
+ * **Example** (Use DocumentMetadata)
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
  * import { DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata.ts"
@@ -615,13 +620,13 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
    *
    * @param characterCount - Non-negative number of source characters.
    * @returns The heuristic token count, rounded upward at four characters per token.
-   * @example
+   * **Example** (Use estimateTokens)
    * ```ts
    * import { DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata.ts"
    *
    * console.log(DocumentMetadata.estimateTokens(9)) // 3
    * ```
-   * @category helpers
+   * @category utilities
    * @since 0.0.0
    */
   static readonly estimateTokens = (characterCount: NonNegativeInt): NonNegativeInt =>
@@ -634,7 +639,7 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
    * @param estimatedTokens - Non-negative estimated token count.
    * @param entityDensity - Coarse entity-density classification.
    * @returns A non-negative integer priority where lower values run first.
-   * @example
+   * **Example** (Use computePriority)
    * ```ts
    * import { ComplexityScore, DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata.ts"
    *
@@ -644,7 +649,7 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
    *   "sparse"
    * ))
    * ```
-   * @category helpers
+   * @category utilities
    * @since 0.0.0
    */
   static readonly computePriority = (
@@ -661,7 +666,7 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
    *
    * @param input - Validated source identity, content metadata, and processing instant.
    * @returns Complete metadata using neutral classification and standard chunking defaults.
-   * @example
+   * **Example** (Use fallback)
    * ```ts
    * import { DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata.ts"
    *
@@ -700,7 +705,7 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
 /**
  * Aggregated measurements from preprocessing a batch.
  *
- * @example
+ * **Example** (Use PreprocessingStats)
  * ```ts
  * import type { PreprocessingStats } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -733,7 +738,7 @@ export class PreprocessingStats extends S.Class<PreprocessingStats>($I`Preproces
 /**
  * Batch manifest enriched with preprocessing results.
  *
- * @example
+ * **Example** (Use EnrichedManifest)
  * ```ts
  * import type { EnrichedManifest } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -741,7 +746,7 @@ export class PreprocessingStats extends S.Class<PreprocessingStats>($I`Preproces
  * console.log(count)
  * ```
  *
- * @category manifests
+ * @category models
  * @since 0.0.0
  */
 export class EnrichedManifest extends S.Class<EnrichedManifest>($I`EnrichedManifest`)(
@@ -766,11 +771,12 @@ export class EnrichedManifest extends S.Class<EnrichedManifest>($I`EnrichedManif
 /**
  * Input to the document-preprocessing activity.
  *
- * @remarks
- * The deprecated `skipClassification` source flag is absorbed by
+ * **Details**
+ *
+ * * The deprecated `skipClassification` source flag is absorbed by
  * `preprocessing.classifyDocuments`, leaving one source of truth.
  *
- * @example
+ * **Example** (Use PreprocessingActivityInput)
  * ```ts
  * import * as S from "effect/Schema"
  * import { PreprocessingActivityInput } from "@effect-ontology/Schema/DocumentMetadata.ts"
@@ -782,7 +788,7 @@ export class EnrichedManifest extends S.Class<EnrichedManifest>($I`EnrichedManif
  * console.log(input.preprocessing.enabled) // true
  * ```
  *
- * @category activities
+ * @category dtos
  * @since 0.0.0
  */
 export class PreprocessingActivityInput extends S.Class<PreprocessingActivityInput>($I`PreprocessingActivityInput`)(
@@ -799,7 +805,7 @@ export class PreprocessingActivityInput extends S.Class<PreprocessingActivityInp
 /**
  * Output produced by the document-preprocessing activity.
  *
- * @example
+ * **Example** (Use PreprocessingActivityOutput)
  * ```ts
  * import type { PreprocessingActivityOutput } from "@effect-ontology/Schema/DocumentMetadata.ts"
  *
@@ -807,7 +813,7 @@ export class PreprocessingActivityInput extends S.Class<PreprocessingActivityInp
  * console.log(duration)
  * ```
  *
- * @category activities
+ * @category dtos
  * @since 0.0.0
  */
 export class PreprocessingActivityOutput extends S.Class<PreprocessingActivityOutput>($I`PreprocessingActivityOutput`)(

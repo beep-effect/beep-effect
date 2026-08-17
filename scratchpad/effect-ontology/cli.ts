@@ -4,8 +4,8 @@
  *
  * Main entry point for the effect-onto CLI.
  *
- * @since 2.0.0
- * @module cli
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { runCli } from "./Cli/index.ts";

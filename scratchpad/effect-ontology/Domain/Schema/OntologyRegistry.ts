@@ -15,12 +15,13 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/OntologyRegistry"
 /**
  * Registry metadata and storage references for one ontology.
  *
- * @remarks
- * IRI, semantic-version, and GCS object-path validation are delegated to the
+ * **Details**
+ *
+ * * IRI, semantic-version, and GCS object-path validation are delegated to the
  * repository's canonical foundation schemas. Nullable or absent resource
  * paths decode to `Option.none()`, while imports default to an empty array.
  *
- * @example
+ * **Example** (Use OntologyEntry)
  * ```ts
  * import { OntologyEntry } from "@effect-ontology/Schema/OntologyRegistry.ts"
  *
@@ -104,7 +105,7 @@ export class OntologyEntry extends S.Class<OntologyEntry>($I`OntologyEntry`)(
 /**
  * Storage resources shared by every registry entry.
  *
- * @example
+ * **Example** (Use SharedResources)
  * ```ts
  * import { SharedResources } from "@effect-ontology/Schema/OntologyRegistry.ts"
  *
@@ -134,12 +135,13 @@ export class SharedResources extends S.Class<SharedResources>($I`SharedResources
 /**
  * Complete versioned ontology-registry manifest.
  *
- * @remarks
- * `generatedAt` decodes from an RFC 3339/ISO timestamp into an Effect UTC
+ * **Details**
+ *
+ * * `generatedAt` decodes from an RFC 3339/ISO timestamp into an Effect UTC
  * instant. Empty registries and omitted shared resources receive schema-owned
  * defaults.
  *
- * @example
+ * **Example** (Use OntologyRegistry)
  * ```ts
  * import { OntologyRegistry } from "@effect-ontology/Schema/OntologyRegistry.ts"
  *
@@ -152,7 +154,7 @@ export class SharedResources extends S.Class<SharedResources>($I`SharedResources
  *
  * @invariant The manifest is semantically versioned, UTC timestamped, and
  * contains only validated ontology entries.
- * @category manifests
+ * @category models
  * @since 0.0.0
  */
 export class OntologyRegistry extends S.Class<OntologyRegistry>($I`OntologyRegistry`)(
@@ -190,7 +192,7 @@ const OntologyRegistryJsonDefinition = S.fromJsonString(OntologyRegistry);
 /**
  * JSON-string codec for {@link OntologyRegistry}.
  *
- * @example
+ * **Example** (Use OntologyRegistryJson)
  * ```ts
  * import * as S from "effect/Schema"
  * import { OntologyRegistryJson } from "@effect-ontology/Schema/OntologyRegistry.ts"
@@ -218,7 +220,7 @@ const OntologyEntryJsonDefinition = S.fromJsonString(OntologyEntry);
 /**
  * JSON-string codec for one {@link OntologyEntry}.
  *
- * @example
+ * **Example** (Use OntologyEntryJson)
  * ```ts
  * import * as S from "effect/Schema"
  * import { OntologyEntryJson } from "@effect-ontology/Schema/OntologyRegistry.ts"

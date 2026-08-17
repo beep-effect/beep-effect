@@ -4,8 +4,8 @@
  * Converts Entity and Relation domain models to Claims for provenance tracking.
  * Claims capture individual extracted facts with source attribution.
  *
- * @since 2.0.0
- * @module Utils/ClaimFactory
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -61,8 +61,8 @@ const claimQuad = (input: {
 /**
  * Options for claim creation
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ClaimFactoryOptions {
   /** Base namespace for entity IRIs */
@@ -83,8 +83,8 @@ export interface ClaimFactoryOptions {
  * Captures details about colliding entities for debugging and reporting.
  * This happens when two entities have the same ID but different content.
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface IriCollisionWarning {
   /** The entity ID that collides */
@@ -103,8 +103,8 @@ export interface IriCollisionWarning {
 /**
  * Result of IRI collision detection
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface IriCollisionReport {
   /** Whether any collisions were detected */
@@ -122,8 +122,8 @@ export interface IriCollisionReport {
  *
  * Extended version of CreateClaimInput with generated claimId
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ClaimData extends CreateClaimInput {
   /** Generated claim ID */
@@ -145,8 +145,8 @@ export interface ClaimData extends CreateClaimInput {
  * @param baseNamespace - Base namespace for IRI construction
  * @returns IriCollisionReport with collision details
  *
- * @example
- * ```typescript
+ * **Example** (Use detectIriCollisions)
+ * ```ts
  * const report = detectIriCollisions(entities, "http://example.org/")
  * if (report.hasCollisions) {
  *   console.warn(`Found ${report.collisions.length} IRI collisions`)
@@ -156,8 +156,8 @@ export interface ClaimData extends CreateClaimInput {
  * }
  * ```
  *
- * @since 2.0.0
- * @category Validation
+ * @since 0.0.0
+ * @category validation
  */
 export const detectIriCollisions = dual2((entities: Iterable<Entity>, baseNamespace: string): IriCollisionReport => {
   const entityMap = MutableHashMap.empty<string, Array<Entity>>();
@@ -217,8 +217,8 @@ export const detectIriCollisions = dual2((entities: Iterable<Entity>, baseNamesp
  * @param baseNamespace - Base namespace for IRI construction
  * @returns Effect that yields the entities with logged warnings
  *
- * @since 2.0.0
- * @category Validation
+ * @since 0.0.0
+ * @category validation
  */
 export const checkIriCollisions = dual2(
   (entities: ReadonlyArray<Entity>, baseNamespace: string): Effect.Effect<ReadonlyArray<Entity>> =>
@@ -256,8 +256,8 @@ export const checkIriCollisions = dual2(
  * @param articleId - Source document ID
  * @returns Deterministic ClaimId
  *
- * @since 2.0.0
- * @category Constructors
+ * @since 0.0.0
+ * @category constructors
  */
 export const generateClaimId = dual4(
   (subjectIri: string, predicateIri: string, objectValue: string, articleId: string): ClaimId => {
@@ -283,8 +283,8 @@ export const generateClaimId = dual4(
  * @param options - Claim factory options
  * @returns Array of ClaimData ready for persistence
  *
- * @example
- * ```typescript
+ * **Example** (Use entityToClaims)
+ * ```ts
  * const entity = new Entity({
  *   id: "cristiano_ronaldo",
  *   mention: "Cristiano Ronaldo",
@@ -306,8 +306,8 @@ export const generateClaimId = dual4(
  * // ]
  * ```
  *
- * @since 2.0.0
- * @category Transformations
+ * @since 0.0.0
+ * @category mapping
  */
 export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOptions): ReadonlyArray<ClaimData> => {
   const claims: Array<ClaimData> = [];
@@ -383,8 +383,8 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
  * @param options - Claim factory options
  * @returns ClaimData ready for persistence
  *
- * @example
- * ```typescript
+ * **Example** (Use relationToClaim)
+ * ```ts
  * const relation = new Relation({
  *   subjectId: "cristiano_ronaldo",
  *   predicate: "http://schema.org/memberOf",
@@ -400,8 +400,8 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
  * //      objectValue: "http://example.org/al_nassr_fc", objectType: "iri", ... }
  * ```
  *
- * @since 2.0.0
- * @category Transformations
+ * @since 0.0.0
+ * @category mapping
  */
 export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryOptions): ClaimData => {
   const { baseNamespace, defaultConfidence = Confidence.make(0.85), documentId, ontologyId } = options;
@@ -457,8 +457,8 @@ export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryO
  * @param options - Claim factory options
  * @returns Array of ClaimData
  *
- * @since 2.0.0
- * @category Transformations
+ * @since 0.0.0
+ * @category mapping
  */
 export const entitiesToClaims = dual2(
   (entities: Iterable<Entity>, options: ClaimFactoryOptions): ReadonlyArray<ClaimData> => {
@@ -482,8 +482,8 @@ export const entitiesToClaims = dual2(
  * @param options - Claim factory options
  * @returns Array of ClaimData
  *
- * @since 2.0.0
- * @category Transformations
+ * @since 0.0.0
+ * @category mapping
  */
 export const relationsToClaims = dual2(
   (relations: Iterable<Relation>, options: ClaimFactoryOptions): ReadonlyArray<ClaimData> => {
@@ -505,8 +505,8 @@ export const relationsToClaims = dual2(
  * @param options - Claim factory options
  * @returns Array of ClaimData for all entities and relations
  *
- * @since 2.0.0
- * @category Transformations
+ * @since 0.0.0
+ * @category mapping
  */
 export const knowledgeGraphToClaims = dual3(
   (
@@ -531,8 +531,8 @@ export const knowledgeGraphToClaims = dual3(
  * @param extractedAt - Extraction timestamp (ISO string)
  * @returns Array of Quad objects
  *
- * @since 2.0.0
- * @category RDF
+ * @since 0.0.0
+ * @category encoding
  */
 export const claimDataToQuads = dual3(
   (claim: ClaimData, graphUri: string | undefined, extractedAt: string | undefined): ReadonlyArray<Quad> => {
@@ -699,8 +699,8 @@ export const claimDataToQuads = dual3(
  * @param extractedAt - Extraction timestamp (ISO string)
  * @returns Array of all quads for all claims
  *
- * @since 2.0.0
- * @category RDF
+ * @since 0.0.0
+ * @category encoding
  */
 export const claimsDataToQuads = dual3(
   (

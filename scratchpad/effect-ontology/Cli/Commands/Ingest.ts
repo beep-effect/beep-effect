@@ -3,8 +3,8 @@
  *
  * Upload local files to storage and generate batch manifest.
  *
- * @since 2.0.0
- * @module Cli/Commands/Ingest
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import {NonNegativeInt} from "@beep/schema/Int";

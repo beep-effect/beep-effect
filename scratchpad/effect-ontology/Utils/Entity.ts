@@ -3,8 +3,8 @@
  *
  * Pure functions for entity ID validation and reference detection.
  *
+ * @packageDocumentation
  * @since 0.0.0
- * @module Utils/Entity
  */
 
 import { ENTITY_ID_PATTERN } from "../Domain/Model/shared.ts";
@@ -17,7 +17,7 @@ import { ENTITY_ID_PATTERN } from "../Domain/Model/shared.ts";
  *
  * **Example**
  *
- * ```typescript
+ * ```ts
  * isEntityReference("cristiano_ronaldo")  // => true
  * isEntityReference("al_nassr_fc")        // => true
  * isEntityReference("1985-02-05")         // => false (starts with digit)
@@ -28,6 +28,6 @@ import { ENTITY_ID_PATTERN } from "../Domain/Model/shared.ts";
  * @param value - String to check
  * @returns True if value matches entity reference pattern
  * @since 0.0.0
- * @category Entity
+ * @category predicates
  */
 export const isEntityReference = (value: string): boolean => ENTITY_ID_PATTERN.test(value);

@@ -1,8 +1,9 @@
 /**
  * Schema-backed entity and relation extraction failures.
  *
- * @remarks
- * Diagnostic text and partial payloads normalize absence to `Option`. Raw
+ * **Details**
+ *
+ * * Diagnostic text and partial payloads normalize absence to `Option`. Raw
  * validation payloads use `Schema.Json`, keeping errors serializable and
  * suitable for structured logging.
  *
@@ -82,7 +83,7 @@ const extractionFields = {
 /**
  * General extraction-process failure.
  *
- * @example
+ * **Example** (Use ExtractionError)
  * ```ts
  * import { ExtractionError } from "@effect-ontology/Error/Extraction.ts"
  *
@@ -105,7 +106,7 @@ export const ExtractionError = makeOntologyErrorClass
   .pipe(SchemaUtils.withStatics((schema) => ({ is: S.is(schema) })));
 
 /** Runtime value decoded by {@link ExtractionError}.
- * @example
+ * **Example** (Use ExtractionError)
  * ```ts
  * import { ExtractionError, type ExtractionError as Failure } from "@effect-ontology/Error/Extraction.ts"
  * const error: Failure = ExtractionError.make({ message: "Failed." })
@@ -118,7 +119,7 @@ export type ExtractionError = typeof ExtractionError.Type;
 /**
  * Failure to extract mention spans from source text.
  *
- * @example
+ * **Example** (Use MentionExtractionFailed)
  * ```ts
  * import { MentionExtractionFailed } from "@effect-ontology/Error/Extraction.ts"
  *
@@ -139,7 +140,7 @@ export const MentionExtractionFailed = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link MentionExtractionFailed}.
- * @example
+ * **Example** (Use MentionExtractionFailed)
  * ```ts
  * import { MentionExtractionFailed, type MentionExtractionFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
  * const error: Failure = MentionExtractionFailed.make({ message: "Failed." })
@@ -152,7 +153,7 @@ export type MentionExtractionFailed = typeof MentionExtractionFailed.Type;
 /**
  * Failure to extract entities from source text.
  *
- * @example
+ * **Example** (Use EntityExtractionFailed)
  * ```ts
  * import { EntityExtractionFailed } from "@effect-ontology/Error/Extraction.ts"
  *
@@ -173,7 +174,7 @@ export const EntityExtractionFailed = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link EntityExtractionFailed}.
- * @example
+ * **Example** (Use EntityExtractionFailed)
  * ```ts
  * import { EntityExtractionFailed, type EntityExtractionFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
  * const error: Failure = EntityExtractionFailed.make({ message: "Failed." })
@@ -186,7 +187,7 @@ export type EntityExtractionFailed = typeof EntityExtractionFailed.Type;
 /**
  * Failure to extract relations, optionally retaining partial entities.
  *
- * @example
+ * **Example** (Use RelationExtractionFailed)
  * ```ts
  * import { RelationExtractionFailed } from "@effect-ontology/Error/Extraction.ts"
  *
@@ -212,7 +213,7 @@ export const RelationExtractionFailed = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link RelationExtractionFailed}.
- * @example
+ * **Example** (Use RelationExtractionFailed)
  * ```ts
  * import { RelationExtractionFailed, type RelationExtractionFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
  * const error: Failure = RelationExtractionFailed.make({ message: "Failed." })
@@ -225,7 +226,7 @@ export type RelationExtractionFailed = typeof RelationExtractionFailed.Type;
 /**
  * Failure to derive the structured-output schema used by extraction.
  *
- * @example
+ * **Example** (Use SchemaGenerationFailed)
  * ```ts
  * import { SchemaGenerationFailed } from "@effect-ontology/Error/Extraction.ts"
  *
@@ -253,7 +254,7 @@ export const SchemaGenerationFailed = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link SchemaGenerationFailed}.
- * @example
+ * **Example** (Use SchemaGenerationFailed)
  * ```ts
  * import { SchemaGenerationFailed, type SchemaGenerationFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
  * const error: Failure = SchemaGenerationFailed.make({ message: "Failed." })
@@ -266,7 +267,7 @@ export type SchemaGenerationFailed = typeof SchemaGenerationFailed.Type;
 /**
  * Failure to validate a structured extraction payload.
  *
- * @example
+ * **Example** (Use ValidationFailed)
  * ```ts
  * import { ValidationFailed } from "@effect-ontology/Error/Extraction.ts"
  *
@@ -297,7 +298,7 @@ export const ValidationFailed = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link ValidationFailed}.
- * @example
+ * **Example** (Use ValidationFailed)
  * ```ts
  * import { ValidationFailed, type ValidationFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
  * const error: Failure = ValidationFailed.make({ message: "Invalid." })
@@ -310,10 +311,11 @@ export type ValidationFailed = typeof ValidationFailed.Type;
 /**
  * Non-fatal per-row entity validation failure.
  *
- * @remarks
- * The raw entity is restricted to JSON so this diagnostic remains serializable.
+ * **Details**
  *
- * @example
+ * * The raw entity is restricted to JSON so this diagnostic remains serializable.
+ *
+ * **Example** (Use EntityValidationFailed)
  * ```ts
  * import { EntityValidationFailed } from "@effect-ontology/Error/Extraction.ts"
  *
@@ -347,7 +349,7 @@ export const EntityValidationFailed = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link EntityValidationFailed}.
- * @example
+ * **Example** (Use EntityValidationFailed)
  * ```ts
  * import { EntityValidationFailed, type EntityValidationFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
  * const error: Failure = EntityValidationFailed.make({ reason: "Invalid.", entityData: null })
@@ -360,10 +362,11 @@ export type EntityValidationFailed = typeof EntityValidationFailed.Type;
 /**
  * Non-fatal per-row relation validation failure.
  *
- * @remarks
- * The raw relation is restricted to JSON so this diagnostic remains serializable.
+ * **Details**
  *
- * @example
+ * * The raw relation is restricted to JSON so this diagnostic remains serializable.
+ *
+ * **Example** (Use RelationValidationFailed)
  * ```ts
  * import { RelationValidationFailed } from "@effect-ontology/Error/Extraction.ts"
  *
@@ -397,7 +400,7 @@ export const RelationValidationFailed = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link RelationValidationFailed}.
- * @example
+ * **Example** (Use RelationValidationFailed)
  * ```ts
  * import { RelationValidationFailed, type RelationValidationFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
  * const error: Failure = RelationValidationFailed.make({ reason: "Invalid.", relationData: null })
@@ -421,7 +424,7 @@ const AnyExtractionErrorDefinition = S.Union([
 /**
  * Exhaustive tagged union of extraction and row-validation failures.
  *
- * @example
+ * **Example** (Use AnyExtractionError)
  * ```ts
  * import { AnyExtractionError, ExtractionError } from "@effect-ontology/Error/Extraction.ts"
  *
@@ -442,7 +445,7 @@ export const AnyExtractionError = AnyExtractionErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link AnyExtractionError}.
  *
- * @example
+ * **Example** (Use AnyExtractionError)
  * ```ts
  * import { ExtractionError, type AnyExtractionError } from "@effect-ontology/Error/Extraction.ts"
  * const error: AnyExtractionError = ExtractionError.make({ message: "Failed." })

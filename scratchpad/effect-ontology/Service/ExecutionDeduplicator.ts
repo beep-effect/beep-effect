@@ -3,8 +3,8 @@
  *
  * Deduplicates concurrent in-flight requests for the same idempotency key.
  *
- * @since 2.0.0
- * @module Service/ExecutionDeduplicator
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -31,7 +31,7 @@ export const makeExecutionDeduplicator = Effect.gen(function* () {
     const existing = yield* Ref.get(map).pipe(Effect.map((handles) => HashMap.get(handles, key)));
     if (Option.isSome(existing)) {
       yield* Effect.logInfo(`Reusing in-flight execution key=${key}`);
-      return { handle: existing.value, isNew: false } as const;
+      return { handle: existing.value, isNew: false };
     }
 
     const deferred = yield* Deferred.make<KnowledgeGraph, ExecutionFailure>();
@@ -50,8 +50,8 @@ export const makeExecutionDeduplicator = Effect.gen(function* () {
       ] => {
         const raceExisting = HashMap.get(handles, key);
         return Option.match(raceExisting, {
-          onNone: () => [{ handle, isNew: true } as const, HashMap.set(handles, key, handle)] as const,
-          onSome: (raceHandle) => [{ handle: raceHandle, isNew: false } as const, handles] as const,
+          onNone: () => [{ handle, isNew: true }, HashMap.set(handles, key, handle)],
+          onSome: (raceHandle) => [{ handle: raceHandle, isNew: false }, handles],
         });
       }
     );
@@ -64,10 +64,10 @@ export const makeExecutionDeduplicator = Effect.gen(function* () {
   const complete = Effect.fn("ExecutionDeduplicator.complete")(function* (key: string, result: KnowledgeGraph) {
     const handle = yield* Ref.modify(map, (handles) =>
       Option.match(HashMap.get(handles, key), {
-        onNone: () => [Option.none<ExecutionHandle>(), handles] as const,
+        onNone: () => [Option.none<ExecutionHandle>(), handles],
         onSome: (existing) => {
           const updated: ExecutionHandle = { ...existing, status: "completed" };
-          return [Option.some(updated), HashMap.set(handles, key, updated)] as const;
+          return [Option.some(updated), HashMap.set(handles, key, updated)];
         },
       })
     );
@@ -80,10 +80,10 @@ export const makeExecutionDeduplicator = Effect.gen(function* () {
   const fail = Effect.fn("ExecutionDeduplicator.fail")(function* (key: string, error: ExecutionFailure) {
     const handle = yield* Ref.modify(map, (handles) =>
       Option.match(HashMap.get(handles, key), {
-        onNone: () => [Option.none<ExecutionHandle>(), handles] as const,
+        onNone: () => [Option.none<ExecutionHandle>(), handles],
         onSome: (existing) => {
           const updated: ExecutionHandle = { ...existing, status: "failed" };
-          return [Option.some(updated), HashMap.set(handles, key, updated)] as const;
+          return [Option.some(updated), HashMap.set(handles, key, updated)];
         },
       })
     );
@@ -98,7 +98,7 @@ export const makeExecutionDeduplicator = Effect.gen(function* () {
     yield* Effect.logDebug(`Cleaned up execution handle key=${key}`);
   });
 
-  return { getOrCreate, complete, fail, cleanup } as const;
+  return { getOrCreate, complete, fail, cleanup };
 });
 
 export class ExecutionDeduplicator extends Context.Service<ExecutionDeduplicator>()($I`ExecutionDeduplicator`, {

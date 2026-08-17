@@ -3,8 +3,8 @@
  *
  * Semantic conventions for LLM tracing following OpenTelemetry GenAI specs.
  *
- * @module Telemetry/LlmAttributes
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Effect } from "effect";
@@ -13,7 +13,7 @@ import { calculateCost } from "./CostCalculator.ts";
 /**
  * Semantic conventions for LLM spans (OpenTelemetry GenAI)
  *
- * @since 2.0.0
+ * @since 0.0.0
  * @category constants
  */
 export const LlmAttributes = {
@@ -67,8 +67,8 @@ export const LlmAttributes = {
  * @param attrs - LLM call attributes
  * @returns Effect that annotates the current span
  *
- * @since 2.0.0
- * @category annotation
+ * @since 0.0.0
+ * @category observability
  */
 export const annotateLlmCall = (attrs: {
   model: string;
@@ -111,8 +111,8 @@ export const annotateLlmCall = (attrs: {
  * @param attrs - Retry attributes
  * @returns Effect that annotates the current span
  *
- * @since 2.0.0
- * @category annotation
+ * @since 0.0.0
+ * @category observability
  */
 export const annotateRetry = (attrs: { retryCount: number; maxAttempts: number }): Effect.Effect<void> =>
   Effect.all([
@@ -126,8 +126,8 @@ export const annotateRetry = (attrs: { retryCount: number; maxAttempts: number }
  * @param attrs - Error attributes
  * @returns Effect that annotates the current span
  *
- * @since 2.0.0
- * @category annotation
+ * @since 0.0.0
+ * @category observability
  */
 export const annotateError = (attrs: { errorType: string; errorMessage?: string }): Effect.Effect<void> =>
   Effect.gen(function* () {
@@ -144,8 +144,8 @@ export const annotateError = (attrs: { errorType: string; errorMessage?: string 
  * @param attrs - Extraction attributes
  * @returns Effect that annotates the current span
  *
- * @since 2.0.0
- * @category annotation
+ * @since 0.0.0
+ * @category observability
  */
 export const annotateExtraction = (attrs: {
   chunkIndex?: number;

@@ -5,8 +5,8 @@
  * Wraps extraction, validation, querying, and reasoning services
  * into a single composable interface.
  *
- * @since 2.0.0
- * @module Service/OntologyAgent
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -60,8 +60,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/OntologyAgent");
 /**
  * Failure while orchestrating an ontology-agent operation.
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class OntologyAgentError extends Data.TaggedError("OntologyAgentError")<{
   readonly operation: "loadOntology" | "parseOntology" | "formatAnswer";
@@ -81,8 +81,8 @@ export class OntologyAgentError extends Data.TaggedError("OntologyAgentError")<{
  * - `validateWithPolicy` - Policy-based validation for workflow control
  * - `explainViolations` - Convert SHACL violations to LLM-friendly explanations
  *
- * @example
- * ```typescript
+ * **Example** (Use OntologyAgent)
+ * ```ts
  * Effect.gen(function*() {
  *   const agent = yield* OntologyAgent
  *
@@ -99,8 +99,8 @@ export class OntologyAgentError extends Data.TaggedError("OntologyAgentError")<{
  * })
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyAgent`, {
   make: Effect.gen(function* () {
@@ -258,8 +258,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param options - Options including articleId and agent config overrides
        * @returns ExtractWithClaimsResult with graph, metrics, and claim count
        *
-       * @example
-       * ```typescript
+       * **Example** (Use extractWithClaims)
+       * ```ts
        * const result = yield* agent.extractWithClaims(text, {
        *   articleId: "article-001",
        *   defaultConfidence: 0.85
@@ -337,7 +337,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
                   () => `${baseNamespace}${relation.object}`
                 )
               : String(relation.object);
-            const objectType = isEntityRef ? ("iri" as const) : ("literal" as const);
+            const objectType = isEntityRef ? ("iri") : ("literal");
 
             // Get confidence from evidence span if available
             const confidence = O.match(relation.evidence, {
@@ -418,8 +418,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param reasoningConfig - Optional reasoning configuration (defaults to subclass-only)
        * @returns ExtractionResult with graph containing inferred types
        *
-       * @example
-       * ```typescript
+       * **Example** (Use extractWithReasoning)
+       * ```ts
        * const result = yield* agent.extractWithReasoning(text)
        * // Turtle now includes inferred type assertions from rdfs:subClassOf
        * console.log(`Inferred triples included in RDF output`)
@@ -684,8 +684,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param policy - Optional validation policy (defaults to fail on violations only)
        * @returns EnhancedValidationReport with explanations and grouped violations
        *
-       * @example
-       * ```typescript
+       * **Example** (Use validateGraph)
+       * ```ts
        * const report = yield* agent.validateGraph(rdfStore)
        * if (!report.conforms) {
        *   console.log("Critical:", report.byLevel.violations)
@@ -774,8 +774,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param dataStore - RDF store containing the knowledge graph
        * @returns QueryResult with answer, SPARQL, bindings, and confidence
        *
-       * @example
-       * ```typescript
+       * **Example** (Use query)
+       * ```ts
        * const result = yield* agent.query(
        *   "Who founded Acme Corp?",
        *   rdfStore
@@ -979,8 +979,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
        * @param reasoningConfig - Optional reasoning configuration (defaults to full RDFS)
        * @returns Reasoning result with statistics
        *
-       * @example
-       * ```typescript
+       * **Example** (Use reason)
+       * ```ts
        * const result = yield* agent.reason(rdfStore)
        * console.log(`Inferred ${result.inferredTripleCount} new triples`)
        * ```

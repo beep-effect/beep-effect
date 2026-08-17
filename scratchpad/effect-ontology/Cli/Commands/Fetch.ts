@@ -4,8 +4,8 @@
  * Commands for fetching web content via Jina Reader API,
  * ingesting URLs to storage, and managing ingested documents.
  *
- * @since 2.0.0
- * @module Cli/Commands/Fetch
+ * @packageDocumentation
+ * @since 0.0.0
  */
 import {pipe} from "effect/Function";
 import * as Str from "effect/String";

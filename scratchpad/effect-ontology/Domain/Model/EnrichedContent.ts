@@ -33,7 +33,7 @@ const LanguageCode = S.String.check(
 /**
  * Classification assigned to an ingested content source.
  *
- * @example
+ * **Example** (Use SourceType)
  * ```ts
  * import { SourceType } from "@effect-ontology/Model/EnrichedContent.ts"
  *
@@ -57,7 +57,7 @@ export const SourceType = LiteralKit(["news", "blog", "press_release", "official
 /**
  * Runtime value accepted by {@link SourceType}.
  *
- * @example
+ * **Example** (Use SourceType)
  * ```ts
  * import type { SourceType } from "@effect-ontology/Model/EnrichedContent.ts"
  *
@@ -124,12 +124,13 @@ const EnrichedContentFields = {
 /**
  * AI-derived metadata for one ingested content source.
  *
- * @remarks
- * All source absence is normalized to `Option`, while collections and language
+ * **Details**
+ *
+ * * All source absence is normalized to `Option`, while collections and language
  * receive schema-level defaults. Consumers therefore never need nullish
  * fallback branches for enrichment metadata.
  *
- * @example
+ * **Example** (Use EnrichedContent)
  * ```ts
  * import * as S from "effect/Schema"
  * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent.ts"
@@ -165,7 +166,7 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
   /**
    * Whether this value carries non-empty author attribution.
    *
-   * @example
+   * **Example** (Use JinaContentFields)
    * ```ts
    * import * as S from "effect/Schema"
    * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent.ts"
@@ -188,7 +189,7 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
   /**
    * Whether this value carries an original publication instant.
    *
-   * @example
+   * **Example** (Use JinaContentFields)
    * ```ts
    * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent.ts"
    *
@@ -253,11 +254,12 @@ const JinaContentFields = {
 /**
  * Cleaned page content returned by a Jina-compatible reader.
  *
- * @remarks
- * Optional transport fields are decoded directly into `Option`. `wordCount`
+ * **Details**
+ *
+ * * Optional transport fields are decoded directly into `Option`. `wordCount`
  * derives from the cleaned Markdown content and ignores runs of whitespace.
  *
- * @example
+ * **Example** (Use JinaContent)
  * ```ts
  * import * as S from "effect/Schema"
  * import { JinaContent } from "@effect-ontology/Model/EnrichedContent.ts"
@@ -289,7 +291,7 @@ export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
   /**
    * Approximate count of non-empty whitespace-delimited words.
    *
-   * @example
+   * **Example** (Use EnrichedContent)
    * ```ts
    * import * as S from "effect/Schema"
    * import { JinaContent } from "@effect-ontology/Model/EnrichedContent.ts"
@@ -311,7 +313,7 @@ export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
   /**
    * Reported character count, falling back to the cleaned content length.
    *
-   * @example
+   * **Example** (Use EnrichedContent)
    * ```ts
    * import { JinaContent } from "@effect-ontology/Model/EnrichedContent.ts"
    *

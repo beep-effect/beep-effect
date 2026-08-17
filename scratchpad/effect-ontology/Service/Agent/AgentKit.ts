@@ -5,8 +5,8 @@
  * pipeline envelope. This reduces API surface area by standardizing the
  * inputs/outputs across ingestion, extraction, validation, and correction.
  *
- * @since 2.0.0
- * @module Service/Agent/AgentKit
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";

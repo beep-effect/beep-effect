@@ -3,8 +3,8 @@
  *
  * Content-addressable cache for embedding vectors with TTL and LRU eviction.
  *
- * @since 2.0.0
- * @module Service/EmbeddingCache
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -23,8 +23,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCache");
 /**
  * Embedding vector type
  *
- * @since 2.0.0
- * @category Model
+ * @since 0.0.0
+ * @category models
  */
 export const Embedding = Schema.Array(Schema.Finite);
 export type Embedding = typeof Embedding.Type;
@@ -32,8 +32,8 @@ export type Embedding = typeof Embedding.Type;
 /**
  * Cache entry with embedding and access timestamp for LRU eviction
  *
- * @since 2.0.0
- * @category Model
+ * @since 0.0.0
+ * @category models
  */
 interface CacheEntry {
   readonly embedding: Embedding;
@@ -44,8 +44,8 @@ interface CacheEntry {
 /**
  * Cache configuration
  *
- * @since 2.0.0
- * @category Config
+ * @since 0.0.0
+ * @category configuration
  */
 export interface EmbeddingCacheConfig {
   readonly ttlMs: number;
@@ -55,8 +55,8 @@ export interface EmbeddingCacheConfig {
 /**
  * Default cache configuration
  *
- * @since 2.0.0
- * @category Config
+ * @since 0.0.0
+ * @category configuration
  */
 export const defaultCacheConfig: EmbeddingCacheConfig = {
   ttlMs: Duration.toMillis(Duration.hours(1)),
@@ -66,8 +66,8 @@ export const defaultCacheConfig: EmbeddingCacheConfig = {
 /**
  * EmbeddingCache service interface
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface EmbeddingCacheService {
   readonly get: (hash: string) => Effect.Effect<Option.Option<Embedding>>;
@@ -80,15 +80,15 @@ export interface EmbeddingCacheService {
 /**
  * EmbeddingCache service tag
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCacheService>()($I`EmbeddingCache`) {
   /**
    * In-memory implementation with TTL and LRU eviction
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly InMemory = (config: EmbeddingCacheConfig = defaultCacheConfig): Layer.Layer<EmbeddingCache> =>
     Layer.effect(
@@ -166,8 +166,8 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
   /**
    * Default in-memory implementation with standard config
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Default: Layer.Layer<EmbeddingCache> = EmbeddingCache.InMemory();
 }
@@ -175,8 +175,8 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
 /**
  * Test layer that always misses cache
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const EmbeddingCacheTest: Layer.Layer<EmbeddingCache> = Layer.succeed(EmbeddingCache, {
   get: Effect.fn("EmbeddingCache.get")((_hash: string) => Effect.succeed(Option.none())),
@@ -193,8 +193,8 @@ export const EmbeddingCacheTest: Layer.Layer<EmbeddingCache> = Layer.succeed(Emb
 /**
  * Extended cache interface with persistence and warm-up capabilities
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface PersistentEmbeddingCacheService extends EmbeddingCacheService {
   /**
@@ -224,8 +224,8 @@ export interface PersistentEmbeddingCacheService extends EmbeddingCacheService {
 /**
  * PersistentEmbeddingCache service tag
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class PersistentEmbeddingCache extends Context.Service<
   PersistentEmbeddingCache,
@@ -235,8 +235,8 @@ export class PersistentEmbeddingCache extends Context.Service<
 /**
  * Embedding blob format for storage
  *
- * @since 2.0.0
- * @category Model
+ * @since 0.0.0
+ * @category models
  */
 const PersistentEmbeddingEntry = Schema.Struct({
   vector: Embedding,
@@ -261,8 +261,8 @@ const encodeEmbeddingBlob = Schema.encodeEffect(Schema.fromJsonString(EmbeddingB
  * - Writes to both memory and GCS on set
  * - Batch writes use a single blob per batch to minimize GCS operations
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const makePersistentEmbeddingCache = Effect.fn(function* (
   storage: StorageServiceMethods,
@@ -524,8 +524,8 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
  * - ConfigService (for embedding.cachePath, cacheTtlHours, cacheMaxEntries)
  * - StorageService (for GCS persistence when cachePath is set)
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 const PersistentEmbeddingCacheLayer = Layer.effect(
   PersistentEmbeddingCache,

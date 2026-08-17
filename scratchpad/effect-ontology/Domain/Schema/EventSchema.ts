@@ -1,8 +1,9 @@
 /**
  * Effect v4 EventLog groups for curation and extraction events.
  *
- * @remarks
- * Payload schemas are the event-journal boundary: they normalize optional
+ * **Details**
+ *
+ * * Payload schemas are the event-journal boundary: they normalize optional
  * values, constrain counts and identities, and carry explicit arbitraries
  * before EventLog persistence or remote distribution.
  *
@@ -104,18 +105,19 @@ const EntityLinkedPayload = EntityLinkedPayloadDefinition.annotate({
 /**
  * EventLog definitions emitted after successful curation operations.
  *
- * @remarks
- * Primary keys encode the ontology scope and affected domain identity, making
+ * **Details**
+ *
+ * * Primary keys encode the ontology scope and affected domain identity, making
  * replay idempotency stable across retries of the same curation result.
  *
- * @example
+ * **Example** (Use CurationEventGroup)
  * ```ts
  * import { CurationEventGroup } from "@effect-ontology/Schema/EventSchema.ts"
  *
  * console.log(Object.keys(CurationEventGroup.events).length) // 5
  * ```
  *
- * @category event-groups
+ * @category events
  * @since 0.0.0
  */
 export const CurationEventGroup = EventGroup.empty
@@ -148,7 +150,7 @@ export const CurationEventGroup = EventGroup.empty
 /**
  * Event definitions contained by {@link CurationEventGroup}.
  *
- * @example
+ * **Example** (Use CurationEvent)
  * ```ts
  * import type { CurationEvent } from "@effect-ontology/Schema/EventSchema.ts"
  *
@@ -223,14 +225,14 @@ const BatchStateChangedPayload = BatchStateChangedPayloadDefinition.annotate({
 /**
  * EventLog definitions emitted by extraction and batch workflows.
  *
- * @example
+ * **Example** (Use ExtractionEventGroup)
  * ```ts
  * import { ExtractionEventGroup } from "@effect-ontology/Schema/EventSchema.ts"
  *
  * console.log(Object.keys(ExtractionEventGroup.events).length) // 3
  * ```
  *
- * @category event-groups
+ * @category events
  * @since 0.0.0
  */
 export const ExtractionEventGroup = EventGroup.empty
@@ -253,7 +255,7 @@ export const ExtractionEventGroup = EventGroup.empty
 /**
  * Event definitions contained by {@link ExtractionEventGroup}.
  *
- * @example
+ * **Example** (Use ExtractionEvent)
  * ```ts
  * import type { ExtractionEvent } from "@effect-ontology/Schema/EventSchema.ts"
  *
@@ -269,7 +271,7 @@ export type ExtractionEvent = EventGroup.Events<typeof ExtractionEventGroup>;
 /**
  * Immutable tuple of all effect-ontology EventLog groups.
  *
- * @example
+ * **Example** (Use OntologyEventGroups)
  * ```ts
  * import { OntologyEventGroups } from "@effect-ontology/Schema/EventSchema.ts"
  *
@@ -284,7 +286,7 @@ export const OntologyEventGroups = Tuple.make(CurationEventGroup, ExtractionEven
 /**
  * Union of every effect-ontology EventLog event definition.
  *
- * @example
+ * **Example** (Use OntologyEvent)
  * ```ts
  * import type { OntologyEvent } from "@effect-ontology/Schema/EventSchema.ts"
  *

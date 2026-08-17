@@ -15,7 +15,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/OntologyBrowser")
 /**
  * Reference to an imported standards vocabulary.
  *
- * @example
+ * **Example** (Use VocabularyRef)
  * ```ts
  * import { VocabularyRef } from "@effect-ontology/Schema/OntologyBrowser.ts"
  *
@@ -66,7 +66,7 @@ export class VocabularyRef extends S.Class<VocabularyRef>($I`VocabularyRef`)(
 /**
  * Compact ontology metadata used in list views.
  *
- * @example
+ * **Example** (Use OntologySummary)
  * ```ts
  * import { OntologySummary } from "@effect-ontology/Schema/OntologyBrowser.ts"
  *
@@ -127,14 +127,14 @@ export class OntologySummary extends S.Class<OntologySummary>($I`OntologySummary
 /**
  * Response containing all visible ontology summaries.
  *
- * @example
+ * **Example** (Use OntologyListResponse)
  * ```ts
  * import { OntologyListResponse } from "@effect-ontology/Schema/OntologyBrowser.ts"
  *
  * console.log(OntologyListResponse.make({}).ontologies.length) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class OntologyListResponse extends S.Class<OntologyListResponse>($I`OntologyListResponse`)(
@@ -154,7 +154,7 @@ export class OntologyListResponse extends S.Class<OntologyListResponse>($I`Ontol
 /**
  * Browser projection of an ontology class definition.
  *
- * @example
+ * **Example** (Use ClassSummary)
  * ```ts
  * import { ClassSummary } from "@effect-ontology/Schema/OntologyBrowser.ts"
  *
@@ -206,12 +206,13 @@ export class ClassSummary extends S.Class<ClassSummary>($I`ClassSummary`)(
 /**
  * Browser projection of an ontology property definition.
  *
- * @remarks
- * `domain` and `range` are semantic IRIs, not arbitrary strings. The explicit
+ * **Details**
+ *
+ * * `domain` and `range` are semantic IRIs, not arbitrary strings. The explicit
  * `isObjectProperty` flag preserves whether the range denotes resources rather
  * than datatype values.
  *
- * @example
+ * **Example** (Use PropertySummary)
  * ```ts
  * import { PropertySummary } from "@effect-ontology/Schema/OntologyBrowser.ts"
  *
@@ -273,7 +274,7 @@ export class PropertySummary extends S.Class<PropertySummary>($I`PropertySummary
 /**
  * Pageless response listing every class in an ontology.
  *
- * @example
+ * **Example** (Use OntologyClassesResponse)
  * ```ts
  * import * as S from "effect/Schema"
  * import { OntologyClassesResponse } from "@effect-ontology/Schema/OntologyBrowser.ts"
@@ -287,7 +288,7 @@ export class PropertySummary extends S.Class<PropertySummary>($I`PropertySummary
  *
  * @invariant `total` is non-negative; callers should keep it equal to the
  * unpaginated class collection size.
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class OntologyClassesResponse extends S.Class<OntologyClassesResponse>($I`OntologyClassesResponse`)(
@@ -313,7 +314,7 @@ export class OntologyClassesResponse extends S.Class<OntologyClassesResponse>($I
 /**
  * Pageless response listing every property in an ontology.
  *
- * @example
+ * **Example** (Use OntologyPropertiesResponse)
  * ```ts
  * import * as S from "effect/Schema"
  * import { OntologyPropertiesResponse } from "@effect-ontology/Schema/OntologyBrowser.ts"
@@ -327,7 +328,7 @@ export class OntologyClassesResponse extends S.Class<OntologyClassesResponse>($I
  *
  * @invariant `total` is non-negative; callers should keep it equal to the
  * unpaginated property collection size.
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class OntologyPropertiesResponse extends S.Class<OntologyPropertiesResponse>($I`OntologyPropertiesResponse`)(
@@ -353,12 +354,13 @@ export class OntologyPropertiesResponse extends S.Class<OntologyPropertiesRespon
 /**
  * Detailed browser projection of one ontology.
  *
- * @remarks
- * Collection-valued fields always decode to arrays, while optional prose and
+ * **Details**
+ *
+ * * Collection-valued fields always decode to arrays, while optional prose and
  * provenance fields decode to `Option`. This keeps browser logic focused on
  * ontology relationships instead of null normalization.
  *
- * @example
+ * **Example** (Use OntologyDetailResponse)
  * ```ts
  * import { OntologyDetailResponse } from "@effect-ontology/Schema/OntologyBrowser.ts"
  *
@@ -372,7 +374,7 @@ export class OntologyPropertiesResponse extends S.Class<OntologyPropertiesRespon
  * console.log(detail.imports.length) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class OntologyDetailResponse extends S.Class<OntologyDetailResponse>($I`OntologyDetailResponse`)(

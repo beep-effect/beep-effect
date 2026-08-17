@@ -5,8 +5,8 @@
  * Extends the domain model with service-specific concerns like
  * task definitions, execution contexts, and feedback handling.
  *
- * @since 2.0.0
- * @module Service/Agent/types
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -32,8 +32,8 @@ import { ShaclValidationReport } from "../Shacl.ts";
  *
  * Wraps raw input with metadata for tracking and routing.
  *
- * @since 2.0.0
- * @category Domain
+ * @since 0.0.0
+ * @category models
  */
 export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
   /**
@@ -194,8 +194,8 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
 /**
  * PipelineConfig - Configuration for a multi-agent pipeline
  *
- * @since 2.0.0
- * @category Domain
+ * @since 0.0.0
+ * @category models
  */
 export class PipelineConfig extends Schema.Class<PipelineConfig>("PipelineConfig")({
   /**
@@ -269,16 +269,16 @@ export class PipelineConfig extends Schema.Class<PipelineConfig>("PipelineConfig
 /**
  * HumanFeedback - Feedback from human review at checkpoints
  *
- * @since 2.0.0
- * @category Events
+ * @since 0.0.0
+ * @category domain-events
  */
 export type HumanFeedback = HumanApprove | HumanReject | HumanModify | HumanSkip;
 
 /**
  * HumanApprove - Human approves the current state
  *
- * @since 2.0.0
- * @category Events
+ * @since 0.0.0
+ * @category domain-events
  */
 export class HumanApprove extends Data.TaggedClass("HumanApprove")<{
   readonly reviewerId?: string;
@@ -288,8 +288,8 @@ export class HumanApprove extends Data.TaggedClass("HumanApprove")<{
 /**
  * HumanReject - Human rejects the current state
  *
- * @since 2.0.0
- * @category Events
+ * @since 0.0.0
+ * @category domain-events
  */
 export class HumanReject extends Data.TaggedClass("HumanReject")<{
   readonly reason: string;
@@ -299,8 +299,8 @@ export class HumanReject extends Data.TaggedClass("HumanReject")<{
 /**
  * HumanModify - Human provides modifications to the state
  *
- * @since 2.0.0
- * @category Events
+ * @since 0.0.0
+ * @category domain-events
  */
 export class HumanModify extends Data.TaggedClass("HumanModify")<{
   /**
@@ -314,8 +314,8 @@ export class HumanModify extends Data.TaggedClass("HumanModify")<{
 /**
  * HumanSkip - Human skips a specific agent
  *
- * @since 2.0.0
- * @category Events
+ * @since 0.0.0
+ * @category domain-events
  */
 export class HumanSkip extends Data.TaggedClass("HumanSkip")<{
   readonly agentId: AgentIdType;
@@ -332,8 +332,8 @@ export class HumanSkip extends Data.TaggedClass("HumanSkip")<{
  *
  * Controls how the refinement loop executes and when it terminates.
  *
- * @since 2.0.0
- * @category Domain
+ * @since 0.0.0
+ * @category models
  */
 export class RefinementConfig extends Schema.Class<RefinementConfig>("RefinementConfig")({
   /**
@@ -421,8 +421,8 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
 /**
  * RefinementStatus - Outcome of a refinement loop
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export type RefinementStatus =
   | "conformant" // All validations pass
@@ -435,8 +435,8 @@ export type RefinementStatus =
 /**
  * RefinementResult - Result of a validation-correction loop
  *
- * @since 2.0.0
- * @category Domain
+ * @since 0.0.0
+ * @category models
  */
 export class RefinementResult extends Schema.Class<RefinementResult>("RefinementResult")({
   /**
@@ -507,8 +507,8 @@ export class RefinementResult extends Schema.Class<RefinementResult>("Refinement
  *
  * Wraps the Agent interface with registration metadata.
  *
- * @since 2.0.0
- * @category Domain
+ * @since 0.0.0
+ * @category models
  */
 export interface RegisteredAgent<I = unknown, O = unknown, E = unknown, R = never> {
   /**
@@ -535,8 +535,8 @@ export interface RegisteredAgent<I = unknown, O = unknown, E = unknown, R = neve
 /**
  * AgentRegistry - Type for the agent registry map
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export type AgentRegistry = HashMap.HashMap<AgentIdType, RegisteredAgent>;
 
@@ -549,8 +549,8 @@ export type AgentRegistry = HashMap.HashMap<AgentIdType, RegisteredAgent>;
  *
  * Provides access to shared state and utilities during execution.
  *
- * @since 2.0.0
- * @category Domain
+ * @since 0.0.0
+ * @category models
  */
 export class ExecutionContext extends Schema.Class<ExecutionContext>("ExecutionContext")({
   /**
@@ -586,8 +586,8 @@ export class ExecutionContext extends Schema.Class<ExecutionContext>("ExecutionC
 /**
  * AgentExecutionError - Error during agent execution
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class AgentExecutionError extends Data.TaggedError("AgentExecutionError")<{
   readonly agentId: AgentIdType;
@@ -599,8 +599,8 @@ export class AgentExecutionError extends Data.TaggedError("AgentExecutionError")
 /**
  * PipelineExecutionError - Error during pipeline execution
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class PipelineExecutionError extends Data.TaggedError("PipelineExecutionError")<{
   readonly pipelineId: string;
@@ -613,8 +613,8 @@ export class PipelineExecutionError extends Data.TaggedError("PipelineExecutionE
 /**
  * AgentNotFoundError - Requested agent not registered
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class AgentNotFoundError extends Data.TaggedError("AgentNotFoundError")<{
   readonly agentId: AgentIdType;
@@ -624,8 +624,8 @@ export class AgentNotFoundError extends Data.TaggedError("AgentNotFoundError")<{
 /**
  * CheckpointTimeoutError - Human approval not received in time
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class CheckpointTimeoutError extends Data.TaggedError("CheckpointTimeoutError")<{
   readonly pipelineId: string;

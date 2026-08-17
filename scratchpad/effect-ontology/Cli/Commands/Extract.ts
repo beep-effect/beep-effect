@@ -4,8 +4,8 @@
  * Quick ad-hoc extraction testing without server setup.
  * Supports inline text, file input, or stdin.
  *
- * @since 2.0.0
- * @module Cli/Commands/Extract
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";

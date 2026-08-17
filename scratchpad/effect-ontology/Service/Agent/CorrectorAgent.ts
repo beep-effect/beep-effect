@@ -12,8 +12,8 @@
  * 4. **Domain/range mismatch**: Re-classify entity or update relation
  * 5. **Pattern violation**: Reformat value to match pattern
  *
- * @example
- * ```typescript
+ * **Example** (Use CorrectorAgent)
+ * ```ts
  * Effect.gen(function*() {
  *   const corrector = yield* CorrectorAgent
  *
@@ -26,8 +26,8 @@
  * })
  * ```
  *
- * @since 2.0.0
- * @module Service/Agent/CorrectorAgent
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -63,8 +63,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Agent/CorrectorAgent");
 /**
  * Error: Failed to generate correction
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class CorrectionError extends Data.TaggedError("CorrectionError")<{
   readonly message: string;
@@ -76,8 +76,8 @@ export class CorrectionError extends Data.TaggedError("CorrectionError")<{
 /**
  * Error: Failed to apply correction to graph
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class CorrectionApplicationError extends Data.TaggedError("CorrectionApplicationError")<{
   readonly message: string;
@@ -92,8 +92,8 @@ export class CorrectionApplicationError extends Data.TaggedError("CorrectionAppl
 /**
  * Correction strategy based on violation type
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export type CorrectionStrategy =
   | "generate-value" // Missing required property
@@ -106,8 +106,8 @@ export type CorrectionStrategy =
 /**
  * CorrectionStrategySchema for LLM output
  *
- * @since 2.0.0
- * @category Schemas
+ * @since 0.0.0
+ * @category schemas
  */
 export const CorrectionStrategySchema = Schema.Literals([
   "generate-value",
@@ -121,8 +121,8 @@ export const CorrectionStrategySchema = Schema.Literals([
 /**
  * Generated correction action
  *
- * @since 2.0.0
- * @category Models
+ * @since 0.0.0
+ * @category models
  */
 export class Correction extends Schema.Class<Correction>("Correction")({
   /**
@@ -182,8 +182,8 @@ export class Correction extends Schema.Class<Correction>("Correction")({
 /**
  * Result of correcting a single violation
  *
- * @since 2.0.0
- * @category Models
+ * @since 0.0.0
+ * @category models
  */
 export class CorrectionResult extends Schema.Class<CorrectionResult>("CorrectionResult")({
   /**
@@ -210,8 +210,8 @@ export class CorrectionResult extends Schema.Class<CorrectionResult>("Correction
 /**
  * Result of correcting all violations in a report
  *
- * @since 2.0.0
- * @category Models
+ * @since 0.0.0
+ * @category models
  */
 export class BatchCorrectionResult extends Schema.Class<BatchCorrectionResult>("BatchCorrectionResult")({
   /**
@@ -257,8 +257,8 @@ export class BatchCorrectionResult extends Schema.Class<BatchCorrectionResult>("
 /**
  * Input for CorrectorAgent execution
  *
- * @since 2.0.0
- * @category Models
+ * @since 0.0.0
+ * @category models
  */
 export interface CorrectorInput {
   readonly report: ShaclValidationReport;
@@ -311,8 +311,8 @@ const CorrectionResponseSchema = Schema.Struct({
  * Corrections can add missing values, fix datatypes, remove excess values,
  * or reclassify entities.
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`CorrectorAgent`, {
   make: Effect.gen(function* () {

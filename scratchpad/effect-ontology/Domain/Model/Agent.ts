@@ -21,7 +21,7 @@ const agentIdPattern = /^[a-z][a-z0-9_-]*$/;
 /**
  * Stable lowercase identifier for an agent implementation.
  *
- * @example
+ * **Example** (Use AgentId)
  * ```ts
  * import { AgentId } from "@effect-ontology/Model/Agent.ts"
  *
@@ -57,7 +57,7 @@ export const AgentId = S.String.check(
 /**
  * Runtime value decoded by {@link AgentId}.
  *
- * @example
+ * **Example** (Use AgentId)
  * ```ts
  * import { AgentId, type AgentId as AgentIdentifier } from "@effect-ontology/Model/Agent.ts"
  *
@@ -73,7 +73,7 @@ export type AgentId = typeof AgentId.Type;
 /**
  * Functional role played by an agent in an ontology pipeline.
  *
- * @example
+ * **Example** (Use AgentType)
  * ```ts
  * import { AgentType } from "@effect-ontology/Model/Agent.ts"
  *
@@ -97,7 +97,7 @@ export const AgentType = LiteralKit(["extractor", "validator", "resolver", "corr
 /**
  * Runtime value accepted by {@link AgentType}.
  *
- * @example
+ * **Example** (Use AgentType)
  * ```ts
  * import type { AgentType } from "@effect-ontology/Model/Agent.ts"
  *
@@ -132,7 +132,7 @@ const AgentMetadataFields = {
 /**
  * Descriptive identity for an executable agent.
  *
- * @example
+ * **Example** (Use AgentMetadata)
  * ```ts
  * import { AgentId, AgentMetadata } from "@effect-ontology/Model/Agent.ts"
  *
@@ -170,11 +170,12 @@ const ValidationResultFields = {
 /**
  * Immutable diagnostics produced by agent input validation.
  *
- * @remarks
- * Validity is derived from the error collection, so an impossible
+ * **Details**
+ *
+ * * Validity is derived from the error collection, so an impossible
  * `valid: true` plus non-empty errors state cannot be constructed.
  *
- * @example
+ * **Example** (Use ValidationResult)
  * ```ts
  * import { ValidationResult } from "@effect-ontology/Model/Agent.ts"
  *
@@ -196,7 +197,7 @@ export class ValidationResult extends S.Class<ValidationResult>($I`ValidationRes
   /**
    * Constructs a validation result without diagnostics.
    *
-   * @example
+   * **Example** (Use pass)
    * ```ts
    * import { ValidationResult } from "@effect-ontology/Model/Agent.ts"
    *
@@ -216,7 +217,7 @@ export class ValidationResult extends S.Class<ValidationResult>($I`ValidationRes
    * @param errors - Non-empty blocking diagnostic collection.
    * @returns An invalid result containing the supplied errors.
    *
-   * @example
+   * **Example** (Use fail)
    * ```ts
    * import { ValidationResult } from "@effect-ontology/Model/Agent.ts"
    *
@@ -234,7 +235,7 @@ export class ValidationResult extends S.Class<ValidationResult>($I`ValidationRes
    * @param warnings - Non-empty non-blocking diagnostic collection.
    * @returns A valid result containing the supplied warnings.
    *
-   * @example
+   * **Example** (Use warn)
    * ```ts
    * import { ValidationResult } from "@effect-ontology/Model/Agent.ts"
    *
@@ -249,7 +250,7 @@ export class ValidationResult extends S.Class<ValidationResult>($I`ValidationRes
   /**
    * Whether no blocking diagnostics were produced.
    *
-   * @example
+   * **Example** (Use Agent)
    * ```ts
    * import { ValidationResult } from "@effect-ontology/Model/Agent.ts"
    *
@@ -265,7 +266,7 @@ export class ValidationResult extends S.Class<ValidationResult>($I`ValidationRes
   /**
    * Number of blocking diagnostics.
    *
-   * @example
+   * **Example** (Use Agent)
    * ```ts
    * import { ValidationResult } from "@effect-ontology/Model/Agent.ts"
    *
@@ -281,7 +282,7 @@ export class ValidationResult extends S.Class<ValidationResult>($I`ValidationRes
   /**
    * Number of non-blocking diagnostics.
    *
-   * @example
+   * **Example** (Use Agent)
    * ```ts
    * import { ValidationResult } from "@effect-ontology/Model/Agent.ts"
    *
@@ -298,12 +299,13 @@ export class ValidationResult extends S.Class<ValidationResult>($I`ValidationRes
 /**
  * Stateless executable participant in an agent pipeline.
  *
- * @remarks
- * This is a service contract rather than a data model, so it intentionally
+ * **Details**
+ *
+ * * This is a service contract rather than a data model, so it intentionally
  * remains an interface. Optional validation is represented explicitly with
  * `Option`.
  *
- * @example
+ * **Example** (Use Agent)
  * ```ts
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
@@ -342,7 +344,7 @@ export interface Agent<Input, Output, Error, R = never> {
 /**
  * Execution mode used by a multi-agent pipeline.
  *
- * @example
+ * **Example** (Use PipelineMode)
  * ```ts
  * import { PipelineMode } from "@effect-ontology/Model/Agent.ts"
  *
@@ -363,7 +365,7 @@ export const PipelineMode = LiteralKit(["sequential", "loop", "parallel", "graph
 /**
  * Runtime value accepted by {@link PipelineMode}.
  *
- * @example
+ * **Example** (Use PipelineMode)
  * ```ts
  * import type { PipelineMode } from "@effect-ontology/Model/Agent.ts"
  *
@@ -379,12 +381,13 @@ export type PipelineMode = typeof PipelineMode.Type;
 /**
  * Discriminated execution state for an agent pipeline.
  *
- * @remarks
- * Completion and failure data live inside their respective variants. This
+ * **Details**
+ *
+ * * Completion and failure data live inside their respective variants. This
  * replaces the upstream optional-field bag and makes impossible combinations
  * such as a pending pipeline with a completion timestamp unrepresentable.
  *
- * @example
+ * **Example** (Use PipelineStatus)
  * ```ts
  * import { PipelineStatus } from "@effect-ontology/Model/Agent.ts"
  *
@@ -425,7 +428,7 @@ export const PipelineStatus = S.TaggedUnion({
 /**
  * Runtime value decoded by {@link PipelineStatus}.
  *
- * @example
+ * **Example** (Use PipelineStatus)
  * ```ts
  * import type { PipelineStatus } from "@effect-ontology/Model/Agent.ts"
  *
@@ -456,7 +459,7 @@ const IntermediateResultFields = {
 /**
  * JSON-compatible output retained from a completed agent.
  *
- * @example
+ * **Example** (Use IntermediateResult)
  * ```ts
  * import { DateTime, Duration } from "effect"
  * import { AgentId, IntermediateResult } from "@effect-ontology/Model/Agent.ts"
@@ -512,7 +515,7 @@ const PipelineStateFields = {
 /**
  * Immutable checkpoint snapshot of a multi-agent pipeline.
  *
- * @example
+ * **Example** (Use PipelineState)
  * ```ts
  * import { DateTime } from "effect"
  * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent.ts"
@@ -540,7 +543,7 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
    * @param agentId - Stable identifier of the producing agent.
    * @returns The retained intermediate result, or `Option.none()` when absent.
    *
-   * @example
+   * **Example** (Use getResult)
    * ```ts
    * import { DateTime } from "effect"
    * import * as O from "effect/Option"
@@ -564,7 +567,7 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
    * @param agentId - Stable identifier of the agent to inspect.
    * @returns `true` when the agent has completed in this snapshot.
    *
-   * @example
+   * **Example** (Use hasCompleted)
    * ```ts
    * import { DateTime } from "effect"
    * import { AgentId, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent.ts"
@@ -587,7 +590,7 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
    * @param now - Current UTC instant used for active or paused pipelines.
    * @returns Duration from pipeline start to the terminal or supplied instant.
    *
-   * @example
+   * **Example** (Use getElapsed)
    * ```ts
    * import { DateTime, Duration } from "effect"
    * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent.ts"
@@ -615,7 +618,7 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
   /**
    * Whether the pipeline has completed or failed.
    *
-   * @example
+   * **Example** (Use TerminationConditionFields)
    * ```ts
    * import { DateTime } from "effect"
    * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent.ts"
@@ -657,7 +660,7 @@ const TerminationConditionFields = {
 /**
  * Stop conditions for a looping agent pipeline.
  *
- * @example
+ * **Example** (Use TerminationCondition)
  * ```ts
  * import { TerminationCondition } from "@effect-ontology/Model/Agent.ts"
  *
@@ -678,7 +681,7 @@ export class TerminationCondition extends S.Class<TerminationCondition>($I`Termi
   /**
    * Constructs the canonical default loop-termination policy.
    *
-   * @example
+   * **Example** (Use CheckpointConfigFields)
    * ```ts
    * import { TerminationCondition } from "@effect-ontology/Model/Agent.ts"
    *
@@ -715,7 +718,7 @@ const CheckpointConfigFields = {
 /**
  * Policy controlling pipeline checkpoint creation and approval.
  *
- * @example
+ * **Example** (Use CheckpointConfig)
  * ```ts
  * import { CheckpointConfig } from "@effect-ontology/Model/Agent.ts"
  *
@@ -736,7 +739,7 @@ export class CheckpointConfig extends S.Class<CheckpointConfig>($I`CheckpointCon
   /**
    * Constructs the canonical default checkpoint policy.
    *
-   * @example
+   * **Example** (Use AgentStartedFields)
    * ```ts
    * import { CheckpointConfig } from "@effect-ontology/Model/Agent.ts"
    *
@@ -760,7 +763,7 @@ const AgentStartedFields = {
 /**
  * Event emitted when an agent begins execution.
  *
- * @example
+ * **Example** (Use AgentStarted)
  * ```ts
  * import { DateTime } from "effect"
  * import { AgentId, AgentStarted } from "@effect-ontology/Model/Agent.ts"
@@ -794,7 +797,7 @@ const AgentProgressFields = {
 /**
  * Progress update emitted during agent execution.
  *
- * @example
+ * **Example** (Use AgentProgress)
  * ```ts
  * import { Percentage } from "@beep/schema/Percentage"
  * import { DateTime } from "effect"
@@ -830,7 +833,7 @@ const AgentCompletedFields = {
 /**
  * Event emitted after successful agent execution.
  *
- * @example
+ * **Example** (Use AgentCompleted)
  * ```ts
  * import { DateTime, Duration } from "effect"
  * import { AgentCompleted, AgentId } from "@effect-ontology/Model/Agent.ts"
@@ -866,7 +869,7 @@ const AgentFailedFields = {
 /**
  * Event emitted after failed agent execution.
  *
- * @example
+ * **Example** (Use AgentFailed)
  * ```ts
  * import { DateTime, Duration } from "effect"
  * import { AgentFailed, AgentId } from "@effect-ontology/Model/Agent.ts"
@@ -895,7 +898,7 @@ export class AgentFailed extends S.TaggedClass<AgentFailed>($I`AgentFailed`)(
 /**
  * Reason a pipeline checkpoint was written.
  *
- * @example
+ * **Example** (Use CheckpointReason)
  * ```ts
  * import { CheckpointReason } from "@effect-ontology/Model/Agent.ts"
  *
@@ -918,7 +921,7 @@ export const CheckpointReason = LiteralKit(["scheduled", "agent-completed", "man
 /**
  * Runtime value accepted by {@link CheckpointReason}.
  *
- * @example
+ * **Example** (Use CheckpointReason)
  * ```ts
  * import type { CheckpointReason } from "@effect-ontology/Model/Agent.ts"
  *
@@ -940,7 +943,7 @@ const PipelineCheckpointFields = {
 /**
  * Event carrying an immutable pipeline checkpoint.
  *
- * @example
+ * **Example** (Use PipelineCheckpoint)
  * ```ts
  * import { DateTime } from "effect"
  * import { PipelineCheckpoint, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent.ts"
@@ -981,7 +984,7 @@ const AgentEventDefinition = S.TaggedUnion({
 /**
  * Exhaustively discriminated union of agent and pipeline lifecycle events.
  *
- * @example
+ * **Example** (Use AgentEvent)
  * ```ts
  * import { DateTime } from "effect"
  * import { AgentEvent, AgentId } from "@effect-ontology/Model/Agent.ts"
@@ -1013,7 +1016,7 @@ export const AgentEvent = AgentEventDefinition.pipe(
 /**
  * Runtime value decoded by {@link AgentEvent}.
  *
- * @example
+ * **Example** (Use AgentEvent)
  * ```ts
  * import type { AgentEvent } from "@effect-ontology/Model/Agent.ts"
  *

@@ -1,8 +1,8 @@
 /**
  * Workflow Layer Exports
  *
- * @since 2.0.0
- * @module Workflow
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 export * from "./DurableActivities.ts";

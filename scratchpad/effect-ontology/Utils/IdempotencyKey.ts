@@ -6,8 +6,8 @@
  *
  * Key formula: sha256(normalizedText + ontologyId + ontologyVersion + paramsHash)
  *
+ * @packageDocumentation
  * @since 0.0.0
- * @module Utils/IdempotencyKey
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -121,8 +121,8 @@ export const computeOntologyVersion = (ontologyContent: string): string => sha25
  * @param params - Extraction parameters (optional)
  * @returns SHA-256 idempotency key
  *
- * @example
- * ```typescript
+ * **Example** (Use computeIdempotencyKey)
+ * ```ts
  * const key = computeIdempotencyKey(
  *   "John works at Apple.",
  *   "foaf",

@@ -4,8 +4,8 @@
  * Provider-agnostic embedding service with caching and Effect Request API batching.
  * Supports Nomic (local) and Voyage (API) providers via EmbeddingProvider interface.
  *
- * @since 2.0.0
- * @module Service/Embedding
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -29,8 +29,8 @@ export type { NomicTaskType } from "./NomicNlp.ts";
  *
  * Provider-agnostic embedding operations with caching.
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface EmbeddingServiceMethods {
   /**
@@ -78,8 +78,8 @@ export interface EmbeddingServiceMethods {
 /**
  * EmbeddingService service tag
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class EmbeddingService extends Context.Service<EmbeddingService, EmbeddingServiceMethods>()(
   $I`EmbeddingService`
@@ -93,8 +93,8 @@ export class EmbeddingService extends Context.Service<EmbeddingService, Embeddin
  * - EmbeddingCache with versioned keys (includes model/dimension)
  * - Effect Request API for automatic batching via RequestResolver
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const EmbeddingServiceLive: Layer.Layer<
   EmbeddingService,
@@ -165,8 +165,8 @@ export const EmbeddingServiceLive: Layer.Layer<
  * Provides complete embedding infrastructure including provider,
  * cache, and metrics.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const EmbeddingServiceDefault: Layer.Layer<
   EmbeddingService,
@@ -185,7 +185,7 @@ export const EmbeddingServiceDefault: Layer.Layer<
  * Prefer EmbeddingServiceLive with EmbeddingProvider for new code.
  *
  * @deprecated Use EmbeddingServiceLive with EmbeddingProvider instead
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export { NomicNlpService, NomicNlpServiceLive } from "./NomicNlp.ts";

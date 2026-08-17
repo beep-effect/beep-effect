@@ -4,8 +4,8 @@
  * Resolves inherited properties and class ancestry.
  * Handles the "Inheritance Gap" by computing effective properties (own + inherited).
  *
- * @since 2.0.0
- * @module Service/Inheritance
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";

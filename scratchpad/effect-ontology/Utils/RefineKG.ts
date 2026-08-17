@@ -3,8 +3,8 @@
  *
  * Merges entities and rewrites relations based on canonical mappings.
  *
- * @since 2.0.0
- * @module Utils/RefineKG
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { IRI } from "@beep/rdf";

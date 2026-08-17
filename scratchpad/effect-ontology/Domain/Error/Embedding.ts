@@ -1,8 +1,9 @@
 /**
  * Granular schema-backed embedding-provider failures.
  *
- * @remarks
- * Counts and durations are non-negative integers, optional metadata is decoded
+ * **Details**
+ *
+ * * Counts and durations are non-negative integers, optional metadata is decoded
  * to `Option`, and the family union supports exhaustive recovery by `_tag`.
  *
  * @packageDocumentation
@@ -26,7 +27,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Embedding");
 /**
  * General embedding-provider failure.
  *
- * @example
+ * **Example** (Use EmbeddingError)
  * ```ts
  * import { EmbeddingError } from "@effect-ontology/Error/Embedding.ts"
  *
@@ -63,7 +64,7 @@ export const EmbeddingError = makeOntologyErrorClass
   );
 
 /** Runtime value decoded by {@link EmbeddingError}.
- * @example
+ * **Example** (Use EmbeddingError)
  * ```ts
  * import { EmbeddingError, type EmbeddingError as Failure } from "@effect-ontology/Error/Embedding.ts"
  * const error: Failure = EmbeddingError.make({ message: "Failed.", provider: "provider" })
@@ -76,7 +77,7 @@ export type EmbeddingError = typeof EmbeddingError.Type;
 /**
  * Embedding request rejected because provider quota was exhausted.
  *
- * @example
+ * **Example** (Use EmbeddingRateLimitError)
  * ```ts
  * import { EmbeddingRateLimitError } from "@effect-ontology/Error/Embedding.ts"
  *
@@ -107,7 +108,7 @@ export const EmbeddingRateLimitError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link EmbeddingRateLimitError}.
- * @example
+ * **Example** (Use EmbeddingRateLimitError)
  * ```ts
  * import { EmbeddingRateLimitError, type EmbeddingRateLimitError as Failure } from "@effect-ontology/Error/Embedding.ts"
  * const error: Failure = EmbeddingRateLimitError.make({ message: "Limited.", provider: "provider" })
@@ -120,7 +121,7 @@ export type EmbeddingRateLimitError = typeof EmbeddingRateLimitError.Type;
 /**
  * Embedding request that exceeded its configured deadline.
  *
- * @example
+ * **Example** (Use EmbeddingTimeoutError)
  * ```ts
  * import { EmbeddingTimeoutError } from "@effect-ontology/Error/Embedding.ts"
  *
@@ -156,7 +157,7 @@ export const EmbeddingTimeoutError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link EmbeddingTimeoutError}.
- * @example
+ * **Example** (Use EmbeddingTimeoutError)
  * ```ts
  * import { EmbeddingTimeoutError, type EmbeddingTimeoutError as Failure } from "@effect-ontology/Error/Embedding.ts"
  * const error: Failure = EmbeddingTimeoutError.fromUnknown({ message: "Timed out.", provider: "p", timeoutMs: 1 })
@@ -169,10 +170,11 @@ export type EmbeddingTimeoutError = typeof EmbeddingTimeoutError.Type;
 /**
  * Embedding provider response that could not be validated.
  *
- * @remarks
- * `response` should contain only a bounded, redacted excerpt.
+ * **Details**
  *
- * @example
+ * * `response` should contain only a bounded, redacted excerpt.
+ *
+ * **Example** (Use EmbeddingInvalidResponseError)
  * ```ts
  * import { EmbeddingInvalidResponseError } from "@effect-ontology/Error/Embedding.ts"
  *
@@ -206,7 +208,7 @@ export const EmbeddingInvalidResponseError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link EmbeddingInvalidResponseError}.
- * @example
+ * **Example** (Use EmbeddingInvalidResponseError)
  * ```ts
  * import { EmbeddingInvalidResponseError, type EmbeddingInvalidResponseError as Failure } from "@effect-ontology/Error/Embedding.ts"
  * const error: Failure = EmbeddingInvalidResponseError.make({ message: "Invalid.", provider: "p" })
@@ -219,7 +221,7 @@ export type EmbeddingInvalidResponseError = typeof EmbeddingInvalidResponseError
 /**
  * Embedding vector whose dimension differs from the expected dimension.
  *
- * @example
+ * **Example** (Use EmbeddingDimensionMismatchError)
  * ```ts
  * import { EmbeddingDimensionMismatchError } from "@effect-ontology/Error/Embedding.ts"
  *
@@ -255,7 +257,7 @@ export const EmbeddingDimensionMismatchError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link EmbeddingDimensionMismatchError}.
- * @example
+ * **Example** (Use EmbeddingDimensionMismatchError)
  * ```ts
  * import { EmbeddingDimensionMismatchError, type EmbeddingDimensionMismatchError as Failure } from "@effect-ontology/Error/Embedding.ts"
  * const error: Failure = EmbeddingDimensionMismatchError.fromUnknown({ message: "Mismatch.", expected: 2, actual: 1 })
@@ -268,7 +270,7 @@ export type EmbeddingDimensionMismatchError = typeof EmbeddingDimensionMismatchE
 /**
  * Embedding input that exceeds the provider token budget.
  *
- * @example
+ * **Example** (Use EmbeddingTokenLimitError)
  * ```ts
  * import { EmbeddingTokenLimitError } from "@effect-ontology/Error/Embedding.ts"
  *
@@ -307,7 +309,7 @@ export const EmbeddingTokenLimitError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link EmbeddingTokenLimitError}.
- * @example
+ * **Example** (Use EmbeddingTokenLimitError)
  * ```ts
  * import { EmbeddingTokenLimitError, type EmbeddingTokenLimitError as Failure } from "@effect-ontology/Error/Embedding.ts"
  * const error: Failure = EmbeddingTokenLimitError.fromUnknown({ message: "Too large.", provider: "p", maxTokens: 10 })
@@ -329,7 +331,7 @@ const AnyEmbeddingErrorDefinition = S.Union([
 /**
  * Exhaustive tagged union of embedding-operation failures.
  *
- * @example
+ * **Example** (Use AnyEmbeddingError)
  * ```ts
  * import { AnyEmbeddingError, EmbeddingError } from "@effect-ontology/Error/Embedding.ts"
  *
@@ -350,7 +352,7 @@ export const AnyEmbeddingError = AnyEmbeddingErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link AnyEmbeddingError}.
  *
- * @example
+ * **Example** (Use AnyEmbeddingError)
  * ```ts
  * import { EmbeddingError, type AnyEmbeddingError } from "@effect-ontology/Error/Embedding.ts"
  *

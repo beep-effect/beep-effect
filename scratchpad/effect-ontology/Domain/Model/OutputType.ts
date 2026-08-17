@@ -1,8 +1,9 @@
 /**
  * Extraction-run output artifact taxonomy and metadata.
  *
- * @remarks
- * The output kind is the source of truth for its stable filename and
+ * **Details**
+ *
+ * * The output kind is the source of truth for its stable filename and
  * human-readable description. Consumers use schema-owned statics instead of
  * maintaining parallel filename helpers.
  *
@@ -61,7 +62,7 @@ type OutputTypeValue = typeof OutputTypeDefinition.Type;
 /**
  * Stable persisted filename for an extraction-run artifact.
  *
- * @example
+ * **Example** (Use OutputFilename)
  * ```ts
  * import { OutputFilename } from "@effect-ontology/Model/OutputType.ts"
  *
@@ -117,7 +118,7 @@ export const OutputFilename = LiteralKit({
 /**
  * Runtime value decoded by {@link OutputFilename}. {@inheritDoc OutputFilename}
  *
- * @example
+ * **Example** (Use OutputFilename)
  * ```ts
  * import { OutputFilename, type OutputFilename as OutputFilenameValue } from "@effect-ontology/Model/OutputType.ts"
  *
@@ -176,11 +177,12 @@ const outputTypeRegistry = {
 /**
  * Finite kind of artifact produced by an extraction run.
  *
- * @remarks
- * `filename`, `description`, and `metadata` are total because the registry is
+ * **Details**
+ *
+ * * `filename`, `description`, and `metadata` are total because the registry is
  * checked against the complete literal domain at compile time.
  *
- * @example
+ * **Example** (Use OutputType)
  * ```ts
  * import { OutputType } from "@effect-ontology/Model/OutputType.ts"
  *
@@ -204,7 +206,7 @@ export const OutputType = OutputTypeDefinition.pipe(
 /**
  * Runtime value decoded by {@link OutputType}. {@inheritDoc OutputType}
  *
- * @example
+ * **Example** (Use OutputType)
  * ```ts
  * import { OutputType, type OutputType as OutputTypeValue } from "@effect-ontology/Model/OutputType.ts"
  *
@@ -220,11 +222,12 @@ export type OutputType = typeof OutputType.Type;
 /**
  * Complete output metadata registry keyed by {@link OutputType}.
  *
- * @remarks
- * The object is exported for compatibility and enumeration. Point lookups
+ * **Details**
+ *
+ * * The object is exported for compatibility and enumeration. Point lookups
  * should normally use the schema-owned `OutputType.metadata` static.
  *
- * @example
+ * **Example** (Use OutputTypeRegistry)
  * ```ts
  * import { OutputTypeRegistry } from "@effect-ontology/Model/OutputType.ts"
  *
@@ -240,7 +243,7 @@ export const OutputTypeRegistry = outputTypeRegistry;
 /**
  * Compatibility export for the upstream schema name.
  *
- * @example
+ * **Example** (Use getOutputFilename)
  * ```ts
  * import { OutputTypeSchema } from "@effect-ontology/Model/OutputType.ts"
  *
@@ -256,11 +259,12 @@ export { OutputType as OutputTypeSchema };
 /**
  * Return the stable filename for an output type.
  *
- * @remarks
- * This compatibility shim delegates to the schema-owned static and remains
+ * **Details**
+ *
+ * * This compatibility shim delegates to the schema-owned static and remains
  * total over the finite {@link OutputType} domain.
  *
- * @example
+ * **Example** (Use getOutputFilename)
  * ```ts
  * import { getOutputFilename } from "@effect-ontology/Model/OutputType.ts"
  *
@@ -278,11 +282,12 @@ export const getOutputFilename = OutputType.filename;
 /**
  * Return the human-readable purpose of an output type.
  *
- * @remarks
- * This compatibility shim delegates to the schema-owned static and remains
+ * **Details**
+ *
+ * * This compatibility shim delegates to the schema-owned static and remains
  * total over the finite {@link OutputType} domain.
  *
- * @example
+ * **Example** (Use getOutputDescription)
  * ```ts
  * import { getOutputDescription } from "@effect-ontology/Model/OutputType.ts"
  *

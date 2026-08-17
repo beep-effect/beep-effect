@@ -9,8 +9,8 @@
  * - OPEN: Failing fast, requests rejected immediately
  * - HALF_OPEN: Testing recovery, limited requests allowed
  *
- * @since 2.0.0
- * @module Runtime/CircuitBreaker
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Clock, Duration, Effect, Ref, Schema } from "effect";
@@ -81,7 +81,7 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (
       const newSuccessCount = current.successCount + 1;
       if (newSuccessCount >= config.successThreshold) {
         yield* Ref.set(stateRef, {
-          state: "closed" as const,
+          state: "closed",
           failureCount: 0,
           successCount: 0,
           lastFailureTime: 0,
@@ -107,7 +107,7 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (
     const current = yield* getState;
     if (current.state === "half_open") {
       yield* Ref.set(stateRef, {
-        state: "open" as const,
+        state: "open",
         failureCount: config.maxFailures,
         successCount: 0,
         lastFailureTime: Number(now),
@@ -117,7 +117,7 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (
       const newFailureCount = current.failureCount + 1;
       if (newFailureCount >= config.maxFailures) {
         yield* Ref.set(stateRef, {
-          state: "open" as const,
+          state: "open",
           failureCount: newFailureCount,
           successCount: 0,
           lastFailureTime: Number(now),
@@ -145,7 +145,7 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (
       if (elapsed >= Duration.toMillis(config.resetTimeout)) {
         yield* Ref.update(stateRef, (s) => ({
           ...s,
-          state: "half_open" as const,
+          state: "half_open",
           successCount: 0,
         }));
         yield* Effect.logInfo("Circuit breaker entering half-open state");
@@ -182,7 +182,7 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (
     getState: () => Ref.get(stateRef).pipe(Effect.map((s) => s.state)),
     reset: () =>
       Ref.set(stateRef, {
-        state: "closed" as const,
+        state: "closed",
         failureCount: 0,
         successCount: 0,
         lastFailureTime: 0,

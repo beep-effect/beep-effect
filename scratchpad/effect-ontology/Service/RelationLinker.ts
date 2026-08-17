@@ -4,8 +4,8 @@
  * Canonicalizes relations using Entity Resolution Graph.
  * Maps subject/object IDs to their canonical representatives.
  *
- * @since 2.0.0
- * @module Service/RelationLinker
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -21,8 +21,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/RelationLinker");
 /**
  * Linked relation with canonical IDs
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface LinkedRelation {
   /** Original relation */
@@ -44,8 +44,8 @@ export interface LinkedRelation {
 /**
  * Result of linking a batch of relations
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface LinkingResult {
   readonly linkedRelations: Chunk.Chunk<LinkedRelation>;
@@ -58,8 +58,8 @@ export interface LinkingResult {
  *
  * Takes relations and an ERG, returns relations with canonical IDs.
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class RelationLinker extends Context.Service<RelationLinker>()($I`RelationLinker`, {
   make: Effect.succeed({

@@ -10,8 +10,8 @@
  * - Hybrid search combining vector + text via RRF fusion
  * - Ontology-scoped storage
  *
- * @since 2.0.0
- * @module Repository/Embedding
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { DrizzleError } from "@beep/drizzle";
@@ -36,16 +36,16 @@ import { embeddings } from "./schema.ts";
 /**
  * Entity types that can have embeddings
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export type EmbeddingEntityType = "class" | "entity" | "claim" | "example";
 
 /**
  * Result from vector similarity search
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface SimilarityResult {
   readonly entityId: string;
@@ -56,8 +56,8 @@ export interface SimilarityResult {
 /**
  * Result from hybrid search (vector + text RRF fusion)
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface HybridSearchResult {
   readonly entityId: string;
@@ -70,8 +70,8 @@ export interface HybridSearchResult {
 /**
  * Options for similarity search
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface SimilaritySearchOptions {
   /** Number of results to return (default: 20) */
@@ -83,8 +83,8 @@ export interface SimilaritySearchOptions {
 /**
  * Options for hybrid search
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface HybridSearchOptions {
   /** Number of results to return (default: 20) */
@@ -104,8 +104,8 @@ export interface HybridSearchOptions {
  *
  * Provides persistent vector storage with hybrid search capabilities.
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()($I`EmbeddingRepository`, {
   make: Effect.gen(function* () {

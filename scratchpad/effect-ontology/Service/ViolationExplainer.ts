@@ -4,8 +4,8 @@
  * LLM-powered explanations for SHACL violations following the xpSHACL pattern.
  * Generates human-readable explanations and actionable fix suggestions.
  *
- * @since 2.0.0
- * @module Service/ViolationExplainer
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -33,8 +33,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
 /**
  * Error: Failed to generate explanation
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class ExplanationError extends Data.TaggedError("ExplanationError")<{
   readonly message: string;
@@ -49,8 +49,8 @@ export class ExplanationError extends Data.TaggedError("ExplanationError")<{
 /**
  * Context for generating explanations
  *
- * @since 2.0.0
- * @category Models
+ * @since 0.0.0
+ * @category models
  */
 export class ExplanationContext extends Schema.Class<ExplanationContext>("ExplanationContext")({
   /** The RDF store containing the data graph */
@@ -80,8 +80,8 @@ export class ExplanationContext extends Schema.Class<ExplanationContext>("Explan
 /**
  * LLM-generated explanation for a SHACL violation
  *
- * @since 2.0.0
- * @category Models
+ * @since 0.0.0
+ * @category models
  */
 export class LlmViolationExplanation extends Schema.Class<LlmViolationExplanation>("LlmViolationExplanation")({
   /** Original violation */
@@ -110,8 +110,8 @@ export class LlmViolationExplanation extends Schema.Class<LlmViolationExplanatio
 /**
  * Batch explanation result
  *
- * @since 2.0.0
- * @category Models
+ * @since 0.0.0
+ * @category models
  */
 export class BatchExplanationResult extends Schema.Class<BatchExplanationResult>("BatchExplanationResult")({
   explanations: Schema.Array(LlmViolationExplanation),
@@ -166,8 +166,8 @@ const ExplanationResponseSchema = Schema.Struct({
  * with context from the data graph. Follows the xpSHACL pattern for
  * explainable SHACL validation.
  *
- * @example
- * ```typescript
+ * **Example** (Use ViolationExplainer)
+ * ```ts
  * Effect.gen(function*() {
  *   const explainer = yield* ViolationExplainer
  *
@@ -181,8 +181,8 @@ const ExplanationResponseSchema = Schema.Struct({
  * })
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I`ViolationExplainer`, {
   make: Effect.gen(function* () {

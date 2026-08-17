@@ -4,8 +4,8 @@
  * TypeScript types matching the PostgreSQL schema for claims, articles, and corrections.
  * These types are used by repository services for typed database access.
  *
- * @since 2.0.0
- * @module Repository/types
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -132,10 +132,10 @@ export const ClaimInsert = Schema.Struct({
   subjectIri: Schema.String,
   predicateIri: Schema.String,
   objectValue: Schema.String,
-  objectType: ObjectType.pipe(SchemaUtils.withKeyDefaults("iri" as const)),
+  objectType: ObjectType.pipe(SchemaUtils.withKeyDefaults("iri")),
   objectDatatype: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   objectLanguage: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  rank: ClaimRank.pipe(SchemaUtils.withKeyDefaults("normal" as const)),
+  rank: ClaimRank.pipe(SchemaUtils.withKeyDefaults("normal")),
   validFrom: Schema.DateTimeUtc.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   validTo: Schema.DateTimeUtc.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   confidenceScore: Confidence.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),

@@ -4,8 +4,8 @@
  * Provides fine-grained concurrency control for LLM API calls.
  * Complements rate limiting with connection-level limits.
  *
- * @since 2.0.0
- * @module Runtime/LlmSemaphore
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -20,8 +20,8 @@ import { ConfigService } from "../Service/Config.ts";
 /**
  * Error thrown when semaphore permit acquisition times out
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class SemaphoreTimeoutError extends Data.TaggedError("SemaphoreTimeoutError")<{
   readonly message: string;
@@ -34,11 +34,11 @@ export class SemaphoreTimeoutError extends Data.TaggedError("SemaphoreTimeoutErr
  * Use this to wrap LLM calls for fine-grained concurrency control.
  * Works in conjunction with rate limiting.
  *
- * @example
+ * **Example** (Use LlmSemaphoreService)
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class LlmSemaphoreService extends Context.Service<LlmSemaphoreService>()($I`LlmSemaphoreService`, {
   make: Effect.gen(function* () {

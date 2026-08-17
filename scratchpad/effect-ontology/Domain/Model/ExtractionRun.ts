@@ -18,7 +18,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionRun");
 /**
  * Stable code describing why an extraction run terminated unsuccessfully.
  *
- * @example
+ * **Example** (Use ErrorCode)
  * ```ts
  * import { ErrorCode } from "@effect-ontology/Model/ExtractionRun.ts"
  *
@@ -50,7 +50,7 @@ export const ErrorCode = LiteralKit([
 /**
  * Runtime value accepted by {@link ErrorCode}.
  *
- * @example
+ * **Example** (Use ErrorCode)
  * ```ts
  * import type { ErrorCode } from "@effect-ontology/Model/ExtractionRun.ts"
  *
@@ -66,7 +66,7 @@ export type ErrorCode = typeof ErrorCode.Type;
 /**
  * Audit event category recorded during an extraction run.
  *
- * @example
+ * **Example** (Use AuditEventType)
  * ```ts
  * import { AuditEventType } from "@effect-ontology/Model/ExtractionRun.ts"
  *
@@ -89,7 +89,7 @@ export const AuditEventType = LiteralKit(["started", "completed", "failed", "inf
 /**
  * Runtime value accepted by {@link AuditEventType}.
  *
- * @example
+ * **Example** (Use AuditEventType)
  * ```ts
  * import type { AuditEventType } from "@effect-ontology/Model/ExtractionRun.ts"
  *
@@ -123,7 +123,7 @@ const OutputMetadataFields = {
 /**
  * Integrity and location metadata for one persisted run output.
  *
- * @example
+ * **Example** (Use OutputMetadata)
  * ```ts
  * import { DateTime } from "effect"
  * import * as S from "effect/Schema"
@@ -158,7 +158,7 @@ const AuditEventFields = {
 /**
  * Structured, JSON-compatible extraction-run audit event.
  *
- * @example
+ * **Example** (Use AuditEvent)
  * ```ts
  * import { DateTime } from "effect"
  * import { AuditEvent } from "@effect-ontology/Model/ExtractionRun.ts"
@@ -190,7 +190,7 @@ const AuditErrorFields = {
 /**
  * Structured error retained in an extraction run's audit trail.
  *
- * @example
+ * **Example** (Use AuditError)
  * ```ts
  * import { DateTime } from "effect"
  * import { AuditError } from "@effect-ontology/Model/ExtractionRun.ts"
@@ -216,11 +216,12 @@ export class AuditError extends S.Class<AuditError>($I`AuditError`)(
 /**
  * Canonical discriminated lifecycle state for an extraction run.
  *
- * @remarks
- * Failure details and terminal timestamps are nested in their legal variants,
+ * **Details**
+ *
+ * * Failure details and terminal timestamps are nested in their legal variants,
  * eliminating the upstream status string plus optional error/timestamp bag.
  *
- * @example
+ * **Example** (Use RunStatus)
  * ```ts
  * import { RunStatus } from "@effect-ontology/Model/ExtractionRun.ts"
  *
@@ -257,7 +258,7 @@ export const RunStatus = S.TaggedUnion({
 /**
  * Runtime value decoded by {@link RunStatus}.
  *
- * @example
+ * **Example** (Use RunStatus)
  * ```ts
  * import type { RunStatus } from "@effect-ontology/Model/ExtractionRun.ts"
  *
@@ -319,7 +320,7 @@ const ChunkingConfigFields = {
 /**
  * Schema-defaulted text chunking policy.
  *
- * @example
+ * **Example** (Use ChunkingConfig)
  * ```ts
  * import { ChunkingConfig } from "@effect-ontology/Model/ExtractionRun.ts"
  *
@@ -340,7 +341,7 @@ export class ChunkingConfig extends S.Class<ChunkingConfig>($I`ChunkingConfig`)(
   /**
    * Constructs the canonical chunking policy.
    *
-   * @example
+   * **Example** (Use Temperature)
    * ```ts
    * import { ChunkingConfig } from "@effect-ontology/Model/ExtractionRun.ts"
    *
@@ -406,7 +407,7 @@ const LlmConfigFields = {
 /**
  * Model-execution policy captured by an extraction run.
  *
- * @example
+ * **Example** (Use LlmConfig)
  * ```ts
  * import { Duration } from "effect"
  * import { LlmConfig } from "@effect-ontology/Model/ExtractionRun.ts"
@@ -461,7 +462,7 @@ const RunConfigFields = {
 /**
  * Complete immutable configuration snapshot for an extraction run.
  *
- * @example
+ * **Example** (Use RunConfig)
  * ```ts
  * import { Duration } from "effect"
  * import * as S from "effect/Schema"
@@ -508,7 +509,7 @@ const RunStatsFields = {
 /**
  * Non-negative measurements collected during extraction.
  *
- * @example
+ * **Example** (Use RunStats)
  * ```ts
  * import * as S from "effect/Schema"
  * import { RunStats } from "@effect-ontology/Model/ExtractionRun.ts"
@@ -553,12 +554,13 @@ const ExtractionRunFields = {
 /**
  * Root aggregate for one execution of the knowledge-extraction pipeline.
  *
- * @remarks
- * Lifecycle-specific completion and failure data is carried by
+ * **Details**
+ *
+ * * Lifecycle-specific completion and failure data is carried by
  * {@link RunStatus}. Audit collections receive schema defaults, and storage
  * paths derive through the shared `PathLayout` source of truth.
  *
- * @example
+ * **Example** (Use ExtractionRun)
  * ```ts
  * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun.ts"
  *
@@ -582,7 +584,7 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
    * @param index - Zero-based chunk index.
    * @returns A run-scoped chunk identifier in `{runId}-chunk-{index}` form.
    *
-   * @example
+   * **Example** (Use chunkId)
    * ```ts
    * import { NonNegativeInt } from "@beep/schema"
    * import { DocumentId } from "@effect-ontology/Identity.ts"
@@ -604,7 +606,7 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
    *
    * @returns This run's validated document identifier.
    *
-   * @example
+   * **Example** (Use ExtractionRun)
    * ```ts
    * import { PrimaryKey } from "effect"
    * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun.ts"
@@ -622,7 +624,7 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
    *
    * @returns Storage-relative metadata path derived from the run identifier.
    *
-   * @example
+   * **Example** (Use ExtractionRun)
    * ```ts
    * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun.ts"
    *
@@ -639,7 +641,7 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
    *
    * @returns Storage-relative input path derived from the run identifier.
    *
-   * @example
+   * **Example** (Use outputPath)
    * ```ts
    * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun.ts"
    *
@@ -657,7 +659,7 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
    * @param type - Logical output kind whose canonical filename is requested.
    * @returns Storage-relative path under this run's output directory.
    *
-   * @example
+   * **Example** (Use AuditErrorType)
    * ```ts
    * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun.ts"
    *
@@ -675,7 +677,7 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
 /**
  * Alias for the stable audit-error category.
  *
- * @example
+ * **Example** (Use AuditErrorType)
  * ```ts
  * import type { AuditErrorType } from "@effect-ontology/Model/ExtractionRun.ts"
  *

@@ -4,8 +4,8 @@
  * Graph-based entity clustering using Effect's Graph module.
  * Uses connected components algorithm for transitive clustering.
  *
- * @since 2.0.0
- * @module Workflow/EntityResolutionGraph
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { IRI } from "@beep/rdf";
@@ -62,8 +62,8 @@ import { simpleTokenize } from "../Utils/String.ts";
  * @param config - Resolution configuration
  * @returns Effect yielding array of entity clusters
  *
- * @example
- * ```typescript
+ * **Example** (Use clusterEntities)
+ * ```ts
  * const clusters = yield* clusterEntities(
  *   extractedEntities,
  *   extractedRelations,
@@ -72,8 +72,8 @@ import { simpleTokenize } from "../Utils/String.ts";
  * // => [{ entities: [arsenal, arsenal_fc], minSimilarity: 0.85, ... }]
  * ```
  *
- * @since 2.0.0
- * @category Clustering
+ * @since 0.0.0
+ * @category processes
  */
 export const clusterEntities = dual3(
   (
@@ -378,14 +378,14 @@ const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
  * @param config - Resolution configuration
  * @returns Effect yielding EntityResolutionGraph
  *
- * @example
- * ```typescript
+ * **Example** (Use buildEntityResolutionGraph)
+ * ```ts
  * const erg = yield* buildEntityResolutionGraph(knowledgeGraph, config)
  * const canonicalId = erg.canonicalMap["arsenal"] // => "arsenal_fc"
  * ```
  *
- * @since 2.0.0
- * @category Resolution
+ * @since 0.0.0
+ * @category workflows
  */
 export const buildEntityResolutionGraph = dual2(
   (kg: KnowledgeGraph, config: EntityResolutionConfig): Effect.Effect<EntityResolutionGraph, never, EmbeddingService> =>

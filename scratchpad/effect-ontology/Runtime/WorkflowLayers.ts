@@ -11,7 +11,7 @@
  * - StorageBundle: StorageService for document/graph persistence
  * - ActivityDependenciesLayer: All services needed by workflow activities
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 
 import { BunServices } from "@effect/platform-bun";
@@ -251,8 +251,8 @@ const GraphRAGBundle = GraphRAG.Default.pipe(Layer.provideMerge(EmbeddingBundle)
  * 2. Run migrations (v4 adds pgvector tables)
  * 3. Merge CrossBatchEntityResolverBundle into your layer composition
  *
- * @example
- * ```typescript
+ * **Example** (Use CrossBatchEntityResolverBundle)
+ * ```ts
  * const layerWithCrossBatch = ActivityDependenciesLayer.pipe(
  *   Layer.provideMerge(CrossBatchEntityResolverBundle),
  *   Layer.provide(RepositoriesLive) // Provides EntityRegistryRepository
@@ -390,7 +390,7 @@ export const WorkflowOrchestratorFullLayer = BatchExtractionWorkflowWithDepsLaye
  *
  * Use with BunServices.layer for platform services (FileSystem, Path).
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const CliExtractionLayer = Layer.mergeAll(ExtractionWorkflowBundle, RdfBuilderBundle).pipe(
   // Provide embedding infrastructure to satisfy EmbeddingServiceDefault requirements
@@ -405,8 +405,8 @@ export const CliExtractionLayer = Layer.mergeAll(ExtractionWorkflowBundle, RdfBu
  * The custom provider is set BEFORE any layers are built, ensuring
  * all services read from the custom provider.
  *
- * @example
- * ```typescript
+ * **Example** (Use makeCliExtractionLayer)
+ * ```ts
  * const configMap = HashMap.make(
  *   ["ONTOLOGY_PATH", "/path/to/ontology.ttl"],
  *   ["ONTOLOGY_EXTERNAL_VOCABS_PATH", ""]  // Empty = skip loading
@@ -417,7 +417,7 @@ export const CliExtractionLayer = Layer.mergeAll(ExtractionWorkflowBundle, RdfBu
  * const layer = makeCliExtractionLayer(customProvider)
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeCliExtractionLayer = (configProvider: ConfigProvider.ConfigProvider) => {
   // All layers read through the custom provider installed on the final layer.
@@ -492,13 +492,13 @@ export const makeCliExtractionLayer = (configProvider: ConfigProvider.ConfigProv
  * to inject their own ConfigProvider. Use with TestConfigProviderLayer.
  *
  * Pattern:
- * ```typescript
+ * ```ts
  * const TestLayer = NlpBundleOpen.pipe(
  *   Layer.provide(TestConfigProviderLayer)
  * )
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 
 /**

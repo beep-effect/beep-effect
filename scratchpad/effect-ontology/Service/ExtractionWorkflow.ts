@@ -4,8 +4,8 @@
  * Defines the contract for the high-level extraction workflow.
  * Allows services to depend on the interface without depending on calculations/implementations.
  *
- * @since 2.0.0
- * @module Service/ExtractionWorkflow
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";

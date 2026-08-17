@@ -3,8 +3,8 @@
  *
  * Error types used by schema factories.
  *
- * @module Schema/Errors
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import * as S from "effect/Schema";
@@ -13,7 +13,7 @@ import * as S from "effect/Schema";
  * Error thrown when attempting to create a schema with empty vocabularies
  *
  * @category errors
- * @since 2.0.0
+ * @since 0.0.0
  */
 export class EmptyVocabularyError extends S.TaggedError<EmptyVocabularyError>()("EmptyVocabularyError", {
   message: S.String.annotate({

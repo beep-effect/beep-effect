@@ -5,8 +5,8 @@
  * - Reciprocal Rank Fusion (RRF) for combining multiple ranked lists
  * - Score computation and result fusion
  *
+ * @packageDocumentation
  * @since 0.0.0
- * @module Utils/Retrieval
  */
 import { pipe } from "effect";
 import * as A from "effect/Array";
@@ -34,7 +34,7 @@ const byRrfScoreDescending = Order.mapInput(
  * @returns RRF score (higher is better)
  *
  * @since 0.0.0
- * @category Retrieval
+ * @category queries
  */
 export const rrfScore = dual2((ranks: ReadonlyArray<number>, k: number): number =>
   A.reduce(ranks, 0, (sum, rank) => sum + 1 / (k + rank))
@@ -51,7 +51,7 @@ export const rrfScore = dual2((ranks: ReadonlyArray<number>, k: number): number 
  * @returns Combined list sorted by descending RRF score
  *
  * @since 0.0.0
- * @category Retrieval
+ * @category queries
  */
 export const rrfFusion: {
   <T extends { id: string }>(
@@ -91,7 +91,7 @@ export const rrfFusion: {
  * Expanded term with weight
  *
  * @since 0.0.0
- * @category Retrieval
+ * @category queries
  */
 export interface ExpandedTerm {
   readonly term: string;
@@ -103,7 +103,7 @@ export interface ExpandedTerm {
  * Query expansion options
  *
  * @since 0.0.0
- * @category Retrieval
+ * @category queries
  */
 export interface QueryExpansionOptions {
   /** Include SKOS altLabels (synonyms) - default: true */
@@ -174,7 +174,7 @@ interface OntologyContext {
  * ```
  *
  * @since 0.0.0
- * @category Retrieval
+ * @category queries
  */
 export const expandQueryWithOntology = dual3(
   (query: string, ontology: OntologyContext, options: QueryExpansionOptions): ReadonlyArray<ExpandedTerm> => {
@@ -295,7 +295,7 @@ export const expandQueryWithOntology = dual3(
  * ```
  *
  * @since 0.0.0
- * @category Retrieval
+ * @category queries
  */
 export const buildExpandedQuery = dual2((terms: ReadonlyArray<ExpandedTerm>, useBoosting: boolean): string => {
   if (useBoosting) {

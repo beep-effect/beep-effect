@@ -11,8 +11,8 @@
  * This layer sits between the base LanguageModel provider and consuming services,
  * ensuring all LLM calls are automatically rate limited.
  *
- * @since 2.0.0
- * @module Runtime/RateLimitedLanguageModel
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Clock, DateTime, Duration, Effect, Layer, Stream } from "effect";
@@ -24,11 +24,11 @@ import type { Response } from "effect/unstable/ai";
 import { AiError, LanguageModel } from "effect/unstable/ai";
 import type * as Tool from "effect/unstable/ai/Tool";
 import type * as Toolkit from "effect/unstable/ai/Toolkit";
+import { flow } from "effect/Function";
 import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
 import { ConfigService } from "../Service/Config.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
-import type { CircuitOpenError } from "./CircuitBreaker.ts";
-import { makeCircuitBreaker } from "./CircuitBreaker.ts";
+import { CircuitOpenError, makeCircuitBreaker } from "./CircuitBreaker.ts";
 
 /**
  * Rate limit configurations per provider
@@ -59,8 +59,8 @@ const RATE_LIMITS: Record<
  * Wraps the base LanguageModel with rate limiting based on provider configuration.
  * All LLM methods (generateObject, generateText, streamText) are wrapped.
  *
- * @example
- * ```typescript
+ * **Example** (Use callCount)
+ * ```ts
  * // In ProductionRuntime
  * const layers = ExtractionLayersLive.pipe(
  *   Layer.provide(RateLimitedLanguageModelLayer),
@@ -68,7 +68,7 @@ const RATE_LIMITS: Record<
  * )
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 /**
  * Track LLM call statistics for observability
@@ -124,7 +124,10 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
     });
 
     // Helper to wrap LLM calls with rate limiting and observability
-    const withRateLimit = <A, E, R>(method: string, effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> => {
+    const withRateLimit = <A, E, R>(
+      method: string,
+      effect: Effect.Effect<A, AiError.AiError | E, R>
+    ): Effect.Effect<A, AiError.AiError | E, R> => {
       const callId = ++callCount;
 
       return Clock.currentTimeMillis.pipe(
@@ -144,10 +147,14 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
               rateLimiter(effect).pipe(
                 Effect.catchTag("RateLimiterError", (error) =>
                   Effect.fail(
-                    AiError.UnknownError.make({
-                      description: `Rate limiter failed for ${method}`,
-                      metadata: { method, cause: error },
-                    }) as E
+                    AiError.AiError.make({
+                      module: "RateLimitedLanguageModel",
+                      method,
+                      reason: AiError.UnknownError.make({
+                        description: `Rate limiter failed for ${method}`,
+                        metadata: { method, cause: error },
+                      }),
+                    })
                   )
                 )
               )
@@ -156,23 +163,19 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
               // Convert CircuitOpenError to AiError.UnknownError
               // This maintains compatibility with LanguageModel error channel (E must extend AiError)
               // while preserving circuit breaker state information
-              Effect.catchTag("CircuitOpenError", (err) => {
-                // Type assertion is safe here - we know err is CircuitOpenError based on the tag
-                const circuitErr = err as CircuitOpenError;
-                const lastFailureStr = O.match(circuitErr.lastFailureTime, {
+              Effect.catchIf(CircuitOpenError.is, (circuitError) => {
+                const lastFailureStr = O.match(circuitError.lastFailureTime, {
                   onNone: () => "unknown",
-                  onSome: (lastFailureTime) => DateTime.formatIso(DateTime.makeUnsafe(lastFailureTime)),
+                  onSome: flow(DateTime.makeUnsafe, DateTime.formatIso),
                 });
-                return Effect.fail(
-                  AiError.UnknownError.make({
-                    description: `Circuit breaker is open. Last failure: ${lastFailureStr}. Reset timeout: ${circuitErr.resetTimeoutMs}ms`,
-                    metadata: {
-                      module: "RateLimitedLanguageModel",
-                      method: `${method} (circuit breaker)`,
-                      cause: circuitErr,
-                    },
-                  }) as E // Safe cast since E extends AiError.AiError
-                );
+                return AiError.AiError.make({
+                  module: "RateLimitedLanguageModel",
+                  method: `${method} (circuit breaker)`,
+                  reason: AiError.UnknownError.make({
+                    description: `Circuit breaker is open. Last failure: ${lastFailureStr}. Reset timeout: ${circuitError.resetTimeoutMs}ms`,
+                    metadata: { cause: circuitError },
+                  }),
+                });
               }),
               Effect.tap((_result) =>
                 Clock.currentTimeMillis.pipe(
@@ -211,7 +214,15 @@ export const RateLimitedLanguageModelLayer = Layer.effect(
       Tools extends Record<string, Tool.Any> = {},
     >(
       options: Options & LanguageModel.GenerateObjectOptions<Tools, StructuredOutputSchema>
-    ) => withRateLimit("generateObject", baseLlm.generateObject(options));
+    ): Effect.Effect<
+      LanguageModel.GenerateObjectResponse<Tools, StructuredOutputSchema["Type"]>,
+      LanguageModel.ExtractError<Options>,
+      StructuredOutputSchema["DecodingServices"] | LanguageModel.ExtractServices<Options>
+    > =>
+      withRateLimit(
+        "generateObject",
+        baseLlm.generateObject<ObjectEncoded, StructuredOutputSchema, Options, Tools>(options)
+      );
 
     type GenerateTextOptionsWithoutToolkit = Omit<LanguageModel.GenerateTextOptions<{}>, "toolkit"> & {
       readonly toolkit?: undefined;

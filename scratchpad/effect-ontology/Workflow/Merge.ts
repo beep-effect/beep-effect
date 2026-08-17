@@ -4,8 +4,8 @@
  * Pure functions for merging KnowledgeGraph fragments from multiple chunks.
  * Implements monoid operations for streaming reduction.
  *
- * @since 2.0.0
- * @module Workflow/Merge
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { IRI } from "@beep/rdf";
@@ -23,8 +23,8 @@ const decodeEntityTypes = Schema.decodeUnknownSync(Schema.NonEmptyArray(IRI));
  *
  * Records conflicts detected during entity attribute merging.
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface MergeConflict {
   /**
@@ -143,8 +143,8 @@ const selectBestTypes = (
  * @param b - Second graph
  * @returns Merged graph
  *
- * @example
- * ```typescript
+ * **Example** (Use mergeGraphs)
+ * ```ts
  * const graph1 = new KnowledgeGraph({
  *   entities: [entity1],
  *   relations: [relation1]
@@ -159,7 +159,7 @@ const selectBestTypes = (
  * ```
  *
  * @category constructors
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const mergeGraphs = dual2((a: KnowledgeGraph, b: KnowledgeGraph): KnowledgeGraph => {
   // Identity element: empty graph
@@ -253,7 +253,7 @@ export const mergeGraphs = dual2((a: KnowledgeGraph, b: KnowledgeGraph): Knowled
  * @returns Tuple of [merged graph, conflicts]
  *
  * @category constructors
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const mergeGraphsWithConflicts = dual2(
   (a: KnowledgeGraph, b: KnowledgeGraph): [KnowledgeGraph, ReadonlyArray<MergeConflict>] => {

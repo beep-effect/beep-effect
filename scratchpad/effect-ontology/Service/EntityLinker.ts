@@ -6,8 +6,8 @@
  * - getMentionsForEntity: Get all MentionRecords for a canonical entity
  * - toMermaid: Visualization of the resolution graph
  *
- * @since 2.0.0
- * @module Service/EntityLinker
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Graph, Option } from "effect";
@@ -28,8 +28,8 @@ import { dual2 } from "../Utils/Dual.ts";
  * @param entityId - Original entity ID from extraction
  * @returns Option containing canonical ID, or None if not found
  *
- * @example
- * ```typescript
+ * **Example** (Use getCanonicalId)
+ * ```ts
  * const canonical = getCanonicalId(erg, "arsenal")
  * // => Option.some("arsenal_fc")
  *
@@ -37,8 +37,8 @@ import { dual2 } from "../Utils/Dual.ts";
  * // => Option.none()
  * ```
  *
- * @since 2.0.0
- * @category Query
+ * @since 0.0.0
+ * @category queries
  */
 export const getCanonicalId = dual2((erg: EntityResolutionGraph, entityId: EntityId): Option.Option<EntityId> => {
   const canonical = erg.canonicalMap[entityId];
@@ -55,8 +55,8 @@ export const getCanonicalId = dual2((erg: EntityResolutionGraph, entityId: Entit
  * @param canonicalId - Canonical entity ID (from ResolvedEntity)
  * @returns Array of MentionRecords that resolved to this entity
  *
- * @example
- * ```typescript
+ * **Example** (Use getMentionsForEntity)
+ * ```ts
  * const mentions = getMentionsForEntity(erg, "arsenal_fc")
  * // => [
  * //   MentionRecord { id: "arsenal", mention: "Arsenal", chunkIndex: 0 },
@@ -64,8 +64,8 @@ export const getCanonicalId = dual2((erg: EntityResolutionGraph, entityId: Entit
  * // ]
  * ```
  *
- * @since 2.0.0
- * @category Query
+ * @since 0.0.0
+ * @category queries
  */
 export const getMentionsForEntity = dual2(
   (erg: EntityResolutionGraph, canonicalId: EntityId): ReadonlyArray<MentionRecord> => {
@@ -113,8 +113,8 @@ const isMentionRecord = (node: ERNode): node is MentionRecord => node._tag === "
  * @param erg - Entity Resolution Graph
  * @returns Mermaid diagram string
  *
- * @example
- * ```typescript
+ * **Example** (Use toMermaid)
+ * ```ts
  * const mermaid = toMermaid(erg)
  * // graph TD
  * //   m0["Arsenal (chunk 0)"]
@@ -124,8 +124,8 @@ const isMentionRecord = (node: ERNode): node is MentionRecord => node._tag === "
  * //   m1 --> r0
  * ```
  *
- * @since 2.0.0
- * @category Visualization
+ * @since 0.0.0
+ * @category formatting
  */
 export const toMermaid = (erg: EntityResolutionGraph): string => {
   const lines: Array<string> = ["graph TD"];

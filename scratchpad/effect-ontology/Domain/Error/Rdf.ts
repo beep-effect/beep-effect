@@ -1,8 +1,9 @@
 /**
  * Schema-backed failures for RDF parsing and serialization.
  *
- * @remarks
- * Format context and underlying defects decode to `Option`, so RDF recovery
+ * **Details**
+ *
+ * * Format context and underlying defects decode to `Option`, so RDF recovery
  * code can remain total and explicit.
  *
  * @packageDocumentation
@@ -17,7 +18,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Rdf");
 /**
  * General RDF-processing failure.
  *
- * @example
+ * **Example** (Use RdfError)
  * ```ts
  * import { RdfError } from "@effect-ontology/Error/Rdf.ts"
  *
@@ -45,7 +46,7 @@ export const RdfError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link RdfError}.
  *
- * @example
+ * **Example** (Use RdfError)
  * ```ts
  * import { RdfError, type RdfError as RdfFailure } from "@effect-ontology/Error/Rdf.ts"
  *
@@ -61,7 +62,7 @@ export type RdfError = typeof RdfError.Type;
 /**
  * Indicates that RDF data could not be serialized to a target format.
  *
- * @example
+ * **Example** (Use SerializationFailed)
  * ```ts
  * import { SerializationFailed } from "@effect-ontology/Error/Rdf.ts"
  *
@@ -94,7 +95,7 @@ export const SerializationFailed = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link SerializationFailed}.
  *
- * @example
+ * **Example** (Use SerializationFailed)
  * ```ts
  * import { SerializationFailed, type SerializationFailed as Failure } from "@effect-ontology/Error/Rdf.ts"
  *
@@ -110,7 +111,7 @@ export type SerializationFailed = typeof SerializationFailed.Type;
 /**
  * Indicates that RDF input could not be parsed.
  *
- * @example
+ * **Example** (Use ParsingFailed)
  * ```ts
  * import { ParsingFailed } from "@effect-ontology/Error/Rdf.ts"
  *
@@ -143,7 +144,7 @@ export const ParsingFailed = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link ParsingFailed}.
  *
- * @example
+ * **Example** (Use ParsingFailed)
  * ```ts
  * import { ParsingFailed, type ParsingFailed as Failure } from "@effect-ontology/Error/Rdf.ts"
  *
@@ -161,7 +162,7 @@ const AnyRdfErrorDefinition = S.Union([RdfError, SerializationFailed, ParsingFai
 /**
  * Exhaustive tagged union of RDF-processing failures.
  *
- * @example
+ * **Example** (Use AnyRdfError)
  * ```ts
  * import { AnyRdfError, ParsingFailed } from "@effect-ontology/Error/Rdf.ts"
  *
@@ -182,7 +183,7 @@ export const AnyRdfError = AnyRdfErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link AnyRdfError}.
  *
- * @example
+ * **Example** (Use AnyRdfError)
  * ```ts
  * import { RdfError, type AnyRdfError } from "@effect-ontology/Error/Rdf.ts"
  *

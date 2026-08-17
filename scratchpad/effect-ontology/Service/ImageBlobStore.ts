@@ -4,8 +4,8 @@
  * Low-level storage operations for image bytes and metadata.
  * Wraps StorageService with image-specific path management.
  *
- * @since 2.0.0
- * @module Service/ImageBlobStore
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -32,8 +32,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageBlobStore");
  *
  * Low-level image storage operations for bytes and metadata.
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface ImageBlobStoreService {
   /**
@@ -105,15 +105,15 @@ export interface ImageBlobStoreService {
 /**
  * ImageBlobStore service tag
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobStoreService>()($I`ImageBlobStore`) {
   /**
    * Live implementation using StorageService
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Live = Layer.effect(
     ImageBlobStore,
@@ -207,8 +207,8 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
   /**
    * Default layer with StorageService dependency
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Default = ImageBlobStore.Live.pipe(Layer.provide(StorageServiceLive));
 }

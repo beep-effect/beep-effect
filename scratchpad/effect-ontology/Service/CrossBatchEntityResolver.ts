@@ -5,8 +5,8 @@
  * entity registry. Enables building up a knowledge base over time where entities
  * from different batches are linked to canonical IRIs.
  *
- * @since 2.0.0
- * @module Service/CrossBatchEntityResolver
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";

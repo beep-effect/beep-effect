@@ -1,8 +1,9 @@
 /**
  * Schema-backed circuit-breaker and rate-limit failures.
  *
- * @remarks
- * Retry timing is normalized to `Option`, and message getters are pure views
+ * **Details**
+ *
+ * * Retry timing is normalized to `Option`, and message getters are pure views
  * over schema-owned fields. A zero-millisecond retry delay remains meaningful.
  *
  * @packageDocumentation
@@ -51,11 +52,12 @@ const CircuitOpenErrorBase = S.TaggedError<CircuitOpenError>($I`CircuitOpenError
 /**
  * Failure raised when a circuit breaker rejects work while open.
  *
- * @remarks
- * `message` prefers a server-directed retry delay and otherwise reports the
+ * **Details**
+ *
+ * * `message` prefers a server-directed retry delay and otherwise reports the
  * configured reset timeout.
  *
- * @example
+ * **Example** (Use CircuitOpenError)
  * ```ts
  * import * as S from "effect/Schema"
  * import { CircuitOpenError } from "@effect-ontology/Error/Circuit.ts"
@@ -72,7 +74,7 @@ export class CircuitOpenError extends CircuitOpenErrorBase {
   /**
    * Human-readable circuit state and retry delay.
    *
-   * @example
+   * **Example** (Use RateLimitReason)
    * ```ts
    * import { CircuitOpenError } from "@effect-ontology/Error/Circuit.ts"
    *
@@ -96,7 +98,7 @@ export class CircuitOpenError extends CircuitOpenErrorBase {
 /**
  * Closed resource dimensions used by rate-limit policy.
  *
- * @example
+ * **Example** (Use RateLimitReason)
  * ```ts
  * import { RateLimitReason } from "@effect-ontology/Error/Circuit.ts"
  *
@@ -119,7 +121,7 @@ export const RateLimitReason = LiteralKit(["tokens", "requests", "concurrent"])
 /**
  * Runtime value accepted by {@link RateLimitReason}.
  *
- * @example
+ * **Example** (Use RateLimitReason)
  * ```ts
  * import type { RateLimitReason } from "@effect-ontology/Error/Circuit.ts"
  *
@@ -164,7 +166,7 @@ const RateLimitErrorBase = S.TaggedError<RateLimitError>($I`RateLimitError`)(
 /**
  * Failure raised when a token, request, or concurrency quota is exhausted.
  *
- * @example
+ * **Example** (Use RateLimitError)
  * ```ts
  * import { RateLimitError } from "@effect-ontology/Error/Circuit.ts"
  *
@@ -179,7 +181,7 @@ export class RateLimitError extends RateLimitErrorBase {
   /**
    * Human-readable exhausted quota and optional retry delay.
    *
-   * @example
+   * **Example** (Use CircuitErrorDefinition)
    * ```ts
    * import * as O from "effect/Option"
    * import { RateLimitError } from "@effect-ontology/Error/Circuit.ts"
@@ -208,7 +210,7 @@ const CircuitErrorDefinition = S.Union([CircuitOpenError, RateLimitError]).pipe(
 /**
  * Exhaustive tagged union of circuit-breaker policy failures.
  *
- * @example
+ * **Example** (Use CircuitError)
  * ```ts
  * import { CircuitError, RateLimitError } from "@effect-ontology/Error/Circuit.ts"
  *
@@ -229,7 +231,7 @@ export const CircuitError = CircuitErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link CircuitError}.
  *
- * @example
+ * **Example** (Use CircuitError)
  * ```ts
  * import { RateLimitError, type CircuitError } from "@effect-ontology/Error/Circuit.ts"
  *

@@ -4,8 +4,8 @@
  * Command-line interface for knowledge extraction and reasoning tools.
  * Built with @effect/cli for type-safe command parsing.
  *
- * @since 2.0.0
- * @module Cli
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { makeDrizzleLayer } from "@beep/postgres";

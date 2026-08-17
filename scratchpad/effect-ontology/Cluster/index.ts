@@ -6,8 +6,8 @@
  * - Streaming progress events with backpressure
  * - Automatic result caching
  *
- * @since 2.0.0
- * @module Cluster
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 export * from "./BackpressureHandler.ts";

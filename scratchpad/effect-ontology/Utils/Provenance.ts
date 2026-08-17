@@ -4,8 +4,8 @@
  * Generates deterministic URIs for RDF named graphs to track
  * the provenance of extracted triples back to their source documents.
  *
- * @since 2.0.0
- * @module Utils/Provenance
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Schema } from "effect";
@@ -22,7 +22,7 @@ import { dual3 } from "./Dual.ts";
  *
  * Format: `urn:provenance:batch/{batchId}/doc/{documentId}[/chunk/{chunkIndex}]`
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const ProvenanceUri = Schema.String.pipe(
   Schema.check(Schema.isPattern(/^urn:provenance:batch\/batch-[a-f0-9]{12}\/doc\/doc-[a-f0-9]{12}(\/chunk\/\d+)?$/)),
@@ -49,8 +49,8 @@ export type ProvenanceUri = typeof ProvenanceUri.Type;
  * @param chunkIndex - Optional chunk index for chunk-level provenance
  * @returns Provenance URI string
  *
- * @example
- * ```typescript
+ * **Example** (Use makeProvenanceUri)
+ * ```ts
  * // Document-level provenance
  * makeProvenanceUri("batch-1234567890ab", "doc-abcdef123456", undefined)
  * // => "urn:provenance:batch/batch-1234567890ab/doc/doc-abcdef123456"
@@ -60,7 +60,7 @@ export type ProvenanceUri = typeof ProvenanceUri.Type;
  * // => "urn:provenance:batch/batch-1234567890ab/doc/doc-abcdef123456/chunk/0"
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeProvenanceUri = dual3(
   (batchId: BatchId, documentId: DocumentId, chunkIndex: number | undefined): ProvenanceUri => {
@@ -76,13 +76,13 @@ export const makeProvenanceUri = dual3(
  * @param uri - The provenance URI to parse
  * @returns Object containing batchId, documentId, and optional chunkIndex
  *
- * @example
- * ```typescript
+ * **Example** (Use parseProvenanceUri)
+ * ```ts
  * parseProvenanceUri("urn:provenance:batch/batch-123/doc/doc-456/chunk/0")
  * // => { batchId: "batch-123", documentId: "doc-456", chunkIndex: 0 }
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const parseProvenanceUri = (
   uri: string
@@ -107,7 +107,7 @@ export const parseProvenanceUri = (
  * @param uri - The string to check
  * @returns true if the string is a valid provenance URI
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const isProvenanceUri = (uri: string): uri is ProvenanceUri =>
   /^urn:provenance:batch\/batch-[a-f0-9]{12}\/doc\/doc-[a-f0-9]{12}(\/chunk\/\d+)?$/.test(uri);

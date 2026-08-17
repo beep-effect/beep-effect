@@ -11,8 +11,8 @@
  * - Property scoping: 8%
  * - Other: 7%
  *
- * @since 2.0.0
- * @module Service/LlmControl/TokenBudget
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -64,8 +64,8 @@ const STAGE_ALLOCATIONS: Record<BudgetedStage, number> = {
  * - Usage tracking
  * - Budget availability checks
  *
- * @example
- * ```typescript
+ * **Example** (Use TokenBudgetService)
+ * ```ts
  * Effect.gen(function*() {
  *   const budget = yield* TokenBudgetService
  *

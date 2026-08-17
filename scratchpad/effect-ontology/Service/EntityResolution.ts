@@ -3,8 +3,8 @@
  *
  * Service wrapper for entity resolution operations.
  *
- * @since 2.0.0
- * @module Service/EntityResolution
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -20,8 +20,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EntityResolution");
 /**
  * EntityResolutionService - Entity resolution operations
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 const makeEntityResolutionService = Effect.gen(function* () {
   const embedding = yield* EmbeddingService;

@@ -4,8 +4,8 @@
  * Provides model and provider information for span annotations.
  * Thread this through your layer composition to enable LLM tracing.
  *
- * @module Telemetry/TracingContext
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -14,7 +14,7 @@ import { Context, Layer } from "effect";
 /**
  * Tracing context interface
  *
- * @since 2.0.0
+ * @since 0.0.0
  * @category models
  */
 export interface TracingContextShape {
@@ -28,14 +28,14 @@ const $I = $ScratchpadId.create("effect-ontology/Telemetry/TracingContext");
  *
  * Provides model/provider info for LLM span annotations.
  *
- * @since 2.0.0
+ * @since 0.0.0
  * @category services
  */
 export class TracingContext extends Context.Service<TracingContext, TracingContextShape>()($I`TracingContext`) {
   /**
    * Default layer with unknown model/provider
    *
-   * @since 2.0.0
+   * @since 0.0.0
    * @category layers
    */
   static readonly Default = Layer.succeed(TracingContext, {
@@ -50,7 +50,7 @@ export class TracingContext extends Context.Service<TracingContext, TracingConte
    * @param provider - Provider name
    * @returns Layer providing TracingContext
    *
-   * @since 2.0.0
+   * @since 0.0.0
    * @category constructors
    */
   static readonly make = (model: string, provider: string) =>

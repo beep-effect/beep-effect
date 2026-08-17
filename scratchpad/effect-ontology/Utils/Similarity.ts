@@ -18,7 +18,7 @@ import { combinedSimilarity, jaccardSimilarity, overlapRatio } from "./String.ts
  * @returns Object with Sets of incoming and outgoing neighbor IDs
  *
  * @since 0.0.0
- * @category Similarity
+ * @category getters
  */
 export const getNeighbors = dual2(
   (
@@ -71,7 +71,7 @@ export const getNeighbors = dual2(
  * @returns Combined similarity score (0.0-1.0)
  *
  * @since 0.0.0
- * @category Similarity
+ * @category utilities
  */
 export const computeEntitySimilarity = dual6(
   (
@@ -181,7 +181,7 @@ export const computeEntitySimilarity = dual6(
  * @returns True if entities should be considered for merging
  *
  * @since 0.0.0
- * @category Similarity
+ * @category predicates
  */
 export const shouldConsiderMerge = dual6(
   (
@@ -225,7 +225,7 @@ export const shouldConsiderMerge = dual6(
  * @returns Resolution method type
  *
  * @since 0.0.0
- * @category Similarity
+ * @category mapping
  */
 export const detectResolutionMethod = dual3(
   (a: Entity, b: Entity, relations: ReadonlyArray<Relation>): "exact" | "similarity" | "containment" | "neighbor" => {

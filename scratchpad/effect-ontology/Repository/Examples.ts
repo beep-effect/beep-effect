@@ -5,8 +5,8 @@
  * Provides hybrid retrieval (vector similarity + lexical search) for
  * ontology-scoped examples.
  *
- * @since 2.0.0
- * @module Repository/Examples
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { DrizzleError } from "@beep/drizzle";

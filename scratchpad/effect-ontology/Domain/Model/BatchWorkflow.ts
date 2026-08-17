@@ -60,12 +60,13 @@ const DocumentStatusDefinition = S.Union([
 /**
  * Per-document batch state with payloads nested by lifecycle variant.
  *
- * @remarks
- * Success-only graph/count fields and failure-only diagnostics exist solely in
+ * **Details**
+ *
+ * * Success-only graph/count fields and failure-only diagnostics exist solely in
  * their corresponding variants. No consumer needs to correlate a status
  * string with a bag of optional fields.
  *
- * @example
+ * **Example** (Use DocumentStatus)
  * ```ts
  * import * as S from "effect/Schema"
  * import { DocumentStatus } from "@effect-ontology/Model/BatchWorkflow.ts"
@@ -90,7 +91,7 @@ export const DocumentStatus = DocumentStatusDefinition.pipe(
 /**
  * Runtime value decoded by {@link DocumentStatus}.
  *
- * @example
+ * **Example** (Use DocumentStatus)
  * ```ts
  * import type { DocumentStatus } from "@effect-ontology/Model/BatchWorkflow.ts"
  *
@@ -127,7 +128,7 @@ const BatchIdentityFields = {
 /**
  * Identity and immutable routing context shared by every batch state.
  *
- * @example
+ * **Example** (Use BatchIdentity)
  * ```ts
  * import { DateTime } from "effect"
  * import * as S from "effect/Schema"
@@ -190,7 +191,7 @@ class BatchCompletionStats extends S.Class<BatchCompletionStats>($I`BatchComplet
 /**
  * Batch lifecycle discriminator used by transition policy.
  *
- * @example
+ * **Example** (Use BatchStage)
  * ```ts
  * import { BatchStage } from "@effect-ontology/Model/BatchWorkflow.ts"
  *
@@ -232,7 +233,7 @@ export const BatchStage = LiteralKit([
 /**
  * Runtime value accepted by {@link BatchStage}.
  *
- * @example
+ * **Example** (Use BatchStage)
  * ```ts
  * import type { BatchStage } from "@effect-ontology/Model/BatchWorkflow.ts"
  *
@@ -377,12 +378,13 @@ const validateTransition = (from: BatchStage, to: BatchStage): O.Option<string> 
 /**
  * Canonical batch lifecycle union with schema-owned transition behavior.
  *
- * @remarks
- * Each stage owns only its legal payload. Shared batch identity is nested under
+ * **Details**
+ *
+ * * Each stage owns only its legal payload. Shared batch identity is nested under
  * `batch`, and failure/success payloads are unavailable in other variants.
  * Re-entering the same stage is valid for progress-only updates.
  *
- * @example
+ * **Example** (Use BatchState)
  * ```ts
  * import { BatchState } from "@effect-ontology/Model/BatchWorkflow.ts"
  *
@@ -420,7 +422,7 @@ export const BatchState = BatchStateDefinition.pipe(
 /**
  * Runtime value decoded by {@link BatchState}.
  *
- * @example
+ * **Example** (Use BatchState)
  * ```ts
  * import type { BatchState } from "@effect-ontology/Model/BatchWorkflow.ts"
  *

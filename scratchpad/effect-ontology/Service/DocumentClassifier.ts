@@ -4,8 +4,8 @@
  * LLM-based document classification for intelligent preprocessing.
  * Extracts document type, domain tags, complexity, and entity density.
  *
- * @since 2.3.0
- * @module Service/DocumentClassifier
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -30,8 +30,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/DocumentClassifier");
 /**
  * Classification result for a single document
  *
- * @since 2.3.0
- * @category Schemas
+ * @since 0.0.0
+ * @category schemas
  */
 export const DocumentClassification = Schema.Struct({
   /** Classified document type */
@@ -74,8 +74,8 @@ export type DocumentClassification = typeof DocumentClassification.Type;
 /**
  * Batch classification response for multiple documents
  *
- * @since 2.3.0
- * @category Schemas
+ * @since 0.0.0
+ * @category schemas
  */
 export const BatchClassificationResponse = Schema.Struct({
   classifications: Schema.Array(
@@ -92,8 +92,8 @@ export type BatchClassificationResponse = typeof BatchClassificationResponse.Typ
 /**
  * Input for single document classification
  *
- * @since 2.3.0
- * @category Schemas
+ * @since 0.0.0
+ * @category schemas
  */
 export const ClassifyInput = Schema.Struct({
   /** Document text preview (first 1500-4000 chars recommended) */
@@ -106,8 +106,8 @@ export type ClassifyInput = typeof ClassifyInput.Type;
 /**
  * Input for batch document classification
  *
- * @since 2.3.0
- * @category Schemas
+ * @since 0.0.0
+ * @category schemas
  */
 export const ClassifyBatchInput = Schema.Struct({
   /** Array of document previews with indices */
@@ -131,8 +131,8 @@ export type ClassifyBatchInput = typeof ClassifyBatchInput.Type;
 /**
  * Error when document classification fails
  *
- * @since 2.3.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class ClassificationError extends Schema.TaggedError<ClassificationError>()("ClassificationError", {
   message: Schema.String,
@@ -214,8 +214,8 @@ Respond with classifications for each document by index.`;
 /**
  * Default classification when LLM fails or is unavailable
  *
- * @since 2.3.0
- * @category Utilities
+ * @since 0.0.0
+ * @category utilities
  */
 export const defaultClassification: DocumentClassification = {
   documentType: "unknown" as DocumentType,
@@ -238,8 +238,8 @@ export const defaultClassification: DocumentClassification = {
  * Mode: effect (requires LanguageModel)
  * Dependencies: ConfigService, LanguageModel
  *
- * @example
- * ```typescript
+ * **Example** (Use DocumentClassifier)
+ * ```ts
  * Effect.gen(function*() {
  *   const classifier = yield* DocumentClassifier
  *   const result = yield* classifier.classify({
@@ -250,8 +250,8 @@ export const defaultClassification: DocumentClassification = {
  * }).pipe(Effect.provide(DocumentClassifier.Default))
  * ```
  *
- * @since 2.3.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I`DocumentClassifier`, {
   make: Effect.gen(function* () {
@@ -457,13 +457,13 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I
 
       classifyBatch: Effect.fn("DocumentClassifier.classifyBatch")((input: ClassifyBatchInput) =>
         Effect.succeed(
-          MutableHashMap.fromIterable(A.map(input.documents, (doc) => [doc.index, defaultClassification] as const))
+          MutableHashMap.fromIterable(A.map(input.documents, (doc) => [doc.index, defaultClassification]))
         )
       ),
 
       classifyWithAutoBatching: Effect.fn("DocumentClassifier.classifyWithAutoBatching")((documents) =>
         Effect.succeed(
-          MutableHashMap.fromIterable(A.map(documents, (doc) => [doc.index, defaultClassification] as const))
+          MutableHashMap.fromIterable(A.map(documents, (doc) => [doc.index, defaultClassification]))
         )
       ),
     })

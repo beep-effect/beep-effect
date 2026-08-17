@@ -4,8 +4,8 @@
  * Utilities for building Prompt objects with Anthropic prompt caching support.
  * Separates cacheable system messages from variable user messages.
  *
- * @module Service/PromptCache
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Prompt } from "effect/unstable/ai";
@@ -23,8 +23,8 @@ import { dual2, dual3 } from "../Utils/Dual.ts";
  * @param enableCaching - Whether to enable prompt caching
  * @returns Prompt object ready for LLM calls
  *
- * @example
- * ```typescript
+ * **Example** (Use makeCachedPrompt)
+ * ```ts
  * const prompt = makeCachedPrompt(
  *   structured.systemMessage,
  *   structured.userMessage,
@@ -32,7 +32,7 @@ import { dual2, dual3 } from "../Utils/Dual.ts";
  * )
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeCachedPrompt = dual3(
   (systemMessage: string, userMessage: string, _enableCaching: boolean): Prompt.Prompt =>
@@ -55,7 +55,7 @@ export const makeCachedPrompt = dual3(
  * @param enableCaching - Whether to enable prompt caching
  * @returns Prompt object ready for LLM calls
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeCachedPromptFromStructured = dual2(
   (structured: StructuredPrompt, enableCaching: boolean): Prompt.Prompt =>

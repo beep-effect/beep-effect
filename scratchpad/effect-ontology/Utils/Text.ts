@@ -6,8 +6,8 @@ import { dual2 } from "./Dual.ts";
  * Pure text transformation functions for search enhancement.
  * These are domain-agnostic string operations.
  *
- * @since 2.0.0
- * @module Utils/Text
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 // =============================================================================
@@ -23,16 +23,16 @@ import { dual2 } from "./Dual.ts";
  * @param text - Text possibly containing camelCase
  * @returns Space-separated words
  *
- * @example
- * ```typescript
+ * **Example** (Use splitCamelCase)
+ * ```ts
  * splitCamelCase("birthPlace")     // => "birth Place"
  * splitCamelCase("FirstName")       // => "First Name"
  * splitCamelCase("XMLHttpRequest") // => "XML Http Request"
  * splitCamelCase("already spaced") // => "already spaced"
  * ```
  *
- * @since 2.0.0
- * @category Text
+ * @since 0.0.0
+ * @category normalization
  */
 export const splitCamelCase = (text: string): string =>
   text
@@ -54,8 +54,8 @@ export const splitCamelCase = (text: string): string =>
  * @param n - N-gram size (default: 2 for bigrams)
  * @returns Array of n-gram strings
  *
- * @example
- * ```typescript
+ * **Example** (Use generateNGrams)
+ * ```ts
  * generateNGrams(["birth", "place", "location"], 2)
  * // => ["birth place", "place location"]
  *
@@ -63,8 +63,8 @@ export const splitCamelCase = (text: string): string =>
  * // => ["person name"] (only one trigram possible)
  * ```
  *
- * @since 2.0.0
- * @category Text
+ * @since 0.0.0
+ * @category normalization
  */
 export const generateNGrams = dual2((tokens: ReadonlyArray<string>, n: number): ReadonlyArray<string> => {
   if (tokens.length < n) {
@@ -92,14 +92,14 @@ export const generateNGrams = dual2((tokens: ReadonlyArray<string>, n: number): 
  * @param ngramSize - Size of n-grams to generate (default: 2)
  * @returns Enhanced text with camelCase split and n-grams
  *
- * @example
- * ```typescript
+ * **Example** (Use enhanceTextForSearch)
+ * ```ts
  * enhanceTextForSearch("birthPlace location", 2)
  * // => "birthPlace location birth place location birth place place location"
  * ```
  *
- * @since 2.0.0
- * @category Text
+ * @since 0.0.0
+ * @category normalization
  */
 export const enhanceTextForSearch = dual2((text: string, ngramSize: number): string => {
   // Split camelCase in the original text

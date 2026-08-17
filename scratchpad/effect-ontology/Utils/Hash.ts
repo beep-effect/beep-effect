@@ -4,8 +4,8 @@
  * Content-addressable hashing for cache keys.
  * Uses WebCrypto API for cross-platform compatibility (Node.js & Browser).
  *
- * @since 2.0.0
- * @module Utils/Hash
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Effect } from "effect";
@@ -29,8 +29,8 @@ const toHex = (buffer: ArrayBuffer): string => {
  * @param input - String to hash
  * @returns Hex-encoded SHA-256 hash
  *
- * @since 2.0.0
- * @category Hash
+ * @since 0.0.0
+ * @category utilities
  */
 export const sha256 = (input: string): Effect.Effect<string> =>
   Effect.promise(() => globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(input)).then(toHex));
@@ -45,8 +45,8 @@ export const sha256 = (input: string): Effect.Effect<string> =>
  * @param taskType - Embedding task type (e.g., "search_document", "search_query")
  * @returns SHA-256 hash for cache lookup
  *
- * @since 2.0.0
- * @category Hash
+ * @since 0.0.0
+ * @category utilities
  */
 export const hashEmbeddingKey = dual2(
   (text: string, taskType: string): Effect.Effect<string> => sha256(`${text}::${taskType}`)
@@ -61,8 +61,8 @@ export const hashEmbeddingKey = dual2(
  * @param input - String to hash
  * @returns Hex-encoded SHA-256 hash (full 64 chars)
  *
- * @since 2.0.0
- * @category Hash
+ * @since 0.0.0
+ * @category utilities
  */
 export const sha256SyncFull = (input: string): string => {
   // For synchronous use cases that only run on Node.js
@@ -92,8 +92,8 @@ export const sha256SyncFull = (input: string): string => {
  * @param input - String to hash
  * @returns Hex-encoded SHA-256 hash (first 16 chars for brevity)
  *
- * @since 2.0.0
- * @category Hash
+ * @since 0.0.0
+ * @category utilities
  */
 export const sha256Sync = (input: string): string => sha256SyncFull(input).slice(0, 16);
 
@@ -104,8 +104,8 @@ export const sha256Sync = (input: string): string => sha256SyncFull(input).slice
  * @param taskType - Embedding task type
  * @returns SHA-256 hash for cache lookup
  *
- * @since 2.0.0
- * @category Hash
+ * @since 0.0.0
+ * @category utilities
  */
 export const hashEmbeddingKeySync = dual2((text: string, taskType: string): string =>
   sha256SyncFull(`${text}::${taskType}`)
@@ -114,8 +114,8 @@ export const hashEmbeddingKeySync = dual2((text: string, taskType: string): stri
 /**
  * Provider metadata for versioned cache keys
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface EmbeddingKeyMetadata {
   readonly providerId: string;
@@ -138,8 +138,8 @@ export interface EmbeddingKeyMetadata {
  * @param metadata - Provider metadata (providerId, modelId, dimension)
  * @returns Effect yielding SHA-256 hash for cache lookup
  *
- * @since 2.0.0
- * @category Hash
+ * @since 0.0.0
+ * @category utilities
  */
 export const hashVersionedEmbeddingKey = dual3(
   (text: string, taskType: string, metadata: EmbeddingKeyMetadata): Effect.Effect<string> =>
@@ -154,8 +154,8 @@ export const hashVersionedEmbeddingKey = dual3(
  * @param metadata - Provider metadata (providerId, modelId, dimension)
  * @returns SHA-256 hash for cache lookup
  *
- * @since 2.0.0
- * @category Hash
+ * @since 0.0.0
+ * @category utilities
  */
 export const hashVersionedEmbeddingKeySync = dual3(
   (text: string, taskType: string, metadata: EmbeddingKeyMetadata): string =>
@@ -170,8 +170,8 @@ export const hashVersionedEmbeddingKeySync = dual3(
  * @param bytes - Uint8Array to hash
  * @returns Hex-encoded SHA-256 hash
  *
- * @since 2.0.0
- * @category Hash
+ * @since 0.0.0
+ * @category utilities
  */
 export const sha256Bytes = (bytes: BufferSource): Effect.Effect<string> =>
   Effect.promise(() => globalThis.crypto.subtle.digest("SHA-256", bytes).then(toHex));
@@ -184,8 +184,8 @@ export const sha256Bytes = (bytes: BufferSource): Effect.Effect<string> =>
  * @param bytes - Uint8Array to hash
  * @returns Hex-encoded SHA-256 hash
  *
- * @since 2.0.0
- * @category Hash
+ * @since 0.0.0
+ * @category utilities
  */
 export const sha256BytesSync = (bytes: Uint8Array): string => {
   try {

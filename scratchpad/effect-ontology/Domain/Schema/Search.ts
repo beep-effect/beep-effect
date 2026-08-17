@@ -72,7 +72,7 @@ const PositiveLimitFromString = S.FiniteFromString.pipe(
 /**
  * Body for full-text and faceted claim search.
  *
- * @example
+ * **Example** (Use ClaimSearchRequest)
  * ```ts
  * import { ClaimSearchRequest } from "@effect-ontology/Schema/Search.ts"
  *
@@ -82,7 +82,7 @@ const PositiveLimitFromString = S.FiniteFromString.pipe(
  *
  * @invariant Query text is non-empty, limit is positive, and offset is
  * non-negative.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class ClaimSearchRequest extends S.Class<ClaimSearchRequest>($I`ClaimSearchRequest`)(
@@ -121,7 +121,7 @@ const ClaimSearchFacets = S.Struct({
 /**
  * Paginated claim-search response and optional facets.
  *
- * @example
+ * **Example** (Use ClaimSearchResponse)
  * ```ts
  * import type { ClaimSearchResponse } from "@effect-ontology/Schema/Search.ts"
  *
@@ -129,7 +129,7 @@ const ClaimSearchFacets = S.Struct({
  * console.log(count)
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class ClaimSearchResponse extends S.Class<ClaimSearchResponse>($I`ClaimSearchResponse`)(
@@ -150,7 +150,7 @@ export class ClaimSearchResponse extends S.Class<ClaimSearchResponse>($I`ClaimSe
 /**
  * Body for label-oriented entity search.
  *
- * @example
+ * **Example** (Use EntitySearchRequest)
  * ```ts
  * import { EntitySearchRequest } from "@effect-ontology/Schema/Search.ts"
  *
@@ -158,7 +158,7 @@ export class ClaimSearchResponse extends S.Class<ClaimSearchResponse>($I`ClaimSe
  * console.log(request.limit) // 20
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class EntitySearchRequest extends S.Class<EntitySearchRequest>($I`EntitySearchRequest`)(
@@ -183,7 +183,7 @@ const EntityTopClaim = S.Struct({
 /**
  * Entity-search hit with semantic type and claim previews.
  *
- * @example
+ * **Example** (Use EntitySearchResult)
  * ```ts
  * import type { EntitySearchResult } from "@effect-ontology/Schema/Search.ts"
  *
@@ -210,7 +210,7 @@ export class EntitySearchResult extends S.Class<EntitySearchResult>($I`EntitySea
 /**
  * Response containing entity-search hits.
  *
- * @example
+ * **Example** (Use EntitySearchResponse)
  * ```ts
  * import * as S from "effect/Schema"
  * import { EntitySearchResponse } from "@effect-ontology/Schema/Search.ts"
@@ -222,7 +222,7 @@ export class EntitySearchResult extends S.Class<EntitySearchResult>($I`EntitySea
  * console.log(response.entities.length) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class EntitySearchResponse extends S.Class<EntitySearchResponse>($I`EntitySearchResponse`)(
@@ -239,7 +239,7 @@ export class EntitySearchResponse extends S.Class<EntitySearchResponse>($I`Entit
 /**
  * URL-query parameters for search suggestions.
  *
- * @example
+ * **Example** (Use SuggestionQuery)
  * ```ts
  * import { SuggestionQuery } from "@effect-ontology/Schema/Search.ts"
  *
@@ -247,7 +247,7 @@ export class EntitySearchResponse extends S.Class<EntitySearchResponse>($I`Entit
  * console.log(query.limit) // 10
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class SuggestionQuery extends S.Class<SuggestionQuery>($I`SuggestionQuery`)(
@@ -265,7 +265,7 @@ export class SuggestionQuery extends S.Class<SuggestionQuery>($I`SuggestionQuery
 /**
  * Individual entity suggestion.
  *
- * @example
+ * **Example** (Use Suggestion)
  * ```ts
  * import type { Suggestion } from "@effect-ontology/Schema/Search.ts"
  *
@@ -291,7 +291,7 @@ export class Suggestion extends S.Class<Suggestion>($I`Suggestion`)(
 /**
  * Response containing typeahead suggestions.
  *
- * @example
+ * **Example** (Use SuggestionsResponse)
  * ```ts
  * import { SuggestionsResponse } from "@effect-ontology/Schema/Search.ts"
  *
@@ -299,7 +299,7 @@ export class Suggestion extends S.Class<Suggestion>($I`Suggestion`)(
  * console.log(response.suggestions.length) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class SuggestionsResponse extends S.Class<SuggestionsResponse>($I`SuggestionsResponse`)(
@@ -315,7 +315,7 @@ export class SuggestionsResponse extends S.Class<SuggestionsResponse>($I`Suggest
 /**
  * Body for searching source articles.
  *
- * @example
+ * **Example** (Use ArticleSearchRequest)
  * ```ts
  * import { ArticleSearchRequest } from "@effect-ontology/Schema/Search.ts"
  *
@@ -323,7 +323,7 @@ export class SuggestionsResponse extends S.Class<SuggestionsResponse>($I`Suggest
  * console.log(request.limit) // 20
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`ArticleSearchRequest`)(
@@ -344,7 +344,7 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
 /**
  * Source-article search hit and its aggregate knowledge counts.
  *
- * @example
+ * **Example** (Use ArticleSearchResult)
  * ```ts
  * import type { ArticleSearchResult } from "@effect-ontology/Schema/Search.ts"
  *
@@ -369,7 +369,7 @@ export class ArticleSearchResult extends S.Class<ArticleSearchResult>($I`Article
 /**
  * Paginated article-search response.
  *
- * @example
+ * **Example** (Use ArticleSearchResponse)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ArticleSearchResponse } from "@effect-ontology/Schema/Search.ts"
@@ -383,7 +383,7 @@ export class ArticleSearchResult extends S.Class<ArticleSearchResult>($I`Article
  * console.log(response.articles.length) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class ArticleSearchResponse extends S.Class<ArticleSearchResponse>($I`ArticleSearchResponse`)(

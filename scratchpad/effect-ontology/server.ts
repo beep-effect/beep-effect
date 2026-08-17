@@ -9,7 +9,7 @@
  * - POSTGRES_HOST: PostgreSQL host (enables durable workflows)
  * - All EnvConfigService variables (see DEPLOY.md)
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 
 import { makeDrizzleLayer } from "@beep/postgres";

@@ -4,8 +4,8 @@
  * Implements the KnowledgeGraphExtractor entity behavior with Effect-native
  * time, randomness, cancellation, rate limiting, and extraction services.
  *
- * @since 2.0.0
- * @module Cluster/ExtractionEntityHandler
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -394,7 +394,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       const run = yield* runService.getByKey(IdempotencyKey.make(envelope.payload.idempotencyKey));
       if (P.isNull(run)) {
         return {
-          status: "pending" as const,
+          status: "pending",
           progress: O.some(Percentage.make(0)),
           startedAt: O.none<string>(),
           completedAt: O.none<string>(),

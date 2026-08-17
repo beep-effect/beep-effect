@@ -4,8 +4,8 @@
  * Effect-native repository layer for claims metadata using Drizzle ORM.
  * Provides typed access to PostgreSQL tables for claims, articles, and corrections.
  *
- * @since 2.0.0
- * @module Repository
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { makeDrizzleLayer } from "@beep/postgres";

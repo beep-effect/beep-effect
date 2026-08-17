@@ -1,8 +1,9 @@
 /**
  * Shared error schemas for the effect-ontology experiment.
  *
- * @remarks
- * These schemas normalize recoverable error metadata before it reaches domain
+ * **Details**
+ *
+ * * These schemas normalize recoverable error metadata before it reaches domain
  * logic. Error messages are non-empty, causes become `Option`, and operational
  * counts are finite non-negative integers.
  *
@@ -22,7 +23,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Base");
 /**
  * Non-empty human-readable diagnostic carried by ontology errors.
  *
- * @example
+ * **Example** (Use ErrorMessage)
  * ```ts
  * import { ErrorMessage } from "@effect-ontology/Error/Base.ts"
  *
@@ -46,7 +47,7 @@ export const ErrorMessage = S.NonEmptyString.annotate({
 /**
  * Runtime text accepted by {@link ErrorMessage}.
  *
- * @example
+ * **Example** (Use ErrorMessage)
  * ```ts
  * import { ErrorMessage, type ErrorMessage as ErrorMessageValue } from "@effect-ontology/Error/Base.ts"
  *
@@ -62,7 +63,7 @@ export type ErrorMessage = typeof ErrorMessage.Type;
 /**
  * Optional canonical URL normalized from an absent object key.
  *
- * @example
+ * **Example** (Use OptionalErrorUrl)
  * ```ts
  * import * as O from "effect/Option"
  * import { OptionalErrorUrl } from "@effect-ontology/Error/Base.ts"
@@ -94,7 +95,7 @@ export const OptionalErrorUrl = S.OptionFromNullishOr(URLStr)
 /**
  * Runtime option decoded by {@link OptionalErrorUrl}.
  *
- * @example
+ * **Example** (Use OptionalErrorUrl)
  * ```ts
  * import * as O from "effect/Option"
  * import type { OptionalErrorUrl } from "@effect-ontology/Error/Base.ts"
@@ -111,7 +112,7 @@ export type OptionalErrorUrl = typeof OptionalErrorUrl.Type;
 /**
  * Optional canonical RDF IRI normalized from an absent object key.
  *
- * @example
+ * **Example** (Use OptionalErrorIri)
  * ```ts
  * import * as O from "effect/Option"
  * import { OptionalErrorIri } from "@effect-ontology/Error/Base.ts"
@@ -143,7 +144,7 @@ export const OptionalErrorIri = S.OptionFromNullishOr(IRI)
 /**
  * Runtime option decoded by {@link OptionalErrorIri}.
  *
- * @example
+ * **Example** (Use OptionalErrorIri)
  * ```ts
  * import * as O from "effect/Option"
  * import type { OptionalErrorIri } from "@effect-ontology/Error/Base.ts"
@@ -162,11 +163,12 @@ const ErrorDefect = S.Defect({ includeStack: true });
 /**
  * Optional underlying defect normalized from an absent object key.
  *
- * @remarks
- * The encoded form may omit `cause`; the decoded form always contains an
+ * **Details**
+ *
+ * * The encoded form may omit `cause`; the decoded form always contains an
  * `Option`, preventing `undefined` checks from leaking into error handlers.
  *
- * @example
+ * **Example** (Use OptionalErrorCause)
  * ```ts
  * import * as O from "effect/Option"
  * import { OptionalErrorCause } from "@effect-ontology/Error/Base.ts"
@@ -198,7 +200,7 @@ export const OptionalErrorCause = S.OptionFromNullishOr(ErrorDefect)
 /**
  * Runtime option decoded by {@link OptionalErrorCause}.
  *
- * @example
+ * **Example** (Use OptionalErrorCause)
  * ```ts
  * import * as O from "effect/Option"
  * import type { OptionalErrorCause } from "@effect-ontology/Error/Base.ts"
@@ -215,7 +217,7 @@ export type OptionalErrorCause = typeof OptionalErrorCause.Type;
 /**
  * Optional non-empty diagnostic text normalized from an absent object key.
  *
- * @example
+ * **Example** (Use OptionalErrorMessage)
  * ```ts
  * import * as O from "effect/Option"
  * import { OptionalErrorMessage } from "@effect-ontology/Error/Base.ts"
@@ -247,7 +249,7 @@ export const OptionalErrorMessage = S.OptionFromNullishOr(ErrorMessage)
 /**
  * Runtime option decoded by {@link OptionalErrorMessage}.
  *
- * @example
+ * **Example** (Use OptionalErrorMessage)
  * ```ts
  * import * as O from "effect/Option"
  * import type { OptionalErrorMessage } from "@effect-ontology/Error/Base.ts"
@@ -264,7 +266,7 @@ export type OptionalErrorMessage = typeof OptionalErrorMessage.Type;
 /**
  * Optional finite non-negative integer normalized from an absent object key.
  *
- * @example
+ * **Example** (Use OptionalNonNegativeInt)
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -297,7 +299,7 @@ export const OptionalNonNegativeInt = S.OptionFromNullishOr(NonNegativeInt)
 /**
  * Runtime option decoded by {@link OptionalNonNegativeInt}.
  *
- * @example
+ * **Example** (Use OptionalNonNegativeInt)
  * ```ts
  * import * as O from "effect/Option"
  * import type { OptionalNonNegativeInt } from "@effect-ontology/Error/Base.ts"
@@ -314,7 +316,7 @@ export type OptionalNonNegativeInt = typeof OptionalNonNegativeInt.Type;
 /**
  * Optional HTTP response status normalized from an absent object key.
  *
- * @example
+ * **Example** (Use OptionalHttpStatusCode)
  * ```ts
  * import * as O from "effect/Option"
  * import { OptionalHttpStatusCode } from "@effect-ontology/Error/Base.ts"
@@ -346,7 +348,7 @@ export const OptionalHttpStatusCode = S.OptionFromNullishOr(HttpStatusCode)
 /**
  * Runtime option decoded by {@link OptionalHttpStatusCode}.
  *
- * @example
+ * **Example** (Use OptionalHttpStatusCode)
  * ```ts
  * import * as O from "effect/Option"
  * import type { OptionalHttpStatusCode } from "@effect-ontology/Error/Base.ts"
@@ -363,7 +365,7 @@ export type OptionalHttpStatusCode = typeof OptionalHttpStatusCode.Type;
 /**
  * Finite non-negative millisecond count used by timeout and retry errors.
  *
- * @example
+ * **Example** (Use Milliseconds)
  * ```ts
  * import { Milliseconds } from "@effect-ontology/Error/Base.ts"
  *
@@ -388,7 +390,7 @@ export const Milliseconds = NonNegativeInt.annotate({
 /**
  * Runtime millisecond count accepted by {@link Milliseconds}.
  *
- * @example
+ * **Example** (Use Milliseconds)
  * ```ts
  * import { Milliseconds, type Milliseconds as MillisecondValue } from "@effect-ontology/Error/Base.ts"
  *
@@ -404,7 +406,7 @@ export type Milliseconds = typeof Milliseconds.Type;
 /**
  * Optional millisecond count normalized from an absent object key.
  *
- * @example
+ * **Example** (Use OptionalMilliseconds)
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -437,7 +439,7 @@ export const OptionalMilliseconds = S.OptionFromNullishOr(Milliseconds)
 /**
  * Runtime option decoded by {@link OptionalMilliseconds}.
  *
- * @example
+ * **Example** (Use OptionalMilliseconds)
  * ```ts
  * import * as O from "effect/Option"
  * import type { OptionalMilliseconds } from "@effect-ontology/Error/Base.ts"
@@ -469,12 +471,13 @@ type OntologyErrorCodecStatics<Self> = {
 /**
  * Builds a schema-backed ontology error class with schema-derived capabilities.
  *
- * @remarks
- * `S.TaggedError` supplies the upstream tagged-error class semantics; this
+ * **Details**
+ *
+ * * `S.TaggedError` supplies the upstream tagged-error class semantics; this
  * helper keeps identity scoping and the structural self type consistent
  * across the experimental error families.
  *
- * @example
+ * **Example** (Use makeOntologyErrorClass)
  * ```ts
  * import { $ScratchpadId } from "@beep/identity"
  * import * as S from "effect/Schema"
@@ -530,12 +533,13 @@ export const makeOntologyErrorClass = {
 /**
  * Root fallback error for failures without a more specific ontology tag.
  *
- * @remarks
- * Prefer a specific family error whenever the failed operation is known.
+ * **Details**
+ *
+ * * Prefer a specific family error whenever the failed operation is known.
  * `BaseError` exists for compatibility with upstream fallback paths, not as a
  * nominal superclass for every domain error.
  *
- * @example
+ * **Example** (Use BaseError)
  * ```ts
  * import * as O from "effect/Option"
  * import { BaseError } from "@effect-ontology/Error/Base.ts"
@@ -569,7 +573,7 @@ export const BaseError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link BaseError}.
  *
- * @example
+ * **Example** (Use BaseError)
  * ```ts
  * import { BaseError, type BaseError as BaseErrorValue } from "@effect-ontology/Error/Base.ts"
  *
@@ -585,11 +589,12 @@ export type BaseError = typeof BaseError.Type;
 /**
  * Typed marker for a deliberately unfinished service method.
  *
- * @remarks
- * This error keeps incomplete experimental paths in the typed error channel.
+ * **Details**
+ *
+ * * This error keeps incomplete experimental paths in the typed error channel.
  * It should disappear when the named method is implemented.
  *
- * @example
+ * **Example** (Use NotImplemented)
  * ```ts
  * import { NotImplemented } from "@effect-ontology/Error/Base.ts"
  *
@@ -627,7 +632,7 @@ export const NotImplemented = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link NotImplemented}.
  *
- * @example
+ * **Example** (Use NotImplemented)
  * ```ts
  * import { NotImplemented, type NotImplemented as MissingCapability } from "@effect-ontology/Error/Base.ts"
  *
@@ -649,7 +654,7 @@ const BaseErrorDefinition = S.Union([BaseError, NotImplemented]).pipe(S.toTagged
 /**
  * Tagged union of shared fallback and implementation-status errors.
  *
- * @example
+ * **Example** (Use BaseDomainError)
  * ```ts
  * import { BaseDomainError, BaseError } from "@effect-ontology/Error/Base.ts"
  *
@@ -674,7 +679,7 @@ export const BaseDomainError = BaseErrorDefinition.pipe(
 /**
  * Runtime value decoded by {@link BaseDomainError}.
  *
- * @example
+ * **Example** (Use BaseDomainError)
  * ```ts
  * import { BaseError, type BaseDomainError } from "@effect-ontology/Error/Base.ts"
  *

@@ -3,8 +3,8 @@
  *
  * Provides liveness and readiness probes for Kubernetes/cloud deployment.
  *
- * @since 2.0.0
- * @module Runtime/HealthCheck
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -29,8 +29,8 @@ export interface HealthResult {
 /**
  * HealthCheckService - Liveness and readiness probes
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class HealthCheckService extends Context.Service<HealthCheckService>()($I`HealthCheckService`, {
   make: Effect.gen(function* () {
@@ -44,7 +44,7 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
        */
       liveness: Effect.fn("liveness")(function* () {
         return {
-          status: "ok" as const,
+          status: "ok",
           timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
         };
       }),
@@ -73,7 +73,7 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
         const hasError = Object.values(checks).some((c) => c === "error");
 
         return {
-          status: hasError ? ("degraded" as const) : ("ok" as const),
+          status: hasError ? ("degraded") : ("ok"),
           timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
           checks,
         };
@@ -97,12 +97,12 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
         if (P.isTruthy(config.ontology.path)) {
           checks.ontologyFile = yield* storage.get(config.ontology.path).pipe(
             Effect.timeout(Duration.seconds(5)),
-            Effect.map((opt) => (opt !== undefined ? ("ok" as const) : ("error" as const))),
+            Effect.map((opt) => (opt !== undefined ? ("ok") : ("error"))),
             Effect.catch((error) =>
               Effect.logWarning("Ontology file health check failed", {
                 path: config.ontology.path,
                 error: String(error),
-              }).pipe(Effect.as("error" as const))
+              }).pipe(Effect.as("error"))
             )
           );
         } else {
@@ -118,12 +118,12 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
           // Try to list or access the bucket root to verify connectivity
           checks.storageConnectivity = yield* storage.list("").pipe(
             Effect.timeout(Duration.seconds(5)),
-            Effect.map(() => "ok" as const),
+            Effect.map(() => "ok"),
             Effect.catch((error) =>
               Effect.logWarning("Storage connectivity check failed", {
                 bucket: config.storage.bucket,
                 error: String(error),
-              }).pipe(Effect.as("error" as const))
+              }).pipe(Effect.as("error"))
             )
           );
         }

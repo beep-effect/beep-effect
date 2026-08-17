@@ -4,8 +4,8 @@
  * Stateless NLP operations using wink-nlp.
  * Provides tokenization, BM25 search, and text chunking.
  *
- * @since 2.0.0
- * @module Service/Nlp
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -115,8 +115,8 @@ export interface OntologySemanticIndex {
 /**
  * Indicates that an ontology search received an invalid opaque index.
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class NlpIndexError extends S.TaggedError<NlpIndexError>($I`NlpIndexError`)(
   "NlpIndexError",
@@ -168,16 +168,16 @@ export interface OntologySearchResult {
  * - searchSimilar: BM25 ranking over documents
  * - chunkText: Sentence-aware text chunking
  *
- * @example
- * ```typescript
+ * **Example** (Use embeddingRetrySchedule)
+ * ```ts
  * Effect.gen(function*() {
  *   const result = yield* NlpService.tokenize("Hello world")
  *   console.log(result.tokens)  // ["hello", "world"]
  * }).pipe(Effect.provide(NlpService.Default))
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 /**
  * Retry schedule for embedding calls

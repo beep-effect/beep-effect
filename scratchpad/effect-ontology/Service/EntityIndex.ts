@@ -4,8 +4,8 @@
  * Indexed embedding store for fast entity retrieval in GraphRAG.
  * Supports k-NN search by embedding similarity and type-based filtering.
  *
- * @since 2.0.0
- * @module Service/EntityIndex
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { NonNegativeInt } from "@beep/schema/Int";
@@ -35,8 +35,8 @@ import { StorageService } from "./Storage.ts";
 /**
  * Scored entity result from similarity search
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ScoredEntity {
   readonly entity: Entity;
@@ -46,8 +46,8 @@ export interface ScoredEntity {
 /**
  * Options for similarity search
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface FindSimilarOptions {
   /** Filter to only entities with any of these types */
@@ -77,8 +77,8 @@ const emptyState: IndexState = {
 /**
  * EntityIndex service interface
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface EntityIndexService {
   /**
@@ -273,8 +273,8 @@ const makeEntityIndexMethods = (
 /**
  * EntityIndex - In-memory entity index with embedding-based retrieval
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class EntityIndex extends Context.Service<EntityIndex>()($I`EntityIndex`, {
   make: Effect.gen(function* () {
@@ -292,16 +292,16 @@ export class EntityIndex extends Context.Service<EntityIndex>()($I`EntityIndex`,
  *
  * Requires EmbeddingService dependencies to be provided.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const EntityIndexDefault = EntityIndex.Default;
 
 /**
  * Serialized entity index format for GCS persistence
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category schemas
  */
 export const SerializedEntityIndex = Schema.Struct({
   version: Schema.Literal(1),
@@ -326,8 +326,8 @@ const decodeSerializedEntityIndex = Schema.decodeOption(SerializedEntityIndexJso
 /**
  * Extended EntityIndex interface with persistence capabilities
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface PersistentEntityIndexService extends EntityIndexService {
   /**
@@ -365,8 +365,8 @@ export interface PersistentEntityIndexService extends EntityIndexService {
 /**
  * PersistentEntityIndex service tag
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class PersistentEntityIndex extends Context.Service<PersistentEntityIndex, PersistentEntityIndexService>()(
   $I`PersistentEntityIndex`
@@ -378,8 +378,8 @@ export class PersistentEntityIndex extends Context.Service<PersistentEntityIndex
  * @param storage - StorageService for GCS operations
  * @param indexPath - GCS path for index storage (e.g., "entity-index")
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const makePersistentEntityIndex = dual3(
   (
@@ -409,7 +409,7 @@ export const makePersistentEntityIndex = dual3(
             });
           }
         }
-        return { version: 1 as const, indexedAt: EpochMillis.make(yield* Clock.currentTimeMillis), entities };
+        return { version: 1, indexedAt: EpochMillis.make(yield* Clock.currentTimeMillis), entities };
       });
 
       const deserialize = Effect.fn("PersistentEntityIndex.deserialize")(function* (data: SerializedEntityIndex) {
@@ -497,8 +497,8 @@ export const makePersistentEntityIndex = dual3(
  * - StorageService (for GCS persistence when entityIndexPath is set)
  * - EmbeddingService (for computing embeddings)
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const PersistentEntityIndexLayer: Layer.Layer<
   PersistentEntityIndex,
@@ -529,7 +529,7 @@ export const PersistentEntityIndexLayer: Layer.Layer<
         size: Effect.succeed(0),
         serialize: Effect.gen(function* () {
           return {
-            version: 1 as const,
+            version: 1,
             indexedAt: EpochMillis.make(yield* Clock.currentTimeMillis),
             entities: [],
           };

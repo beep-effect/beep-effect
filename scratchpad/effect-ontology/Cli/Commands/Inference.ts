@@ -3,8 +3,8 @@
  *
  * Run RDFS inference on a local Turtle file.
  *
- * @since 2.0.0
- * @module Cli/Commands/Inference
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import * as Struct from "@beep/utils/Struct";
@@ -57,7 +57,7 @@ class InferenceCliError extends Data.TaggedError("InferenceCliError")<{
 /**
  * inference - Run RDFS inference on a Turtle file
  *
- * @example
+ * **Example** (Use inferenceCommand)
  * ```bash
  * effect-onto inference --input graph.ttl --output enriched.ttl --profile rdfs
  * effect-onto inference -i graph.ttl -d  # Output only delta

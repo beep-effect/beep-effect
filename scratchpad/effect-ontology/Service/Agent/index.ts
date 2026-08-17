@@ -3,8 +3,8 @@
  *
  * Multi-agent orchestration framework for ontology extraction pipelines.
  *
- * @since 2.0.0
- * @module Service/Agent
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 export * from "./AgentCoordinator.ts";

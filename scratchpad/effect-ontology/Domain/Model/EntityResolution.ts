@@ -18,7 +18,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolution")
 /**
  * Evidence strategy used to resolve a mention to a canonical entity.
  *
- * @example
+ * **Example** (Use ResolutionMethod)
  * ```ts
  * import { ResolutionMethod } from "@effect-ontology/Model/EntityResolution.ts"
  *
@@ -41,7 +41,7 @@ export const ResolutionMethod = LiteralKit(["exact", "similarity", "containment"
 /**
  * Runtime value accepted by {@link ResolutionMethod}.
  *
- * @example
+ * **Example** (Use ResolutionMethod)
  * ```ts
  * import type { ResolutionMethod } from "@effect-ontology/Model/EntityResolution.ts"
  *
@@ -80,7 +80,7 @@ const MentionRecordFields = {
 /**
  * Immutable evidence node preserving one original extraction event.
  *
- * @example
+ * **Example** (Use MentionRecord)
  * ```ts
  * import * as S from "effect/Schema"
  * import { MentionRecord } from "@effect-ontology/Model/EntityResolution.ts"
@@ -134,7 +134,7 @@ const ResolvedEntityFields = {
 /**
  * Canonical entity produced by clustering immutable mention records.
  *
- * @example
+ * **Example** (Use ResolvedEntity)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ResolvedEntity } from "@effect-ontology/Model/EntityResolution.ts"
@@ -167,7 +167,7 @@ const ERNodeDefinition = S.Union([MentionRecord, ResolvedEntity]).pipe(S.toTagge
 /**
  * Discriminated node union for an entity-resolution graph.
  *
- * @example
+ * **Example** (Use ERNode)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ERNode } from "@effect-ontology/Model/EntityResolution.ts"
@@ -195,7 +195,7 @@ export const ERNode = ERNodeDefinition.pipe(
 /**
  * Runtime value decoded by {@link ERNode}.
  *
- * @example
+ * **Example** (Use ERNode)
  * ```ts
  * import type { ERNode } from "@effect-ontology/Model/EntityResolution.ts"
  *
@@ -220,7 +220,7 @@ const ResolutionEdgeFields = {
 /**
  * Directed edge from an immutable mention record to its canonical entity.
  *
- * @example
+ * **Example** (Use ResolutionEdge)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ResolutionEdge } from "@effect-ontology/Model/EntityResolution.ts"
@@ -260,7 +260,7 @@ const RelationEdgeFields = {
 /**
  * Ontology relation edge between two canonical entities.
  *
- * @example
+ * **Example** (Use RelationEdge)
  * ```ts
  * import * as S from "effect/Schema"
  * import { RelationEdge } from "@effect-ontology/Model/EntityResolution.ts"
@@ -287,7 +287,7 @@ const EREdgeDefinition = S.Union([ResolutionEdge, RelationEdge]).pipe(S.toTagged
 /**
  * Discriminated edge union for an entity-resolution graph.
  *
- * @example
+ * **Example** (Use EREdge)
  * ```ts
  * import * as S from "effect/Schema"
  * import { EREdge } from "@effect-ontology/Model/EntityResolution.ts"
@@ -312,7 +312,7 @@ export const EREdge = EREdgeDefinition.pipe(
 /**
  * Runtime value decoded by {@link EREdge}.
  *
- * @example
+ * **Example** (Use EREdge)
  * ```ts
  * import type { EREdge } from "@effect-ontology/Model/EntityResolution.ts"
  *
@@ -359,11 +359,12 @@ const EntityResolutionConfigFields = {
 /**
  * Tunable policy for deterministic entity clustering.
  *
- * @remarks
- * All obvious defaults belong to the schema. `default` is a schema-owned
+ * **Details**
+ *
+ * * All obvious defaults belong to the schema. `default` is a schema-owned
  * constructor, replacing the upstream free-standing default instance.
  *
- * @example
+ * **Example** (Use EntityResolutionConfig)
  * ```ts
  * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution.ts"
  *
@@ -385,7 +386,7 @@ export class EntityResolutionConfig extends S.Class<EntityResolutionConfig>($I`E
   /**
    * Constructs the canonical default entity-resolution policy.
    *
-   * @example
+   * **Example** (Use default)
    * ```ts
    * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution.ts"
    *

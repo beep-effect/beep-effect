@@ -4,8 +4,8 @@
  * High-level service for managing curated assertions derived from claims.
  * Assertions represent accepted facts in the knowledge base after curation.
  *
- * @since 2.0.0
- * @module Service/Assertion
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -69,8 +69,8 @@ const canonicalQuad = (input: {
 /**
  * Input for creating an assertion from claims
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface CreateAssertionInput {
   /** Claim IDs this assertion is derived from */
@@ -93,8 +93,8 @@ export interface CreateAssertionInput {
 /**
  * Filter for querying assertions
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface AssertionFilter {
   readonly subjectIri?: string;
@@ -108,8 +108,8 @@ export interface AssertionFilter {
 /**
  * Assertion with full provenance information
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface AssertionWithProvenance {
   readonly assertion: AssertionRow;
@@ -119,8 +119,8 @@ export interface AssertionWithProvenance {
 /**
  * Internal assertion row type (matches what we store)
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface AssertionRow {
   readonly id: string;
@@ -166,7 +166,7 @@ const ASSERTIONS = {
   Pending: IRI.fromUnknown("http://effect-ontology.dev/assertions#Pending"),
   rejectedAt: IRI.fromUnknown("http://effect-ontology.dev/assertions#rejectedAt"),
   rejectionReason: IRI.fromUnknown("http://effect-ontology.dev/assertions#rejectionReason"),
-} as const;
+};
 
 // =============================================================================
 // Service
@@ -186,8 +186,8 @@ const ASSERTIONS = {
  * - `reject`: Soft-delete an assertion with reason
  * - `toTriples`: Convert assertion to RDF quads
  *
- * @example
- * ```typescript
+ * **Example** (Use AssertionService)
+ * ```ts
  * Effect.gen(function*() {
  *   // Accept a claim as fact
  *   const assertion = yield* AssertionService.createAssertion({
@@ -200,8 +200,8 @@ const ASSERTIONS = {
  * }).pipe(Effect.provide(AssertionService.Default))
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class AssertionService extends Context.Service<AssertionService>()($I`AssertionService`, {
   make: Effect.gen(function* () {

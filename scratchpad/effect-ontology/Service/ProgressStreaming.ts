@@ -4,8 +4,8 @@
  * Implements the progress streaming contract with Effect patterns.
  * Provides functional builders for creating progress events.
  *
- * @since 2.0.0
- * @module Service/ProgressStreaming
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -51,8 +51,8 @@ import { dual2 } from "../Utils/Dual.ts";
 /**
  * Failure caused by progress-stream backpressure policy enforcement.
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class ProgressStreamingError extends Data.TaggedError("ProgressStreamingError")<{
   readonly reason: "BackpressureTimeout" | "QueueOverflow";
@@ -448,7 +448,7 @@ export const createExtractionFailed: {
       isRecoverable,
       retryStrategy: P.isNotUndefined(options?.isTemporary)
         ? ExtractionFailedRetryStrategy.cases.exponential_backoff.makeOption({
-            type: "exponential_backoff" as const,
+            type: "exponential_backoff",
             delayMs: O.fromUndefinedOr(options.retryAfterMs),
             maxAttempts: O.some(PosInt.make(3)),
           })

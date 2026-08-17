@@ -1,8 +1,9 @@
 /**
  * Serializable activity failures for durable workflow journals.
  *
- * @remarks
- * These values are plain tagged records rather than throwable errors because
+ * **Details**
+ *
+ * * These values are plain tagged records rather than throwable errors because
  * workflow engines persist them. Constructors and conversion helpers live on
  * the schema, while compatibility exports delegate to those statics.
  *
@@ -82,7 +83,7 @@ const ActivityTimeoutErrorDefinition = ActivityErrorCases.cases.ActivityTimeout;
 /**
  * Serializable timeout at a named workflow activity stage.
  *
- * @example
+ * **Example** (Use ActivityTimeoutError)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ActivityTimeoutError } from "@effect-ontology/Error/Activity.ts"
@@ -110,7 +111,7 @@ export const ActivityTimeoutError = ActivityTimeoutErrorDefinition.annotate({
 /**
  * Runtime value decoded by {@link ActivityTimeoutError}.
  *
- * @example
+ * **Example** (Use ActivityTimeoutError)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ActivityTimeoutError, type ActivityTimeoutError as Timeout } from "@effect-ontology/Error/Activity.ts"
@@ -133,7 +134,7 @@ const ActivityServiceErrorDefinition = ActivityErrorCases.cases.ActivityServiceF
 /**
  * Serializable service-operation failure raised by an activity.
  *
- * @example
+ * **Example** (Use ActivityServiceError)
  * ```ts
  * import { ActivityServiceError } from "@effect-ontology/Error/Activity.ts"
  *
@@ -159,7 +160,7 @@ export const ActivityServiceError = ActivityServiceErrorDefinition.annotate({
 /**
  * Runtime value decoded by {@link ActivityServiceError}.
  *
- * @example
+ * **Example** (Use ActivityServiceError)
  * ```ts
  * import { ActivityServiceError, type ActivityServiceError as ServiceFailure } from "@effect-ontology/Error/Activity.ts"
  *
@@ -181,7 +182,7 @@ const ActivityNotFoundErrorDefinition = ActivityErrorCases.cases.ActivityNotFoun
 /**
  * Serializable missing-resource failure raised by an activity.
  *
- * @example
+ * **Example** (Use ActivityNotFoundError)
  * ```ts
  * import { ActivityNotFoundError } from "@effect-ontology/Error/Activity.ts"
  *
@@ -207,7 +208,7 @@ export const ActivityNotFoundError = ActivityNotFoundErrorDefinition.annotate({
 /**
  * Runtime value decoded by {@link ActivityNotFoundError}.
  *
- * @example
+ * **Example** (Use ActivityNotFoundError)
  * ```ts
  * import { ActivityNotFoundError, type ActivityNotFoundError as Missing } from "@effect-ontology/Error/Activity.ts"
  *
@@ -229,7 +230,7 @@ const ActivityValidationErrorDefinition = ActivityErrorCases.cases.ActivityValid
 /**
  * Serializable activity-input validation failure.
  *
- * @example
+ * **Example** (Use ActivityValidationError)
  * ```ts
  * import { ActivityValidationError } from "@effect-ontology/Error/Activity.ts"
  *
@@ -254,7 +255,7 @@ export const ActivityValidationError = ActivityValidationErrorDefinition.annotat
 /**
  * Runtime value decoded by {@link ActivityValidationError}.
  *
- * @example
+ * **Example** (Use ActivityValidationError)
  * ```ts
  * import { ActivityValidationError, type ActivityValidationError as Invalid } from "@effect-ontology/Error/Activity.ts"
  *
@@ -275,7 +276,7 @@ const ActivityGenericErrorDefinition = ActivityErrorCases.cases.ActivityGeneric;
 /**
  * Serializable fallback for an otherwise unclassified activity failure.
  *
- * @example
+ * **Example** (Use ActivityGenericError)
  * ```ts
  * import { ActivityGenericError } from "@effect-ontology/Error/Activity.ts"
  *
@@ -297,7 +298,7 @@ export const ActivityGenericError = ActivityGenericErrorDefinition.annotate({
 /**
  * Runtime value decoded by {@link ActivityGenericError}.
  *
- * @example
+ * **Example** (Use ActivityGenericError)
  * ```ts
  * import { ActivityGenericError, type ActivityGenericError as GenericFailure } from "@effect-ontology/Error/Activity.ts"
  *
@@ -369,11 +370,12 @@ const ActivityErrorDefinition = S.Union([
 /**
  * Exhaustive journal-safe tagged union of workflow activity failures.
  *
- * @remarks
- * The companion constructors centralize unknown-error rendering and defaults;
+ * **Details**
+ *
+ * * The companion constructors centralize unknown-error rendering and defaults;
  * downstream workflow code can use `.match`, `.guards`, and `.cases`.
  *
- * @example
+ * **Example** (Use ActivityError)
  * ```ts
  * import { ActivityError } from "@effect-ontology/Error/Activity.ts"
  *
@@ -399,7 +401,7 @@ export const ActivityError = ActivityErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link ActivityError}.
  *
- * @example
+ * **Example** (Use ActivityError)
  * ```ts
  * import { ActivityError, type ActivityError as ActivityFailure } from "@effect-ontology/Error/Activity.ts"
  *
@@ -415,7 +417,7 @@ export type ActivityError = typeof ActivityError.Type;
 /**
  * Converts an unknown failure into a journal-safe generic activity error.
  *
- * @example
+ * **Example** (Use toActivityError)
  * ```ts
  * import { toActivityError } from "@effect-ontology/Error/Activity.ts"
  *
@@ -432,7 +434,7 @@ export const toActivityError = ActivityError.fromUnknown;
 /**
  * Constructs a journal-safe service-operation activity failure.
  *
- * @example
+ * **Example** (Use serviceError)
  * ```ts
  * import { serviceError } from "@effect-ontology/Error/Activity.ts"
  *
@@ -455,7 +457,7 @@ export const serviceError = ActivityError.serviceFailure;
 /**
  * Constructs a journal-safe missing-resource activity failure.
  *
- * @example
+ * **Example** (Use notFoundError)
  * ```ts
  * import { notFoundError } from "@effect-ontology/Error/Activity.ts"
  *

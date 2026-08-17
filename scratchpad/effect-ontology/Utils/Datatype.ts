@@ -4,8 +4,8 @@
  * Automatic XSD datatype detection and normalization for RDF literals.
  * Converts raw string values to typed literals with appropriate XSD datatypes.
  *
- * @since 2.0.0
- * @module Utils/Datatype
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { IRI } from "@beep/rdf";
@@ -21,8 +21,8 @@ const XSD_DECIMAL = makeNamedNode(`${XSD_NAMESPACE}decimal`);
 /**
  * Result of datatype normalization
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface NormalizedValue {
   /** Normalized string representation of the value */
@@ -89,8 +89,8 @@ const SCIENTIFIC_PATTERN = /^-?\d+(?:\.\d+)?[eE][+-]?\d+$/;
  * @param expectedType - Optional expected datatype IRI (hint for ambiguous values)
  * @returns Normalized value with detected datatype
  *
- * @example
- * ```typescript
+ * **Example** (Use normalizeDatatype)
+ * ```ts
  * normalizeDatatype("2024-12-16", undefined) // { value: "2024-12-16", datatype: XSD.date }
  * normalizeDatatype("42", undefined)         // { value: "42", datatype: XSD.integer }
  * normalizeDatatype("3.14159", undefined)    // { value: "3.14159", datatype: XSD.decimal }
@@ -99,8 +99,8 @@ const SCIENTIFIC_PATTERN = /^-?\d+(?:\.\d+)?[eE][+-]?\d+$/;
  * normalizeDatatype("1.5e10", undefined)     // { value: "1.5e10", datatype: XSD.double }
  * ```
  *
- * @since 2.0.0
- * @category Normalization
+ * @since 0.0.0
+ * @category normalization
  */
 export const normalizeDatatype = dual2((value: string, expectedType: IRI | undefined): NormalizedValue => {
   // If expected type provided, use it with minimal validation
@@ -155,8 +155,8 @@ export const normalizeDatatype = dual2((value: string, expectedType: IRI | undef
  * @param value - Value to check
  * @returns true if value matches ISO 8601 date pattern
  *
- * @since 2.0.0
- * @category Predicates
+ * @since 0.0.0
+ * @category predicates
  */
 export const isDate = (value: string): boolean => ISO_DATE_PATTERN.test(value.trim());
 
@@ -166,8 +166,8 @@ export const isDate = (value: string): boolean => ISO_DATE_PATTERN.test(value.tr
  * @param value - Value to check
  * @returns true if value matches ISO 8601 dateTime pattern
  *
- * @since 2.0.0
- * @category Predicates
+ * @since 0.0.0
+ * @category predicates
  */
 export const isDateTime = (value: string): boolean => ISO_DATETIME_PATTERN.test(value.trim());
 
@@ -177,8 +177,8 @@ export const isDateTime = (value: string): boolean => ISO_DATETIME_PATTERN.test(
  * @param value - Value to check
  * @returns true if value is integer, decimal, or scientific notation
  *
- * @since 2.0.0
- * @category Predicates
+ * @since 0.0.0
+ * @category predicates
  */
 export const isNumeric = (value: string): boolean => {
   const trimmed = value.trim();
@@ -191,7 +191,7 @@ export const isNumeric = (value: string): boolean => {
  * @param value - Value to check
  * @returns true if value is "true" or "false" (case-insensitive)
  *
- * @since 2.0.0
- * @category Predicates
+ * @since 0.0.0
+ * @category predicates
  */
 export const isBoolean = (value: string): boolean => BOOLEAN_PATTERN.test(value.trim());

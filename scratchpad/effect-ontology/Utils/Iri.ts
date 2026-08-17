@@ -5,8 +5,8 @@
  * Used to handle casing mismatches between ontology IRI local names (PascalCase)
  * and rdfs:label values (camelCase) that cause LLM extraction failures.
  *
+ * @packageDocumentation
  * @since 0.0.0
- * @module Utils/Iri
  */
 
 import { SafePnLocal } from "@beep/identity";

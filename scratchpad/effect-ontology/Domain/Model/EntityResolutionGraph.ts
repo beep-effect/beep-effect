@@ -18,7 +18,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolutionGr
 /**
  * Re-export of the canonical entity-resolution method domain.
  *
- * @example
+ * **Example** (Use SimilarityEdgeFields)
  * ```ts
  * import { ResolutionMethod } from "@effect-ontology/Model/EntityResolutionGraph.ts"
  *
@@ -42,7 +42,7 @@ const SimilarityEdgeFields = {
 /**
  * Weighted candidate edge used while clustering extracted entities.
  *
- * @example
+ * **Example** (Use SimilarityEdge)
  * ```ts
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { SimilarityEdge } from "@effect-ontology/Model/EntityResolutionGraph.ts"
@@ -79,7 +79,7 @@ const EntityResolutionInfoFields = {
 /**
  * Explanation of how one extracted entity resolved to its canonical form.
  *
- * @example
+ * **Example** (Use EntityResolutionInfo)
  * ```ts
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { EntityId } from "@effect-ontology/Model/shared.ts"
@@ -118,7 +118,7 @@ const EntityClusterFields = {
 /**
  * Non-empty cluster of extracted entities representing one canonical entity.
  *
- * @example
+ * **Example** (Use EntityCluster)
  * ```ts
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import * as S from "effect/Schema"
@@ -163,7 +163,7 @@ const ClusteringResultFields = {
 /**
  * Clustering output together with the embeddings used to derive it.
  *
- * @example
+ * **Example** (Use ClusteringResult)
  * ```ts
  * import * as HashMap from "effect/HashMap"
  * import { ClusteringResult } from "@effect-ontology/Model/EntityResolutionGraph.ts"
@@ -200,7 +200,7 @@ const EntityResolutionStatsFields = {
 /**
  * Cardinality summary for an entity-resolution graph.
  *
- * @example
+ * **Example** (Use EntityResolutionStats)
  * ```ts
  * import * as S from "effect/Schema"
  * import { EntityResolutionStats } from "@effect-ontology/Model/EntityResolutionGraph.ts"
@@ -273,12 +273,13 @@ const EntityResolutionGraphFields = {
 /**
  * Immutable entity-resolution graph with lookup indexes and statistics.
  *
- * @remarks
- * The graph uses the repository's schema-backed Effect `DirectedGraph`
+ * **Details**
+ *
+ * * The graph uses the repository's schema-backed Effect `DirectedGraph`
  * codec. Indexes are serialized records rather than mutable JavaScript maps,
  * preserving deterministic transport behavior.
  *
- * @example
+ * **Example** (Use EntityResolutionGraph)
  * ```ts
  * import { Graph } from "effect"
  * import { DateTime } from "effect"

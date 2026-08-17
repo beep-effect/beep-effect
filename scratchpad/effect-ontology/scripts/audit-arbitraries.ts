@@ -13,7 +13,7 @@
  * bun run --cwd scratchpad audit:effect-ontology-arbitraries
  * ```
  *
- * @category tooling
+ * @category tools
  * @since 0.0.0
  */
 import { Effect } from "effect";

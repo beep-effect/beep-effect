@@ -4,8 +4,8 @@
  * Effect-wrapped Google Cloud Pub/Sub client for event distribution
  * and job queue integration.
  *
- * @since 2.0.0
- * @module Service/PubSubClient
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -27,7 +27,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/PubSubClient");
 /**
  * Published message result
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface PublishResult {
   readonly messageId: string;
@@ -37,7 +37,7 @@ export interface PublishResult {
 /**
  * Received message from subscription
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface ReceivedMessage {
   readonly id: string;
@@ -51,7 +51,7 @@ export interface ReceivedMessage {
 /**
  * Pub/Sub client configuration
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface PubSubClientConfig {
   readonly projectId: string;
@@ -68,7 +68,7 @@ export interface PubSubClientConfig {
 /**
  * PubSubClient service interface
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface PubSubClientMethods {
   /**
@@ -117,7 +117,7 @@ export interface PubSubClientMethods {
 /**
  * PubSubClient context tag
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export class PubSubClient extends Context.Service<PubSubClient, PubSubClientMethods>()($I`PubSubClient`) {}
 
@@ -128,7 +128,7 @@ export class PubSubClient extends Context.Service<PubSubClient, PubSubClientMeth
 /**
  * PubSub configuration from environment
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const PubSubClientConfig = Config.all({
   projectId: Config.string("PUBSUB_PROJECT_ID").pipe(Config.withDefault("effect-ontology")),
@@ -149,7 +149,7 @@ export const PubSubClientConfig = Config.all({
  * Used for production deployments where events need to be distributed
  * across multiple Cloud Run instances.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const PubSubClientLive = Layer.effect(
   PubSubClient,
@@ -296,7 +296,7 @@ export const PubSubClientLive = Layer.effect(
  * This layer subscribes to EventJournal changes and publishes them
  * to Cloud Pub/Sub for distribution across instances.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const EventBusPubSubBridge = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -333,6 +333,6 @@ export const EventBusPubSubBridge = Layer.effectDiscard(
 /**
  * Default PubSubClient layer
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const PubSubClientDefault = PubSubClientLive;

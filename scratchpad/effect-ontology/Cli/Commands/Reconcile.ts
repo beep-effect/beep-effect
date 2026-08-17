@@ -4,8 +4,8 @@
  * Analyze entities in a batch for potential duplicates and display statistics.
  * For full cross-batch resolution with persistent registry, use the API endpoint.
  *
- * @since 2.0.0
- * @module Cli/Commands/Reconcile
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { makeNamedNode } from "@beep/rdf";

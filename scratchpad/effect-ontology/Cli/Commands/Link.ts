@@ -3,8 +3,8 @@
  *
  * Create owl:sameAs links between local entities and Wikidata entities.
  *
- * @since 2.0.0
- * @module Cli/Commands/Link
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { IRI } from "@beep/rdf";

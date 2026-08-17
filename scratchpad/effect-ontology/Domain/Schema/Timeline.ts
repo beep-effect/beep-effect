@@ -18,14 +18,14 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Timeline");
 /**
  * Claim-rank vocabulary re-exported for timeline source-path parity.
  *
- * @example
+ * **Example** (Use BooleanQueryValueDefinition)
  * ```ts
  * import { ClaimRank } from "@effect-ontology/Schema/Timeline.ts"
  *
  * console.log(ClaimRank.is.preferred("preferred")) // true
  * ```
  *
- * @category claims
+ * @category schemas
  * @since 0.0.0
  */
 export { ClaimRank };
@@ -122,7 +122,7 @@ const TimelineRangeQuery = S.fromJsonString(TimelineRangeDefinition).pipe(
 /**
  * Compact source-article projection used for timeline attribution.
  *
- * @example
+ * **Example** (Use ArticleSummary)
  * ```ts
  * import { ArticleSummary } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -168,12 +168,13 @@ export class ArticleSummary extends S.Class<ArticleSummary>($I`ArticleSummary`)(
 /**
  * Claim projection enriched for bitemporal timeline queries.
  *
- * @remarks
- * Valid-world time and knowledge-base transaction time are nested separately.
+ * **Details**
+ *
+ * * Valid-world time and knowledge-base transaction time are nested separately.
  * The RDF object keeps its canonical term discriminator, and missing
  * confidence or evidence is normalized to `Option`.
  *
- * @example
+ * **Example** (Use ClaimWithRank)
  * ```ts
  * import type { ClaimWithRank } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -212,7 +213,7 @@ export class ClaimWithRank extends S.Class<ClaimWithRank>($I`ClaimWithRank`)(
 /**
  * Compact record of one claim correction or supersession.
  *
- * @example
+ * **Example** (Use CorrectionSummary)
  * ```ts
  * import { CorrectionSummary } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -247,7 +248,7 @@ export class CorrectionSummary extends S.Class<CorrectionSummary>($I`CorrectionS
 /**
  * Article detail response with its timeline claims and aggregate counts.
  *
- * @example
+ * **Example** (Use ArticleDetailResponse)
  * ```ts
  * import { ArticleDetailResponse } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -255,7 +256,7 @@ export class CorrectionSummary extends S.Class<CorrectionSummary>($I`CorrectionS
  * console.log(countClaims)
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`ArticleDetailResponse`)(
@@ -273,7 +274,7 @@ export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`Art
 /**
  * Query for one entity's timeline state.
  *
- * @example
+ * **Example** (Use TimelineEntityQuery)
  * ```ts
  * import { TimelineEntityQuery } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -281,7 +282,7 @@ export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`Art
  * console.log(query.includeDeprecated) // false
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`TimelineEntityQuery`)(
@@ -300,7 +301,7 @@ export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`Timelin
 /**
  * Timeline response for one entity IRI.
  *
- * @example
+ * **Example** (Use TimelineEntityResponse)
  * ```ts
  * import type { TimelineEntityResponse } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -308,7 +309,7 @@ export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`Timelin
  * console.log(countCorrections)
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class TimelineEntityResponse extends S.Class<TimelineEntityResponse>($I`TimelineEntityResponse`)(
@@ -326,7 +327,7 @@ export class TimelineEntityResponse extends S.Class<TimelineEntityResponse>($I`T
 /**
  * Filter and pagination query for timeline claims.
  *
- * @example
+ * **Example** (Use TimelineClaimsQuery)
  * ```ts
  * import { TimelineClaimsQuery } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -334,7 +335,7 @@ export class TimelineEntityResponse extends S.Class<TimelineEntityResponse>($I`T
  * console.log(query.limit) // 20
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`TimelineClaimsQuery`)(
@@ -357,7 +358,7 @@ export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`Timelin
 /**
  * Paginated response containing timeline claims.
  *
- * @example
+ * **Example** (Use TimelineClaimsResponse)
  * ```ts
  * import type { TimelineClaimsResponse } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -365,7 +366,7 @@ export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`Timelin
  * console.log(hasNext)
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class TimelineClaimsResponse extends S.Class<TimelineClaimsResponse>($I`TimelineClaimsResponse`)(
@@ -384,14 +385,14 @@ export class TimelineClaimsResponse extends S.Class<TimelineClaimsResponse>($I`T
 /**
  * Correction-history query controls.
  *
- * @example
+ * **Example** (Use CorrectionHistoryQuery)
  * ```ts
  * import { CorrectionHistoryQuery } from "@effect-ontology/Schema/Timeline.ts"
  *
  * console.log(CorrectionHistoryQuery.make({}).includeOriginalClaims) // false
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class CorrectionHistoryQuery extends S.Class<CorrectionHistoryQuery>($I`CorrectionHistoryQuery`)(
@@ -411,7 +412,7 @@ const AffectedClaim = S.Struct({
 /**
  * Full correction record and the claims it affected.
  *
- * @example
+ * **Example** (Use CorrectionWithClaims)
  * ```ts
  * import type { CorrectionWithClaims } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -439,7 +440,7 @@ export class CorrectionWithClaims extends S.Class<CorrectionWithClaims>($I`Corre
 /**
  * Correction-history response for one article.
  *
- * @example
+ * **Example** (Use CorrectionHistoryResponse)
  * ```ts
  * import { CorrectionHistoryResponse } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -447,7 +448,7 @@ export class CorrectionWithClaims extends S.Class<CorrectionWithClaims>($I`Corre
  * console.log(response.corrections.length) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class CorrectionHistoryResponse extends S.Class<CorrectionHistoryResponse>($I`CorrectionHistoryResponse`)(
@@ -483,7 +484,7 @@ const ConflictType = LiteralKit(["position", "temporal", "contradictory", "dupli
 /**
  * Filter and pagination query for detected claim conflicts.
  *
- * @example
+ * **Example** (Use ConflictsQuery)
  * ```ts
  * import { ConflictsQuery } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -491,7 +492,7 @@ const ConflictType = LiteralKit(["position", "temporal", "contradictory", "dupli
  * console.log(query.limit) // 20
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class ConflictsQuery extends S.Class<ConflictsQuery>($I`ConflictsQuery`)(
@@ -537,11 +538,12 @@ const ClaimConflictDefinition = S.TaggedUnion({
 /**
  * Claim conflict discriminated by resolution status.
  *
- * @remarks
- * Pending conflicts cannot carry resolution data. Resolved conflicts must carry
+ * **Details**
+ *
+ * * Pending conflicts cannot carry resolution data. Resolved conflicts must carry
  * strategy, accepted assertion, resolution instant, and optional notes.
  *
- * @example
+ * **Example** (Use ClaimConflict)
  * ```ts
  * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -550,7 +552,7 @@ const ClaimConflictDefinition = S.TaggedUnion({
  * ```
  *
  * @invariant The `_tag` determines whether and which resolution data exists.
- * @category unions
+ * @category schemas
  * @since 0.0.0
  */
 export const ClaimConflict = ClaimConflictDefinition.pipe(
@@ -563,7 +565,7 @@ export const ClaimConflict = ClaimConflictDefinition.pipe(
 /**
  * Runtime value decoded by {@link ClaimConflict}.
  *
- * @example
+ * **Example** (Use ClaimConflict)
  * ```ts
  * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline.ts"
  *
@@ -579,7 +581,7 @@ export type ClaimConflict = typeof ClaimConflict.Type;
 /**
  * Response containing detected claim conflicts and aggregate counts.
  *
- * @example
+ * **Example** (Use ConflictsResponse)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ConflictsResponse } from "@effect-ontology/Schema/Timeline.ts"
@@ -592,7 +594,7 @@ export type ClaimConflict = typeof ClaimConflict.Type;
  * ```
  *
  * @invariant Counts are non-negative.
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class ConflictsResponse extends S.Class<ConflictsResponse>($I`ConflictsResponse`)(

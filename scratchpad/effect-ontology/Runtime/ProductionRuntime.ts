@@ -8,8 +8,8 @@
  * by the application (e.g., from @effect/ai-anthropic or @effect/ai-openai).
  * Use `makeLanguageModelLayer()` helper to create it from ConfigService.
  *
- * @since 2.0.0
- * @module Runtime/ProductionRuntime
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import {AnthropicClient, AnthropicLanguageModel} from "@effect/ai-anthropic";
@@ -73,14 +73,14 @@ export class UnsupportedLlmProviderError extends Data.TaggedError("UnsupportedLl
  *
  * @returns Layer providing LanguageModel (with all dependencies satisfied)
  *
- * @example
- * ```typescript
+ * **Example** (Use makeLanguageModelLayer)
+ * ```ts
  * const layers = ProductionLayers.pipe(
  *   Layer.provide(makeLanguageModelLayer())
  * )
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeLanguageModelLayer = Layer.unwrap(
   Effect.gen(function* () {
@@ -119,7 +119,7 @@ export const makeLanguageModelLayer = Layer.unwrap(
  * Composes the base LanguageModel with rate limiting.
  * All LLM calls go through the rate limiter automatically.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const RateLimitedLlmLayer = RateLimitedLanguageModelLayer.pipe(Layer.provide(makeLanguageModelLayer));
 
@@ -134,7 +134,7 @@ export const RateLimitedLlmLayer = RateLimitedLanguageModelLayer.pipe(Layer.prov
  *
  * All services use the rate-limited LanguageModel automatically.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const ExtractionLayersLive = Layer.mergeAll(
   EntityExtractor.Default,
@@ -150,15 +150,15 @@ export const ExtractionLayersLive = Layer.mergeAll(
  * Run Jaeger locally with: docker run -d -p 16686:16686 -p 4318:4318 jaegertracing/all-in-one:latest
  * View traces at: http://localhost:16686
  *
- * @example
- * ```typescript
+ * **Example** (Use TracingLive)
+ * ```ts
  * // Use in production
  * const layers = ExtractionLayersLive.pipe(
  *   Layer.provide(TracingLive)
  * )
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const TracingLive = makeTracingLayer({
   serviceName: "effect-ontology-extraction",
@@ -174,7 +174,7 @@ export const TracingLive = makeTracingLayer({
  * - Rate-limited LLM
  * - OpenTelemetry tracing to Jaeger
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const ProductionLayersWithTracing = Layer.mergeAll(ExtractionLayersLive, TracingLive);
 
@@ -190,8 +190,8 @@ export const ProductionLayersWithTracing = Layer.mergeAll(ExtractionLayersLive, 
  * Does NOT include HTTP server layer - compose separately
  * based on your runtime (Bun, Node, etc.)
  *
- * @example
- * ```typescript
+ * **Example** (Use LlmControlLive)
+ * ```ts
  * import { BunHttpServer, BunRuntime } from "@effect/platform-bun"
  *
  * const ServerLive = HttpServerLive.pipe(
@@ -203,7 +203,7 @@ export const ProductionLayersWithTracing = Layer.mergeAll(ExtractionLayersLive, 
  * BunRuntime.runMain(Layer.launch(ServerLive))
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 /**
  * LLM Control layer stack
@@ -213,7 +213,7 @@ export const ProductionLayersWithTracing = Layer.mergeAll(ExtractionLayersLive, 
  * - StageTimeoutService: Soft/hard timeouts per stage
  * - CentralRateLimiterService: Rate limiting with circuit breaker
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const LlmControlLive = Layer.mergeAll(
   TokenBudgetServiceLive,

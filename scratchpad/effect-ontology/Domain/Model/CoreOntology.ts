@@ -26,7 +26,7 @@ const utf8Encoder = new TextEncoder();
 /**
  * Namespace IRI for the experimental core ontology.
  *
- * @example
+ * **Example** (Use CORE_NAMESPACE)
  * ```ts
  * import { CORE_NAMESPACE } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -41,11 +41,12 @@ export const CORE_NAMESPACE: IRI = IRI.fromUnknown("http://effect-ontology.dev/c
 /**
  * Core ontology class IRIs used by tracked objects.
  *
- * @remarks
- * This deliberately narrow schema replaces the upstream open-ended constants
+ * **Details**
+ *
+ * * This deliberately narrow schema replaces the upstream open-ended constants
  * object; it is not intended to become a repository-wide mega-vocabulary.
  *
- * @example
+ * **Example** (Use CoreClass)
  * ```ts
  * import { CoreClass } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -89,7 +90,7 @@ export const CoreClass = LiteralKit([
 /**
  * Runtime value accepted by {@link CoreClass}.
  *
- * @example
+ * **Example** (Use CoreClass)
  * ```ts
  * import type { CoreClass } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -105,7 +106,7 @@ export type CoreClass = typeof CoreClass.Type;
 /**
  * Core ontology property IRIs used by tracked objects and events.
  *
- * @example
+ * **Example** (Use CoreProperty)
  * ```ts
  * import { CoreProperty } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -169,7 +170,7 @@ export const CoreProperty = LiteralKit([
 /**
  * Runtime value accepted by {@link CoreProperty}.
  *
- * @example
+ * **Example** (Use CoreProperty)
  * ```ts
  * import type { CoreProperty } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -193,7 +194,7 @@ const digestText = Effect.fn("CoreOntology.digestText")(function* (text: string)
 /**
  * Deterministic identifier for one mention span.
  *
- * @example
+ * **Example** (Use MentionId)
  * ```ts
  * import { Effect } from "effect"
  * import { MentionId } from "@effect-ontology/Model/CoreOntology.ts"
@@ -237,7 +238,7 @@ export const MentionId = S.String.check(
 /**
  * Runtime value decoded by {@link MentionId}.
  *
- * @example
+ * **Example** (Use MentionId)
  * ```ts
  * import { MentionId, type MentionId as MentionIdentifier } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -260,7 +261,7 @@ type LegacyMentionEvidenceValue = typeof LegacyMentionEvidence.Type;
 /**
  * Ordered text evidence carried by a core ontology mention.
  *
- * @example
+ * **Example** (Use MentionEvidence)
  * ```ts
  * import { MentionEvidence } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -300,7 +301,7 @@ export const MentionEvidence = LegacyMentionEvidence.pipe(
 /**
  * Runtime value decoded by {@link MentionEvidence}.
  *
- * @example
+ * **Example** (Use MentionEvidence)
  * ```ts
  * import type { MentionEvidence } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -326,7 +327,7 @@ const MentionFields = {
 /**
  * Text evidence linking a source span to a tracked entity or event.
  *
- * @example
+ * **Example** (Use Mention)
  * ```ts
  * import * as S from "effect/Schema"
  * import { Mention } from "@effect-ontology/Model/CoreOntology.ts"
@@ -357,7 +358,7 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
 /**
  * Stable canonical identifier for a persistent resolved entity.
  *
- * @example
+ * **Example** (Use CanonicalEntityId)
  * ```ts
  * import { Effect } from "effect"
  * import { CanonicalEntityId } from "@effect-ontology/Model/CoreOntology.ts"
@@ -396,7 +397,7 @@ export const CanonicalEntityId = S.String.check(
 /**
  * Runtime value decoded by {@link CanonicalEntityId}.
  *
- * @example
+ * **Example** (Use CanonicalEntityId)
  * ```ts
  * import {
  *   CanonicalEntityId,
@@ -429,7 +430,7 @@ const TrackedEntityFields = {
 /**
  * Persistent canonical entity tracked across source documents.
  *
- * @example
+ * **Example** (Use TrackedEntity)
  * ```ts
  * import * as S from "effect/Schema"
  * import { TrackedEntity } from "@effect-ontology/Model/CoreOntology.ts"
@@ -455,7 +456,7 @@ export class TrackedEntity extends S.Class<TrackedEntity>($I`TrackedEntity`)(
   /**
    * Whether at least one other entity was merged into this canonical form.
    *
-   * @example
+   * **Example** (Use EventId)
    * ```ts
    * import * as S from "effect/Schema"
    * import { TrackedEntity } from "@effect-ontology/Model/CoreOntology.ts"
@@ -479,7 +480,7 @@ export class TrackedEntity extends S.Class<TrackedEntity>($I`TrackedEntity`)(
 /**
  * Stable deterministic identifier for a tracked event.
  *
- * @example
+ * **Example** (Use EventId)
  * ```ts
  * import { Effect } from "effect"
  * import { EventId } from "@effect-ontology/Model/CoreOntology.ts"
@@ -519,7 +520,7 @@ export const EventId = S.String.check(
 /**
  * Runtime value decoded by {@link EventId}.
  *
- * @example
+ * **Example** (Use EventId)
  * ```ts
  * import { EventId, type EventId as EventIdentifier } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -540,7 +541,7 @@ const ParticipantFields = {
 /**
  * Tracked entity participating in an event, with an optional ontology role.
  *
- * @example
+ * **Example** (Use Participant)
  * ```ts
  * import * as S from "effect/Schema"
  * import { Participant } from "@effect-ontology/Model/CoreOntology.ts"
@@ -615,7 +616,7 @@ const EventIntervalDefinition = EventIntervalFieldsModel.check(
 /**
  * Ordered start and optional end instant for a duration event.
  *
- * @example
+ * **Example** (Use EventInterval)
  * ```ts
  * import { DateTime } from "effect"
  * import { EventInterval } from "@effect-ontology/Model/CoreOntology.ts"
@@ -642,7 +643,7 @@ export const EventInterval = EventIntervalDefinition.annotate({
 /**
  * Runtime value decoded by {@link EventInterval}.
  *
- * @example
+ * **Example** (Use EventInterval)
  * ```ts
  * import type { EventInterval } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -664,7 +665,7 @@ const EventTimeDefinition = S.TaggedUnion({
 /**
  * Explicit temporal grounding for a tracked event.
  *
- * @example
+ * **Example** (Use EventTime)
  * ```ts
  * import { EventTime } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -685,7 +686,7 @@ export const EventTime = EventTimeDefinition.pipe(
 /**
  * Runtime value decoded by {@link EventTime}.
  *
- * @example
+ * **Example** (Use EventTime)
  * ```ts
  * import type { EventTime } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -712,7 +713,7 @@ const TrackedEventFields = {
 /**
  * Persistent ontology-typed occurrence involving tracked entities.
  *
- * @example
+ * **Example** (Use TrackedEvent)
  * ```ts
  * import * as S from "effect/Schema"
  * import { TrackedEvent } from "@effect-ontology/Model/CoreOntology.ts"
@@ -737,7 +738,7 @@ export class TrackedEvent extends S.Class<TrackedEvent>($I`TrackedEvent`)(
   /**
    * Whether this event has an explicit instant or interval.
    *
-   * @example
+   * **Example** (Use CoreOperationErrorFields)
    * ```ts
    * import * as S from "effect/Schema"
    * import { TrackedEvent } from "@effect-ontology/Model/CoreOntology.ts"
@@ -765,7 +766,7 @@ const CoreOperationErrorFields = {
 /**
  * Failure while constructing or persisting mention evidence.
  *
- * @example
+ * **Example** (Use MentionError)
  * ```ts
  * import { MentionError } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -787,7 +788,7 @@ export class MentionError extends S.TaggedError<MentionError>($I`MentionError`)(
 /**
  * Failure while resolving or persisting a tracked entity.
  *
- * @example
+ * **Example** (Use TrackedEntityError)
  * ```ts
  * import { TrackedEntityError } from "@effect-ontology/Model/CoreOntology.ts"
  *
@@ -809,7 +810,7 @@ export class TrackedEntityError extends S.TaggedError<TrackedEntityError>($I`Tra
 /**
  * Failure while grounding or persisting a tracked event.
  *
- * @example
+ * **Example** (Use TrackedEventError)
  * ```ts
  * import { TrackedEventError } from "@effect-ontology/Model/CoreOntology.ts"
  *

@@ -3,8 +3,8 @@
  *
  * Provides consistent error formatting and handling for CLI commands.
  *
- * @since 2.0.0
- * @module Cli/ErrorHandler
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Cause, Console, Effect, Result } from "effect";

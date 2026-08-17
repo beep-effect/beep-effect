@@ -3,8 +3,8 @@
  *
  * HTTP endpoints for WebSocket ticket-based authentication.
  *
- * @since 2.0.0
- * @module Runtime/AuthRouter
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Effect, HashSet, Option, Redacted, Schema } from "effect";

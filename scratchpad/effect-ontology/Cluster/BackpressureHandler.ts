@@ -6,8 +6,8 @@
  * - Non-critical events sampled when queue load exceeds threshold
  * - Configurable queue size and sampling rates
  *
- * @since 2.0.0
- * @module Cluster/BackpressureHandler
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -119,8 +119,8 @@ const isCriticalEvent = (event: ExtractionProgressEvent): boolean => HashSet.has
  * @param config - Backpressure configuration
  * @returns Stream with backpressure applied
  *
- * @example
- * ```typescript
+ * **Example** (Use withBackpressure)
+ * ```ts
  * const controlled = withBackpressure(progressStream, {
  *   maxQueuedEvents: 500,
  *   samplingThreshold: 0.7,

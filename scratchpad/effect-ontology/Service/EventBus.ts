@@ -4,8 +4,8 @@
  * Unified interface for event publishing and job queuing.
  * Supports multiple backends: Memory (dev/test), Postgres (durable), PubSub (production).
  *
- * @since 2.0.0
- * @module Service/EventBus
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -32,7 +32,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EventBus");
 /**
  * Job with metadata for processing
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface JobWithMetadata {
   readonly job: BackgroundJob;
@@ -43,7 +43,7 @@ export interface JobWithMetadata {
 /**
  * Event entry from journal
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface EventEntry {
   readonly id: string;
@@ -60,7 +60,7 @@ export interface EventEntry {
 /**
  * EventBusService interface for event publishing and job queuing
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface EventBusServiceMethods {
   /**
@@ -117,7 +117,7 @@ export interface EventBusServiceMethods {
 /**
  * EventBusService context tag
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export class EventBusService extends Context.Service<EventBusService, EventBusServiceMethods>()($I`EventBusService`) {}
 
@@ -131,7 +131,7 @@ export class EventBusService extends Context.Service<EventBusService, EventBusSe
  * Uses Effect Queue for jobs and in-memory event storage.
  * Not durable - events and jobs are lost on restart.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const EventBusServiceMemory = Layer.effect(
   EventBusService,
@@ -342,7 +342,7 @@ const JOBS_QUEUE_NAME = "ontology_jobs";
  * - effect_event_remotes: Remote sync tracking
  * - effect_queue: Durable job queue with retry semantics
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const EventBusServiceSql = Layer.effect(
   EventBusService,
@@ -494,7 +494,7 @@ export const EventBusServiceSql = Layer.effect(
  * Requires SqlClient.SqlClient in context.
  * Auto-creates tables: effect_event_journal, effect_event_remotes, effect_queue
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const EventBusServiceSqlLayers = Layer.mergeAll(
   SqlEventJournal.layer({
@@ -511,7 +511,7 @@ export const EventBusServiceSqlLayers = Layer.mergeAll(
  *
  * Requires SqlClient.SqlClient in context.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const EventBusServiceSqlLive = EventBusServiceSql.pipe(Layer.provide(EventBusServiceSqlLayers));
 
@@ -522,6 +522,6 @@ export const EventBusServiceSqlLive = EventBusServiceSql.pipe(Layer.provide(Even
 /**
  * Default EventBusService layer (Memory implementation)
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const EventBusServiceDefault = EventBusServiceMemory;

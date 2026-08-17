@@ -5,8 +5,8 @@
  * Handles corrections, deprecations, alias additions, and rank promotions.
  * Publishes events via EventBusService and queues background jobs for async processing.
  *
- * @since 2.0.0
- * @module Service/Curation
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { DrizzleError } from "@beep/drizzle";

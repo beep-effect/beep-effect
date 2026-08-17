@@ -1,8 +1,9 @@
 /**
  * Schema-backed failures raised by large-language-model operations.
  *
- * @remarks
- * Timeout and retry metadata are decoded to `Option` values, keeping absence
+ * **Details**
+ *
+ * * Timeout and retry metadata are decoded to `Option` values, keeping absence
  * out of downstream branching and preserving exhaustive `_tag` handling.
  *
  * @packageDocumentation
@@ -23,7 +24,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Llm");
 /**
  * General LLM provider failure without a more precise recovery category.
  *
- * @example
+ * **Example** (Use LlmError)
  * ```ts
  * import { LlmError } from "@effect-ontology/Error/Llm.ts"
  *
@@ -53,7 +54,7 @@ export const LlmError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link LlmError}.
  *
- * @example
+ * **Example** (Use LlmError)
  * ```ts
  * import { LlmError, type LlmError as LlmFailure } from "@effect-ontology/Error/Llm.ts"
  *
@@ -69,11 +70,12 @@ export type LlmError = typeof LlmError.Type;
 /**
  * Indicates that an LLM call exceeded its configured deadline.
  *
- * @remarks
- * The deadline may be unavailable when a provider owns timeout policy; the
+ * **Details**
+ *
+ * * The deadline may be unavailable when a provider owns timeout policy; the
  * decoded value is still always an `Option`.
  *
- * @example
+ * **Example** (Use LlmTimeout)
  * ```ts
  * import { LlmTimeout } from "@effect-ontology/Error/Llm.ts"
  *
@@ -106,7 +108,7 @@ export const LlmTimeout = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link LlmTimeout}.
  *
- * @example
+ * **Example** (Use LlmTimeout)
  * ```ts
  * import { LlmTimeout, type LlmTimeout as Timeout } from "@effect-ontology/Error/Llm.ts"
  *
@@ -122,7 +124,7 @@ export type LlmTimeout = typeof LlmTimeout.Type;
 /**
  * Indicates that an LLM provider rejected work because of a rate limit.
  *
- * @example
+ * **Example** (Use LlmRateLimit)
  * ```ts
  * import { LlmRateLimit } from "@effect-ontology/Error/Llm.ts"
  *
@@ -155,7 +157,7 @@ export const LlmRateLimit = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link LlmRateLimit}.
  *
- * @example
+ * **Example** (Use LlmRateLimit)
  * ```ts
  * import { LlmRateLimit, type LlmRateLimit as RateLimited } from "@effect-ontology/Error/Llm.ts"
  *
@@ -171,11 +173,12 @@ export type LlmRateLimit = typeof LlmRateLimit.Type;
 /**
  * Indicates that an LLM response could not be interpreted.
  *
- * @remarks
- * A diagnostic excerpt may be retained, but callers should truncate or redact
+ * **Details**
+ *
+ * * A diagnostic excerpt may be retained, but callers should truncate or redact
  * provider output before crossing this boundary.
  *
- * @example
+ * **Example** (Use LlmInvalidResponse)
  * ```ts
  * import { LlmInvalidResponse } from "@effect-ontology/Error/Llm.ts"
  *
@@ -208,7 +211,7 @@ export const LlmInvalidResponse = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link LlmInvalidResponse}.
  *
- * @example
+ * **Example** (Use LlmInvalidResponse)
  * ```ts
  * import { LlmInvalidResponse, type LlmInvalidResponse as InvalidResponse } from "@effect-ontology/Error/Llm.ts"
  *
@@ -228,7 +231,7 @@ const AnyLlmErrorDefinition = S.Union([LlmError, LlmTimeout, LlmRateLimit, LlmIn
 /**
  * Exhaustive tagged union of LLM operation failures.
  *
- * @example
+ * **Example** (Use AnyLlmError)
  * ```ts
  * import { AnyLlmError, LlmTimeout } from "@effect-ontology/Error/Llm.ts"
  *
@@ -249,7 +252,7 @@ export const AnyLlmError = AnyLlmErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link AnyLlmError}.
  *
- * @example
+ * **Example** (Use AnyLlmError)
  * ```ts
  * import { LlmError, type AnyLlmError } from "@effect-ontology/Error/Llm.ts"
  *

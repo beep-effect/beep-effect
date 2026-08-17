@@ -4,8 +4,8 @@
  * Wraps existing NomicNlpService as EmbeddingProvider interface.
  * Enables local inference via Transformers.js.
  *
- * @since 2.0.0
- * @module Service/NomicEmbeddingProvider
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Effect, Layer } from "effect";
@@ -43,8 +43,8 @@ const mapTaskType = (taskType: string): NomicTaskType => {
 /**
  * Create NomicEmbeddingProvider from NomicNlpService
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const NomicEmbeddingProviderLive: Layer.Layer<EmbeddingProvider, never, NomicNlpService | ConfigService> =
   Layer.effect(
@@ -92,8 +92,8 @@ export const NomicEmbeddingProviderLive: Layer.Layer<EmbeddingProvider, never, N
  *
  * Includes NomicNlpService layer.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const NomicEmbeddingProviderDefault: Layer.Layer<EmbeddingProvider, never, ConfigService> =
   NomicEmbeddingProviderLive.pipe(Layer.provide(NomicNlpServiceLive));

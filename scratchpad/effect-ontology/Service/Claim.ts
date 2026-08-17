@@ -4,8 +4,8 @@
  * High-level service for claim management with RDF serialization.
  * Wraps ClaimRepository with additional business logic and RDF reification.
  *
- * @since 2.0.0
- * @module Service/Claim
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -74,8 +74,8 @@ const randomUuid = Effect.all([
 /**
  * Input for creating a new claim
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface CreateClaimInput {
   readonly subjectIri: string;
@@ -97,8 +97,8 @@ export interface CreateClaimInput {
 /**
  * Result of deprecating a claim
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface DeprecationResult {
   readonly claimId: string;
@@ -125,8 +125,8 @@ export interface DeprecationResult {
  * - `getClaimHistory`: Get all claims for a subject+predicate over time
  * - `toReifiedTriples`: Convert claim to reified RDF quads
  *
- * @example
- * ```typescript
+ * **Example** (Use ClaimService)
+ * ```ts
  * Effect.gen(function*() {
  *   const claim = yield* ClaimService.createClaim({
  *     subjectIri: "http://example.org/person/123",
@@ -142,8 +142,8 @@ export interface DeprecationResult {
  * }).pipe(Effect.provide(ClaimService.Default))
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class ClaimService extends Context.Service<ClaimService>()($I`ClaimService`, {
   make: Effect.gen(function* () {

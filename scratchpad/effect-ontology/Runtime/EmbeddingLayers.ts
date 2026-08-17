@@ -4,8 +4,8 @@
  * Provides configured embedding service based on EMBEDDING_PROVIDER config.
  * Handles dynamic provider selection between Nomic (local) and Voyage (API).
  *
- * @since 2.0.0
- * @module Runtime/EmbeddingLayers
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Effect, Layer } from "effect";
@@ -39,8 +39,8 @@ import { MetricsService } from "../Telemetry/Metrics.ts";
  * Note: Uses Layer.unwrap with proper type annotation for the union
  * of all possible layer requirements.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const EmbeddingProviderFromConfig: Layer.Layer<
   EmbeddingProvider,
@@ -80,8 +80,8 @@ export const EmbeddingProviderFromConfig: Layer.Layer<
  * Uses EMBEDDING_RATE_LIMIT_RPM and EMBEDDING_MAX_CONCURRENT from config.
  * Falls back to provider defaults if not specified.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const EmbeddingRateLimiterFromConfig: Layer.Layer<EmbeddingRateLimiter, never, ConfigService> = Layer.unwrap(
   Effect.gen(function* () {
@@ -106,8 +106,8 @@ export const EmbeddingRateLimiterFromConfig: Layer.Layer<EmbeddingRateLimiter, n
  *
  * Complete local embedding stack with in-memory cache.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const NomicEmbeddingInfrastructure: Layer.Layer<
   EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache,
@@ -120,8 +120,8 @@ export const NomicEmbeddingInfrastructure: Layer.Layer<
  *
  * Complete Voyage API embedding stack with rate limiting and cache.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const VoyageEmbeddingInfrastructure: Layer.Layer<
   EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache,
@@ -145,8 +145,8 @@ export const VoyageEmbeddingInfrastructure: Layer.Layer<
  * - EmbeddingRateLimiterFromConfig needs: ConfigService
  * - FetchHttpClient.layer needs: nothing
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const EmbeddingInfrastructure: Layer.Layer<
   EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache,
@@ -165,8 +165,8 @@ export const EmbeddingInfrastructure: Layer.Layer<
  * Self-contained layer that includes ConfigService.
  * May fail with ConfigError if environment is not properly configured.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const EmbeddingInfrastructureDefault = EmbeddingInfrastructure.pipe(
   Layer.provideMerge(MetricsService.Default),

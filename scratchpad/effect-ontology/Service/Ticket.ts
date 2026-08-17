@@ -4,8 +4,8 @@
  * Single-use ticket management for WebSocket authentication.
  * Tickets are stored in shared StorageService so any replica can consume them.
  *
- * @since 2.0.0
- * @module Service/Ticket
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { randomBytes } from "node:crypto";

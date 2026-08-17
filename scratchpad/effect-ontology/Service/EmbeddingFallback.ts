@@ -5,8 +5,8 @@
  * When the primary provider (Voyage) fails, automatically falls back to
  * secondary provider (Nomic).
  *
- * @since 2.0.0
- * @module Service/EmbeddingFallback
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import {Effect, Layer, Option, Redacted, Ref} from "effect";
@@ -42,8 +42,8 @@ import {makeVoyageProvider} from "./VoyageEmbeddingProvider.ts";
 /**
  * Fallback chain configuration
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface FallbackChainConfig {
   /** Order of providers to try */
@@ -55,8 +55,8 @@ export interface FallbackChainConfig {
 /**
  * Active provider tracking for observability
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ActiveProviderInfo {
   readonly currentProvider: EmbeddingProviderId;
@@ -71,8 +71,8 @@ export interface ActiveProviderInfo {
 /**
  * Default fallback chain: Voyage -> Nomic
  *
- * @since 2.0.0
- * @category Constants
+ * @since 0.0.0
+ * @category constants
  */
 export const DEFAULT_FALLBACK_CHAIN: FallbackChainConfig = {
   providers: ["voyage", "nomic"],
@@ -115,8 +115,8 @@ const makeProtectedProvider = (
  *
  * Wraps providers with circuit breaker protection and fallback logic.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const EmbeddingProviderFallbackLive: Layer.Layer<
   EmbeddingProvider,
@@ -210,7 +210,7 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
 
           // Log fallback and update tracking
           return Ref.update(activeProviderRef, (info) => ({
-            currentProvider: "nomic" as const,
+            currentProvider: "nomic",
             fallbackCount: info.fallbackCount + 1,
             lastFallbackReason: reason,
           })).pipe(
@@ -253,8 +253,8 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
  *
  * Includes HTTP client, Nomic NLP, circuit breaker, and rate limiter.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const EmbeddingProviderFallbackDefault: Layer.Layer<EmbeddingProvider, never, ConfigService | NomicNlpService> =
   EmbeddingProviderFallbackLive.pipe(

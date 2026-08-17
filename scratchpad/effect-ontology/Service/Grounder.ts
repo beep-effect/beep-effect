@@ -6,8 +6,8 @@
  *
  * Supports both single and batched verification for efficiency.
  *
- * @since 2.0.0
- * @module Service/Grounder
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
@@ -318,7 +318,7 @@ const DEFAULT_BATCH_SIZE = 5;
  * Provides relation verification via secondary LLM pass.
  * Supports both single relation and batched verification.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
   make: Effect.gen(function* () {
@@ -456,7 +456,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             confidence: number;
           };
           const resultsMap = HashMap.fromIterable(
-            (response.value.results as ReadonlyArray<GrounderResult>).map((r: GrounderResult) => [r.index, r] as const)
+            (response.value.results as ReadonlyArray<GrounderResult>).map((r: GrounderResult) => [r.index, r])
           );
           return inputs.map((input, index) => {
             const result = HashMap.get(resultsMap, index);
@@ -531,7 +531,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                   };
                   const resultsMap = HashMap.fromIterable(
                     (response.value.results as ReadonlyArray<GrounderResult>).map(
-                      (r: GrounderResult) => [r.index, r] as const
+                      (r: GrounderResult) => [r.index, r]
                     )
                   );
                   return batchArray.map((input, index) => {
@@ -681,7 +681,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             confidence: number;
           };
           const resultsMap = HashMap.fromIterable(
-            (response.value.results as ReadonlyArray<EntityResult>).map((r: EntityResult) => [r.index, r] as const)
+            (response.value.results as ReadonlyArray<EntityResult>).map((r: EntityResult) => [r.index, r])
           );
           return entities.map((entity, index) => {
             const result = HashMap.get(resultsMap, index);
@@ -716,7 +716,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
   /**
    * Test layer with deterministic responses (all relations pass verification)
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   static Test = Layer.succeed(Grounder, {
     verifyRelation: Effect.fn("Grounder.verifyRelation")((input: RelationVerificationInput) =>

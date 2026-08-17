@@ -15,8 +15,8 @@
  * - Server sends periodic pings to keep connection alive
  * - Client receives events filtered by ontologyId
  *
- * @since 2.0.0
- * @module Runtime/EventBroadcastRouter
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -328,7 +328,7 @@ export const EventBroadcastHubLive = Layer.unwrap(
  * Provides WebSocket endpoint for real-time event streaming:
  * - GET /v1/ontologies/:ontologyId/events/stream - WebSocket upgrade
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const EventBroadcastRouter = HttpRouter.addAll([
   HttpRouter.route(
@@ -454,7 +454,7 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
  *
  * Call this from EventBusService or WorkflowOrchestrator to broadcast events.
  *
- * @example
+ * **Example** (Use broadcastDomainEvent)
  * ```ts
  * yield* broadcastDomainEvent("seattle", {
  *   event: "ExtractionCompleted",

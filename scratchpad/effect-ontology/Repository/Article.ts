@@ -4,8 +4,8 @@
  * Effect-native repository for article metadata using Drizzle ORM.
  * Tracks source documents from which claims are extracted.
  *
- * @since 2.0.0
- * @module Repository/Article
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";

@@ -4,8 +4,8 @@
  * Post-extraction entity resolution to merge duplicate/coreference entities.
  * Handles cases like "Eze" and "Eberechi Eze" being the same person.
  *
- * @since 2.0.0
- * @module Workflow/EntityResolution
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { IRI } from "@beep/rdf";
@@ -194,16 +194,16 @@ const mergeEntityCluster = (
  * @param config - Resolution configuration (optional)
  * @returns Effect yielding resolved knowledge graph
  *
- * @example
- * ```typescript
+ * **Example** (Use resolveEntities)
+ * ```ts
  * const resolved = yield* resolveEntities(graph, {
  *   mentionSimilarityThreshold: 0.7,
  *   requireTypeOverlap: true
  * })
  * ```
  *
- * @since 2.0.0
- * @category Workflows
+ * @since 0.0.0
+ * @category workflows
  */
 export const resolveEntities = dual2(
   (graph: KnowledgeGraph, config: Partial<EntityResolutionConfig>): Effect.Effect<KnowledgeGraph, never, never> =>

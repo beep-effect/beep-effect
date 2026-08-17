@@ -5,8 +5,8 @@
  * clean LLM-friendly markdown. Handles rate limiting, timeouts, and retries.
  *
  * @see https://jina.ai/reader/
- * @since 2.0.0
- * @module Service/JinaReaderClient
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -103,7 +103,7 @@ const makeRateLimiter = (maxRequests: number, windowMs: number = 60_000) => {
     }
   });
 
-  return { acquire } as const;
+  return { acquire };
 };
 
 // =============================================================================

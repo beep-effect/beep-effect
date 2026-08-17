@@ -5,8 +5,8 @@
  * Provides typed access to the claims table with support for
  * querying, deprecation, and conflict detection.
  *
- * @since 2.0.0
- * @module Repository/Claim
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { DrizzleError } from "@beep/drizzle";

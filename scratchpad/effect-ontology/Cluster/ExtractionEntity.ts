@@ -6,8 +6,8 @@
  * - Idempotency key routing
  * - Cached result retrieval
  *
- * @since 2.0.0
- * @module Cluster/ExtractionEntity
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";

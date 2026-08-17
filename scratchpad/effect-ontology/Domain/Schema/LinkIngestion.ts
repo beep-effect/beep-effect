@@ -39,11 +39,12 @@ const LinkStatus = LiteralKit(["pending", "enriched", "processed", "failed"])
 /**
  * Request to ingest and optionally enrich one HTTP(S) resource.
  *
- * @remarks
- * Boolean controls have schema-owned defaults. Source classification is an
+ * **Details**
+ *
+ * * Boolean controls have schema-owned defaults. Source classification is an
  * `Option`, eliminating undefined checks from ingestion behavior.
  *
- * @example
+ * **Example** (Use IngestLinkRequest)
  * ```ts
  * import { IngestLinkRequest } from "@effect-ontology/Schema/LinkIngestion.ts"
  *
@@ -54,7 +55,7 @@ const LinkStatus = LiteralKit(["pending", "enriched", "processed", "failed"])
  * console.log(request.skipEnrich) // false
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class IngestLinkRequest extends S.Class<IngestLinkRequest>($I`IngestLinkRequest`)(
@@ -95,7 +96,7 @@ export class IngestLinkRequest extends S.Class<IngestLinkRequest>($I`IngestLinkR
 /**
  * Successful result of ingesting one link.
  *
- * @example
+ * **Example** (Use IngestLinkResponse)
  * ```ts
  * import { IngestLinkResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
  *
@@ -108,7 +109,7 @@ export class IngestLinkRequest extends S.Class<IngestLinkRequest>($I`IngestLinkR
  * console.log(response.duplicate) // false
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class IngestLinkResponse extends S.Class<IngestLinkResponse>($I`IngestLinkResponse`)(
@@ -149,7 +150,7 @@ export class IngestLinkResponse extends S.Class<IngestLinkResponse>($I`IngestLin
 /**
  * Request to ingest a non-empty batch of HTTP(S) resources.
  *
- * @example
+ * **Example** (Use BatchIngestRequest)
  * ```ts
  * import { BatchIngestRequest } from "@effect-ontology/Schema/LinkIngestion.ts"
  *
@@ -162,7 +163,7 @@ export class IngestLinkResponse extends S.Class<IngestLinkResponse>($I`IngestLin
  *
  * @invariant At least one valid HTTP(S) URL is present and concurrency is a
  * positive integer.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class BatchIngestRequest extends S.Class<BatchIngestRequest>($I`BatchIngestRequest`)(
@@ -244,12 +245,13 @@ const BatchIngestResultDefinition = S.TaggedUnion({
 /**
  * Per-link batch outcome discriminated by status.
  *
- * @remarks
- * Success and duplicate outcomes nest their identifiers under `value`; error
+ * **Details**
+ *
+ * * Success and duplicate outcomes nest their identifiers under `value`; error
  * outcomes carry a mandatory diagnostic. Impossible combinations of nullable
  * identifiers and errors are therefore unrepresentable.
  *
- * @example
+ * **Example** (Use BatchIngestResult)
  * ```ts
  * import * as S from "effect/Schema"
  * import { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion.ts"
@@ -263,7 +265,7 @@ const BatchIngestResultDefinition = S.TaggedUnion({
  * ```
  *
  * @invariant The `_tag` discriminator determines the complete payload shape.
- * @category unions
+ * @category schemas
  * @since 0.0.0
  */
 export const BatchIngestResult = BatchIngestResultDefinition.pipe(
@@ -276,7 +278,7 @@ export const BatchIngestResult = BatchIngestResultDefinition.pipe(
 /**
  * Runtime value decoded by {@link BatchIngestResult}.
  *
- * @example
+ * **Example** (Use BatchIngestResult)
  * ```ts
  * import type { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion.ts"
  *
@@ -372,7 +374,7 @@ const BatchIngestResponseDefinition = BatchIngestResponseFields.check(
 /**
  * Batch-ingestion response with a summary proven from tagged results.
  *
- * @example
+ * **Example** (Use BatchIngestResponse)
  * ```ts
  * import { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
  *
@@ -381,7 +383,7 @@ const BatchIngestResponseDefinition = BatchIngestResponseFields.check(
  * ```
  *
  * @invariant Summary counts exactly equal the result count grouped by `_tag`.
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export const BatchIngestResponse = BatchIngestResponseDefinition.annotate({
@@ -407,7 +409,7 @@ export const BatchIngestResponse = BatchIngestResponseDefinition.annotate({
 /**
  * Runtime value decoded by {@link BatchIngestResponse}.
  *
- * @example
+ * **Example** (Use BatchIngestResponse)
  * ```ts
  * import type { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
  *
@@ -423,7 +425,7 @@ export type BatchIngestResponse = typeof BatchIngestResponse.Type;
 /**
  * Normalized query for listing ingested links.
  *
- * @example
+ * **Example** (Use ListLinksQuery)
  * ```ts
  * import { ListLinksQuery } from "@effect-ontology/Schema/LinkIngestion.ts"
  *
@@ -432,7 +434,7 @@ export type BatchIngestResponse = typeof BatchIngestResponse.Type;
  * console.log(query.offset) // 0
  * ```
  *
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class ListLinksQuery extends S.Class<ListLinksQuery>($I`ListLinksQuery`)(
@@ -478,7 +480,7 @@ export class ListLinksQuery extends S.Class<ListLinksQuery>($I`ListLinksQuery`)(
 /**
  * Compact projection of one ingested link.
  *
- * @example
+ * **Example** (Use LinkSummary)
  * ```ts
  * import { LinkSummary } from "@effect-ontology/Schema/LinkIngestion.ts"
  *
@@ -543,7 +545,7 @@ export class LinkSummary extends S.Class<LinkSummary>($I`LinkSummary`)(
 /**
  * Paginated response listing ingested links.
  *
- * @example
+ * **Example** (Use ListLinksResponse)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ListLinksResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
@@ -557,7 +559,7 @@ export class LinkSummary extends S.Class<LinkSummary>($I`LinkSummary`)(
  * console.log(response.links.length) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class ListLinksResponse extends S.Class<ListLinksResponse>($I`ListLinksResponse`)(
@@ -579,11 +581,12 @@ export class ListLinksResponse extends S.Class<ListLinksResponse>($I`ListLinksRe
 /**
  * Detailed projection of one ingested link and its processing metadata.
  *
- * @remarks
- * All nullable source metadata decodes to `Option`; topics and entity keys
+ * **Details**
+ *
+ * * All nullable source metadata decodes to `Option`; topics and entity keys
  * always decode to readonly arrays.
  *
- * @example
+ * **Example** (Use LinkDetail)
  * ```ts
  * import { LinkDetail } from "@effect-ontology/Schema/LinkIngestion.ts"
  *
@@ -596,7 +599,7 @@ export class ListLinksResponse extends S.Class<ListLinksResponse>($I`ListLinksRe
  * console.log(detail.topics.length) // 0
  * ```
  *
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export class LinkDetail extends S.Class<LinkDetail>($I`LinkDetail`)(

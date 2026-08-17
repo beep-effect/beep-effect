@@ -3,8 +3,8 @@
  *
  * Provides layers for workflow persistence backends and database migrations.
  *
- * @since 2.0.0
- * @module Runtime/Persistence
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 export * from "./MigrationRunner.ts";

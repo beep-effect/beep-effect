@@ -4,8 +4,8 @@
  * Extracts relevant subgraphs from knowledge graphs for GraphRAG context.
  * Supports N-hop traversal from seed entities and relevance-based extraction.
  *
- * @since 2.0.0
- * @module Service/SubgraphExtractor
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -24,8 +24,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
 /**
  * Extracted subgraph containing nodes and edges
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface Subgraph {
   /** Entities in the subgraph */
@@ -41,8 +41,8 @@ export interface Subgraph {
 /**
  * Options for N-hop extraction
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ExtractOptions {
   /** Maximum number of nodes to include (default: unlimited) */
@@ -56,8 +56,8 @@ export interface ExtractOptions {
 /**
  * Options for relevance-based extraction
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ExtractRelevantOptions {
   /** Number of seed entities to find (default: 5) */
@@ -73,8 +73,8 @@ export interface ExtractRelevantOptions {
 /**
  * SubgraphExtractor service interface
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface SubgraphExtractorService {
   /**
@@ -123,8 +123,8 @@ const emptySubgraph = (centerNodes: ReadonlyArray<EntityId>, depth: number): Sub
 /**
  * SubgraphExtractor - Extracts relevant subgraphs for GraphRAG context
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()($I`SubgraphExtractor`, {
   make: Effect.gen(function* () {
@@ -277,7 +277,7 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()($I`S
  *
  * Requires EmbeddingService dependencies to be provided.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const SubgraphExtractorDefault = SubgraphExtractor.Default;

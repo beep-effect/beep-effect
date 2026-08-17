@@ -9,8 +9,8 @@
  * - Resolution of ontology URIs to storage paths
  * - Validation that required files exist
  *
- * @since 2.0.0
- * @module Service/OntologyRegistry
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -28,8 +28,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/OntologyRegistry");
 /**
  * Error types for registry operations
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class RegistryNotFoundError {
   readonly _tag = "RegistryNotFoundError";
@@ -74,8 +74,8 @@ const DEFAULT_REGISTRY_PATH = "registry.json";
  * - Look up ontologies by ID or IRI
  * - Resolve ontology URIs to storage paths
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class OntologyRegistryService extends Context.Service<OntologyRegistryService>()($I`OntologyRegistryService`, {
   make: Effect.gen(function* () {

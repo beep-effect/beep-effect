@@ -17,13 +17,13 @@
  *                                    WebSocket clients
  * ```
  *
- * @since 2.0.0
- * @module Service/BatchStateBridge
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
 import { Context, Effect, Fiber, Layer, PubSub, Stream } from "effect";
-import type { BatchState } from "../Domain/Model/BatchWorkflow.ts";
+import { BatchState } from "../Domain/Model/BatchWorkflow.ts";
 import { broadcastDomainEvent } from "../Runtime/EventBroadcastRouter.ts";
 import { BatchStateHub } from "./BatchState.ts";
 
@@ -40,7 +40,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/BatchStateBridge");
  * The bridge starts automatically when the service is created and runs until
  * the scope is closed.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface BatchStateBridgeShape {
   /**
@@ -73,68 +73,55 @@ const toBroadcastPayload = (state: BatchState) => ({
 /**
  * Extract stage-specific details for the broadcast payload
  */
-const getStageDetails = (state: BatchState): Record<string, unknown> => {
-  switch (state._tag) {
-    case "Pending":
-      return { documentCount: state.documentCount };
-
-    case "Preprocessing":
-      return {
-        documentsTotal: state.documentsTotal,
-        documentsClassified: state.documentsClassified,
-        documentsFailed: state.documentsFailed,
-        enrichedManifestUri: state.enrichedManifestUri,
-      };
-
-    case "Extracting":
-      return {
-        documentsTotal: state.documentsTotal,
-        documentsCompleted: state.documentsCompleted,
-        documentsFailed: state.documentsFailed,
-        currentDocumentId: state.currentDocumentId,
-        progress: state.documentsTotal > 0 ? Math.round((state.documentsCompleted / state.documentsTotal) * 100) : 0,
-      };
-
-    case "Resolving":
-      return {
-        extractionOutputUri: state.extractionOutputUri,
-        entitiesTotal: state.entitiesTotal,
-        clustersFormed: state.clustersFormed,
-      };
-
-    case "Validating":
-      return {
-        resolvedGraphUri: state.resolvedGraphUri,
-        validationStartedAt: state.validationStartedAt.toString(),
-      };
-
-    case "Ingesting":
-      return {
-        validatedGraphUri: state.validatedGraphUri,
-        triplesTotal: state.triplesTotal,
-        triplesIngested: state.triplesIngested,
-        progress: state.triplesTotal > 0 ? Math.round((state.triplesIngested / state.triplesTotal) * 100) : 0,
-      };
-
-    case "Complete":
-      return {
-        canonicalGraphUri: state.canonicalGraphUri,
-        stats: state.stats,
-        completedAt: state.completedAt.toString(),
-      };
-
-    case "Failed":
-      return {
-        failedAt: state.failedAt.toString(),
-        failedInStage: state.failedInStage,
-        error: state.error,
-        lastSuccessfulStage: state.lastSuccessfulStage,
-      };
-
-    default:
-      return {};
-  }
-};
+const getStageDetails = (state: BatchState): Record<string, unknown> =>
+  BatchState.match(state, {
+    Pending: ({ documentCount }): Record<string, unknown> => ({ documentCount }),
+    Preprocessing: ({ documentsClassified, documentsFailed, documentsTotal, enrichedManifestUri }): Record<
+      string,
+      unknown
+    > => ({
+      documentsTotal,
+      documentsClassified,
+      documentsFailed,
+      enrichedManifestUri,
+    }),
+    Extracting: ({ currentDocumentId, documentsCompleted, documentsFailed, documentsTotal }): Record<
+      string,
+      unknown
+    > => ({
+      documentsTotal,
+      documentsCompleted,
+      documentsFailed,
+      currentDocumentId,
+      progress: documentsTotal > 0 ? Math.round((documentsCompleted / documentsTotal) * 100) : 0,
+    }),
+    Resolving: ({ clustersFormed, entitiesTotal, extractionOutputUri }): Record<string, unknown> => ({
+      extractionOutputUri,
+      entitiesTotal,
+      clustersFormed,
+    }),
+    Validating: ({ resolvedGraphUri, validationStartedAt }): Record<string, unknown> => ({
+      resolvedGraphUri,
+      validationStartedAt: validationStartedAt.toString(),
+    }),
+    Ingesting: ({ triplesIngested, triplesTotal, validatedGraphUri }): Record<string, unknown> => ({
+      validatedGraphUri,
+      triplesTotal,
+      triplesIngested,
+      progress: triplesTotal > 0 ? Math.round((triplesIngested / triplesTotal) * 100) : 0,
+    }),
+    Complete: ({ canonicalGraphUri, completedAt, stats }): Record<string, unknown> => ({
+      canonicalGraphUri,
+      stats,
+      completedAt: completedAt.toString(),
+    }),
+    Failed: ({ error, failedAt, failedInStage, lastSuccessfulStage }): Record<string, unknown> => ({
+      failedAt: failedAt.toString(),
+      failedInStage,
+      error,
+      lastSuccessfulStage,
+    }),
+  });
 
 /**
  * Create the BatchStateBridge service
@@ -188,7 +175,7 @@ const makeBatchStateBridge = Effect.gen(function* () {
  * Requires BatchStateHub and EventBroadcastHub to be provided.
  * Runs as a scoped service - the bridge fiber is cleaned up when the layer scope closes.
  *
- * @example
+ * **Example** (Use BatchStateBridgeLive)
  * ```ts
  * const AppLayer = Layer.mergeAll(
  *   BatchStateHubLayer,
@@ -197,13 +184,13 @@ const makeBatchStateBridge = Effect.gen(function* () {
  * )
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const BatchStateBridgeLive = Layer.effect(BatchStateBridge, makeBatchStateBridge);
 
 /**
  * Default layer (alias for BatchStateBridgeLive)
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const BatchStateBridgeDefault = BatchStateBridgeLive;

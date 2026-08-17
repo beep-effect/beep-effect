@@ -3,8 +3,8 @@
  *
  * Browse and manage data in cloud storage (GCS) or local storage.
  *
- * @since 2.0.0
- * @module Cli/Commands/Storage
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Console, Effect } from "effect";

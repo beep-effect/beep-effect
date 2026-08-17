@@ -1,8 +1,9 @@
 /**
  * Schema-backed failures for the SHACL validation lifecycle.
  *
- * @remarks
- * Shape identifiers use canonical RDF IRIs, policy severity is a closed
+ * **Details**
+ *
+ * * Shape identifiers use canonical RDF IRIs, policy severity is a closed
  * literal domain, and result counts are finite non-negative integers.
  *
  * @packageDocumentation
@@ -19,7 +20,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Shacl");
 /**
  * Severity threshold that caused SHACL policy rejection.
  *
- * @example
+ * **Example** (Use ValidationPolicySeverity)
  * ```ts
  * import { ValidationPolicySeverity } from "@effect-ontology/Error/Shacl.ts"
  *
@@ -40,7 +41,7 @@ export const ValidationPolicySeverity = S.Literals(ShaclSeverity.pickOptions(["v
 /**
  * Runtime value accepted by {@link ValidationPolicySeverity}.
  *
- * @example
+ * **Example** (Use ValidationPolicySeverity)
  * ```ts
  * import type { ValidationPolicySeverity } from "@effect-ontology/Error/Shacl.ts"
  *
@@ -56,7 +57,7 @@ export type ValidationPolicySeverity = typeof ValidationPolicySeverity.Type;
 /**
  * Failure to load a SHACL shapes graph.
  *
- * @example
+ * **Example** (Use ShapesLoadError)
  * ```ts
  * import { ShapesLoadError } from "@effect-ontology/Error/Shacl.ts"
  *
@@ -87,7 +88,7 @@ export const ShapesLoadError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link ShapesLoadError}.
- * @example
+ * **Example** (Use ShapesLoadError)
  * ```ts
  * import { ShapesLoadError, type ShapesLoadError as Failure } from "@effect-ontology/Error/Shacl.ts"
  * const error: Failure = ShapesLoadError.make({ message: "Failed." })
@@ -100,7 +101,7 @@ export type ShapesLoadError = typeof ShapesLoadError.Type;
 /**
  * Failure to generate or serialize a SHACL validation report.
  *
- * @example
+ * **Example** (Use ValidationReportError)
  * ```ts
  * import { ValidationReportError } from "@effect-ontology/Error/Shacl.ts"
  *
@@ -128,7 +129,7 @@ export const ValidationReportError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link ValidationReportError}.
- * @example
+ * **Example** (Use ValidationReportError)
  * ```ts
  * import { ValidationReportError, type ValidationReportError as Failure } from "@effect-ontology/Error/Shacl.ts"
  * const error: Failure = ValidationReportError.make({ message: "Failed." })
@@ -141,7 +142,7 @@ export type ValidationReportError = typeof ValidationReportError.Type;
 /**
  * SHACL validation result rejected by configured severity policy.
  *
- * @example
+ * **Example** (Use ValidationPolicyError)
  * ```ts
  * import { ValidationPolicyError } from "@effect-ontology/Error/Shacl.ts"
  *
@@ -184,7 +185,7 @@ export const ValidationPolicyError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link ValidationPolicyError}.
- * @example
+ * **Example** (Use ValidationPolicyError)
  * ```ts
  * import { ValidationPolicyError, type ValidationPolicyError as Failure } from "@effect-ontology/Error/Shacl.ts"
  * const error: Failure = ValidationPolicyError.fromUnknown({
@@ -209,7 +210,7 @@ const ShaclErrorDefinition = S.Union([
 /**
  * Exhaustive tagged union of SHACL lifecycle failures.
  *
- * @example
+ * **Example** (Use ShaclError)
  * ```ts
  * import { ShaclError, ShapesLoadError } from "@effect-ontology/Error/Shacl.ts"
  *
@@ -230,7 +231,7 @@ export const ShaclError = ShaclErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link ShaclError}.
  *
- * @example
+ * **Example** (Use ShaclError)
  * ```ts
  * import { ShapesLoadError, type ShaclError } from "@effect-ontology/Error/Shacl.ts"
  * const error: ShaclError = ShapesLoadError.make({ message: "Failed." })

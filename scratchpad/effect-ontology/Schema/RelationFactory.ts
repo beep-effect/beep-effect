@@ -7,8 +7,8 @@
  * This schema constrains subject and object references to entity IDs from Stage 1,
  * eliminating identity hallucination and ensuring entity consistency.
  *
- * @module Schema/RelationFactory
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { IRI } from "@beep/rdf";
@@ -124,8 +124,8 @@ const localNameSchema = (
  * @param properties - Array of PropertyDefinition objects from ontology
  * @returns Relation schema for LLM structured output
  *
- * @example
- * ```typescript
+ * **Example** (Use makeRelationSchema)
+ * ```ts
  * const schema = makeRelationSchema(
  *   ["cristiano_ronaldo", "al_nassr"], // From Stage 1
  *   [new PropertyDefinition({ id: "http://schema.org/memberOf", ... })]
@@ -144,7 +144,7 @@ const localNameSchema = (
  * ```
  *
  * @category constructors
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeRelationSchema = dual2(
   (validEntityIds: ReadonlyArray<string>, properties: ReadonlyArray<PropertyDefinition>) => {
@@ -283,8 +283,8 @@ CRITICAL RULES:
 /**
  * Type helpers
  *
- * @category type utilities
- * @since 2.0.0
+ * @category type-level
+ * @since 0.0.0
  */
 export type RelationGraphSchema = ReturnType<typeof makeRelationSchema>;
 

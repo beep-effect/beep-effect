@@ -1,8 +1,9 @@
 /**
  * Schema-backed authentication failures for ontology transports.
  *
- * @remarks
- * Ticket and API-key failures retain enough context for observability while
+ * **Details**
+ *
+ * * Ticket and API-key failures retain enough context for observability while
  * keeping credentials opaque. Authentication reasons form a closed literal
  * domain so recovery logic is exhaustive.
  *
@@ -19,7 +20,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Auth");
 /**
  * Closed reasons why authentication can be rejected.
  *
- * @example
+ * **Example** (Use AuthenticationReason)
  * ```ts
  * import { AuthenticationReason } from "@effect-ontology/Error/Auth.ts"
  *
@@ -43,7 +44,7 @@ export const AuthenticationReason = LiteralKit(["missing", "invalid", "disabled"
 /**
  * Runtime reason accepted by {@link AuthenticationReason}.
  *
- * @example
+ * **Example** (Use AuthenticationReason)
  * ```ts
  * import type { AuthenticationReason } from "@effect-ontology/Error/Auth.ts"
  *
@@ -59,11 +60,12 @@ export type AuthenticationReason = typeof AuthenticationReason.Type;
 /**
  * Indicates that a one-time authentication ticket is no longer valid.
  *
- * @remarks
- * The expired ticket is retained for correlation only; callers should avoid
+ * **Details**
+ *
+ * * The expired ticket is retained for correlation only; callers should avoid
  * writing it to user-facing logs.
  *
- * @example
+ * **Example** (Use TicketExpiredError)
  * ```ts
  * import { TicketExpiredError } from "@effect-ontology/Error/Auth.ts"
  *
@@ -101,7 +103,7 @@ export const TicketExpiredError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link TicketExpiredError}.
  *
- * @example
+ * **Example** (Use TicketExpiredError)
  * ```ts
  * import { TicketExpiredError, type TicketExpiredError as Expired } from "@effect-ontology/Error/Auth.ts"
  *
@@ -121,7 +123,7 @@ export type TicketExpiredError = typeof TicketExpiredError.Type;
 /**
  * Indicates that a one-time ticket is unknown or has already been consumed.
  *
- * @example
+ * **Example** (Use TicketNotFoundError)
  * ```ts
  * import { TicketNotFoundError } from "@effect-ontology/Error/Auth.ts"
  *
@@ -155,7 +157,7 @@ export const TicketNotFoundError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link TicketNotFoundError}.
  *
- * @example
+ * **Example** (Use TicketNotFoundError)
  * ```ts
  * import { TicketNotFoundError, type TicketNotFoundError as Missing } from "@effect-ontology/Error/Auth.ts"
  *
@@ -174,7 +176,7 @@ export type TicketNotFoundError = typeof TicketNotFoundError.Type;
 /**
  * General authentication rejection with a machine-readable reason.
  *
- * @example
+ * **Example** (Use AuthenticationError)
  * ```ts
  * import { AuthenticationError } from "@effect-ontology/Error/Auth.ts"
  *
@@ -207,7 +209,7 @@ export const AuthenticationError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link AuthenticationError}.
  *
- * @example
+ * **Example** (Use AuthenticationError)
  * ```ts
  * import { AuthenticationError, type AuthenticationError as AuthFailure } from "@effect-ontology/Error/Auth.ts"
  *
@@ -226,11 +228,12 @@ export type AuthenticationError = typeof AuthenticationError.Type;
 /**
  * Indicates that API-key verification failed.
  *
- * @remarks
- * The key itself is intentionally absent. Only the diagnostic and optional
+ * **Details**
+ *
+ * * The key itself is intentionally absent. Only the diagnostic and optional
  * underlying defect cross this domain boundary.
  *
- * @example
+ * **Example** (Use InvalidApiKeyError)
  * ```ts
  * import { InvalidApiKeyError } from "@effect-ontology/Error/Auth.ts"
  *
@@ -260,7 +263,7 @@ export const InvalidApiKeyError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link InvalidApiKeyError}.
  *
- * @example
+ * **Example** (Use InvalidApiKeyError)
  * ```ts
  * import { InvalidApiKeyError, type InvalidApiKeyError as InvalidKey } from "@effect-ontology/Error/Auth.ts"
  *
@@ -283,7 +286,7 @@ const AuthErrorDefinition = S.Union([
 /**
  * Exhaustive tagged union of transport authentication failures.
  *
- * @example
+ * **Example** (Use AuthError)
  * ```ts
  * import { AuthError, AuthenticationError } from "@effect-ontology/Error/Auth.ts"
  *
@@ -304,7 +307,7 @@ export const AuthError = AuthErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link AuthError}.
  *
- * @example
+ * **Example** (Use AuthError)
  * ```ts
  * import { TicketNotFoundError, type AuthError } from "@effect-ontology/Error/Auth.ts"
  *

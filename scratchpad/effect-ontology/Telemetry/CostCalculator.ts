@@ -3,8 +3,8 @@
  *
  * Calculates estimated costs based on token usage and model pricing.
  *
- * @module Telemetry/CostCalculator
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import * as P from "effect/Predicate";
@@ -39,8 +39,8 @@ const PRICING: Record<string, { input: number; output: number }> = {
  * @param model - Model identifier
  * @returns Pricing info or undefined if unknown
  *
- * @since 2.0.0
- * @category pricing
+ * @since 0.0.0
+ * @category utilities
  */
 export const getPricing = (model: string): { input: number; output: number } | undefined => PRICING[model];
 
@@ -52,8 +52,8 @@ export const getPricing = (model: string): { input: number; output: number } | u
  * @param outputTokens - Number of output tokens
  * @returns Estimated cost in USD (0 if model unknown)
  *
- * @since 2.0.0
- * @category pricing
+ * @since 0.0.0
+ * @category utilities
  */
 export const calculateCost = dual3((model: string, inputTokens: number, outputTokens: number): number => {
   const pricing = PRICING[model];

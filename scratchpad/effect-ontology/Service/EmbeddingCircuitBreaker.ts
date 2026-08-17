@@ -5,8 +5,8 @@
  * Each provider (Voyage, Nomic) gets its own circuit breaker instance
  * to prevent cascading failures and enable graceful fallback.
  *
- * @since 2.0.0
- * @module Service/EmbeddingCircuitBreaker
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -23,16 +23,16 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCircuitBreaker
 /**
  * Supported embedding provider identifiers
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export type EmbeddingProviderId = "voyage" | "nomic" | "openai";
 
 /**
  * Provider-specific circuit breaker configuration
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ProviderCircuitConfig {
   /** Number of consecutive failures before opening circuit */
@@ -46,8 +46,8 @@ export interface ProviderCircuitConfig {
 /**
  * Circuit breaker status for observability
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface CircuitStatus {
   readonly providerId: EmbeddingProviderId;
@@ -62,8 +62,8 @@ export interface CircuitStatus {
 /**
  * Default circuit breaker configuration for embedding providers
  *
- * @since 2.0.0
- * @category Constants
+ * @since 0.0.0
+ * @category constants
  */
 export const DEFAULT_EMBEDDING_CIRCUIT_CONFIG: Record<EmbeddingProviderId, ProviderCircuitConfig> = {
   voyage: {
@@ -92,8 +92,8 @@ export const DEFAULT_EMBEDDING_CIRCUIT_CONFIG: Record<EmbeddingProviderId, Provi
  *
  * Manages per-provider circuit breakers for embedding API calls.
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface EmbeddingCircuitBreakerService {
   readonly protect: <A, E, R>(
@@ -256,7 +256,7 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
 /**
  * Live layer for EmbeddingCircuitBreaker
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const EmbeddingCircuitBreakerLive: Layer.Layer<EmbeddingCircuitBreaker> = EmbeddingCircuitBreaker.Default;

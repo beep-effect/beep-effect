@@ -4,8 +4,8 @@
  * High-level image storage orchestration with deduplication and manifest management.
  * Uses ImageBlobStore for low-level storage and manages owner-image relationships.
  *
- * @since 2.0.0
- * @module Service/ImageStore
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -33,8 +33,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageStore");
  * High-level operations for storing, retrieving, and managing images
  * with deduplication and owner manifests.
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface ImageStoreService {
   /**
@@ -144,15 +144,15 @@ export interface ImageStoreService {
 /**
  * ImageStore service tag
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()($I`ImageStore`) {
   /**
    * Live implementation
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Live = Layer.effect(
     ImageStore,
@@ -264,8 +264,8 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
   /**
    * Default layer with all dependencies
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Default = ImageStore.Live.pipe(Layer.provide(ImageBlobStore.Live), Layer.provide(StorageServiceLive));
 }

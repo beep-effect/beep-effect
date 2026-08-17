@@ -3,8 +3,8 @@
  *
  * OpenTelemetry tracing, LLM attributes, and cost calculation.
  *
- * @since 2.0.0
- * @module Telemetry
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 export * from "./CostCalculator.ts";

@@ -4,8 +4,8 @@
  * HTTP endpoints for serving images with caching, streaming,
  * and listing images for links/documents.
  *
- * @since 2.0.0
- * @module Runtime/ImageRouter
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Effect, Option } from "effect";

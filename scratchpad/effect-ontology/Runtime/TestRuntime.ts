@@ -12,8 +12,8 @@
  * - CentralRateLimiterService
  * - Grounder
  *
- * @since 2.0.0
- * @module Runtime/TestRuntime
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import * as Rdf from "@beep/rdf/Rdf";
@@ -21,7 +21,7 @@ import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { BunServices } from "@effect/platform-bun";
 import { ConfigProvider, DateTime, Effect, Layer, ManagedRuntime, Stream } from "effect";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
+import * as A from "effect/Array";
 import type { Response } from "effect/unstable/ai";
 import { LanguageModel } from "effect/unstable/ai";
 import { ConfigServiceDefault } from "../Service/Config.ts";
@@ -50,7 +50,7 @@ import { MetricsService } from "../Telemetry/Metrics.ts";
  * Provides a stub implementation that returns empty responses.
  * Used by EntityExtractor and RelationExtractor test layers.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 const MockLanguageModel = Layer.succeed(
   LanguageModel.LanguageModel,
@@ -78,7 +78,7 @@ const MockLanguageModel = Layer.succeed(
  * - StageTimeoutServiceTest: Default timeouts (can be overridden)
  * - CentralRateLimiterServiceTest: High limits for testing
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 const LlmControlTestLayers = Layer.mergeAll(
   TokenBudgetServiceTest(4096),
@@ -132,13 +132,13 @@ export const MockShaclService = (options?: {
       sourceConstraintComponent: Rdf.makeNamedNode("urn:beep:shacl:constraint:test"),
       ...(P.isNotUndefined(violation.value)
         ? {
-            value: S.encodeSync(Rdf.Literal)(Rdf.makeLiteral(violation.value, XSD_STRING.value)),
+            value: Rdf.Literal.encodeSync(Rdf.makeLiteral(violation.value, XSD_STRING.value)),
           }
         : {}),
       ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: Rdf.makeNamedNode(violation.sourceShape) } : {}),
     }));
-    return yield* S.decodeEffect(ShaclValidationReport)({
-      validation: { conforms: violations.length === 0, violations, truncated: false },
+    return yield* ShaclValidationReport.decodeEffect({
+      validation: { conforms: A.isReadonlyArrayEmpty(violations), violations, truncated: false },
       validatedAt: DateTime.formatIso(yield* DateTime.now),
       dataGraphTripleCount: rdfStoreSize(dataStore),
       shapesGraphTripleCount: rdfStoreSize(shapesStore),
@@ -170,7 +170,7 @@ export const MockShaclService = (options?: {
  *
  * Returns deterministic zero vectors for all embedding requests.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 const MockEmbeddingProvider = Layer.succeed(EmbeddingProvider, {
   metadata: {
@@ -194,7 +194,7 @@ const MockEmbeddingProvider = Layer.succeed(EmbeddingProvider, {
  * - LLM Control: Test layers with high limits
  * - Other services use Default layers (can be mocked per test)
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 // Embedding infrastructure for NlpService.Default
 const EmbeddingInfraLayer = Layer.mergeAll(MockEmbeddingProvider, EmbeddingCache.Default, MetricsService.Default);
@@ -228,6 +228,6 @@ export const TestLayers = Layer.mergeAll(
  *
  * Managed runtime for testing with all test layers provided.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const TestRuntime = ManagedRuntime.make(TestLayers);

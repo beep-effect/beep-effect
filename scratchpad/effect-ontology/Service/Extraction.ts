@@ -4,8 +4,8 @@
  * EntityExtractor and RelationExtractor service contracts.
  * Implements two-stage extraction using LLM with structured output.
  *
- * @since 2.0.0
- * @module Service/Extraction
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -66,8 +66,8 @@ const generateEntityId = (mention: string): string =>
  *
  * Extracts entities from text using LLM with structured output.
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class EntityExtractor extends Context.Service<EntityExtractor>()($I`EntityExtractor`, {
   make: Effect.gen(function* () {
@@ -274,7 +274,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
   /**
    * Test layer with deterministic fake entities
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   static Test = Layer.succeed(
     EntityExtractor,
@@ -316,8 +316,8 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
  * Extracts entity mentions from text without type assignment.
  * This enables entity-level semantic search for better class retrieval.
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class MentionExtractor extends Context.Service<MentionExtractor>()($I`MentionExtractor`, {
   make: Effect.gen(function* () {
@@ -399,7 +399,7 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
   /**
    * Test layer with deterministic fake mentions
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   static Test = Layer.succeed(
     MentionExtractor,
@@ -423,8 +423,8 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
  *
  * Extracts relations between entities using LLM with structured output.
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class RelationExtractor extends Context.Service<RelationExtractor>()($I`RelationExtractor`, {
   make: Effect.gen(function* () {
@@ -683,7 +683,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
   /**
    * Test layer with deterministic fake relations
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   static Test = Layer.succeed(
     RelationExtractor,

@@ -10,8 +10,8 @@
  * - ClusterWorkflowEngine provides PostgreSQL-backed persistence
  * - Supports both synchronous (blocking) and fire-and-forget execution
  *
- * @since 2.0.0
- * @module Service/WorkflowOrchestrator
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import {$ScratchpadId} from "@beep/identity";

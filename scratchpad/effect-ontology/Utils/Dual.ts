@@ -1,8 +1,8 @@
 /**
  * Internal constructors for fixed-arity dual APIs.
  *
- * @since 2.0.0
- * @module Utils/Dual
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { dual } from "effect/Function";

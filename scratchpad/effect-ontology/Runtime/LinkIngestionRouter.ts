@@ -3,8 +3,8 @@
  *
  * HTTP endpoint for creating a workflow batch from already-ingested links.
  *
- * @since 2.0.0
- * @module Runtime/LinkIngestionRouter
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { NonNegativeInt } from "@beep/schema/Int";

@@ -4,8 +4,8 @@
  * Extracts image candidates from Jina reader responses and markdown content.
  * Parses both the structured `image` field and inline markdown images.
  *
- * @since 2.0.0
- * @module Service/ImageExtractor
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -44,8 +44,8 @@ export interface ImageExtractionInput {
  *
  * Extracts image candidates from content for downstream fetching and storage.
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface ImageExtractorService {
   /**
@@ -163,15 +163,15 @@ const parseMarkdownImages = (markdown: string, sourceUrl: string, startOrder: nu
 /**
  * ImageExtractor service tag
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class ImageExtractor extends Context.Service<ImageExtractor, ImageExtractorService>()($I`ImageExtractor`) {
   /**
    * Live implementation
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Live = Layer.succeed(ImageExtractor, {
     extractFromJina: (content: JinaContent): ReadonlyArray<ImageCandidate> => {
@@ -235,8 +235,8 @@ export class ImageExtractor extends Context.Service<ImageExtractor, ImageExtract
   /**
    * Default layer (no dependencies)
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Default = ImageExtractor.Live;
 }

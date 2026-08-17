@@ -4,8 +4,8 @@
  * Collects multiple EmbedTextRequest into batches and resolves
  * them with a single provider call.
  *
- * @since 2.0.0
- * @module Service/EmbeddingResolver
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Effect, Exit, Request, RequestResolver } from "effect";
@@ -19,8 +19,8 @@ import type { EmbedTextRequest } from "./EmbeddingRequest.ts";
  *
  * Voyage API limit is 128 texts per request.
  *
- * @since 2.0.0
- * @category Constants
+ * @since 0.0.0
+ * @category constants
  */
 export const DEFAULT_MAX_BATCH_SIZE = 128;
 
@@ -37,8 +37,8 @@ export const DEFAULT_MAX_BATCH_SIZE = 128;
  * @param maxBatchSize - Maximum requests per batch (default: 128)
  * @returns RequestResolver for EmbedTextRequest
  *
- * @since 2.0.0
- * @category Constructors
+ * @since 0.0.0
+ * @category constructors
  */
 export const makeEmbeddingResolver = dual2(
   (provider: EmbeddingProviderMethods, maxBatchSize: number): RequestResolver.RequestResolver<EmbedTextRequest> =>

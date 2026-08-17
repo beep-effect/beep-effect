@@ -6,8 +6,8 @@
  * - Batch window collection
  * - Type-safe request/response handling
  *
- * @since 2.0.0
- * @module Service/EmbeddingRequest
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Request } from "effect";
@@ -20,8 +20,8 @@ import type { Embedding, EmbeddingTaskType, ProviderMetadata } from "./Embedding
  * Uses Request.tagged for automatic batching via RequestResolver.
  * Requests with the same properties are deduplicated automatically.
  *
- * @since 2.0.0
- * @category Request
+ * @since 0.0.0
+ * @category type-level
  */
 export interface EmbedTextRequest extends Request.Request<Embedding, AnyEmbeddingError> {
   readonly _tag: "EmbedTextRequest";
@@ -33,8 +33,8 @@ export interface EmbedTextRequest extends Request.Request<Embedding, AnyEmbeddin
 /**
  * EmbedTextRequest constructor
  *
- * @since 2.0.0
- * @category Request
+ * @since 0.0.0
+ * @category constructors
  */
 export const EmbedTextRequest = Request.tagged<EmbedTextRequest>("EmbedTextRequest");
 
@@ -44,8 +44,8 @@ export const EmbedTextRequest = Request.tagged<EmbedTextRequest>("EmbedTextReque
  * Used for request deduplication within a batch window.
  * Format: providerId::modelId::taskType::text
  *
- * @since 2.0.0
- * @category Utilities
+ * @since 0.0.0
+ * @category utilities
  */
 export const embedRequestHash = (req: EmbedTextRequest): string =>
   `${req.metadata.providerId}::${req.metadata.modelId}::${req.taskType}::${req.text}`;

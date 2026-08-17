@@ -4,8 +4,8 @@
  * Creates OTLP tracer layer using Effect's built-in OtlpTracer.
  * This avoids OpenTelemetry SDK version compatibility issues.
  *
- * @module Telemetry/Tracing
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Layer } from "effect";
@@ -14,8 +14,8 @@ import { OtlpTracer } from "effect/unstable/observability";
 /**
  * Tracing configuration
  *
- * @since 2.0.0
- * @category config
+ * @since 0.0.0
+ * @category configuration
  */
 export interface TracingConfig {
   /** Service name for traces */
@@ -37,7 +37,7 @@ export interface TracingConfig {
  * @param config - Tracing configuration
  * @returns Layer that provides tracing (requires HttpClient)
  *
- * @since 2.0.0
+ * @since 0.0.0
  * @category constructors
  */
 export const makeTracingLayer = (config: TracingConfig) => {
@@ -64,7 +64,7 @@ export const makeTracingLayer = (config: TracingConfig) => {
  *
  * Use in tests to avoid OpenTelemetry setup overhead.
  *
- * @since 2.0.0
+ * @since 0.0.0
  * @category layers
  */
 export const TracingTestLayer: Layer.Layer<never> = Layer.empty;

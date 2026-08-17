@@ -4,8 +4,8 @@
  * Creates Effect Schemas for mention extraction before entity typing.
  * This enables entity-level semantic search for better class assignment.
  *
- * @module Schema/MentionFactory
- * @since 2.0.0
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { SchemaUtils } from "@beep/schema";
@@ -14,7 +14,7 @@ import { Schema as S } from "effect";
 /**
  * Schema for a single entity mention (without types)
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 const MentionSchema = S.Struct({
   id: S.String.pipe(
@@ -37,7 +37,7 @@ const MentionSchema = S.Struct({
 /**
  * Schema for mention extraction (entity detection without typing)
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const MentionGraphSchema = S.Struct({
   mentions: S.Array(MentionSchema).annotate({
@@ -59,8 +59,8 @@ CRITICAL RULES:
 /**
  * Type helpers
  *
- * @category type utilities
- * @since 2.0.0
+ * @category type-level
+ * @since 0.0.0
  */
 export type MentionGraphType = typeof MentionGraphSchema.Type;
 

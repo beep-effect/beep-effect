@@ -1,8 +1,9 @@
 /**
  * Schema-backed failures for Jina Reader API operations.
  *
- * @remarks
- * URLs use the repository's canonical URL schema, optional transport metadata
+ * **Details**
+ *
+ * * URLs use the repository's canonical URL schema, optional transport metadata
  * becomes `Option`, and safe messages default during schema construction.
  *
  * @packageDocumentation
@@ -26,7 +27,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Jina");
 /**
  * General Jina Reader transport or API response failure.
  *
- * @example
+ * **Example** (Use JinaApiError)
  * ```ts
  * import { JinaApiError } from "@effect-ontology/Error/Jina.ts"
  *
@@ -60,7 +61,7 @@ export const JinaApiError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link JinaApiError}.
- * @example
+ * **Example** (Use JinaApiError)
  * ```ts
  * import { JinaApiError, type JinaApiError as Failure } from "@effect-ontology/Error/Jina.ts"
  * const error: Failure = JinaApiError.make({ message: "Failed." })
@@ -102,7 +103,7 @@ const JinaRateLimitErrorBase = S.TaggedError<JinaRateLimitError>($I`JinaRateLimi
 /**
  * Jina Reader request rejected because the API quota was exhausted.
  *
- * @example
+ * **Example** (Use JinaRateLimitError)
  * ```ts
  * import * as S from "effect/Schema"
  * import { JinaRateLimitError } from "@effect-ontology/Error/Jina.ts"
@@ -118,7 +119,7 @@ export class JinaRateLimitError extends JinaRateLimitErrorBase {
   /**
    * Provider-directed retry delay as an Effect `Duration`.
    *
-   * @example
+   * **Example** (Use JinaParseError)
    * ```ts
    * import { JinaRateLimitError } from "@effect-ontology/Error/Jina.ts"
    *
@@ -137,7 +138,7 @@ export class JinaRateLimitError extends JinaRateLimitErrorBase {
 /**
  * Jina Reader response that could not be parsed.
  *
- * @example
+ * **Example** (Use JinaParseError)
  * ```ts
  * import { JinaParseError } from "@effect-ontology/Error/Jina.ts"
  *
@@ -168,7 +169,7 @@ export const JinaParseError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link JinaParseError}.
- * @example
+ * **Example** (Use JinaParseError)
  * ```ts
  * import { JinaParseError, type JinaParseError as Failure } from "@effect-ontology/Error/Jina.ts"
  * const error: Failure = JinaParseError.make({ message: "Malformed." })
@@ -181,7 +182,7 @@ export type JinaParseError = typeof JinaParseError.Type;
 /**
  * Jina Reader request that exceeded its configured deadline.
  *
- * @example
+ * **Example** (Use JinaTimeoutError)
  * ```ts
  * import { JinaTimeoutError } from "@effect-ontology/Error/Jina.ts"
  *
@@ -215,7 +216,7 @@ export const JinaTimeoutError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link JinaTimeoutError}.
- * @example
+ * **Example** (Use JinaTimeoutError)
  * ```ts
  * import { JinaTimeoutError, type JinaTimeoutError as Failure } from "@effect-ontology/Error/Jina.ts"
  * const error: Failure = JinaTimeoutError.fromUnknown({ url: "https://example.com/a", timeoutMs: 10 })
@@ -232,7 +233,7 @@ const JinaErrorDefinition = S.Union([JinaApiError, JinaRateLimitError, JinaParse
 /**
  * Exhaustive tagged union of Jina Reader failures.
  *
- * @example
+ * **Example** (Use JinaError)
  * ```ts
  * import { JinaError, JinaApiError } from "@effect-ontology/Error/Jina.ts"
  *
@@ -253,7 +254,7 @@ export const JinaError = JinaErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link JinaError}.
  *
- * @example
+ * **Example** (Use JinaError)
  * ```ts
  * import { JinaApiError, type JinaError } from "@effect-ontology/Error/Jina.ts"
  *

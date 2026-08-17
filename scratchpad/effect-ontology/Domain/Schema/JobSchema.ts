@@ -1,8 +1,9 @@
 /**
  * Persisted background-job contracts with retry metadata.
  *
- * @remarks
- * Jobs use a single tagged union and a content-derived identifier. The
+ * **Details**
+ *
+ * * Jobs use a single tagged union and a content-derived identifier. The
  * upstream delimiter-concatenation helpers were intentionally removed because
  * caller-controlled text and wall-clock milliseconds did not provide
  * unambiguous or collision-resistant identity.
@@ -22,7 +23,7 @@ const backgroundJobIdPattern = /^job-[0-9a-f]{12}$/;
 /**
  * Compact content-derived background-job identifier.
  *
- * @example
+ * **Example** (Use BackgroundJobId)
  * ```ts
  * import { BackgroundJobId } from "@effect-ontology/Schema/JobSchema.ts"
  *
@@ -59,7 +60,7 @@ export const BackgroundJobId = S.String.check(
 /**
  * Runtime value decoded by {@link BackgroundJobId}.
  *
- * @example
+ * **Example** (Use BackgroundJobId)
  * ```ts
  * import {
  *   BackgroundJobId,
@@ -124,14 +125,14 @@ const BackgroundJobDefinition = S.TaggedUnion({
 /**
  * Persisted request to re-embed a canonical entity.
  *
- * @example
+ * **Example** (Use EmbeddingJob)
  * ```ts
  * import { EmbeddingJob } from "@effect-ontology/Schema/JobSchema.ts"
  *
  * console.log(EmbeddingJob.make)
  * ```
  *
- * @category jobs
+ * @category commands
  * @since 0.0.0
  */
 export const EmbeddingJob = BackgroundJobDefinition.cases.EmbeddingJob.pipe(
@@ -144,14 +145,14 @@ export const EmbeddingJob = BackgroundJobDefinition.cases.EmbeddingJob.pipe(
 /**
  * Persisted request to update a prompt cache.
  *
- * @example
+ * **Example** (Use PromptCacheJob)
  * ```ts
  * import { PromptCacheJob } from "@effect-ontology/Schema/JobSchema.ts"
  *
  * console.log(PromptCacheJob.make)
  * ```
  *
- * @category jobs
+ * @category commands
  * @since 0.0.0
  */
 export const PromptCacheJob = BackgroundJobDefinition.cases.PromptCacheJob.pipe(
@@ -164,14 +165,14 @@ export const PromptCacheJob = BackgroundJobDefinition.cases.PromptCacheJob.pipe(
 /**
  * Persisted request to recompute entity-similarity scores.
  *
- * @example
+ * **Example** (Use SimilarityRecomputeJob)
  * ```ts
  * import { SimilarityRecomputeJob } from "@effect-ontology/Schema/JobSchema.ts"
  *
  * console.log(SimilarityRecomputeJob.make)
  * ```
  *
- * @category jobs
+ * @category commands
  * @since 0.0.0
  */
 export const SimilarityRecomputeJob = BackgroundJobDefinition.cases.SimilarityRecomputeJob.pipe(
@@ -184,14 +185,14 @@ export const SimilarityRecomputeJob = BackgroundJobDefinition.cases.SimilarityRe
 /**
  * Persisted request to rebuild blocking tokens for an entity.
  *
- * @example
+ * **Example** (Use BlockingTokenJob)
  * ```ts
  * import { BlockingTokenJob } from "@effect-ontology/Schema/JobSchema.ts"
  *
  * console.log(BlockingTokenJob.make)
  * ```
  *
- * @category jobs
+ * @category commands
  * @since 0.0.0
  */
 export const BlockingTokenJob = BackgroundJobDefinition.cases.BlockingTokenJob.pipe(
@@ -204,7 +205,7 @@ export const BlockingTokenJob = BackgroundJobDefinition.cases.BlockingTokenJob.p
 /**
  * Persisted request to deliver an HTTPS webhook.
  *
- * @example
+ * **Example** (Use WebhookJob)
  * ```ts
  * import { WebhookJob } from "@effect-ontology/Schema/JobSchema.ts"
  *
@@ -212,7 +213,7 @@ export const BlockingTokenJob = BackgroundJobDefinition.cases.BlockingTokenJob.p
  * ```
  *
  * @invariant Webhook destinations use HTTPS and payloads are JSON-safe.
- * @category jobs
+ * @category commands
  * @since 0.0.0
  */
 export const WebhookJob = BackgroundJobDefinition.cases.WebhookJob.pipe(
@@ -225,14 +226,14 @@ export const WebhookJob = BackgroundJobDefinition.cases.WebhookJob.pipe(
 /**
  * Schema for every persisted background-job variant.
  *
- * @example
+ * **Example** (Use BackgroundJobSchema)
  * ```ts
  * import { BackgroundJobSchema } from "@effect-ontology/Schema/JobSchema.ts"
  *
  * console.log(Object.keys(BackgroundJobSchema.cases).length) // 5
  * ```
  *
- * @category unions
+ * @category schemas
  * @since 0.0.0
  */
 export const BackgroundJobSchema = BackgroundJobDefinition.pipe(
@@ -245,7 +246,7 @@ export const BackgroundJobSchema = BackgroundJobDefinition.pipe(
 /**
  * Runtime job decoded by {@link BackgroundJobSchema}.
  *
- * @example
+ * **Example** (Use BackgroundJob)
  * ```ts
  * import type { BackgroundJob } from "@effect-ontology/Schema/JobSchema.ts"
  *
@@ -285,7 +286,7 @@ const JobMetadataDefinition = S.Struct({
 /**
  * Retry metadata stored alongside a background job.
  *
- * @example
+ * **Example** (Use JobMetadataSchema)
  * ```ts
  * import { JobMetadataSchema } from "@effect-ontology/Schema/JobSchema.ts"
  *
@@ -310,7 +311,7 @@ export const JobMetadataSchema = JobMetadataDefinition.annotate({
 /**
  * Runtime metadata decoded by {@link JobMetadataSchema}.
  *
- * @example
+ * **Example** (Use JobMetadata)
  * ```ts
  * import type { JobMetadata } from "@effect-ontology/Schema/JobSchema.ts"
  *

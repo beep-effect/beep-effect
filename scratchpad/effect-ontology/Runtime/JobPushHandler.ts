@@ -4,8 +4,8 @@
  * HTTP endpoint for Cloud Pub/Sub push subscriptions to process background jobs.
  * This handler receives Pub/Sub push messages and dispatches them to the appropriate job processor.
  *
- * @since 2.0.0
- * @module Runtime/JobPushHandler
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
@@ -22,7 +22,7 @@ import { BackgroundJobSchema } from "../Domain/Schema/JobSchema.ts";
 /**
  * Pub/Sub push message envelope
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 const PubSubPushMessage = Schema.Struct({
   message: Schema.Struct({
@@ -47,7 +47,7 @@ class JobProcessorNotImplementedError extends Data.TaggedError("JobProcessorNotI
 /**
  * Process a background job based on its type
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 const processBackgroundJob = (
   job: BackgroundJob,
@@ -125,7 +125,7 @@ const processBackgroundJob = (
  * Provides endpoints for Pub/Sub push subscriptions:
  * - POST /v1/jobs/process - Receive and process pushed jobs
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const JobPushRouter = HttpRouter.addAll([
   HttpRouter.route(
@@ -161,7 +161,7 @@ export const JobPushRouter = HttpRouter.addAll([
               jobDataString
             ).pipe(
               Effect.mapError((e) => ({
-                _tag: "JobParseError" as const,
+                _tag: "JobParseError",
                 error: e,
               }))
             );
@@ -183,7 +183,7 @@ export const JobPushRouter = HttpRouter.addAll([
               attempts,
             }).pipe(
               Effect.mapError((e) => ({
-                _tag: "ProcessingError" as const,
+                _tag: "ProcessingError",
                 error: e,
               }))
             );

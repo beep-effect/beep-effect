@@ -4,8 +4,8 @@
  * Effect.Cache wrapper around ArticleRepository for frequently accessed queries.
  * Caches single article lookups with TTL.
  *
- * @since 2.0.0
- * @module Repository/CachedArticle
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -40,8 +40,8 @@ const URI_CACHE_TTL = Duration.hours(1);
  * Wraps ArticleRepository with Effect.Cache for hot-path queries.
  * Maintains same interface as ArticleRepository.
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class CachedArticleRepository extends Context.Service<CachedArticleRepository>()($I`CachedArticleRepository`, {
   make: Effect.gen(function* () {
@@ -160,7 +160,7 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
 /**
  * Layer that provides CachedArticleRepository
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const CachedArticleRepositoryLayer = CachedArticleRepository.Default;

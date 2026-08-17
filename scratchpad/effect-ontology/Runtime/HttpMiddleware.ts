@@ -4,8 +4,8 @@
  * Middleware for the HTTP server, including shutdown tracking, authentication,
  * and request logging.
  *
- * @since 2.0.0
- * @module Runtime/HttpMiddleware
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Clock, Effect, HashSet, Option, Redacted } from "effect";
@@ -49,8 +49,8 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
  * - Health endpoints remain public
  * - Invalid/missing key returns 401
  *
- * @since 2.0.0
- * @category Middleware
+ * @since 0.0.0
+ * @category handlers
  */
 export const makeAuthMiddleware = Effect.gen(function* () {
   const config = yield* ConfigService;
@@ -111,8 +111,8 @@ export const makeAuthMiddleware = Effect.gen(function* () {
 /**
  * Middleware to track active requests for graceful shutdown
  *
- * @since 2.0.0
- * @category Middleware
+ * @since 0.0.0
+ * @category handlers
  */
 export const makeShutdownMiddleware = Effect.gen(function* () {
   const shutdown = yield* ShutdownService;
@@ -128,8 +128,8 @@ export const makeShutdownMiddleware = Effect.gen(function* () {
  * - Response status code
  * - Configurable log level (debug for health checks, info for API)
  *
- * @since 2.0.0
- * @category Middleware
+ * @since 0.0.0
+ * @category handlers
  */
 export const makeLoggingMiddleware = Effect.sync(() =>
   HttpMiddleware.make((app) =>

@@ -24,8 +24,8 @@
  * )
  * ```
  *
- * @since 2.0.0
- * @module Runtime/ClusterRuntime
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { SqliteClient } from "@effect/sql-sqlite-bun";

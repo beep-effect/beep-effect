@@ -1,8 +1,9 @@
 /**
  * Provenance-aware claims, curated assertions, derivations, and events.
  *
- * @remarks
- * The source module's three-layer epistemic distinction is retained while its
+ * **Details**
+ *
+ * * The source module's three-layer epistemic distinction is retained while its
  * ambiguous string-or-instance RDF values are replaced by canonical RDF/JS
  * term schemas. Temporal absence is normalized to `Option`, and repeated
  * identifier construction lives on the identifier schemas themselves.
@@ -33,7 +34,7 @@ const decodeDateTimeUtcFromMillis = S.decodeUnknownSync(S.DateTimeUtcFromMillis)
 /**
  * Deterministic identifier of an extracted claim.
  *
- * @example
+ * **Example** (Use ClaimId)
  * ```ts
  * import { ClaimId } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -70,7 +71,7 @@ export const ClaimId = S.String.check(
 /**
  * Runtime value decoded by {@link ClaimId}.
  *
- * @example
+ * **Example** (Use ClaimId)
  * ```ts
  * import { ClaimId, type ClaimId as ClaimIdValue } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -86,7 +87,7 @@ export type ClaimId = typeof ClaimId.Type;
 /**
  * Deterministic identifier of a curated assertion.
  *
- * @example
+ * **Example** (Use AssertionId)
  * ```ts
  * import { AssertionId } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -124,7 +125,7 @@ export const AssertionId = S.String.check(
 /**
  * Runtime value decoded by {@link AssertionId}.
  *
- * @example
+ * **Example** (Use AssertionId)
  * ```ts
  * import { AssertionId, type AssertionId as AssertionIdValue } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -140,7 +141,7 @@ export type AssertionId = typeof AssertionId.Type;
 /**
  * Deterministic identifier of an inferred assertion.
  *
- * @example
+ * **Example** (Use DerivedAssertionId)
  * ```ts
  * import { DerivedAssertionId } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -178,7 +179,7 @@ export const DerivedAssertionId = S.String.check(
 /**
  * Runtime value decoded by {@link DerivedAssertionId}.
  *
- * @example
+ * **Example** (Use DerivedAssertionId)
  * ```ts
  * import {
  *   DerivedAssertionId,
@@ -197,7 +198,7 @@ export type DerivedAssertionId = typeof DerivedAssertionId.Type;
 /**
  * Stable identifier of a reasoning rule.
  *
- * @example
+ * **Example** (Use RuleId)
  * ```ts
  * import { RuleId } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -231,7 +232,7 @@ export const RuleId = S.String.check(
 /**
  * Runtime value decoded by {@link RuleId}.
  *
- * @example
+ * **Example** (Use RuleId)
  * ```ts
  * import { RuleId, type RuleId as RuleIdValue } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -260,7 +261,7 @@ type LegacyTextSpanValue = typeof LegacyTextSpan.Type;
 /**
  * Half-open source-text evidence span `[start, end)`.
  *
- * @example
+ * **Example** (Use TextSpan)
  * ```ts
  * import { TextSpan } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -269,7 +270,7 @@ type LegacyTextSpanValue = typeof LegacyTextSpan.Type;
  * ```
  *
  * @invariant The range is non-empty and `endChar - startChar` equals the UTF-16 width of `quote`.
- * @category evidence
+ * @category value-objects
  * @since 0.0.0
  */
 export const TextSpan = LegacyTextSpan.pipe(
@@ -296,7 +297,7 @@ export const TextSpan = LegacyTextSpan.pipe(
 /**
  * Runtime value decoded by {@link TextSpan}.
  *
- * @example
+ * **Example** (Use TextSpan)
  * ```ts
  * import type { TextSpan } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -336,11 +337,12 @@ const EvidenceSource = EvidenceSourceDefinition.pipe(
 /**
  * Provenance evidence supporting an extracted claim.
  *
- * @remarks
- * Source location is explicitly discriminated, text spans are non-empty, and
+ * **Details**
+ *
+ * * Source location is explicitly discriminated, text spans are non-empty, and
  * optional contextual prose is normalized to `Option`.
  *
- * @example
+ * **Example** (Use Evidence)
  * ```ts
  * import * as S from "effect/Schema"
  * import { Evidence } from "@effect-ontology/Schema/KnowledgeModel.ts"
@@ -356,7 +358,7 @@ const EvidenceSource = EvidenceSourceDefinition.pipe(
  *
  * @invariant Contains at least one ordered text span and exactly one tagged
  * source location.
- * @category evidence
+ * @category value-objects
  * @since 0.0.0
  */
 export class Evidence extends S.Class<Evidence>($I`Evidence`)(
@@ -384,7 +386,7 @@ export class Evidence extends S.Class<Evidence>($I`Evidence`)(
 /**
  * Canonical RDF/JS object term used in claims and assertions.
  *
- * @example
+ * **Example** (Use RdfObject)
  * ```ts
  * import { makeLiteral } from "@effect-ontology/Rdf/Types.ts"
  * import { RdfObject } from "@effect-ontology/Schema/KnowledgeModel.ts"
@@ -396,7 +398,7 @@ export class Evidence extends S.Class<Evidence>($I`Evidence`)(
  * console.log(RdfObject.is(literal)) // true
  * ```
  *
- * @category rdf
+ * @category models
  * @since 0.0.0
  */
 export const RdfObject = ObjectTerm.annotate({
@@ -411,7 +413,7 @@ export const RdfObject = ObjectTerm.annotate({
 /**
  * Runtime value decoded by {@link RdfObject}.
  *
- * @example
+ * **Example** (Use RdfObject)
  * ```ts
  * import type { RdfObject } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -427,14 +429,14 @@ export type RdfObject = typeof RdfObject.Type;
 /**
  * Wikidata-style rank assigned to an extracted claim.
  *
- * @example
+ * **Example** (Use ClaimRank)
  * ```ts
  * import { ClaimRank } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
  * console.log(ClaimRank.is.preferred("preferred")) // true
  * ```
  *
- * @category literals
+ * @category schemas
  * @since 0.0.0
  */
 export const ClaimRank = LiteralKit(["preferred", "normal", "deprecated"])
@@ -450,7 +452,7 @@ export const ClaimRank = LiteralKit(["preferred", "normal", "deprecated"])
 /**
  * Runtime value accepted by {@link ClaimRank}.
  *
- * @example
+ * **Example** (Use ClaimRank)
  * ```ts
  * import type { ClaimRank } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -514,13 +516,14 @@ const TemporalInterval = TemporalIntervalDefinition.pipe(
 /**
  * Reported RDF fact extracted from one source document.
  *
- * @remarks
- * Claims retain provenance and confidence and may conflict with one another.
+ * **Details**
+ *
+ * * Claims retain provenance and confidence and may conflict with one another.
  * Curated truth belongs to {@link Assertion}. The RDF triple uses canonical
  * RDF/JS terms, rank defaults to `normal`, and temporal validity is nested as
  * one optional ordered interval.
  *
- * @example
+ * **Example** (Use Claim)
  * ```ts
  * import { Claim } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -551,7 +554,7 @@ const TemporalInterval = TemporalIntervalDefinition.pipe(
  *
  * @invariant RDF terms are canonical, confidence lies in `[0, 1]`, evidence is
  * non-empty, and optional temporal validity is ordered.
- * @category claims
+ * @category entities
  * @since 0.0.0
  */
 export class Claim extends S.Class<Claim>($I`Claim`)(
@@ -577,14 +580,14 @@ export class Claim extends S.Class<Claim>($I`Claim`)(
 /**
  * Curation lifecycle status of an assertion.
  *
- * @example
+ * **Example** (Use AssertionStatus)
  * ```ts
  * import { AssertionStatus } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
  * console.log(AssertionStatus.is.accepted("accepted")) // true
  * ```
  *
- * @category literals
+ * @category schemas
  * @since 0.0.0
  */
 export const AssertionStatus = LiteralKit(["accepted", "rejected", "pending"])
@@ -600,7 +603,7 @@ export const AssertionStatus = LiteralKit(["accepted", "rejected", "pending"])
 /**
  * Runtime value accepted by {@link AssertionStatus}.
  *
- * @example
+ * **Example** (Use AssertionStatus)
  * ```ts
  * import type { AssertionStatus } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -616,7 +619,7 @@ export type AssertionStatus = typeof AssertionStatus.Type;
 /**
  * Curated RDF fact normalized from one or more claims.
  *
- * @example
+ * **Example** (Use Assertion)
  * ```ts
  * import { Assertion } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -665,7 +668,7 @@ export class Assertion extends S.Class<Assertion>($I`Assertion`)(
 /**
  * Assertion inferred by applying a reasoning rule to accepted facts.
  *
- * @example
+ * **Example** (Use DerivedAssertion)
  * ```ts
  * import { DerivedAssertion } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -695,7 +698,7 @@ export class DerivedAssertion extends S.Class<DerivedAssertion>($I`DerivedAssert
 /**
  * Deterministic identifier of a real-world event node.
  *
- * @example
+ * **Example** (Use EventId)
  * ```ts
  * import { EventId } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -712,7 +715,7 @@ export const EventId = CanonicalEventId;
 /**
  * Runtime value decoded by {@link EventId}.
  *
- * @example
+ * **Example** (Use EventId)
  * ```ts
  * import { EventId, type EventId as EventIdValue } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -728,14 +731,14 @@ export type EventId = typeof EventId.Type;
 /**
  * Presentation category for a real-world event.
  *
- * @example
+ * **Example** (Use EventType)
  * ```ts
  * import { EventType } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
  * console.log(EventType.is.Appointment("Appointment")) // true
  * ```
  *
- * @category literals
+ * @category schemas
  * @since 0.0.0
  */
 export const EventType = LiteralKit([
@@ -768,7 +771,7 @@ export const EventType = LiteralKit([
 /**
  * Runtime value accepted by {@link EventType}.
  *
- * @example
+ * **Example** (Use EventType)
  * ```ts
  * import type { EventType } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
@@ -784,7 +787,7 @@ export type EventType = typeof EventType.Type;
 /**
  * Named RDF resource participating in an event.
  *
- * @example
+ * **Example** (Use EntityRef)
  * ```ts
  * import { makeNamedNode } from "@effect-ontology/Rdf/Types.ts"
  * import { EntityRef } from "@effect-ontology/Schema/KnowledgeModel.ts"
@@ -826,12 +829,13 @@ export class EntityRef extends S.Class<EntityRef>($I`EntityRef`)(
 /**
  * First-class real-world event grouping participants and curated facts.
  *
- * @remarks
- * Publication time is mandatory and source documents are non-empty. All other
+ * **Details**
+ *
+ * * Publication time is mandatory and source documents are non-empty. All other
  * optional time and prose values decode to `Option`; participant, fact, and
  * tag collections default to empty arrays.
  *
- * @example
+ * **Example** (Use Event)
  * ```ts
  * import { Event } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *

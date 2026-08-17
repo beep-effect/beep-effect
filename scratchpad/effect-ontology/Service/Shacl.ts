@@ -5,8 +5,8 @@
  * metadata. Validation execution is owned by the canonical semantic-web
  * contract and the `@beep/shacl` driver.
  *
- * @since 2.0.0
- * @module Service/Shacl
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -82,14 +82,14 @@ export interface ShaclWorkflowServiceMethods {
   /**
    * Clear the shapes cache. Useful for testing or when ontology has changed.
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly clearShapesCache: Effect.Effect<void>;
 
   /**
    * Get cache statistics for monitoring
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly getShapesCacheStats: Effect.Effect<{ size: number; keys: ReadonlyArray<string> }>;
 
@@ -104,7 +104,7 @@ export interface ShaclWorkflowServiceMethods {
    * @param policy - Policy controlling which severities cause failure
    * @returns The validation report on success, or ValidationPolicyError if policy violated
    *
-   * @since 2.0.0
+   * @since 0.0.0
    */
   readonly validateWithPolicy: (
     dataStore: RdfStore,
@@ -116,8 +116,8 @@ export interface ShaclWorkflowServiceMethods {
 /**
  * Configuration for ShaclWorkflowService.Test layer
  *
- * @since 2.0.0
- * @category Test
+ * @since 0.0.0
+ * @category testing
  */
 export interface ShaclWorkflowServiceTestConfig {
   /** Whether validation should report conformance (default: true) */
@@ -129,8 +129,8 @@ export interface ShaclWorkflowServiceTestConfig {
 /**
  * Default test configuration - always conforms with no violations
  *
- * @since 2.0.0
- * @category Test
+ * @since 0.0.0
+ * @category testing
  */
 export const defaultTestConfig: ShaclWorkflowServiceTestConfig = {
   conforms: true,
@@ -150,8 +150,8 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
    * @param config - Optional configuration for mock behavior
    * @returns Layer providing mock ShaclWorkflowService
    *
-   * @example
-   * ```typescript
+   * **Example** (Use Test)
+   * ```ts
    * // Default - always conforms
    * const layer = ShaclWorkflowService.Test()
    *
@@ -166,8 +166,8 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
    * })
    * ```
    *
-   * @since 2.0.0
-   * @category Layers
+   * @since 0.0.0
+   * @category layers
    */
   static readonly Test = (
     config: ShaclWorkflowServiceTestConfig = defaultTestConfig

@@ -95,14 +95,15 @@ const makeShaclValidationReportArbitrary = (fc: typeof FastCheck) =>
 /**
  * Complete normalized report for one SHACL validation run.
  *
- * @remarks
- * The canonical validation result is embedded under `validation`; the other
+ * **Details**
+ *
+ * * The canonical validation result is embedded under `validation`; the other
  * fields are experiment-specific execution metadata.
  *
  * The decoded `durationMs` value is an Effect `Duration`; its encoded form is
  * the finite, non-negative millisecond measurement named by the field.
  *
- * @example
+ * **Example** (Use ShaclValidationReport)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ShaclValidationReport } from "@effect-ontology/Schema/Shacl.ts"
@@ -131,13 +132,14 @@ export const ShaclValidationReport = ShaclValidationReportFields.annotate({
     description:
       "Complete normalized SHACL validation report with spec-consistent conformance, graph sizes, completion time, and finite duration.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withEffectCodecStatics,
+
 );
 
 /**
  * Runtime value decoded by {@link ShaclValidationReport}.
  *
- * @example
+ * **Example** (Use ShaclValidationReport)
  * ```ts
  * import type { ShaclValidationReport } from "@effect-ontology/Schema/Shacl.ts"
  *
@@ -181,14 +183,15 @@ class ValidationPolicyFields extends S.Class<ValidationPolicyFields>($I`Validati
 /**
  * Workflow policy that maps SHACL result severities to failure behavior.
  *
- * @remarks
- * `logOnly` takes precedence over both failure flags. When it is false,
+ * **Details**
+ *
+ * * `logOnly` takes precedence over both failure flags. When it is false,
  * `failOnWarning` extends failure behavior to Warning-level results while
  * `failOnViolation` controls Violation-level results. Info-level results never
  * fail a workflow under this policy. The schema-owned `shouldFail` static
  * evaluates this policy without changing standards-level report conformance.
  *
- * @example
+ * **Example** (Use ValidationPolicy)
  * ```ts
  * import { ValidationPolicy } from "@effect-ontology/Schema/Shacl.ts"
  *
@@ -239,7 +242,7 @@ export const ValidationPolicy = ValidationPolicyFields.annotate({
 /**
  * Runtime value decoded by {@link ValidationPolicy}.
  *
- * @example
+ * **Example** (Use ValidationPolicy)
  * ```ts
  * import { ValidationPolicy, type ValidationPolicy as ValidationPolicyValue } from "@effect-ontology/Schema/Shacl.ts"
  *

@@ -4,8 +4,8 @@
  * Defines types and interfaces for configuring different LLM providers
  * (Anthropic, OpenAI, Google) with specific resilience settings.
  *
- * @since 2.0.0
- * @module Service/LlmProvider
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { Duration, Schedule } from "effect";

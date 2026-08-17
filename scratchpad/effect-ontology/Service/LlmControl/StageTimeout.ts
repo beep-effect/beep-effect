@@ -13,8 +13,8 @@
  * - Entity verification: 30s soft / 45s hard
  * - Serialization: 7s soft / 10s hard
  *
- * @since 2.0.0
- * @module Service/LlmControl/StageTimeout
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -91,8 +91,8 @@ export class TimeoutError extends Data.TaggedError("TimeoutError")<{
  * 1. Soft timeout emits a warning callback (for logging, metrics)
  * 2. Hard timeout fails the effect with TimeoutError
  *
- * @example
- * ```typescript
+ * **Example** (Use StageTimeoutService)
+ * ```ts
  * Effect.gen(function*() {
  *   const timeout = yield* StageTimeoutService
  *

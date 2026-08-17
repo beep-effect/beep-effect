@@ -5,8 +5,8 @@
  * using the wbsearchentities action.
  *
  * @see https://www.wikidata.org/w/api.php?action=help&modules=wbsearchentities
- * @since 2.0.0
- * @module Service/WikidataClient
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -267,7 +267,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
             qid: result.id,
             label: O.getOrElse(result.label, () => result.title),
             description: result.description,
-            matchType: result.match.type === "label" ? ("label" as const) : ("alias" as const),
+            matchType: result.match.type === "label" ? ("label") : ("alias"),
             matchLanguage: result.match.language,
             score: Percentage.make(calculateScore(query, result, index, parsed.search.length)),
             conceptUri: result.concepturi,
@@ -339,7 +339,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
           qid: entity.id,
           label,
           description: O.fromUndefinedOr(description),
-          matchType: "label" as const,
+          matchType: "label",
           matchLanguage: language,
           score: Percentage.make(100), // Direct lookup
           conceptUri: `http://www.wikidata.org/entity/${qid}`,

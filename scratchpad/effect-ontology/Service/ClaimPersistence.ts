@@ -4,8 +4,8 @@
  * Encapsulates the persistence logic for claims extracted from documents.
  * Handles article creation, claim-to-row mapping, and idempotent upserts.
  *
- * @since 2.0.0
- * @module Service/ClaimPersistence
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -25,8 +25,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ClaimPersistence");
 /**
  * Metadata for the source article
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ArticleMetadata {
   /** Article URI (unique identifier) */
@@ -46,8 +46,8 @@ export interface ArticleMetadata {
 /**
  * Result of claim persistence operation
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface PersistenceResult {
   /** Database ID of the article */
@@ -68,8 +68,8 @@ export interface PersistenceResult {
  * Persists extracted claims to PostgreSQL with proper article linking
  * and idempotent upsert handling.
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class ClaimPersistenceService extends Context.Service<ClaimPersistenceService>()($I`ClaimPersistenceService`, {
   make: Effect.gen(function* () {
@@ -118,7 +118,7 @@ export class ClaimPersistenceService extends Context.Service<ClaimPersistenceSer
         predicateIri: claim.predicateIri,
         objectValue: claim.objectValue,
         objectType: claim.objectType,
-        rank: "normal" as const,
+        rank: "normal",
         confidenceScore: claim.confidence?.toString(),
         evidenceText: claim.evidence?.text,
         evidenceStartOffset: claim.evidence?.startOffset,

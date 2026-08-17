@@ -4,8 +4,8 @@
  * Abstracts over Nomic (local), Voyage (API), and future providers.
  * Enables dynamic provider selection based on configuration.
  *
- * @since 2.0.0
- * @module Service/EmbeddingProvider
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -25,24 +25,24 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingProvider");
  * - clustering: For clustering tasks
  * - classification: For classification tasks
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export type EmbeddingTaskType = "search_query" | "search_document" | "clustering" | "classification";
 
 /**
  * Embedding vector type
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export type Embedding = ReadonlyArray<number>;
 
 /**
  * Embedding request for batching
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface EmbeddingRequest {
   readonly text: string;
@@ -52,8 +52,8 @@ export interface EmbeddingRequest {
 /**
  * Provider metadata for cache key generation and configuration
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ProviderMetadata {
   /**
@@ -78,8 +78,8 @@ export interface ProviderMetadata {
  * Providers implement this interface to expose their embedding capabilities.
  * The service layer handles caching, deduplication, and batching.
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export interface EmbeddingProviderMethods {
   /**
@@ -115,8 +115,8 @@ export interface EmbeddingProviderMethods {
 /**
  * EmbeddingProvider service tag
  *
- * @since 2.0.0
- * @category Service
+ * @since 0.0.0
+ * @category services
  */
 export class EmbeddingProvider extends Context.Service<EmbeddingProvider, EmbeddingProviderMethods>()(
   $I`EmbeddingProvider`
@@ -128,8 +128,8 @@ export class EmbeddingProvider extends Context.Service<EmbeddingProvider, Embedd
  * Extracted as a utility function since it's pure math and doesn't
  * depend on the provider. Can be shared across implementations.
  *
- * @since 2.0.0
- * @category Utilities
+ * @since 0.0.0
+ * @category utilities
  */
 export const cosineSimilarity: {
   (b: Embedding): (a: Embedding) => number;

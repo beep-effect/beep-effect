@@ -1,8 +1,9 @@
 /**
  * Public batch-submission request schemas.
  *
- * @remarks
- * Optional boundary fields decode to `Option`, and omitted preprocessing
+ * **Details**
+ *
+ * * Optional boundary fields decode to `Option`, and omitted preprocessing
  * configuration decodes to the complete canonical default.
  *
  * @packageDocumentation
@@ -19,11 +20,12 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/BatchRequest");
 /**
  * One stored source document submitted for batch extraction.
  *
- * @remarks
- * Server-generated identifiers, size observations, and real-world timestamps
+ * **Details**
+ *
+ * * Server-generated identifiers, size observations, and real-world timestamps
  * are represented as `Option`; downstream logic never inspects nullish values.
  *
- * @example
+ * **Example** (Use BatchRequestDocument)
  * ```ts
  * import * as S from "effect/Schema"
  * import { BatchRequestDocument } from "@effect-ontology/Schema/BatchRequest.ts"
@@ -37,7 +39,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/BatchRequest");
  *
  * @invariant Size, when present, is a non-negative integer and content type is
  * a recognized MIME type.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`BatchRequestDocument`)(
@@ -84,12 +86,13 @@ export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`Batch
 /**
  * Request to launch one ontology-scoped extraction batch.
  *
- * @remarks
- * At least one document is required. Omitting `preprocessing` supplies
+ * **Details**
+ *
+ * * At least one document is required. Omitting `preprocessing` supplies
  * {@link defaultPreprocessingOptions}; optional generated or derived fields are
  * normalized to `Option`.
  *
- * @example
+ * **Example** (Use BatchRequest)
  * ```ts
  * import * as S from "effect/Schema"
  * import { BatchRequest } from "@effect-ontology/Schema/BatchRequest.ts"
@@ -112,7 +115,7 @@ export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`Batch
  *
  * @invariant Contains at least one validated document and a complete
  * preprocessing policy.
- * @category requests
+ * @category dtos
  * @since 0.0.0
  */
 export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
@@ -168,7 +171,7 @@ export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
    * @returns An Effect that succeeds with a complete request or fails with a
    * schema parse error.
    *
-   * @example
+   * **Example** (Use decode)
    * ```ts
    * import { BatchRequest } from "@effect-ontology/Schema/BatchRequest.ts"
    *
@@ -200,7 +203,7 @@ export {
   /**
    * Canonical default preprocessing policy retained for source-path parity.
    *
-   * @example
+   * **Example** (Use BatchRequest)
    * ```ts
    * import { defaultPreprocessingOptions } from "@effect-ontology/Schema/BatchRequest.ts"
    *
@@ -214,7 +217,7 @@ export {
   /**
    * Schema-backed preprocessing policy retained for source-path parity.
    *
-   * @example
+   * **Example** (Use BatchRequest)
    * ```ts
    * import * as S from "effect/Schema"
    * import { PreprocessingOptions } from "@effect-ontology/Schema/BatchRequest.ts"

@@ -1,8 +1,9 @@
 /**
  * Batch-workflow manifests and activity boundary schemas.
  *
- * @remarks
- * All optional inputs are normalized to `Option`, collections use meaningful
+ * **Details**
+ *
+ * * All optional inputs are normalized to `Option`, collections use meaningful
  * empty or non-empty constraints, and workflow policies/configuration receive
  * schema-owned defaults.
  *
@@ -23,7 +24,7 @@ const defaultValidationPolicy = ValidationPolicy.fromUnknown({});
 /**
  * One immutable source entry in a stored batch manifest.
  *
- * @example
+ * **Example** (Use ManifestDocument)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ManifestDocument } from "@effect-ontology/Schema/Batch.ts"
@@ -39,7 +40,7 @@ const defaultValidationPolicy = ValidationPolicy.fromUnknown({});
  *
  * @invariant Size is a non-negative integer and content type is a recognized
  * MIME type.
- * @category manifests
+ * @category models
  * @since 0.0.0
  */
 export class ManifestDocument extends S.Class<ManifestDocument>($I`ManifestDocument`)(
@@ -65,12 +66,13 @@ export class ManifestDocument extends S.Class<ManifestDocument>($I`ManifestDocum
 /**
  * Immutable manifest that defines one batch workflow.
  *
- * @remarks
- * A manifest must contain at least one document. Omitted SHACL shapes decode
+ * **Details**
+ *
+ * * A manifest must contain at least one document. Omitted SHACL shapes decode
  * to `Option.none`, while omitted validation policy decodes to the canonical
  * policy that fails on violations only.
  *
- * @example
+ * **Example** (Use BatchManifest)
  * ```ts
  * import * as S from "effect/Schema"
  * import { BatchManifest, ManifestDocument } from "@effect-ontology/Schema/Batch.ts"
@@ -85,7 +87,7 @@ export class ManifestDocument extends S.Class<ManifestDocument>($I`ManifestDocum
  * ```
  *
  * @invariant Contains at least one document and a complete validation policy.
- * @category manifests
+ * @category models
  * @since 0.0.0
  */
 export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
@@ -134,12 +136,13 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
 /**
  * Input to extraction of one document.
  *
- * @remarks
- * Optional provenance and acceleration metadata are `Option` values. Extraction
+ * **Details**
+ *
+ * * Optional provenance and acceleration metadata are `Option` values. Extraction
  * logic therefore matches on semantic absence instead of checking nullish
  * boundary values.
  *
- * @example
+ * **Example** (Use ExtractionActivityInput)
  * ```ts
  * import type { ExtractionActivityInput } from "@effect-ontology/Schema/Batch.ts"
  *
@@ -147,7 +150,7 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
  * console.log(typeof ontology) // "function"
  * ```
  *
- * @category activities
+ * @category dtos
  * @since 0.0.0
  */
 export class ExtractionActivityInput extends S.Class<ExtractionActivityInput>($I`ExtractionActivityInput`)(
@@ -172,7 +175,7 @@ export class ExtractionActivityInput extends S.Class<ExtractionActivityInput>($I
 /**
  * Input to entity resolution after per-document extraction.
  *
- * @example
+ * **Example** (Use ResolutionActivityInput)
  * ```ts
  * import type { ResolutionActivityInput } from "@effect-ontology/Schema/Batch.ts"
  *
@@ -181,7 +184,7 @@ export class ExtractionActivityInput extends S.Class<ExtractionActivityInput>($I
  * ```
  *
  * @invariant At least one document graph is supplied for resolution.
- * @category activities
+ * @category dtos
  * @since 0.0.0
  */
 export class ResolutionActivityInput extends S.Class<ResolutionActivityInput>($I`ResolutionActivityInput`)(
@@ -199,11 +202,12 @@ export class ResolutionActivityInput extends S.Class<ResolutionActivityInput>($I
 /**
  * Input to SHACL validation of a resolved graph.
  *
- * @remarks
- * Omitted shapes request generation from the ontology; omitted policy uses the
+ * **Details**
+ *
+ * * Omitted shapes request generation from the ontology; omitted policy uses the
  * canonical violation-failing default.
  *
- * @example
+ * **Example** (Use ValidationActivityInput)
  * ```ts
  * import type { ValidationActivityInput } from "@effect-ontology/Schema/Batch.ts"
  *
@@ -211,7 +215,7 @@ export class ResolutionActivityInput extends S.Class<ResolutionActivityInput>($I
  * console.log(typeof graph) // "function"
  * ```
  *
- * @category activities
+ * @category dtos
  * @since 0.0.0
  */
 export class ValidationActivityInput extends S.Class<ValidationActivityInput>($I`ValidationActivityInput`)(
@@ -230,7 +234,7 @@ export class ValidationActivityInput extends S.Class<ValidationActivityInput>($I
 /**
  * Aggregated SHACL results for one severity.
  *
- * @example
+ * **Example** (Use ValidationActivityViolationSummary)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ValidationActivityViolationSummary } from "@effect-ontology/Schema/Batch.ts"
@@ -272,12 +276,13 @@ export class ValidationActivityViolationSummary extends S.Class<ValidationActivi
 /**
  * Compact output of the SHACL validation activity.
  *
- * @remarks
- * This transport summary complements the experiment execution
+ * **Details**
+ *
+ * * This transport summary complements the experiment execution
  * `ShaclValidationReport`, whose nested validation result owns standards-level
  * conformance; this value records artifact locations and workflow timing.
  *
- * @example
+ * **Example** (Use ValidationActivityOutput)
  * ```ts
  * import type { ValidationActivityOutput } from "@effect-ontology/Schema/Batch.ts"
  *
@@ -310,7 +315,7 @@ export class ValidationActivityOutput extends S.Class<ValidationActivityOutput>(
 /**
  * Input to ingestion of a graph that has completed validation.
  *
- * @example
+ * **Example** (Use IngestionActivityInput)
  * ```ts
  * import type { IngestionActivityInput } from "@effect-ontology/Schema/Batch.ts"
  *
@@ -318,7 +323,7 @@ export class ValidationActivityOutput extends S.Class<ValidationActivityOutput>(
  * console.log(typeof namespace) // "function"
  * ```
  *
- * @category activities
+ * @category dtos
  * @since 0.0.0
  */
 export class IngestionActivityInput extends S.Class<IngestionActivityInput>($I`IngestionActivityInput`)(
@@ -335,11 +340,12 @@ export class IngestionActivityInput extends S.Class<IngestionActivityInput>($I`I
 /**
  * Complete payload used to start or resume a batch workflow.
  *
- * @remarks
- * Document identifiers are non-empty, optional artifact locations decode to
+ * **Details**
+ *
+ * * Document identifiers are non-empty, optional artifact locations decode to
  * `Option`, and preprocessing always has a complete schema-owned value.
  *
- * @example
+ * **Example** (Use BatchWorkflowPayload)
  * ```ts
  * import type { BatchWorkflowPayload } from "@effect-ontology/Schema/Batch.ts"
  *
@@ -374,7 +380,7 @@ export class BatchWorkflowPayload extends S.Class<BatchWorkflowPayload>($I`Batch
 /**
  * SHACL workflow policy re-export retained for source-path parity.
  *
- * @example
+ * **Example** (Use Batch)
  * ```ts
  * import { ValidationPolicy } from "@effect-ontology/Schema/Batch.ts"
  *

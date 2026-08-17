@@ -5,8 +5,8 @@
  * Implements hybrid retrieval (vector + lexical) with RRF fusion for
  * high-quality example selection.
  *
- * @since 2.0.0
- * @module Service/Examples
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";

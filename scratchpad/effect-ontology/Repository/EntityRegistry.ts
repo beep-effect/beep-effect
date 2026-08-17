@@ -5,8 +5,8 @@
  * Provides typed access to canonical entities, aliases, and blocking tokens
  * with support for pgvector similarity search.
  *
- * @since 2.0.0
- * @module Repository/EntityRegistry
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -342,7 +342,7 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
           ontologyId,
           canonicalEntityId: canonicalId,
           token: token.toLowerCase(),
-          tokenType: "mention" as const,
+          tokenType: "mention",
         }));
         yield* drizzle.insert(entityBlockingTokens).values(values).onConflictDoNothing();
       });

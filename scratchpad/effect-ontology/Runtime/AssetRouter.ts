@@ -4,8 +4,8 @@
  * HTTP endpoints for downloading raw assets: documents, RDF graphs,
  * validation reports, and link content.
  *
- * @since 2.0.0
- * @module Runtime/AssetRouter
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Effect, Option, Schema } from "effect";

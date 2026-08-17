@@ -5,8 +5,8 @@
  * Runs as a background fiber that subscribes to EventBusService and broadcasts
  * events to connected WebSocket clients.
  *
- * @since 2.0.0
- * @module Runtime/EventBridge
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -26,7 +26,7 @@ import { EventBroadcastHub } from "./EventBroadcastRouter.ts";
  *
  * Provides methods to start/stop the bridge between EventBusService and EventBroadcastHub
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface EventBridgeServiceMethods {
   /**
@@ -111,7 +111,7 @@ const makeEventBridge = Effect.gen(function* () {
  *
  * Requires EventBusService and EventBroadcastHub
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const EventBridgeLive = Layer.effect(EventBridgeService, makeEventBridge);
 
@@ -121,7 +121,7 @@ export const EventBridgeLive = Layer.effect(EventBridgeService, makeEventBridge)
  * Automatically starts the bridge when the layer is acquired.
  * Stops when the layer scope closes.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const EventBridgeAutoStart = Layer.effect(
   EventBridgeService,

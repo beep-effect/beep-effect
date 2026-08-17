@@ -4,8 +4,8 @@
  * Applies SQL migrations in order, tracking which have been applied.
  * Uses the schema_migrations table to track applied versions.
  *
- * @since 2.0.0
- * @module Runtime/Persistence/MigrationRunner
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";

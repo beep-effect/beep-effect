@@ -4,8 +4,8 @@
  * Wraps pure similarity functions with shared embedding cache.
  * Provides Effect-native interface for entity similarity computation.
  *
- * @since 2.0.0
- * @module Service/SimilarityScorer
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -21,8 +21,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SimilarityScorer");
 /**
  * Similarity score result with method detection
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface SimilarityResult {
   readonly score: number;
@@ -38,8 +38,8 @@ export interface SimilarityResult {
  * - Effect-native interface
  * - Configurable weights
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class SimilarityScorer extends Context.Service<SimilarityScorer>()($I`SimilarityScorer`, {
   make: Effect.gen(function* () {

@@ -1,8 +1,9 @@
 /**
  * Public response for querying a batch workflow.
  *
- * @remarks
- * Response variants are discriminated by `_tag`; suspension-only metadata is
+ * **Details**
+ *
+ * * Response variants are discriminated by `_tag`; suspension-only metadata is
  * unavailable on active and missing responses. Optional suspension context is
  * normalized to `Option`.
  *
@@ -59,12 +60,13 @@ const BatchStatusResponseDefinition = S.TaggedUnion({
 /**
  * Result of querying a batch workflow by identifier.
  *
- * @remarks
- * Nested `value` objects make variant ownership explicit: active responses own
+ * **Details**
+ *
+ * * Nested `value` objects make variant ownership explicit: active responses own
  * workflow state, suspended responses own recovery context, and missing
  * responses own only the requested identifier.
  *
- * @example
+ * **Example** (Use BatchStatusResponse)
  * ```ts
  * import * as S from "effect/Schema"
  * import { BatchStatusResponse } from "@effect-ontology/Schema/BatchStatusResponse.ts"
@@ -78,7 +80,7 @@ const BatchStatusResponseDefinition = S.TaggedUnion({
  *
  * @invariant Every response is exactly one of Active, Suspended, or NotFound,
  * with no cross-variant optional-field bag.
- * @category responses
+ * @category dtos
  * @since 0.0.0
  */
 export const BatchStatusResponse = BatchStatusResponseDefinition.pipe(
@@ -91,7 +93,7 @@ export const BatchStatusResponse = BatchStatusResponseDefinition.pipe(
 /**
  * Runtime value decoded by {@link BatchStatusResponse}.
  *
- * @example
+ * **Example** (Use BatchStatusResponse)
  * ```ts
  * import type { BatchStatusResponse } from "@effect-ontology/Schema/BatchStatusResponse.ts"
  *

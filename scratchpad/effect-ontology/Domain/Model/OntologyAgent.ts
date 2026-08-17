@@ -74,12 +74,13 @@ class OntologyAgentConfigModel extends S.Class<OntologyAgentConfigModel>($I`Onto
 /**
  * Complete policy for ontology extraction, validation, and reasoning.
  *
- * @remarks
- * The ontology override is optional because deployments may supply a default.
+ * **Details**
+ *
+ * * The ontology override is optional because deployments may supply a default.
  * Validation, concurrency, and chunking always have concrete schema-level
  * values, so agent logic does not branch on missing configuration.
  *
- * @example
+ * **Example** (Use OntologyAgentConfig)
  * ```ts
  * import { OntologyAgentConfig } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -109,7 +110,7 @@ export const OntologyAgentConfig = OntologyAgentConfigModel.annotate({
 /**
  * Runtime value decoded by {@link OntologyAgentConfig}.
  *
- * @example
+ * **Example** (Use OntologyAgentConfig)
  * ```ts
  * import type { OntologyAgentConfig } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -141,7 +142,7 @@ class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`Extracti
   /**
    * Total input and output tokens consumed.
    *
-   * @example
+   * **Example** (Use ExtractionMetrics)
    * ```ts
    * import { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -166,7 +167,7 @@ class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`Extracti
 /**
  * Measurements produced by a completed extraction operation.
  *
- * @example
+ * **Example** (Use ExtractionMetrics)
  * ```ts
  * import { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -198,7 +199,7 @@ export const ExtractionMetrics = ExtractionMetricsModel.annotate({
 /**
  * Runtime value decoded by {@link ExtractionMetrics}.
  *
- * @example
+ * **Example** (Use ExtractionMetrics)
  * ```ts
  * import type { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -233,7 +234,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
   /**
    * Extracted entities.
    *
-   * @example
+   * **Example** (Use OntologyAgent)
    * ```ts
    * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -249,7 +250,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
   /**
    * Extracted relations.
    *
-   * @example
+   * **Example** (Use OntologyAgent)
    * ```ts
    * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -265,7 +266,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
   /**
    * Whether no entities were extracted.
    *
-   * @example
+   * **Example** (Use onNone)
    * ```ts
    * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -281,7 +282,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
   /**
    * Whether validation passed, treating an absent report as not yet invalid.
    *
-   * @example
+   * **Example** (Use onNone)
    * ```ts
    * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -300,7 +301,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
   /**
    * Whether non-empty Turtle output is available.
    *
-   * @example
+   * **Example** (Use ExtractionResult)
    * ```ts
    * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -317,11 +318,12 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
 /**
  * Complete result of one ontology extraction operation.
  *
- * @remarks
- * Turtle and validation absence are explicit `Option` values. Convenience
+ * **Details**
+ *
+ * * Turtle and validation absence are explicit `Option` values. Convenience
  * accessors are colocated with the schema-backed result.
  *
- * @example
+ * **Example** (Use ExtractionResult)
  * ```ts
  * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -329,7 +331,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
  * console.log(typeof count) // "function"
  * ```
  *
- * @category results
+ * @category models
  * @since 0.0.0
  */
 export const ExtractionResult = ExtractionResultModel.annotate({
@@ -345,7 +347,7 @@ export const ExtractionResult = ExtractionResultModel.annotate({
 /**
  * Runtime value decoded by {@link ExtractionResult}.
  *
- * @example
+ * **Example** (Use ExtractionResult)
  * ```ts
  * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -393,12 +395,13 @@ class ExtractWithClaimsOptionsModel extends S.Class<ExtractWithClaimsOptionsMode
 /**
  * Options for extracting a graph and provenance-bearing claims.
  *
- * @remarks
- * The source article and ontology registry identifiers are mandatory. Booleans
+ * **Details**
+ *
+ * * The source article and ontology registry identifiers are mandatory. Booleans
  * and confidence receive schema defaults; namespace and agent overrides are
  * `Option` values.
  *
- * @example
+ * **Example** (Use ExtractWithClaimsOptions)
  * ```ts
  * import { ExtractWithClaimsOptions } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -429,7 +432,7 @@ export const ExtractWithClaimsOptions = ExtractWithClaimsOptionsModel.annotate({
 /**
  * Runtime value decoded by {@link ExtractWithClaimsOptions}.
  *
- * @example
+ * **Example** (Use ExtractWithClaimsOptions)
  * ```ts
  * import type { ExtractWithClaimsOptions } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -461,7 +464,7 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
   /**
    * Extracted entities.
    *
-   * @example
+   * **Example** (Use OntologyAgent)
    * ```ts
    * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -477,7 +480,7 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
   /**
    * Extracted relations.
    *
-   * @example
+   * **Example** (Use OntologyAgent)
    * ```ts
    * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -493,7 +496,7 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
   /**
    * Whether no entities were extracted.
    *
-   * @example
+   * **Example** (Use OntologyAgent)
    * ```ts
    * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -509,7 +512,7 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
   /**
    * Whether one or more claims were created.
    *
-   * @example
+   * **Example** (Use ExtractWithClaimsResult)
    * ```ts
    * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -526,7 +529,7 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
 /**
  * Extraction result augmented with claim-provenance metadata.
  *
- * @example
+ * **Example** (Use ExtractWithClaimsResult)
  * ```ts
  * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -535,7 +538,7 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
  * ```
  *
  * @invariant Claim count is non-negative and article identity is non-empty.
- * @category results
+ * @category models
  * @since 0.0.0
  */
 export const ExtractWithClaimsResult = ExtractWithClaimsResultModel.annotate({
@@ -553,7 +556,7 @@ export const ExtractWithClaimsResult = ExtractWithClaimsResultModel.annotate({
 /**
  * Runtime value decoded by {@link ExtractWithClaimsResult}.
  *
- * @example
+ * **Example** (Use ExtractWithClaimsResult)
  * ```ts
  * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -583,7 +586,7 @@ class QueryBindingModel extends S.Class<QueryBindingModel>($I`QueryBinding`)(
 /**
  * One row of variable bindings returned by a SPARQL query.
  *
- * @example
+ * **Example** (Use QueryBinding)
  * ```ts
  * import { QueryBinding } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -607,7 +610,7 @@ export const QueryBinding = QueryBindingModel.annotate({
 /**
  * Runtime value decoded by {@link QueryBinding}.
  *
- * @example
+ * **Example** (Use QueryBinding)
  * ```ts
  * import type { QueryBinding } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -645,7 +648,7 @@ class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
   /**
    * Whether the query returned at least one binding row.
    *
-   * @example
+   * **Example** (Use QueryResult)
    * ```ts
    * import { QueryResult } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -667,7 +670,7 @@ class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
 /**
  * Grounded result of a natural-language graph query.
  *
- * @example
+ * **Example** (Use QueryResult)
  * ```ts
  * import { QueryResult } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -680,7 +683,7 @@ class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
  * ```
  *
  * @invariant Confidence lies on the closed unit interval.
- * @category results
+ * @category models
  * @since 0.0.0
  */
 export const QueryResult = QueryResultModel.annotate({
@@ -696,7 +699,7 @@ export const QueryResult = QueryResultModel.annotate({
 /**
  * Runtime value decoded by {@link QueryResult}.
  *
- * @example
+ * **Example** (Use QueryResult)
  * ```ts
  * import type { QueryResult } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -725,7 +728,7 @@ class ReasoningResultModel extends S.Class<ReasoningResultModel>($I`ReasoningRes
 /**
  * Result of RDFS or OWL reasoning over a knowledge graph.
  *
- * @example
+ * **Example** (Use ReasoningResult)
  * ```ts
  * import { ReasoningResult } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -738,7 +741,7 @@ class ReasoningResultModel extends S.Class<ReasoningResultModel>($I`ReasoningRes
  * ```
  *
  * @invariant Inferred triple count is non-negative.
- * @category results
+ * @category models
  * @since 0.0.0
  */
 export const ReasoningResult = ReasoningResultModel.annotate({
@@ -754,7 +757,7 @@ export const ReasoningResult = ReasoningResultModel.annotate({
 /**
  * Runtime value decoded by {@link ReasoningResult}.
  *
- * @example
+ * **Example** (Use ReasoningResult)
  * ```ts
  * import type { ReasoningResult } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -791,7 +794,7 @@ class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`Violatio
   /**
    * Total number of diagnostics across all severity levels.
    *
-   * @example
+   * **Example** (Use OntologyAgent)
    * ```ts
    * import { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -811,7 +814,7 @@ class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`Violatio
   /**
    * Whether at least one blocking violation is present.
    *
-   * @example
+   * **Example** (Use ViolationsByLevel)
    * ```ts
    * import { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -831,7 +834,7 @@ class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`Violatio
 /**
  * SHACL diagnostics partitioned by standard severity.
  *
- * @example
+ * **Example** (Use ViolationsByLevel)
  * ```ts
  * import { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -856,7 +859,7 @@ export const ViolationsByLevel = ViolationsByLevelModel.annotate({
 /**
  * Runtime value decoded by {@link ViolationsByLevel}.
  *
- * @example
+ * **Example** (Use ViolationsByLevel)
  * ```ts
  * import type { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -899,7 +902,7 @@ class ViolationExplanationModel extends S.Class<ViolationExplanationModel>($I`Vi
 /**
  * Context-aware explanation of one SHACL validation result.
  *
- * @example
+ * **Example** (Use ViolationExplanation)
  * ```ts
  * import { ViolationExplanation } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -928,7 +931,7 @@ export const ViolationExplanation = ViolationExplanationModel.annotate({
 /**
  * Runtime value decoded by {@link ViolationExplanation}.
  *
- * @example
+ * **Example** (Use ViolationExplanation)
  * ```ts
  * import type { ViolationExplanation } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -967,7 +970,7 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
   /**
    * Total number of grouped diagnostics.
    *
-   * @example
+   * **Example** (Use OntologyAgent)
    * ```ts
    * import { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -990,7 +993,7 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
   /**
    * Whether standards-level validation conforms.
    *
-   * @example
+   * **Example** (Use OntologyAgent)
    * ```ts
    * import type { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -1006,7 +1009,7 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
   /**
    * Whether validation conforms while still surfacing non-blocking warnings.
    *
-   * @example
+   * **Example** (Use OntologyAgent)
    * ```ts
    * import { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent.ts"
    *
@@ -1030,12 +1033,13 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
 /**
  * SHACL report augmented with grouped and explainable diagnostics.
  *
- * @remarks
- * `violationCount` is derived from the severity groups instead of stored as a
+ * **Details**
+ *
+ * * `violationCount` is derived from the severity groups instead of stored as a
  * second potentially stale value. Duration is a `Duration` at runtime while
  * remaining millisecond-encoded at persistence boundaries.
  *
- * @example
+ * **Example** (Use EnhancedValidationReport)
  * ```ts
  * import { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent.ts"
  *
@@ -1067,7 +1071,7 @@ export const EnhancedValidationReport = EnhancedValidationReportModel.annotate({
 /**
  * Runtime value decoded by {@link EnhancedValidationReport}.
  *
- * @example
+ * **Example** (Use EnhancedValidationReport)
  * ```ts
  * import type { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent.ts"
  *

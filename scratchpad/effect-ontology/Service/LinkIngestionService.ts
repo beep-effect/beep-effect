@@ -5,8 +5,8 @@
  * Handles fetching via Jina, content-addressed storage, and optional
  * AI enrichment for metadata extraction.
  *
- * @example
- * ```typescript
+ * **Example** (Use LinkIngestionService)
+ * ```ts
  * Effect.gen(function*() {
  *   const ingestion = yield* LinkIngestionService
  *
@@ -21,8 +21,8 @@
  * })
  * ```
  *
- * @since 2.0.0
- * @module Service/LinkIngestionService
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { createHash } from "node:crypto";

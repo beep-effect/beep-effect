@@ -11,8 +11,8 @@
  * - Respects `Retry-After` header from rate limit responses
  *
  * @see https://docs.voyageai.com/docs/embeddings
- * @since 2.0.0
- * @module Service/VoyageEmbeddingProvider
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
@@ -46,8 +46,8 @@ const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
 /**
  * Voyage model dimensions
  *
- * @since 2.0.0
- * @category Constants
+ * @since 0.0.0
+ * @category constants
  */
 export const VOYAGE_MODELS: Record<string, number> = {
   "voyage-3": 1024,
@@ -193,8 +193,8 @@ const mapVoyageError = (error: unknown, timeoutMs: number): AnyEmbeddingError =>
 /**
  * Voyage embedding provider configuration
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface VoyageProviderConfig {
   /** Voyage API key */
@@ -208,8 +208,8 @@ export interface VoyageProviderConfig {
 /**
  * Create VoyageEmbeddingProvider with explicit config
  *
- * @since 2.0.0
- * @category Constructors
+ * @since 0.0.0
+ * @category constructors
  */
 export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
   config: VoyageProviderConfig
@@ -393,8 +393,8 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
  *
  * Requires EMBEDDING_VOYAGE_API_KEY to be set.
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const VoyageEmbeddingProviderLive: Layer.Layer<
   EmbeddingProvider,
@@ -423,8 +423,8 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
 /**
  * Complete Voyage provider with HTTP client
  *
- * @since 2.0.0
- * @category Layers
+ * @since 0.0.0
+ * @category layers
  */
 export const VoyageEmbeddingProviderDefault: Layer.Layer<
   EmbeddingProvider,

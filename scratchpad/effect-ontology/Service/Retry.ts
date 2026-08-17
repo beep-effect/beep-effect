@@ -4,8 +4,8 @@
  * Provides shared retry policy with exponential backoff, jitter, and logging.
  * Used by all LLM-calling services for consistent retry behavior.
  *
- * @since 2.0.0
- * @module Service/Retry
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Duration, Effect, Schedule } from "effect";
@@ -14,7 +14,7 @@ import * as P from "effect/Predicate";
 /**
  * Options for creating a retry policy
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface RetryPolicyOptions {
   /**
@@ -59,7 +59,7 @@ const DEFAULT_MAX_DELAY_MS = 30_000;
  * @param error - The error to check
  * @returns true if the error should be retried
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const isRetryableError = (error: unknown): boolean => {
   if (!(error instanceof Error)) {
@@ -130,8 +130,8 @@ export const isRetryableError = (error: unknown): boolean => {
  * @param opts - Retry policy options
  * @returns Schedule for use with Effect.retry
  *
- * @example
- * ```typescript
+ * **Example** (Use makeRetryPolicy)
+ * ```ts
  * const retryPolicy = makeRetryPolicy({
  *   initialDelayMs: 2000,
  *   maxDelayMs: 30000,
@@ -142,7 +142,7 @@ export const isRetryableError = (error: unknown): boolean => {
  * yield* myEffect.pipe(Effect.retry(retryPolicy))
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const makeRetryPolicy = (opts: RetryPolicyOptions) => {
   const maxDelayMs = opts.maxDelayMs ?? DEFAULT_MAX_DELAY_MS;

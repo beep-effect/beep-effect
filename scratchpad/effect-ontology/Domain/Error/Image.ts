@@ -1,8 +1,9 @@
 /**
  * Schema-backed image fetching and validation failures.
  *
- * @remarks
- * URLs use the repository's canonical `URLStr`, byte counts and durations are
+ * **Details**
+ *
+ * * URLs use the repository's canonical `URLStr`, byte counts and durations are
  * non-negative integers, and safe messages default at schema construction.
  *
  * @packageDocumentation
@@ -25,7 +26,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Image");
 /**
  * Failure to download an image from a URL.
  *
- * @example
+ * **Example** (Use ImageFetchError)
  * ```ts
  * import { ImageFetchError } from "@effect-ontology/Error/Image.ts"
  *
@@ -62,7 +63,7 @@ export const ImageFetchError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link ImageFetchError}.
- * @example
+ * **Example** (Use ImageFetchError)
  * ```ts
  * import { ImageFetchError, type ImageFetchError as Failure } from "@effect-ontology/Error/Image.ts"
  * const error: Failure = ImageFetchError.fromUnknown({ message: "Failed.", url: "https://example.com/a.png" })
@@ -107,7 +108,7 @@ const ImageTimeoutErrorBase = S.TaggedError<ImageTimeoutError>($I`ImageTimeoutEr
 /**
  * Image download that exceeded its configured deadline.
  *
- * @example
+ * **Example** (Use ImageTimeoutError)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ImageTimeoutError } from "@effect-ontology/Error/Image.ts"
@@ -126,7 +127,7 @@ export class ImageTimeoutError extends ImageTimeoutErrorBase {
   /**
    * Configured deadline represented as an Effect `Duration`.
    *
-   * @example
+   * **Example** (Use ImageTooLargeError)
    * ```ts
    * import * as S from "effect/Schema"
    * import { ImageTimeoutError } from "@effect-ontology/Error/Image.ts"
@@ -152,7 +153,7 @@ export class ImageTimeoutError extends ImageTimeoutErrorBase {
 /**
  * Downloaded image whose size exceeds the configured maximum.
  *
- * @example
+ * **Example** (Use ImageTooLargeError)
  * ```ts
  * import { ImageTooLargeError } from "@effect-ontology/Error/Image.ts"
  *
@@ -191,7 +192,7 @@ export const ImageTooLargeError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link ImageTooLargeError}.
- * @example
+ * **Example** (Use ImageTooLargeError)
  * ```ts
  * import { ImageTooLargeError, type ImageTooLargeError as Failure } from "@effect-ontology/Error/Image.ts"
  * const error: Failure = ImageTooLargeError.fromUnknown({ url: "https://example.com/a", sizeBytes: 2, maxBytes: 1 })
@@ -204,7 +205,7 @@ export type ImageTooLargeError = typeof ImageTooLargeError.Type;
 /**
  * Image response with an unsupported media type.
  *
- * @example
+ * **Example** (Use ImageInvalidTypeError)
  * ```ts
  * import { ImageInvalidTypeError } from "@effect-ontology/Error/Image.ts"
  *
@@ -243,7 +244,7 @@ export const ImageInvalidTypeError = makeOntologyErrorClass.make(
 );
 
 /** Runtime value decoded by {@link ImageInvalidTypeError}.
- * @example
+ * **Example** (Use ImageInvalidTypeError)
  * ```ts
  * import { ImageInvalidTypeError, type ImageInvalidTypeError as Failure } from "@effect-ontology/Error/Image.ts"
  * const error: Failure = ImageInvalidTypeError.fromUnknown({
@@ -267,7 +268,7 @@ const ImageErrorDefinition = S.Union([
 /**
  * Exhaustive tagged union of image-operation failures.
  *
- * @example
+ * **Example** (Use ImageError)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ImageError, ImageTimeoutError } from "@effect-ontology/Error/Image.ts"
@@ -292,7 +293,7 @@ export const ImageError = ImageErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link ImageError}.
  *
- * @example
+ * **Example** (Use ImageError)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ImageTimeoutError, type ImageError } from "@effect-ontology/Error/Image.ts"

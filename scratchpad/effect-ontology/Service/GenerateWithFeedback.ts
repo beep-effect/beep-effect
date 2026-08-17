@@ -5,8 +5,8 @@
  * When schema validation fails (MalformedOutput), includes the error
  * in the retry prompt so the LLM can self-correct.
  *
- * @since 2.0.0
- * @module Service/GenerateWithFeedback
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import type { Cause, Schedule } from "effect";
@@ -21,7 +21,7 @@ import { makeCachedPromptFromStructured } from "./PromptCache.ts";
 /**
  * Options for generateObjectWithFeedback
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export interface GenerateWithFeedbackOptions<
   StructuredOutputSchema extends S.Codec<Record<string, unknown>, Record<string, unknown>, never, never>,
@@ -71,8 +71,8 @@ export interface GenerateWithFeedbackOptions<
  *
  * For other errors (network, rate limiting), retries without feedback.
  *
- * @example
- * ```typescript
+ * **Example** (Use generateObjectWithFeedback)
+ * ```ts
  * const response = yield* generateObjectWithFeedback(llm, {
  *   prompt: entityExtractionPrompt,
  *   schema: EntityGraphSchema,
@@ -82,7 +82,7 @@ export interface GenerateWithFeedbackOptions<
  * })
  * ```
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const generateObjectWithFeedback = Effect.fn("generateObjectWithFeedback")(function* <
   StructuredOutputSchema extends S.Codec<Record<string, unknown>, Record<string, unknown>, never, never>,
@@ -231,11 +231,11 @@ const buildFeedbackMessage = (error: AiError.InvalidOutputError): ReadonlyArray<
 
   return [
     {
-      role: "assistant" as const,
+      role: "assistant",
       content: "I attempted to generate the output but it failed schema validation.",
     },
     {
-      role: "user" as const,
+      role: "user",
       content: `Your response failed schema validation with this error:
 
 ${errorDescription}
@@ -254,7 +254,7 @@ Generate a corrected response following the schema exactly.`,
 /**
  * Type helper for the generateObjectWithFeedback result
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type GenerateWithFeedbackResult<A> = LanguageModel.GenerateObjectResponse<{}, A>;

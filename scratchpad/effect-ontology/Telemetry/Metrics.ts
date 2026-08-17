@@ -4,8 +4,8 @@
  * Collects and exports metrics in Prometheus text format.
  * Provides counters, gauges, and histograms for extraction observability.
  *
- * @since 2.0.0
- * @module Telemetry/Metrics
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -20,8 +20,8 @@ import * as O from "effect/Option";
 /**
  * Extraction metrics input
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface ExtractionMetrics {
   readonly durationMs: number;
@@ -34,8 +34,8 @@ export interface ExtractionMetrics {
 /**
  * LLM call metrics input
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface LlmCallMetrics {
   readonly provider: string;
@@ -49,8 +49,8 @@ export interface LlmCallMetrics {
 /**
  * Embedding cache metrics input
  *
- * @since 2.0.0
- * @category Types
+ * @since 0.0.0
+ * @category type-level
  */
 export interface EmbeddingCacheMetrics {
   readonly hits: number;
@@ -110,8 +110,8 @@ const initialState: MetricsState = {
 /**
  * MetricsService - Prometheus metrics collection
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class MetricsService extends Context.Service<MetricsService>()($I`MetricsService`, {
   make: Effect.gen(function* () {

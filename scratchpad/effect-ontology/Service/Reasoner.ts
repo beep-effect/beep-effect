@@ -8,8 +8,8 @@
  * Based on the Re-SHACL pattern for targeted reasoning - only computing
  * inferences needed for validation rather than full materialization.
  *
- * @since 2.0.0
- * @module Service/Reasoner
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -32,8 +32,8 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Reasoner");
 /**
  * Error: Reasoning operation failed
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class ReasoningError extends Data.TaggedError("ReasoningError")<{
   readonly message: string;
@@ -43,8 +43,8 @@ export class ReasoningError extends Data.TaggedError("ReasoningError")<{
 /**
  * Error: Invalid N3 rule syntax
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class RuleParseError extends Data.TaggedError("RuleParseError")<{
   readonly message: string;
@@ -59,8 +59,8 @@ export class RuleParseError extends Data.TaggedError("RuleParseError")<{
 /**
  * Reasoning profile - predefined sets of RDFS/OWL rules
  *
- * @since 2.0.0
- * @category Models
+ * @since 0.0.0
+ * @category models
  */
 export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas", "custom"]);
 export type ReasoningProfile = typeof ReasoningProfile.Type;
@@ -68,11 +68,11 @@ export type ReasoningProfile = typeof ReasoningProfile.Type;
 /**
  * Configuration for reasoning operations
  *
- * @since 2.0.0
- * @category Models
+ * @since 0.0.0
+ * @category models
  */
 export class ReasoningConfig extends Schema.Class<ReasoningConfig>("ReasoningConfig")({
-  profile: ReasoningProfile.pipe(SchemaUtils.withKeyDefaults("rdfs" as const)),
+  profile: ReasoningProfile.pipe(SchemaUtils.withKeyDefaults("rdfs")),
   customRules: Schema.Array(Schema.String).pipe(SchemaUtils.withKeyDefaults([])),
   maxIterations: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(100))),
 }) {
@@ -101,8 +101,8 @@ export class ReasoningConfig extends Schema.Class<ReasoningConfig>("ReasoningCon
 /**
  * Result of a reasoning operation
  *
- * @since 2.0.0
- * @category Models
+ * @since 0.0.0
+ * @category models
  */
 export class ReasoningResult extends Schema.Class<ReasoningResult>("ReasoningResult")({
   inferredTripleCount: NonNegativeInt,
@@ -257,8 +257,8 @@ const getRulesForProfile = (profile: ReasoningProfile): ReadonlyArray<string> =>
  * Provides forward-chaining reasoning for knowledge graphs with support
  * for RDFS entailment rules and custom N3 rules.
  *
- * @example
- * ```typescript
+ * **Example** (Use Reasoner)
+ * ```ts
  * Effect.gen(function*() {
  *   const reasoner = yield* Reasoner
  *   const rdfBuilder = yield* RdfBuilder
@@ -273,8 +273,8 @@ const getRulesForProfile = (profile: ReasoningProfile): ReadonlyArray<string> =>
  * })
  * ```
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
   make: Effect.sync(() => {

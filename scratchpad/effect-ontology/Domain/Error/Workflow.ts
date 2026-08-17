@@ -1,8 +1,9 @@
 /**
  * Schema-backed workflow execution failures.
  *
- * @remarks
- * The module distinguishes infrastructure failure, missing executions, and
+ * **Details**
+ *
+ * * The module distinguishes infrastructure failure, missing executions, and
  * resumable suspension so workflow handlers can recover by `_tag`.
  *
  * @packageDocumentation
@@ -18,7 +19,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Workflow");
 /**
  * General workflow runtime failure.
  *
- * @example
+ * **Example** (Use WorkflowError)
  * ```ts
  * import { WorkflowError } from "@effect-ontology/Error/Workflow.ts"
  *
@@ -48,7 +49,7 @@ export const WorkflowError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link WorkflowError}.
  *
- * @example
+ * **Example** (Use WorkflowError)
  * ```ts
  * import { WorkflowError, type WorkflowError as Failure } from "@effect-ontology/Error/Workflow.ts"
  *
@@ -64,7 +65,7 @@ export type WorkflowError = typeof WorkflowError.Type;
 /**
  * Indicates that a workflow execution identifier could not be resolved.
  *
- * @example
+ * **Example** (Use WorkflowNotFoundError)
  * ```ts
  * import { WorkflowNotFoundError } from "@effect-ontology/Error/Workflow.ts"
  *
@@ -101,7 +102,7 @@ export const WorkflowNotFoundError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link WorkflowNotFoundError}.
  *
- * @example
+ * **Example** (Use WorkflowNotFoundError)
  * ```ts
  * import { WorkflowNotFoundError, type WorkflowNotFoundError as Missing } from "@effect-ontology/Error/Workflow.ts"
  *
@@ -120,11 +121,12 @@ export type WorkflowNotFoundError = typeof WorkflowNotFoundError.Type;
 /**
  * Indicates that workflow execution is suspended.
  *
- * @remarks
- * `isResumable` defaults to `false`, making the safe behavior explicit when a
+ * **Details**
+ *
+ * * `isResumable` defaults to `false`, making the safe behavior explicit when a
  * producer omits resume capability.
  *
- * @example
+ * **Example** (Use WorkflowSuspendedError)
  * ```ts
  * import { WorkflowSuspendedError } from "@effect-ontology/Error/Workflow.ts"
  *
@@ -157,7 +159,7 @@ export const WorkflowSuspendedError = makeOntologyErrorClass.make(
 /**
  * Runtime value decoded by {@link WorkflowSuspendedError}.
  *
- * @example
+ * **Example** (Use WorkflowSuspendedError)
  * ```ts
  * import { WorkflowSuspendedError, type WorkflowSuspendedError as Suspended } from "@effect-ontology/Error/Workflow.ts"
  *
@@ -177,7 +179,7 @@ const AnyWorkflowErrorDefinition = S.Union([WorkflowError, WorkflowNotFoundError
 /**
  * Exhaustive tagged union of workflow failures.
  *
- * @example
+ * **Example** (Use AnyWorkflowError)
  * ```ts
  * import { AnyWorkflowError, WorkflowSuspendedError } from "@effect-ontology/Error/Workflow.ts"
  *
@@ -198,7 +200,7 @@ export const AnyWorkflowError = AnyWorkflowErrorDefinition.pipe(
 /**
  * Runtime failure decoded by {@link AnyWorkflowError}.
  *
- * @example
+ * **Example** (Use AnyWorkflowError)
  * ```ts
  * import { WorkflowError, type AnyWorkflowError } from "@effect-ontology/Error/Workflow.ts"
  *

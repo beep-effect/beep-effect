@@ -9,8 +9,8 @@
  * - SqlMessageStorage from @effect/cluster for message persistence
  * - ClusterWorkflowEngine for durable workflow execution
  *
- * @since 2.0.0
- * @module Runtime/Persistence/PostgresLayer
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Port } from "@beep/schema/Port";

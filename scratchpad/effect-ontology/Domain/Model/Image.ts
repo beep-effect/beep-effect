@@ -31,7 +31,7 @@ const Base64ImageData = S.NonEmptyString.check(
 /**
  * Semantic role an image plays in its source document.
  *
- * @example
+ * **Example** (Use ImageRole)
  * ```ts
  * import { ImageRole } from "@effect-ontology/Model/Image.ts"
  *
@@ -55,7 +55,7 @@ export const ImageRole = LiteralKit(["hero", "inline", "thumbnail"])
 /**
  * Runtime value accepted by {@link ImageRole}.
  *
- * @example
+ * **Example** (Use ImageRole)
  * ```ts
  * import type { ImageRole } from "@effect-ontology/Model/Image.ts"
  *
@@ -71,7 +71,7 @@ export type ImageRole = typeof ImageRole.Type;
 /**
  * Kind of aggregate that owns an image reference.
  *
- * @example
+ * **Example** (Use ImageOwnerType)
  * ```ts
  * import { ImageOwnerType } from "@effect-ontology/Model/Image.ts"
  *
@@ -94,7 +94,7 @@ export const ImageOwnerType = LiteralKit(["link", "document"])
 /**
  * Runtime value accepted by {@link ImageOwnerType}.
  *
- * @example
+ * **Example** (Use ImageOwnerType)
  * ```ts
  * import type { ImageOwnerType } from "@effect-ontology/Model/Image.ts"
  *
@@ -133,7 +133,7 @@ const ImageCandidateFields = {
 /**
  * Image discovered before fetching, hashing, or persistence.
  *
- * @example
+ * **Example** (Use ImageCandidate)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ImageCandidate } from "@effect-ontology/Model/Image.ts"
@@ -198,7 +198,7 @@ const ImageAssetFields = {
 /**
  * Deduplicated, content-addressed metadata for stored image bytes.
  *
- * @example
+ * **Example** (Use ImageAsset)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ImageAsset } from "@effect-ontology/Model/Image.ts"
@@ -273,7 +273,7 @@ const ImageRefFields = {
 /**
  * Owner-scoped reference from a document or link to an image asset.
  *
- * @example
+ * **Example** (Use ImageRef)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ImageRef } from "@effect-ontology/Model/Image.ts"
@@ -320,11 +320,12 @@ const ImageManifestFields = {
 /**
  * Ordered image-reference manifest for one owner.
  *
- * @remarks
- * `totalCount` is derived from `images`; it is intentionally not persisted as
+ * **Details**
+ *
+ * * `totalCount` is derived from `images`; it is intentionally not persisted as
  * a second, potentially inconsistent source of truth.
  *
- * @example
+ * **Example** (Use ImageManifest)
  * ```ts
  * import { DateTime } from "effect"
  * import { ImageManifest } from "@effect-ontology/Model/Image.ts"
@@ -351,7 +352,7 @@ export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
   /**
    * Number of references in this manifest.
    *
-   * @example
+   * **Example** (Use ImageForPromptFields)
    * ```ts
    * import { DateTime } from "effect"
    * import { ImageManifest } from "@effect-ontology/Model/Image.ts"
@@ -412,7 +413,7 @@ const ImageForPromptFields = {
 /**
  * Image payload prepared for multimodal model input.
  *
- * @example
+ * **Example** (Use ImageForPrompt)
  * ```ts
  * import { ImageForPrompt } from "@effect-ontology/Model/Image.ts"
  *
@@ -452,7 +453,7 @@ const ImageFetchResultFields = {
 /**
  * Successful result of fetching and identifying an image candidate.
  *
- * @example
+ * **Example** (Use ImageFetchResult)
  * ```ts
  * import * as S from "effect/Schema"
  * import { ImageFetchResult } from "@effect-ontology/Model/Image.ts"

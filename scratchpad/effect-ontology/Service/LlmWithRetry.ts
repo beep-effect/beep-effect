@@ -9,8 +9,8 @@
  *
  * Reduces code duplication across extractors and grounders.
  *
- * @since 2.0.0
- * @module Service/LlmWithRetry
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { Cause, Duration, Effect, Ref, Schedule } from "effect";
@@ -68,7 +68,7 @@ export interface GenerateObjectWithRetryOptions<
 /**
  * Generate structured object with standardized retry, timeout, and telemetry.
  *
- * @since 2.0.0
+ * @since 0.0.0
  */
 export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(function* <
   StructuredOutputSchema extends S.Codec<Record<string, unknown>, Record<string, unknown>, never, never>,

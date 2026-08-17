@@ -4,8 +4,8 @@
  * Centralized configuration for LLM, RDF, Ontology, and Runtime settings.
  * Uses Effect.Config for environment-based configuration.
  *
- * @since 2.0.0
- * @module Service/Config
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId, CoreVocab } from "@beep/identity";
@@ -300,7 +300,7 @@ export const DEFAULT_CONFIG: AppConfig = {
     batchSize: 5,
   },
   embedding: {
-    provider: "nomic" as const,
+    provider: "nomic",
     model: "nomic-embed-text-v1.5",
     dimension: 768,
     transformersModelId: "Xenova/nomic-embed-text-v1",

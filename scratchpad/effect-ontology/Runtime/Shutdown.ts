@@ -4,8 +4,8 @@
  * Provides graceful shutdown with request draining for cloud deployment.
  * Ensures in-flight requests complete before pod termination.
  *
- * @since 2.0.0
- * @module Runtime/Shutdown
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
@@ -35,8 +35,8 @@ export const DEFAULT_SHUTDOWN_CONFIG: ShutdownConfig = {
 /**
  * Error thrown when request is rejected during shutdown
  *
- * @since 2.0.0
- * @category Errors
+ * @since 0.0.0
+ * @category errors
  */
 export class ShutdownError extends Data.TaggedError("ShutdownError")<{
   readonly message: string;
@@ -51,8 +51,8 @@ export class ShutdownError extends Data.TaggedError("ShutdownError")<{
  * @param config - Shutdown configuration
  * @returns Effect providing the shutdown handler
  *
- * @example
- * ```typescript
+ * **Example** (Use ShutdownService)
+ * ```ts
  * const shutdown = yield* makeGracefulShutdown()
  *
  * // Wrap all requests
@@ -63,14 +63,14 @@ export class ShutdownError extends Data.TaggedError("ShutdownError")<{
  * yield* shutdown.drain()
  * ```
  *
- * @since 2.0.0
- * @category Constructors
+ * @since 0.0.0
+ * @category constructors
  */
 /**
  * Shutdown Service
  *
- * @since 2.0.0
- * @category Services
+ * @since 0.0.0
+ * @category services
  */
 export class ShutdownService extends Context.Service<ShutdownService>()($I`ShutdownService`, {
   make: Effect.gen(function* () {

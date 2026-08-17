@@ -3,8 +3,8 @@
  *
  * Persists extraction results to filesystem.
  *
- * @since 2.0.0
- * @module Service/ExtractionCache
+ * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $ScratchpadId } from "@beep/identity";
