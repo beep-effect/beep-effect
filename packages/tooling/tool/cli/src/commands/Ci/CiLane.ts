@@ -20,6 +20,7 @@ import { Console, Duration, Effect, FileSystem, Match, Path, pipe } from "effect
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
+import { turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { LABS_TURBO_EXCLUDE_FILTER, LABS_TURBO_SELECT_FILTER } from "../../internal/cli/Labs/index.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
@@ -950,7 +951,11 @@ export const ciLaneStepsForTesting: {
           options
         ),
       ],
-      "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy"])],
+      // `--full` states the hosted scope in the argv instead of inheriting it
+      // from ambient `CI=true`, so a local replay scans the same repo-wide
+      // surface the required Lint Policy context does. Hosted runs are
+      // unchanged: `beep lint policy` already forces the full sweep under CI.
+      "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy", "--full"])],
       nix: () => [
         QualityTaskStep.make({
           label: "ci:nix:flake-check",
@@ -1011,11 +1016,16 @@ const runLaneProcess = Effect.fn("CiLane.runLaneProcess")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<number, CiCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log(`[ci] ${step.label}: ${renderStepCommand(step)}`);
+  // Lane bodies that shell out to Turbo need the same env hygiene the root
+  // quality runner applies: no interactive TUI (it can leave a killed run's
+  // terminal in mouse-capture mode) and no unresolved `op://` token/team
+  // references leaking through as literal values on a workstation.
+  const envOverrides = yield* turboEnvOverrides(step.command, step.args);
   return yield* runToExit({
     command: step.command,
     args: step.args,
     cwd: step.cwd,
-    env: step.env ?? {},
+    env: { ...envOverrides, ...(step.env ?? {}) },
     extendEnv: true,
     stdio: "inherit",
   }).pipe(CiCommandError.mapError(`Failed to spawn ${renderStepCommand(step)}.`));
@@ -1366,13 +1376,18 @@ export class CiLocalStepPlan extends S.Class<CiLocalStepPlan>($I`CiLocalStepPlan
 
 const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArray<string> => {
   const affectedFlags = plan.affected ? ["--affected", "--base", plan.base] : A.empty<string>();
+  // check.yml gives every Turbo-backed matrix lane `--summarize` as well as the
+  // affected shape. It only writes gitignored `.turbo/runs/*.json` receipts, so
+  // replaying it locally costs nothing and keeps the dispatched argv identical
+  // to the hosted one.
+  const turboShapeFlags = [...affectedFlags, "--summarize"];
 
   return CiLaneId.$match(laneId, {
     build: A.empty<string>,
-    check: () => affectedFlags,
+    check: () => turboShapeFlags,
     codegen: A.empty<string>,
     commitlint: () => ["--from", plan.base],
-    coverage: () => affectedFlags,
+    coverage: () => turboShapeFlags,
     "desktop-ipc": A.empty<string>,
     docgen: () => ["--mode", plan.affected ? "affected" : "full", "--base", plan.base],
     ecosystem: A.empty<string>,
@@ -1380,18 +1395,60 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     "jsdoc-ratchet": A.empty<string>,
     knip: A.empty<string>,
     labs: A.empty<string>,
-    lint: () => affectedFlags,
+    lint: () => turboShapeFlags,
     "lint-policy": A.empty<string>,
     nix: A.empty<string>,
-    property: () => affectedFlags,
+    property: () => turboShapeFlags,
     "repo-sanity": () => (plan.onMainBranch ? A.empty<string>() : ["--changeset-status"]),
     sast: A.empty<string>,
     secrets: A.empty<string>,
     security: A.empty<string>,
-    "test-integration": () => affectedFlags,
-    "test-unit": () => affectedFlags,
+    "test-integration": () => turboShapeFlags,
+    "test-unit": () => turboShapeFlags,
   });
 };
+
+/**
+ * Build the `beep ci lane <id>` dispatch step for one lane.
+ *
+ * **Details**
+ *
+ * This is the single source of the argv every local replay of a hosted lane
+ * runs — the local CI battery and Yeet's pre-push proof both dispatch through
+ * it, so neither can drift into a cousin root command that only approximates
+ * the hosted body (ship-velocity B1). Callers own the label because failure
+ * attribution keys on it.
+ *
+ * **Example** (Dispatch the affected check lane)
+ *
+ * ```ts
+ * import { CiLocalStepPlan, ciLaneDispatchStep } from "@beep/repo-cli/commands/Ci"
+ *
+ * const plan = CiLocalStepPlan.make({ affected: true, base: "origin/main", onMainBranch: false })
+ * console.log(ciLaneDispatchStep("/repo", "quality:check", "check", plan).args)
+ * ```
+ *
+ * @param repoRoot - Repository root used as the subprocess working directory.
+ * @param label - Lane label used for failure attribution.
+ * @param laneId - CI lane to dispatch.
+ * @param plan - Resolved local battery shape.
+ * @returns The planned `beep ci lane` dispatch step.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const ciLaneDispatchStep: {
+  (repoRoot: string, label: string, laneId: CiLaneId, plan: CiLocalStepPlan): QualityTaskStep;
+  (label: string, laneId: CiLaneId, plan: CiLocalStepPlan): (repoRoot: string) => QualityTaskStep;
+} = dual(
+  4,
+  (repoRoot: string, label: string, laneId: CiLaneId, plan: CiLocalStepPlan): QualityTaskStep =>
+    QualityTaskStep.make({
+      label,
+      command: "bun",
+      args: ["run", "beep", "ci", "lane", laneId, ...ciLocalLaneFlags(laneId, plan)],
+      cwd: repoRoot,
+    })
+);
 
 /**
  * Build the local battery step plan. Exposed for focused unit tests.
@@ -1423,14 +1480,7 @@ export const ciLocalStepsForTesting: {
 } = dual(
   3,
   (repoRoot: string, selection: ReadonlyArray<CiLaneId>, plan: CiLocalStepPlan): ReadonlyArray<QualityTaskStep> =>
-    A.map(selection, (laneId) =>
-      QualityTaskStep.make({
-        label: `ci:local:${laneId}`,
-        command: "bun",
-        args: ["run", "beep", "ci", "lane", laneId, ...ciLocalLaneFlags(laneId, plan)],
-        cwd: repoRoot,
-      })
-    )
+    A.map(selection, (laneId) => ciLaneDispatchStep(repoRoot, `ci:local:${laneId}`, laneId, plan))
 );
 
 /**

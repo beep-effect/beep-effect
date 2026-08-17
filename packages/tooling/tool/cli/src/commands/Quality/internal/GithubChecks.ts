@@ -10,7 +10,9 @@ import { Match, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { QualityTaskStep } from "../../../internal/process/index.ts";
+import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
 import { GithubCheckLaneSpec, GithubCheckLaneWave, GithubCheckLaneWaveSpec } from "../Quality.schemas.ts";
+import type { CiLaneId } from "../../Ci/CiLane.ts";
 import type {
   FallowQualityFeatureFamily,
   GithubCheckLaneStage,
@@ -92,6 +94,39 @@ const bunxLane = (repoRoot: string, label: string, args: ReadonlyArray<string>):
  */
 const repoCliLane = (repoRoot: string, label: string, args: ReadonlyArray<string>): QualityTaskStep =>
   bunRunLane(repoRoot, label, ["beep", "quality", ...args]);
+
+// PR shape for locally replayed hosted lanes: affected against the `origin/main`
+// the collector already refreshed, matching what check.yml passes its matrix
+// jobs. Env posture stays local on purpose — B1 makes the command identical, not
+// the environment (`CI=true`, blank PR secrets, and cache flags belong to the
+// later `--ci-parity` tier). `onMainBranch` only shapes the repo-sanity lane,
+// which this collector plans separately.
+const PRE_PUSH_CI_LANE_PLAN = CiLocalStepPlan.make({
+  affected: true,
+  base: "origin/main",
+  onMainBranch: false,
+});
+
+/**
+ * Build a pre-push lane step that dispatches the hosted lane body verbatim.
+ *
+ * **Example** (Inspect GitHub checks)
+ *
+ * ```ts
+ * import { githubCheckQualityLanes } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(githubCheckQualityLanes("/repo")[1]?.step.args)
+ * ```
+ *
+ * @param repoRoot - Repository root used as the subprocess working directory.
+ * @param label - Lane label used for failure attribution.
+ * @param laneId - Hosted CI lane replayed by this pre-push lane.
+ * @returns The `beep ci lane` dispatch step for the lane.
+ * @category utilities
+ * @since 0.0.0
+ */
+const ciLaneStep = (repoRoot: string, label: string, laneId: CiLaneId): QualityTaskStep =>
+  ciLaneDispatchStep(repoRoot, label, laneId, PRE_PUSH_CI_LANE_PLAN);
 
 /**
  * Opt a Turbo-backed lane into no-location TS2589 flake quarantine.
@@ -227,12 +262,34 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "heavy",
     ts2589QuarantineLane(bunRunLane(repoRoot, "quality:build", ["build"]))
   ),
-  githubCheckLane("quality:lint", "repo-quality", "heavy", bunRunLane(repoRoot, "quality:lint", ["lint"])),
+  githubCheckLane("quality:lint", "repo-quality", "heavy", ciLaneStep(repoRoot, "quality:lint", "lint")),
+  githubCheckLane(
+    "quality:lint-policy",
+    "repo-quality",
+    "heavy",
+    ciLaneStep(repoRoot, "quality:lint-policy", "lint-policy")
+  ),
   githubCheckLane(
     "quality:check",
     "repo-quality",
     "heavy",
-    ts2589QuarantineLane(bunRunLane(repoRoot, "quality:check", ["check"]))
+    ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:check", "check"))
+  ),
+  // The hosted Check context runs affected-scoped, which suppresses the two
+  // repo-wide extras root `bun run check` used to carry. They are the only gate
+  // on Effect tsgo diagnostics in test files, so they stay as their own local
+  // lanes rather than disappearing with the root command.
+  githubCheckLane(
+    "quality:check:tsgo-tests",
+    "repo-quality",
+    "heavy",
+    repoCliLane(repoRoot, "quality:check:tsgo-tests", ["test-tsgo"])
+  ),
+  githubCheckLane(
+    "quality:check:tsgo-smoke",
+    "repo-quality",
+    "heavy",
+    repoCliLane(repoRoot, "quality:check:tsgo-smoke", ["tsgo-smoke"])
   ),
   githubCheckLane("quality:knip", "repo-quality", "preflight", repoCliLane(repoRoot, "quality:knip", ["knip"])),
   githubCheckLane(
@@ -250,7 +307,13 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
     "documentation",
     bunRunLane(repoRoot, "quality:docgen", ["docgen:local", "--", "--allow-full"])
   ),
-  githubCheckLane("quality:test", "repo-quality", "test", bunRunLane(repoRoot, "quality:test", ["test"])),
+  githubCheckLane("quality:test-unit", "repo-quality", "test", ciLaneStep(repoRoot, "quality:test-unit", "test-unit")),
+  githubCheckLane(
+    "quality:test-integration",
+    "repo-quality",
+    "test",
+    ciLaneStep(repoRoot, "quality:test-integration", "test-integration")
+  ),
 ];
 
 /**
