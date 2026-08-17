@@ -3,6 +3,7 @@ import {
   canonicalJsonTextPretty,
   foldPacketEvents,
   PACKET_EVENT_UPCASTERS,
+  PacketDerivedState,
   PacketEvent,
   PacketEventStore,
   PacketEventStoreLive,
@@ -19,9 +20,10 @@ import {
 } from "@beep/repo-cli/test/Goals";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, Exit, FileSystem, Layer } from "effect";
+import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
 
 const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
@@ -251,6 +253,10 @@ describe("golden replay (committed fixture)", () => {
           const expectedTrace = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.json`);
           const renderedTrace = yield* renderPacketTraceFile(projectPacketTrace(derived));
           expect(renderedTrace).toBe(expectedTrace);
+
+          const expectedDerived = yield* fs.readFileString(`${GOLDEN_PATH}/expected-derived.json`);
+          const encodedDerived = yield* S.encodeUnknownEffect(PacketDerivedState)(derived);
+          expect(canonicalJsonTextPretty(encodedDerived)).toBe(expectedDerived);
         }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
@@ -287,6 +293,9 @@ describe("golden replay (committed fixture)", () => {
           });
           const result = yield* Effect.exit(store.append(locator, next));
           expect(Exit.isFailure(result)).toBe(true);
+          if (Exit.isFailure(result)) {
+            expect(String(Cause.squash(result.cause))).toContain("forked");
+          }
         }).pipe(provideScopedLayer(testLayer))
       ),
     20_000

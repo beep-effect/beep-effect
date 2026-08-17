@@ -15,6 +15,16 @@ amendments and the promised-now/gated split recorded below.
   fires, its presumptive home is a lab app under `apps/labs`, resolving
   D12's deferred-home question with the repo's own experimental-app
   lifecycle; the package-creation command remains mandatory.
+- **Amendment C — `PacketFold` ledger-symbol shape (2026-08-17, recorded at
+  P1 implementation, carried for operator review in the P1 slice PR).** The
+  D5 ledger symbol `PacketFold` ships as the pure fold function family in the
+  colocated `PacketFold.ts` module (`foldPacketEvents`,
+  `projectPacketTrace`, `packetTraceIsStale`) rather than a
+  `Context.Service`: the fold has no dependencies and no second
+  implementation, so a service wrapper would add indirection without a
+  contract. The event store and guarded writer remain `Context.Service`
+  contracts. No new significant symbol is introduced; the ledger's concept
+  set is unchanged.
 - **Promised-now vs gated.** Only `packet-control-plane-core` is promised-now
   and scaffolds at graduation. `packet-design-approval-gate` and
   `packet-projection-migration` gate on the packet-core fold contract

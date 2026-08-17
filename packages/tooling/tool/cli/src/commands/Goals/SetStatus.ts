@@ -11,7 +11,9 @@
  * transition plan without writing, and a real write appends the CAS events
  * (seeding a genesis event on the first transition) and regenerates the
  * derived `ops/trace.json` projection before the manifest edit — refusing
- * whole on a moved tip, fork, or integrity issue. `--migrate` runs the
+ * before any manifest edit on a moved tip, fork, or integrity issue (an
+ * interrupted multi-event append leaves only valid chain events behind, never
+ * a projection or manifest change). `--migrate` runs the
  * mechanical census-locked migration over every packet (dry-run by default,
  * `--write` to apply).
  *

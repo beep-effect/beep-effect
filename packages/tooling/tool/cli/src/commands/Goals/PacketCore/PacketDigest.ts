@@ -16,11 +16,10 @@
 import { createHash } from "node:crypto";
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str } from "@beep/utils";
-import { Effect, Order } from "effect";
+import { Effect, Order, Struct } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as Struct from "effect/Struct";
 import { isJsonRecord } from "../Inventory.ts";
 import { PacketEvent, PacketEventType } from "./PacketCore.schemas.ts";
 import type { PacketEventId } from "./PacketCore.schemas.ts";

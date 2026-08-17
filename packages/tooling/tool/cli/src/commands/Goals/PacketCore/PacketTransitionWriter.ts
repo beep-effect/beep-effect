@@ -6,11 +6,12 @@
  * The writer separates preview from write the way Yeet's publish-time index
  * guard separates disposition from action: `plan` folds the live stream and
  * produces the exact events a transition would append plus the derived state
- * after them, writing nothing; `commit` appends those events under
- * compare-and-set and regenerates the derived trace projection. A stream that
- * moved, forked, or broke between plan and commit refuses the whole
- * transition — no event, no projection — so the caller re-plans against
- * reality instead of forking the chain.
+ * after them, writing nothing; `commit` appends those events one at a time,
+ * each under its own compare-and-set, and regenerates the derived trace
+ * projection only after every append lands. A stream that moved, forked, or
+ * broke between plan and commit refuses the failing append — events already
+ * appended by the same commit remain as a valid linear chain (never a fork
+ * or corruption) — and the caller re-plans against reality.
  *
  * @packageDocumentation
  * @since 0.0.0

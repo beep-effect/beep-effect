@@ -62,9 +62,11 @@ export class PacketStreamError extends S.TaggedError<PacketStreamError>($I`Packe
  * **Details**
  *
  * The writer's plan recorded an expected revision; by append time the folded
- * stream had moved past it. The transition is refused whole — no event, no
- * projection, no manifest edit — so the operator re-plans against the moved
- * tip instead of forking the chain unknowingly.
+ * stream had moved past it. The failing append writes nothing itself, and no
+ * projection or manifest edit happens until every planned append lands. In a
+ * multi-event plan, events appended before the conflict remain — they extend
+ * the valid linear chain (never a fork or corruption) — and the operator
+ * re-plans against the moved tip.
  *
  * **Example** (Create a CAS conflict error)
  *
