@@ -83,6 +83,26 @@ no hand edits, which discharges two SPEC Track B boxes at once:
 - *"mints labs that pass `beep:check`, `beep:lint`, `beep:test` out of the
   box"* — measured on the generated lab: check exit 0, lint
   "Checked 12 files … No fixes applied", test 1/1 passed.
+
+  The Track B criterion covers Next.js, Vite, and service labs, and the
+  Vite lab alone does not discharge it. Minting throwaway `nextjs-probe`
+  and `service-probe` labs and running all three gates against each found
+  **three of six failing**: nextjs `lint` 1; service `check` 1 and `lint`
+  1. Deleting the probes surfaced a fourth, from Fallow's unused-export
+  gate. All four were generator defects, not lab defects:
+
+  | variant | gate | before | cause |
+  | --- | --- | --- | --- |
+  | nextjs | lint | 1 | tsconfig `include` emitted multi-line |
+  | service | lint | 1 | same |
+  | service | check | 1 | bare `yield*` on `Layer.launch` (TS377006); mid-pipeline `Effect.provide` (TS377032) |
+  | service | fallow | 1 | `ApiGroup` exported with no importer |
+
+  Re-minting both variants through the fixed generator returns
+  check/lint/test = 0 across all six gates. The formatting class is now
+  closed structurally rather than by hand-tuning emitted arrays:
+  `create-package` runs `biome check --write` over the generated tree as
+  an advisory pass.
 - *D5 zero-root-churn, proven live rather than argued.* The mint's entire
   footprint outside the lab tree is the generated identity segment
   (`generatedLabComposers = {}` → `$I.compose("trustgraph-workbench")`, strictly
