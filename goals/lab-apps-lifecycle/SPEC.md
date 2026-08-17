@@ -175,7 +175,7 @@ not against recollection. Where a box is checked, the evidence is:
 | box | evidence |
 | --- | --- |
 | A1 synthetic #680 fixture | `test/delete-package.test.ts` — "reports every synthetic PR #680 residue class without relying on ambient state" |
-| A2 zero-consumer delete leaves nothing | `history/p1-track-a-round-trip.md` (verify battery recorded) and re-proved end-to-end in `history/p4-first-vertical-slice.md`; the non-lab `{}` changeset half was observed on a P3 probe, the lab exemption on the P4 probe |
+| A2 zero-consumer delete leaves nothing | **Qualified — every clause except regenerated baselines.** Path/workspace/identity/tsconfig/syncpack/lockfile removal and the green verify battery are proven in `history/p1-track-a-round-trip.md` and again in `history/p4-first-vertical-slice.md`; the non-lab `{}` changeset half was observed on a P3 probe, the lab exemption on the P4 probe. The **regenerated-baselines** clause is NOT proven and is waived for labs: a lab minted after `HEAD` never enters a committed baseline, so there is nothing to regenerate away, and attempting a full regen exceeds ten minutes while emitting drift unrelated to the target. Tracked as ledger receipt 9; do not read this box as proof of that clause. |
 | A3 §9.4 refuse table | `test/delete-package.test.ts` — `describe("delete-package hard-refuse table")` |
 | A4 orphan-composer lint | `commands/Lint/IdentityRegistry.ts` — closed violation kind covering orphaned registrations and generated-labs-segment drift |
 | B1 glob + gate entries, zero hand edits | PR #732; re-proved by three later mints (P3 tauri lab, P3 non-lab, P4 vite lab) whose whole footprint was `bun.lock` + the fenced identity segment |
@@ -205,7 +205,9 @@ Track A — delete-package:
       the path-aware status wrapper, consistent with D2's ceremony
       exemption), and a green verify battery (`tsconfig-sync --check`, `lint
       identity-registry`, `quality changeset-graph`, `fallow boundaries
-      --check`, exact-name `rg` sweep).
+      --check`, exact-name `rg` sweep). **The regenerated-baselines clause is
+      waived for lab targets and remains unproven** — see the evidence table
+      above and ledger receipt 9.
 - [x] The command refuses each hard-refuse case in
       `research/05-deletion-prior-art.md` §9.4 with the dependents cascade
       printed.

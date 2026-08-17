@@ -228,6 +228,34 @@ Numbers are STABLE IDS — never renumber to express priority.
    it is a trap with a well-known workaround, and the workaround is exactly what
    stops the trap from ever being fixed.
 
+   *Amendment (same day, after PR review):* two reviewers independently flagged
+   that P4 had been marked complete on an interrupted delete. Re-measuring
+   without a timeout ceiling settled the question the first run left open: the
+   second run produced `standards/` drift of +23,058 / −26,180 against the
+   first run's +23,007 / −26,176, matching to within a few dozen lines.
+   **The drift is deterministic output of the regeneration, not damage from the
+   interrupt.** A2's regenerated-baselines clause is therefore waived for labs
+   rather than claimed, and the phase is recorded as proven with
+   `--skip-baselines` semantics. The reviewers were right and the original
+   wording overclaimed.
+
+   *The re-run also upgraded this receipt from "slow" to "broken."* Without a
+   ceiling the default delete ran **718s and then exited 1 on its own**. The
+   failure is not the duration: the `coverage-baseline` rebuild runs the
+   repo-wide coverage suite, one pre-existing unrelated test fails there
+   (`@beep/wink` — `corpus "missing-corpus" does not exist`, reproducible
+   without any delete in play), and that failure fails the delete. So
+   **deleting one leaf package is coupled to every other package's tests
+   passing.** The registration work had already completed correctly by then —
+   probe tree gone, identity segment clean — so the command destroys and then
+   reports failure, which is receipt 3's half-deleted-state hazard reached by a
+   different route.
+
+   *Would have prevented it, revised:* scoping the baseline write to the
+   deleted workspace fixes the duration, the drift, and this coupling at once.
+   Until then `--skip-baselines` is not a convenience flag, it is the only path
+   that can succeed on a tree with any failing test anywhere.
+
 10. **The reflection lint reports a false green on an active packet, and only
     `goals doctor` catches the invalid frontmatter.** — `unowned`
 
@@ -258,3 +286,30 @@ Numbers are STABLE IDS — never renumber to express priority.
     author's head. The `P6 Closeout Checklist` in `PLAN.md` names this lint as
     the validation step, so following the packet's own instructions produces
     the false green.
+
+11. **Recording the evidence of a round-trip makes that round-trip
+    unrepeatable.** — `unowned`
+
+    *Doing:* re-running the P4 slice to answer the review, using the same probe
+    name the evidence file documents.
+
+    *Evidence:* `bun run beep delete-package @beep/round-trip-probe` now exits 1
+    within five seconds with `REFUSE [packet-claim/soft] Packet reference
+    remains at goals/lab-apps-lifecycle/history/p4-first-vertical-slice.md`.
+    Six lines of that file name the probe, and `authored-references` cannot
+    distinguish a live registration from a historical record of one. The
+    escape hatches are `--allow-stale-packets`, `--rewrite-packets` (which
+    would edit the evidence file), or a fresh probe name.
+
+    *Would have prevented it:* teaching the packet-claim scan that
+    `history/**` is a historical-record glob rather than a live claim — the
+    geometry model already has a `historical-records` surface it classifies as
+    `[preserve]`, so the concept exists and simply is not consulted by the
+    authored-references refusal.
+
+    *Second-order:* the refusal is correct for its stated purpose and wrong
+    here, because "a packet file mentions this name" conflates two opposite
+    meanings: a packet that *claims* a package, and a packet that *documents
+    having deleted* one. Any repo that asks agents to write durable evidence
+    will keep hitting this, and the incentive it creates is to write less
+    evidence.

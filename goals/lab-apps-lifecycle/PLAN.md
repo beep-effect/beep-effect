@@ -187,14 +187,47 @@ swept the tree including 2.9 MB of gitignored `dist/` + `node_modules/`, and
 the deleted-target doctor probe reported **"clean: no registration residue
 remains"** with `git status` empty.
 
-One operational defect surfaced, recorded as ledger receipt 9: an unscoped
-delete's baseline regeneration **exceeds ten minutes** and, when interrupted,
-leaves six `standards/` files rewritten by ~49k lines of drift that is not
-probe removal at all — a lab minted after `HEAD` never entered a committed
-baseline, so regenerating repo-wide to remove it is wasted work by
-construction. Every prior probe cycle in this packet passed
-`--skip-baselines`, which is why the cost stayed invisible until a phase
-deliberately declined it.
+**What P4 does and does not prove.** The proven path is the delete's
+registration work — tree removal, identity-segment prune, lockfile refresh —
+followed by a green deleted-target doctor and an empty `git status`. That is
+the SPEC's stated First Vertical Slice bar and it passed.
+
+**Full baseline regeneration is explicitly NOT part of that proof**, and A2's
+regenerated-baselines clause is waived for labs rather than claimed. Review of
+this PR pushed back on an earlier draft that read as if the whole default path
+had completed; it had not. Re-measured twice, without a timeout ceiling the
+second time:
+
+| run | outcome | `standards/` drift |
+| --- | --- | --- |
+| 1 (600s ceiling) | killed mid-regeneration | 6 files, +23,007 / −26,176 |
+| 2 (no ceiling) | **exited 1 after 718s on its own** | 7 files, +23,304 / −26,354 |
+
+The second run settles both open questions. The drift is deterministic output
+of the regeneration rather than damage from interrupting it, and the default
+path does not merely exceed a ceiling — **it fails**. The `coverage-baseline`
+rebuild runs the repo-wide coverage suite; one pre-existing unrelated test
+fails there (`@beep/wink`, reproducible with no delete in play) and that failure
+fails the delete. Deleting one leaf package is coupled to every other package's
+tests passing. The registration work had already completed correctly by then,
+so the command destroys and then reports failure.
+
+None of the drift is probe removal —
+a lab minted after `HEAD` never entered a committed baseline, so regenerating
+repo-wide to remove it is wasted work by construction, and what it actually
+emits is unrelated churn dominated by `jsdoc-documentation.inventory.jsonc`.
+
+So the honest statement of the phase is: the round-trip is proven with
+`--skip-baselines` semantics, and full regeneration is an open defect
+(ledger receipt 9) rather than a passing step. Every prior probe cycle in this
+packet passed that flag, which is why the cost stayed invisible until a phase
+declined it.
+
+Re-running the slice also exposed a second-order problem worth its own receipt
+(10b): **recording the evidence makes the round-trip unrepeatable.** The delete
+now refuses with `REFUSE [packet-claim/soft]` because six lines of
+`history/p4-first-vertical-slice.md` name the probe, so re-proving requires
+`--allow-stale-packets` or a fresh probe name.
 
 ## P6 Closeout Checklist
 
