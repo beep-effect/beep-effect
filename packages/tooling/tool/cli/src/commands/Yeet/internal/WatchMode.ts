@@ -330,12 +330,15 @@ const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
   const observedAt = yield* isoNow;
   const events = diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: observedAt, next, prev }));
   yield* Effect.forEach(events, emitWatchEvent, { discard: true });
-  if (next.headSha !== prev.headSha) {
+  const headChanged = next.headSha !== prev.headSha;
+  if (headChanged) {
     yield* supersedeYeetDispatchState(context.repoRoot, next.headSha, next.prNumber, observedAt);
   }
   yield* convergeYeetWatchDispatch(context, next, observedAt);
+  // The registration window belongs to a head: a new push starts its own
+  // patience budget rather than inheriting whatever the superseded head spent.
   return O.some({
-    emptyPolls: A.isReadonlyArrayEmpty(next.checks) ? emptyPolls + 1 : 0,
+    emptyPolls: A.isReadonlyArrayEmpty(next.checks) ? (headChanged ? 1 : emptyPolls + 1) : 0,
     snapshot: next,
   });
 });

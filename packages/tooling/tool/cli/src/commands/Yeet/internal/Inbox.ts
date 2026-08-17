@@ -167,6 +167,32 @@ export class YeetFailureCapsule extends S.Class<YeetFailureCapsule>($I`YeetFailu
  * when the transition was observed — the watch stamps both from the same poll
  * tick.
  *
+ * **Example** (Build a row)
+ *
+ * ```ts
+ * import { YeetCheckFailedRow, YeetFailureCapsule, yeetInboxRowId } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetFailureCapsule.make({
+ *   bucket: "fail",
+ *   headSha: "abc123",
+ *   lane: "Check / Coverage",
+ *   link: null,
+ *   observedAt: "2026-08-17T00:00:00Z",
+ *   prNumber: 754,
+ *   state: "FAILURE",
+ *   workflow: null
+ * })
+ * const row = YeetCheckFailedRow.make({
+ *   capsule,
+ *   checkout: "/repo",
+ *   id: yeetInboxRowId(capsule),
+ *   severity: "P0",
+ *   ts: "2026-08-17T00:00:00Z"
+ * })
+ *
+ * console.log(row.kind) // "check-failed"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -227,6 +253,13 @@ export type YeetInboxRow = typeof YeetInboxRow.Type;
  * segment. It doubles as the ack receipt filename under `.beep/inbox/acks/`,
  * which is why it must never carry observation-time entropy.
  *
+ * **Gotchas**
+ *
+ * Two checks that share a display name on one head share an identity — that
+ * is the dedup contract (headSha + lane), not an accident. The capsule keeps
+ * the first observed record's link and raw signal; a repair session works the
+ * lane by name and sees every same-named job on the PR checks page anyway.
+ *
  * **Example** (Same failure, same id)
  *
  * ```ts
@@ -253,6 +286,20 @@ export const yeetInboxRowId = (capsule: Pick<YeetFailureCapsule, "headSha" | "la
 
 /**
  * The inbox file layout under one checkout.
+ *
+ * **Example** (Build the layout)
+ *
+ * ```ts
+ * import { YeetInboxPaths } from "@beep/repo-cli/test/Yeet"
+ *
+ * const paths = YeetInboxPaths.make({
+ *   acksDir: "/repo/.beep/inbox/acks",
+ *   dir: "/repo/.beep/inbox",
+ *   failuresPath: "/repo/.beep/inbox/failures.ndjson"
+ * })
+ *
+ * console.log(paths.failuresPath) // "/repo/.beep/inbox/failures.ndjson"
+ * ```
  *
  * @category models
  * @since 0.0.0

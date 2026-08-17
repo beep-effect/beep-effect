@@ -775,6 +775,42 @@ describe("registration patience", () => {
     )
   );
 
+  // The registration budget belongs to a head: polls the OLD head spent must
+  // not shorten the NEW head's window, or a push landing late in the old
+  // window could exit green before its checks register (#754 review P1).
+  it.live("restarts the registration budget when the head changes mid-window", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
+
+        expect(ended.failing).toBe(1);
+        const patience = A.filter(A.map(yield* TestConsole.errorLines, String), (line) =>
+          Str.includes("no checks registered")(line)
+        );
+        expect(A.some(patience, (line) => Str.includes("head aaa111 yet (2/10)")(line))).toBe(true);
+        expect(A.some(patience, (line) => Str.includes("head bbb222 yet (1/10)")(line))).toBe(true);
+        expect(A.some(patience, (line) => Str.includes("(3/10)")(line))).toBe(false);
+      })
+    ).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          PlatformLayer,
+          scriptedSpawnerLayer([
+            unregistered("aaa111"),
+            unregistered("aaa111"),
+            unregistered("bbb222"),
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "bbb222") },
+              checks: { exitCode: 0, output: checksJson([{ bucket: "fail", name: "Coverage", state: "FAILURE" }]) },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
   // Scenario B of the review P1: a push lands mid-watch and the next poll
   // reads the new head while gh still answers "no checks reported". Ending
   // there would retire the superseded wave AND report the new push green.

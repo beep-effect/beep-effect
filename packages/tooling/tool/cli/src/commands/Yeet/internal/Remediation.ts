@@ -25,6 +25,14 @@
  * capsule was delivered. The A7 posture applies — a side-channel failure must
  * not cancel check watching.
  *
+ * The wave record is last-writer-wins by design, not a lock: two concurrent
+ * watches on one checkout can interleave load/persist and clobber each
+ * other's record. The failure modes that leaves are bounded — a re-announced
+ * red or a same-id row re-appended, never a lost capsule (the inbox is
+ * append-only and ids are deterministic, so consumers dedup by id), and a
+ * stale-head record self-heals on the next tick's supersede-and-converge.
+ * Single-writer discipline for the checkout is A2's hook-mutex deliverable.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -162,6 +170,22 @@ export type YeetDispatchDecision = typeof YeetDispatchDecision.Type;
 /**
  * The dispatch policy's input: one observed red plus the persisted wave.
  *
+ * **Example** (Build a first-red input)
+ *
+ * ```ts
+ * import { YeetRemediationInput } from "@beep/repo-cli/test/Yeet"
+ *
+ * const input = YeetRemediationInput.make({
+ *   at: "2026-08-17T00:00:00Z",
+ *   capsuleId: "coverage-abc",
+ *   headSha: "abc123",
+ *   prNumber: 754,
+ *   wave: null
+ * })
+ *
+ * console.log(input.wave) // null
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -180,6 +204,25 @@ export class YeetRemediationInput extends S.Class<YeetRemediationInput>($I`YeetR
 
 /**
  * The dispatch policy's output: the decision and the wave to persist.
+ *
+ * **Example** (Build an outcome)
+ *
+ * ```ts
+ * import { YeetRemediationOutcome, YeetRemediationWave } from "@beep/repo-cli/test/Yeet"
+ *
+ * const outcome = YeetRemediationOutcome.make({
+ *   decision: "start-session",
+ *   wave: YeetRemediationWave.make({
+ *     capsuleIds: ["coverage-abc"],
+ *     headSha: "abc123",
+ *     prNumber: 754,
+ *     sessionStartedAt: "2026-08-17T00:00:00Z",
+ *     updatedAt: "2026-08-17T00:00:00Z"
+ *   })
+ * })
+ *
+ * console.log(outcome.decision) // "start-session"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -275,6 +318,21 @@ export const decideYeetRemediation = (input: YeetRemediationInput): YeetRemediat
 
 /**
  * The supersession input: the observed head plus the persisted wave.
+ *
+ * **Example** (Build a supersession input)
+ *
+ * ```ts
+ * import { YeetWaveSupersedeInput } from "@beep/repo-cli/test/Yeet"
+ *
+ * const input = YeetWaveSupersedeInput.make({
+ *   at: "2026-08-17T00:00:00Z",
+ *   headSha: "bbb222",
+ *   prNumber: 754,
+ *   wave: null
+ * })
+ *
+ * console.log(input.headSha) // "bbb222"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -434,6 +492,51 @@ const persistYeetRemediationWave = (
 
 /**
  * The rendering input for one dispatch announcement: decision plus row.
+ *
+ * **Example** (Build a report)
+ *
+ * ```ts
+ * import {
+ *   YeetCheckFailedRow,
+ *   YeetDispatchReport,
+ *   YeetFailureCapsule,
+ *   YeetRemediationOutcome,
+ *   YeetRemediationWave,
+ *   yeetInboxRowId
+ * } from "@beep/repo-cli/test/Yeet"
+ *
+ * const capsule = YeetFailureCapsule.make({
+ *   bucket: "fail",
+ *   headSha: "abc123",
+ *   lane: "Check",
+ *   link: null,
+ *   observedAt: "2026-08-17T00:00:00Z",
+ *   prNumber: 754,
+ *   state: "FAILURE",
+ *   workflow: null
+ * })
+ * const report = YeetDispatchReport.make({
+ *   outcome: YeetRemediationOutcome.make({
+ *     decision: "start-session",
+ *     wave: YeetRemediationWave.make({
+ *       capsuleIds: [yeetInboxRowId(capsule)],
+ *       headSha: "abc123",
+ *       prNumber: 754,
+ *       sessionStartedAt: "2026-08-17T00:00:00Z",
+ *       updatedAt: "2026-08-17T00:00:00Z"
+ *     })
+ *   }),
+ *   row: YeetCheckFailedRow.make({
+ *     capsule,
+ *     checkout: "/repo",
+ *     id: yeetInboxRowId(capsule),
+ *     severity: "P0",
+ *     ts: "2026-08-17T00:00:00Z"
+ *   })
+ * })
+ *
+ * console.log(report.outcome.decision) // "start-session"
+ * ```
  *
  * @category models
  * @since 0.0.0
