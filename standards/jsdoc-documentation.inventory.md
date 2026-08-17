@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-08-16T21:51:07.984Z
+Generated: 2026-08-17T02:17:54.528Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 59 |
 | publicModules | 2510 |
-| publicExports | 16138 |
+| publicExports | 16154 |
 | openModules | 397 |
 | openExports | 135 |
 | missingExportExamples | 4 |
@@ -73,7 +73,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 16 | `@beep/ontology-use-cases` | `packages/ontology/use-cases` | needs-remediation | 23 | 214 | 1 | 3 |
 | 17 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
 | 18 | `@beep/dock` | `packages/foundation/ui-system/dock` | clean | 20 | 212 | 0 | 0 |
-| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 189 | 1413 | 46 | 10 |
+| 19 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 189 | 1429 | 46 | 10 |
 | 20 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 3 | 0 |
 | 21 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 86 | 0 | 0 |
 | 22 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 11 | 39 | 2 | 0 |
@@ -353,16 +353,16 @@ Module findings:
 - `src/index.ts:1` (packageDocumentation) - 2 documentation section/link violation(s)
 
 Export findings:
-- `src/commands/Ci/CiLane.ts:330` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
-- `src/commands/Ci/CiLane.ts:794` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
-- `src/commands/CreatePackage/CreatePackage.command.ts:92` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:332` `CI_LANE_DESCRIPTORS` (const) - 1 documentation section/link violation(s)
+- `src/commands/Ci/CiLane.ts:810` `ciLaneStepsForTesting` (const) - 1 documentation section/link violation(s)
+- `src/commands/CreatePackage/CreatePackage.command.ts:103` `resolveCreatePackageTemplateDir` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/FrozenGrantSet.ts:328` `runFrozenGrantSetRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Laws/NoNativeRuntime.ts:565` `runNoNativeRuntimeRules` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgeCheck.ts:343` `requireInventoryRound` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgeCheck.ts:412` `extractLastJsonBlock` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:541` `renderTimeline` (const) - 1 documentation section/link violation(s)
 - `src/commands/Qa/JudgePack.ts:642` `selectJudgeEvidence` (const) - 1 documentation section/link violation(s)
-- `src/commands/Quality/Quality.command.ts:635` `runBunAudit` (const) - 1 documentation section/link violation(s)
+- `src/commands/Quality/Quality.command.ts:637` `runBunAudit` (const) - 1 documentation section/link violation(s)
 
 ### @beep/pglite
 

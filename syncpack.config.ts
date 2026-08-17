@@ -22,6 +22,7 @@ const config = {
     "apps/oip-web/package.json",
     "apps/professional-desktop/package.json",
     "apps/storybook/package.json",
+    "apps/labs/*/package.json",
     "packages/agents/domain/package.json",
     "packages/agents/use-cases/package.json",
     "packages/agents/client/package.json",

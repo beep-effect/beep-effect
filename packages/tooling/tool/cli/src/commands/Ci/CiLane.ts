@@ -22,6 +22,7 @@ import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { turboEnvOverrides } from "../../internal/cli/EnvConfig.ts";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { LABS_TURBO_EXCLUDE_FILTER, LABS_TURBO_SELECT_FILTER } from "../../internal/cli/Labs/index.ts";
 import { runCaptured, runToExit } from "../../internal/process/StepExec.ts";
 import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "../Quality/Tasks.ts";
 import { CiCommandError } from "./Ci.errors.ts";
@@ -167,6 +168,7 @@ export const CI_LANE_ID_VALUES = [
   "fallow",
   "jsdoc-ratchet",
   "knip",
+  "labs",
   "lint",
   "lint-policy",
   "nix",
@@ -534,6 +536,20 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     notes:
       "Added by one-round-loop P1 (D3): schema property laws at a 400-run PR floor via BEEP_FC_NUM_RUNS, pinned to a fixed BEEP_FC_SEED so local and CI test identical inputs (one-round determinism; nightly rotates seeds); lands non-required, flips to required at P4 after a stable green history.",
   }),
+  // lab-apps-lifecycle P2 (ratified row 10): the single visible labs proof
+  // lane. Labs are excluded from every required turbo lane (row 9); this lane
+  // positively selects the labs glob and is PERMANENTLY non-required — never
+  // add its "Labs" context to ruleset 10240248.
+  CiLaneDescriptor.make({
+    id: "labs",
+    contextName: "Labs",
+    required: false,
+    laneClass: "workflow-gated",
+    replay: "exact",
+    flags: ["--summarize"],
+    notes:
+      "Path-gated in the workflow to direct apps/labs/** changes on PRs; push and local replays run the full labs glob. Zero labs => zero tasks (green).",
+  }),
 ];
 
 /**
@@ -899,10 +915,42 @@ export const ciLaneStepsForTesting: {
         ]),
       ],
       knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
+      // lab-apps-lifecycle P2 (ratified row 10): one bundled turbo invocation
+      // over the labs glob. Deliberately no --affected — turbo unions filter
+      // selectors, so --affected plus the positive labs filter would WIDEN the
+      // selection to affected-products plus labs; the workflow path gate scopes
+      // PRs, while push and local replays want the full labs set.
+      labs: () => [
+        QualityTaskStep.make({
+          label: "ci:labs",
+          command: "bunx",
+          args: [
+            "turbo",
+            "run",
+            "check",
+            "lint",
+            "test",
+            LABS_TURBO_SELECT_FILTER,
+            HOSTED_16GB_TURBO_CONCURRENCY_ARG,
+            ...(options.summarize ? ["--summarize"] : A.empty<string>()),
+          ],
+          cwd: repoRoot,
+        }),
+      ],
       // Required Lint Policy owns the repo-policy battery. The Lint context
       // therefore runs only the package Turbo graph instead of duplicating
-      // that battery through the root `bun run lint` aggregate.
-      lint: () => [turboTaskLaneStep(repoRoot, "lint", "lint", [HOSTED_16GB_TURBO_CONCURRENCY_ARG], options)],
+      // that battery through the root `bun run lint` aggregate. The lane
+      // invokes turbo directly (bypassing Quality/Tasks.ts turboRunArgs), so
+      // the labs exclude filter is applied explicitly here (row 9).
+      lint: () => [
+        turboTaskLaneStep(
+          repoRoot,
+          "lint",
+          "lint",
+          [HOSTED_16GB_TURBO_CONCURRENCY_ARG, LABS_TURBO_EXCLUDE_FILTER],
+          options
+        ),
+      ],
       // `--full` states the hosted scope in the argv instead of inheriting it
       // from ambient `CI=true`, so a local replay scans the same repo-wide
       // surface the required Lint Policy context does. Hosted runs are
@@ -938,7 +986,18 @@ export const ciLaneStepsForTesting: {
       "repo-sanity": () => [
         bunRunStep(repoRoot, "ci:repo-sanity", ["audit:github", "repo-sanity"]),
         ...(options.changesetStatus
-          ? [bunRunStep(repoRoot, "ci:repo-sanity:changeset-status", ["changeset:status:since-main"])]
+          ? [
+              // lab-apps-lifecycle P2 (ratified row 8): route CI's changeset
+              // gate through the path-aware wrapper so lab-only changes are
+              // exempt from changeset ceremony.
+              bunRunStep(repoRoot, "ci:repo-sanity:changeset-status", [
+                "beep",
+                "quality",
+                "changeset-status",
+                "--since",
+                "origin/main",
+              ]),
+            ]
           : A.empty<QualityTaskStep>()),
       ],
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
@@ -1227,6 +1286,7 @@ const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "build",
   "test-unit",
   "ecosystem",
+  "labs",
   "test-integration",
   "property",
   "docgen",
@@ -1334,6 +1394,7 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,
     knip: A.empty<string>,
+    labs: A.empty<string>,
     lint: () => turboShapeFlags,
     "lint-policy": A.empty<string>,
     nix: A.empty<string>,

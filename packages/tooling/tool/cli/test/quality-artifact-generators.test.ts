@@ -127,6 +127,47 @@ const withFixtureRepo = Effect.fnUntraced(function* <A, E, R>(use: (repoRoot: st
   ).pipe(provideScopedLayer(PlatformLayer));
 });
 
+const acquireLabsFixtureRepo = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* acquireFixtureRepo();
+  const labRoot = path.join(repoRoot, "apps", "labs", "demo");
+
+  yield* fs.makeDirectory(path.join(labRoot, "src"), { recursive: true });
+  yield* writeJsonFile(path.join(repoRoot, "package.json"), {
+    name: "fixture-root",
+    scripts: {
+      "topo-sort": "printf '@beep/demo\\n@beep/lab-demo\\n'",
+    },
+    workspaces: ["packages/*", "apps/labs/*"],
+  });
+  yield* writeJsonFile(path.join(labRoot, "package.json"), {
+    name: "@beep/lab-demo",
+    exports: {
+      ".": "./src/index.ts",
+    },
+  });
+  // Deliberately undocumented exported symbol: it would produce inventory
+  // findings if labs were ever analyzed.
+  yield* fs.writeFileString(
+    path.join(labRoot, "src", "index.ts"),
+    "export const labValue = (input: number): number => input + 1;\n"
+  );
+
+  return repoRoot;
+});
+
+const withLabsFixtureRepo = Effect.fnUntraced(function* <A, E, R>(use: (repoRoot: string) => Effect.Effect<A, E, R>) {
+  return yield* Effect.acquireUseRelease(
+    acquireLabsFixtureRepo(),
+    use,
+    Effect.fnUntraced(function* (repoRoot) {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.remove(repoRoot, { recursive: true });
+    })
+  ).pipe(provideScopedLayer(PlatformLayer));
+});
+
 describe("quality artifact generators", () => {
   it("writes the JSDoc inventory to explicit artifact paths", () =>
     Effect.runPromise(
@@ -158,6 +199,35 @@ describe("quality artifact generators", () => {
           expect(inventory.packages.map((pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
           expect(inventory.packages[0]?.counts.schemaAnnotationFindings).toBe(0);
           expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
+        })
+      )
+    ));
+
+  it("excludes lab workspaces from the JSDoc inventory while both writers still emit", () =>
+    Effect.runPromise(
+      withLabsFixtureRepo(
+        Effect.fnUntraced(function* (repoRoot) {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const outputJsonPath = path.join(repoRoot, "out", "jsdoc.inventory.jsonc");
+          const outputMarkdownPath = path.join(repoRoot, "out", "jsdoc.inventory.md");
+
+          const result = yield* writeJSDocDocumentationInventory({
+            rootDir: repoRoot,
+            outputJsonPath,
+            outputMarkdownPath,
+            generatedAt: fixedGeneratedAt,
+          });
+          const inventory = parseJsoncText(yield* fs.readFileString(outputJsonPath)) as {
+            readonly packages: ReadonlyArray<{ readonly packageName: string }>;
+          };
+          const markdown = yield* fs.readFileString(outputMarkdownPath);
+
+          expect(result.outputJsonPath).toBe(outputJsonPath);
+          expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
+          expect(inventory.packages.map((pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
+          expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
+          expect(markdown).not.toContain("@beep/lab-demo");
         })
       )
     ));

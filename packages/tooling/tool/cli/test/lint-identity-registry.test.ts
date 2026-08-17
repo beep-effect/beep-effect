@@ -1,4 +1,11 @@
 import { lintCommand } from "@beep/repo-cli";
+import {
+  LAB_COMPOSERS_END_MARKER,
+  LAB_COMPOSERS_START_MARKER,
+  LAB_EXPORTS_END_MARKER,
+  LAB_EXPORTS_START_MARKER,
+  LabIdentitySegment,
+} from "@beep/repo-cli/commands/CreatePackage/internal/LabIdentitySegment";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -25,26 +32,36 @@ const testLayer = Layer.mergeAll(
 const IDENTITY_REGISTRY_PATH = "packages/identity/src/packages.ts";
 const LINT_TIMEOUT = 20_000;
 
-const registryContentFor = (slugs: ReadonlyArray<string>): string =>
-  Str.concat(
-    Str.concat(
-      "const composers = $I.compose(\n",
+const registryContentFor = (slugs: ReadonlyArray<string>, labSlugs: ReadonlyArray<string> = []): string =>
+  A.join(
+    [
+      "const composers = $I.compose(",
       A.join(
         A.map(slugs, (slug) => `  "${slug}"`),
         ",\n"
-      )
-    ),
-    Str.concat(
-      "\n);\n\n",
-      A.join(
-        A.map(slugs, (slug) => `export const $${Str.pascalCase(slug)}Id = composers.$${Str.pascalCase(slug)}Id;\n`),
-        "\n"
-      )
-    )
+      ),
+      ");",
+      "",
+      LAB_COMPOSERS_START_MARKER,
+      LabIdentitySegment.renderLabComposersRegion(labSlugs),
+      LAB_COMPOSERS_END_MARKER,
+      "",
+      ...A.map(slugs, (slug) => `export const $${Str.pascalCase(slug)}Id = composers.$${Str.pascalCase(slug)}Id;`),
+      "",
+      LAB_EXPORTS_START_MARKER,
+      ...(A.isReadonlyArrayEmpty(labSlugs)
+        ? A.empty<string>()
+        : A.of(LabIdentitySegment.renderLabExportsRegion(labSlugs))),
+      LAB_EXPORTS_END_MARKER,
+      "",
+    ],
+    "\n"
   );
 
 const writeWorkspaceFixture = Effect.fn("writeWorkspaceFixture")(function* (options: {
   readonly registrySlugs: ReadonlyArray<string>;
+  readonly registryLabSlugs?: ReadonlyArray<string>;
+  readonly labPackages?: ReadonlyArray<string>;
   readonly extraPackages?: ReadonlyArray<string>;
   readonly widgetSourceLines?: ReadonlyArray<string>;
   readonly widgetRootFileLines?: ReadonlyArray<string>;
@@ -59,9 +76,17 @@ const writeWorkspaceFixture = Effect.fn("writeWorkspaceFixture")(function* (opti
       name: "fixture-root",
       private: true,
       type: "module",
-      workspaces: ["packages/*"],
+      workspaces: ["packages/*", "apps/labs/*"],
     })}\n`
   );
+
+  for (const labSlug of options.labPackages ?? A.empty<string>()) {
+    yield* fs.makeDirectory(path.join("apps", "labs", labSlug), { recursive: true });
+    yield* fs.writeFileString(
+      path.join("apps", "labs", labSlug, "package.json"),
+      `${encodeJson({ name: `@beep/${labSlug}`, version: "0.0.0", type: "module" })}\n`
+    );
+  }
 
   yield* fs.makeDirectory(path.join("packages", "identity", "src"), { recursive: true });
   yield* fs.writeFileString(
@@ -72,7 +97,10 @@ const writeWorkspaceFixture = Effect.fn("writeWorkspaceFixture")(function* (opti
     path.join("packages", "identity", "tsconfig.json"),
     `${encodeJson({ compilerOptions: {} })}\n`
   );
-  yield* fs.writeFileString(IDENTITY_REGISTRY_PATH, registryContentFor(options.registrySlugs));
+  yield* fs.writeFileString(
+    IDENTITY_REGISTRY_PATH,
+    registryContentFor(options.registrySlugs, options.registryLabSlugs ?? A.empty<string>())
+  );
 
   for (const packageSlug of options.extraPackages ?? ["widget"]) {
     yield* fs.makeDirectory(path.join("packages", packageSlug, "src"), { recursive: true });
@@ -116,7 +144,7 @@ describe("identity-registry lint command", { concurrent: false }, () => {
 
             const logLines = yield* TestConsole.logLines;
             expect(logLines).toContain(
-              "[lint:identity-registry] OK: 2 workspace packages registered; no orphan or local root composers."
+              "[lint:identity-registry] OK: 2 workspace packages registered; 0 lab(s) in the generated labs segment; no orphan or local root composers."
             );
           })
         ).pipe(provideScopedLayer(testLayer))
@@ -286,6 +314,261 @@ describe("identity-registry lint command", { concurrent: false }, () => {
             expect(A.some(logLines, (line) => P.isString(line) && Str.includes('registered "widget"')(line))).toBe(
               true
             );
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    LINT_TIMEOUT
+  );
+
+  it(
+    "passes when a live lab is registered in the generated labs segment",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget"],
+              registryLabSlugs: ["probe-lab"],
+              labPackages: ["probe-lab"],
+            });
+
+            yield* runLintCommand(["identity-registry"]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toContain(
+              "[lint:identity-registry] OK: 3 workspace packages registered; 1 lab(s) in the generated labs segment; no orphan or local root composers."
+            );
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    LINT_TIMEOUT
+  );
+
+  it(
+    "reports a live lab registered in the flat group as misplaced",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget", "probe-lab"],
+              labPackages: ["probe-lab"],
+            });
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(errorLines).toContain("[lint:identity-registry] found 1 violation(s).");
+            expect(
+              A.some(
+                errorLines,
+                (line) => P.isString(line) && Str.startsWith("@beep/probe-lab [labs-segment-misplaced]")(line)
+              )
+            ).toBe(true);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    LINT_TIMEOUT
+  );
+
+  it(
+    "reports an unregistered lab as missing from both the registry and the labs segment",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget"],
+              labPackages: ["probe-lab"],
+            });
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(
+              A.some(
+                errorLines,
+                (line) => P.isString(line) && Str.startsWith("@beep/probe-lab [missing-registration]")(line)
+              )
+            ).toBe(true);
+            expect(
+              A.some(
+                errorLines,
+                (line) => P.isString(line) && Str.startsWith("@beep/probe-lab [labs-segment-missing]")(line)
+              )
+            ).toBe(true);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    LINT_TIMEOUT
+  );
+
+  it(
+    "reports a labs segment entry with no live lab as extra alongside the orphan check",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget"],
+              registryLabSlugs: ["ghost-lab"],
+            });
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(
+              A.some(
+                errorLines,
+                (line) => P.isString(line) && Str.startsWith("@beep/ghost-lab [labs-segment-extra]")(line)
+              )
+            ).toBe(true);
+            expect(
+              A.some(
+                errorLines,
+                (line) => P.isString(line) && Str.startsWith("@beep/ghost-lab [orphan-registration]")(line)
+              )
+            ).toBe(true);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    LINT_TIMEOUT
+  );
+
+  it(
+    "reports a live non-lab workspace inside the labs segment as extra without an orphan",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity"],
+              registryLabSlugs: ["widget"],
+            });
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(errorLines).toContain("[lint:identity-registry] found 1 violation(s).");
+            expect(
+              A.some(
+                errorLines,
+                (line) => P.isString(line) && Str.startsWith("@beep/widget [labs-segment-extra]")(line)
+              )
+            ).toBe(true);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    LINT_TIMEOUT
+  );
+
+  it(
+    "registers a missing lab and prunes a ghost from the labs segment with --fix",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget"],
+              registryLabSlugs: ["ghost-lab"],
+              labPackages: ["probe-lab"],
+            });
+
+            yield* runLintCommand(["identity-registry", "--fix"]);
+
+            const registryContent = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
+            expect(registryContent).toContain('"probe-lab"');
+            expect(registryContent).toContain("export const $ProbeLabId");
+            expect(Str.includes("ghost-lab")(registryContent)).toBe(false);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(A.some(logLines, (line) => P.isString(line) && Str.includes('registered "probe-lab"')(line))).toBe(
+              true
+            );
+            expect(
+              A.some(
+                logLines,
+                (line) => P.isString(line) && Str.includes('removed "ghost-lab" from the generated labs segment')(line)
+              )
+            ).toBe(true);
+
+            yield* runLintCommand(["identity-registry"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    LINT_TIMEOUT
+  );
+
+  it(
+    "consolidates a misplaced lab into the generated labs segment with --fix",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget", "probe-lab"],
+              labPackages: ["probe-lab"],
+            });
+
+            yield* runLintCommand(["identity-registry", "--fix"]);
+
+            const state = yield* LabIdentitySegment.diffLabIdentitySegment(".");
+            expect(state.expectedSlugs).toEqual(["probe-lab"]);
+            expect(state.actualComposerSlugs).toEqual(["probe-lab"]);
+            expect(state.actualExportSlugs).toEqual(["probe-lab"]);
+            expect(state.misplacedSlugs).toEqual([]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(
+              A.some(logLines, (line) => P.isString(line) && Str.includes('removed misplaced lab "probe-lab"')(line))
+            ).toBe(true);
+
+            yield* runLintCommand(["identity-registry"]);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    LINT_TIMEOUT
+  );
+
+  it(
+    "fails with the substrate remediation when the labs segment markers are missing",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
+            yield* fs.writeFileString(
+              IDENTITY_REGISTRY_PATH,
+              A.join(
+                [
+                  'const composers = $I.compose("identity", "widget");',
+                  "export const $IdentityId = composers.$IdentityId;",
+                  "export const $WidgetId = composers.$WidgetId;",
+                  "",
+                ],
+                "\n"
+              )
+            );
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(
+              A.some(
+                errorLines,
+                (line) =>
+                  P.isString(line) &&
+                  Str.includes("Generated labs marker")(line) &&
+                  Str.includes("bun run beep lint identity-registry --fix")(line)
+              )
+            ).toBe(true);
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

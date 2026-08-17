@@ -1889,6 +1889,12 @@
       "@beep/repo-cli/test/DeletePackage": [
         "./packages/tooling/tool/cli/src/test/DeletePackage.test-kit.ts"
       ],
+      "@beep/repo-cli/commands/Labs": [
+        "./packages/tooling/tool/cli/src/commands/Labs/index.ts"
+      ],
+      "@beep/repo-cli/test/Labs": [
+        "./packages/tooling/tool/cli/src/test/Labs.test-kit.ts"
+      ],
       "@beep/shared-tables/entities": [
         "./packages/shared/tables/src/entities/index.ts"
       ],

@@ -30,6 +30,7 @@ import {
   Viewport,
 } from "@beep/qa-capture";
 import {
+  AppHostTarget,
   artifactBudgetPath,
   CaptureTargetRequest,
   citedEventIds,
@@ -69,6 +70,7 @@ import {
   renderInventoryMarkdown,
   renderRoundReport,
   renderTimeline,
+  resolveAppHostTarget,
   resolveCaptureTarget,
   runQaExtract,
   selectJudgeEvidence,
@@ -118,8 +120,13 @@ const marker = (label: string, seq: number, tEpochMs: number) =>
   MarkerEvent.make({ kind: "marker", label, seq, tEpochMs });
 
 describe("commands/Qa Qa.session pure helpers", () => {
-  it("expands an app name onto the portless dev-server URL", () => {
-    expect(portlessUrlForApp("storybook")).toBe(`http://storybook.beep.localhost:${PORTLESS_PORT}`);
+  it("expands decoded app targets onto both portless host shapes", () => {
+    expect(portlessUrlForApp(AppHostTarget.make({ name: "storybook", namespace: "apps" }))).toBe(
+      `http://storybook.beep.localhost:${PORTLESS_PORT}`
+    );
+    expect(portlessUrlForApp(AppHostTarget.make({ name: "kg-scratch", namespace: "labs" }))).toBe(
+      `http://kg-scratch.labs.beep.localhost:${PORTLESS_PORT}`
+    );
     expect(PORTLESS_PORT).toBe(1355);
   });
 
@@ -131,6 +138,7 @@ describe("commands/Qa Qa.session pure helpers", () => {
     Effect.runPromise(
       Effect.map(
         resolveCaptureTarget(
+          "/repo",
           CaptureTargetRequest.make({ app: O.some("storybook"), url: O.some("http://example.test:4321/page") })
         ),
         (target) => {
@@ -139,35 +147,85 @@ describe("commands/Qa Qa.session pure helpers", () => {
           expect(target.allowedOrigins).toContain("http://localhost:4321");
           expect(target.allowedOrigins).toContain("http://127.0.0.1:4321");
         }
+      ).pipe(provideScopedLayer(PlatformLayer))
+    ));
+
+  it("falls back to the apps host for names that are not lab workspaces", () =>
+    Effect.runPromise(
+      withTempDir(
+        Effect.fnUntraced(function* (dir) {
+          const target = yield* resolveCaptureTarget(
+            dir,
+            CaptureTargetRequest.make({ app: O.some("storybook"), url: O.none() })
+          );
+          expect(target.url).toBe(`http://storybook.beep.localhost:${PORTLESS_PORT}`);
+        })
       )
     ));
 
-  it("expands --app when no --url is supplied", () =>
+  it("keeps the apps host for names that resolve under apps/", () =>
     Effect.runPromise(
-      Effect.map(
-        resolveCaptureTarget(CaptureTargetRequest.make({ app: O.some("storybook"), url: O.none() })),
-        (target) => {
-          expect(target.url).toBe(`http://storybook.beep.localhost:${PORTLESS_PORT}`);
-        }
+      withTempDir(
+        Effect.fnUntraced(function* (dir) {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.makeDirectory(`${dir}/apps/my-lab`, { recursive: true });
+          const target = yield* resolveCaptureTarget(
+            dir,
+            CaptureTargetRequest.make({ app: O.some("my-lab"), url: O.none() })
+          );
+          expect(target.url).toBe(`http://my-lab.beep.localhost:${PORTLESS_PORT}`);
+        })
+      )
+    ));
+
+  it("expands --app to the labs host when the workspace lives under apps/labs", () =>
+    Effect.runPromise(
+      withTempDir(
+        Effect.fnUntraced(function* (dir) {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.makeDirectory(`${dir}/apps/labs/my-lab`, { recursive: true });
+          const target = yield* resolveCaptureTarget(
+            dir,
+            CaptureTargetRequest.make({ app: O.some("my-lab"), url: O.none() })
+          );
+          expect(target.url).toBe(`http://my-lab.labs.beep.localhost:${PORTLESS_PORT}`);
+          expect(target.allowedOrigins).toContain(`http://my-lab.labs.beep.localhost:${PORTLESS_PORT}`);
+          expect(target.allowedOrigins).toContain(`http://localhost:${PORTLESS_PORT}`);
+          expect(target.allowedOrigins).toContain(`http://127.0.0.1:${PORTLESS_PORT}`);
+        })
+      )
+    ));
+
+  it("resolves apps over labs when both directories exist", () =>
+    Effect.runPromise(
+      withTempDir(
+        Effect.fnUntraced(function* (dir) {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.makeDirectory(`${dir}/apps/shared-name`, { recursive: true });
+          yield* fs.makeDirectory(`${dir}/apps/labs/shared-name`, { recursive: true });
+          const target = yield* resolveAppHostTarget(dir, "shared-name");
+          expect(target.namespace).toBe("apps");
+          expect(portlessUrlForApp(target)).toBe(`http://shared-name.beep.localhost:${PORTLESS_PORT}`);
+        })
       )
     ));
 
   it.effect("fails when neither --url nor --app is supplied", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(
-        resolveCaptureTarget(CaptureTargetRequest.make({ app: O.none(), url: O.none() }))
+        resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.none(), url: O.none() }))
       );
       expect(Exit.isFailure(exit)).toBe(true);
-    })
+    }).pipe(provideScopedLayer(PlatformLayer))
   );
 
   it.effect("fails when the supplied --url is not absolute", () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(
-        resolveCaptureTarget(CaptureTargetRequest.make({ app: O.none(), url: O.some("not-a-url") }))
+        resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.none(), url: O.some("not-a-url") }))
       );
       expect(Exit.isFailure(exit)).toBe(true);
-    })
+    }).pipe(provideScopedLayer(PlatformLayer))
   );
 });
 
