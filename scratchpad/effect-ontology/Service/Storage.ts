@@ -13,8 +13,22 @@ import {
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Storage } from "@google-cloud/storage";
-import { Clock, Context, Duration, Effect, FileSystem, Inspectable, Layer, Match, MutableHashMap, Path } from "effect";
+import {
+  Clock,
+  Context,
+  DateTime,
+  Duration,
+  Effect,
+  FileSystem,
+  Inspectable,
+  Layer,
+  Match,
+  MutableHashMap,
+  Path,
+  Semaphore,
+} from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import { SystemError } from "effect/PlatformError";
@@ -22,6 +36,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { KeyValueStore } from "effect/unstable/persistence";
+import { sha256SyncFull } from "../Utils/Hash.ts";
 import { ConfigService } from "./Config.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Storage");
@@ -56,6 +71,21 @@ const LocalStorageKey = S.NonEmptyString.check(
     description: "A non-empty, relative local storage key without current-directory or parent-directory segments.",
   })
 );
+
+const GcsGeneration = S.String.check(
+  S.isPattern(/^(?:0|[1-9][0-9]*)$/u, {
+    identifier: $I`GcsGenerationPatternCheck`,
+    title: "GCS Generation",
+    description: "A canonical non-negative decimal GCS generation string.",
+    message: "GCS generation must be zero or a non-zero decimal integer without leading zeros.",
+  })
+).pipe(
+  $I.annoteSchema("GcsGeneration", {
+    description: "A canonical decimal GCS generation preserved as text for exact 64-bit preconditions.",
+  })
+);
+
+const decodeGcsGeneration = S.decodeEffect(GcsGeneration);
 
 const isLocalStorageKey = S.is(LocalStorageKey);
 
@@ -404,12 +434,28 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
         generation: Inspectable.toStringUnknown(metadata.generation),
       });
     }),
-    setIfGenerationMatch: (key, value, expectedGeneration) =>
-      Effect.tryPromise({
+    setIfGenerationMatch: Effect.fn("Storage.gcs.setIfGenerationMatch")(function* (
+      key: string,
+      value: string,
+      expectedGeneration: string
+    ) {
+      const exactGeneration = yield* decodeGcsGeneration(expectedGeneration).pipe(
+        Effect.mapError(
+          (cause) =>
+            new SystemError({
+              _tag: "InvalidData",
+              module: "KeyValueStore",
+              method: "setIfGenerationMatch",
+              pathOrDescriptor: key,
+              description: Inspectable.toStringUnknown(cause),
+            })
+        )
+      );
+      yield* Effect.tryPromise({
         try: () =>
           bucket.file(toPath(key)).save(value, {
             preconditionOpts: {
-              ifGenerationMatch: Number(expectedGeneration),
+              ifGenerationMatch: exactGeneration,
             },
           }),
         catch: (e) => {
@@ -418,7 +464,8 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
           }
           return handleError("setIfGenerationMatch", key, e);
         },
-      }),
+      });
+    }),
     getSignedUrl: Effect.fn("getSignedUrl")(function* (key: string, expiresIn: Duration.Duration = Duration.hours(1)) {
       const expires = (yield* Clock.currentTimeMillis) + Duration.toMillis(expiresIn);
       const file = bucket.file(toPath(key));
@@ -456,6 +503,20 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
 const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageConfigValue) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const mutationGate = yield* Semaphore.make(1);
+  const generationTokens = MutableHashMap.empty<string, string>();
+  let generationSequence = 0;
+  const assignGeneration = (key: string, content: string): void => {
+    generationSequence += 1;
+    MutableHashMap.set(generationTokens, key, `local-${generationSequence}-${sha256SyncFull(content)}`);
+  };
+  const generationFromSnapshot = (content: string, stat: FileSystem.File.Info): string =>
+    sha256SyncFull(
+      `${content}:${stat.dev}:${O.getOrElse(stat.ino, () => 0)}:${O.match(stat.mtime, {
+        onNone: () => "missing",
+        onSome: (mtime) => `${DateTime.toEpochMillis(DateTime.fromDateUnsafe(mtime))}`,
+      })}:${stat.size}`
+    );
   const basePath = config.localPath ?? "./output";
   const globalPrefix = config.pathPrefix ?? "";
   yield* fs.makeDirectory(basePath, { recursive: true });
@@ -556,30 +617,46 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       }).pipe(Effect.mapError(localKvError("getUint8Array", key)));
     }),
     set: Effect.fn("Storage.local.set")(function* (key, value) {
-      return yield* Effect.gen(function* () {
-        const bytes = P.isString(value) ? new TextEncoder().encode(value) : value;
-        yield* writePath("set", key, bytes);
-      }).pipe(Effect.mapError(localKvError("set", key)));
+      return yield* mutationGate
+        .withPermits(1)(
+          Effect.gen(function* () {
+            const bytes = P.isString(value) ? new TextEncoder().encode(value) : value;
+            yield* writePath("set", key, bytes);
+            assignGeneration(key, P.isString(value) ? value : new TextDecoder().decode(value));
+          })
+        )
+        .pipe(Effect.mapError(localKvError("set", key)));
     }),
     remove: Effect.fn("Storage.local.remove")(function* (key) {
-      return yield* Effect.gen(function* () {
-        const resolved = yield* resolvePath(key);
-        if (yield* fs.exists(resolved)) yield* fs.remove(resolved);
-      }).pipe(Effect.mapError(localKvError("remove", key)));
+      return yield* mutationGate
+        .withPermits(1)(
+          Effect.gen(function* () {
+            const resolved = yield* resolvePath(key);
+            if (yield* fs.exists(resolved)) {
+              yield* fs.remove(resolved);
+              assignGeneration(key, "removed");
+            }
+          })
+        )
+        .pipe(Effect.mapError(localKvError("remove", key)));
     }),
-    clear: Effect.gen(function* () {
-      const checkedRoot = yield* resolveContainedPath(".");
-      if (!(yield* fs.exists(checkedRoot))) {
-        yield* fs.makeDirectory(checkedRoot, { recursive: true });
-        return;
-      }
-      const entries = yield* fs.readDirectory(checkedRoot);
-      for (const entry of entries) {
-        const entryPath = path.join(checkedRoot, entry);
-        const checkedEntry = yield* resolveContainedPath(entryPath);
-        yield* fs.remove(checkedEntry, { recursive: true });
-      }
-    }).pipe(Effect.mapError(localKvError("clear", globalPrefix))),
+    clear: mutationGate
+      .withPermits(1)(
+        Effect.gen(function* () {
+          const checkedRoot = yield* resolveContainedPath(".");
+          if (!(yield* fs.exists(checkedRoot))) {
+            yield* fs.makeDirectory(checkedRoot, { recursive: true });
+            return;
+          }
+          const entries = yield* fs.readDirectory(checkedRoot);
+          for (const entry of entries) {
+            const entryPath = path.join(checkedRoot, entry);
+            const checkedEntry = yield* resolveContainedPath(entryPath);
+            yield* fs.remove(checkedEntry, { recursive: true });
+          }
+        })
+      )
+      .pipe(Effect.mapError(localKvError("clear", globalPrefix))),
     size: Effect.gen(function* () {
       const checkedRoot = yield* resolveContainedPath(".");
       if (!(yield* fs.exists(checkedRoot))) return 0;
@@ -608,10 +685,9 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       if (!(yield* fs.exists(resolved))) return O.none();
       const content = yield* fs.readFileString(resolved);
       const stat = yield* fs.stat(resolved);
-      const generation = O.match(stat.mtime, {
-        onNone: () => String(stat.size),
-        onSome: (mtime) => String(mtime.getTime()),
-      });
+      const generation = O.getOrElse(MutableHashMap.get(generationTokens, key), () =>
+        generationFromSnapshot(content, stat)
+      );
       return O.some({ content, generation });
     }),
     setIfGenerationMatch: Effect.fn("Storage.local.setIfGenerationMatch")(function* (
@@ -619,22 +695,37 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       value: string,
       expectedGeneration: string
     ) {
-      const resolved = yield* resolvePath(key).pipe(Effect.mapError(localPathError("setIfGenerationMatch", key)));
-      if (yield* fs.exists(resolved)) {
-        const stat = yield* fs.stat(resolved);
-        const currentGeneration = O.match(stat.mtime, {
-          onNone: () => String(stat.size),
-          onSome: (mtime) => String(mtime.getTime()),
-        });
-        if (currentGeneration !== expectedGeneration) {
-          return yield* GenerationMismatchError.make({
-            key,
-            expectedGeneration,
-            actualGeneration: O.some(currentGeneration),
-          });
-        }
-      }
-      yield* writePath("setIfGenerationMatch", key, new TextEncoder().encode(value));
+      yield* mutationGate.withPermits(1)(
+        Effect.gen(function* () {
+          const resolved = yield* resolvePath(key).pipe(Effect.mapError(localPathError("setIfGenerationMatch", key)));
+          if (!(yield* fs.exists(resolved))) {
+            if (!Eq.equals(expectedGeneration, "0")) {
+              return yield* GenerationMismatchError.make({
+                key,
+                expectedGeneration,
+                actualGeneration: O.none(),
+              });
+            }
+            yield* writePath("setIfGenerationMatch", key, new TextEncoder().encode(value));
+            assignGeneration(key, value);
+            return;
+          }
+          const stat = yield* fs.stat(resolved);
+          const content = yield* fs.readFileString(resolved);
+          const currentGeneration = O.getOrElse(MutableHashMap.get(generationTokens, key), () =>
+            generationFromSnapshot(content, stat)
+          );
+          if (!Eq.equals(currentGeneration, expectedGeneration)) {
+            return yield* GenerationMismatchError.make({
+              key,
+              expectedGeneration,
+              actualGeneration: O.some(currentGeneration),
+            });
+          }
+          yield* writePath("setIfGenerationMatch", key, new TextEncoder().encode(value));
+          assignGeneration(key, value);
+        })
+      );
     }),
     getSignedUrl: (_key: string) => Effect.succeed(O.none()),
     supportsSignedUrls: false,
@@ -674,11 +765,13 @@ const makeMemoryStore = Effect.sync(() => {
     remove: (key) =>
       Effect.sync(() => {
         MutableHashMap.remove(store, key);
-        MutableHashMap.remove(generations, key);
+        incrementGeneration(key);
       }),
     clear: Effect.sync(() => {
+      for (const key of MutableHashMap.keys(store)) {
+        incrementGeneration(key);
+      }
       MutableHashMap.clear(store);
-      MutableHashMap.clear(generations);
     }),
     size: Effect.sync(() => MutableHashMap.size(store)),
   });
@@ -698,12 +791,16 @@ const makeMemoryStore = Effect.sync(() => {
     setIfGenerationMatch: (key, value, expectedGeneration) =>
       Effect.suspend(() => {
         const currentGeneration = getGeneration(key);
-        if (MutableHashMap.has(store, key) && currentGeneration !== expectedGeneration) {
+        const hasCurrent = MutableHashMap.has(store, key);
+        if (
+          (!hasCurrent && !Eq.equals(expectedGeneration, "0")) ||
+          (hasCurrent && !Eq.equals(currentGeneration, expectedGeneration))
+        ) {
           return Effect.fail(
             GenerationMismatchError.make({
               key,
               expectedGeneration,
-              actualGeneration: O.some(currentGeneration),
+              actualGeneration: hasCurrent ? O.some(currentGeneration) : O.none(),
             })
           );
         }

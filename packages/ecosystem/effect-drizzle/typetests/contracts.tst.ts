@@ -74,15 +74,21 @@ declare const sqliteColumns: sqlite.Table.BoundColumns<{
 }>;
 
 it("derives Drizzle select and insert contracts", () => {
-  expect<typeof assembly.tables.organization>().type.toBe<typeof assembly.tables.organization>();
-  expect<(typeof userTable.$inferSelect)["id"]>().type.toBe<number>();
-  expect<(typeof userTable.$inferSelect)["name"]>().type.toBe<string>();
-  expect<(typeof userTable.$inferSelect)["status"]>().type.toBe<"draft" | "active">();
-  expect<typeof userTable.$inferInsert>().type.toBeAssignableFrom<{
-    readonly organizationId: number;
-    readonly name: string;
-    readonly active: boolean;
-  }>();
+  type Assertions = ExpectAll<{
+    readonly assembly: Equal<typeof assembly.tables.organization, typeof assembly.tables.organization>;
+    readonly id: Equal<(typeof userTable.$inferSelect)["id"], number>;
+    readonly name: Equal<(typeof userTable.$inferSelect)["name"], string>;
+    readonly status: Equal<(typeof userTable.$inferSelect)["status"], "draft" | "active">;
+    readonly insert: {
+      readonly organizationId: number;
+      readonly name: string;
+      readonly active: boolean;
+    } extends typeof userTable.$inferInsert
+      ? true
+      : false;
+  }>;
+
+  expect<Assertions>().type.toBe<Assertions>();
 });
 
 it("keeps generated and defaulted fields in the intended model variants", () => {
@@ -103,21 +109,29 @@ it("keeps generated and defaulted fields in the intended model variants", () => 
 
 it("preserves resolved metadata algebra", () => {
   const field = String.pipe(pg.varchar(80), pg.unique(), pg.default("guest"));
-  expect<(typeof field.meta.column)["kind"]>().type.toBe<"varchar">();
-  expect<(typeof field.meta.column)["length"]>().type.toBe<80>();
-  expect<typeof field.meta.unique>().type.toBe<true>();
-  expect<typeof field.meta.hasDefault>().type.toBe<true>();
-  expect<(typeof User.sql.columns.organizationId.references)["tableName"]>().type.toBe<"organization">();
+  type Assertions = ExpectAll<{
+    readonly kind: Equal<(typeof field.meta.column)["kind"], "varchar">;
+    readonly length: Equal<(typeof field.meta.column)["length"], 80>;
+    readonly unique: Equal<typeof field.meta.unique, true>;
+    readonly hasDefault: Equal<typeof field.meta.hasDefault, true>;
+    readonly referencedTable: Equal<(typeof User.sql.columns.organizationId.references)["tableName"], "organization">;
+  }>;
+
+  expect<Assertions>().type.toBe<Assertions>();
 });
 
 it("exports declaration-portable metadata and PostgreSQL column carriers", () => {
-  expect<DefaultSqlExpr<string>["_tag"]>().type.toBe<"sqlExpr">();
-  expect<DefaultValue<"draft">["value"]>().type.toBe<"draft">();
-  expect<References<"organization", "id">["tableName"]>().type.toBe<"organization">();
-  expect<Custom<"vector(768)">["sqlType"]>().type.toBe<"vector(768)">();
-  expect<Numeric["kind"]>().type.toBe<"numeric">();
-  expect<Timestamp<"date">["mode"]>().type.toBe<"date">();
-  expect<Varchar<120>["length"]>().type.toBe<120>();
+  type Assertions = ExpectAll<{
+    readonly defaultSqlExpr: Equal<DefaultSqlExpr<string>["_tag"], "sqlExpr">;
+    readonly defaultValue: Equal<DefaultValue<"draft">["value"], "draft">;
+    readonly references: Equal<References<"organization", "id">["tableName"], "organization">;
+    readonly custom: Equal<Custom<"vector(768)">["sqlType"], "vector(768)">;
+    readonly numeric: Equal<Numeric["kind"], "numeric">;
+    readonly timestamp: Equal<Timestamp<"date">["mode"], "date">;
+    readonly varchar: Equal<Varchar<120>["length"], 120>;
+  }>;
+
+  expect<Assertions>().type.toBe<Assertions>();
 });
 
 it("infers dialect kits and their invariant fields", () => {

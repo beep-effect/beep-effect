@@ -61,7 +61,7 @@ import type { OntologyEntry } from "../Domain/Schema/OntologyRegistry.ts";
 import { dual3 } from "../Utils/Dual.ts";
 import { rrfFusion } from "../Utils/Retrieval.ts";
 import { ConfigService } from "./Config.ts";
-import { NlpService } from "./Nlp.ts";
+import { NlpService, OntologySearchResult } from "./Nlp.ts";
 import { OntologyRegistryService } from "./OntologyRegistry.ts";
 import type { RdfBuilderShape, RdfStore } from "./Rdf.ts";
 import { RdfBuilder } from "./Rdf.ts";
@@ -77,6 +77,41 @@ const RDFS_RANGE = makeNamedNode(`${RDFS_NAMESPACE}range`);
 const RDFS_SUBCLASSOF = makeNamedNode(`${RDFS_NAMESPACE}subClassOf`);
 const RDFS_SUBPROPERTYOF = makeNamedNode(`${RDFS_NAMESPACE}subPropertyOf`);
 const SKOS_EXAMPLE = makeNamedNode(`${SKOS_NAMESPACE}example`);
+
+const collectSearchResultClasses = (
+  ontology: OntologyContext,
+  results: ReadonlyArray<OntologySearchResult>
+): Chunk.Chunk<ClassDefinition> => {
+  const classes = MutableHashMap.empty<string, ClassDefinition>();
+  const collect = (result: OntologySearchResult): void =>
+    OntologySearchResult.match(result, {
+      class: ({ definition }) => {
+        MutableHashMap.set(classes, definition.id, definition);
+      },
+      property: ({ definition }) => {
+        for (const domainIri of definition.domain) {
+          O.map(
+            A.findFirst(ontology.classes, (candidate) => candidate.id === domainIri),
+            (domainClass: ClassDefinition) => MutableHashMap.set(classes, domainClass.id, domainClass)
+          );
+        }
+      },
+    });
+  A.forEach(results, collect);
+  return Chunk.fromIterable(MutableHashMap.values(classes));
+};
+
+const collectSearchResultProperties = (results: ReadonlyArray<OntologySearchResult>): Chunk.Chunk<PropertyDefinition> =>
+  Chunk.fromIterable(
+    A.getSomes(
+      A.map(results, (result) =>
+        OntologySearchResult.match(result, {
+          class: O.none<PropertyDefinition>,
+          property: ({ definition }) => O.some(definition),
+        })
+      )
+    )
+  );
 const OWL_FUNCTIONAL_PROPERTY = makeNamedNode(`${OWL_NAMESPACE}FunctionalProperty`);
 const OWL_INVERSEOF = makeNamedNode(`${OWL_NAMESPACE}inverseOf`);
 const OWL_EQUIVALENT_CLASS = makeNamedNode(`${OWL_NAMESPACE}equivalentClass`);
@@ -888,40 +923,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
                     query,
                     PosInt.make(searchLimit)
                   );
-                  const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-                  for (const result of results) {
-                    if (O.isSome(result.class)) {
-                      MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
-                    }
-                    if (O.isSome(result.property)) {
-                      for (const domainIri of result.property.value.domain) {
-                        const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                        if (P.isNotUndefined(domainClass)) {
-                          MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                        }
-                      }
-                    }
-                  }
-                  return Chunk.fromIterable(MutableHashMap.values(classesMap));
+                  return collectSearchResultClasses(ontology, results);
                 }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
               : Effect.succeed(Chunk.empty<ClassDefinition>()),
             Effect.gen(function* () {
               const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-              const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-              for (const result of results) {
-                if (O.isSome(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
-                }
-                if (O.isSome(result.property)) {
-                  for (const domainIri of result.property.value.domain) {
-                    const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                    if (P.isNotUndefined(domainClass)) {
-                      MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                    }
-                  }
-                }
-              }
-              return Chunk.fromIterable(MutableHashMap.values(classesMap));
+              return collectSearchResultClasses(ontology, results);
             }),
           ],
           { concurrency: 2 }
@@ -998,40 +1005,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
                       query,
                       PosInt.make(searchLimit)
                     );
-                    const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-                    for (const result of results) {
-                      if (O.isSome(result.class)) {
-                        MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
-                      }
-                      if (O.isSome(result.property)) {
-                        for (const domainIri of result.property.value.domain) {
-                          const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                          if (P.isNotUndefined(domainClass)) {
-                            MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                          }
-                        }
-                      }
-                    }
-                    return Chunk.fromIterable(MutableHashMap.values(classesMap));
+                    return collectSearchResultClasses(ontology, results);
                   }).pipe(Effect.orElseSucceed(() => Chunk.empty<ClassDefinition>()))
                 : Effect.succeed(Chunk.empty<ClassDefinition>()),
               Effect.gen(function* () {
                 const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-                const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-                for (const result of results) {
-                  if (O.isSome(result.class)) {
-                    MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
-                  }
-                  if (O.isSome(result.property)) {
-                    for (const domainIri of result.property.value.domain) {
-                      const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                      if (P.isNotUndefined(domainClass)) {
-                        MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                      }
-                    }
-                  }
-                }
-                return Chunk.fromIterable(MutableHashMap.values(classesMap));
+                return collectSearchResultClasses(ontology, results);
               }),
             ],
             { concurrency: 2 }
@@ -1083,26 +1062,12 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         });
         const index = yield* getBm25Index;
         const results = yield* nlp.searchOntologyIndex(index, query, PosInt.make(limit));
-        const validClasses = MutableHashMap.empty<string, ClassDefinition>();
-        for (const result of results) {
-          if (O.isSome(result.class)) {
-            MutableHashMap.set(validClasses, result.class.value.id, result.class.value);
-          }
-          if (O.isSome(result.property)) {
-            for (const domainIri of result.property.value.domain) {
-              const domainClass = ontology.classes.find((c) => c.id === domainIri);
-              if (P.isNotUndefined(domainClass)) {
-                MutableHashMap.set(validClasses, domainClass.id, domainClass);
-              }
-            }
-          }
-        }
-        return Chunk.fromIterable(MutableHashMap.values(validClasses));
+        return collectSearchResultClasses(ontology, results);
       }),
       searchProperties: Effect.fn("OntologyService.searchProperties")(function* (query: string, limit: number = 10) {
         const index = yield* getBm25Index;
         const results = yield* nlp.searchOntologyIndex(index, query, PosInt.make(limit));
-        return Chunk.fromIterable(A.getSomes(A.map(results, (result) => result.property)));
+        return collectSearchResultProperties(results);
       }),
       getPropertiesFor: Effect.fn("OntologyService.getPropertiesFor")(function* (classIris: ReadonlyArray<string>) {
         const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
@@ -1138,21 +1103,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         });
         const index = yield* getSemanticIndex;
         const results = yield* nlp.searchOntologySemanticIndex(index, query, PosInt.make(limit));
-        const validClasses = MutableHashMap.empty<string, ClassDefinition>();
-        for (const result of results) {
-          if (O.isSome(result.class)) {
-            MutableHashMap.set(validClasses, result.class.value.id, result.class.value);
-          }
-          if (O.isSome(result.property)) {
-            for (const domainIri of result.property.value.domain) {
-              const domainClass = ontology.classes.find((c) => c.id === domainIri);
-              if (P.isNotUndefined(domainClass)) {
-                MutableHashMap.set(validClasses, domainClass.id, domainClass);
-              }
-            }
-          }
-        }
-        return Chunk.fromIterable(MutableHashMap.values(validClasses));
+        return collectSearchResultClasses(ontology, results);
       }),
       searchPropertiesSemantic: Effect.fn("OntologyService.searchPropertiesSemantic")(function* (
         query: string,
@@ -1160,7 +1111,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
       ) {
         const index = yield* getSemanticIndex;
         const results = yield* nlp.searchOntologySemanticIndex(index, query, PosInt.make(limit));
-        return Chunk.fromIterable(A.getSomes(A.map(results, (result) => result.property)));
+        return collectSearchResultProperties(results);
       }),
       searchClassesHybrid: Effect.fn("OntologyService.searchClassesHybrid")(function* (
         query: string,
@@ -1179,21 +1130,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             Effect.gen(function* () {
               const semanticIndex = yield* getSemanticIndex;
               const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
-              const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-              for (const result of results) {
-                if (O.isSome(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
-                }
-                if (O.isSome(result.property)) {
-                  for (const domainIri of result.property.value.domain) {
-                    const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                    if (P.isNotUndefined(domainClass)) {
-                      MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                    }
-                  }
-                }
-              }
-              return Chunk.fromIterable(MutableHashMap.values(classesMap));
+              return collectSearchResultClasses(ontology, results);
             }).pipe(
               Effect.catch(
                 Effect.fnUntraced(function* (error) {
@@ -1208,21 +1145,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             Effect.gen(function* () {
               const bm25Index = yield* getBm25Index;
               const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-              const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-              for (const result of results) {
-                if (O.isSome(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
-                }
-                if (O.isSome(result.property)) {
-                  for (const domainIri of result.property.value.domain) {
-                    const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                    if (P.isNotUndefined(domainClass)) {
-                      MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                    }
-                  }
-                }
-              }
-              return Chunk.fromIterable(MutableHashMap.values(classesMap));
+              return collectSearchResultClasses(ontology, results);
             }),
           ],
           { concurrency: 2 }
@@ -1268,21 +1191,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           [
             Effect.gen(function* () {
               const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
-              const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-              for (const result of results) {
-                if (O.isSome(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
-                }
-                if (O.isSome(result.property)) {
-                  for (const domainIri of result.property.value.domain) {
-                    const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                    if (P.isNotUndefined(domainClass)) {
-                      MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                    }
-                  }
-                }
-              }
-              return Chunk.fromIterable(MutableHashMap.values(classesMap));
+              return collectSearchResultClasses(ontology, results);
             }).pipe(
               Effect.catch(
                 Effect.fnUntraced(function* (error) {
@@ -1297,21 +1206,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             Effect.gen(function* () {
               const bm25Index = yield* getBm25Index;
               const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
-              const classesMap = MutableHashMap.empty<string, ClassDefinition>();
-              for (const result of results) {
-                if (O.isSome(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
-                }
-                if (O.isSome(result.property)) {
-                  for (const domainIri of result.property.value.domain) {
-                    const domainClass = ontology.classes.find((c) => c.id === domainIri);
-                    if (P.isNotUndefined(domainClass)) {
-                      MutableHashMap.set(classesMap, domainClass.id, domainClass);
-                    }
-                  }
-                }
-              }
-              return Chunk.fromIterable(MutableHashMap.values(classesMap));
+              return collectSearchResultClasses(ontology, results);
             }),
           ],
           { concurrency: 2 }

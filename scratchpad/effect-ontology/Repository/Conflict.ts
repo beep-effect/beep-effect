@@ -251,15 +251,16 @@ const selectConflictCount = (
 /**
  * Repository for detected conflict persistence, queries, counts, and terminal transitions.
  *
- * **Example** (Inspect the conflict service)
+ * **Example** (Inspect the default conflict repository layer)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { ConflictRepository } from "@effect-ontology/Repository/Conflict"
  *
- * console.log(ConflictRepository)
+ * console.log(Layer.isLayer(ConflictRepository.Default)) // true
  * ```
  *
- * @category layers
+ * @category repositories
  * @since 0.0.0
  */
 export class ConflictRepository extends Context.Service<ConflictRepository>()($I`ConflictRepository`, {

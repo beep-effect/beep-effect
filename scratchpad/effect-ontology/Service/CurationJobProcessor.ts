@@ -13,14 +13,14 @@
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import type { Fiber } from "effect";
+import type { Fiber, Scope } from "effect";
 import { Clock, Context, Duration, Effect, Layer, Match, Schedule } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { EventBusError } from "../Domain/Error/EventBus.ts";
 import type { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
-import { EntityRegistryRepository } from "../Repository/EntityRegistry.ts";
+import { CanonicalEntityId, EntityRegistryRepository } from "../Repository/EntityRegistry.ts";
 import { EmbeddingService } from "./Embedding.ts";
 import { EventBusService } from "./EventBus.ts";
 
@@ -117,8 +117,10 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
             attempts: meta.attempts,
           });
 
+          const canonicalEntityId = CanonicalEntityId.make(j.canonicalEntityId);
+
           // Get canonical entity
-          const entityOpt = yield* entityRegistry.getCanonicalEntity(j.ontologyId, j.canonicalEntityId);
+          const entityOpt = yield* entityRegistry.getCanonicalEntity(j.ontologyId, canonicalEntityId);
           if (O.isNone(entityOpt)) {
             yield* Effect.logWarning("Canonical entity not found for embedding job", {
               canonicalEntityId: j.canonicalEntityId,
@@ -129,7 +131,7 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
           const entity = entityOpt.value;
 
           // Get all aliases for this entity
-          const aliases = yield* entityRegistry.getAliasesForCanonical(j.ontologyId, j.canonicalEntityId);
+          const aliases = yield* entityRegistry.getAliasesForCanonical(j.ontologyId, canonicalEntityId);
 
           // Combine mention and aliases for embedding
           const allMentions = [entity.canonicalMention, ...aliases.map((a) => a.mention)];
@@ -302,7 +304,7 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
      */
     const runBackground = Effect.fn("CurationJobProcessor.runBackground")(function* (
       pollInterval: Duration.Duration = Duration.seconds(5)
-    ): Effect.fn.Return<Fiber.Fiber<never, never>, never> {
+    ): Effect.fn.Return<Fiber.Fiber<never, never>, never, Scope.Scope> {
       const processor = Effect.gen(function* () {
         const pendingCount = yield* eventBus.pendingJobCount;
         if (pendingCount > 0) {
@@ -316,7 +318,7 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
         Effect.forever
       );
 
-      const fiber = yield* Effect.forkChild(processor);
+      const fiber = yield* Effect.forkScoped(processor);
 
       yield* Effect.logInfo("Background job processor started", {
         pollIntervalMs: Duration.toMillis(pollInterval),

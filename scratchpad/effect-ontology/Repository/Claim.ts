@@ -166,12 +166,13 @@ export class ConflictCandidate extends S.Class<ConflictCandidate>($I`ConflictCan
 /**
  * Joined correction record and the persisted claim identifiers it links.
  *
- * **Example** (Inspect a correction-chain entry schema)
+ * **Example** (Reject an incomplete correction-chain entry)
  *
  * ```ts
  * import { CorrectionChainEntry } from "@effect-ontology/Repository/Claim"
+ * import * as S from "effect/Schema"
  *
- * console.log(CorrectionChainEntry)
+ * console.log(S.is(CorrectionChainEntry)({})) // false
  * ```
  *
  * @category models
@@ -200,15 +201,16 @@ const decodeCorrectionChainEntries = (rows: unknown) =>
 /**
  * Provides repository access for claim repository.
  *
- * **Example** (Inspect claim repository)
+ * **Example** (Inspect the default claim repository layer)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { ClaimRepository } from "@effect-ontology/Repository/Claim"
  *
- * console.log(ClaimRepository)
+ * console.log(Layer.isLayer(ClaimRepository.Default)) // true
  * ```
  *
- * @category layers
+ * @category repositories
  * @since 0.0.0
  */
 export class ClaimRepository extends Context.Service<ClaimRepository>()($I`ClaimRepository`, {

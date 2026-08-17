@@ -22,7 +22,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
-import { Crypto, DateTime, Duration, Effect, Encoding, pipe, Schedule } from "effect";
+import { Cause, Crypto, DateTime, Duration, Effect, Encoding, pipe, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -51,6 +51,9 @@ import { dual3 } from "../Utils/Dual.ts";
 import { makeProvenanceUri } from "../Utils/Provenance.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/StreamingExtractionActivity");
+const isActivityError = S.is(ActivityError);
+const preserveActivityError = (error: unknown): ActivityError =>
+  isActivityError(error) ? error : toActivityError(error);
 const textEncoder = new TextEncoder();
 
 // -----------------------------------------------------------------------------
@@ -154,7 +157,9 @@ const resolveBucket = (config: { storage: { bucket: O.Option<string> } }) =>
  * - Jitter to prevent thundering herd
  */
 const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Schedule.recurs(3)]).pipe(
-  Schedule.jittered
+  Schedule.jittered,
+  Schedule.setInputType<Cause.Cause<unknown>>(),
+  Schedule.while((meta) => Cause.hasInterrupts(meta.input))
 );
 
 // -----------------------------------------------------------------------------
@@ -532,6 +537,6 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
         claimCount: NonNegativeInt.make(claims.length),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });

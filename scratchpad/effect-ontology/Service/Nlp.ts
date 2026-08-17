@@ -15,13 +15,27 @@ import type { BM25Config } from "@beep/nlp/Core/Vectorization";
 import { DefaultBM25Config } from "@beep/nlp/Core/Vectorization";
 import { Tokenization } from "@beep/nlp-processing/Core";
 import { IRI } from "@beep/rdf";
+import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { WinkTokenizationError } from "@beep/wink/Wink.errors";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { WinkStringArray } from "@beep/wink/Wink.models";
 import { WinkEngine } from "@beep/wink/Wink.service";
 import { WinkCorpusManager } from "@beep/wink/WinkCorpus.service";
-import { Context, Duration, Effect, Inspectable, Layer, MutableHashMap, Order, pipe, Schedule } from "effect";
+import {
+  Context,
+  Duration,
+  Effect,
+  Inspectable,
+  Layer,
+  Match,
+  MutableHashMap,
+  Order,
+  pipe,
+  Schedule,
+  SchemaGetter,
+  Tuple,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -30,7 +44,7 @@ import * as Str from "effect/String";
 import type { OntologyContext } from "../Domain/Model/Ontology.ts";
 import { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import type { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
-import { ChunkingParams, ChunkingStrategy, defaultChunkingParams } from "../Domain/Schema/DocumentMetadata.ts";
+import { ChunkingParams, ChunkingStrategy } from "../Domain/Schema/DocumentMetadata.ts";
 import { enhanceTextForSearch } from "../Utils/Text.ts";
 import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts";
 
@@ -96,9 +110,29 @@ export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityRes
   })
 ) {}
 
+class TextChunkModel extends S.Class<TextChunkModel>($I`TextChunkModel`)(
+  {
+    index: NonNegativeInt,
+    text: S.String,
+    startOffset: NonNegativeInt,
+    endOffset: NonNegativeInt,
+  },
+  $I.annote("TextChunkModel", {
+    description: "Zero-based source-aligned text chunk with non-negative UTF-16 offsets.",
+  })
+) {}
+
+const TextChunkDefinition = TextChunkModel.check(
+  S.makeFilter(({ endOffset, startOffset }) => endOffset >= startOffset, {
+    identifier: $I`TextChunkOffsetOrderCheck`,
+    title: "Text Chunk Offset Order",
+    description: "Checks that a text chunk ends at or after its source start offset.",
+    message: "Expected endOffset to be greater than or equal to startOffset.",
+  })
+);
+
 /**
- * Text chunk with offset information
- *
+ * Source-aligned text chunk with ordered UTF-16 offsets.
  *
  * **Example** (Represent a source-aligned chunk)
  *
@@ -115,50 +149,103 @@ export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityRes
  * console.log(chunk.endOffset - chunk.startOffset) // 4
  * ```
  *
+ * @invariant `endOffset` is greater than or equal to `startOffset`.
  * @category models
  * @since 0.0.0
  */
-export class TextChunk extends S.Class<TextChunk>($I`TextChunk`)(
-  {
-    index: NonNegativeInt,
-    text: S.String,
-    startOffset: NonNegativeInt,
-    endOffset: NonNegativeInt,
-  },
-  $I.annote("TextChunk", {
-    description: "Zero-based source-aligned text chunk with non-negative UTF-16 offsets.",
+export const TextChunk = TextChunkDefinition.pipe(
+  $I.annoteSchema("TextChunk", {
+    description: "Zero-based source-aligned text chunk whose UTF-16 offsets are non-negative and ordered.",
+    toArbitrary: () => (fc) => S.toArbitrary(TextChunkModel)(fc).filter(S.is(TextChunkDefinition)),
   })
-) {}
+);
 
 /**
- * Chunking options
+ * Decoded source-aligned chunk produced by {@link TextChunk}.
  *
- *
- * **Example** (Configure character and sentence units)
- *
- * ```ts
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- * import { ChunkOptions } from "@effect-ontology/Service/Nlp"
- *
- * const options = S.decodeUnknownOption(ChunkOptions)({ strategy: "fine_grained" })
- * console.log(O.map(options, (value) => value.strategy)) // Some(Some("fine_grained"))
- * ```
- *
- * @category configuration
+ * @category type-level
  * @since 0.0.0
  */
-export class ChunkOptions extends S.Class<ChunkOptions>($I`ChunkOptions`)(
+export type TextChunk = typeof TextChunk.Type;
+
+class ChunkOptionsInput extends S.Class<ChunkOptionsInput>($I`ChunkOptionsInput`)(
   {
     preserveSentences: S.OptionFromOptionalKey(ChunkingParams.fields.preserveSentences),
     maxChunkSize: S.OptionFromOptionalKey(ChunkingParams.fields.chunkSize),
     overlapSentences: S.OptionFromOptionalKey(ChunkingParams.fields.overlapSentences),
     strategy: S.OptionFromOptionalKey(ChunkingStrategy),
   },
-  $I.annote("ChunkOptions", {
+  $I.annote("ChunkOptionsInput", {
     description: "Optional overrides derived from the canonical chunk-parameter domains and strategy registry.",
   })
 ) {}
+
+class ResolvedChunkOptions extends S.Class<ResolvedChunkOptions>($I`ResolvedChunkOptions`)(
+  {
+    strategy: ChunkingStrategy,
+    params: ChunkingParams,
+  },
+  $I.annote("ResolvedChunkOptions", {
+    description: "Selected chunking strategy paired with one complete canonical parameter set.",
+  })
+) {}
+
+const resolveChunkOptions = (options: ChunkOptionsInput): ResolvedChunkOptions => {
+  const strategy = O.getOrElse(options.strategy, () => ChunkingStrategy.Enum.standard);
+  const defaults = ChunkingStrategy.parameters(strategy);
+  return ResolvedChunkOptions.make({
+    strategy,
+    params: ChunkingParams.make({
+      chunkSize: O.getOrElse(options.maxChunkSize, () => defaults.chunkSize),
+      overlapSentences: O.getOrElse(options.overlapSentences, () => defaults.overlapSentences),
+      preserveSentences: O.getOrElse(options.preserveSentences, () => defaults.preserveSentences),
+    }),
+  });
+};
+
+const encodeChunkOptions = (options: ResolvedChunkOptions): ChunkOptionsInput =>
+  ChunkOptionsInput.make({
+    strategy: O.some(options.strategy),
+    maxChunkSize: O.some(options.params.chunkSize),
+    overlapSentences: O.some(options.params.overlapSentences),
+    preserveSentences: O.some(options.params.preserveSentences),
+  });
+
+/**
+ * Optional chunking overrides decoded to a complete canonical strategy configuration.
+ *
+ * **Example** (Resolve fine-grained defaults)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ChunkOptions } from "@effect-ontology/Service/Nlp"
+ *
+ * const options = S.decodeOption(ChunkOptions)({ strategy: "fine_grained" })
+ * console.log(O.map(options, (value) => value.params.chunkSize)) // Some(300)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const ChunkOptions = ChunkOptionsInput.pipe(
+  S.decodeTo(S.toType(ResolvedChunkOptions), {
+    decode: SchemaGetter.transform(resolveChunkOptions),
+    encode: SchemaGetter.transform(encodeChunkOptions),
+  }),
+  $I.annoteSchema("ChunkOptions", {
+    description: "Optional chunk overrides decoded to one complete canonical strategy parameter set.",
+    toArbitrary: () => (fc) => S.toArbitrary(ResolvedChunkOptions)(fc),
+  })
+);
+
+/**
+ * Complete chunking configuration decoded by {@link ChunkOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ChunkOptions = typeof ChunkOptions.Type;
 
 /**
  * Opaque BM25 index for ontology search
@@ -193,12 +280,18 @@ export interface OntologySemanticIndex {
 /**
  * Indicates that an ontology search received an invalid opaque index.
  *
- * **Example** (Inspect nlp index error)
+ * **Example** (Identify an invalid BM25 index)
  *
  * ```ts
  * import { NlpIndexError } from "@effect-ontology/Service/Nlp"
+ * import * as O from "effect/Option"
  *
- * console.log(NlpIndexError)
+ * const error = NlpIndexError.make({
+ *   indexKind: "bm25",
+ *   message: "Invalid BM25 index reference",
+ *   cause: O.none()
+ * })
+ * console.log(error._tag) // "NlpIndexError"
  * ```
  *
  * @category errors
@@ -221,39 +314,99 @@ const decodeWinkStrings = (value: unknown, operation: string, text: string) =>
     Effect.mapError((cause) => WinkTokenizationError.fromCause(cause, operation, { text }))
   );
 
+const OntologySearchResultKind = LiteralKit(["class", "property"]);
+
+class OntologySearchResultBase extends S.Class<OntologySearchResultBase>($I`OntologySearchResultBase`)(
+  {
+    iri: IRI,
+    score: S.Finite,
+  },
+  $I.annote("OntologySearchResultBase", {
+    description: "IRI and finite relevance score shared by every ontology search hit.",
+  })
+) {}
+
+class ClassOntologySearchResult extends OntologySearchResultBase.extend<ClassOntologySearchResult>(
+  $I`ClassOntologySearchResult`
+)(
+  {
+    kind: S.tag(OntologySearchResultKind.Enum.class),
+    definition: ClassDefinition,
+  },
+  $I.annote("ClassOntologySearchResult", {
+    description: "Ontology search hit carrying a class definition.",
+  })
+) {}
+
+class PropertyOntologySearchResult extends OntologySearchResultBase.extend<PropertyOntologySearchResult>(
+  $I`PropertyOntologySearchResult`
+)(
+  {
+    kind: S.tag(OntologySearchResultKind.Enum.property),
+    definition: PropertyDefinition,
+  },
+  $I.annote("PropertyOntologySearchResult", {
+    description: "Ontology search hit carrying a property definition.",
+  })
+) {}
+
 /**
- * Search result from ontology BM25 index
+ * Finite-scored ontology search hit discriminated as a class or property definition.
  *
- *
- * **Example** (Represent an ontology search hit)
+ * **Example** (Represent a class search hit)
  *
  * ```ts
  * import { IRI } from "@beep/rdf"
+ * import { ClassDefinition } from "@effect-ontology/Model/Ontology"
+ * import { OntologySearchResult } from "@effect-ontology/Service/Nlp"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { OntologySearchResult } from "@effect-ontology/Service/Nlp"
  *
- * const result = S.decodeUnknownOption(OntologySearchResult)({
- *   iri: IRI.make("https://schema.org/Person"),
- *   score: 0.8
- * })
- * console.log(O.map(result, (value) => value.iri)) // Some("https://schema.org/Person")
+ * const iri = IRI.make("https://schema.org/Person")
+ * const result = O.map(
+ *   S.decodeOption(ClassDefinition)({ id: iri, label: "Person" }),
+ *   (definition) => OntologySearchResult.cases.class.make({ iri, score: 0.8, definition })
+ * )
+ * console.log(O.map(result, OntologySearchResult.guards.class)) // Some(true)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class OntologySearchResult extends S.Class<OntologySearchResult>($I`OntologySearchResult`)(
-  {
-    iri: IRI,
-    score: S.Finite,
-    class: S.OptionFromOptionalKey(ClassDefinition),
-    property: S.OptionFromOptionalKey(PropertyDefinition),
-  },
-  $I.annote("OntologySearchResult", {
-    description: "Finite-scored ontology search hit carrying its decoded class or property definition when present.",
+export const OntologySearchResult = OntologySearchResultKind.mapMembers(
+  Tuple.evolve([() => ClassOntologySearchResult, () => PropertyOntologySearchResult])
+).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("OntologySearchResult", {
+    description: "Finite-scored ontology search hit discriminated as a class or property definition.",
   })
-) {}
+);
+
+/**
+ * Class or property search hit decoded by {@link OntologySearchResult}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OntologySearchResult = typeof OntologySearchResult.Type;
+
+const isClassDefinition = S.is(ClassDefinition);
+
+const ontologySearchResultCase = Match.type<ClassDefinition | PropertyDefinition>().pipe(
+  Match.when(
+    isClassDefinition,
+    (definition) => (iri: IRI, score: number) => OntologySearchResult.cases.class.make({ iri, score, definition })
+  ),
+  Match.orElse(
+    (definition) => (iri: IRI, score: number) => OntologySearchResult.cases.property.make({ iri, score, definition })
+  )
+);
+
+const makeOntologySearchResult = (
+  iri: IRI,
+  score: number,
+  definition: ClassDefinition | PropertyDefinition
+): OntologySearchResult => ontologySearchResultCase(definition)(iri, score);
 
 const makeTextChunk = (index: number, text: string, startOffset: number, endOffset: number): TextChunk =>
   TextChunk.make({
@@ -263,28 +416,6 @@ const makeTextChunk = (index: number, text: string, startOffset: number, endOffs
     endOffset: NonNegativeInt.make(endOffset),
   });
 
-/**
- * NlpService - Stateless NLP operations
- *
- * Mode: sync (synchronous operations, no async init)
- * Dependencies: None
- *
- * Capabilities:
- * - tokenize: Extract tokens, sentences, entities
- * - searchSimilar: BM25 ranking over documents
- * - chunkText: Sentence-aware text chunking
- *
- * **Example** (Use embeddingRetrySchedule)
- * ```ts
- * Effect.gen(function*() {
- *   const result = yield* NlpService.tokenize("Hello world")
- *   console.log(result.tokens)  // ["hello", "world"]
- * }).pipe(Effect.provide(NlpService.Default))
- * ```
- *
- * @since 0.0.0
- * @category services
- */
 /**
  * Retry schedule for embedding calls
  * - Exponential backoff starting at 1 second
@@ -533,6 +664,17 @@ function chunkBySize(text: string, maxChunkSize: number, startIndex: number): Ar
   return chunks;
 }
 
+type SpecializedChunker = (text: string, maxChunkSize: number, overlapSentences: number) => Array<TextChunk>;
+
+const chunkerForStrategy = ChunkingStrategy.$match({
+  standard: O.none<SpecializedChunker>,
+  fine_grained: O.none<SpecializedChunker>,
+  high_overlap: O.none<SpecializedChunker>,
+  section_aware: () => O.some(chunkBySections),
+  speaker_aware: () => O.some(chunkBySpeakerTurns),
+  paragraph_based: () => O.some(chunkByParagraphs),
+});
+
 const EMBEDDING_TIMEOUT = Duration.seconds(10);
 
 type WinkSentenceView = {
@@ -542,15 +684,16 @@ type WinkSentenceView = {
 /**
  * Provides the nlp service service capability.
  *
- * **Example** (Inspect nlp service)
+ * **Example** (Inspect the default NLP layer)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { NlpService } from "@effect-ontology/Service/Nlp"
  *
- * console.log(NlpService)
+ * console.log(Layer.isLayer(NlpService.Default)) // true
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
@@ -633,24 +776,13 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
       }),
       chunkText: Effect.fn("NlpService.chunkText")(function* (text: string, options: typeof ChunkOptions.Encoded = {}) {
         const decodedOptions = yield* S.decodeEffect(ChunkOptions)(options);
-        const strategyDefaults = O.match(decodedOptions.strategy, {
-          onNone: () => defaultChunkingParams.standard,
-          onSome: (strategy) => defaultChunkingParams[strategy],
-        });
-        const maxChunkSize = O.getOrElse(decodedOptions.maxChunkSize, () => strategyDefaults.chunkSize);
-        const overlapSentences = O.getOrElse(decodedOptions.overlapSentences, () => strategyDefaults.overlapSentences);
-        const preserveSentences = O.getOrElse(
-          decodedOptions.preserveSentences,
-          () => strategyDefaults.preserveSentences
-        );
-        if (O.contains(decodedOptions.strategy, "section_aware")) {
-          return chunkBySections(text, maxChunkSize, overlapSentences);
-        }
-        if (O.contains(decodedOptions.strategy, "speaker_aware")) {
-          return chunkBySpeakerTurns(text, maxChunkSize, overlapSentences);
-        }
-        if (O.contains(decodedOptions.strategy, "paragraph_based")) {
-          return chunkByParagraphs(text, maxChunkSize, overlapSentences);
+        const { params, strategy } = decodedOptions;
+        const maxChunkSize = params.chunkSize;
+        const overlapSentences = params.overlapSentences;
+        const preserveSentences = params.preserveSentences;
+        const specializedChunker = chunkerForStrategy(strategy);
+        if (O.isSome(specializedChunker)) {
+          return specializedChunker.value(text, maxChunkSize, overlapSentences);
         }
         const doc = yield* winkEngine.getWinkDoc(text);
         const sentences = yield* decodeWinkStrings(doc.sentences().out(), "sentences", text);
@@ -793,16 +925,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
             const domainModel = MutableHashMap.get(domainModelMap, iri);
             if (O.isSome(domainModel)) {
               const iriValue = IRI.fromUnknown(iri);
-              const classDef = ontology.getClass(iriValue);
-              const propertyDef = ontology.getProperty(iriValue);
-              results.push(
-                OntologySearchResult.make({
-                  iri: iriValue,
-                  score: result.score,
-                  class: classDef,
-                  property: propertyDef,
-                })
-              );
+              results.push(makeOntologySearchResult(iriValue, result.score, domainModel.value));
             }
           }
           return results;
@@ -910,16 +1033,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
             const domainModel = MutableHashMap.get(domainModelMap, iri);
             if (O.isSome(domainModel)) {
               const iriValue = IRI.fromUnknown(iri);
-              const classDef = ontology.getClass(iriValue);
-              const propertyDef = ontology.getProperty(iriValue);
-              results.push(
-                OntologySearchResult.make({
-                  iri: iriValue,
-                  score,
-                  class: classDef,
-                  property: propertyDef,
-                })
-              );
+              results.push(makeOntologySearchResult(iriValue, score, domainModel.value));
             }
           }
         }

@@ -241,15 +241,16 @@ export class CrossBatchResolverConfig extends S.Class<CrossBatchResolverConfig>(
 /**
  * Provides the cross batch entity resolver service capability.
  *
- * **Example** (Inspect cross batch entity resolver)
+ * **Example** (Inspect the default resolver layer)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { CrossBatchEntityResolver } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
- * console.log(CrossBatchEntityResolver)
+ * console.log(Layer.isLayer(CrossBatchEntityResolver.Default)) // true
  * ```
  *
- * @category layers
+ * @category services
  * @since 0.0.0
  */
 export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityResolver>()(
@@ -582,12 +583,13 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
 /**
  * Live layer for CrossBatchEntityResolver
  *
- * **Example** (Inspect cross batch entity resolver live)
+ * **Example** (Recognize the live resolver layer)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { CrossBatchEntityResolverLive } from "@effect-ontology/Service/CrossBatchEntityResolver"
  *
- * console.log(CrossBatchEntityResolverLive)
+ * console.log(Layer.isLayer(CrossBatchEntityResolverLive)) // true
  * ```
  *
  * @category layers

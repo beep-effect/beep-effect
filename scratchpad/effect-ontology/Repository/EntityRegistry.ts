@@ -58,6 +58,7 @@ import { CanonicalEntities, canonicalEntities, EntityAliases, entityAliases, ent
  * @since 0.0.0
  */
 export const CanonicalEntityId = UUID.pipe(
+  S.brand("EntityRegistryCanonicalEntityId"),
   $I.annoteSchema("CanonicalEntityId", {
     description: "Database identity of a canonical entity in the persistent registry.",
   })
@@ -87,6 +88,7 @@ export type CanonicalEntityId = typeof CanonicalEntityId.Type;
  * @since 0.0.0
  */
 export const EntityAliasId = UUID.pipe(
+  S.brand("EntityRegistryEntityAliasId"),
   $I.annoteSchema("EntityAliasId", {
     description: "Database identity of an entity alias in the persistent registry.",
   })
@@ -283,15 +285,16 @@ const decodeOneRegistryStatsSqlRow = (rows: unknown) =>
 /**
  * Provides repository access for entity registry repository.
  *
- * **Example** (Inspect entity registry repository)
+ * **Example** (Inspect the default registry repository layer)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { EntityRegistryRepository } from "@effect-ontology/Repository/EntityRegistry"
  *
- * console.log(EntityRegistryRepository)
+ * console.log(Layer.isLayer(EntityRegistryRepository.Default)) // true
  * ```
  *
- * @category layers
+ * @category repositories
  * @since 0.0.0
  */
 export class EntityRegistryRepository extends Context.Service<EntityRegistryRepository>()(

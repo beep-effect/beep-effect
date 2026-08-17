@@ -7,10 +7,16 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ConfigService, DEFAULT_CONFIG } from "../../Service/Config.ts";
-import { StorageService, StorageServiceLive } from "../../Service/Storage.ts";
+import {
+  GenerationMismatchError,
+  StorageService,
+  StorageServiceLive,
+  StorageServiceTest,
+} from "../../Service/Storage.ts";
 
 const PlatformLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 const isPathSafetyError = S.is(PathSafetyError);
@@ -102,6 +108,68 @@ describe("effect-ontology local StorageService", () => {
 
         yield* storage.clear;
         assert.deepStrictEqual(yield* fs.readDirectory(path.join(root, "tenant-a")), []);
+      })
+    );
+  });
+
+  it.layer(makeStorageTestLayer("tenant-b"))("with isolated versioned local storage", (it) => {
+    it.effect(
+      "enforces create-only and stale-generation semantics atomically",
+      Effect.fnUntraced(function* () {
+        const storage = yield* StorageService;
+
+        const staleMissing = yield* Effect.result(
+          storage.setIfGenerationMatch("documents/missing.txt", "unexpected", "12")
+        );
+        assert(staleMissing.pipe(Result.isFailure));
+        assert(staleMissing.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
+
+        const createResults = yield* Effect.all(
+          [
+            Effect.result(storage.setIfGenerationMatch("documents/created.txt", "first", "0")),
+            Effect.result(storage.setIfGenerationMatch("documents/created.txt", "second", "0")),
+          ],
+          { concurrency: "unbounded" }
+        );
+        assert.strictEqual(A.length(A.filter(createResults, Result.isSuccess)), 1);
+        assert.strictEqual(A.length(A.filter(createResults, Result.isFailure)), 1);
+
+        const versioned = yield* storage.getWithGeneration("documents/created.txt");
+        assert(versioned.pipe(O.isSome));
+        yield* storage.remove("documents/created.txt");
+        const deletedBeforeUpdate = yield* Effect.result(
+          storage.setIfGenerationMatch("documents/created.txt", "stale-update", versioned.pipe(O.getOrThrow).generation)
+        );
+        assert(deletedBeforeUpdate.pipe(Result.isFailure));
+        assert(deletedBeforeUpdate.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
+        assert.deepStrictEqual(yield* storage.getOption("documents/created.txt"), O.none());
+
+        yield* storage.setIfGenerationMatch("documents/created.txt", "first", "0");
+        const recreated = yield* storage.getWithGeneration("documents/created.txt");
+        assert(recreated.pipe(O.isSome));
+        assert.notStrictEqual(recreated.pipe(O.getOrThrow).generation, versioned.pipe(O.getOrThrow).generation);
+
+        const staleAfterRecreate = yield* Effect.result(
+          storage.setIfGenerationMatch("documents/created.txt", "stale-update", versioned.pipe(O.getOrThrow).generation)
+        );
+        assert(staleAfterRecreate.pipe(Result.isFailure));
+        assert(staleAfterRecreate.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
+        assert.deepStrictEqual(yield* storage.getOption("documents/created.txt"), O.some("first"));
+
+        yield* storage.setIfGenerationMatch(
+          "documents/created.txt",
+          "equal-size-1",
+          recreated.pipe(O.getOrThrow).generation
+        );
+        const updated = yield* storage.getWithGeneration("documents/created.txt");
+        assert(updated.pipe(O.isSome));
+        assert.notStrictEqual(updated.pipe(O.getOrThrow).generation, recreated.pipe(O.getOrThrow).generation);
+
+        const reusedGeneration = yield* Effect.result(
+          storage.setIfGenerationMatch("documents/created.txt", "equal-size-2", recreated.pipe(O.getOrThrow).generation)
+        );
+        assert(reusedGeneration.pipe(Result.isFailure));
+        assert(reusedGeneration.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
       })
     );
   });
@@ -260,6 +328,38 @@ describe("effect-ontology local StorageService", () => {
 
         assertLocalPathRejected(error);
         assert.isFalse(yield* fs.exists(path.join(sandbox, "outside")));
+      })
+    );
+  });
+});
+
+describe("effect-ontology memory StorageService", () => {
+  it.layer(StorageServiceTest)("with versioned in-memory storage", (it) => {
+    it.effect(
+      "rejects stale generations after deletion and recreation",
+      Effect.fnUntraced(function* () {
+        const storage = yield* StorageService;
+        yield* storage.set("document.txt", "first");
+        const original = yield* storage.getWithGeneration("document.txt");
+        assert(original.pipe(O.isSome));
+
+        yield* storage.remove("document.txt");
+        const updateWhileAbsent = yield* Effect.result(
+          storage.setIfGenerationMatch("document.txt", "stale", original.pipe(O.getOrThrow).generation)
+        );
+        assert(updateWhileAbsent.pipe(Result.isFailure));
+        assert(updateWhileAbsent.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
+
+        yield* storage.setIfGenerationMatch("document.txt", "first", "0");
+        const recreated = yield* storage.getWithGeneration("document.txt");
+        assert(recreated.pipe(O.isSome));
+        assert.notStrictEqual(recreated.pipe(O.getOrThrow).generation, original.pipe(O.getOrThrow).generation);
+
+        const staleAfterRecreate = yield* Effect.result(
+          storage.setIfGenerationMatch("document.txt", "stale", original.pipe(O.getOrThrow).generation)
+        );
+        assert(staleAfterRecreate.pipe(Result.isFailure));
+        assert(staleAfterRecreate.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
       })
     );
   });

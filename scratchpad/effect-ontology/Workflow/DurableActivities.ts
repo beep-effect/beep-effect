@@ -379,13 +379,14 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
   for (const quad of allQuads) {
     if (quad.subject.termType !== "NamedNode") continue;
     const subjectIri = quad.subject.value;
+    if (!MutableHashSet.has(entityIris, subjectIri)) continue;
     const subjectLocalName = extractLocalNameFromIri(subjectIri);
     const subjectId = EntityId.make(subjectLocalName);
-    if (!MutableHashSet.has(entityIdSet, subjectId)) continue;
     const predicate = quad.predicate.value;
     if (predicate === RDF_TYPE.value || predicate === RDFS_LABEL.value) continue;
     const objectValue = quad.object;
     if (objectValue.termType === "NamedNode") {
+      if (!MutableHashSet.has(entityIris, objectValue.value)) continue;
       const objectLocalName = extractLocalNameFromIri(objectValue.value);
       const objectId = EntityId.make(objectLocalName);
       if (MutableHashSet.has(entityIdSet, objectId)) {
@@ -424,7 +425,7 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
  * - Max 3 attempts
  * - Jitter to prevent thundering herd
  */
-const activityRetryPolicy = Schedule.min([Schedule.exponential("1 second"), Schedule.recurs(3)]).pipe(
+const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Schedule.recurs(3)]).pipe(
   Schedule.jittered,
   Schedule.setInputType<Cause.Cause<unknown>>(),
   Schedule.while((meta) => Cause.hasInterrupts(meta.input))
@@ -599,7 +600,7 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
         provenanceMap,
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -751,7 +752,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
         reportUri: GcsUri.fromUnknown(`gs://${bucket}/${reportPath}`),
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -979,7 +980,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
         triplesIngested: NonNegativeInt.make(stats.tripleCount),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -1228,7 +1229,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
         documentsFailed: NonNegativeInt.make(documentsFailed),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -1594,7 +1595,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
         rulesApplied: reasoningResult.rulesApplied,
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -1812,7 +1813,7 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
         dimension: NonNegativeInt.make(dimension),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -2233,7 +2234,7 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
         totalProcessed: NonNegativeInt.make(pairsToVerify.length),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 
@@ -2689,6 +2690,6 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         averageComplexity: UnitInterval.make(avgComplexity),
         durationMs: NonNegNum.make(durationMs),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
