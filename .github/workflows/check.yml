@@ -147,6 +147,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
       - name: Fetch pull request base
@@ -396,6 +397,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
       - name: Fetch pull request base
@@ -567,6 +569,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
       - name: Setup monorepo CI
@@ -590,6 +593,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
       - name: Setup monorepo CI
@@ -639,6 +643,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
       - name: Setup monorepo CI
@@ -665,6 +670,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
       - name: Determine commit range
@@ -785,6 +791,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
       - name: OSV vulnerability scan
@@ -913,6 +920,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          filter: blob:none
           persist-credentials: false
 
       - name: Fetch pull request base
