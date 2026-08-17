@@ -21,8 +21,8 @@ import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { LiteralKit, NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Clock, Context, Effect, Layer, Match } from "effect";
-import * as O from "effect/Option";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { RdfStore } from "./Rdf.ts";
@@ -363,9 +363,8 @@ const OWL_SAMEAS_SYMMETRY_RULE = `
 /**
  * Get rules for a reasoning profile
  */
-const getRulesForProfile = (profile: ReasoningProfile): ReadonlyArray<string> =>
-  Match.value(profile).pipe(
-    Match.when("rdfs", () => [
+const getRulesForProfile = Match.type<ReasoningProfile>().pipe(
+  Match.when("rdfs", () => [
       RDFS_SUBCLASS_RULE,
       RDFS_SUBCLASS_CHAIN_RULE,
       RDFS_SUBPROPERTY_RULE,
@@ -375,8 +374,8 @@ const getRulesForProfile = (profile: ReasoningProfile): ReadonlyArray<string> =>
     Match.when("rdfs-subclass", () => [RDFS_SUBCLASS_RULE, RDFS_SUBCLASS_CHAIN_RULE]),
     Match.when("owl-sameas", () => [OWL_SAMEAS_RULE, OWL_SAMEAS_SYMMETRY_RULE]),
     Match.when("custom", () => []),
-    Match.exhaustive
-  );
+  Match.exhaustive
+);
 
 // =============================================================================
 // Service Definition
@@ -542,11 +541,13 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
        * @param config - Reasoning configuration
        * @returns True if reasoning would add new triples
        */
-      wouldInfer:
-        Effect.fn("Reasoner.wouldInfer")(function* (store: RdfStore, config: ReasoningConfig): Effect.fn.Return<boolean, ReasoningError | RuleParseError> {
-          const { result } = yield* reasonCopy(store, config);
-          return result.hasInferences;
-        }),
+      wouldInfer: Effect.fn("Reasoner.wouldInfer")(function* (
+        store: RdfStore,
+        config: ReasoningConfig
+      ): Effect.fn.Return<boolean, ReasoningError | RuleParseError> {
+        const { result } = yield* reasonCopy(store, config);
+        return result.hasInferences;
+      }),
 
       /**
        * Get available RDFS rules as N3 strings

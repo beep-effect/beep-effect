@@ -11,10 +11,12 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Cause, DateTime, Effect, HashSet, Random, Schedule } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as A from "effect/Array";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { BatchId, ContentHash, DocumentId, GcsBucket, GcsUri, Namespace } from "../Domain/Identity.ts";
 import { BatchStage, BatchState } from "../Domain/Model/BatchWorkflow.ts";
@@ -31,12 +33,10 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/LinkIngestionRouter");
 const CreateBatchFromLinksBody = S.Struct({
   linkIds: S.Array(S.String),
   targetNamespace: S.optionalKey(S.String),
-});
+}).pipe(
+  SchemaUtils.withOptionCodecStatics,
+);
 
-const decodeCreateBatchRequest = S.decodeUnknownOption(CreateBatchFromLinksBody);
-const decodeBatchManifest = S.decodeUnknownEffect(BatchManifest);
-const encodeBatchManifest = S.encodeEffect(S.fromJsonString(BatchManifest));
-const decodeWorkflowPayload = S.decodeUnknownEffect(BatchWorkflowPayload);
 const NonTerminalBatchStage = BatchStage.pick(BatchStage.omitOptions(["Complete", "Failed"]));
 
 class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError>($I`BatchNotTerminalError`)(
@@ -91,7 +91,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       }
 
       const httpRequest = yield* HttpServerRequest.HttpServerRequest;
-      const request = decodeCreateBatchRequest(yield* httpRequest.json);
+      const request = CreateBatchFromLinksBody.decodeUnknownOption(yield* httpRequest.json);
       if (O.isNone(request)) {
         return yield* HttpServerResponse.json(
           { error: "VALIDATION_ERROR", message: "Invalid create-batch request" },
@@ -117,7 +117,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
         );
       }
 
-      const invalidLinks = links.filter((link) => link.ontologyId !== ontologyId);
+      const invalidLinks = A.filter(links, (link) => link.ontologyId !== ontologyId);
       if (invalidLinks.length > 0) {
         return yield* HttpServerResponse.json(
           {
@@ -147,7 +147,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       const ontologyVersion = yield* ontologyService.generateVersion(ontologyId, entry.value.iri);
       const now = yield* DateTime.now;
 
-      const manifest = yield* decodeBatchManifest({
+      const manifest = yield* BatchManifest.decodeUnknownEffect({
         batchId,
         ontologyId: entry.value.id,
         ontologyUri,
@@ -158,9 +158,9 @@ export const LinkIngestionRouter = HttpRouter.addAll([
         createdAt: now,
       });
       const manifestPath = PathLayout.batch.manifest(batchId);
-      yield* storage.set(manifestPath, yield* encodeBatchManifest(manifest));
+      yield* storage.set(manifestPath, yield* BatchManifest.encodeEffectFromJsonString(manifest));
       const manifestUri = GcsUri.fromUnknown(`gs://${bucket}/${manifestPath}`);
-      const payload = yield* decodeWorkflowPayload({
+      const payload = yield* BatchWorkflowPayload.decodeUnknownEffect({
         batchId,
         ontologyId: entry.value.id,
         manifestUri,

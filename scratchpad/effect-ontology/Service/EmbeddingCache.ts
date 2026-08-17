@@ -19,6 +19,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { ConfigService } from "./Config.ts";
 import type { StorageServiceMethods } from "./Storage.ts";
 import { StorageService } from "./Storage.ts";
@@ -150,9 +151,9 @@ export const defaultCacheConfig = EmbeddingCacheConfig.make({});
  * @since 0.0.0
  */
 export interface EmbeddingCacheService {
-  readonly get: (hash: string) => Effect.Effect<O.Option<Embedding>>;
-  readonly set: (hash: string, embedding: Embedding) => Effect.Effect<void>;
-  readonly has: (hash: string) => Effect.Effect<boolean>;
+  readonly get: (hash: string) => Effect.Effect<O.Option<Embedding>, EmbeddingError>;
+  readonly set: (hash: string, embedding: Embedding) => Effect.Effect<void, EmbeddingError>;
+  readonly has: (hash: string) => Effect.Effect<boolean, EmbeddingError>;
   readonly size: Effect.Effect<number>;
   readonly clear: Effect.Effect<void>;
 }
@@ -310,13 +311,13 @@ export interface PersistentEmbeddingCacheService extends EmbeddingCacheService {
    * Warm up the cache by loading embeddings from persistent storage
    * @returns Number of embeddings loaded
    */
-  readonly warmUp: Effect.Effect<number>;
+  readonly warmUp: Effect.Effect<number, EmbeddingError>;
 
   /**
    * Flush all in-memory embeddings to persistent storage
    * @returns Number of embeddings persisted
    */
-  readonly flush: Effect.Effect<number>;
+  readonly flush: Effect.Effect<number, EmbeddingError>;
 
   /**
    * Get cache statistics
@@ -409,6 +410,12 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
   });
 
   const isExpired = (entry: CacheEntry, now: number): boolean => now - entry.createdAt > Duration.toMillis(config.ttl);
+  const storageError = (cause: unknown): EmbeddingError =>
+    EmbeddingError.make({
+      message: "Persistent embedding cache storage operation failed.",
+      provider: "persistent-cache",
+      cause: O.some(cause),
+    });
 
   const evictLRU = (map: HashMap.HashMap<string, CacheEntry>): HashMap.HashMap<string, CacheEntry> => {
     if (HashMap.size(map) < config.maxEntries) return map;
@@ -427,15 +434,14 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
   };
 
   // Load embedding from GCS
-  const loadFromStorage = Effect.fn(function* (hash: string): Effect.fn.Return<O.Option<Embedding>> {
+  const loadFromStorage = Effect.fn(function* (
+    hash: string
+  ): Effect.fn.Return<O.Option<Embedding>, EmbeddingError> {
     const blobPath = `${cachePath}/${Str.takeLeft(2)(hash)}/${hash}.json`;
-    const content = yield* storage.get(blobPath).pipe(Effect.catch(() => Effect.void));
+    const content = yield* storage.getOption(blobPath).pipe(Effect.mapError(storageError));
+    if (O.isNone(content)) return O.none();
 
-    if (content === undefined) {
-      return O.none();
-    }
-
-    const blob = decodeEmbeddingBlob(content);
+    const blob = decodeEmbeddingBlob(content.value);
     if (O.isNone(blob)) return O.none();
 
     const entry = blob.value.embeddings[hash];
@@ -576,7 +582,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
 
     warmUp: Effect.gen(function* () {
       // List all embedding blobs in the cache path
-      const files = yield* storage.list(cachePath).pipe(Effect.orElseSucceed(() => []));
+      const files = yield* storage.list(cachePath).pipe(Effect.mapError(storageError));
 
       let loaded = 0;
       const now = yield* Clock.currentTimeMillis;
@@ -586,11 +592,10 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
         A.filter(files, Str.endsWith(".json")),
         (file) =>
           Effect.gen(function* () {
-            const content = yield* storage.get(file).pipe(Effect.catch(() => Effect.void));
+            const content = yield* storage.getOption(file).pipe(Effect.mapError(storageError));
+            if (O.isNone(content)) return;
 
-            if (content === undefined) return;
-
-            const blob = decodeEmbeddingBlob(content);
+            const blob = decodeEmbeddingBlob(content.value);
             if (O.isNone(blob)) return;
 
             for (const [hash, entry] of R.toEntries(blob.value.embeddings)) {

@@ -101,15 +101,15 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
     const getOntologyStore = yield* Effect.cached(
       Effect.gen(function* () {
         const ontologyPath = config.ontology.path;
-        const contentOpt = yield* storage.get(ontologyPath);
-        if (contentOpt === undefined) {
+        const contentOpt = yield* storage.getOption(ontologyPath);
+        if (O.isNone(contentOpt)) {
           return yield* AgentInputError.make({
             taskId: "agent-kit",
             message: `Ontology not found at ${ontologyPath}`,
             missing: [ontologyPath],
           });
         }
-        return yield* rdfBuilder.parseTurtle(contentOpt);
+        return yield* rdfBuilder.parseTurtle(contentOpt.value);
       })
     );
     const getShapesStore = yield* Effect.cached(
@@ -177,15 +177,15 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
         ontologyId: task.ontologyId.value,
         ...extraOptions,
       });
-      const contentOpt = yield* storage.get(ingestResult.storageUri);
-      if (contentOpt === undefined) {
+      const contentOpt = yield* storage.getOption(ingestResult.storageUri);
+      if (O.isNone(contentOpt)) {
         return yield* AgentInputError.make({
           taskId: task.taskId,
           message: `Ingested content missing at ${ingestResult.storageUri}`,
         });
       }
       return mergeTask(task, {
-        text: O.some(contentOpt),
+        text: O.some(contentOpt.value),
         ingestionResult: O.some(ingestResult),
         documentId: O.orElse(task.documentId, () => O.some(ingestResult.id)),
       });

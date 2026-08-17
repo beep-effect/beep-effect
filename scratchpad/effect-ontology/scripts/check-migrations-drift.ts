@@ -35,11 +35,9 @@ const program = Effect.scoped(
 
     const exitCode = yield* spawner.exitCode(
       ChildProcess.make(
-        "bunx",
+        "bun",
         [
-          "--bun",
-          "drizzle-kit",
-          "generate",
+          "scripts/generate-migrations.ts",
           "--dialect",
           "postgresql",
           "--schema",

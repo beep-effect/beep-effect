@@ -283,7 +283,7 @@ export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`Art
  * import * as S from "effect/Schema"
  * import { TimelineEntityQuery } from "@effect-ontology/Schema/Timeline"
  *
- * const query = S.decodeUnknownOption(TimelineEntityQuery)({})
+ * const query = S.decodeUnknownOption(TimelineEntityQuery)({ ontologyId: "ontology-a" })
  * console.log(O.map(query, (value) => value.includeDeprecated)) // Some(false)
  * ```
  *
@@ -292,6 +292,7 @@ export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`Art
  */
 export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`TimelineEntityQuery`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for the timeline query." }),
     asOf: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
     range: S.OptionFromOptionalKey(TimelineRangeQuery).pipe(SchemaUtils.withNoneDefault),
     includeDeprecated: BooleanQueryValue.pipe(SchemaUtils.withKeyDefaults(false)),
@@ -338,7 +339,7 @@ export class TimelineEntityResponse extends S.Class<TimelineEntityResponse>($I`T
  * import * as S from "effect/Schema"
  * import { TimelineClaimsQuery } from "@effect-ontology/Schema/Timeline"
  *
- * const query = S.decodeUnknownOption(TimelineClaimsQuery)({})
+ * const query = S.decodeUnknownOption(TimelineClaimsQuery)({ ontologyId: "ontology-a" })
  * console.log(O.map(query, (value) => value.limit)) // Some(20)
  * ```
  *
@@ -347,6 +348,7 @@ export class TimelineEntityResponse extends S.Class<TimelineEntityResponse>($I`T
  */
 export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`TimelineClaimsQuery`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for the claim query." }),
     subject: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
     predicate: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
     asOf: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),

@@ -18,7 +18,6 @@ import { SchemaUtils } from "@beep/schema";
 import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
@@ -142,7 +141,7 @@ export const makeEntitySchema = dual2(
     const ClassLocalName = localNameSchema(classIris, "classes");
 
     // Determine available property names for description
-    const availableProps = datatypeProperties?.map((p) => extractLocalNameFromIri(p.id)) || [];
+    const availableProps = datatypeProperties.map((p) => extractLocalNameFromIri(p.id));
     const propList =
       availableProps.length > 0
         ? ` (allowed: ${availableProps.slice(0, 10).join(", ")}${availableProps.length > 10 ? "..." : ""})`
@@ -152,7 +151,7 @@ export const makeEntitySchema = dual2(
     // If properties are provided, build a specific Struct to enforce cardinality and valid keys
     let AttributesSchema: S.Codec<Record<string, unknown>, unknown, never, never>;
 
-    if (P.isNotUndefined(datatypeProperties) && datatypeProperties.length > 0) {
+    if (datatypeProperties.length > 0) {
       const fields: Record<string, S.Codec<unknown, unknown, never, never>> = {};
 
       // Build case-insensitive local name map for key normalization
@@ -272,17 +271,17 @@ export type EntityGraphSchema = ReturnType<typeof makeEntitySchema>;
 /**
  * Describes the entity graph type data exposed by this module.
  *
- * **Example** (Reference EntityGraphType fields)
+ * **Example** (Reference EntityGraph fields)
  *
  * ```ts
- * import type { EntityGraphType } from "@effect-ontology/Schema/EntityFactory"
+ * import type { EntityGraph } from "@effect-ontology/Schema/EntityFactory"
  *
- * const entityGraphTypeFields: ReadonlyArray<keyof EntityGraphType> = ["entities"]
+ * const entityGraphFields: ReadonlyArray<keyof EntityGraph> = ["entities"]
  *
- * console.log(entityGraphTypeFields)
+ * console.log(entityGraphFields)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export type EntityGraphType = S.Schema.Type<EntityGraphSchema>;
+export type EntityGraph = S.Schema.Type<EntityGraphSchema>;

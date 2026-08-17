@@ -16,7 +16,6 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag as Options } from "effect/unstable/cli";
 import { RdfBuilder } from "../../Service/Rdf.ts";
@@ -111,7 +110,7 @@ To create a link, run:`);
     yield* Console.log("Q-IDs should match the pattern: Q followed by digits (e.g., Q42)");
     return;
   }
-  const entityIriResult = S.decodeResult(IRI)(entityIri);
+  const entityIriResult = IRI.decodeResult(entityIri);
   if (Result.isFailure(entityIriResult)) {
     yield* Console.error(`Invalid entity IRI: ${entityIri}`);
     return;

@@ -315,9 +315,8 @@ export const EmbeddingProviderFallbackDefault: Layer.Layer<
   EmbeddingProvider,
   AnyEmbeddingError,
   ConfigService | NomicNlpService
-> =
-  EmbeddingProviderFallbackLive.pipe(
-    Layer.provide(EmbeddingCircuitBreaker.Default),
-    Layer.provide(EmbeddingRateLimiterVoyage),
-    Layer.provide(FetchHttpClient.layer)
-  );
+> = EmbeddingProviderFallbackLive.pipe(
+  Layer.provide(EmbeddingCircuitBreaker.Default),
+  Layer.provide(EmbeddingRateLimiterVoyage),
+  Layer.provide(FetchHttpClient.layer)
+);

@@ -43,7 +43,7 @@ export { toPgTable } from "./table.ts";
  * @category type-level
  * @since 0.0.0
  */
-export type { Bigint, Integer, Jsonb, Serial, Text } from "./Column.ts";
+export type { Bigint, Custom, Integer, Jsonb, Numeric, Serial, Text, Timestamp, Varchar } from "./Column.ts";
 /** PostgreSQL kit configuration and result types.
  * @category type-level
  * @since 0.0.0

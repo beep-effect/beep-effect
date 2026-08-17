@@ -241,22 +241,6 @@ export type OutputType = typeof OutputType.Type;
 export const OutputTypeRegistry = outputTypeRegistry;
 
 /**
- * Compatibility export for the upstream schema name.
- *
- * **Example** (Use getOutputFilename)
- * ```ts
- * import { OutputTypeSchema } from "@effect-ontology/Model/OutputType"
- *
- * console.log(OutputTypeSchema.is.metadata("metadata")) // true
- * ```
- *
- * @deprecated Use {@link OutputType}; new schema values omit the `Schema` suffix.
- * @category interop
- * @since 0.0.0
- */
-export { OutputType as OutputTypeSchema };
-
-/**
  * Return the stable filename for an output type.
  *
  * **Details**

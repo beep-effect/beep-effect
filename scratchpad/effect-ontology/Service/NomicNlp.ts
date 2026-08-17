@@ -12,8 +12,10 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { pipeline } from "@xenova/transformers";
-import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";

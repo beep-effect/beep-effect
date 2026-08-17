@@ -134,8 +134,7 @@ export class ShutdownService extends Context.Service<ShutdownService>()($I`Shutd
       /**
        * Track a request for graceful shutdown
        */
-      trackRequest: <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | ShutdownError, R> =>
-        Effect.gen(function* () {
+      trackRequest: Effect.fn("ShutdownService.trackRequest")(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
           const isShuttingDown = yield* Ref.get(shuttingDownRef);
           if (isShuttingDown) {
             return yield* ShutdownError.make({
@@ -181,8 +180,8 @@ export class ShutdownService extends Context.Service<ShutdownService>()($I`Shutd
           }
         }).pipe(
           Effect.timeout(config.drainTimeout),
-          Effect.catch(() =>
-            Effect.gen(function* () {
+          Effect.catch(
+            Effect.fnUntraced(function* () {
               const remaining = yield* Ref.get(inFlightRef);
               yield* Effect.logWarning("Drain timeout exceeded", {
                 remainingRequests: remaining,

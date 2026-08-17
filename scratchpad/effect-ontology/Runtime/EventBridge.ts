@@ -121,8 +121,8 @@ const makeEventBridge = Effect.gen(function* () {
       )
     );
     const run = eventStream.pipe(
-      Stream.runForEach((entry) =>
-        Effect.gen(function* () {
+      Stream.runForEach(
+        Effect.fnUntraced(function* (entry) {
           const ontologyId = entry.payload.ontologyId;
           const broadcastEvent: BroadcastEvent = {
             type: "event",

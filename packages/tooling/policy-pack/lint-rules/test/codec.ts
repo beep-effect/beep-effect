@@ -6,6 +6,7 @@
  * The config encoder is identical across harnesses, and the report decoder differs only by the
  * report schema — both live here so neither harness re-implements the codec boilerplate.
  */
+import { Unknown } from "@beep/schema/Unknown";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -13,7 +14,7 @@ import * as S from "effect/Schema";
 /** Encode an arbitrary config object to a JSON string (for the throwaway lint config file). */
 // unary by contract: `options` stays reachable through `S.encodeUnknownSync(...)`;
 // a dual is undecidable here because `input` is `unknown`.
-export const encodeConfig: (input: unknown) => string = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+export const encodeConfig: (input: unknown) => string = Unknown.encodeUnknownSyncFromJsonString;
 
 /**
  * Build a decoder that parses a subprocess's JSON `stdout` into `report`'s decoded type,

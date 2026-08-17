@@ -12,8 +12,10 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { Unknown } from "@beep/schema/Unknown";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { ConfigProvider, Console, Duration, Effect, FileSystem, Layer, Path } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -116,7 +118,7 @@ const readInputText = Effect.fn("Extract.readInputText")(function* (
   }
 
   const input = yield* Effect.callback<string, ExtractInputError>((resume) => {
-    const chunks: Buffer[] = [];
+    const chunks = A.empty<Buffer>();
     const onData = (chunk: Buffer | string) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
     const onEnd = () => resume(Effect.succeed(Buffer.concat(chunks).toString("utf-8")));
     const onError = (cause: unknown) =>
@@ -210,7 +212,7 @@ const extractHandler = Effect.fn("extractHandler")(function* (
         object: r.object,
       })),
     };
-    const outputJson = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }))(output);
+    const outputJson = yield* Unknown.encodeUnknownEffectFromJsonString(output, { space: 2 });
     yield* Console.log(outputJson);
   } else {
     const rdf = yield* RdfBuilder;

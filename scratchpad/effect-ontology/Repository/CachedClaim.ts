@@ -15,7 +15,7 @@ import { Context, HashSet, Layer, pipe } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/CachedClaim");
 
-import { Cache, Duration, Effect } from "effect";
+import { Cache, Data, Duration, Effect } from "effect";
 import * as A from "effect/Array";
 import type { ClaimId, CorrectionId } from "./Claim.ts";
 import { ClaimRepository } from "./Claim.ts";
@@ -30,6 +30,11 @@ const CLAIM_CACHE_TTL = Duration.minutes(30);
 
 const SUBJECT_CACHE_CAPACITY = 5_000;
 const SUBJECT_CACHE_TTL = Duration.hours(1);
+
+class ScopedCacheKey extends Data.Class<{
+  readonly ontologyId: string;
+  readonly value: string;
+}> {}
 
 // =============================================================================
 // Service
@@ -62,41 +67,45 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
     const claimCache = yield* Cache.make({
       capacity: CLAIM_CACHE_CAPACITY,
       timeToLive: CLAIM_CACHE_TTL,
-      lookup: (id: ClaimId) => repo.getClaim(id),
+      lookup: (key: ScopedCacheKey) => repo.getClaim(key.value, key.ontologyId),
     });
+
+    const scopedCacheKey = (value: string, ontologyId: string): ScopedCacheKey =>
+      new ScopedCacheKey({ ontologyId, value });
 
     // Subject-based query cache
     const subjectCache = yield* Cache.make({
       capacity: SUBJECT_CACHE_CAPACITY,
       timeToLive: SUBJECT_CACHE_TTL,
-      lookup: (subjectIri: string) => repo.getClaimsBySubject(subjectIri),
+      lookup: (key: ScopedCacheKey) => repo.getClaimsBySubject(key.value, key.ontologyId),
     });
 
     // Cached single claim lookup
-    const getClaim = (id: ClaimId) => Cache.get(claimCache, id);
+    const getClaim = (id: ClaimId, ontologyId: string) => Cache.get(claimCache, scopedCacheKey(id, ontologyId));
 
     // Cached subject query
-    const getClaimsBySubject = (subjectIri: string) => Cache.get(subjectCache, subjectIri);
+    const getClaimsBySubject = (subjectIri: string, ontologyId: string) =>
+      Cache.get(subjectCache, scopedCacheKey(subjectIri, ontologyId));
 
     // Invalidate subject cache on insert
     const insertClaim = (claim: ClaimInsertRow) =>
       repo.insertClaim(claim).pipe(
         Effect.tap((result) =>
-          Cache.invalidate(subjectCache, claim.subjectIri).pipe(
+          Cache.invalidate(subjectCache, scopedCacheKey(claim.subjectIri, claim.ontologyId)).pipe(
             Effect.tap(() =>
               // Also invalidate single claim cache for the new claim
-              Cache.invalidate(claimCache, result.id)
+              Cache.invalidate(claimCache, scopedCacheKey(result.id, result.ontologyId))
             )
           )
         )
       );
 
     // Invalidate caches on deprecation
-    const deprecateClaim = (claimId: ClaimId, correctionId: CorrectionId) =>
-      repo.deprecateClaim(claimId, correctionId).pipe(
+    const deprecateClaim = (claimId: ClaimId, correctionId: CorrectionId, ontologyId: string) =>
+      repo.deprecateClaim(claimId, correctionId, ontologyId).pipe(
         Effect.tap(() =>
           // Invalidate the claim's cache entry
-          Cache.invalidate(claimCache, claimId).pipe(
+          Cache.invalidate(claimCache, scopedCacheKey(claimId, ontologyId)).pipe(
             Effect.tap(
               () =>
                 // We'd need to know the subjectIri to invalidate subject cache
@@ -115,7 +124,7 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
             // Invalidate subject caches for all affected subjects
             pipe(
               claimList,
-              A.map((claim) => claim.subjectIri),
+              A.map((claim) => scopedCacheKey(claim.subjectIri, claim.ontologyId)),
               HashSet.fromIterable,
               HashSet.map((iri) => Cache.invalidate(subjectCache, iri))
             ),
@@ -131,7 +140,7 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
           Effect.all(
             pipe(
               claimList,
-              A.map((claim) => claim.subjectIri),
+              A.map((claim) => scopedCacheKey(claim.subjectIri, claim.ontologyId)),
               HashSet.fromIterable,
               HashSet.map((iri) => Cache.invalidate(subjectCache, iri))
             ),

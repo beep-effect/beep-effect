@@ -7,6 +7,7 @@
 
 import { DuckDb, DuckDbConnectionOptions, DuckDbParquetExport } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import { Clock, Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as R from "effect/Record";
@@ -346,7 +347,7 @@ const countFromRow = (row: Record<string, unknown> | undefined): number => {
   return globalThis.Number.isFinite(parsed) ? parsed : 0;
 };
 
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 const mirrorFailure = (message: string, cause: unknown): AiMetricsMirrorError =>
   AiMetricsMirrorError.make({ cause, message });
@@ -751,7 +752,7 @@ const privacyProofFor = (
   const tokenMatchesPayload = (token: ForbiddenTokenCheck): boolean =>
     token.matchMode === "json-string"
       ? // TODO(effect-native-migration): model schema
-        Str.includes(S.encodeUnknownSync(S.fromJsonString(S.Unknown))(token.value))(payload)
+        Str.includes(Unknown.encodeUnknownSyncFromJsonString(token.value))(payload)
       : Str.includes(token.value)(payload);
   const forbiddenMatches = pipe(
     checkedTokens,

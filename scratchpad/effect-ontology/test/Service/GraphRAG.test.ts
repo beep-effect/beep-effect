@@ -113,8 +113,7 @@ const CompleteTestLayer = Layer.merge(GraphRAGTest, ValidLanguageModel);
 
 describe("SubgraphExtractor", () => {
   it.layer(SubgraphExtractorTest)("bounded breadth-first traversal", (it) => {
-    it.effect("enforces the node bound before accepting seeds and supports both dual forms", () =>
-      Effect.gen(function* () {
+    it.effect("enforces the node bound before accepting seeds and supports both dual forms", Effect.fnUntraced(function* () {
         const extractor = yield* SubgraphExtractor;
         const options = { maxNodes: PosInt.make(2), followIncoming: true, followOutgoing: true };
 
@@ -132,8 +131,7 @@ describe("SubgraphExtractor", () => {
       })
     );
 
-    it.effect("records shortest hop distances and actual depth", () =>
-      Effect.gen(function* () {
+    it.effect("records shortest hop distances and actual depth", Effect.fnUntraced(function* () {
         const extractor = yield* SubgraphExtractor;
         const subgraph = yield* extractor.extract(graph, [alice.id], NonNegativeInt.make(3), {
           maxNodes: PosInt.make(4),
@@ -150,8 +148,7 @@ describe("SubgraphExtractor", () => {
       })
     );
 
-    it.effect("supports both relevance-extraction dual forms", () =>
-      Effect.gen(function* () {
+    it.effect("supports both relevance-extraction dual forms", Effect.fnUntraced(function* () {
         const extractor = yield* SubgraphExtractor;
         const options = {
           topK: PosInt.make(1),
@@ -171,8 +168,7 @@ describe("SubgraphExtractor", () => {
 
 describe("GraphRAG", () => {
   it.layer(CompleteTestLayer)("with a language model in the Effect environment", (it) => {
-    it.effect("supports both dual forms across retrieval, formatting, generation, answer, and explanation", () =>
-      Effect.gen(function* () {
+    it.effect("supports both dual forms across retrieval, formatting, generation, answer, and explanation", Effect.fnUntraced(function* () {
         const graphRag = yield* GraphRAG;
         const retrievalOptions = {
           topK: PosInt.make(1),
@@ -228,8 +224,7 @@ describe("GraphRAG", () => {
   });
 
   it.layer(Layer.merge(GraphRAGTest, InvalidCitationLanguageModel))("with an invalid citation response", (it) => {
-    it.effect("rejects citations outside the retrieved subgraph", () =>
-      Effect.gen(function* () {
+    it.effect("rejects citations outside the retrieved subgraph", Effect.fnUntraced(function* () {
         const graphRag = yield* GraphRAG;
         const retrieval = yield* graphRag.retrieve(graph, "Who knows Carol?", {
           topK: PosInt.make(1),

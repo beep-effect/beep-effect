@@ -105,7 +105,7 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
     });
     const cutoffDate = DateTime.toDateUtc(DateTime.makeUnsafe((yield* Clock.currentTimeMillis) - minutes * 60 * 1000));
     const staleCandidates = staleLinks.filter((link) => link.updatedAt && link.updatedAt < cutoffDate);
-    if (staleCandidates.length === 0) {
+    if (A.isReadonlyArrayEmpty(staleCandidates)) {
       yield* Console.log("No stale links would be cleaned up.");
       return;
     }
@@ -170,7 +170,7 @@ const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: 
     status: "failed",
     limit,
   });
-  if (links.length === 0) {
+  if (A.isReadonlyArrayEmpty(links)) {
     yield* Console.log("No failed links found.");
     return;
   }
@@ -181,7 +181,7 @@ const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: 
     yield* Console.log(`  Processing: ${link.id}`);
     const result = yield* ingestion.reEnrich(link.id).pipe(
       Effect.catch(
-        Effect.fn(function* (error) {
+        Effect.fnUntraced(function* (error) {
           yield* Console.log(`    Failed: ${error.message}`);
           return O.none();
         })

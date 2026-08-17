@@ -81,10 +81,10 @@ export type AttributeValue = typeof AttributeValue.Type;
  * import { Attributes } from "@effect-ontology/Model/shared"
  *
  * const attributes = Attributes.make({
- *   "http://schema.org/age": 39,
- *   "http://schema.org/active": true
+ *   "https://schema.org/age": 39,
+ *   "https://schema.org/active": true
  * })
- * console.log(attributes["http://schema.org/age"]) // 39
+ * console.log(attributes["https://schema.org/age"]) // 39
  * ```
  *
  * @invariant Every property value is a JSON-safe scalar.

@@ -171,7 +171,7 @@ const InferenceRouterDefinition = HttpRouter.addAll([
             },
             { status: 400 }
           ),
-        onSuccess: Effect.fn(
+        onSuccess: Effect.fnUntraced(
           function* (request) {
             const rdfBuilder = yield* RdfBuilder;
             const reasoner = yield* Reasoner;
@@ -296,7 +296,7 @@ const InferenceRouterDefinition = HttpRouter.addAll([
           },
           Effect.catchTag(
             "InferenceExecutionError",
-            Effect.fn(function* (error) {
+            Effect.fnUntraced(function* (error) {
               yield* Effect.logError("Inference failed", { error });
 
               const jobStore = yield* InferenceJobStore;

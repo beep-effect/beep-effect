@@ -9,6 +9,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { decodeTomlTextAs } from "@beep/schema/Toml";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, O, Str } from "@beep/utils";
 import { Console, Crypto, Effect, Encoding, FileSystem, Order, Path, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -35,7 +36,7 @@ const SKILLS_LOCK_PATH = "skills-lock.json";
 
 const textDecoder = new TextDecoder();
 const textEncoder = new TextEncoder();
-const encodeUnknownJsonResult = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeUnknownJsonResult = Unknown.encodeUnknownResultFromJsonString;
 
 type SkillsRunMode = "write" | "check" | "dry-run";
 

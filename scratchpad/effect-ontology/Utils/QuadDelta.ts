@@ -94,7 +94,10 @@ export interface QuadDelta {
  * @category utilities
  * @since 0.0.0
  */
-export const computeQuadDelta = dual2(
+export const computeQuadDelta: {
+  (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta>;
+  (enriched: RdfStore): (original: RdfStore) => Effect.Effect<QuadDelta>;
+} = dual2(
   (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta> =>
     Effect.sync(() => {
       const originalQuads = rdfStoreAllQuads(original);

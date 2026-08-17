@@ -9,6 +9,7 @@
 
 import { SerializedEditorState } from "@beep/lexical-schema";
 import { analyzeEditorStateCompatibilityResult } from "@beep/lexical-schema/Lexical.model";
+import { Unknown } from "@beep/schema/Unknown";
 import { O } from "@beep/utils";
 import { useAtomSet } from "@effect/atom-react";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
@@ -33,7 +34,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
 const encodeEditorState = S.encodeUnknownResult(SerializedEditorState);
-const encodeJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownResultFromJsonString;
 
 interface SerializedNodeLike {
   readonly children?: ReadonlyArray<SerializedNodeLike> | undefined;

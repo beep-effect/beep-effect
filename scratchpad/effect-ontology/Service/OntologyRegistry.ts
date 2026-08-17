@@ -278,14 +278,14 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
       yield* Effect.logInfo("Loading ontology registry", { path: registryPath });
 
       const contentOpt = yield* storage
-        .get(registryPath)
+        .getOption(registryPath)
         .pipe(Effect.mapError(() => new RegistryNotFoundError(registryPath)));
 
-      if (contentOpt === undefined) {
+      if (O.isNone(contentOpt)) {
         return yield* Effect.fail(new RegistryNotFoundError(registryPath));
       }
 
-      const registry = yield* S.decodeEffect(OntologyRegistryJson)(contentOpt).pipe(
+      const registry = yield* S.decodeEffect(OntologyRegistryJson)(contentOpt.value).pipe(
         Effect.mapError((cause) => new RegistryParseError(registryPath, cause))
       );
 

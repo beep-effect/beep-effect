@@ -15,8 +15,8 @@ import { Config, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import { Command } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
+import { DatabaseReadyLive } from "../Runtime/Persistence/PostgresLayer.ts";
 import { makeLanguageModelLayer } from "../Runtime/ProductionRuntime.ts";
-import { PgDrizzleLive } from "../Runtime/Persistence/PostgresLayer.ts";
 import { ConfigServiceDefault } from "../Service/Config.ts";
 import { ContentEnrichmentAgent } from "../Service/ContentEnrichmentAgent.ts";
 import { ImageExtractor } from "../Service/ImageExtractor.ts";
@@ -68,7 +68,7 @@ const rootCommand = Command.make("effect-onto").pipe(
 const LinkIngestionLive = LinkIngestionService.Default.pipe(
   Layer.provideMerge(ContentEnrichmentAgent.Default),
   Layer.provideMerge(JinaReaderClient.Default),
-  Layer.provideMerge(PgDrizzleLive),
+  Layer.provideMerge(DatabaseReadyLive),
   Layer.provideMerge(ImageExtractor.Default),
   Layer.provideMerge(ImageFetcher.Default),
   Layer.provideMerge(ImageStore.Default),

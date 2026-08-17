@@ -566,15 +566,17 @@ describe("schema assembly", () => {
   });
 
   it("resolves exact registry keys before unique physical-name fallbacks", () => {
-    const exact = first(
+    const exactForeignKey = first(
       getTableConfig(exactKeyResolutionSchema.tables.resolution_source).foreignKeys,
       "exact-key foreign key"
-    ).reference();
+    );
+    const exact = exactForeignKey.reference();
     const physical = first(
       getTableConfig(uniquePhysicalResolutionSchema.tables.resolution_source).foreignKeys,
       "physical-name foreign key"
     ).reference();
     expect(getTableName(exact.foreignTable)).toBe("resolution_decoy");
+    expect(exactForeignKey.getName()).toBe("resolution_source_target_id_resolution_target_id_fkey");
     expect(getTableName(physical.foreignTable)).toBe("resolution_target");
   });
 

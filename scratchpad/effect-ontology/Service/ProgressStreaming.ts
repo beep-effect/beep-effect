@@ -24,7 +24,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { v4 as uuidv4 } from "uuid";
-import type { BackpressureConfigInput, ProgressEvent } from "../Contract/ProgressStreaming.ts";
+import type { BackpressureConfigInput } from "../Contract/ProgressStreaming.ts";
 import {
   BackpressureConfig,
   BackpressureWarningEvent,
@@ -36,7 +36,7 @@ import {
   ExtractionFailedEvent,
   ExtractionFailedRetryStrategy,
   ExtractionStartedEvent,
-  ProgressEventSchema,
+  ProgressEvent,
   RecoverableErrorEvent,
   RelationFoundEvent,
 } from "../Contract/ProgressStreaming.ts";
@@ -724,7 +724,7 @@ export const setPhaseProgress = dual2(
 export class BackpressureState extends S.Class<BackpressureState>($I`BackpressureState`)(
   {
     config: BackpressureConfig,
-    eventQueue: S.Array(ProgressEventSchema),
+    eventQueue: S.Array(ProgressEvent),
     lastWarnTime: S.Finite.check(
       S.isGreaterThanOrEqualTo(0, { message: "Expected a non-negative backpressure warning timestamp" })
     ),
@@ -776,6 +776,52 @@ const shouldIncludeEvent = Effect.fn("ProgressStreaming.shouldIncludeEvent")(fun
   return (yield* Random.next) < sampleRate;
 });
 
+type BackpressureOverflowContext = {
+  readonly ref: Ref.Ref<BackpressureState>;
+  readonly event: ProgressEvent;
+  readonly state: BackpressureState;
+};
+
+const backpressureOverflow = Match.type<BackpressureConfig["strategy"]>().pipe(
+  Match.when("drop_oldest", () => ({ ref, event }: BackpressureOverflowContext) =>
+    Ref.update(ref, (state) => ({
+      ...state,
+      eventQueue: [...state.eventQueue.slice(1), event],
+    })).pipe(Effect.as(O.none()))
+  ),
+  Match.when("drop_newest", () => (_context: BackpressureOverflowContext) => Effect.succeed(O.none())),
+  Match.when("block_producer", () =>
+    Effect.fn("ProgressStreaming.backpressureOverflow.blockProducer")(function* ({
+      ref,
+      event,
+      state,
+    }: BackpressureOverflowContext): Effect.fn.Return<O.Option<BackpressureWarningEvent>, ProgressStreamingError> {
+      yield* Effect.sleep(state.config.blockTimeout);
+      const afterWait = yield* Ref.get(ref);
+      if (afterWait.eventQueue.length >= state.config.maxQueueSize) {
+        return yield* ProgressStreamingError.make({
+          reason: "BackpressureTimeout",
+          message: "Backpressure timeout: client not consuming events fast enough",
+        });
+      }
+      yield* Ref.update(ref, (current) => ({
+        ...current,
+        eventQueue: [...current.eventQueue, event],
+      }));
+      return O.none();
+    })
+  ),
+  Match.when("close_stream", () => (_context: BackpressureOverflowContext) =>
+    Effect.fail(
+      ProgressStreamingError.make({
+        reason: "QueueOverflow",
+        message: "Backpressure critical: stream closed due to queue overflow",
+      })
+    )
+  ),
+  Match.exhaustive
+);
+
 /**
  * Enqueue event with backpressure handling
  *
@@ -822,41 +868,7 @@ export const enqueueEvent: {
 
     // Handle overflow
     if (ratio > 1.0) {
-      return yield* Match.value(state.config.strategy).pipe(
-        Match.when("drop_oldest", () =>
-          Ref.update(ref, (s) => ({
-            ...s,
-            eventQueue: [...s.eventQueue.slice(1), event],
-          })).pipe(Effect.as(O.none()))
-        ),
-        Match.when("drop_newest", () => Effect.succeed(O.none())),
-        Match.when("block_producer", () =>
-          Effect.gen(function* () {
-            yield* Effect.sleep(state.config.blockTimeout);
-            const afterWait = yield* Ref.get(ref);
-            if (afterWait.eventQueue.length >= state.config.maxQueueSize) {
-              return yield* ProgressStreamingError.make({
-                reason: "BackpressureTimeout",
-                message: "Backpressure timeout: client not consuming events fast enough",
-              });
-            }
-            yield* Ref.update(ref, (s) => ({
-              ...s,
-              eventQueue: [...s.eventQueue, event],
-            }));
-            return O.none();
-          })
-        ),
-        Match.when("close_stream", () =>
-          Effect.fail(
-            ProgressStreamingError.make({
-              reason: "QueueOverflow",
-              message: "Backpressure critical: stream closed due to queue overflow",
-            })
-          )
-        ),
-        Match.exhaustive
-      );
+      return yield* backpressureOverflow(state.config.strategy)({ ref, event, state });
     }
 
     // Check warning threshold

@@ -27,13 +27,12 @@ import { NomicNlpService, NomicNlpServiceLive } from "./NomicNlp.ts";
  *
  * @internal
  */
-const mapTaskType = (taskType: string): NomicTaskType =>
-  Match.value(taskType).pipe(
-    Match.when("search_query", (): NomicTaskType => "search_query"),
-    Match.when("clustering", (): NomicTaskType => "clustering"),
-    Match.when("classification", (): NomicTaskType => "classification"),
-    Match.orElse((): NomicTaskType => "search_document")
-  );
+const mapTaskType = Match.type<string>().pipe(
+  Match.when("search_query", (): NomicTaskType => "search_query"),
+  Match.when("clustering", (): NomicTaskType => "clustering"),
+  Match.when("classification", (): NomicTaskType => "classification"),
+  Match.orElse((): NomicTaskType => "search_document")
+);
 
 /**
  * Create NomicEmbeddingProvider from NomicNlpService

@@ -6,11 +6,11 @@ import {
 } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str, thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, HashMap, HashSet, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
-import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { isLabsWorkspacePath } from "../Labs/index.ts";
 import { RegistrationGeometryError } from "./RegistrationGeometry.errors.ts";
@@ -456,7 +456,7 @@ const decodedRootManifest = Effect.fn("RegistrationGeometry.decodedRootManifest"
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const content = yield* fs.readFileString(path.join(repoRoot, "package.json"));
-  const unknown = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(content).pipe(
+  const unknown = yield* Unknown.decodeEffectFromJsonString(content).pipe(
     Effect.mapError(RegistrationGeometryError.newCause("Failed to parse root package.json during E15 scanning."))
   );
   return yield* decodePackageJsonEffect(unknown).pipe(

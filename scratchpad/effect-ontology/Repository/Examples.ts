@@ -15,6 +15,7 @@ import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { Unknown } from "@beep/schema/Unknown";
 import { Context, Effect, Layer, SchemaTransformation } from "effect";
 import * as P from "effect/Predicate";
 
@@ -22,12 +23,12 @@ const $I = $ScratchpadId.create("effect-ontology/Repository/Examples");
 
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, desc, eq } from "drizzle-orm";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { SqlClient } from "effect/unstable/sql";
-import * as SqlError from "effect/unstable/sql/SqlError";
 import type { LlmExampleRow } from "./schema.ts";
-import { llmExamples } from "./schema.ts";
+import { LlmExamples, llmExamples } from "./schema.ts";
 
 // =============================================================================
 // Types
@@ -319,44 +320,6 @@ export class CreateExampleInput extends S.Class<CreateExampleInput>($I`CreateExa
  */
 export type CreateExampleInputInput = (typeof CreateExampleInput)["~type.make.in"];
 
-const PgVector = S.Finite.pipe(
-  S.Array,
-  S.fromJsonString,
-  $I.annoteSchema("PgVector", {
-    description: "PostgreSQL pgvector text decoded to a finite numeric vector.",
-  })
-);
-
-const MutablePromptMessages = PromptMessage.pipe(S.Array, S.mutable);
-
-const LlmExampleSqlRow = S.Struct({
-  id: S.String,
-  ontologyId: S.String,
-  exampleType: ExampleType,
-  source: ExampleSource,
-  inputText: S.String,
-  targetClass: S.String.pipe(S.NullOr),
-  targetPredicate: S.String.pipe(S.NullOr),
-  evidenceText: S.String.pipe(S.NullOr),
-  evidenceStartOffset: S.Int.pipe(S.NullOr),
-  evidenceEndOffset: S.Int.pipe(S.NullOr),
-  expectedOutput: S.Record(S.String, S.Unknown),
-  promptMessages: MutablePromptMessages.pipe(S.NullOr),
-  explanation: S.String.pipe(S.NullOr),
-  embedding: PgVector,
-  isNegative: S.Boolean,
-  negativePattern: S.String.pipe(S.NullOr),
-  usageCount: S.Int.pipe(S.NullOr),
-  successRate: S.String.pipe(S.NullOr),
-  createdAt: S.Date.pipe(S.NullOr),
-  createdBy: S.String.pipe(S.NullOr),
-  isActive: S.Boolean,
-}).pipe(
-  $I.annoteSchema("LlmExampleSqlRow", {
-    description: "Decoded LLM-example row returned by raw PostgreSQL queries.",
-  })
-);
-
 const ExampleCounts = S.Record(S.String, S.Int);
 
 const ExampleCountsFromNullable = ExampleCounts.pipe(
@@ -384,9 +347,18 @@ const ExampleStatsSqlRow = S.Struct({
   })
 );
 
-const decodeOneLlmExampleSqlRow = S.decodeUnknownEffect(S.Tuple([LlmExampleSqlRow]));
-const decodeScoredExampleSqlRows = S.decodeUnknownEffect(ScoredExample.pipe(S.Array, S.mutable));
-const decodeOneExampleStatsSqlRow = S.decodeUnknownEffect(S.Tuple([ExampleStatsSqlRow]));
+const normalizeDecodedRows = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
+  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause)));
+const normalizeQueryError = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
+  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+const decodeOneLlmExampleRow = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([LlmExamples.select]))(rows));
+const decodeLlmExampleRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(LlmExamples.select.pipe(S.Array, S.mutable))(rows));
+const decodeScoredExampleSqlRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(ScoredExample.pipe(S.Array, S.mutable))(rows));
+const decodeOneExampleStatsSqlRow = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([ExampleStatsSqlRow]))(rows));
 
 // =============================================================================
 // Service
@@ -420,17 +392,17 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
      */
     const create = Effect.fn(function* (
       input: CreateExampleInputInput
-    ): Effect.fn.Return<LlmExampleRow, SqlError.SqlError | S.SchemaError> {
+    ): Effect.fn.Return<LlmExampleRow, DrizzleError | S.SchemaError> {
       const resolvedInput = CreateExampleInput.make(input);
       const vectorStr = formatVector(resolvedInput.embedding);
-      const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+      const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
       const expectedOutputJson = yield* encodeJson(resolvedInput.expectedOutput);
       const promptMessagesJson = yield* O.match(O.fromUndefinedOr(resolvedInput.promptMessages), {
         onNone: () => Effect.succeed(null),
         onSome: encodeJson,
       });
 
-      const result = yield* sql`
+      const result = yield* normalizeQueryError(sql`
           INSERT INTO llm_examples (
             ontology_id, example_type, source,
             input_text, target_class, target_predicate,
@@ -477,8 +449,8 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
                     created_at as "createdAt",
                     created_by as "createdBy",
                     is_active as "isActive"
-        `;
-      const [row] = yield* decodeOneLlmExampleSqlRow(result);
+        `);
+      const [row] = yield* decodeOneLlmExampleRow(result);
       return row;
     });
 
@@ -491,13 +463,10 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
      */
     const getById = (id: ExampleId): Effect.Effect<O.Option<LlmExampleRow>, DrizzleError> =>
       Effect.gen(function* () {
-        const [result] = yield* drizzle
-          .select()
-          .from(llmExamples)
-          .where(eq(llmExamples.id, id))
-          .limit(1)
-          .pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
-        return O.fromNullishOr(result);
+        const rows = yield* normalizeQueryError(
+          drizzle.select().from(llmExamples).where(eq(llmExamples.id, id)).limit(1)
+        );
+        return A.head(yield* decodeLlmExampleRows(rows));
       });
 
     /**
@@ -507,7 +476,7 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
       ontologyId: string,
       embedding: ReadonlyArray<number>,
       options: ExampleRetrievalOptionsInput = {}
-    ): Effect.Effect<Array<ScoredExample>, SqlError.SqlError> =>
+    ): Effect.Effect<Array<ScoredExample>, DrizzleError> =>
       Effect.gen(function* () {
         const { includeNegatives, k, minSimilarity, targetClass, targetPredicate } =
           ExampleRetrievalOptions.make(options);
@@ -521,7 +490,7 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
           ...(P.isNotUndefined(targetClass) ? [sql`target_class = ${targetClass}`] : []),
           ...(P.isNotUndefined(targetPredicate) ? [sql`target_predicate = ${targetPredicate}`] : []),
         ];
-        const results = yield* sql`
+        const results = yield* normalizeQueryError(sql`
           SELECT id,
                  ontology_id as "ontologyId",
                  example_type as "exampleType",
@@ -536,9 +505,9 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
           WHERE ${sql.and(conditions)}
           ORDER BY embedding <=> ${vectorStr}::vector
           LIMIT ${k}
-        `;
+        `);
         return yield* decodeScoredExampleSqlRows(results);
-      }).pipe(Effect.mapError((cause) => toSqlError("ExamplesRepository.findSimilar", cause)));
+      });
 
     /**
      * Find negative examples using lexical search (for pattern matching)
@@ -547,10 +516,10 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
       ontologyId: string,
       queryText: string,
       k: number = 5
-    ): Effect.Effect<Array<ScoredExample>, SqlError.SqlError> =>
+    ): Effect.Effect<Array<ScoredExample>, DrizzleError> =>
       Effect.gen(function* () {
         // Use trigram similarity for fuzzy matching
-        const results = yield* sql`
+        const results = yield* normalizeQueryError(sql`
           SELECT
             id, ontology_id as "ontologyId", example_type as "exampleType",
             input_text as "inputText", expected_output as "expectedOutput",
@@ -564,9 +533,9 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
             AND similarity(input_text, ${queryText}) > 0.1
           ORDER BY similarity(input_text, ${queryText}) DESC
           LIMIT ${k}
-        `;
+        `);
         return yield* decodeScoredExampleSqlRows(results);
-      }).pipe(Effect.mapError((cause) => toSqlError("ExamplesRepository.findNegatives", cause)));
+      });
 
     /**
      * Get examples by type for an ontology
@@ -576,19 +545,20 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
       exampleType: ExampleType,
       limit: number = 100
     ): Effect.Effect<Array<LlmExampleRow>, DrizzleError> =>
-      drizzle
-        .select()
-        .from(llmExamples)
-        .where(
-          and(
-            eq(llmExamples.ontologyId, ontologyId),
-            eq(llmExamples.exampleType, exampleType),
-            eq(llmExamples.isActive, true)
+      normalizeQueryError(
+        drizzle
+          .select()
+          .from(llmExamples)
+          .where(
+            and(
+              eq(llmExamples.ontologyId, ontologyId),
+              eq(llmExamples.exampleType, exampleType),
+              eq(llmExamples.isActive, true)
+            )
           )
-        )
-        .orderBy(desc(llmExamples.usageCount))
-        .limit(limit)
-        .pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+          .orderBy(desc(llmExamples.usageCount))
+          .limit(limit)
+      ).pipe(Effect.flatMap(decodeLlmExampleRows));
 
     // -------------------------------------------------------------------------
     // Update Operations
@@ -597,8 +567,9 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
     /**
      * Record example usage and update success rate
      */
-    const recordUsage = (id: ExampleId, wasSuccessful: boolean): Effect.Effect<void, SqlError.SqlError> =>
-      Effect.asVoid(sql`
+    const recordUsage = (id: ExampleId, wasSuccessful: boolean): Effect.Effect<void, DrizzleError> =>
+      Effect.asVoid(
+        normalizeQueryError(sql`
           UPDATE llm_examples
           SET
             usage_count = usage_count + 1,
@@ -607,7 +578,8 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
               ELSE (success_rate * usage_count + ${wasSuccessful ? 1 : 0}) / (usage_count + 1)
             END
           WHERE id = ${id}
-        `);
+        `)
+      );
 
     /**
      * Deactivate an example (soft delete)
@@ -638,10 +610,10 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
         negativeCount: number;
         avgSuccessRate: number | null;
       },
-      SqlError.SqlError
+      DrizzleError
     > =>
       Effect.gen(function* () {
-        const result = yield* sql`
+        const result = yield* normalizeQueryError(sql`
           SELECT
             COUNT(*)::int as total,
             COUNT(*) FILTER (WHERE is_negative)::int as "negativeCount",
@@ -657,10 +629,10 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
             ) as "byType"
           FROM llm_examples
           WHERE ontology_id = ${ontologyId} AND is_active = true
-        `;
+        `);
         const [row] = yield* decodeOneExampleStatsSqlRow(result);
         return row;
-      }).pipe(Effect.mapError((cause) => toSqlError("ExamplesRepository.getStats", cause)));
+      });
 
     return {
       create,
@@ -685,13 +657,5 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
  * Format a vector array as PostgreSQL vector literal
  */
 function formatVector(vector: ReadonlyArray<number>): string {
-  return `[${vector.join(",")}]`;
-}
-
-function toSqlError(operation: string, cause: unknown): SqlError.SqlError {
-  return SqlError.isSqlError(cause)
-    ? cause
-    : SqlError.SqlError.make({
-        reason: SqlError.UnknownError.make({ cause, operation }),
-      });
+  return `[${A.join(A.map(vector, globalThis.String), ",")}]`;
 }

@@ -86,6 +86,12 @@ const generateBatchId = randomIdFragment.pipe(Effect.map((fragment) => BatchId.m
 
 const generateDocumentId = randomIdFragment.pipe(Effect.map((fragment) => DocumentId.make(`doc-${fragment}`)));
 
+const OntologyScopeQuery = S.Struct({ ontologyId: S.NonEmptyString }).annotate({
+  identifier: "OntologyScopeQuery",
+  title: "Ontology Scope Query",
+  description: "Required ontology scope for repository-backed HTTP lookups.",
+});
+
 const createManifest = Effect.fn(function* (request: BatchRequest) {
   const storage = yield* StorageService;
   const now = yield* DateTime.now;
@@ -194,7 +200,7 @@ const claimRowToClaimWithRank = Effect.fn(function* (claim: ClaimRow, article: A
   const now = yield* DateTime.now;
   const subject = yield* S.decodeEffect(IRI)(claim.subjectIri);
   const predicate = yield* S.decodeEffect(IRI)(claim.predicateIri);
-  const rank = yield* S.decodeUnknownEffect(ClaimRank)(claim.rank);
+  const rank = yield* S.decodeEffect(ClaimRank)(claim.rank);
   const source = yield* articleRowToArticleSummary(article);
   const object =
     claim.objectType === "iri"
@@ -280,15 +286,14 @@ export const TimelineRouter = HttpRouter.addAll([
         );
       }
       const decodedIri = yield* S.decodeEffect(IRI)(decodeURIComponent(iri));
-      const queryParams = yield* HttpServerRequest.schemaSearchParams(TimelineEntityQuery).pipe(
-        Effect.orElseSucceed(() => TimelineEntityQuery.make({}))
-      );
+      const queryParams = yield* HttpServerRequest.schemaSearchParams(TimelineEntityQuery);
 
       const claimRepo = yield* ClaimRepository;
       const articleRepo = yield* ArticleRepository;
 
       // Get claims for this entity
       const claims = yield* claimRepo.getClaims({
+        ontologyId: queryParams.ontologyId,
         subjectIri: decodedIri,
         includeDeprecated: queryParams.includeDeprecated,
         limit: 100,
@@ -298,7 +303,7 @@ export const TimelineRouter = HttpRouter.addAll([
       const claimsWithArticles = yield* Effect.forEach(
         claims,
         Effect.fn(function* (claim) {
-          const articleOpt = yield* articleRepo.getArticle(claim.articleId);
+          const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
           if (O.isNone(articleOpt)) {
             return O.none<ClaimWithRank>();
           }
@@ -336,9 +341,7 @@ export const TimelineRouter = HttpRouter.addAll([
     "GET",
     "/v1/timeline/claims",
     Effect.gen(function* () {
-      const queryParams = yield* HttpServerRequest.schemaSearchParams(TimelineClaimsQuery).pipe(
-        Effect.orElseSucceed(() => TimelineClaimsQuery.make({}))
-      );
+      const queryParams = yield* HttpServerRequest.schemaSearchParams(TimelineClaimsQuery);
 
       const claimRepo = yield* ClaimRepository;
       const articleRepo = yield* ArticleRepository;
@@ -348,6 +351,7 @@ export const TimelineRouter = HttpRouter.addAll([
 
       // Get claims with filters
       const claims = yield* claimRepo.getClaims({
+        ontologyId: queryParams.ontologyId,
         ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
         ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
         ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
@@ -362,7 +366,7 @@ export const TimelineRouter = HttpRouter.addAll([
       const claimsWithArticles = yield* Effect.forEach(
         claimResults,
         Effect.fn(function* (claim) {
-          const articleOpt = yield* articleRepo.getArticle(claim.articleId);
+          const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
           if (O.isNone(articleOpt)) {
             return O.none<ClaimWithRank>();
           }
@@ -378,6 +382,7 @@ export const TimelineRouter = HttpRouter.addAll([
 
       // Get total count
       const total = yield* claimRepo.countClaims({
+        ontologyId: queryParams.ontologyId,
         ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
         ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
         ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
@@ -410,9 +415,10 @@ export const TimelineRouter = HttpRouter.addAll([
 
       const articleRepo = yield* ArticleRepository;
       const claimRepo = yield* ClaimRepository;
+      const queryParams = yield* HttpServerRequest.schemaSearchParams(OntologyScopeQuery);
 
       // Get article
-      const articleOpt = yield* articleRepo.getArticle(articleId);
+      const articleOpt = yield* articleRepo.getArticle(articleId, queryParams.ontologyId);
       if (O.isNone(articleOpt)) {
         return yield* HttpServerResponse.json(
           {
@@ -425,7 +431,7 @@ export const TimelineRouter = HttpRouter.addAll([
       const article = articleOpt.value;
 
       // Get all claims for this article
-      const claims = yield* claimRepo.getClaimsByArticle(articleId);
+      const claims = yield* claimRepo.getClaimsByArticle(articleId, queryParams.ontologyId);
 
       // Transform claims
       const claimsWithRank = yield* Effect.forEach(claims, (claim) => claimRowToClaimWithRank(claim, article));
@@ -506,6 +512,7 @@ export const SearchRouter = HttpRouter.addAll([
           // Note: Full-text search would require pg_trgm or ts_vector
           // For now, we do a simple query and filter in memory
           const claims = yield* claimRepo.getClaims({
+            ontologyId: request.ontologyId,
             ...(O.isSome(request.rank) ? { rank: request.rank.value } : {}),
             includeDeprecated: false,
           });
@@ -521,7 +528,7 @@ export const SearchRouter = HttpRouter.addAll([
 
           const claimsWithArticles = yield* Effect.forEach(predicateMatched, (claim) =>
             Effect.gen(function* () {
-              const articleOpt = yield* articleRepo.getArticle(claim.articleId);
+              const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
               if (O.isNone(articleOpt)) {
                 return O.none<ClaimWithRank>();
               }
@@ -584,6 +591,7 @@ export const SearchRouter = HttpRouter.addAll([
 
           // Get all claims to find unique subjects
           const claims = yield* claimRepo.getClaims({
+            ontologyId: request.ontologyId,
             includeDeprecated: false,
             limit: 1000,
           });
@@ -678,6 +686,7 @@ export const SearchRouter = HttpRouter.addAll([
 
       // Get claims and extract unique subjects
       const claims = yield* claimRepo.getClaims({
+        ontologyId: queryParams.ontologyId,
         includeDeprecated: false,
         limit: 500,
       });
@@ -741,6 +750,7 @@ export const SearchRouter = HttpRouter.addAll([
 
           // Get articles with filters
           const articles = yield* articleRepo.getArticles({
+            ontologyId: request.ontologyId,
             ...(O.isSome(request.dateRange)
               ? {
                   publishedAfter: DateTime.toDateUtc(request.dateRange.value.from),
@@ -774,6 +784,7 @@ export const SearchRouter = HttpRouter.addAll([
             page,
             Effect.fn(function* (article) {
               const claims = yield* claimRepo.getClaims({
+                ontologyId: request.ontologyId,
                 articleId: article.id,
                 includeDeprecated: true,
               });
@@ -1028,7 +1039,7 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
         middleware: (app) =>
           app.pipe(
             Effect.catchCause(
-              Effect.fn(function* (cause) {
+              Effect.fnUntraced(function* (cause) {
                 const requestId = Math.abs(yield* Random.nextInt).toString(16);
 
                 yield* Effect.logError("Unhandled error in HTTP handler", {

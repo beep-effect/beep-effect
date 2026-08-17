@@ -7,7 +7,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { Formatter, HashSet, Inspectable, pipe, SchemaIssue } from "effect";
+import { Formatter, HashSet, Inspectable, pipe, flow, SchemaIssue } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -102,13 +102,10 @@ export class Violation extends S.Class<Violation>($I`Violation`)(
 export const extractViolations = (error: S.SchemaError): ReadonlyArray<Violation> =>
   A.map(formatStandardIssue(error.issue).issues, (issue) =>
     Violation.make({
-      path:
-        issue.path === undefined
-          ? "root"
-          : A.join(
-              A.map(issue.path, (segment) => Formatter.format(segment)),
-              "."
-            ),
+      path: O.match(O.fromUndefinedOr(issue.path), {
+        onNone: () => "root",
+        onSome: (path) => A.join(A.map(path, (segment) => Formatter.format(segment)), "."),
+      }),
       message: issue.message,
     })
   );
@@ -221,9 +218,8 @@ export const generateFeedback = dual2((error: S.SchemaError, ruleSet: RuleSet): 
     extractViolations(error),
     A.match({
       onEmpty: () => "Validation failed. Please check the output format.",
-      onNonEmpty: (violations) =>
-        pipe(
-          violations,
+      onNonEmpty:
+        flow(
           A.map((violation) =>
             pipe(
               findMatchingRule(violation, ruleSet),

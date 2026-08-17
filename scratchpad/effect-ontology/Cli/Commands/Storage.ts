@@ -36,12 +36,12 @@ const listHandler = Effect.fn("listHandler")(function* (prefix: O.Option<string>
   yield* Console.log(`Listing: ${effectivePrefix || "(root)"}`);
   yield* Console.log("");
   const items = yield* storage.list(effectivePrefix);
-  if (items.length === 0) {
+  if (A.isReadonlyArrayEmpty(items)) {
     yield* Console.log("(empty)");
     return;
   }
   const dirs = MutableHashSet.empty<string>();
-  const files: Array<string> = [];
+  const files = A.empty<string>()
   for (const item of items) {
     const relativePath = P.isTruthy(effectivePrefix)
       ? Str.replace(/^\//, "")(Str.replace(effectivePrefix, "")(item))
@@ -80,12 +80,12 @@ const catLinesOption = Options.integer("lines").pipe(
 
 const catHandler = Effect.fn("catHandler")(function* (path: string, lines: number) {
   const storage = yield* StorageService;
-  const contentOpt = yield* storage.get(path);
-  if (contentOpt === undefined) {
+  const contentOpt = yield* storage.getOption(path);
+  if (O.isNone(contentOpt)) {
     yield* Console.error(`Not found: ${path}`);
     return;
   }
-  let content = contentOpt;
+  let content = contentOpt.value;
   if (lines > 0) {
     content = A.join(A.take(Str.split("\n")(content), lines), "\n");
   }
@@ -111,9 +111,9 @@ const batchesHandler = Effect.fn("batchesHandler")(function* () {
     return;
   }
   for (const manifestPath of manifestPaths) {
-    const contentOpt = yield* storage.get(manifestPath);
-    if (contentOpt !== undefined) {
-      const manifest = BatchManifest.decodeOptionString(contentOpt);
+    const contentOpt = yield* storage.getOption(manifestPath);
+    if (O.isSome(contentOpt)) {
+      const manifest = BatchManifest.decodeOptionString(contentOpt.value);
       yield* O.match(manifest, {
         onNone: () => Console.log(`📦 ${manifestPath} (invalid manifest)`).pipe(Effect.andThen(Console.log(""))),
         onSome: (value) =>
@@ -141,8 +141,8 @@ const infoHandler = Effect.fn("infoHandler")(function* () {
   yield* Console.log("");
   const size = yield* storage.size;
   yield* Console.log(`  Total size: ${formatBytes(size)}`);
-  const hasGcsMarker = yield* storage.get(".gcs-marker").pipe(
-    Effect.map(P.isNotUndefined),
+  const hasGcsMarker = yield* storage.getOption(".gcs-marker").pipe(
+    Effect.map(O.isSome),
     Effect.orElseSucceed(() => false)
   );
   yield* Console.log(`  Type: ${P.isTruthy(hasGcsMarker) ? "GCS" : "Local/Memory"}`);

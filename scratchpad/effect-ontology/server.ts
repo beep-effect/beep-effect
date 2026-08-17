@@ -15,15 +15,11 @@
  * @since 0.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity";
 import { BunHttpServer, BunRuntime, BunServices } from "@effect/platform-bun";
-import { Cause, Config, Effect, Layer, Schedule } from "effect";
+import { Cause, Config, Effect, Layer } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { ClusterWorkflowEngine, SingleRunner } from "effect/unstable/cluster";
-import { SqlClient } from "effect/unstable/sql/SqlClient";
 import { WorkflowEngine } from "effect/unstable/workflow";
-import { ErrorMessage, OptionalErrorCause } from "./Domain/Error/Base.ts";
 import { ArticleRepository } from "./Repository/Article.ts";
 import { CachedArticleRepository } from "./Repository/CachedArticle.ts";
 import { CachedClaimRepository } from "./Repository/CachedClaim.ts";
@@ -33,8 +29,7 @@ import { EventBroadcastHubLive } from "./Runtime/EventBroadcastRouter.ts";
 import { HealthCheckService } from "./Runtime/HealthCheck.ts";
 import { HttpServerLive, HttpServerWithoutRepositoriesLive } from "./Runtime/HttpServer.ts";
 import { InferenceJobStoreLive } from "./Runtime/InferenceRouter.ts";
-import { migrateOnBoot } from "./Runtime/Persistence/MigrationRunner.ts";
-import { PgClientLive, PgDrizzleLive } from "./Runtime/Persistence/PostgresLayer.ts";
+import { DatabaseReadyLive, PgClientLive } from "./Runtime/Persistence/PostgresLayer.ts";
 import { ShutdownService } from "./Runtime/Shutdown.ts";
 import { ActivityDependenciesLayer, WorkflowOrchestratorFullLayer } from "./Runtime/WorkflowLayers.ts";
 import { BatchStateHubLayer, BatchStatePersistenceLayer } from "./Service/BatchState.ts";
@@ -50,8 +45,6 @@ import { ImageStore } from "./Service/ImageStore.ts";
 import { JinaReaderClient } from "./Service/JinaReaderClient.ts";
 import { LinkIngestionService } from "./Service/LinkIngestionService.ts";
 import { TicketService } from "./Service/Ticket.ts";
-
-const $I = $ScratchpadId.create("effect-ontology/server");
 
 // Load port from environment
 const port = Effect.runSync(Config.number("PORT").pipe(Config.withDefault(8080)));
@@ -82,54 +75,6 @@ const ClusterWorkflowEngineLive = ClusterWorkflowEngine.layer.pipe(
 // - Without: Use in-memory engine (development only, no crash recovery)
 const WorkflowEngineLive = usePostgres ? ClusterWorkflowEngineLive : WorkflowEngine.layerMemory;
 
-class ServerStartupError extends S.TaggedError<ServerStartupError>($I`ServerStartupError`)(
-  "ServerStartupError",
-  {
-    message: ErrorMessage.annotateKey({
-      description: "Human-readable server startup failure diagnostic.",
-    }),
-    cause: OptionalErrorCause.annotateKey({
-      description: "Optional defect that prevented the server from starting.",
-    }),
-  },
-  $I.annote("ServerStartupError", {
-    description: "Failure raised when database readiness or migration blocks server startup.",
-  })
-) {}
-
-// Database readiness check - verifies PostgreSQL is accessible before starting
-// Retries with exponential backoff to handle slow database startup
-const checkDatabaseReady = Effect.gen(function* () {
-  const sql = yield* SqlClient;
-  yield* sql`SELECT 1`;
-  yield* Effect.logInfo("PostgreSQL connection verified");
-}).pipe(
-  Effect.retry(Schedule.max([Schedule.exponential("500 millis"), Schedule.recurs(5)]).pipe(Schedule.jittered)),
-  Effect.timeout("30 seconds"),
-  Effect.tapError((error) => Effect.logError("PostgreSQL connection failed", { error: String(error) })),
-  Effect.mapError((cause) =>
-    ServerStartupError.make({
-      message: `Database not ready after retries: ${String(cause)}`,
-      cause: O.some(cause),
-    })
-  )
-);
-
-// Run database migrations at startup
-const runMigrations = Effect.gen(function* () {
-  yield* migrateOnBoot.pipe(
-    Effect.mapError((cause) =>
-      ServerStartupError.make({
-        message: "Effect ontology database migration failed.",
-        cause: O.some(cause),
-      })
-    )
-  );
-  yield* Effect.logInfo("Effect ontology migrations are current");
-});
-
-const DatabaseStartupLive = PgDrizzleLive;
-
 // Pre-compose WorkflowOrchestrator with all its dependencies
 // Workflow layer has dependencies provided before construction (see WorkflowLayers)
 const WorkflowOrchestratorWithDependencies = WorkflowOrchestratorFullLayer.pipe(
@@ -159,7 +104,7 @@ const HealthCheckWithDeps = HealthCheckService.Default.pipe(
 // PgDrizzle layer provides drizzle ORM access over PgClient
 // Base repositories bundle - ClaimRepository + ArticleRepository
 const BaseRepositoriesLayer = Layer.mergeAll(ClaimRepository.Default, ArticleRepository.Default).pipe(
-  Layer.provideMerge(PgDrizzleLive)
+  Layer.provideMerge(DatabaseReadyLive)
 );
 
 // Cached repositories layer (wraps base repositories with Effect.Cache)
@@ -192,7 +137,7 @@ const PostgresLinkIngestionLayer = LinkIngestionService.Default.pipe(
   Layer.provideMerge(ImageExtractor.Default),
   Layer.provideMerge(ImageFetcher.Default),
   Layer.provideMerge(ImageServicesLayer),
-  Layer.provideMerge(PgDrizzleLive)
+  Layer.provideMerge(DatabaseReadyLive)
 );
 
 const LinkIngestionLayer = usePostgres ? PostgresLinkIngestionLayer : LinkIngestionService.Disabled;
@@ -259,13 +204,6 @@ const server = Effect.gen(function* () {
   );
   if (usePostgres) {
     yield* Effect.logInfo(`Repository caching: ${useCaching ? "enabled" : "disabled"}`);
-  }
-
-  // Verify database connectivity and run migrations (if PostgreSQL is configured)
-  if (usePostgres) {
-    const databaseContext = yield* Layer.build(DatabaseStartupLive);
-    yield* checkDatabaseReady.pipe(Effect.provide(databaseContext));
-    yield* runMigrations.pipe(Effect.provide(databaseContext));
   }
 
   // Warm up caches from GCS (runs in background, doesn't block startup)

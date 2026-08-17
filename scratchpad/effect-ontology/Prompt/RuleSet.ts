@@ -11,6 +11,8 @@ import { SchemaUtils } from "@beep/schema";
 import { HashMap, Match, pipe, Result, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
@@ -277,12 +279,14 @@ export class RuleSet extends S.Class<RuleSet>($I`RuleSet`)(
    * @returns Result produced by this operation.
    */
   getRulesByCategory(category: RuleCategory): ReadonlyArray<ExtractionRule> {
-    return A.filter(this.allRules, (rule) => rule.category === category);
+    return A.filter(this.allRules, P.Struct({
+      category: Eq.equals(category)
+    }));
   }
 }
 
 const makeExtractionRule = (input: unknown): ExtractionRule =>
-  pipe(S.decodeUnknownResult(ExtractionRule)(input), Result.getOrThrow);
+  pipe(ExtractionRule.decodeUnknownResult(input), Result.getOrThrow);
 
 const previewValues = <Value>(values: ReadonlyArray<Value>, render: (value: Value) => string): string =>
   pipe(values, A.take(5), A.map(render), A.join(", "));
@@ -379,7 +383,7 @@ export const ENTITY_STATIC_RULES: ReadonlyArray<ExtractionRule> = [
     instruction: "Map each entity to at least one ontology class from the allowed list",
     example: RuleExample.make({
       input: "Cristiano Ronaldo is a footballer",
-      output: '["http://schema.org/Person"]',
+      output: '["https://schema.org/Person"]',
       explanation: "At least one type IRI is required",
     }),
     counterExample: RuleExample.make({
@@ -403,7 +407,7 @@ export const ENTITY_STATIC_RULES: ReadonlyArray<ExtractionRule> = [
     }),
     counterExample: RuleExample.make({
       input: "Cristiano Ronaldo is a footballer",
-      output: "http://schema.org/Thing",
+      output: "https://schema.org/Thing",
       explanation: "Too generic - prefer specific type",
     }),
     schemaDescription: "Use the most specific applicable class from the ontology",

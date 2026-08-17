@@ -17,7 +17,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { OxigraphSparqlQueryServiceLive } from "@beep/oxigraph";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import type { SparqlQueryProfile } from "@beep/semantic-web/services/sparql-query";
+import type { SparqlQueryProfile, SparqlQueryResult } from "@beep/semantic-web/services/sparql-query";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
 import { Chunk, Context, DateTime, Duration, Effect, Layer, Match, MutableHashMap, Result } from "effect";
 import * as A from "effect/Array";
@@ -33,14 +33,15 @@ import type { OntologyFileNotFound, OntologyParsingFailed } from "../Domain/Erro
 import type { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Error/Rdf.ts";
 import type { ValidationPolicyError, ValidationReportError } from "../Domain/Error/Shacl.ts";
 import { ContentHash, Namespace, OntologyName } from "../Domain/Identity.ts";
-import { ChunkingConfig, LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
+import { LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
-import type { ExtractWithClaimsOptions, OntologyAgentConfig } from "../Domain/Model/OntologyAgent.ts";
+import type { ExtractWithClaimsOptions } from "../Domain/Model/OntologyAgent.ts";
 import {
   EnhancedValidationReport,
   ExtractionMetrics,
   ExtractionResult,
   ExtractWithClaimsResult,
+  OntologyAgentConfig,
   QueryBinding,
   QueryResult,
   ViolationExplanation,
@@ -175,6 +176,26 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
     const llm = yield* LanguageModel.LanguageModel;
     const storage = yield* StorageService;
 
+    const sparqlResultTriples = Match.type<SparqlQueryResult>().pipe(
+      Match.discriminatorsExhaustive("profile")({
+        select: ({ rows }) =>
+          A.flatMap(rows, (row) =>
+            A.map(R.toEntries(row), ([variable, value]) => ({
+              subject: "result",
+              predicate: variable,
+              object: value.termType === "Literal" ? value.value : extractLocalName(value.value),
+            }))
+          ),
+        construct: ({ dataset }) =>
+          A.map(dataset.quads, (quad) => ({
+            subject: extractLocalName(quad.subject.value),
+            predicate: extractLocalName(quad.predicate.value),
+            object: quad.object.termType === "Literal" ? quad.object.value : extractLocalName(quad.object.value),
+          })),
+        ask: ({ value }) => [{ subject: "query", predicate: "result", object: value ? "true" : "false" }],
+      })
+    );
+
     // Cache the parsed ontology RDF store for SHACL shape generation
     // Uses StorageService for cloud-native loading (GCS/local)
     const getOntologyStore = yield* Effect.cached(
@@ -184,7 +205,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
         yield* Effect.logDebug("Loading ontology for SHACL shapes", { ontologyPath });
 
         // Load from storage (GCS or local filesystem via StorageService)
-        const contentOpt = yield* storage.get(ontologyPath).pipe(
+        const contentOpt = yield* storage.getOption(ontologyPath).pipe(
           Effect.mapError((cause) =>
             OntologyAgentError.make({
               operation: "loadOntology",
@@ -194,7 +215,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           )
         );
 
-        if (contentOpt === undefined) {
+        if (O.isNone(contentOpt)) {
           return yield* OntologyAgentError.make({
             operation: "loadOntology",
             message: `Ontology file not found at ${ontologyPath}`,
@@ -202,7 +223,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
         }
 
         // Parse Turtle to RDF store
-        const ontologyStore = yield* rdfBuilder.parseTurtle(contentOpt).pipe(
+        const ontologyStore = yield* rdfBuilder.parseTurtle(contentOpt.value).pipe(
           Effect.mapError((cause) =>
             OntologyAgentError.make({
               operation: "parseOntology",
@@ -939,29 +960,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           });
           const triplesForLlm = yield* Result.match(execution, {
             onFailure: fallbackTriples,
-            onSuccess: (result) =>
-              Effect.succeed(
-                Match.value(result).pipe(
-                  Match.discriminatorsExhaustive("profile")({
-                    select: ({ rows }) =>
-                      A.flatMap(rows, (row) =>
-                        A.map(R.toEntries(row), ([variable, value]) => ({
-                          subject: "result",
-                          predicate: variable,
-                          object: value.termType === "Literal" ? value.value : extractLocalName(value.value),
-                        }))
-                      ),
-                    construct: ({ dataset }) =>
-                      A.map(dataset.quads, (quad) => ({
-                        subject: extractLocalName(quad.subject.value),
-                        predicate: extractLocalName(quad.predicate.value),
-                        object:
-                          quad.object.termType === "Literal" ? quad.object.value : extractLocalName(quad.object.value),
-                      })),
-                    ask: ({ value }) => [{ subject: "query", predicate: "result", object: value ? "true" : "false" }],
-                  })
-                )
-              ),
+            onSuccess: (result) => Effect.succeed(sparqlResultTriples(result)),
           });
 
           yield* Effect.logDebug("SPARQL execution complete", {
@@ -1166,29 +1165,14 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
  */
 const buildRunConfig = (configService: AppConfig, agentConfig?: OntologyAgentConfig): Effect.Effect<RunConfig> =>
   Effect.sync(() => {
-    // Build ontology ref from path or use provided
-    // Use branded type constructors for identity types
-    const ontologyRef =
-      agentConfig === undefined
-        ? OntologyRef.make({
-            namespace: Namespace.make("default"),
-            name: OntologyName.make("ontology"),
-            contentHash: ContentHash.make(Str.repeat(64)("0")),
-          })
-        : O.getOrElse(agentConfig.ontology, () =>
-            OntologyRef.make({
-              namespace: Namespace.make("default"),
-              name: OntologyName.make("ontology"),
-              contentHash: ContentHash.make(Str.repeat(64)("0")),
-            })
-          );
-
-    // Build chunking config
-    const chunkingConfig = ChunkingConfig.make({
-      maxChunkSize: PosInt.make(agentConfig?.chunking.maxChunkSize ?? 2000),
-      preserveSentences: agentConfig?.chunking.preserveSentences ?? true,
-      overlapTokens: NonNegativeInt.make(50),
-    });
+    const resolvedAgentConfig = O.getOrElse(O.fromUndefinedOr(agentConfig), OntologyAgentConfig.default);
+    const ontologyRef = O.getOrElse(resolvedAgentConfig.ontology, () =>
+      OntologyRef.make({
+        namespace: Namespace.make("default"),
+        name: OntologyName.make("ontology"),
+        contentHash: ContentHash.make(Str.repeat(64)("0")),
+      })
+    );
 
     // Build LLM config from service config
     const llmConfig = LlmConfig.make({
@@ -1200,9 +1184,9 @@ const buildRunConfig = (configService: AppConfig, agentConfig?: OntologyAgentCon
 
     return RunConfig.make({
       ontology: ontologyRef,
-      chunking: chunkingConfig,
+      chunking: resolvedAgentConfig.chunking,
       llm: llmConfig,
-      concurrency: PosInt.make(agentConfig?.concurrency ?? 4),
+      concurrency: resolvedAgentConfig.concurrency,
       enableGrounding: true,
     });
   });
@@ -1243,26 +1227,39 @@ const generateCorrectionSuggestion = (violation: ShaclValidationViolation): stri
  *
  * Categorizes SHACL violations into violations (critical), warnings, and info.
  */
+type GroupedViolations = {
+  readonly violations: ReadonlyArray<string>;
+  readonly warnings: ReadonlyArray<string>;
+  readonly info: ReadonlyArray<string>;
+};
+
+const appendViolationBySeverity = Match.type<ShaclValidationViolation["severity"]>().pipe(
+  Match.when("violation", () => (byLevel: GroupedViolations, message: string) => ({
+    ...byLevel,
+    violations: A.append(byLevel.violations, message),
+  })),
+  Match.when("warning", () => (byLevel: GroupedViolations, message: string) => ({
+    ...byLevel,
+    warnings: A.append(byLevel.warnings, message),
+  })),
+  Match.when("info", () => (byLevel: GroupedViolations, message: string) => ({
+    ...byLevel,
+    info: A.append(byLevel.info, message),
+  })),
+  Match.exhaustive
+);
+
 const groupViolationsBySeverity = Effect.fn("OntologyAgent.groupViolationsBySeverity")(function* (
   violations: ReadonlyArray<ShaclValidationViolation>
 ) {
-  const grouped = A.reduce<
-    ShaclValidationViolation,
-    {
-      readonly violations: ReadonlyArray<string>;
-      readonly warnings: ReadonlyArray<string>;
-      readonly info: ReadonlyArray<string>;
-    }
-  >(violations, { violations: A.empty(), warnings: A.empty(), info: A.empty() }, (byLevel, violation) => {
+  const grouped = A.reduce<ShaclValidationViolation, GroupedViolations>(
+    violations,
+    { violations: A.empty(), warnings: A.empty(), info: A.empty() },
+    (byLevel, violation) => {
     const message = formatViolationExplanation(violation);
-
-    return Match.value(violation.severity).pipe(
-      Match.when("violation", () => ({ ...byLevel, violations: A.append(byLevel.violations, message) })),
-      Match.when("warning", () => ({ ...byLevel, warnings: A.append(byLevel.warnings, message) })),
-      Match.when("info", () => ({ ...byLevel, info: A.append(byLevel.info, message) })),
-      Match.exhaustive
-    );
-  });
+      return appendViolationBySeverity(violation.severity)(byLevel, message);
+    }
+  );
 
   return yield* decodeAgentModel(ViolationsByLevel, grouped, "grouped validation violations");
 });

@@ -10,9 +10,9 @@
  * @since 0.0.0
  */
 
-import { makeNamedNode } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
+import { SCHEMA_NAME } from "@beep/rdf/Vocab/SchemaOrg";
 import { Chunk, Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -23,8 +23,6 @@ import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
-
-const SCHEMA_NAME = makeNamedNode("http://schema.org/name");
 
 // =============================================================================
 // Command Options
@@ -116,26 +114,26 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     manifestData = yield* S.decodeEffect(S.fromJsonString(BatchManifest))(content);
   } else {
     const manifestKey = `batches/${batchId}/manifest.json`;
-    const contentOpt = yield* storage.get(manifestKey);
-    if (contentOpt === undefined) {
+    const contentOpt = yield* storage.getOption(manifestKey);
+    if (O.isNone(contentOpt)) {
       yield* Console.error(`Manifest not found: ${manifestKey}`);
       yield* Console.log("Use --manifest to specify a local manifest file");
       return;
     }
-    manifestData = yield* S.decodeEffect(S.fromJsonString(BatchManifest))(contentOpt);
+    manifestData = yield* S.decodeEffect(S.fromJsonString(BatchManifest))(contentOpt.value);
   }
   yield* Console.log(`Found ${manifestData.documents.length} documents in batch`);
   const allEntities: Array<ExtractedEntity> = [];
   for (const doc of manifestData.documents) {
     const graphKey = `batches/${batchId}/graphs/${doc.documentId}.ttl`;
-    const graphContentOpt = yield* storage.get(graphKey);
-    if (graphContentOpt === undefined) {
+    const graphContentOpt = yield* storage.getOption(graphKey);
+    if (O.isNone(graphContentOpt)) {
       if (verbose) {
         yield* Console.log(`  No graph found for: ${doc.documentId}`);
       }
       continue;
     }
-    const store = yield* rdf.parseTurtle(graphContentOpt);
+    const store = yield* rdf.parseTurtle(graphContentOpt.value);
     const typeQuads = yield* rdf.queryStore(store, {
       predicate: RDF_TYPE,
     });

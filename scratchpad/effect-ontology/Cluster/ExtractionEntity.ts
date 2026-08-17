@@ -19,7 +19,7 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
 import { Entity } from "effect/unstable/cluster";
 import * as Rpc from "effect/unstable/rpc/Rpc";
-import { ProgressEventSchema } from "../Contract/ProgressStreaming.ts";
+import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { Entity as DomainEntity, Relation } from "../Domain/Model/Entity.ts";
 
@@ -237,7 +237,7 @@ export type KnowledgeGraphResult = typeof KnowledgeGraphResult.Type;
  */
 export const ExtractFromTextRpc = Rpc.make("ExtractFromText", {
   payload: ExtractFromTextPayload,
-  success: ProgressEventSchema,
+  success: ProgressEvent,
   error: ExtractionError,
   stream: true,
 });

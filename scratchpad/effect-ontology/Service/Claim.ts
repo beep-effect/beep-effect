@@ -176,7 +176,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Generates a unique claim ID and persists the claim with metadata.
      */
-    const createClaim = Effect.fn(function* (input: CreateClaimInput) {
+    const createClaim = Effect.fn("ClaimService.createClaim")(function* (input: CreateClaimInput) {
       const id = yield* randomUuid;
 
       const claimRow: ClaimInsertRow = {
@@ -205,11 +205,16 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Marks the claim as deprecated and optionally links to a correction.
      */
-    const deprecateClaim = Effect.fn(function* (claimId: string, reason: string, correctionId?: string) {
+    const deprecateClaim = Effect.fn("ClaimService.deprecateClaim")(function* (
+      claimId: string,
+      ontologyId: string,
+      reason: string,
+      correctionId?: string
+    ) {
       const now = yield* DateTime.now;
 
       const resolvedCorrectionId = P.isUndefined(correctionId) ? yield* randomUuid : correctionId;
-      yield* repo.deprecateClaim(claimId, resolvedCorrectionId);
+      yield* repo.deprecateClaim(claimId, resolvedCorrectionId, ontologyId);
 
       return {
         claimId,
@@ -224,7 +229,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Sets the claim as the preferred value for its subject+predicate.
      */
-    const promoteToPreferred = (claimId: string) => repo.promoteToPreferred(claimId);
+    const promoteToPreferred = (claimId: string, ontologyId: string) => repo.promoteToPreferred(claimId, ontologyId);
 
     /**
      * Find claims that conflict with a given claim
@@ -239,13 +244,13 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Returns all claims (including deprecated) in chronological order.
      */
-    const getClaimHistory = (subjectIri: string, predicateIri: string) =>
-      repo.getClaimHistory(subjectIri, predicateIri);
+    const getClaimHistory = (subjectIri: string, predicateIri: string, ontologyId: string) =>
+      repo.getClaimHistory(subjectIri, predicateIri, ontologyId);
 
     /**
      * Get a claim by ID
      */
-    const getClaim = (claimId: string) => repo.getClaim(claimId);
+    const getClaim = (claimId: string, ontologyId: string) => repo.getClaim(claimId, ontologyId);
 
     /**
      * Query claims with filters
@@ -499,7 +504,11 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Convenience method that converts a claim to quads and adds them to a store.
      */
-    const addClaimToStore = Effect.fn(function* (_rdfStore: RdfStore, claim: ClaimRow, graphUri?: string) {
+    const addClaimToStore = Effect.fn("ClaimService.addClaimToStore")(function* (
+      _rdfStore: RdfStore,
+      claim: ClaimRow,
+      graphUri?: string
+    ) {
       // Add quads to store using low-level N3 operations
       // The RdfBuilder doesn't have a direct addQuads method, so we build manually
       return yield* toReifiedTriples(claim, graphUri);
@@ -510,7 +519,10 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
      *
      * Creates a new RDF store, adds all claims, and serializes to Turtle.
      */
-    const claimsToTurtle = Effect.fn(function* (claims: Array<ClaimRow>, graphUri?: string) {
+    const claimsToTurtle = Effect.fn("ClaimService.claimsToTurtle")(function* (
+      claims: Array<ClaimRow>,
+      graphUri?: string
+    ) {
       const store = yield* rdf.createStore;
 
       for (const claim of claims) {

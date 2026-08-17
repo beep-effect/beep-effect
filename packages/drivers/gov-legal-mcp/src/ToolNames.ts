@@ -14,6 +14,7 @@
 import { createHash } from "node:crypto";
 import { $GovLegalMcpId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { flow, HashMap, HashSet, Match, Number as N, Order, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -81,7 +82,7 @@ const NormalizedWireName = S.NonEmptyString.check(
 );
 
 const isNormalizedWireName = S.is(NormalizedWireName);
-const encodeCompactJson = S.encodeResult(S.fromJsonString(S.Unknown));
+const encodeCompactJson = Unknown.encodeResultFromJsonString;
 const encodeJsonLeaf: (value: unknown) => string = flow(encodeCompactJson, Result.getOrThrow);
 const jsonEntryOrder = Order.mapInput(Order.String, ([key]: readonly [string, unknown]) => key);
 

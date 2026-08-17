@@ -6,8 +6,7 @@ import { Effect } from "effect";
 
 describe("canonical SPARQL adapter", () => {
   it.layer(OxigraphSparqlQueryServiceLive)("with the canonical Oxigraph adapter", (it) => {
-    it.effect("returns the semantic-web ASK result contract", () =>
-      Effect.gen(function* () {
+    it.effect("returns the semantic-web ASK result contract", Effect.fnUntraced(function* () {
         const sparql = yield* SparqlQueryService;
         const result = yield* sparql.execute(
           SparqlQueryRequest.make({

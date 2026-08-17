@@ -5,9 +5,10 @@
  * @since 0.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { pipe, Result } from "effect";
+import {$ScratchpadId} from "@beep/identity";
+import {LiteralKit, SchemaUtils} from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
+import {pipe, Result} from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
@@ -16,12 +17,16 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Prompt from "effect/unstable/ai/Prompt";
-import { Entity } from "../Domain/Model/Entity.ts";
-import { ImageForPrompt } from "../Domain/Model/Image.ts";
-import { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
-import { dual2, dual3, dual4 } from "../Utils/Dual.ts";
-import type { RuleSet } from "./RuleSet.ts";
-import { makeEntityRuleSet, makeMentionRuleSet, makeRelationRuleSet } from "./RuleSet.ts";
+import {Entity} from "../Domain/Model/Entity.ts";
+import {ImageForPrompt} from "../Domain/Model/Image.ts";
+import {ClassDefinition, PropertyDefinition} from "../Domain/Model/Ontology.ts";
+import {dual2, dual3, dual4} from "../Utils/Dual.ts";
+import type {RuleSet} from "./RuleSet.ts";
+import {
+  makeEntityRuleSet,
+  makeMentionRuleSet,
+  makeRelationRuleSet
+} from "./RuleSet.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Prompt/PromptGenerator");
 
@@ -51,7 +56,7 @@ const optionText =
 const renderUnknownJson = (value: unknown): string =>
   pipe(
     value,
-    S.encodeUnknownResult(S.fromJsonString(S.Unknown)),
+    Unknown.encodeUnknownResultFromJsonString,
     Result.getOrElse(() => "null")
   );
 
@@ -249,6 +254,7 @@ const NegativeExampleOutput = S.Struct({
     })
   ),
 }).pipe(
+  SchemaUtils.withOptionCodecStatics,
   $I.annoteSchema("NegativeExampleOutput", {
     description: "Optional structured metadata carried by a negative extraction example.",
   })
@@ -761,7 +767,7 @@ const buildOutputFormatSection = (stage: "mention" | "entity" | "relation"): Pro
  * @returns Array of example messages as user/assistant turns
  */
 const buildExampleMessages = (examples: ReadonlyArray<ScoredExample>): ReadonlyArray<ExampleMessage> => {
-  const messages: Array<ExampleMessage> = [];
+  const messages = A.empty<ExampleMessage>()
 
   for (const example of examples) {
     // Skip negative examples - they go in system message
@@ -818,7 +824,7 @@ const buildNegativeExamplesSection = (examples: ReadonlyArray<ScoredExample>): P
   const lines: Array<PromptDoc> = [Doc.text("=== EXTRACTION WARNINGS (Avoid These Mistakes) ==="), Doc.empty];
 
   for (const neg of negatives) {
-    const output = S.decodeUnknownOption(NegativeExampleOutput)(neg.expectedOutput);
+    const output = NegativeExampleOutput.decodeUnknownOption(neg.expectedOutput);
 
     lines.push(Doc.text(`❌ DO NOT: ${optionText("Avoid this pattern")(neg.explanation)}`));
 
@@ -901,11 +907,9 @@ export const generateStructuredPrompt = dual3(
     const userSections = buildInputTextSection(text);
 
     const systemDoc = Doc.vsep(systemSections);
-    const userDoc = userSections;
-
     return StructuredPrompt.make({
       systemMessage: Doc.render(systemDoc, { style: "pretty", options: { lineWidth: 120 } }),
-      userMessage: Doc.render(userDoc, { style: "pretty", options: { lineWidth: 120 } }),
+      userMessage: Doc.render(userSections, { style: "pretty", options: { lineWidth: 120 } }),
     });
   }
 );
@@ -1348,14 +1352,18 @@ export const buildMultimodalUserContent = dual3(
   ): ReadonlyArray<Prompt.UserMessagePart> => {
     const parts: Array<Prompt.UserMessagePart> = [Prompt.makePart("text", { text })];
 
-    if (P.isNotUndefined(images) && images.length > 0) {
+    const availableImages = O.flatMap(
+      O.fromUndefinedOr(images),
+      A.match({ onEmpty: O.none, onNonEmpty: O.some })
+    );
+    if (O.isSome(availableImages)) {
       // Add intro text for images if provided
       if (P.isNotUndefined(imageIntro)) {
         parts.push(Prompt.makePart("text", { text: `\n\n${imageIntro}` }));
       }
 
       // Add image parts with context annotations
-      for (const img of images) {
+      for (const img of availableImages.value) {
         // Build context string from available metadata
         const contextParts = A.getSomes([img.alt, img.caption, img.context]);
         const position = O.getOrElse(img.position, () => 0);

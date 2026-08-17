@@ -18,7 +18,6 @@ import { SchemaUtils } from "@beep/schema";
 import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { EvidenceSpan as EvidenceSpanValue } from "../Domain/Model/Entity.ts";
 import { EvidenceSpan } from "../Domain/Model/Entity.ts";
@@ -177,12 +176,14 @@ export const makeRelationSchema = dual2(
 
     // Create local name schemas for each property type
     // LLM outputs local names (e.g., "playsFor") which are expanded to full IRIs post-extraction
-    const ObjectPropertyUnion =
-      objectProperties.length > 0 ? localNameSchema(asIriArray(objectProperties.map((p) => p.id)), "properties") : null;
-    const DatatypePropertyUnion =
-      datatypeProperties.length > 0
-        ? localNameSchema(asIriArray(datatypeProperties.map((p) => p.id)), "properties")
-        : null;
+    const ObjectPropertyUnion = A.match(objectProperties, {
+      onEmpty: O.none,
+      onNonEmpty: (values) => O.some(localNameSchema(asIriArray(A.map(values, (value) => value.id)), "properties")),
+    });
+    const DatatypePropertyUnion = A.match(datatypeProperties, {
+      onEmpty: O.none,
+      onNonEmpty: (values) => O.some(localNameSchema(asIriArray(A.map(values, (value) => value.id)), "properties")),
+    });
 
     // Create relation schemas discriminated by rangeType
     type RelationOutput = {
@@ -195,13 +196,13 @@ export const makeRelationSchema = dual2(
     const relationSchemas: Array<S.Codec<RelationOutput, unknown, never, never>> = [];
 
     // Object property relation schema: object must be entity ID only
-    if (P.isNotNull(ObjectPropertyUnion)) {
+    if (O.isSome(ObjectPropertyUnion)) {
       relationSchemas.push(
         S.Struct({
           subjectId: EntityIdUnion.annotate({
             description: "Subject entity ID - MUST be one of the entity IDs identified in Stage 1",
           }),
-          predicate: ObjectPropertyUnion.annotate({
+          predicate: ObjectPropertyUnion.value.annotate({
             description: "Object property name (e.g., 'playsFor') - use local name, not full URI",
           }),
           object: EntityIdUnion.annotate({
@@ -217,13 +218,13 @@ export const makeRelationSchema = dual2(
     }
 
     // Datatype property relation schema: object must be literal only (NOT entity ID)
-    if (P.isNotNull(DatatypePropertyUnion)) {
+    if (O.isSome(DatatypePropertyUnion)) {
       relationSchemas.push(
         S.Struct({
           subjectId: EntityIdUnion.annotate({
             description: "Subject entity ID - MUST be one of the entity IDs identified in Stage 1",
           }),
-          predicate: DatatypePropertyUnion.annotate({
+          predicate: DatatypePropertyUnion.value.annotate({
             description: "Datatype property name (e.g., 'hasAge') - use local name, not full URI",
           }),
           object: S.Union([
@@ -315,17 +316,17 @@ export type RelationGraphSchema = ReturnType<typeof makeRelationSchema>;
 /**
  * Describes the relation graph type data exposed by this module.
  *
- * **Example** (Reference RelationGraphType fields)
+ * **Example** (Reference RelationGraph fields)
  *
  * ```ts
- * import type { RelationGraphType } from "@effect-ontology/Schema/RelationFactory"
+ * import type { RelationGraph } from "@effect-ontology/Schema/RelationFactory"
  *
- * const relationGraphTypeFields: ReadonlyArray<keyof RelationGraphType> = ["relations"]
+ * const relationGraphFields: ReadonlyArray<keyof RelationGraph> = ["relations"]
  *
- * console.log(relationGraphTypeFields)
+ * console.log(relationGraphFields)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export type RelationGraphType = S.Schema.Type<RelationGraphSchema>;
+export type RelationGraph = S.Schema.Type<RelationGraphSchema>;

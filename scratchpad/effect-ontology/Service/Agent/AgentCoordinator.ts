@@ -770,6 +770,38 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
     /**
      * Execute pipeline based on configuration
      */
+    const executePipelineMode = Match.type<PipelineConfig["mode"]>().pipe(
+      Match.when("sequential", () => (
+        task: AgentTask,
+        _pipelineConfig: PipelineConfig,
+        agentIds: ReadonlyArray<AgentId>,
+        options: ExecutionOptions | undefined
+      ) => executeSequential(task, agentIds, options)),
+      Match.when("loop", () => (
+        task: AgentTask,
+        pipelineConfig: PipelineConfig,
+        agentIds: ReadonlyArray<AgentId>,
+        options: ExecutionOptions | undefined
+      ) => executeLoop(task, agentIds, O.getOrElse(pipelineConfig.termination, TerminationCondition.default), options)),
+      Match.when("parallel", () => (
+        task: AgentTask,
+        pipelineConfig: PipelineConfig,
+        agentIds: ReadonlyArray<AgentId>,
+        options: ExecutionOptions | undefined
+      ) =>
+        executeParallel(task, agentIds, {
+          ...options,
+          ...(O.isSome(pipelineConfig.concurrency) ? { concurrency: pipelineConfig.concurrency.value } : {}),
+        })),
+      Match.when("graph", () => (
+        task: AgentTask,
+        _pipelineConfig: PipelineConfig,
+        agentIds: ReadonlyArray<AgentId>,
+        options: ExecutionOptions | undefined
+      ) => executeSequential(task, agentIds, options)),
+      Match.exhaustive
+    );
+
     const execute = (
       task: AgentTask,
       pipelineConfig: PipelineConfig,
@@ -777,20 +809,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
     ): Effect.Effect<ExecutionResult, PipelineExecutionError> => {
       const agentIds = A.map(O.getOrElse(pipelineConfig.agentSequence, A.empty<string>), (id) => AgentId.make(id));
 
-      return Match.value(pipelineConfig.mode).pipe(
-        Match.when("sequential", () => executeSequential(task, agentIds, options)),
-        Match.when("loop", () =>
-          executeLoop(task, agentIds, O.getOrElse(pipelineConfig.termination, TerminationCondition.default), options)
-        ),
-        Match.when("parallel", () =>
-          executeParallel(task, agentIds, {
-            ...options,
-            ...(O.isSome(pipelineConfig.concurrency) ? { concurrency: pipelineConfig.concurrency.value } : {}),
-          })
-        ),
-        Match.when("graph", () => executeSequential(task, agentIds, options)),
-        Match.exhaustive
-      );
+      return executePipelineMode(pipelineConfig.mode)(task, pipelineConfig, agentIds, options);
     };
 
     /**

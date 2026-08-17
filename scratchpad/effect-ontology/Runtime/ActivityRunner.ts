@@ -14,6 +14,7 @@
  * @since 0.0.0
  */
 
+import { LiteralKit, SchemaUtils, Unknown } from "@beep/schema";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
 import { Config, Console, Effect, Layer, Match } from "effect";
 import * as S from "effect/Schema";
@@ -37,7 +38,9 @@ import { ActivityDependenciesLayer, ConfigServiceDefault, EmbeddingBundleOpen } 
 // Activity Name Schema
 // -----------------------------------------------------------------------------
 
-const ActivityName = S.Literals(["extraction", "resolution", "validation", "ingestion"]);
+const ActivityName = LiteralKit(["extraction", "resolution", "validation", "ingestion"]).pipe(
+  SchemaUtils.withEffectCodecStatics
+);
 type ActivityName = typeof ActivityName.Type;
 
 // -----------------------------------------------------------------------------
@@ -59,47 +62,41 @@ const getActivityPayload = Config.string("ACTIVITY_PAYLOAD").pipe(Config.withDef
  *
  * Schema validation happens at ingress - the decoded payload is passed directly to the activity.
  */
-const dispatchActivity = (name: ActivityName, payloadJson: string) =>
-  Match.value(name).pipe(
-    Match.when(
-      "extraction",
-      Effect.fn(function* () {
-        const payload = yield* S.decodeEffect(S.fromJsonString(ExtractionActivityInput))(payloadJson);
-        // ExtractionActivityInput has: batchId, documentId, sourceUri, ontologyUri, targetNamespace
-        // Use unified 6-phase streaming extraction activity
-        const activity = makeStreamingExtractionActivity(payload);
-        return yield* activity.execute;
-      })
-    ),
-    Match.when(
-      "resolution",
-      Effect.fn(function* () {
-        const payload = yield* S.decodeEffect(S.fromJsonString(ResolutionActivityInput))(payloadJson);
-        // ResolutionActivityInput has: batchId, documentGraphUris
-        const activity = makeResolutionActivity(payload);
-        return yield* activity.execute;
-      })
-    ),
-    Match.when(
-      "validation",
-      Effect.fn(function* () {
-        const payload = yield* S.decodeEffect(S.fromJsonString(ValidationActivityInput))(payloadJson);
-        // ValidationActivityInput has: batchId, resolvedGraphUri, shaclUri (optional)
-        const activity = makeValidationActivity(payload);
-        return yield* activity.execute;
-      })
-    ),
-    Match.when(
-      "ingestion",
-      Effect.fn(function* () {
-        const payload = yield* S.decodeEffect(S.fromJsonString(IngestionActivityInput))(payloadJson);
-        // IngestionActivityInput has: batchId, validatedGraphUri, targetNamespace
-        const activity = makeIngestionActivity(payload);
-        return yield* activity.execute;
-      })
-    ),
-    Match.exhaustive
-  );
+const runExtraction = Effect.fnUntraced(function* runExtraction(payloadJson: string) {
+  const payload = yield* ExtractionActivityInput.decodeEffectFromJsonString(payloadJson);
+  const activity = makeStreamingExtractionActivity(payload);
+  return yield* activity.execute;
+});
+
+const runResolution = Effect.fnUntraced(function* runResolution(payloadJson: string) {
+  const payload = yield* ResolutionActivityInput.decodeEffectFromJsonString(payloadJson);
+  const activity = makeResolutionActivity(payload);
+  return yield* activity.execute;
+});
+
+const runValidation = Effect.fnUntraced(function* runValidation(payloadJson: string) {
+  const payload = yield* ValidationActivityInput.decodeEffectFromJsonString(payloadJson);
+  const activity = makeValidationActivity(payload);
+  return yield* activity.execute;
+});
+
+const runIngestion = Effect.fnUntraced(function* runIngestion(payloadJson: string) {
+  const payload = yield* IngestionActivityInput.decodeEffectFromJsonString(payloadJson);
+  const activity = makeIngestionActivity(payload);
+  return yield* activity.execute;
+});
+
+const activityHandler = Match.type<ActivityName>().pipe(
+  Match.when("extraction", () => runExtraction),
+  Match.when("resolution", () => runResolution),
+  Match.when("validation", () => runValidation),
+  Match.when("ingestion", () => runIngestion),
+  Match.exhaustive
+);
+
+const dispatchActivity = Effect.fnUntraced(function* dispatchActivity(name: ActivityName, payloadJson: string) {
+  return yield* activityHandler(name)(payloadJson);
+});
 
 // -----------------------------------------------------------------------------
 // Main Entry Point
@@ -122,7 +119,7 @@ const program = Effect.gen(function* () {
   );
 
   yield* Console.log(`Activity ${activityName} completed successfully`);
-  const resultJson = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }))(result);
+  const resultJson = yield* Unknown.encodeUnknownEffectFromJsonString(result, { space: 2 });
   yield* Console.log(`Result: ${resultJson}`);
 
   return result;

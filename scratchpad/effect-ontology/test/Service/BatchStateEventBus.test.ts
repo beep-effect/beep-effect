@@ -6,16 +6,12 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { BatchId, OntologyName } from "../../Domain/Identity.ts";
-import { BackgroundJobId, PromptCacheJob } from "../../Domain/Schema/JobSchema.ts";
 import { BatchState } from "../../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../../Domain/PathLayout.ts";
+import { BackgroundJobId, PromptCacheJob } from "../../Domain/Schema/JobSchema.ts";
 import { BatchStateHub, BatchStateHubLayer, getBatchStateFromStore, publishState } from "../../Service/BatchState.ts";
 import { BatchStateBridge, BatchStateBridgeLive } from "../../Service/BatchStateBridge.ts";
-import {
-  EventBusService,
-  EventBusServiceMemory,
-  EventBusServiceSqlLive,
-} from "../../Service/EventBus.ts";
+import { EventBusService, EventBusServiceMemory, EventBusServiceSqlLive } from "../../Service/EventBus.ts";
 import { StorageService, StorageServiceTest } from "../../Service/Storage.ts";
 
 const makePendingState = Effect.fn("BatchStateEventBusTest.makePendingState")(function* (batchId: BatchId) {
@@ -97,8 +93,7 @@ const queueLifecycle = Effect.fn("BatchStateEventBusTest.queueLifecycle")(functi
 
 describe("BatchState persistence", () => {
   it.layer(StateTestLayer)("with in-memory storage", (it) => {
-    it.effect("round-trips a durable state and publishes it after persistence", () =>
-      Effect.gen(function* () {
+    it.effect("round-trips a durable state and publishes it after persistence", Effect.fnUntraced(function* () {
         const state = yield* makePendingState(BatchId.make("batch-deadbeefcafe"));
         const hub = yield* BatchStateHub;
         const subscription = yield* PubSub.subscribe(hub);
@@ -113,8 +108,7 @@ describe("BatchState persistence", () => {
       })
     );
 
-    it.effect("distinguishes corrupt durable state from an absent state", () =>
-      Effect.gen(function* () {
+    it.effect("distinguishes corrupt durable state from an absent state", Effect.fnUntraced(function* () {
         const batchId = BatchId.make("batch-feedfacecafe");
         const storage = yield* StorageService;
         yield* storage.set(PathLayout.batch.status(batchId), "not-json");
@@ -128,8 +122,7 @@ describe("BatchState persistence", () => {
   });
 
   it.layer(FailingStateTestLayer)("with failing storage", (it) => {
-    it.effect("does not publish a state that failed to persist", () =>
-      Effect.gen(function* () {
+    it.effect("does not publish a state that failed to persist", Effect.fnUntraced(function* () {
         const state = yield* makePendingState(BatchId.make("batch-cafebabefeed"));
         const hub = yield* BatchStateHub;
         const subscription = yield* PubSub.subscribe(hub);
@@ -146,8 +139,7 @@ describe("BatchState persistence", () => {
 
 describe("BatchStateBridge", () => {
   it.layer(BridgeTestLayer)("with the canonical in-memory EventBus", (it) => {
-    it.effect("publishes canonical repeated state events and tracks stream exit", () =>
-      Effect.gen(function* () {
+    it.effect("publishes canonical repeated state events and tracks stream exit", Effect.fnUntraced(function* () {
         const state = yield* makePendingState(BatchId.make("batch-acdeabcdef12"));
         const bridge = yield* BatchStateBridge;
         const hub = yield* BatchStateHub;
@@ -188,16 +180,14 @@ describe("BatchStateBridge", () => {
 
 describe("EventBus queue backend parity", () => {
   it.layer(EventBusServiceMemory)("with the memory backend", (it) => {
-    it.effect("tracks enqueue, take, and process lifecycle counts", () =>
-      Effect.gen(function* () {
+    it.effect("tracks enqueue, take, and process lifecycle counts", Effect.fnUntraced(function* () {
         assert.deepEqual(yield* queueLifecycle(), [1, 0, 1, 0]);
       })
     );
   });
 
   it.layer(SqlEventBusTestLayer)("with the SQL backend", (it) => {
-    it.effect("tracks enqueue, take, and process lifecycle counts", () =>
-      Effect.gen(function* () {
+    it.effect("tracks enqueue, take, and process lifecycle counts", Effect.fnUntraced(function* () {
         assert.deepEqual(yield* queueLifecycle(), [1, 0, 1, 0]);
       })
     );

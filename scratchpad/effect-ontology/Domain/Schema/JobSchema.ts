@@ -226,17 +226,18 @@ export const WebhookJob = BackgroundJobDefinition.cases.WebhookJob.pipe(
 /**
  * Schema for every persisted background-job variant.
  *
- * **Example** (Use BackgroundJobSchema)
+ * **Example** (Use BackgroundJob)
  * ```ts
- * import { BackgroundJobSchema } from "@effect-ontology/Schema/JobSchema"
+ * import { BackgroundJob } from "@effect-ontology/Schema/JobSchema"
  *
- * console.log(Object.keys(BackgroundJobSchema.cases).length) // 5
+ * console.log(Object.keys(BackgroundJob.cases).length) // 5
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const BackgroundJobSchema = BackgroundJobDefinition.pipe(
+export const BackgroundJob = BackgroundJobDefinition.pipe(
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("BackgroundJob", {
     description: "Tagged persisted background-job union for embedding, caching, similarity, blocking, and webhooks.",
     toArbitrary: () => S.toArbitrary(BackgroundJobDefinition),
@@ -244,7 +245,7 @@ export const BackgroundJobSchema = BackgroundJobDefinition.pipe(
 );
 
 /**
- * Runtime job decoded by {@link BackgroundJobSchema}.
+ * Runtime job decoded by {@link BackgroundJob}.
  *
  * **Example** (Use BackgroundJob)
  * ```ts
@@ -257,7 +258,7 @@ export const BackgroundJobSchema = BackgroundJobDefinition.pipe(
  * @category type-level
  * @since 0.0.0
  */
-export type BackgroundJob = typeof BackgroundJobSchema.Type;
+export type BackgroundJob = typeof BackgroundJob.Type;
 
 const JobMetadataDefinition = S.Struct({
   id: BackgroundJobId.annotateKey({
@@ -286,13 +287,13 @@ const JobMetadataDefinition = S.Struct({
 /**
  * Retry metadata stored alongside a background job.
  *
- * **Example** (Use JobMetadataSchema)
+ * **Example** (Use JobMetadata)
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { JobMetadataSchema } from "@effect-ontology/Schema/JobSchema"
+ * import { JobMetadata } from "@effect-ontology/Schema/JobSchema"
  *
- * const metadata = S.decodeUnknownOption(JobMetadataSchema)({ id: "job-abc123def456" })
+ * const metadata = S.decodeUnknownOption(JobMetadata)({ id: "job-abc123def456" })
  * console.log(O.map(metadata, (value) => value.attempts)) // Some(0)
  * ```
  *
@@ -301,7 +302,7 @@ const JobMetadataDefinition = S.Struct({
  * @category models
  * @since 0.0.0
  */
-export const JobMetadataSchema = JobMetadataDefinition.annotate({
+export const JobMetadata = JobMetadataDefinition.annotate({
   toArbitrary: () => S.toArbitrary(JobMetadataDefinition),
 }).pipe(
   $I.annoteSchema("JobMetadata", {
@@ -311,7 +312,7 @@ export const JobMetadataSchema = JobMetadataDefinition.annotate({
 );
 
 /**
- * Runtime metadata decoded by {@link JobMetadataSchema}.
+ * Runtime metadata decoded by {@link JobMetadata}.
  *
  * **Example** (Use JobMetadata)
  * ```ts
@@ -324,4 +325,4 @@ export const JobMetadataSchema = JobMetadataDefinition.annotate({
  * @category type-level
  * @since 0.0.0
  */
-export type JobMetadata = typeof JobMetadataSchema.Type;
+export type JobMetadata = typeof JobMetadata.Type;

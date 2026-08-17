@@ -16,8 +16,7 @@ import { DateTime, Effect, Match } from "effect";
 import * as S from "effect/Schema";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
-import type { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
-import { BackgroundJobSchema } from "../Domain/Schema/JobSchema.ts";
+import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/JobPushHandler");
 
@@ -43,11 +42,11 @@ const PubSubPushMessage = S.Struct({
 type PubSubPushMessage = typeof PubSubPushMessage.Type;
 
 const BackgroundJobType = S.Union([
-  BackgroundJobSchema.cases.EmbeddingJob.fields._tag,
-  BackgroundJobSchema.cases.PromptCacheJob.fields._tag,
-  BackgroundJobSchema.cases.SimilarityRecomputeJob.fields._tag,
-  BackgroundJobSchema.cases.BlockingTokenJob.fields._tag,
-  BackgroundJobSchema.cases.WebhookJob.fields._tag,
+  BackgroundJob.cases.EmbeddingJob.fields._tag,
+  BackgroundJob.cases.PromptCacheJob.fields._tag,
+  BackgroundJob.cases.SimilarityRecomputeJob.fields._tag,
+  BackgroundJob.cases.BlockingTokenJob.fields._tag,
+  BackgroundJob.cases.WebhookJob.fields._tag,
 ]);
 
 class JobProcessorNotImplementedError extends S.TaggedError<JobProcessorNotImplementedError>(
@@ -103,71 +102,79 @@ class ProcessingError extends S.TaggedError<ProcessingError>($I`ProcessingError`
  *
  * @since 0.0.0
  */
-const processBackgroundJob = (
-  job: BackgroundJob,
-  meta: { id: string; attempts: number }
-): Effect.Effect<void, JobProcessorNotImplementedError> =>
-  Match.value(job).pipe(
+type JobMeta = { readonly id: string; readonly attempts: number };
+
+const processBackgroundJobByType = Match.type<BackgroundJob>().pipe(
     Match.tag(
       "EmbeddingJob",
-      Effect.fn(function* (j) {
-        yield* Effect.logInfo("Processing EmbeddingJob", {
-          id: j.id,
-          entityId: j.canonicalEntityId,
-          reason: j.reason,
-          attempts: meta.attempts,
-        });
-        return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
-      })
+      (j) =>
+        Effect.fn("processEmbeddingJob")(function* (meta: JobMeta) {
+          yield* Effect.logInfo("Processing EmbeddingJob", {
+            id: j.id,
+            entityId: j.canonicalEntityId,
+            reason: j.reason,
+            attempts: meta.attempts,
+          });
+          return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
+        })
     ),
-    Match.tag("PromptCacheJob", (j) =>
-      Effect.gen(function* () {
-        yield* Effect.logInfo("Processing PromptCacheJob", {
-          id: j.id,
-          exampleId: j.exampleId,
-          isNegative: j.isNegative,
-          attempts: meta.attempts,
-        });
-        return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
-      })
+    Match.tag(
+      "PromptCacheJob",
+      (j) =>
+        Effect.fn("processPromptCacheJob")(function* (meta: JobMeta) {
+          yield* Effect.logInfo("Processing PromptCacheJob", {
+            id: j.id,
+            exampleId: j.exampleId,
+            isNegative: j.isNegative,
+            attempts: meta.attempts,
+          });
+          return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
+        })
     ),
     Match.tag(
       "SimilarityRecomputeJob",
-      Effect.fn(function* (j) {
-        yield* Effect.logInfo("Processing SimilarityRecomputeJob", {
-          id: j.id,
-          entityId: j.entityId,
-          reason: j.reason,
-          attempts: meta.attempts,
-        });
-        return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
-      })
+      (j) =>
+        Effect.fn("processSimilarityRecomputeJob")(function* (meta: JobMeta) {
+          yield* Effect.logInfo("Processing SimilarityRecomputeJob", {
+            id: j.id,
+            entityId: j.entityId,
+            reason: j.reason,
+            attempts: meta.attempts,
+          });
+          return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
+        })
     ),
     Match.tag(
       "BlockingTokenJob",
-      Effect.fn(function* (j) {
-        yield* Effect.logInfo("Processing BlockingTokenJob", {
-          id: j.id,
-          entityId: j.entityId,
-          attempts: meta.attempts,
-        });
-        return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
-      })
+      (j) =>
+        Effect.fn("processBlockingTokenJob")(function* (meta: JobMeta) {
+          yield* Effect.logInfo("Processing BlockingTokenJob", {
+            id: j.id,
+            entityId: j.entityId,
+            attempts: meta.attempts,
+          });
+          return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
+        })
     ),
     Match.tag(
       "WebhookJob",
-      Effect.fn(function* (j) {
-        yield* Effect.logInfo("Processing WebhookJob", {
-          id: j.id,
-          url: j.url,
-          eventType: j.eventType,
-          attempts: meta.attempts,
-        });
-        return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
-      })
+      (j) =>
+        Effect.fn("processWebhookJob")(function* (meta: JobMeta) {
+          yield* Effect.logInfo("Processing WebhookJob", {
+            id: j.id,
+            url: j.url,
+            eventType: j.eventType,
+            attempts: meta.attempts,
+          });
+          return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
+        })
     ),
     Match.exhaustive
   );
+
+const processBackgroundJob = Effect.fn("processBackgroundJob")(function* (job: BackgroundJob, meta: JobMeta) {
+  return yield* processBackgroundJobByType(job)(meta);
+});
 
 // =============================================================================
 // HTTP Router
@@ -222,7 +229,7 @@ export const JobPushRouter = HttpRouter.addAll([
             const jobDataString = jobDataBuffer.toString("utf-8");
 
             // Parse the job schema
-            const jobParseResult = yield* S.decodeEffect(S.fromJsonString(BackgroundJobSchema))(jobDataString).pipe(
+            const jobParseResult = yield* BackgroundJob.decodeEffectFromJsonString(jobDataString).pipe(
               Effect.mapError((cause) =>
                 JobParseError.make({
                   message: "Failed to decode the pushed background-job payload.",
@@ -243,7 +250,7 @@ export const JobPushRouter = HttpRouter.addAll([
             });
 
             // Process the job
-            yield* processBackgroundJob(jobParseResult, {
+            return yield* processBackgroundJob(jobParseResult, {
               id: jobId,
               attempts,
             }).pipe(
@@ -254,23 +261,9 @@ export const JobPushRouter = HttpRouter.addAll([
                 })
               )
             );
-
-            yield* Effect.logInfo("Job processed successfully", {
-              messageId,
-              jobType,
-              jobId,
-            });
-
-            // Return 200 to acknowledge the message
-            // (Pub/Sub will retry on non-2xx responses)
-            return yield* HttpServerResponse.json({
-              processed: true,
-              messageId,
-              jobType,
-            });
           },
           Effect.catchTags({
-            JobParseError: Effect.fn(function* (e) {
+            JobParseError: Effect.fnUntraced(function* (e) {
               yield* Effect.logError("Failed to parse job payload", {
                 error: String(e.cause),
               });
@@ -284,7 +277,7 @@ export const JobPushRouter = HttpRouter.addAll([
                 { status: 400 }
               );
             }),
-            ProcessingError: Effect.fn(function* (e) {
+            ProcessingError: Effect.fnUntraced(function* (e) {
               yield* Effect.logError("Job processing failed", {
                 error: String(e.cause),
               });

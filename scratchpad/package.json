@@ -15,7 +15,7 @@
     "claudecode:typecheck": "tsgo -p claudecode/tsconfig.json --noEmit",
     "docgen": "bun run ../packages/tooling/tool/docgen/src/bin.ts",
     "docgen:effect-ontology": "bun run ../packages/tooling/tool/docgen/src/bin.ts --config-file docgen.effect-ontology.json",
-    "generate:effect-ontology-migrations": "bunx --bun drizzle-kit generate --config effect-ontology/drizzle.config.ts",
+    "generate:effect-ontology-migrations": "bun effect-ontology/scripts/generate-migrations.ts",
     "lint:effect-ontology": "biome check --config-path effect-ontology/biome.jsonc effect-ontology",
     "migrations:check:effect-ontology": "bun effect-ontology/scripts/check-migrations-drift.ts",
     "test:effect-ontology": "bunx --bun vitest run --config effect-ontology/vitest.config.ts"

@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, Order, pipe } from "effect";
@@ -231,9 +232,9 @@ type CommandOutput = {
 };
 
 const UnknownStringRecord = S.Record(S.String, S.Unknown);
-const decodeJsonText = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeJsonText = Unknown.decodeUnknownEffectFromJsonString;
 const decodeUnknownRecordOption = S.decodeUnknownOption(UnknownStringRecord);
-const encodeReportJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeReportJson = Unknown.encodeUnknownEffectFromJsonString;
 const isProofTaskName = S.is(TurboConfigProofTaskName);
 
 const emptySummary = () =>

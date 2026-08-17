@@ -1,5 +1,5 @@
-import { assert, describe, it } from "@effect/vitest";
 import { $ScratchpadId } from "@beep/identity";
+import { assert, describe, it } from "@effect/vitest";
 import { Context, Effect, Fiber, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -37,8 +37,7 @@ const IsolatedInferenceStores = Layer.merge(FirstInferenceStoreLive, SecondInfer
 
 describe("InferenceJobStore", () => {
   it.layer(IsolatedInferenceStores)("with isolated runtime-local stores", (it) => {
-    it.effect("isolates two layer instances and evicts the oldest bounded entry", () =>
-      Effect.gen(function* () {
+    it.effect("isolates two layer instances and evicts the oldest bounded entry", Effect.fnUntraced(function* () {
         const first = yield* FirstInferenceStore;
         const second = yield* SecondInferenceStore;
         const retained = InferenceRunResponse.make({ jobId: "job-retained", status: "processing" });

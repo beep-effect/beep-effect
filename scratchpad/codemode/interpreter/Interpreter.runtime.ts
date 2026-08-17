@@ -1,3 +1,4 @@
+import { Unknown } from "@beep/schema/Unknown";
 import {
   Cause,
   Context,
@@ -172,7 +173,7 @@ import {
 } from "../Codemode.values.ts";
 
 const MAX_ARRAY_LENGTH = 4_294_967_295;
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
 
 const StatementNodeType = LiteralKit([
   "ExpressionStatement",

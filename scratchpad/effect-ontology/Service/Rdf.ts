@@ -38,7 +38,8 @@ import * as R from "effect/Record";
 import * as Str from "effect/String";
 import * as N3 from "n3";
 import { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Error/Rdf.ts";
-import type { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
+import type { Entity, Relation } from "../Domain/Model/Entity.ts";
+import { RelationObject } from "../Domain/Model/Entity.ts";
 import { CLAIMS, CORE, EXTR } from "../Domain/Rdf/Constants.ts";
 import { buildIri } from "../Utils/Rdf.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
@@ -100,14 +101,12 @@ const relationObjectToN3Term = (
   baseNamespace: string,
   prefixes: RdfConstructionPrefixes
 ): N3.Quad_Object =>
-  Match.value(object).pipe(
-    Match.tagsExhaustive({
-      EntityReference: ({ value }) => n3NamedNode(buildIri(baseNamespace, value)),
-      Text: ({ value }) => valueToN3Literal(value, prefixes),
-      Number: ({ value }) => valueToN3Literal(value, prefixes),
-      Boolean: ({ value }) => valueToN3Literal(value, prefixes),
-    })
-  );
+  RelationObject.match(object, {
+      EntityReference: ({ value }): N3.Quad_Object => n3NamedNode(buildIri(baseNamespace, value)),
+      Text: ({ value }): N3.Quad_Object => valueToN3Literal(value, prefixes),
+      Number: ({ value }): N3.Quad_Object => valueToN3Literal(value, prefixes),
+      Boolean: ({ value }): N3.Quad_Object => valueToN3Literal(value, prefixes),
+  });
 
 const relationToN3Quad = (relation: Relation, baseNamespace: string, prefixes: RdfConstructionPrefixes): N3.Quad =>
   N3.DataFactory.quad(
@@ -420,19 +419,21 @@ const n3TermToDomainTerm = (term: N3.Term): ObjectTerm => {
 /**
  * Internal: Convert N3 Quad to domain Quad
  */
+const n3SubjectToDomainSubject = Match.type<N3.Quad_Subject>().pipe(
+  Match.when({ termType: "NamedNode" }, (term) => makeNamedNode(term.value)),
+  Match.when({ termType: "BlankNode" }, (term) => makeBlankNode(term.value)),
+  Match.orElse((term) =>
+    Result.fail(
+      RdfError.make({
+        message: `Unsupported N3 subject term type: ${term.termType}`,
+        cause: O.none(),
+      })
+    ).pipe(Result.getOrThrowWith((error) => error))
+  )
+);
+
 const n3QuadToDomainQuad = (n3Quad: N3.Quad): Quad => {
-  const subject = Match.value(n3Quad.subject).pipe(
-    Match.when({ termType: "NamedNode" }, (term) => makeNamedNode(term.value)),
-    Match.when({ termType: "BlankNode" }, (term) => makeBlankNode(term.value)),
-    Match.orElse((term) =>
-      Result.fail(
-        RdfError.make({
-          message: `Unsupported N3 subject term type: ${term.termType}`,
-          cause: O.none(),
-        })
-      ).pipe(Result.getOrThrowWith((error) => error))
-    )
-  );
+  const subject = n3SubjectToDomainSubject(n3Quad.subject);
 
   const predicate = makeNamedNode(n3Quad.predicate.value);
 

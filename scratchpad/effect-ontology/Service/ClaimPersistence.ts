@@ -173,7 +173,7 @@ export class ClaimPersistenceService extends Context.Service<ClaimPersistenceSer
 
       // 4. Update article with graph URI if provided
       if (P.isNotUndefined(graphUri) && P.isNull(article.graphUri)) {
-        yield* articleRepo.setGraphUri(article.id, graphUri);
+        yield* articleRepo.setGraphUri(article.id, articleMeta.ontologyId, graphUri);
         yield* Effect.logDebug("Article graph URI updated", {
           articleId: article.id,
           graphUri,

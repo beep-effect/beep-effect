@@ -17,8 +17,7 @@ const RdfBuilderTest = RdfBuilder.Default.pipe(
 
 describe("RdfBuilder", () => {
   it.layer(RdfBuilderTest)("with the canonical RDF service", (it) => {
-    it.effect("validates strings at the canonical IRI construction boundary", () =>
-      Effect.gen(function* () {
+    it.effect("validates strings at the canonical IRI construction boundary", Effect.fnUntraced(function* () {
         const rdf = yield* RdfBuilder;
         const valid = rdf.createIri("https://example.org/resource");
         const invalid = yield* Effect.exit(Effect.sync(() => rdf.createIri("not an iri")));
@@ -28,8 +27,7 @@ describe("RdfBuilder", () => {
       })
     );
 
-    it.effect("round-trips Turtle through the canonical N3 codec", () =>
-      Effect.gen(function* () {
+    it.effect("round-trips Turtle through the canonical N3 codec", Effect.fnUntraced(function* () {
         const rdf = yield* RdfBuilder;
         const store = yield* rdf.parseTurtle('<https://example.org/ada> <https://schema.org/name> "Ada" .');
         const source = yield* rdf.toTurtle(store);
@@ -41,8 +39,7 @@ describe("RdfBuilder", () => {
       })
     );
 
-    it.effect("applies RDF rules in data-first and data-last forms", () =>
-      Effect.gen(function* () {
+    it.effect("applies RDF rules in data-first and data-last forms", Effect.fnUntraced(function* () {
         const rdf = yield* RdfBuilder;
         const dataFirstStore = yield* rdf.createStore;
         const dataLastStore = yield* rdf.createStore;
@@ -55,8 +52,7 @@ describe("RdfBuilder", () => {
       })
     );
 
-    it.effect("serializes canonically branded confidence as RDF reification", () =>
-      Effect.gen(function* () {
+    it.effect("serializes canonically branded confidence as RDF reification", Effect.fnUntraced(function* () {
         const rdf = yield* RdfBuilder;
         const store = yield* rdf.createStore;
         yield* rdf.addTripleWithConfidence(
@@ -81,8 +77,7 @@ describe("RdfBuilder", () => {
       })
     );
 
-    it.effect("maps unsupported named graphs to SerializationFailed", () =>
-      Effect.gen(function* () {
+    it.effect("maps unsupported named graphs to SerializationFailed", Effect.fnUntraced(function* () {
         const rdf = yield* RdfBuilder;
         const store = yield* rdf.createStore;
         yield* rdf.addTripleWithConfidence(
@@ -102,8 +97,7 @@ describe("RdfBuilder", () => {
       })
     );
 
-    it.effect("rejects invalid confidence triple IRIs before mutating the store", () =>
-      Effect.gen(function* () {
+    it.effect("rejects invalid confidence triple IRIs before mutating the store", Effect.fnUntraced(function* () {
         const rdf = yield* RdfBuilder;
         const invalidInputs = [
           {
@@ -141,12 +135,12 @@ describe("RdfBuilder", () => {
       })
     );
 
-    it.effect("rejects detached structural copies of opaque stores", () =>
-      Effect.gen(function* () {
+    it.effect("rejects detached structural copies of opaque stores", Effect.fnUntraced(function* () {
         const rdf = yield* RdfBuilder;
         const store = yield* rdf.createStore;
-        return { ...store };
-      }).pipe(Effect.map((detachedStore) => assert.isFalse(isRdfStore(detachedStore))))
+        const detachedStore = { ...store };
+        assert.isFalse(isRdfStore(detachedStore));
+      })
     );
   });
 });

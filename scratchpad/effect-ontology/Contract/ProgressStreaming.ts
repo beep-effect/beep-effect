@@ -1813,9 +1813,9 @@ export class RateLimitedEvent extends S.TaggedClass<RateLimitedEvent>($I`RateLim
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ProgressEventSchema } from "@effect-ontology/Contract/ProgressStreaming"
+ * import { ProgressEvent } from "@effect-ontology/Contract/ProgressStreaming"
  *
- * const isProgressEvent = S.is(ProgressEventSchema)
+ * const isProgressEvent = S.is(ProgressEvent)
  * console.log(isProgressEvent({
  *   _tag: "stage_started",
  *   eventId: "evt-23",
@@ -1829,7 +1829,7 @@ export class RateLimitedEvent extends S.TaggedClass<RateLimitedEvent>($I`RateLim
  * @category schemas
  * @since 0.0.0
  */
-export const ProgressEventSchema = S.Union([
+export const ProgressEvent = S.Union([
   ExtractionStartedEvent,
   ChunkingStartedEvent,
   ChunkingProgressEvent,
@@ -1855,13 +1855,14 @@ export const ProgressEventSchema = S.Union([
   RateLimitedEvent,
 ]).pipe(
   S.toTaggedUnion("_tag"),
-  $I.annoteSchema("ProgressEventSchema", {
+  SchemaUtils.withEffectCodecStatics,
+  $I.annoteSchema("ProgressEvent", {
     description: "Exhaustive discriminated union of extraction progress stream events.",
   })
 );
 
 /**
- * Decoded event value produced by {@link ProgressEventSchema}.
+ * Decoded event value produced by {@link ProgressEvent}.
  *
  * **Example** (Narrow a progress event)
  *
@@ -1872,11 +1873,11 @@ export const ProgressEventSchema = S.Union([
  * console.log(typeof tagOf) // "function"
  * ```
  *
- * @see {@link ProgressEventSchema} for the runtime schema and tagged-union helpers.
+ * @see {@link ProgressEvent} for the runtime schema and tagged-union helpers.
  * @category type-level
  * @since 0.0.0
  */
-export type ProgressEvent = typeof ProgressEventSchema.Type;
+export type ProgressEvent = typeof ProgressEvent.Type;
 
 // =============================================================================
 // Backpressure Strategy
@@ -2324,7 +2325,7 @@ export class ProgressMessage extends S.TaggedClass<ProgressMessage>($I`ProgressM
   {
     /** Progress event payload or serialization diagnostic. */
     data: S.Union([
-      ProgressEventSchema,
+      ProgressEvent,
       S.TaggedStruct("serialization_error", {
         /** Discriminator of the progress event that could not be serialized. */
         eventTag: S.String.pipe(

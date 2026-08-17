@@ -174,16 +174,16 @@ class CircuitBreakerState extends S.Class<CircuitBreakerState>($I`CircuitBreaker
  * @category constructors
  * @since 0.0.0
  */
-export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (
-  input: CircuitBreakerConfigInput = {}
-) {
+export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (input: CircuitBreakerConfigInput = {}) {
   const config = CircuitBreakerConfig.make(input);
-  const stateRef = yield* Ref.make<CircuitBreakerState>(CircuitBreakerState.make({
-    state: "closed",
-    failureCount: 0,
-    successCount: 0,
-    lastFailureTime: 0,
-  }));
+  const stateRef = yield* Ref.make<CircuitBreakerState>(
+    CircuitBreakerState.make({
+      state: "closed",
+      failureCount: 0,
+      successCount: 0,
+      lastFailureTime: 0,
+    })
+  );
   const getState = Ref.get(stateRef);
   const recordSuccess = Effect.gen(function* () {
     const current = yield* getState;
@@ -295,7 +295,7 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (
                   const error = yield* S.decodeUnknownEffect(CircuitOpenError)({
                     resetTimeoutMs,
                     lastFailureTime: O.some(current.lastFailureTime),
-                  retryAfterMs: O.some(N.max(0)(retryAfterMs)),
+                    retryAfterMs: O.some(N.max(0)(retryAfterMs)),
                   }).pipe(Effect.orDie);
                   return yield* error;
                 })

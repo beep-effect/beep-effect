@@ -43,6 +43,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
+import * as Str from "effect/String";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import type * as Socket from "effect/unstable/socket/Socket";
 import { OntologyName } from "../Domain/Identity.ts";
@@ -70,7 +71,14 @@ import { TicketService } from "../Service/Ticket.ts";
  * @category schemas
  * @since 0.0.0
  */
-export const BroadcastEvent = S.Struct({
+type BroadcastEventValue = {
+  readonly type: "event";
+  readonly entry: OntologyEventEntry;
+  readonly ontologyId: OntologyName;
+  readonly timestamp: NonNegativeInt;
+};
+
+export const BroadcastEvent: S.Codec<BroadcastEventValue, unknown> = S.Struct({
   type: S.tag("event"),
   entry: OntologyEventEntry,
   ontologyId: OntologyName,
@@ -93,7 +101,7 @@ export const BroadcastEvent = S.Struct({
  * @category type-level
  * @since 0.0.0
  */
-export type BroadcastEvent = typeof BroadcastEvent.Type;
+export type BroadcastEvent = BroadcastEventValue;
 
 /**
  * Ping message to keep connection alive
@@ -114,6 +122,15 @@ export const PingMessage = S.Struct({
   type: S.tag("ping"),
   timestamp: NonNegativeInt,
 });
+
+/**
+ * Decoded keep-alive message produced by {@link PingMessage}.
+ *
+ * @see {@link PingMessage} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PingMessage = typeof PingMessage.Type;
 
 /**
  * Connected message sent on connection
@@ -138,6 +155,15 @@ export const ConnectedMessage = S.Struct({
 });
 
 /**
+ * Decoded connection acknowledgement produced by {@link ConnectedMessage}.
+ *
+ * @see {@link ConnectedMessage} for the runtime schema and decoding behavior.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConnectedMessage = typeof ConnectedMessage.Type;
+
+/**
  * Union of all server-to-client messages
  *
  * **Example** (Validate server message)
@@ -152,7 +178,11 @@ export const ConnectedMessage = S.Struct({
  * @category schemas
  * @since 0.0.0
  */
-export const ServerMessage = S.Union([BroadcastEvent, PingMessage, ConnectedMessage]);
+export const ServerMessage: S.Codec<BroadcastEvent | PingMessage | ConnectedMessage, unknown> = S.Union([
+  BroadcastEvent,
+  PingMessage,
+  ConnectedMessage,
+]);
 /**
  * Describes the server message data exposed by this module.
  *
@@ -170,7 +200,7 @@ export const ServerMessage = S.Union([BroadcastEvent, PingMessage, ConnectedMess
  * @category type-level
  * @since 0.0.0
  */
-export type ServerMessage = typeof ServerMessage.Type;
+export type ServerMessage = BroadcastEvent | PingMessage | ConnectedMessage;
 
 const decodePubSubEventPayload = S.decodeUnknownOption(S.fromJsonString(OntologyEventEntry));
 const encodeServerMessage = S.encodeEffect(S.fromJsonString(ServerMessage));
@@ -580,14 +610,16 @@ export const EventBroadcastRouter = HttpRouter.addAll([
       }
 
       const request = yield* HttpServerRequest.HttpServerRequest;
-      const ticket = new URL(request.url, "http://localhost").searchParams.get("ticket");
-      if (ticket === null || ticket.length === 0) {
+      const ticket = O.fromNullishOr(new URL(request.url, "http://localhost").searchParams.get("ticket")).pipe(
+        O.filter(Str.isNonEmpty)
+      );
+      if (O.isNone(ticket)) {
         return yield* HttpServerResponse.json(
           { error: "UNAUTHORIZED", message: "Missing ticket query parameter" },
           { status: 401 }
         );
       }
-      const scopedOntologyId = yield* (yield* TicketService).validateTicket(ticket);
+      const scopedOntologyId = yield* (yield* TicketService).validateTicket(ticket.value);
       if (scopedOntologyId !== ontologyId) {
         return yield* HttpServerResponse.json(
           { error: "FORBIDDEN", message: "Ticket is not scoped to this ontology" },
@@ -642,8 +674,8 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
     "events"
   )(
     Stream.fromSubscription(eventQueue).pipe(
-      Stream.tap((event) =>
-        Effect.gen(function* () {
+      Stream.tap(
+        Effect.fnUntraced(function* (event) {
           const message: ServerMessage = { ...event, type: "event" };
           yield* writer(new TextEncoder().encode(yield* encodeServerMessage(message)));
         })

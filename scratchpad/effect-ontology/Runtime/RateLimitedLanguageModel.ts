@@ -12,9 +12,9 @@
  * @since 0.0.0
  */
 
+import { PosInt } from "@beep/schema/Int";
 import { AnthropicClient } from "@effect/ai-anthropic";
 import { OpenAiClient } from "@effect/ai-openai";
-import { PosInt } from "@beep/schema/Int";
 import { Clock, DateTime, Duration, Effect, Layer, Ref, Stream } from "effect";
 import * as O from "effect/Option";
 import { AiError } from "effect/unstable/ai";

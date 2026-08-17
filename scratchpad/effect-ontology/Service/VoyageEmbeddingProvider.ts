@@ -384,11 +384,10 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
   /**
    * Map task type to Voyage input_type
    */
-  const mapInputType = (taskType: string): "query" | "document" =>
-    Match.value(taskType).pipe(
-      Match.when("search_query", (): "query" => "query"),
-      Match.orElse((): "document" => "document")
-    );
+  const mapInputType = Match.type<string>().pipe(
+    Match.when("search_query", (): "query" => "query"),
+    Match.orElse((): "document" => "document")
+  );
 
   /**
    * Retry schedule for transient errors (429, 5xx)

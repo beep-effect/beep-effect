@@ -20,6 +20,7 @@ import {
   PhoenixPromptCreateInput,
 } from "@beep/phoenix";
 import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, O, P, Str } from "@beep/utils";
 import { DateTime, Duration, Effect, FileSystem, flow, HashMap, Match, Path, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -2152,7 +2153,7 @@ const decodePhoenixGraphqlProjectStatsResponse = S.decodeUnknownEffect(PhoenixGr
 const encodeDoctorReportJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessDoctorReport));
 const encodeAnnotationPlanJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationPlan));
 const encodeAnnotationPlanJsonSync = S.encodeUnknownSync(S.fromJsonString(AgentEffectivenessAnnotationPlan));
-const decodeUnknownJsonSync = S.decodeUnknownSync(S.fromJsonString(S.Unknown));
+const decodeUnknownJsonSync = Unknown.decodeUnknownSyncFromJsonString;
 const encodeAnnotationCheckJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationCheckReport));
 const encodeDatasetBundleJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessDatasetBundle));
 const encodePromptBundleJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessPromptBundle));

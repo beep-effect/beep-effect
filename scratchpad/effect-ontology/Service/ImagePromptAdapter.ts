@@ -310,10 +310,8 @@ export const buildMultimodalContent = dual2(
   (text: string, images: ReadonlyArray<ImageForPrompt> | undefined): ReadonlyArray<Prompt.UserMessagePart> => {
     const parts: Array<Prompt.UserMessagePart> = [Prompt.makePart("text", { text })];
 
-    if (P.isNotUndefined(images) && images.length > 0) {
-      for (const part of imagesToPromptParts(images)) {
-        parts.push(part);
-      }
+    for (const part of imagesToPromptParts(O.getOrElse(O.fromUndefinedOr(images), A.empty))) {
+      parts.push(part);
     }
 
     return parts;

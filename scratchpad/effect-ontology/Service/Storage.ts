@@ -142,6 +142,11 @@ export class GenerationMismatchError extends S.TaggedError<GenerationMismatchErr
  * @since 0.0.0
  */
 export interface StorageServiceMethods extends KeyValueStore.KeyValueStore {
+  /** Read text content while representing a missing key explicitly. */
+  readonly getOption: (
+    key: string
+  ) => Effect.Effect<O.Option<string>, KeyValueStore.KeyValueStoreError>;
+
   readonly list: (prefix: string) => Effect.Effect<Array<string>, SystemError | PlatformError>;
 
   /**
@@ -309,6 +314,16 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
   const bucket = storage.bucket(config.bucketName);
   const prefix = config.pathPrefix ?? "";
   const toPath = (key: string) => `${prefix}/${key}`.replace(/\/+/g, "/").replace(/^\//, "");
+  const systemErrorReason = Match.type<number | undefined>().pipe(
+    Match.when(404, (): SystemError["_tag"] => "NotFound"),
+    Match.when(403, (): SystemError["_tag"] => "PermissionDenied"),
+    Match.when(409, (): SystemError["_tag"] => "AlreadyExists"),
+    Match.when(400, (): SystemError["_tag"] => "InvalidData"),
+    Match.when(408, (): SystemError["_tag"] => "Busy"),
+    Match.when(503, (): SystemError["_tag"] => "Busy"),
+    Match.when(504, (): SystemError["_tag"] => "Busy"),
+    Match.orElse((): SystemError["_tag"] => "Unknown")
+  );
   const handleError = (method: string, key: string, cause: unknown) => {
     const messageOf = (value: unknown): O.Option<string> =>
       P.isObject(value) && P.hasProperty(value, "message") && P.isString(value.message)
@@ -323,16 +338,7 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
         : Inspectable.toStringUnknown(cause)
     );
     const code = P.isObject(cause) && P.hasProperty(cause, "code") && P.isNumber(cause.code) ? cause.code : undefined;
-    const reason: SystemError["_tag"] = Match.value(code).pipe(
-      Match.when(404, (): SystemError["_tag"] => "NotFound"),
-      Match.when(403, (): SystemError["_tag"] => "PermissionDenied"),
-      Match.when(409, (): SystemError["_tag"] => "AlreadyExists"),
-      Match.when(400, (): SystemError["_tag"] => "InvalidData"),
-      Match.when(408, (): SystemError["_tag"] => "Busy"),
-      Match.when(503, (): SystemError["_tag"] => "Busy"),
-      Match.when(504, (): SystemError["_tag"] => "Busy"),
-      Match.orElse((): SystemError["_tag"] => "Unknown")
-    );
+    const reason = systemErrorReason(code);
     return new SystemError({
       _tag: reason,
       module: "KeyValueStore",
@@ -393,6 +399,7 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
   });
   const service: StorageServiceMethods = {
     ...impl,
+    getOption: (key) => impl.get(key).pipe(Effect.map(O.fromUndefinedOr)),
     list: (listPrefix) =>
       tryStoragePromise("list", listPrefix, () => bucket.getFiles({ prefix: toPath(listPrefix) })).pipe(
         Effect.map(([files]) => files.map((file) => file.name.replace(P.isTruthy(prefix) ? `${prefix}/` : "", "")))
@@ -546,28 +553,32 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   });
 
   const impl = KeyValueStore.make({
-    get: (key) =>
-      Effect.gen(function* () {
+    get: Effect.fn("Storage.local.get")(function* (key) {
+      return yield* Effect.gen(function* () {
         const resolved = yield* resolvePath(key);
         if (!(yield* fs.exists(resolved))) return undefined;
         return yield* fs.readFileString(resolved);
-      }).pipe(Effect.mapError(localKvError("get", key))),
-    getUint8Array: (key) =>
-      Effect.gen(function* () {
+      }).pipe(Effect.mapError(localKvError("get", key)));
+    }),
+    getUint8Array: Effect.fn("Storage.local.getUint8Array")(function* (key) {
+      return yield* Effect.gen(function* () {
         const resolved = yield* resolvePath(key);
         if (!(yield* fs.exists(resolved))) return undefined;
         return yield* fs.readFile(resolved);
-      }).pipe(Effect.mapError(localKvError("getUint8Array", key))),
-    set: (key, value) =>
-      Effect.gen(function* () {
+      }).pipe(Effect.mapError(localKvError("getUint8Array", key)));
+    }),
+    set: Effect.fn("Storage.local.set")(function* (key, value) {
+      return yield* Effect.gen(function* () {
         const bytes = P.isString(value) ? new TextEncoder().encode(value) : value;
         yield* writePath("set", key, bytes);
-      }).pipe(Effect.mapError(localKvError("set", key))),
-    remove: (key) =>
-      Effect.gen(function* () {
+      }).pipe(Effect.mapError(localKvError("set", key)));
+    }),
+    remove: Effect.fn("Storage.local.remove")(function* (key) {
+      return yield* Effect.gen(function* () {
         const resolved = yield* resolvePath(key);
         if (yield* fs.exists(resolved)) yield* fs.remove(resolved);
-      }).pipe(Effect.mapError(localKvError("remove", key))),
+      }).pipe(Effect.mapError(localKvError("remove", key)));
+    }),
     clear: Effect.gen(function* () {
       const checkedRoot = yield* resolveContainedPath(".");
       if (!(yield* fs.exists(checkedRoot))) {
@@ -596,6 +607,7 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
 
   return {
     ...impl,
+    getOption: (key) => impl.get(key).pipe(Effect.map(O.fromUndefinedOr)),
     list: Effect.fn("Storage.local.list")(function* (prefix: string) {
       const dir = yield* (P.isTruthy(prefix) ? resolvePath(prefix) : resolveContainedPath(".")).pipe(
         Effect.mapError(localPathError("list", prefix))
@@ -685,6 +697,7 @@ const makeMemoryStore = Effect.sync(() => {
 
   const service: StorageServiceMethods = {
     ...kv,
+    getOption: (key) => kv.get(key).pipe(Effect.map(O.fromUndefinedOr)),
     list: (prefix) =>
       Effect.sync(() => store.pipe(MutableHashMap.keys, A.fromIterable, A.filter(Str.startsWith(prefix)))),
     getWithGeneration: (key) =>

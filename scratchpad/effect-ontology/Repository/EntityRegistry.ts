@@ -15,11 +15,9 @@ import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { Context, Effect, HashSet, Layer, pipe } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as SqlError from "effect/unstable/sql/SqlError";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/EntityRegistry");
 
@@ -33,7 +31,13 @@ import type {
   EntityAliasRow,
   EntityBlockingTokenInsertRow,
 } from "./schema.ts";
-import { canonicalEntities, entityAliases, entityBlockingTokens } from "./schema.ts";
+import {
+  CanonicalEntities,
+  canonicalEntities,
+  EntityAliases,
+  entityAliases,
+  entityBlockingTokens,
+} from "./schema.ts";
 
 // =============================================================================
 // Types
@@ -115,7 +119,7 @@ export interface BlockingCandidate {
  * @since 0.0.0
  */
 export interface CanonicalEntityFilter {
-  readonly ontologyId?: string;
+  readonly ontologyId: string;
   readonly types?: ReadonlyArray<string>;
   readonly limit?: number;
   readonly offset?: number;
@@ -195,11 +199,22 @@ const RegistryStatsSqlRow = S.Struct({
   })
 );
 
-const decodeOneCanonicalEntitySqlRow = S.decodeUnknownEffect(S.Tuple([CanonicalEntitySqlRow]));
-const decodeOneEntityAliasSqlRow = S.decodeUnknownEffect(S.Tuple([EntityAliasSqlRow]));
-const decodeBlockingCandidateSqlRows = S.decodeUnknownEffect(S.mutable(S.Array(BlockingCandidateSqlRow)));
-const decodeOneCountSqlRow = S.decodeUnknownEffect(S.Tuple([CountSqlRow]));
-const decodeOneRegistryStatsSqlRow = S.decodeUnknownEffect(S.Tuple([RegistryStatsSqlRow]));
+const normalizeDecodedRows = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
+  effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause)));
+const decodeOneCanonicalEntitySqlRow = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([CanonicalEntitySqlRow]))(rows));
+const decodeOneEntityAliasSqlRow = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([EntityAliasSqlRow]))(rows));
+const decodeCanonicalEntityDrizzleRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(CanonicalEntities.select.pipe(S.Array, S.mutable))(rows));
+const decodeEntityAliasDrizzleRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(EntityAliases.select.pipe(S.Array, S.mutable))(rows));
+const decodeBlockingCandidateSqlRows = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(BlockingCandidateSqlRow.pipe(S.Array, S.mutable))(rows));
+const decodeOneCountSqlRow = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([CountSqlRow]))(rows));
+const decodeOneRegistryStatsSqlRow = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(S.Tuple([RegistryStatsSqlRow]))(rows));
 
 // =============================================================================
 // Service
@@ -237,8 +252,8 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
        */
       const insertCanonicalEntity = Effect.fn("insertCanonicalEntity")(function* (
         entity: CanonicalEntityInsertRow
-      ): Effect.fn.Return<CanonicalEntityRow, SqlError.SqlError> {
-        const result = yield* sql`
+      ): Effect.fn.Return<CanonicalEntityRow, DrizzleError> {
+        const result = yield* normalizeQueryError(sql`
           INSERT INTO canonical_entities (ontology_id, iri, canonical_mention,
                                           types, embedding, merge_count,
                                           confidence_avg)
@@ -260,38 +275,37 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
                     last_seen_at as "lastSeenAt",
                     created_at as "createdAt",
                     updated_at as "updatedAt"
-        `;
-        const [row] = yield* decodeOneCanonicalEntitySqlRow(result).pipe(
-          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.insertCanonicalEntity", cause))
-        );
+        `);
+        const [row] = yield* decodeOneCanonicalEntitySqlRow(result);
         return row;
       });
 
       /**
        * Get canonical entity by ID
        */
-      const getCanonicalEntity = Effect.fn("getCanonicalEntity")(function* (id: CanonicalEntityId) {
-        const [result] = yield* drizzle.select().from(canonicalEntities).where(eq(canonicalEntities.id, id)).limit(1);
-        return O.fromNullishOr(result);
+      const getCanonicalEntity = Effect.fn("getCanonicalEntity")(function* (ontologyId: string, id: CanonicalEntityId) {
+        const rows = yield* normalizeQueryError(
+          drizzle
+            .select()
+            .from(canonicalEntities)
+            .where(and(eq(canonicalEntities.ontologyId, ontologyId), eq(canonicalEntities.id, id)))
+            .limit(1)
+        );
+        return A.head(yield* decodeCanonicalEntityDrizzleRows(rows));
       });
 
       /**
        * Get canonical entity by IRI
        */
-      const getCanonicalEntityByIri = Effect.fn("getCanonicalEntityByIri")(function* (
-        iri: string,
-        ontologyId?: string
-      ) {
-        const conditions = [eq(canonicalEntities.iri, iri)];
-        if (P.isNotUndefined(ontologyId)) {
-          conditions.push(eq(canonicalEntities.ontologyId, ontologyId));
-        }
-        const [result] = yield* drizzle
-          .select()
-          .from(canonicalEntities)
-          .where(and(...conditions))
-          .limit(1);
-        return O.fromNullishOr(result);
+      const getCanonicalEntityByIri = Effect.fn("getCanonicalEntityByIri")(function* (ontologyId: string, iri: string) {
+        const rows = yield* normalizeQueryError(
+          drizzle
+            .select()
+            .from(canonicalEntities)
+            .where(and(eq(canonicalEntities.ontologyId, ontologyId), eq(canonicalEntities.iri, iri)))
+            .limit(1)
+        );
+        return A.head(yield* decodeCanonicalEntityDrizzleRows(rows));
       });
 
       /**
@@ -312,14 +326,14 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
           k?: number;
           minSimilarity?: number;
         } = {}
-      ): Effect.fn.Return<Array<BlockingCandidate>, SqlError.SqlError> {
+      ): Effect.fn.Return<Array<BlockingCandidate>, DrizzleError> {
         const { k = 10, minSimilarity = 0.7, types } = options;
         const vectorStr = formatVector(embedding);
 
         // Build query with ontology scoping and optional type filter
         const results =
           P.isNotUndefined(types) && types.length > 0
-            ? yield* sql`
+            ? yield* normalizeQueryError(sql`
                 SELECT id                                       as "canonicalEntityId",
                        iri,
                        canonical_mention                        as mention,
@@ -331,8 +345,8 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
                   AND types && ${types}::text[]
                 ORDER BY embedding <=> ${vectorStr}::vector
                   LIMIT ${k}
-              `
-            : yield* sql`
+              `)
+            : yield* normalizeQueryError(sql`
                 SELECT id                                       as "canonicalEntityId",
                        iri,
                        canonical_mention                        as mention,
@@ -343,11 +357,9 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
                   AND 1 - (embedding <=> ${vectorStr}::vector) >= ${minSimilarity}
                 ORDER BY embedding <=> ${vectorStr}::vector
                   LIMIT ${k}
-              `;
+              `);
 
-        return yield* decodeBlockingCandidateSqlRows(results).pipe(
-          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.findSimilarEntities", cause))
-        );
+        return yield* decodeBlockingCandidateSqlRows(results);
       });
 
       /**
@@ -361,10 +373,10 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
         ontologyId: string,
         tokens: ReadonlyArray<string>,
         k: number = 50
-      ): Effect.fn.Return<Array<BlockingCandidate>, SqlError.SqlError> {
+      ): Effect.fn.Return<Array<BlockingCandidate>, DrizzleError> {
         if (A.isReadonlyArrayEmpty(tokens)) return [];
 
-        const results = yield* sql`
+        const results = yield* normalizeQueryError(sql`
             SELECT DISTINCT ce.id                as "canonicalEntityId",
                             ce.iri,
                             ce.canonical_mention as mention,
@@ -376,53 +388,52 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
             WHERE bt.ontology_id = ${ontologyId}
               AND bt.token = ANY (${tokens}::text[])
               LIMIT ${k}
-          `;
+          `);
 
-        return yield* decodeBlockingCandidateSqlRows(results).pipe(
-          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.findCandidatesByTokens", cause))
-        );
+        return yield* decodeBlockingCandidateSqlRows(results);
       });
 
       /**
        * Update canonical entity after merge
        */
       const mergeIntoCanonical = Effect.fn("mergeIntoCanonical")(function* (
+        ontologyId: string,
         id: CanonicalEntityId,
         updates: {
           mergeCount?: number;
           confidenceAvg?: number;
         }
       ) {
-        yield* sql`
+        yield* normalizeQueryError(sql`
           UPDATE canonical_entities
           SET merge_count    = COALESCE(${updates.mergeCount ?? null}, merge_count),
               confidence_avg = COALESCE(${updates.confidenceAvg ?? null}, confidence_avg),
               last_seen_at   = NOW(),
               updated_at     = NOW()
-          WHERE id = ${id}
-        `;
+          WHERE ontology_id = ${ontologyId} AND id = ${id}
+        `);
       });
 
       /**
        * Update last seen timestamp
        */
-      const touchCanonicalEntity = (id: CanonicalEntityId) =>
-        sql`
-          UPDATE canonical_entities
-          SET last_seen_at = NOW(),
-              updated_at = NOW()
-          WHERE id = ${id}
-        `;
+      const touchCanonicalEntity = (ontologyId: string, id: CanonicalEntityId) =>
+        normalizeQueryError(
+          sql`
+            UPDATE canonical_entities
+            SET last_seen_at = NOW(),
+                updated_at = NOW()
+            WHERE ontology_id = ${ontologyId} AND id = ${id}
+          `
+        );
 
       /**
        * Count total canonical entities
        */
-      const countCanonicalEntities = Effect.fn("countCanonicalEntities")(function* () {
-        const result = yield* sql`SELECT COUNT(*) ::int as count
-                                  FROM canonical_entities`;
-        const [row] = yield* decodeOneCountSqlRow(result).pipe(
-          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.countCanonicalEntities", cause))
-        );
+      const countCanonicalEntities = Effect.fn("countCanonicalEntities")(function* (ontologyId: string) {
+        const result = yield* normalizeQueryError(sql`SELECT COUNT(*) ::int as count
+                                  FROM canonical_entities WHERE ontology_id = ${ontologyId}`);
+        const [row] = yield* decodeOneCountSqlRow(result);
         return row.count;
       });
 
@@ -435,9 +446,9 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
        */
       const insertAlias = Effect.fn("insertAlias")(function* (
         alias: EntityAliasInsertRow
-      ): Effect.fn.Return<EntityAliasRow, SqlError.SqlError> {
+      ): Effect.fn.Return<EntityAliasRow, DrizzleError> {
         const embeddingValue = P.isNotNullish(alias.embedding) ? formatVector(alias.embedding) : null;
-        const result = yield* sql`
+        const result = yield* normalizeQueryError(sql`
           INSERT INTO entity_aliases (ontology_id, canonical_entity_id, mention,
                                       mention_normalized, embedding,
                                       resolution_method, resolution_confidence,
@@ -465,10 +476,8 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
             first_batch_id as "firstBatchId",
             source_article_id as "sourceArticleId",
             created_at as "createdAt"
-        `;
-        const [row] = yield* decodeOneEntityAliasSqlRow(result).pipe(
-          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.insertAlias", cause))
-        );
+        `);
+        const [row] = yield* decodeOneEntityAliasSqlRow(result);
         return row;
       });
 
@@ -480,32 +489,37 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
        */
       const findAliasByMention = Effect.fn("findAliasByMention")(function* (ontologyId: string, mention: string) {
         const normalized = pipe(mention, Str.toLowerCase, Str.trim);
-        const [result] = yield* drizzle
-          .select()
-          .from(entityAliases)
-          .where(and(eq(entityAliases.ontologyId, ontologyId), eq(entityAliases.mentionNormalized, normalized)))
-          .limit(1);
-        return O.fromNullishOr(result);
+        const rows = yield* normalizeQueryError(
+          drizzle
+            .select()
+            .from(entityAliases)
+            .where(and(eq(entityAliases.ontologyId, ontologyId), eq(entityAliases.mentionNormalized, normalized)))
+            .limit(1)
+        );
+        return A.head(yield* decodeEntityAliasDrizzleRows(rows));
       });
 
       /**
        * Get all aliases for a canonical entity
        */
-      const getAliasesForCanonical = (canonicalId: CanonicalEntityId) =>
-        drizzle.select().from(entityAliases).where(eq(entityAliases.canonicalEntityId, canonicalId));
+      const getAliasesForCanonical = (ontologyId: string, canonicalId: CanonicalEntityId) =>
+        normalizeQueryError(
+          drizzle
+            .select()
+            .from(entityAliases)
+            .where(and(eq(entityAliases.ontologyId, ontologyId), eq(entityAliases.canonicalEntityId, canonicalId)))
+        ).pipe(Effect.flatMap(decodeEntityAliasDrizzleRows));
 
       /**
        * Count aliases for a canonical entity
        */
-      const countAliases = Effect.fn("countAliases")(function* (canonicalId: CanonicalEntityId) {
-        const result = yield* sql`
+      const countAliases = Effect.fn("countAliases")(function* (ontologyId: string, canonicalId: CanonicalEntityId) {
+        const result = yield* normalizeQueryError(sql`
           SELECT COUNT(*) ::int as count
           FROM entity_aliases
-          WHERE canonical_entity_id = ${canonicalId}
-        `;
-        const [row] = yield* decodeOneCountSqlRow(result).pipe(
-          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.countAliases", cause))
-        );
+          WHERE ontology_id = ${ontologyId} AND canonical_entity_id = ${canonicalId}
+        `);
+        const [row] = yield* decodeOneCountSqlRow(result);
         return row.count;
       });
 
@@ -538,8 +552,15 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
       /**
        * Delete all blocking tokens for a canonical entity
        */
-      const deleteBlockingTokens = (canonicalId: CanonicalEntityId) =>
-        drizzle.delete(entityBlockingTokens).where(eq(entityBlockingTokens.canonicalEntityId, canonicalId));
+      const deleteBlockingTokens = (ontologyId: string, canonicalId: CanonicalEntityId) =>
+        drizzle
+          .delete(entityBlockingTokens)
+          .where(
+            and(
+              eq(entityBlockingTokens.ontologyId, ontologyId),
+              eq(entityBlockingTokens.canonicalEntityId, canonicalId)
+            )
+          );
 
       /**
        * Rebuild blocking tokens for a canonical entity from its mention
@@ -553,7 +574,7 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
         canonicalId: CanonicalEntityId,
         mention: string
       ) {
-        yield* deleteBlockingTokens(canonicalId);
+        yield* deleteBlockingTokens(ontologyId, canonicalId);
         const tokens = tokenize(mention);
         yield* insertBlockingTokens(ontologyId, canonicalId, tokens);
       });
@@ -576,10 +597,17 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
        * Get multiple canonical entities by IDs
        */
       const getCanonicalEntitiesByIds = Effect.fn("getCanonicalEntitiesByIds")(function* (
+        ontologyId: string,
         ids: Array<CanonicalEntityId>
       ) {
         if (ids.length === 0) return [];
-        return yield* drizzle.select().from(canonicalEntities).where(inArray(canonicalEntities.id, ids));
+        const rows = yield* normalizeQueryError(
+          drizzle
+            .select()
+            .from(canonicalEntities)
+            .where(and(eq(canonicalEntities.ontologyId, ontologyId), inArray(canonicalEntities.id, ids)))
+        );
+        return yield* decodeCanonicalEntityDrizzleRows(rows);
       });
 
       /**
@@ -587,9 +615,8 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
        *
        * @param ontologyId - Optional ontology scope. If provided, returns stats for that ontology only.
        */
-      const getStats = Effect.fn("getStats")(function* (ontologyId?: string) {
-        const result = P.isNotUndefined(ontologyId)
-          ? yield* sql`
+      const getStats = Effect.fn("getStats")(function* (ontologyId: string) {
+        const result = yield* normalizeQueryError(sql`
             SELECT (SELECT COUNT(*) ::int
                     FROM canonical_entities
                     WHERE ontology_id = ${ontologyId}) as "entityCount",
@@ -602,49 +629,28 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
                    (SELECT COALESCE(SUM(merge_count), 0) ::int
                     FROM canonical_entities
                     WHERE ontology_id = ${ontologyId}) as "totalMerges"
-          `
-          : yield* sql`
-            SELECT (SELECT COUNT(*) ::int
-                    FROM canonical_entities)                   as "entityCount",
-                   (SELECT COUNT(*) ::int FROM entity_aliases) as "aliasCount",
-                   (SELECT COUNT(*) ::int
-                    FROM entity_blocking_tokens)               as "tokenCount",
-                   (SELECT COALESCE(SUM(merge_count), 0) ::int
-                    FROM canonical_entities)                   as "totalMerges"
-          `;
-        const [row] = yield* decodeOneRegistryStatsSqlRow(result).pipe(
-          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.getStats", cause))
-        );
+          `);
+        const [row] = yield* decodeOneRegistryStatsSqlRow(result);
         return row;
       });
 
       return {
         // Canonical entities
         insertCanonicalEntity,
-        getCanonicalEntity: Effect.fn("EntityRegistryRepository.getCanonicalEntity")((id: CanonicalEntityId) =>
-          normalizeQueryError(getCanonicalEntity(id))
-        ),
-        getCanonicalEntityByIri: Effect.fn("EntityRegistryRepository.getCanonicalEntityByIri")(
-          (iri: string, ontologyId?: string) => normalizeQueryError(getCanonicalEntityByIri(iri, ontologyId))
-        ),
+        getCanonicalEntity,
+        getCanonicalEntityByIri,
         findSimilarEntities,
         findCandidatesByTokens,
         mergeIntoCanonical,
         touchCanonicalEntity,
         countCanonicalEntities,
         insertCanonicalEntitiesBatch,
-        getCanonicalEntitiesByIds: Effect.fn("EntityRegistryRepository.getCanonicalEntitiesByIds")(
-          (ids: Array<CanonicalEntityId>) => normalizeQueryError(getCanonicalEntitiesByIds(ids))
-        ),
+        getCanonicalEntitiesByIds,
 
         // Aliases
         insertAlias,
-        findAliasByMention: Effect.fn("EntityRegistryRepository.findAliasByMention")(
-          (ontologyId: string, mention: string) => normalizeQueryError(findAliasByMention(ontologyId, mention))
-        ),
-        getAliasesForCanonical: Effect.fn("EntityRegistryRepository.getAliasesForCanonical")(
-          (canonicalId: CanonicalEntityId) => normalizeQueryError(getAliasesForCanonical(canonicalId))
-        ),
+        findAliasByMention,
+        getAliasesForCanonical,
         countAliases,
 
         // Blocking tokens
@@ -653,7 +659,8 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
             normalizeQueryError(insertBlockingTokens(ontologyId, canonicalId, tokens))
         ),
         deleteBlockingTokens: Effect.fn("EntityRegistryRepository.deleteBlockingTokens")(
-          (canonicalId: CanonicalEntityId) => normalizeQueryError(deleteBlockingTokens(canonicalId))
+          (ontologyId: string, canonicalId: CanonicalEntityId) =>
+            normalizeQueryError(deleteBlockingTokens(ontologyId, canonicalId))
         ),
         rebuildBlockingTokens: Effect.fn("EntityRegistryRepository.rebuildBlockingTokens")(
           (ontologyId: string, canonicalId: CanonicalEntityId, mention: string) =>
@@ -677,15 +684,7 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
  * Format a vector array as PostgreSQL vector literal
  */
 function formatVector(vector: ReadonlyArray<number>): string {
-  return `[${vector.join(",")}]`;
-}
-
-function toSqlError(operation: string, cause: unknown): SqlError.SqlError {
-  return SqlError.isSqlError(cause)
-    ? cause
-    : SqlError.SqlError.make({
-        reason: SqlError.UnknownError.make({ cause, operation }),
-      });
+  return `[${A.join(A.map(vector, globalThis.String), ",")}]`;
 }
 
 /**

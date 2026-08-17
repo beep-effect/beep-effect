@@ -87,8 +87,7 @@ export class SimilarityScorer extends Context.Service<SimilarityScorer>()($I`Sim
      * Note: We leverage the mention text as the cache key to deduplicate
      * processing for identical mentions across different entities.
      */
-    const getOrComputeEmbedding = (mention: string) =>
-      Cache.get(embeddingCache, mention);
+    const getOrComputeEmbedding = (mention: string) => Cache.get(embeddingCache, mention);
 
     /**
      * Compute similarity between two entities
@@ -124,12 +123,8 @@ export class SimilarityScorer extends Context.Service<SimilarityScorer>()($I`Sim
     /**
      * Check if two entities should be merged (convenience method)
      */
-    const shouldMerge = (
-      a: Entity,
-      b: Entity,
-      relations: ReadonlyArray<Relation>,
-      config: EntityResolutionConfig
-    ) => compute(a, b, relations, config).pipe(Effect.map((r) => r.shouldMerge));
+    const shouldMerge = (a: Entity, b: Entity, relations: ReadonlyArray<Relation>, config: EntityResolutionConfig) =>
+      compute(a, b, relations, config).pipe(Effect.map((r) => r.shouldMerge));
 
     /**
      * Clear the embedding cache

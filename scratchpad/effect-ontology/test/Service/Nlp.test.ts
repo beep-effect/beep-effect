@@ -26,8 +26,7 @@ const NlpServiceTest = Layer.effect(NlpService, NlpService.make).pipe(
 );
 
 describe("NlpService canonical Wink adapter", () => {
-  it.effect("models index failures with the canonical schema and defect cause", () =>
-    Effect.gen(function* () {
+  it.effect("models index failures with the canonical schema and defect cause", Effect.fnUntraced(function* () {
       const cause = yield* S.decodeUnknownEffect(S.Finite)("query unavailable").pipe(Effect.flip);
       const error = NlpIndexError.make({
         indexKind: "bm25",
@@ -41,8 +40,7 @@ describe("NlpService canonical Wink adapter", () => {
   );
 
   it.layer(NlpServiceTest)("with canonical Wink services", (it) => {
-    it.effect("decodes canonical Wink token, sentence, and entity output", () =>
-      Effect.gen(function* () {
+    it.effect("decodes canonical Wink token, sentence, and entity output", Effect.fnUntraced(function* () {
         const nlp = yield* NlpService;
         const result = yield* nlp.tokenize("Ada Lovelace wrote the first algorithm.");
 
@@ -52,8 +50,7 @@ describe("NlpService canonical Wink adapter", () => {
       })
     );
 
-    it.effect("ranks documents without exposing a Wink runtime index", () =>
-      Effect.gen(function* () {
+    it.effect("ranks documents without exposing a Wink runtime index", Effect.fnUntraced(function* () {
         const nlp = yield* NlpService;
         const results = yield* nlp.searchSimilar(
           "semantic graph",

@@ -16,6 +16,7 @@ import {
 } from "@beep/repo-cli/test/Labs";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { today } from "@beep/schema/LocalDate";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -40,8 +41,8 @@ const shouldAppendSkipLockfile = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, (arg) => arg === "--dry-run" || arg === "--skip-lockfile");
 const runCreatePackageCommand = (args: ReadonlyArray<string>) =>
   runCreatePackageCommandRaw(shouldAppendSkipLockfile(args) ? [...args, "--skip-lockfile"] : args);
-const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
-const decodeUnknownJson = S.decodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownSyncFromJsonString;
+const decodeUnknownJson = Unknown.decodeUnknownSyncFromJsonString;
 const CreatePackageLabTestTimeoutMs = 30_000;
 const TestFileCwd = process.cwd();
 

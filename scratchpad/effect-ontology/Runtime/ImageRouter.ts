@@ -196,9 +196,9 @@ export const ImageRouter = HttpRouter.addAll([
       const linkService = yield* LinkIngestionService;
 
       // Look up link by ID to get contentHash (images are stored by contentHash)
-      const link = yield* linkService.getById(linkId).pipe(Effect.map((optLink) => O.getOrNull(optLink)));
+      const link = yield* linkService.getById(linkId);
 
-      if (link === null) {
+      if (O.isNone(link)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -209,7 +209,7 @@ export const ImageRouter = HttpRouter.addAll([
       }
 
       // Verify ontology matches
-      if (link.ontologyId !== ontologyId) {
+      if (link.value.ontologyId !== ontologyId) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -219,7 +219,7 @@ export const ImageRouter = HttpRouter.addAll([
         );
       }
 
-      const images = yield* imageStore.listByOwner("link", link.contentHash);
+      const images = yield* imageStore.listByOwner("link", link.value.contentHash);
 
       return yield* HttpServerResponse.json(
         {

@@ -84,6 +84,8 @@ describe("effect-ontology local StorageService", () => {
         yield* storage.set("documents/report.txt", "inside");
 
         assert.strictEqual(yield* storage.get("documents/report.txt"), "inside");
+        assert.deepStrictEqual(yield* storage.getOption("documents/report.txt"), O.some("inside"));
+        assert.deepStrictEqual(yield* storage.getOption("documents/missing.txt"), O.none());
         assert.deepStrictEqual(yield* storage.list("documents"), ["report.txt"]);
         assert.strictEqual(yield* fs.readFileString(path.join(root, "tenant-a", "documents", "report.txt")), "inside");
 

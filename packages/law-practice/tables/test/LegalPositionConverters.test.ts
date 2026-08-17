@@ -36,6 +36,7 @@ import {
   toLegalPositionRelatorInsert,
 } from "@beep/law-practice-tables/entities/LegalPositionRelator";
 import { fromPowerExerciseRow, toPowerExerciseInsert } from "@beep/law-practice-tables/entities/PowerExercise";
+import { Unknown } from "@beep/schema/Unknown";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -435,10 +436,10 @@ describe("LegalOppositionCandidate converters", () => {
 describe("set-valued fields across the storage boundary", () => {
   // The trip a jsonb column actually puts a row through: the insert is
   // serialized to JSON text and parsed back before it is decoded. Doing it
-  // through `S.UnknownFromJsonString` rather than by hand keeps the proof on the
+  // through the shared `Unknown` JSON-string schema rather than by hand keeps the proof on the
   // repo's schema APIs, and it is where the tagged `{"_id":"HashSet"}` form
   // would show up if a set-valued field were declared with `S.HashSet`.
-  const StoredRow = S.fromJsonString(S.Unknown);
+  const StoredRow = S.fromJsonString(Unknown);
   const serializeRow = S.encodeEffect(StoredRow);
   const parseRow = S.decodeUnknownEffect(StoredRow);
 

@@ -86,6 +86,8 @@ const canonicalQuad = (input: {
  * @since 0.0.0
  */
 export interface CreateAssertionInput {
+  /** Ontology scope shared by all source claims */
+  readonly ontologyId: string;
   /** Claim IDs this assertion is derived from */
   readonly claimIds: ReadonlyArray<string>;
   /** How the assertion was created */
@@ -170,6 +172,7 @@ export interface AssertionWithProvenance {
  */
 export interface AssertionRow {
   readonly id: string;
+  readonly ontologyId: string;
   readonly subjectIri: string;
   readonly predicateIri: string;
   readonly objectValue: string;
@@ -292,7 +295,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
       const now = yield* DateTime.now;
       const sourceClaims: Array<ClaimRow> = [];
       for (const claimId of input.claimIds) {
-        const claim = yield* claimRepo.getClaim(claimId);
+        const claim = yield* claimRepo.getClaim(claimId, input.ontologyId);
         if (O.isSome(claim)) {
           sourceClaims.push(claim.value);
         }
@@ -327,6 +330,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
       const id = AssertionId.fromContentHash(ContentHash.make(yield* sha256(uniqueSuffix)));
       const assertionRow: AssertionRow = {
         id,
+        ontologyId: input.ontologyId,
         subjectIri,
         predicateIri,
         objectValue,
@@ -356,7 +360,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
       }
       const sourceClaims: Array<ClaimRow> = [];
       for (const claimId of assertion.value.derivedFrom) {
-        const claim = yield* claimRepo.getClaim(claimId);
+        const claim = yield* claimRepo.getClaim(claimId, assertion.value.ontologyId);
         if (O.isSome(claim)) {
           sourceClaims.push(claim.value);
         }
@@ -409,7 +413,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
       }
       const claims: Array<ClaimRow> = [];
       for (const claimId of assertion.value.derivedFrom) {
-        const claim = yield* claimRepo.getClaim(claimId);
+        const claim = yield* claimRepo.getClaim(claimId, assertion.value.ontologyId);
         if (O.isSome(claim)) {
           claims.push(claim.value);
         }

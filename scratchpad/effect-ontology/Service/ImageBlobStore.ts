@@ -11,6 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { getSomesStruct } from "@beep/utils/Option";
 import { Context, DateTime, Effect, Layer, MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -161,10 +162,10 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
         }),
 
         getMetadata: Effect.fn(function* (hash: string) {
-          const content = yield* storage.get(PathLayout.image.metadata(imagePathHash(hash)));
-          if (content === undefined) return O.none();
+          const content = yield* storage.getOption(PathLayout.image.metadata(imagePathHash(hash)));
+          if (O.isNone(content)) return O.none();
 
-          const asset = yield* ImageAsset.decodeJsonStringEffect(content);
+          const asset = yield* ImageAsset.decodeJsonStringEffect(content.value);
           return O.some(asset);
         }),
 
@@ -184,7 +185,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
             contentType,
             sizeBytes: bytes.length,
             storagePath: PathLayout.image.original(pathHash),
-            ...(sourceUrl === undefined ? {} : { sourceUrl }),
+            ...getSomesStruct({ sourceUrl: O.fromUndefinedOr(sourceUrl) }),
             createdAt: DateTime.formatIso(yield* DateTime.now),
           });
 

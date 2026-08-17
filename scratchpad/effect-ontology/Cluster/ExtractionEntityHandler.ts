@@ -35,7 +35,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { Entity as ClusterEntity } from "effect/unstable/cluster";
-import { ProgressEventSchema } from "../Contract/ProgressStreaming.ts";
+import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { ContentHash, IdempotencyKey, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { RunStatus } from "../Domain/Model/ExtractionRun.ts";
@@ -114,7 +114,7 @@ const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
 ) {
   const eventNumber = yield* Random.nextInt;
   const timestamp = DateTime.formatIso(yield* DateTime.now);
-  return yield* S.decodeUnknownEffect(ProgressEventSchema)({
+  return yield* ProgressEvent.decodeUnknownEffect({
     _tag: tag,
     eventId: `evt-${eventNumber}`,
     runId,
@@ -240,12 +240,12 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         );
 
       const ontologyParts = Str.includes("/")(ontologyId) ? Str.split("/")(ontologyId) : ["default", ontologyId];
-      const namespace = yield* S.decodeEffect(Namespace)(ontologyParts[0]);
-      const name = yield* S.decodeEffect(OntologyName)(ontologyParts[1] ?? ontologyParts[0]);
+      const namespace = yield* Namespace.decodeEffect(ontologyParts[0]);
+      const name = yield* OntologyName.decodeEffect(ontologyParts[1] ?? ontologyParts[0]);
       const ontologyRef = OntologyRef.make({
         namespace,
         name,
-        contentHash: yield* S.decodeEffect(ContentHash)(ontologyVersion),
+        contentHash: yield* ContentHash.decodeEffect(ontologyVersion),
       });
 
       yield* runService.createRun(

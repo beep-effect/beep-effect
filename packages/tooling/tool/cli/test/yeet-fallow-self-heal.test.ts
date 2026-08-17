@@ -11,6 +11,7 @@ import {
   runYeetFallowFeedbackForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { NonNegativeInt } from "@beep/schema";
+import { Unknown } from "@beep/schema/Unknown";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -23,7 +24,7 @@ import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const TestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer);
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 const decodeQualityIssueIndex = S.decodeUnknownEffect(S.fromJsonString(QualityIssueIndex));
 
 const RUN_STARTED_AT = "2026-06-16T00:00:00.000Z";

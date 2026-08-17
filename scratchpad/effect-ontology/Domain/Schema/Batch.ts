@@ -132,6 +132,10 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
   })
 ) {
   static readonly decodeOptionString = S.decodeOption(S.fromJsonString(BatchManifest));
+
+  static readonly encodeEffectFromJsonStringFormatted = S.encodeEffect(S.fromJsonString(BatchManifest, { space: 2 }))
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(BatchManifest)
+  static readonly encodeEffectFromJsonString = S.encodeEffect(S.fromJsonString(BatchManifest))
 }
 
 /**
@@ -171,7 +175,9 @@ export class ExtractionActivityInput extends S.Class<ExtractionActivityInput>($I
   $I.annote("ExtractionActivityInput", {
     description: "Document, ontology, namespace, acceleration, and provenance inputs for extraction.",
   })
-) {}
+) {
+  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(ExtractionActivityInput))
+}
 
 /**
  * Input to entity resolution after per-document extraction.
@@ -198,7 +204,9 @@ export class ResolutionActivityInput extends S.Class<ResolutionActivityInput>($I
   $I.annote("ResolutionActivityInput", {
     description: "Batch identity and non-empty extracted graph locations for entity resolution.",
   })
-) {}
+) {
+  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(ResolutionActivityInput))
+}
 
 /**
  * Input to SHACL validation of a resolved graph.
@@ -230,7 +238,9 @@ export class ValidationActivityInput extends S.Class<ValidationActivityInput>($I
   $I.annote("ValidationActivityInput", {
     description: "Resolved graph, ontology, optional shapes, and complete SHACL failure policy.",
   })
-) {}
+) {
+  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(ValidationActivityInput))
+}
 
 /**
  * Aggregated SHACL results for one severity.
@@ -337,7 +347,9 @@ export class IngestionActivityInput extends S.Class<IngestionActivityInput>($I`I
   $I.annote("IngestionActivityInput", {
     description: "Batch identity, validated graph location, and target namespace for ingestion.",
   })
-) {}
+) {
+  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(IngestionActivityInput))
+}
 
 /**
  * Complete payload used to start or resume a batch workflow.
@@ -377,7 +389,9 @@ export class BatchWorkflowPayload extends S.Class<BatchWorkflowPayload>($I`Batch
     description:
       "Complete ontology-scoped batch workflow payload with non-empty documents and normalized optional artifacts.",
   })
-) {}
+) {
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(BatchWorkflowPayload)
+}
 
 /**
  * SHACL workflow policy re-export retained for source-path parity.

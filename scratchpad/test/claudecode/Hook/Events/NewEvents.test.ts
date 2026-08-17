@@ -4,10 +4,10 @@
  *
  * @since 0.1.0
  */
+import { Unknown } from "@beep/schema/Unknown";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 
 import * as MessageDisplay from "../../../../claudecode/Hook/Events/MessageDisplay.ts";
 import * as PostToolBatch from "../../../../claudecode/Hook/Events/PostToolBatch.ts";
@@ -22,7 +22,7 @@ const envelope = {
   permission_mode: "default",
 } as const;
 
-const encodeJson = S.encodeSync(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeSyncFromJsonString;
 
 // ---------------------------------------------------------------------------
 // Setup

@@ -31,11 +31,48 @@ import { isRdfStore } from "../Rdf.ts";
 import { ShaclValidationReport } from "../Shacl.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Agent/types");
-const RdfStoreFromSelf = S.declare(isRdfStore).annotate({
+const RdfStoreFromSelf: S.Codec<RdfStore, unknown> = S.declare(isRdfStore).annotate({
   title: "RdfStore",
   description: "Opaque mutable RDF workflow store created by RdfBuilder.",
 });
-const AgentGraph = S.Union([KnowledgeGraph, RdfStoreFromSelf]);
+type AgentGraphValue = KnowledgeGraph | RdfStore;
+
+/**
+ * Graph representation accepted at agent workflow boundaries.
+ *
+ * **Details**
+ *
+ * Agents may exchange an immutable knowledge graph or an opaque mutable RDF
+ * store without exposing the store implementation through declarations.
+ *
+ * **Example** (Validate a knowledge graph)
+ *
+ * ```ts
+ * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { AgentGraph } from "@effect-ontology/Service/Agent/types"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(AgentGraph)(KnowledgeGraph.make({}))) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AgentGraph: S.Codec<AgentGraphValue, unknown> = S.Union([KnowledgeGraph, RdfStoreFromSelf]).pipe(
+  $I.annoteSchema("AgentGraph", {
+    description: "Agent graph boundary accepting a knowledge graph or opaque RDF store.",
+    toArbitrary: () => S.toArbitrary(KnowledgeGraph),
+  })
+);
+
+/**
+ * Decoded graph value produced by {@link AgentGraph}.
+ *
+ * @see {@link AgentGraph} for the runtime schema and accepted graph representations.
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AgentGraph = AgentGraphValue;
 
 // =============================================================================
 // Agent Task Definition

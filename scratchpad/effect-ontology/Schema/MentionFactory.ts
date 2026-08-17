@@ -46,16 +46,16 @@ const MentionSchema = S.Struct({
  * **Example** (Validate mention graph schema)
  *
  * ```ts
- * import { MentionGraphSchema } from "@effect-ontology/Schema/MentionFactory"
+ * import { MentionGraph } from "@effect-ontology/Schema/MentionFactory"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(MentionGraphSchema)({}))
+ * console.log(S.is(MentionGraph)({}))
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const MentionGraphSchema = S.Struct({
+export const MentionGraph = S.Struct({
   mentions: S.Array(MentionSchema).annotate({
     description: "Array of entity mentions - extract all named entities from the text",
   }),
@@ -75,22 +75,22 @@ CRITICAL RULES:
 /**
  * Type helpers
  *
- * **Example** (Decode MentionGraphType)
+ * **Example** (Decode MentionGraph)
  *
  * ```ts
- * import { MentionGraphSchema, type MentionGraphType } from "@effect-ontology/Schema/MentionFactory"
+ * import { MentionGraph } from "@effect-ontology/Schema/MentionFactory"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const summarizeMentionGraphType = (_value: MentionGraphType): string => "valid mention graph type"
+ * const summarizeMentionGraph = (_value: MentionGraph): string => "valid mention graph"
  *
- * console.log(O.map(S.decodeUnknownOption(MentionGraphSchema)({}), summarizeMentionGraphType))
+ * console.log(O.map(S.decodeUnknownOption(MentionGraph)({}), summarizeMentionGraph))
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export type MentionGraphType = typeof MentionGraphSchema.Type;
+export type MentionGraph = typeof MentionGraph.Type;
 
 /**
  * Describes the mention data exposed by this module.

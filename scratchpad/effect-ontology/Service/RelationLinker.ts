@@ -114,7 +114,7 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
         let remappedCount = 0;
         let literalObjectCount = 0;
 
-        const linkedRelations = A.empty<LinkedRelation>()
+        const linkedRelations = A.empty<LinkedRelation>();
 
         for (const relation of relations) {
           // Canonicalize subject - unwrap Option with fallback to original
@@ -171,7 +171,7 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
     deduplicateLinked: (linkingResult: LinkingResult): Effect.Effect<Chunk.Chunk<Relation>, never> =>
       Effect.sync(() => {
         let seen = HashSet.empty<string>();
-        const deduplicated = A.empty<Relation>()
+        const deduplicated = A.empty<Relation>();
 
         for (const linked of linkingResult.linkedRelations) {
           // Create canonical key

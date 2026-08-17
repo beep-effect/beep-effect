@@ -53,6 +53,6 @@ SELECT c.entity_id, c.entity_type, c.rrf_score::DOUBLE PRECISION,
 FROM combined c ORDER BY c.rrf_score DESC LIMIT result_limit
 $$;
 --> statement-breakpoint
-COMMENT ON COLUMN claims.asserted_at IS 'When the source asserted the claim; NULL means the assertion time is unknown.';
+COMMENT ON COLUMN claims.asserted_at IS 'Transaction time: when this claim was asserted to the knowledge base';
 --> statement-breakpoint
-COMMENT ON COLUMN claims.derived_at IS 'When the system derived the claim; NULL means the claim is not known to be system-derived.';
+COMMENT ON COLUMN claims.derived_at IS 'Transaction time: when this derived assertion was produced by inference (NULL for extracted claims)';

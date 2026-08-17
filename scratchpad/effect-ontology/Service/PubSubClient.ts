@@ -19,15 +19,14 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PubSubError } from "../Domain/Error/EventBus.ts";
 import { OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
-import type { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
-import { BackgroundJobSchema } from "../Domain/Schema/JobSchema.ts";
+import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 import type { EventEntry } from "./EventBus.ts";
 import { EventBusService } from "./EventBus.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/PubSubClient");
 
 const DeadLetterMessage = S.Struct({
-  originalMessage: BackgroundJobSchema,
+  originalMessage: BackgroundJob,
   error: S.String,
   attempts: NonNegativeInt,
   failedAt: S.DateTimeUtcFromString,
@@ -317,7 +316,7 @@ export const PubSubClientLive = Layer.effect(
 
     const publishJob: PubSubClientMethods["publishJob"] = Effect.fn("publishJob")(function* (job) {
       const timestamp = DateTime.formatIso(yield* DateTime.now);
-      const encoded = yield* S.encodeEffect(S.fromJsonString(BackgroundJobSchema))(job).pipe(
+      const encoded = yield* S.encodeEffect(S.fromJsonString(BackgroundJob))(job).pipe(
         Effect.mapError((cause) =>
           PubSubError.make({
             method: "publishJob",

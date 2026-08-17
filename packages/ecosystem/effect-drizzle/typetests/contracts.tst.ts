@@ -20,6 +20,8 @@ import {
 import { transformOrFail } from "effect/SchemaGetter";
 import { Model as EffectModel } from "effect/unstable/schema";
 import { expect, it } from "tstyche";
+import type { DefaultSqlExpr, DefaultValue, References } from "@beep/effect-drizzle";
+import type { Custom, Numeric, Timestamp, Varchar } from "@beep/effect-drizzle/pg";
 import type { Effect, Success } from "effect/Effect";
 
 type IsOptional<T, K extends keyof T> = {} extends Pick<T, K> ? true : false;
@@ -43,7 +45,10 @@ class Organization extends Model<Organization>("Organization")({
 
 class User extends Model<User>("User")({
   id: Int.pipe(pg.integer(), pg.identity("always"), pg.primaryKey()),
-  organizationId: OrganizationId.pipe(pg.integer(), pg.references(OrganizationId)),
+  organizationId: OrganizationId.pipe(
+    pg.integer(),
+    pg.references(OrganizationId, { name: "user_organization_id_organization_id_fkey" })
+  ),
   name: String.pipe(pg.varchar(120)),
   active: Boolean,
   status: Literals(["draft", "active"]).pipe(pg.enum("type_contract_status"), pg.default("draft")),
@@ -103,6 +108,16 @@ it("preserves resolved metadata algebra", () => {
   expect<typeof field.meta.unique>().type.toBe<true>();
   expect<typeof field.meta.hasDefault>().type.toBe<true>();
   expect<(typeof User.sql.columns.organizationId.references)["tableName"]>().type.toBe<"organization">();
+});
+
+it("exports declaration-portable metadata and PostgreSQL column carriers", () => {
+  expect<DefaultSqlExpr<string>["_tag"]>().type.toBe<"sqlExpr">();
+  expect<DefaultValue<"draft">["value"]>().type.toBe<"draft">();
+  expect<References<"organization", "id">["tableName"]>().type.toBe<"organization">();
+  expect<Custom<"vector(768)">["sqlType"]>().type.toBe<"vector(768)">();
+  expect<Numeric["kind"]>().type.toBe<"numeric">();
+  expect<Timestamp<"date">["mode"]>().type.toBe<"date">();
+  expect<Varchar<120>["length"]>().type.toBe<120>();
 });
 
 it("infers dialect kits and their invariant fields", () => {
@@ -375,6 +390,9 @@ it("pins PostgreSQL carrier and modifier diagnostics", () => {
 
 it("pins public SQL-name and table-extra diagnostics", () => {
   expect(String.pipe(pg.columnName("Bad Name"))).type.toRaiseError("pg.columnName requires a lowercase SQL identifier");
+  expect(Int.pipe(pg.references(OrganizationId, { name: "Bad Foreign Key" }))).type.toRaiseError(
+    "pg.references constraint name must be a valid PostgreSQL identifier"
+  );
   expect(Literals(["ok"]).pipe(pg.enum("Bad-Enum"))).type.toRaiseError(
     "pg.enum name must be a lowercase SQL identifier"
   );

@@ -89,8 +89,7 @@ export class ShapesLoadError extends S.TaggedError<ShapesLoadError>($I`ShapesLoa
     description: "Failure to load a SHACL shapes graph.",
   })
 ) {
-
-  static readonly is = S.is(ShapesLoadError)
+  static readonly is = S.is(ShapesLoadError);
 }
 
 /**

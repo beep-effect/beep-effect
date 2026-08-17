@@ -358,8 +358,8 @@ export const generateClaimId = dual4(
  * const entity = S.decodeUnknownOption(Entity)({
  *   id: "cristiano_ronaldo",
  *   mention: "Cristiano Ronaldo",
- *   types: ["http://schema.org/Person", "http://schema.org/Athlete"],
- *   attributes: { "http://schema.org/birthDate": "1985-02-05" }
+ *   types: ["https://schema.org/Person", "https://schema.org/Athlete"],
+ *   attributes: { "https://schema.org/birthDate": "1985-02-05" }
  * })
  *
  * const claims = O.map(entity, (value) => entityToClaims(value, {
@@ -458,7 +458,7 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
  *
  * const relation = S.decodeUnknownOption(Relation)({
  *   subjectId: "cristiano_ronaldo",
- *   predicate: "http://schema.org/memberOf",
+ *   predicate: "https://schema.org/memberOf",
  *   object: { _tag: "EntityReference", value: "al_nassr_fc" }
  * })
  *

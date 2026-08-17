@@ -516,18 +516,17 @@ export const ComplexityScore = UnitInterval.annotate({
  */
 export type ComplexityScore = typeof ComplexityScore.Type;
 
-const tokenAdjustment = (estimatedTokens: NonNegativeInt): number =>
-  Match.value(estimatedTokens).pipe(
-    Match.when(
-      (tokens) => tokens < 1_000,
-      () => -10
-    ),
-    Match.when(
-      (tokens) => tokens > 10_000,
-      () => 10
-    ),
-    Match.orElse(() => 0)
-  );
+const tokenAdjustment = Match.type<NonNegativeInt>().pipe(
+  Match.when(
+    (tokens) => tokens < 1_000,
+    () => -10
+  ),
+  Match.when(
+    (tokens) => tokens > 10_000,
+    () => 10
+  ),
+  Match.orElse(() => 0)
+);
 
 const densityAdjustment = EntityDensity.$match({
   sparse: () => -5,
@@ -535,19 +534,21 @@ const densityAdjustment = EntityDensity.$match({
   dense: () => 5,
 });
 
+const fallbackComplexityStrategy = Match.type<ComplexityScore>().pipe(
+  Match.when(
+    (score) => score > 0.8,
+    () => ChunkingStrategy.Enum.high_overlap
+  ),
+  Match.orElse(() => ChunkingStrategy.Enum.standard)
+);
+
+const fallbackDensityStrategy = Match.type<EntityDensity>().pipe(
+  Match.when("dense", () => (_complexity: ComplexityScore) => ChunkingStrategy.Enum.fine_grained),
+  Match.orElse(() => fallbackComplexityStrategy)
+);
+
 const fallbackChunkingStrategy = (entityDensity: EntityDensity, complexity: ComplexityScore): ChunkingStrategy =>
-  Match.value(entityDensity).pipe(
-    Match.when("dense", () => ChunkingStrategy.Enum.fine_grained),
-    Match.orElse(() =>
-      Match.value(complexity).pipe(
-        Match.when(
-          (score) => score > 0.8,
-          () => ChunkingStrategy.Enum.high_overlap
-        ),
-        Match.orElse(() => ChunkingStrategy.Enum.standard)
-      )
-    )
-  );
+  fallbackDensityStrategy(entityDensity)(complexity);
 
 const recommendChunkingStrategy = (
   documentType: DocumentType,

@@ -10,6 +10,6 @@
  * @since 0.0.0
  */
 
-export { type EntityGraphSchema, type EntityGraphType, makeEntitySchema } from "./EntityFactory.ts";
+export { type EntityGraph, type EntityGraphSchema, makeEntitySchema } from "./EntityFactory.ts";
 export { EmptyVocabularyError } from "./Errors.ts";
-export { makeRelationSchema, type RelationGraphSchema, type RelationGraphType } from "./RelationFactory.ts";
+export { makeRelationSchema, type RelationGraph, type RelationGraphSchema } from "./RelationFactory.ts";

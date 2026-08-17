@@ -19,7 +19,6 @@ import { Context, Effect, Layer, Match } from "effect";
 import type * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type * as S from "effect/Schema";
-import type { SqlError } from "effect/unstable/sql";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type {
   CreateExampleInputInput,
@@ -54,7 +53,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Examples");
  * @category type-level
  * @since 0.0.0
  */
-export type ExamplesServiceError = SqlError.SqlError | DrizzleError | S.SchemaError | AnyEmbeddingError;
+export type ExamplesServiceError = DrizzleError | S.SchemaError | AnyEmbeddingError;
 
 /**
  * Extraction stage for context-aware example retrieval
@@ -309,7 +308,7 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
      * @param exampleId - ID of the example
      * @param wasSuccessful - Whether the extraction using this example succeeded
      */
-    const recordUsage = (exampleId: string, wasSuccessful: boolean): Effect.Effect<void, SqlError.SqlError> =>
+    const recordUsage = (exampleId: string, wasSuccessful: boolean): Effect.Effect<void, DrizzleError> =>
       repository.recordUsage(exampleId, wasSuccessful);
 
     /**
@@ -322,8 +321,7 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
      *
      * @param ontologyId - Ontology scope
      */
-    const stats = (ontologyId: string): Effect.Effect<ExampleStats, SqlError.SqlError> =>
-      repository.getStats(ontologyId);
+    const stats = (ontologyId: string): Effect.Effect<ExampleStats, DrizzleError> => repository.getStats(ontologyId);
 
     /**
      * Deactivate an example (soft delete)
@@ -352,10 +350,8 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
 /**
  * Map extraction stage to example type
  */
-function stageToExampleType(stage: ExtractionStage): ExampleType {
-  return Match.value(stage).pipe(
-    Match.when("relation_extraction", (): ExampleType => "relation_extraction"),
-    Match.when("entity_linking", (): ExampleType => "entity_linking"),
-    Match.orElse((): ExampleType => "entity_extraction")
-  );
-}
+const stageToExampleType = Match.type<ExtractionStage>().pipe(
+  Match.when("relation_extraction", (): ExampleType => "relation_extraction"),
+  Match.when("entity_linking", (): ExampleType => "entity_linking"),
+  Match.orElse((): ExampleType => "entity_extraction")
+);

@@ -30,6 +30,7 @@ import {
   validateRepoSafetyPolicy,
 } from "@beep/ai-sync";
 import { renderGeneratedSchemas } from "@beep/ai-sync/generator";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { assert, expect, layer } from "@effect/vitest";
@@ -71,7 +72,7 @@ const repoSafeClaudePermissions = {
   defaultMode: "default",
   deny: requiredClaudeRepoDenyPermissions,
 };
-const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   fc.assert(

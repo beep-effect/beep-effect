@@ -26,8 +26,7 @@ import { SqlClient, SqlSchema } from "effect/unstable/sql";
 import { EventBusError } from "../Domain/Error/EventBus.ts";
 import type { OntologyEventEntry as OntologyEventEntryValue } from "../Domain/Schema/EventSchema.ts";
 import { CurationEventGroup, ExtractionEventGroup, OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
-import type { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
-import { BackgroundJobSchema } from "../Domain/Schema/JobSchema.ts";
+import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EventBus");
 
@@ -72,7 +71,7 @@ export interface JobWithMetadata {
  * @category schemas
  * @since 0.0.0
  */
-export const EventEntry = S.toType(OntologyEventEntry);
+export const EventEntry: S.Codec<EventEntry, unknown> = S.toType(OntologyEventEntry);
 
 /**
  * Runtime event entry paired with its canonical EventGroup payload.
@@ -295,7 +294,7 @@ export const EventBusServiceMemory = Layer.effect(
       Effect.gen(function* () {
         const now = yield* DateTime.now;
         const sequence = yield* Ref.getAndUpdate(eventIdCounter, (value) => value + 1);
-        const entry = yield* S.decodeUnknownEffect(EventEntry)({
+        const entry = yield* S.decodeEffect(EventEntry)({
           id: `evt_${yield* Clock.currentTimeMillis}_${sequence}`,
           event: prepared.event,
           primaryKey: prepared.primaryKey,
@@ -505,7 +504,7 @@ export const EventBusServiceSql = Layer.effect(
     // Create a typed PersistedQueue for background jobs
     const jobQueue = yield* PersistedQueue.make({
       name: JOBS_QUEUE_NAME,
-      schema: BackgroundJobSchema,
+      schema: BackgroundJob,
     });
 
     // Subscribe to journal changes for event streaming
@@ -607,7 +606,7 @@ export const EventBusServiceSql = Layer.effect(
         Stream.mapEffect((entry) =>
           Effect.gen(function* () {
             const payload = yield* decodeEventPayload(entry.event, entry.payload);
-            return yield* S.decodeUnknownEffect(EventEntry)({
+            return yield* S.decodeEffect(EventEntry)({
               id: entry.idString,
               event: entry.event,
               primaryKey: entry.primaryKey,

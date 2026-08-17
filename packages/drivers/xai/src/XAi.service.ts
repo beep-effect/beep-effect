@@ -7,12 +7,12 @@
 
 import { $XaiId } from "@beep/identity";
 import { decodeJsonString, encodeJsonString } from "@beep/schema/Json";
+import { Unknown } from "@beep/schema/Unknown";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Context, Effect, flow, Layer, Match, pipe, Queue, Redacted, Stream } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -570,7 +570,7 @@ const makeStreamingRequest = (request = XAiRequestOptions.make({})): XAiRequestO
   });
 
 const decodeSseJson = decodeJsonString;
-const decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(S.Unknown));
+const decodeJsonOption = Unknown.decodeUnknownOptionFromJsonString;
 const encodeJson = encodeJsonString;
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.

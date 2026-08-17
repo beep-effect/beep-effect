@@ -51,38 +51,29 @@ import { MetricsService } from "../Telemetry/Metrics.ts";
  * @category layers
  * @since 0.0.0
  */
-export const EmbeddingProviderFromConfig: Layer.Layer<
-  EmbeddingProvider,
-  AnyEmbeddingError,
-  ConfigService
-> = Layer.unwrap<
-  EmbeddingProvider,
-  AnyEmbeddingError,
-  never,
-  never,
-  ConfigService
->(
-  Effect.gen(function* () {
-    const config = yield* ConfigService;
-    const configLayer = Layer.succeed(ConfigService, config);
+export const EmbeddingProviderFromConfig: Layer.Layer<EmbeddingProvider, AnyEmbeddingError, ConfigService> =
+  Layer.unwrap<EmbeddingProvider, AnyEmbeddingError, never, never, ConfigService>(
+    Effect.gen(function* () {
+      const config = yield* ConfigService;
+      const configLayer = Layer.succeed(ConfigService, config);
 
-    // Select the provider based on config, then provide ConfigService to it
-    // CRITICAL: The returned layer needs ConfigService, so we provide it here
-    //
-    // Requirements after providing ConfigService:
-    // - Nomic: NomicNlpService
-    // - Voyage: EmbeddingRateLimiter | HttpClient.HttpClient
-    // Union: NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
-    if (config.embedding.provider === "voyage") {
-      return VoyageEmbeddingProviderDefault.pipe(
-        Layer.provide(EmbeddingRateLimiterFromConfig.pipe(Layer.provide(configLayer))),
-        Layer.provide(configLayer)
-      );
-    } else {
-      return NomicEmbeddingProviderDefault.pipe(Layer.provide(configLayer));
-    }
-  })
-);
+      // Select the provider based on config, then provide ConfigService to it
+      // CRITICAL: The returned layer needs ConfigService, so we provide it here
+      //
+      // Requirements after providing ConfigService:
+      // - Nomic: NomicNlpService
+      // - Voyage: EmbeddingRateLimiter | HttpClient.HttpClient
+      // Union: NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
+      if (config.embedding.provider === "voyage") {
+        return VoyageEmbeddingProviderDefault.pipe(
+          Layer.provide(EmbeddingRateLimiterFromConfig.pipe(Layer.provide(configLayer))),
+          Layer.provide(configLayer)
+        );
+      } else {
+        return NomicEmbeddingProviderDefault.pipe(Layer.provide(configLayer));
+      }
+    })
+  );
 
 /**
  * Dynamic rate limiter based on config values

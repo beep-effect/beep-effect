@@ -325,13 +325,16 @@ export const ActivityGenericError = ActivityGenericErrorDefinition.annotate({
  */
 export type ActivityGenericError = typeof ActivityGenericError.Type;
 
-const messageFromUnknown = Match.type<unknown>().pipe(
-  Match.when(P.isError, (error) =>
-    Match.value(error.message).pipe(
-      Match.when(ErrorMessage.is, (message) => message),
-      Match.orElse(() => ErrorMessage.make(Inspectable.toStringUnknown(error, 0)))
-    )
+const messageFromError = Match.type<Error>().pipe(
+  Match.when(
+    (error) => ErrorMessage.is(error.message),
+    (error) => ErrorMessage.make(error.message)
   ),
+  Match.orElse((error) => ErrorMessage.make(Inspectable.toStringUnknown(error, 0)))
+);
+
+const messageFromUnknown = Match.type<unknown>().pipe(
+  Match.when(P.isError, messageFromError),
   Match.orElse((value) => ErrorMessage.make(Inspectable.toStringUnknown(value, 0)))
 );
 

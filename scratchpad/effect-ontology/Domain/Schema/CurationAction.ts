@@ -355,9 +355,9 @@ export type LinkToWikidataAction = typeof LinkToWikidataAction.Type;
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { CurationActionSchema } from "@effect-ontology/Schema/CurationAction"
+ * import { CurationAction } from "@effect-ontology/Schema/CurationAction"
  *
- * const action = S.decodeUnknownOption(CurationActionSchema)({
+ * const action = S.decodeUnknownOption(CurationAction)({
  *   _tag: "PromoteToPreferredAction",
  *   ontologyId: "claims",
  *   claimId: "claim-abc123def456"
@@ -368,7 +368,7 @@ export type LinkToWikidataAction = typeof LinkToWikidataAction.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const CurationActionSchema = CurationActionDefinition.pipe(
+export const CurationAction = CurationActionDefinition.pipe(
   $I.annoteSchema("CurationAction", {
     description: "Tagged union of claim correction, deprecation, aliasing, promotion, and Wikidata-link actions.",
     toArbitrary: () => S.toArbitrary(CurationActionDefinition),
@@ -376,24 +376,24 @@ export const CurationActionSchema = CurationActionDefinition.pipe(
 );
 
 /**
- * Runtime action decoded by {@link CurationActionSchema}.
+ * Runtime action decoded by {@link CurationAction}.
  *
  * **Example** (Decode CurationAction)
  *
  * ```ts
- * import { CurationActionSchema, type CurationAction } from "@effect-ontology/Domain/Schema/CurationAction"
+ * import { CurationAction } from "@effect-ontology/Domain/Schema/CurationAction"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
  * const summarizeCurationAction = (_value: CurationAction): string => "valid curation action"
  *
- * console.log(O.map(S.decodeUnknownOption(CurationActionSchema)({}), summarizeCurationAction))
+ * console.log(O.map(S.decodeUnknownOption(CurationAction)({}), summarizeCurationAction))
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export type CurationAction = typeof CurationActionSchema.Type;
+export type CurationAction = typeof CurationAction.Type;
 
 const EventBase = {
   ontologyId: OntologyName,

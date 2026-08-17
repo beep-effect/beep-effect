@@ -15,7 +15,7 @@ import { Layer, Redacted } from "effect";
 import {
   DrizzleLive as CanonicalDrizzleLive,
   PgClientLive as CanonicalPgClientLive,
-  PgDrizzleLive,
+  DatabaseReadyLive,
 } from "../Runtime/Persistence/PostgresLayer.ts";
 import { ArticleRepository } from "./Article.ts";
 import { ClaimRepository } from "./Claim.ts";
@@ -34,7 +34,6 @@ export {
 } from "./Embedding.ts";
 export { type BlockingCandidate, EntityRegistryRepository } from "./EntityRegistry.ts";
 export * from "./schema.ts";
-export * from "./types.ts";
 
 // =============================================================================
 // Layer Composition
@@ -100,7 +99,7 @@ export const PgClientLive = CanonicalPgClientLive;
  * @category layers
  * @since 0.0.0
  */
-export const DrizzleWithPgLive = PgDrizzleLive;
+export const DrizzleWithPgLive = DatabaseReadyLive;
 
 /**
  * ClaimRepository with Drizzle
@@ -116,7 +115,7 @@ export const DrizzleWithPgLive = PgDrizzleLive;
  * @category layers
  * @since 0.0.0
  */
-export const ClaimRepositoryLive = ClaimRepository.Default.pipe(Layer.provide(DrizzleLive));
+export const ClaimRepositoryLive = ClaimRepository.Default.pipe(Layer.provide(DatabaseReadyLive));
 
 /**
  * ArticleRepository with Drizzle
@@ -132,7 +131,7 @@ export const ClaimRepositoryLive = ClaimRepository.Default.pipe(Layer.provide(Dr
  * @category layers
  * @since 0.0.0
  */
-export const ArticleRepositoryLive = ArticleRepository.Default.pipe(Layer.provide(DrizzleLive));
+export const ArticleRepositoryLive = ArticleRepository.Default.pipe(Layer.provide(DatabaseReadyLive));
 
 /**
  * EntityRegistryRepository with Drizzle
@@ -152,7 +151,7 @@ export const ArticleRepositoryLive = ArticleRepository.Default.pipe(Layer.provid
  * @category layers
  * @since 0.0.0
  */
-export const EntityRegistryRepositoryLive = EntityRegistryRepository.Default.pipe(Layer.provide(DrizzleLive));
+export const EntityRegistryRepositoryLive = EntityRegistryRepository.Default.pipe(Layer.provide(DatabaseReadyLive));
 
 /**
  * EmbeddingRepository with Drizzle
@@ -173,7 +172,7 @@ export const EntityRegistryRepositoryLive = EntityRegistryRepository.Default.pip
  * @category layers
  * @since 0.0.0
  */
-export const EmbeddingRepositoryLive = EmbeddingRepository.Default.pipe(Layer.provide(DrizzleLive));
+export const EmbeddingRepositoryLive = EmbeddingRepository.Default.pipe(Layer.provide(DatabaseReadyLive));
 
 /**
  * All repositories with Drizzle and Postgres
@@ -194,7 +193,7 @@ export const RepositoriesLive = Layer.mergeAll(
   ArticleRepositoryLive,
   EntityRegistryRepositoryLive,
   EmbeddingRepositoryLive
-).pipe(Layer.provide(PgClientLive));
+);
 
 /**
  * Test layer with explicit config

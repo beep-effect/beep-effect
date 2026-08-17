@@ -14,8 +14,10 @@
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { Context, Layer } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Claim");
 
@@ -23,7 +25,28 @@ import { PostgresDrizzle } from "@beep/postgres";
 import { and, count, desc, eq, isNull, or } from "drizzle-orm";
 import { DateTime, Effect } from "effect";
 import type { ClaimInsertRow, ClaimRow, CorrectionInsertRow } from "./schema.ts";
-import { claims, correctionClaims, corrections } from "./schema.ts";
+import { Claims, Corrections, claims, correctionClaims, corrections } from "./schema.ts";
+
+const ClaimCountDatabaseRow = S.Struct({ count: S.Int }).pipe(
+  $I.annoteSchema("ClaimCountDatabaseRow", {
+    description: "Claim count projection decoded at the Drizzle database boundary.",
+  })
+);
+
+const decodeClaimRows = (rows: unknown) =>
+  S.decodeUnknownEffect(Claims.select.pipe(S.Array, S.mutable))(rows).pipe(
+    Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
+  );
+
+const decodeCorrectionRows = (rows: unknown) =>
+  S.decodeUnknownEffect(Corrections.select.pipe(S.Array, S.mutable))(rows).pipe(
+    Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
+  );
+
+const decodeClaimCountRows = (rows: unknown) =>
+  S.decodeUnknownEffect(S.Tuple([ClaimCountDatabaseRow]))(rows).pipe(
+    Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause))
+  );
 
 // =============================================================================
 // Types
@@ -98,7 +121,7 @@ export type CorrectionId = string;
  * @since 0.0.0
  */
 export interface ClaimFilter {
-  readonly ontologyId?: string;
+  readonly ontologyId: string;
   readonly articleId?: ArticleId;
   readonly subjectIri?: string;
   readonly predicateIri?: string;
@@ -162,7 +185,7 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      */
     const insertClaim = Effect.fn("insertClaim")(
       function* (claim: ClaimInsertRow) {
-        const [result] = yield* drizzle.insert(claims).values(claim).returning();
+        const [result] = yield* decodeClaimRows(yield* drizzle.insert(claims).values(claim).returning());
         return result;
       },
       Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause))
@@ -171,8 +194,14 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     /**
      * Get claim by ID
      */
-    const getClaim = Effect.fn("getClaim")(function* (id: ClaimId) {
-      const [result] = yield* drizzle.select().from(claims).where(eq(claims.id, id)).limit(1);
+    const getClaim = Effect.fn("getClaim")(function* (id: ClaimId, ontologyId: string) {
+      const [result] = yield* decodeClaimRows(
+        yield* drizzle
+          .select()
+          .from(claims)
+          .where(and(eq(claims.id, id), eq(claims.ontologyId, ontologyId)))
+          .limit(1)
+      );
       return O.fromNullishOr(result);
     });
 
@@ -219,7 +248,7 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
       if (P.isNotUndefined(filter.offset)) {
         query = query.offset(filter.offset);
       }
-      return yield* query;
+      return yield* decodeClaimRows(yield* query);
     });
 
     // -------------------------------------------------------------------------
@@ -229,24 +258,26 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     /**
      * Get claims by article
      */
-    const getClaimsByArticle = (articleId: ArticleId) => getClaims({ articleId, includeDeprecated: false });
+    const getClaimsByArticle = (articleId: ArticleId, ontologyId: string) =>
+      getClaims({ articleId, ontologyId, includeDeprecated: false });
 
     /**
      * Get claims by subject IRI
      */
-    const getClaimsBySubject = (subjectIri: string) => getClaims({ subjectIri, includeDeprecated: false });
+    const getClaimsBySubject = (subjectIri: string, ontologyId: string) =>
+      getClaims({ subjectIri, ontologyId, includeDeprecated: false });
 
     /**
      * Get preferred claims for a subject + predicate
      */
-    const getPreferredClaims = (subjectIri: string, predicateIri: string) =>
-      getClaims({ subjectIri, predicateIri, rank: "preferred" });
+    const getPreferredClaims = (subjectIri: string, predicateIri: string, ontologyId: string) =>
+      getClaims({ subjectIri, predicateIri, ontologyId, rank: "preferred" });
 
     /**
      * Get all claims for a subject + predicate (including deprecated)
      */
-    const getClaimHistory = (subjectIri: string, predicateIri: string) =>
-      getClaims({ subjectIri, predicateIri, includeDeprecated: true });
+    const getClaimHistory = (subjectIri: string, predicateIri: string, ontologyId: string) =>
+      getClaims({ subjectIri, predicateIri, ontologyId, includeDeprecated: true });
 
     // -------------------------------------------------------------------------
     // Deprecation & Corrections
@@ -255,7 +286,11 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
     /**
      * Deprecate a claim due to a correction
      */
-    const deprecateClaim = Effect.fn("deprecateClaim")(function* (claimId: ClaimId, correctionId: CorrectionId) {
+    const deprecateClaim = Effect.fn("deprecateClaim")(function* (
+      claimId: ClaimId,
+      correctionId: CorrectionId,
+      ontologyId: string
+    ) {
       const now = yield* DateTime.now;
       yield* drizzle
         .update(claims)
@@ -264,20 +299,23 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
           deprecatedBy: correctionId,
           rank: "deprecated",
         })
-        .where(eq(claims.id, claimId));
+        .where(and(eq(claims.id, claimId), eq(claims.ontologyId, ontologyId)));
     });
 
     /**
      * Promote a claim to preferred rank
      */
-    const promoteToPreferred = (claimId: ClaimId) =>
-      drizzle.update(claims).set({ rank: "preferred" }).where(eq(claims.id, claimId));
+    const promoteToPreferred = (claimId: ClaimId, ontologyId: string) =>
+      drizzle
+        .update(claims)
+        .set({ rank: "preferred" })
+        .where(and(eq(claims.id, claimId), eq(claims.ontologyId, ontologyId)));
 
     /**
      * Insert a correction
      */
     const insertCorrection = Effect.fn("insertCorrection")(function* (correction: CorrectionInsertRow) {
-      const [result] = yield* drizzle.insert(corrections).values(correction).returning();
+      const [result] = yield* decodeCorrectionRows(yield* drizzle.insert(corrections).values(correction).returning());
       return result;
     });
 
@@ -285,7 +323,9 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      * Get correction by ID
      */
     const getCorrection = Effect.fn("getCorrection")(function* (id: CorrectionId) {
-      const [result] = yield* drizzle.select().from(corrections).where(eq(corrections.id, id)).limit(1);
+      const [result] = yield* decodeCorrectionRows(
+        yield* drizzle.select().from(corrections).where(eq(corrections.id, id)).limit(1)
+      );
       return O.fromNullishOr(result);
     });
 
@@ -311,7 +351,7 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
         .innerJoin(corrections, eq(correctionClaims.correctionId, corrections.id))
         .where(or(eq(correctionClaims.originalClaimId, claimId), eq(correctionClaims.newClaimId, claimId)))
         .orderBy(desc(corrections.correctionDate));
-      return result.map((r) => r.correction);
+      return yield* decodeCorrectionRows(A.map(result, (row) => row.correction));
     });
 
     // -------------------------------------------------------------------------
@@ -337,13 +377,14 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
             and(
               eq(claims.subjectIri, claim.subjectIri),
               eq(claims.predicateIri, claim.predicateIri),
+              eq(claims.ontologyId, claim.ontologyId),
               isNull(claims.deprecatedAt) // Only active claims
             )
           );
 
         const conflicts: Array<ConflictCandidate> = [];
 
-        for (const existing of candidates) {
+        for (const existing of yield* decodeClaimRows(candidates)) {
           // Skip if same claim or same value
           if ("id" in claim && existing.id === claim.id) continue;
           if (existing.objectValue === claim.objectValue) continue;
@@ -388,7 +429,7 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      */
     const insertClaimsBatch = Effect.fn("insertClaimsBatch")(function* (claimList: Array<ClaimInsertRow>) {
       if (claimList.length === 0) return [];
-      return yield* drizzle.insert(claims).values(claimList).returning();
+      return yield* decodeClaimRows(yield* drizzle.insert(claims).values(claimList).returning());
     });
 
     /**
@@ -399,14 +440,16 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      * Returns only the newly inserted claims.
      */
     const upsertClaimsBatch = Effect.fn("upsertClaimsBatch")(function* (claimList: Array<ClaimInsertRow>) {
-      if (claimList.length === 0) return [];
-      return yield* drizzle
-        .insert(claims)
-        .values(claimList)
-        .onConflictDoNothing({
-          target: [claims.articleId, claims.subjectIri, claims.predicateIri, claims.objectValue],
-        })
-        .returning();
+      if (A.isReadonlyArrayEmpty(claimList)) return [];
+      return yield* decodeClaimRows(
+        yield* drizzle
+          .insert(claims)
+          .values(claimList)
+          .onConflictDoNothing({
+            target: [claims.articleId, claims.subjectIri, claims.predicateIri, claims.objectValue],
+          })
+          .returning()
+      );
     });
 
     /**
@@ -418,8 +461,8 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
       if (conditions.length > 0) {
         query = query.where(and(...conditions));
       }
-      const result = yield* query;
-      return result[0]?.count ?? 0;
+      const [result] = yield* decodeClaimCountRows(yield* query);
+      return result.count;
     });
 
     return {
@@ -427,31 +470,36 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
       insertClaim: Effect.fn("ClaimRepository.insertClaim")((claim: ClaimInsertRow) =>
         normalizeQueryError(insertClaim(claim))
       ),
-      getClaim: Effect.fn("ClaimRepository.getClaim")((id: ClaimId) => normalizeQueryError(getClaim(id))),
+      getClaim: Effect.fn("ClaimRepository.getClaim")((id: ClaimId, ontologyId: string) =>
+        normalizeQueryError(getClaim(id, ontologyId))
+      ),
       getClaims: Effect.fn("ClaimRepository.getClaims")((filter: ClaimFilter) =>
         normalizeQueryError(getClaims(filter))
       ),
 
       // Queries
-      getClaimsByArticle: Effect.fn("ClaimRepository.getClaimsByArticle")((articleId: ArticleId) =>
-        normalizeQueryError(getClaimsByArticle(articleId))
+      getClaimsByArticle: Effect.fn("ClaimRepository.getClaimsByArticle")((articleId: ArticleId, ontologyId: string) =>
+        normalizeQueryError(getClaimsByArticle(articleId, ontologyId))
       ),
-      getClaimsBySubject: Effect.fn("ClaimRepository.getClaimsBySubject")((subjectIri: string) =>
-        normalizeQueryError(getClaimsBySubject(subjectIri))
+      getClaimsBySubject: Effect.fn("ClaimRepository.getClaimsBySubject")((subjectIri: string, ontologyId: string) =>
+        normalizeQueryError(getClaimsBySubject(subjectIri, ontologyId))
       ),
-      getPreferredClaims: Effect.fn("ClaimRepository.getPreferredClaims")((subjectIri: string, predicateIri: string) =>
-        normalizeQueryError(getPreferredClaims(subjectIri, predicateIri))
+      getPreferredClaims: Effect.fn("ClaimRepository.getPreferredClaims")(
+        (subjectIri: string, predicateIri: string, ontologyId: string) =>
+          normalizeQueryError(getPreferredClaims(subjectIri, predicateIri, ontologyId))
       ),
-      getClaimHistory: Effect.fn("ClaimRepository.getClaimHistory")((subjectIri: string, predicateIri: string) =>
-        normalizeQueryError(getClaimHistory(subjectIri, predicateIri))
+      getClaimHistory: Effect.fn("ClaimRepository.getClaimHistory")(
+        (subjectIri: string, predicateIri: string, ontologyId: string) =>
+          normalizeQueryError(getClaimHistory(subjectIri, predicateIri, ontologyId))
       ),
 
       // Deprecation & Corrections
-      deprecateClaim: Effect.fn("ClaimRepository.deprecateClaim")((claimId: ClaimId, correctionId: CorrectionId) =>
-        normalizeQueryError(deprecateClaim(claimId, correctionId))
+      deprecateClaim: Effect.fn("ClaimRepository.deprecateClaim")(
+        (claimId: ClaimId, correctionId: CorrectionId, ontologyId: string) =>
+          normalizeQueryError(deprecateClaim(claimId, correctionId, ontologyId))
       ),
-      promoteToPreferred: Effect.fn("ClaimRepository.promoteToPreferred")((claimId: ClaimId) =>
-        normalizeQueryError(promoteToPreferred(claimId))
+      promoteToPreferred: Effect.fn("ClaimRepository.promoteToPreferred")((claimId: ClaimId, ontologyId: string) =>
+        normalizeQueryError(promoteToPreferred(claimId, ontologyId))
       ),
       insertCorrection: Effect.fn("ClaimRepository.insertCorrection")((correction: CorrectionInsertRow) =>
         normalizeQueryError(insertCorrection(correction))

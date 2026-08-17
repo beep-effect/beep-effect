@@ -76,7 +76,7 @@ export class UnsupportedLlmProviderError extends S.TaggedError<UnsupportedLlmPro
 )(
   "UnsupportedLlmProviderError",
   {
-    provider: S.Literal("google").annotateKey({
+    provider: S.tag("google").annotateKey({
       description: "Configured LLM provider without an available Effect AI adapter.",
     }),
   },

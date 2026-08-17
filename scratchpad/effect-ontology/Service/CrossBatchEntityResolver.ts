@@ -22,7 +22,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { SqlError } from "effect/unstable/sql";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { Entity } from "../Domain/Model/Entity.ts";
 import type { BlockingCandidate } from "../Repository/EntityRegistry.ts";
@@ -52,7 +51,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/CrossBatchEntityResolve
  * @category type-level
  * @since 0.0.0
  */
-export type CrossBatchResolutionError = AnyEmbeddingError | DrizzleError | SqlError.SqlError;
+export type CrossBatchResolutionError = AnyEmbeddingError | DrizzleError;
 
 // =============================================================================
 // Types
@@ -238,7 +237,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
 
               // Embedding-based ANN search
               const embeddingCandidates = yield* registry.findSimilarEntities(ontologyId, entityEmbedding, {
-                ...(entity.types.length > 0 ? { types: entity.types } : {}),
+                types: entity.types,
                 k: config.maxCandidatesPerEntity,
                 minSimilarity: config.candidateThreshold,
               });
@@ -339,7 +338,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
           canonicalMap: Record<string, string>;
           newCanonicals: Array<string>;
         },
-        DrizzleError | SqlError.SqlError
+        DrizzleError
       > {
         const { canonicalMap, mergedEntities, unresolvedEntities } = resolutionResult;
         let newCanonicalIris: Array<string> = [];
@@ -352,7 +351,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
 
           // Insert alias for this mention
           // Note: We need to look up the canonical entity ID from IRI
-          const canonicalOpt = yield* registry.getCanonicalEntityByIri(merged.canonicalIri, ontologyId);
+          const canonicalOpt = yield* registry.getCanonicalEntityByIri(ontologyId, merged.canonicalIri);
           if (O.isSome(canonicalOpt)) {
             const canonical = canonicalOpt.value;
             // We don't have the original entity mention here - this needs refactoring
@@ -360,7 +359,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
             // TODO: Pass Entity through resolution result for alias creation
 
             // Touch the canonical entity to update last_seen_at
-            yield* registry.touchCanonicalEntity(canonical.id);
+            yield* registry.touchCanonicalEntity(ontologyId, canonical.id);
           }
         }
 
@@ -382,7 +381,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
           // Insert blocking tokens
           const tokens = tokenize(entity.mention);
           // Need to get the ID of the just-inserted entity
-          const insertedOpt = yield* registry.getCanonicalEntityByIri(iri, ontologyId);
+          const insertedOpt = yield* registry.getCanonicalEntityByIri(ontologyId, iri);
           if (O.isSome(insertedOpt)) {
             yield* registry.insertBlockingTokens(ontologyId, insertedOpt.value.id, tokens);
           }
@@ -473,8 +472,8 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
       /**
        * Check if entity registry is empty
        */
-      const isEmpty = Effect.fn(function* () {
-        const count = yield* registry.countCanonicalEntities();
+      const isEmpty = Effect.fn(function* (ontologyId: string) {
+        const count = yield* registry.countCanonicalEntities(ontologyId);
         return count === 0;
       });
 
@@ -483,7 +482,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
        *
        * @param ontologyId - Optional ontology scope. If provided, returns stats for that ontology only.
        */
-      const getStats = (ontologyId?: string) => registry.getStats(ontologyId);
+      const getStats = (ontologyId: string) => registry.getStats(ontologyId);
 
       return {
         loadCandidates,

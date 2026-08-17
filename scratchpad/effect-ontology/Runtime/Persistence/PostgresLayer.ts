@@ -15,13 +15,16 @@
  * @since 0.0.0
  */
 
+import { makeDrizzleLayer } from "@beep/postgres";
 import { Port } from "@beep/schema/Port";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { makeDrizzleLayer } from "@beep/postgres";
 import { PgClient } from "@effect/sql-pg";
-import { Config, Effect, Layer, Redacted } from "effect";
+import { Config, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 import { ShardingConfig, SqlMessageStorage, SqlRunnerStorage } from "effect/unstable/cluster";
+import { databaseReady } from "./DatabaseReady.ts";
+
+export { databaseReady } from "./DatabaseReady.ts";
 
 // -----------------------------------------------------------------------------
 // PostgreSQL Configuration Schema
@@ -47,7 +50,7 @@ export const PostgresConfig = S.Struct({
   port: Port,
   database: S.String,
   username: S.String,
-  password: S.String,
+  password: S.Redacted(S.NonEmptyString),
   ssl: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
 });
 /**
@@ -111,7 +114,35 @@ export const PostgresConfigFromEnv = Config.all({
   username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
   password: Config.redacted("POSTGRES_PASSWORD"),
   ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
-});
+}).pipe(
+  Config.mapOrFail((value) =>
+    S.decodeEffect(PostgresConfig)(value).pipe(Effect.mapError((error) => new Config.ConfigError(error)))
+  )
+);
+
+/**
+ * Constructs a PostgreSQL client layer from a schema-decoded configuration.
+ *
+ * **Example** (Inspect pg client layer from config)
+ *
+ * ```ts
+ * import { PgClientLayerFromConfig } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ *
+ * console.log(PgClientLayerFromConfig)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const PgClientLayerFromConfig = (config: PostgresConfig) =>
+  PgClient.layer({
+    host: config.host,
+    port: config.port,
+    database: config.database,
+    username: config.username,
+    password: config.password,
+    ssl: config.ssl,
+  });
 
 // -----------------------------------------------------------------------------
 // SQL Client Layer
@@ -131,47 +162,58 @@ export const PostgresConfigFromEnv = Config.all({
  * @category layers
  * @since 0.0.0
  */
-export const PgClientLive = PgClient.layerConfig({
-  host: Config.string("POSTGRES_HOST").pipe(Config.withDefault("localhost")),
-  port: PostgresPortConfig,
-  database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
-  username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
-  password: Config.redacted("POSTGRES_PASSWORD"),
-  ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
-});
+export const PgClientLive = Layer.unwrap(PostgresConfigFromEnv.pipe(Effect.map(PgClientLayerFromConfig)));
 
 /**
- * Canonical shared PostgreSQL client and Drizzle context.
+ * Constructs a Drizzle service from the PostgreSQL client in context.
+ *
+ * **Example** (Inspect the Drizzle constructor layer)
+ *
+ * ```ts
+ * import { DrizzleLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ *
+ * console.log(DrizzleLive)
+ * ```
  *
  * @category layers
  * @since 0.0.0
  */
 export const DrizzleLive = makeDrizzleLayer();
+
+/**
+ * Provides one environment-configured PostgreSQL client and its Drizzle service.
+ *
+ * **Example** (Inspect the complete database layer)
+ *
+ * ```ts
+ * import { PgDrizzleLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ *
+ * console.log(PgDrizzleLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const PgDrizzleLive = DrizzleLive.pipe(Layer.provideMerge(PgClientLive));
 
 /**
- * PgClient layer with explicit config
+ * Provides one scoped PostgreSQL client and Drizzle service after readiness
+ * verification and canonical effect-ontology migrations complete.
  *
- * **Example** (Inspect pg client layer from config)
+ * **Example** (Inspect the database-ready layer)
  *
  * ```ts
- * import { PgClientLayerFromConfig } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
+ * import { DatabaseReadyLive } from "@effect-ontology/Runtime/Persistence/PostgresLayer"
  *
- * console.log(PgClientLayerFromConfig)
+ * console.log(DatabaseReadyLive)
  * ```
  *
- * @category services
+ * @category layers
  * @since 0.0.0
  */
-export const PgClientLayerFromConfig = (config: PostgresConfig) =>
-  PgClient.layer({
-    host: config.host,
-    port: config.port,
-    database: config.database,
-    username: config.username,
-    password: Redacted.make(config.password),
-    ssl: config.ssl,
-  });
+export const DatabaseReadyLive = PgDrizzleLive.pipe(
+  Layer.tap((databaseContext) => databaseReady().pipe(Effect.provide(databaseContext)))
+);
 
 // -----------------------------------------------------------------------------
 // Message Storage Layer

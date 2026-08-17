@@ -13,7 +13,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import type { NonNegativeInt } from "@beep/schema";
 import { SchemaUtils, Sha256Hex } from "@beep/schema";
-import { identity, Match } from "effect";
+import { Match } from "effect";
 import type * as Brand from "effect/Brand";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -202,6 +202,7 @@ export const ContentHash = Sha256Hex.annotate({
     description: "Canonical content identity represented by a complete lowercase SHA-256 digest.",
   }),
   SchemaUtils.withCodecStatics,
+  SchemaUtils.withEffectCodecStatics,
   SchemaUtils.withStatics((schema) => ({
     prefix: (hash: typeof schema.Type): LegacyContentHashPrefix => LegacyContentHashPrefix.make(Str.takeLeft(16)(hash)),
     idFragment: (hash: typeof schema.Type): string => Str.takeLeft(12)(hash),
@@ -350,6 +351,7 @@ export const GcsBucket = GcsBucketEncoded.pipe(
     documentation:
       "Provider-side availability and Google's broader close-misspelling policy must still be checked when creating the bucket.",
   }),
+  SchemaUtils.withEffectCodecStatics,
   SchemaUtils.withCodecStatics
 );
 
@@ -441,15 +443,17 @@ export const GcsUri = GcsUriEncoded.pipe(
       "The schema validates URI components locally; bucket existence, permissions, and hierarchical-namespace configuration require GCS.",
   }),
   SchemaUtils.withCodecStatics,
+  SchemaUtils.withEffectCodecStatics,
   SchemaUtils.withStatics((schema) => {
     const fromParts = dual(2, (bucket: GcsBucket, objectPath: GcsObject) =>
       schema.fromUnknown(`gs://${bucket}/${objectPath}`)
     );
+    const resolveStoragePath = Match.type<typeof schema.Type | GcsObject>().pipe(
+      Match.when(schema.is, (value) => (_bucket: GcsBucket) => value),
+      Match.orElse((objectPath) => (bucket: GcsBucket) => fromParts(bucket, objectPath))
+    );
     const resolve = dual(2, (storagePath: typeof schema.Type | GcsObject, bucket: GcsBucket) =>
-      Match.value(storagePath).pipe(
-        Match.when(schema.is, identity),
-        Match.orElse((objectPath) => fromParts(bucket, objectPath))
-      )
+      resolveStoragePath(storagePath)(bucket)
     );
 
     return { fromParts, resolve };
@@ -623,6 +627,7 @@ export const Namespace = S.String.check(
       description:
         "Lowercase ontology namespace identifier beginning with a letter and containing letters, digits, or hyphens.",
     }),
+    SchemaUtils.withEffectCodecStatics,
     SchemaUtils.withCodecStatics
   );
 
@@ -677,6 +682,7 @@ export const OntologyName = S.String.check(
       description:
         "Lowercase ontology name beginning with a letter and containing letters, digits, hyphens, or underscores.",
     }),
+    SchemaUtils.withEffectCodecStatics,
     SchemaUtils.withCodecStatics
   );
 
@@ -956,6 +962,7 @@ export const BatchId = S.String.check(
         "The 48-bit truncated suffix is compact but collision-sensitive; consumers must define collision handling.",
     }),
     SchemaUtils.withCodecStatics,
+    SchemaUtils.withEffectCodecStatics,
     SchemaUtils.withStatics((schema) => ({
       fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`batch-${Str.takeLeft(12)(hash)}`),
     }))

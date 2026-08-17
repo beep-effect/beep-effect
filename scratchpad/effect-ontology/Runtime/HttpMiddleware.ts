@@ -79,7 +79,7 @@ export const makeAuthMiddleware = Effect.gen(function* () {
   });
 
   // If auth is required but no keys configured, log warning
-  if (HashSet.size(apiKeys) === 0) {
+  if (HashSet.isEmpty(apiKeys)) {
     yield* Effect.logWarning("API.REQUIRE_AUTH is true but no API.KEYS configured - all requests will be rejected");
   }
 

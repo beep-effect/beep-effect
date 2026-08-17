@@ -26,15 +26,47 @@ const SourceType = LiteralKit(["news", "blog", "press_release", "official", "aca
     })
   );
 
-const LinkStatus = LiteralKit(["pending", "enriched", "processed", "failed"])
+/**
+ * Canonical lifecycle status shared by link contracts and persistence.
+ *
+ * **Example** (Validate a processing status)
+ *
+ * ```ts
+ * import { LinkStatus } from "@effect-ontology/Domain/Schema/LinkIngestion"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(LinkStatus)("processing"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LinkStatus = LiteralKit(["pending", "enriched", "processing", "processed", "failed", "skipped"])
   .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("pending", "enriched", "processed", "failed"),
+    toArbitrary: () => (fc) => fc.constantFrom("pending", "enriched", "processing", "processed", "failed", "skipped"),
   })
   .annotate(
     $I.annote("LinkStatus", {
       description: "Lifecycle statuses used when listing ingested links.",
     })
   );
+
+/**
+ * Decoded link lifecycle status.
+ *
+ * **Example** (Use a link lifecycle status)
+ *
+ * ```ts
+ * import type { LinkStatus } from "@effect-ontology/Domain/Schema/LinkIngestion"
+ *
+ * const status: LinkStatus = "processing"
+ * console.log(status)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LinkStatus = typeof LinkStatus.Type;
 
 /**
  * Request to ingest and optionally enrich one HTTP(S) resource.
@@ -343,23 +375,30 @@ const BatchIngestResponseFields = S.Struct({
   }),
 });
 
+const BatchSummaryComparison = S.Struct({
+  actual: BatchIngestSummary,
+  expected: BatchIngestSummary,
+});
+
+const matchBatchSummaryConsistency = Match.type<typeof BatchSummaryComparison.Type>().pipe(
+  Match.when(
+    ({ actual, expected }) =>
+      expected.total === actual.total &&
+      expected.success === actual.success &&
+      expected.duplicate === actual.duplicate &&
+      expected.error === actual.error,
+    () => undefined
+  ),
+  Match.orElse(() => ({
+    path: ["summary"],
+    issue: "Batch summary counts must exactly match the tagged result collection.",
+  }))
+);
+
 const BatchIngestResponseDefinition = BatchIngestResponseFields.check(
   S.makeFilter(
     ({ results, summary }) =>
-      Match.value(summarizeBatchResults(results)).pipe(
-        Match.when(
-          (expected) =>
-            expected.total === summary.total &&
-            expected.success === summary.success &&
-            expected.duplicate === summary.duplicate &&
-            expected.error === summary.error,
-          () => undefined
-        ),
-        Match.orElse(() => ({
-          path: ["summary"],
-          issue: "Batch summary counts must exactly match the tagged result collection.",
-        }))
-      ),
+      matchBatchSummaryConsistency({ actual: summary, expected: summarizeBatchResults(results) }),
     {
       identifier: $I`BatchIngestSummaryConsistencyCheck`,
       title: "Batch Ingest Summary Consistency",

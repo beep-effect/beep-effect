@@ -12,7 +12,7 @@ import {
   EntityDensity,
   PreprocessingOptions,
 } from "../../../Domain/Schema/DocumentMetadata.ts";
-import { BackgroundJobId, JobMetadataSchema } from "../../../Domain/Schema/JobSchema.ts";
+import { BackgroundJobId, JobMetadata } from "../../../Domain/Schema/JobSchema.ts";
 import { AssertionId, ClaimId, DerivedAssertionId, TextSpan } from "../../../Domain/Schema/KnowledgeModel.ts";
 
 const contentHash = ContentHash.make("a".repeat(64));
@@ -41,8 +41,7 @@ describe("effect-ontology schema-owned domain behavior", () => {
     expect(Result.isFailure(invalidBatchSize)).toBe(true);
   });
 
-  it.effect("applies complete preprocessing defaults and Option-normalizes overrides", () =>
-    Effect.gen(function* () {
+  it.effect("applies complete preprocessing defaults and Option-normalizes overrides", Effect.fnUntraced(function* () {
       const defaults = yield* S.decodeEffect(PreprocessingOptions)({});
       const override = yield* S.decodeEffect(PreprocessingOptions)({
         chunkingStrategyOverride: "section_aware",
@@ -77,8 +76,7 @@ describe("effect-ontology schema-owned domain behavior", () => {
     expect(sparse).toBeLessThan(dense);
   });
 
-  it.effect("constructs a complete conservative metadata fallback without nullish fields", () =>
-    Effect.gen(function* () {
+  it.effect("constructs a complete conservative metadata fallback without nullish fields", Effect.fnUntraced(function* () {
       const preprocessedAt = yield* S.decodeEffect(S.DateTimeUtcFromString)("2026-07-25T12:00:00.000Z");
       const sourceUri = yield* S.decodeEffect(GcsUri)("gs://beep-input/documents/report.txt");
       const metadata = DocumentMetadata.fallback({
@@ -107,9 +105,8 @@ describe("effect-ontology schema-owned domain behavior", () => {
     expect(BackgroundJobId.fromContentHash(contentHash)).toBe("job-aaaaaaaaaaaa");
   });
 
-  it.effect("applies retry defaults and normalizes width-checked evidence spans", () =>
-    Effect.gen(function* () {
-      const metadata = yield* S.decodeEffect(JobMetadataSchema)({
+  it.effect("applies retry defaults and normalizes width-checked evidence spans", Effect.fnUntraced(function* () {
+      const metadata = yield* S.decodeEffect(JobMetadata)({
         id: BackgroundJobId.fromContentHash(contentHash),
       });
       const span = yield* S.decodeEffect(TextSpan)({

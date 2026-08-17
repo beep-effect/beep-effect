@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "b6249dba-275c-4aee-a548-db313f233171",
-  "prevIds": [
-    "00000000-0000-0000-0000-000000000000"
-  ],
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -3603,14 +3601,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "article_id"
-      ],
+      "columns": ["article_id"],
       "schemaTo": "public",
       "tableTo": "articles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "claims_article_id_articles_id_fkey",
@@ -3620,14 +3614,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "deprecated_by"
-      ],
+      "columns": ["deprecated_by"],
       "schemaTo": "public",
       "tableTo": "corrections",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "claims_deprecated_by_corrections_id_fkey",
@@ -3637,14 +3627,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "claim_a_id"
-      ],
+      "columns": ["claim_a_id"],
       "schemaTo": "public",
       "tableTo": "claims",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "conflicts_claim_a_id_claims_id_fkey",
@@ -3654,14 +3640,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "claim_b_id"
-      ],
+      "columns": ["claim_b_id"],
       "schemaTo": "public",
       "tableTo": "claims",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "conflicts_claim_b_id_claims_id_fkey",
@@ -3671,14 +3653,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "accepted_claim_id"
-      ],
+      "columns": ["accepted_claim_id"],
       "schemaTo": "public",
       "tableTo": "claims",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "conflicts_accepted_claim_id_claims_id_fkey",
@@ -3688,14 +3666,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "correction_id"
-      ],
+      "columns": ["correction_id"],
       "schemaTo": "public",
       "tableTo": "corrections",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "correction_claims_correction_id_corrections_id_fkey",
@@ -3705,14 +3679,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "original_claim_id"
-      ],
+      "columns": ["original_claim_id"],
       "schemaTo": "public",
       "tableTo": "claims",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "correction_claims_original_claim_id_claims_id_fkey",
@@ -3722,14 +3692,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "new_claim_id"
-      ],
+      "columns": ["new_claim_id"],
       "schemaTo": "public",
       "tableTo": "claims",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "correction_claims_new_claim_id_claims_id_fkey",
@@ -3739,14 +3705,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "source_article_id"
-      ],
+      "columns": ["source_article_id"],
       "schemaTo": "public",
       "tableTo": "articles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "corrections_source_article_id_articles_id_fkey",
@@ -3756,14 +3718,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "canonical_entity_id"
-      ],
+      "columns": ["canonical_entity_id"],
       "schemaTo": "public",
       "tableTo": "canonical_entities",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "entity_aliases_canonical_entity_id_canonical_entities_id_fkey",
@@ -3773,14 +3731,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "source_article_id"
-      ],
+      "columns": ["source_article_id"],
       "schemaTo": "public",
       "tableTo": "articles",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
       "name": "entity_aliases_source_article_id_articles_id_fkey",
@@ -3790,14 +3744,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "canonical_entity_id"
-      ],
+      "columns": ["canonical_entity_id"],
       "schemaTo": "public",
       "tableTo": "canonical_entities",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "entity_blocking_tokens_Sx4xpmtdQjTC_fkey",
@@ -3807,14 +3757,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "batch_id"
-      ],
+      "columns": ["batch_id"],
       "schemaTo": "public",
       "tableTo": "link_batches",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "link_batch_items_batch_id_link_batches_id_fkey",
@@ -3824,14 +3770,10 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "link_id"
-      ],
+      "columns": ["link_id"],
       "schemaTo": "public",
       "tableTo": "ingested_links",
-      "columnsTo": [
-        "id"
-      ],
+      "columnsTo": ["id"],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
       "name": "link_batch_items_link_id_ingested_links_id_fkey",
@@ -3840,10 +3782,7 @@
       "table": "link_batch_items"
     },
     {
-      "columns": [
-        "correction_id",
-        "original_claim_id"
-      ],
+      "columns": ["correction_id", "original_claim_id"],
       "nameExplicit": false,
       "name": "correction_claims_pkey",
       "entityType": "pks",
@@ -3851,10 +3790,7 @@
       "table": "correction_claims"
     },
     {
-      "columns": [
-        "batch_id",
-        "link_id"
-      ],
+      "columns": ["batch_id", "link_id"],
       "nameExplicit": false,
       "name": "link_batch_items_pkey",
       "entityType": "pks",
@@ -3862,9 +3798,7 @@
       "table": "link_batch_items"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "articles_pkey",
       "schema": "public",
@@ -3872,9 +3806,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "batch_runs_pkey",
       "schema": "public",
@@ -3882,9 +3814,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "canonical_entities_pkey",
       "schema": "public",
@@ -3892,9 +3822,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "claims_pkey",
       "schema": "public",
@@ -3902,9 +3830,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "conflicts_pkey",
       "schema": "public",
@@ -3912,9 +3838,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "corrections_pkey",
       "schema": "public",
@@ -3922,9 +3846,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "embeddings_pkey",
       "schema": "public",
@@ -3932,9 +3854,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "entity_aliases_pkey",
       "schema": "public",
@@ -3942,9 +3862,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "entity_blocking_tokens_pkey",
       "schema": "public",
@@ -3952,9 +3870,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "ingested_links_pkey",
       "schema": "public",
@@ -3962,9 +3878,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "link_batches_pkey",
       "schema": "public",
@@ -3972,9 +3886,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "llm_examples_pkey",
       "schema": "public",
@@ -3983,9 +3895,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "batch_id"
-      ],
+      "columns": ["batch_id"],
       "nullsNotDistinct": false,
       "name": "batch_runs_batch_id_key",
       "schema": "public",
@@ -3994,9 +3904,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "batch_id"
-      ],
+      "columns": ["batch_id"],
       "nullsNotDistinct": false,
       "name": "link_batches_batch_id_key",
       "schema": "public",

@@ -77,7 +77,7 @@ const PositiveLimitFromString = S.FiniteFromString.pipe(
  * import * as S from "effect/Schema"
  * import { ClaimSearchRequest } from "@effect-ontology/Schema/Search"
  *
- * const request = S.decodeUnknownOption(ClaimSearchRequest)({ query: "appointed director" })
+ * const request = S.decodeUnknownOption(ClaimSearchRequest)({ ontologyId: "ontology-a", query: "appointed director" })
  * console.log(O.map(request, (value) => value.limit)) // Some(20)
  * ```
  *
@@ -88,6 +88,7 @@ const PositiveLimitFromString = S.FiniteFromString.pipe(
  */
 export class ClaimSearchRequest extends S.Class<ClaimSearchRequest>($I`ClaimSearchRequest`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for claim search." }),
     query: S.NonEmptyString,
     predicates: IRI.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     sources: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -157,7 +158,7 @@ export class ClaimSearchResponse extends S.Class<ClaimSearchResponse>($I`ClaimSe
  * import * as S from "effect/Schema"
  * import { EntitySearchRequest } from "@effect-ontology/Schema/Search"
  *
- * const request = S.decodeUnknownOption(EntitySearchRequest)({ query: "Alice" })
+ * const request = S.decodeUnknownOption(EntitySearchRequest)({ ontologyId: "ontology-a", query: "Alice" })
  * console.log(O.map(request, (value) => value.limit)) // Some(20)
  * ```
  *
@@ -166,6 +167,7 @@ export class ClaimSearchResponse extends S.Class<ClaimSearchResponse>($I`ClaimSe
  */
 export class EntitySearchRequest extends S.Class<EntitySearchRequest>($I`EntitySearchRequest`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for entity search." }),
     query: S.NonEmptyString,
     types: IRI.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
@@ -249,7 +251,7 @@ export class EntitySearchResponse extends S.Class<EntitySearchResponse>($I`Entit
  * import * as S from "effect/Schema"
  * import { SuggestionQuery } from "@effect-ontology/Schema/Search"
  *
- * const query = S.decodeUnknownOption(SuggestionQuery)({ prefix: "Ali" })
+ * const query = S.decodeUnknownOption(SuggestionQuery)({ ontologyId: "ontology-a", prefix: "Ali" })
  * console.log(O.map(query, (value) => value.limit)) // Some(10)
  * ```
  *
@@ -258,6 +260,7 @@ export class EntitySearchResponse extends S.Class<EntitySearchResponse>($I`Entit
  */
 export class SuggestionQuery extends S.Class<SuggestionQuery>($I`SuggestionQuery`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for suggestions." }),
     prefix: S.NonEmptyString,
     limit: PositiveLimitFromString.pipe(SchemaUtils.withKeyDefaults(PosInt.make(10))),
   },
@@ -327,7 +330,7 @@ export class SuggestionsResponse extends S.Class<SuggestionsResponse>($I`Suggest
  * import * as S from "effect/Schema"
  * import { ArticleSearchRequest } from "@effect-ontology/Schema/Search"
  *
- * const request = S.decodeUnknownOption(ArticleSearchRequest)({})
+ * const request = S.decodeUnknownOption(ArticleSearchRequest)({ ontologyId: "ontology-a" })
  * console.log(O.map(request, (value) => value.limit)) // Some(20)
  * ```
  *
@@ -336,6 +339,7 @@ export class SuggestionsResponse extends S.Class<SuggestionsResponse>($I`Suggest
  */
 export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`ArticleSearchRequest`)(
   {
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope for article search." }),
     query: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     sources: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     dateRange: S.OptionFromOptionalKey(SearchDateRange).pipe(SchemaUtils.withNoneDefault),

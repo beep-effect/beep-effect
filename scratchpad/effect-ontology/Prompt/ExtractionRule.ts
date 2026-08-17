@@ -302,6 +302,8 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
   formatValidationMessage(value: unknown): string {
     return pipe(this.validationTemplate, Str.replace("{value}", Inspectable.toStringUnknown(value, 0)));
   }
+
+  static readonly decodeUnknownResult = S.decodeUnknownResult(ExtractionRule)
 }
 
 /**

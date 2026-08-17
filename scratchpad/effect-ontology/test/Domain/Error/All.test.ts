@@ -123,8 +123,7 @@ describe("effect-ontology domain errors", () => {
     }
   });
 
-  it.effect("normalizes omitted metadata and applies safe schema defaults", () =>
-    Effect.gen(function* () {
+  it.effect("normalizes omitted metadata and applies safe schema defaults", Effect.fnUntraced(function* () {
       const base = Base.BaseError.make({ message: "Unexpected failure." });
       const nullCause = yield* S.decodeEffect(Base.BaseError)({
         _tag: "BaseError",

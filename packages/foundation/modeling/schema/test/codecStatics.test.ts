@@ -18,10 +18,16 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const Count = S.FiniteFromString;
+const CountRecord = S.Struct({ count: Count });
+const DetailedCountRecord = S.Struct({ count: Count, ignored: S.String });
 const invalidEncoded = "nope";
 const invalidDecoded = "42";
 const validJsonEncoded = '"42"';
 const invalidJsonEncoded = '"nope"';
+const numericCountJson = '{"count":42}';
+const encodedCountJson = '{"count":"42"}';
+const prettyCountJson = '{\n  "count": "42"\n}';
+const reviveCount = (_key: string, value: unknown): unknown => (value === 42 ? "42" : value);
 
 const expectSharedStatics = <Sch extends S.Top & SchemaUtils.SharedCodecStatics<Sch>>(schema: Sch) => {
   expect(schema.is(42)).toBe(true);
@@ -88,6 +94,28 @@ describe("codec group statics", () => {
     );
   });
 
+  it("configures JSON parsing, stringification, and schema parsing per sync invocation", () => {
+    const ConfigurableCount = CountRecord.pipe(withSyncCodecStatics);
+    const ConfigurableDetailedCount = DetailedCountRecord.pipe(withSyncCodecStatics);
+
+    expect(ConfigurableCount.decodeSyncFromJsonString(numericCountJson, { reviver: reviveCount })).toEqual({
+      count: 42,
+    });
+    expect(ConfigurableCount.decodeUnknownSyncFromJsonString(numericCountJson, { reviver: reviveCount })).toEqual({
+      count: 42,
+    });
+    expect(ConfigurableCount.encodeSyncFromJsonString({ count: 42 }, { space: 2 })).toBe(prettyCountJson);
+    expect(ConfigurableCount.encodeUnknownSyncFromJsonString({ count: 42 }, { space: 2 })).toBe(prettyCountJson);
+    expect(
+      ConfigurableDetailedCount.encodeSyncFromJsonString({ count: 42, ignored: "omit" }, { replacer: ["count"] })
+    ).toBe(encodedCountJson);
+    expect(() =>
+      ConfigurableCount.decodeSyncFromJsonString('{"count":"42","extra":true}', {
+        onExcessProperty: "error",
+      })
+    ).toThrow();
+  });
+
   it("attaches Option, Result, and Exit codecs for direct and JSON-string boundaries", () => {
     const OptionCount = Count.pipe(withOptionCodecStatics);
     const ResultCount = Count.pipe(withResultCodecStatics);
@@ -141,6 +169,29 @@ describe("codec group statics", () => {
     expect(Exit.isFailure(ExitCount.decodeUnknownExitFromJsonString(42))).toBe(true);
     expect(Exit.isFailure(ExitCount.decodeExitFromJsonString(invalidJsonEncoded))).toBe(true);
     expect(Exit.isFailure(ExitCount.encodeUnknownExitFromJsonString(invalidDecoded))).toBe(true);
+
+    const OptionCountRecord = CountRecord.pipe(withOptionCodecStatics);
+    const ResultCountRecord = CountRecord.pipe(withResultCodecStatics);
+    const ExitCountRecord = CountRecord.pipe(withExitCodecStatics);
+
+    expect(OptionCountRecord.decodeOptionFromJsonString(numericCountJson, { reviver: reviveCount })).toStrictEqual(
+      O.some({ count: 42 })
+    );
+    expect(OptionCountRecord.encodeUnknownOptionFromJsonString({ count: 42 }, { space: 2 })).toStrictEqual(
+      O.some(prettyCountJson)
+    );
+    expect(
+      Result.getOrThrow(ResultCountRecord.decodeUnknownResultFromJsonString(numericCountJson, { reviver: reviveCount }))
+    ).toEqual({ count: 42 });
+    expect(Result.getOrThrow(ResultCountRecord.encodeResultFromJsonString({ count: 42 }, { space: 2 }))).toBe(
+      prettyCountJson
+    );
+    expect(
+      Exit.getSuccess(ExitCountRecord.decodeExitFromJsonString(numericCountJson, { reviver: reviveCount }))
+    ).toStrictEqual(O.some({ count: 42 }));
+    expect(Exit.getSuccess(ExitCountRecord.encodeUnknownExitFromJsonString({ count: 42 }, { space: 2 }))).toStrictEqual(
+      O.some(prettyCountJson)
+    );
   });
 
   it.effect(
@@ -170,6 +221,14 @@ describe("codec group statics", () => {
       expect(Exit.isFailure(failedUnknownJsonDecode)).toBe(true);
       expect(Exit.isFailure(failedJsonDecode)).toBe(true);
       expect(Exit.isFailure(failedUnknownJsonEncode)).toBe(true);
+
+      const EffectCountRecord = CountRecord.pipe(withEffectCodecStatics);
+      expect(yield* EffectCountRecord.decodeEffectFromJsonString(numericCountJson, { reviver: reviveCount })).toEqual({
+        count: 42,
+      });
+      expect(yield* EffectCountRecord.encodeUnknownEffectFromJsonString({ count: 42 }, { space: 2 })).toBe(
+        prettyCountJson
+      );
     })
   );
 
@@ -212,6 +271,16 @@ describe("codec group statics", () => {
       expect(Result.isFailure(failedUnknownJsonDecode)).toBe(true);
       expect(Result.isFailure(failedJsonDecode)).toBe(true);
       expect(Result.isFailure(failedUnknownJsonEncode)).toBe(true);
+
+      const PromiseCountRecord = CountRecord.pipe(withPromiseCodecStatics);
+      expect(
+        yield* Effect.tryPromise(() =>
+          PromiseCountRecord.decodeUnknownPromiseFromJsonString(numericCountJson, { reviver: reviveCount })
+        )
+      ).toEqual({ count: 42 });
+      expect(
+        yield* Effect.tryPromise(() => PromiseCountRecord.encodePromiseFromJsonString({ count: 42 }, { space: 2 }))
+      ).toBe(prettyCountJson);
     })
   );
 

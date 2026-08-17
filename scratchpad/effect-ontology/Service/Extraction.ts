@@ -12,6 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
+import { Unknown } from "@beep/schema/Unknown";
 import { Chunk, Context, Effect, Inspectable, Layer, Match, MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
@@ -36,8 +37,8 @@ import {
 } from "../Prompt/index.ts";
 import { makeEntitySchema } from "../Schema/EntityFactory.ts";
 import type { Mention } from "../Schema/MentionFactory.ts";
-import { MentionGraphSchema } from "../Schema/MentionFactory.ts";
-import type { RelationGraphType } from "../Schema/RelationFactory.ts";
+import { MentionGraph } from "../Schema/MentionFactory.ts";
+import type { RelationGraph } from "../Schema/RelationFactory.ts";
 import { makeRelationSchema } from "../Schema/RelationFactory.ts";
 import { annotateExtraction, annotateLlmCall, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { sha256Sync } from "../Utils/Hash.ts";
@@ -121,7 +122,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           promptPreview: structuredPrompt.systemMessage.slice(0, 500),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
-        const jsonSchemaText = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(jsonSchema);
+        const jsonSchemaText = yield* Unknown.encodeUnknownEffectFromJsonString(jsonSchema);
         const schemaHash = sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Entity extraction schema", {
           stage: "entity-extraction",
@@ -329,7 +330,7 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
         });
         const response = yield* generateObjectWithRetry({
           prompt: structuredPrompt,
-          schema: MentionGraphSchema,
+          schema: MentionGraph,
           enablePromptCaching: config.llm.enablePromptCaching,
           objectName: "MentionGraph",
           serviceName: "MentionExtractor",
@@ -465,7 +466,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           promptPreview: structuredPrompt.systemMessage.slice(0, 500),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
-        const jsonSchemaText = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(jsonSchema);
+        const jsonSchemaText = yield* Unknown.encodeUnknownEffectFromJsonString(jsonSchema);
         const schemaHash = sha256Sync(jsonSchemaText);
         yield* Effect.logDebug("Relation extraction schema", {
           stage: "relation-extraction",
@@ -527,7 +528,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           objectTypes: ReadonlyArray<string>;
           expectedRange: ReadonlyArray<string>;
         }> = [];
-        type RelationData = RelationGraphType["relations"][number];
+        type RelationData = RelationGraph["relations"][number];
         const toLiteralObject = Match.type<string | number | boolean>().pipe(
           Match.when(P.isString, (value) => RelationObject.cases.Text.make({ value })),
           Match.when(P.isNumber, (value) => RelationObject.cases.Number.make({ value })),

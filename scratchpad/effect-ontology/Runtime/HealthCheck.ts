@@ -14,9 +14,9 @@ import { LiteralKit } from "@beep/schema";
 import { Context, DateTime, Duration, Effect, Layer, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { ConfigService } from "../Service/Config.ts";
 import { StorageService } from "../Service/Storage.ts";
 
@@ -177,21 +177,10 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
        * Checks dependencies (config, LLM availability, etc.)
        */
       readiness: Effect.fn("readiness")(function* () {
-        const checks: Record<string, "ok" | "error"> = {};
-
-        // Check config is loaded
-        if (P.isTruthy(config.llm.provider)) {
-          checks.config = "ok";
-        } else {
-          checks.config = "error";
-        }
-
-        // Check ontology path is set (not necessarily accessible yet)
-        if (P.isTruthy(config.ontology.path)) {
-          checks.ontologyConfig = "ok";
-        } else {
-          checks.ontologyConfig = "error";
-        }
+        const checks: Record<string, "ok" | "error"> = {
+          config: "ok",
+          ontologyConfig: "ok",
+        };
 
         const hasError = A.some(R.values(checks), (check) => check === "error");
 
@@ -211,30 +200,26 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
         let overallStatus: "ok" | "degraded" | "error" = "ok";
 
         // 1. Config check - LLM provider configured
-        checks.config = P.isTruthy(config.llm.provider) ? "ok" : "error";
+        checks.config = "ok";
 
         // 2. Ontology config check - path configured
-        checks.ontologyConfig = P.isTruthy(config.ontology.path) ? "ok" : "error";
+        checks.ontologyConfig = "ok";
 
         // 3. Ontology file exists and readable via StorageService
-        if (P.isTruthy(config.ontology.path)) {
-          checks.ontologyFile = yield* storage.get(config.ontology.path).pipe(
-            Effect.timeout(Duration.seconds(5)),
-            Effect.map((opt): "ok" | "error" => (opt !== undefined ? healthOk : healthError)),
-            Effect.catch((error) =>
-              Effect.logWarning("Ontology file health check failed", {
-                path: config.ontology.path,
-                error: String(error),
-              }).pipe(Effect.as(healthError))
-            )
-          );
-        } else {
-          checks.ontologyFile = "error";
-        }
+        checks.ontologyFile = yield* storage.getOption(config.ontology.path).pipe(
+          Effect.timeout(Duration.seconds(5)),
+          Effect.map(O.match({ onNone: () => healthError, onSome: () => healthOk })),
+          Effect.catch((error) =>
+            Effect.logWarning("Ontology file health check failed", {
+              path: config.ontology.path,
+              error: String(error),
+            }).pipe(Effect.as(healthError))
+          )
+        );
 
         // 4. LLM API key present check (verify apiKey is non-empty)
         const apiKeyValue = Redacted.value(config.llm.apiKey);
-        checks.llmApiKey = P.isTruthy(apiKeyValue) && apiKeyValue.length > 0 ? "ok" : "error";
+        checks.llmApiKey = Str.isNonEmpty(apiKeyValue) ? "ok" : "error";
 
         // 5. Storage bucket accessibility (if using GCS)
         if (O.isSome(config.storage.bucket) && config.storage.type === "gcs") {

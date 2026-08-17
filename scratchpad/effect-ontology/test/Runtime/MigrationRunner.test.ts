@@ -31,17 +31,14 @@ const MigrationRunnerTestLayer = Layer.merge(DatabaseTestLayer, BunServices.laye
 
 describe.sequential("effect-ontology migrations", () => {
   it.layer(BunServices.layer)("with generated migration files", (it) => {
-    it.effect("keeps unsupported PostgreSQL features in the reviewed custom migration", () =>
-      Effect.gen(function* () {
+    it.effect("keeps unsupported PostgreSQL features in the reviewed custom migration", Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const migrationNames = yield* fs.readDirectory(migrationsFolder);
-        const customSql = yield* Effect.forEach(
-          A.filter(migrationNames, Str.endsWith("_postgres_features")),
-          (name) => fs.readFileString(`${migrationsFolder}/${name}/migration.sql`)
+        const customSql = yield* Effect.forEach(A.filter(migrationNames, Str.endsWith("_postgres_features")), (name) =>
+          fs.readFileString(`${migrationsFolder}/${name}/migration.sql`)
         );
-        const baselineSql = yield* Effect.forEach(
-          A.filter(migrationNames, Str.endsWith("_baseline")),
-          (name) => fs.readFileString(`${migrationsFolder}/${name}/migration.sql`)
+        const baselineSql = yield* Effect.forEach(A.filter(migrationNames, Str.endsWith("_baseline")), (name) =>
+          fs.readFileString(`${migrationsFolder}/${name}/migration.sql`)
         );
         const sql = A.join(customSql, "\n");
         const baseline = A.join(baselineSql, "\n");
@@ -54,7 +51,7 @@ describe.sequential("effect-ontology migrations", () => {
         assert.include(sql, "CREATE TRIGGER ingested_links_updated_at");
         assert.include(baseline, "CREATE EXTENSION IF NOT EXISTS vector");
         assert.include(baseline, "CREATE EXTENSION IF NOT EXISTS pg_trgm");
-        assert.isBelow(baseline.indexOf("CREATE EXTENSION IF NOT EXISTS vector"), baseline.indexOf('vector(768)'));
+        assert.isBelow(baseline.indexOf("CREATE EXTENSION IF NOT EXISTS vector"), baseline.indexOf("vector(768)"));
         assert.include(baseline, 'CONSTRAINT "claims_rank_check"');
         assert.include(baseline, 'CONSTRAINT "different_claims"');
         assert.include(baseline, 'CONSTRAINT "ingested_links_status_check"');
@@ -64,8 +61,7 @@ describe.sequential("effect-ontology migrations", () => {
   });
 
   it.layer(DatabaseTestLayer)("with canonical Drizzle migration journaling", (it) => {
-    it.effect("applies fresh, remains idempotent, and discovers a future migration", () =>
-      Effect.gen(function* () {
+    it.effect("applies fresh, remains idempotent, and discovers a future migration", Effect.fnUntraced(function* () {
         const database = yield* PostgresDrizzle;
         const sql = yield* SqlClient.SqlClient;
         const config = { migrationsSchema: "effect_ontology", migrations: [BaselineProbe] };
@@ -102,8 +98,7 @@ describe.sequential("effect-ontology migrations", () => {
   });
 
   it.layer(MigrationRunnerTestLayer)("with non-canonical migration history", (it) => {
-    it.effect("refuses an empty legacy journal with reset guidance", () =>
-      Effect.gen(function* () {
+    it.effect("refuses an empty legacy journal with reset guidance", Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
         yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
@@ -120,8 +115,7 @@ describe.sequential("effect-ontology migrations", () => {
       })
     );
 
-    it.effect("refuses partial and mixed known legacy histories", () =>
-      Effect.gen(function* () {
+    it.effect("refuses partial and mixed known legacy histories", Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
         yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
@@ -137,8 +131,32 @@ describe.sequential("effect-ontology migrations", () => {
       })
     );
 
-    it.effect("allows an empty canonical journal to resume canonical migration", () =>
-      Effect.gen(function* () {
+    it.effect("classifies a complete known legacy history and refuses an in-place rebaseline", Effect.fnUntraced(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
+        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
+        yield* sql`CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL)`;
+        yield* sql`
+          INSERT INTO schema_migrations (version, name)
+          VALUES (1, '001_claims_schema'),
+                 (2, '002_bitemporal_timestamps'),
+                 (3, '003_claim_idempotency'),
+                 (4, '004_ingested_links'),
+                 (5, '005_ontology_scoping'),
+                 (6, '006_entity_registry_scoping'),
+                 (7, '007_llm_examples'),
+                 (8, '008_content_hash_scoping'),
+                 (9, '009_processing_status'),
+                 (10, '010_pgvector_setup')
+        `;
+
+        const error = yield* migrateOnBoot.pipe(Effect.flip);
+        assert.instanceOf(error, LegacyMigrationHistoryError);
+        assert.include(error.message, "complete legacy effect-ontology migration history");
+      })
+    );
+
+    it.effect("allows an empty canonical journal to resume canonical migration", Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
         yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
@@ -157,8 +175,7 @@ describe.sequential("effect-ontology migrations", () => {
       })
     );
 
-    it.effect("refuses mixed canonical journal names", () =>
-      Effect.gen(function* () {
+    it.effect("refuses mixed canonical journal names", Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         const fs = yield* FileSystem.FileSystem;
         const baselineName = A.filter(yield* fs.readDirectory(migrationsFolder), Str.endsWith("_baseline"));
@@ -186,8 +203,7 @@ describe.sequential("effect-ontology migrations", () => {
       })
     );
 
-    it.effect("does not misclassify an unrelated journal as legacy ontology history", () =>
-      Effect.gen(function* () {
+    it.effect("does not misclassify an unrelated journal as legacy ontology history", Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
         yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
@@ -196,6 +212,31 @@ describe.sequential("effect-ontology migrations", () => {
 
         const error = yield* migrateOnBoot.pipe(Effect.flip);
         assert.notInstanceOf(error, LegacyMigrationHistoryError);
+      })
+    );
+
+    it.effect("does not query legacy columns on an unrelated journal shape", Effect.fnUntraced(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
+        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
+        yield* sql`CREATE TABLE schema_migrations (application_key TEXT PRIMARY KEY)`;
+        yield* sql`INSERT INTO schema_migrations (application_key) VALUES ('another_application')`;
+
+        const error = yield* migrateOnBoot.pipe(Effect.flip);
+        assert.notInstanceOf(error, LegacyMigrationHistoryError);
+      })
+    );
+
+    it.effect("refuses a malformed canonical journal with typed reset guidance", Effect.fnUntraced(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
+        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
+        yield* sql`CREATE SCHEMA effect_ontology`;
+        yield* sql`CREATE TABLE effect_ontology.__drizzle_migrations (id SERIAL PRIMARY KEY, hash TEXT NOT NULL)`;
+
+        const error = yield* migrateOnBoot.pipe(Effect.flip);
+        assert.instanceOf(error, LegacyMigrationHistoryError);
+        assert.include(error.message, "unsupported table shape");
       })
     );
   });

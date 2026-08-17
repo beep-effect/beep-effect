@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Unknown } from "@beep/schema/Unknown";
 import {$ScratchpadId} from "@beep/identity";
 import {
   LiteralKit,
@@ -634,7 +635,7 @@ export const toolExpression = (path: string): string =>
     A.map((segment) =>
       identifierSegment(segment)
         ? `.${segment}`
-        : `[${S.encodeUnknownSync(S.fromJsonString(S.Unknown))(segment)}]`
+        : `[${Unknown.encodeUnknownSyncFromJsonString(segment)}]`
     ),
     A.join("")
   )}`;

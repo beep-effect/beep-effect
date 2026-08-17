@@ -1,5 +1,6 @@
 // The rendered acceptance script is executed once to prove its fail-closed
 // usage path through Effect's real Node child-process service.
+
 import {
   makeOpenClawBundleHash,
   makeOpenClawDeploymentIntent,
@@ -28,6 +29,7 @@ import {
   renderOpenClawUnit,
 } from "@beep/infra";
 import { OpenclawSecretReference, OpenclawSha256Hex } from "@beep/openclaw";
+import { Unknown } from "@beep/schema/Unknown";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
@@ -113,7 +115,7 @@ const runCaptured = Effect.fnUntraced(function* (command: ChildProcess.Command) 
 const defaultArgs = OpenClawStackArgs.new(identity, deploymentConfig);
 const defaultGeneration = makeOpenClawGeneration(defaultArgs);
 const parseDocument = (json: string): { readonly [key: string]: unknown } =>
-  O.getOrThrow(pipe(Result.getOrThrow(S.decodeResult(S.fromJsonString(S.Unknown))(json)), O.liftPredicate(P.isObject)));
+  O.getOrThrow(pipe(Result.getOrThrow(Unknown.decodeResultFromJsonString(json)), O.liftPredicate(P.isObject)));
 
 /**
  * Unwrap a rendered `/bin/bash --noprofile --norc -p -c '<body>'` command back into the body the

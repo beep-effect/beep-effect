@@ -168,7 +168,31 @@ const loadAndMergeExternalVocabularies = Effect.fn("loadAndMergeExternalVocabula
  * @category parsing
  * @since 0.0.0
  */
-export const parseOntologyFromStore = dual3(
+type OntologyQueryService = {
+  readonly queryStore: (
+    store: RdfStore,
+    pattern: {
+      readonly subject?: IRI | Subject | null;
+      readonly predicate?: IRI | NamedNode | null;
+      readonly object?: IRI | ObjectTerm | null;
+      readonly graph?: IRI | GraphTerm | null;
+    }
+  ) => Effect.Effect<Chunk.Chunk<Quad>, RdfError>;
+};
+
+type ParsedOntology = {
+  readonly classes: Chunk.Chunk<ClassDefinition>;
+  readonly properties: Chunk.Chunk<PropertyDefinition>;
+  readonly hierarchy: Record<string, Array<IRI>>;
+  readonly propertyHierarchy: Record<string, Array<IRI>>;
+};
+
+export const parseOntologyFromStore: {
+  (rdf: OntologyQueryService, store: RdfStore, ontologyPath: string): Effect.Effect<ParsedOntology, OntologyParsingFailed>;
+  (store: RdfStore, ontologyPath: string): (
+    rdf: OntologyQueryService
+  ) => Effect.Effect<ParsedOntology, OntologyParsingFailed>;
+} = dual3(
   (
     rdf: {
       readonly queryStore: (
@@ -561,7 +585,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const ontologyPath = config.ontology.path;
 
         // Load main ontology
-        const contentOpt = yield* storage.get(ontologyPath).pipe(
+        const contentOpt = yield* storage.getOption(ontologyPath).pipe(
           Effect.mapError((error) =>
             OntologyFileNotFound.make({
               message: `Failed to read ontology from storage at ${ontologyPath}`,
@@ -571,14 +595,14 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           )
         );
 
-        if (contentOpt === undefined) {
+        if (O.isNone(contentOpt)) {
           return yield* OntologyFileNotFound.make({
             message: `Ontology file not found at ${ontologyPath}`,
             path: FilePath.make(ontologyPath),
           });
         }
 
-        const turtleContent = contentOpt;
+        const turtleContent = contentOpt.value;
         const mainStore = yield* rdf.parseTurtle(turtleContent);
 
         // Load and merge external vocabularies (PROV-O, W3C ORG, etc.)
@@ -649,7 +673,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         return cached.value.data;
       }
       yield* Effect.logInfo("Loading ontology from URI", { uri, storagePath });
-      const contentOpt = yield* storage.get(storagePath).pipe(
+      const contentOpt = yield* storage.getOption(storagePath).pipe(
         Effect.mapError((error) =>
           OntologyFileNotFound.make({
             message: `Failed to read ontology from storage at ${uri}`,
@@ -658,13 +682,13 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           })
         )
       );
-      if (contentOpt === undefined) {
+      if (O.isNone(contentOpt)) {
         return yield* OntologyFileNotFound.make({
           message: `Ontology file not found at ${uri}`,
           path: FilePath.make(uri),
         });
       }
-      const turtleContent = contentOpt;
+      const turtleContent = contentOpt.value;
       const mainStore = yield* rdf.parseTurtle(turtleContent);
       const externalPath = config.ontology.externalVocabsPath;
       yield* loadAndMergeExternalVocabularies(mainStore, externalPath, "uri", uri, storage, rdf);
@@ -704,7 +728,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         iri: entry.iri,
         storagePath: entry.storagePath,
       });
-      const contentOpt = yield* storage.get(entry.storagePath).pipe(
+      const contentOpt = yield* storage.getOption(entry.storagePath).pipe(
         Effect.mapError((error) =>
           OntologyFileNotFound.make({
             message: `Failed to read ontology from storage at ${entry.storagePath}`,
@@ -713,13 +737,13 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           })
         )
       );
-      if (contentOpt === undefined) {
+      if (O.isNone(contentOpt)) {
         return yield* OntologyFileNotFound.make({
           message: `Ontology file not found at ${entry.storagePath}`,
           path: FilePath.make(entry.storagePath),
         });
       }
-      const turtleContent = contentOpt;
+      const turtleContent = contentOpt.value;
       const mainStore = yield* rdf.parseTurtle(turtleContent);
       if (O.isSome(entry.externalVocabsPath)) {
         yield* loadAndMergeExternalVocabularies(

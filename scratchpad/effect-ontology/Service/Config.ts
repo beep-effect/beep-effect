@@ -268,7 +268,7 @@ const RdfSettings = S.Struct({
     xsd: IRI,
   }).pipe(
     SchemaUtils.withKeyDefaults({
-      schema: IRI.make("http://schema.org/"),
+      schema: IRI.make(CoreVocab.schema.iri),
       rdf: IRI.make(CoreVocab.rdf.iri),
       rdfs: IRI.make(CoreVocab.rdfs.iri),
       owl: IRI.make(CoreVocab.owl.iri),

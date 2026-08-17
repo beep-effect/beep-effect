@@ -228,15 +228,66 @@ const EventEntryFields = {
   createdAt: S.DateTimeUtc,
 };
 
+const ClaimCorrectedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("ClaimCorrected"),
+  payload: ClaimCorrectedPayload,
+});
+const ClaimDeprecatedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("ClaimDeprecated"),
+  payload: ClaimDeprecatedPayload,
+});
+const AliasAddedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("AliasAdded"),
+  payload: AliasAddedPayload,
+});
+const ClaimPromotedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("ClaimPromoted"),
+  payload: ClaimPromotedPayload,
+});
+const EntityLinkedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("EntityLinked"),
+  payload: EntityLinkedPayload,
+});
+const ExtractionCompletedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("ExtractionCompleted"),
+  payload: ExtractionCompletedPayload,
+});
+const ValidationFailedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("ValidationFailed"),
+  payload: ValidationFailedPayload,
+});
+const BatchStateChangedEventEntry = S.Struct({
+  ...EventEntryFields,
+  event: S.tag("BatchStateChanged"),
+  payload: BatchStateChangedPayload,
+});
+
+type OntologyEventEntryValue =
+  | typeof ClaimCorrectedEventEntry.Type
+  | typeof ClaimDeprecatedEventEntry.Type
+  | typeof AliasAddedEventEntry.Type
+  | typeof ClaimPromotedEventEntry.Type
+  | typeof EntityLinkedEventEntry.Type
+  | typeof ExtractionCompletedEventEntry.Type
+  | typeof ValidationFailedEventEntry.Type
+  | typeof BatchStateChangedEventEntry.Type;
+
 const OntologyEventEntryDefinition = S.Union([
-  S.Struct({ ...EventEntryFields, event: S.tag("ClaimCorrected"), payload: ClaimCorrectedPayload }),
-  S.Struct({ ...EventEntryFields, event: S.tag("ClaimDeprecated"), payload: ClaimDeprecatedPayload }),
-  S.Struct({ ...EventEntryFields, event: S.tag("AliasAdded"), payload: AliasAddedPayload }),
-  S.Struct({ ...EventEntryFields, event: S.tag("ClaimPromoted"), payload: ClaimPromotedPayload }),
-  S.Struct({ ...EventEntryFields, event: S.tag("EntityLinked"), payload: EntityLinkedPayload }),
-  S.Struct({ ...EventEntryFields, event: S.tag("ExtractionCompleted"), payload: ExtractionCompletedPayload }),
-  S.Struct({ ...EventEntryFields, event: S.tag("ValidationFailed"), payload: ValidationFailedPayload }),
-  S.Struct({ ...EventEntryFields, event: S.tag("BatchStateChanged"), payload: BatchStateChangedPayload }),
+  ClaimCorrectedEventEntry,
+  ClaimDeprecatedEventEntry,
+  AliasAddedEventEntry,
+  ClaimPromotedEventEntry,
+  EntityLinkedEventEntry,
+  ExtractionCompletedEventEntry,
+  ValidationFailedEventEntry,
+  BatchStateChangedEventEntry,
 ]).pipe(S.toTaggedUnion("event"));
 
 /**
@@ -251,7 +302,7 @@ const OntologyEventEntryDefinition = S.Union([
  * @category events
  * @since 0.0.0
  */
-export const OntologyEventEntry = OntologyEventEntryDefinition.pipe(
+export const OntologyEventEntry: S.Codec<OntologyEventEntryValue, unknown> = OntologyEventEntryDefinition.pipe(
   $I.annoteSchema("OntologyEventEntry", {
     description: "Schema-validated journal entry whose event tag determines its canonical payload.",
     toArbitrary: () => S.toArbitrary(OntologyEventEntryDefinition),
@@ -271,7 +322,7 @@ export const OntologyEventEntry = OntologyEventEntryDefinition.pipe(
  * @category type-level
  * @since 0.0.0
  */
-export type OntologyEventEntry = typeof OntologyEventEntry.Type;
+export type OntologyEventEntry = OntologyEventEntryValue;
 
 /**
  * EventLog definitions emitted by extraction and batch workflows.

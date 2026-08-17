@@ -11,8 +11,7 @@ import { CachedExtractionResult } from "../../Service/ExtractionCache.ts";
 import { ExplanationContext } from "../../Service/ViolationExplainer.ts";
 
 describe("canonical service schema boundaries", () => {
-  it.effect("round-trips canonical extraction entities and relations", () =>
-    Effect.gen(function* () {
+  it.effect("round-trips canonical extraction entities and relations", Effect.fnUntraced(function* () {
       const ada = yield* S.decodeEffect(EntityId)("ada_lovelace");
       const personIri = yield* S.decodeEffect(IRI)("https://schema.org/Person");
       const nameIri = yield* S.decodeEffect(IRI)("https://schema.org/name");

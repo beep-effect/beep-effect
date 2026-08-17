@@ -23,6 +23,7 @@ import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { NonNegativeInt, PosInt, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { Unknown } from "@beep/schema/Unknown";
 import { Effect, FileSystem, Order, Path, Result } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -47,7 +48,7 @@ const decodeContentDigest = S.decodeUnknownEffect(ContentDigest);
 const decodeOperationId = S.decodeUnknownEffect(OperationId);
 const decodePosixPath = S.decodeUnknownEffect(PosixPath);
 const hashBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
-const encodeUnknownJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const encodeUnknownJson = Unknown.encodeUnknownEffectFromJsonString;
 
 const createClaimsTables = [
   `CREATE TABLE IF NOT EXISTS epistemic_candidate_claim (

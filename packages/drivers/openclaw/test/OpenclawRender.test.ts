@@ -19,6 +19,7 @@ import {
   RenderedOpenclawConfig,
   renderOpenclawConfig,
 } from "@beep/openclaw/OpenclawRender";
+import { Unknown } from "@beep/schema/Unknown";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { pipe, Result } from "effect";
@@ -36,14 +37,13 @@ import {
 
 const IntentArbitrary = S.toArbitrary(OpenclawDeploymentIntent)(fc);
 
-const decodeJsonDocument = (json: string): unknown =>
-  Result.getOrThrow(S.decodeResult(S.fromJsonString(S.Unknown))(json));
+const decodeJsonDocument = (json: string): unknown => Result.getOrThrow(Unknown.decodeResultFromJsonString(json));
 
 const parseDocument = (json: string): { readonly [key: string]: unknown } =>
   O.getOrThrow(pipe(decodeJsonDocument(json), O.liftPredicate(P.isObject)));
 
 const withoutSecretsJson = (json: string): string =>
-  Result.getOrThrow(S.encodeResult(S.fromJsonString(S.Unknown))(R.remove(parseDocument(json), "secrets")));
+  Result.getOrThrow(Unknown.encodeResultFromJsonString(R.remove(parseDocument(json), "secrets")));
 
 const secretReferenceCount = (json: string): number => Str.split(json, "op://").length - 1;
 
@@ -345,7 +345,7 @@ describe("@beep/openclaw render adapter", () => {
 
         expect(second.canonicalJson).toBe(first.canonicalJson);
         expect(second.contentHash).toBe(first.contentHash);
-        expect(Result.isSuccess(S.decodeResult(S.fromJsonString(S.Unknown))(first.canonicalJson))).toBe(true);
+        expect(Result.isSuccess(Unknown.decodeResultFromJsonString(first.canonicalJson))).toBe(true);
       }),
       fcRuns(25)
     ));

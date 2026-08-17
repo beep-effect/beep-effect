@@ -260,8 +260,12 @@ const makeEntityIndexMethods = (
     if (HashMap.size(state.entities) === 0) return [];
     const queryEmbedding = yield* embedding.embed(query, "search_query");
     let candidateIds = HashSet.empty<string>();
-    if (P.isNotUndefined(options.filterTypes) && options.filterTypes.length > 0) {
-      for (const typeIri of options.filterTypes) {
+    const filterTypes = O.flatMap(
+      O.fromUndefinedOr(options.filterTypes),
+      A.match({ onEmpty: O.none, onNonEmpty: O.some })
+    );
+    if (O.isSome(filterTypes)) {
+      for (const typeIri of filterTypes.value) {
         const typeEntities = HashMap.get(state.typeIndex, typeIri);
         if (O.isSome(typeEntities)) candidateIds = HashSet.union(candidateIds, typeEntities.value);
       }
