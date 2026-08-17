@@ -53,6 +53,8 @@ export * from "../commands/Yeet/internal/Sweep.schemas.ts";
 export * from "../commands/Yeet/internal/Sweep.ts";
 export * from "../commands/Yeet/internal/TurboQuery.ts";
 export * from "../commands/Yeet/internal/Verdict.ts";
+export * from "../commands/Yeet/internal/WatchMode.ts";
+export * from "../commands/Yeet/internal/WatchStream.ts";
 export * from "../commands/Yeet/Yeet.render.ts";
 export * from "../commands/Yeet/Yeet.schemas.ts";
 export { GhActor } from "../internal/github/GhSchema.ts";
