@@ -688,24 +688,6 @@ export const stashUnstagedWorktreeForTesting = stashUnstagedWorktree;
 export const restoreStashedWorktreeForTesting = restoreStashedWorktree;
 
 /**
- * Publish state a pre-commit step needs in order to hand residue back.
- *
- * **Details**
- *
- * `stash` is `none` for any publish that parked nothing — a publish without
- * `--staged-only` — which is what makes
- * {@link restorePublishStashOnFailure} a pass-through there instead of a
- * conditional at every call site.
- *
- * @category models
- * @since 0.0.0
- */
-export interface PublishStashScope {
-  readonly context: RepoRunContext;
-  readonly stash: O.Option<YeetStashState>;
-}
-
-/**
  * Hand parked residue back when a step between the stash and the commit fails.
  *
  * **Details**
@@ -761,7 +743,7 @@ export interface PublishStashScope {
  * @since 0.0.0
  */
 export const restorePublishStashOnFailure =
-  (scope: PublishStashScope) =>
+  (scope: { readonly context: RepoRunContext; readonly stash: O.Option<YeetStashState> }) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | ChildProcessSpawner.ChildProcessSpawner> =>
     O.match(scope.stash, {
       onNone: () => effect,
