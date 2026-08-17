@@ -95,11 +95,7 @@
         "$TURBO_ROOT$/packages/foundation/ui-system/*/stories/**",
         "!.beep/**"
       ],
-      "outputs": [
-        "dist/**",
-        "**/node_modules/.tmp/*.tsbuildinfo",
-        "!**/.turbo/**"
-      ]
+      "outputs": []
     },
     "test": {
       "passThroughEnv": [

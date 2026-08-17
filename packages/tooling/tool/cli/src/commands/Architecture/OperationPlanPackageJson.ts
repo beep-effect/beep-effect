@@ -104,7 +104,7 @@ export const renderPackageJsonOperation = Effect.fn(function* (operation: WriteP
       "beep:audit":
         "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
       "beep:build": "tsc -p tsconfig.json && bun run babel",
-      "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+      "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
       "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
       "beep:lint": "biome check .",
       "beep:lint:fix": "biome check . --write",
