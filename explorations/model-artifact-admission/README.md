@@ -2,13 +2,15 @@
 
 ## Status
 
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
-Align closed 2026-08-17: three-tier identity-assurance floor, the conservative
-requalification matrix, and the five-status immutable disposition semantics
-all ratified — see [`DECISIONS.md`](./DECISIONS.md). BRIEF ratified with amendments
-2026-08-17; next gate: MAP draft + operator MAP review.
+Graduated 2026-08-17: the [`MAP`](./MAP.md) was ratified with five
+adversarial-review amendments and
+[`goals/model-arrangement-admission-core`](../../goals/model-arrangement-admission-core/README.md)
+was scaffolded as a paused queue goal in the graduation PR — see
+[`DECISIONS.md`](./DECISIONS.md). Eval harness and enforcement stay gated in
+the MAP.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -24,10 +26,10 @@ decoding configuration, and artifact digest.
 
 ## Next Open Question
 
-Align pending: ratify the minimum hosted identity-assurance level for each
-admitted role and data class, the full-versus-bounded-delta requalification
-matrix, and the `ModelArrangementDisposition` status, restriction, expiry, and
-supersession vocabulary.
+None — graduated. Fired MAP gates (the first real non-fixture qualification,
+for the eval harness; the approval-gate consumer landing, for enforcement
+wiring) reopen this exploration at decompose; execution questions belong to
+[`goals/model-arrangement-admission-core`](../../goals/model-arrangement-admission-core/README.md).
 
 ## Read This First
 
@@ -47,3 +49,12 @@ supersession vocabulary.
   boundary without fabricating a weights digest, proposed qualification
   evidence and full/delta rules, and grounded disposition/lineage composition
   in the shipped epistemic core. ATLAS synced in this PR.
+- 2026-08-17: align closed -> decompose — identity-assurance floor,
+  conservative requalification matrix, and five-status immutable disposition
+  semantics ratified; BRIEF ratified with amendments (approval-gate consumer;
+  repo's own arrangement as first fixture; admission-local vocabularies).
+- 2026-08-17: MAP ratified -> graduated — 8-lane adversarial review produced
+  amendments A-E (restricted fixture; closed chat-arrangement component set;
+  enumerated kits + assurance-floor policy table; envelope+component digest;
+  referential integrity). `goals/model-arrangement-admission-core` scaffolded
+  paused in the graduation PR; ATLAS synced.

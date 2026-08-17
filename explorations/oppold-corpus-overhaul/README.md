@@ -2,7 +2,13 @@
 
 ## Status
 
-Stage: `capture` · Status: `active`
+Stage: `align` · Status: `active`
+
+Restoration bar **v2** ratified 2026-08-17 after an 8-lane adversarial review
+(grok + codex) invalidated the first census — see
+[`DECISIONS.md`](./DECISIONS.md) and
+[`research/2026-08-17-adversarial/`](./research/2026-08-17-adversarial/).
+Next gate: bound the remaining capture bullets, then the BRIEF.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -44,5 +50,10 @@ prerequisite for the next expensive pipeline run.
   `goals/folio-lynx-taxonomy-browse`.
 
 ## Trail
+
+- 2026-08-17 (later): adversarial review round — 4 lanes attacked the bar, 4 the
+  vision; census factually corrected (no orphan; three volumes; raw
+  `f-recyclebin-*`; collector ledger absorbed); bar v2 re-ratified
+  (one-pass copy-while-hashing, honest loss universe, mail-first).
 
 - 2026-08-17: packet created from the operator's roadmap re-eval notes (operator-ratified); born active at capture; first align question is the salvage restoration inventory.

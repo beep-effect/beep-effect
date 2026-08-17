@@ -220,12 +220,16 @@ resume trigger) lives in
 | [`secure-document-delivery`](../goals/secure-document-delivery/README.md) | An approved-document delivery consumer ships in the portal. |
 | [`effect-v4-workflow-engine-spike`](../goals/effect-v4-workflow-engine-spike/README.md) | A workflow consumer demands it; spike only. |
 | [`voice-composer-slice`](../goals/voice-composer-slice/README.md) | Voice capture re-enters the product bet. |
+| [`belief-view-engine`](../goals/belief-view-engine/README.md) | Scaffolded paused 2026-08-17 (queue goal, adversarially reviewed spec); a lane slot frees or an epistemic consumer pulls it. |
+| [`model-arrangement-admission-core`](../goals/model-arrangement-admission-core/README.md) | Scaffolded paused 2026-08-17 (queue goal, adversarially reviewed spec); a lane slot frees or the approval-gate consumer pulls it. |
 
-The eight rows above (beyond domain-kernel-hardening) were graduated
-2026-07-14 and saw zero execution; the 2026-08-17 re-eval moved them here
-explicitly rather than leaving them implied-active. Their manifests stay
-`active` (they are executable); this file owns the fact that they are queued,
-not in flight.
+Beyond `domain-kernel-hardening`, this cohort has two vintages. The eight
+rows through `voice-composer-slice` were graduated 2026-07-14 and saw zero
+execution; the 2026-08-17 re-eval moved them here explicitly rather than
+leaving them implied-active, and their manifests stay `active` (they are
+executable) while this file owns the fact that they are queued, not in
+flight. The last two rows were scaffolded `paused` on 2026-08-17 as queue
+goals; their manifests already record that lifecycle.
 
 Completed packets record their own reopening triggers; deleted packets' living
 visions were re-captured under `explorations/`:

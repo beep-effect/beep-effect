@@ -47,13 +47,14 @@ import { syncTsconfigAtRoot } from "../TsconfigSync/index.ts";
 import {
   createFileGenerationPlanService,
   FileGenerationPlanInput,
+  PlannedAsset,
   PlannedFile,
   PlannedSymlink,
 } from "./FileGenerationPlanService.ts";
 import { CreatePackageIdentityRegistration } from "./internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "./internal/LabIdentitySegment.ts";
 import * as RetiredNameRegistry from "./internal/RetiredNameRegistry.ts";
-import { createTemplateService, TemplateRenderRequest, TemplateSpec } from "./TemplateService.ts";
+import { createTemplateService, StaticAssetSpec, TemplateRenderRequest, TemplateSpec } from "./TemplateService.ts";
 
 const $I = $RepoCliId.create("commands/CreatePackage/CreatePackage.command");
 const {
@@ -412,6 +413,16 @@ const TAURI_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom(
   ...REAL_APP_DOC_TEMPLATE_PAIRS,
 ]);
 
+// `tauri::generate_context!()` opens `src-tauri/icons/icon.png` while the macro
+// expands, so a Tauri crate does not compile without a real icon on disk — no
+// `bundle.icon` value avoids this, including `[]` and `bundle.active: false`.
+// The icon is therefore a generated file, and being binary it is copied
+// verbatim rather than rendered. Authors replace it in place; regeneration
+// never clobbers an existing icon.
+const TAURI_APP_ASSET_SPECS: ReadonlyArray<StaticAssetSpec> = A.of(
+  StaticAssetSpec.make({ assetName: "assets/tauri-icon.png", outputPath: "src-tauri/icons/icon.png" })
+);
+
 const NEXTJS_LAB_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
   ["app-next-tsconfig.json.hbs", "tsconfig.json"],
   CHECK_TSCONFIG_TEMPLATE_PAIR,
@@ -494,6 +505,16 @@ const templateSpecsFor = (shape: ScaffoldShape): ReadonlyArray<TemplateSpec> =>
     })
   );
 
+// Only the Tauri kinds carry verbatim assets today; every other scaffold is
+// fully expressible as rendered text.
+const assetSpecsFor = (shape: ScaffoldShape): ReadonlyArray<StaticAssetSpec> =>
+  pipe(
+    shape.appKind,
+    O.filter((kind) => appKindEquivalence(kind, "tauri")),
+    O.map(() => TAURI_APP_ASSET_SPECS),
+    O.getOrElse(A.empty<StaticAssetSpec>)
+  );
+
 /**
  * Ordered list of all generated files for dry-run and summary output.
  *
@@ -550,6 +571,7 @@ const TAURI_APP_FILES = [
   "src-tauri/build.rs",
   "src-tauri/tauri.conf.json",
   "src-tauri/capabilities/default.json",
+  "src-tauri/icons/icon.png",
   "src-tauri/src/main.rs",
   "src-tauri/src/lib.rs",
   "LICENSE",
@@ -643,7 +665,14 @@ const filesFor = (shape: ScaffoldShape): ReadonlyArray<string> =>
 const PACKAGE_DIRECTORIES = ["src", "test", "docs"] as const;
 const STORIES_DIRECTORIES = ["stories"] as const;
 const NEXTJS_APP_DIRECTORIES = ["src", "src/app", "test"] as const;
-const TAURI_APP_DIRECTORIES = ["src", "test", "src-tauri", "src-tauri/capabilities", "src-tauri/src"] as const;
+const TAURI_APP_DIRECTORIES = [
+  "src",
+  "test",
+  "src-tauri",
+  "src-tauri/capabilities",
+  "src-tauri/icons",
+  "src-tauri/src",
+] as const;
 
 const VITE_APP_DIRECTORIES = ["src", "src/styles", "test"] as const;
 const SERVICE_APP_DIRECTORIES = ["src", "src/runtime", "test"] as const;
@@ -947,10 +976,6 @@ const labFlagRefusal = (options: {
       [
         !packageTypeEquivalence(options.packageType, "app"),
         "--lab is only valid with --type app; labs are runnable app workspaces under apps/labs.",
-      ],
-      [
-        appKindIs(options.appKind, "tauri"),
-        "--lab --app-kind tauri is deferred to lab-apps P3; scaffold with --app-kind vite for the lab web shell today.",
       ],
       [
         appKindIs(options.appKind, "runtime-proof"),
@@ -1547,6 +1572,12 @@ export const createPackageCommand = Command.make(
             labManifestFiles
           ),
           A.flatten
+        ),
+        assets: A.map(assetSpecsFor(scaffoldShape), (asset) =>
+          PlannedAsset.make({
+            relativePath: asset.outputPath,
+            sourcePath: `${templateDir}/${asset.assetName}`,
+          })
         ),
         symlinks: A.of(
           PlannedSymlink.make({

@@ -34,6 +34,7 @@ import { runYeetMonitorUntilMerged } from "./MonitorLoop.ts";
 import { renderYeetReplyFailureVerdict, replyReportPathForContext, runYeetReply } from "./Reply.ts";
 import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
 import { executeSweep, overrideSweepBranch, planSweep, renderSweepReport } from "./Sweep.ts";
+import { runYeetWatchStream, yeetWatchExitFailure } from "./WatchMode.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
@@ -289,4 +290,62 @@ export const runYeetMergeLoop = Effect.fn("Yeet.runMergeLoopCommand")(function* 
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   return yield* runYeetMonitorUntilMerged(yield* hydrateYeetReadOnlyContext(options), {});
+});
+
+/**
+ * Default poll interval for `yeet monitor --watch`, matching the GitHub CLI's
+ * own check-watch cadence.
+ *
+ * **Example** (Read the interval)
+ *
+ * ```ts
+ * import { YEET_WATCH_INTERVAL_MILLIS } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YEET_WATCH_INTERVAL_MILLIS) // 10000
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const YEET_WATCH_INTERVAL_MILLIS = 10_000;
+
+/**
+ * Stream the current branch PR's state transitions until it settles.
+ *
+ * **Details**
+ *
+ * This is `yeet monitor --watch`: one NDJSON row per transition on stdout,
+ * ending when the PR merges, closes, or every check is terminal. The exit code
+ * is the backpressure contract — a red wave, a closed PR, or a poll error
+ * exits non-zero so a supervising session treats the stream's end as a signal,
+ * not a shrug.
+ *
+ * **Example** (Build the watch-loop runner effect)
+ *
+ * ```ts
+ * import { runYeetWatchLoop } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.succeed(runYeetWatchLoop)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param options - Parsed `yeet monitor` flag values.
+ * @returns Nothing on a green settle; a reported non-zero exit otherwise.
+ * @category commands
+ * @since 0.0.0
+ */
+export const runYeetWatchLoop = Effect.fn("Yeet.runWatchLoopCommand")(function* (
+  options: YeetPorcelainOptions
+): Effect.fn.Return<
+  void,
+  YeetCommandError | CliReportedExit,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const context = yield* hydrateYeetReadOnlyContext(options);
+  const ended = yield* runYeetWatchStream(context, { intervalMillis: YEET_WATCH_INTERVAL_MILLIS });
+  if (yeetWatchExitFailure(ended)) {
+    yield* Console.error(`yeet watch ended ${ended.reason} with ${ended.failing} failing check(s).`);
+    return yield* failWithReportedExit(`yeet watch ended ${ended.reason} with ${ended.failing} failing check(s).`);
+  }
 });

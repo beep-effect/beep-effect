@@ -100,6 +100,38 @@ export class PlannedFile extends S.Class<PlannedFile>($I`PlannedFile`)(
 ) {}
 
 /**
+ * A verbatim asset copy operation.
+ *
+ * **Details**
+ *
+ * `sourcePath` points outside the output directory, at the template asset on
+ * disk; only `relativePath` is constrained to the generated tree. Assets exist
+ * because not every generated file is text — see `StaticAssetSpec`.
+ *
+ * **Example** (Validate PlannedAsset candidate)
+ *
+ * ```ts
+ * import { PlannedAsset } from "@beep/repo-cli/commands/CreatePackage"
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { relativePath: "src-tauri/icons/icon.png", sourcePath: "/tmp/templates/assets/tauri-icon.png" }
+ * console.log(S.is(PlannedAsset)(candidate)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PlannedAsset extends S.Class<PlannedAsset>($I`PlannedAsset`)(
+  {
+    relativePath: RelativePlanPath,
+    sourcePath: S.String,
+  },
+  $I.annote("PlannedAsset", {
+    description: "A verbatim asset copy operation.",
+  })
+) {}
+
+/**
  * A symlink operation.
  *
  * **Example** (Validate PlannedSymlink candidate)
@@ -146,6 +178,7 @@ export class FileGenerationPlanInput extends S.Class<FileGenerationPlanInput>($I
     outputDir: S.String,
     directories: S.Array(RelativePlanPath),
     files: S.Array(PlannedFile),
+    assets: PlannedAsset.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<PlannedAsset>())),
     symlinks: PlannedSymlink.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty<PlannedSymlink>())),
   },
   $I.annote("FileGenerationPlanInput", {
@@ -169,7 +202,7 @@ export class FileGenerationPlanInput extends S.Class<FileGenerationPlanInput>($I
  * @category models
  * @since 0.0.0
  */
-export const GenerationActionKind = LiteralKit(["mkdir", "write-file", "symlink"]).pipe(
+export const GenerationActionKind = LiteralKit(["mkdir", "write-file", "copy-asset", "symlink"]).pipe(
   $I.annoteSchema("GenerationActionKind", {
     description: "Planned action kinds for deterministic generation.",
   })
@@ -200,6 +233,17 @@ class GenerationActionWriteFile extends S.Class<GenerationActionWriteFile>($I`Ge
   },
   $I.annote("GenerationActionWriteFile", {
     description: "File write action.",
+  })
+) {}
+
+class GenerationActionCopyAsset extends S.Class<GenerationActionCopyAsset>($I`GenerationActionCopyAsset`)(
+  {
+    kind: S.tag("copy-asset"),
+    relativePath: RelativePlanPath,
+    sourcePath: S.String,
+  },
+  $I.annote("GenerationActionCopyAsset", {
+    description: "Verbatim asset copy action.",
   })
 ) {}
 
@@ -234,6 +278,7 @@ class GenerationActionSymlink extends S.Class<GenerationActionSymlink>($I`Genera
 export const GenerationAction = S.Union([
   GenerationActionMkdir,
   GenerationActionWriteFile,
+  GenerationActionCopyAsset,
   GenerationActionSymlink,
 ]).pipe(
   $I.annoteSchema("GenerationAction", {
@@ -245,6 +290,7 @@ export const GenerationAction = S.Union([
       schema.match({
         mkdir: (action) => `mkdir ${action.relativePath}`,
         "write-file": (action) => `write ${action.relativePath}`,
+        "copy-asset": (action) => `copy ${action.relativePath}`,
         symlink: (action) => `symlink ${action.relativePath} -> ${action.target}`,
       })
     ),
@@ -568,6 +614,7 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       A.make(
         A.map(input.directories, toPosixPath),
         parentDirectoriesForEntries(input.files),
+        parentDirectoriesForEntries(input.assets),
         parentDirectoriesForEntries(symlinks)
       ),
       A.flatten,
@@ -592,6 +639,17 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       )
     );
 
+    const copyAssetActions = pipe(
+      input.assets,
+      sortedByRelativePath,
+      A.map((asset) =>
+        GenerationAction.cases["copy-asset"].make({
+          relativePath: toPosixPath(asset.relativePath),
+          sourcePath: asset.sourcePath,
+        })
+      )
+    );
+
     const symlinkActions = pipe(
       symlinks,
       sortedByRelativePath,
@@ -606,6 +664,7 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
     const actions: ReadonlyArray<GenerationAction> = pipe(
       mkdirActions,
       A.appendAll(writeActions),
+      A.appendAll(copyAssetActions),
       A.appendAll(symlinkActions)
     );
 
@@ -679,6 +738,19 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
             O.map(() => countSkippedFileWrite),
             O.getOrElse(() => writeFile(absolutePath, content))
           )
+        )
+      );
+
+    // Copied unconditionally rather than skipped-if-present. `create-package`
+    // refuses to run against an existing directory, so a destination-exists
+    // branch here is one no test can reach — the shape that reads as lost
+    // coverage the moment anything else in this file moves.
+    const copyAsset = (absolutePath: string, sourcePath: string) =>
+      ensureDirectoryFor(absolutePath).pipe(
+        Effect.andThen(() =>
+          fs
+            .copyFile(sourcePath, absolutePath)
+            .pipe(mapFsError(`Failed to copy asset "${sourcePath}" to "${absolutePath}"`), Effect.tap(countWrittenFile))
         )
       );
 
@@ -759,6 +831,7 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       GenerationAction.match(action, {
         mkdir: () => createDirectory(absolutePath),
         "write-file": (writeAction) => writeFileIfChanged(absolutePath, writeAction.content),
+        "copy-asset": (copyAction) => copyAsset(absolutePath, copyAction.sourcePath),
         symlink: (linkAction) => ensureSymlink(absolutePath, linkAction.target),
       })
     );
@@ -778,12 +851,16 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       const absolutePath = yield* GenerationAction.match(action, {
         mkdir: () => resolveContainedPath(plan.outputDir, action.relativePath),
         "write-file": () => resolveContainedPath(plan.outputDir, action.relativePath),
+        "copy-asset": () => resolveContainedPath(plan.outputDir, action.relativePath),
         symlink: () => resolveContainedSymlinkDestinationPath(plan.outputDir, action.relativePath),
       });
 
       yield* GenerationAction.match(action, {
         mkdir: thunkEffectVoid,
         "write-file": thunkEffectVoid,
+        // Only the destination is constrained; `sourcePath` deliberately points
+        // at the template asset outside the generated tree.
+        "copy-asset": thunkEffectVoid,
         symlink: ({ target }) => validateSymlinkTarget(absolutePath, target),
       });
 

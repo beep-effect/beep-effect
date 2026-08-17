@@ -139,6 +139,15 @@ bun run beep yeet monitor
 bun run beep yeet monitor --until-merged
 ```
 
+- Stream one NDJSON row per PR state transition (typed `yeet-watch/v1` rows:
+  check transitions, thread open/resolve, mergeability, head supersession)
+  until the PR settles; exits non-zero on a red wave, a closed PR, or a poll
+  error:
+
+```bash
+bun run beep yeet monitor --watch
+```
+
 - Reset the clone after a merge (prune refs, fast-forward `main`, delete the
   merged branch locally and remotely, reinstall when `bun.lock` moved, end on
   `main`). Inspect the plan before running it:

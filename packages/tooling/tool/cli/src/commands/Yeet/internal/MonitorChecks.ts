@@ -38,10 +38,30 @@ import type { RepoStepRunResult } from "../../../internal/repo-run/index.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorChecks");
 
-// `gh pr checks` prints "no checks reported on the '<branch>' branch", and
-// "no required checks reported on ..." under `--required`. Both mean the same
-// thing to a freshly pushed head: nothing has registered yet.
-const NO_CHECKS_REPORTED = /no (?:required )?checks reported/iu;
+/**
+ * Matches `gh pr checks`' empty-registration error text.
+ *
+ * **Details**
+ *
+ * `gh pr checks` prints "no checks reported on the '<branch>' branch", and
+ * "no required checks reported on ..." under `--required`. Both mean the same
+ * thing to a freshly pushed head: nothing has registered yet. This is the ONLY
+ * non-zero checks exit that may be read as an empty rollup — any other failure
+ * (authentication, rate limit, network) is a poll error, and treating it as
+ * empty converts an outage into a green completion.
+ *
+ * **Example** (Match the registration message)
+ *
+ * ```ts
+ * import { NO_CHECKS_REPORTED } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(NO_CHECKS_REPORTED.test("no checks reported on the 'feat/x' branch")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const NO_CHECKS_REPORTED = /no (?:required )?checks reported/iu;
 
 /**
  * Whether a check watch found checks to watch.
