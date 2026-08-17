@@ -591,7 +591,7 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
           : O.some(thread.isResolved ? ("resolved" as const) : ("unresolved" as const)),
     });
     return O.match(to, {
-      onNone: () => A.empty<YeetWatchEvent>(),
+      onNone: A.empty<YeetWatchEvent>,
       onSome: (state) => [YeetThreadTransition.make({ at, headSha: next.headSha, threadId: thread.id, to: state })],
     });
   });

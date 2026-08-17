@@ -177,7 +177,7 @@ const frontmatterIsValid = (raw: string): Effect.Effect<boolean> =>
     onSome: (yamlText) =>
       decodeFrontmatter(yamlText).pipe(
         Effect.map(() => true),
-        Effect.orElseSucceed(() => false)
+        Effect.orElseSucceed(thunkFalse)
       ),
   });
 
