@@ -29,12 +29,18 @@ committed inventory).
 
 ## Corpus facts (S0–S2, 2026-07-25)
 
-- Source: `~/Downloads/research-7-24-26` — 524 files scanned (519 PDFs + 4
+- Source (acquisition, transient — no longer on disk):
+  `~/Downloads/research-7-24-26` — 524 files scanned (519 PDFs + 4
   doc/docx + 1 pre-extracted article markdown; the prior synthesis markdown
   excluded as a non-paper).
 - 447 unique by SHA-256 (77 exact-duplicate files collapsed), 443 canonical
   papers after title-dupe collapse (4).
 - Waves: 343 papers dated 2026-06-29, 100 dated 2026-07-25.
+- **Current location (verified 2026-08-17):**
+  `~/YeeBois/research/academia-2026-07` — `text/`, `meta/`, `firstpages/` all
+  hold 443 files; 443/443 `extractStatus: "ok"`. Source PDFs were not
+  retained and no DOI/URL was recorded, so re-acquisition would be
+  title-search based. See README "Corpus location".
 - Extraction: 443/443 clean (`pdftotext`; libreoffice for doc/docx). No OCR
   or firecrawl fallback was needed.
 - Overlap vs `~/YeeBois/research` (1,696 hashed files): 57 exact sha256

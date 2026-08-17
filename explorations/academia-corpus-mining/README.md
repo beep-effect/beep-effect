@@ -9,13 +9,46 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Spark
 
-519 research PDFs landed in `~/Downloads/research-7-24-26` from Academia.edu
+519 research PDFs landed in `~/Downloads/research-7-24-26` (**acquisition
+site, no longer present — see Corpus location below**) from Academia.edu
 interest recommendations — two waves (June 29: LLM agents, memory,
 metacognition, neuro-symbolic, document understanding; July 24–25: legal
 ontologies, AI-and-law). With five non-PDF papers that is 524 files,
 normalized to **443 canonical papers** (the early "444 unique titles" figure
 was the preliminary filename estimate). Mine them against the repo's live
 work streams and land the intelligence here for later goal graduation.
+
+## Corpus location (verified 2026-08-17)
+
+The source PDFs were **not retained**. `~/Downloads/research-7-24-26` was a
+transient acquisition site and no longer exists. Nothing is lost that this
+packet depends on: the durable artifact is the normalized library, and every
+paper's extracted text survived.
+
+**Durable library:** `~/YeeBois/research/academia-2026-07` (out-of-repo)
+
+| Directory | Files | What it holds |
+| --- | ---: | --- |
+| `text/` | **443** | Full extracted text, one per canonical paper |
+| `meta/` | **443** | Per-paper metadata (sha256, pages, size, pdfTitle, extractStatus) |
+| `firstpages/` | **443** | First-page extracts used for triage |
+| `notes/` | 231 | Deep-read notes |
+| `synthesis/` | 10 | Tier-3 syntheses |
+| `state/` | 24 | Pipeline state and dispatch records |
+
+Verified counts, not claimed ones: **443/443 records report
+`extractStatus: "ok"`** — zero failures and zero sub-1k-char extractions. Text
+volume is 330 papers at 20k–100k chars, 49 above 100k, 64 at 1k–20k. The
+citable content of all 443 papers is intact.
+
+**Two real gaps, both non-blocking:**
+
+1. **No PDFs.** Figures, tables, and page layout are unrecoverable from the
+   text extracts. This only matters for a paper whose figures carry the
+   argument.
+2. **No DOIs or URLs were recorded** in any of the 443 meta records
+   (`srcPath` points at the dead Downloads path). Re-acquisition would be
+   title-based search per paper, not a link fetch.
 
 ## Next Open Question
 

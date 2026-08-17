@@ -10,7 +10,8 @@ dated heading at the bottom.
 ## 2026-07-25
 
 The spark: Academia.edu sent interest-based recommendations; the resulting
-download pile at `~/Downloads/research-7-24-26` is 519 PDFs + 6 non-PDFs
+download pile at `~/Downloads/research-7-24-26` (transient; deleted after
+normalization) is 519 PDFs + 6 non-PDFs
 (3 docx, 1 doc, 2 md), ~357 MB, 444 unique titles after stripping " (N)"
 duplicate suffixes. Intent: turn the pile into actionable repo intelligence
 instead of letting it rot in Downloads.
