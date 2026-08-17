@@ -40,6 +40,7 @@ export * from "../commands/Yeet/internal/MonitorComments.ts";
 export * from "../commands/Yeet/internal/MonitorLoop.ts";
 export * from "../commands/Yeet/internal/Planner.ts";
 export * from "../commands/Yeet/internal/Porcelain.ts";
+export * from "../commands/Yeet/internal/PortfolioIndexGuard.ts";
 export * from "../commands/Yeet/internal/ProofState.ts";
 export * from "../commands/Yeet/internal/Provenance.ts";
 export * from "../commands/Yeet/internal/PublishScope.ts";
