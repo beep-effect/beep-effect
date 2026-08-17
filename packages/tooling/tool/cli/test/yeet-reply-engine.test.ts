@@ -1,10 +1,13 @@
 import {
+  failedReplyOutcomes,
+  failYeetReplyOnFailedOutcomes,
   findReplyThread,
   planReplyActions,
   REPLY_DRAFTS_FILE_NAME,
   REPLY_REPORT_FILE_NAME,
   REPLY_RERUN_COMMAND,
   ReplyDraft,
+  ReplyDraftOutcome,
   ReplyDrafts,
   ReplyDraftsJson,
   ReplyLiveThread,
@@ -13,7 +16,9 @@ import {
   ReplyThreadComment,
   ReplyThreadCommentConnection,
   RepoRunContext,
+  renderYeetReplyFailureVerdict,
   replyDraftsPathForContext,
+  replyOutcomeTarget,
   replyReportPathForContext,
   replyResolveRetryCommand,
   replyReviewThreadsPageQuery,
@@ -28,7 +33,8 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import type { ReplyAction, ReplyDraftOutcome } from "@beep/repo-cli/test/Yeet";
+import { expectReportedExit } from "./support/CommandTest.ts";
+import type { ReplyAction } from "@beep/repo-cli/test/Yeet";
 
 const OPEN_COMMENT_ID = 2_284_119_001;
 const RESOLVED_COMMENT_ID = 2_284_119_002;
@@ -422,4 +428,132 @@ describe("reply operator surfaces", () => {
     expect(REPLY_REPORT_FILE_NAME).toBe("reply-report.json");
     expect(REPLY_RERUN_COMMAND).toBe("bun run beep yeet reply");
   });
+});
+
+// A7 (ship-velocity): a pass whose replies were rejected used to exit 0, so
+// `yeet reply && bun run beep yeet monitor` walked straight past threads that
+// are still open — and an unresolved thread is a hard merge gate. The batch
+// still runs to completion; the exit code is what changed.
+const deniedReplyMutationStubs: ReadonlyArray<readonly [string, CommandStub]> = [
+  ["gh repo view", ok(repoViewJson)],
+  ["YeetReplyReviewThreads", ok(reviewThreadsJson)],
+  ["addPullRequestReviewThreadReply", { exitCode: 1, output: "gh: Resource not accessible by integration" }],
+];
+
+const reportOf = (outcomes: ReadonlyArray<ReplyDraftOutcome>): ReplyReport =>
+  ReplyReport.make({
+    schemaVersion: "yeet-reply-report/v1",
+    prNumber: 558,
+    createdAt: "2026-08-16T00:00:00.000Z",
+    outcomes,
+  });
+
+describe("replyOutcomeTarget", () => {
+  it("prefers the thread id the draft named", () => {
+    expect(replyOutcomeTarget({ threadId: O.some("PRRT_open"), commentId: O.some(OPEN_COMMENT_ID) })).toBe("PRRT_open");
+  });
+
+  it("falls back to the comment handle when only a comment id was named", () => {
+    expect(replyOutcomeTarget({ threadId: O.none(), commentId: O.some(OPEN_COMMENT_ID) })).toBe(
+      `comment ${OPEN_COMMENT_ID}`
+    );
+  });
+
+  // Unreachable through a decoded outcome — ReplyTargetPresenceCheck rejects an
+  // empty target — but reachable here, which is why the function takes the
+  // handles instead of the outcome.
+  it("renders an unknown handle rather than throwing on an empty target", () => {
+    expect(replyOutcomeTarget({ threadId: O.none(), commentId: O.none() })).toBe("comment ?");
+  });
+});
+
+describe("reply run verdict", () => {
+  it("counts only failed outcomes, never stale ones", () => {
+    const report = reportOf([
+      ReplyDraftOutcome.make({ threadId: O.some("PRRT_stale"), status: "stale", detail: "already resolved upstream" }),
+      ReplyDraftOutcome.make({ threadId: O.some("PRRT_posted"), status: "posted", detail: "reply posted" }),
+      ReplyDraftOutcome.make({ threadId: O.some("PRRT_open"), status: "failed", detail: "denied" }),
+    ]);
+    expect(A.map(failedReplyOutcomes(report), (outcome) => outcome.threadId)).toEqual([O.some("PRRT_open")]);
+  });
+
+  it("names every failed handle, the report, and the still-open threads", () => {
+    const verdict = renderYeetReplyFailureVerdict(
+      reportOf([
+        ReplyDraftOutcome.make({ threadId: O.some("PRRT_open"), status: "failed", detail: "denied" }),
+        ReplyDraftOutcome.make({ commentId: O.some(OPEN_COMMENT_ID), status: "failed", detail: "denied" }),
+      ]),
+      "/repo/.beep/yeet/reply-report.json"
+    );
+    expect(O.isSome(verdict)).toBe(true);
+    const text = O.getOrElse(verdict, () => "");
+    expect(text).toContain("2 of 2 drafts");
+    expect(text).toContain("PRRT_open");
+    expect(text).toContain(`comment ${OPEN_COMMENT_ID}`);
+    expect(text).toContain("/repo/.beep/yeet/reply-report.json");
+    expect(text).toContain("still open");
+    // The retry is per outcome: a draft that posted and only failed to resolve
+    // must never be told to re-run the pass, which would post the body twice.
+    expect(text).not.toContain(REPLY_RERUN_COMMAND);
+  });
+
+  it("has no verdict for a pass where nothing failed", () => {
+    expect(
+      renderYeetReplyFailureVerdict(
+        reportOf([
+          ReplyDraftOutcome.make({ threadId: O.some("PRRT_a"), status: "resolved", detail: "reply posted" }),
+          ReplyDraftOutcome.make({ threadId: O.some("PRRT_b"), status: "stale", detail: "already resolved upstream" }),
+        ]),
+        "reply-report.json"
+      )
+    ).toEqual(O.none());
+  });
+
+  it.effect("exits zero when every outcome is posted, resolved, or stale", () =>
+    failYeetReplyOnFailedOutcomes(
+      reportOf([
+        ReplyDraftOutcome.make({ threadId: O.some("PRRT_a"), status: "resolved", detail: "reply posted" }),
+        ReplyDraftOutcome.make({ threadId: O.some("PRRT_b"), status: "stale", detail: "already resolved upstream" }),
+      ]),
+      "reply-report.json"
+    )
+  );
+
+  it.effect("exits non-zero, and silently, when any outcome failed", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        failYeetReplyOnFailedOutcomes(
+          reportOf([ReplyDraftOutcome.make({ threadId: O.some("PRRT_open"), status: "failed", detail: "denied" })]),
+          "reply-report.json"
+        )
+      );
+
+      // Exit code 1, and reported=false: the pass already printed every
+      // outcome, so the sentinel adds the code, not a second rendering.
+      expectReportedExit(exit);
+    })
+  );
+
+  it.effect("fails the whole reply run when a live draft's reply is rejected", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const context = replyContext(root);
+        yield* writeDrafts(
+          context,
+          draftsOf([
+            ReplyDraft.make({ threadId: O.some("PRRT_open"), body: "Fixed in 0123456." }),
+            ReplyDraft.make({ commentId: O.some(RESOLVED_COMMENT_ID), body: "Already handled." }),
+          ])
+        );
+
+        const report = yield* runYeetReply(context);
+        // The batch still ran: the stale draft was still classified.
+        expect(A.map(report.outcomes, (outcome) => outcome.status)).toEqual(["failed", "stale"]);
+
+        expectReportedExit(
+          yield* Effect.exit(failYeetReplyOnFailedOutcomes(report, yield* replyReportPathForContext(context)))
+        );
+      })
+    ).pipe(provideScopedLayer(replyTestLayer(deniedReplyMutationStubs)))
+  );
 });

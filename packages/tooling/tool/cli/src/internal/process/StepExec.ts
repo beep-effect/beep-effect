@@ -29,9 +29,11 @@ import * as O from "@beep/utils/Option";
 import { Effect, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
+import type { Duration } from "effect";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
@@ -646,6 +648,17 @@ export type RunToExitOptions = SpawnFields & {
   readonly command: string;
   readonly args: ReadonlyArray<string>;
   readonly stdio: "inherit" | "ignore";
+  /**
+   * Escalate to `SIGKILL` this long after the scope closes and the child is
+   * sent `SIGTERM`.
+   *
+   * Interrupting a `runToExit` closes the child's scope, which signals the
+   * process group and then waits for the exit event. Without this, a child that
+   * ignores `SIGTERM` makes that wait unbounded, so a caller-side timeout
+   * cannot actually reclaim the process. Left `undefined`, behaviour is
+   * unchanged.
+   */
+  readonly forceKillAfter?: Duration.Input | undefined;
 };
 
 /**
@@ -683,6 +696,7 @@ export const runToExit = Effect.fn("StepExec.runToExit")(function* (
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make(options.command, [...options.args], {
         ...spawnFields(options),
+        ...(P.isUndefined(options.forceKillAfter) ? {} : { forceKillAfter: options.forceKillAfter }),
         stdin: options.stdin ?? options.stdio,
         stdout: options.stdio,
         stderr: options.stdio,

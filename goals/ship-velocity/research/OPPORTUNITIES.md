@@ -165,3 +165,111 @@ session/machine ids.
   debug cycle on a test that reported "no lane carries the flake quarantine" when both lanes
   did. Already recorded as agent memory; worth a lint rule or a v3→v4 migration note, since the
   failure mode is a wrong answer rather than a type error.
+
+## 2026-08-16 — A7 implementation
+
+- Four new exported helpers were written, typechecked green by the package's own
+  `bunx tsgo -p tsconfig.check.json`, and only then rejected by the same command once the
+  effect language-service rules ran: `TS377101 missingPipeableSignature` on every 2+-parameter
+  export (two renderers, one combinator, one Option-returning formatter). The rule is invisible
+  while authoring — nothing in the editor loop, the law files, or the JSDoc pattern doc says
+  "a new exported function with two or more parameters needs a data-last partner or it will not
+  compile". Cost: a second authoring pass over four symbols plus their call sites and tests.
+  Prevention: state the arity rule in the code laws next to the helper-form law, with its three
+  standard remedies (make it module-private, curry it data-last, or `dual` it) — the remedy is
+  cheap once known and expensive to rediscover.
+- The test-file typecheck lane cannot be run for one package. `bunx tsgo -p test/tsconfig.json`
+  from the package fails immediately with TS6059 (`rootDir` is `src`), because the real lane
+  (`beep quality test-tsgo`) synthesises a per-package config with `rootDir: <repoRoot>` into
+  `node_modules/.tmp/`. Reproducing that by hand was the only way to typecheck three new test
+  files without running the repo-wide lane; a first attempt with the synthetic config outside
+  the repo failed differently (TS2688, `bun`/`node` type roots unresolvable). It found two real
+  classes immediately — `strictEffectProvide` (TS377032) on mid-effect `Effect.provide(layer)`
+  and a `Ref<string[]>` vs `Ref<readonly string[]>` mismatch — so the lane is worth reaching,
+  which is the argument for `beep quality test-tsgo --filter <package>` (or a documented
+  scoped recipe) rather than all-or-nothing.
+- `it.effect` runs under a TestClock, so every timed assertion silently hangs to the 30s vitest
+  timeout instead of failing: four monitor tests wedged with no diagnostic beyond "Test timed
+  out", including one whose only sleep was 30 real milliseconds. `it.live` is the fix and it is
+  in the repo already (`worktree-fleet-scan.test.ts`), but nothing connects the symptom to the
+  cause. Prevention: a testing-patterns line — "a test that sleeps, races, or polls needs
+  `it.live`; `it.effect` gives it a clock that never advances".
+- A monitor comment poll reported `Failed to poll pull request comments during yeet monitor.`
+  and dropped gh's own words on the floor, so the degraded-stream line an operator sees could
+  not distinguish a rate limit from a revoked token. Found only because a test asserted on the
+  surfaced text. Same class as the misattributed-composite-hint receipts above: a failure that
+  is *reported* to a human must carry the underlying tool's message, not just the wrapper's.
+- SPEC A7's optional fifth item (Lint Policy lane success-exit hang) was already closed on main:
+  `.github/workflows/check.yml` runs every lane through a `run_lane` wrapper (`setsid` + `wait`
+  + process-group TERM/KILL) that landed in #718, and `bin-main.ts` already exits explicitly on
+  success for all three entry paths. Re-deriving that cost a full investigation pass. Prevention:
+  when a SPEC item is closed incidentally by another PR, strike it in the SPEC in that PR — the
+  workflow comment cites "ship-velocity SPEC A7" but the SPEC bullet never learned about it.
+  Residual gap worth its own receipt: the post-lane `Append Turbo summary` steps still invoke
+  `bun run beep` directly, outside the reaping wrapper.
+- Ran `bun run beep lint schema-catalog` as a pre-flight, saw it red, and regenerated
+  `standards/schema-catalog.generated.jsonc` into a feature branch — a +170/-458 whole-file
+  diff of which three entries were mine. Wrong call, reverted: `standards/generated-artifacts.
+  policy.md` says whole-repo snapshots are refreshed only in dedicated chore PRs, that these
+  gates are delta/ratchet-based, and that staleness at HEAD is not gating; the same mistake is
+  already recorded there against PR #452. Confirmed the mechanics too — `schema-catalog`
+  appears in no `package.json` script and nowhere in `.github/workflows/check.yml`, and the
+  gating composite in `Quality/Tasks.ts:1699` carries `lint:schema-first` only. The trap is
+  that `beep lint` exposes gating and non-gating scans through one uniform surface with one
+  uniform exit code, so a manual pre-flight sweep of "the cheap lint gates" cannot tell which
+  reds a proof actually enforces. Two preventions: have `beep lint <subcommand>` state whether
+  the scan is gating (and point at the policy when it is not), and separately, the underlying
+  staleness — a package deletion left `packages/drivers/box/src/experimental` entries behind —
+  wants the standing `chore: refresh generated standards artifacts` PR from clean main, not a
+  feature branch.
+- The coverage ratchet cost two ~6.5-minute cycles for the same defect class, and neither hit
+  was where the risk was expected. Both were `Option.getOrElse` fallback thunks that no test
+  reaches: `replyOutcomeTarget`'s "neither handle" arm (unreachable through a decoded outcome,
+  because `ReplyTargetPresenceCheck` rejects an empty target) and `yeetCheckRegistration`'s
+  absent-`output` arm. Two rules made this expensive to predict: a **new** file is held to zero
+  uncovered units ("no baseline file identity"), not to the package floor, so `MonitorChecks.ts`
+  failed at 91.66% functions while the package's own floor is 63%; and a per-file floor at 100%
+  means a single new defensive thunk is a regression. Both fixes were real tests, not floor
+  moves — the first required changing `replyOutcomeTarget` to take the two handles instead of
+  the whole outcome, since the schema check makes the empty case impossible to construct and
+  therefore impossible to test. Prevention: say in the coverage lane's output that new files
+  are held to 100%, and treat "a `getOrElse`/`orElse` thunk over a field the tests always
+  populate" as the house signature of a ratchet failure — grep the diff for it before paying a
+  cycle.
+- **B5 has a costed case now.** Publishing A7 paid for two full ~17-minute proofs on byte-identical
+  content. The second was not triggered by any source change but by `git add`: `ProofState.ts`'s
+  `collectDiffFingerprint` hashes
+  `sha256(git status --short ‖ git diff HEAD ‖ git diff --cached)`, so staging invalidates the
+  proof three ways at once — status letters flip (`??`→`A `, `MM`→`M `), bytes leave the unstaged
+  diff, and the same bytes enter the cached diff — while the resulting tree is unchanged. The
+  fingerprint keys on the *staging arrangement*, not on the tree. Keying it on a tree SHA
+  (`git write-tree` over the index) would have reused the proof. That is SPEC B5, and the price
+  here was ~17 minutes of serialized slot time for a no-op, with three queued items waiting.
+  Ordering half of the same defect: `yeet publish` refuses untracked files only *after* running
+  the fallow-advisory preflight, and under `--start-pr-early` that waste sits on the critical
+  path — the intent check belongs before the preflight, and the fingerprint could be taken after
+  intent staging rather than before.
+- Never pipe a long proof through `tail`: `bun run beep yeet verify 2>&1 | tail -50` buffers
+  everything until exit, so 16 minutes of a healthy run were indistinguishable from a hang and
+  the monitor armed on the log file could not fire until completion. Confirming liveness needed
+  `ps`. Redirect to a file and tail the file. Same family as the existing piped-exit-code receipt.
+- `yeet publish`'s operator status summary quoted a *stale* verdict: after the second publish
+  attempt pushed and created PR #738, the summary printed
+  `verdict: publish failure: yeet publish refuses untracked files` — the previous attempt's
+  artifact — beside `checks: 28 total, 0 failing, 0 pending` from the current one. Two runs' state
+  in one block, with the failure line the most eye-catching part. Sixth receipt in the
+  misattributed-hint family: a summary must read the verdict written by the run it is summarizing,
+  or state which run it came from.
+- Seventh misattributed-hint receipt, and the clearest yet: a `full:pre-push` failure whose only
+  red lanes were `quality:check` and `quality:check:tsgo-tests` — a single `strictEffectProvide`
+  diagnostic in one test file — produced the verdict repair command *"Inspect the OSV finding and
+  rerun `bun run beep quality github-checks security`"*. The security lane had passed. Six prior
+  receipts in this ledger describe the same class from different lanes; at seven, the pattern is
+  no longer anecdotal and the fix is A-track capsule work: the hint must be derived from the
+  failing sublane, not from a fixed template.
+- The same failure is also a receipt against my own process: the synthetic `test-tsgo` replica I
+  ran to pre-check the test files was executed *before* the P1 regression test existed, and I did
+  not re-run it after adding that test — so a gate result was carried forward onto a tree it never
+  saw. `bun run beep quality test-tsgo` is in-process, takes no lock, and needs no turbo, so there
+  was no reason to skip it except forgetting that a proof binds to a tree. Prevention: re-run the
+  cheap in-process gates as the *last* step before publish, never as a step before the last edit.
