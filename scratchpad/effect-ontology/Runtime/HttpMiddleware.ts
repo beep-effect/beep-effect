@@ -184,9 +184,9 @@ export const makeLoggingMiddleware = Effect.sync(() =>
       });
 
       // Execute the handler and capture the response
-      const response = yield* app.pipe(
-        Effect.tap((res) =>
-          Effect.gen(function* () {
+      return yield* app.pipe(
+        Effect.tap(
+          Effect.fnUntraced(function* (res) {
             const elapsed = (yield* Clock.currentTimeMillis) - start;
 
             yield* logLevel("HTTP request completed", {
@@ -198,8 +198,8 @@ export const makeLoggingMiddleware = Effect.sync(() =>
             });
           })
         ),
-        Effect.tapError((error) =>
-          Effect.gen(function* () {
+        Effect.tapError(
+          Effect.fnUntraced(function* (error) {
             const elapsed = (yield* Clock.currentTimeMillis) - start;
 
             yield* Effect.logWarning("HTTP request failed", {
@@ -212,8 +212,6 @@ export const makeLoggingMiddleware = Effect.sync(() =>
           })
         )
       );
-
-      return response;
     })
   )
 );

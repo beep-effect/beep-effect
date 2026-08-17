@@ -38,7 +38,6 @@ export {
   ExtractionLayersLive,
   makeLanguageModelLayer,
   ProductionLayersWithTracing,
-  RateLimitedLlmLayer,
   TracingLive,
 } from "./Runtime/ProductionRuntime.ts";
 // Services (Effect.Service classes with .Default layers)

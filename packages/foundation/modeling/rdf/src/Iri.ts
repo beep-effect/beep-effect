@@ -1109,7 +1109,8 @@ export const IRI = S.String.pipe(
     description: "RFC 3987 IRI syntax. Decoding canonicalizes legacy schema.org namespaces to https://schema.org/.",
   }),
   SchemaUtils.withCodecStatics,
-  SchemaUtils.withResultCodecStatics
+  SchemaUtils.withResultCodecStatics,
+  SchemaUtils.withEffectCodecStatics
 );
 
 /**

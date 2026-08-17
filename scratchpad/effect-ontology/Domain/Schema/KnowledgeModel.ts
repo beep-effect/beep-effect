@@ -19,6 +19,7 @@ import { AbsoluteIRI, NamedNode, ObjectTerm } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
+import type { FastCheck } from "effect/testing";
 import { ContentHash, GcsUri } from "../Identity.ts";
 import { EventId as CanonicalEventId } from "../Model/CoreOntology.ts";
 
@@ -291,7 +292,7 @@ export const TextSpan = LegacyTextSpan.pipe(
   $I.annoteSchema("TextSpan", {
     description: "Legacy text-span ingress decoding to the canonical provenance TextAnchor.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withEffectCodecStatics
 );
 
 /**
@@ -427,6 +428,14 @@ export const RdfObject = ObjectTerm.annotate({
  */
 export type RdfObject = typeof RdfObject.Type;
 
+/** Literal domain underlying the public claim-rank schema. */
+const ClaimRankDefinition = LiteralKit(["preferred", "normal", "deprecated"]).annotate(
+  $I.annote("ClaimRank", {
+    toArbitrary: () => (fc: typeof FastCheck) => fc.constantFrom("preferred", "normal", "deprecated"),
+    description: "Wikidata-style preferred, normal, or deprecated claim rank.",
+  })
+);
+
 /**
  * Wikidata-style rank assigned to an extracted claim.
  *
@@ -440,16 +449,11 @@ export type RdfObject = typeof RdfObject.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const ClaimRank = LiteralKit(["preferred", "normal", "deprecated"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("preferred", "normal", "deprecated"),
-  })
-  .annotate(
-    $I.annote("ClaimRank", {
-      description: "Wikidata-style preferred, normal, or deprecated claim rank.",
-    })
-  );
-
+export const ClaimRank = ClaimRankDefinition.pipe(
+  SchemaUtils.withStatics(() => ({
+    decodeEffect: S.decodeEffect(ClaimRankDefinition),
+  }))
+);
 /**
  * Runtime value accepted by {@link ClaimRank}.
  *
@@ -498,7 +502,13 @@ const TemporalIntervalFromSelf = S.declare((input: unknown): input is typeof Tem
 ).annotate({
   toArbitrary: () => (fc) =>
     fc
-      .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
+      .tuple(
+        fc.integer({ min: 0, max: 4_000_000_000_000 }),
+        fc.integer({
+          min: 0,
+          max: 86_400_000,
+        })
+      )
       .map(([from, duration]) =>
         TemporalIntervalFields.make({
           from: DateTime.makeUnsafe(from),

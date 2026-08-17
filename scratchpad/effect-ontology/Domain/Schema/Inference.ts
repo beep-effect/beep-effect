@@ -121,6 +121,8 @@ export class InferenceStats extends S.Class<InferenceStats>($I`InferenceStats`)(
   })
 ) {
   static readonly is = S.is(InferenceStats);
+
+  static readonly decodeEffect = S.decodeEffect(InferenceStats);
 }
 
 /**

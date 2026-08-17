@@ -11,6 +11,7 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Cause, DateTime, Effect, HashSet, Layer, MutableHashMap, MutableHashSet, Random } from "effect";
 import * as A from "effect/Array";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -145,7 +146,7 @@ const stageManifest = Effect.fn(function* (manifest: BatchManifest) {
   const storage = yield* StorageService;
   const config = yield* ConfigService;
 
-  const manifestJson = yield* S.encodeEffect(S.fromJsonString(BatchManifest))(manifest);
+  const manifestJson = yield* BatchManifest.encodeEffectFromJsonString(manifest);
   const manifestPath = PathLayout.batch.manifest(manifest.batchId);
 
   yield* storage.set(manifestPath, manifestJson);
@@ -185,7 +186,7 @@ const toPayload = (
 
 const articleRowToArticleSummary = Effect.fn(function* (article: ArticleRow) {
   const now = yield* DateTime.now;
-  const uri = yield* S.decodeEffect(IRI)(article.uri);
+  const uri = yield* IRI.decodeEffect(article.uri);
   return ArticleSummary.make({
     id: article.id,
     uri,
@@ -198,13 +199,13 @@ const articleRowToArticleSummary = Effect.fn(function* (article: ArticleRow) {
 
 const claimRowToClaimWithRank = Effect.fn(function* (claim: ClaimRow, article: ArticleRow) {
   const now = yield* DateTime.now;
-  const subject = yield* S.decodeEffect(IRI)(claim.subjectIri);
-  const predicate = yield* S.decodeEffect(IRI)(claim.predicateIri);
-  const rank = yield* S.decodeEffect(ClaimRank)(claim.rank);
+  const subject = yield* IRI.decodeEffect(claim.subjectIri);
+  const predicate = yield* IRI.decodeEffect(claim.predicateIri);
+  const rank = yield* ClaimRank.decodeEffect(claim.rank);
   const source = yield* articleRowToArticleSummary(article);
   const object =
     claim.objectType === "iri"
-      ? makeNamedNode(yield* S.decodeEffect(IRI)(claim.objectValue))
+      ? makeNamedNode(yield* IRI.decodeEffect(claim.objectValue))
       : makeLiteral(
           claim.objectValue,
           claim.objectDatatype ?? XSD_STRING.value,
@@ -219,7 +220,7 @@ const claimRowToClaimWithRank = Effect.fn(function* (claim: ClaimRow, article: A
       : O.none();
   const confidence = yield* O.match(O.fromNullishOr(claim.confidenceScore), {
     onNone: () => Effect.succeed(O.none()),
-    onSome: (value) => S.decodeEffect(UnitInterval)(Number(value)).pipe(Effect.map(O.some)),
+    onSome: (value) => UnitInterval.decodeEffect(Number(value)).pipe(Effect.map(O.some)),
   });
   const evidence = yield* O.match(
     O.all({
@@ -229,7 +230,7 @@ const claimRowToClaimWithRank = Effect.fn(function* (claim: ClaimRow, article: A
     }),
     {
       onNone: () => Effect.succeed(O.none()),
-      onSome: (span) => S.decodeEffect(TextSpan)(span).pipe(Effect.map(O.some)),
+      onSome: flow(TextSpan.decodeEffect, Effect.map(O.some)),
     }
   );
 
@@ -285,7 +286,7 @@ export const TimelineRouter = HttpRouter.addAll([
           { status: 400 }
         );
       }
-      const decodedIri = yield* S.decodeEffect(IRI)(decodeURIComponent(iri));
+      const decodedIri = yield* IRI.decodeEffect(decodeURIComponent(iri));
       const queryParams = yield* HttpServerRequest.schemaSearchParams(TimelineEntityQuery);
 
       const claimRepo = yield* ClaimRepository;
@@ -600,7 +601,11 @@ export const SearchRouter = HttpRouter.addAll([
           const queryLower = Str.toLowerCase(request.query);
           const subjectMap = MutableHashMap.empty<
             string,
-            { iri: string; claimCount: number; types: MutableHashSet.MutableHashSet<string> }
+            {
+              iri: string;
+              claimCount: number;
+              types: MutableHashSet.MutableHashSet<string>;
+            }
           >();
 
           for (const claim of claims) {
@@ -638,8 +643,8 @@ export const SearchRouter = HttpRouter.addAll([
           );
           const entities = yield* Effect.forEach(entityCandidates, (entity) =>
             Effect.gen(function* () {
-              const iri = yield* S.decodeEffect(IRI)(entity.iri);
-              const types = yield* Effect.forEach(A.fromIterable(entity.types), (type) => S.decodeEffect(IRI)(type));
+              const iri = yield* IRI.decodeEffect(entity.iri);
+              const types = yield* Effect.forEach(A.fromIterable(entity.types), (type) => IRI.decodeEffect(type));
               const label = O.filter(A.last(Str.split(/[#/]/)(entity.iri)), Str.isNonEmpty);
               return EntitySearchResult.make({
                 iri,
@@ -708,7 +713,7 @@ export const SearchRouter = HttpRouter.addAll([
         }
       }
       const suggestionList = yield* Effect.forEach(suggestionIris, (suggestion) =>
-        S.decodeEffect(IRI)(suggestion.iri).pipe(
+        IRI.decodeEffect(suggestion.iri).pipe(
           Effect.map((iri) =>
             Suggestion.make({
               label: suggestion.label,
@@ -876,7 +881,13 @@ export const ExtractionRouter = HttpRouter.addAll([
       return yield* pollToBatchState(id).pipe(
         Effect.flatMap((state) => HttpServerResponse.json(state)),
         Effect.catch((error) =>
-          HttpServerResponse.json({ error: "NOT_FOUND", message: String(error) }, { status: 404 })
+          HttpServerResponse.json(
+            {
+              error: "NOT_FOUND",
+              message: String(error),
+            },
+            { status: 404 }
+          )
         )
       );
     })
@@ -961,7 +972,10 @@ export const OntologyRouter = HttpRouter.addAll([
       return yield* O.match(entry, {
         onNone: () =>
           HttpServerResponse.json(
-            { error: "NOT_FOUND", message: `Ontology "${id}" not found in registry` },
+            {
+              error: "NOT_FOUND",
+              message: `Ontology "${id}" not found in registry`,
+            },
             { status: 404 }
           ),
         onSome: (value) => HttpServerResponse.json(value),

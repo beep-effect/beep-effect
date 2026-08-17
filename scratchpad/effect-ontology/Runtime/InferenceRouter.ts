@@ -254,7 +254,7 @@ const InferenceRouterDefinition = HttpRouter.addAll([
             const durationMs = (yield* Clock.currentTimeMillis) - startTime;
 
             // Build stats
-            const stats: InferenceStats = yield* S.decodeEffect(InferenceStats)(
+            const stats: InferenceStats = yield* InferenceStats.decodeEffect(
               P.isNotNull(delta)
                 ? { ...summarizeDelta(delta), durationMs }
                 : {

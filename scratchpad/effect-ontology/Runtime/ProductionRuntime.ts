@@ -137,27 +137,6 @@ export const makeLanguageModelLayer = Layer.unwrap(
 );
 
 /**
- * Rate-limited LanguageModel layer
- *
- * **Details**
- *
- * Composes the base LanguageModel with rate limiting.
- * All LLM calls go through the rate limiter automatically.
- *
- * **Example** (Inspect rate limited llm layer)
- *
- * ```ts
- * import { RateLimitedLlmLayer } from "@effect-ontology/Runtime/ProductionRuntime"
- *
- * console.log(RateLimitedLlmLayer)
- * ```
- *
- * @category layers
- * @since 0.0.0
- */
-export const RateLimitedLlmLayer = makeLanguageModelLayer;
-
-/**
  * Production extraction layers with rate-limited LLM
  *
  * **Details**
@@ -186,7 +165,7 @@ export const ExtractionLayersLive = Layer.mergeAll(
   MentionExtractor.Default,
   RelationExtractor.Default,
   Grounder.Default
-).pipe(Layer.provide(RateLimitedLlmLayer));
+).pipe(Layer.provide(makeLanguageModelLayer));
 
 /**
  * OpenTelemetry tracing layer for Jaeger export
