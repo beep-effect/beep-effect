@@ -24,6 +24,8 @@ import { HttpStatusUnofficial } from "./HttpStatus.unofficial.aggregate.ts";
 /**
  * Any HTTP response status code in the standard three-digit range.
  *
+ * **Details**
+ *
  * Unlike {@link HttpStatus}, this schema accepts extension and unassigned
  * status codes in addition to the named codes catalogued by this package.
  *

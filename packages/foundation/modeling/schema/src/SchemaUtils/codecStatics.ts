@@ -2,6 +2,8 @@
  * Attach a runner-specific Effect Schema codec group to a schema value, along
  * with the shared `asserts`, `is`, and `equivalence` statics.
  *
+ * **Details**
+ *
  * Each combinator binds one decode/encode interpreter — Effect, Result,
  * Option, Exit, Promise, or Sync — so consuming modules call
  * `MySchema.decodeUnknownEffect(raw)` instead of accumulating free-floating
