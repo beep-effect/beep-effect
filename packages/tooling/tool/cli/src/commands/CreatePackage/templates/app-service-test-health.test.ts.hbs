@@ -28,9 +28,9 @@ describe("{{scopedName}}", () => {
       const health = yield* Effect.flatMap(response.text, decodeHealth);
 
       expect(health.status).toBe("ok");
-    // `provideScopedLayer` builds the layer inside a scope and provides the
-    // resulting Context; a bare `Effect.provide(<Layer>)` mid-pipeline trips
-    // the effect-LSP's strictEffectProvide rule.
+      // `provideScopedLayer` builds the layer inside a scope and provides the
+      // resulting Context; a bare `Effect.provide(<Layer>)` mid-pipeline trips
+      // the effect-LSP's strictEffectProvide rule.
     }).pipe(Effect.scoped, provideScopedLayer(FetchHttpClient.layer))
   );
 });

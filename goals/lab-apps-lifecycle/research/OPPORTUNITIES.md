@@ -74,3 +74,39 @@ Numbers are STABLE IDS — never renumber to express priority.
    verification scripts, and the machine-parseable last line #82 asks for. This
    is the third independent recurrence across packets; it is cheap and it keeps
    costing real verification integrity.
+
+5. **Two biome invocations in the same command resolve config differently, and
+   only coincidence keeps them agreeing.** — `unowned`
+
+   *Doing:* attributing a Coverage Regression on `TsconfigSync.plan.ts`, a file
+   this branch never edited.
+
+   *Evidence:* `renderBiomeJson`
+   (`packages/tooling/library/repo-utils/src/schemas/BiomeJson.ts`) pins
+   `--config-path=<findRepoRoot(moduleDir)>/biome.jsonc` — always the CLI's own
+   repo. `formatGeneratedPackage` (`CreatePackage.command.ts`) instead runs
+   `bunx biome check --write` with `cwd: repoRoot` and no `--config-path`,
+   so it relies on ambient discovery. In production the two paths coincide and
+   agree. In the test fixture, which scaffolds `package.json`, three
+   `tsconfig*.json` and a syncpack config but no biome config, discovery finds
+   nothing and biome falls back to its default `indentStyle: "tab"`. Generated
+   JSON landed tab-indented while the canonical renderer emitted two spaces, so
+   every `tsconfig-sync` docgen comparison reported drift: the already-canonical
+   skip at `TsconfigSync.plan.ts:1002-1003` went from 9 hits to 0, which is
+   exactly +1 uncovered line/statement/branch and reproduces all six reported
+   percentages. Proven by A/B — HEAD gave 0 hits, HEAD minus the biome pass gave
+   9.
+
+   *Would have prevented it:* one config-resolution helper shared by both call
+   sites, so a generated file is formatted by the same config that decides
+   whether it is canonical. Fixed here by giving the fixtures a realistic
+   `biome.json`, which is the narrower change; the asymmetry itself is still
+   live, and any repo whose root differs from the CLI's checkout would hit it
+   for real rather than only in tests.
+
+   *Second-order:* the coverage this branch lost was **incidental** — a
+   `tsconfig-sync` branch that only create-package tests ever reached. A ratchet
+   on incidental coverage means an unrelated command's tests silently own
+   another module's floor, so a correct change to one looks like a regression in
+   the other. Worth deciding whether `tsconfig-sync` should cover that path
+   directly.

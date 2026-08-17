@@ -176,6 +176,20 @@ const TestRootTypeScriptPlugins = [
   },
 ];
 
+// create-package runs `biome check --write` over the generated tree. Without a
+// root biome config the fixture falls back to biome's defaults — notably
+// indentStyle "tab" — so generated JSON lands tab-indented while the repo's
+// canonical renderer emits two spaces, and every tsconfig-sync comparison then
+// reports drift. Mirror the real root's formatter settings so the fixture
+// exercises the same formatting the repo does.
+const TestRootBiomeConfig = {
+  formatter: { enabled: true, lineWidth: 120, indentStyle: "space", indentWidth: 2 },
+  json: {
+    formatter: { indentStyle: "space", indentWidth: 2, trailingCommas: "none", lineWidth: 80 },
+    parser: { allowComments: true },
+  },
+} as const;
+
 const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootConfigOptions) {
   const path = yield* Path.Path;
 
@@ -200,6 +214,7 @@ const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootC
   yield* writeJsonFile(path.join(rootDir, "tsconfig.packages.json"), {
     references: A.map(options.references, (referencePath) => ({ path: referencePath })),
   });
+  yield* writeJsonFile(path.join(rootDir, "biome.json"), TestRootBiomeConfig);
   yield* writeSyncpackConfig(path.join(rootDir, "syncpack.config.ts"), options.syncpackSources);
 });
 
