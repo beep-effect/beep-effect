@@ -21,5 +21,9 @@ ci-lane-economics (coverage placement lands via #698), coding-agent-effectivenes
 (proof reuse, failure capsules), fleet-coordination exploration (routing/lease laws), and the
 fleet-mirror contested-path index.
 
-Phases: P0 ratify+baseline · P1 instant wins · P2 backpressure engine · P3 full parity ·
-P4 concurrency+cache · P5 hot-file endgame + close.
+Phases: ~~P0 ratify+baseline~~ · ~~P1 instant wins~~ · **P2 backpressure engine (current)** ·
+P3 full parity · P4 concurrency+cache · P5 hot-file endgame + close.
+
+P0 and P1 complete 2026-08-17. P1 shipped as #737 (B1 same-argv lanes), #736 (E1 publish
+regenerates the derived goals INDEX), #738 (A7 monitor hardening), #743 (C1 remote-read cache
+posture); see [the P1 closeout reflection](history/reflections/2026-08-17-claude.md).

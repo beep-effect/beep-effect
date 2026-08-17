@@ -4,11 +4,14 @@ Order is by cycles-returned-per-unit-of-work. Items execute until finished; no c
 estimates. Each item lands as its own PR (or small PR series) through yeet; the packet manifest
 phase flips ride the final PR of each phase.
 
-## P0 — Ratify and baseline (this PR + immediate follow-ups)
+## P0 — Ratify and baseline — COMPLETE 2026-08-17
 
-- Land this packet; record operator decisions: C2 (PR remote reads / CSF-014), E2 (INDEX
-  end-state), E6 (path-filtered required checks) — all pre-approved 2026-08-13 in principle,
-  each gets a dated decision note when its implementation PR opens.
+- ~~Land this packet; record operator decisions: C2 (PR remote reads / CSF-014), E2 (INDEX
+  end-state), E6 (path-filtered required checks)~~ — packet landed 2026-08-13 as #709. The three
+  decision notes are deliberately deferred to their implementation PRs (C2 in P4, E2/E6 in P5),
+  and the manifest stop condition now names all three explicitly (E2 was missing from it until
+  the #747 review wave caught the gap), so none of those changes can proceed without its recorded
+  note. Nothing further is owed by P0.
 - ~~Baseline metrics snapshot (SPEC §Metrics) from existing artifacts: c1-raw-failures.txt,
   merge-commit counts, current monitor latency budget~~ — done 2026-08-14:
   `research/metrics-baseline.md` freezes all five metric baselines + re-measurement protocol.
@@ -16,7 +19,11 @@ phase flips ride the final PR of each phase.
   (coverage scoping, `286a2be63b`) and #702 (runners-bake, `ddc8a873b1`) merged 2026-08-13/14.
   Verify closure only; do not restart either.
 
-## P1 — Instant wins
+## P1 — Instant wins — COMPLETE 2026-08-17
+
+Shipped as four PRs: #737 (B1), #736 (E1), #738 (A7), #743 (C1). Three of the four needed a
+review-fix wave; the receipts those waves produced are in `research/OPPORTUNITIES.md` and drove
+the C5 metric correction and the new C7 item below.
 
 - ~~B1 same-argv lanes (`beep ci lane` from yeet)~~ — done 2026-08-16: the pre-push collector's
   Lint, Lint Policy, Check, Test Unit, and Test Integration lanes dispatch the hosted
