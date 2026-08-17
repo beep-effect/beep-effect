@@ -86,7 +86,7 @@
     },
     {
       "id": "P3",
-      "name": "Workstream A rewrite + hermetic lane; C Stage-1 gate",
+      "name": "Workstream A rewrite + hermetic byte gates; C Stage-1 gate",
       "status": "in-progress"
     },
     {

@@ -36,18 +36,30 @@ to a repo already managing lane sprawl and runner memory ceilings.
 ## H2. The ASLR torture variant is dropped
 
 The variant was "optional scheduled" in the ratified text, so this reopens nothing.
-Its one non-vacuous control (randomized clone depth) rediscovers a contract the code
-already documents and errors on (`KNOWLEDGE_HISTORY_REMEDIATION`), at CI cost; the
-rest inherits the lane's vacuity. Spaced/Unicode-path coverage survives where it is
-real: the archive contract test pins a spaced/non-ASCII `--output` path, and the
-redaction gap below is H3.
+
+**Correction (review round, PR #744).** The design report's rationale for this drop
+conflated the checkout's filesystem nesting depth with shallow git history:
+"randomized clone depth" in the ratified sentence means where the checkout *sits on
+disk* (deep nesting, spaces, non-ASCII segments), while `KNOWLEDGE_HISTORY_REMEDIATION`
+concerns missing git *history* (`fetch-depth: 0` / `--unshallow`) and is unrelated.
+The location-depth control is therefore real, not vacuous-by-rediscovery: it probes
+path-handling assumptions in the live spawn path, which the current tests do not
+exercise (the differential test archives from a flat `<tmp>/repo`, and the
+spaced/Unicode assertion only constructs an `--output` argument). The variant is still
+dropped in *lane* form — but its real control moves to the H3 follow-up rather than
+being declared covered. The remaining variant controls (read-only home) inherit the
+lane's vacuity analysis from the design report.
 
 ## H3. The ASCII-only redaction gap gets its own follow-up PR
 
 `POSIX_ABSOLUTE_PATH_PATTERN` (`Knowledge.service.ts`) is ASCII-only, so a non-ASCII
 checkout path in probe stderr is only partially redacted. Ratified: widen the pattern
-in its own small PR with a spaced/Unicode fixture test. It is hygiene, not a security
-boundary, and stays out of the archive-contract changes to keep each PR single-subject.
+in its own small PR with a spaced/Unicode fixture test — and, per H2's correction, that
+same PR adds a nested spaced/Unicode checkout profile to the hostile-profile
+differential test (the scratch repo sits under a deep path with space and non-ASCII
+segments), so location-depth behavior is exercised in the live spawn path rather than
+assumed. It is hygiene, not a security boundary, and stays out of the archive-contract
+changes to keep each PR single-subject.
 
 ## Measured residual, recorded not fixed
 

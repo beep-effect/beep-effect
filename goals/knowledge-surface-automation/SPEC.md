@@ -55,8 +55,9 @@ infrastructure.
 - **E**: all four feature groups in v1 (bypass funnels, plan contract, lineage +
   provisioning, rematerialize + capsules).
 - **Spin-offs**: context-rent telemetry and bitemporal `--as-of` roadmap are captured as
-  `explorations/` packets, not workstreams here. The ASLR torture lane folds INTO
-  Workstream A.
+  `explorations/` packets, not workstreams here. The ASLR torture lane was folded into
+  Workstream A and then retired 2026-08-17 (`research/p3-hermetic-lane-decisions.md` H2);
+  its real control (nested spaced/Unicode checkout paths) moves to the H3 follow-up.
 
 ## Workstream A — clone-agnostic references
 
