@@ -1759,9 +1759,13 @@ const PORTABLE_HOME_CONVENTIONS = HashSet.make(
 // admission here would let live guidance park arbitrary machine-local files behind the folder name.
 const PORTABLE_HOME_EXACT_CONVENTIONS = HashSet.make("~/Downloads");
 const TEMP_CONVENTIONS = HashSet.make("/tmp/portless");
+const stripTrailingSlashes = Str.replace(/\/+$/u, "");
 
 const hasConventionPrefix = (conventions: HashSet.HashSet<string>, token: string): boolean =>
   HashSet.some(conventions, (prefix) => token === prefix || Str.startsWith(`${prefix}/`)(token));
+
+const isExactHomeConvention = (token: string): boolean =>
+  HashSet.has(PORTABLE_HOME_EXACT_CONVENTIONS, stripTrailingSlashes(token));
 
 /**
  * Whether a line reads as rule, pattern, or inventory text rather than as guidance.
@@ -1834,7 +1838,7 @@ export type KnowledgeRefClassificationInput = {
 const classifyLiveHostAnchor = (anchor: KnowledgeHostAnchor, token: string): KnowledgeRefClassification => {
   if (
     KnowledgeHostAnchor.is["home-relative"](anchor) &&
-    (hasConventionPrefix(PORTABLE_HOME_CONVENTIONS, token) || HashSet.has(PORTABLE_HOME_EXACT_CONVENTIONS, token))
+    (hasConventionPrefix(PORTABLE_HOME_CONVENTIONS, token) || isExactHomeConvention(token))
   ) {
     return KnowledgeRefClassification.Enum["portable-home-convention"];
   }
