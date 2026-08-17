@@ -18,6 +18,7 @@ import { Tool, Toolkit } from "effect/unstable/ai";
 import { McpServerClient } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import { HttpServerRequest } from "effect/unstable/http";
+import { makeStubMcpClient, StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
 const FixtureTool = Tool.make("fixture_tool", {
   parameters: S.Struct({ secret: S.String }),
@@ -43,11 +44,20 @@ const RefTool = Tool.make("ref_tool", {
   success: S.String,
 });
 
+// A no-argument tool: an empty parameter class renders as `anyOf: [object,
+// array]`, the shape that used to slip through without a top-level `type`.
+class EmptyParameters extends S.Class<EmptyParameters>("EmptyParameters")({}) {}
+
+const EmptyParamsTool = Tool.make("empty_params_tool", {
+  parameters: EmptyParameters,
+  success: S.String,
+});
+
 const CallerTool = Tool.make("caller_tool", { success: S.String });
 
 const FixtureToolkit = Toolkit.make(FixtureTool, ExpectedFailureTool, CallerTool);
 
-const RefToolkit = Toolkit.make(RefTool);
+const RefToolkit = Toolkit.make(RefTool, EmptyParamsTool);
 
 const FixtureHandlersLive = FixtureToolkit.toLayer({
   // Returns what the sanitized dispatch put on `CurrentMcpCaller`, so each
@@ -64,6 +74,7 @@ const FixtureHandlersLive = FixtureToolkit.toLayer({
 });
 
 const RefHandlersLive = RefToolkit.toLayer({
+  empty_params_tool: () => Effect.succeed("ok"),
   ref_tool: (params: RefParameters) => Effect.succeed(`ok:${params.secret}`),
 });
 
@@ -88,29 +99,16 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
   return { captured, tracer };
 };
 
-// `sanitizedToolkit` mints a caller identity only when `McpServerClient` is in
-// scope — the HTTP transport's own middleware provides it per request. Without
-// this stub the identity is `None` and every session assertion below would pass
-// vacuously.
-const stubMcpClient = (clientId: number) =>
-  McpServerClient.of({
-    clientId,
-    protocolVersion: "2025-06-18",
-    getClient: Effect.die("the fixture client is never dereferenced") as never,
-    initializePayload: {
-      capabilities: {},
-      clientInfo: { name: "sanitized-toolkit-test", version: "0.0.0" },
-      protocolVersion: "2025-06-18",
-    } as never,
-  });
-
 // The tool's success payload is JSON-encoded into the first text content part.
 const callerReport = (result: { readonly content: ReadonlyArray<unknown> }): string => {
   const [first] = result.content;
   return JSON.parse((first as { readonly text: string }).text) as string;
 };
 
-const withMcpClient = (clientId: number) => Effect.provideService(McpServerClient, stubMcpClient(clientId));
+// `sanitizedToolkit` mints a caller identity only when `McpServerClient` is in
+// scope — the HTTP transport's own middleware provides it per request. Overriding
+// the suite-level stub is what makes the session assertions below non-vacuous.
+const withMcpClient = (clientId: number) => Effect.provideService(McpServerClient, makeStubMcpClient(clientId));
 
 const withSessionHeader = (sessionId: string) =>
   Effect.provideService(
@@ -121,9 +119,9 @@ const withSessionHeader = (sessionId: string) =>
   );
 
 const registrationLayer = sanitizedToolkit(FixtureToolkit).pipe(Layer.provide(FixtureHandlersLive));
-const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer);
+const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer, StubMcpClientLayer);
 const refRegistrationLayer = sanitizedToolkit(RefToolkit).pipe(Layer.provide(RefHandlersLive));
-const refFullLayer = Layer.mergeAll(McpServer.McpServer.layer, refRegistrationLayer);
+const refFullLayer = Layer.mergeAll(McpServer.McpServer.layer, refRegistrationLayer, StubMcpClientLayer);
 
 describe("sanitizedToolkit", () => {
   layer(fullLayer)("with the fixture toolkit registered via sanitizedToolkit", (it) => {
@@ -256,6 +254,21 @@ describe("sanitizedToolkit", () => {
         const inputSchema = registered?.tool.inputSchema as { readonly $ref?: unknown; readonly type?: unknown };
         assert.strictEqual(inputSchema.type, "object");
         assert.strictEqual(inputSchema.$ref, "#/$defs/RefParametersEncoded");
+      })
+    );
+
+    it.effect(
+      "adds a top-level object type to a no-argument tool's input schema",
+      Effect.fnUntraced(function* () {
+        const server = yield* McpServer.McpServer;
+        const registered = server.tools.find(({ tool }) => tool.name === "empty_params_tool");
+
+        // Registration itself validates against `McpSchema.Tool`, so a missing
+        // top-level `type` here would fail the whole layer build, not just
+        // this assertion.
+        assert.isDefined(registered);
+        const inputSchema = registered?.tool.inputSchema as { readonly type?: unknown };
+        assert.strictEqual(inputSchema.type, "object");
       })
     );
   });

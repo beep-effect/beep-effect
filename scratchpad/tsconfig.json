@@ -17,13 +17,34 @@
       "path": "../packages/drivers/drizzle/tsconfig.json"
     },
     {
+      "path": "../packages/drivers/n3/tsconfig.json"
+    },
+    {
+      "path": "../packages/drivers/oxigraph/tsconfig.json"
+    },
+    {
       "path": "../packages/drivers/postgres/tsconfig.json"
     },
     {
       "path": "../packages/drivers/pretext/tsconfig.json"
     },
     {
+      "path": "../packages/drivers/shacl/tsconfig.json"
+    },
+    {
+      "path": "../packages/drivers/wink/tsconfig.json"
+    },
+    {
+      "path": "../packages/epistemic/domain/tsconfig.json"
+    },
+    {
       "path": "../packages/foundation/capability/file-processing/tsconfig.json"
+    },
+    {
+      "path": "../packages/foundation/capability/nlp-processing/tsconfig.json"
+    },
+    {
+      "path": "../packages/foundation/capability/semantic-web/tsconfig.json"
     },
     {
       "path": "../packages/foundation/modeling/identity/tsconfig.json"
@@ -32,7 +53,13 @@
       "path": "../packages/foundation/modeling/md/tsconfig.json"
     },
     {
+      "path": "../packages/foundation/modeling/nlp/tsconfig.json"
+    },
+    {
       "path": "../packages/foundation/modeling/ontology/tsconfig.json"
+    },
+    {
+      "path": "../packages/foundation/modeling/provenance/tsconfig.json"
     },
     {
       "path": "../packages/foundation/modeling/rdf/tsconfig.json"

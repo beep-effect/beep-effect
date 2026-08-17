@@ -4,10 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import {$ScratchpadId} from "@beep/identity";
-import {LiteralKit, NonNegativeInt, SchemaUtils} from "@beep/schema";
+import {LiteralKit, NonNegativeInt, PosInt, SchemaUtils} from "@beep/schema";
 import {Percentage} from "@beep/schema/Percentage";
-import {UnitInterval} from "@beep/schema/UnitInterval";
 import type {Duration, Effect} from "effect";
 import {DateTime} from "effect";
 import * as A from "effect/Array";
@@ -636,22 +636,15 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
 }
 
 const TerminationConditionFields = {
-  maxIterations: S.Int.check(
-    S.isGreaterThan(0, {
-      identifier: $I`MaxIterationsPositiveCheck`,
-      title: "Positive Maximum Iterations",
-      description: "A loop termination limit greater than zero.",
-      message: "Maximum iterations must be greater than zero.",
-    })
-  ).pipe(
-    SchemaUtils.withKeyDefaults(5),
+  maxIterations: PosInt.pipe(
+    SchemaUtils.withKeyDefaults(PosInt.make(5)),
     S.annotateKey({description: "Maximum completed iterations before forced termination."})
   ),
   stopOnConformance: S.Boolean.pipe(
     SchemaUtils.withKeyDefaults(true),
     S.annotateKey({description: "Whether validation conformance terminates the loop."})
   ),
-  minConfidence: S.OptionFromOptionalKey(UnitInterval).pipe(
+  minConfidence: S.OptionFromOptionalKey(Confidence).pipe(
     SchemaUtils.withNoneDefault,
     S.annotateKey({description: "Optional confidence floor for continued execution."})
   ),
@@ -705,16 +698,7 @@ const CheckpointConfigFields = {
     SchemaUtils.withEmptyArrayDefaults<AgentId>(),
     S.annotateKey({description: "Agents whose completion triggers a checkpoint."})
   ),
-  everyNIterations: S.OptionFromOptionalKey(
-    S.Int.check(
-      S.isGreaterThan(0, {
-        identifier: $I`CheckpointIterationIntervalPositiveCheck`,
-        title: "Positive Checkpoint Iteration Interval",
-        description: "A checkpoint iteration interval greater than zero.",
-        message: "Checkpoint iteration interval must be greater than zero.",
-      })
-    )
-  ).pipe(
+  everyNIterations: S.OptionFromOptionalKey(PosInt).pipe(
     SchemaUtils.withNoneDefault,
     S.annotateKey({description: "Optional periodic checkpoint interval for loop mode."})
   ),

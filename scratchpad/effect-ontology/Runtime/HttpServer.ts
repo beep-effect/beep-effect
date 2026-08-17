@@ -1,3 +1,5 @@
+import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
+import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Cause, Effect, Layer } from "effect";
@@ -15,7 +17,6 @@ import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstab
 import { BatchId, DocumentId, GcsUri } from "../Domain/Identity.ts";
 import { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
-import { IRI, Literal } from "../Domain/Rdf/Types.ts";
 import type { BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
 import { BatchManifest } from "../Domain/Schema/Batch.ts";
 import type { PreprocessingOptions } from "../Domain/Schema/BatchRequest.ts";
@@ -195,15 +196,12 @@ const claimRowToClaimWithRank = Effect.fn(function* (claim: ClaimRow, article: A
   const source = yield* articleRowToArticleSummary(article);
   const object =
     claim.objectType === "iri"
-      ? yield* S.decodeEffect(IRI)(claim.objectValue)
-      : Literal.make({
-          value: claim.objectValue,
-          language: O.fromNullishOr(claim.objectLanguage),
-          datatype: yield* O.match(O.fromNullishOr(claim.objectDatatype), {
-            onNone: () => Effect.succeed(O.none()),
-            onSome: (datatype) => S.decodeEffect(IRI)(datatype).pipe(Effect.map(O.some)),
-          }),
-        });
+      ? makeNamedNode(yield* S.decodeEffect(IRI)(claim.objectValue))
+      : makeLiteral(
+          claim.objectValue,
+          claim.objectDatatype ?? XSD_STRING.value,
+          P.isNull(claim.objectLanguage) ? {} : { language: claim.objectLanguage }
+        );
   const validTime =
     P.isNotNull(claim.validFrom) && P.isNotNull(claim.validTo)
       ? O.some({

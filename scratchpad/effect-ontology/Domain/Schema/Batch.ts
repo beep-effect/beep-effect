@@ -11,10 +11,11 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { MimeType, NonNegativeInt, NonNegNum, SchemaUtils } from "@beep/schema";
+import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyName, OntologyVersion } from "../Identity.ts";
 import { defaultPreprocessingOptions, LanguageCode, PreprocessingOptions } from "./DocumentMetadata.ts";
-import { ShaclViolationSeverity, ValidationPolicy } from "./Shacl.ts";
+import { ValidationPolicy } from "./Shacl.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Batch");
 const defaultValidationPolicy = ValidationPolicy.fromUnknown({});
@@ -127,8 +128,7 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
     description: "Versioned ontology-scoped batch manifest with non-empty documents and a complete validation policy.",
   })
 ) {
-
-  static readonly decodeOptionString = S.decodeOption(S.fromJsonString(BatchManifest))
+  static readonly decodeOptionString = S.decodeOption(S.fromJsonString(BatchManifest));
 }
 
 /**
@@ -236,7 +236,7 @@ export class ValidationActivityInput extends S.Class<ValidationActivityInput>($I
  * import { ValidationActivityViolationSummary } from "@effect-ontology/Schema/Batch.ts"
  *
  * const summary = S.decodeUnknownSync(ValidationActivityViolationSummary)({
- *   severity: "Warning",
+ *   severity: "warning",
  *   count: 0
  * })
  * console.log(summary.sampleMessages) // []
@@ -251,7 +251,7 @@ export class ValidationActivityViolationSummary extends S.Class<ValidationActivi
   $I`ValidationActivityViolationSummary`
 )(
   {
-    severity: ShaclViolationSeverity.annotateKey({
+    severity: ShaclSeverity.annotateKey({
       description: "Standard SHACL severity summarized by this value.",
     }),
     count: NonNegativeInt.annotateKey({
@@ -273,8 +273,9 @@ export class ValidationActivityViolationSummary extends S.Class<ValidationActivi
  * Compact output of the SHACL validation activity.
  *
  * @remarks
- * This transport summary complements the standards-level
- * `ShaclValidationReport`: it records artifact locations and workflow timing.
+ * This transport summary complements the experiment execution
+ * `ShaclValidationReport`, whose nested validation result owns standards-level
+ * conformance; this value records artifact locations and workflow timing.
  *
  * @example
  * ```ts

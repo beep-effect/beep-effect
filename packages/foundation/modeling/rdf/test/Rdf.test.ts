@@ -117,6 +117,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import { FastCheck as fc } from "effect/testing";
 
 const decodeIri = IRI.fromUnknown;
@@ -387,6 +388,11 @@ describe("@beep/rdf IRI schemas", () => {
 });
 
 describe("@beep/rdf URI schemas and helpers", () => {
+  it("publishes a canonical arbitrary for URI values", () => {
+    expect(SchemaAST.resolve(URI.ast)?.toArbitrary).toBeDefined();
+    expect(fc.sample(S.toArbitrary(URI)(fc), { numRuns: 20, seed: 0x5eed }).every(URI.is)).toBe(true);
+  });
+
   it("accepts representative absolute and relative URI forms", () => {
     expect(decodeUri("https://example.com/path?q=1#frag")).toBe("https://example.com/path?q=1#frag");
     expect(decodeAbsoluteUri("mailto:user@example.com")).toBe("mailto:user@example.com");
@@ -748,6 +754,10 @@ describe("@beep/rdf crispening parity", () => {
     assertDecodeEncodeDecodeStable(LanguageTag);
     assertRoundTrips(PrefixMap);
     assertDecodeEncodeDecodeStable(Literal);
+    assertRoundTrips(Term);
+    assertRoundTrips(Subject);
+    assertRoundTrips(ObjectTerm);
+    assertRoundTrips(GraphTerm);
     assertRoundTrips(JsonLdDocument);
     assertRoundTrips(EvidenceAnchor);
     assertRoundTrips(WebAnnotationFromEvidenceAnchor);

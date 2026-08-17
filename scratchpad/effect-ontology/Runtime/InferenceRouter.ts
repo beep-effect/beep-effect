@@ -21,7 +21,7 @@ import {
   InferenceStats,
   InferenceStatusResponse,
 } from "../Domain/Schema/Inference.ts";
-import { RdfBuilder } from "../Service/Rdf.ts";
+import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize } from "../Service/Rdf.ts";
 import { Reasoner, ReasoningConfig } from "../Service/Reasoner.ts";
 import { computeQuadDelta, summarizeDelta } from "../Utils/QuadDelta.ts";
 
@@ -83,7 +83,7 @@ export const InferenceRouter = HttpRouter.addAll([
               }))
             );
 
-            const originalCount = originalStore._store.size;
+            const originalCount = rdfStoreSize(originalStore);
 
             // Build reasoning config
             const config =
@@ -111,7 +111,7 @@ export const InferenceRouter = HttpRouter.addAll([
             if (request.returnDeltaOnly && P.isNotNull(delta)) {
               const deltaStore = yield* rdfBuilder.createStore;
               for (const quad of delta.newQuads) {
-                deltaStore._store.addQuad(quad);
+                rdfStoreAddQuad(deltaStore, quad);
               }
               outputGraph = yield* rdfBuilder.toTurtle(deltaStore);
             } else {

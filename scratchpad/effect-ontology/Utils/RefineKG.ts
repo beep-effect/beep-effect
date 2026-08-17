@@ -6,6 +6,8 @@
  * @since 2.0.0
  * @module Utils/RefineKG
  */
+
+import { IRI } from "@beep/rdf";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -13,7 +15,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts";
-import { EntityId, IRI } from "../Domain/Model/shared.ts";
+import { EntityId } from "../Domain/Model/shared.ts";
 import { dual2 } from "./Dual.ts";
 
 /**

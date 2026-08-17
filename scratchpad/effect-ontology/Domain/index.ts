@@ -63,12 +63,12 @@ export * as Model from "./Model/index.ts";
  */
 export * as PathLayout from "./PathLayout.ts";
 /**
- * Canonical RDF terms, triples, datasets, and vocabulary constants.
+ * Canonical RDF terms and experiment-owned vocabulary constants.
  *
  * @example
  * ```ts
  * import { Rdf } from "@effect-ontology/index.ts"
- * console.log(Rdf.RDF.type.termType) // "NamedNode"
+ * console.log(Rdf.CLAIMS.Claim.termType) // "NamedNode"
  * ```
  *
  * @category namespaces

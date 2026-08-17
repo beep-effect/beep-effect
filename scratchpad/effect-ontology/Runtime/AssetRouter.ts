@@ -11,8 +11,7 @@
 import { Effect, Option, Schema } from "effect";
 import * as P from "effect/Predicate";
 import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
-import type { DocumentId } from "../Domain/Identity.ts";
-import { BatchId } from "../Domain/Identity.ts";
+import { BatchId, DocumentId } from "../Domain/Identity.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
 import { LinkIngestionService } from "../Service/LinkIngestionService.ts";
 import { StorageService } from "../Service/Storage.ts";
@@ -39,8 +38,15 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
+      if (!DocumentId.is(docId)) {
+        return yield* HttpServerResponse.json(
+          { error: "VALIDATION_ERROR", message: "docId must be a canonical document identifier" },
+          { status: 400 }
+        );
+      }
+
       const storage = yield* StorageService;
-      const path = PathLayout.document.input(docId as DocumentId);
+      const path = PathLayout.document.input(docId);
 
       const content = yield* storage.get(path).pipe(
         Effect.map((optContent) => optContent ?? null),
@@ -91,8 +97,15 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
+      if (!DocumentId.is(docId)) {
+        return yield* HttpServerResponse.json(
+          { error: "VALIDATION_ERROR", message: "docId must be a canonical document identifier" },
+          { status: 400 }
+        );
+      }
+
       const storage = yield* StorageService;
-      const path = PathLayout.document.graph(docId as DocumentId);
+      const path = PathLayout.document.graph(docId);
 
       const content = yield* storage.get(path).pipe(
         Effect.map((optContent) => optContent ?? null),

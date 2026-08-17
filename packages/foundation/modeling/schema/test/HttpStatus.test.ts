@@ -1,10 +1,20 @@
 import { fcRuns } from "@beep/fc-runs";
+import { HttpStatusCode as RootHttpStatusCode } from "@beep/schema";
 import * as HttpStatus from "@beep/schema/HttpStatus";
 import { describe, expect, it } from "@effect/vitest";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 describe("HttpStatus", () => {
+  it("accepts the complete standard three-digit status range", () => {
+    expect(RootHttpStatusCode).toBe(HttpStatus.HttpStatusCode);
+    expect(HttpStatus.HttpStatusCode.decodeOption(100)).toStrictEqual(O.some(100));
+    expect(HttpStatus.HttpStatusCode.decodeOption(599)).toStrictEqual(O.some(599));
+    expect(O.isNone(HttpStatus.HttpStatusCode.decodeOption(99))).toBe(true);
+    expect(O.isNone(HttpStatus.HttpStatusCode.decodeOption(600))).toBe(true);
+  });
+
   it("decodes and encodes status names through the canonical schema", () => {
     expect(S.decodeSync(HttpStatus.Schema)("Ok")).toBe(200);
     expect(S.encodeSync(HttpStatus.Schema)(404)).toBe("NotFound");

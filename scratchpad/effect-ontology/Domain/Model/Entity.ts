@@ -4,28 +4,25 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance/TextAnchor";
+import { IRI } from "@beep/rdf";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Equal, Hash, pipe } from "effect";
+import { Equal, Hash, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
-import type * as O from "effect/Option";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { FastCheck } from "effect/testing";
 import { ChunkId, DocumentId, GcsUri } from "../Identity.ts";
-import { Attributes, Confidence, EntityId, IRI } from "./shared.ts";
+import { Attributes, EntityId } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/Entity");
 
 const EvidenceSpanFields = {
-  text: S.NonEmptyString.annotateKey({
-    description: "Exact text quoted from the source.",
-  }),
-  startChar: NonNegativeInt.annotateKey({
-    description: "Zero-based inclusive character offset.",
-  }),
-  endChar: NonNegativeInt.annotateKey({
-    description: "Zero-based exclusive character offset.",
-  }),
+  ...TextAnchorFields,
   confidence: S.OptionFromOptionalKey(Confidence).pipe(
     SchemaUtils.withNoneDefault,
     S.annotateKey({
@@ -34,50 +31,41 @@ const EvidenceSpanFields = {
   ),
 } as const;
 
-class EvidenceSpanFieldsModel extends S.Class<EvidenceSpanFieldsModel>($I`EvidenceSpanFieldsModel`)(
+class EvidenceSpanModel extends S.Class<EvidenceSpanModel>($I`EvidenceSpanModel`)(
   EvidenceSpanFields,
-  $I.annote("EvidenceSpanFieldsModel", {
-    description: "Internal field model for a character-level provenance span.",
+  $I.annote("EvidenceSpanModel", {
+    description: "Canonical text anchor with optional experiment extraction confidence.",
   })
 ) {}
 
 const makeEvidenceSpanArbitrary = (fc: typeof FastCheck) =>
   fc
-    .record({
-      text: fc.string({ minLength: 1, maxLength: 128 }),
-      startChar: fc.integer({ min: 0, max: 100_000 }),
-      width: fc.integer({ min: 0, max: 10_000 }),
-    })
-    .map(({ text, startChar, width }) =>
-      EvidenceSpanFieldsModel.make({
-        text,
+    .tuple(
+      fc.nat(100_000),
+      fc.string({ minLength: 1, maxLength: 128 }),
+      fc.option(S.toArbitrary(Confidence)(fc), { nil: undefined })
+    )
+    .map(([startChar, quote, confidence]) =>
+      EvidenceSpanModel.make({
+        quote,
         startChar: NonNegativeInt.make(startChar),
-        endChar: NonNegativeInt.make(startChar + width),
+        endChar: NonNegativeInt.make(startChar + quote.length),
+        ...(P.isUndefined(confidence) ? {} : { confidence: O.some(confidence) }),
       })
     );
 
-const EvidenceSpanDefinition = EvidenceSpanFieldsModel.check(
-  S.makeFilter(
-    (span: EvidenceSpanFieldsModel) =>
-      span.endChar >= span.startChar
-        ? undefined
-        : {
-            path: ["endChar"],
-            issue: "endChar must be greater than or equal to startChar.",
-          },
-    {
-      identifier: $I`EvidenceSpanOffsetOrderCheck`,
-      title: "Evidence Span Offset Order",
-      description: "A character span whose exclusive end offset does not precede its start offset.",
-      message: "Evidence span end offset must be greater than or equal to its start offset.",
-      arbitrary: {
-        candidate: {
-          make: makeEvidenceSpanArbitrary,
-        },
-      },
-    }
-  )
-);
+const CanonicalEvidenceSpan = EvidenceSpanModel.check(TextAnchorWidthCheck).annotate({
+  toArbitrary: () => makeEvidenceSpanArbitrary,
+});
+
+const LegacyEvidenceSpan = S.Struct({
+  text: TextAnchorFields.quote,
+  startChar: TextAnchorFields.startChar,
+  endChar: TextAnchorFields.endChar,
+  confidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
+});
+type LegacyEvidenceSpanValue = typeof LegacyEvidenceSpan.Type;
+type CanonicalEvidenceSpanEncoded = typeof CanonicalEvidenceSpan.Encoded;
 
 /**
  * Character-level provenance for text supporting an extracted fact.
@@ -103,14 +91,36 @@ const EvidenceSpanDefinition = EvidenceSpanFieldsModel.check(
  * @category value-objects
  * @since 0.0.0
  */
-export const EvidenceSpan = EvidenceSpanDefinition.annotate({
-  toArbitrary: () => makeEvidenceSpanArbitrary,
-}).pipe(
-  $I.annoteSchema("EvidenceSpan", {
-    description: "Ordered character-level provenance span with optional system confidence.",
-  }),
-  SchemaUtils.withCodecStatics
-);
+export const EvidenceSpan = LegacyEvidenceSpan.pipe(
+  S.decodeTo(CanonicalEvidenceSpan, {
+    decode: SchemaGetter.transform(
+      (span: LegacyEvidenceSpanValue): CanonicalEvidenceSpanEncoded => ({
+        quote: span.text,
+        startChar: span.startChar,
+        endChar: span.endChar,
+        ...(O.isSome(span.confidence) ? { confidence: span.confidence.value } : {}),
+      })
+    ),
+    encode: SchemaGetter.transform(
+      (span: CanonicalEvidenceSpanEncoded): LegacyEvidenceSpanValue => ({
+        text: span.quote,
+        startChar: NonNegativeInt.make(span.startChar),
+        endChar: NonNegativeInt.make(span.endChar),
+        confidence: O.map(O.fromUndefinedOr(span.confidence), Confidence.make),
+      })
+    ),
+  })
+)
+  .annotate({
+    toArbitrary: () => makeEvidenceSpanArbitrary,
+  })
+  .pipe(
+    $I.annoteSchema("EvidenceSpan", {
+      description:
+        "Legacy text-field ingress codec decoding to a canonical TextAnchor-backed span with optional confidence.",
+    }),
+    SchemaUtils.withCodecStatics
+  );
 
 /**
  * Runtime value decoded by {@link EvidenceSpan}.

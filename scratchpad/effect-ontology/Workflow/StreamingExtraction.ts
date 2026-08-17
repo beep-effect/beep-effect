@@ -155,7 +155,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
         // Save chunks to run folder
         yield* Effect.all(
           chunks.map((chunk) =>
-            runService.saveChunk(run.id, chunk.index, chunk.text).pipe(
+            runService.saveChunk(run.id, NonNegativeInt.make(chunk.index), chunk.text).pipe(
               Effect.tapError((error) =>
                 Effect.logWarning("Failed to save chunk", {
                   stage: "chunking",

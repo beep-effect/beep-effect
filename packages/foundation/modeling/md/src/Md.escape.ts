@@ -504,8 +504,9 @@ const decodeHtmlCharacterReferences = (value: string): string =>
         [
           pipe(
             O.fromUndefinedOr(named),
-            O.map((value) =>
-              Match.value(Str.toLowerCase(value)).pipe(
+            O.map(Str.toLowerCase),
+            O.map(
+              Match.type<Lowercase<string>>().pipe(
                 Match.when("bsol", () => 92),
                 Match.when("sol", () => 47),
                 Match.when("tab", () => 9),
@@ -514,10 +515,7 @@ const decodeHtmlCharacterReferences = (value: string): string =>
               )
             )
           ),
-          pipe(
-            O.fromUndefinedOr(hexadecimal),
-            O.map((value) => parseCodePoint(value, 16))
-          ),
+          pipe(O.fromUndefinedOr(hexadecimal), O.map(parseCodePoint(16))),
         ],
         O.firstSomeOf,
         O.getOrElse(() => parseCodePoint(O.getOrThrow(O.fromUndefinedOr(decimal)), 10))
@@ -601,24 +599,29 @@ export const normalizeUrlPolicy = (policy: UrlPolicyInput): UrlPolicySpec => {
   });
 };
 
-const hasAllowedProtocol = (policy: UrlPolicySpec, protocol: string): boolean =>
+const hasAllowedProtocol: {
+  (policy: UrlPolicySpec, protocol: string): boolean;
+  (protocol: string): (policy: UrlPolicySpec) => boolean;
+} = dual(2, (policy: UrlPolicySpec, protocol: string): boolean =>
   Match.value(policy).pipe(
-    Match.tag("Compatibility", () => true),
-    Match.tag("AllowList", ({ schemes }) => A.contains(schemes, protocol)),
-    Match.exhaustive
-  );
+    Match.tagsExhaustive({
+      Compatibility: () => true,
+      AllowList: P.Struct({
+        schemes: A.contains(protocol),
+      }),
+    })
+  )
+);
 
 const isAllowedRelativeDestination = (policy: UrlPolicySpec, destination: string): boolean =>
   Match.value(policy).pipe(
-    Match.tag("Compatibility", () => true),
-    Match.tag(
-      "AllowList",
-      ({ allowBackslashRelative, allowProtocolRelative, allowRelative }) =>
+    Match.tagsExhaustive({
+      Compatibility: () => true,
+      AllowList: ({ allowBackslashRelative, allowProtocolRelative, allowRelative }) =>
         allowRelative &&
         (allowProtocolRelative || !Str.startsWith("//")(destination)) &&
-        (allowBackslashRelative || !Str.includes("\\")(destination))
-    ),
-    Match.exhaustive
+        (allowBackslashRelative || !Str.includes("\\")(destination)),
+    })
   );
 
 const isAllowedByPolicy = (policy: UrlPolicySpec, destination: string): boolean => {

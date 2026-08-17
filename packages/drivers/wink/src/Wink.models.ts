@@ -15,8 +15,45 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { Pattern, PatternElement } from "@beep/nlp/Core/Pattern";
+import type { FastCheck } from "effect/testing";
 
 const $I = $WinkId.create("Wink/WinkPattern");
+const makeWinkStringArrayArbitrary = (fc: typeof FastCheck) => fc.array(fc.string(), { maxLength: 64 });
+
+/**
+ * Canonical schema for arrays returned by Wink string-valued accessors.
+ *
+ * **Example** (Decode accessor output)
+ *
+ * ```ts
+ * import { WinkStringArray } from "@beep/wink"
+ * import * as Result from "effect/Result"
+ * import * as S from "effect/Schema"
+ *
+ * const values = S.decodeResult(WinkStringArray)(["sentence", "tokens"])
+ * console.log(Result.isSuccess(values)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const WinkStringArray = S.Array(S.String)
+  .annotate({
+    toArbitrary: () => makeWinkStringArrayArbitrary,
+  })
+  .pipe(
+    $I.annoteSchema("WinkStringArray", {
+      description: "Array of strings returned by Wink NLP accessors.",
+    })
+  );
+
+/**
+ * Runtime value decoded by {@link WinkStringArray} for Wink string-valued accessors.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type WinkStringArray = typeof WinkStringArray.Type;
 
 const renderPatternElement = Match.type<PatternElement>().pipe(
   Match.tagsExhaustive({

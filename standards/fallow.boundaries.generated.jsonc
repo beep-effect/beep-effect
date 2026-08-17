@@ -1206,14 +1206,12 @@
           "@beep/cosmos",
           "@beep/identity",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/cosmos",
           "@beep/identity",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1294,7 +1292,6 @@
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1302,7 +1299,6 @@
           "@beep/identity",
           "@beep/pretext",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1625,6 +1621,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/ui"
         ],
         "allowTypeOnly": [
@@ -1635,6 +1632,7 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/ui"
         ]
       },
@@ -1809,14 +1807,12 @@
           "@beep/graph-3d",
           "@beep/identity",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/graph-3d",
           "@beep/identity",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2153,7 +2149,6 @@
           "@beep/n3",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2161,7 +2156,6 @@
           "@beep/n3",
           "@beep/rdf",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2234,14 +2228,12 @@
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/obs",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2507,7 +2499,6 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2516,7 +2507,6 @@
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2959,14 +2949,12 @@
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -3012,33 +3000,51 @@
           "@beep/dock",
           "@beep/dock-react",
           "@beep/drizzle",
+          "@beep/epistemic-domain",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/md",
+          "@beep/n3",
+          "@beep/nlp",
+          "@beep/nlp-processing",
           "@beep/ontology",
+          "@beep/oxigraph",
           "@beep/postgres",
           "@beep/pretext",
+          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/scratchpad",
+          "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/wink"
         ],
         "allowTypeOnly": [
           "@beep/dock",
           "@beep/dock-react",
           "@beep/drizzle",
+          "@beep/epistemic-domain",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/md",
+          "@beep/n3",
+          "@beep/nlp",
+          "@beep/nlp-processing",
           "@beep/ontology",
+          "@beep/oxigraph",
           "@beep/postgres",
           "@beep/pretext",
+          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/scratchpad",
+          "@beep/semantic-web",
+          "@beep/shacl",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/wink"
         ]
       },
       {
@@ -3068,7 +3074,6 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
-          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3077,7 +3082,6 @@
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shacl",
-          "@beep/test-utils",
           "@beep/utils"
         ]
       },

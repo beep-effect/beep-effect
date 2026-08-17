@@ -10,8 +10,9 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { IRI, URI } from "@beep/rdf";
-import { FilePath, NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
+import { IRI } from "@beep/rdf";
+import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
+import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import type { Cause } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -59,48 +60,6 @@ export const ErrorMessage = S.NonEmptyString.annotate({
 export type ErrorMessage = typeof ErrorMessage.Type;
 
 /**
- * Canonical URL string with an explicit arbitrary for error metadata.
- *
- * @remarks
- * This preserves the repository's `URLStr` validation and supplies the
- * generator annotation needed by error-family property tests.
- *
- * @example
- * ```ts
- * import { ErrorUrl } from "@effect-ontology/Error/Base.ts"
- *
- * console.log(ErrorUrl.fromUnknown("https://example.com/image.png"))
- * ```
- *
- * @invariant The value is a non-empty string accepted by the platform URL parser.
- * @category errors
- * @since 0.0.0
- */
-export const ErrorUrl = S.declare(URLStr.is).pipe(
-  $I.annoteSchema("ErrorUrl", {
-    description: "Canonical URL string used as ontology-error context.",
-    toArbitrary: () => (fc) => fc.webUrl().map(URLStr.make),
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime URL accepted by {@link ErrorUrl}.
- *
- * @example
- * ```ts
- * import { ErrorUrl, type ErrorUrl as ErrorUrlValue } from "@effect-ontology/Error/Base.ts"
- *
- * const url: ErrorUrlValue = ErrorUrl.fromUnknown("https://example.com")
- * console.log(url)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ErrorUrl = typeof ErrorUrl.Type;
-
-/**
  * Optional canonical URL normalized from an absent object key.
  *
  * @example
@@ -115,13 +74,13 @@ export type ErrorUrl = typeof ErrorUrl.Type;
  * @category errors
  * @since 0.0.0
  */
-export const OptionalErrorUrl = S.OptionFromNullishOr(ErrorUrl)
+export const OptionalErrorUrl = S.OptionFromNullishOr(URLStr)
   .pipe(SchemaUtils.withNoneDefault)
   .annotate({
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorUrl)(fc).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(URLStr)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -150,44 +109,6 @@ export const OptionalErrorUrl = S.OptionFromNullishOr(ErrorUrl)
 export type OptionalErrorUrl = typeof OptionalErrorUrl.Type;
 
 /**
- * Canonical RDF IRI with an explicit arbitrary for error metadata.
- *
- * @example
- * ```ts
- * import { ErrorIri } from "@effect-ontology/Error/Base.ts"
- *
- * console.log(ErrorIri.fromUnknown("https://example.com/ontology#Person"))
- * ```
- *
- * @invariant The value satisfies the repository's RFC 3987 IRI schema.
- * @category errors
- * @since 0.0.0
- */
-export const ErrorIri = S.declare(IRI.is).pipe(
-  $I.annoteSchema("ErrorIri", {
-    description: "Canonical RFC 3987 IRI used as ontology-error context.",
-    toArbitrary: () => (fc) => fc.webUrl().map(IRI.make),
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime IRI accepted by {@link ErrorIri}.
- *
- * @example
- * ```ts
- * import { ErrorIri, type ErrorIri as ErrorIriValue } from "@effect-ontology/Error/Base.ts"
- *
- * const iri: ErrorIriValue = ErrorIri.fromUnknown("https://example.com/id")
- * console.log(iri)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ErrorIri = typeof ErrorIri.Type;
-
-/**
  * Optional canonical RDF IRI normalized from an absent object key.
  *
  * @example
@@ -202,13 +123,13 @@ export type ErrorIri = typeof ErrorIri.Type;
  * @category errors
  * @since 0.0.0
  */
-export const OptionalErrorIri = S.OptionFromNullishOr(ErrorIri)
+export const OptionalErrorIri = S.OptionFromNullishOr(IRI)
   .pipe(SchemaUtils.withNoneDefault)
   .annotate({
     toArbitrary: () => (fc) => {
       const none = fc.constant(O.none());
       return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorIri)(fc).map(O.some)),
+        arbitrary: fc.oneof(none, S.toArbitrary(IRI)(fc).map(O.some)),
         terminal: none,
       };
     },
@@ -235,87 +156,6 @@ export const OptionalErrorIri = S.OptionFromNullishOr(ErrorIri)
  * @since 0.0.0
  */
 export type OptionalErrorIri = typeof OptionalErrorIri.Type;
-
-/**
- * Canonical RFC 3986 URI with an explicit arbitrary for error metadata.
- *
- * @example
- * ```ts
- * import { ErrorUri } from "@effect-ontology/Error/Base.ts"
- *
- * console.log(ErrorUri.fromUnknown("https://example.com/ontology"))
- * ```
- *
- * @invariant The value satisfies the repository's RFC 3986 URI schema.
- * @category errors
- * @since 0.0.0
- */
-export const ErrorUri = S.declare(URI.is).pipe(
-  $I.annoteSchema("ErrorUri", {
-    description: "Canonical RFC 3986 URI used as ontology-error context.",
-    toArbitrary: () => (fc) => fc.webUrl().map(URI.make),
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime URI accepted by {@link ErrorUri}.
- *
- * @example
- * ```ts
- * import { ErrorUri, type ErrorUri as ErrorUriValue } from "@effect-ontology/Error/Base.ts"
- *
- * const uri: ErrorUriValue = ErrorUri.fromUnknown("https://example.com/ontology")
- * console.log(uri)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ErrorUri = typeof ErrorUri.Type;
-
-const decodeFilePath = S.decodeUnknownSync(FilePath);
-const isFilePath = FilePath.pipe(S.is);
-
-/**
- * Canonical file path with an explicit arbitrary for error metadata.
- *
- * @example
- * ```ts
- * import { ErrorFilePath } from "@effect-ontology/Error/Base.ts"
- *
- * console.log(ErrorFilePath.fromUnknown("data/ontology.ttl"))
- * ```
- *
- * @invariant The value is accepted by at least one supported path family and
- * contains a leaf segment.
- * @category errors
- * @since 0.0.0
- */
-export const ErrorFilePath = S.declare(isFilePath).pipe(
-  $I.annoteSchema("ErrorFilePath", {
-    description: "Canonical filesystem path used as ontology-error context.",
-    toArbitrary: () => (fc) =>
-      fc.constantFrom("data/ontology.ttl", "/tmp/ontology.ttl", "fixtures/embeddings.bin").map(decodeFilePath),
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime path accepted by {@link ErrorFilePath}.
- *
- * @example
- * ```ts
- * import { ErrorFilePath, type ErrorFilePath as ErrorPath } from "@effect-ontology/Error/Base.ts"
- *
- * const path: ErrorPath = ErrorFilePath.fromUnknown("data/ontology.ttl")
- * console.log(path)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ErrorFilePath = typeof ErrorFilePath.Type;
 
 const ErrorDefect = S.Defect({ includeStack: true });
 
@@ -470,58 +310,6 @@ export const OptionalNonNegativeInt = S.OptionFromNullishOr(NonNegativeInt)
  * @since 0.0.0
  */
 export type OptionalNonNegativeInt = typeof OptionalNonNegativeInt.Type;
-
-/**
- * Valid three-digit HTTP response status.
- *
- * @example
- * ```ts
- * import { HttpStatusCode } from "@effect-ontology/Error/Base.ts"
- *
- * console.log(HttpStatusCode.make(404))
- * ```
- *
- * @invariant The value is an integer from 100 through 599.
- * @category errors
- * @since 0.0.0
- */
-export const HttpStatusCode = S.Int.check(
-  S.isBetween(
-    { minimum: 100, maximum: 599 },
-    {
-      identifier: $I`HttpStatusCodeRangeCheck`,
-      title: "HTTP Status Code Range",
-      description: "A three-digit HTTP response status from 100 through 599.",
-      message: "HTTP status code must be an integer between 100 and 599.",
-    }
-  )
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 100, max: 599 }),
-  })
-  .pipe(
-    S.brand("HttpStatusCode"),
-    $I.annoteSchema("HttpStatusCode", {
-      description: "Valid three-digit HTTP response status.",
-    }),
-    SchemaUtils.withCodecStatics
-  );
-
-/**
- * Runtime status accepted by {@link HttpStatusCode}.
- *
- * @example
- * ```ts
- * import { HttpStatusCode, type HttpStatusCode as Status } from "@effect-ontology/Error/Base.ts"
- *
- * const status: Status = HttpStatusCode.make(503)
- * console.log(status)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type HttpStatusCode = typeof HttpStatusCode.Type;
 
 /**
  * Optional HTTP response status normalized from an absent object key.
@@ -718,8 +506,7 @@ export const makeOntologyErrorClass = {
     tag: Tag,
     fields: Fields,
     annotations: S.Annotations.Declaration<OntologyTaggedError<Tag, Fields>, readonly [S.TaggedStruct<Tag, Fields>]>
-  ): OntologyTaggedErrorClass<Tag, Fields> &
-    OntologyErrorCodecStatics<OntologyTaggedError<Tag, Fields>> => {
+  ): OntologyTaggedErrorClass<Tag, Fields> & OntologyErrorCodecStatics<OntologyTaggedError<Tag, Fields>> => {
     type Self = OntologyTaggedError<Tag, Fields>;
     const makeInstance = (input: S.Schema.Type<S.TaggedStruct<Tag, Fields>>): Self => ErrorClass.make(input as never);
     const ErrorClass = S.TaggedError<Self>(identifier)<Tag, Fields>(tag, fields, {
@@ -880,7 +667,7 @@ const BaseErrorDefinition = S.Union([BaseError, NotImplemented]).pipe(S.toTagged
 export const BaseDomainError = BaseErrorDefinition.pipe(
   $I.annoteSchema("BaseDomainError", {
     description: "Tagged union of shared fallback and implementation-status errors.",
-  toArbitrary: () => S.toArbitrary(BaseErrorDefinition),
+    toArbitrary: () => S.toArbitrary(BaseErrorDefinition),
   })
 );
 

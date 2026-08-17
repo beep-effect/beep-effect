@@ -178,19 +178,6 @@ export * from "./Rdf.ts";
  */
 export * from "./Shacl.ts";
 /**
- * SPARQL parsing, endpoint, timeout, execution, and result failures.
- *
- * @example
- * ```ts
- * import { SparqlExecutionError } from "@effect-ontology/Error/index.ts"
- * console.log(SparqlExecutionError)
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export * from "./Sparql.ts";
-/**
  * Workflow transition, suspension, activity, and terminal failures.
  *
  * @example

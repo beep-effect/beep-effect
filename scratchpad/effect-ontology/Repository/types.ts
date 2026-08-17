@@ -8,7 +8,8 @@
  * @module Repository/types
  */
 
-import { SchemaUtils } from "@beep/schema";
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Schema } from "effect";
 
 // =============================================================================
@@ -118,10 +119,10 @@ export const Claim = Schema.Struct({
   assertedAt: Schema.DateTimeUtc,
   deprecatedAt: Schema.NullOr(Schema.DateTimeUtc),
   deprecatedBy: Schema.NullOr(CorrectionId),
-  confidenceScore: Schema.NullOr(Schema.Finite),
+  confidenceScore: Schema.NullOr(Confidence),
   evidenceText: Schema.NullOr(Schema.String),
-  evidenceStartOffset: Schema.NullOr(Schema.Finite),
-  evidenceEndOffset: Schema.NullOr(Schema.Finite),
+  evidenceStartOffset: Schema.NullOr(NonNegativeInt),
+  evidenceEndOffset: Schema.NullOr(NonNegativeInt),
 });
 export type Claim = typeof Claim.Type;
 
@@ -137,10 +138,10 @@ export const ClaimInsert = Schema.Struct({
   rank: ClaimRank.pipe(SchemaUtils.withKeyDefaults("normal" as const)),
   validFrom: Schema.DateTimeUtc.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   validTo: Schema.DateTimeUtc.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  confidenceScore: Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  confidenceScore: Confidence.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   evidenceText: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  evidenceStartOffset: Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  evidenceEndOffset: Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  evidenceStartOffset: NonNegativeInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  evidenceEndOffset: NonNegativeInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
 export type ClaimInsert = typeof ClaimInsert.Type;
 
@@ -214,10 +215,10 @@ export const BatchRun = Schema.Struct({
   id: BatchRunId,
   batchId: Schema.String,
   status: BatchRunStatus,
-  documentsTotal: Schema.Finite,
-  documentsProcessed: Schema.Finite,
-  claimsExtracted: Schema.Finite,
-  conflictsDetected: Schema.Finite,
+  documentsTotal: NonNegativeInt,
+  documentsProcessed: NonNegativeInt,
+  claimsExtracted: NonNegativeInt,
+  conflictsDetected: NonNegativeInt,
   startedAt: Schema.NullOr(Schema.DateTimeUtc),
   completedAt: Schema.NullOr(Schema.DateTimeUtc),
   errorMessage: Schema.NullOr(Schema.String),
@@ -229,9 +230,9 @@ export type BatchRun = typeof BatchRun.Type;
 export const BatchRunInsert = Schema.Struct({
   id: BatchRunId.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   batchId: Schema.String,
-  documentsTotal: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
-  documentsProcessed: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
-  claimsExtracted: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
-  conflictsDetected: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(0)),
+  documentsTotal: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+  documentsProcessed: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+  claimsExtracted: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+  conflictsDetected: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
 });
 export type BatchRunInsert = typeof BatchRunInsert.Type;

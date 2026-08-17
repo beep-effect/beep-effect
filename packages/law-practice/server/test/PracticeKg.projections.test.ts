@@ -33,6 +33,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
+import { McpServerClient } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import * as Response from "effect/unstable/ai/Response";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
@@ -369,12 +370,33 @@ const runBuild = Effect.fn("runBuild")(function* (options: PracticeKgOptions, bu
   );
 });
 
+// `McpServer.callTool` resolves the calling client from context; in production
+// the transport's own middleware provides it per request. This fixture stands in
+// for that middleware so the call dispatches instead of dying on a missing
+// service.
+const stubClientInfo = { name: "practice-kg-projections-test", version: "0.0.0" };
+
+const stubMcpClient = McpServerClient.of({
+  clientId: 1,
+  protocolVersion: "2025-06-18",
+  clientCapabilities: {},
+  clientInfo: stubClientInfo,
+  getClient: Effect.die("the fixture client is never dereferenced") as never,
+  initializePayload: {
+    capabilities: {},
+    clientInfo: stubClientInfo,
+    protocolVersion: "2025-06-18",
+  } as never,
+});
+
 const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
   name: string,
   args: Readonly<Record<string, unknown>>
 ) {
   const server = yield* McpServer.McpServer;
-  const result = yield* server.callTool({ name, arguments: args });
+  const result = yield* server
+    .callTool({ name, arguments: args })
+    .pipe(Effect.provideService(McpServerClient, stubMcpClient));
   const decoded = yield* decodeToolTextResult(result);
   return A.headNonEmpty(decoded.content).text;
 });

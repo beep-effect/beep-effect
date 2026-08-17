@@ -8,6 +8,7 @@
  * @module Cli/Commands/Extract
  */
 
+import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
@@ -23,6 +24,7 @@ import * as S from "effect/Schema";
 import * as Args from "effect/unstable/cli/Argument";
 import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
+import { ContentHash, Namespace, OntologyName } from "../../Domain/Identity.ts";
 import { ChunkingConfig, LlmConfig, RunConfig } from "../../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../../Domain/Model/Ontology.ts";
 import { makeCliExtractionLayer } from "../../Runtime/WorkflowLayers.ts";
@@ -158,27 +160,27 @@ const extractHandler = Effect.fn("extractHandler")(function* (
   yield* Console.error(`Concurrency: ${concurrency}`);
   yield* Console.error("---");
   const ontologyContent = yield* fs.readFileString(ontologyPath);
-  const contentHash = createContentHash(ontologyContent) as OntologyRef["contentHash"];
+  const contentHash = ContentHash.make(createContentHash(ontologyContent));
   const basename = path.basename(ontologyPath, ".ttl");
   const ontologyRef = OntologyRef.make({
-    namespace: "cli" as OntologyRef["namespace"],
-    name: basename as OntologyRef["name"],
+    namespace: Namespace.make("cli"),
+    name: OntologyName.make(basename),
     contentHash,
   });
   const runConfig = RunConfig.make({
     ontology: ontologyRef,
     chunking: ChunkingConfig.make({
-      maxChunkSize: 2000,
+      maxChunkSize: PosInt.make(2000),
       preserveSentences: true,
-      overlapTokens: 50,
+      overlapTokens: NonNegativeInt.make(50),
     }),
     llm: LlmConfig.make({
       model: "claude-haiku-4-5",
       temperature: 0.1,
-      maxTokens: 4096,
+      maxTokens: PosInt.make(4096),
       timeout: Duration.millis(60000),
     }),
-    concurrency,
+    concurrency: PosInt.make(concurrency),
     enableGrounding: true,
   });
   const workflow = yield* ExtractionWorkflow;

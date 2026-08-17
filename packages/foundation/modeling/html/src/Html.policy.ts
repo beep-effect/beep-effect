@@ -263,6 +263,9 @@ export const SafeUrlAttribute = S.String.check(
     message: "Expected a relative, https, mailto, or tel URL without control characters",
   })
 ).pipe(
+  SchemaUtils.withStatics((schema) => ({
+    is: S.is(schema),
+  })),
   $I.annoteSchema("SafeUrlAttribute", {
     description: "URL permitted in a safe HTML href or src attribute.",
   })
@@ -309,6 +312,9 @@ export const SafeImageUrlAttribute = S.String.check(
     message: "Expected a relative or https image URL without control characters",
   })
 ).pipe(
+  SchemaUtils.withStatics((schema) => ({
+    is: S.is(schema),
+  })),
   $I.annoteSchema("SafeImageUrlAttribute", {
     description: "URL permitted in a safe HTML img src attribute.",
   })

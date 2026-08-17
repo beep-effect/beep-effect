@@ -9,7 +9,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema";
+import { ShaclSeverity, ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import * as S from "effect/Schema";
 import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause, OptionalErrorIri } from "./Base.ts";
 
@@ -22,22 +23,19 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Shacl");
  * ```ts
  * import { ValidationPolicySeverity } from "@effect-ontology/Error/Shacl.ts"
  *
- * console.log(ValidationPolicySeverity.is.Warning("Warning")) // true
+ * console.log(ValidationPolicySeverity.includes("warning")) // true
  * ```
  *
- * @invariant Every value is either `Violation` or `Warning`.
+ * @invariant Every value is either `violation` or `warning`.
  * @category errors
  * @since 0.0.0
  */
-export const ValidationPolicySeverity = LiteralKit(["Violation", "Warning"])
-  .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("Violation", "Warning"),
+export const ValidationPolicySeverity = S.Literals(ShaclSeverity.pickOptions(["violation", "warning"])).pipe(
+  $I.annoteSchema("ValidationPolicySeverity", {
+    description: "Severity threshold that caused SHACL validation policy rejection.",
+    toArbitrary: () => (fc) => fc.constantFrom("violation" as const, "warning" as const),
   })
-  .pipe(
-    $I.annoteSchema("ValidationPolicySeverity", {
-      description: "Severity threshold that caused SHACL validation policy rejection.",
-    })
-  );
+);
 
 /**
  * Runtime value accepted by {@link ValidationPolicySeverity}.
@@ -46,7 +44,7 @@ export const ValidationPolicySeverity = LiteralKit(["Violation", "Warning"])
  * ```ts
  * import type { ValidationPolicySeverity } from "@effect-ontology/Error/Shacl.ts"
  *
- * const severity: ValidationPolicySeverity = "Violation"
+ * const severity: ValidationPolicySeverity = "violation"
  * console.log(severity)
  * ```
  *
@@ -54,47 +52,6 @@ export const ValidationPolicySeverity = LiteralKit(["Violation", "Warning"])
  * @since 0.0.0
  */
 export type ValidationPolicySeverity = typeof ValidationPolicySeverity.Type;
-
-/**
- * General failure while running SHACL validation.
- *
- * @example
- * ```ts
- * import { ShaclValidationError } from "@effect-ontology/Error/Shacl.ts"
- *
- * const error = ShaclValidationError.make({ message: "Validation engine failed." })
- * console.log(error._tag)
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export const ShaclValidationError = makeOntologyErrorClass.make(
-  $I`ShaclValidationError`,
-  "ShaclValidationError",
-  {
-    message: ErrorMessage.annotateKey({
-      description: "Human-readable SHACL validation diagnostic.",
-    }),
-    cause: OptionalErrorCause.annotateKey({
-      description: "Optional SHACL engine defect.",
-    }),
-  },
-  $I.annote("ShaclValidationError", {
-    description: "General failure while running SHACL validation.",
-  })
-);
-
-/** Runtime value decoded by {@link ShaclValidationError}.
- * @example
- * ```ts
- * import { ShaclValidationError, type ShaclValidationError as Failure } from "@effect-ontology/Error/Shacl.ts"
- * const error: Failure = ShaclValidationError.make({ message: "Failed." })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type ShaclValidationError = typeof ShaclValidationError.Type;
 
 /**
  * Failure to load a SHACL shapes graph.
@@ -192,7 +149,7 @@ export type ValidationReportError = typeof ValidationReportError.Type;
  *   message: "Validation policy rejected the graph.",
  *   violationCount: 2,
  *   warningCount: 1,
- *   severity: "Violation"
+ *   severity: "violation"
  * })
  * console.log(error.violationCount)
  * ```
@@ -234,7 +191,7 @@ export const ValidationPolicyError = makeOntologyErrorClass.make(
  *   message: "Rejected.",
  *   violationCount: 1,
  *   warningCount: 0,
- *   severity: "Violation"
+ *   severity: "violation"
  * })
  * ```
  * @category type-level
@@ -266,7 +223,7 @@ const ShaclErrorDefinition = S.Union([
 export const ShaclError = ShaclErrorDefinition.pipe(
   $I.annoteSchema("ShaclError", {
     description: "Exhaustive tagged union of SHACL validation lifecycle failures.",
-  toArbitrary: () => S.toArbitrary(ShaclErrorDefinition),
+    toArbitrary: () => S.toArbitrary(ShaclErrorDefinition),
   })
 );
 

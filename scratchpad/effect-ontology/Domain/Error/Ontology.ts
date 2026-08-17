@@ -9,8 +9,10 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { IRI, URI } from "@beep/rdf";
+import { FilePath } from "@beep/schema";
 import * as S from "effect/Schema";
-import { ErrorFilePath, ErrorIri, ErrorMessage, ErrorUri, makeOntologyErrorClass, OptionalErrorCause } from "./Base.ts";
+import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Ontology");
 
@@ -79,7 +81,7 @@ export const ClassNotFound = makeOntologyErrorClass.make(
   "ClassNotFound",
   {
     ...commonFields,
-    classIri: ErrorIri.annotateKey({
+    classIri: IRI.annotateKey({
       description: "Canonical class IRI that could not be resolved.",
     }),
   },
@@ -121,7 +123,7 @@ export const PropertyNotFound = makeOntologyErrorClass.make(
   "PropertyNotFound",
   {
     ...commonFields,
-    propertyIri: ErrorIri.annotateKey({
+    propertyIri: IRI.annotateKey({
       description: "Canonical property IRI that could not be resolved.",
     }),
   },
@@ -163,7 +165,7 @@ export const OntologyFileNotFound = makeOntologyErrorClass.make(
   "OntologyFileNotFound",
   {
     ...commonFields,
-    path: ErrorFilePath.annotateKey({
+    path: FilePath.annotateKey({
       description: "Canonical ontology file path that could not be resolved.",
     }),
   },
@@ -205,7 +207,7 @@ export const OntologyParsingFailed = makeOntologyErrorClass.make(
   "OntologyParsingFailed",
   {
     ...commonFields,
-    path: ErrorFilePath.annotateKey({
+    path: FilePath.annotateKey({
       description: "Canonical path of the ontology file that failed to parse.",
     }),
   },
@@ -248,10 +250,10 @@ export const EmbeddingsNotFound = makeOntologyErrorClass.make(
   "EmbeddingsNotFound",
   {
     ...commonFields,
-    ontologyUri: ErrorUri.annotateKey({
+    ontologyUri: URI.annotateKey({
       description: "Canonical URI of the ontology missing embeddings.",
     }),
-    embeddingsPath: ErrorFilePath.annotateKey({
+    embeddingsPath: FilePath.annotateKey({
       description: "Canonical path where embeddings were expected.",
     }),
   },
@@ -299,7 +301,7 @@ export const EmbeddingsVersionMismatch = makeOntologyErrorClass.make(
   "EmbeddingsVersionMismatch",
   {
     ...commonFields,
-    ontologyUri: ErrorUri.annotateKey({
+    ontologyUri: URI.annotateKey({
       description: "Canonical URI of the ontology.",
     }),
     expectedVersion: S.NonEmptyString.annotateKey({
@@ -357,7 +359,7 @@ const AnyOntologyErrorDefinition = S.Union([
 export const AnyOntologyError = AnyOntologyErrorDefinition.pipe(
   $I.annoteSchema("AnyOntologyError", {
     description: "Exhaustive tagged union of ontology lookup, loading, and embeddings failures.",
-  toArbitrary: () => S.toArbitrary(AnyOntologyErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyOntologyErrorDefinition),
   })
 );
 

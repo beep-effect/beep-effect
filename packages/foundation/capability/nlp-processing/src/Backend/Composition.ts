@@ -20,7 +20,7 @@ import { $NlpProcessingId } from "@beep/identity";
 import { PosInt, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Cache, Duration, Effect } from "effect";
-import { dual } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Obs from "../internal/observability.ts";
 import { NLPBackend } from "./NLPBackend.ts";
@@ -53,7 +53,7 @@ const fallbackOperation = <A, E, R>(
     secondary_backend: secondary.name,
   };
   return primaryEffect.pipe(
-    Effect.catchCause((cause) => Obs.recordNlpBackendFallback(cause, attributes).pipe(Effect.andThen(secondaryEffect))),
+    Effect.catchCause(flow(Obs.recordNlpBackendFallback(attributes), Effect.andThen(secondaryEffect))),
     Obs.trackNlpDuration(`nlp.backend.fallback.${operation}`, attributes)
   );
 };
@@ -279,13 +279,41 @@ export const withCaching = Effect.fn("withCaching")(function* (
   options: (typeof CachingOptions)["~type.make.in"] = {}
 ): Effect.fn.Return<NLPBackendShape> {
   const { capacity, timeToLive } = CachingOptions.make(options);
-  const tokenizeCache = yield* Cache.make({ capacity, lookup: backend.tokenize, timeToLive });
-  const sentencizeCache = yield* Cache.make({ capacity, lookup: backend.sentencize, timeToLive });
-  const posTagCache = yield* Cache.make({ capacity, lookup: backend.posTag, timeToLive });
-  const lemmatizeCache = yield* Cache.make({ capacity, lookup: backend.lemmatize, timeToLive });
-  const entitiesCache = yield* Cache.make({ capacity, lookup: backend.extractEntities, timeToLive });
-  const dependenciesCache = yield* Cache.make({ capacity, lookup: backend.parseDependencies, timeToLive });
-  const relationsCache = yield* Cache.make({ capacity, lookup: backend.extractRelations, timeToLive });
+  const tokenizeCache = yield* Cache.make({
+    capacity,
+    lookup: backend.tokenize,
+    timeToLive,
+  });
+  const sentencizeCache = yield* Cache.make({
+    capacity,
+    lookup: backend.sentencize,
+    timeToLive,
+  });
+  const posTagCache = yield* Cache.make({
+    capacity,
+    lookup: backend.posTag,
+    timeToLive,
+  });
+  const lemmatizeCache = yield* Cache.make({
+    capacity,
+    lookup: backend.lemmatize,
+    timeToLive,
+  });
+  const entitiesCache = yield* Cache.make({
+    capacity,
+    lookup: backend.extractEntities,
+    timeToLive,
+  });
+  const dependenciesCache = yield* Cache.make({
+    capacity,
+    lookup: backend.parseDependencies,
+    timeToLive,
+  });
+  const relationsCache = yield* Cache.make({
+    capacity,
+    lookup: backend.extractRelations,
+    timeToLive,
+  });
 
   return NLPBackend.of({
     capabilities: backend.capabilities,
