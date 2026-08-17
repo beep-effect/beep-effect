@@ -9,13 +9,14 @@ import * as Result from "effect/Result";
 const input = { name: "Ada", active: true };
 const compactJson = '{"name":"Ada","active":true}';
 const formattedJson = '{\n  "name": "Ada",\n  "active": true\n}';
+const assertsUnknown: typeof Unknown.asserts = Unknown.asserts;
 
 describe("Unknown", () => {
   it("exports the codec-enhanced schema from the package root", () => {
     expect(RootUnknown).toBe(Unknown);
     expect(Unknown.is(input)).toBe(true);
     expect(Unknown.equivalence(input, input)).toBe(true);
-    Unknown.asserts(input);
+    assertsUnknown(input);
   });
 
   it("exposes Sync, Option, Result, and Exit codecs", () => {

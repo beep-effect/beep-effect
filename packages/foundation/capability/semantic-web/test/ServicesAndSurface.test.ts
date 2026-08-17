@@ -171,7 +171,7 @@ describe("Services and Surface", () => {
   it.effect(
     "keeps optional service control fields absent in encoded wire shapes when omitted",
     Effect.fnUntraced(function* () {
-      const emptyDataset = yield* S.decodeUnknownEffect(Dataset)({ quads: [] });
+      const emptyDataset = yield* S.decodeEffect(Dataset)({ quads: [] });
       const namedNode = makeNamedNode("https://schema.org/name");
 
       const encodedCanonicalizeRequest = yield* S.encodeEffect(CanonicalizeDatasetRequest)(
@@ -233,7 +233,7 @@ describe("Services and Surface", () => {
         const service = yield* CanonicalizationService;
         const encodedDataset = yield* S.encodeEffect(Dataset)(dataset);
         const canonicalized = yield* service.canonicalize(
-          yield* S.decodeUnknownEffect(CanonicalizeDatasetRequest)({
+          yield* S.decodeEffect(CanonicalizeDatasetRequest)({
             algorithm: "rdfc-1.0",
             dataset: encodedDataset,
           })
@@ -242,7 +242,7 @@ describe("Services and Surface", () => {
         expect(pipe(canonicalized.canonicalText, Str.split("\n"))).toHaveLength(2);
 
         const fingerprint = yield* service.fingerprint(
-          yield* S.decodeUnknownEffect(FingerprintDatasetRequest)({
+          yield* S.decodeEffect(FingerprintDatasetRequest)({
             algorithm: "rdfc-1.0",
             dataset: encodedDataset,
           })
@@ -276,7 +276,7 @@ describe("Services and Surface", () => {
           [
             S.encodeEffect(Dataset)(left).pipe(
               Effect.flatMap((encoded) =>
-                S.decodeUnknownEffect(FingerprintDatasetRequest)({
+                S.decodeEffect(FingerprintDatasetRequest)({
                   algorithm: "rdfc-1.0",
                   dataset: encoded,
                 })
@@ -284,7 +284,7 @@ describe("Services and Surface", () => {
             ),
             S.encodeEffect(Dataset)(right).pipe(
               Effect.flatMap((encoded) =>
-                S.decodeUnknownEffect(FingerprintDatasetRequest)({
+                S.decodeEffect(FingerprintDatasetRequest)({
                   algorithm: "rdfc-1.0",
                   dataset: encoded,
                 })
@@ -309,7 +309,7 @@ describe("Services and Surface", () => {
         const service = yield* SparqlQueryService;
         const error = yield* service
           .execute(
-            yield* S.decodeUnknownEffect(SparqlQueryRequest)({
+            yield* S.decodeEffect(SparqlQueryRequest)({
               dataset: yield* S.encodeEffect(Dataset)(dataset),
               profile: "select",
               query: "SELECT * WHERE { ?s ?p ?o }",
@@ -319,7 +319,7 @@ describe("Services and Surface", () => {
 
         expect(error.message).toBe("No SPARQL engine is wired into the v1 semantic-web package.");
 
-        const annotation = yield* S.decodeUnknownEffect(WebAnnotation)({
+        const annotation = yield* S.decodeEffect(WebAnnotation)({
           id: "https://example.com/annotations/1",
           target: {
             selector: {
