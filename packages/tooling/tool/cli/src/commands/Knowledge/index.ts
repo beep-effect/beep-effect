@@ -47,6 +47,7 @@ export * from "./Knowledge.schemas.ts";
  * @since 0.0.0
  */
 export {
+  guardKnowledgeCloneAttributes,
   KnowledgeService,
   KnowledgeServiceLive,
   makeKnowledgeFindingId,
