@@ -7,6 +7,10 @@
     "declaration": false,
     "declarationMap": false,
     "incremental": false,
-    "noEmit": true
+    "noEmit": true,
+    "emitDeclarationOnly": false,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node", "bun"]
   }
 }
