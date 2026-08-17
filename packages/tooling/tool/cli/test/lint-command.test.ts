@@ -17,6 +17,7 @@ const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
 const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 const deprecatedApiLintShards = [
   "apps/architecture-lab-proof",
+  "apps/labs",
   "apps/oip-web",
   "apps/professional-desktop",
   "infra",
@@ -91,10 +92,15 @@ const writeSchemaFirstSourceFixture = Effect.fn("writeSchemaFirstSourceFixture")
   yield* writeSchemaFirstFileFixture("packages/example/src/Example.ts", sourceLines);
 });
 
-const writeDeprecatedApiLintFixture = Effect.fn("writeDeprecatedApiLintFixture")(function* (failingShard?: string) {
+const writeDeprecatedApiLintFixture = Effect.fn("writeDeprecatedApiLintFixture")(function* (options?: {
+  readonly failingShard?: string;
+  readonly omitShard?: string;
+}) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  yield* Effect.forEach(deprecatedApiLintShards, (shard) => fs.makeDirectory(shard, { recursive: true }), {
+  const failingShard = options?.failingShard;
+  const shards = A.filter(deprecatedApiLintShards, (shard) => shard !== options?.omitShard);
+  yield* Effect.forEach(shards, (shard) => fs.makeDirectory(shard, { recursive: true }), {
     concurrency: 4,
   });
 
@@ -145,9 +151,9 @@ describe("deprecated-apis lint command", { concurrent: false }, () => {
               A.map(invocationLines, (line) => argumentAfter(line, "--cache-location"))
             );
 
-            expect(logLines).toContain("[lint:deprecated-apis] running 24 shards with concurrency 4");
-            expect(invocationLines).toHaveLength(24);
-            expect(A.dedupe(cacheLocations)).toHaveLength(24);
+            expect(logLines).toContain("[lint:deprecated-apis] running 25 shards with concurrency 4");
+            expect(invocationLines).toHaveLength(25);
+            expect(A.dedupe(cacheLocations)).toHaveLength(25);
             expect(A.every(invocationLines, (line) => Str.includes("--cache-strategy content")(line))).toBe(true);
             expect(
               A.every(cacheLocations, Str.startsWith("node_modules/.cache/eslint-deprecated-apis/.eslintcache-"))
@@ -164,7 +170,7 @@ describe("deprecated-apis lint command", { concurrent: false }, () => {
       Effect.runPromise(
         withTempWorkingDirectory(
           Effect.gen(function* () {
-            yield* writeDeprecatedApiLintFixture("packages/agents");
+            yield* writeDeprecatedApiLintFixture({ failingShard: "packages/agents" });
 
             const exit = yield* Effect.exit(runLintCommand(["deprecated-apis"]));
 
@@ -172,6 +178,57 @@ describe("deprecated-apis lint command", { concurrent: false }, () => {
             expect(A.filter(yield* TestConsole.logLines, P.isString)).not.toContain(
               "[lint:deprecated-apis] OK: no deprecated vendor API usage found."
             );
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    10_000
+  );
+
+  it(
+    "skips the labs shard when the labs root is absent",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeDeprecatedApiLintFixture({ omitShard: "apps/labs" });
+            yield* runLintCommand(["deprecated-apis"]);
+
+            const logLines = A.filter(yield* TestConsole.logLines, P.isString);
+            const invocationLines = A.filter(
+              logLines,
+              (line) =>
+                Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
+            );
+
+            expect(logLines).toContain("[lint:deprecated-apis] skipping missing shard: apps/labs");
+            expect(invocationLines).toHaveLength(24);
+            expect(logLines).toContain("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    10_000
+  );
+
+  it(
+    "passes --no-error-on-unmatched-pattern to the labs shard only",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeDeprecatedApiLintFixture();
+            yield* runLintCommand(["deprecated-apis"]);
+
+            const logLines = A.filter(yield* TestConsole.logLines, P.isString);
+            const invocationLines = A.filter(
+              logLines,
+              (line) =>
+                Str.startsWith("[lint:deprecated-apis] ")(line) && Str.includes(": ./node_modules/.bin/eslint ")(line)
+            );
+            const labsLines = A.filter(invocationLines, Str.startsWith("[lint:deprecated-apis] apps/labs: "));
+            const flaggedLines = A.filter(invocationLines, Str.includes("--no-error-on-unmatched-pattern"));
+
+            expect(labsLines).toHaveLength(1);
+            expect(flaggedLines).toEqual(labsLines);
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

@@ -53,6 +53,7 @@ Start with the smallest boundary that owns the meaning:
 | External engines, SDKs, services, frameworks, or browser platform wrappers | `drivers/*`. |
 | Domain-agnostic reusable substrate owned by this repo | `foundation/*`, after the specific-home-first routing test. |
 | Repo-authored libraries published for external consumption | `ecosystem/*`, through the promotion gate in [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md). |
+| Law-abiding experimental app proving an uncertain idea | `apps/labs/*`, per [15-lab-apps.md](architecture/15-lab-apps.md). |
 | Typed application/runtime configuration contracts | The slice or shared `config` package. |
 | Product-agnostic UI primitives, themes, tokens, hooks, or composition helpers | `foundation/ui-system`. |
 | Browser/client product state, adapters, or interaction behavior | The slice `client` or `ui` package. |
@@ -64,6 +65,11 @@ app-local through `@/*` and should not publish a public `@beep/<app>` TypeScript
 API, root `src/index.ts`, package exports, or docgen surface. Runtime proof apps are the explicit exception: they may stay
 package-like when the app exists to prove a runtime contract from a public
 workspace API.
+
+Law-abiding experimental apps live under `apps/labs/*`: they are
+production-shaped, durable while useful, and mechanically deletable without
+per-app shared-registration edits. They obey
+[15-lab-apps.md](architecture/15-lab-apps.md).
 
 The core vocabulary is deliberately small at the entry point: slice, domain,
 use-cases, adapter, driver, shared kernel, foundation, config contract, Layer,

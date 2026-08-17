@@ -35,6 +35,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { applyJsoncModification as applySharedJsoncModification, decodeJsoncTextAs } from "../../internal/cli/Jsonc.ts";
+import { isLabsWorkspaceDir } from "../../internal/cli/Labs/index.ts";
 import { TsconfigSyncFilterError } from "./TsconfigSync.errors.ts";
 import {
   byPlannedChangeAscending,
@@ -428,6 +429,15 @@ const compareReferencePathsInOrder = (parsed: TsconfigWithReferences): ReadonlyA
     A.flatMap((entry) => (P.isString(entry.path) ? A.make(entry.path) : A.empty<string>()))
   );
 
+// Ratified lab-apps row 2 (zero-root-churn holdout A): labs workspaces never
+// enter the root solution reference set. Each lab's package-local check is its
+// typecheck authority and the non-required labs lane runs it. Workspace
+// discovery, package-local reference planning, root aliases, and syncpack
+// sources still see labs; only the root reference plan excludes them, and
+// check mode fails on any hand-added lab reference.
+const contributesRootReference = (workspace: WorkspaceDescriptor): boolean =>
+  workspace.hasProjectTsconfig && !isLabsWorkspaceDir(workspace.relativeDir);
+
 /**
  * Plan root tsconfig package-reference edits.
  *
@@ -454,7 +464,9 @@ const planRootReferenceSync = Effect.fn(function* (rootDir: string, workspaces: 
   const expected = uniqueSorted(
     pipe(
       workspaces,
-      A.flatMap((workspace) => (workspace.hasProjectTsconfig ? A.make(workspace.relativeDir) : A.empty<string>()))
+      A.flatMap((workspace) =>
+        contributesRootReference(workspace) ? A.make(workspace.relativeDir) : A.empty<string>()
+      )
     )
   );
 

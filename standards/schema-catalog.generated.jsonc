@@ -30922,6 +30922,46 @@
       "description": "Supported AST mutation categories required by create-package."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/LabIdentitySegment.ts",
+      "symbol": "LabIdentitySegmentState",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "LabIdentitySegmentState",
+      "description": "Labs identity-segment diff: expected lab slugs from the workspace catalog, actual composer/export slugs read from the marker-fenced regions, and live lab slugs registered outside the regions."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "BaselineOutputStamp",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BaselineOutputStamp",
+      "description": "(mtime, size) stamp of a baseline output file proving a write happened."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "BaselineStepOutcome",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "BaselineStepOutcome",
+      "description": "Closed outcome of one baseline writer invocation: ok, tolerated, or failed."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "BaselineWriterExitPolicy",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "BaselineWriterExitPolicy",
+      "description": "Closed exit policy for one delete-package baseline writer step."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
+      "symbol": "BaselineWriterStep",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BaselineWriterStep",
+      "description": "One delete-package baseline writer step with exit policy and optional verified output file."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.schemas.ts",
       "symbol": "DeletePackageManifest",
       "kind": "schema-class",
@@ -32650,6 +32690,14 @@
       "owner": "@beep/repo-cli"
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Labs/Labs.command.ts",
+      "symbol": "LabsListRow",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "LabsListRow",
+      "description": "One labs-list row: workspace name, repo-relative directory, and the decoded lab manifest or the manifest issue."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
       "symbol": "AllowlistCheckOptions",
       "kind": "schema-class",
@@ -33307,6 +33355,22 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Qa/Qa.session.ts",
+      "symbol": "AppHostTarget",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AppHostTarget",
+      "description": "Decoded portless target: app name plus the workspace family that fixes its host shape."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Qa.session.ts",
+      "symbol": "AppNamespace",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "AppNamespace",
+      "description": "Workspace family a portless app name resolves under."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Qa/Qa.session.ts",
       "symbol": "CaptureTarget",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -33370,12 +33434,44 @@
       "description": "Aggregate result emitted by the changeset package graph guard."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
+      "symbol": "ChangesetStatusPartition",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ChangesetStatusPartition",
+      "description": "Changed-file partition used by the path-aware changeset status wrapper."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
+      "symbol": "ChangesetStatusVerdict",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "ChangesetStatusVerdict",
+      "description": "Path-aware changeset status verdict: lab-only exemption, stock parity, or the reimplemented mixed check."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts",
+      "symbol": "ChangesetStatusWorkspacePackage",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ChangesetStatusWorkspacePackage",
+      "description": "A changed product workspace considered by the reimplemented mixed changeset check."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
       "symbol": "ChangesetGraphError",
       "kind": "tagged-error",
       "owner": "@beep/repo-cli",
       "identity": "ChangesetGraphError",
       "description": "Failure raised while validating changeset package references."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+      "symbol": "ChangesetStatusError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "ChangesetStatusError",
+      "description": "Failure raised while running the path-aware changeset status wrapper."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
@@ -36400,6 +36496,60 @@
       "description": "A comment-preserving JSONC modification request (content, JSON path, value, array-insertion flag)."
     },
     {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
+      "symbol": "LabDisposition",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "LabDisposition",
+      "description": "Closed lab lifecycle disposition (D9): active, promote, or expired."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
+      "symbol": "LabManifest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "LabManifest",
+      "description": "Schema-validated lab lifecycle manifest (D9/D12); decoded, never hand-parsed."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
+      "symbol": "LabManifestFromJsonString",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Labs/LabManifest.ts",
+      "symbol": "LabPostgresSchemaName",
+      "kind": "brand",
+      "owner": "@beep/repo-cli",
+      "identity": "LabPostgresSchemaName",
+      "description": "Lab-namespaced Postgres schema name derived from the lab slug (D12)."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Labs/LabsWorkspace.ts",
+      "symbol": "LabsWorkspaceDir",
+      "kind": "brand",
+      "owner": "@beep/repo-cli",
+      "identity": "LabsWorkspaceDir",
+      "description": "Repo-relative workspace directory below the apps/labs root."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Labs/RetiredPackages.ts",
+      "symbol": "RetiredPackageRecord",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RetiredPackageRecord",
+      "description": "One retired workspace package name and its retirement rationale."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Labs/RetiredPackages.ts",
+      "symbol": "RetiredPackagesRegistry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RetiredPackagesRegistry",
+      "description": "Registry of retired workspace package names kept for changeset history."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.errors.ts",
       "symbol": "RegistrationGeometryError",
       "kind": "tagged-error",
@@ -36422,6 +36572,14 @@
       "owner": "@beep/repo-cli",
       "identity": "DataResourceSurface",
       "description": "Manifest-owned destructive state requiring ownership proof and explicit consent."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "DeletionNotePolicy",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DeletionNotePolicy",
+      "description": "Whether deleting this package emits the canonical `{}` deletion changeset or is ceremony-exempt by labs path."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
@@ -36478,6 +36636,14 @@
       "owner": "@beep/repo-cli",
       "identity": "IdentitySegmentSurface",
       "description": "A package identity compose argument and its exported composer accessor."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",
+      "symbol": "LabTargetFacts",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "LabTargetFacts",
+      "description": "Decoded lab-manifest facts (manifest path, optional Postgres schema, locality) for a labs target."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/cli/RegistrationGeometry/RegistrationGeometry.schemas.ts",

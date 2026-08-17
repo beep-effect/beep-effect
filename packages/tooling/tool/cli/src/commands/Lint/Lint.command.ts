@@ -15,6 +15,7 @@ import { Console, Effect, FileSystem, HashSet, Inspectable, MutableHashSet, Orde
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { runToExit } from "../../internal/process/StepExec.ts";
 import { runGoalsDoctor } from "../Goals/Doctor.ts";
@@ -49,6 +50,7 @@ const DEPRECATED_API_LINT_ESLINT_BIN = "node_modules/.bin/eslint";
 const DEPRECATED_API_LINT_NODE_OPTIONS = "--max-old-space-size=8192";
 const DEPRECATED_API_LINT_SHARDS = [
   "apps/architecture-lab-proof",
+  LABS_WORKSPACE_ROOT,
   "apps/oip-web",
   "apps/professional-desktop",
   "infra",
@@ -480,9 +482,13 @@ const runDeprecatedApiLintShard = Effect.fn("runDeprecatedApiLintShard")(functio
     "content",
     "--config",
     "eslint.config.mjs",
+    // The labs root may exist while holding zero lab apps (README-only
+    // container, goals/lab-apps-lifecycle D3); only the labs shard tolerates
+    // an unmatched pattern so an empty root cannot fail the law lane.
+    ...(shard === LABS_WORKSPACE_ROOT ? ["--no-error-on-unmatched-pattern"] : A.empty<string>()),
     shard,
-  ] as const;
-  const args = hasLocalEslint ? eslintArgs : (["eslint", ...eslintArgs] as const);
+  ];
+  const args = hasLocalEslint ? eslintArgs : ["eslint", ...eslintArgs];
   yield* Console.log(`[lint:deprecated-apis] ${shard}: ${command} ${A.join(args, " ")}`);
 
   const exitCode = yield* runToExit({

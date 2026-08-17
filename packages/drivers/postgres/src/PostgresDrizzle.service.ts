@@ -621,7 +621,7 @@ export const migrateBundle: {
           const legacyNameSets = pipe(
             decoded.legacyNameSets,
             O.fromUndefinedOr,
-            O.getOrElse(() => A.empty<MigrationBundleLegacyNameSet>())
+            O.getOrElse(A.empty<MigrationBundleLegacyNameSet>)
           );
           const migrationsSchema = pipe(
             decoded.migrationsSchema,

@@ -12,11 +12,12 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { ActionEvent, decodeActionEventJson, RoundNumber, SessionId, SessionStore } from "@beep/qa-capture";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str, thunkEmptyReadonlyRecord } from "@beep/utils";
 import { Effect, FileSystem, flow, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { LABS_WORKSPACE_ROOT } from "../../internal/cli/Labs/index.ts";
 import { runCaptured } from "../../internal/process/index.ts";
 import { QaCommandError } from "./Qa.errors.ts";
 import type { RoundLayout } from "@beep/qa-capture";
@@ -63,22 +64,145 @@ export const qaRootPath: {
 } = dual(2, (path: Path.Path, cwd: string): string => path.join(cwd, ".beep", "qa"));
 
 /**
- * Portless URL of a repo dev-server app.
+ * Workspace family a portless `--app` name resolves under.
  *
- * **Example** (Building app portless URL)
+ * **Example** (Reading a namespace literal)
  *
  * ```ts
- * import { portlessUrlForApp } from "@beep/repo-cli/commands/Qa/Qa.session"
+ * import { AppNamespace } from "@beep/repo-cli/commands/Qa/Qa.session"
  *
- * console.log(portlessUrlForApp("storybook")) // "http://storybook.beep.localhost:1355"
+ * console.log(AppNamespace.Enum.labs) // "labs"
  * ```
  *
- * @param app - Portless app name, for example storybook.
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AppNamespace = LiteralKit(["apps", "labs"]).pipe(
+  $I.annoteSchema("AppNamespace", {
+    description: "Workspace family a portless app name resolves under.",
+  })
+);
+
+/**
+ * Decoded {@link AppNamespace} type.
+ *
+ * **Example** (Typing a namespace value)
+ *
+ * ```ts
+ * import { AppNamespace } from "@beep/repo-cli/commands/Qa/Qa.session"
+ * import type { AppNamespace as AppNamespaceValue } from "@beep/repo-cli/commands/Qa/Qa.session"
+ *
+ * const namespace: AppNamespaceValue = AppNamespace.Enum.apps
+ * console.log(namespace) // "apps"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AppNamespace = typeof AppNamespace.Type;
+
+/**
+ * Decoded portless target: an app name plus the workspace family that fixes
+ * its host shape.
+ *
+ * **Example** (Creating an AppHostTarget)
+ *
+ * ```ts
+ * import { AppHostTarget } from "@beep/repo-cli/commands/Qa/Qa.session"
+ *
+ * const target = AppHostTarget.make({ name: "storybook", namespace: "apps" })
+ * console.log(target.namespace) // "apps"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AppHostTarget extends S.Class<AppHostTarget>($I`AppHostTarget`)(
+  {
+    name: S.NonEmptyString.pipe(
+      $I.annoteKey("AppHostTarget.name", {
+        description: "Portless app name; the leading host segment.",
+      })
+    ),
+    namespace: AppNamespace.pipe(
+      $I.annoteKey("AppHostTarget.namespace", {
+        description: "apps produces <name>.beep.localhost; labs produces <name>.labs.beep.localhost.",
+      })
+    ),
+  },
+  $I.annote("AppHostTarget", {
+    description: "Decoded portless target: app name plus the workspace family that fixes its host shape.",
+  })
+) {}
+
+/**
+ * Portless URL of a repo dev-server app.
+ *
+ * **Details**
+ *
+ * The namespace fixes the host shape: `apps` targets serve on
+ * `<name>.beep.localhost`, `labs` targets on `<name>.labs.beep.localhost`.
+ *
+ * **Example** (Building both portless host shapes)
+ *
+ * ```ts
+ * import { AppHostTarget, portlessUrlForApp } from "@beep/repo-cli/commands/Qa/Qa.session"
+ *
+ * console.log(portlessUrlForApp(AppHostTarget.make({ name: "storybook", namespace: "apps" })))
+ * // "http://storybook.beep.localhost:1355"
+ * console.log(portlessUrlForApp(AppHostTarget.make({ name: "kg-scratch", namespace: "labs" })))
+ * // "http://kg-scratch.labs.beep.localhost:1355"
+ * ```
+ *
+ * @param target - Decoded app target naming the app and its workspace family.
  * @returns The app's canonical portless dev-server URL.
  * @category utilities
  * @since 0.0.0
  */
-export const portlessUrlForApp = (app: string): string => `http://${app}.beep.localhost:${PORTLESS_PORT}`;
+export const portlessUrlForApp = (target: AppHostTarget): string =>
+  AppNamespace.$match(target.namespace, {
+    apps: () => `http://${target.name}.beep.localhost:${PORTLESS_PORT}`,
+    labs: () => `http://${target.name}.labs.beep.localhost:${PORTLESS_PORT}`,
+  });
+
+/**
+ * Resolve which workspace family a portless `--app` name serves under.
+ *
+ * **Details**
+ *
+ * A real `apps/<name>` workspace wins over `apps/labs/<name>`; names matching
+ * neither fall back to the `apps` host shape so non-workspace portless labels
+ * (spike hosts, worktree lanes) keep resolving exactly as before. A missing
+ * `apps/labs` directory means "not a lab", never an error.
+ *
+ * **Example** (Resolving an app host target)
+ *
+ * ```ts
+ * import { resolveAppHostTarget } from "@beep/repo-cli/commands/Qa/Qa.session"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(resolveAppHostTarget("/repo", "storybook"))) // true
+ * ```
+ *
+ * @param cwd - Checkout root the `apps/` tree is probed under.
+ * @param app - Portless app name as supplied on the command line.
+ * @returns An Effect resolving the decoded app host target.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const resolveAppHostTarget = Effect.fn("QaSession.resolveAppHostTarget")(function* (
+  cwd: string,
+  app: string
+): Effect.fn.Return<AppHostTarget, never, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const dirExists = (root: string) => fs.exists(path.join(cwd, root, app)).pipe(Effect.orElseSucceed(() => false));
+  const [isApp, isLab] = yield* Effect.all([dirExists("apps"), dirExists(LABS_WORKSPACE_ROOT)], { concurrency: 2 });
+  return AppHostTarget.make({
+    name: app,
+    namespace: !isApp && isLab ? AppNamespace.Enum.labs : AppNamespace.Enum.apps,
+  });
+});
 
 /**
  * The page a capture round drives, with the CORS origins its witness may post from.
@@ -165,8 +289,9 @@ export class CaptureTargetRequest extends S.Class<CaptureTargetRequest>($I`Captu
  *
  * **Details**
  *
- * `--url` wins when both are supplied; `--app` expands through the portless
- * naming mandate rather than a numeric localhost port.
+ * `--url` wins when both are supplied; `--app` resolves its workspace family
+ * through {@link resolveAppHostTarget} against `cwd` and expands through the
+ * portless naming mandate rather than a numeric localhost port.
  *
  * **Example** (Resolving from app flag)
  *
@@ -175,32 +300,39 @@ export class CaptureTargetRequest extends S.Class<CaptureTargetRequest>($I`Captu
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
- * const program = resolveCaptureTarget(CaptureTargetRequest.make({ app: O.some("storybook"), url: O.none() }))
+ * const program = resolveCaptureTarget("/repo", CaptureTargetRequest.make({ app: O.some("storybook"), url: O.none() }))
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
+ * @param cwd - Checkout root `--app` namespace resolution probes under.
  * @param options - The --url / --app pair as supplied on the command line.
  * @returns An Effect resolving the capture target, failing when neither flag yields a usable URL.
  * @category use-cases
  * @since 0.0.0
  */
-export const resolveCaptureTarget = (options: CaptureTargetRequest): Effect.Effect<CaptureTarget, QaCommandError> =>
-  pipe(
-    O.orElse(options.url, () => O.map(options.app, portlessUrlForApp)),
-    O.match({
-      onNone: () =>
-        Effect.fail(
-          QaCommandError.make({
-            message: "qa record needs a capture target: pass --url <absolute-url> or --app <portless-app-name>.",
-          })
-        ),
-      onSome: (raw) =>
-        Effect.try({
-          try: () => new URL(raw),
-          catch: (cause) => QaCommandError.new(cause, `qa record could not parse "${raw}" as an absolute URL.`),
-        }).pipe(Effect.map((url) => CaptureTarget.make({ allowedOrigins: originsOf(url), url: raw }))),
-    })
-  );
+export const resolveCaptureTarget = Effect.fn("QaSession.resolveCaptureTarget")(function* (
+  cwd: string,
+  options: CaptureTargetRequest
+): Effect.fn.Return<CaptureTarget, QaCommandError, FileSystem.FileSystem | Path.Path> {
+  const raw = yield* O.match(options.url, {
+    onNone: () =>
+      O.match(options.app, {
+        onNone: () =>
+          Effect.fail(
+            QaCommandError.make({
+              message: "qa record needs a capture target: pass --url <absolute-url> or --app <portless-app-name>.",
+            })
+          ),
+        onSome: (app) => Effect.map(resolveAppHostTarget(cwd, app), portlessUrlForApp),
+      }),
+    onSome: Effect.succeed,
+  });
+  const url = yield* Effect.try({
+    try: () => new URL(raw),
+    catch: (cause) => QaCommandError.new(cause, `qa record could not parse "${raw}" as an absolute URL.`),
+  });
+  return CaptureTarget.make({ allowedOrigins: originsOf(url), url: raw });
+});
 
 // Both round resolvers accept an explicit `--round` the same way and differ
 // only in what they do when the flag is absent, so the decode branch is shared

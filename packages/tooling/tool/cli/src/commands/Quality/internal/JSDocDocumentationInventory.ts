@@ -8,6 +8,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
 import { formatJsonc } from "../../../internal/artifacts/index.ts";
+import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 import { globPatternToRegExp as sharedGlobPatternToRegExp } from "../../../internal/GlobPattern.ts";
 import { runGitLines } from "../../../internal/repo-run/index.ts";
 import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "../../../internal/tsmorph/index.ts";
@@ -1478,11 +1479,14 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   // Ecosystem members are documented to the published-package grammar and
   // gated by their own package docgen lane; the repo carrier grammar this
   // inventory enforces does not govern them (standards/architecture/
-  // 14-ecosystem-packages.md, Style-Law Scoping).
+  // 14-ecosystem-packages.md, Style-Law Scoping). Lab apps under apps/labs
+  // are likewise excluded: labs are ceremony-exempt scratch surfaces
+  // (goals/lab-apps-lifecycle D2) and never enter the carrier-grammar
+  // inventory.
   const inventoriedNames = A.filter(topoNames, (packageName) =>
     O.match(MutableHashMap.get(packageByName, packageName), {
       onNone: () => true,
-      onSome: (info) => !Str.startsWith("packages/ecosystem/")(info.path),
+      onSome: (info) => !Str.startsWith("packages/ecosystem/")(info.path) && !isLabsWorkspacePath(info.path),
     })
   );
   const packages = yield* Effect.forEach(

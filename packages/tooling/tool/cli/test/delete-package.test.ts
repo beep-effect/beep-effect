@@ -1,4 +1,6 @@
 import {
+  BaselineOutputStamp,
+  DeletePackageBaselineWriters,
   DeletePackagePolicy,
   DeletePackagePolicyEvaluation,
   DependentHit,
@@ -227,7 +229,52 @@ describe("delete-package registration geometry", () => {
         "coverage-baseline",
       ])
     );
+    // The data-resource surface is conditional on decoded lab facts; a
+    // non-lab target must never declare it.
+    expect(A.map(plan.operations, (operation) => operation.surfaceId)).not.toContain("lab-postgres-schema");
     expect(A.every(plan.operations, (operation) => operation.detail.length > 0)).toBe(true);
+  });
+});
+
+describe("delete-package baseline writers", () => {
+  const stamp = (mtimeMillis: number, size: number) => BaselineOutputStamp.make({ mtimeMillis, size });
+  const outcome = DeletePackageBaselineWriters.baselineStepOutcome;
+
+  it("classifies writer exits: zero is ok, exit >= 2 always fails", () => {
+    expect(outcome(0, "zero-only", O.none(), O.none())).toBe("ok");
+    expect(outcome(0, "tolerate-finding-exit", O.none(), O.some(stamp(1, 1)))).toBe("ok");
+    expect(outcome(2, "tolerate-finding-exit", O.none(), O.some(stamp(1, 1)))).toBe("failed");
+    expect(outcome(3, "zero-only", O.none(), O.none())).toBe("failed");
+  });
+
+  it("never tolerates a finding exit under zero-only", () => {
+    expect(outcome(1, "zero-only", O.none(), O.some(stamp(1, 1)))).toBe("failed");
+  });
+
+  it("tolerates exit 1 only when the verified output was provably written", () => {
+    expect(outcome(1, "tolerate-finding-exit", O.none(), O.some(stamp(1_000, 10)))).toBe("tolerated");
+    expect(outcome(1, "tolerate-finding-exit", O.some(stamp(1_000, 10)), O.some(stamp(2_000, 10)))).toBe("tolerated");
+    expect(outcome(1, "tolerate-finding-exit", O.some(stamp(1_000, 10)), O.some(stamp(1_000, 12)))).toBe("tolerated");
+    expect(outcome(1, "tolerate-finding-exit", O.some(stamp(1_000, 10)), O.some(stamp(1_000, 10)))).toBe("failed");
+    expect(outcome(1, "tolerate-finding-exit", O.some(stamp(1_000, 10)), O.none())).toBe("failed");
+    expect(outcome(1, "tolerate-finding-exit", O.none(), O.none())).toBe("failed");
+  });
+
+  it("keeps the fallow health baseline as the only tolerant step in the writer table", () => {
+    const tolerant = A.filter(
+      DeletePackageBaselineWriters.steps,
+      (step) => step.exitPolicy === "tolerate-finding-exit"
+    );
+    const tolerantStep = O.getOrThrow(A.head(tolerant));
+    expect(A.length(tolerant)).toBe(1);
+    expect(tolerantStep.label).toBe("fallow health baseline");
+    expect(O.getOrThrow(tolerantStep.verifiedOutput)).toBe("standards/fallow.health.regression-baseline.jsonc");
+    for (const step of DeletePackageBaselineWriters.steps) {
+      if (!Str.equivalence(step.label, "fallow health baseline")) {
+        expect(step.exitPolicy).toBe("zero-only");
+        expect(O.isNone(step.verifiedOutput)).toBe(true);
+      }
+    }
   });
 });
 
@@ -269,6 +316,11 @@ const policy = (overrides: Partial<DeletePackagePolicy> = {}): DeletePackagePoli
     livePromotionRecord: false,
     cascadeClosureAllowed: true,
     catalogUniquenessProven: true,
+    dropData: false,
+    allowNonLocalData: false,
+    dataResourceDeclared: false,
+    dataConnectionNonLocal: false,
+    dataOwnershipProven: false,
     ...overrides,
   });
 

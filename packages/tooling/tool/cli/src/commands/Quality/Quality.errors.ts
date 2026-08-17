@@ -75,6 +75,57 @@ export class ChangesetGraphError extends S.TaggedError<ChangesetGraphError>($I`C
 }
 
 /**
+ * Failure raised while running the path-aware changeset status wrapper.
+ *
+ * **Example** (Raise a changeset status error)
+ *
+ * ```ts
+ * import { ChangesetStatusError } from "@beep/repo-cli/commands/Quality/ChangesetStatus"
+ *
+ * const error = new ChangesetStatusError({
+ *   message: "Changeset status validation failed."
+ * })
+ * console.log(error.message)
+ * ```
+ *
+ * @category error-handling
+ * @since 0.0.0
+ */
+export class ChangesetStatusError extends S.TaggedError<ChangesetStatusError>($I`ChangesetStatusError`)(
+  "ChangesetStatusError",
+  {
+    message: S.String,
+    file: S.optionalKey(S.String),
+    cause: S.optionalKey(S.Defect({ includeStack: true })),
+  },
+  $I.annote("ChangesetStatusError", {
+    description: "Failure raised while running the path-aware changeset status wrapper.",
+  })
+) {
+  /**
+   * Construct a changeset status error from a cause and context.
+   *
+   * @category constructors
+   */
+  static readonly new: {
+    (cause: unknown, message: string, file?: string): ChangesetStatusError;
+    (message: string, file?: string): (cause: unknown) => ChangesetStatusError;
+  } = dual(
+    3,
+    (cause, message, file): ChangesetStatusError =>
+      ChangesetStatusError.make({
+        cause,
+        message,
+        ...O.getSomesStruct({
+          file: O.fromUndefinedOr(file),
+        }),
+      })
+  );
+
+  static readonly mapError = Err.mapToError(this.new);
+}
+
+/**
  * Typed failure for repo operational commands.
  *
  * **Example** (Raise a quality script command error)

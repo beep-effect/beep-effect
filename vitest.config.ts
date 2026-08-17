@@ -12,6 +12,9 @@ export default defineConfig({
       "packages/*/*/vitest.config.ts",
       "packages/tooling/*/*/vitest.config.ts",
       "apps/*/vitest.config.ts",
+      // Lab apps live one level deeper (apps/labs/<name>); globs do not cross "/".
+      // Canonical labs path module: packages/tooling/tool/cli/src/internal/cli/Labs.
+      "apps/labs/*/vitest.config.ts",
       ...(isBun
         ? [
             // Exclude Node-specific packages when running with Bun

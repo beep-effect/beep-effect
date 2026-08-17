@@ -1,0 +1,20 @@
+import { {{identityAccessor}} } from "@beep/identity/packages";
+import * as S from "effect/Schema";
+import { HttpApi, HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
+
+const $I = {{identityAccessor}}.create("Api");
+
+export class Health extends S.Class<Health>($I`Health`)(
+  {
+    status: S.tag("ok"),
+  },
+  $I.annote("Health", {
+    description: "Service health snapshot returned by GET /health.",
+  })
+) {}
+
+export const ApiGroup = HttpApiGroup.make("{{name}}").add(
+  HttpApiEndpoint.get("health", "/health", { success: Health })
+);
+
+export const Api = HttpApi.make("{{name}}-api").add(ApiGroup);
