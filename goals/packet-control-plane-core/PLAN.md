@@ -56,6 +56,13 @@ exploration at decompose — they do not extend this goal.
 Also reuse, not reinvent: the explore check reports through the existing
 `goals doctor` finding/baseline shape rather than minting a new report type.
 
+The doctor/check surface built here is also the **rubric for the post-close
+fleet campaign** (ROADMAP, Machinery lane): the convention-migration +
+adversarial quality loop over all non-`completed-retained` packets uses this
+check as its mechanical acceptance gate, targeting a zero inherited-findings
+baseline. Build the check to *express the canonical packet convention*, not
+merely to pass this packet.
+
 ## Current blockers
 
 None. P1 is startable.
