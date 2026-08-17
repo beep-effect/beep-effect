@@ -69,10 +69,12 @@ interface CommandStdinShape {
  * @since 0.0.0
  */
 export const CommandStdinSource: Context.Reference<CommandStdinShape> = Context.Reference($I`CommandStdinSource`, {
+  /* v8 ignore start -- the production stdin bridge: tests always provide a stub, because a real stdin.text() read blocks until the worker's held-open pipe reaches EOF */
   defaultValue: (): CommandStdinShape => ({
     interactive: () => process.stdin.isTTY === true,
     text: () => Bun.stdin.text(),
   }),
+  /* v8 ignore stop */
 });
 
 /**
