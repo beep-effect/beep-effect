@@ -96,6 +96,11 @@ export const CHANGESET_STATUS_NEUTRAL_PATH_PREFIXES: ReadonlyArray<string> = [
  */
 export const LAB_EXEMPT_COMPANION_PATHS: ReadonlyArray<string> = [
   "packages/foundation/modeling/identity/src/packages.ts",
+  // Minting or deleting a lab always refreshes the lockfile. Without this the
+  // repo-root `bun.lock` classifies as a blocking path (no workspace owns a
+  // path with no `/`), so `lab-exempt` is unreachable for every real lab PR
+  // and the ratified D2 ceremony exemption never applies in practice.
+  "bun.lock",
 ];
 
 /**
