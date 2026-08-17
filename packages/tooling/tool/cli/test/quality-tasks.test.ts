@@ -3092,7 +3092,12 @@ describe("labs turbo exclusion", () => {
   it("ends check argvs with the labs exclude while repo-wide tsgo steps survive", () => {
     for (const argv of [["check", "--affected", "--summarize"], ["check"]]) {
       const steps = rootQualityStepsForTesting("/repo", getInvocation(argv));
-      expect(A.map(steps, (step) => step.label)).toEqual(["check", "check:tsgo:tests", "check:tsgo:smoke"]);
+      expect(A.map(steps, (step) => step.label)).toEqual([
+        "check",
+        "check:tsgo:rules",
+        "check:tsgo:tests",
+        "check:tsgo:smoke",
+      ]);
       expectEndsWithLabsExclude(steps[0]);
     }
   });
