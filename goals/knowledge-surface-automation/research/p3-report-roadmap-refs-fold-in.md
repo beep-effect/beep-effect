@@ -59,3 +59,25 @@ Ledger receipts for both are in `research/OPPORTUNITIES.md`.
 With this item closed, P3's scope (Workstream A rewrite pass, hermetic byte gates, C
 Stage-1 gate, A7 fold-in) is complete; the manifest phase flip rides the same PR as this
 report per the packet's same-change rule.
+
+## PR-review addendum: soft-wrapped link labels (Greptile P1, fixed in-PR)
+
+Greptile's review of PR #753 found a genuine coverage regression the equivalence proof
+could not see: the retired parser matched `\[[^\]]*\]\(...\)` document-globally, so a
+link label wrapped across lines (live instance: `docs/ROADMAP.md:195-196`, the
+`oip-web-production-hardening` launch-runbook link) still matched across the newline.
+The folded per-line parse skipped it. Outcome-level equivalence (0 findings vs
+0 findings) was blind to this because a valid-but-uninventoried link produces no
+finding either way — only deleting the target would have exposed the gap.
+
+Fix: `RoadmapRefs` now merges soft-wrapped prose lines before link extraction — a line
+ending in an unclosed `[label` absorbs following prose lines until the label closes,
+with consumed-line tracking so a complete link sitting on a continuation line is
+matched exactly once. The shared census parser is untouched (its per-line semantics
+stay pinned by golden fixtures). The fixture pins both wrapped-label cases: dead
+target → blocking finding; resolving target with trailing `(2/2)` snapshot → drift
+advisory.
+
+Lesson recorded in the ledger: equivalence proofs for scanner rewrites must compare
+the parsed *inventory*, not just the emitted findings, when the corpus is currently
+all-green.

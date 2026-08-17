@@ -287,3 +287,17 @@ measurement first). Reviewed at each grill.
   files (they are diff-scoped and fast: ~10s and ~35s here) would have caught both before
   the full proof spent its minutes. The misattributed OSV hint is already a recorded
   capsule-derivation defect in the ship-velocity packet; this is one more receipt for it.
+
+## 2026-08-17 — outcome-level equivalence proofs are blind to coverage regressions
+
+- **What happened:** the roadmap-refs fold-in (PR #753) proved behavior preservation by
+  comparing lint outcomes on the live corpus (0 blocking / 0 advisory, identical to main).
+  Greptile's review caught that the folded per-line parse silently dropped soft-wrapped
+  link labels (`docs/ROADMAP.md:195-196`) that the retired document-global regex matched.
+  Both parsers emit zero findings today, so the outcome comparison could not distinguish
+  "parsed and verified" from "never seen".
+- **Evidence:** Greptile P1 thread on PR #753 (`RoadmapRefs.ts:147`); the live wrapped link
+  resolves, so no finding fired under either parser.
+- **Prevention:** when rewriting a scanner against an all-green corpus, diff the parsed
+  inventory (reference list / observation set), not just the emitted findings — or plant a
+  canary (temporarily dead target) per structural link shape present in the live corpus.

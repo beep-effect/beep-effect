@@ -9,7 +9,8 @@
  * + `knowledgeLinkDestinations`), so what counts as a link — and which lines are
  * prose — is decided in one place; only the roadmap-specific concerns (the
  * goals/explorations domain filter, trailing phase snapshots, reference-style
- * definitions) live here.
+ * definitions, soft-wrapped link labels merged back onto their opening line)
+ * live here.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -114,16 +115,57 @@ const definitionReference = (lineText: string): O.Option<RoadmapReference> => {
     : O.none();
 };
 
+// A prose line whose final link label never closes: its `](destination)` sits on a following
+// soft-wrapped line, so per-line matching alone cannot see the link.
+const UNCLOSED_LINK_LABEL_PATTERN = /\[[^\]]*$/;
+
+type RoadmapLineUnit = {
+  readonly text: string;
+  readonly lastLineNumber: number;
+};
+
+const wrappedUnitFrom = (
+  lines: ReadonlyArray<KnowledgeDocumentLine>,
+  start: KnowledgeDocumentLine
+): RoadmapLineUnit => {
+  let text = start.text;
+  let lastLineNumber = start.number;
+  // `number` is 1-based, so indexing the 0-based array with it lands on the following line.
+  let next = A.get(lines, lastLineNumber);
+  while (UNCLOSED_LINK_LABEL_PATTERN.test(text) && O.isSome(next) && next.value.prose) {
+    text = `${text} ${Str.trimStart(next.value.text)}`;
+    lastLineNumber = next.value.number;
+    next = A.get(lines, lastLineNumber);
+  }
+  return { text, lastLineNumber };
+};
+
+// Continuation lines are consumed into their opening line's unit so a complete link sitting on a
+// continuation is matched exactly once.
+const roadmapLineUnits = (lines: ReadonlyArray<KnowledgeDocumentLine>): ReadonlyArray<RoadmapLineUnit> => {
+  let units = A.empty<RoadmapLineUnit>();
+  let consumedThrough = 0;
+  for (const line of lines) {
+    if (!line.prose || line.number <= consumedThrough) {
+      continue;
+    }
+    const unit = wrappedUnitFrom(lines, line);
+    units = A.append(units, unit);
+    consumedThrough = unit.lastLineNumber;
+  }
+  return units;
+};
+
 const linkReference = (
   lines: ReadonlyArray<KnowledgeDocumentLine>,
-  line: KnowledgeDocumentLine,
+  unit: RoadmapLineUnit,
   link: KnowledgeLinkDestination
 ): O.Option<RoadmapReference> => {
   if (!ROADMAP_TARGET_PATTERN.test(link.destination)) {
     return O.none();
   }
-  // `line.number` is 1-based, so indexing the 0-based array with it lands on the next line.
-  const phaseSnapshot = phaseSnapshotNear(Str.slice(link.end)(line.text), A.get(lines, line.number));
+  // `lastLineNumber` is 1-based, so indexing the 0-based array with it lands on the next line.
+  const phaseSnapshot = phaseSnapshotNear(Str.slice(link.end)(unit.text), A.get(lines, unit.lastLineNumber));
   return O.some(
     RoadmapReference.make({
       target: link.destination,
@@ -136,21 +178,17 @@ const linkReference = (
   );
 };
 
-const lineReferences =
+const unitReferences =
   (lines: ReadonlyArray<KnowledgeDocumentLine>) =>
-  (line: KnowledgeDocumentLine): ReadonlyArray<RoadmapReference> => {
-    if (!line.prose) {
-      return A.empty();
-    }
-    return O.match(definitionReference(line.text), {
+  (unit: RoadmapLineUnit): ReadonlyArray<RoadmapReference> =>
+    O.match(definitionReference(unit.text), {
       onSome: A.of,
-      onNone: () => A.getSomes(A.map(knowledgeLinkDestinations(line.text), (link) => linkReference(lines, line, link))),
+      onNone: () => A.getSomes(A.map(knowledgeLinkDestinations(unit.text), (link) => linkReference(lines, unit, link))),
     });
-  };
 
 const parseRoadmapReferences = (raw: string): ReadonlyArray<RoadmapReference> => {
   const lines = knowledgeDocumentLines(raw);
-  return A.flatMap(lines, lineReferences(lines));
+  return A.flatMap(roadmapLineUnits(lines), unitReferences(lines));
 };
 
 const targetPath: (target: string) => string = flow(Str.split(/[?#]/), A.head, O.getOrElse(thunkEmptyStr));
