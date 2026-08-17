@@ -227,3 +227,34 @@ Numbers are STABLE IDS — never renumber to express priority.
    deliberately declined it. A default that everyone overrides is not a default;
    it is a trap with a well-known workaround, and the workaround is exactly what
    stops the trap from ever being fixed.
+
+10. **The reflection lint reports a false green on an active packet, and only
+    `goals doctor` catches the invalid frontmatter.** — `unowned`
+
+    *Doing:* landing the P6 closeout reflection, validating it with the command
+    the P6 checklist names.
+
+    *Evidence:* `bun run beep lint reflection-artifacts` exited **0** on a
+    reflection whose YAML frontmatter did not decode. The `explanation` value
+    quoted the tauri defect literally — an icon key with an empty array — and
+    that colon-space inside an unquoted plain scalar is a YAML mapping error.
+    `bun run beep goals doctor` failed it as a NEW blocking finding
+    (`reflection-frontmatter-invalid`), which surfaced through `Lint Policy`
+    rather than through the gate the checklist tells you to run. The two share
+    `frontmatterIsValid`; they differ in reach, because the lint only visits
+    packets whose manifest is already `completed` and this packet is `active`.
+    `Doctor.ts` even comments the asymmetry: "Reflection frontmatter must decode
+    in ANY packet (the PR #365 YAML traps hid in the completed-only gap)".
+
+    *Would have prevented it:* the lint validating frontmatter for every packet
+    and reserving the completed-only rule for the *presence* requirement, which
+    is the only part that legitimately depends on status.
+
+    *Second-order:* this is the packet's own thesis turned on the packet.
+    Receipt 6 is a gate that measured a narrower thing than the artifact it
+    gated; so is this, and it bit while writing the document that records
+    receipt 6. A gate that returns green for a file it never opened is worse
+    than no gate, because it converts "unchecked" into "checked" in the
+    author's head. The `P6 Closeout Checklist` in `PLAN.md` names this lint as
+    the validation step, so following the packet's own instructions produces
+    the false green.
