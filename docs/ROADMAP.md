@@ -52,14 +52,24 @@ never as a serial phase ahead of product work. A packet claims accelerator
 status only by passing two tests: the **named-consumer test** (it names the
 specific goals it accelerates, and how) and the **payback-before-horizon
 test** (the acceleration lands before its consumer goals would finish
-anyway).
+anyway). The 2026-08 CI campaign is the proof case: pipelines and local
+checks went from hours to minutes with faster backpressure, and its named
+consumer is every subsequent goal — most concretely the paused
+goal-portfolio-driver, which is uneconomic at hours-per-iteration.
 
-Execution note: the active-portfolio drain is driven autonomously by
-[`goal-portfolio-driver`](../goals/goal-portfolio-driver/README.md), which
-locked a dependency-ordered queue of the 25 active packets on 2026-07-14
-(NOW lanes first). The lane cap above refers to these thematic program
-lanes; the driver's two worktree edit lanes are execution slots, not
-program lanes. Priority stays owned by this file; lifecycle stays owned by
+**The one finish-first goal (2026-08-17):**
+[`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
+is the single accelerator that should *finish before the rest* — it is the
+trust substrate for autonomous execution. The dependency chain is explicit:
+CI speed (paid) + control-plane state truth (this goal) → the
+goal-portfolio-driver revisit.
+
+Execution note: [`goal-portfolio-driver`](../goals/goal-portfolio-driver/README.md)
+is **paused (2026-08-17)** pending its revisit gate — exploration wrap-up
+complete + packet-control-plane-core closed. Its 2026-07-14 locked 25-packet
+queue is stale and will be relocked from control-plane derived state at
+revisit; until then the portfolio drains through ordinary operator-driven
+sessions. Priority stays owned by this file; lifecycle stays owned by
 `goals/INDEX.md`.
 
 ### Lane 1 — Product
