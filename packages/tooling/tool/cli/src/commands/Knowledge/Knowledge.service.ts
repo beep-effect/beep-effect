@@ -101,8 +101,10 @@ const ANSI_ESCAPE_PATTERN = /\u001B\[[0-?]*[ -/]*[@-~]/gu;
 const OTHER_ESCAPE_PATTERN = /\u001B[@-Z\\-_]/gu;
 const DISALLOWED_DIAGNOSTIC_CONTROL_PATTERN = /[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/gu;
 const FORMAT_CHARACTER_PATTERN = /\p{Cf}/gu;
+// Segments admit Unicode letters, marks, and digits (not just ASCII) so a non-ASCII checkout path
+// in probe output is redacted whole instead of leaking its tail after the first non-ASCII segment.
 const POSIX_ABSOLUTE_PATH_PATTERN =
-  /(?<![A-Za-z0-9_.>:/-])\/[A-Za-z0-9._@+-]+(?:\/[A-Za-z0-9._@+-]+)*(?::\d+(?::\d+)?)?/gu;
+  /(?<![\p{L}\p{M}\p{N}_.>:/-])\/[\p{L}\p{M}\p{N}._@+-]+(?:\/[\p{L}\p{M}\p{N}._@+-]+)*(?::\d+(?::\d+)?)?/gu;
 const WINDOWS_ABSOLUTE_PATH_PATTERN = /[A-Za-z]:\\(?:[^\\\s"'`]+\\)*[^\\\s"'`]+(?::\d+(?::\d+)?)?/gu;
 const textEncoder = new TextEncoder();
 const bytesEquivalent = S.toEquivalence(S.Uint8Array);

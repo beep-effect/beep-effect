@@ -1337,7 +1337,7 @@ describe("knowledge semantic-delta current-checkout probes", () => {
       Effect.gen(function* () {
         const harness = yield* makeProbeHarness(
           "unsafe stdout from /home/operator/private/stdout.ts",
-          "\u001B[31mSyntaxError\u001B[0m in /home/operator/private/stderr.ts\u0001\r\nsecond\rspoof at /secret and C:\\secret",
+          "\u001B[31mSyntaxError\u001B[0m in /home/operator/private/stderr.ts\u0001\r\nsecond\rspoof at /secret and C:\\secret and /home/üser/prójects/tökens.ts:3:7 plus /données/été",
           1
         );
         const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
@@ -1352,6 +1352,14 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.notInclude(error.message, "/home/operator");
         assert.notInclude(error.message, "/secret");
         assert.notInclude(error.message, "C:\\secret");
+        // Non-ASCII segments must be swallowed by the same redaction, tail and line:col included —
+        // an ASCII-only pattern used to stop at `/home` and leak `üser/prójects/tökens.ts:3:7`.
+        assert.notInclude(error.message, "üser");
+        assert.notInclude(error.message, "prójects");
+        assert.notInclude(error.message, "tökens");
+        assert.notInclude(error.message, "3:7");
+        assert.notInclude(error.message, "données");
+        assert.notInclude(error.message, "été");
         assert.include(error.message, "secondspoof");
         assert.notInclude(error.message, "\r");
         assert.notInclude(error.message, "\u001B");
