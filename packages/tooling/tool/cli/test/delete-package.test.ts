@@ -17,11 +17,13 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Layer, Path, pipe } from "effect";
+import { Cause, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
+import * as ChildProcessSpawner from "effect/unstable/process/ChildProcessSpawner";
 import { describe, expect, it } from "vitest";
 import { expectReportedExit, withTempWorkingDirectory } from "./support/CommandTest.ts";
 import type { DeletePackageRefusal } from "@beep/repo-cli/test/DeletePackage";
@@ -451,6 +453,104 @@ describe("delete-package hard-refuse table", () => {
       expect(cascade[1]).toContain("transitive:");
     }
   );
+});
+
+describe("delete-package baseline writer stage", () => {
+  const fakeSpawnerLayer = (exitCode: number, spawned: Array<string>) =>
+    Layer.succeed(ChildProcessSpawner.ChildProcessSpawner)(
+      ChildProcessSpawner.make((command) =>
+        Effect.sync(() => {
+          if (command._tag === "StandardCommand") {
+            spawned.push(A.join([command.command, ...command.args], " "));
+          }
+          return ChildProcessSpawner.makeHandle({
+            pid: ChildProcessSpawner.ProcessId(1),
+            exitCode: Effect.succeed(ChildProcessSpawner.ExitCode(exitCode)),
+            isRunning: Effect.succeed(false),
+            kill: () => Effect.void,
+            stdin: Sink.drain,
+            stdout: Stream.empty,
+            stderr: Stream.empty,
+            all: Stream.empty,
+            getInputFd: () => Sink.drain,
+            getOutputFd: () => Stream.empty,
+            unref: Effect.succeed(Effect.void),
+          });
+        })
+      )
+    );
+
+  const coverageBaselineFixture = `{
+  "schema_version": 2,
+  "generated_at": "2026-08-17T00:00:00.000Z",
+  "git_sha": "0123456789abcdef0123456789abcdef01234567",
+  "command": "bun run coverage:baseline:write",
+  "epsilon": 0.001,
+  "minimum": { "lines": 70, "statements": 70, "branches": 50, "functions": 60 },
+  "exemptions": {},
+  "follow_ups": {},
+  "packages": {
+    "@beep/courtlistener": {
+      "path": "packages/drivers/courtlistener",
+      "lines": 100, "statements": 100, "branches": 100, "functions": 100,
+      "uncovered": { "lines": 0, "statements": 0, "branches": 0, "functions": 0 },
+      "files": {
+        "packages/drivers/courtlistener/src/index.ts": {
+          "lines": 100, "statements": 100, "branches": 100, "functions": 100,
+          "uncovered": { "lines": 0, "statements": 0, "branches": 0, "functions": 0 }
+        }
+      }
+    }
+  }
+}
+`;
+
+  it("subtracts the coverage baseline then runs every shell step in table order", () =>
+    Effect.runPromise(
+      withTempDirectory((repoRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.makeDirectory(path.join(repoRoot, "standards"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(repoRoot, "standards", "coverage.regression-baseline.jsonc"),
+            coverageBaselineFixture
+          );
+
+          const spawned: Array<string> = [];
+          yield* DeletePackageBaselineWriters.run(repoRoot, "@beep/courtlistener").pipe(
+            Effect.provide(fakeSpawnerLayer(0, spawned))
+          );
+
+          const baseline = yield* fs.readFileString(
+            path.join(repoRoot, "standards", "coverage.regression-baseline.jsonc")
+          );
+          expect(Str.includes("@beep/courtlistener")(baseline)).toBe(false);
+          expect(spawned).toStrictEqual(
+            A.map(DeletePackageBaselineWriters.steps, (step) => A.join(["bun", ...step.args], " "))
+          );
+        })
+      ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("fails the stage on the first zero-only step that exits nonzero", () =>
+    Effect.runPromise(
+      withTempDirectory((repoRoot) =>
+        Effect.gen(function* () {
+          const spawned: Array<string> = [];
+          const exit = yield* Effect.exit(
+            DeletePackageBaselineWriters.run(repoRoot, "@beep/courtlistener").pipe(
+              Effect.provide(fakeSpawnerLayer(1, spawned))
+            )
+          );
+          expect(Exit.isFailure(exit)).toBe(true);
+          if (Exit.isFailure(exit)) {
+            expect(Str.includes("fallow boundaries failed with exit code 1")(Cause.pretty(exit.cause))).toBe(true);
+          }
+          expect(A.length(spawned)).toBe(1);
+        })
+      ).pipe(provideScopedLayer(commandLayer))
+    ));
 });
 
 describe("delete-package packet-claim refusal", () => {

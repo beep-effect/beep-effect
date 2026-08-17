@@ -476,31 +476,6 @@ const statBaselineOutput = Effect.fn("DeletePackage.statBaselineOutput")(functio
   });
 });
 
-/**
- * Baseline-writer step table and the pure exit-outcome decision helper.
- *
- * **Details**
- *
- * `baselineStepOutcome` classifies one writer invocation: exit 0 is `ok`;
- * exit 1 under `tolerate-finding-exit` is `tolerated` only when the verified
- * output's `(mtime, size)` stamp changed or the file was created; everything
- * else — including every exit `>= 2` — is `failed`.
- *
- * **Example** (Classify a finding exit without a written baseline)
- *
- * ```ts
- * import { DeletePackageBaselineWriters } from "@beep/repo-cli/commands/DeletePackage"
- * import * as O from "effect/Option"
- *
- * const outcome = DeletePackageBaselineWriters.baselineStepOutcome(1, "tolerate-finding-exit", O.none(), O.none())
- * console.log(outcome) // "failed"
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const DeletePackageBaselineWriters = { baselineStepOutcome, steps: BASELINE_WRITER_STEPS } as const;
-
 const runBaselineWriters = Effect.fn("DeletePackage.runBaselineWriters")(function* (
   repoRoot: string,
   packageName: string
@@ -529,6 +504,38 @@ const runBaselineWriters = Effect.fn("DeletePackage.runBaselineWriters")(functio
     });
   }
 });
+
+/**
+ * Baseline-writer step table, the pure exit-outcome decision helper, and the
+ * writer stage itself.
+ *
+ * **Details**
+ *
+ * `baselineStepOutcome` classifies one writer invocation: exit 0 is `ok`;
+ * exit 1 under `tolerate-finding-exit` is `tolerated` only when the verified
+ * output's `(mtime, size)` stamp changed or the file was created; everything
+ * else — including every exit `>= 2` — is `failed`. `run` is the full writer
+ * stage: coverage-baseline subtraction first, then the shell steps in table
+ * order.
+ *
+ * **Example** (Classify a finding exit without a written baseline)
+ *
+ * ```ts
+ * import { DeletePackageBaselineWriters } from "@beep/repo-cli/commands/DeletePackage"
+ * import * as O from "effect/Option"
+ *
+ * const outcome = DeletePackageBaselineWriters.baselineStepOutcome(1, "tolerate-finding-exit", O.none(), O.none())
+ * console.log(outcome) // "failed"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const DeletePackageBaselineWriters = {
+  baselineStepOutcome,
+  steps: BASELINE_WRITER_STEPS,
+  run: runBaselineWriters,
+} as const;
 
 const invalidateCiMirrors = Effect.fn("DeletePackage.invalidateCiMirrors")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
