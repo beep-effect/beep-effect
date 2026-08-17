@@ -98,7 +98,7 @@ export type YeetCheckRegistration = typeof YeetCheckRegistration.Type;
  *
  * const result = RepoStepRunResult.make({
  *   stepId: "monitor:02-pr-checks-watch",
- *   commandText: "gh pr checks --watch",
+ *   commandText: "gh pr checks --watch --fail-fast",
  *   exitCode: 1,
  *   output: "no checks reported on the 'feat/x' branch",
  * })

@@ -544,7 +544,7 @@ describe("yeet planner", () => {
       "--json",
       "number,headRefName,state",
     ]);
-    expect(findStep(plan.steps, "monitor:pr-checks:watch").args).toEqual(["pr", "checks", "--watch"]);
+    expect(findStep(plan.steps, "monitor:pr-checks:watch").args).toEqual(["pr", "checks", "--watch", "--fail-fast"]);
   });
 
   it("builds status as local-only by default and adds remote PR reads on request", () => {
