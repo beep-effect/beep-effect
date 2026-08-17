@@ -87,19 +87,20 @@ const testUsptoLayer = (http: Layer.Layer<HttpClient.HttpClient>): Layer.Layer<U
 // in front of it — has to supply the caller itself.
 const stubClientInfo = { name: "uspto-mcp-test-client", version: "0.0.0" };
 
-const StubMcpClientLayer = Layer.succeed(
-  McpServerClient,
-  McpServerClient.of({
-    clientId: 1,
+const stubMcpClientFields = {
+  clientId: 1,
+  protocolVersion: "2025-06-18" as const,
+  clientCapabilities: {},
+  clientInfo: stubClientInfo,
+  getClient: Effect.die("the fixture client is never dereferenced") as never,
+  initializePayload: {
+    capabilities: {},
+    clientInfo: stubClientInfo,
     protocolVersion: "2025-06-18",
-    getClient: Effect.die("the fixture client is never dereferenced") as never,
-    initializePayload: {
-      capabilities: {},
-      clientInfo: stubClientInfo,
-      protocolVersion: "2025-06-18",
-    },
-  })
-);
+  },
+};
+
+const StubMcpClientLayer = Layer.succeed(McpServerClient, McpServerClient.of(stubMcpClientFields));
 
 const buildLayer = (env: Record<string, string>, http: Layer.Layer<HttpClient.HttpClient>) => {
   const usptoToolkitLayer = sanitizedToolkit(UsptoToolkit).pipe(

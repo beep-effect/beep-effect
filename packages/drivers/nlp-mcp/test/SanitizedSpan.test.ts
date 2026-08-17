@@ -44,16 +44,19 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
 // service.
 const stubClientInfo = { name: "nlp-mcp-sanitized-span-test", version: "0.0.0" };
 
-const stubMcpClient = McpServerClient.of({
+const stubMcpClientFields = {
   clientId: 1,
-  protocolVersion: "2025-06-18",
+  protocolVersion: "2025-06-18" as const,
+  clientCapabilities: {},
+  clientInfo: stubClientInfo,
   getClient: Effect.die("the fixture client is never dereferenced") as never,
   initializePayload: {
     capabilities: {},
     clientInfo: stubClientInfo,
     protocolVersion: "2025-06-18",
   },
-});
+};
+const stubMcpClient = McpServerClient.of(stubMcpClientFields);
 
 const registrationLayer = sanitizedToolkit(NlpToolkit).pipe(Layer.provide(WinkNlpToolkitLive));
 const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer);
