@@ -1,6 +1,8 @@
 /**
  * Lab-app lifecycle inspection commands (`beep labs`).
  *
+ * **Details**
+ *
  * `beep labs list` is the D9 truth surface for `apps/labs/*`: it enumerates
  * every lab workspace, decodes each `lab.manifest.json` through the
  * {@link LabManifest} schema, and renders one row per lab. A missing or

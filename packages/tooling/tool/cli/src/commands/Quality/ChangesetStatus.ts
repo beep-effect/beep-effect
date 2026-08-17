@@ -1,6 +1,8 @@
 /**
  * Path-aware changeset status wrapper (lab-apps-lifecycle P2, ratified row 8).
  *
+ * **Details**
+ *
  * Lab apps under `apps/labs/**` are changeset-ceremony exempt: a lab-only
  * change set succeeds without consulting changesets, a change set with zero
  * lab paths runs stock `changeset status --since` for byte-parity, and a
