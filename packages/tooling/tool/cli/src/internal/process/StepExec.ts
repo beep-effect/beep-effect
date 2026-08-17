@@ -461,6 +461,66 @@ const captureTextStream = (
   return decodedText(handle.all);
 };
 
+/**
+ * Defect raised when a capture pipe stays open after the child exited and its process group was
+ * reaped — an escaped descendant (double-fork or `setsid` daemon) still holds the write end.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+class CapturePipeWedgedError extends S.TaggedError<CapturePipeWedgedError>($I`CapturePipeWedgedError`)(
+  "CapturePipeWedgedError",
+  {
+    commandLine: S.String,
+    message: S.String,
+  },
+  $I.annote("CapturePipeWedgedError", {
+    description:
+      "Capture pipe still open after child exit and process-group reap; an escaped descendant holds the write end.",
+  })
+) {}
+
+/** Grace for inherited-pipe stragglers to close the capture after the child exits, before its process group is reaped. */
+const CAPTURE_DRAIN_GRACE: Duration.Input = "2 seconds";
+/** Grace after the group reap for the kernel to deliver EOF before the capture is declared wedged. */
+const CAPTURE_REAP_GRACE: Duration.Input = "3 seconds";
+
+/**
+ * Bounds a capture stream's lifetime to its child process.
+ *
+ * **Details**
+ *
+ * A capture completes only at pipe EOF, and EOF requires every inherited copy of the write end to
+ * close — not just the direct child. A child that exits successfully gets no process-group cleanup
+ * from the spawner (its cleanup is interrupt/nonzero-only), and the child's own success hard-exit
+ * can orphan a grandchild that still holds the write end, leaving the fold waiting forever while
+ * the lane sits silent (Lint Policy jobs 94646234791 and 95354812245: every policy step logged
+ * done, then 29-40 minutes of nothing until job cleanup reaped the wedged wrapper chain). Spawns
+ * are detached session leaders, so the CI runner's own `setsid` group reap cannot reach them
+ * either. After the child exits, stragglers get a short drain grace; then the child's process
+ * group is reaped so the kernel closes surviving write ends and the capture ends with its text
+ * intact. A descendant that escaped the group too (double-fork or its own `setsid`) becomes a loud
+ * defect naming the command instead of a silent hang. On the normal path the deadline is forked by
+ * `Stream.interruptWhen` and interrupted the moment the stream ends — it costs nothing.
+ */
+const capturePipeDeadline = (
+  handle: ChildProcessSpawner.ChildProcessHandle,
+  commandLine: string
+): Effect.Effect<never, PlatformError.PlatformError> =>
+  handle.exitCode.pipe(
+    Effect.andThen(Effect.sleep(CAPTURE_DRAIN_GRACE)),
+    Effect.andThen(Effect.ignore(handle.kill({ forceKillAfter: "1 second" }))),
+    Effect.andThen(Effect.sleep(CAPTURE_REAP_GRACE)),
+    Effect.andThen(
+      Effect.die(
+        CapturePipeWedgedError.make({
+          commandLine,
+          message: `${commandLine}: capture pipe still open after child exit and process-group reap — an escaped descendant (double-fork or setsid daemon) still holds the write end`,
+        })
+      )
+    )
+  );
+
 const foldDecodedText = <E>(
   stream: Stream.Stream<string, E>,
   bound: OutputBound | undefined,
@@ -553,8 +613,16 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
         stdout: "pipe",
         stderr: source === "stdout" ? "ignore" : "pipe",
       });
+      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
       const [captured, exitCode] = yield* Effect.all(
-        [foldDecodedText(captureTextStream(handle, source), options.bound, options.tee ?? false), handle.exitCode],
+        [
+          foldDecodedText(
+            captureTextStream(handle, source).pipe(Stream.interruptWhen(deadline)),
+            options.bound,
+            options.tee ?? false
+          ),
+          handle.exitCode,
+        ],
         { concurrency: "unbounded" }
       );
       return CapturedStep.make({
@@ -620,10 +688,11 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
         stdout: "pipe",
         stderr: "pipe",
       });
+      const deadline = capturePipeDeadline(handle, formatCommandLine(options.command, options.args));
       const [stdout, stderr, exitCode] = yield* Effect.all(
         [
-          foldDecodedText(decodedText(handle.stdout), options.bound, false),
-          foldDecodedText(decodedText(handle.stderr), options.bound, false),
+          foldDecodedText(decodedText(handle.stdout).pipe(Stream.interruptWhen(deadline)), options.bound, false),
+          foldDecodedText(decodedText(handle.stderr).pipe(Stream.interruptWhen(deadline)), options.bound, false),
           handle.exitCode,
         ],
         { concurrency: "unbounded" }
