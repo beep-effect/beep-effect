@@ -26,7 +26,7 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
+import { Effect, Order } from "effect";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -50,6 +50,15 @@ import type * as S from "effect/Schema";
 export type RepositoryUnavailable<Operation, Unavailable> = (
   operation: Operation
 ) => <Value, E, R>(effect: Effect.Effect<Value, E, R>) => Effect.Effect<Value, Unavailable, R>;
+
+/**
+ * Canonical ascending order for repository entities carrying a numeric id.
+ *
+ * @internal
+ * @category repositories
+ * @since 0.0.0
+ */
+export const byIdAscending = Order.mapInput(Order.Number, (record: { readonly id: number }) => record.id);
 
 /**
  * The pair of row decoders one repository uses, bound to that repository's

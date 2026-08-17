@@ -32,12 +32,12 @@ import {
 } from "@beep/law-practice-use-cases/CandorRecord";
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, asc, eq } from "drizzle-orm";
-import { Effect, Order, Ref } from "effect";
+import { Effect, Ref } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
-import { makeRowDecoders } from "../internal/RepoSupport.ts";
+import { byIdAscending, makeRowDecoders } from "../internal/RepoSupport.ts";
 import type { CandorDisposition, IdsSubmissionFact, PatentCitationEvent } from "@beep/law-practice-domain";
 import type { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy";
 import type { CandorRecordOperation } from "@beep/law-practice-use-cases/CandorRecord";
@@ -84,10 +84,6 @@ const repositoryUnavailable =
 // rows back with identical semantics; only the combinator above is this
 // repository's own.
 const { decodeAppended, decodeRows } = makeRowDecoders(repositoryUnavailable);
-
-// The in-memory sibling orders by the same key the Drizzle variant does, so a
-// read proved here cannot pass in memory and fail against the database.
-const byIdAscending = Order.mapInput(Order.Number, (record: { readonly id: number }) => record.id);
 
 // A read is scoped by organization FIRST and filing second. Records of two
 // tenants can carry the same application number, so a filing-only filter would

@@ -32,11 +32,11 @@ import {
 } from "@beep/law-practice-use-cases/LegalPositionRecord";
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, asc, eq } from "drizzle-orm";
-import { Effect, Order, pipe, Ref } from "effect";
+import { Effect, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as P from "effect/Predicate";
-import { makeRowDecoders } from "../internal/RepoSupport.ts";
+import { byIdAscending, makeRowDecoders } from "../internal/RepoSupport.ts";
 import type {
   ActFrame,
   CorrectionDelta,
@@ -98,11 +98,6 @@ const repositoryUnavailable =
 // Both decoders are shared with the candor record adapter, which reads rows back
 // with identical semantics; only the combinator above is this repository's own.
 const { decodeAppended, decodeRows } = makeRowDecoders(repositoryUnavailable);
-
-// The in-memory sibling orders by the same key the Drizzle variant does, so a
-// read proved here cannot pass in memory and fail against the database. The
-// order is the order records were appended; it is never a ranking.
-const byIdAscending = Order.mapInput(Order.Number, (record: { readonly id: number }) => record.id);
 
 // A read is scoped by organization first, always. Two tenants can record
 // positions about the same norm and the same act, so an unscoped read would
