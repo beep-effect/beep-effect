@@ -55,7 +55,8 @@
     "research/p1-fp-eyeball-verdicts.md",
     "research/p1-t2-mini-grill-decisions.md",
     "research/p1-report-refs-tree.md",
-    "research/p3-report-refs-rewrite.md"
+    "research/p3-report-refs-rewrite.md",
+    "research/p3-hermetic-lane-design.md"
   ],
   "agentLaunchers": [
     {
