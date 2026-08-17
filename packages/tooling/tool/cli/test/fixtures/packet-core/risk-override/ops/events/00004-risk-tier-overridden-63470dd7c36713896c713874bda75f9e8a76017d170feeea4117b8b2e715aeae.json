@@ -1,0 +1,16 @@
+{
+  "actor": "fixture",
+  "at": "2026-08-17T12:15:00.000Z",
+  "body": {
+    "previous": "standard",
+    "reason": "fixture: raised after scope review",
+    "tier": "full",
+    "type": "risk-tier-overridden"
+  },
+  "expectedRevision": 3,
+  "packet": "risk-override",
+  "parent": "2c60eae90066873535cb1dbd2e4a4c2ce823be380b9bf8a69d32ca9a9c1089a7",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 4
+}

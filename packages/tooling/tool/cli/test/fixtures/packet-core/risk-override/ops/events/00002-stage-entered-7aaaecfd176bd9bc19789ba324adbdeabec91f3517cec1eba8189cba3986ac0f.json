@@ -1,0 +1,15 @@
+{
+  "actor": "fixture",
+  "at": "2026-08-17T12:05:00.000Z",
+  "body": {
+    "ordinal": 2,
+    "stage": "align",
+    "type": "stage-entered"
+  },
+  "expectedRevision": 1,
+  "packet": "risk-override",
+  "parent": "c73b13cafa3c37e91881ef2e140493820ead38fb67fe87df25651df687f873a3",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 2
+}

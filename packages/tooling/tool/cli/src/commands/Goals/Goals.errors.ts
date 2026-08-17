@@ -158,8 +158,9 @@ export class GoalsGitError extends S.TaggedError<GoalsGitError>($I`GoalsGitError
 }
 
 /**
- * Failure raised when `beep goals set-status` receives arguments outside the
- * canonical status domain or an unusable slug/status combination.
+ * Failure raised when a `beep goals` writer command receives unusable
+ * arguments — a slug/status outside the canonical domain for `set-status`,
+ * or an unknown tier / missing reason for `set-risk-tier`.
  *
  * **Example** (Create status-input error)
  *
@@ -179,7 +180,7 @@ export class GoalStatusInputError extends S.TaggedError<GoalStatusInputError>($I
     message: S.String,
   },
   $I.annote("GoalStatusInputError", {
-    description: "Invalid slug/status input for beep goals set-status.",
+    description: "Invalid argument input for a beep goals writer command (set-status, set-risk-tier).",
   })
 ) {
   static readonly new = (message: string): GoalStatusInputError => GoalStatusInputError.make({ message });

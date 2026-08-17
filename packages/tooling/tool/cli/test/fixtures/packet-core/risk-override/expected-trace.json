@@ -1,0 +1,29 @@
+{
+  "derived": {
+    "forks": [],
+    "furthestOrdinal": 2,
+    "furthestStage": "align",
+    "issues": [],
+    "packet": "risk-override",
+    "resumeStage": "align",
+    "revision": 4,
+    "riskTierOverride": {
+      "actor": "fixture",
+      "at": "2026-08-17T12:15:00.000Z",
+      "reason": "fixture: raised after scope review",
+      "tier": "full"
+    },
+    "root": "goals",
+    "status": "active",
+    "tip": {
+      "id": "63470dd7c36713896c713874bda75f9e8a76017d170feeea4117b8b2e715aeae",
+      "seq": 4
+    }
+  },
+  "projectorVersion": 1,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "63470dd7c36713896c713874bda75f9e8a76017d170feeea4117b8b2e715aeae",
+    "seq": 4
+  }
+}
