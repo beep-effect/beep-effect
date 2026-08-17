@@ -1,0 +1,44 @@
+# Oppold Corpus Overhaul
+
+## Status
+
+Stage: `capture` · Status: `active`
+
+Source: [`ops/manifest.json`](./ops/manifest.json)
+
+## Spark
+
+Re-evaluate the oppold-corpus pipeline from scratch so the next expensive
+pipeline run produces the best knowledge graph the corpus can support — and
+so the pipeline itself becomes a reusable asset for other solo-practice
+attorneys. Sparked by the operator's 2026-08-17 roadmap notes and by the
+machine-local T7 salvage drive (`oppold-salvage-2026-08-10`), mined from the
+practice's old workstation, which post-dates the completed
+[`goals/oppold-corpus-refresh`](../../goals/oppold-corpus-refresh/README.md)
+consolidation and is not yet integrated.
+
+## Next Open Question
+
+Salvage restoration and data-loss proof first: the salvage lives on a
+removable drive, recycle-bin content needs `$R`/`$I` re-pairing to recover
+original names and paths, and libpff-exported mail attachments (`.p`, `.d`,
+…) need repair to their true types — what is the restoration inventory and
+the no-loss acceptance bar?
+
+## Position in the roadmap
+
+Per the operator's ratified gating (2026-08-17): **this packet gates
+practice-kg bundle v2, not the live v1 front.** Lane 1's first-user delivery
+ships from the current corpus; this overhaul's exit is the declared
+prerequisite for the next expensive pipeline run.
+
+## Provenance
+
+- Operator roadmap notes, 2026-08-17 (captured near-verbatim in
+  [`CAPTURE.md`](./CAPTURE.md)).
+- Predecessor: [`goals/oppold-corpus-refresh`](../../goals/oppold-corpus-refresh/README.md)
+  (completed-retained; salvage/catalog/dedupe for the July consolidation —
+  its own notes say refreshes need a successor).
+- Composes with (does not duplicate): `goals/semantic-foundation` M1
+  Intake-Serving Semantic Seed, `goals/patent-document-schema`,
+  `goals/folio-lynx-taxonomy-browse`.

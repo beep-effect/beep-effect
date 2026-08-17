@@ -39,6 +39,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — capture
+  (2026-08-17): from-scratch re-eval of the oppold-corpus pipeline — salvage
+  restoration with a no-loss bar, T-Box-guided ingestion (composing with
+  semantic-foundation M1), dedupe/prune, mail-extraction repair,
+  fidelity-verified conversion, per-step self-evaluation, enrichment survey.
+  Gates practice-kg bundle v2, not the live v1 front. First align question:
+  restoration inventory (salvage sits on a removable drive).
 - [`packet-system-redesign`](./packet-system-redesign/README.md) —
   graduated 2026-08-17: MAP ratified with amendments (live index-guard
   capability cited; apps/labs as the React candidate's presumptive home).

@@ -46,6 +46,14 @@ At most three concurrent implementation lanes. A **lane slot** frees only
 when a lane finishes (or retires) its listed scope — Lane 3 frees its slot
 when its last packet closes, not one slot per packet.
 
+**Accelerator principle (2026-08-17):** goals that accelerate or improve the
+quality of other goal packets run in the **Machinery lane in parallel** —
+never as a serial phase ahead of product work. A packet claims accelerator
+status only by passing two tests: the **named-consumer test** (it names the
+specific goals it accelerates, and how) and the **payback-before-horizon
+test** (the acceleration lands before its consumer goals would finish
+anyway).
+
 Execution note: the active-portfolio drain is driven autonomously by
 [`goal-portfolio-driver`](../goals/goal-portfolio-driver/README.md), which
 locked a dependency-ordered queue of the 25 active packets on 2026-07-14
@@ -89,6 +97,12 @@ Illustrator artwork (86 of 175 sheets carry live `FIG. n` text). Same Tom
 delivery surface: P1's numeral rows land where the practice-kg MCP can serve
 them, so it composes with the live front instead of competing. Draft-quality
 figures; the illustrator stays the last mile.
+
+**Corpus gate (2026-08-17):** practice-kg **bundle v2** is gated on the
+[`oppold-corpus-overhaul`](../explorations/oppold-corpus-overhaul/README.md)
+exploration's exit — the next expensive pipeline run happens once, at
+maximum quality (T-Box-guided ingestion, salvage integrated, dedupe/prune,
+fidelity-verified conversions). The live v1 front is explicitly NOT gated.
 
 **Also queued behind handoff (Phase 2, per practice-kg-mcp SPEC D-7):** a starter
 stack distribution packet (revives

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "oppold-corpus-overhaul",
+    "title": "Oppold Corpus Overhaul",
+    "status": "active",
+    "stage": "capture",
+    "openQuestions": [
+      "Salvage restoration and data-loss proof: what is the restoration inventory (recycle-bin re-pairing, libpff attachment repair, fidelity-verified doc conversion) and the no-loss acceptance bar, given the salvage sits on a removable drive?"
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-17",
+    "updated": "2026-08-17"
+  }
+}
