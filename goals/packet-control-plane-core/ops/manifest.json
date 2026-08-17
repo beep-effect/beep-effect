@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/packet-control-plane-core",
   "lifecycle": "active",
-  "mission": "Single colocated packet-core in the Goals CLI: versioned CAS events, deterministic fold, derived lifecycle, guarded writers — self-hosted in advisory mode.",
+  "mission": "Single colocated packet-core in the Goals CLI: versioned CAS events, deterministic fold, derived lifecycle, guarded writers \u2014 self-hosted in advisory mode.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -52,12 +52,12 @@
     {
       "id": "P1",
       "name": "First vertical slice (event fold + guarded writer + check + projection)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Advisory self-hosting (D9)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",

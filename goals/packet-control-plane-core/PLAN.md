@@ -8,11 +8,22 @@ Inherited whole from the parent exploration: BRIEF (operator-ratified
 2026-08-13), nine align decisions, and the MAP ratified 2026-08-17 with
 amendments. See `research/SOURCES.md`.
 
-## P1 — The ratified first vertical slice
+## P1 — The ratified first vertical slice (COMPLETE 2026-08-17)
 
 Schema first: `PacketEvent` family, tip/revision, fold, derived state — then
 the `Context.Service` contracts (event store, fold, guarded writer), then
 implementation inside the Goals command tree.
+
+Shipped as `packages/tooling/tool/cli/src/commands/Goals/PacketCore/`
+(schemas, digest/canonical encoding, pure fold, `PacketEventStore` and
+`PacketTransitionWriter` services), the `set-status --preview`/write path,
+and `beep explore --check`. The three proofs live in
+`packages/tooling/tool/cli/test/{goals-packet-core,goals-set-status-stream,explore-check}.test.ts`
+over committed golden fixtures (`test/fixtures/packet-core/`). One deviation
+from this plan's service list: the fold stayed a pure function
+(`foldPacketEvents`) rather than a `Context.Service` — it has no dependencies
+and no second implementation, so a service wrapper added indirection without
+a contract; the store and writer are services.
 
 1. Event schema + per-event CAS store (`ops/events/<seq>-<type>-<digest>`
    shape, parent digest, expected revision).
@@ -26,13 +37,19 @@ implementation inside the Goals command tree.
 **Exit:** the three proofs — golden linear stream, deliberate fork, stale
 projection — pass in CI-runnable tests.
 
-## P2 — Advisory self-hosting (D9)
+## P2 — Advisory self-hosting (D9) (COMPLETE 2026-08-17)
 
 Fold this goal's own stream; run the guarded writer in advisory mode on this
 campaign. No fleet adoption, no blocking checks.
 
 **Exit:** this packet's own transitions flow through the preview path and the
 projection reports them truthfully.
+
+Live: this packet opted in (`ops/events/` with genesis at P1 plus a
+status-set through `set-status --preview` → write), `ops/trace.json` is the
+committed projection, and `beep explore --check` reports the stream. Stage
+events beyond genesis stay out of scope until a stage writer exists (P3+);
+the manifest remains the phase source in advisory mode.
 
 ## P3 — Remaining core rungs
 
@@ -65,4 +82,5 @@ merely to pass this packet.
 
 ## Current blockers
 
-None. P1 is startable.
+None. P1 and P2 shipped 2026-08-17; P3 (risk-tier floor/override, full trace
+projection, fork-repair plan surface — one small PR per rung) is startable.

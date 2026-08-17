@@ -1,0 +1,15 @@
+{
+  "actor": "fixture",
+  "at": "2026-08-17T00:01:00.000Z",
+  "body": {
+    "ordinal": 2,
+    "stage": "align",
+    "type": "stage-entered"
+  },
+  "expectedRevision": 1,
+  "packet": "forked",
+  "parent": "95526f179c6cffe42281f4036eb314ad351329dee9109b0a3e6fe98cf2ad2154",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 2
+}

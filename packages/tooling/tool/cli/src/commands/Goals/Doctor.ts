@@ -108,9 +108,14 @@ export const GoalDoctorFindingKind = LiteralKit([
   "completion-gate-unsatisfied",
   "superseded-without-pointer",
   "exploration-backlink-missing",
+  "packet-stream-fork",
+  "packet-stream-integrity",
+  "packet-trace-stale",
+  "packet-trace-missing",
 ]).pipe(
   $I.annoteSchema("GoalDoctorFindingKind", {
-    description: "Finding kinds emitted by beep goals doctor (blocking and advisory).",
+    description:
+      "Finding kinds emitted by beep goals doctor and beep explore --check (blocking and advisory; the packet-* kinds are the explore check's stream findings).",
   })
 );
 
