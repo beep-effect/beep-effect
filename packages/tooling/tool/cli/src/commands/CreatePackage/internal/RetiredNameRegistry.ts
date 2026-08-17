@@ -31,6 +31,16 @@ const encodeRegistryJson = S.encodeEffect(RetiredPackagesRegistryFromJsonString)
  * 2-space formatting plus trailing newline. Returns whether an entry was
  * actually removed; a name absent from the registry is a no-op.
  *
+ * **Example** (Remove a sanctioned reused name)
+ *
+ * ```ts
+ * import { removeRetiredPackageName } from "@beep/repo-cli/commands/CreatePackage/internal/RetiredNameRegistry"
+ * import { Effect } from "effect"
+ *
+ * const program = removeRetiredPackageName("/repo", "@beep/probe")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */

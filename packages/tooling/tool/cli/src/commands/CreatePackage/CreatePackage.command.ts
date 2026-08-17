@@ -1018,6 +1018,39 @@ const labManifestPlannedFile = Effect.fn(function* (description: string) {
   return PlannedFile.make({ relativePath: LAB_MANIFEST_FILENAME, content: `${content}\n` });
 });
 
+/**
+ * Format the freshly-scaffolded tree so a generated package passes its own
+ * `beep:lint` with no hand edits.
+ *
+ * Templates and JSON renderers cannot reliably predict biome's line-width
+ * decisions — an injected plugin array or an `include` list formats one way in
+ * the template and another way under `biome check`. Formatting the output is
+ * the durable fix: it holds for every app kind and survives future template
+ * edits, instead of hand-tuning each array until the next one drifts.
+ *
+ * Advisory by design: a formatter that cannot run must not fail a scaffold that
+ * is otherwise complete, so a non-zero exit warns and continues.
+ */
+const formatGeneratedPackage = Effect.fn("CreatePackage.formatGeneratedPackage")(function* (
+  repoRoot: string,
+  outputDir: string
+) {
+  const args = ["biome", "check", "--write", "--files-ignore-unknown=true", "--no-errors-on-unmatched", outputDir];
+  const exitCode = yield* runToExit({
+    command: "bunx",
+    args,
+    cwd: repoRoot,
+    stdio: "ignore",
+  }).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn bunx ${A.join(args, " ")}.`)));
+
+  if (exitCode !== 0) {
+    yield* Console.log(
+      `[create-package] warning: biome could not format ${outputDir} (exit ${exitCode}); run "bun run beep:lint:fix" in the package.`
+    );
+  }
+  return exitCode === 0;
+});
+
 const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(function* (repoRoot: string) {
   const args = ["install", "--lockfile-only"] as const;
   yield* Console.log(`[create-package] Refreshing bun.lock: bun ${A.join(args, " ")}`);
@@ -1524,6 +1557,7 @@ export const createPackageCommand = Command.make(
 
     // ── Execute plan and repo mutations ────────────────────────────────
     yield* fileGenerationPlanService.executePlan(plan);
+    yield* formatGeneratedPackage(repoRoot, outputDir);
 
     const workspaceUpdated = yield* ensureRootWorkspaceEntry(repoRoot, packagePath);
     const identityUpdated = yield* lab
@@ -1821,6 +1855,9 @@ const serviceAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLab
     effect: "catalog:",
   },
   devDependencies: {
+    // test/health.test.ts uses `provideScopedLayer` to satisfy the effect-LSP's
+    // strictEffectProvide rule.
+    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     typescript: "catalog:",

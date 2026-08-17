@@ -101,6 +101,11 @@ export const LAB_EXEMPT_COMPANION_PATHS: ReadonlyArray<string> = [
   // path with no `/`), so `lab-exempt` is unreachable for every real lab PR
   // and the ratified D2 ceremony exemption never applies in practice.
   "bun.lock",
+  // Same class: `fallow:boundaries:write` adds or removes a workspace's entries
+  // in this generated registry on every lab create/delete, so leaving it
+  // blocking would keep `lab-exempt` unreachable for exactly the PRs the
+  // exemption exists for.
+  "standards/fallow.boundaries.generated.jsonc",
 ];
 
 /**
