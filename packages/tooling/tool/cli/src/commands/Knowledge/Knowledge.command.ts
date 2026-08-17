@@ -334,7 +334,34 @@ export const knowledgeRefsCheckFailure = (report: KnowledgeRefsReport): O.Option
     : O.none();
 };
 
-const renderRefsCheckSection = (report: KnowledgeRefsReport): string => {
+/**
+ * Renders the `--check` section a checked census prints before its exit status is decided.
+ *
+ * **Example** (Render a debt-free check section)
+ *
+ * ```ts
+ * import { KnowledgeRefsReport } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ * import { renderKnowledgeRefsCheckSection } from "@beep/repo-cli/test/Knowledge"
+ *
+ * const section = renderKnowledgeRefsCheckSection(
+ *   KnowledgeRefsReport.make({
+ *     treeish: "HEAD",
+ *     commit: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4",
+ *     observations: [],
+ *     skipped: [],
+ *   })
+ * )
+ *
+ * console.log(section) // "check: 0 live gated observation(s)"
+ * ```
+ *
+ * @internal
+ * @param report - Census produced for the tree under test.
+ * @returns The check headline plus one rendered line per live gated observation.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderKnowledgeRefsCheckSection = (report: KnowledgeRefsReport): string => {
   const debt = knowledgeRefsLiveDebt(report);
   return A.join([`check: ${A.length(debt)} live gated observation(s)`, ...A.map(debt, renderObservation)], "\n");
 };
@@ -357,7 +384,7 @@ const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
   }
   if (options.check) {
     if (!options.json) {
-      yield* Console.log(renderRefsCheckSection(report));
+      yield* Console.log(renderKnowledgeRefsCheckSection(report));
     }
     yield* O.match(knowledgeRefsCheckFailure(report), { onNone: () => Effect.void, onSome: Effect.fail });
   }

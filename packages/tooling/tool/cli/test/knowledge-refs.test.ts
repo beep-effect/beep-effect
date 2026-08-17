@@ -10,6 +10,7 @@ import {
   makeKnowledgeTreeOracle,
   scanKnowledgeRefsTree,
 } from "@beep/repo-cli/commands/Knowledge";
+import { renderKnowledgeRefsCheckSection } from "@beep/repo-cli/test/Knowledge";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -453,6 +454,10 @@ describe("knowledge refs check gate", () => {
       });
       expect(A.length(knowledgeRefsLiveDebt(report))).toBe(2);
       expect(O.map(knowledgeRefsCheckFailure(report), (error) => error.liveDebtCount)).toEqual(O.some(2));
+      const section = renderKnowledgeRefsCheckSection(report);
+      expect(Str.startsWith("check: 2 live gated observation(s)")(section)).toBe(true);
+      expect(section).toContain("actionable-host-path");
+      expect(section).toContain("external-mirror-reference");
     })
   );
 
@@ -466,6 +471,20 @@ describe("knowledge refs check gate", () => {
       });
       expect(A.length(knowledgeRefsLiveDebt(report))).toBe(0);
       expect(O.isNone(knowledgeRefsCheckFailure(report))).toBe(true);
+      expect(renderKnowledgeRefsCheckSection(report)).toBe("check: 0 live gated observation(s)");
+    })
+  );
+
+  it.effect("a Downloads descendant is live debt in the check section", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        ".claude/skills/demo/SKILL.md": "Exports land under ~/Downloads but never cite ~/Downloads/report.csv here.\n",
+      });
+      expect(A.length(knowledgeRefsLiveDebt(report))).toBe(1);
+      const section = renderKnowledgeRefsCheckSection(report);
+      expect(Str.startsWith("check: 1 live gated observation(s)")(section)).toBe(true);
+      expect(section).toContain("external-mirror-reference");
+      expect(section).toContain("~/Downloads/report.csv");
     })
   );
 });
