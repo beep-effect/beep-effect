@@ -1098,6 +1098,22 @@ const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* 
   ].join("\n");
 });
 
+const writeBaselineDocument = Effect.fn("CoverageRegression.writeBaselineDocument")(function* (
+  repoRoot: string,
+  baseline: CoverageRegressionBaseline
+): Effect.fn.Return<void, CoverageRegressionError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const content = yield* formatBaseline(baseline);
+  yield* writeArtifact({
+    path: path.join(repoRoot, coverageRegressionBaselinePath),
+    body: content,
+    onError: (cause) =>
+      QualityTaskConfigurationError.new(
+        `Failed to write ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
+      ),
+  });
+});
+
 const missingCoverageSnapshotPackages = (
   entries: ReadonlyArray<CoverageSnapshotEntry>,
   expectedPackageNames: ReadonlyArray<string>
@@ -1197,15 +1213,7 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     }
 
     const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries, previous, scoped);
-    const content = yield* formatBaseline(baseline);
-    yield* writeArtifact({
-      path: path.join(repoRoot, coverageRegressionBaselinePath),
-      body: content,
-      onError: (cause) =>
-        QualityTaskConfigurationError.new(
-          `Failed to write ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
-        ),
-    });
+    yield* writeBaselineDocument(repoRoot, baseline);
     yield* Console.log(
       scoped
         ? `[coverage-ratchet] merged ${A.length(entries)} measured package(s) into ${coverageRegressionBaselinePath} (${R.size(baseline.packages)} total)`
@@ -1248,7 +1256,6 @@ export const subtractPackageFromCoverageRegressionBaseline = Effect.fn(
   repoRoot: string,
   packageName: string
 ): Effect.fn.Return<void, CoverageRegressionError, FileSystem.FileSystem | Path.Path> {
-  const path = yield* Path.Path;
   const previous = yield* readPreviousBaseline(repoRoot);
 
   if (O.isNone(previous)) {
@@ -1285,15 +1292,7 @@ export const subtractPackageFromCoverageRegressionBaseline = Effect.fn(
     follow_ups: R.remove(document.follow_ups, packageName),
     packages: R.remove(document.packages, packageName),
   });
-  const content = yield* formatBaseline(next);
-  yield* writeArtifact({
-    path: path.join(repoRoot, coverageRegressionBaselinePath),
-    body: content,
-    onError: (cause) =>
-      QualityTaskConfigurationError.new(
-        `Failed to write ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
-      ),
-  });
+  yield* writeBaselineDocument(repoRoot, next);
   yield* Console.log(
     `[coverage-ratchet] subtracted ${packageName} from ${coverageRegressionBaselinePath} (${R.size(next.packages)} package(s) remain)`
   );
