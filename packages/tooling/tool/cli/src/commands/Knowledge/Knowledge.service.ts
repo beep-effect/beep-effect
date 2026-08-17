@@ -894,10 +894,40 @@ const gitAdapter: GitCommandErrorAdapter<KnowledgeOperationalError> = {
   onTruncated: O.none(),
 };
 
-// A clone-local info/attributes file outranks every attribute layer the canonical archive contract
-// pins and no git invocation can disable it (research/p3-hermetic-lane-decisions.md, "Measured
-// residual"), so both tree-materializing entry points refuse to archive while a non-empty one exists.
-const guardKnowledgeCloneAttributes = (repoRoot: string) =>
+/**
+ * Refuses to materialize archives while a non-empty clone-local git attributes file exists.
+ *
+ * **Details**
+ *
+ * A clone-local `info/attributes` file outranks every attribute layer the canonical archive
+ * contract pins and no git invocation can disable it
+ * (`goals/knowledge-surface-automation/research/p3-hermetic-lane-decisions.md`, "Measured
+ * residual"), so both tree-materializing entry points run this guard before writing any archive.
+ * An absent or empty file passes; a non-empty file fails with
+ * {@link KnowledgeCloneAttributesError}; a stat failure other than not-found fails closed as
+ * {@link KnowledgeOperationalError}.
+ *
+ * **Example** (Guard a repository root before archiving)
+ *
+ * ```ts
+ * import { guardKnowledgeCloneAttributes } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(guardKnowledgeCloneAttributes("/repo"))) // true
+ * ```
+ *
+ * @param repoRoot - Repository root whose clone-local attributes file is checked.
+ * @returns Void when archiving may proceed; a typed failure otherwise.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const guardKnowledgeCloneAttributes = (
+  repoRoot: string
+): Effect.Effect<
+  void,
+  KnowledgeOperationalError | KnowledgeCloneAttributesError,
+  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+> =>
   guardCloneLocalGitAttributes(repoRoot, gitAdapter, KnowledgeCloneAttributesError.at, (attributesPath) =>
     KnowledgeOperationalError.new(`Failed to stat clone-local git attributes "${attributesPath}".`)
   );
@@ -1400,11 +1430,11 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
   const repoRoot = yield* findRepoRoot().pipe(
     KnowledgeOperationalError.mapError("Failed to locate the repository root for semantic-delta.")
   );
+  yield* guardKnowledgeCloneAttributes(repoRoot);
   const historyAdapter = historyGitAdapter(baseRef);
   const headCommit = yield* resolveGitCommit(repoRoot, "HEAD", historyAdapter);
   const baseCommit = yield* resolveGitMergeBase(repoRoot, baseRef, headCommit, historyAdapter);
   const probePolicy = yield* resolveKnowledgeProbePolicy(process.env);
-  yield* guardKnowledgeCloneAttributes(repoRoot);
 
   return yield* Effect.scoped(
     Effect.gen(function* () {
@@ -1507,8 +1537,8 @@ export const makeKnowledgeTreeOracle = Effect.fn("Knowledge.makeTreeOracle")(fun
   const repoRoot = yield* findRepoRoot().pipe(
     KnowledgeOperationalError.mapError("Failed to locate the repository root for the reference census.")
   );
-  const commit = yield* resolveGitCommit(repoRoot, treeish, treeGitAdapter(treeish));
   yield* guardKnowledgeCloneAttributes(repoRoot);
+  const commit = yield* resolveGitCommit(repoRoot, treeish, treeGitAdapter(treeish));
   const tempRoot = yield* fs
     .makeTempDirectoryScoped({ prefix: "beep-knowledge-refs-" })
     .pipe(KnowledgeOperationalError.mapError("Failed to create a reference-census temporary root."));
