@@ -182,7 +182,7 @@ export const portfolioIndexPublishDisposition = (input: {
  * hand-staged one.
  * @effects Writes and stages {@link PORTFOLIO_INDEX_PATH} when the committed
  * projection is stale.
- * @category execution
+ * @category use-cases
  * @since 0.0.0
  */
 export const enforcePortfolioIndexPublishIntent = Effect.fn("Yeet.enforcePortfolioIndexPublishIntent")(function* (

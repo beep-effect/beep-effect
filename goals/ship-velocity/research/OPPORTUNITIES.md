@@ -108,3 +108,43 @@ session/machine ids.
   blocker. Verified locally: an otherwise identical config with `rootDir: "."` typechecks the
   same file at exit 0. Prevention: fix `rootDir` in the test project before B6 counts repo-cli's
   test surface as covered; the baseline note should record the real cause.
+
+## 2026-08-16 — E1 review wave
+
+- The coverage ratchet is hosted-only, so a green full local proof still shipped a required-lane
+  red: `yeet verify` runs `test`, never `coverage`, and PR #736's Coverage Regression lane failed
+  on three `Yeet/internal/Handler.ts` floors (functions 9.8 < 10.1, lines 23.2 < 23.47, statements
+  21.54 < 21.77) after 22 minutes of green local proof. The mechanism is structural, not a
+  one-off: the file is ~1,460 lines at 23% coverage, so *any* uncovered orchestration line trips
+  its per-file floor, and nothing local says so before the push. Direct evidence for SPEC B2
+  (coverage in the local proof) — the affected-scoped lane is cheap enough to run pre-push, and
+  the scoped `--affected --write-baseline` path already exists for the legitimate floor move.
+- Fifth misattributed-repair-hint receipt, this time from the monitor rather than a proof capsule:
+  with exactly one failing job (Coverage Regression, `95283426563`), the monitor's rerun decision
+  printed "same-SHA red detected for **Check**". Check had passed. The hint names a lane the
+  operator would have reran for nothing. Prevention (A7/A1 input): the rerun decision must derive
+  its lane name from the failing job record it already fetched, not from a separate classifier
+  pass over the check list.
+- The coverage baseline writer is scoped by *package*, but a change is scoped by *file*: the
+  legitimate `coverage --affected --write-baseline` run for one edited file rewrote every
+  `@beep/repo-cli` entry from the local measurement, and three files nobody touched moved with it
+  — `MonitorLoop.ts` lines 45.79 → 44.23 and branches 36.84 → 33.33, `CreatePackage.command.ts`
+  down, `PackageShell.ts` up. Local and hosted measurement disagree by ~0.2–3 pp on those files
+  (env-gated tests), so committing the whole write would have silently relaxed three unrelated
+  monotonic floors to buy one intended floor move. Pruned the write by hand to the two files the
+  diff actually touches. Prevention: let the writer take the touched-file set (it already takes
+  `expectedPackageNames`) and leave untouched entries byte-identical, so a floor can only move
+  where the diff moved code.
+- Editing `standards/coverage.regression-baseline.jsonc` puts the affected-coverage planner into
+  its full-repo fallback: verifying a 12-line baseline edit ran 231 coverage tasks (~10 min)
+  instead of the 31 the write itself ran, and the identical check with an explicit
+  `--filter=@beep/repo-cli` is ~3 min. The fallback is correct for source under `standards/`, but
+  the baseline document is an input to the *gate*, not to the packages' coverage. Prevention:
+  exempt the regression baseline from the full-fallback trigger, or map it to the packages whose
+  entries changed — the same file-scoping fix as the receipt above.
+- Review corroborated the stash-window receipt above as a live defect rather than a nit: Greptile
+  flagged P1 "commit failure strands publish state" against the same window. Fixed properly rather
+  than patched at the call site — `restorePublishStashOnFailure` now wraps the whole guard+commit
+  window in `PublishScope.ts` (where `stashUnstagedWorktree`/`restoreStashedWorktree` already live
+  and are covered), restoring on interruption as well as failure. Confirms the prevention note:
+  restoration belongs to the staged-only publish scope, not to whichever sub-phase last needed it.
