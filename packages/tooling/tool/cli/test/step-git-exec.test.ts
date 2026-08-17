@@ -10,6 +10,7 @@ import {
   runCapturedStreams,
 } from "@beep/repo-cli/test/Process";
 import {
+  gitArchiveArgs,
   gitLinesFromOutput,
   gitPathListFromNulOutput,
   isSafeOriginBranch,
@@ -137,5 +138,29 @@ describe("GitExec origin-branch refname safety", () => {
   it("extracts only safe branches from an origin base ref", () => {
     expect(safeOriginBranchFromBase("origin/main")).toEqual(O.some("main"));
     expect(safeOriginBranchFromBase("origin/--upload-pack=x")).toEqual(O.none());
+  });
+});
+
+// `.gitattributes` declares `* text=auto`, so an archive written on a host carrying
+// `core.autocrlf=true` differs byte-for-byte from the same commit archived on CI. Consumers that
+// compare those bytes exactly (the knowledge semantic-delta index-drift finding) then report drift
+// no source edit can clear, so the overrides are part of the archive's contract, not a preference.
+describe("GitExec archive byte canonicality", () => {
+  it("pins end-of-line handling ahead of the archive subcommand", () => {
+    expect(gitArchiveArgs("/tmp/base.tar", "HEAD")).toEqual([
+      "-c",
+      "core.autocrlf=false",
+      "-c",
+      "core.eol=lf",
+      "archive",
+      "--format=tar",
+      "--output=/tmp/base.tar",
+      "HEAD",
+    ]);
+  });
+
+  it("passes a spaced and non-ASCII archive path through unquoted", () => {
+    const archivePath = "/tmp/beep qa/ünicode/base.tar";
+    expect(gitArchiveArgs(archivePath, "deadbeef")).toContain(`--output=${archivePath}`);
   });
 });

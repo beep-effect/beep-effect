@@ -21,6 +21,7 @@ import { isOptionLike } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
 import { Effect, flow, Number as N, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -529,6 +530,60 @@ export const resolveGitMergeBase = Effect.fn("GitExec.resolveGitMergeBase")(func
   return yield* runGitStructured(["merge-base", "--", leftRef, rightRef], adapter, structuredCapture(cwd));
 });
 
+/**
+ * Config flags pinning archive bytes to the repository's canonical LF form.
+ *
+ * **Details**
+ *
+ * `.gitattributes` declares `* text=auto`, so `git archive` applies the *host's* end-of-line
+ * configuration when it materializes text blobs. Git children inherit the ambient environment, so a
+ * contributor with `core.autocrlf=true` (the Windows default) produces different archive bytes than
+ * CI for byte-identical objects. Every consumer that compares those bytes exactly then reports drift
+ * that no source edit can clear. Pinning both keys per invocation keeps one archive canonical
+ * without disturbing the ambient config the other Git children legitimately read.
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+const CANONICAL_ARCHIVE_CONFIG: ReadonlyArray<string> = ["-c", "core.autocrlf=false", "-c", "core.eol=lf"];
+
+/**
+ * Argument vector writing one commit's canonical tar archive.
+ *
+ * **Details**
+ *
+ * The end-of-line overrides lead the vector because Git only honours `-c` before the subcommand.
+ * Keeping the vector a pure value lets the byte-canonicality contract be asserted without spawning
+ * a process.
+ *
+ * **Example** (The overrides lead the subcommand)
+ *
+ * ```ts
+ * import { gitArchiveArgs } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(gitArchiveArgs("/tmp/base.tar", "HEAD")[0]) // "-c"
+ * ```
+ *
+ * @param archivePath - Absolute path the tar is written to.
+ * @param commit - Commit-ish whose tree is archived.
+ * @returns The full `git` argument vector, end-of-line overrides first.
+ * @category execution
+ * @since 0.0.0
+ */
+export const gitArchiveArgs: {
+  (archivePath: string, commit: string): ReadonlyArray<string>;
+  (commit: string): (archivePath: string) => ReadonlyArray<string>;
+} = dual(
+  2,
+  (archivePath: string, commit: string): ReadonlyArray<string> => [
+    ...CANONICAL_ARCHIVE_CONFIG,
+    "archive",
+    "--format=tar",
+    `--output=${archivePath}`,
+    commit,
+  ]
+);
+
 /** Write one verified commit as a tar archive. @category execution @since 0.0.0 */
 export const writeGitArchive = Effect.fn("GitExec.writeGitArchive")(function* <E>(
   cwd: string,
@@ -536,7 +591,7 @@ export const writeGitArchive = Effect.fn("GitExec.writeGitArchive")(function* <E
   archivePath: string,
   adapter: GitCommandErrorAdapter<E>
 ): Effect.fn.Return<void, E, ChildProcessSpawner.ChildProcessSpawner> {
-  yield* runGitRawOutput(cwd, ["archive", "--format=tar", `--output=${archivePath}`, commit], adapter);
+  yield* runGitRawOutput(cwd, gitArchiveArgs(archivePath, commit), adapter);
 });
 
 /** Read and strictly parse one recursive full Git tree. @category execution @since 0.0.0 */

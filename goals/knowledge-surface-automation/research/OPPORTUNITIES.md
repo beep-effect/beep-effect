@@ -235,3 +235,33 @@ measurement first). Reviewed at each grill.
     packages' coverage ratchet (it already knows the affected owners), or the
     verdict naming `Coverage Regression` as a known hosted-only gate so the
     "green local means green CI" contract carries its own exception list.
+
+17. **The proof pipeline's own archive bytes were host-dependent.** `fixed-in-pr`
+
+    Found while scoping P3's hermetic lane. `.gitattributes` declares
+    `* text=auto` and Git children inherit the ambient environment, so
+    `git archive` applied the *host's* end-of-line configuration to a commit's
+    text blobs. Reproduced read-only on this tree — the same commit, the same
+    path, three digests:
+
+    ```
+    git archive --format=tar HEAD -- goals/INDEX.md        -> bdd6752319d881d6…
+    git -c core.autocrlf=true archive … goals/INDEX.md     -> 985569dede0df9fe…
+    git -c core.eol=crlf     archive … goals/INDEX.md      -> 985569dede0df9fe…
+    ```
+
+    Semantic-delta compares archived bytes to the in-process index projection
+    with an exact `S.toEquivalence(S.Uint8Array)`, so a host carrying
+    `core.autocrlf=true` reported a standing `index-drift` on `goals/INDEX.md`
+    whose remediation (`beep goals index --write`) regenerates LF and can never
+    clear it. **Measured blast radius, both directions:** the finding fires in
+    the base *and* the HEAD archive, so the delta cancels it into `unchanged`
+    (497 → 496 with the fix) and it never reaches `introduced`. It is standing
+    noise and a misleading finding, not a red required lane — the stronger
+    claim was checked and did not hold.
+
+    **What would have prevented it:** treating "bytes a gate compares" as a
+    determinism contract with its config pinned at the call site, the way
+    `makeHermeticEnv` already pins the probe children's environment. The lane
+    that would have caught it is exactly the P3 residue, which is why the
+    hermetic lane's assertion is worth reframing (see the P3 report).
