@@ -464,3 +464,21 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   mechanism and needs the mechanism check — who is in the process group, and when the reap can
   actually run — not just the plausible fact that X exists. Both confident misattributions this
   week burned exactly this way.
+
+## 2026-08-17 — A1 PR-2: the registration gap the sibling surface had already solved
+
+- Pre-publish adversarial review of the capsule/dispatch PR confirmed a P1 inherited from the
+  merged watch-stream PR (#751): a zero-check OPEN snapshot ends the watch as a green
+  `all-terminal` with exit 0. `gh pr checks` answers "no checks reported" for seconds after any
+  push, so a watch started (or a push landing mid-watch) inside that window reported a green
+  settle while the wave's checks were about to run — and PR-2's dispatch would additionally
+  retire the superseded wave record on that same tick. The classic monitor had this exact law
+  already (A7: "zero-checks-yet ≠ terminal-empty", `YEET_CHECK_REGISTRATION_BACKOFF`, ~95s of
+  patience), and the stream PR's own docstring *claimed* an upstream registration backoff that
+  did not exist on its path. Fixed in PR-2 with a bounded in-loop patience (10 consecutive
+  zero-check polls at the 10s interval) mirroring the monitor's budget.
+- Prevention, two shapes: (1) when a new surface replaces an old one, its guard inventory must be
+  diffed against the old surface's laws — the registration backoff was a named constant one file
+  away; (2) a docstring that assigns a responsibility "upstream" is a claim about a mechanism and
+  needs the same mechanism check as an exoneration — name the call site that implements it or
+  implement it where the claim lives.
