@@ -180,6 +180,37 @@ describe("set-status guarded stream writer", () => {
   );
 
   it(
+    "commits a streamless plan as a no-op (no events, no trace)",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeProjectFile("goals/no-stream/README.md", "# no-stream\n");
+            const writer = yield* PacketTransitionWriter;
+            const plan = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator: PacketStreamLocator.make({
+                  packet: "no-stream",
+                  root: "goals",
+                  packetPath: "goals/no-stream",
+                }),
+                status: "paused",
+                previousStatus: "active",
+                actor: "test",
+                at: "2026-08-17T10:00:00.000Z",
+              })
+            );
+            expect(plan.streamPresent).toBe(false);
+            const outcome = yield* writer.commit(plan);
+            expect(outcome.appended).toBe(0);
+            expect(outcome.traceWritten).toBe(false);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
     "records previous from the stream's derived status when the manifest snapshot lags",
     () =>
       Effect.runPromise(

@@ -14,6 +14,7 @@ import {
   packetTraceIsStale,
   parsePacketEventFileName,
   projectPacketTrace,
+  renderPacketEventFile,
   renderPacketTraceFile,
   StoredPacketEvent,
   upcastPacketEventJson,
@@ -296,6 +297,114 @@ describe("golden replay (committed fixture)", () => {
           if (Exit.isFailure(result)) {
             expect(String(Cause.squash(result.cause))).toContain("forked");
           }
+        }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+});
+
+describe("store read robustness", () => {
+  const writeStoredEvent = Effect.fnUntraced(function* (directory: string, event: PacketEvent) {
+    const fs = yield* FileSystem.FileSystem;
+    const id = yield* packetEventDigest(event);
+    const content = yield* renderPacketEventFile(event);
+    yield* fs.makeDirectory(directory, { recursive: true });
+    yield* fs.writeFileString(`${directory}/${packetEventFileName(event, id)}`, content);
+    return { id, content };
+  });
+
+  const genesisEvent = (packet: string): PacketEvent =>
+    PacketEvent.make({
+      schemaVersion: "packet-event/v1",
+      packet,
+      root: "goals",
+      seq: 1,
+      expectedRevision: 0,
+      at: "2026-08-17T00:00:00.000Z",
+      actor: "test",
+      body: { type: "packet-created", status: "active" },
+    });
+
+  it(
+    "reports unreadable names, invalid JSON, undecodable events, and digest or name mismatches as issues",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const store = yield* PacketEventStore;
+          const packetPath = yield* fs.makeTempDirectory();
+          const events = `${packetPath}/ops/events`;
+          const { content } = yield* writeStoredEvent(events, genesisEvent("robust"));
+          const digest = "d".repeat(64);
+          yield* fs.writeFileString(`${events}/junk.json`, "{}");
+          yield* fs.writeFileString(`${events}/00002-status-set-${digest}.json`, "not json at all");
+          yield* fs.writeFileString(
+            `${events}/00003-status-set-${"e".repeat(64)}.json`,
+            '{"schemaVersion":"packet-event/v1"}'
+          );
+          yield* fs.writeFileString(`${events}/00004-status-set-${"f".repeat(64)}.json`, content);
+
+          const listing = yield* store.list(PacketStreamLocator.make({ packet: "robust", root: "goals", packetPath }));
+          expect(A.length(listing.events)).toBe(1);
+          const kinds = A.map(listing.issues, (issue) => issue.kind);
+          expect(kinds).toContain("file-name-mismatch");
+          expect(kinds).toContain("event-invalid");
+          expect(kinds).toContain("digest-mismatch");
+          yield* fs.remove(packetPath, { recursive: true, force: true });
+        }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  it(
+    "refuses appends onto a missing stream, a broken stream, and a mismatched parent",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const store = yield* PacketEventStore;
+
+          const missingPath = yield* fs.makeTempDirectory();
+          const missingLocator = PacketStreamLocator.make({ packet: "robust", root: "goals", packetPath: missingPath });
+          const missing = yield* Effect.exit(store.append(missingLocator, genesisEvent("robust")));
+          expect(Exit.isFailure(missing)).toBe(true);
+          if (Exit.isFailure(missing)) {
+            expect(String(Cause.squash(missing.cause))).toContain("ops/events");
+          }
+
+          const brokenPath = yield* fs.makeTempDirectory();
+          yield* fs.makeDirectory(`${brokenPath}/ops/events`, { recursive: true });
+          yield* fs.writeFileString(`${brokenPath}/ops/events/junk.json`, "{}");
+          const brokenLocator = PacketStreamLocator.make({ packet: "robust", root: "goals", packetPath: brokenPath });
+          const broken = yield* Effect.exit(store.append(brokenLocator, genesisEvent("robust")));
+          expect(Exit.isFailure(broken)).toBe(true);
+          if (Exit.isFailure(broken)) {
+            expect(String(Cause.squash(broken.cause))).toContain("integrity");
+          }
+
+          const parentPath = yield* fs.makeTempDirectory();
+          yield* writeStoredEvent(`${parentPath}/ops/events`, genesisEvent("robust"));
+          const parentLocator = PacketStreamLocator.make({ packet: "robust", root: "goals", packetPath: parentPath });
+          const wrongParent = PacketEvent.make({
+            schemaVersion: "packet-event/v1",
+            packet: "robust",
+            root: "goals",
+            seq: 2,
+            parent: "a".repeat(64),
+            expectedRevision: 1,
+            at: "2026-08-17T00:01:00.000Z",
+            actor: "test",
+            body: { type: "status-set", status: "paused", previous: "active" },
+          });
+          const conflicted = yield* Effect.exit(store.append(parentLocator, wrongParent));
+          expect(Exit.isFailure(conflicted)).toBe(true);
+          if (Exit.isFailure(conflicted)) {
+            expect(String(Cause.squash(conflicted.cause))).toContain("parent digest");
+          }
+
+          yield* fs.remove(missingPath, { recursive: true, force: true });
+          yield* fs.remove(brokenPath, { recursive: true, force: true });
+          yield* fs.remove(parentPath, { recursive: true, force: true });
         }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
