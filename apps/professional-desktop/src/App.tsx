@@ -22,7 +22,6 @@ import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client
 import { DockNode, DockWorkspace, PanelId, TabChrome } from "@beep/dock";
 import { DockviewReact } from "@beep/dock-react";
 import { epistemicProtocolLayerAtom } from "@beep/epistemic-client";
-import { ContradictionTriagePanel } from "@beep/epistemic-ui";
 import { $ProfessionalDesktopId } from "@beep/identity";
 import { redactCauseForClient } from "@beep/observability";
 import { HttpOntologyProtocolLive, ontologyProtocolLayerAtom } from "@beep/ontology-client";
@@ -56,7 +55,6 @@ import { professionalAtomRegistryAtom, professionalBrowserRuntime } from "./runt
 import { VaultSyncPanel } from "./sync/VaultSyncPanel.tsx";
 import { makeDesktopHttpProtocolLive } from "./transport/DesktopHttpProtocol.ts";
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
-import { IpcSpikePanel } from "./transport/IpcSpikePanel.tsx";
 import { SidecarTransport } from "./transport/SidecarTransport.ts";
 import {
   DESKTOP_PANELS,
@@ -91,6 +89,17 @@ const OntologyValidationRegion = lazy(() =>
   import("@beep/ontology-ui/aggregates/Session/validation").then(({ OntologyValidationRegion }) => ({
     default: OntologyValidationRegion,
   }))
+);
+// Contradiction triage is the one shell panel outside the default workspace
+// layout, so its package (and the epistemic domain/use-case graph behind it)
+// only has to exist once the user opens the Beliefs panel.
+const ContradictionTriagePanel = lazy(() =>
+  import("@beep/epistemic-ui").then(({ ContradictionTriagePanel }) => ({ default: ContradictionTriagePanel }))
+);
+// The IPC spike is gated on the `?ipc` query flag; a static import put its
+// whole fixture graph in the boot chunk for every launch that never sets it.
+const IpcSpikePanel = lazy(() =>
+  import("./transport/IpcSpikePanel.tsx").then(({ IpcSpikePanel }) => ({ default: IpcSpikePanel }))
 );
 const CosmosSpike = lazy(() =>
   import("./spikes/CosmosSpike.tsx").then(({ CosmosSpike }) => ({ default: CosmosSpike }))
@@ -573,7 +582,7 @@ const makePanelRenderers = (appRegistry: AppRegistry): Readonly<Record<DesktopPa
     home: () => wrap("Home", <HomeSurface />),
     chat: () => wrap("Chat", <ChatApp />),
     sync: () => wrapDesktop("Vault sync", <VaultSyncPanel floating={false} />),
-    "contradiction-triage": () => wrapDesktop("Contradiction Triage", <ContradictionTriagePanel />),
+    "contradiction-triage": () => wrapDesktopLazy("Contradiction Triage", <ContradictionTriagePanel />),
     "ontology-explorer": () => wrapDesktop("Explorer", <OntologyExplorerRegion />),
     "ontology-document": () => wrapDesktop("Document", <OntologyDocumentRegion />),
     "ontology-graph": () => wrapDesktop("Graph", <OntologyGraphRegion />),
@@ -841,7 +850,11 @@ const DesktopShell = ({
       </DocumentIntakeTarget>
       <ChatTurnErrorToasts />
       <Toaster richColors />
-      {transport.ipc && hasIpcSpikeFlag() ? <IpcSpikePanel /> : null}
+      {transport.ipc && hasIpcSpikeFlag() ? (
+        <Suspense fallback={null}>
+          <IpcSpikePanel />
+        </Suspense>
+      ) : null}
     </>
   );
 };

@@ -57,6 +57,32 @@ const initialChunkGroups = [
     priority: 30,
   },
   { name: "pretext-vendor", test: /node_modules[\\/]@chenglou[\\/]pretext[\\/]/, priority: 25 },
+  // The four groups below carve the markdown -> safe-HTML subsystem out of the
+  // entry chunk. `@beep/html`'s conformance rules parse URLs to the WHATWG
+  // spec (whatwg-url, plus tr46/@exodus/bytes for IDNA) and attributes to the
+  // CSS syntax specs (@csstools), which together outweigh the shell itself.
+  // They are reached eagerly through chat message rendering, so this is a
+  // granularity fix, not a deferral: several cacheable chunks instead of one
+  // monolith the runtime must parse as a unit.
+  {
+    name: "url-spec-vendor",
+    test: /node_modules[\\/](whatwg-url|tr46|@exodus[\\/]bytes|punycode)[\\/]/,
+    priority: 24,
+  },
+  { name: "css-syntax-vendor", test: /node_modules[\\/]@csstools[\\/]/, priority: 23 },
+  {
+    name: "markdown-vendor",
+    test: /node_modules[\\/](micromark|mdast|unist|decode-named-character-reference|character-entities|dompurify|zwitch|longest-streak|ccount|markdown-table|devlop)/,
+    priority: 22,
+  },
+  { name: "html-modeling", test: /packages[\\/]foundation[\\/]modeling[\\/](html|md)[\\/]src[\\/]/, priority: 21 },
+  // Domain entity models carry their PostgreSQL column mapping (`@beep/effect-drizzle`
+  // annotations on `ProductEntity` fields), so the renderer links the drizzle query
+  // builder even though it never issues SQL. Isolating it keeps that weight out of
+  // the shell chunk and makes the cost legible; removing it needs the model/table
+  // split tracked against the entity-stack migration.
+  { name: "drizzle-vendor", test: /node_modules[\\/]drizzle-orm[\\/]/, priority: 20 },
+  { name: "sql-modeling", test: /packages[\\/]ecosystem[\\/]effect-drizzle[\\/]src[\\/]/, priority: 19 },
 ];
 
 export default defineConfig({
@@ -80,6 +106,8 @@ export default defineConfig({
     // Three.js and Mermaid's generated parser each ship as one irreducible
     // upstream module. Keep the cap just above those modules while splitting
     // our generated IANA data out of the application entry chunk below.
+    // three.module is the current ceiling at ~724 kB and is dynamic-only (the
+    // 3D toggle), so it never lands on the boot path.
     chunkSizeWarningLimit: 750,
     rolldownOptions: {
       output: {
