@@ -273,3 +273,115 @@ session/machine ids.
   saw. `bun run beep quality test-tsgo` is in-process, takes no lock, and needs no turbo, so there
   was no reason to skip it except forgetting that a proof binds to a tree. Prevention: re-run the
   cheap in-process gates as the *last* step before publish, never as a step before the last edit.
+
+## 2026-08-16 — C1 implementation
+
+- Building the C1 resolver, I found the workstation's interactive shell already exports the
+  full remote-read quad (`TURBO_API`/`TURBO_TOKEN`/`TURBO_TEAM`/`TURBO_CACHE=local:rw,remote:r`)
+  with literal — not `op://` — credential values, while the checked-in `.env.example` listed
+  only two of the four names and no checkout documents the contract. So the cache was
+  *configured* and the CLI's forced `--cache=local:rw` was the only thing suppressing it; the
+  C4 audit's "not enabled locally" verdict read as a config gap when it was a CLI gap. Proven
+  live against the cache's status endpoint: authenticated `200`, unauthenticated `401`.
+  Prevention: any env-driven capability needs its full name set in `.env.example` plus one
+  operator doc at the moment it is deployed, so "is it configured?" is answerable without
+  reading the consumer's source.
+- **Vacuous-test receipt (15 assertions).** The same shell export made 15 existing
+  `quality-tasks.test.ts` cases fail the moment the resolver went live (`expected
+  --cache=local:rw, received --cache=local:rw,remote:r`). The cause is the vacuous-assertion
+  class, not a behavior change: the helper *restated the production formula* in the test
+  (`Bun.env.CI === "true" || A.some(args, isTurboCacheControlArg) ? [] : ["--cache=local:rw"]`,
+  plus a verbatim copy of `isTurboCacheControlArg`), so each assertion compared the
+  implementation against a second copy of itself. That proves nothing about the policy: it
+  passes for any implementation the copy also describes, and it fails whenever the copy drifts
+  — which is exactly what happened, on a machine difference rather than on a code defect. The
+  suite's apparent green had been conditional on this workstation being *unconfigured*, and a
+  verify launched from a configured shell would have failed for a reason unrelated to the
+  change under test.
+  Fix, stated honestly: the tautology was not removed from those 15 cases, it was *relocated*.
+  They now derive the cache segment from the same resolver, which makes them structural
+  assertions (the plan's args reach turbo, in the right position, for every lane) and
+  environment-independent by construction; the policy itself is proven separately in
+  `turbo-cache.test.ts`, where concrete literals are asserted against explicitly constructed
+  environments with no ambient reads. Prevention, general form: a test may restate a value or
+  derive it, never both-ways-at-once — derive the environment-dependent segment and assert the
+  decision function against literals somewhere else. A restated formula is a second
+  implementation that silently inherits every bug of the first and adds drift of its own.
+  Detection idea for A5/B-track: flag test helpers whose body is a textual near-duplicate of a
+  production expression (the copied `isTurboCacheControlArg` here was byte-identical).
+- `withLocalEnv` in `Quality/Tasks.ts` rebuilt the op-run step from four fields and silently
+  dropped `env` and `flakeQuarantine`. It was harmless only because the single `useLocalEnv`
+  step today (root build) carries no `env`, and the quarantine policy is read from the
+  pre-resolution step. Making more steps op-wrappable would have turned it into a real
+  regression (a coverage step losing `CI=true`, or an integration step losing its
+  testcontainer URI). Prevention: step transformers should copy-with-override
+  (`optionalProp` over every optional field) rather than re-enumerate a subset — or the step
+  model should expose a total `withCommand` helper so no call site can forget a field.
+- `op run --env-file=.env` overlays the checkout's dotenv onto the child, so wrapping a step
+  that carries its own `env` can silently clobber lane-critical values. There is no way to
+  express "step env wins" with `op run`, so the wrapper is now restricted to steps with no
+  step-specific env. Worth recording because the obvious reading of "wire op-run env for all
+  Turbo steps" is unsafe as stated.
+- Self-review before the proof slot caught a real defect the tests would not have: my
+  `turboEnvOverrides` scrubbed `op://` credential references for *every* turbo spawn, including
+  the `op run`-wrapped one. An ambient-env probe settles what the docs left implicit — `op run`
+  resolves `op://` references out of the environment it is handed, not only out of
+  `--env-file` (a bogus ambient reference made it fail on the vault name). So the scrub deleted
+  the exact reference the wrapper exists to resolve: a checkout holding the quad as shell
+  exports would have handed the wrapped turbo *no credential at all* while argv demanded
+  `remote:r`. Fixed by scoping the scrub to direct `bunx turbo` spawns. Prevention: when a
+  wrapper's whole job is to transform a value, the transform stage must be excluded from every
+  sanitizer aimed at the untransformed form — state the pipeline stage a guard belongs to, not
+  just its condition.
+- The regression guard for the above was itself vacuous on the first attempt: vitest's
+  `toEqual` **ignores keys whose value is `undefined`**, and this codebase uses
+  `{ VAR: undefined }` as the spawner's *delete* signal. Every assertion about a scrub was
+  therefore passing for both the scrubbing and the non-scrubbing implementation. Only
+  `toStrictEqual` compares undefined-valued keys. Verified by mutation: with the fix reverted
+  the strict assertion fails (`TURBO_TOKEN: undefined`, `TURBO_CACHE: "local:rw"` leaking into
+  the wrapped spawn), where the `toEqual` form had passed. Prevention, repo-wide: any
+  assertion over an env-override record that encodes deletion as `undefined` must use
+  `toStrictEqual` — a lint or review checklist item, since the weaker matcher silently proves
+  nothing and reads identically. Second instance of the vacuous-assertion class in one packet.
+- The new-file zero-uncovered rule turned out to be satisfiable only because it was *measured*
+  rather than assumed. A targeted `bunx vitest run <files> --coverage --coverage.include=<file>`
+  (no turbo, no ratchet env, ~7s) reported `TurboCache.ts` at 100% on all four metrics — but the
+  same probe surfaced the real exposure one file over: `EnvConfig.ts`'s new
+  `isUnresolvedSecretReference(value) ? "secret-reference" : "literal"` arm is **unexecutable on
+  any checkout whose credentials are literal**, and this workstation's are. It would have been a
+  permanently uncovered branch added to a baselined file, invisible to every local run. Fixed by
+  moving the ternary into the pure module as `turboCacheValueSourceFor(boolean)` where a test
+  reaches both arms with no environment at all. Prevention, and the generalizable half: an
+  environment-classifying branch belongs in a pure function that takes the verdict, never at the
+  reading edge that produces it — otherwise its coverage is a property of the machine.
+  Corollary worth adopting packet-wide: scoped `--coverage.include` on a single file is cheap
+  enough (seconds, no lock) to run before every proof that adds a file, instead of discovering
+  the floor from a hosted lane.
+- Same probe, second finding: `Tasks.ts`'s run-time degradation arm was unreachable in tests for
+  the same reason (its guard calls an env reader). Rather than mutate the ambient environment in
+  a shared test file — fragile, because the default ConfigProvider snapshots the environment at
+  the first config read — the session verdict became a *parameter* and the function got a
+  `...ForTesting` export, the convention already used dozens of times in that file. That closed a
+  real gap, not just a number: nothing had proven that an unwrapped step's remote posture is
+  actually rewritten, or that the rewrite carries `env` and `flakeQuarantine` through. Four cases
+  now do. Prevention: when a guard mixes a pure decision with an ambient read, take the read as
+  an argument — testability and the coverage floor both follow for free.
+- Third instance of the same species in one PR, and the one that proves it is systemic rather
+  than careless: after fixing the pattern twice, `turboStepLocalEnv`'s opt-in arm still shipped
+  uncovered because its guard called an env reader, and the ratchet caught it —
+  `Tasks.ts` branches 63.63 vs baseline 64.48, a real regression, on the pre-verify coverage run
+  the lead insisted on. Fixed identically (session verdict becomes a parameter, plus a
+  `...ForTesting` export and three cases pinning both arms), which cleared it. The lesson is not
+  "be careful": **any guard that reads the ambient environment inline is a coverage landmine on a
+  machine whose environment happens to take one branch.** A lint rule could find these — an
+  `if`/ternary whose condition transitively calls a `*Sync` config reader — and would have caught
+  all three at authoring time instead of one per proof cycle.
+- Reading the ratchet's failure line as a percentage comparison sends you chasing a phantom. The
+  rule is a **conjunction**: "surviving files fail when a percentage drop is accompanied by more
+  uncovered units" (`CoverageRegression.ts` §Gotchas). Both of this PR's runs showed a percentage
+  drop on the same file — upstream's B1 and labs additions grew its denominator — and only the
+  first also added uncovered units. Reported as `branches: 63.63 < 64.48`, the message names only
+  the percentage half, so the obvious reading is that the percentage must be restored, which is
+  neither necessary nor achievable when someone else's merge moved the denominator. Prevention:
+  the failure line should print both halves — the percentage drop and the uncovered-count delta
+  that made it a failure — so the remedy (cover your own new units) is unambiguous.

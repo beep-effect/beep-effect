@@ -139,6 +139,16 @@ be closed, not tolerated.
   eligible-remote-hit rate, forced/disabled excluded, p50/p95 lane wall time by cache mode.
   Then de-fragment keys (stop hashing per-clone `.env*` globally, localize story globs) with
   before/after probes. Prior audit: 24% hits, 93.6% of misses in all-miss (cold/forced) groups.
+- **C6 op-run reference resolvability.** C1 leaves the degrade-to-local-only contract unmet for
+  one case: `op run` fails hard when any `op://` reference in scope cannot be resolved, while
+  `canUseLocalEnv` probes only `op whoami` — session alive, references unverified. A stale
+  reference anywhere in `.env` therefore fails the lane instead of degrading it. Pre-existing
+  (the root build step has carried `useLocalEnv` all along), but C1 widens it from one step to
+  every cacheable Turbo step in an `op://`-configured checkout. Fix: probe reference
+  resolvability before wrapping, cache the verdict per run (not per step — the probe is a
+  subprocess), and fall back to an unwrapped local-only spawn on failure. Deferred out of C1
+  deliberately: it changes shared `canUseLocalEnv` semantics that B1 also touches, and its
+  caching deserves its own review. Cannot affect a checkout whose credentials are literal.
 
 ## Workstream D — Concurrency: install the gate the profile describes
 
