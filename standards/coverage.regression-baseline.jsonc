@@ -24855,15 +24855,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts": {
-          "lines": 74.66,
-          "statements": 75,
+          "lines": 73.33,
+          "statements": 73.68,
           "branches": 80,
-          "functions": 77.77,
+          "functions": 74.07,
           "uncovered": {
-            "lines": 19,
-            "statements": 19,
+            "lines": 20,
+            "statements": 20,
             "branches": 9,
-            "functions": 6
+            "functions": 7
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts": {
