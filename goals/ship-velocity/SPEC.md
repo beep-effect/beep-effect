@@ -139,6 +139,18 @@ be closed, not tolerated.
   eligible-remote-hit rate, forced/disabled excluded, p50/p95 lane wall time by cache mode.
   Then de-fragment keys (stop hashing per-clone `.env*` globally, localize story globs) with
   before/after probes. Prior audit: 24% hits, 93.6% of misses in all-miss (cold/forced) groups.
+  **Metric definition (locked 2026-08-17, from C1's first measured run — do not build the
+  dashboard on the naive ratio):** count remote hits on the **first cold lane touching each
+  task**, never remote/attempted across a whole proof. A remote restore lands in the local cache,
+  so every later lane touching the same task scores a *local* hit — one remote read can be counted
+  remote exactly once, and the denominator therefore punishes success. C1's proof measured
+  attempted=528, local=312, remote=60, miss=156 (11.4%), yet the honest evidence was a single
+  lane: lint at 30/31 `source: REMOTE` on artifacts never built in that worktree. Two further
+  cautions from the same run: `local-hit` is **not attributable** (a prior local run populates the
+  same closure and is indistinguishable after the fact), and hosted lane wall-clock is confounded
+  by #740's `filter: blob:none` checkout change, which is unrelated to cache posture. Correctness
+  tripwire worth keeping in the dashboard: tasks of a package whose source the branch changed must
+  be misses — a hit there means a key that cannot see the edit.
 - **C6 op-run reference resolvability.** C1 leaves the degrade-to-local-only contract unmet for
   one case: `op run` fails hard when any `op://` reference in scope cannot be resolved, while
   `canUseLocalEnv` probes only `op whoami` — session alive, references unverified. A stale
@@ -149,6 +161,22 @@ be closed, not tolerated.
   subprocess), and fall back to an unwrapped local-only spawn on failure. Deferred out of C1
   deliberately: it changes shared `canUseLocalEnv` semantics that B1 also touches, and its
   caching deserves its own review. Cannot affect a checkout whose credentials are literal.
+- **C7 PR lanes cannot populate their local fallback cache.** Verified at source 2026-08-17;
+  noticed by a sibling session during lane-cost auditing, then re-derived here. PR events are
+  tokenless by design — `check.yml:130-133` resolve `TURBO_API`/`TURBO_TOKEN`/`TURBO_TEAM` to `''`
+  and `TURBO_CACHE` to `local:rw` unless `github.event_name == 'push'`, and
+  `ci-runner-security.test.ts` pins those expressions. The local-fallback **restore** in
+  `setup-monorepo-ci/action.yml:95` runs on every lane, but the **save** at `:125` additionally
+  requires `inputs.cache-write == 'true'`, and exactly one job passes it: check.yml's build job at
+  `:653`. Because the cache key embeds `${{ github.job }}`, each job owns its namespace — so
+  `build` is the only PR lane with a nonzero hit chance (it can restore its own key from a prior
+  run) and **every other PR lane is guaranteed cold**, its restore unable to find an artifact
+  nothing ever wrote. Fix candidate: set `cache-write: "true"` on the remaining check.yml lanes,
+  which keeps PR lanes tokenless and leaves the security constraint untouched; the actions/cache
+  storage cost versus cold-lane time needs an operator decision note first. Corollary: any
+  lane-timing census taken since #696 has invalid hit rates for every lane except build. Stable
+  citations are this item and shared memory `coverage-ratchet-treadmill-and-ci-cold-cache.md`
+  §"PR turbo lanes are ~100% cold" — not the PR the finder happened to be working in.
 
 ## Workstream D — Concurrency: install the gate the profile describes
 

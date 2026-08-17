@@ -395,3 +395,34 @@ session/machine ids.
   finds the truth. Prevention: capsule and verdict rendering should quote the lane verdict, never
   matched stdout, and lanes that deliberately emit failure prose in fixtures are the reason
   A1's watch stream must key on transitions rather than log-line matching.
+
+## 2026-08-17 — P1 closeout
+
+- The ledger itself is the packet's hottest contention surface, and it is contention in *prose*,
+  not code (A7's framing, carried here at closeout): every packet PR that appends to this file
+  invalidates the next packet PR's base, so a queue of N packet items serializes into N base
+  refreshes **regardless of code overlap**. Evidence from P1 alone: four items, each appending its
+  own dated section, producing a two-way and then a three-way conflict on the same tail hunk, with
+  one agent contributing three appends by itself. Two of the four PRs paid a re-merge for a
+  conflict that touched none of their code. That makes it an E5 contention-family problem — the
+  fix shape is per-item append targets, or a ledger generated from parts — rather than a
+  merge-order problem to be scheduled around.
+- Non-canonical `@category` values are a repo-wide drift class, not a per-PR slip. Three sightings
+  in one session: `execution` on a new E1 export (fixed in #736, then found 5 more pre-existing
+  uses in `EnvConfig.ts` / `Tasks.ts`), `resolution` ×4 on new C1 exports (fixed in #743), and
+  `tasks` ×1 in `Tasks.ts`. Every instance was caught by review rather than by a gate, and each
+  cost a review round trip on an otherwise-green PR. The canonical domain is already machine-
+  readable (`repo-utils/src/schemas/JSDocCategories.ts`, 80 literals) and the JSDoc law already
+  says to use it, so nothing prevents a check. Prevention: a codemod for the existing drift plus a
+  lint rule that rejects a non-canonical `@category` on a touched export, which turns three review
+  round trips into a local failure in seconds.
+- A base-freshness claim sourced from a clone's `HEAD` rather than from `origin/main` sent an agent
+  toward merging an unrelated branch. The orchestrator read `git log -1` in a checkout that another
+  session had switched to a feature branch, reported "main moved" with that branch's tip, and
+  instructed a re-merge; the receiving agent verified from the merge base, found the claim false,
+  and did not act on it. No damage, purely because the instruction was checked rather than obeyed.
+  Prevention, and it generalizes to every agent-to-agent hand-off in this repo: a base claim must
+  cite `origin/main` explicitly (`git rev-parse origin/main`), never a working checkout's `HEAD`,
+  and overlap must be computed from the merge base (`git diff --name-only <merge-base>..origin/main`)
+  because the bidirectional `HEAD..origin/main` form lists your own commits as incoming and makes
+  every branch with a commit look like a total collision.
