@@ -37,7 +37,7 @@ import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { pipe } from "effect/Function";
 import * as P from "effect/Predicate";
-import { byIdAscending, makeRowDecoders } from "../internal/RepoSupport.ts";
+import { makeRowDecoders, sortByIdAscending } from "../internal/RepoSupport.ts";
 import type { CandorDisposition, IdsSubmissionFact, PatentCitationEvent } from "@beep/law-practice-domain";
 import type { CandorFilingScope } from "@beep/law-practice-use-cases/CandorPolicy";
 import type { CandorRecordOperation } from "@beep/law-practice-use-cases/CandorRecord";
@@ -106,7 +106,7 @@ const filedUnder = <
         citingApplication: CitingApplicationIdentity.equivalence(scope.citingApplication),
       })
     ),
-    A.sort(byIdAscending)
+    sortByIdAscending
   );
 
 /**

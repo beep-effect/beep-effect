@@ -36,7 +36,7 @@ import { Effect, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as P from "effect/Predicate";
-import { byIdAscending, makeRowDecoders } from "../internal/RepoSupport.ts";
+import { makeRowDecoders, sortByIdAscending } from "../internal/RepoSupport.ts";
 import type {
   ActFrame,
   CorrectionDelta,
@@ -113,7 +113,7 @@ const heldBy = <Entity extends { readonly id: number; readonly orgId: number }>(
         orgId: Eq.equals(scope.orgId),
       })
     ),
-    A.sort(byIdAscending)
+    sortByIdAscending
   );
 
 // The two frame-keyed reads narrow the tenant scope by the frame the records
@@ -137,7 +137,7 @@ const citingFrame = <
         frame: Eq.equals(scope.frame),
       })
     ),
-    A.sort(byIdAscending)
+    sortByIdAscending
   );
 
 /**

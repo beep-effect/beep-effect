@@ -58,7 +58,18 @@ export type RepositoryUnavailable<Operation, Unavailable> = (
  * @category repositories
  * @since 0.0.0
  */
-export const byIdAscending = Order.mapInput(Order.Number, (record: { readonly id: number }) => record.id);
+const byIdAscending = Order.mapInput(Order.Number, (record: { readonly id: number }) => record.id);
+
+/**
+ * Sort repository entities by their numeric id in ascending order.
+ *
+ * @internal
+ * @category repositories
+ * @since 0.0.0
+ */
+export const sortByIdAscending = <Entity extends { readonly id: number }>(
+  records: ReadonlyArray<Entity>
+): Array<Entity> => A.sort(records, byIdAscending);
 
 /**
  * The pair of row decoders one repository uses, bound to that repository's
