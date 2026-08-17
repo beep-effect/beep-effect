@@ -378,7 +378,7 @@ describe("golden replay (committed fixture)", () => {
           // upcast — it fails the v2 decode, explore --check reports it as
           // packet-trace-stale, and the next write regenerates it.
           const v1Text = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.v1.json`);
-          const decoded = yield* Effect.exit(S.decodeUnknownEffect(S.fromJsonString(PacketTraceProjection))(v1Text));
+          const decoded = yield* Effect.exit(S.decodeEffect(S.fromJsonString(PacketTraceProjection))(v1Text));
           expect(Exit.isFailure(decoded)).toBe(true);
 
           const v2Text = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.json`);
