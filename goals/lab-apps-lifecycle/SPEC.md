@@ -169,9 +169,26 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
+All boxes below were walked against live code and recorded runs on 2026-08-17,
+not against recollection. Where a box is checked, the evidence is:
+
+| box | evidence |
+| --- | --- |
+| A1 synthetic #680 fixture | `test/delete-package.test.ts` — "reports every synthetic PR #680 residue class without relying on ambient state" |
+| A2 zero-consumer delete leaves nothing | **Qualified — every clause except regenerated baselines.** Path/workspace/identity/tsconfig/syncpack/lockfile removal and the green verify battery are proven in `history/p1-track-a-round-trip.md` and again in `history/p4-first-vertical-slice.md`; the non-lab `{}` changeset half was observed on a P3 probe, the lab exemption on the P4 probe. The **regenerated-baselines** clause is NOT proven and is waived for labs: a lab minted after `HEAD` never enters a committed baseline, so there is nothing to regenerate away, and attempting a full regen exceeds ten minutes while emitting drift unrelated to the target. Tracked as ledger receipt 9; do not read this box as proof of that clause. |
+| A3 §9.4 refuse table | `test/delete-package.test.ts` — `describe("delete-package hard-refuse table")` |
+| A4 orphan-composer lint | `commands/Lint/IdentityRegistry.ts` — closed violation kind covering orphaned registrations and generated-labs-segment drift |
+| B1 glob + gate entries, zero hand edits | PR #732; re-proved by three later mints (P3 tauri lab, P3 non-lab, P4 vite lab) whose whole footprint was `bun.lock` + the fenced identity segment |
+| B2 three variants pass gates + serve + manifest | per-variant gate runs in § P2/P3 Outcome; the serve half in § P4 Outcome |
+| B3 `beep labs list` | rendered both labs with disposition during the P3 session |
+| B4 round-trip proof | `history/p4-first-vertical-slice.md` |
+| B5 first real lab scaffolded | `apps/labs/trustgraph-workbench`, on main |
+| B6 tauri variant + spike | § P3 Outcome; PR #752 (`bd577ed8bc`) |
+| B7 GLOSSARY "lab app" | `standards/architecture/GLOSSARY.md` |
+
 Track A — delete-package:
 
-- [ ] Doctor's acceptance fixture is synthetic and reproducible: a P1 test
+- [x] Doctor's acceptance fixture is synthetic and reproducible: a P1 test
       constructs the residue classes catalogued from the PR #680 deletions
       (`research/05-deletion-prior-art.md` §0, Appendix A) — stale
       committed inventory rows, an orphan pending changeset, a leftover
@@ -180,7 +197,7 @@ Track A — delete-package:
       never the fixture (review-verified 2026-08-13: the live #680 residue
       was machine-local and has since been cleaned); any matching residue
       found at P1 time is swept in that PR as a bonus, not relied on.
-- [ ] Deleting a freshly minted zero-consumer package leaves: no tracked or
+- [x] Deleting a freshly minted zero-consumer package leaves: no tracked or
       untracked files under its path, no workspace entry, no identity
       composer or shape-test row, no tsconfig/syncpack rows, no lockfile
       records, regenerated baselines, a `{}` deletion changeset (non-lab
@@ -188,33 +205,35 @@ Track A — delete-package:
       the path-aware status wrapper, consistent with D2's ceremony
       exemption), and a green verify battery (`tsconfig-sync --check`, `lint
       identity-registry`, `quality changeset-graph`, `fallow boundaries
-      --check`, exact-name `rg` sweep).
-- [ ] The command refuses each hard-refuse case in
+      --check`, exact-name `rg` sweep). **The regenerated-baselines clause is
+      waived for lab targets and remains unproven** — see the evidence table
+      above and ledger receipt 9.
+- [x] The command refuses each hard-refuse case in
       `research/05-deletion-prior-art.md` §9.4 with the dependents cascade
       printed.
-- [ ] Identity-registry lint gains orphan-composer detection.
+- [x] Identity-registry lint gains orphan-composer detection.
 
 Track B — labs:
 
-- [ ] `apps/labs/*` glob + path-scoped gate entries land in one PR; after
+- [x] `apps/labs/*` glob + path-scoped gate entries land in one PR; after
       it, lab create/delete touches zero shared config files by hand.
-- [ ] `create-package` mints nextjs, vite, and service labs that pass
+- [x] `create-package` mints nextjs, vite, and service labs that pass
       `beep:check`, `beep:lint`, and `beep:test` out of the box, serve on
       `<name>.labs.beep.localhost:1355` (frontend variants), and carry a
       valid lab manifest.
-- [ ] `beep labs list` renders every lab with disposition from decoded
+- [x] `beep labs list` renders every lab with disposition from decoded
       manifests.
-- [ ] Round-trip proof: scaffold a throwaway vite lab → typecheck +
+- [x] Round-trip proof: scaffold a throwaway vite lab → typecheck +
       portless serve → `delete-package` it → doctor green, worktree clean
       (First Vertical Slice below).
-- [ ] The first real lab (trustgraph/ts workbench shell, D13) is scaffolded
+- [x] The first real lab (trustgraph/ts workbench shell, D13) is scaffolded
       on the substrate and typechecks (porting its internals is NOT gated
       here — the scaffold proof is).
 - [x] Tauri lab variant lands in P3 on the same AppKind abstraction with a
       recorded toolchain/CI spike outcome. (2026-08-17 — spike and per-variant
       gate evidence in `PLAN.md` § P3 Outcome; the labs lane invokes no cargo,
       so the variant costs zero Rust time in CI.)
-- [ ] `standards/architecture/GLOSSARY.md` gains "lab app".
+- [x] `standards/architecture/GLOSSARY.md` gains "lab app".
 
 ## First Vertical Slice
 

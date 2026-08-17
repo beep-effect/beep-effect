@@ -87,10 +87,18 @@
     {
       "id": "P4",
       "name": "Verify create/delete round-trip",
+      "status": "complete"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet: final PR to mergeable",
       "status": "pending"
     },
-    { "id": "P5", "name": "Yeet: final PR to mergeable", "status": "pending" },
-    { "id": "P6", "name": "Close", "status": "pending" }
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/lab-apps-lifecycle/GOAL.md)\" -le 4000",
