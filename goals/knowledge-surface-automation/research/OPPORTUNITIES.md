@@ -301,3 +301,22 @@ measurement first). Reviewed at each grill.
 - **Prevention:** when rewriting a scanner against an all-green corpus, diff the parsed
   inventory (reference list / observation set), not just the emitted findings — or plant a
   canary (temporarily dead target) per structural link shape present in the live corpus.
+
+## 2026-08-17 — guard wiring in never-covered live functions reddens the coverage ratchet
+
+- **What happened:** the info/attributes guard PR (#757) wired three lines into
+  `Knowledge.service.ts` (`semanticDeltaLive`, `makeKnowledgeTreeOracle`, and one shared
+  helper). Those live entry points have never been unit-covered — the suite exercises
+  injected oracles via `makeKnowledgeArchiveOracle` instead — so the new lines landed at 0%
+  and diluted the file below its per-file ratchet floor (`lines: 86.8 < 86.89`,
+  `statements: 87.31 < 87.4`), failing the hosted Coverage Regression lane even though the
+  underlying primitive is fully tested in `step-git-exec.test.ts`.
+- **Evidence:** Coverage Regression job 95460770069 on PR #757; local
+  `vitest --coverage` confirms `semanticDeltaLive` (lines ~1397-1470) uncovered before and
+  after the change.
+- **Prevention:** local verify runs `test`, never `coverage`, so this class is only visible
+  hosted (already a recorded gap). When touching a file with a ratchet floor, check whether
+  the touched region is covered at all (`vitest run --coverage` scoped to the package,
+  then read the file's uncovered ranges) before pushing; wiring lines into an uncovered
+  function need either a directly testable seam (export the helper and pin it) or a
+  deliberate floor adjustment, decided before the hosted lane spends 13 minutes finding it.

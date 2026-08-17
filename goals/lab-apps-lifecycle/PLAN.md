@@ -2,12 +2,17 @@
 
 ## Status
 
-Status: `active` — P0 complete 2026-08-14 (PR #722); P1 complete 2026-08-16
+Status: `completed-retained` — closed out 2026-08-17, all seven phases
+complete. P4/P5 shipped in #756 (`5ec933e8e2`) and P6 in the closeout PR that
+follows it.
+
+History: P0 complete 2026-08-14 (PR #722); P1 complete 2026-08-16
 (PR #723, delete-package + registration geometry merged as `e97f73be44`);
 P2 complete 2026-08-17 (substrate PR #732 merged as `afe4cdfaa7`, plus the
 lab-minting PR that scaffolded `apps/labs/trustgraph-workbench`); P3 complete
 2026-08-17 (tauri lab AppKind, PR #752 merged as `bd577ed8bc`); P4 complete
-2026-08-17 (First Vertical Slice proven live); P5 next.
+2026-08-17 (First Vertical Slice proven live, with baseline
+regeneration excluded from the proof); P5 and P6 complete 2026-08-17.
 
 ## Phases
 
@@ -18,8 +23,8 @@ lab-minting PR that scaffolded `apps/labs/trustgraph-workbench`); P3 complete
 | P2 Implement apps/labs substrate and v1 variants | complete | One-time `apps/labs/*` glob + gate scoping PR; lab manifest schema + `beep labs list`; vite + service AppKinds (nextjs reused); GLOSSARY "lab app"; promotion runbook; scaffold the trustgraph-ts workbench lab shell. | Track B acceptance boxes (except tauri + round-trip) pass; PRs mergeable via yeet. |
 | P3 Tauri lab variant (spike then land) | complete | Toolchain/CI spike (rust on runners, portless semantics for the webview, professional-desktop overlap), then land tauri as a lab AppKind on the existing templates. | Spike outcome recorded; tauri lab scaffolds and typechecks; PR mergeable. |
 | P4 Verify create/delete round-trip | complete | Run the First Vertical Slice: vite lab scaffold → serve → delete → doctor green, clean tree. | Round-trip evidence recorded in `history/`; doctor green. |
-| P5 Yeet: final PR to mergeable | pending | Publish remaining work through yeet and drive to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P6 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence updated; closeout reflection exists. |
+| P5 Yeet: final PR to mergeable | complete | Publish remaining work through yeet and drive to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P6 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence updated; closeout reflection exists. |
 
 Phase ids MUST match `ops/manifest.json` `phases[]` exactly. Each implement
 phase (P1, P2, P3) ships as its own PR through yeet with the packet slug in

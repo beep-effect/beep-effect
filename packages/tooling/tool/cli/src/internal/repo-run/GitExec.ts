@@ -19,7 +19,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { isOptionLike } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
-import { Effect, flow, Number as N, Order, pipe } from "effect";
+import { Effect, FileSystem, flow, Number as N, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -27,6 +27,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { formatCommandLine, repoRunOutputBound, runCaptured, runCapturedStreams } from "../process/StepExec.ts";
+import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RunCapturedOptions, RunCapturedStreamsOptions } from "../process/StepExec.ts";
 
@@ -636,6 +637,49 @@ export const writeGitArchive = Effect.fn("GitExec.writeGitArchive")(function* <E
     env: gitArchiveEnv,
     extendEnv: true,
   });
+});
+
+/**
+ * Fails closed when a non-empty clone-local `info/attributes` file would poison archive bytes.
+ *
+ * **Details**
+ *
+ * The clone-local attributes file outranks every attribute layer {@link gitArchiveArgs} and
+ * {@link gitArchiveEnv} pin, and no git invocation can disable it (measured against git 2.55.0).
+ * The path is resolved through `git rev-parse --git-path info/attributes` so worktrees reach the
+ * shared common-dir file, then stat'd: an absent or empty file passes — fresh clones and CI never
+ * carry one, so the guard is vacuously green there — while a non-empty file fails with the resolved
+ * path. A stat failure other than not-found also fails closed via `onStatFailure`: a file that
+ * cannot be verified cannot be proven inert.
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+export const guardCloneLocalGitAttributes = Effect.fn("GitExec.guardCloneLocalGitAttributes")(function* <E, EDirty>(
+  cwd: string,
+  adapter: GitCommandErrorAdapter<E>,
+  onCloneLocalAttributes: (attributesPath: string) => EDirty,
+  onStatFailure: (attributesPath: string) => (cause: PlatformError.PlatformError) => E
+): Effect.fn.Return<void, E | EDirty, ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const gitPath = yield* runGitStructured(
+    ["rev-parse", "--git-path", "info/attributes"],
+    adapter,
+    structuredCapture(cwd)
+  );
+  const attributesPath = path.isAbsolute(gitPath) ? gitPath : path.join(cwd, gitPath);
+  const nonEmpty = yield* fs.stat(attributesPath).pipe(
+    Effect.map((info) => info.size > 0n),
+    Effect.catchIf(
+      (error) => error.reason._tag === "NotFound",
+      () => Effect.succeed(false)
+    ),
+    Effect.mapError(onStatFailure(attributesPath))
+  );
+  if (nonEmpty) {
+    return yield* Effect.fail(onCloneLocalAttributes(attributesPath));
+  }
 });
 
 /** Read and strictly parse one recursive full Git tree. @category execution @since 0.0.0 */

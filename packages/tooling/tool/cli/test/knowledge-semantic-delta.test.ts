@@ -1,6 +1,7 @@
 import {
   decodeKnowledgeUtf8,
   encodeKnowledgeSemanticDeltaReportJson,
+  guardKnowledgeCloneAttributes,
   KNOWLEDGE_PROBE_DEPENDENT_KINDS,
   KnowledgeCommandResolved,
   KnowledgeCommandUnknown,
@@ -1594,5 +1595,59 @@ describe("knowledge semantic-delta base probe boot failure", () => {
       assert.notInclude(human, "\u202E");
       assert.include(human, "<absolute-path>");
     })
+  );
+});
+
+// The clone-local info/attributes file is the one attribute layer no git invocation can disable
+// (research/p3-hermetic-lane-decisions.md "Measured residual"). The GitExec primitive's states are
+// pinned in step-git-exec.test.ts; this block pins the service wiring — the typed errors both
+// tree-materializing entry points surface through guardKnowledgeCloneAttributes.
+describe("knowledge clone-local attributes guard", () => {
+  const runGit = (cwd: string, args: ReadonlyArray<string>, env: Record<string, string>): void => {
+    const result = Bun.spawnSync(["git", ...args], { cwd, env, stderr: "pipe", stdout: "pipe" });
+    if (result.exitCode !== 0) {
+      throw new Error(`git ${A.join(args, " ")} failed: ${result.stderr.toString()}`);
+    }
+  };
+
+  it.effect("passes while the clone-local attributes file is absent or empty and fails closed once non-empty", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-clone-attributes-" });
+      const repoDir = path.join(tempRoot, "repo");
+      const home = path.join(tempRoot, "home");
+      yield* fs.makeDirectory(repoDir, { recursive: true });
+      yield* fs.makeDirectory(home, { recursive: true });
+      const env = {
+        PATH: Bun.env.PATH ?? "",
+        HOME: home,
+        GIT_CONFIG_GLOBAL: "/dev/null",
+        GIT_CONFIG_NOSYSTEM: "1",
+      };
+      yield* Effect.sync(() => runGit(repoDir, ["init", "-b", "main"], env));
+
+      yield* guardKnowledgeCloneAttributes(repoDir);
+      const attributesPath = path.join(repoDir, ".git", "info", "attributes");
+      yield* fs.writeFileString(attributesPath, "");
+      yield* guardKnowledgeCloneAttributes(repoDir);
+
+      yield* fs.writeFileString(attributesPath, "*.md eol=crlf\n");
+      const failure = yield* Effect.flip(guardKnowledgeCloneAttributes(repoDir));
+      assert.strictEqual(failure._tag, "KnowledgeCloneAttributesError");
+      if (failure._tag === "KnowledgeCloneAttributesError") {
+        assert.strictEqual(failure.attributesPath, attributesPath);
+        assert.include(failure.message, attributesPath);
+      }
+    }).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("runs the guard on the live semantic-delta path before failing typed on an unresolvable base ref", () =>
+    Effect.gen(function* () {
+      const knowledge = yield* KnowledgeService;
+      const failure = yield* Effect.flip(knowledge.semanticDelta("refs/beep/definitely-missing-base"));
+      assert.strictEqual(failure._tag, "KnowledgeOperationalError");
+      assert.include(failure.message, "fetch-depth: 0");
+    }).pipe(provideScopedLayer(testLayer))
   );
 });
