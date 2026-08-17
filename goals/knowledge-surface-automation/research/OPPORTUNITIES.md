@@ -197,3 +197,41 @@ measurement first). Reviewed at each grill.
     **What would have prevented it:** `*`/`_` in the host-token leading-trim
     set (a falsifiable one-character rule-table widening for the next census
     version), or the authoring rule "never wrap a path span inside emphasis".
+
+15. **Archival-segment matching is depth-blind, so a live guidance directory can
+    name its way out of the standing gate.** `unowned`
+
+    `isKnowledgeArchivalPath` tests every path segment against
+    `ARCHIVAL_SEGMENTS`, so the label applies at any depth, not only under a
+    packet's capture directory. Probed against the shipped classifier: both
+    `docs/data/GUIDE.md` and `.claude/skills/data/SKILL.md` carrying a
+    beep-checkout absolute path classify `archival` /`archival-provenance` and
+    contribute **zero** live debt — the `--check` gate passes. The property is
+    inherited (the nine pre-existing segments — `research`, `logs`, `outputs`,
+    `findings`, … — behave identically on `main`); the P3 pass only widened the
+    set with `data`, so this is a rule-table shape question, not a regression.
+
+    **What would have prevented it:** anchoring archival segments to their
+    owning surface (`goals/<slug>/data/**`, `explorations/<slug>/research/**`)
+    instead of matching a bare segment name anywhere in the path. That is a
+    ratified-semantics change, so it is proposed here rather than applied —
+    it needs the same phase-0 false-positive eyeball the original class got.
+
+16. **The standing gate's own PR went red on a lane the authoritative local
+    proof does not run.** `unowned`
+
+    `yeet verify` (full tier) is documented as the authoritative gate — "if
+    `yeet verify` is green, CI should be green on the first push". It runs
+    `bun run test`; it never runs `bun run coverage`, and the Yeet sources
+    reference coverage only for baseline *staleness*, never to execute the
+    ratchet. Adding the `--check` applicator to an already-baselined file
+    (`Knowledge.command.ts`) therefore passed a full green local proof and then
+    failed hosted `Coverage Regression` on a per-file monotonic floor
+    (`branches: 37.5 < 40`) — twice, because the first failure was misread as a
+    flake and rerun. The two lanes also use different runtimes: the package
+    `test` script runs `vitest` under Bun, `coverage` runs it under Node.
+
+    **What would have prevented it:** the full proof running the affected
+    packages' coverage ratchet (it already knows the affected owners), or the
+    verdict naming `Coverage Regression` as a known hosted-only gate so the
+    "green local means green CI" contract carries its own exception list.

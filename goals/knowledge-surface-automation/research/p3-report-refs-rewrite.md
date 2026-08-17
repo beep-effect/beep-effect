@@ -33,7 +33,11 @@ The verdict's 122-row set had grown to **447 live gated rows** by 2026-08-16
    concrete descendant stays gated — a prefix admission would have let live
    guidance park arbitrary machine-local files behind the folder name, the
    laundering surface the stop conditions name. The nine live descendant rows
-   were rewritten instead (rules 227–236).
+   were rewritten instead (rules 227–236). A second review round narrowed the
+   comparison once more: a trailing slash normalizes to the exact mention
+   (`~/Downloads/` names the directory, not a descendant), while case variants
+   (`~/downloads/report.csv`) stay gated because the convention is spelled
+   exactly.
 3. **Textual: 226-rule mechanical rewrite + 2 manual folds (233 remaining
    rows across 126 files).** Drafted per file-context by four fan-out agents
    under a written bucket policy, reviewed centrally (zero conflicting rules,
@@ -110,9 +114,13 @@ observations.
 - `bun run beep knowledge refs --check` → exit 0 at head; `--tree main --check`
   → exit 1 (249).
 - `bun run beep knowledge semantic-delta` → exit 0 (no introduced findings).
-- Package tests: 41 passing in `test/knowledge-refs.test.ts`, including the new
+- Package tests: 46 passing in `test/knowledge-refs.test.ts`, including the new
   convention-batch, segment-awareness, `data`-segment, and check-gate cases; the
   baseline-agreement test still reproduces the frozen inventory numbers.
+- Per-file coverage of `Knowledge.command.ts` clears every monotonic floor after
+  the check applicator gained direct tests: branches 50 (floor 40), statements
+  56.66 (44.73), lines 58.13 (46.57), functions 40.54 (24.24). The ratchet is a
+  hosted-only lane — the full local proof does not run it (ledger receipt 16).
 - Every rewritten `.json` file re-parses (`jq`), and executable manifest
   commands keep their semantics (tilde expansion in shell; `--state-dir` is a
   documented portless install option).
@@ -126,3 +134,9 @@ observations.
   names, upstream paths in prose) persist in the corpus, and gating that class
   was never part of the A verdict.
 - The `roadmap-refs` fold-in (T2 decision A7) is untouched by this pass.
+- Archival segments match at any path depth, so a live guidance directory named
+  after one (`docs/data/GUIDE.md`, `.claude/skills/data/SKILL.md`) is labelled
+  archival and contributes no live debt. The property is inherited from the
+  ratified nine-segment table, not introduced by the `data` admission; anchoring
+  segments to their owning surface is proposed as ledger receipt 15 rather than
+  applied here, because it changes ratified classification semantics.

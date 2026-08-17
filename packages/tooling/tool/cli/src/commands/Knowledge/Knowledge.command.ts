@@ -388,7 +388,7 @@ export const renderKnowledgeRefsCheckSection = (report: KnowledgeRefsReport): st
  *
  * @internal
  * @param report - Census produced for the tree under test.
- * @param options.json - When true, skip the human check section; JSON already carried the census.
+ * @param options - `json` skips the human check section because JSON already carried the census.
  * @returns An effect that logs the section and fails on live gated observations.
  * @category use-cases
  * @since 0.0.0

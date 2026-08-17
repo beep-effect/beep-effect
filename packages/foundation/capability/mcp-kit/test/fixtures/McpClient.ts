@@ -18,10 +18,10 @@ const fixtureClientInfo = { name: "mcp-kit-test-client", version: "0.0.0" };
  *
  * @since 0.0.0
  */
-export const makeStubMcpClient = (clientId: number) => {
-  const stub = {
+export const makeStubMcpClient = (clientId: number) =>
+  McpServerClient.of({
     clientId,
-    protocolVersion: "2025-06-18" as const,
+    protocolVersion: "2025-06-18",
     clientCapabilities: {},
     clientInfo: fixtureClientInfo,
     getClient: Effect.die("the fixture client is never dereferenced") as never,
@@ -29,10 +29,8 @@ export const makeStubMcpClient = (clientId: number) => {
       capabilities: {},
       clientInfo: fixtureClientInfo,
       protocolVersion: "2025-06-18",
-    },
-  };
-  return McpServerClient.of(stub);
-};
+    } as never,
+  });
 
 /**
  * Layer supplying the default stub caller, for suites that only need

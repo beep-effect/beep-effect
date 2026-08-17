@@ -156,20 +156,21 @@ const FailingGovinfoRegistrationLayer = sanitizedToolkit(GovinfoToolkit).pipe(
 // in front of it — has to supply the caller itself.
 const stubClientInfo = { name: "gov-legal-mcp-test-client", version: "0.0.0" };
 
-const stubMcpClientFields = {
-  clientId: 1,
-  protocolVersion: "2025-06-18" as const,
-  clientCapabilities: {},
-  clientInfo: stubClientInfo,
-  getClient: Effect.die("the fixture client is never dereferenced") as never,
-  initializePayload: {
-    capabilities: {},
-    clientInfo: stubClientInfo,
+const StubMcpClientLayer = Layer.succeed(
+  McpSchema.McpServerClient,
+  McpSchema.McpServerClient.of({
+    clientId: 1,
     protocolVersion: "2025-06-18",
-  },
-};
-
-const StubMcpClientLayer = Layer.succeed(McpSchema.McpServerClient, McpSchema.McpServerClient.of(stubMcpClientFields));
+    clientCapabilities: {},
+    clientInfo: stubClientInfo,
+    getClient: Effect.die("the fixture client is never dereferenced") as never,
+    initializePayload: {
+      capabilities: {},
+      clientInfo: stubClientInfo,
+      protocolVersion: "2025-06-18",
+    } as never,
+  })
+);
 
 const buildFixtureLayer = (environment: Readonly<Record<string, string>>) =>
   Layer.mergeAll(

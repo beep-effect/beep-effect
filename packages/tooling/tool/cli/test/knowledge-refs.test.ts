@@ -501,7 +501,7 @@ describe("knowledge refs check gate", () => {
       expect(A.some(logs, (line) => Str.startsWith("check: 2 live gated observation(s)")(Str.trim(String(line))))).toBe(
         true
       );
-    }).pipe(Effect.provide(TestConsole.layer))
+    }).pipe(provideScopedLayer(TestConsole.layer))
   );
 
   it.effect("the check applicator skips the section under json when the census is debt-free", () =>
@@ -511,7 +511,7 @@ describe("knowledge refs check gate", () => {
       });
       yield* applyKnowledgeRefsCheck(report, { json: true });
       expect(yield* TestConsole.logLines).toEqual([]);
-    }).pipe(Effect.provide(TestConsole.layer))
+    }).pipe(provideScopedLayer(TestConsole.layer))
   );
 
   it.effect("a Downloads descendant is live debt in the check section", () =>
