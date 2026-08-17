@@ -1,5 +1,29 @@
 # Decisions
 
+## 2026-08-17 — Wave-2 routing triaged; all 14 proposals dispatched; re-park
+
+**Decision:** The operator triaged the full wave-2 routing table. All ten
+attach-to/extend proposals were routed as dated research notes, retargeted
+where the original target had completed: `identity-iri-fold` routes land on
+its active successor `identity-iri-fibered`; `epistemic-bitemporal-edge-core`
+and `file-processing-capability` (completed-retained) receive re-entry notes
+in their `research/` dirs; graduated explorations (`rag-retrieval-projection`,
+`citation-grounding-hallucination-guard`) receive re-entry notes for their
+next decompose reopening. All four proposed new explorations were spawned —
+`legal-inference-policy`, `ontology-curation-governance`,
+`evidence-source-policy-calibration`, `ontology-lifecycle-qa` — each at
+`capture`, parked with a named resume trigger.
+
+**Rationale (operator, verbatim intent):** the parked portfolio is the work
+queue — spawn all four "so that I have a lot of work queued up for new model
+releases & so my ROADMAP.md can be optimally ordered based on real research."
+
+**Packet fate:** parked again per this packet's own 2026-07-25 precedent (a
+mining packet's deliverable is routed intelligence; graduate does not apply).
+New revival trigger: a new paper corpus wave lands in the library. The
+2026-08-17 identifier backfill (186/443 DOIs-or-arXiv-ids recovered, OA PDFs
+fetched, `resolved-index.jsonl`) strengthens the parked reference surface.
+
 ## 2026-08-13 — Wave 2 executed; park on routing triage
 
 **Decision:** Record wave 2 as executed and keep the packet parked. The

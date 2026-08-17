@@ -87,9 +87,9 @@ roughly 10 req/s, so the resolver backs off on 429.
 
 ## Next Open Question
 
-Parked revival trigger: the operator triages the wave-2 routing proposals in
-the external synthesis routing table. Proposals never auto-enter the packet
-tree.
+Parked revival trigger: a new paper corpus wave lands in the machine-local
+academia-2026-07 research corpus (or a successor library). The wave-2 routing
+triage completed 2026-08-17 — all 14 proposals dispatched.
 
 ## Read This First
 
@@ -103,6 +103,16 @@ tree.
 8. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-08-17: wave-2 routing TRIAGED (operator). All ten attach-to/extend
+  proposals routed as dated notes (completed-retained targets receive
+  re-entry notes; `identity-iri-fold` retargeted to `identity-iri-fibered`);
+  all four proposed explorations spawned parked-at-capture
+  (`legal-inference-policy`, `ontology-curation-governance`,
+  `evidence-source-policy-calibration`, `ontology-lifecycle-qa`). Same day:
+  identifier backfill recovered 186/443 DOIs/arXiv ids and OA PDFs into the
+  library (`resolved-index.jsonl`). Packet re-parked; new trigger = a new
+  corpus wave lands.
 
 - 2026-08-13: wave 2 EXECUTED. The approved “97 legal-NLP/extraction papers”
   count was aggregate-only and largely consumed by July wave-1 deep reads

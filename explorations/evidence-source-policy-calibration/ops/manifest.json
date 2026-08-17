@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "evidence-source-policy-calibration",
+    "title": "Evidence Source Policy Calibration",
+    "status": "parked",
+    "stage": "capture",
+    "openQuestions": [
+      "Resume when an epistemic consumer needs calibrated multi-signal confidence (source trust vs extractor vs validator vs reviewer) rather than a single collapsed score."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-08-17",
+    "updated": "2026-08-17"
+  }
+}

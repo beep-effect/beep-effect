@@ -1,12 +1,12 @@
 {
   "schemaVersion": "exploration-manifest/v1",
   "exploration": {
-    "slug": "academia-corpus-mining",
-    "title": "Academia Corpus Mining",
+    "slug": "ontology-lifecycle-qa",
+    "title": "Ontology Lifecycle QA",
     "status": "parked",
-    "stage": "align",
+    "stage": "capture",
     "openQuestions": [
-      "Parked revival trigger: a new paper corpus wave lands in the machine-local academia-2026-07 research corpus (or a successor library)."
+      "Resume when shape-induction / SHACL lifecycle work is pulled onto the roadmap; versioned induced shapes with triple-level witnesses land here."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -14,7 +14,7 @@
       "docs": [],
       "supersededBy": null
     },
-    "created": "2026-07-25",
+    "created": "2026-08-17",
     "updated": "2026-08-17"
   }
 }

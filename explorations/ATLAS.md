@@ -169,6 +169,25 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   proposal machinery; decide the A/B guidance-degraded-session question at
   unpark.
 
+- [`legal-inference-policy`](./legal-inference-policy/README.md) — parked
+  2026-08-17 at capture (born from academia wave-2 routing): derivation-DAG'd,
+  predicate-gated inference policy over the epistemic edge substrate; resume
+  when KG inference/completion work is pulled onto the roadmap.
+- [`ontology-curation-governance`](./ontology-curation-governance/README.md)
+  — parked 2026-08-17 at capture (academia wave-2, two high-priority
+  findings): consequence-visible accept/decline/quarantine review for
+  ontology curation, no direct generated writes; resume when curation/review
+  UX work is pulled.
+- [`evidence-source-policy-calibration`](./evidence-source-policy-calibration/README.md)
+  — parked 2026-08-17 at capture (academia wave-2): separate typed confidence
+  signals (source/extractor/validator/reviewer) instead of one collapsed
+  score; resume when an epistemic consumer needs calibrated multi-signal
+  confidence.
+- [`ontology-lifecycle-qa`](./ontology-lifecycle-qa/README.md) — parked
+  2026-08-17 at capture (academia wave-2): versioned induced shapes with
+  triple-level witnesses, SHACL lifecycle QA; resume when shape-induction
+  lifecycle work is pulled.
+
 - [`academia-corpus-mining`](./academia-corpus-mining/README.md) — parked
   2026-07-25 at align-complete with all 15 high-priority routes dispatched:
   443 canonical Academia.edu papers mined in tiers (T1 triage of all 443,
