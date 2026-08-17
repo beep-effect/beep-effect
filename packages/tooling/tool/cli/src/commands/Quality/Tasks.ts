@@ -31,9 +31,20 @@ import {
   configStringEqualsSync,
   configStringOption,
   isUnresolvedSecretReference,
+  readTurboCacheEnvironmentSync,
   turboEnvOverrides,
 } from "../../internal/cli/EnvConfig.ts";
 import { isLabsWorkspacePath, LABS_TURBO_EXCLUDE_FILTER } from "../../internal/cli/Labs/index.ts";
+import { optionalProp } from "../../internal/cli/OptionRecord.ts";
+import {
+  hasRemoteTurboCacheArgs,
+  isTurboCacheControlArg,
+  localOnlyTurboCacheArgs,
+  resolveTurboCachePlan,
+  turboCacheEnvironmentNeedsSecretSession,
+  turboCachePlanArgs,
+  turboCachePlanNeedsSecretSession,
+} from "../../internal/cli/TurboCache.ts";
 import {
   formatCommandLine,
   QualityTaskStep,
@@ -503,16 +514,6 @@ export const workspaceTaskFiltersForTesting = workspaceTaskFilters;
 
 const commandText = formatCommandLine;
 
-const isTurboCacheControlArg = (arg: string): boolean =>
-  arg === "--no-cache" ||
-  arg === "--force" ||
-  Str.startsWith("--force=")(arg) ||
-  arg === "--remote-only" ||
-  Str.startsWith("--remote-only=")(arg) ||
-  arg === "--remote-cache-read-only" ||
-  Str.startsWith("--remote-cache-read-only=")(arg) ||
-  Str.startsWith("--cache=")(arg);
-
 const isTurboConcurrencyArg = (arg: string): boolean =>
   arg === "--concurrency" || Str.startsWith("--concurrency=")(arg);
 
@@ -680,8 +681,51 @@ const shouldRunLintRepoWideSteps = (args: ReadonlyArray<string>): boolean =>
 
 const isCi = (): boolean => Bun.env.CI === "true" || configStringEqualsSync("CI", "true");
 
+// A workstation configured for remote reads is honored; everything else falls
+// back to local-only. The decision itself lives in `internal/cli/TurboCache`
+// so the whole matrix stays unit-testable without mutating the environment.
+const turboCachePlan = (args: ReadonlyArray<string>) =>
+  resolveTurboCachePlan(readTurboCacheEnvironmentSync(), { args, ci: isCi() });
+
 const localTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
-  isCi() || A.some(args, isTurboCacheControlArg) ? A.empty() : ["--cache=local:rw"];
+  turboCachePlanArgs(turboCachePlan(args));
+
+// Steps carrying their own environment must not be op-wrapped: `op run
+// --env-file=.env` overlays the checkout's dotenv onto the child, which would
+// clobber lane-critical values (the hosted coverage identity, a testcontainer
+// connection URI). They are `cache: false` lanes in turbo.json, so they lose no
+// remote hits by staying unwrapped; the run-time degradation below keeps a
+// reference-backed remote posture from reaching them anyway.
+// The session verdict is a parameter for the same reason it is on
+// `withoutUnusableRemoteCache`: taken from the ambient environment here, the
+// opt-in arm is unreachable on any checkout whose credentials are literal.
+const turboStepLocalEnv: {
+  (needsSecretSession: boolean): (env: Record<string, string | undefined> | undefined) => O.Option<boolean>;
+  (env: Record<string, string | undefined> | undefined, needsSecretSession: boolean): O.Option<boolean>;
+} = dual(
+  2,
+  (env: Record<string, string | undefined> | undefined, needsSecretSession: boolean): O.Option<boolean> =>
+    env === undefined && needsSecretSession ? O.some(true) : O.none()
+);
+
+/**
+ * Decide whether a Turbo step opts into `op run` local-env injection. Exposed
+ * for focused unit tests.
+ *
+ * **Example** (Opt a credential-free step in)
+ *
+ * ```ts
+ * import { turboStepLocalEnvForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(turboStepLocalEnvForTesting(undefined, true))
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const turboStepLocalEnvForTesting = turboStepLocalEnv;
+
+const needsTurboSecretSession = (): boolean => turboCacheEnvironmentNeedsSecretSession(readTurboCacheEnvironmentSync());
 
 const ciFreshTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
   isCi() && !A.some(args, isTurboCacheControlArg) ? ["--force", ...args] : args;
@@ -856,14 +900,67 @@ const usableSqlConnectionUri = (value: string | undefined): O.Option<string> =>
 const sqlIntegrationConnectionUriFromEnv = (env: Record<string, string | undefined>): O.Option<string> =>
   usableSqlConnectionUri(env.BEEP_TEST_DATABASE_URL);
 
+const carriedStepProps = (step: QualityTaskStep) => ({
+  ...optionalProp("env", O.fromUndefinedOr(step.env)),
+  ...optionalProp("flakeQuarantine", O.fromUndefinedOr(step.flakeQuarantine)),
+});
+
+// A spawn that is not wrapped in `op run` sees the credentials exactly as this
+// process does — unresolved `op://` references — so it must not carry a remote
+// cache posture. Rewriting is a no-op for arguments that carry none, which is
+// every step outside a checkout configured for reference-backed remote reads.
+// The session verdict is a parameter so both arms are reachable from a test
+// without mutating the ambient environment.
+const withoutUnusableRemoteCache: {
+  (needsSecretSession: boolean): (step: QualityTaskStep) => QualityTaskStep;
+  (step: QualityTaskStep, needsSecretSession: boolean): QualityTaskStep;
+} = dual(
+  2,
+  (step: QualityTaskStep, needsSecretSession: boolean): QualityTaskStep =>
+    needsSecretSession && hasRemoteTurboCacheArgs(step.args)
+      ? QualityTaskStep.make({
+          label: step.label,
+          command: step.command,
+          args: localOnlyTurboCacheArgs(step.args),
+          cwd: step.cwd,
+          ...carriedStepProps(step),
+        })
+      : step
+);
+
+/**
+ * Strip an unusable remote cache posture from a step that will not run under
+ * `op run`. Exposed for focused unit tests.
+ *
+ * **Example** (Degrade an unwrapped step)
+ *
+ * ```ts
+ * import { QualityTaskStep, withoutUnusableRemoteCacheForTesting } from "@beep/repo-cli/test/Quality"
+ *
+ * const step = QualityTaskStep.make({
+ *   label: "check",
+ *   command: "bunx",
+ *   args: ["turbo", "run", "check", "--cache=local:rw,remote:r"],
+ *   cwd: "/repo"
+ * })
+ * console.log(withoutUnusableRemoteCacheForTesting(step, true).args)
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const withoutUnusableRemoteCacheForTesting = withoutUnusableRemoteCache;
+
 const withLocalEnv = Effect.fn("QualityTasks.withLocalEnv")(function* (step: QualityTaskStep) {
   if (step.useLocalEnv !== true) {
-    return step;
+    return withoutUnusableRemoteCache(step, needsTurboSecretSession());
   }
 
+  // A missing, expired, or denied 1Password session degrades the lane to
+  // local-only instead of failing it.
   const shouldUseLocalEnv = yield* canUseLocalEnv(step.cwd);
   if (!shouldUseLocalEnv) {
-    return step;
+    return withoutUnusableRemoteCache(step, needsTurboSecretSession());
   }
 
   return QualityTaskStep.make({
@@ -871,6 +968,7 @@ const withLocalEnv = Effect.fn("QualityTasks.withLocalEnv")(function* (step: Qua
     command: "op",
     args: ["run", "--env-file=.env", "--", step.command, ...step.args],
     cwd: step.cwd,
+    ...carriedStepProps(step),
   });
 });
 
@@ -1357,7 +1455,10 @@ const turboStep = (cwd: string, label: string, tasks: ReadonlyArray<string>, arg
     command: "bunx",
     args: turboRunArgs(tasks, args),
     cwd,
-    ...O.getSomesStruct({ env: O.fromUndefinedOr(env) }),
+    ...O.getSomesStruct({
+      env: O.fromUndefinedOr(env),
+      useLocalEnv: turboStepLocalEnv(env, turboCachePlanNeedsSecretSession(turboCachePlan(args))),
+    }),
   });
 };
 

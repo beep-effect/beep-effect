@@ -25,7 +25,10 @@ phase flips ride the final PR of each phase.
 - ~~E1 publish refuses hand-staged INDEX + regenerates from manifests.~~ Done 2026-08-16
   (`PortfolioIndexGuard.ts`; renders the projection after the staged-only stash, stages it when it
   differs, refuses a hand-staged copy that disagrees).
-- C1 local remote-cache read path + checkout env template.
+- ~~C1 local remote-cache read path + checkout env template.~~ Done 2026-08-16 (schema-first
+  `resolveTurboCachePlan` honors a complete remote-read quad and fails closed otherwise;
+  `op run` env for reference-backed Turbo steps; `scripts/enable-turbo-remote-reads.sh` +
+  `standards/turbo-remote-cache.md` + `.env.example`).
 - ~~A7 monitor hardening quick items (`yeet reply` exit code, cursor persistence, registration
   backoff).~~ Done 2026-08-16 (reply exits non-zero on any `failed` outcome; comment cursors
   persist through a versioned `monitor-comments.json`; comment-poll failures degrade without
