@@ -15,7 +15,7 @@ this repository. … I want to orchestrate the /deep-research on these documents
 and create a new exploration packet /explore. I think it relevant to [run]
 through /adhd."
 
-Corpus: `/home/elpresidank/YeeBois/research/legal-patent-ontology-knowledge-graph-and-related-research/`
+Corpus: the machine-local `legal-patent-ontology-knowledge-graph-and-related-research` corpus
 — ~120 papers (PDF/HTML, ~100 unique after dedupe; several exact-duplicate
 filenames), ~24 cloned repos, 4,491 files total, plus `links.md` (15 URLs:
 FIBO Legal Core, UFO-L project page, LegalRuleML 1.0 spec, ScienceDirect /

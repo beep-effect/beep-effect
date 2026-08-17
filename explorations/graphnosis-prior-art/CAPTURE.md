@@ -12,7 +12,7 @@ dated heading at the bottom.
 ### The ask (verbatim)
 
 > Just discovered an opensource project called [Graphnosis](https://graphnosis.com/getting-started/overview/).
-> I cloned the repo [here](~/YeeBois/dev/Graphnosis) I would like you to do some exploration of it
+> I cloned the repo here (machine-local clone) I would like you to do some exploration of it
 > and this repo to see if there is any valuable:
 >
 > - information
@@ -27,7 +27,7 @@ dated heading at the bottom.
 
 ### First-pass reconnaissance (before any deep read)
 
-Clone on disk at `~/YeeBois/dev/Graphnosis`, remote `git@github.com:nehloo/Graphnosis.git`,
+Machine-local clone outside this repo, remote `git@github.com:nehloo/Graphnosis.git`,
 HEAD `7a19c4b`. Published as `@nehloo/graphnosis` v0.11.0.
 
 - **License: Apache-2.0** (`LICENSE`, `NOTICE` — Copyright 2026 Nehloo Interactive LLC).

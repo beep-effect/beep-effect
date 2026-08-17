@@ -1,6 +1,6 @@
 # GOAL: Harden root lint advisories into failures
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect5`.
+Repo: `beep-effect` (this checkout).
 
 Outcome: root `bun run lint` no longer prints nonfatal law warnings or advisory
 notes, and PR CI/Yeet quality paths fail if they return.

@@ -79,7 +79,7 @@ Ledger).
 - **Sibling completed packets (do not re-open):** `rich-text-foundation`
   (`@beep/editor` + `@beep/lexical-schema`), `desktop-chat-surface` (chat
   substrate/atoms), `chat-surface-parity` (block render/stream/viewer).
-- **Closest prior art to port from:** `~/YeeBois/projects/effect-lexical-chat`
+- **Closest prior art to port from:** the machine-local `effect-lexical-chat` checkout
   (Atom.family keyed by `LexicalEditor`; draft `Atom.kvs`). Live deploy is a
   behavioral/visual reference.
 - **Theme references:** trustgraph `workbench-ui` port + `palette.json`

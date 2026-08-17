@@ -3,8 +3,8 @@
   "id": "oip-web-launch",
   "owner": "@beep-team",
   "app": "@beep/oip-web",
-  "sourcePrototype": "/home/elpresidank/Documents/OP_IP_LAW/site",
-  "sourceBrandContext": "/home/elpresidank/Documents/OP_IP_LAW/assets/BRAND_CONTEXT.md",
+  "sourcePrototype": "OP_IP_LAW prototype site (machine-local, outside the repo)",
+  "sourceBrandContext": "OP_IP_LAW assets/BRAND_CONTEXT.md (machine-local, outside the repo)",
   "scope": {
     "firstMilestone": "faithful-port-and-refactor",
     "routeShape": "single-page-anchors",

@@ -21,7 +21,7 @@ Capability cites (what already exists and moves or is consumed):
   superseded by pretext's real APIs).
 - `scratchpad/computable-layout/full-circle.test.ts` — the integration proof
   pattern (metrics → minimum lookup → dock geometry).
-- `~/YeeBois/dev/pretext` — upstream clone for API reference; npm
+- the machine-local `pretext` upstream clone — API reference; npm
   `@chenglou/pretext` is the actual dependency (catalog).
 - `standards/architecture/03-driver-boundaries.md` — dev-safe driver duties
   (typed services, centralized technical errors, test layers, no product

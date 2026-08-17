@@ -9,7 +9,7 @@ rebuilding them). Date sections; research goes stale.
 ## 2026-08-06 — Method and headline
 
 Four sources were mined against the live checkout at `d1dfc4b3c1`: the Graphnosis repo
-(`~/YeeBois/dev/Graphnosis` @ `7a19c4b`), its whitepaper and trained-skills PDF, and two adjacent
+(machine-local clone @ `7a19c4b`), its whitepaper and trained-skills PDF, and two adjacent
 papers found in the same research session (RAPTOR, Chronocept). Both Graphnosis PDFs predate the
 code we read, so paper-vs-code drift was tracked explicitly.
 

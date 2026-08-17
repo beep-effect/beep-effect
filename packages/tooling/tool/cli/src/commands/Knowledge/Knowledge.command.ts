@@ -12,12 +12,17 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
-import { KnowledgeIntroducedFindingsError, KnowledgeOperationalError } from "./Knowledge.errors.ts";
+import {
+  KnowledgeHostPathDebtError,
+  KnowledgeIntroducedFindingsError,
+  KnowledgeOperationalError,
+} from "./Knowledge.errors.ts";
 import {
   encodeKnowledgeRefsReportJson,
   KnowledgeRefClassification,
   KnowledgeRefSurface,
   KnowledgeRefSurfaceFilter,
+  knowledgeRefsLiveDebt,
 } from "./Knowledge.refs.ts";
 import {
   encodeKnowledgeSemanticDeltaReportJson,
@@ -46,6 +51,9 @@ const surfaceFlag = Flag.choiceWithValue("surface", [
   Flag.withDescription("Narrow the detailed listing; summary counts stay whole-corpus")
 );
 const refsJsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Render the whole census as JSON"));
+const refsCheckFlag = Flag.boolean("check").pipe(
+  Flag.withDescription("Fail when any live observation sits in a gated host-path class")
+);
 
 const renderFinding = (finding: KnowledgeFinding): string =>
   `  ${finding.findingId} ${finding.kind} ${finding.location.path}: ${finding.message}`;
@@ -282,10 +290,60 @@ const renderRefsReport = (report: KnowledgeRefsReport, surface: KnowledgeRefSurf
   );
 };
 
+/**
+ * The failure a checked census gates on, if any.
+ *
+ * **Details**
+ *
+ * This is the whole `--check` rule: any live observation in a gated host-path class
+ * (`actionable-host-path`, `external-mirror-reference`) fails the run. Archival observations and
+ * convention or pattern classes never gate, so the census can keep measuring captured history
+ * while the live surface holds at zero.
+ *
+ * **Example** (A debt-free census does not gate)
+ *
+ * ```ts
+ * import { knowledgeRefsCheckFailure } from "@beep/repo-cli/commands/Knowledge/Knowledge.command"
+ * import { KnowledgeRefsReport } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ * import * as O from "effect/Option"
+ *
+ * const report = KnowledgeRefsReport.make({
+ *   treeish: "HEAD",
+ *   commit: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4",
+ *   observations: [],
+ *   skipped: [],
+ * })
+ *
+ * console.log(O.isNone(knowledgeRefsCheckFailure(report))) // true
+ * ```
+ *
+ * @param report - Census produced for the tree under test.
+ * @returns The typed failure when live gated observations exist, `O.none()` otherwise.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const knowledgeRefsCheckFailure = (report: KnowledgeRefsReport): O.Option<KnowledgeHostPathDebtError> => {
+  const debt = knowledgeRefsLiveDebt(report);
+  return A.isReadonlyArrayNonEmpty(debt)
+    ? O.some(
+        KnowledgeHostPathDebtError.make({
+          message: `knowledge refs --check: ${A.length(debt)} live host-path observation(s).`,
+          liveDebtCount: NonNegativeInt.make(A.length(debt)),
+        })
+      )
+    : O.none();
+};
+
+const renderRefsCheckSection = (report: KnowledgeRefsReport): string => {
+  const debt = knowledgeRefsLiveDebt(report);
+  return A.join([`check: ${A.length(debt)} live gated observation(s)`, ...A.map(debt, renderObservation)], "\n");
+};
+
 const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
   readonly tree: string;
   readonly surface: KnowledgeRefSurfaceFilter;
   readonly json: boolean;
+  readonly check: boolean;
 }) {
   const knowledge = yield* KnowledgeService;
   const report = yield* knowledge.refsTree(options.tree);
@@ -296,6 +354,12 @@ const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
     yield* Console.log(json);
   } else {
     yield* Console.log(renderRefsReport(report, options.surface));
+  }
+  if (options.check) {
+    if (!options.json) {
+      yield* Console.log(renderRefsCheckSection(report));
+    }
+    yield* O.match(knowledgeRefsCheckFailure(report), { onNone: () => Effect.void, onSome: Effect.fail });
   }
 });
 
@@ -314,8 +378,10 @@ const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
  *
  * `--surface` narrows the detailed listing only — the totals and the class table stay whole-corpus,
  * and `--json` always carries every observation — so a filtered run can never be mistaken for a
- * smaller census. The command exits zero for every observation mix: it measures the corpus and gates
- * nothing, which is what keeps it out of the policy lane until its false-positive rate is known.
+ * smaller census. Without `--check` the command exits zero for every observation mix: it measures
+ * the corpus and gates nothing. `--check` is the standing gate the phase-0 eyeball unlocked: after
+ * the report prints, any live observation in a gated host-path class fails the run, while archival,
+ * convention, and pattern classes never do.
  *
  * **Example** (Read the subcommand identity)
  *
@@ -330,10 +396,10 @@ const runRefs = Effect.fn("KnowledgeCommand.runRefs")(function* (options: {
  */
 export const knowledgeRefsCommand = Command.make(
   "refs",
-  { tree: treeFlag, surface: surfaceFlag, json: refsJsonFlag },
+  { tree: treeFlag, surface: surfaceFlag, json: refsJsonFlag, check: refsCheckFlag },
   runRefs
 ).pipe(
-  Command.withDescription("Census every reference in one tracked tree without gating on the result"),
+  Command.withDescription("Census every reference in one tracked tree; --check gates on live host-path debt"),
   Command.provide(KnowledgeServiceLive)
 );
 
@@ -364,7 +430,7 @@ export const knowledgeRefsCommand = Command.make(
  */
 export const knowledgeCommand = Command.make("knowledge", {}, () =>
   Console.log(
-    "Knowledge commands: refs [--tree <rev>] [--surface live|archival|all] [--json], semantic-delta [--base <ref>] [--json]"
+    "Knowledge commands: refs [--tree <rev>] [--surface live|archival|all] [--json] [--check], semantic-delta [--base <ref>] [--json]"
   )
 ).pipe(
   Command.withDescription("Knowledge-surface verification commands"),

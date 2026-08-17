@@ -42,7 +42,7 @@ tree.
   re-triage by definition. Five first-page-grounded batches classified the
   199-paper no-note backlog as core 2 / extended 44 / excluded 153; all 46
   core+extended papers were deep-read (46/46 notes, zero failures). External
-  synthesis: `~/YeeBois/research/academia-2026-07/synthesis/wave2-synthesis.md`.
+  synthesis: `synthesis/wave2-synthesis.md` in the machine-local academia-2026-07 research corpus.
   It found zero contradictions of the master ten findings and produced 14
   routing proposals, including `legal-inference-policy`,
   `ontology-curation-governance`, `evidence-source-policy-calibration`, and
@@ -82,5 +82,5 @@ tree.
   prior June-29 synthesis adopted into `research/`; S0–S2 + T1 triage
   complete (443 papers: 185 deep-read / 93 maybe / 165 catalog-only);
   external normalized corpus library established at
-  `~/YeeBois/research/academia-2026-07/` (public repo — no copyrighted
+  the machine-local `academia-2026-07` corpus home (public repo — no copyrighted
   PDFs/full texts committed here).

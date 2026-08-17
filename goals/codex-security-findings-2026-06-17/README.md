@@ -47,7 +47,7 @@ zero unique commits (PR diff will contain only this work).
 
 - Two human approval gates: GATE 1 after triage (disposition matrix), GATE 2
   before merge. Do not start Codex closures or remediation before GATE 1.
-- Raw captures stay untracked in `/tmp/codex-security-findings-2026-06-17`;
+- Raw captures stay untracked in a machine-local scratch directory outside the repo;
   commit only sanitized markdown + (post-fix) patches.
 - The user-provided `openai.com_cookies.txt` lives only in the raw capture root
   and must never enter the repo (`*cookies*.txt` is gitignored).

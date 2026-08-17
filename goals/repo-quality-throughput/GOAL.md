@@ -1,6 +1,6 @@
 # GOAL: Implement End-to-End Green Speedups
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: this `beep-effect` checkout.
 
 Outcome: implement every viable repo-quality performance task identified by the
 completed throughput research, prove the wins, and publish a mergeable PR.

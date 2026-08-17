@@ -71,7 +71,7 @@ Observable end state:
 2. `AGENTS.md`, `CLAUDE.md`, and required skills.
 3. `standards/ARCHITECTURE.md` and the numbered architecture docs
    (03-driver-boundaries, 07-non-slice-families).
-4. Upstream pretext docs in `~/YeeBois/dev/pretext` (README API glossary,
+4. Upstream pretext docs at https://github.com/PreTeXtBook/pretext (README API glossary,
    PLATFORM_BUGS ledger).
 
 ## Acceptance

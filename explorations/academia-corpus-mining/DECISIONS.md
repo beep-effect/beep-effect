@@ -10,7 +10,7 @@ already noted. The operator ratified re-triage by definition.
 Five first-page-grounded batches classified the 199-paper no-note backlog into
 core 2 / extended 44 / excluded 153. All 46 core+extended papers were deep-read:
 46/46 notes, zero failures. Synthesis lives outside the public repo at
-`~/YeeBois/research/academia-2026-07/synthesis/wave2-synthesis.md`.
+`synthesis/wave2-synthesis.md` in the machine-local academia-2026-07 research corpus.
 
 The synthesis found zero contradictions of the master ten findings and made 14
 routing proposals, including four candidate explorations:
@@ -30,7 +30,7 @@ with the reason.
 ## 2026-07-25 — corpus scope
 
 **Question:** Normalize only the new download, or fold in the standing
-`~/YeeBois/research` library (1,161 PDFs) and reprocess everything?
+machine-local research library (1,161 PDFs) and reprocess everything?
 
 **Answer:** New download only; **mark** overlap against the standing library
 and the prior synthesis's 72 deep-read papers (hash + normalized-title match);
@@ -46,7 +46,7 @@ what's *new* relative to prior coverage.
 **Question:** Where do normalized texts and metadata live — inside the repo or
 outside?
 
-**Answer:** Externally at `~/YeeBois/research/academia-2026-07/`. The packet
+**Answer:** Externally, in the machine-local `academia-2026-07` research corpus. The packet
 commits only derived intelligence: paper catalog (inventory), cluster
 syntheses, SOURCES.md ledger, routing table.
 

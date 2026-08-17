@@ -25,7 +25,7 @@ Two distinct download waves, visible in file mtimes:
 Buried discovery in the same folder: `Legal_Ontologies_for_beep-effect.md` — a
 **prior June-29 multi-agent synthesis** (~120 agents, ~4.8M tokens): 72 papers
 deep-read (19-paper "most-similar" set + 53 triaged from 449 candidates in
-`~/YeeBois/research/ontology_research/IP_ONTOLOGY_AI_RESEARCH/pdfs`), plus a
+the `ontology_research/IP_ONTOLOGY_AI_RESEARCH/pdfs` shelf of the standing research library (machine-local)), plus a
 ~240-paper catalogued-but-unread backlog ("next seam to mine — especially
 legal-NLP/extraction ~97"). Its footer says "move it into the repo if you want
 it tracked" — it never was. Adopted into this packet as
@@ -34,7 +34,7 @@ Caveat recorded there: Appendix B has **no file-level list** of the 72
 deep-read papers — only §10 short-name tables — so overlap reconstruction is
 fuzzy-match with bias toward inclusion.
 
-Standing library context: `~/YeeBois/research/` already holds 1,161 PDFs
+Standing library context: the standing research library (machine-local, outside the repo) already holds 1,161 PDFs
 across themed dirs (ontology_research, law_stuff, memory_knowledge_semanticweb,
 knowledge-graphs, patent_stuff, layout_stuff, dms_stuff, …). This corpus is
 marked against it, not merged into it.
@@ -55,7 +55,7 @@ Off-topic strata exist (crypto forecasting, quantum, misc engineering) —
 catalogued-only, no deep-read spend.
 
 Pipeline home: normalized corpus (full texts, metadata, per-paper notes'
-working copies) lives externally at `~/YeeBois/research/academia-2026-07/`
+working copies) lives externally in the machine-local `academia-2026-07` research corpus
 because this repo is public and copyrighted full texts must never be
 committed. The packet commits only derived intelligence: catalog, syntheses,
 sources ledger, routing table.

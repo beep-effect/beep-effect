@@ -267,7 +267,7 @@ Use the service command when users want the proxy to start automatically after r
 portless service install
 portless service install --lan
 portless service install --wildcard
-PORTLESS_STATE_DIR=~/.portless-lan PORTLESS_LAN=1 portless service install
+PORTLESS_LAN=1 portless service install --state-dir ~/.portless-lan
 portless service status
 portless service uninstall
 ```
@@ -454,7 +454,7 @@ proxy: {
 }
 ```
 
-Portless automatically sets `NODE_EXTRA_CA_CERTS` in child processes so Node.js trusts the portless CA. If you run a separate Node.js process outside portless, point it at the CA manually: `NODE_EXTRA_CA_CERTS=~/.portless/ca.pem`. Alternatively, use `--no-tls` for plain HTTP.
+Portless automatically sets `NODE_EXTRA_CA_CERTS` in child processes so Node.js trusts the portless CA. If you run a separate Node.js process outside portless, point it at the CA manually by setting `NODE_EXTRA_CA_CERTS` to `~/.portless/ca.pem`. Alternatively, use `--no-tls` for plain HTTP.
 
 ### Tailscale not working
 

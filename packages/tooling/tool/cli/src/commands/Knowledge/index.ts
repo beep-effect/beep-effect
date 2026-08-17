@@ -13,6 +13,7 @@
  */
 export {
   knowledgeCommand,
+  knowledgeRefsCheckFailure,
   knowledgeRefsCommand,
   knowledgeSemanticDeltaCommand,
   knowledgeSemanticDeltaFailure,

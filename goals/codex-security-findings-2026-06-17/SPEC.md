@@ -60,7 +60,7 @@ Higher sources outrank lower sources when they conflict.
   remediated findings closed after the PR merges. Two Chrome closure passes.
 - Sanitize signed URLs, token-like params, auth headers, cookies, secret paths,
   and private keys from all committed content. Raw captures stay untracked in
-  `/tmp/codex-security-findings-2026-06-17`.
+  a machine-local scratch directory outside the repo.
 - Keep unremediated findings' exploit detail, specific evidence paths, source
   commits, and patch material out of public tracking until fixes land
   atomically; tracked ledgers carry title + severity + disposition + justification.

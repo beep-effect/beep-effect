@@ -25,7 +25,7 @@ Hard laws (never weaken for convenience):
 - Writer stage (single Fable call) receives structured records, never raw
   scraped bytes.
 - Ledger is single-writer (the routine); packets are immutable after merge.
-- PR-only from the dedicated clone (`~/YeeBois/projects/beep-effect-nightly`);
+- PR-only from the dedicated `beep-effect-nightly` clone (machine-local);
   red-first PR (`nightly-not-finished` status cleared last); failure
   attribution (introduced vs inherited) then stop-with-note — no repair
   thrashing. Never auto-merge.

@@ -51,7 +51,7 @@ captures and 3 committed patch files.
 
 - One human approval gate after triage (disposition matrix). Do not start
   closures or remediation before approval.
-- Raw captures stay untracked in `/tmp/codex-security-findings-2026-06`; commit
+- Raw captures stay untracked in a machine-local scratch directory outside the repo; commit
   only sanitized markdown + patches.
 - Unremediated findings stay redacted in public tracking regardless of severity;
   publish detailed report and patch material only with the corresponding fix and

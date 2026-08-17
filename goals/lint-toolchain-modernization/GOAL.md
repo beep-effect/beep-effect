@@ -1,6 +1,6 @@
 # GOAL: modernize the lint toolchain (Biome GritQL + effect-smol alignment + oxlint lane)
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect5`.
+Repo: `beep-effect` (this checkout).
 
 Outcome: faster, effect-smol-aligned quality enforcement — syntactic CLI checks moved
 to Biome GritQL rules, `biome.jsonc` lint rules aligned to effect-smol (formatting

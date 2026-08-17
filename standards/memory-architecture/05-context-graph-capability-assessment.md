@@ -111,7 +111,7 @@ not win package topology, runtime authority, or source-of-truth status.
 
 ### Local TrustGraph TypeScript Port
 
-Source: `~/YeeBois/dev/trustgraph/ts` inspected read-only. Relevant anchors:
+Source: the machine-local TrustGraph TypeScript port (upstream: https://github.com/trustgraph-ai/trustgraph), inspected read-only. Relevant anchors:
 `package.json`, `packages/base/src/processor/flow-processor.ts`,
 `packages/flow/src/retrieval/graph-rag.ts`,
 `packages/flow/src/storage/triples/falkordb.ts`,

@@ -18,7 +18,7 @@ sparse manifest, typed memory-write triggers, transcript-audit gate, symbolic lo
 RDF-as-carrier weak (OWL decorative — no reasoner in the loop, Turtle token-hostile, validators
 are regex, arms race of ASCII-art GATE boxes).
 
-Then: full repo cloned to `~/YeeBois/research/daily/08-10-2026/ai-agent-skills/` — "there are
+Then: full repo cloned into the machine-local daily research corpus as `ai-agent-skills/` — "there are
 several other skills and items I think are worth a mining pass for an exploration packet. use
 codex gpt 5.6 sol agents on high reasoning."
 
@@ -55,7 +55,7 @@ model reasons over legal structure, not whether the answer is right. Gold-reason
 evaluation = the eval layer the legal/patent KG work is missing. Note + local PDF: see
 [`research/mining/ai-barrister-flight-simulator.md`](./research/mining/ai-barrister-flight-simulator.md)
 (PDF kept out of the public repo — local copy at
-`~/YeeBois/research/daily/08-10-2026/mining/sources/ai-barrister-flight-simulator-iclr2026.pdf`).
+`ai-barrister-flight-simulator-iclr2026.pdf` in the machine-local daily research corpus).
 
 Candidate tracks sketched in SYNTHESIS (not yet grilled): contract kernel
 (SkillContract/Gate/Evidence/FailureReceipt), KG ingestion + gold-path eval, fleet protocol

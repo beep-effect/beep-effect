@@ -26,7 +26,7 @@ Future work after V1:
 - Read the architecture standards, this initiative packet, and the retained
   automation reference note in `history/repo-architecture-automation-reference.md`.
 - Inspect the Effect v3 db-admin reference at
-  `~/YeeBois/projects/beep-effect4/packages/_internal/db-admin`, especially
+  `packages/_internal/db-admin` in the machine-local `beep-effect4` checkout, especially
   `drizzle.config.ts`, `src/schema.ts`, `src/tables.ts`,
   `src/db/AdminDb.ts`, `test/container.ts`,
   `src/scripts/inject-extensions.ts`, and `drizzle/**`.

@@ -83,8 +83,8 @@ Implementation must read sources in this order:
    - `https://docs.firecrawl.dev/api-reference/v2-openapi.json`
    - `https://www.npmjs.com/package/firecrawl`
 7. Local Firecrawl source clone:
-   - `/home/elpresidank/YeeBois/dev/firecrawl`
-   - `/home/elpresidank/YeeBois/dev/firecrawl/apps/js-sdk/firecrawl`
+   - upstream `https://github.com/firecrawl/firecrawl`
+   - JS SDK subtree `https://github.com/firecrawl/firecrawl/tree/main/apps/js-sdk/firecrawl`
    - expected SDK files:
      - `src/index.ts`
      - `src/v2/client.ts`
@@ -137,8 +137,8 @@ package is no longer viable and records the reason.
 Observed drift to re-check:
 
 - npm `firecrawl` latest was `4.25.2` on 2026-06-04.
-- Local clone SDK manifest at
-  `/home/elpresidank/YeeBois/dev/firecrawl/apps/js-sdk/firecrawl/package.json`
+- The SDK manifest at
+  `https://github.com/firecrawl/firecrawl/blob/main/apps/js-sdk/firecrawl/package.json`
   declared `@mendable/firecrawl-js@4.25.2` while depending on
   `firecrawl@4.16.0`.
 

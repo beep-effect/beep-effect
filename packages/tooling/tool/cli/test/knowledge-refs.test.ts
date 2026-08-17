@@ -5,6 +5,8 @@ import {
   KnowledgeOperationalError,
   KnowledgeRefSurface,
   KnowledgeTrackedEntry,
+  knowledgeRefsCheckFailure,
+  knowledgeRefsLiveDebt,
   makeKnowledgeTreeOracle,
   scanKnowledgeRefsTree,
 } from "@beep/repo-cli/commands/Knowledge";
@@ -230,6 +232,41 @@ describe("knowledge refs golden fixture matrix", () => {
     })
   );
 
+  it.effect("the rewrite-pass convention batch classifies as portable", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        ".claude/skills/demo/SKILL.md":
+          "State sits in ~/.local/state/beep/ai-metrics and caches in ~/.cache/beep-p0-stage today.\n" +
+          "Exports land under ~/Downloads and the CLI reads ~/.oracle/config.json plus ~/.portless-lan for LAN mode.\n",
+      });
+      expect(verdicts(report.observations)).toEqual([
+        "portable-home-convention/not-applicable",
+        "portable-home-convention/not-applicable",
+        "portable-home-convention/not-applicable",
+        "portable-home-convention/not-applicable",
+        "portable-home-convention/not-applicable",
+      ]);
+    })
+  );
+
+  it.effect("a convention prefix is segment-aware, not a string prefix", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        ".claude/skills/demo/SKILL.md": "Never write to ~/.cachefoo/anything from guidance.\n",
+      });
+      expect(verdicts(report.observations)).toEqual(["external-mirror-reference/not-applicable"]);
+    })
+  );
+
+  it.effect("a packet data directory is an archival segment", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        "goals/example/data/extract.jsonl": '{"blockText":"see /home/user/knowledge for the vault"}\n',
+      });
+      expect(verdicts(report.observations)).toEqual(["archival-provenance/not-applicable"]);
+    })
+  );
+
   it.effect("documented temp convention is not a defect", () =>
     Effect.gen(function* () {
       const report = yield* scanFixture({
@@ -391,6 +428,32 @@ describe("knowledge refs golden fixture matrix", () => {
         "malformed-utf8 goals/example/ops/data.json",
       ]);
       expect(verdicts(report.observations)).toEqual(["verified/resolved"]);
+    })
+  );
+});
+
+describe("knowledge refs check gate", () => {
+  it.effect("a live gated observation fails the check with its count", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        ".claude/skills/demo/SKILL.md":
+          "Run it from /home/example/checkouts/beep-effect and sync the mirror at ~/mirrors/firecrawl.\n",
+      });
+      expect(A.length(knowledgeRefsLiveDebt(report))).toBe(2);
+      expect(O.map(knowledgeRefsCheckFailure(report), (error) => error.liveDebtCount)).toEqual(O.some(2));
+    })
+  );
+
+  it.effect("conventions, pattern literals, and archival provenance never gate", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        ".claude/skills/demo/SKILL.md": "Memory lives under ~/.claude/memory today.\n",
+        "standards/git-worktrees.md": 'The audit runs rg -n "/home/" over the tree.\n',
+        "goals/example/research/notes.md": "Captured from /home/example/checkouts/beep-effect once.\n",
+        "goals/example/data/extract.jsonl": '{"blockText":"see /home/user/knowledge for the vault"}\n',
+      });
+      expect(A.length(knowledgeRefsLiveDebt(report))).toBe(0);
+      expect(O.isNone(knowledgeRefsCheckFailure(report))).toBe(true);
     })
   );
 });

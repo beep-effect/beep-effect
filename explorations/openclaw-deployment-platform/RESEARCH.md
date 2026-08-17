@@ -111,7 +111,7 @@ Full notes with per-post citations:
 
 ### 2026-07-24 — source-dive first pass (Fable verification leg)
 
-Direct reads of `~/YeeBois/dev/openclaw` @ `663c4fba` ahead of the codex
+Direct reads of the machine-local `openclaw` clone @ `663c4fba` ahead of the codex
 deep-dive (which lands as
 [`research/openclaw-config-internals.md`](./research/openclaw-config-internals.md)):
 
@@ -176,7 +176,7 @@ Headlines the synthesis relies on:
 
 ### 2026-07-24 — nix-openclaw behavioral study (clean-room; AGPL upstream)
 
-Facts observed from `~/YeeBois/dev/nix-openclaw` @ `5f849be4` (behavioral
+Facts observed from the machine-local `nix-openclaw` clone @ `5f849be4` (behavioral
 facts only — no code ported; AGPL-3.0 discipline per
 [`research/SOURCES.md`](./research/SOURCES.md)):
 
@@ -187,7 +187,7 @@ facts only — no code ported; AGPL-3.0 discipline per
   `OPENCLAW_CONFIG_PATH` pointing at it plus `OPENCLAW_NIX_MODE=1` in the
   service environment (`nix/modules/home-manager/openclaw/config.nix`).
 - Under that mode, `openclaw plugins install/update/uninstall/enable/disable`
-  **fail instead of mutating `~/.openclaw`** (README, "OpenClaw Runtime
+  **fail instead of mutating** `~/.openclaw` (README, "OpenClaw Runtime
   Plugins") — plugins and skills are wired declaratively by the distro, not
   imperatively by the CLI. Consequence for us: the v1 proof skill must be
   installed declaratively (rendered file wiring), not via `clawhub`/`openclaw

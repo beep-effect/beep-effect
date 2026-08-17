@@ -37,8 +37,8 @@ Phase content is normatively bounded by `SPEC.md` decisions D1–D11.
    pick the driver's default model. → `research/embedding-bakeoff.md`
 4. **Librarian/critic prior art** — mine the recorded
    `research/librarian-critic.md` findings and git history (packet removed 2026-07-14),
-   `~/YeeBois/dev/trustgraph/ts` (librarian patterns), and
-   `~/YeeBois/dev/cognee` (pipeline stages, ontology validation, provenance
+   TrustGraph's `ts/` package (https://github.com/trustgraph-ai/trustgraph/tree/main/ts; librarian patterns), and
+   the machine-local `cognee` checkout (pipeline stages, ontology validation, provenance
    anchoring) for prompt and loop design. → `research/librarian-critic.md`
 5. **Sync-state model** — design durable sync tables (content hashes, remote
    ids, cursors/stream positions, conflict records), atomic-materialization

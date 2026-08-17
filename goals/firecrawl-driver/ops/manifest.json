@@ -43,8 +43,8 @@
     "goals/firecrawl-driver/SPEC.md"
   ],
   "firecrawlSources": {
-    "localClonePath": "/home/elpresidank/YeeBois/dev/firecrawl",
-    "localJsSdkPath": "/home/elpresidank/YeeBois/dev/firecrawl/apps/js-sdk/firecrawl",
+    "upstreamRepo": "https://github.com/firecrawl/firecrawl",
+    "upstreamJsSdkPath": "https://github.com/firecrawl/firecrawl/tree/main/apps/js-sdk/firecrawl",
     "observedLocalCloneCommit": "42b46be4f75afbd88cd4161495345e94a04c3148",
     "observedLocalCloneStatus": "main...origin/main with untracked .idea/",
     "observedLocalSdkPackageName": "@mendable/firecrawl-js",
@@ -89,17 +89,17 @@
     },
     {
       "name": "github:yeet",
-      "path": "/home/elpresidank/.codex/plugins/cache/openai-curated/github/2abb1c44/skills/yeet/SKILL.md",
+      "path": "~/.codex/plugins/cache/openai-curated/github/2abb1c44/skills/yeet/SKILL.md",
       "statusDuringPacketAuthoring": "available"
     },
     {
       "name": "github:gh-fix-ci",
-      "path": "/home/elpresidank/.codex/plugins/cache/openai-curated/github/2abb1c44/skills/gh-fix-ci/SKILL.md",
+      "path": "~/.codex/plugins/cache/openai-curated/github/2abb1c44/skills/gh-fix-ci/SKILL.md",
       "statusDuringPacketAuthoring": "available"
     },
     {
       "name": "github:gh-address-comments",
-      "path": "/home/elpresidank/.codex/plugins/cache/openai-curated/github/2abb1c44/skills/gh-address-comments/SKILL.md",
+      "path": "~/.codex/plugins/cache/openai-curated/github/2abb1c44/skills/gh-address-comments/SKILL.md",
       "statusDuringPacketAuthoring": "available"
     }
   ],

@@ -10,7 +10,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 Salvage, consolidate, dedupe, name-restore, extract, organize, and
 USPTO-enrich the scattered 25-year Oppold IP practice corpus into a single
-governed home (`/home/elpresidank/data-home/oppold-corpus/`) with a DuckDB
+governed home (machine-local, outside the repo) with a DuckDB
 catalog and `@beep/file-processing` manifests, so the runtime ingestion lane
 and the IP-law knowledge graph have a clean, provenance-tracked substrate to
 consume.

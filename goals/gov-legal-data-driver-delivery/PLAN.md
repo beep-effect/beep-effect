@@ -90,7 +90,7 @@ Before marking the packet closed (and `status` → `completed-retained` /
   extends the `beep ci lane codegen` step list in
   `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts` (+ its test).
 - Donor specs live at
-  `/home/elpresidank/YeeBois/research/law_stuff/repos/us-legal-tools/packages/*-sdk`
+  the machine-local `us-legal-tools` donor checkout, under `packages/*-sdk`
   (MIT; attribution in `research/SOURCES.md`; patterns and specs only — never
   the axios/zod runtime).
 - Keep this plan current; archive run outputs under `history/`.

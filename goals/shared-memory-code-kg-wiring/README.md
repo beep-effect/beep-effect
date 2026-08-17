@@ -52,7 +52,7 @@ a Cursor GUI session check, and the 2026-08-20 pilot review.
 
 ## Notes
 
-- The shared store lives OUTSIDE the repo (`~/YeeBois/memory/beep-shared`) so
+- The shared store lives OUTSIDE the repo (machine-local `beep-shared` store) so
   every beep-effect clone sees the same memory — same pattern as the shared
   Claude auto-memory dir.
 - basic-memory is AGPL-3.0: internal tooling only; the future Effect-native
