@@ -11,12 +11,11 @@ import {
   writeFileWithinCanonicalRootAtomically,
 } from "@beep/file-processing/PathSafety";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { Storage } from "@google-cloud/storage";
 import {
   Clock,
   Context,
-  DateTime,
   Duration,
   Effect,
   FileSystem,
@@ -25,7 +24,6 @@ import {
   Match,
   MutableHashMap,
   Path,
-  Random,
   Schedule,
 } from "effect";
 import * as A from "effect/Array";
@@ -96,32 +94,29 @@ const GcsGeneration = S.String.check(
 
 const decodeGcsGeneration = S.decodeEffect(GcsGeneration);
 
-const LocalGenerationRecord = S.Union([
-  S.TaggedStruct("Present", {
+const LocalGenerationRecord = S.TaggedUnion({
+  Present: {
     generation: Sha256Hex,
     contentHash: Sha256Hex,
-  }),
-  S.TaggedStruct("Absent", {
+  },
+  Absent: {
     generation: Sha256Hex,
-  }),
-]);
+  },
+}).pipe(
+  $I.annoteSchema("LocalGenerationRecord", {
+    description: "Durable generation authority for a present or deleted local storage object.",
+  })
+);
 
-const LocalGenerationRecordFromString = S.fromJsonString(LocalGenerationRecord);
-const decodeLocalGenerationRecord = S.decodeEffect(LocalGenerationRecordFromString);
-const encodeLocalGenerationRecord = S.encodeEffect(LocalGenerationRecordFromString);
+const LocalGenerationRecordJson = S.fromJsonString(LocalGenerationRecord).pipe(
+  $I.annoteSchema("LocalGenerationRecordJson", {
+    description: "JSON representation persisted for a local storage generation record.",
+  })
+);
+const decodeLocalGenerationRecord = S.decodeEffect(LocalGenerationRecordJson);
+const encodeLocalGenerationRecord = S.encodeEffect(LocalGenerationRecordJson);
 type LocalGenerationRecord = typeof LocalGenerationRecord.Type;
 
-const LocalMutationLockRecord = S.Struct({
-  owner: Sha256Hex,
-  expiresAt: NonNegativeInt,
-});
-const LocalMutationLockRecordFromString = S.fromJsonString(LocalMutationLockRecord);
-const decodeLocalMutationLockRecord = S.decodeEffect(LocalMutationLockRecordFromString);
-const encodeLocalMutationLockRecord = S.encodeEffect(LocalMutationLockRecordFromString);
-type LocalMutationLockRecord = typeof LocalMutationLockRecord.Type;
-
-const localMutationLockLease = Duration.seconds(30);
-const localMutationLockOperationTimeout = Duration.seconds(20);
 const localMutationLockAcquireTimeout = Duration.seconds(5);
 
 const isLocalStorageKey = S.is(LocalStorageKey);
@@ -602,7 +597,6 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   });
   const generationDirectory = yield* resolveContainedPath(path.join(localStorageMetadataDirectoryName, "generations"));
   const lockCandidate = path.join(localStorageMetadataDirectoryName, "mutation.lock");
-  const lockPath = yield* resolveContainedPath(lockCandidate);
   yield* fs.makeDirectory(generationDirectory, { recursive: true, mode: 0o700 });
 
   const metadataDecodeError = (key: string, cause: unknown) =>
@@ -621,70 +615,31 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       module: "KeyValueStore",
       method,
       pathOrDescriptor: activeLockPath,
-      description: "Timed out while waiting for the local storage mutation lease.",
+      description: "Timed out while waiting for the local storage mutation lock.",
     });
-  const decodeLockRecordOption = (encoded: string) => decodeLocalMutationLockRecord(encoded).pipe(Effect.option);
-  const reclaimExpiredMutationLock = Effect.fnUntraced(function* (owner: string, activeLockPath: string) {
-    const now = yield* Clock.currentTimeMillis;
-    const encoded = yield* fs.readFileString(activeLockPath).pipe(Effect.option);
-    const record = O.isSome(encoded) ? yield* decodeLockRecordOption(encoded.value) : O.none();
-    const expired = O.match(record, {
-      onNone: () => false,
-      onSome: (value) => value.expiresAt <= now,
-    });
-    const invalidRecordExpired = O.isNone(record)
-      ? yield* fs.stat(activeLockPath).pipe(
-          Effect.map((stat) =>
-            O.exists(
-              stat.mtime,
-              (mtime) =>
-                DateTime.toEpochMillis(DateTime.fromDateUnsafe(mtime)) + Duration.toMillis(localMutationLockLease) <=
-                now
-            )
-          ),
-          Effect.orElseSucceed(() => false)
-        )
-      : false;
-    if (!expired && !invalidRecordExpired) return;
-
-    const stalePath = `${activeLockPath}.${owner}.stale`;
-    const claimed = yield* fs.rename(activeLockPath, stalePath).pipe(Effect.option);
-    if (O.isSome(claimed)) {
-      yield* fs.remove(stalePath, { force: true });
-    }
-  });
+  const decodeLockOwnerOption = (encoded: string) => S.decodeEffect(Sha256Hex)(encoded).pipe(Effect.option);
   const acquireMutationLock = Effect.fnUntraced(function* () {
     const activeLockPath = yield* resolveContainedPath(lockCandidate).pipe(
       Effect.mapError(localPathError("acquireMutationLock", lockCandidate))
     );
-    const now = yield* Clock.currentTimeMillis;
-    const entropy = yield* Random.nextInt;
-    const owner = Sha256Hex.make(sha256SyncFull(`${activeLockPath}:${now}:${entropy}`));
-    const record: LocalMutationLockRecord = {
-      owner,
-      expiresAt: NonNegativeInt.make(now + Duration.toMillis(localMutationLockLease)),
-    };
-    const encoded = yield* encodeLocalMutationLockRecord(record).pipe(
-      Effect.mapError((cause) => metadataDecodeError(activeLockPath, cause))
-    );
-    const attempt = fs
-      .writeFileString(activeLockPath, encoded, { flag: "wx", mode: 0o600 })
-      .pipe(
-        Effect.catchIf(isLockContention, (error) =>
-          reclaimExpiredMutationLock(owner, activeLockPath).pipe(Effect.andThen(Effect.fail(error)))
-        )
-      );
-    yield* attempt.pipe(
-      Effect.retry({
-        while: isLockContention,
-        schedule: Schedule.spaced(Duration.millis(2)),
+    return yield* Effect.acquireUseRelease(
+      fs.makeTempFile({ directory: generationDirectory, prefix: "owner-" }),
+      Effect.fnUntraced(function* (ownerFile) {
+        const owner = Sha256Hex.make(sha256SyncFull(ownerFile));
+        yield* fs.writeFileString(activeLockPath, owner, { flag: "wx", mode: 0o600 }).pipe(
+          Effect.retry({
+            while: isLockContention,
+            schedule: Schedule.spaced(Duration.millis(2)),
+          }),
+          Effect.timeoutOrElse({
+            duration: localMutationLockAcquireTimeout,
+            orElse: () => Effect.fail(lockBusyError("acquireMutationLock", activeLockPath)),
+          })
+        );
+        return { activeLockPath, owner };
       }),
-      Effect.timeoutOrElse({
-        duration: localMutationLockAcquireTimeout,
-        orElse: () => Effect.fail(lockBusyError("acquireMutationLock", activeLockPath)),
-      })
+      (ownerFile) => fs.remove(ownerFile, { force: true })
     );
-    return { activeLockPath, owner };
   });
   const releaseMutationLock = Effect.fnUntraced(function* ({
     activeLockPath,
@@ -695,29 +650,22 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   }) {
     const encoded = yield* fs.readFileString(activeLockPath).pipe(Effect.option);
     if (O.isNone(encoded)) return;
-    const record = yield* decodeLockRecordOption(encoded.value);
-    if (O.isSome(record) && Eq.equals(record.value.owner, owner)) {
+    const lockOwner = yield* decodeLockOwnerOption(encoded.value);
+    if (O.isSome(lockOwner) && Eq.equals(lockOwner.value, owner)) {
       yield* fs.remove(activeLockPath, { force: true });
     }
   });
   const withMutationLock = <A, E, R>(
     effect: Effect.Effect<A, E, R>
   ): Effect.Effect<A, E | PlatformError | SystemError, R> =>
-    Effect.acquireUseRelease(
-      acquireMutationLock(),
-      () =>
-        effect.pipe(
-          Effect.timeoutOrElse({
-            duration: localMutationLockOperationTimeout,
-            orElse: () => Effect.fail(lockBusyError("withMutationLock", lockPath)),
-          })
-        ),
-      releaseMutationLock
-    );
-  const generationRecordCandidate = (key: string): string =>
-    path.join(localStorageMetadataDirectoryName, "generations", `${sha256SyncFull(key)}.json`);
+    Effect.acquireUseRelease(acquireMutationLock(), () => effect, releaseMutationLock);
+  const generationRecordCandidate = Effect.fnUntraced(function* (key: string) {
+    const resolved = yield* resolvePath(key).pipe(Effect.mapError(localPathError("generationRecordCandidate", key)));
+    const storageIdentity = path.relative(canonicalRoot, resolved);
+    return path.join(localStorageMetadataDirectoryName, "generations", `${sha256SyncFull(storageIdentity)}.json`);
+  });
   const readGenerationRecord = Effect.fnUntraced(function* (key: string) {
-    const candidate = generationRecordCandidate(key);
+    const candidate = yield* generationRecordCandidate(key);
     const resolved = yield* resolveContainedPath(candidate).pipe(
       Effect.mapError(localPathError("readGenerationRecord", key))
     );
@@ -728,7 +676,7 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
     );
   });
   const writeGenerationRecord = Effect.fnUntraced(function* (key: string, record: LocalGenerationRecord) {
-    const candidate = generationRecordCandidate(key);
+    const candidate = yield* generationRecordCandidate(key);
     const encoded = yield* encodeLocalGenerationRecord(record).pipe(
       Effect.mapError((cause) => metadataDecodeError(key, cause))
     );
@@ -742,23 +690,24 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       Effect.catchTag("PathSafetyError", (cause) => Effect.fail(localPathError("writeGenerationRecord", key)(cause)))
     );
   });
-  const previousGeneration = (record: O.Option<LocalGenerationRecord>): string =>
-    O.match(record, {
-      onNone: () => "0",
-      onSome: (value) => value.generation,
+  const generationOfRecord = (record: LocalGenerationRecord): string =>
+    LocalGenerationRecord.match(record, {
+      Present: (present) => present.generation,
+      Absent: (absent) => absent.generation,
     });
+  const previousGeneration = (record: O.Option<LocalGenerationRecord>): string =>
+    O.getOrElse(O.map(record, generationOfRecord), () => "0");
   const makePresentGeneration = (previous: O.Option<LocalGenerationRecord>, content: string): LocalGenerationRecord => {
     const contentHash = Sha256Hex.make(sha256SyncFull(content));
-    return {
-      _tag: "Present",
+    return LocalGenerationRecord.cases.Present.make({
       contentHash,
       generation: Sha256Hex.make(sha256SyncFull(`${previousGeneration(previous)}:present:${contentHash}`)),
-    };
+    });
   };
-  const makeAbsentGeneration = (previous: O.Option<LocalGenerationRecord>): LocalGenerationRecord => ({
-    _tag: "Absent",
-    generation: Sha256Hex.make(sha256SyncFull(`${previousGeneration(previous)}:absent`)),
-  });
+  const makeAbsentGeneration = (previous: O.Option<LocalGenerationRecord>): LocalGenerationRecord =>
+    LocalGenerationRecord.cases.Absent.make({
+      generation: Sha256Hex.make(sha256SyncFull(`${previousGeneration(previous)}:absent`)),
+    });
   const advancePresentGeneration = Effect.fnUntraced(function* (key: string, content: string) {
     const record = makePresentGeneration(yield* readGenerationRecord(key), content);
     yield* writeGenerationRecord(key, record);
@@ -772,9 +721,11 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   const reconcilePresentGeneration = Effect.fnUntraced(function* (key: string, content: string) {
     const previous = yield* readGenerationRecord(key);
     const contentHash = Sha256Hex.make(sha256SyncFull(content));
-    if (O.isSome(previous) && previous.value._tag === "Present" && Eq.equals(previous.value.contentHash, contentHash)) {
-      return previous.value;
-    }
+    const matching = previous.pipe(
+      O.filter(LocalGenerationRecord.guards.Present),
+      O.filter((present) => Eq.equals(present.contentHash, contentHash))
+    );
+    if (O.isSome(matching)) return matching.value;
     const record = makePresentGeneration(previous, content);
     yield* writeGenerationRecord(key, record);
     return record;

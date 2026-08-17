@@ -76,10 +76,10 @@ const IndependentLocalStoragePairLayer = Layer.unwrap(
   Effect.map(LocalStorageFixture, ({ root }) =>
     Layer.merge(
       Layer.effect(FirstLocalStorage, StorageService).pipe(
-        Layer.provide(makeLocalStorageLayer(root, "independent-pair"))
+        Layer.provide(Layer.fresh(makeLocalStorageLayer(root, "independent-pair")))
       ),
       Layer.effect(SecondLocalStorage, StorageService).pipe(
-        Layer.provide(makeLocalStorageLayer(root, "independent-pair"))
+        Layer.provide(Layer.fresh(makeLocalStorageLayer(root, "independent-pair")))
       )
     )
   )
@@ -143,6 +143,7 @@ describe.sequential("effect-ontology local StorageService", () => {
       Effect.fnUntraced(function* () {
         const first = yield* FirstLocalStorage;
         const second = yield* SecondLocalStorage;
+        assert.notStrictEqual(first, second);
         yield* first.set("stale.txt", "first");
         const before = yield* first.getWithGeneration("stale.txt");
         if (O.isNone(before)) return yield* Effect.die("Expected the first layer to read its stored object.");
@@ -179,6 +180,29 @@ describe.sequential("effect-ontology local StorageService", () => {
         assert.strictEqual(A.length(A.filter(results, Result.isSuccess)), 1);
         assert.strictEqual(A.length(A.filter(results, Result.isFailure)), 1);
         assert(A.some(results, (result) => result.pipe(Result.getFailure, O.exists(GenerationMismatchError.is))));
+      })
+    );
+
+    it.effect(
+      "uses one generation authority for repeated-separator aliases",
+      Effect.fnUntraced(function* () {
+        const first = yield* FirstLocalStorage;
+        const second = yield* SecondLocalStorage;
+        yield* first.set("aliases//same.txt", "same");
+        const before = yield* first.getWithGeneration("aliases//same.txt");
+        if (O.isNone(before)) return yield* Effect.die("Expected the aliased object to exist.");
+
+        yield* second.set("aliases/same.txt", "same");
+        const updated = yield* first.getWithGeneration("aliases/same.txt");
+        if (O.isNone(updated)) return yield* Effect.die("Expected the canonical object to exist.");
+        assert.notStrictEqual(updated.value.generation, before.value.generation);
+
+        const staleWrite = yield* Effect.result(
+          first.setIfGenerationMatch("aliases//same.txt", "stale", before.value.generation)
+        );
+        assert(staleWrite.pipe(Result.isFailure));
+        assert(staleWrite.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
+        assert.strictEqual(yield* first.get("aliases/same.txt"), "same");
       })
     );
 
@@ -271,25 +295,30 @@ describe.sequential("effect-ontology local StorageService", () => {
     );
   });
 
-  it.layer(makeStorageTestLayer("expired-lock"))("with an abandoned local mutation lease", (it) => {
+  it.layer(makeStorageTestLayer("residual-lock"))("with a residual local mutation lock", (it) => {
     it.effect(
-      "reclaims an expired owner record before mutating",
+      "fails closed with Busy instead of reclaiming another owner",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const { root } = yield* LocalStorageFixture;
-        const lockPath = path.join(root, "expired-lock", ".effect-ontology-storage", "mutation.lock");
-        yield* fs.writeFileString(
-          lockPath,
-          '{"owner":"0000000000000000000000000000000000000000000000000000000000000000","expiresAt":0}',
-          { flag: "wx", mode: 0o600 }
-        );
+        const lockPath = path.join(root, "residual-lock", ".effect-ontology-storage", "mutation.lock");
+        yield* fs.writeFileString(lockPath, "0000000000000000000000000000000000000000000000000000000000000000", {
+          flag: "wx",
+          mode: 0o600,
+        });
         const storage = yield* StorageService;
 
-        yield* TestClock.withLive(storage.set("document.txt", "recovered"));
+        const result = yield* TestClock.withLive(
+          Effect.result(storage.setIfGenerationMatch("document.txt", "blocked", "0"))
+        );
 
-        assert.strictEqual(yield* storage.get("document.txt"), "recovered");
-        assert.isFalse(yield* fs.exists(lockPath));
+        assert(result.pipe(Result.isFailure));
+        const failure = result.pipe(Result.getFailure);
+        assert(failure.pipe(O.isSome));
+        if (O.isNone(failure)) return yield* Effect.die("Expected a typed local lock timeout.");
+        assert.strictEqual(failure.value._tag, "Busy");
+        assert.isTrue(yield* fs.exists(lockPath));
       })
     );
   });
