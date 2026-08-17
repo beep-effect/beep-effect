@@ -279,6 +279,67 @@ const convergeYeetWatchDispatch = (
 // registration backoff (MonitorChecks) grants the same gap.
 const YEET_WATCH_REGISTRATION_PATIENCE = 10;
 
+// Emit the terminal row and hand it back as the stream's return value.
+const emitWatchEnded = Effect.fn("Yeet.emitWatchEnded")(function* (
+  snapshot: YeetWatchSnapshot,
+  reason: YeetWatchEndReason
+) {
+  const ended = YeetWatchEnded.make({
+    at: yield* isoNow,
+    failing: countYeetWatchFailures(snapshot),
+    headSha: snapshot.headSha,
+    reason,
+  });
+  yield* emitWatchEvent(ended);
+  return ended;
+});
+
+// A zero-check OPEN snapshot inside the registration window is not a verdict:
+// gh answers "no checks reported" for seconds after a push, and believing it
+// would end the watch green while the wave's checks are about to run.
+// Merged/closed endings pass through regardless.
+const watchTickEnd = (snapshot: YeetWatchSnapshot, emptyPolls: number): O.Option<YeetWatchEndReason> =>
+  O.filter(
+    yeetWatchEndReason(snapshot),
+    (reason) =>
+      !(
+        YeetWatchEndReason.is["all-terminal"](reason) &&
+        A.isReadonlyArrayEmpty(snapshot.checks) &&
+        emptyPolls <= YEET_WATCH_REGISTRATION_PATIENCE
+      )
+  );
+
+// One post-sleep tick: poll, emit the diff, supersede on a head change, and
+// converge the inbox. `None` means the poll itself failed and the stream must
+// end as a typed poll-error.
+const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
+  context: RepoRunContext,
+  prev: YeetWatchSnapshot,
+  emptyPolls: number
+) {
+  const polled = yield* collectYeetWatchSnapshot(context).pipe(
+    Effect.map(O.some),
+    Effect.catch((error) =>
+      Console.error(`[yeet] watch poll failed: ${error.message}`).pipe(Effect.as(O.none<YeetWatchSnapshot>()))
+    )
+  );
+  if (O.isNone(polled)) {
+    return O.none<{ readonly emptyPolls: number; readonly snapshot: YeetWatchSnapshot }>();
+  }
+  const next = polled.value;
+  const observedAt = yield* isoNow;
+  const events = diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: observedAt, next, prev }));
+  yield* Effect.forEach(events, emitWatchEvent, { discard: true });
+  if (next.headSha !== prev.headSha) {
+    yield* supersedeYeetDispatchState(context.repoRoot, next.headSha, next.prNumber, observedAt);
+  }
+  yield* convergeYeetWatchDispatch(context, next, observedAt);
+  return O.some({
+    emptyPolls: A.isReadonlyArrayEmpty(next.checks) ? emptyPolls + 1 : 0,
+    snapshot: next,
+  });
+});
+
 /**
  * Poll the pull request and stream one NDJSON row per state transition.
  *
@@ -362,59 +423,22 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
   let emptyPolls = A.isReadonlyArrayEmpty(current.checks) ? 1 : 0;
 
   while (true) {
-    const end = yeetWatchEndReason(current);
-    // A zero-check OPEN snapshot inside the registration window is not a
-    // verdict: gh answers "no checks reported" for seconds after a push, and
-    // believing it would end the watch green while the wave's checks are
-    // about to run. Merged/closed endings pass through regardless.
-    const awaitingRegistration =
-      O.isSome(end) &&
-      YeetWatchEndReason.is["all-terminal"](end.value) &&
-      A.isReadonlyArrayEmpty(current.checks) &&
-      emptyPolls <= YEET_WATCH_REGISTRATION_PATIENCE;
-    if (O.isSome(end) && !awaitingRegistration) {
-      const ended = YeetWatchEnded.make({
-        at: yield* isoNow,
-        failing: countYeetWatchFailures(current),
-        headSha: current.headSha,
-        reason: end.value,
-      });
-      yield* emitWatchEvent(ended);
-      return ended;
+    const end = watchTickEnd(current, emptyPolls);
+    if (O.isSome(end)) {
+      return yield* emitWatchEnded(current, end.value);
     }
-    if (awaitingRegistration) {
+    if (A.isReadonlyArrayEmpty(current.checks)) {
       yield* Console.error(
         `[yeet] no checks registered for head ${Str.slice(0, 7)(current.headSha)} yet (${emptyPolls}/${YEET_WATCH_REGISTRATION_PATIENCE}); continuing to poll.`
       );
     }
-
     yield* Effect.sleep(Duration.millis(config.intervalMillis));
-    const polled = yield* collectYeetWatchSnapshot(context).pipe(
-      Effect.map(O.some),
-      Effect.catch((error) =>
-        Console.error(`[yeet] watch poll failed: ${error.message}`).pipe(Effect.as(O.none<YeetWatchSnapshot>()))
-      )
-    );
-    if (O.isNone(polled)) {
-      const ended = YeetWatchEnded.make({
-        at: yield* isoNow,
-        failing: countYeetWatchFailures(current),
-        headSha: current.headSha,
-        reason: "poll-error",
-      });
-      yield* emitWatchEvent(ended);
-      return ended;
+    const advanced = yield* advanceYeetWatchTick(context, current, emptyPolls);
+    if (O.isNone(advanced)) {
+      return yield* emitWatchEnded(current, YeetWatchEndReason.Enum["poll-error"]);
     }
-    const next = polled.value;
-    const observedAt = yield* isoNow;
-    const events = diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: observedAt, next, prev: current }));
-    yield* Effect.forEach(events, emitWatchEvent, { discard: true });
-    if (next.headSha !== current.headSha) {
-      yield* supersedeYeetDispatchState(context.repoRoot, next.headSha, next.prNumber, observedAt);
-    }
-    yield* convergeYeetWatchDispatch(context, next, observedAt);
-    emptyPolls = A.isReadonlyArrayEmpty(next.checks) ? emptyPolls + 1 : 0;
-    current = next;
+    current = advanced.value.snapshot;
+    emptyPolls = advanced.value.emptyPolls;
   }
 });
 
