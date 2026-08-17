@@ -15,6 +15,7 @@ import {
 } from "@beep/law-practice-server";
 import * as OptionUtils from "@beep/utils/Option";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makePracticeKgDuckDbLayer } from "./DuckDb.ts";
@@ -47,7 +48,12 @@ export class PracticeKgHostError extends S.TaggedError<PracticeKgHostError>($I`P
   $I.annote("PracticeKgHostError", {
     description: "Sanitized startup failure while resolving a portable practice KG bundle.",
   })
-) {}
+) {
+  static readonly newCause: {
+    (cause: unknown, message: string): PracticeKgHostError;
+    (message: string): (cause: unknown) => PracticeKgHostError;
+  } = dual(2, (cause: unknown, message: string): PracticeKgHostError => PracticeKgHostError.make({ cause, message }));
+}
 
 /**
  * Read and validate the bundle manifest before either database is opened.
@@ -124,7 +130,10 @@ export const makePracticeKgHostLayer = (context: PracticeKgBundleContext) =>
         Layer.succeed(PracticeKgBundle, PracticeKgBundle.of(context))
       );
       return makePracticeKgServerLayer(
-        PracticeKgMcpServerConfig.make({ name: "beep-practice-kg", version: "0.0.0" })
+        PracticeKgMcpServerConfig.make({
+          name: "beep-practice-kg",
+          version: "0.0.0",
+        })
       ).pipe(Layer.provide(resources));
     })
   );

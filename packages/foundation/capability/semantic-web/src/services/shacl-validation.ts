@@ -9,9 +9,8 @@ import { $SemanticWebId } from "@beep/identity/packages";
 import { Dataset, NamedNode, ObjectTerm } from "@beep/rdf/Rdf";
 import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Context } from "effect";
+import { Context, Tuple } from "effect";
 import * as S from "effect/Schema";
-import * as Tuple from "effect/Tuple";
 import type { Effect } from "effect";
 
 const $I = $SemanticWebId.create("services/shacl-validation");
