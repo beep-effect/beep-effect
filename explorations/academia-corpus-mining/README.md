@@ -1,4 +1,4 @@
-"# Academia Corpus Mining
+# Academia Corpus Mining
 
 ## Status
 
