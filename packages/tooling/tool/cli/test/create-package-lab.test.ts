@@ -5,6 +5,7 @@ import {
   LAB_EXPORTS_END_MARKER,
   LAB_EXPORTS_START_MARKER,
 } from "@beep/repo-cli/commands/CreatePackage/internal/LabIdentitySegment";
+import * as RetiredNameRegistry from "@beep/repo-cli/commands/CreatePackage/internal/RetiredNameRegistry";
 import {
   decodeLabManifestJson,
   LAB_MANIFEST_FILENAME,
@@ -774,6 +775,33 @@ describe("create-package --lab", { concurrent: false }, () => {
             expect(registryAfterCreate).not.toContain("@beep/probe");
             const createOutput = A.join(A.map(yield* TestConsole.logLines, String), "\n");
             expect(createOutput).toContain(`${RETIRED_REGISTRY_PATH}: removed the retired entry for "@beep/probe"`);
+          })
+        )
+      ),
+    CreatePackageLabTestTimeoutMs
+  );
+
+  it(
+    "leaves the retired registry untouched when the name is absent",
+    () =>
+      Effect.runPromise(
+        withLabsFixture(LabsRootConfig, ({ fs, path, rootDir }) =>
+          Effect.gen(function* () {
+            // The no-op path is unreachable through the command surface —
+            // create-package only calls the writer once it has established the
+            // name IS retired — so it is exercised directly. Absent names must
+            // not rewrite the file, or every sanctioned reuse would churn the
+            // registry's formatting for unrelated entries.
+            const registryPath = path.join(rootDir, RETIRED_REGISTRY_PATH);
+            yield* writeJsonFile(registryPath, {
+              packages: [{ name: "@beep/other", rationale: "Retired to keep historical changesets resolvable." }],
+            });
+            const before = yield* fs.readFileString(registryPath);
+
+            const removed = yield* RetiredNameRegistry.removeRetiredPackageName(rootDir, "@beep/absent");
+
+            expect(removed).toBe(false);
+            expect(yield* fs.readFileString(registryPath)).toBe(before);
           })
         )
       ),
