@@ -1,0 +1,15 @@
+{
+  "actor": "fixture",
+  "at": "2026-08-17T00:03:00.000Z",
+  "body": {
+    "ordinal": 2,
+    "stage": "align",
+    "type": "stage-entered"
+  },
+  "expectedRevision": 3,
+  "packet": "golden-linear",
+  "parent": "a73044b02e0cce8100ddc670f989ece8bdb9922c75bcdaf0d3b337f9acc4cdf1",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 4
+}

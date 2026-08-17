@@ -1921,6 +1921,9 @@
       ],
       "@beep/shared-domain/values/LocalDate": [
         "./packages/shared/domain/src/values/LocalDate/index.ts"
+      ],
+      "@beep/repo-cli/commands/Explore": [
+        "./packages/tooling/tool/cli/src/commands/Explore/index.ts"
       ]
     }
   }

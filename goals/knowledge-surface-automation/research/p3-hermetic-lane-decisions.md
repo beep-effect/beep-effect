@@ -61,12 +61,22 @@ segments), so location-depth behavior is exercised in the live spawn path rather
 assumed. It is hygiene, not a security boundary, and stays out of the archive-contract
 changes to keep each PR single-subject.
 
-## Measured residual, recorded not fixed
+## Measured residual, guarded fail-closed
 
 Clone-local `.git/info/attributes` outranks every attribute layer and **no git
 invocation can disable it** — measured against git 2.55.0: `core.attributesFile=/dev/null`,
 `--attr-source=HEAD`, `GIT_ATTR_SOURCE`, `-c attr.tree=HEAD`, and `GIT_ATTR_NOSYSTEM`
 all fail to suppress it (full matrix in the design report's addendum). It is absent
-from fresh clones and CI. If it must be guarded, the shape is: stat
-`git rev-parse --git-path info/attributes` before archiving and fail with a remediation
-naming the file. Whether to add that guard is an open decision, not ratified here.
+from fresh clones and CI.
+
+**Ratified 2026-08-17 (follow-up grill, same session as H1–H3):** the guard ships,
+fail-closed on a non-empty file. Every tree-materializing knowledge operation stats
+the path from `git rev-parse --git-path info/attributes` (so worktrees reach the
+shared common-dir file) before writing a hermetic archive and fails with the typed
+`KnowledgeCloneAttributesError`, naming the resolved path and carrying the
+move-or-delete remediation inline. An empty file passes; an absent file passes, so
+the guard is vacuously green in CI. A stat failure other than not-found also fails
+closed as operational — a file that cannot be verified cannot be proven inert. The
+standing proof is the fixture-clone test alongside the hostile-profile differentials
+(`test/step-git-exec.test.ts`): absent passes, empty passes, non-empty raises the
+typed failure, and a worktree resolves to — and fails on — the main clone's file.

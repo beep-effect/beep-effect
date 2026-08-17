@@ -18,6 +18,7 @@ import { createPackageCommand } from "./CreatePackage/index.ts";
 import { deletePackageCommand } from "./DeletePackage/index.ts";
 import { docgenCommand } from "./Docgen/index.ts";
 import { docsCommand } from "./Docs/index.ts";
+import { exploreCommand } from "./Explore/index.ts";
 import { fallowCommand } from "./Fallow/index.ts";
 import { filesCommand } from "./Files/index.ts";
 import { goalsCommand } from "./Goals/index.ts";
@@ -75,6 +76,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     corpusCommand,
     docgenCommand,
     docsCommand,
+    exploreCommand,
     fallowCommand,
     filesCommand,
     goalsCommand as Command.Command<"goals", {}, {}, never, never>,

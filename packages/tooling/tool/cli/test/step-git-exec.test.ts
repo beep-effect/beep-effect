@@ -1,3 +1,4 @@
+import { KnowledgeCloneAttributesError, KnowledgeOperationalError } from "@beep/repo-cli/commands/Knowledge";
 import {
   BoundedOutput,
   boundedChunkReducer,
@@ -14,6 +15,7 @@ import {
   gitArchiveEnv,
   gitLinesFromOutput,
   gitPathListFromNulOutput,
+  guardCloneLocalGitAttributes,
   isSafeOriginBranch,
   originBranchFromBase,
   safeOriginBranchFromBase,
@@ -28,6 +30,7 @@ import { Effect, FileSystem, Layer, Path, Ref, Sink, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
+import type { GitCommandErrorAdapter } from "@beep/repo-cli/test/RepoRun";
 
 const encode = (value: string): Uint8Array => new TextEncoder().encode(value);
 
@@ -334,6 +337,92 @@ layer(NodeServices.layer)("GitExec archive hostile-profile canonicality", (it) =
         const umaskWitness = yield* archiveBytes("umask-witness.tar", unpinnedArgs, envWith(umaskEnv));
         expect(umaskPinned).toStrictEqual(canonical);
         expect(umaskWitness).not.toStrictEqual(canonical);
+      });
+
+      yield* body.pipe(Effect.ensuring(fs.remove(tmpDir, { recursive: true }).pipe(Effect.ignore)));
+    })
+  );
+});
+
+// The clone-local info/attributes file is the one attribute layer no git invocation can disable
+// (research/p3-hermetic-lane-decisions.md "Measured residual"): the guard must pass while the file
+// is absent or empty, fail closed with the resolved path once it is non-empty, and resolve through
+// `rev-parse --git-path` so a worktree reaches the shared common-dir file.
+layer(NodeServices.layer)("GitExec clone-local attributes guard", (it) => {
+  const runGit = (cwd: string, args: ReadonlyArray<string>, env: Record<string, string>): void => {
+    const result = Bun.spawnSync(["git", ...args], { cwd, env, stderr: "pipe", stdout: "pipe" });
+    if (result.exitCode !== 0) {
+      throw new Error(`git ${A.join(args, " ")} failed: ${result.stderr.toString()}`);
+    }
+  };
+
+  it.effect(
+    "passes on absent and empty info/attributes, fails closed on non-empty, and follows worktrees to the common dir",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      // realPath keeps the joined expectation byte-identical to what git records for the common
+      // dir even when the temp root contains symlinked segments.
+      const tmpDir = yield* fs.realPath(yield* fs.makeTempDirectory());
+
+      const body = Effect.gen(function* () {
+        const repoDir = path.join(tmpDir, "repo");
+        const home = path.join(tmpDir, "home");
+        yield* fs.makeDirectory(repoDir, { recursive: true });
+        yield* fs.makeDirectory(home, { recursive: true });
+        const env = {
+          PATH: Bun.env.PATH ?? "",
+          HOME: home,
+          GIT_CONFIG_GLOBAL: "/dev/null",
+          GIT_CONFIG_NOSYSTEM: "1",
+        };
+        yield* Effect.sync(() => {
+          runGit(repoDir, ["init", "-b", "main"], env);
+          runGit(repoDir, ["config", "user.email", "guard@example.test"], env);
+          runGit(repoDir, ["config", "user.name", "Guard Test"], env);
+        });
+
+        const adapter: GitCommandErrorAdapter<KnowledgeOperationalError> = {
+          onSpawnFailure: (commandLine) => (cause) =>
+            KnowledgeOperationalError.make({ message: `spawn ${commandLine}`, cause }),
+          onNonZeroExit: ({ commandLine, exitCode }) =>
+            KnowledgeOperationalError.make({ message: `${commandLine} exit ${exitCode}` }),
+          onTruncated: O.none(),
+        };
+        const guardAt = (cwd: string) =>
+          guardCloneLocalGitAttributes(cwd, adapter, KnowledgeCloneAttributesError.at, (attributesPath) =>
+            KnowledgeOperationalError.new(`stat failed for "${attributesPath}".`)
+          );
+        const attributesPath = path.join(repoDir, ".git", "info", "attributes");
+
+        yield* guardAt(repoDir);
+        yield* fs.writeFileString(attributesPath, "");
+        yield* guardAt(repoDir);
+
+        yield* fs.writeFileString(attributesPath, "*.md eol=crlf\n");
+        const failure = yield* Effect.flip(guardAt(repoDir));
+        if (failure._tag !== "KnowledgeCloneAttributesError") {
+          throw new Error(`expected KnowledgeCloneAttributesError, got ${failure._tag}`);
+        }
+        expect(failure.attributesPath).toBe(attributesPath);
+        expect(failure.message).toContain(attributesPath);
+
+        const worktreeDir = path.join(tmpDir, "wt");
+        yield* fs.writeFileString(path.join(repoDir, "seed.txt"), "seed\n");
+        yield* Effect.sync(() => {
+          runGit(repoDir, ["add", "."], env);
+          runGit(repoDir, ["commit", "-m", "seed"], env);
+          runGit(repoDir, ["worktree", "add", worktreeDir], env);
+        });
+        const worktreeFailure = yield* Effect.flip(guardAt(worktreeDir));
+        if (worktreeFailure._tag !== "KnowledgeCloneAttributesError") {
+          throw new Error(`expected KnowledgeCloneAttributesError, got ${worktreeFailure._tag}`);
+        }
+        expect(worktreeFailure.attributesPath).toBe(attributesPath);
+
+        yield* fs.remove(attributesPath);
+        yield* guardAt(worktreeDir);
+        yield* guardAt(repoDir);
       });
 
       yield* body.pipe(Effect.ensuring(fs.remove(tmpDir, { recursive: true }).pipe(Effect.ignore)));

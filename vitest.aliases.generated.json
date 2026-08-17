@@ -1751,5 +1751,8 @@
   ],
   "@beep/repo-cli/test/Labs": [
     "./packages/tooling/tool/cli/src/test/Labs.test-kit.ts"
+  ],
+  "@beep/repo-cli/commands/Explore": [
+    "./packages/tooling/tool/cli/src/commands/Explore/index.ts"
   ]
 }

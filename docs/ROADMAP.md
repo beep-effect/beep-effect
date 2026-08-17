@@ -148,7 +148,7 @@ and [`ai-metrics-stack`](../goals/ai-metrics-stack/README.md) are all
 completed-retained (2026-08-17 re-eval). The freed slot goes to:
 
 - [`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
-  (1/6) — the packet system's event fold, guarded writers, and derived
+  (3/6) — the packet system's event fold, guarded writers, and derived
   projections. It is the instrument that makes the *next* roadmap re-eval
   mechanical (derived pulse: what can start, what is blocked, what awaits the
   operator), scaffolded 2026-08-17 from the ratified packet-system-redesign MAP

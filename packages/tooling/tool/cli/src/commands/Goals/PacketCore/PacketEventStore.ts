@@ -1,0 +1,325 @@
+/**
+ * Per-event CAS store for packet streams (`ops/events/`).
+ *
+ * **Details**
+ *
+ * A packet opts into event sourcing by carrying an `ops/events/` directory;
+ * each event is one immutable file named `<seq>-<type>-<digest>.json` (D1).
+ * Reads are advisory — unreadable, invalid, or tampered files surface as
+ * chain issues, never failures — while appends are guarded: a compare-and-set
+ * against the folded revision, refused outright on integrity issues or an
+ * unresolved fork. Digests are computed over the canonical compact encoding
+ * of the event, not the raw file bytes, so reformatting a file does not
+ * change its identity while any content edit does.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+import { $RepoCliId } from "@beep/identity/packages";
+import { A, O, pipe, Str, thunkFalse } from "@beep/utils";
+import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
+import * as S from "effect/Schema";
+import { PacketCasConflictError, PacketStreamError } from "./PacketCore.errors.ts";
+import { PacketChainIssue, PacketEvent, PacketRoot, PacketSlug, StoredPacketEvent } from "./PacketCore.schemas.ts";
+import {
+  packetEventDigest,
+  packetEventFileName,
+  parsePacketEventFileName,
+  renderPacketEventFile,
+} from "./PacketDigest.ts";
+import { foldPacketEvents, upcastPacketEventJson } from "./PacketFold.ts";
+import type { PacketEventId } from "./PacketCore.schemas.ts";
+
+const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketEventStore");
+
+/**
+ * Directory segments of a packet's event stream below its packet path.
+ *
+ * **Example** (Read the stream segments)
+ *
+ * ```ts
+ * import { PACKET_EVENTS_SEGMENTS } from "@beep/repo-cli/test/Goals"
+ *
+ * console.log(PACKET_EVENTS_SEGMENTS) // ["ops", "events"]
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const PACKET_EVENTS_SEGMENTS = ["ops", "events"] as const;
+
+/**
+ * Identity of one packet stream on disk.
+ *
+ * **Example** (Construct a stream locator)
+ *
+ * ```ts
+ * import { PacketStreamLocator } from "@beep/repo-cli/test/Goals"
+ *
+ * const locator = PacketStreamLocator.make({
+ *   packet: "packet-control-plane-core",
+ *   root: "goals",
+ *   packetPath: "goals/packet-control-plane-core",
+ * })
+ * console.log(locator.root) // "goals"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PacketStreamLocator extends S.Class<PacketStreamLocator>($I`PacketStreamLocator`)(
+  {
+    packet: PacketSlug,
+    root: PacketRoot,
+    packetPath: S.String,
+  },
+  $I.annote("PacketStreamLocator", {
+    description: "Identity of one packet stream on disk (slug, root, packet directory path).",
+  })
+) {}
+
+/**
+ * Result of reading one packet stream: verified events plus chain issues.
+ *
+ * **Example** (Construct an empty listing)
+ *
+ * ```ts
+ * import { PacketStreamListing } from "@beep/repo-cli/test/Goals"
+ *
+ * const listing = PacketStreamListing.make({ events: [], issues: [] })
+ * console.log(listing.events.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PacketStreamListing extends S.Class<PacketStreamListing>($I`PacketStreamListing`)(
+  {
+    events: S.Array(StoredPacketEvent),
+    issues: S.Array(PacketChainIssue),
+  },
+  $I.annote("PacketStreamListing", {
+    description: "Verified events plus chain issues from one packet-stream read.",
+  })
+) {}
+
+/**
+ * Contract of the per-event CAS store.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface PacketEventStoreShape {
+  /**
+   * Append one event with compare-and-set semantics against the folded
+   * revision. Refused on integrity issues, forks, or a moved tip.
+   *
+   * @since 0.0.0
+   */
+  readonly append: (
+    locator: PacketStreamLocator,
+    event: PacketEvent
+  ) => Effect.Effect<StoredPacketEvent, PacketCasConflictError | PacketStreamError>;
+  /**
+   * Whether the packet has opted into event sourcing (`ops/events/` exists).
+   *
+   * @since 0.0.0
+   */
+  readonly hasStream: (packetPath: string) => Effect.Effect<boolean>;
+
+  /**
+   * Read and verify every event file in the stream. Never fails: unreadable
+   * or invalid files become chain issues.
+   *
+   * @since 0.0.0
+   */
+  readonly list: (locator: PacketStreamLocator) => Effect.Effect<PacketStreamListing>;
+}
+
+/**
+ * Service tag for the per-event CAS store.
+ *
+ * **Example** (Yield the store inside an Effect)
+ *
+ * ```ts
+ * import { PacketEventStore } from "@beep/repo-cli/test/Goals"
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.map(PacketEventStore, (store) => typeof store.list)
+ * console.log(program.pipe !== undefined) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class PacketEventStore extends Context.Service<PacketEventStore, PacketEventStoreShape>()(
+  $I`PacketEventStore`
+) {}
+
+const decodeJsonUnknown = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodePacketEventEffect = S.decodeUnknownEffect(PacketEvent);
+
+const issue = (kind: PacketChainIssue["kind"], fileName: string, detail: string): PacketChainIssue =>
+  PacketChainIssue.make({ kind, fileName, detail });
+
+type ReadEventOutcome = {
+  readonly stored: O.Option<StoredPacketEvent>;
+  readonly issues: ReadonlyArray<PacketChainIssue>;
+};
+
+const readOutcome = (stored: StoredPacketEvent): ReadEventOutcome => ({
+  stored: O.some(stored),
+  issues: A.empty<PacketChainIssue>(),
+});
+const issueOutcome = (item: PacketChainIssue): ReadEventOutcome => ({ stored: O.none(), issues: A.of(item) });
+
+const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  const eventsDir = (packetPath: string): string => path.join(packetPath, ...PACKET_EVENTS_SEGMENTS);
+
+  const readEventFile: (directory: string, fileName: string) => Effect.Effect<ReadEventOutcome> = Effect.fn(
+    "PacketEventStore.readEventFile"
+  )(function* (directory: string, fileName: string) {
+    const parts = parsePacketEventFileName(fileName);
+    if (O.isNone(parts)) {
+      return issueOutcome(
+        issue("file-name-mismatch", fileName, "file name is not a <seq>-<type>-<digest>.json CAS name.")
+      );
+    }
+    const text = yield* fs
+      .readFileString(path.join(directory, fileName))
+      .pipe(Effect.map(O.some), Effect.orElseSucceed(O.none<string>));
+    if (O.isNone(text)) {
+      return issueOutcome(issue("event-unreadable", fileName, "event file could not be read."));
+    }
+    const decoded = yield* decodeJsonUnknown(text.value).pipe(
+      Effect.map((raw) => O.some(upcastPacketEventJson(raw))),
+      Effect.orElseSucceed(O.none<unknown>)
+    );
+    if (O.isNone(decoded)) {
+      return issueOutcome(issue("event-invalid", fileName, "event file is not valid JSON."));
+    }
+    const event = yield* decodePacketEventEffect(decoded.value).pipe(
+      Effect.map(O.some),
+      Effect.orElseSucceed(O.none<PacketEvent>)
+    );
+    if (O.isNone(event)) {
+      return issueOutcome(issue("event-invalid", fileName, "event file does not decode as PacketEvent."));
+    }
+    const digest = yield* packetEventDigest(event.value).pipe(
+      Effect.map(O.some),
+      Effect.orElseSucceed(O.none<PacketEventId>)
+    );
+    if (O.isNone(digest)) {
+      return issueOutcome(issue("event-invalid", fileName, "event could not be re-encoded for digest verification."));
+    }
+    if (digest.value !== parts.value.id) {
+      return issueOutcome(
+        issue("digest-mismatch", fileName, `recomputed digest ${digest.value} disagrees with the file name.`)
+      );
+    }
+    if (parts.value.seq !== event.value.seq || parts.value.type !== event.value.body.type) {
+      return issueOutcome(issue("file-name-mismatch", fileName, "file-name seq/type disagree with the event content."));
+    }
+    return readOutcome(StoredPacketEvent.make({ id: digest.value, fileName, event: event.value }));
+  });
+
+  const hasStream = Effect.fn("PacketEventStore.hasStream")(function* (packetPath: string) {
+    return yield* fs.exists(eventsDir(packetPath)).pipe(Effect.orElseSucceed(thunkFalse));
+  });
+
+  const list = Effect.fn("PacketEventStore.list")(function* (locator: PacketStreamLocator) {
+    const directory = eventsDir(locator.packetPath);
+    const entries = yield* fs.readDirectory(directory).pipe(Effect.orElseSucceed(A.empty<string>));
+    const fileNames = pipe(entries, A.filter(Str.endsWith(".json")), A.sort(Order.String));
+    let events = A.empty<StoredPacketEvent>();
+    let issues = A.empty<PacketChainIssue>();
+    for (const fileName of fileNames) {
+      const outcome = yield* readEventFile(directory, fileName);
+      events = pipe(outcome.stored, O.match({ onNone: () => events, onSome: (stored) => A.append(events, stored) }));
+      issues = A.appendAll(issues, outcome.issues);
+    }
+    return PacketStreamListing.make({ events, issues });
+  });
+
+  const append = Effect.fn("PacketEventStore.append")(function* (locator: PacketStreamLocator, event: PacketEvent) {
+    const directory = eventsDir(locator.packetPath);
+    const present = yield* hasStream(locator.packetPath);
+    if (!present) {
+      return yield* PacketStreamError.new(
+        locator.packet,
+        `"${directory}" does not exist; a packet opts into event sourcing by carrying an ops/events/ directory.`
+      );
+    }
+    const listing = yield* list(locator);
+    if (A.isReadonlyArrayNonEmpty(listing.issues)) {
+      return yield* PacketStreamError.new(
+        locator.packet,
+        `stream has ${A.length(listing.issues)} integrity issue(s); repair them before writing (first: ${pipe(
+          A.head(listing.issues),
+          O.match({ onNone: () => "unknown", onSome: (item) => `${item.fileName} ${item.kind}` })
+        )}).`
+      );
+    }
+    const derived = foldPacketEvents({ packet: locator.packet, root: locator.root, events: listing.events });
+    if (A.isReadonlyArrayNonEmpty(derived.forks)) {
+      return yield* PacketStreamError.new(
+        locator.packet,
+        "stream is forked (two children of one parent); repair the fork before writing."
+      );
+    }
+    if (event.expectedRevision !== derived.revision) {
+      return yield* PacketCasConflictError.make({
+        packet: locator.packet,
+        expectedRevision: event.expectedRevision,
+        actualRevision: derived.revision,
+        message: `stream is at revision ${derived.revision}, not ${event.expectedRevision}; re-plan the transition.`,
+      });
+    }
+    const tipId = pipe(
+      O.fromUndefinedOr(derived.tip),
+      O.map((tip) => tip.id)
+    );
+    if (O.getOrUndefined(tipId) !== event.parent) {
+      return yield* PacketCasConflictError.make({
+        packet: locator.packet,
+        expectedRevision: event.expectedRevision,
+        actualRevision: derived.revision,
+        message: "event parent digest does not match the current tip; re-plan the transition.",
+      });
+    }
+    const digest = yield* packetEventDigest(event).pipe(
+      Effect.mapError((error) => PacketStreamError.new(locator.packet, `event could not be encoded: ${error.message}`))
+    );
+    const content = yield* renderPacketEventFile(event).pipe(
+      Effect.mapError((error) => PacketStreamError.new(locator.packet, `event could not be rendered: ${error.message}`))
+    );
+    const fileName = packetEventFileName(event, digest);
+    yield* fs
+      .writeFileString(path.join(directory, fileName), content)
+      .pipe(Effect.mapError((error) => PacketStreamError.new(locator.packet, `event write failed: ${String(error)}`)));
+    return StoredPacketEvent.make({ id: digest, fileName, event });
+  });
+
+  return PacketEventStore.of({ hasStream, list, append });
+});
+
+/**
+ * Live layer for {@link PacketEventStore} over the platform filesystem.
+ *
+ * **Example** (Reference the live store layer)
+ *
+ * ```ts
+ * import { PacketEventStoreLive } from "@beep/repo-cli/test/Goals"
+ *
+ * console.log(typeof PacketEventStoreLive) // "object"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const PacketEventStoreLive: Layer.Layer<PacketEventStore, never, FileSystem.FileSystem | Path.Path> =
+  Layer.effect(PacketEventStore, makePacketEventStore());

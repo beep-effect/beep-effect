@@ -1,0 +1,23 @@
+{
+  "derived": {
+    "forks": [],
+    "furthestOrdinal": 4,
+    "furthestStage": "decompose",
+    "issues": [],
+    "packet": "golden-linear",
+    "resumeStage": "align",
+    "revision": 5,
+    "root": "goals",
+    "status": "paused",
+    "tip": {
+      "id": "3e504c4d293fc7e27c30e64f82d98b5a6d90c0d3f6dc7d433e387a7c0c514056",
+      "seq": 5
+    }
+  },
+  "projectorVersion": 1,
+  "schemaVersion": "packet-trace/v1",
+  "sourceTip": {
+    "id": "3e504c4d293fc7e27c30e64f82d98b5a6d90c0d3f6dc7d433e387a7c0c514056",
+    "seq": 5
+  }
+}

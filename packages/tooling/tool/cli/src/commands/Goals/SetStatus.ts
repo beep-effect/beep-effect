@@ -5,8 +5,17 @@
  * `lifecycle` when present, `initiative.updated`), rewrites the README
  * `Lifecycle:` line, and regenerates `goals/INDEX.md` in one operation,
  * refusing with typed errors on unknown slugs/statuses or READMEs without a
- * recognizable status line. `--migrate` runs the mechanical census-locked
- * migration over every packet (dry-run by default, `--write` to apply).
+ * recognizable status line. Packets that opted into event sourcing (an
+ * `ops/events/` directory exists) additionally flow the transition through
+ * the guarded packet-core writer: `--preview` prints the fold-backed
+ * transition plan without writing, and a real write appends the CAS events
+ * (seeding a genesis event on the first transition) and regenerates the
+ * derived `ops/trace.json` projection before the manifest edit — refusing
+ * before any manifest edit on a moved tip, fork, or integrity issue (an
+ * interrupted multi-event append leaves only valid chain events behind, never
+ * a projection or manifest change). `--migrate` runs the
+ * mechanical census-locked migration over every packet (dry-run by default,
+ * `--write` to apply).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -18,18 +27,36 @@ import * as R from "effect/Record";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { applyJsoncModification } from "../../internal/cli/Jsonc.ts";
+import { optionalProp } from "../../internal/cli/OptionRecord.ts";
 import {
   GoalManifestInvalidError,
   GoalPacketNotFoundError,
   GoalReadmeStatusLineError,
   GoalStatusInputError,
 } from "./Goals.errors.ts";
-import { decodeGoalManifest, GoalStatus, isGoalStatus } from "./Goals.schemas.ts";
-import { listGoalPackets, parseGoalManifestText, rewriteReadmeLifecycleToken } from "./Inventory.ts";
+import { decodeGoalManifest, GoalPhaseStatus, GoalStatus, isGoalStatus } from "./Goals.schemas.ts";
+import {
+  goalManifestPhases,
+  isJsonRecord,
+  listGoalPackets,
+  parseGoalManifestText,
+  rewriteReadmeLifecycleToken,
+} from "./Inventory.ts";
 import { planGoalPacketMigration } from "./Migration.ts";
+import { PacketStreamError } from "./PacketCore/PacketCore.errors.ts";
+import { isPacketSlug, isPacketStage } from "./PacketCore/PacketCore.schemas.ts";
+import { PacketEventStore, PacketStreamLocator } from "./PacketCore/PacketEventStore.ts";
+import {
+  PacketCoreLive,
+  PacketTransitionRequest,
+  PacketTransitionWriter,
+} from "./PacketCore/PacketTransitionWriter.ts";
 import { PORTFOLIO_INDEX_PATH, writePortfolioIndex } from "./PortfolioIndex.ts";
+import type { GoalManifest, GoalPhase } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 import type { GoalPacketMigration } from "./Migration.ts";
+import type { PacketStage } from "./PacketCore/PacketCore.schemas.ts";
+import type { PacketTransitionPlan } from "./PacketCore/PacketTransitionWriter.ts";
 
 const STATUS_DOMAIN = A.join(GoalStatus.Options, " | ");
 
@@ -87,8 +114,93 @@ const runGoalsMigration = Effect.fn("Goals.runGoalsMigration")(function* (option
   );
 });
 
-const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (slug: string, status: GoalStatus) {
-  const fs = yield* FileSystem.FileSystem;
+const stageTokenOf = (phase: GoalPhase, index: number): PacketStage => {
+  const id = phase.id;
+  return id !== undefined && isPacketStage(id) ? id : `phase-${index + 1}`;
+};
+
+// The packet-core fold is stage-vocabulary-agnostic; the goals writer owns
+// mapping manifest phases onto a genesis stage/ordinal pair (D3).
+const goalStagePosition = (
+  manifest: GoalManifest
+): O.Option<{ readonly stage: PacketStage; readonly ordinal: number }> => {
+  const phases = goalManifestPhases(manifest);
+  let inProgress = O.none<number>();
+  let complete = O.none<number>();
+  let index = 0;
+  for (const phase of phases) {
+    if (GoalPhaseStatus.is["in-progress"](phase.status)) {
+      inProgress = O.some(index);
+    }
+    if (GoalPhaseStatus.is.complete(phase.status)) {
+      complete = O.some(index);
+    }
+    index += 1;
+  }
+  const chosen = pipe(
+    inProgress,
+    O.orElse(() => complete),
+    O.orElse(() => (A.isReadonlyArrayNonEmpty(phases) ? O.some(0) : O.none<number>()))
+  );
+  return pipe(
+    chosen,
+    O.flatMap((position) =>
+      pipe(
+        A.get(phases, position),
+        O.map((phase) => ({ stage: stageTokenOf(phase, position), ordinal: position }))
+      )
+    )
+  );
+};
+
+const shortTip = (id: string): string => pipe(id, Str.slice(0, 12));
+
+const previewEventLine = (event: PacketTransitionPlan["events"][number]): string => {
+  const body = event.body;
+  if (body.type === "status-set") {
+    return `would append ${event.seq} status-set: ${body.previous} -> ${body.status}`;
+  }
+  if (body.type === "packet-created") {
+    const stage = body.stage === undefined ? "" : ` stage=${body.stage}@${body.ordinal}`;
+    return `would append ${event.seq} packet-created: genesis status=${body.status}${stage}`;
+  }
+  return `would append ${event.seq} stage-entered: ${body.stage}@${body.ordinal}`;
+};
+
+const printTransitionPreview = Effect.fn("Goals.printTransitionPreview")(function* (
+  slug: string,
+  status: GoalStatus,
+  previous: string,
+  plan: O.Option<PacketTransitionPlan>
+) {
+  yield* Console.log(`[goals:set-status] preview ${slug}: ${previous} -> ${status}`);
+  if (O.isNone(plan)) {
+    yield* Console.log(
+      "[goals:set-status] stream: none (a packet opts in by creating ops/events/); a write edits the manifest, README Lifecycle line, and goals/INDEX.md."
+    );
+    yield* Console.log("[goals:set-status] preview only — nothing written.");
+    return;
+  }
+  const transition = plan.value;
+  const tipText = pipe(
+    O.fromUndefinedOr(transition.currentTip),
+    O.match({ onNone: () => "empty", onSome: (tip) => `${tip.seq}@${shortTip(tip.id)}` })
+  );
+  yield* Console.log(`[goals:set-status] stream: revision ${transition.currentRevision}, tip ${tipText}`);
+  for (const event of transition.events) {
+    yield* Console.log(`[goals:set-status] ${previewEventLine(event)}`);
+  }
+  const derived = O.fromUndefinedOr(transition.derivedAfter);
+  if (O.isSome(derived)) {
+    yield* Console.log(
+      `[goals:set-status] derived after: revision=${derived.value.revision} status=${derived.value.status ?? "—"} furthest=${derived.value.furthestStage ?? "—"} resume=${derived.value.resumeStage ?? "—"}`
+    );
+  }
+  yield* Console.log(`[goals:set-status] trace: ${transition.tracePath} (regenerated on write)`);
+  yield* Console.log("[goals:set-status] preview only — nothing written.");
+});
+
+const loadPacketSurfaces = Effect.fn("Goals.loadPacketSurfaces")(function* (slug: string, status: GoalStatus) {
   const records = yield* listGoalPackets();
   const record = yield* pipe(
     A.findFirst(records, (candidate) => candidate.slug === slug),
@@ -109,7 +221,7 @@ const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (slug: st
   if (O.isNone(parsed)) {
     return yield* GoalManifestInvalidError.new(slug, `"${record.manifestPath}" does not parse as JSON.`);
   }
-  yield* decodeGoalManifest(parsed.value).pipe(
+  const decoded = yield* decodeGoalManifest(parsed.value).pipe(
     Effect.mapError((issue) =>
       GoalManifestInvalidError.new(slug, `"${record.manifestPath}" does not decode as GoalManifest: ${issue.message}`)
     )
@@ -130,9 +242,70 @@ const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (slug: st
     );
   }
 
-  const manifest = parsed.value as Readonly<Record<string, unknown>>;
+  const manifest: Readonly<Record<string, unknown>> = isJsonRecord(parsed.value) ? parsed.value : {};
+  return { record, manifestText, manifest, decoded, rewrittenReadme: rewrittenReadme.value };
+});
+
+const planStreamTransition = Effect.fn("Goals.planStreamTransition")(function* (
+  slug: string,
+  status: GoalStatus,
+  decoded: GoalManifest,
+  record: GoalPacketRecord,
+  at: string
+) {
+  const store = yield* PacketEventStore;
+  const writer = yield* PacketTransitionWriter;
+  const streamPresent = yield* store.hasStream(record.packetPath);
+  if (!streamPresent) {
+    return O.none<PacketTransitionPlan>();
+  }
+  if (!isPacketSlug(slug)) {
+    return yield* PacketStreamError.new(
+      slug,
+      `directory name "${slug}" is not a valid packet slug for an event stream.`
+    );
+  }
+  const position = goalStagePosition(decoded);
+  const request = PacketTransitionRequest.make({
+    locator: PacketStreamLocator.make({ packet: slug, root: "goals", packetPath: record.packetPath }),
+    status,
+    previousStatus: decoded.initiative.status,
+    ...optionalProp(
+      "genesisStage",
+      O.map(position, (value) => value.stage)
+    ),
+    ...optionalProp(
+      "genesisOrdinal",
+      O.map(position, (value) => value.ordinal)
+    ),
+    actor: "operator",
+    at,
+  });
+  return O.some(yield* writer.plan(request));
+});
+
+const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (
+  slug: string,
+  status: GoalStatus,
+  preview: boolean
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const writer = yield* PacketTransitionWriter;
+  const { decoded, manifest, manifestText, record, rewrittenReadme } = yield* loadPacketSurfaces(slug, status);
   const now = yield* DateTime.now;
   const today = pipe(DateTime.formatIso(now), Str.slice(0, 10));
+  const plan = yield* planStreamTransition(slug, status, decoded, record, DateTime.formatIso(now));
+
+  if (preview) {
+    return yield* printTransitionPreview(slug, status, decoded.initiative.status, plan);
+  }
+
+  if (O.isSome(plan)) {
+    const outcome = yield* writer.commit(plan.value);
+    yield* Console.log(
+      `[goals:set-status] ${slug}: appended ${outcome.appended} event(s); regenerated ${outcome.tracePath}.`
+    );
+  }
 
   let nextManifest = applyJsoncModification({ content: manifestText, path: ["initiative", "status"], value: status });
   if (R.has(manifest, "lifecycle")) {
@@ -141,7 +314,7 @@ const setStatusForSlug = Effect.fn("Goals.setStatusForSlug")(function* (slug: st
   nextManifest = applyJsoncModification({ content: nextManifest, path: ["initiative", "updated"], value: today });
 
   yield* fs.writeFileString(record.manifestPath, nextManifest);
-  yield* fs.writeFileString(record.readmePath, rewrittenReadme.value);
+  yield* fs.writeFileString(record.readmePath, rewrittenReadme);
   yield* writePortfolioIndex();
   yield* Console.log(
     `[goals:set-status] ${slug} -> ${status} (manifest, README Lifecycle line, ${PORTFOLIO_INDEX_PATH}).`
@@ -162,6 +335,44 @@ const migrateFlag = Flag.boolean("migrate").pipe(
 const migrateWriteFlag = Flag.boolean("write").pipe(
   Flag.withDescription("Apply --migrate edits (default is a dry-run report)")
 );
+const previewFlag = Flag.boolean("preview").pipe(
+  Flag.withDescription("Print the guarded transition plan (fold, events to append, derived state) without writing")
+);
+
+type SetStatusInput = {
+  readonly migrate: boolean;
+  readonly preview: boolean;
+  readonly write: boolean;
+  readonly slug: O.Option<string>;
+  readonly status: O.Option<string>;
+};
+
+const runMigrateMode = Effect.fn("Goals.runMigrateMode")(function* (input: SetStatusInput) {
+  if (O.isSome(input.slug) || O.isSome(input.status)) {
+    return yield* GoalStatusInputError.new("--migrate takes no slug/status arguments; it migrates every packet.");
+  }
+  if (input.preview) {
+    return yield* GoalStatusInputError.new(
+      "--migrate has its own dry-run default; --preview applies to per-slug transitions."
+    );
+  }
+  return yield* runGoalsMigration({ write: input.write });
+});
+
+const runSetStatusProgram = Effect.fn("Goals.runSetStatusProgram")(function* (input: SetStatusInput) {
+  if (input.migrate) {
+    return yield* runMigrateMode(input);
+  }
+  if (O.isNone(input.slug) || O.isNone(input.status)) {
+    return yield* GoalStatusInputError.new(
+      `Usage: beep goals set-status <slug> <status> with status one of ${STATUS_DOMAIN}.`
+    );
+  }
+  if (!isGoalStatus(input.status.value)) {
+    return yield* GoalStatusInputError.new(`Unknown status "${input.status.value}"; expected one of ${STATUS_DOMAIN}.`);
+  }
+  return yield* setStatusForSlug(input.slug.value, input.status.value, input.preview);
+});
 
 /**
  * `bun run beep goals set-status` — single writer for goal-packet status.
@@ -179,27 +390,9 @@ const migrateWriteFlag = Flag.boolean("write").pipe(
  */
 export const goalsSetStatusCommand = Command.make(
   "set-status",
-  { slug: slugArgument, status: statusArgument, migrate: migrateFlag, write: migrateWriteFlag },
-  Effect.fn(function* ({ migrate, slug, status, write }) {
-    const program = Effect.gen(function* () {
-      if (migrate) {
-        if (O.isSome(slug) || O.isSome(status)) {
-          return yield* GoalStatusInputError.new("--migrate takes no slug/status arguments; it migrates every packet.");
-        }
-        return yield* runGoalsMigration({ write });
-      }
-      if (O.isNone(slug) || O.isNone(status)) {
-        return yield* GoalStatusInputError.new(
-          `Usage: beep goals set-status <slug> <status> with status one of ${STATUS_DOMAIN}.`
-        );
-      }
-      if (!isGoalStatus(status.value)) {
-        return yield* GoalStatusInputError.new(`Unknown status "${status.value}"; expected one of ${STATUS_DOMAIN}.`);
-      }
-      return yield* setStatusForSlug(slug.value, status.value);
-    });
-
-    return yield* program.pipe(
+  { slug: slugArgument, status: statusArgument, migrate: migrateFlag, write: migrateWriteFlag, preview: previewFlag },
+  Effect.fn(function* ({ migrate, preview, slug, status, write }) {
+    return yield* runSetStatusProgram({ migrate, preview, slug, status, write }).pipe(
       Effect.catchTags({
         GoalStatusInputError: Effect.fn(function* (error) {
           yield* Console.error(`[goals:set-status] ${error.message}`);
@@ -217,7 +410,18 @@ export const goalsSetStatusCommand = Command.make(
           yield* Console.error(`[goals:set-status] ${error.message}`);
           return yield* failWithReportedExit(`goals set-status: ${error.message}`);
         }),
+        PacketStreamError: Effect.fn(function* (error) {
+          yield* Console.error(`[goals:set-status] ${error.message}`);
+          return yield* failWithReportedExit(`goals set-status: ${error.message}`);
+        }),
+        PacketCasConflictError: Effect.fn(function* (error) {
+          yield* Console.error(`[goals:set-status] ${error.message}`);
+          return yield* failWithReportedExit(`goals set-status: ${error.message}`);
+        }),
       })
     );
   })
-).pipe(Command.withDescription("Set a packet's canonical status (manifest + README + INDEX) or run --migrate"));
+).pipe(
+  Command.withDescription("Set a packet's canonical status (manifest + README + INDEX) or run --migrate"),
+  Command.provide(PacketCoreLive)
+);
