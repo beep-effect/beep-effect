@@ -637,6 +637,57 @@ describe("create-package", { concurrent: false }, () => {
   );
 
   it(
+    "refuses to scaffold into a directory that already exists",
+    () =>
+      Effect.runPromise(
+        withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) =>
+          Effect.gen(function* () {
+            yield* bootstrapIdentityWorkspace(rootDir);
+            yield* runCreatePackageCommand([
+              "occupied-app",
+              "--type",
+              "app",
+              "--app-kind",
+              "vite",
+              "--description",
+              "First scaffold",
+            ]);
+
+            const packageDir = path.join(rootDir, "apps", "occupied-app");
+            const sentinel = path.join(packageDir, "src-tauri", "icons", "icon.png");
+            yield* fs.makeDirectory(path.dirname(sentinel), { recursive: true });
+            yield* fs.writeFileString(sentinel, "author-replaced");
+
+            const result = yield* runCreatePackageCommand([
+              "occupied-app",
+              "--type",
+              "app",
+              "--app-kind",
+              "tauri",
+              "--description",
+              "Second scaffold over the first",
+            ]).pipe(
+              Effect.match({
+                onFailure: toFailureMessage,
+                onSuccess: () => "success",
+              })
+            );
+
+            expect(result).toContain("Directory already exists");
+            // This refusal is what keeps the plan's `copy-asset` action safe to
+            // write unconditionally: a generated asset can never land on top of
+            // one an author edited, because a second scaffold never runs. If this
+            // guard is ever relaxed, the overwrite in
+            // `FileGenerationPlanService` becomes reachable and needs its own
+            // skip-if-present branch.
+            expect(yield* fs.readFileString(sentinel)).toBe("author-replaced");
+          })
+        )
+      ),
+    CreatePackageTestTimeoutMs
+  );
+
+  it(
     "creates Next.js apps without package API boilerplate",
     () =>
       Effect.runPromise(
