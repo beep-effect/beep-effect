@@ -30,14 +30,14 @@ amendments below (8-lane grok+codex review; reports in
   envelope field present or explicitly marked not-applicable — absence is
   recorded, never omitted.
 
-Per the prospective-path rule, candidate goals are named by slug only until
-the operator ratifies this MAP and a lane/queue decision creates the packet.
+Per the prospective-path rule, gated candidates stay slug-only until their
+gate fires. Candidate 1 was ratified and scaffolded in the graduation PR.
 
 ## Candidate Goal Packets
 
 | Order | Proposed slug | Mission | Dependencies | Live capability composition |
 | --- | --- | --- | --- | --- |
-| 1 | `model-arrangement-admission-core` (not yet created) | Deliver the ratified admission substrate: content-addressed `ModelArrangementRevision` (provider-attested identity envelope + controlled-component digests), `ModelArrangementQualification` (evidence envelope), `ModelArrangementDisposition` (five statuses, restricted scope kits, human-only supersession), the three-tier assurance floor, and the two-axis as-of eligibility query. First fixture (ratified): admit the repo's own live pinned arrangement. First consumer contract (ratified): the professional runtime approval gate references an admission-disposition id. | Agents + epistemic-pattern reuse; no external gates. | Reuse `ProviderInstance` (public identity fields; no-token law), the Anthropic driver's pinned-default config as the fixture arrangement, `ClaimDisposition` as the record-shape precedent (not a reusable type), the `EdgeAuthority` half-open two-axis predicate as the as-of pattern, `RuntimeUsageRecord` as linked execution evidence, `LiteralKit` for assurance/status/role kits (admission-local, net-new). NET-NEW: all three schemas, assurance kits, digest rules, eligibility query. |
+| 1 | [`model-arrangement-admission-core`](../../goals/model-arrangement-admission-core/README.md) (scaffolded paused 2026-08-17) | Deliver the ratified admission substrate: content-addressed `ModelArrangementRevision` (provider-attested identity envelope + controlled-component digests), `ModelArrangementQualification` (evidence envelope), `ModelArrangementDisposition` (five statuses, restricted scope kits, human-only supersession), the assurance floor as amendment C's policy table over (role, data-class) → minimum assurance tag (four-tag kit), and the two-axis as-of eligibility query. First fixture (ratified as amended): admit the repo's live chat arrangement — amendment B's closed component set — under a `restricted` disposition (amendment A). First consumer contract (ratified): the professional runtime approval gate references an admission-disposition id. | Agents + epistemic-pattern reuse; no external gates. | Reuse `ProviderInstance` (public identity fields; no-token law), the live chat arrangement as the fixture (amendment B's closed component set: materialized model id, `maxTokens`, system-prompt digest, tool-wrapper/`toolChoice` semantics, output-parser version, retry plan — the driver's pinned model id supplies only the identity envelope's resolved id), `ClaimDisposition` as the record-shape precedent (not a reusable type), the `EdgeAuthority` half-open two-axis predicate as the as-of pattern, `RuntimeUsageRecord` as linked execution evidence, `LiteralKit` for assurance/status/role kits (admission-local, net-new). NET-NEW: all three schemas, assurance kits, digest rules, eligibility query. |
 | 2 | `model-admission-eval-harness` (not yet created; **gated**) | Author and freeze evaluation-plan revisions (corpus digests, per-case typed results, sentinel suites) that qualifications consume. | `model-arrangement-admission-core`. **Gate:** the first real (non-fixture) qualification demands more than recorded-evidence envelopes. | Reuse docgen/proof-manifest determinism patterns; qa judge-gate precedent for typed verdicts. |
 | 3 | Runtime enforcement wiring (described, not a slug; **gated**) | Approval gate consults admission eligibility before candidate review. | Core + the approval-gate consumer landing in the professional runtime's own roadmap slot. | ProfessionalRuntime approval contracts. |
 
@@ -51,17 +51,22 @@ model-arrangement-admission-core
 
 ## Chosen First Vertical Slice
 
-Admit the repo's live pinned arrangement end to end: build its
+Admit the repo's live chat arrangement (amendment B's closed component set)
+end to end: build its
 `ModelArrangementRevision` (real identity envelope, real component digests),
 record a minimal `ModelArrangementQualification` (identity-assurance evidence
-+ deterministic invariant checks only), record an `admitted`-status
-disposition scoped to non-matter internal tooling, and prove:
++ deterministic invariant checks only), record a `restricted` disposition with explicit scope kits — role
+`internal-tooling`, data classes `public`/`synthetic`, modality `text`
+(amendment A: scope kits ride `restricted` only; `admitted` stays
+unscoped) — and prove:
 
 - the arrangement digest is stable across rebuilds (canonical ordering);
 - a mutated component digest yields a NEW revision and the old disposition
   does not transfer (no inheritance);
 - the as-of query answers eligibility at (`validAt`, `knownAt`) and a
-  superseding disposition flips it without mutating the prior record.
+  superseding disposition flips it without mutating the prior record;
+- the referential-integrity invariant (amendment E) rejects a disposition
+  citing a qualification of a different arrangement revision.
 
 Not in the slice: eval-harness authoring, runtime enforcement, any
 requalification automation, any UI.

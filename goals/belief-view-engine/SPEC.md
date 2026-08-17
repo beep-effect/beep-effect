@@ -7,7 +7,8 @@ Normative contract, seeded 2026-08-17 from the ratified
 ## Mission
 
 Deliver the ratified on-demand belief-view contract over the shipped
-epistemic core: group open authority into contention sets, select or abstain
+epistemic core: group the authority cut at (`validAt`, `knownAt`) into
+contention sets, select or abstain
 under an immutable policy revision, and emit a replayable content-addressed
 revision.
 
@@ -26,8 +27,11 @@ revision.
    authority cut is digested over rows projected through the triage
    `projectEdgeVersionAtKnownAt` pattern so the mutable `expiredAt` never
    enters the digest. `ClaimProjection` is the sorted-fold precedent only.
-4. **Scope-wide read (amendment B)** — all open lineages for an org/matter at
-   (`validAt`, `knownAt`), shipped WITH its supporting index (the org index
+4. **Scope-wide read (amendment B)** — every lineage for an org/matter whose
+   version interval contains the (`validAt`, `knownAt`) cut under the
+   half-open `asOfWhere` predicate — never the live-head "open" predicate,
+   whose mutable `expiredAt` input is exactly the replay poison amendment A
+   excludes. Shipped WITH its supporting index (the org index
    was dropped in migration `20260813143745`) and a hard result cap returning
    a typed view-too-large error. No pagination. Matter request selects
    `matterScope ∈ {None, Some(matter)}`.
