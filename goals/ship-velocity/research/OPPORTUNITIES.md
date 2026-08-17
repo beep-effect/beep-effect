@@ -260,3 +260,16 @@ session/machine ids.
   in one block, with the failure line the most eye-catching part. Sixth receipt in the
   misattributed-hint family: a summary must read the verdict written by the run it is summarizing,
   or state which run it came from.
+- Seventh misattributed-hint receipt, and the clearest yet: a `full:pre-push` failure whose only
+  red lanes were `quality:check` and `quality:check:tsgo-tests` — a single `strictEffectProvide`
+  diagnostic in one test file — produced the verdict repair command *"Inspect the OSV finding and
+  rerun `bun run beep quality github-checks security`"*. The security lane had passed. Six prior
+  receipts in this ledger describe the same class from different lanes; at seven, the pattern is
+  no longer anecdotal and the fix is A-track capsule work: the hint must be derived from the
+  failing sublane, not from a fixed template.
+- The same failure is also a receipt against my own process: the synthetic `test-tsgo` replica I
+  ran to pre-check the test files was executed *before* the P1 regression test existed, and I did
+  not re-run it after adding that test — so a gate result was carried forward onto a tree it never
+  saw. `bun run beep quality test-tsgo` is in-process, takes no lock, and needs no turbo, so there
+  was no reason to skip it except forgetting that a proof binds to a tree. Prevention: re-run the
+  cheap in-process gates as the *last* step before publish, never as a step before the last edit.

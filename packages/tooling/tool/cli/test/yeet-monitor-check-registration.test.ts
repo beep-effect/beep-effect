@@ -355,7 +355,7 @@ describe("the monitor check watch recorder", () => {
 
         yield* runMonitorCheckWatchForTesting(context, checkSteps, recorder, "yeet monitor failed.", [
           Duration.zero,
-        ]).pipe(Effect.provide(registrationThenSuccessSpawnerLayer(callsRef)));
+        ]).pipe(provideScopedLayer(registrationThenSuccessSpawnerLayer(callsRef)));
 
         const recorded = yield* Ref.get(recorder);
         const watchEntries = A.filter(recorded, (entry) => entry.step.id === "monitor:02-pr-checks-watch");
