@@ -385,3 +385,13 @@ session/machine ids.
   neither necessary nor achievable when someone else's merge moved the denominator. Prevention:
   the failure line should print both halves — the percentage drop and the uncovered-count delta
   that made it a failure — so the remedy (cover your own new units) is unambiguous.
+- A green proof log contains realistic failure text as **fixture output**, and the only reliable
+  discriminator is the lane verdict line. This proof printed
+  `yeet publish --push-only --reuse-verified refuses staged changes`,
+  `warning: staged-only residue was NOT restored: stash pop failed`, and a bare
+  `yeet monitor failed.` — every one of them E1's or A7's own tests asserting their refusal and
+  degrade paths, in a run whose lanes were all `ok`. An agent or operator scanning stdout for
+  trouble finds three convincing failures in a clean run; scanning for `quality:<lane>: ok`
+  finds the truth. Prevention: capsule and verdict rendering should quote the lane verdict, never
+  matched stdout, and lanes that deliberately emit failure prose in fixtures are the reason
+  A1's watch stream must key on transitions rather than log-line matching.

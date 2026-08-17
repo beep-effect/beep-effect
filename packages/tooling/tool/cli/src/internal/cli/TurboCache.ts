@@ -526,7 +526,7 @@ const requestedTurboCacheMode = (environment: TurboCacheEnvironment): O.Option<T
  * @param environment - The remote-read configuration the checkout carries.
  * @param options - The invocation's arguments and whether it runs under CI.
  * @returns The resolved cache plan.
- * @category resolution
+ * @category configuration
  * @since 0.0.0
  */
 export const resolveTurboCachePlan: {
@@ -575,7 +575,7 @@ export const resolveTurboCachePlan: {
  *
  * @param plan - The resolved cache plan.
  * @returns The cache arguments to prepend, empty when the caller owns them.
- * @category resolution
+ * @category formatting
  * @since 0.0.0
  */
 export const turboCachePlanArgs = (plan: TurboCachePlan): ReadonlyArray<string> =>
@@ -601,7 +601,7 @@ export const turboCachePlanArgs = (plan: TurboCachePlan): ReadonlyArray<string> 
  *
  * @param plan - The resolved cache plan.
  * @returns Whether the invocation needs 1Password env injection.
- * @category resolution
+ * @category predicates
  * @since 0.0.0
  */
 export const turboCachePlanNeedsSecretSession = (plan: TurboCachePlan): boolean =>
@@ -628,7 +628,7 @@ export const turboCachePlanNeedsSecretSession = (plan: TurboCachePlan): boolean 
  *
  * @param args - The already-built command arguments.
  * @returns The arguments with any remote cache posture replaced by local-only.
- * @category resolution
+ * @category mapping
  * @since 0.0.0
  */
 export const localOnlyTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
