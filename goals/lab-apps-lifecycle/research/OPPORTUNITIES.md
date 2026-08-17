@@ -256,6 +256,24 @@ Numbers are STABLE IDS — never renumber to express priority.
    Until then `--skip-baselines` is not a convenience flag, it is the only path
    that can succeed on a tree with any failing test anywhere.
 
+   *Correction (2026-08-17, receipt-9 fix PR):* the coupling **instance**
+   recorded above was misattributed. Run 2's own logs show the repo-wide
+   coverage rebuild **succeeded** — `[coverage-ratchet] wrote
+   standards/coverage.regression-baseline.jsonc with 127 package(s)` — and the
+   `@beep/wink` message is a WARN emitted by the expected-failure path of a
+   test that *passes*: `ToolValidation.test.ts` deliberately queries a corpus
+   that must not exist and asserts the structured failure, and the suite shows
+   `✓` immediately after that WARN in both P4 run logs. There was never a wink
+   defect. The exit 1 came from the post-apply doctor instead:
+   `authored-references` residue on `.beep/yeet/runs/.../pr-body.md`, a
+   machine-local yeet artifact the residue scan should never have read —
+   receipt 11's class reached through a sibling directory. The structural
+   claims stand (the coverage rebuild is the bulk of the 718s, and a genuinely
+   red test anywhere would fail it), but no red test existed that day.
+   *Fixed:* the delete path now subtracts the target's rows from the committed
+   coverage baseline schema-first instead of re-running repo-wide coverage,
+   and `.beep/` is excluded from residue scans.
+
 10. **The reflection lint reports a false green on an active packet, and only
     `goals doctor` catches the invalid frontmatter.** — `unowned`
 
@@ -287,6 +305,11 @@ Numbers are STABLE IDS — never renumber to express priority.
     the validation step, so following the packet's own instructions produces
     the false green.
 
+    *Fixed (2026-08-17, receipt-9 fix PR):* `beep lint reflection-artifacts`
+    now validates frontmatter in every packet, active or completed; only the
+    closeout-presence gate remains a completed-packet contract. The two
+    validators agree again.
+
 11. **Recording the evidence of a round-trip makes that round-trip
     unrepeatable.** — `unowned`
 
@@ -313,3 +336,11 @@ Numbers are STABLE IDS — never renumber to express priority.
     having deleted* one. Any repo that asks agents to write durable evidence
     will keep hitting this, and the incentive it creates is to write less
     evidence.
+
+    *Fixed (2026-08-17, receipt-9 fix PR):* the dependents scan now classifies
+    `goals/*/history/**` and `goals/*/research/**` as `historical-doc` rather
+    than live packet claims, so recorded proofs and ledger receipts no longer
+    refuse the deletion they document; live claims in `PLAN.md`/`SPEC.md`
+    still do. `.beep/` is excluded from the authored-references residue probe
+    for the same reason — it is machine-local operator state, not a
+    registration surface.

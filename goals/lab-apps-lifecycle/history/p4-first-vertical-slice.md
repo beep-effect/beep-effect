@@ -119,6 +119,34 @@ A third finding came from attempting the re-run at all: `delete-package` now
 refuses with `REFUSE [packet-claim/soft]` because six lines of *this file* name
 the probe. Recording the proof makes the proof unrepeatable (ledger receipt 11).
 
+### 4c. Corrected attribution (2026-08-17, receipt-9 fix PR)
+
+Conclusion 2 in §4b is wrong, and the error is worth recording precisely
+because two review rounds had already taught this file that a claim is only as
+corrected as its least-corrected copy. Re-reading run 2's own logs:
+
+- The repo-wide coverage rebuild **succeeded**: `Tasks: 17 successful, 17
+  total`, then `[coverage-ratchet] wrote
+  standards/coverage.regression-baseline.jsonc with 127 package(s)`.
+- The `@beep/wink` line was a `WARN` emitted by the expected-failure path of a
+  **passing** test — `ToolValidation.test.ts` deliberately queries a corpus
+  that must not exist and asserts the structured failure; the log shows
+  `✓ test/ToolValidation.test.ts` immediately after the WARN in both runs.
+  There was never a failing wink test, and no wink fix was needed.
+- The exit 1 came from the **post-apply doctor**: `authored-references`
+  residue on `.beep/yeet/runs/.../pr-body.md` — a machine-local yeet artifact
+  mentioning the probe, which the residue scan should never have read. That is
+  receipt 11's conflation of record with claim, reached through a sibling
+  directory.
+
+What survives from §4b: the drift determinism (conclusion 1), the ~12-minute
+coverage-rebuild cost, and the *property* that a genuinely red test anywhere
+would fail the default delete. What does not survive: the claim that such a
+test existed. The fix PR removes the property too — the delete path now
+subtracts the target's rows from the committed coverage baseline schema-first,
+classifies packet `history/**` and `research/**` as historical records, and
+excludes `.beep/` from residue scans.
+
 ## 5. Doctor
 
 ```
@@ -153,8 +181,11 @@ Read that scope precisely, because §4b narrows it:
 
 The defect the loop surfaced is **structural, not operational**. An earlier
 draft of this file called it "slower than a ten-minute ceiling"; that was
-wrong, and PR review caught it. The default `delete-package` cannot complete on
-a tree with any failing test anywhere, because its baseline step runs the
-repo-wide coverage suite — and it removes the package before discovering that.
-Tracked as ledger receipt 9, with receipts 3 (half-deleted state) and 11
-(evidence blocks re-proof) adjacent.
+wrong, and PR review caught it. A later correction (§4c) narrowed §4b in turn:
+the run-2 failure was the residue scan reading a machine-local `.beep`
+artifact, not a red test, though the repo-wide coverage rerun and its
+red-test coupling were real properties of the default path. Tracked as ledger
+receipt 9, with receipts 3 (half-deleted state) and 11 (evidence blocks
+re-proof) adjacent. Receipts 9 and 11 are closed by the receipt-9 fix PR;
+receipt 3's interrupt hazard is narrowed (the slow, fallible step is gone)
+but an interrupt mid-delete can still leave partial state.
