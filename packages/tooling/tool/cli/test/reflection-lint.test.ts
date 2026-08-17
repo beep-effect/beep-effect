@@ -204,13 +204,39 @@ describe("reflection-artifacts lint command", { concurrent: false }, () => {
   // in an ACTIVE packet passed this lint while goals doctor failed it. The
   // frontmatter gate now covers every packet.
   it(
-    "blocks an active goal whose reflection frontmatter does not decode",
+    "blocks an active goal whose reflection file has no frontmatter block",
     () =>
       Effect.runPromise(
         withTempWorkingDirectory(
           Effect.gen(function* () {
             yield* writeActiveGoal("in-flight");
             yield* writeReflection("in-flight", "2026-08-17-claude.md", "# no frontmatter here\n");
+            const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
+            expectReportedFailure(exit);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  // Present-but-invalid frontmatter is the decode-failure path — this is the
+  // literal receipt-10 trap: a colon-space inside an unquoted plain scalar
+  // turns the explanation into a YAML mapping error.
+  it(
+    "blocks an active goal whose present frontmatter does not decode",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeActiveGoal("in-flight");
+            yield* writeReflection(
+              "in-flight",
+              "2026-08-17-claude.md",
+              Str.replace(
+                "explanation: Because of the evidence.",
+                'explanation: the template emitted "icon": [] here.'
+              )(VALID_REFLECTION)
+            );
             const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
             expectReportedFailure(exit);
           })

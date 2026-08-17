@@ -1245,6 +1245,16 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
  * refused the same way scoped writes refuse it: v1 must be regenerated in
  * full before any row-level edit is meaningful.
  *
+ * **Example** (Subtract a deleted workspace's rows)
+ *
+ * ```ts
+ * import { subtractPackageFromCoverageRegressionBaseline } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
+ *
+ * const program = subtractPackageFromCoverageRegressionBaseline("/repo", "@beep/retired-driver")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
  * @param repoRoot - Repository root.
  * @param packageName - Workspace package name (`@beep/...`) whose rows are removed.
  * @category use-cases
