@@ -132,7 +132,7 @@ clean; it does not consume a lane slot.
 Only packets that directly feed Lane 1:
 
 - [`agentic-professional-runtime`](../goals/agentic-professional-runtime/README.md) (3/5)
-- [`semantic-foundation`](../goals/semantic-foundation/README.md) (0/6) — scoped to
+- [`semantic-foundation`](../goals/semantic-foundation/README.md) (1/6) — scoped to
   **M1 Intake-Serving Semantic Seed** and **M4 ClaimGate Shapes** (feeds
   intake P4). Feeder research phases are now R1–R4; M2/M3 queue in NEXT.
 
@@ -148,7 +148,7 @@ and [`ai-metrics-stack`](../goals/ai-metrics-stack/README.md) are all
 completed-retained (2026-08-17 re-eval). The freed slot goes to:
 
 - [`packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
-  (0/5) — the packet system's event fold, guarded writers, and derived
+  (1/6) — the packet system's event fold, guarded writers, and derived
   projections. It is the instrument that makes the *next* roadmap re-eval
   mechanical (derived pulse: what can start, what is blocked, what awaits the
   operator), scaffolded 2026-08-17 from the ratified packet-system-redesign MAP

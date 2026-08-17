@@ -91,8 +91,8 @@ Spike-first, mirroring how `Graph3DSpike` proved WebGL before docking.
 1. `?cad-spike` flag next to `hasGraph3dSpikeFlag`; prove
    `occt-import-js` mounts, resizes, and tears down in the Tauri webview
    without leaking the GL context.
-2. `packages/drivers/occt` via `create-package`, with a `/browser` export,
-   matching `@beep/graph-3d`'s shape exactly.
+2. A new occt driver package created via `create-package` (drivers family,
+   with a `/browser` export), matching `@beep/graph-3d`'s shape exactly.
 3. Dock the panel: `DESKTOP_PANELS` entry, `cluster: "shell"` (a new `cad`
    cluster would silently appear under the Ontology disclosure), start closed,
    `renderMode: "always"`, raised `PanelConstraints`. Update the panel-count

@@ -25,7 +25,8 @@ download pile was a transient acquisition site and no longer exists. Nothing is 
 packet depends on: the durable artifact is the normalized library, and every
 paper's extracted text survived.
 
-**Durable library:** `~/YeeBois/research/academia-2026-07` (out-of-repo)
+**Durable library:** the machine-local `academia-2026-07` research corpus
+(out-of-repo, under the operator's research root)
 
 | Directory | Files | What it holds |
 | --- | ---: | --- |
@@ -66,12 +67,12 @@ uploads usually do not.
 | **No identifier anywhere on the first page** | **257** |
 | **Total carrying a DOI or arXiv id** | **186 / 443 (42%)** |
 
-Index: `~/YeeBois/research/academia-2026-07/resolved-index.jsonl`, one record
+Index: `resolved-index.jsonl` at the corpus root, one record
 per paper keyed by the same 12-char `id` used across `text/`, `meta/`, and
 `firstpages/`.
 
 **Open-access PDFs recovered:** 42 and counting, into
-`~/YeeBois/research/academia-2026-07/pdf/<id>.pdf`, fetched from the
+the corpus's `pdf/<id>.pdf`, fetched from the
 `best_oa_location` OpenAlex reports. 101 papers had an OA PDF URL.
 
 **Why 257 resolve to nothing, honestly:** they are Academia.edu-native
