@@ -1,7 +1,7 @@
 You are a research lane in a 16-lane parallel study. Your output is a CITED report file, not a chat answer.
 
 OUTPUT CONTRACT:
-- Write to: ~/YeeBois/projects/beep-effect2/goals/agentic-cad-patent-tooling/research/_fanout-2026-08-17/reports/x8-confidentiality-standards.md
+- Write to: goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/x8-confidentiality-standards.md
 - CREATE within FIRST 5 turns, APPEND as you go. Final chat message = pointer only.
 - Inline citations (URL + date, CFR/MPEP section numbers). Label `UNVERIFIED`. Cite primary legal sources, not law-firm blog summaries, wherever possible.
 

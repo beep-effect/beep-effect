@@ -1,7 +1,7 @@
 # LLM → CAD generation: state of the art (2026-08-17)
 
-**Lane:** x5-llm-to-cad-codegen  
-**Bias:** what is reproducible *locally* (open kernels, open weights, inspectable code).  
+**Lane:** x5-llm-to-cad-codegen
+**Bias:** what is reproducible *locally* (open kernels, open weights, inspectable code).
 **Access date for all live URLs:** 2026-08-17 unless a paper date is given.
 
 ## How to read this
@@ -404,11 +404,11 @@ Zero-to-CAD is the cleanest “loops are not optional” result: an Apache-2.0 1
 
 ### 5.4 What a local implementation looks like (no new research)
 
-Sandbox: subprocess, 30–60 s, no network, CadQuery 2.4/2.5 pinned.  
-On success: STEP + STL + OCCT report JSON.  
-On exception: traceback → error-refiner with KB2.  
-On valid-but-wrong: three VTK views (iso / high-rear / front) + bbox deltas → VLM judge → refiner with history.  
-Stop: judge pass **or** 2 outer iters **or** solid invalid after 3 inner.  
+Sandbox: subprocess, 30–60 s, no network, CadQuery 2.4/2.5 pinned.
+On success: STEP + STL + OCCT report JSON.
+On exception: traceback → error-refiner with KB2.
+On valid-but-wrong: three VTK views (iso / high-rear / front) + bbox deltas → VLM judge → refiner with history.
+Stop: judge pass **or** 2 outer iters **or** solid invalid after 3 inner.
 Log every (code, traceback, metrics, views) — that log is the next SFT set (Zero-to-CAD’s actual contribution).
 
 earthtojake/text-to-cad (2026-05-20 release: mechanism validation, STEP animations, SDF/SRDF/URDF) is this harness as a Claude/Codex skill, not a paper. [x.com/earthtojake/status/2057203608207466982](https://x.com/earthtojake/status/2057203608207466982)

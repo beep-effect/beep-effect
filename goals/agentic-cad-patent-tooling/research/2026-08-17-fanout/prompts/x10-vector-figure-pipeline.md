@@ -1,7 +1,7 @@
 You are a research lane in a parallel study. Your output is a CITED report FILE, not a chat answer.
 
 OUTPUT CONTRACT:
-- Write to: ~/YeeBois/projects/beep-effect2/goals/agentic-cad-patent-tooling/research/_fanout-2026-08-17/reports/x10-vector-figure-pipeline.md
+- Write to: goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/x10-vector-figure-pipeline.md
 - CREATE within FIRST 5 turns, APPEND as you go. Final chat message = pointer only.
 - Inline citations (URL + date). Label `UNVERIFIED`.
 

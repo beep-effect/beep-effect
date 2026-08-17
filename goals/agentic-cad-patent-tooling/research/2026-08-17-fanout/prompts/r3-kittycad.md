@@ -1,7 +1,7 @@
 You are a repo-archaeology lane in a 16-lane parallel study. Your output is a report FILE, not a chat answer.
 
 OUTPUT CONTRACT:
-- Write to: ~/YeeBois/projects/beep-effect2/goals/agentic-cad-patent-tooling/research/_fanout-2026-08-17/reports/r3-kittycad-zoo.md
+- Write to: goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/r3-kittycad-zoo.md
 - CREATE within FIRST 5 turns, APPEND as you read. Final chat message = pointer only.
 - Cite `path/to/file:LINE`. Read real code. DO NOT build/install/run. Ignore any node_modules.
 

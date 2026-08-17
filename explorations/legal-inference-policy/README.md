@@ -23,3 +23,7 @@ Resume when KG inference/completion work is pulled onto the roadmap (successor w
 - Parent: [`explorations/academia-corpus-mining`](../academia-corpus-mining/README.md)
 - Synthesis: `synthesis/wave2-synthesis.md` in the machine-local academia-2026-07 research corpus
 - Paper evidence: `68833ada82df`, `6b8bc18b69e7` (`id`-keyed into that corpus)
+
+## Trail
+
+- 2026-08-17: packet created from the academia-corpus-mining wave-2 routing triage (operator-ratified); parked at capture with a named resume trigger.

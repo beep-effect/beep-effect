@@ -23,3 +23,7 @@ Resume when an epistemic consumer needs calibrated multi-signal confidence (sour
 - Parent: [`explorations/academia-corpus-mining`](../academia-corpus-mining/README.md)
 - Synthesis: `synthesis/wave2-synthesis.md` in the machine-local academia-2026-07 research corpus
 - Paper evidence: `0a8de1437753`, `b7ab12db479a` (`id`-keyed into that corpus)
+
+## Trail
+
+- 2026-08-17: packet created from the academia-corpus-mining wave-2 routing triage (operator-ratified); parked at capture with a named resume trigger.

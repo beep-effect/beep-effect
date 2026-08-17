@@ -1,8 +1,8 @@
 # R8 — Beep knowledge-graph / domain model: where CAD figures go
 
-**Lane:** r8-beep-kg-model  
-**Question:** If a CAD model and its rendered figures become first-class nodes in this knowledge graph, where do they go and what do they connect to?  
-**Checkout:** isolated worktree snapshot of beep-effect2 (read-only archaeology).  
+**Lane:** r8-beep-kg-model
+**Question:** If a CAD model and its rendered figures become first-class nodes in this knowledge graph, where do they go and what do they connect to?
+**Checkout:** isolated worktree snapshot of beep-effect2 (read-only archaeology).
 **Scope:** `packages/law-practice`, `packages/epistemic`, `packages/ontology`, `packages/documents`, `apps/practice-kg-mcp`.
 
 **Short answer.** There is no single graph. CAD belongs in **four stacked places**, none of which should be invented from scratch:

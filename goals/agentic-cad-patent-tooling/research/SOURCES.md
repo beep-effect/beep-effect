@@ -31,6 +31,7 @@ Provenance ledger. Every claim in `SPEC.md` traces to a row here.
 | `x10-vector-figure-pipeline.md` | How draftsmen actually work; `.ai` is a PDF container with a private Illustrator stream; **the USPTO discards the filed PDF and stores a 300 dpi TIFF in IFW**; recommends a structured SVG scene graph plus a sidecar numeral graph |
 | `x11-2d-first-agentic.md` | 2D-native vs 3D-then-project. Recommends a 2D scene graph as canonical with 3D→projection as an importer. **Names its own limit: no published USPTO-wide figure-type histogram exists; DeepPatent/DeepPatent2 are design-patent corpora and must not be used as a utility-figure census** |
 | `x12-photo-to-starting-cad.md` | **The photo on-ramp, reframed to "get me started".** Fusion `Convert Mesh` caps near **10,000 facets** and gates Organic behind the paid Design Extension; Canvas `Calibrate` is uniform scale. `potrace -b dxf` / OpenCV contours is the ranked-1 local path. **COLMAP has an official HIP/ROCm backend**; **Meshroom hard-requires CUDA**; **RealityScan's EULA permits training on scans**; TRELLIS-AMD is RDNA3-proven, RDNA4 `gfx1201` UNVERIFIED |
+| `x13-rtx3070-target.md` | **The target-hardware split.** The attorney's box is Windows + RTX 3070 (8 GB, CUDA): Meshroom's CUDA depth-map gate is satisfied, 8 GB caps generative 3D to Stable Fast 3D / Hunyuan3D-2.0-shape; the primary photo path and OCCT HLR are CPU-bound so the GPU is not load-bearing. Grounds SPEC's Target hardware section and D9/D10 |
 
 ## Corpus census (measured directly, 2026-08-17)
 
@@ -82,6 +83,6 @@ above then settled empirically: **positive for `.ai`, negative for `.svg`.**
 
 ## Reproduction
 
-The 20 lane prompts are preserved verbatim in
+The 21 lane prompts are preserved verbatim in
 `research/2026-08-17-fanout/prompts/`. Each pins its own output path and
 citation contract, so the study can be re-run against a later snapshot.

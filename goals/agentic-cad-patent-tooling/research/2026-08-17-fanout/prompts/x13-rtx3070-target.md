@@ -1,7 +1,7 @@
 You are a research lane. Output is a CITED report FILE, not a chat answer.
 
 OUTPUT CONTRACT:
-- Write to: /home/elpresidank/YeeBois/projects/beep-effect2/goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/x13-rtx3070-target.md
+- Write to: goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/x13-rtx3070-target.md
 - CREATE the file within your FIRST 5 turns with a skeleton, then APPEND. Final chat message = pointer only.
 - Inline citations (URL + date). Label `UNVERIFIED`. Be precise about NUMBERS.
 

@@ -1,10 +1,10 @@
 # CadSense Repo Archaeology — r2
 
-**Target:** `~/YeeBois/research/CAD_STUFF/cadsense`  
-**Origin:** `git@github.com:AadiJo/cadsense.git` (HEAD `e655169` 2026-08-09, "fix: preserve secrets when settings updates fail (#18)")  
-**Also referenced as:** `github.com/pingdotgg/cadsense` in `apps/server/package.json:7-8`  
-**Date:** 2026-08-17  
-**Method:** read-only source inspection. No build, no install, no app run. `node_modules/` ignored. Claims cite `path:LINE`.  
+**Target:** `~/YeeBois/research/CAD_STUFF/cadsense`
+**Origin:** `git@github.com:AadiJo/cadsense.git` (HEAD `e655169` 2026-08-09, "fix: preserve secrets when settings updates fail (#18)")
+**Also referenced as:** `github.com/pingdotgg/cadsense` in `apps/server/package.json:7-8`
+**Date:** 2026-08-17
+**Method:** read-only source inspection. No build, no install, no app run. `node_modules/` ignored. Claims cite `path:LINE`.
 **No `.codegraph/` index.**
 
 ---
@@ -315,7 +315,7 @@ It **backports RPC client observability hooks** that this beta of Effect does no
    - `onRequestStart({ id, tag, stream })`
    - `onRequestChunk({ id, tag, chunkCount })`
    - `onRequestExit({ id, tag, stream, exit })`
-   - `onRequestInterrupt({ id, tag? })`  
+   - `onRequestInterrupt({ id, tag? })`
    (`patches/effect@4.0.0-beta.59.patch:15-44`, JS class at `:274`).
 
 2. **`ConnectionHooks`** extended with optional `onPing`, `onPong`, `onPingTimeout` (`:45-51`).

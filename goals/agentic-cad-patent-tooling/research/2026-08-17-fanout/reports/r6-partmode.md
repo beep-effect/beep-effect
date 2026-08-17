@@ -1,11 +1,11 @@
 # r6 — PartMode (BOMWiki/partmode) repo archaeology
 
-**Target:** `~/YeeBois/research/CAD_STUFF/partmode`  
-**Remote:** `github.com/BOMWiki/partmode` (`origin` on `main`)  
-**On-disk HEAD:** `0144dad` *Prepare the public contributor launch* (2026-08-11), tag `source-snapshot-2026-08-11`. Parent commit `8db0b80` *PartMode* (2026-08-07) is the initial dump. Two commits total.  
-**Product version:** `package.json` `8.0.0`; agent protocol still advertises studio `7.1.0`.  
-**License:** AGPL-3.0-only. README copyright line: “Copyright © 2026 Sphinx.”  
-**Checkout size:** ~31 MB, of which ~12 MB is vendored OCCT WASM + three.js + replicad.  
+**Target:** `~/YeeBois/research/CAD_STUFF/partmode`
+**Remote:** `github.com/BOMWiki/partmode` (`origin` on `main`)
+**On-disk HEAD:** `0144dad` *Prepare the public contributor launch* (2026-08-11), tag `source-snapshot-2026-08-11`. Parent commit `8db0b80` *PartMode* (2026-08-07) is the initial dump. Two commits total.
+**Product version:** `package.json` `8.0.0`; agent protocol still advertises studio `7.1.0`.
+**License:** AGPL-3.0-only. README copyright line: “Copyright © 2026 Sphinx.”
+**Checkout size:** ~31 MB, of which ~12 MB is vendored OCCT WASM + three.js + replicad.
 **Method:** read-only source inspection. No build, install, or run. No `node_modules`. Citations are `path:LINE` against this checkout.
 
 ---

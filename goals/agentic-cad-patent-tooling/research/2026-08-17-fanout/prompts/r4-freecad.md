@@ -1,7 +1,7 @@
 You are a repo-archaeology lane in a 16-lane parallel study. Your output is a report FILE, not a chat answer.
 
 OUTPUT CONTRACT:
-- Write to: ~/YeeBois/projects/beep-effect2/goals/agentic-cad-patent-tooling/research/_fanout-2026-08-17/reports/r4-freecad.md
+- Write to: goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/r4-freecad.md
 - CREATE within FIRST 5 turns, APPEND as you read. Final chat message = pointer only.
 - Cite `path/to/file:LINE`. DO NOT BUILD IT (it is a 3.1GB C++ tree, a build would take hours — do not attempt). Read only.
 

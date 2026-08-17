@@ -60,3 +60,13 @@ working copies) lives externally in the machine-local `academia-2026-07` researc
 because this repo is public and copyrighted full texts must never be
 committed. The packet commits only derived intelligence: catalog, syntheses,
 sources ledger, routing table.
+
+
+## 2026-08-17 — correction note (in-place edits above)
+
+Two operator-directed sweeps edited earlier entries in place rather than
+appending: the repo-wide host-path convention (PR #734 class) replaced the
+literal download-pile path with machine-local phrasing, and the 2026-08-17
+corpus-location verification annotated the pile as transient/deleted. The
+original wording is preserved in git history; this note records the edit so
+the capture trail stays honest without resurrecting retired phrasing.

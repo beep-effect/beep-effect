@@ -96,7 +96,7 @@
   "stopConditions": [
     "The 37 CFR 1.84(p)(4)-(5) bijection cannot be computed from real corpus files.",
     "DWG support would require linking GPL code or redistributing a converter whose terms forbid it.",
-    "Any requirement would move client technical content off the machine.",
+    "A provider's terms conflict with a matter's recorded consent policy.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ]

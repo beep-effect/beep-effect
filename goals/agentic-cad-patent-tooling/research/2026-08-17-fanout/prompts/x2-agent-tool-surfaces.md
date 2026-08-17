@@ -1,7 +1,7 @@
 You are a research lane in a 16-lane parallel study. Your output is a CITED report file, not a chat answer.
 
 OUTPUT CONTRACT (obey exactly):
-- Write your report to: ~/YeeBois/projects/beep-effect2/goals/agentic-cad-patent-tooling/research/_fanout-2026-08-17/reports/x2-agent-tool-surfaces.md
+- Write your report to: goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/x2-agent-tool-surfaces.md
 - TURN BUDGET DISCIPLINE: CREATE that file within your FIRST 5 turns with a heading skeleton, then APPEND as you go. Never save writing for the end.
 - Final chat message = pointer only.
 - Inline citations (URL + date) on every non-obvious claim. x.com posts are first-class evidence. Label `UNVERIFIED` where you could not confirm.

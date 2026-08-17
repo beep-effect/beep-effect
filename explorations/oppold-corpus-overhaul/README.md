@@ -42,3 +42,7 @@ prerequisite for the next expensive pipeline run.
 - Composes with (does not duplicate): `goals/semantic-foundation` M1
   Intake-Serving Semantic Seed, `goals/patent-document-schema`,
   `goals/folio-lynx-taxonomy-browse`.
+
+## Trail
+
+- 2026-08-17: packet created from the operator's roadmap re-eval notes (operator-ratified); born active at capture; first align question is the salvage restoration inventory.

@@ -23,3 +23,7 @@ Resume when shape-induction / SHACL lifecycle work is pulled onto the roadmap; v
 - Parent: [`explorations/academia-corpus-mining`](../academia-corpus-mining/README.md)
 - Synthesis: `synthesis/wave2-synthesis.md` in the machine-local academia-2026-07 research corpus
 - Paper evidence: `96acfbb4f208`, `e7e99c921d03`, `14dc43d7249e` (`id`-keyed into that corpus)
+
+## Trail
+
+- 2026-08-17: packet created from the academia-corpus-mining wave-2 routing triage (operator-ratified); parked at capture with a named resume trigger.

@@ -1,7 +1,7 @@
 You are a research lane in a parallel study. Your output is a CITED report FILE, not a chat answer.
 
 OUTPUT CONTRACT:
-- Write to: ~/YeeBois/projects/beep-effect2/goals/agentic-cad-patent-tooling/research/_fanout-2026-08-17/reports/x9-dwg-dxf-ingest.md
+- Write to: goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/x9-dwg-dxf-ingest.md
 - CREATE the file within your FIRST 5 turns with a heading skeleton, then APPEND as you research. Never save writing for the end.
 - Final chat message = a pointer paragraph + the path.
 - Inline citations (URL + date) on every non-obvious claim. Label `UNVERIFIED` where unconfirmed.

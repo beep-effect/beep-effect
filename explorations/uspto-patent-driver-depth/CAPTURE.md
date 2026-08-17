@@ -126,3 +126,11 @@ Already-covered — reuse/refine in `@beep/uspto`, NOT new build:
 - BigQuery nuggets (patents-mcp-server#10, patents-mcp#3, patents-mcp-server#13) require GCP creds + billing; keep the dry-run cost gate mandatory; out of the default scope on cost grounds.
 - ppubs (patents-mcp#1, patents-mcp#2) is an undocumented reverse-engineered USPTO endpoint — fragile and may break without notice; treat as a best-effort full-text tier behind ODP, not a primary source.
 - Codegen precedent = runpod (openapi.json + scripts/generate.ts), but uspto is hand-rolled — EXTEND in place; do NOT add generate.ts blindly or introduce Orval/axios/Zod.
+
+
+## 2026-08-17 — correction note (in-place edit above)
+
+The 2026-08-17 operator-directed provider-language sweep rephrased one earlier
+line in place ("offline/privilege-safe default scope" became a cost-scoped
+default). Original wording lives in git history; recorded here so the
+append-only trail stays honest without resurrecting retired phrasing.

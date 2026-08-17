@@ -1,7 +1,7 @@
 You are a research lane in a 16-lane parallel study. Your output is a CITED report file, not a chat answer.
 
 OUTPUT CONTRACT (obey exactly):
-- Write your report to this ABSOLUTE path: ~/YeeBois/projects/beep-effect2/goals/agentic-cad-patent-tooling/research/_fanout-2026-08-17/reports/x1-text-to-cad-market.md
+- Write your report to this ABSOLUTE path: goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/x1-text-to-cad-market.md
 - TURN BUDGET DISCIPLINE: CREATE that file within your FIRST 5 turns with the heading skeleton, then APPEND sections as you research. Never save writing for the end.
 - Your final chat message is a POINTER (one paragraph + the path), never the report itself.
 - Every non-obvious claim needs an inline citation: a URL (x.com post URLs are first-class evidence) and a DATE. Prefer primary sources (product docs, changelogs, founder posts) over blog roundups.

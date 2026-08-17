@@ -1,11 +1,11 @@
 # x8 — Patent-figure / CAD pipeline rules: drawing standards, confidentiality, export control
 
-**Lane:** x8-confidentiality-standards  
-**As-of date:** 2026-08-17  
-**Status:** COMPLETE (primary sources retrieved 2026-08-17)  
-**Audience:** Engineer implementing an agentic CAD → USPTO/PCT figure pipeline  
-**Method:** Primary legal/administrative sources first (eCFR / LII CFR text, MPEP, WIPO official texts, ABA Model Rules + Formal Opinion 512 PDF, USPTO Federal Register). Secondary sources used only to locate primary text. Items that could not be confirmed against a primary page are labeled `UNVERIFIED`.  
-**Non-goals:** Product recommendations; client-specific advice; a legal opinion for a particular matter. This is a build spec, not a brief.  
+**Lane:** x8-confidentiality-standards
+**As-of date:** 2026-08-17
+**Status:** COMPLETE (primary sources retrieved 2026-08-17)
+**Audience:** Engineer implementing an agentic CAD → USPTO/PCT figure pipeline
+**Method:** Primary legal/administrative sources first (eCFR / LII CFR text, MPEP, WIPO official texts, ABA Model Rules + Formal Opinion 512 PDF, USPTO Federal Register). Secondary sources used only to locate primary text. Items that could not be confirmed against a primary page are labeled `UNVERIFIED`.
+**Non-goals:** Product recommendations; client-specific advice; a legal opinion for a particular matter. This is a build spec, not a brief.
 **Confidentiality:** Public statutes, regulations, MPEP, WIPO standards, and bar/USPTO guidance only. No client invention content.
 
 ---
@@ -433,10 +433,10 @@ Primary: [MPEP § 608](https://www.uspto.gov/web/offices/pac/mpep/s608.html) (re
 
 ### 4.1 Two layers of review
 
-**Layer A — OPAP (Office of Patent Application Processing) formal review (MPEP 507).**  
+**Layer A — OPAP (Office of Patent Application Processing) formal review (MPEP 507).**
 OPAP inspects incoming drawings for scan/reproduction fitness and formal 1.84(e)/(f)/(g) defects (paper size, margins, one-sidedness, cracks/creases). Typical formal defects flagged at this layer: wrong sheet size, missing required margins, unscanable quality. Result is commonly a **Notice to File Corrected Application Papers** (see §4.4). MPEP 507 [R-07.2015] expressly lists drawings that “do not have the appropriate margin or are not on the correct size paper” (citing 1.84(f) and (g)) as a review failure.
 
-**Layer B — Examiner review (MPEP 608.02).**  
+**Layer B — Examiner review (MPEP 608.02).**
 The examiner reviews completeness (every claimed feature — 1.83(a)), reference-numeral use, shading/hatching, new matter, and 35 U.S.C. 112 enablement/description. Formal 1.84 defects that survived OPAP can still be objected to here.
 
 ### 4.2 MPEP 608.02 subsection map (what each does)
@@ -726,7 +726,7 @@ PCT extra: emit the optional 11.13(n) sign-list sheet when `|tokens|` is large.
 
 ### 9.1 The black-letter duties
 
-**Rule 1.6(a).** A lawyer shall not reveal information relating to the representation of a client unless the client gives informed consent, the disclosure is impliedly authorized, or an exception in 1.6(b) applies.  
+**Rule 1.6(a).** A lawyer shall not reveal information relating to the representation of a client unless the client gives informed consent, the disclosure is impliedly authorized, or an exception in 1.6(b) applies.
 Source: [ABA Model Rule 1.6](https://www.americanbar.org/groups/professional_responsibility/publications/model_rules_of_professional_conduct/rule_1_6_confidentiality_of_information/) (retrieved 2026-08-17).
 
 **Rule 1.6(c).** “A lawyer shall make reasonable efforts to prevent the inadvertent or unauthorized disclosure of, or unauthorized access to, information relating to the representation of a client.”
@@ -739,12 +739,12 @@ Source: [ABA Model Rule 1.6](https://www.americanbar.org/groups/professional_res
 - difficulty of implementing them
 - extent to which safeguards adversely affect the ability to represent clients
 
-A client may require *more* security than the Rule, or give **informed consent to forgo** measures the Rule would otherwise require. Sharing with nonlawyers outside the firm → Rule 5.3 cmts. [3]–[4].  
+A client may require *more* security than the Rule, or give **informed consent to forgo** measures the Rule would otherwise require. Sharing with nonlawyers outside the firm → Rule 5.3 cmts. [3]–[4].
 Source: [Comment on Rule 1.6](https://www.americanbar.org/groups/professional_responsibility/publications/model_rules_of_professional_conduct/rule_1_6_confidentiality_of_information/comment_on_rule_1_6/) (retrieved 2026-08-17).
 
 **Rule 1.6 cmt. [19].** When transmitting a communication that includes information relating to the representation, the lawyer must take reasonable precautions to prevent it from reaching unintended recipients. Special security measures are **not** required if the method affords a reasonable expectation of privacy — but special circumstances (sensitivity; whether privacy is protected by law or a confidentiality agreement) can require more.
 
-**Rule 1.1 cmt. [8] — “Maintaining Competence.”** “To maintain the requisite knowledge and skill, a lawyer should keep abreast of changes in the law and its practice, **including the benefits and risks associated with relevant technology**…”  
+**Rule 1.1 cmt. [8] — “Maintaining Competence.”** “To maintain the requisite knowledge and skill, a lawyer should keep abreast of changes in the law and its practice, **including the benefits and risks associated with relevant technology**…”
 Source: [Comment on Rule 1.1](https://www.americanbar.org/groups/professional_responsibility/publications/model_rules_of_professional_conduct/rule_1_1_competence/comment_on_rule_1_1/) (retrieved 2026-08-17).
 
 **Predecessor cloud opinion.** ABA Formal Opinion **477R** (May 22, 2017) (cited throughout Formal Op. 512) applies the same 1.6(c) / 1.1 cmt. [8] framework to transmitting client information over the internet: a fact-specific reasonable-efforts standard, not a ban on cloud tools.
@@ -854,7 +854,7 @@ Sources: [89 FR 10043](https://www.federalregister.gov/documents/2024/02/13/2024
 
 ### 11.1 The patent-law license — 35 U.S.C. 184 + 37 CFR 5.11
 
-**35 U.S.C. 184(a).** “Except when authorized by a license obtained from the Commissioner of Patents a person shall not file or cause or authorize to be filed in any foreign country prior to six months after filing in the United States an application for patent … in respect of an invention made in this country.” Retroactive license possible if filed abroad “through error” and the application does not disclose an invention within § 181.  
+**35 U.S.C. 184(a).** “Except when authorized by a license obtained from the Commissioner of Patents a person shall not file or cause or authorize to be filed in any foreign country prior to six months after filing in the United States an application for patent … in respect of an invention made in this country.” Retroactive license possible if filed abroad “through error” and the application does not disclose an invention within § 181.
 Source: [35 U.S.C. § 184](https://www.law.cornell.edu/uscode/text/35/184) (retrieved 2026-08-17).
 
 **35 U.S.C. 185** bars a US patent if the foreign filing was made without the required license. **35 U.S.C. 186** is the criminal counterpart.

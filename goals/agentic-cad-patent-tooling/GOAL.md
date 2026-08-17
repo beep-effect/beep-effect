@@ -51,7 +51,7 @@ Workflow:
 4. Tie every decision to evidence from files, tests, docs, or command output.
 5. Prove numeral extraction against real corpus files, not fixtures.
 6. Update packet evidence/status if implementation changes readiness.
-7. At P4 Close, write a closeout reflection to
+7. At P7 Close, write a closeout reflection to
    `history/reflections/<YYYY-MM-DD>-<agent>.md` via `/reflect`;
    `bun run beep lint reflection-artifacts` must pass.
 

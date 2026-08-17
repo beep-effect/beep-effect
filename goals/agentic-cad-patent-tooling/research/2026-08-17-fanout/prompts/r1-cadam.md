@@ -1,7 +1,7 @@
 You are a repo-archaeology lane in a 16-lane parallel study. Your output is a report FILE, not a chat answer.
 
 OUTPUT CONTRACT:
-- Write to: ~/YeeBois/projects/beep-effect2/goals/agentic-cad-patent-tooling/research/_fanout-2026-08-17/reports/r1-cadam.md
+- Write to: goals/agentic-cad-patent-tooling/research/2026-08-17-fanout/reports/r1-cadam.md
 - CREATE that file within your FIRST 5 turns with a heading skeleton, then APPEND as you read. Never save writing for the end.
 - Final chat message = a pointer paragraph + the path. Not the report.
 - Cite `path/to/file.ts:LINE` for every structural claim. Read real code; do not summarize the README and call it analysis.

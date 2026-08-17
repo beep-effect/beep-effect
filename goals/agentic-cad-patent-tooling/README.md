@@ -70,7 +70,7 @@ pipeline exists, and cloud text-to-CAD is unusable for privileged work.
 
 ## Evidence
 
-- [`research/2026-08-17-fanout/`](research/2026-08-17-fanout/) — 20 cited lane
+- [`research/2026-08-17-fanout/`](research/2026-08-17-fanout/) — 21 cited lane
   reports (market, agent tool surfaces, rendering stacks, DWG/DXF ingest,
   vector figure pipeline, 2D-vs-3D architecture, drawing standards and
   confidentiality law, plus six repo-archaeology lanes over cloned CAD
