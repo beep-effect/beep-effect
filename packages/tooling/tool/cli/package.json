@@ -74,6 +74,7 @@
     "src/**/*.ts",
     "!src/test/**/*.ts",
     "src/commands/CreatePackage/templates/**/*.hbs",
+    "src/commands/CreatePackage/templates/assets/**",
     "dist/**/*.js",
     "dist/**/*.js.map",
     "dist/**/*.d.ts",

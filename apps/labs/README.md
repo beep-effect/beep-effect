@@ -5,7 +5,7 @@ Law-abiding experimental applications. Doctrine:
 glossary term "Lab App"; decisions D1–D14 in
 `goals/lab-apps-lifecycle/SPEC.md`.
 
-- **Create**: `bun run beep create-package <name> --type app --app-kind <nextjs|vite|service> --lab --description "..."`
+- **Create**: `bun run beep create-package <name> --type app --app-kind <nextjs|vite|service|tauri> --lab --description "..."`
 - **List**: `bun run beep labs list`
 - **Delete**: `bun run beep delete-package <name>` (doctor proves zero residue)
 - **Promote**: `docs/runbooks/lab-promotion.md`

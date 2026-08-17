@@ -16,7 +16,13 @@ import {
 } from "./internal/FallowFeedback.ts";
 import { runYeet } from "./internal/Handler.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
-import { runYeetMerge, runYeetMergeLoop, runYeetReplyPass, runYeetSweep } from "./internal/Porcelain.ts";
+import {
+  runYeetMerge,
+  runYeetMergeLoop,
+  runYeetReplyPass,
+  runYeetSweep,
+  runYeetWatchLoop,
+} from "./internal/Porcelain.ts";
 import { YeetRunOptions } from "./Yeet.schemas.ts";
 import type { YeetRunMode } from "./internal/Planner.ts";
 
@@ -245,10 +251,17 @@ const publishFlags = {
   summary: summaryFlag,
 } as const;
 
+const watchFlag = Flag.boolean("watch").pipe(
+  Flag.withDescription(
+    "Stream one NDJSON row per PR state transition until the PR settles, instead of the blocking check watch"
+  )
+);
+
 const monitorFlags = {
   ...sharedFlags,
   summary: summaryFlag,
   untilMerged: untilMergedFlag,
+  watch: watchFlag,
 } as const;
 
 const porcelainFlags = {
@@ -366,8 +379,12 @@ const yeetPublishCommand = Command.make("publish", publishFlags, (options) => ru
   Command.withDescription("Commit reviewed staged changes, prove the commit, then push")
 );
 
-const yeetMonitorCommand = Command.make("monitor", monitorFlags, ({ untilMerged, ...options }) =>
-  untilMerged && !options.plan ? runYeetMergeLoop(options) : runYeetMode("monitor", options)
+const yeetMonitorCommand = Command.make("monitor", monitorFlags, ({ untilMerged, watch, ...options }) =>
+  untilMerged && !options.plan
+    ? runYeetMergeLoop(options)
+    : watch && !options.plan
+      ? runYeetWatchLoop(options)
+      : runYeetMode("monitor", options)
 ).pipe(Command.withDescription("Monitor hosted PR checks for the current branch"));
 
 const yeetSweepCommand = Command.make("sweep", sweepFlags, (options) => runYeetSweep(options)).pipe(
