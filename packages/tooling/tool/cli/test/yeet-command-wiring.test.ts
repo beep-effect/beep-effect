@@ -33,3 +33,17 @@ describe("yeet merge-loop command wiring", () => {
     );
   });
 });
+
+describe("yeet inbox command wiring", () => {
+  it("registers the inbox subcommand with its list, ack, and append children", () => {
+    expect(subcommandNames).toContain("inbox");
+
+    const inbox = findSubcommand("inbox");
+    expect(inbox._tag).toBe("Some");
+    const children =
+      inbox._tag === "Some"
+        ? A.flatMap(inbox.value.subcommands, (group) => A.map(group.commands, (command) => command.name))
+        : [];
+    expect(children).toEqual(expect.arrayContaining(["list", "ack", "append"]));
+  });
+});

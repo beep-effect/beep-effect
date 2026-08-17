@@ -1,3 +1,4 @@
+import { CommandStdinSource } from "@beep/repo-cli/test/Cli";
 import {
   ackYeetInboxRow,
   appendYeetInboxRow,
@@ -9,6 +10,9 @@ import {
   renderYeetInboxEntryLine,
   renderYeetInboxListOutput,
   renderYeetInboxView,
+  runYeetInboxAck,
+  runYeetInboxAppend,
+  runYeetInboxList,
   writeYeetAckReceipt,
   YeetAckFixResolution,
   YeetAckReceipt,
@@ -28,7 +32,9 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 
 const AT = "2026-08-17T00:00:00Z";
 
@@ -127,6 +133,7 @@ describe("renderYeetInboxView", () => {
     const view = YeetInboxView.make({
       entries: [entry(row(capsule())), entry(row(capsule({ lane: "Check / Lint" })), true)],
       skippedLines: 3,
+      unreadable: false,
     });
 
     const rendered = renderYeetInboxView(view);
@@ -137,11 +144,20 @@ describe("renderYeetInboxView", () => {
   });
 });
 
+describe("renderYeetInboxView (unreadable)", () => {
+  it("flags an unreadable failures file in the header", () => {
+    const view = YeetInboxView.make({ entries: [], skippedLines: 0, unreadable: true });
+
+    expect(renderYeetInboxView(view)).toContain("unreadable; inbox state unknown, not empty");
+  });
+});
+
 describe("renderYeetInboxListOutput", () => {
   const view = () =>
     YeetInboxView.make({
       entries: [entry(row(capsule())), entry(row(capsule({ lane: "Check / Lint" }), "P1"), true)],
       skippedLines: 2,
+      unreadable: false,
     });
 
   it.effect("renders the filtered operator text", () =>
@@ -296,5 +312,99 @@ describe("appendYeetInboxRowFromText", () => {
         expect(failure.message).toContain("Failed to decode the inbox row document");
       })
     ).pipe(provideScopedLayer(PlatformLayer))
+  );
+});
+
+// The runners resolve the checkout through findRepoRoot from process.cwd, so
+// these tests chdir into a temp directory carrying a bun.lock root marker.
+// The suite runs with fileParallelism disabled, so the cwd swap cannot race
+// another file.
+const inTempCheckout = Effect.fn("inTempCheckout")(function* <Value, Failure, Requirements>(
+  use: (root: string) => Effect.Effect<Value, Failure, Requirements>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const original = process.cwd();
+  const enter = Effect.gen(function* () {
+    const made = yield* fs.makeTempDirectory();
+    yield* fs.writeFileString(`${made}/bun.lock`, "");
+    yield* Effect.sync(() => process.chdir(made));
+    // findRepoRoot walks from process.cwd(), which may canonicalize the temp
+    // path, so the tests join on whatever cwd now reports.
+    return process.cwd();
+  });
+  return yield* Effect.acquireUseRelease(enter, use, (root) =>
+    Effect.sync(() => process.chdir(original)).pipe(Effect.andThen(Effect.ignore(fs.remove(root, { recursive: true }))))
+  );
+});
+
+const RunnerLayer = Layer.mergeAll(TestConsole.layer, PlatformLayer);
+
+// Inject the stdin source: a real stdin read blocks until EOF and test
+// runners hold their workers' stdin open, so runner tests always stub it.
+const providedStdin = (text: string) =>
+  Effect.provideService(CommandStdinSource, { interactive: () => false, text: () => Promise.resolve(text) });
+
+describe("yeet inbox runners", () => {
+  it.live("list prints the resolved checkout's inbox as text and as decodable JSON", () =>
+    inTempCheckout((root) =>
+      Effect.gen(function* () {
+        yield* appendYeetInboxRow(root, row(capsule()));
+
+        yield* runYeetInboxList({ json: false, severity: "all", unacked: false });
+        yield* runYeetInboxList({ json: true, severity: "all", unacked: true });
+
+        // The text listing is one multi-line log entry; the JSON document is
+        // the second entry.
+        const lines = A.map(yield* TestConsole.logLines, String);
+        expect(A.length(lines)).toBe(2);
+        expect(O.getOrElse(A.head(lines), () => "")).toContain("[yeet] inbox: 1 row(s), 1 unacked, 0 skipped line(s)");
+        const decoded = yield* YeetInboxViewJson.decode(O.getOrElse(A.last(lines), () => ""));
+        expect(A.length(decoded.entries)).toBe(1);
+      })
+    ).pipe(provideScopedLayer(RunnerLayer))
+  );
+
+  it.live("ack writes the receipt from the resolved checkout and reports a replacement on re-ack", () =>
+    inTempCheckout((root) =>
+      Effect.gen(function* () {
+        const subject = row(capsule());
+        yield* appendYeetInboxRow(root, subject);
+
+        yield* runYeetInboxAck({ fixSha: "2817f28", id: subject.id, reason: "", threadUrl: "", wontfix: false });
+        const state = yield* readYeetAckState(root, subject.id);
+        expect(state.receipt?.resolution).toStrictEqual(YeetAckFixResolution.make({ sha: "2817f28" }));
+
+        yield* runYeetInboxAck({ fixSha: "", id: subject.id, reason: "actually flaky", threadUrl: "", wontfix: true });
+
+        const lines = A.map(yield* TestConsole.logLines, String);
+        expect(A.some(lines, (line) => Str.includes("acked")(line))).toBe(true);
+        expect(A.some(lines, (line) => Str.includes("replaced an existing receipt")(line))).toBe(true);
+      })
+    ).pipe(provideScopedLayer(RunnerLayer))
+  );
+
+  it.live("append reads the row document from stdin and appends it to the resolved checkout", () =>
+    inTempCheckout((root) =>
+      Effect.gen(function* () {
+        const subject = row(capsule());
+        const text = yield* YeetInboxRowJson.encode(subject);
+        yield* runYeetInboxAppend({ fromStdin: true }).pipe(providedStdin(`${text}\n`));
+
+        const view = yield* loadYeetInboxView(root);
+        expect(A.map(view.entries, (candidate) => candidate.row.id)).toStrictEqual([subject.id]);
+        const lines = A.map(yield* TestConsole.logLines, String);
+        expect(A.some(lines, (line) => Str.includes("appended")(line))).toBe(true);
+      })
+    ).pipe(provideScopedLayer(RunnerLayer))
+  );
+
+  it.live("append refuses to run without --from-stdin before touching the checkout", () =>
+    inTempCheckout(() =>
+      Effect.gen(function* () {
+        const failure = yield* Effect.flip(runYeetInboxAppend({ fromStdin: false }));
+
+        expect(failure.message).toBe("yeet inbox append requires --from-stdin.");
+      })
+    ).pipe(provideScopedLayer(RunnerLayer))
   );
 });

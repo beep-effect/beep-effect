@@ -7,7 +7,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Effect } from "effect";
+import { Context, Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/cli/Stdin");
@@ -36,6 +36,44 @@ export class StdinDocumentError extends S.TaggedError<StdinDocumentError>($I`Std
     description: "Failure while reading a stdin document for a --from-stdin command flag.",
   })
 ) {}
+
+/**
+ * How a command observes and consumes the process stdin.
+ */
+interface CommandStdinShape {
+  /** Whether stdin is an interactive terminal with nothing piped into it. */
+  readonly interactive: () => boolean;
+  /** Read the whole piped document. */
+  readonly text: () => Promise<string>;
+}
+
+/**
+ * The process-stdin source, injectable so tests never touch real stdin.
+ *
+ * **Details**
+ *
+ * The default reads the real process stdin through the Bun runtime the CLI
+ * ships on. Tests must always provide a stub: a real `stdin.text()` read
+ * blocks until the pipe reaches EOF, and test runners hold their workers'
+ * stdin open — the read would hang for the length of the test timeout.
+ *
+ * **Example** (Read the reference key)
+ *
+ * ```ts
+ * import { CommandStdinSource } from "@beep/repo-cli/internal/cli/Stdin"
+ *
+ * console.log(typeof CommandStdinSource.key) // "string"
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const CommandStdinSource: Context.Reference<CommandStdinShape> = Context.Reference($I`CommandStdinSource`, {
+  defaultValue: (): CommandStdinShape => ({
+    interactive: () => process.stdin.isTTY === true,
+    text: () => Bun.stdin.text(),
+  }),
+});
 
 /**
  * The caller-specific phrasing for each way a stdin read can fail.
@@ -79,14 +117,12 @@ export const readStdinDocument = Effect.fn("Cli.readStdinDocument")(function* (
   if (!fromStdin) {
     return yield* StdinDocumentError.make({ message: messages.missingFlag });
   }
-  if (process.stdin.isTTY) {
+  const source = yield* CommandStdinSource;
+  if (source.interactive()) {
     return yield* StdinDocumentError.make({ message: messages.noStdin });
   }
-  return yield* Effect.tryPromise(() => Bun.stdin.text()).pipe(
-    Effect.mapError((cause) =>
-      StdinDocumentError.make({
-        message: `${messages.readFailurePrefix}: ${cause instanceof Error ? cause.message : String(cause)}`,
-      })
-    )
-  );
+  return yield* Effect.tryPromise({
+    try: () => source.text(),
+    catch: (cause) => StdinDocumentError.make({ message: `${messages.readFailurePrefix}: ${String(cause)}` }),
+  });
 });

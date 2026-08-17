@@ -29,6 +29,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, Match } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -306,7 +307,7 @@ export const readYeetAckState = Effect.fn("Yeet.readYeetAckState")(function* (
   // but cannot be read (permissions, a directory squatting on the path, EIO)
   // still acks its row — folding those read failures into "unacked" would
   // re-arm enforcement over a bookkeeping defect.
-  const acked = yield* fs.exists(ackPath).pipe(Effect.orElseSucceed(() => false));
+  const acked = yield* fs.exists(ackPath).pipe(Effect.orElseSucceed(thunkFalse));
   if (!acked) {
     return YeetAckState.make({ acked: false, receipt: null });
   }

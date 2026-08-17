@@ -13,5 +13,6 @@ export * from "../internal/cli/Json.ts";
 export * from "../internal/cli/Printer.ts";
 export * from "../internal/cli/Progress.ts";
 export * from "../internal/cli/RunMode.ts";
+export * from "../internal/cli/Stdin.ts";
 export * from "../internal/cli/Timing.ts";
 export * from "../internal/cli/UnknownProbe.ts";

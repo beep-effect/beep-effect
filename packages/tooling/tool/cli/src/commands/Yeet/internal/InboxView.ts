@@ -26,6 +26,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { thunkFalse } from "@beep/utils";
 import { Effect, FileSystem, MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -34,7 +35,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
 import { readYeetAckState, YeetAckState } from "./Ack.ts";
-import { YeetInboxRow, YeetInboxRowJson, yeetInboxPaths } from "./Inbox.ts";
+import { YeetInboxRow, YeetInboxRowJson, yeetInboxPaths, yeetInboxRowId } from "./Inbox.ts";
 import { loadYeetRemediationWave } from "./Remediation.ts";
 import type { Path } from "effect";
 import type { YeetRemediationWave } from "./Remediation.ts";
@@ -206,12 +207,20 @@ export class YeetInboxEntry extends S.Class<YeetInboxEntry>($I`YeetInboxEntry`)(
 /**
  * The joined inbox: every deduplicated row plus the reader's accounting.
  *
+ * **Details**
+ *
+ * `unreadable` distinguishes "the failures file does not exist" (a genuinely
+ * empty inbox) from "the file exists but could not be read" (permissions, a
+ * directory squatting on the path, IO failure). An enforcement consumer must
+ * not treat the second case as an empty backlog — the inbox state is unknown,
+ * not clear.
+ *
  * **Example** (Build an empty view)
  *
  * ```ts
  * import { YeetInboxView } from "@beep/repo-cli/test/Yeet"
  *
- * const view = YeetInboxView.make({ entries: [], skippedLines: 0 })
+ * const view = YeetInboxView.make({ entries: [], skippedLines: 0, unreadable: false })
  * console.log(view.schemaVersion) // "yeet-inbox-view/v1"
  * ```
  *
@@ -225,9 +234,11 @@ export class YeetInboxView extends S.Class<YeetInboxView>($I`YeetInboxView`)(
     ),
     entries: S.Array(YeetInboxEntry),
     skippedLines: S.Finite,
+    unreadable: S.Boolean,
   },
   $I.annote("YeetInboxView", {
-    description: "Every deduplicated inbox entry plus the count of undecodable lines the reader skipped.",
+    description:
+      "Every deduplicated inbox entry, the count of skipped lines, and whether the failures file was unreadable.",
   })
 ) {}
 
@@ -259,17 +270,32 @@ const dedupeRowsById = (rows: ReadonlyArray<YeetInboxRow>): ReadonlyArray<YeetIn
   });
 };
 
+// Appends write one whole `line\n` per call, so an unterminated tail is an
+// in-flight append the next read will see whole — provisional, not garbage.
+// Only newline-terminated content is complete evidence.
+const terminatedPortion = (text: string): string =>
+  Str.endsWith("\n")(text)
+    ? text
+    : O.match(Str.lastIndexOf("\n")(text), {
+        onNone: () => "",
+        onSome: (index) => Str.slice(0, index + 1)(text),
+      });
+
 /**
  * Load the joined inbox view for one checkout.
  *
  * **Details**
  *
- * Reads the failures file tolerantly (a missing file is an empty inbox;
- * undecodable lines are counted in `skippedLines`), dedupes rows by id
- * keeping the first observation, then joins each row with its ack state and
- * its liveness against the persisted wave record. This is the one read every
- * consumer shares, so the CLI and the hook adapters provably see the same
- * inbox.
+ * Reads the failures file tolerantly: a missing file is an empty inbox, an
+ * existing-but-unreadable file is flagged `unreadable` instead of decaying to
+ * empty, an unterminated final line is treated as an in-flight append and
+ * ignored without counting, and terminated lines that fail to decode — or
+ * whose id breaks the deterministic {@link yeetInboxRowId} contract the
+ * append path enforces — are counted in `skippedLines`. Surviving rows are
+ * deduplicated by id keeping the first observation, then joined with their
+ * ack state and their liveness against the persisted wave record. This is the
+ * one read every consumer shares, so the CLI and the hook adapters provably
+ * see the same inbox.
  *
  * **Example** (Build the load effect)
  *
@@ -281,7 +307,7 @@ const dedupeRowsById = (rows: ReadonlyArray<YeetInboxRow>): ReadonlyArray<YeetIn
  * ```
  *
  * @param repoRoot - The checkout whose inbox is read.
- * @returns The joined view; an unreadable inbox is empty, never an error.
+ * @returns The joined view; never an error — failure modes fold into the view's accounting.
  * @category services
  * @since 0.0.0
  */
@@ -290,16 +316,18 @@ export const loadYeetInboxView = Effect.fn("Yeet.loadYeetInboxView")(function* (
 ): Effect.fn.Return<YeetInboxView, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const paths = yield* yeetInboxPaths(repoRoot);
+  const exists = yield* fs.exists(paths.failuresPath).pipe(Effect.orElseSucceed(thunkFalse));
+  if (!exists) {
+    return YeetInboxView.make({ entries: [], skippedLines: 0, unreadable: false });
+  }
   const text = yield* Effect.option(fs.readFileString(paths.failuresPath));
-  const lines = A.filter(
-    Str.split(
-      O.getOrElse(text, () => ""),
-      "\n"
-    ),
-    Str.isNonEmpty
-  );
+  if (O.isNone(text)) {
+    return YeetInboxView.make({ entries: [], skippedLines: 0, unreadable: true });
+  }
+  const lines = A.filter(Str.split(terminatedPortion(text.value), "\n"), Str.isNonEmpty);
   const rows = A.getSomes(A.map(lines, YeetInboxRowJson.decodeOption));
-  const deduped = dedupeRowsById(rows);
+  const wellFormed = A.filter(rows, (row) => row.id === yeetInboxRowId(row.capsule));
+  const deduped = dedupeRowsById(wellFormed);
   const wave = yield* loadYeetRemediationWave(repoRoot);
   const entries = yield* Effect.forEach(deduped, (row) =>
     readYeetAckState(repoRoot, row.id).pipe(
@@ -308,6 +336,7 @@ export const loadYeetInboxView = Effect.fn("Yeet.loadYeetInboxView")(function* (
   );
   return YeetInboxView.make({
     entries,
-    skippedLines: A.length(lines) - A.length(rows),
+    skippedLines: A.length(lines) - A.length(wellFormed),
+    unreadable: false,
   });
 });

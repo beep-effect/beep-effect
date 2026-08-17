@@ -482,7 +482,7 @@ const yeetFallowFixtureCheckCommand = Command.make(
   ({ assert, emit, fixturePath }) => runYeetFallowFixtureCheck({ assertions: assert, emit, fixturePath })
 ).pipe(Command.withDescription("Verify Fallow envelope fixtures map into Yeet quality issues"));
 
-const yeetInboxListCommand = Command.make("list", inboxListFlags, (options) => runYeetInboxList(options)).pipe(
+const yeetInboxListCommand = Command.make("list", inboxListFlags, runYeetInboxList).pipe(
   Command.withDescription("List the checkout's failure inbox rows joined with ack state and wave liveness")
 );
 
@@ -495,14 +495,14 @@ const yeetInboxAckCommand = Command.make(
     threadUrl: inboxThreadUrlFlag,
     wontfix: inboxWontfixFlag,
   },
-  (options) => runYeetInboxAck(options)
+  runYeetInboxAck
 ).pipe(Command.withDescription("Acknowledge one inbox row with a fix SHA, a reasoned wontfix, or a thread URL"));
 
-const yeetInboxAppendCommand = Command.make("append", { fromStdin: inboxRowStdinFlag }, (options) =>
-  runYeetInboxAppend(options)
-).pipe(Command.withDescription("Append one typed failure row from stdin to the checkout's inbox"));
+const yeetInboxAppendCommand = Command.make("append", { fromStdin: inboxRowStdinFlag }, runYeetInboxAppend).pipe(
+  Command.withDescription("Append one typed failure row from stdin to the checkout's inbox")
+);
 
-const yeetInboxCommand = Command.make("inbox", inboxListFlags, (options) => runYeetInboxList(options)).pipe(
+const yeetInboxCommand = Command.make("inbox", inboxListFlags, runYeetInboxList).pipe(
   Command.withDescription("Read and acknowledge the checkout's typed failure inbox"),
   Command.withSubcommands([yeetInboxListCommand, yeetInboxAckCommand, yeetInboxAppendCommand])
 );

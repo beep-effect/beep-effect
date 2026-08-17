@@ -196,7 +196,7 @@ export const renderYeetInboxEntryLine = (entry: YeetInboxEntry): string =>
  * ```ts
  * import { renderYeetInboxView, YeetInboxView } from "@beep/repo-cli/test/Yeet"
  *
- * const view = YeetInboxView.make({ entries: [], skippedLines: 0 })
+ * const view = YeetInboxView.make({ entries: [], skippedLines: 0, unreadable: false })
  * console.log(renderYeetInboxView(view)) // "[yeet] inbox: 0 row(s), 0 unacked, 0 skipped line(s)"
  * ```
  *
@@ -207,7 +207,8 @@ export const renderYeetInboxEntryLine = (entry: YeetInboxEntry): string =>
  */
 export const renderYeetInboxView = (view: YeetInboxView): string => {
   const unacked = A.length(A.filter(view.entries, (entry) => !entry.ack.acked));
-  const header = `[yeet] inbox: ${A.length(view.entries)} row(s), ${unacked} unacked, ${view.skippedLines} skipped line(s)`;
+  const suffix = view.unreadable ? " — failures file exists but is unreadable; inbox state unknown, not empty" : "";
+  const header = `[yeet] inbox: ${A.length(view.entries)} row(s), ${unacked} unacked, ${view.skippedLines} skipped line(s)${suffix}`;
   return A.join([header, ...A.map(view.entries, renderYeetInboxEntryLine)], "\n");
 };
 
@@ -423,7 +424,7 @@ const readYeetInboxStdin = (fromStdin: boolean): Effect.Effect<string, YeetComma
  * import { renderYeetInboxListOutput, YeetInboxView } from "@beep/repo-cli/test/Yeet"
  * import { Effect } from "effect"
  *
- * const view = YeetInboxView.make({ entries: [], skippedLines: 0 })
+ * const view = YeetInboxView.make({ entries: [], skippedLines: 0, unreadable: false })
  * const output = renderYeetInboxListOutput(view, { json: false, severity: "all", unacked: false })
  * console.log(Effect.runSync(output)) // "[yeet] inbox: 0 row(s), 0 unacked, 0 skipped line(s)"
  * ```
@@ -441,6 +442,7 @@ export const renderYeetInboxListOutput = Effect.fn("Yeet.renderYeetInboxListOutp
   const filtered = YeetInboxView.make({
     entries: filterYeetInboxEntries(view.entries, options),
     skippedLines: view.skippedLines,
+    unreadable: view.unreadable,
   });
   if (options.json) {
     return yield* YeetInboxViewJson.encode(filtered).pipe(

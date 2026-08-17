@@ -7,6 +7,7 @@ import {
   YeetAckReceipt,
   YeetCheckFailedRow,
   YeetFailureCapsule,
+  YeetInboxRowJson,
   YeetInboxViewJson,
   YeetRemediationWave,
   YeetRemediationWaveJson,
@@ -23,6 +24,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 
 const AT = "2026-08-17T00:00:00Z";
 
@@ -105,6 +107,7 @@ describe("loadYeetInboxView", () => {
         expect(view.schemaVersion).toBe(YEET_INBOX_VIEW_SCHEMA_VERSION);
         expect(view.entries).toStrictEqual([]);
         expect(view.skippedLines).toBe(0);
+        expect(view.unreadable).toBe(false);
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
@@ -194,6 +197,78 @@ describe("loadYeetInboxView", () => {
         const view = yield* loadYeetInboxView(root);
 
         expect(A.map(view.entries, (entry) => entry.liveness)).toStrictEqual(["live", "superseded"]);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("flags an existing-but-unreadable failures file instead of decaying to empty", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const paths = yield* yeetInboxPaths(root);
+        // A directory squatting on the failures path: it exists, but reading
+        // it as a file fails — the view must say "unknown", not "empty".
+        yield* fs.makeDirectory(paths.failuresPath, { recursive: true });
+
+        const view = yield* loadYeetInboxView(root);
+
+        expect(view.unreadable).toBe(true);
+        expect(view.entries).toStrictEqual([]);
+        expect(view.skippedLines).toBe(0);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("skips and counts rows whose id breaks the deterministic contract", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* appendYeetInboxRow(root, row(capsule()));
+        const forged = YeetCheckFailedRow.make({ ...row(capsule({ lane: "Check / Lint" })), id: "forged-id" });
+        const paths = yield* yeetInboxPaths(root);
+        const line = yield* YeetInboxRowJson.encode(forged);
+        yield* fs.writeFileString(paths.failuresPath, `${line}\n`, { flag: "a" });
+
+        const view = yield* loadYeetInboxView(root);
+
+        expect(A.map(view.entries, (entry) => entry.row.id)).toStrictEqual([row(capsule()).id]);
+        expect(view.skippedLines).toBe(1);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("treats a file holding only an unterminated line as empty, not garbage", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const paths = yield* yeetInboxPaths(root);
+        yield* fs.makeDirectory(paths.dir, { recursive: true });
+        // No newline anywhere: the whole file is one in-flight append.
+        yield* fs.writeFileString(paths.failuresPath, '{"kind":"check-fail');
+
+        const view = yield* loadYeetInboxView(root);
+
+        expect(view.entries).toStrictEqual([]);
+        expect(view.skippedLines).toBe(0);
+        expect(view.unreadable).toBe(false);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
+  );
+
+  it.live("ignores an unterminated final line as in-flight instead of counting it as garbage", () =>
+    inTempRepo((root) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        yield* appendYeetInboxRow(root, row(capsule()));
+        const paths = yield* yeetInboxPaths(root);
+        const partial = yield* YeetInboxRowJson.encode(row(capsule({ lane: "Check / Lint" })));
+        // Half of an in-flight append: no trailing newline.
+        yield* fs.writeFileString(paths.failuresPath, Str.slice(0, 25)(partial), { flag: "a" });
+
+        const view = yield* loadYeetInboxView(root);
+
+        expect(A.length(view.entries)).toBe(1);
+        expect(view.skippedLines).toBe(0);
       })
     ).pipe(provideScopedLayer(PlatformLayer))
   );
