@@ -20,6 +20,7 @@ import { extract as extractTar } from "tar";
 import { OutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import {
   gitArchiveEnv,
+  guardCloneLocalGitAttributes,
   readGitRenames,
   readGitTree,
   resolveGitCommit,
@@ -29,6 +30,7 @@ import {
 import { KnowledgeCommandSurface } from "./Knowledge.command-surface.ts";
 import {
   KNOWLEDGE_HISTORY_REMEDIATION,
+  KnowledgeCloneAttributesError,
   KnowledgeOperationalError,
   KnowledgeProbeBootError,
 } from "./Knowledge.errors.ts";
@@ -217,18 +219,24 @@ export interface KnowledgePairedOracleInput {
  * `scanPair` takes an already-materialized comparison boundary and stays pure; `semanticDelta` builds
  * that boundary from local Git history for a base ref and then delegates to it. `refsTree` is the
  * single-tree read-only census: it shares the archive plumbing but compares nothing, so it gates
- * nothing either.
+ * nothing either. Both tree-materializing operations refuse to archive while a non-empty
+ * clone-local git attributes file is present, failing with {@link KnowledgeCloneAttributesError}
+ * before any bytes are compared.
  *
  * @see {@link KnowledgeService} for the service tag that carries this shape.
  * @category services
  * @since 0.0.0
  */
 export interface KnowledgeServiceShape {
-  readonly refsTree: (treeish: string) => Effect.Effect<KnowledgeRefsReport, KnowledgeOperationalError>;
+  readonly refsTree: (
+    treeish: string
+  ) => Effect.Effect<KnowledgeRefsReport, KnowledgeOperationalError | KnowledgeCloneAttributesError>;
   readonly scanPair: (
     input: KnowledgePairedOracleInput
   ) => Effect.Effect<KnowledgeSemanticDeltaReport, KnowledgeOperationalError>;
-  readonly semanticDelta: (baseRef: string) => Effect.Effect<KnowledgeSemanticDeltaReport, KnowledgeOperationalError>;
+  readonly semanticDelta: (
+    baseRef: string
+  ) => Effect.Effect<KnowledgeSemanticDeltaReport, KnowledgeOperationalError | KnowledgeCloneAttributesError>;
 }
 
 /**
@@ -886,6 +894,14 @@ const gitAdapter: GitCommandErrorAdapter<KnowledgeOperationalError> = {
   onTruncated: O.none(),
 };
 
+// A clone-local info/attributes file outranks every attribute layer the canonical archive contract
+// pins and no git invocation can disable it (research/p3-hermetic-lane-decisions.md, "Measured
+// residual"), so both tree-materializing entry points refuse to archive while a non-empty one exists.
+const guardKnowledgeCloneAttributes = (repoRoot: string) =>
+  guardCloneLocalGitAttributes(repoRoot, gitAdapter, KnowledgeCloneAttributesError.at, (attributesPath) =>
+    KnowledgeOperationalError.new(`Failed to stat clone-local git attributes "${attributesPath}".`)
+  );
+
 const ROOT_COMMAND_MODULE = "packages/tooling/tool/cli/src/commands/Root.ts";
 const PORTFOLIO_INDEX_MODULE = "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts";
 
@@ -1388,6 +1404,7 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
   const headCommit = yield* resolveGitCommit(repoRoot, "HEAD", historyAdapter);
   const baseCommit = yield* resolveGitMergeBase(repoRoot, baseRef, headCommit, historyAdapter);
   const probePolicy = yield* resolveKnowledgeProbePolicy(process.env);
+  yield* guardKnowledgeCloneAttributes(repoRoot);
 
   return yield* Effect.scoped(
     Effect.gen(function* () {
@@ -1491,6 +1508,7 @@ export const makeKnowledgeTreeOracle = Effect.fn("Knowledge.makeTreeOracle")(fun
     KnowledgeOperationalError.mapError("Failed to locate the repository root for the reference census.")
   );
   const commit = yield* resolveGitCommit(repoRoot, treeish, treeGitAdapter(treeish));
+  yield* guardKnowledgeCloneAttributes(repoRoot);
   const tempRoot = yield* fs
     .makeTempDirectoryScoped({ prefix: "beep-knowledge-refs-" })
     .pipe(KnowledgeOperationalError.mapError("Failed to create a reference-census temporary root."));

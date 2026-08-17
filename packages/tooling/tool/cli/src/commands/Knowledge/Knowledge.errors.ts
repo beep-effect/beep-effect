@@ -256,3 +256,74 @@ export class KnowledgeHostPathDebtError extends S.TaggedError<KnowledgeHostPathD
     description: "The checked census carries live host-path observations in the gated classes.",
   })
 ) {}
+
+/**
+ * The guard failure raised when a non-empty clone-local git attributes file is present.
+ *
+ * **Details**
+ *
+ * The clone-local attributes file (`git rev-parse --git-path info/attributes`) outranks every
+ * attribute layer the canonical archive contract pins, and no git invocation can disable it
+ * (measured against git 2.55.0 — `goals/knowledge-surface-automation/research/p3-hermetic-lane-decisions.md`).
+ * A non-empty file would silently rewrite the hermetic archive bytes both knowledge commands
+ * compare, so tree materialization refuses to archive while one is present. The file is absent
+ * from fresh clones and CI, where this guard is vacuously green; an empty file also passes.
+ *
+ * **Example** (Fail closed on a non-empty clone-local attributes file)
+ *
+ * ```ts
+ * import { KnowledgeCloneAttributesError } from "@beep/repo-cli/commands/Knowledge/Knowledge.errors"
+ *
+ * const error = KnowledgeCloneAttributesError.at("/repo/.git/info/attributes")
+ *
+ * console.log(error.attributesPath) // "/repo/.git/info/attributes"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class KnowledgeCloneAttributesError extends S.TaggedError<KnowledgeCloneAttributesError>(
+  $I`KnowledgeCloneAttributesError`
+)(
+  "KnowledgeCloneAttributesError",
+  {
+    message: S.String,
+    attributesPath: S.String,
+  },
+  $I.annote("KnowledgeCloneAttributesError", {
+    description: "A non-empty clone-local git attributes file would silently rewrite hermetic archive bytes.",
+  })
+) {
+  /**
+   * Constructs the guard failure for one resolved clone-local attributes path.
+   *
+   * **Details**
+   *
+   * The message carries the remediation inline: the file must be moved or deleted, because no git
+   * invocation can suppress it and any attribute rules it holds belong in the repository's tracked
+   * `.gitattributes` instead.
+   *
+   * **Example** (Name the offending file)
+   *
+   * ```ts
+   * import { KnowledgeCloneAttributesError } from "@beep/repo-cli/commands/Knowledge/Knowledge.errors"
+   *
+   * const error = KnowledgeCloneAttributesError.at("/repo/.git/info/attributes")
+   *
+   * console.log(error.message.includes("/repo/.git/info/attributes")) // true
+   * ```
+   *
+   * @param attributesPath - Resolved path of the offending clone-local attributes file.
+   * @returns The typed guard failure carrying the path and the inline remediation.
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly at = (attributesPath: string): KnowledgeCloneAttributesError =>
+    KnowledgeCloneAttributesError.make({
+      attributesPath,
+      message:
+        `Clone-local git attributes file "${attributesPath}" is non-empty. ` +
+        "It silently rewrites `git archive` bytes and no git invocation can disable it. " +
+        "Move or delete the file; attribute rules belong in the repository's tracked .gitattributes.",
+    });
+}
