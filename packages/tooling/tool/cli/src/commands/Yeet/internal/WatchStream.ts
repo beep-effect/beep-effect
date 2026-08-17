@@ -161,7 +161,15 @@ export const classifyYeetCheckOutcome = (check: YeetCheckSignal): YeetCheckOutco
 };
 
 /**
- * One check within a watch snapshot: its name and classified outcome.
+ * One check within a watch snapshot: its classified outcome plus its record.
+ *
+ * **Details**
+ *
+ * `link`, `workflow`, and the raw `signal` are the check's own record as
+ * `gh pr checks` reported it, preserved so a failure capsule derives from the
+ * failing check's record instead of a classifier pass over composite output.
+ * They default (null link/workflow, empty signal) so synthetic snapshots in
+ * differ tests stay terse; the collector always fills them from the live row.
  *
  * @category models
  * @since 0.0.0
@@ -170,9 +178,14 @@ export class YeetWatchCheck extends S.Class<YeetWatchCheck>($I`YeetWatchCheck`)(
   {
     name: S.NonEmptyString,
     outcome: YeetCheckOutcome,
+    link: S.NullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(null))),
+    signal: YeetCheckSignal.pipe(
+      S.withConstructorDefault(Effect.succeed(YeetCheckSignal.make({ bucket: "", state: "" })))
+    ),
+    workflow: S.NullOr(S.String).pipe(S.withConstructorDefault(Effect.succeed(null))),
   },
   $I.annote("YeetWatchCheck", {
-    description: "One PR check's name and classified outcome within a watch snapshot.",
+    description: "One PR check's name, classified outcome, and raw record within a watch snapshot.",
   })
 ) {}
 
@@ -212,6 +225,7 @@ export class YeetWatchThread extends S.Class<YeetWatchThread>($I`YeetWatchThread
  *   checks: [],
  *   headSha: "abc123",
  *   mergeable: "MERGEABLE",
+ *   prNumber: 751,
  *   state: "OPEN",
  *   threads: []
  * })
@@ -227,6 +241,7 @@ export class YeetWatchSnapshot extends S.Class<YeetWatchSnapshot>($I`YeetWatchSn
     checks: S.Array(YeetWatchCheck),
     headSha: S.NonEmptyString,
     mergeable: S.String,
+    prNumber: S.Finite,
     state: S.String,
     threads: S.Array(YeetWatchThread),
   },
@@ -519,6 +534,7 @@ export class YeetWatchDiffInput extends S.Class<YeetWatchDiffInput>($I`YeetWatch
  *   checks: [YeetWatchCheck.make({ name: "Check", outcome: "pending" })],
  *   headSha: "abc",
  *   mergeable: "MERGEABLE",
+ *   prNumber: 751,
  *   state: "OPEN",
  *   threads: []
  * })
@@ -526,6 +542,7 @@ export class YeetWatchDiffInput extends S.Class<YeetWatchDiffInput>($I`YeetWatch
  *   checks: [YeetWatchCheck.make({ name: "Check", outcome: "fail" })],
  *   headSha: "abc",
  *   mergeable: "MERGEABLE",
+ *   prNumber: 751,
  *   state: "OPEN",
  *   threads: []
  * })
@@ -594,8 +611,10 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
  *
  * A closed or merged PR ends the watch regardless of check state. Otherwise
  * the watch ends when no check is pending — including the degenerate zero-
- * check snapshot, which the registration backoff upstream is responsible for
- * not handing to the stream in the first place.
+ * check snapshot. The evaluator itself is deliberately memoryless about the
+ * registration gap: the watch loop owns the bounded patience that keeps a
+ * zero-check answer from being believed while a push's checks are still
+ * registering.
  *
  * **Example** (A merged PR ends the watch)
  *
@@ -607,6 +626,7 @@ export const diffYeetWatchSnapshots = (input: YeetWatchDiffInput): ReadonlyArray
  *   checks: [],
  *   headSha: "abc",
  *   mergeable: "UNKNOWN",
+ *   prNumber: 751,
  *   state: "MERGED",
  *   threads: []
  * })
@@ -644,6 +664,7 @@ export const yeetWatchEndReason = (snapshot: YeetWatchSnapshot): O.Option<YeetWa
  *   checks: [YeetWatchCheck.make({ name: "Check", outcome: "fail" })],
  *   headSha: "abc",
  *   mergeable: "MERGEABLE",
+ *   prNumber: 751,
  *   state: "OPEN",
  *   threads: []
  * })
