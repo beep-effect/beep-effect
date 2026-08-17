@@ -47,14 +47,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   existing CLI groups; D9 self-hosts the first advisory slice; D12 leaves KSA
   owning static HTML v1. Next: operator MAP review; no goals exist yet.
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
-  graduate-stage, still active: spine graduated 2026-08-13 to
+  graduated 2026-08-13 (status flipped 2026-08-17): spine graduated to
   [`goals/skill-contract-kernel/`](../goals/skill-contract-kernel/README.md)
   (`@beep/skill-contract` foundation/modeling kernel + qa judge-gate retrofit +
   SKILL.md render-as-encode projection). Waves 2–6 (KG ingestion, ops ladder,
   browser leases, memory routing, fleet protocols) remain candidates in
   [`MAP.md`](./typed-agent-skill-contracts/MAP.md); decision log in
   [`DECISIONS.md`](./typed-agent-skill-contracts/DECISIONS.md).
-- [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
+- [`full-document-editor`](./full-document-editor/README.md) — graduated;
   initiative for a configurable full-document substrate and eventual
   Professional Desktop document Portal. A live Lexical Playground `0.49.0`
   audit captured 17 screenshots, keybindings, highlighting, inserts, settings,

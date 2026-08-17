@@ -3,7 +3,7 @@
   "exploration": {
     "slug": "full-document-editor",
     "title": "Full Document Editor",
-    "status": "active",
+    "status": "graduated",
     "stage": "graduate",
     "openQuestions": [],
     "sources": [
@@ -18,6 +18,6 @@
       "supersededBy": null
     },
     "created": "2026-08-04",
-    "updated": "2026-08-04"
+    "updated": "2026-08-17"
   }
 }
