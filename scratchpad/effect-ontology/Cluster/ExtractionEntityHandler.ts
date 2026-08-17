@@ -201,7 +201,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       yield* Ref.update(cancellationRegistry, HashMap.set(keyString, cancelSignal));
 
       const existingRun = yield* runService.getByKey(idempotencyKey);
-      if (P.isNotNull(existingRun) && existingRun.status._tag === "Complete") {
+      if (P.isNotNull(existingRun) && RunStatus.guards.Complete(existingRun.status)) {
         const stats = O.getOrElse(existingRun.stats, () => emptyStats);
         return Stream.make(
           yield* makeEvent(runId, "extraction_complete", 100, {

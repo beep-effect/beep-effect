@@ -21,8 +21,8 @@ import {
 } from "@beep/ontology-use-cases/tools";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { Unknown } from "@beep/schema/Unknown";
-import { makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { fcRuns, makePgliteIntegrationGate, makePgliteSqlTestLayer } from "@beep/test-utils";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
@@ -31,6 +31,7 @@ import * as Random from "effect/Random";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import { migrateOnBoot } from "@/runtime/Migrations";
 import {
@@ -103,6 +104,12 @@ const newOutcomes = (
 const canaryWorkspace = `@prefix ex: <https://example.test/> .
 ex:canary ex:value "${workspaceCanary}" .
 `;
+
+describe("professional desktop execution-authority schema laws", () => {
+  it("generates valid ontology SPARQL query requests", () => {
+    fc.assert(fc.property(S.toArbitrary(OntologySparqlQueryRequest)(fc), S.is(OntologySparqlQueryRequest)), fcRuns(25));
+  });
+});
 
 describe("professional desktop execution authority PgLite acceptance", { concurrent: false }, () => {
   layer(makeAcceptanceLayer(), { timeout: "5 minutes" })((it) => {

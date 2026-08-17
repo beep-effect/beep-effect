@@ -257,7 +257,7 @@ export function checkNamespaces(models: ReadonlyArray<Domain.Namespace>) {
  * console.log(checked)
  * ```
  *
- * @param models - Re-export models already validated through their owning declarations.
+ * @param _models - Re-export models already validated through their owning declarations.
  * @returns Effect containing no export-edge documentation errors.
  * @category predicates
  * @since 0.0.0

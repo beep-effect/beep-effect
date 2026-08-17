@@ -29,17 +29,19 @@ import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
 import { Unknown } from "@beep/schema/Unknown";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import {
+  fcRuns,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
   productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { CitingApplicationIdentity } from "@beep/law-practice-domain";
 import type { CandorRecordRepositoryShape } from "@beep/law-practice-use-cases/CandorRecord";
@@ -83,6 +85,12 @@ const FILING_B: CitingApplicationIdentity.Encoded = {
 const digest = `sha256:${"a".repeat(64)}`;
 
 const decodeScope = S.decodeUnknownEffect(CandorFilingScope);
+
+describe("law-practice candor repository schema laws", () => {
+  it("generates valid filing scopes", () => {
+    fc.assert(fc.property(S.toArbitrary(CandorFilingScope)(fc), S.is(CandorFilingScope)), fcRuns(25));
+  });
+});
 
 /** Scope a filing to one tenant; every read the repository serves takes one. */
 const scopeFor = (citingApplication: CitingApplicationIdentity.Encoded, orgId: number) =>

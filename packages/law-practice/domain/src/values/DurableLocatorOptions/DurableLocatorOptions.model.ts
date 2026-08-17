@@ -8,9 +8,8 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import * as Effect from "effect/Effect";
+import { Effect, Tuple } from "effect";
 import * as S from "effect/Schema";
-import * as Tuple from "effect/Tuple";
 
 const $I = $LawPracticeDomainId.create("values/DurableLocatorOptions/DurableLocatorOptions.model");
 

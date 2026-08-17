@@ -8,17 +8,19 @@ import { toPatentCitationEventInsert } from "@beep/law-practice-tables/entities/
 import { makeDrizzle, migrate } from "@beep/postgres";
 import { Unknown } from "@beep/schema/Unknown";
 import {
+  fcRuns,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
   productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import * as SqlError from "effect/unstable/sql/SqlError";
 
@@ -132,6 +134,12 @@ const submissionFactInput = {
   statement: { sizeFeeAssertionPresent: true, statementPresent: true, statementType: "e2-no-prior-knowledge" },
   submissionKind: "initial",
 };
+
+describe("law-practice candor migration schema laws", () => {
+  it("generates valid patent citation events", () => {
+    fc.assert(fc.property(S.toArbitrary(PatentCitationEvent)(fc), S.is(PatentCitationEvent)), fcRuns(25));
+  });
+});
 
 const sortedNames = (names: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(names, Order.String);
 

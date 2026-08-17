@@ -4,14 +4,20 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { PrimaryKey } from "effect";
+import {$ScratchpadId} from "@beep/identity";
+import {
+  LiteralKit,
+  NonNegativeInt,
+  PosInt,
+  SchemaUtils,
+  Sha256Hex
+} from "@beep/schema";
+import {PrimaryKey} from "effect";
 import * as S from "effect/Schema";
-import { DocumentId, IdempotencyKey, OntologyVersion } from "../Identity.ts";
-import { PathLayout } from "../PathLayout.ts";
-import { OntologyRef } from "./Ontology.ts";
-import { OutputType } from "./OutputType.ts";
+import {DocumentId, IdempotencyKey, OntologyVersion} from "../Identity.ts";
+import {PathLayout} from "../PathLayout.ts";
+import {OntologyRef} from "./Ontology.ts";
+import {OutputType} from "./OutputType.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionRun");
 
@@ -102,23 +108,6 @@ export const AuditEventType = LiteralKit(["started", "completed", "failed", "inf
  */
 export type AuditEventType = typeof AuditEventType.Type;
 
-const OutputMetadataFields = {
-  type: OutputType.annotateKey({
-    description: "Logical output artifact kind.",
-  }),
-  path: S.NonEmptyString.annotateKey({
-    description: "Storage-relative artifact path.",
-  }),
-  hash: Sha256Hex.annotateKey({
-    description: "Full SHA-256 digest of the saved artifact.",
-  }),
-  size: NonNegativeInt.annotateKey({
-    description: "Artifact size in bytes.",
-  }),
-  savedAt: S.DateTimeUtcFromString.annotateKey({
-    description: "UTC instant at which persistence completed.",
-  }),
-};
 
 /**
  * Integrity and location metadata for one persisted run output.
@@ -144,17 +133,29 @@ const OutputMetadataFields = {
  * @since 0.0.0
  */
 export class OutputMetadata extends S.Class<OutputMetadata>($I`OutputMetadata`)(
-  OutputMetadataFields,
+  {
+    type: OutputType.annotateKey({
+      description: "Logical output artifact kind.",
+    }),
+    path: S.NonEmptyString.annotateKey({
+      description: "Storage-relative artifact path.",
+    }),
+    hash: Sha256Hex.annotateKey({
+      description: "Full SHA-256 digest of the saved artifact.",
+    }),
+    size: NonNegativeInt.annotateKey({
+      description: "Artifact size in bytes.",
+    }),
+    savedAt: S.DateTimeUtcFromString.annotateKey({
+      description: "UTC instant at which persistence completed.",
+    }),
+  },
   $I.annote("OutputMetadata", {
     description: "Typed output kind, path, integrity digest, size, and persistence time.",
   })
-) {}
+) {
+}
 
-const AuditEventFields = {
-  timestamp: S.DateTimeUtcFromString,
-  type: AuditEventType,
-  data: S.Record(S.String, S.Json).pipe(SchemaUtils.withKeyDefaults({})),
-};
 
 /**
  * Structured, JSON-compatible extraction-run audit event.
@@ -175,18 +176,16 @@ const AuditEventFields = {
  * @since 0.0.0
  */
 export class AuditEvent extends S.Class<AuditEvent>($I`AuditEvent`)(
-  AuditEventFields,
+  {
+    timestamp: S.DateTimeUtcFromString,
+    type: AuditEventType,
+    data: S.Record(S.String, S.Json).pipe(SchemaUtils.withKeyDefaults({})),
+  },
   $I.annote("AuditEvent", {
     description: "Timestamped audit event with a stable category and JSON-compatible data.",
   })
-) {}
-
-const AuditErrorFields = {
-  timestamp: S.DateTimeUtcFromString,
-  type: ErrorCode,
-  message: S.NonEmptyString,
-  context: S.Record(S.String, S.Json).pipe(SchemaUtils.withKeyDefaults({})),
-};
+) {
+}
 
 /**
  * Structured error retained in an extraction run's audit trail.
@@ -208,11 +207,17 @@ const AuditErrorFields = {
  * @since 0.0.0
  */
 export class AuditError extends S.Class<AuditError>($I`AuditError`)(
-  AuditErrorFields,
+  {
+    timestamp: S.DateTimeUtcFromString,
+    type: ErrorCode,
+    message: S.NonEmptyString,
+    context: S.Record(S.String, S.Json).pipe(SchemaUtils.withKeyDefaults({})),
+  },
   $I.annote("AuditError", {
     description: "Timestamped extraction failure with a stable code and JSON-compatible context.",
   })
-) {}
+) {
+}
 
 /**
  * Canonical discriminated lifecycle state for an extraction run.
@@ -235,8 +240,8 @@ export class AuditError extends S.Class<AuditError>($I`AuditError`)(
  */
 export const RunStatus = S.TaggedUnion({
   Pending: {},
-  Running: { startedAt: S.DateTimeUtcFromString },
-  Complete: { completedAt: S.DateTimeUtcFromString },
+  Running: {startedAt: S.DateTimeUtcFromString},
+  Complete: {completedAt: S.DateTimeUtcFromString},
   Failed: {
     failedAt: S.DateTimeUtcFromString,
     error: AuditError,
@@ -248,9 +253,9 @@ export const RunStatus = S.TaggedUnion({
       S.toArbitrary(
         S.TaggedUnion({
           Pending: {},
-          Running: { startedAt: S.DateTimeUtcFromString },
-          Complete: { completedAt: S.DateTimeUtcFromString },
-          Failed: { failedAt: S.DateTimeUtcFromString, error: AuditError },
+          Running: {startedAt: S.DateTimeUtcFromString},
+          Complete: {completedAt: S.DateTimeUtcFromString},
+          Failed: {failedAt: S.DateTimeUtcFromString, error: AuditError},
         })
       )(fc),
   })
@@ -274,7 +279,7 @@ export type RunStatus = typeof RunStatus.Type;
 
 const ChunkSize = PosInt.check(
   S.isBetween(
-    { minimum: 100, maximum: 10_000 },
+    {minimum: 100, maximum: 10_000},
     {
       identifier: $I`ChunkSizeRangeCheck`,
       title: "Chunk Size Range",
@@ -284,7 +289,10 @@ const ChunkSize = PosInt.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 100, max: 10_000 }).map(PosInt.make),
+    toArbitrary: () => (fc) => fc.integer({
+      min: 100,
+      max: 10_000
+    }).map(PosInt.make),
   })
   .pipe(
     $I.annoteSchema("ChunkSize", {
@@ -294,7 +302,7 @@ const ChunkSize = PosInt.check(
 
 const OverlapTokens = NonNegativeInt.check(
   S.isBetween(
-    { minimum: 0, maximum: 200 },
+    {minimum: 0, maximum: 200},
     {
       identifier: $I`OverlapTokensRangeCheck`,
       title: "Chunk Overlap Range",
@@ -304,7 +312,10 @@ const OverlapTokens = NonNegativeInt.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 0, max: 200 }).map(NonNegativeInt.make),
+    toArbitrary: () => (fc) => fc.integer({
+      min: 0,
+      max: 200
+    }).map(NonNegativeInt.make),
   })
   .pipe(
     $I.annoteSchema("OverlapTokens", {
@@ -312,11 +323,6 @@ const OverlapTokens = NonNegativeInt.check(
     })
   );
 
-const ChunkingConfigFields = {
-  maxChunkSize: ChunkSize.pipe(SchemaUtils.withKeyDefaults(ChunkSize.make(4_000))),
-  preserveSentences: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-  overlapTokens: OverlapTokens.pipe(SchemaUtils.withKeyDefaults(OverlapTokens.make(50))),
-};
 
 /**
  * Schema-defaulted text chunking policy.
@@ -334,7 +340,11 @@ const ChunkingConfigFields = {
  * @since 0.0.0
  */
 export class ChunkingConfig extends S.Class<ChunkingConfig>($I`ChunkingConfig`)(
-  ChunkingConfigFields,
+  {
+    maxChunkSize: ChunkSize.pipe(SchemaUtils.withKeyDefaults(ChunkSize.make(4_000))),
+    preserveSentences: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    overlapTokens: OverlapTokens.pipe(SchemaUtils.withKeyDefaults(OverlapTokens.make(50))),
+  },
   $I.annote("ChunkingConfig", {
     description: "Bounded, schema-defaulted policy for extraction text chunking.",
   })
@@ -359,7 +369,7 @@ export class ChunkingConfig extends S.Class<ChunkingConfig>($I`ChunkingConfig`)(
 
 const Temperature = S.Finite.check(
   S.isBetween(
-    { minimum: 0, maximum: 2 },
+    {minimum: 0, maximum: 2},
     {
       identifier: $I`TemperatureRangeCheck`,
       title: "Model Temperature Range",
@@ -369,7 +379,12 @@ const Temperature = S.Finite.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.double({ min: 0, max: 2, noNaN: true, noDefaultInfinity: true }),
+    toArbitrary: () => (fc) => fc.double({
+      min: 0,
+      max: 2,
+      noNaN: true,
+      noDefaultInfinity: true
+    }),
   })
   .pipe(
     $I.annoteSchema("Temperature", {
@@ -379,7 +394,7 @@ const Temperature = S.Finite.check(
 
 const LlmTimeout = PosInt.check(
   S.isBetween(
-    { minimum: 1_000, maximum: 300_000 },
+    {minimum: 1_000, maximum: 300_000},
     {
       identifier: $I`LlmTimeoutRangeCheck`,
       title: "LLM Timeout Range",
@@ -389,7 +404,10 @@ const LlmTimeout = PosInt.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1_000, max: 300_000 }).map(PosInt.make),
+    toArbitrary: () => (fc) => fc.integer({
+      min: 1_000,
+      max: 300_000
+    }).map(PosInt.make),
   })
   .pipe(
     S.decodeTo(S.DurationFromMillis),
@@ -398,12 +416,6 @@ const LlmTimeout = PosInt.check(
     })
   );
 
-const LlmConfigFields = {
-  model: S.NonEmptyString,
-  temperature: Temperature,
-  maxTokens: PosInt,
-  timeout: LlmTimeout,
-};
 
 /**
  * Model-execution policy captured by an extraction run.
@@ -427,15 +439,21 @@ const LlmConfigFields = {
  * @since 0.0.0
  */
 export class LlmConfig extends S.Class<LlmConfig>($I`LlmConfig`)(
-  LlmConfigFields,
+  {
+    model: S.NonEmptyString,
+    temperature: Temperature,
+    maxTokens: PosInt,
+    timeout: LlmTimeout,
+  },
   $I.annote("LlmConfig", {
     description: "Bounded model identifier, sampling, token, and timeout policy.",
   })
-) {}
+) {
+}
 
 const Concurrency = PosInt.check(
   S.isBetween(
-    { minimum: 1, maximum: 32 },
+    {minimum: 1, maximum: 32},
     {
       identifier: $I`RunConcurrencyRangeCheck`,
       title: "Run Concurrency Range",
@@ -445,7 +463,7 @@ const Concurrency = PosInt.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 32 }).map(PosInt.make),
+    toArbitrary: () => (fc) => fc.integer({min: 1, max: 32}).map(PosInt.make),
   })
   .pipe(
     $I.annoteSchema("Concurrency", {
@@ -453,13 +471,6 @@ const Concurrency = PosInt.check(
     })
   );
 
-const RunConfigFields = {
-  ontology: OntologyRef,
-  chunking: ChunkingConfig,
-  llm: LlmConfig,
-  concurrency: Concurrency.pipe(SchemaUtils.withKeyDefaults(Concurrency.make(4))),
-  enableGrounding: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-};
 
 /**
  * Complete immutable configuration snapshot for an extraction run.
@@ -491,21 +502,19 @@ const RunConfigFields = {
  * @since 0.0.0
  */
 export class RunConfig extends S.Class<RunConfig>($I`RunConfig`)(
-  RunConfigFields,
+  {
+    ontology: OntologyRef,
+    chunking: ChunkingConfig,
+    llm: LlmConfig,
+    concurrency: Concurrency.pipe(SchemaUtils.withKeyDefaults(Concurrency.make(4))),
+    enableGrounding: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+  },
   $I.annote("RunConfig", {
     description: "Ontology, chunking, model, concurrency, and grounding snapshot for a run.",
   })
-) {}
+) {
+}
 
-const RunStatsFields = {
-  chunkCount: NonNegativeInt,
-  entityCount: NonNegativeInt,
-  relationCount: NonNegativeInt,
-  resolvedCount: NonNegativeInt,
-  clusterCount: NonNegativeInt,
-  tokensUsed: NonNegativeInt,
-  duration: S.DurationFromMillis,
-};
 
 /**
  * Non-negative measurements collected during extraction.
@@ -532,26 +541,20 @@ const RunStatsFields = {
  * @since 0.0.0
  */
 export class RunStats extends S.Class<RunStats>($I`RunStats`)(
-  RunStatsFields,
+  {
+    chunkCount: NonNegativeInt,
+    entityCount: NonNegativeInt,
+    relationCount: NonNegativeInt,
+    resolvedCount: NonNegativeInt,
+    clusterCount: NonNegativeInt,
+    tokensUsed: NonNegativeInt,
+    duration: S.DurationFromMillis,
+  },
   $I.annote("RunStats", {
     description: "Non-negative extraction counts, token use, and elapsed duration.",
-  })
-) {}
+  })) {
+}
 
-const ExtractionRunFields = {
-  id: DocumentId,
-  idempotencyKey: S.OptionFromOptionalKey(IdempotencyKey).pipe(SchemaUtils.withNoneDefault),
-  status: RunStatus,
-  config: RunConfig,
-  ontologyVersion: S.OptionFromOptionalKey(OntologyVersion).pipe(SchemaUtils.withNoneDefault),
-  createdAt: S.DateTimeUtcFromString,
-  updatedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-  outputDir: S.NonEmptyString,
-  stats: S.OptionFromOptionalKey(RunStats).pipe(SchemaUtils.withNoneDefault),
-  outputs: S.Array(OutputMetadata).pipe(SchemaUtils.withEmptyArrayDefaults<OutputMetadata>()),
-  events: S.Array(AuditEvent).pipe(SchemaUtils.withEmptyArrayDefaults<AuditEvent>()),
-  errors: S.Array(AuditError).pipe(SchemaUtils.withEmptyArrayDefaults<AuditError>()),
-};
 
 /**
  * Root aggregate for one execution of the knowledge-extraction pipeline.
@@ -574,7 +577,20 @@ const ExtractionRunFields = {
  * @since 0.0.0
  */
 export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
-  ExtractionRunFields,
+  {
+    id: DocumentId,
+    idempotencyKey: S.OptionFromOptionalKey(IdempotencyKey).pipe(SchemaUtils.withNoneDefault),
+    status: RunStatus,
+    config: RunConfig,
+    ontologyVersion: S.OptionFromOptionalKey(OntologyVersion).pipe(SchemaUtils.withNoneDefault),
+    createdAt: S.DateTimeUtcFromString,
+    updatedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
+    outputDir: S.NonEmptyString,
+    stats: S.OptionFromOptionalKey(RunStats).pipe(SchemaUtils.withNoneDefault),
+    outputs: S.Array(OutputMetadata).pipe(SchemaUtils.withEmptyArrayDefaults<OutputMetadata>()),
+    events: S.Array(AuditEvent).pipe(SchemaUtils.withEmptyArrayDefaults<AuditEvent>()),
+    errors: S.Array(AuditError).pipe(SchemaUtils.withEmptyArrayDefaults<AuditError>()),
+  },
   $I.annote("ExtractionRun", {
     description: "Immutable extraction-run aggregate with status, config, outputs, audit, and paths.",
   })
@@ -678,7 +694,7 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
     return PathLayout.run.output(this.id, type);
   }
 
-  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ExtractionRun, { space: 2 }));
+  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ExtractionRun, {space: 2}));
 }
 
 /**

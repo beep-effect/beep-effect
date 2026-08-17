@@ -53,7 +53,7 @@ const formatCause = (cause: Cause.Cause<unknown>): string => {
 export const withErrorHandler = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
   effect.pipe(
     Effect.tapCause(
-      Effect.fn(function* (cause) {
+      Effect.fnUntraced(function* (cause) {
         const formatted = formatCause(cause);
         yield* Console.error(`\n${formatted}\n`);
       })

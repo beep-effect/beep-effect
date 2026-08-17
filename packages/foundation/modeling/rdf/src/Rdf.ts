@@ -597,8 +597,6 @@ export const Term = TermDefinition.pipe(
  */
 export type Term = typeof Term.Type;
 
-const SubjectDefinition = S.Union([NamedNode, BlankNode]).pipe(S.toTaggedUnion("termType"));
-
 /**
  * RDF subject term union.
  *
@@ -618,12 +616,17 @@ const SubjectDefinition = S.Union([NamedNode, BlankNode]).pipe(S.toTaggedUnion("
  * @category models
  * @since 0.0.0
  */
-export const Subject = SubjectDefinition.pipe(
-  $I.annoteSchema("Subject", {
-    description: "RDF subject term union.",
-    toArbitrary: () => S.toArbitrary(SubjectDefinition),
-  }),
-  SchemaUtils.withCodecStatics
+export const Subject = S.Union([NamedNode, BlankNode]).pipe(
+  S.toTaggedUnion("termType"),
+  SchemaUtils.withCodecStatics,
+  (schema) =>
+    pipe(
+      schema,
+      $I.annoteSchema("Subject", {
+        description: "RDF subject term union.",
+        toArbitrary: () => S.toArbitrary(schema),
+      })
+    )
 );
 
 /**

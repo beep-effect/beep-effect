@@ -10,19 +10,28 @@
  * @since 0.0.0
  */
 
-import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
-import { SCHEMA_NAME } from "@beep/rdf/Vocab/SchemaOrg";
-import { Chunk, Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
+import {RDF_TYPE} from "@beep/rdf/Vocab/Rdf";
+import {RDFS_LABEL} from "@beep/rdf/Vocab/Rdfs";
+import {SCHEMA_NAME} from "@beep/rdf/Vocab/SchemaOrg";
+import {
+  Chunk,
+  Console,
+  Effect,
+  FileSystem,
+  MutableHashMap,
+  MutableHashSet,
+  Order
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command, Flag as Options } from "effect/unstable/cli";
-import { BatchManifest } from "../../Domain/Schema/Batch.ts";
-import { RdfBuilder } from "../../Service/Rdf.ts";
-import { StorageService } from "../../Service/Storage.ts";
-import { withErrorHandler } from "../ErrorHandler.ts";
+import {pipe} from "effect/Function";
+import {Command, Flag as Options} from "effect/unstable/cli";
+import {BatchManifest} from "../../Domain/Schema/Batch.ts";
+import {RdfBuilder} from "../../Service/Rdf.ts";
+import {StorageService} from "../../Service/Storage.ts";
+import {withErrorHandler} from "../ErrorHandler.ts";
+import {Subject} from "@beep/rdf";
 
 // =============================================================================
 // Command Options
@@ -59,17 +68,17 @@ const verboseOption = Options.boolean("verbose").pipe(
  * Simple string similarity using normalized Levenshtein distance
  */
 const stringSimilarity = (a: string, b: string): number => {
-  const aLower = a.toLowerCase().trim();
-  const bLower = b.toLowerCase().trim();
+  const aLower = pipe(a, Str.toLowerCase, Str.trim);
+  const bLower = pipe(b, Str.toLowerCase, Str.trim);
 
   if (aLower === bLower) return 1.0;
-  if (aLower.length === 0 || bLower.length === 0) return 0.0;
+  if (Str.isEmpty(aLower) || Str.isEmpty(bLower)) return 0.0;
 
   // Simple Jaccard similarity on character n-grams
   const ngrams = (s: string, n: number = 2): MutableHashSet.MutableHashSet<string> => {
     const result = MutableHashSet.empty<string>();
     for (let i = 0; i <= s.length - n; i++) {
-      MutableHashSet.add(result, s.substring(i, i + n));
+      MutableHashSet.add(result, Str.substring(i, i + n)(s));
     }
     return result;
   };
@@ -111,7 +120,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   if (O.isSome(manifest)) {
     const fs = yield* FileSystem.FileSystem;
     const content = yield* fs.readFileString(manifest.value);
-    manifestData = yield* S.decodeEffect(S.fromJsonString(BatchManifest))(content);
+    manifestData = yield* BatchManifest.decodeEffectFromJsonString(content);
   } else {
     const manifestKey = `batches/${batchId}/manifest.json`;
     const contentOpt = yield* storage.getOption(manifestKey);
@@ -120,7 +129,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
       yield* Console.log("Use --manifest to specify a local manifest file");
       return;
     }
-    manifestData = yield* S.decodeEffect(S.fromJsonString(BatchManifest))(contentOpt.value);
+    manifestData = yield* BatchManifest.decodeEffectFromJsonString(contentOpt.value);
   }
   yield* Console.log(`Found ${manifestData.documents.length} documents in batch`);
   const allEntities: Array<ExtractedEntity> = [];
@@ -139,7 +148,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     });
     const entityTypes = MutableHashMap.empty<string, MutableHashSet.MutableHashSet<string>>();
     for (const quad of typeQuads) {
-      if (quad.subject.termType === "NamedNode") {
+      if (Subject.guards.NamedNode(quad.subject)) {
         const iri = quad.subject.value;
         const types = O.getOrElse(MutableHashMap.get(entityTypes, iri), () => {
           const created = MutableHashSet.empty<string>();
@@ -158,7 +167,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     });
     const entityLabels = MutableHashMap.empty<string, string>();
     for (const quad of Chunk.toArray(rdfsLabelQuads).concat(Chunk.toArray(schemaNameQuads))) {
-      if (quad.subject.termType === "NamedNode" && !MutableHashMap.has(entityLabels, quad.subject.value)) {
+      if (Subject.guards.NamedNode(quad.subject) && !MutableHashMap.has(entityLabels, quad.subject.value)) {
         const subject = quad.subject.value;
         const label = quad.object.value;
         MutableHashMap.set(entityLabels, subject, label);
@@ -180,7 +189,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     }
   }
   yield* Console.log(`\nTotal entities found: ${allEntities.length}`);
-  if (allEntities.length === 0) {
+  if (A.isReadonlyArrayEmpty(allEntities)) {
     yield* Console.log("No entities to analyze. Run extraction first.");
     return;
   }
@@ -298,6 +307,6 @@ export const reconcileCommand = Command.make(
     threshold: thresholdOption,
     verbose: verboseOption,
   },
-  ({ batchId, manifest, threshold, verbose }) =>
+  ({batchId, manifest, threshold, verbose}) =>
     withErrorHandler(reconcileHandler(batchId, manifest, threshold, verbose))
 ).pipe(Command.withDescription("Analyze entities in a batch for potential duplicates and display statistics"));

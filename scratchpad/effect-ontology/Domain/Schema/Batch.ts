@@ -133,6 +133,7 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
 ) {
   static readonly decodeOptionString = S.decodeOption(S.fromJsonString(BatchManifest));
 
+  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(BatchManifest))
   static readonly encodeEffectFromJsonStringFormatted = S.encodeEffect(S.fromJsonString(BatchManifest, { space: 2 }))
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(BatchManifest)
   static readonly encodeEffectFromJsonString = S.encodeEffect(S.fromJsonString(BatchManifest))
