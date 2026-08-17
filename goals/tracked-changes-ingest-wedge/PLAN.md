@@ -26,7 +26,7 @@ Status: `pending`
 ## Execution Notes
 
 - Synthetic C&H first.
-- OIP real data is later and on-device only.
+- OIP real data is later; keep it out of the repo and telemetry.
 - Consume, do not duplicate, the sibling eval framework.
 
 ## Verification Commands

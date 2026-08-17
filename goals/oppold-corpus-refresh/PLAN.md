@@ -89,7 +89,7 @@ Status: `pending`
 - Keep `SPEC.md` normative and update it only when the contract changes.
 - Archive run outputs under `history/outputs/`; corpus data itself stays outside
   the repo.
-- Dynamic workflows are local-only. Agents may process paths, hashes, counts,
+- Agents may process paths, hashes, counts,
   and names, but must never see or log document content.
 - Do not perform extraction, organization, enrichment, downstream ingestion, or
   deletion as part of this packet.

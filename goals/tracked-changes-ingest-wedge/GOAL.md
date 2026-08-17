@@ -14,8 +14,8 @@ the explicit structural representation; do not press ahead without a new
 operator decision.
 
 Test synthetic C&H first through `effect-native-legal-eval`. Any later real
-OIP data room stays on-device only and never enters telemetry, remote
-evaluation, cloud models, or C&H mounts.
+OIP data room stays out of the repo, out of telemetry, and out of shared C&H
+mounts. Provider choice is configuration, not a constraint.
 
 Do not add a generator, DMS taxonomy, broad DOCX redesign, or duplicate eval
 framework. Publish the proven minimal rung through Yeet and close with a

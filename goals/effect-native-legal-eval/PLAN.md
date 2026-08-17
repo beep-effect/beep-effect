@@ -23,7 +23,7 @@ update evidence/status, and close only after the Yeet completion gate.
 
 - Keep C&H on-demand; do not add its bulk corpus to normal gates.
 - The external harness runs once and requires explicit approval.
-- Preserve the OIP on-device-only boundary.
+- Keep OIP material out of the repo and telemetry.
 
 ## Verification Commands
 

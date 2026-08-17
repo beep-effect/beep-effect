@@ -35,7 +35,7 @@ kill-gate. Corpus generation and DMS taxonomy remain re-entry points.
    and fall back to an explicit structural representation.
 4. On a passing spike, land the smallest tracked-changes-aware ingest rung and
    evaluate it first against synthetic C&H fixtures. Real OIP diligence data
-   remains on-device only and outside this cycle.
+   stays out of the repo and outside this cycle.
 
 ## Rabbit Holes
 

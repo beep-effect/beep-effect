@@ -2,9 +2,26 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+**Paused 2026-08-17 — revisit gate.** Resume only when both hold:
+
+1. The exploration portfolio wrap-up is complete (remaining: the two
+   decompose-stage MAP drafts and the oppold-corpus-overhaul align).
+2. [`goals/packet-control-plane-core`](../packet-control-plane-core/README.md)
+   is closed — the driver's trust substrate (guarded transition previews,
+   derived stage truth, fork detection, advisory-mode evidence).
+
+The feedback-latency prerequisite is already paid: the 2026-08 CI campaign
+took pipelines and local checks from hours to minutes and sped up
+backpressure delivery, making driver iterations affordable. At revisit the
+question is not "resume P1" but "is driver-style autonomy now achievable
+with confidence" — the 2026-07-14 locked queue is stale and must be relocked
+from control-plane derived state, and the confidence bar is concrete:
+advisory-mode runs over real packets with zero incorrect transition
+proposals before any guarded write is enabled.
 
 ## Mission
 

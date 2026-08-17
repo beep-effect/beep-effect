@@ -37,5 +37,5 @@ Scaffolded 2026-08-13 from the operator-ratified BRIEF and MAP.
 
 ## Notes
 
-Real OIP data rooms are later and on-device only. The upstream harness is a
+Real OIP data rooms are later, and stay out of the repo. The upstream harness is a
 one-time external-comparison baseline, never the durable eval runtime.

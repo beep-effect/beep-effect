@@ -45,9 +45,9 @@ viable.
 - If U4 passes, land only the smallest tracked-changes-aware ingest rung.
 - Evaluate synthetic C&H fixtures first through the sibling
   `effect-native-legal-eval` contract.
-- Real diligence data comes later and stays on-device only under OIP
-  confidentiality: never telemetry, remote evaluation, cloud models, or C&H
-  mounts.
+- Real diligence data comes later. Keep it out of the repo, out of telemetry,
+  and out of shared corpus mounts. Model/provider choice is a per-matter
+  configuration decision, not an architectural constraint.
 - Preserve the canonical Md authority boundary; Pandoc/OOXML are projections
   and interchange seams, not a second document authority.
 
@@ -70,7 +70,7 @@ viable.
 | Wedge | Tracked-changes-aware ingest is the legally meaningful first wedge. |
 | U4 | The fixture spike is P0 and a real kill-gate. |
 | Fallback | On hard semantic-seam failure, stop and use an explicit structural representation. |
-| Corpus order | Synthetic C&H first; real diligence data later and on-device only. |
+| Corpus order | Synthetic C&H first; real diligence data later, kept out of the repo and telemetry. |
 | Evaluation | Consume `effect-native-legal-eval`; do not recreate its framework. |
 | Re-entry | Corpus generator and DMS taxonomy remain exploration MAP re-entry points. |
 

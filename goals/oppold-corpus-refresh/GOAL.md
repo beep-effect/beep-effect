@@ -48,7 +48,7 @@ Workflow:
    before/after delta.
 6. After verified salvage, move originals to `pre-consolidation-2026-07`,
    preserving relative structure. Never delete anything.
-7. Agents are orchestrated by dynamic workflows, local-only. Agents may handle
+7. Agents are orchestrated by dynamic workflows. Agents may handle
    paths, hashes, counts, and names; they must never see or log document content.
 8. Update evidence/status as phases complete and run Yeet gates before publish.
 

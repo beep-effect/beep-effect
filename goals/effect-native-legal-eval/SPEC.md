@@ -43,8 +43,8 @@ operator-approved upstream C&H harness run as an external baseline.
   durable code/runtime.
 - Preserve criterion-scoped calls, all-pass and diagnostic results,
   closure/precision criteria, neutral-band outcomes, and typed judge services.
-- OIP confidentiality is hard: any later real data room stays on-device only
-  and never enters telemetry, remote evaluation, cloud models, or C&H mounts.
+- Any later real data room stays out of the repo, out of telemetry, and out of
+  shared C&H mounts. Provider choice is per-matter configuration.
 - Record assumptions behind scoring and task classification.
 
 ## Acceptance Criteria
@@ -68,7 +68,7 @@ operator-approved upstream C&H harness run as an external baseline.
 | Standing asset | C&H and its graded tasks remain an on-demand standing test asset. |
 | Framework | Build an Effect-native eval from methodology; do not port LAB Python as the durable runtime. |
 | Baseline | Run the upstream podman + metered-key harness once for external comparison. |
-| Corpus order | Synthetic C&H first; real diligence data later and on-device only under OIP confidentiality. |
+| Corpus order | Synthetic C&H first; real diligence data later, kept out of the repo and telemetry. |
 | Goal split | Eval ships independently before the tracked-changes wedge. |
 | Re-entry | Corpus generator and DMS taxonomy remain exploration MAP re-entry points. |
 
