@@ -8,6 +8,7 @@ import {
   PacketEventStore,
   PacketEventStoreLive,
   PacketStreamLocator,
+  PacketTraceEntry,
   PacketTraceProjection,
   packetEventDigest,
   packetEventFileName,
@@ -25,6 +26,7 @@ import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as fc from "fast-check";
 import { describe, expect, it } from "vitest";
 
 const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
@@ -120,6 +122,23 @@ describe("canonical encoding and digests", () => {
     expect(upcastPacketEventJson(unknownVersion)).toBe(unknownVersion);
     expect(upcastPacketEventJson("scalar")).toBe("scalar");
     expect("packet-event/v1" in PACKET_EVENT_UPCASTERS).toBe(true);
+  });
+});
+
+describe("schema-derived properties", () => {
+  const PacketTraceEntryArbitrary = S.toArbitrary(PacketTraceEntry)(fc);
+  const encodeTraceEntry = S.encodeUnknownSync(PacketTraceEntry);
+  const decodeTraceEntry = S.decodeUnknownSync(PacketTraceEntry);
+
+  it("round-trips arbitrary timeline entries through encode/decode byte-stably", () => {
+    fc.assert(
+      fc.property(PacketTraceEntryArbitrary, (entry) => {
+        const encoded = encodeTraceEntry(entry);
+        const reencoded = encodeTraceEntry(decodeTraceEntry(encoded));
+        return canonicalJsonText(reencoded) === canonicalJsonText(encoded);
+      }),
+      { numRuns: 50 }
+    );
   });
 });
 
