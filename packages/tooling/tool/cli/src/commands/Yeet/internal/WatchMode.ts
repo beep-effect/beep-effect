@@ -34,6 +34,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
 import {
   classifyYeetCheckOutcome,
   countYeetWatchFailures,
@@ -118,9 +119,13 @@ const watchThreadsQuery =
  * downstream speaks {@link YeetWatchSnapshot}.
  *
  * A PR with zero checks yet is returned as-is; the caller decides whether that
- * ends the watch. `gh pr checks` exits non-zero for "no checks reported",
- * which this collector treats as an empty rollup rather than a failure — the
- * registration story belongs to the caller's backoff, not to every poll.
+ * ends the watch. Only `gh pr checks`' "no checks reported" exit reads as an
+ * empty rollup — that is GitHub's registration gap, and the registration story
+ * belongs to the caller's backoff. Every other non-zero read (authentication,
+ * rate limit, network) fails the collection: an outage that decoded to an
+ * empty rollup would end the watch as a green `all-terminal`, and a thread
+ * read that decayed to an empty set would make the next good poll re-report
+ * every existing thread as newly opened.
  *
  * **Example** (Build the collector effect)
  *
@@ -170,6 +175,12 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
     ["pr", "checks", "--json", "name,state,bucket"],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to read PR checks for yeet watch.")));
+  if (checksResult.exitCode !== 0 && !NO_CHECKS_REPORTED.test(checksResult.output)) {
+    return yield* YeetCommandError.make({
+      message: `yeet watch could not read PR checks: ${checksResult.output}`,
+      exitCode: 1,
+    });
+  }
   const checkRows =
     checksResult.exitCode === 0
       ? yield* decodeCheckRows(checksResult.output).pipe(
@@ -182,13 +193,16 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
     ["api", "graphql", "-f", `query=${watchThreadsQuery}`, "-F", `id=${view.id}`],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to read PR review threads for yeet watch.")));
-  const threadNodes =
-    threadsResult.exitCode === 0
-      ? yield* decodeThreadsDocument(threadsResult.output).pipe(
-          Effect.map((document) => document.data.node?.reviewThreads.nodes ?? A.empty<WatchThreadNode>()),
-          Effect.mapError(YeetCommandError.new("Failed to decode PR review threads JSON for yeet watch."))
-        )
-      : A.empty<WatchThreadNode>();
+  if (threadsResult.exitCode !== 0) {
+    return yield* YeetCommandError.make({
+      message: `yeet watch could not read PR review threads: ${threadsResult.output}`,
+      exitCode: 1,
+    });
+  }
+  const threadNodes = yield* decodeThreadsDocument(threadsResult.output).pipe(
+    Effect.map((document) => document.data.node?.reviewThreads.nodes ?? A.empty<WatchThreadNode>()),
+    Effect.mapError(YeetCommandError.new("Failed to decode PR review threads JSON for yeet watch."))
+  );
 
   return YeetWatchSnapshot.make({
     checks: A.map(checkRows, (row) =>
@@ -231,6 +245,12 @@ const emitWatchEvent = (event: YeetWatchEvent): Effect.Effect<void, YeetCommandE
  * supersedes the prior wave" reads in stream form. The consumer that dispatches
  * remediation keys its dedup on `headSha`, so superseded-wave rows cannot leak
  * into the new wave's session.
+ *
+ * A failed poll after the stream has started does not escape as an untyped
+ * error: the stream ends with a `watch-ended` row whose reason is
+ * `poll-error`, carrying the last good snapshot's failure census, so a
+ * consumer never sees a truncated stream. Only the *initial* collection fails
+ * hard — there is nothing to truncate before `watch-started`.
  *
  * **Example** (Build the stream effect)
  *
@@ -285,7 +305,23 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
     }
 
     yield* Effect.sleep(Duration.millis(config.intervalMillis));
-    const next = yield* collectYeetWatchSnapshot(context);
+    const polled = yield* collectYeetWatchSnapshot(context).pipe(
+      Effect.map(O.some),
+      Effect.catch((error) =>
+        Console.error(`[yeet] watch poll failed: ${error.message}`).pipe(Effect.as(O.none<YeetWatchSnapshot>()))
+      )
+    );
+    if (O.isNone(polled)) {
+      const ended = YeetWatchEnded.make({
+        at: yield* isoNow,
+        failing: countYeetWatchFailures(current),
+        headSha: current.headSha,
+        reason: "poll-error",
+      });
+      yield* emitWatchEvent(ended);
+      return ended;
+    }
+    const next = polled.value;
     const events = diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: yield* isoNow, next, prev: current }));
     yield* Effect.forEach(events, emitWatchEvent, { discard: true });
     current = next;

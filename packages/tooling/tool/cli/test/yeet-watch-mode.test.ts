@@ -159,11 +159,14 @@ describe("collectYeetWatchSnapshot", () => {
       )
     )
   );
-  it.effect("degrades a failed thread read to an empty thread set", () =>
+  // An outage that decoded to an empty thread set would make the next good
+  // poll re-report every existing thread as newly opened (#751 review P1).
+  it.effect("fails a poll whose thread read fails, instead of faking emptiness", () =>
     Effect.gen(function* () {
-      const snapshot = yield* collectYeetWatchSnapshot(context);
+      const failure = yield* Effect.flip(collectYeetWatchSnapshot(context));
 
-      expect(snapshot.threads).toEqual([]);
+      expect(failure).toBeInstanceOf(YeetCommandError);
+      expect(failure.message).toContain("could not read PR review threads");
     }).pipe(
       provideScopedLayer(
         scriptedSpawnerLayer([
@@ -171,6 +174,27 @@ describe("collectYeetWatchSnapshot", () => {
             view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
             checks: { exitCode: 0, output: checksJson([]) },
             threads: { exitCode: 1, output: "gh: API rate limit exceeded" },
+          },
+        ])
+      )
+    )
+  );
+
+  // Only gh's registration message buys an empty rollup; any other checks
+  // failure ending the watch as green `all-terminal` was #751's first P1.
+  it.effect("fails a poll whose checks read fails for a non-registration reason", () =>
+    Effect.gen(function* () {
+      const failure = yield* Effect.flip(collectYeetWatchSnapshot(context));
+
+      expect(failure).toBeInstanceOf(YeetCommandError);
+      expect(failure.message).toContain("could not read PR checks");
+    }).pipe(
+      provideScopedLayer(
+        scriptedSpawnerLayer([
+          {
+            view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+            checks: { exitCode: 1, output: "gh: API rate limit exceeded" },
+            threads: { exitCode: 0, output: threadsJson([]) },
           },
         ])
       )
@@ -233,6 +257,38 @@ describe("runYeetWatchStream", () => {
             {
               view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
               checks: { exitCode: 0, output: checksJson([{ bucket: "fail", name: "Coverage", state: "FAILURE" }]) },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+          ])
+        )
+      )
+    )
+  );
+
+  it.live("converts a failed later poll into a typed poll-error ending", () =>
+    Effect.gen(function* () {
+      const ended = yield* runYeetWatchStream(context, { intervalMillis: 0 });
+
+      expect(ended.reason).toBe("poll-error");
+      expect(ended.failing).toBe(0);
+      const lines = A.map(yield* TestConsole.logLines, String);
+      const events = yield* Effect.forEach(lines, (line) => decodeLine(line));
+      expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
+      const errors = A.map(yield* TestConsole.errorLines, String);
+      expect(A.some(errors, (line) => Str.includes("watch poll failed")(line))).toBe(true);
+    }).pipe(
+      provideScopedLayer(
+        Layer.mergeAll(
+          TestConsole.layer,
+          scriptedSpawnerLayer([
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 0, output: checksJson([{ bucket: "pending", name: "Coverage", state: "QUEUED" }]) },
+              threads: { exitCode: 0, output: threadsJson([]) },
+            },
+            {
+              view: { exitCode: 0, output: viewJson("OPEN", "aaa111") },
+              checks: { exitCode: 1, output: "gh: API rate limit exceeded" },
               threads: { exitCode: 0, output: threadsJson([]) },
             },
           ])
