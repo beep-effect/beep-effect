@@ -440,3 +440,27 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   and overlap must be computed from the merge base (`git diff --name-only <mb>..origin/main`)
   because the bidirectional `HEAD..origin/main` form lists your own commits as incoming and makes
   every branch with a commit look like a total collision.
+
+## 2026-08-17 — success-exit hang correction (the #718 exoneration did not hold)
+
+- The P1 record carried "the lane success-exit hang was already closed on main by the `run_lane`
+  process-group reap in #718." That claim did not hold: the hang recurred on 2026-08-17 in Lint
+  Policy job 95354812245 (PR #744) with #718's `run_lane` active, matching the original job
+  94646234791 signature — every policy step logged green, then 29-40 minutes of silence, six
+  orphaned bun processes reaped only by job cleanup. This packet's own later precision, carried
+  here verbatim: the #718 facts were "true but NOT preventive — presented as exoneration when the
+  stragglers sit outside run_lane's setsid pgid (spawns default detached) and the v4 spawner only
+  group-reaps on interrupt/nonzero exit; the #673 success-exit is, ironically, what orphans the
+  grandchildren holding the pipe write-ends." The runner-side reap also fires only after `wait`
+  returns — the very call the wedged pipe blocks — so it could never fire in time.
+- Root cause is a capture-lifetime seam, not a CI-wrapper gap: `runCaptured`/`runCapturedStreams`
+  gate completion on pipe EOF, and EOF needs every inherited write-end closed, so a step child's
+  successful exit while a straggler grandchild still holds the write end (suspected `bunx`
+  resident wrapper — suspected, not proven) wedges the lane silently. Fixed at the seam in #748:
+  after the child exits, a short drain grace, then a process-group reap that closes surviving
+  write-ends with the captured text kept, and a loud `CapturePipeWedgedError` defect naming the
+  command when a descendant escaped even the group.
+- Prevention lesson for the ledger: an exoneration ("already fixed by X") is a claim about a
+  mechanism and needs the mechanism check — who is in the process group, and when the reap can
+  actually run — not just the plausible fact that X exists. Both confident misattributions this
+  week burned exactly this way.
