@@ -1,13 +1,20 @@
-import { ProvBundle } from "@beep/rdf/Prov";
+import { Entity, ObjectRef, ProvBundle } from "@beep/rdf/Prov";
 import { datasetToProvBundle, ProvRdfCodecOptions, provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { areDatasetsEquivalent, makeNamedNode, serializeQuad, sortDatasetQuads } from "@beep/rdf/Rdf";
 import * as ProvVocabulary from "@beep/rdf/Vocab/Prov";
 import { XSD_DATE_TIME } from "@beep/rdf/Vocab/Xsd";
+import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
+
+const RoundTripEntitySeed = S.Struct({
+  index: NonNegativeInt,
+  value: S.String,
+});
 
 const rawCoreBundle: unknown = {
   records: [
@@ -111,6 +118,36 @@ describe("ProvRdf", () => {
       expect(areDatasetsEquivalent(dataset, encodedAgain)).toBe(true);
     })
   );
+
+  it("round-trips schema-derived supported PROV records without RDF loss", () => {
+    const encodableBundle = S.toArbitrary(RoundTripEntitySeed)(fc).map(({ index, value }) =>
+      ProvBundle.make({
+        records: [
+          Entity.make({
+            id: O.some(ObjectRef.make(`urn:beep:prov-property:${index}`)),
+            value: O.some(value),
+          }),
+        ],
+      })
+    );
+    fc.assert(
+      fc.property(encodableBundle, (bundle) =>
+        Result.match(provBundleToDataset(bundle), {
+          onFailure: () => false,
+          onSuccess: (dataset) =>
+            Result.match(datasetToProvBundle(dataset), {
+              onFailure: () => false,
+              onSuccess: (decoded) =>
+                Result.match(provBundleToDataset(decoded), {
+                  onFailure: () => false,
+                  onSuccess: (reencoded) => areDatasetsEquivalent(dataset, reencoded),
+                }),
+            }),
+        })
+      ),
+      { numRuns: 100 }
+    );
+  });
 
   it.effect(
     "rejects extension records instead of dropping them",

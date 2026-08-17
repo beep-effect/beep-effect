@@ -92,6 +92,9 @@ import { refineKnowledgeGraph } from "../Utils/RefineKG.ts";
 import { mergeGraphs } from "./Merge.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/DurableActivities");
+const isActivityError = S.is(ActivityError);
+const preserveActivityError = (error: unknown): ActivityError =>
+  isActivityError(error) ? error : toActivityError(error);
 
 const RDF_STATEMENT = makeNamedNode(`${RDF_NAMESPACE}Statement`);
 const RDF_SUBJECT = makeNamedNode(`${RDF_NAMESPACE}subject`);
@@ -421,8 +424,10 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
  * - Max 3 attempts
  * - Jitter to prevent thundering herd
  */
-const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Schedule.recurs(3)]).pipe(
-  Schedule.jittered
+const activityRetryPolicy = Schedule.min([Schedule.exponential("1 second"), Schedule.recurs(3)]).pipe(
+  Schedule.jittered,
+  Schedule.setInputType<Cause.Cause<unknown>>(),
+  Schedule.while((meta) => Cause.hasInterrupts(meta.input))
 );
 
 // -----------------------------------------------------------------------------
@@ -841,11 +846,9 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
           newTriples: newTripleCount,
           addedTriples: 0,
         };
-        let generation: string | undefined;
+        const generation = O.map(existingGraphOpt, (existing) => existing.generation);
 
         if (O.isSome(existingGraphOpt)) {
-          generation = existingGraphOpt.value.generation;
-
           // Merge with existing graph
           const existingStore = yield* rdf.parseTurtle(existingGraphOpt.value.content).pipe(
             Effect.mapError((error) =>
@@ -937,20 +940,13 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
           });
         }
 
-        // Write with optimistic locking (conditional on generation match)
-        if (generation !== undefined) {
-          yield* storage.setIfGenerationMatch(namespaceCanonicalPath, mergedGraph, generation);
-        } else {
-          const raced = yield* storage.getWithGeneration(namespaceCanonicalPath);
-          if (O.isSome(raced)) {
-            return yield* GenerationMismatchError.make({
-              key: namespaceCanonicalPath,
-              expectedGeneration: "missing",
-              actualGeneration: O.some(raced.value.generation),
-            });
-          }
-          yield* storage.set(namespaceCanonicalPath, mergedGraph);
-        }
+        // Generation zero is the backend-neutral create-only precondition.
+        // Existing objects retain their exact generation token end-to-end.
+        yield* storage.setIfGenerationMatch(
+          namespaceCanonicalPath,
+          mergedGraph,
+          O.getOrElse(generation, () => "0")
+        );
 
         return mergedStats;
       });
@@ -1351,7 +1347,7 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
         candidatesEvaluated: NonNegativeInt.make(result.stats.candidatesEvaluated),
         duration: DateTime.distance(start, end),
       };
-    }).pipe(Effect.mapError(toActivityError)),
+    }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
 

@@ -14,7 +14,7 @@
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { LiteralKit, UUID } from "@beep/schema";
+import { LiteralKit } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -26,7 +26,12 @@ import * as Str from "effect/String";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { Entity } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
-import { BlockingCandidate, EntityRegistryRepository, normalizeEntityMention } from "../Repository/EntityRegistry.ts";
+import {
+  BlockingCandidate,
+  CanonicalEntityId,
+  EntityRegistryRepository,
+  normalizeEntityMention,
+} from "../Repository/EntityRegistry.ts";
 import { EmbeddingService } from "./Embedding.ts";
 import { Embedding } from "./EmbeddingProvider.ts";
 
@@ -79,7 +84,7 @@ export type CrossBatchResolutionError = AnyEmbeddingError | DrizzleError;
  * console.log(result.newCanonicals.length) // 0
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class CrossBatchResolutionResult extends S.Class<CrossBatchResolutionResult>($I`CrossBatchResolutionResult`)(
@@ -120,14 +125,14 @@ export class CrossBatchResolutionResult extends S.Class<CrossBatchResolutionResu
  * console.log(merged.canonicalIri) // "https://example.org/entities/ada"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class MergedEntity extends S.Class<MergedEntity>($I`MergedEntity`)(
   {
     entity: Entity,
     entityId: EntityId,
-    canonicalEntityId: UUID,
+    canonicalEntityId: CanonicalEntityId,
     canonicalIri: IRI,
     confidence: UnitInterval,
     method: ResolutionMethod,
@@ -156,7 +161,7 @@ export class MergedEntity extends S.Class<MergedEntity>($I`MergedEntity`)(
  * console.log(stats.createdNew) // 1
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ResolutionStats extends S.Class<ResolutionStats>($I`ResolutionStats`)(

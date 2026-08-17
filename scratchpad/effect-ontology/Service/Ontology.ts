@@ -890,11 +890,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
                   );
                   const classesMap = MutableHashMap.empty<string, ClassDefinition>();
                   for (const result of results) {
-                    if (P.isNotUndefined(result.class)) {
-                      MutableHashMap.set(classesMap, result.class.id, result.class);
+                    if (O.isSome(result.class)) {
+                      MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
                     }
-                    if (P.isNotUndefined(result.property)) {
-                      for (const domainIri of result.property.domain) {
+                    if (O.isSome(result.property)) {
+                      for (const domainIri of result.property.value.domain) {
                         const domainClass = ontology.classes.find((c) => c.id === domainIri);
                         if (P.isNotUndefined(domainClass)) {
                           MutableHashMap.set(classesMap, domainClass.id, domainClass);
@@ -909,11 +909,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
               const classesMap = MutableHashMap.empty<string, ClassDefinition>();
               for (const result of results) {
-                if (P.isNotUndefined(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.id, result.class);
+                if (O.isSome(result.class)) {
+                  MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
                 }
-                if (P.isNotUndefined(result.property)) {
-                  for (const domainIri of result.property.domain) {
+                if (O.isSome(result.property)) {
+                  for (const domainIri of result.property.value.domain) {
                     const domainClass = ontology.classes.find((c) => c.id === domainIri);
                     if (P.isNotUndefined(domainClass)) {
                       MutableHashMap.set(classesMap, domainClass.id, domainClass);
@@ -1000,11 +1000,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
                     );
                     const classesMap = MutableHashMap.empty<string, ClassDefinition>();
                     for (const result of results) {
-                      if (P.isNotUndefined(result.class)) {
-                        MutableHashMap.set(classesMap, result.class.id, result.class);
+                      if (O.isSome(result.class)) {
+                        MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
                       }
-                      if (P.isNotUndefined(result.property)) {
-                        for (const domainIri of result.property.domain) {
+                      if (O.isSome(result.property)) {
+                        for (const domainIri of result.property.value.domain) {
                           const domainClass = ontology.classes.find((c) => c.id === domainIri);
                           if (P.isNotUndefined(domainClass)) {
                             MutableHashMap.set(classesMap, domainClass.id, domainClass);
@@ -1019,11 +1019,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
                 const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
                 const classesMap = MutableHashMap.empty<string, ClassDefinition>();
                 for (const result of results) {
-                  if (P.isNotUndefined(result.class)) {
-                    MutableHashMap.set(classesMap, result.class.id, result.class);
+                  if (O.isSome(result.class)) {
+                    MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
                   }
-                  if (P.isNotUndefined(result.property)) {
-                    for (const domainIri of result.property.domain) {
+                  if (O.isSome(result.property)) {
+                    for (const domainIri of result.property.value.domain) {
                       const domainClass = ontology.classes.find((c) => c.id === domainIri);
                       if (P.isNotUndefined(domainClass)) {
                         MutableHashMap.set(classesMap, domainClass.id, domainClass);
@@ -1085,11 +1085,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const results = yield* nlp.searchOntologyIndex(index, query, PosInt.make(limit));
         const validClasses = MutableHashMap.empty<string, ClassDefinition>();
         for (const result of results) {
-          if (P.isNotUndefined(result.class)) {
-            MutableHashMap.set(validClasses, result.class.id, result.class);
+          if (O.isSome(result.class)) {
+            MutableHashMap.set(validClasses, result.class.value.id, result.class.value);
           }
-          if (P.isNotUndefined(result.property)) {
-            for (const domainIri of result.property.domain) {
+          if (O.isSome(result.property)) {
+            for (const domainIri of result.property.value.domain) {
               const domainClass = ontology.classes.find((c) => c.id === domainIri);
               if (P.isNotUndefined(domainClass)) {
                 MutableHashMap.set(validClasses, domainClass.id, domainClass);
@@ -1102,7 +1102,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
       searchProperties: Effect.fn("OntologyService.searchProperties")(function* (query: string, limit: number = 10) {
         const index = yield* getBm25Index;
         const results = yield* nlp.searchOntologyIndex(index, query, PosInt.make(limit));
-        return Chunk.fromIterable(results.filter((r) => r.property !== undefined).map((r) => r.property));
+        return Chunk.fromIterable(A.getSomes(A.map(results, (result) => result.property)));
       }),
       getPropertiesFor: Effect.fn("OntologyService.getPropertiesFor")(function* (classIris: ReadonlyArray<string>) {
         const { classes, hierarchy, properties, propertyHierarchy } = yield* getOntology;
@@ -1140,11 +1140,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const results = yield* nlp.searchOntologySemanticIndex(index, query, PosInt.make(limit));
         const validClasses = MutableHashMap.empty<string, ClassDefinition>();
         for (const result of results) {
-          if (P.isNotUndefined(result.class)) {
-            MutableHashMap.set(validClasses, result.class.id, result.class);
+          if (O.isSome(result.class)) {
+            MutableHashMap.set(validClasses, result.class.value.id, result.class.value);
           }
-          if (P.isNotUndefined(result.property)) {
-            for (const domainIri of result.property.domain) {
+          if (O.isSome(result.property)) {
+            for (const domainIri of result.property.value.domain) {
               const domainClass = ontology.classes.find((c) => c.id === domainIri);
               if (P.isNotUndefined(domainClass)) {
                 MutableHashMap.set(validClasses, domainClass.id, domainClass);
@@ -1160,7 +1160,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
       ) {
         const index = yield* getSemanticIndex;
         const results = yield* nlp.searchOntologySemanticIndex(index, query, PosInt.make(limit));
-        return Chunk.fromIterable(results.filter((r) => r.property !== undefined).map((r) => r.property));
+        return Chunk.fromIterable(A.getSomes(A.map(results, (result) => result.property)));
       }),
       searchClassesHybrid: Effect.fn("OntologyService.searchClassesHybrid")(function* (
         query: string,
@@ -1181,11 +1181,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
               const classesMap = MutableHashMap.empty<string, ClassDefinition>();
               for (const result of results) {
-                if (P.isNotUndefined(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.id, result.class);
+                if (O.isSome(result.class)) {
+                  MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
                 }
-                if (P.isNotUndefined(result.property)) {
-                  for (const domainIri of result.property.domain) {
+                if (O.isSome(result.property)) {
+                  for (const domainIri of result.property.value.domain) {
                     const domainClass = ontology.classes.find((c) => c.id === domainIri);
                     if (P.isNotUndefined(domainClass)) {
                       MutableHashMap.set(classesMap, domainClass.id, domainClass);
@@ -1210,11 +1210,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
               const classesMap = MutableHashMap.empty<string, ClassDefinition>();
               for (const result of results) {
-                if (P.isNotUndefined(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.id, result.class);
+                if (O.isSome(result.class)) {
+                  MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
                 }
-                if (P.isNotUndefined(result.property)) {
-                  for (const domainIri of result.property.domain) {
+                if (O.isSome(result.property)) {
+                  for (const domainIri of result.property.value.domain) {
                     const domainClass = ontology.classes.find((c) => c.id === domainIri);
                     if (P.isNotUndefined(domainClass)) {
                       MutableHashMap.set(classesMap, domainClass.id, domainClass);
@@ -1270,11 +1270,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               const results = yield* nlp.searchOntologySemanticIndex(semanticIndex, query, PosInt.make(searchLimit));
               const classesMap = MutableHashMap.empty<string, ClassDefinition>();
               for (const result of results) {
-                if (P.isNotUndefined(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.id, result.class);
+                if (O.isSome(result.class)) {
+                  MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
                 }
-                if (P.isNotUndefined(result.property)) {
-                  for (const domainIri of result.property.domain) {
+                if (O.isSome(result.property)) {
+                  for (const domainIri of result.property.value.domain) {
                     const domainClass = ontology.classes.find((c) => c.id === domainIri);
                     if (P.isNotUndefined(domainClass)) {
                       MutableHashMap.set(classesMap, domainClass.id, domainClass);
@@ -1299,11 +1299,11 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               const results = yield* nlp.searchOntologyIndex(bm25Index, query, PosInt.make(searchLimit));
               const classesMap = MutableHashMap.empty<string, ClassDefinition>();
               for (const result of results) {
-                if (P.isNotUndefined(result.class)) {
-                  MutableHashMap.set(classesMap, result.class.id, result.class);
+                if (O.isSome(result.class)) {
+                  MutableHashMap.set(classesMap, result.class.value.id, result.class.value);
                 }
-                if (P.isNotUndefined(result.property)) {
-                  for (const domainIri of result.property.domain) {
+                if (O.isSome(result.property)) {
+                  for (const domainIri of result.property.value.domain) {
                     const domainClass = ontology.classes.find((c) => c.id === domainIri);
                     if (P.isNotUndefined(domainClass)) {
                       MutableHashMap.set(classesMap, domainClass.id, domainClass);

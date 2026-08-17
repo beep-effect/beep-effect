@@ -191,13 +191,14 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
    *
    * **Example** (Use JinaContentFields)
    * ```ts
+   * import { NonNegativeInt } from "@beep/schema"
    * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent"
    *
    * const content = EnrichedContent.make({
    *   headline: "Example",
    *   description: "Example description",
    *   sourceType: "news",
-   *   wordCount: 2
+   *   wordCount: NonNegativeInt.make(2)
    * })
    * console.log(content.hasPublicationDate) // false
    * ```
@@ -315,10 +316,11 @@ export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
    *
    * **Example** (Use EnrichedContent)
    * ```ts
+   * import { URLStr } from "@beep/schema/URL"
    * import { JinaContent } from "@effect-ontology/Model/EnrichedContent"
    *
    * const page = JinaContent.make({
-   *   url: "https://example.com",
+   *   url: URLStr.make("https://example.com"),
    *   title: "Example",
    *   content: "hello"
    * })

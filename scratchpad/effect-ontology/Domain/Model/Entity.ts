@@ -461,13 +461,15 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
    * **Example** (Read evaluated grounding confidence)
    * ```ts
    * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+   * import { IRI } from "@beep/rdf"
    * import * as O from "effect/Option"
    * import { Entity, GroundingDecision } from "@effect-ontology/Model/Entity"
+   * import { EntityId } from "@effect-ontology/Model/shared"
    *
    * const entity = Entity.make({
-   *   id: "ada_lovelace",
+   *   id: EntityId.make("ada_lovelace"),
    *   mention: "Ada Lovelace",
-   *   types: ["https://schema.org/Person"],
+   *   types: [IRI.make("https://schema.org/Person")],
    *   grounding: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(0.9) })
    * })
    * console.log(O.getOrNull(entity.groundingConfidence)) // 0.9

@@ -14,7 +14,7 @@
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { UUID } from "@beep/schema";
+import { NonNegativeInt, PosInt, SchemaUtils, UUID } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, flow, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
@@ -54,7 +54,7 @@ import { CanonicalEntities, canonicalEntities, EntityAliases, entityAliases, ent
  * console.log(canonicalEntityId)
  * ```
  *
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
 export const CanonicalEntityId = UUID.pipe(
@@ -83,7 +83,7 @@ export type CanonicalEntityId = typeof CanonicalEntityId.Type;
  * console.log(entityAliasId)
  * ```
  *
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
 export const EntityAliasId = UUID.pipe(
@@ -120,7 +120,7 @@ export type EntityAliasId = typeof EntityAliasId.Type;
  * console.log(candidate.mention) // "Ada"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class BlockingCandidate extends S.Class<BlockingCandidate>($I`BlockingCandidate`)(
@@ -158,25 +158,32 @@ export const normalizeEntityMention = flow(Str.toLowerCase, Str.trim);
  * **Example** (Filter canonical entities)
  *
  * ```ts
- * import type { CanonicalEntityFilter } from "@effect-ontology/Repository/EntityRegistry"
+ * import { IRI } from "@beep/rdf"
+ * import { PosInt } from "@beep/schema"
+ * import { CanonicalEntityFilter } from "@effect-ontology/Repository/EntityRegistry"
  *
- * const filter: CanonicalEntityFilter = {
+ * const filter = CanonicalEntityFilter.make({
  *   ontologyId: "claims",
- *   types: ["https://schema.org/Person"],
- *   limit: 20
- * }
+ *   types: [IRI.make("https://schema.org/Person")],
+ *   limit: PosInt.make(20)
+ * })
  * console.log(filter.limit) // 20
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface CanonicalEntityFilter {
-  readonly ontologyId: string;
-  readonly types?: ReadonlyArray<string>;
-  readonly limit?: number;
-  readonly offset?: number;
-}
+export class CanonicalEntityFilter extends S.Class<CanonicalEntityFilter>($I`CanonicalEntityFilter`)(
+  {
+    ontologyId: S.NonEmptyString,
+    types: S.Array(IRI).pipe(SchemaUtils.withEmptyArrayDefaults()),
+    limit: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
+    offset: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+  },
+  $I.annote("CanonicalEntityFilter", {
+    description: "Ontology-scoped canonical-entity filters with schema-owned type and pagination defaults.",
+  })
+) {}
 
 const PgVector = S.Finite.pipe(
   S.Array,

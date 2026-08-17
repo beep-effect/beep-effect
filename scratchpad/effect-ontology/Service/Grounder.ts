@@ -189,13 +189,19 @@ export class EntityGrounderResult extends S.Class<EntityGrounderResult>($I`Entit
    * **Example** (Check a supported entity)
    * ```ts
    * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+   * import { IRI } from "@beep/rdf"
    * import { Entity, GroundingDecision } from "@effect-ontology/Model/Entity"
+   * import { EntityId } from "@effect-ontology/Model/shared"
    * import { EntityGrounderResult } from "@effect-ontology/Service/Grounder"
    *
    * const result = EntityGrounderResult.make({
    *   decision: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(1) }),
    *   typeMatch: true,
-   *   entity: Entity.make({ id: "ada", mention: "Ada", types: ["https://schema.org/Person"] })
+   *   entity: Entity.make({
+   *     id: EntityId.make("ada"),
+   *     mention: "Ada",
+   *     types: [IRI.make("https://schema.org/Person")]
+   *   })
    * })
    * console.log(result.grounded) // true
    * ```
@@ -207,18 +213,24 @@ export class EntityGrounderResult extends S.Class<EntityGrounderResult>($I`Entit
   }
 
   /**
-   * Numeric compatibility view of the schema-owned grounding decision.
+   * Optional confidence view of the schema-owned grounding decision.
    *
    * **Example** (Preserve unevaluated confidence absence)
    * ```ts
    * import * as O from "effect/Option"
+   * import { IRI } from "@beep/rdf"
    * import { Entity, GroundingDecision } from "@effect-ontology/Model/Entity"
+   * import { EntityId } from "@effect-ontology/Model/shared"
    * import { EntityGrounderResult } from "@effect-ontology/Service/Grounder"
    *
    * const result = EntityGrounderResult.make({
    *   decision: GroundingDecision.cases.NotEvaluated.make({}),
    *   typeMatch: false,
-   *   entity: Entity.make({ id: "ada", mention: "Ada", types: ["https://schema.org/Person"] })
+   *   entity: Entity.make({
+   *     id: EntityId.make("ada"),
+   *     mention: "Ada",
+   *     types: [IRI.make("https://schema.org/Person")]
+   *   })
    * })
    * console.log(O.isNone(result.confidence)) // true
    * ```
@@ -509,15 +521,17 @@ export class GrounderResult extends S.Class<GrounderResult>($I`GrounderResult`)(
    * **Example** (Check a supported relation)
    * ```ts
    * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+   * import { IRI } from "@beep/rdf"
    * import { GroundingDecision, Relation, RelationObject } from "@effect-ontology/Model/Entity"
+   * import { EntityId } from "@effect-ontology/Model/shared"
    * import { GrounderResult } from "@effect-ontology/Service/Grounder"
    *
    * const result = GrounderResult.make({
    *   decision: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(1) }),
    *   relation: Relation.make({
-   *     subjectId: "ada",
-   *     predicate: "https://schema.org/knows",
-   *     object: RelationObject.cases.EntityReference.make({ value: "charles" })
+   *     subjectId: EntityId.make("ada"),
+   *     predicate: IRI.make("https://schema.org/knows"),
+   *     object: RelationObject.cases.EntityReference.make({ value: EntityId.make("charles") })
    *   })
    * })
    * console.log(result.grounded) // true
@@ -535,15 +549,17 @@ export class GrounderResult extends S.Class<GrounderResult>($I`GrounderResult`)(
    * **Example** (Preserve unevaluated confidence absence)
    * ```ts
    * import * as O from "effect/Option"
+   * import { IRI } from "@beep/rdf"
    * import { GroundingDecision, Relation, RelationObject } from "@effect-ontology/Model/Entity"
+   * import { EntityId } from "@effect-ontology/Model/shared"
    * import { GrounderResult } from "@effect-ontology/Service/Grounder"
    *
    * const result = GrounderResult.make({
    *   decision: GroundingDecision.cases.NotEvaluated.make({}),
    *   relation: Relation.make({
-   *     subjectId: "ada",
-   *     predicate: "https://schema.org/knows",
-   *     object: RelationObject.cases.EntityReference.make({ value: "charles" })
+   *     subjectId: EntityId.make("ada"),
+   *     predicate: IRI.make("https://schema.org/knows"),
+   *     object: RelationObject.cases.EntityReference.make({ value: EntityId.make("charles") })
    *   })
    * })
    * console.log(O.isNone(result.confidence)) // true

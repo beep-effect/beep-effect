@@ -7,6 +7,7 @@ import { Effect, Equal } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import {
   Entity,
   EntityObservation,
@@ -14,6 +15,8 @@ import {
   GroundingDecision,
   KnowledgeGraph,
   makeExtractionProvenanceBundle,
+  Relation,
+  RelationObject,
 } from "../../Domain/Model/Entity.ts";
 import { EntityId } from "../../Domain/Model/shared.ts";
 import { ClaimId } from "../../Domain/Schema/KnowledgeModel.ts";
@@ -229,5 +232,52 @@ describe("grounding provenance", () => {
         Equal.equals(A.reduce(values, KnowledgeGraph.make({}), mergeGraphs), leftAssociated)
       )
     ).toBe(true);
+  });
+
+  it("merges relation grounding independently of operand order", () => {
+    const subjectId = EntityId.make("relation_subject");
+    const predicate = IRI.make("urn:example:predicate");
+    const object = RelationObject.cases.Text.make({ value: "value" });
+    const notEvaluated = Relation.make({ subjectId, predicate, object });
+    const supported = Relation.make({
+      subjectId,
+      predicate,
+      object,
+      grounding: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(0.8) }),
+    });
+    const left = mergeGraphs(
+      KnowledgeGraph.make({ relations: [notEvaluated] }),
+      KnowledgeGraph.make({ relations: [supported] })
+    );
+    const right = mergeGraphs(
+      KnowledgeGraph.make({ relations: [supported] }),
+      KnowledgeGraph.make({ relations: [notEvaluated] })
+    );
+
+    expect(left.relations).toHaveLength(1);
+    expect(left.relations[0]?.grounding.status).toBe("Supported");
+    expect(Equal.equals(left, right)).toBe(true);
+  });
+
+  it("satisfies identity, commutativity, and associativity for schema-derived graphs", () => {
+    const empty = KnowledgeGraph.make({});
+    const canonicalGraph = S.toArbitrary(KnowledgeGraph)(fc).map((graph) => mergeGraphs(empty, graph));
+
+    fc.assert(
+      fc.property(canonicalGraph, canonicalGraph, canonicalGraph, (first, second, third) => {
+        const leftIdentity = mergeGraphs(empty, first);
+        const rightIdentity = mergeGraphs(first, empty);
+        const leftAssociated = mergeGraphs(mergeGraphs(first, second), third);
+        const rightAssociated = mergeGraphs(first, mergeGraphs(second, third));
+
+        return (
+          Equal.equals(leftIdentity, first) &&
+          Equal.equals(rightIdentity, first) &&
+          Equal.equals(mergeGraphs(first, second), mergeGraphs(second, first)) &&
+          Equal.equals(leftAssociated, rightAssociated)
+        );
+      }),
+      { numRuns: 100 }
+    );
   });
 });

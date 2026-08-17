@@ -36,12 +36,13 @@ const ConflictRecordDefinition = S.Struct({
 /**
  * Persisted conflict with both competing claims.
  *
- * **Example** (Inspect the joined schema)
+ * **Example** (Reject an incomplete joined record)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ConflictRecord } from "@effect-ontology/Repository/Conflict"
  *
- * console.log(ConflictRecord)
+ * console.log(S.is(ConflictRecord)({})) // false
  * ```
  *
  * @category models

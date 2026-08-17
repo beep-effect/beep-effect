@@ -307,34 +307,45 @@ const makeExtractionRunService = Effect.gen(function* () {
   );
 
   const mapRunError = (message: string, runId?: ExtractionRunId) => (cause: unknown) =>
-    ExtractionRunError.make({
-      message,
-      cause: O.some(cause),
-      runId: O.fromUndefinedOr(runId),
-    });
+    ExtractionRunError.is(cause)
+      ? cause
+      : ExtractionRunError.make({
+          message,
+          cause: O.some(cause),
+          runId: O.fromUndefinedOr(runId),
+        });
 
   const updateMetadata = Effect.fn("ExtractionRunService.updateMetadata")(function* (
     runId: ExtractionRunId,
     updater: (run: ExtractionRun) => ExtractionRun
   ) {
-    const content = yield* storage.get(metadataKey(runId));
-    if (P.isUndefined(content)) {
+    const content = yield* storage.getOption(metadataKey(runId));
+    if (O.isNone(content)) {
       return yield* ExtractionRunError.make({
         message: `Run not found: ${runId}`,
         runId: O.some(runId),
       });
     }
-    const run = yield* decodeExtractionRun(content);
+    const run = yield* decodeExtractionRun(content.value);
     const updated = updater(run);
     yield* storage.set(metadataKey(runId), yield* ExtractionRun.encodeJsonStringEffect(updated));
     return updated;
   });
 
-  const getKeyIndex = storage.get(KEY_INDEX_FILE).pipe(
-    Effect.flatMap((content) =>
-      P.isUndefined(content) ? S.decodeEffect(KeyIndex)({}) : KeyIndexJson.decodeKeyIndex(content)
-    ),
-    Effect.catch(() => S.decodeEffect(KeyIndex)({}))
+  const getKeyIndex = storage.getOption(KEY_INDEX_FILE).pipe(
+    Effect.mapError(mapRunError("Failed to read extraction idempotency index")),
+    Effect.flatMap(
+      O.match({
+        onNone: () =>
+          S.decodeEffect(KeyIndex)({}).pipe(
+            Effect.mapError(mapRunError("Failed to initialize extraction idempotency index"))
+          ),
+        onSome: (content) =>
+          KeyIndexJson.decodeKeyIndex(content).pipe(
+            Effect.mapError(mapRunError("Failed to decode extraction idempotency index"))
+          ),
+      })
+    )
   );
 
   const updateKeyIndex = Effect.fn("ExtractionRunService.updateKeyIndex")(function* (
@@ -352,10 +363,16 @@ const makeExtractionRunService = Effect.gen(function* () {
     options?: { idempotencyKey?: IdempotencyKey; ontologyVersion?: string }
   ) {
     const runId = generateDocumentId(text);
-    const existing = yield* storage.get(metadataKey(runId));
-    if (P.isNotUndefined(existing)) {
-      const existingText = (yield* storage.get(documentKey(runId))) ?? "";
-      if (existingText === text) return yield* decodeExtractionRun(existing);
+    const existing = yield* storage.getOption(metadataKey(runId));
+    if (O.isSome(existing)) {
+      const existingText = yield* storage.getOption(documentKey(runId));
+      if (O.isNone(existingText)) {
+        return yield* ExtractionRunError.make({
+          message: `Run document not found: ${runId}`,
+          runId: O.some(runId),
+        });
+      }
+      if (existingText.value === text) return yield* decodeExtractionRun(existing.value);
       yield* Effect.logWarning(`Hash collision detected for runId ${runId}; overwriting the existing run.`);
     }
 
@@ -458,18 +475,18 @@ const makeExtractionRunService = Effect.gen(function* () {
     runId: ExtractionRunId
   ): Effect.fn.Return<ExtractionRun, ExtractionRunError> {
     const mapError = mapRunError("Failed to read extraction run", runId);
-    const content = yield* storage.get(metadataKey(runId)).pipe(Effect.mapError(mapError));
-    if (P.isUndefined(content)) {
+    const content = yield* storage.getOption(metadataKey(runId)).pipe(Effect.mapError(mapError));
+    if (O.isNone(content)) {
       return yield* ExtractionRunError.make({
         message: `Run not found: ${runId}`,
         runId: O.some(runId),
       });
     }
-    return yield* decodeExtractionRun(content).pipe(Effect.mapError(mapError));
+    return yield* decodeExtractionRun(content.value).pipe(Effect.mapError(mapError));
   });
 
   const listRuns = storage.list(RUNS_PREFIX).pipe(
-    Effect.orElseSucceed(() => []),
+    Effect.mapError(mapRunError("Failed to list extraction runs")),
     Effect.flatMap((keys) =>
       Effect.forEach(
         keys.flatMap((key): Array<ExtractionRunId> => {
@@ -488,7 +505,8 @@ const makeExtractionRunService = Effect.gen(function* () {
 
   const existsByKeyRaw = Effect.fn("ExtractionRunService.existsByKey")(function* (key: IdempotencyKey) {
     const runId = R.get(yield* getKeyIndex, key);
-    return O.isNone(runId) ? false : P.isNotUndefined(yield* storage.get(metadataKey(runId.value)));
+    if (O.isNone(runId)) return false;
+    return O.isSome(yield* storage.getOption(metadataKey(runId.value)));
   });
   const existsByKey = (key: IdempotencyKey) =>
     existsByKeyRaw(key).pipe(Effect.mapError(mapRunError("Failed to check extraction idempotency key")));
@@ -496,8 +514,11 @@ const makeExtractionRunService = Effect.gen(function* () {
   const getByKeyRaw = Effect.fn("ExtractionRunService.getByKey")(function* (key: IdempotencyKey) {
     const runId = R.get(yield* getKeyIndex, key);
     if (O.isNone(runId)) return O.none<ExtractionRun>();
-    const content = yield* storage.get(metadataKey(runId.value));
-    return P.isUndefined(content) ? O.none<ExtractionRun>() : O.some(yield* decodeExtractionRun(content));
+    const content = yield* storage.getOption(metadataKey(runId.value));
+    return yield* O.match(content, {
+      onNone: () => Effect.succeed(O.none<ExtractionRun>()),
+      onSome: (value) => decodeExtractionRun(value).pipe(Effect.map(O.some)),
+    });
   });
   const getByKey = (key: IdempotencyKey) =>
     getByKeyRaw(key).pipe(Effect.mapError(mapRunError("Failed to read extraction run by idempotency key")));

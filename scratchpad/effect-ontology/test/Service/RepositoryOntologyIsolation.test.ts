@@ -502,6 +502,60 @@ describe.sequential("repository ontology isolation", () => {
     );
 
     it.effect(
+      "updates example usage counts and weighted success rates through projected Drizzle",
+      Effect.fnUntraced(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const examples = yield* ExamplesRepository;
+        const exampleId = "00000000-0000-4000-8000-000000000042";
+        const embedding = `[${A.join(A.replicate("0.1", 768), ",")}]`;
+
+        yield* sql`DROP TABLE IF EXISTS llm_examples`;
+        yield* sql`
+          CREATE TABLE llm_examples (
+            id UUID PRIMARY KEY,
+            ontology_id TEXT NOT NULL,
+            example_type TEXT NOT NULL,
+            source TEXT NOT NULL DEFAULT 'manual',
+            input_text TEXT NOT NULL,
+            target_class TEXT,
+            target_predicate TEXT,
+            evidence_text TEXT,
+            evidence_start_offset INTEGER,
+            evidence_end_offset INTEGER,
+            expected_output JSONB NOT NULL,
+            prompt_messages JSONB,
+            explanation TEXT,
+            embedding TEXT NOT NULL,
+            is_negative BOOLEAN NOT NULL DEFAULT FALSE,
+            negative_pattern TEXT,
+            usage_count INTEGER DEFAULT 0,
+            success_rate NUMERIC(4, 3),
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            created_by TEXT,
+            is_active BOOLEAN NOT NULL DEFAULT TRUE
+          )
+        `;
+        yield* sql`
+          INSERT INTO llm_examples (
+            id, ontology_id, example_type, input_text, expected_output, embedding, success_rate
+          ) VALUES (
+            ${exampleId}, ${OntologyA}, 'entity_extraction', 'input', '{}'::jsonb, ${embedding}, 0
+          )
+        `;
+
+        yield* examples.recordUsage(exampleId, true);
+        yield* examples.recordUsage(exampleId, false);
+        yield* examples.recordUsage(exampleId, true);
+        const rows = yield* sql<{ readonly success_rate: string; readonly usage_count: number }>`
+          SELECT usage_count, success_rate::text FROM llm_examples WHERE id = ${exampleId}
+        `;
+
+        assert.strictEqual(rows[0]?.usage_count, 3);
+        assert.strictEqual(rows[0]?.success_rate, "0.667");
+      })
+    );
+
+    it.effect(
       "rejects malformed LLM example rows as decodeRows failures",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;

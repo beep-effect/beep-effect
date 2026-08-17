@@ -110,17 +110,16 @@ export type PersistedCorrectionId = CorrectionRow["id"];
 /**
  * Describes the claim filter data exposed by this module.
  *
- * **Example** (Reference ClaimFilter fields)
+ * **Example** (Create an ontology-scoped filter)
  *
  * ```ts
- * import type { ClaimFilter } from "@effect-ontology/Repository/Claim"
+ * import { ClaimFilter } from "@effect-ontology/Repository/Claim"
  *
- * const claimFilterFields: ReadonlyArray<keyof ClaimFilter> = ["ontologyId", "articleId", "subjectIri"]
- *
- * console.log(claimFilterFields)
+ * const filter = ClaimFilter.make({ ontologyId: "claims" })
+ * console.log(filter.ontologyId) // "claims"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ClaimFilter extends S.Class<ClaimFilter>($I`ClaimFilter`)(
@@ -142,17 +141,16 @@ export class ClaimFilter extends S.Class<ClaimFilter>($I`ClaimFilter`)(
 /**
  * Describes the conflict candidate data exposed by this module.
  *
- * **Example** (Reference ConflictCandidate fields)
+ * **Example** (Reject an incomplete conflict candidate)
  *
  * ```ts
- * import type { ConflictCandidate } from "@effect-ontology/Repository/Claim"
+ * import * as S from "effect/Schema"
+ * import { ConflictCandidate } from "@effect-ontology/Repository/Claim"
  *
- * const conflictCandidateFields: ReadonlyArray<keyof ConflictCandidate> = ["existingClaim", "conflictType"]
- *
- * console.log(conflictCandidateFields)
+ * console.log(S.is(ConflictCandidate)({ conflictType: "position" })) // false
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class ConflictCandidate extends S.Class<ConflictCandidate>($I`ConflictCandidate`)(

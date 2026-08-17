@@ -16,7 +16,7 @@ import type { IRI } from "@beep/rdf";
 import { ProvBundle } from "@beep/rdf/Prov";
 import { NonNegativeInt } from "@beep/schema";
 import * as A from "@beep/utils/Array";
-import { DateTime, HashMap, HashSet, Inspectable, Order } from "effect";
+import { DateTime, HashMap, HashSet, Inspectable, MutableHashMap, Order } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -101,6 +101,19 @@ const RelationOrder: Order.Order<Relation> = Order.combine(
     )
   )
 );
+
+class RelationSignature extends S.Class<RelationSignature>($I`RelationSignature`)({
+  subjectId: EntityId,
+  predicate: S.String,
+  object: RelationObject,
+}) {}
+
+const relationSignature = (relation: Relation): RelationSignature =>
+  RelationSignature.make({
+    subjectId: relation.subjectId,
+    predicate: relation.predicate,
+    object: relation.object,
+  });
 
 const EvidenceOrder = Order.combine(
   Order.mapInput(Order.Number, (evidence: Entity["mentions"][number]) => evidence.startChar),
@@ -237,18 +250,19 @@ const mergeRelationCollections = (
   left: ReadonlyArray<Relation>,
   right: ReadonlyArray<Relation>
 ): ReadonlyArray<Relation> => {
-  let relations = HashMap.empty<Relation, Relation>();
+  const relations = MutableHashMap.empty<RelationSignature, Relation>();
   for (const relation of A.appendAll(left, right)) {
-    relations = HashMap.set(
+    const signature = relationSignature(relation);
+    MutableHashMap.set(
       relations,
-      relation,
-      O.match(HashMap.get(relations, relation), {
+      signature,
+      O.match(MutableHashMap.get(relations, signature), {
         onNone: () => relation,
         onSome: (existing) => mergeRelation(existing, relation),
       })
     );
   }
-  return A.sort(A.fromIterable(HashMap.toValues(relations)), RelationOrder);
+  return A.sort(A.fromIterable(MutableHashMap.values(relations)), RelationOrder);
 };
 
 const mergeGraphData = (left: KnowledgeGraph, right: KnowledgeGraph): KnowledgeGraph =>
