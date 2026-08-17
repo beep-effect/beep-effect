@@ -693,14 +693,25 @@ const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
   context: RepoRunContext,
   checkSteps: ReadonlyArray<RepoPlanStep>,
   recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
-  failureMessage: string
+  failureMessage: string,
+  delays: ReadonlyArray<Duration.Duration> = YEET_CHECK_REGISTRATION_BACKOFF
 ): Effect.fn.Return<
   void,
   YeetCommandError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  const results = yield* runPhase(context, checkSteps, recorder).pipe(
-    awaitYeetCheckRegistration(YEET_CHECK_REGISTRATION_BACKOFF)
+  // `runPhase` appends to the recorder, and the recorder is what the verdict,
+  // the PR body, and `yeet status` all read. A retried attempt must therefore
+  // REPLACE the previous attempt's record rather than add to it: otherwise one
+  // step id carries both a failed entry (no checks registered yet) and a passed
+  // one, and every downstream surface reports the same lane as both — the
+  // misattributed-hint class this packet already has receipts for. Rewinding to
+  // the pre-attempt snapshot before each try makes the last attempt the only
+  // one that survives.
+  const beforeAttempts = yield* Ref.get(recorder);
+  const results = yield* Ref.set(recorder, beforeAttempts).pipe(
+    Effect.andThen(runPhase(context, checkSteps, recorder)),
+    awaitYeetCheckRegistration(delays)
   );
   if (A.every(results, (result) => result.exitCode === 0)) {
     return;
@@ -710,10 +721,18 @@ const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
     checkSteps,
     results,
     isAwaitingYeetCheckRegistration(results)
-      ? `${failureMessage} ${renderYeetCheckRegistrationExhausted(YEET_CHECK_REGISTRATION_BACKOFF)}`
+      ? `${failureMessage} ${renderYeetCheckRegistrationExhausted(delays)}`
       : failureMessage
   );
 });
+
+/**
+ * Run the monitor check watch in isolation, with an injectable backoff.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runMonitorCheckWatchForTesting = runMonitorCheckWatch;
 
 const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
   context: RepoRunContext,

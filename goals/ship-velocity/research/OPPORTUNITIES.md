@@ -236,3 +236,27 @@ session/machine ids.
   are held to 100%, and treat "a `getOrElse`/`orElse` thunk over a field the tests always
   populate" as the house signature of a ratchet failure — grep the diff for it before paying a
   cycle.
+- **B5 has a costed case now.** Publishing A7 paid for two full ~17-minute proofs on byte-identical
+  content. The second was not triggered by any source change but by `git add`: `ProofState.ts`'s
+  `collectDiffFingerprint` hashes
+  `sha256(git status --short ‖ git diff HEAD ‖ git diff --cached)`, so staging invalidates the
+  proof three ways at once — status letters flip (`??`→`A `, `MM`→`M `), bytes leave the unstaged
+  diff, and the same bytes enter the cached diff — while the resulting tree is unchanged. The
+  fingerprint keys on the *staging arrangement*, not on the tree. Keying it on a tree SHA
+  (`git write-tree` over the index) would have reused the proof. That is SPEC B5, and the price
+  here was ~17 minutes of serialized slot time for a no-op, with three queued items waiting.
+  Ordering half of the same defect: `yeet publish` refuses untracked files only *after* running
+  the fallow-advisory preflight, and under `--start-pr-early` that waste sits on the critical
+  path — the intent check belongs before the preflight, and the fingerprint could be taken after
+  intent staging rather than before.
+- Never pipe a long proof through `tail`: `bun run beep yeet verify 2>&1 | tail -50` buffers
+  everything until exit, so 16 minutes of a healthy run were indistinguishable from a hang and
+  the monitor armed on the log file could not fire until completion. Confirming liveness needed
+  `ps`. Redirect to a file and tail the file. Same family as the existing piped-exit-code receipt.
+- `yeet publish`'s operator status summary quoted a *stale* verdict: after the second publish
+  attempt pushed and created PR #738, the summary printed
+  `verdict: publish failure: yeet publish refuses untracked files` — the previous attempt's
+  artifact — beside `checks: 28 total, 0 failing, 0 pending` from the current one. Two runs' state
+  in one block, with the failure line the most eye-catching part. Sixth receipt in the
+  misattributed-hint family: a summary must read the verdict written by the run it is summarizing,
+  or state which run it came from.

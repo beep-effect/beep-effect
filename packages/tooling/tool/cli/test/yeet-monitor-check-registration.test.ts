@@ -5,8 +5,10 @@ import {
   RepoRunContext,
   RepoStepRunResult,
   renderYeetCheckRegistrationExhausted,
+  runMonitorCheckWatchForTesting,
   runMonitorPhaseForTesting,
   YEET_CHECK_REGISTRATION_BACKOFF,
+  YeetExecutedStep,
   yeetCheckRegistration,
 } from "@beep/repo-cli/test/Yeet";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -18,7 +20,6 @@ import * as A from "effect/Array";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import type { YeetExecutedStep } from "@beep/repo-cli/test/Yeet";
 
 // A7 (ship-velocity): `gh pr checks --watch` reports a head with no check runs
 // as an error — exit 1, "no checks reported on the '<branch>' branch" — and
@@ -307,5 +308,64 @@ describe("the monitor phase check watch", () => {
         )
       )
     )
+  );
+});
+
+// Greptile P1 on #738: the registration retry re-runs a recorder-mutating
+// phase, so a first attempt that found no checks and a later attempt that
+// passed both landed in the recorder. The verdict, the PR body, and
+// `yeet status` all read that recorder, so one step id reported as failed AND
+// passed — and status would print a repair command for a lane that passed.
+const registrationThenSuccessSpawnerLayer = (callsRef: Ref.Ref<number>) =>
+  Layer.effect(
+    ChildProcessSpawner.ChildProcessSpawner,
+    Effect.succeed(
+      ChildProcessSpawner.make((command) => {
+        if (!ChildProcess.isStandardCommand(command)) {
+          return Effect.die("the check watch never spawns a piped command");
+        }
+        return Effect.map(
+          Ref.updateAndGet(callsRef, (count) => count + 1),
+          (call) =>
+            call === 1
+              ? stubHandle(1, "no checks reported on the 'feat/yeet-monitor-hardening' branch")
+              : stubHandle(0, "All checks were successful")
+        );
+      })
+    )
+  );
+
+describe("the monitor check watch recorder", () => {
+  it.effect("records only the final attempt, never the attempt it retried", () =>
+    withTempDirectory((root) =>
+      Effect.gen(function* () {
+        const context = monitorPhaseContext(root);
+        const callsRef = yield* Ref.make(0);
+        const priorStep = YeetExecutedStep.make({
+          durationMs: 1,
+          result: RepoStepRunResult.make({
+            stepId: "monitor:01-pr-context",
+            commandText: "gh pr view",
+            exitCode: 0,
+          }),
+          step: A.headNonEmpty(monitorSteps(root) as A.NonEmptyReadonlyArray<RepoPlanStep>),
+        });
+        const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>([priorStep]);
+        const checkSteps = A.filter(monitorSteps(root), (step) => step.id === "monitor:02-pr-checks-watch");
+
+        yield* runMonitorCheckWatchForTesting(context, checkSteps, recorder, "yeet monitor failed.", [
+          Duration.zero,
+        ]).pipe(Effect.provide(registrationThenSuccessSpawnerLayer(callsRef)));
+
+        const recorded = yield* Ref.get(recorder);
+        const watchEntries = A.filter(recorded, (entry) => entry.step.id === "monitor:02-pr-checks-watch");
+        expect(yield* Ref.get(callsRef)).toBe(2);
+        // Exactly one entry for the retried step, carrying the attempt that won.
+        expect(A.length(watchEntries)).toBe(1);
+        expect(A.map(watchEntries, (entry) => entry.result.exitCode)).toEqual([0]);
+        // The rewind must not eat entries recorded before the watch began.
+        expect(A.length(A.filter(recorded, (entry) => entry.step.id === "monitor:01-pr-context"))).toBe(1);
+      })
+    ).pipe(provideScopedLayer(PlatformLayer))
   );
 });
