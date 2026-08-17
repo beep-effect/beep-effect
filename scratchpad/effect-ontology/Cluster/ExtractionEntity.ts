@@ -10,7 +10,10 @@
  * @module Cluster/ExtractionEntity
  */
 
-import { SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegNum } from "@beep/schema/Number";
+import { Percentage } from "@beep/schema/Percentage";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
 import { Entity } from "effect/unstable/cluster";
 import * as Rpc from "effect/unstable/rpc/Rpc";
@@ -35,10 +38,10 @@ export const ExtractFromTextPayload = S.Struct({
   ontologyVersion: S.String,
   /** Optional extraction parameters */
   params: S.Struct({
-    maxTokens: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    maxTokens: PosInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     temperature: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     includeConfidence: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    groundingThreshold: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    groundingThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
 
@@ -48,9 +51,9 @@ export type ExtractFromTextPayload = typeof ExtractFromTextPayload.Type;
  * Extraction summary returned on completion
  */
 export const ExtractionSummary = S.Struct({
-  entityCount: S.Finite,
-  relationCount: S.Finite,
-  durationMs: S.Finite,
+  entityCount: NonNegativeInt,
+  relationCount: NonNegativeInt,
+  durationMs: NonNegNum,
   idempotencyKey: S.String,
 });
 
@@ -76,7 +79,7 @@ export const KnowledgeGraphResult = S.Struct({
     ontologyId: S.String,
     ontologyVersion: S.String,
     extractedAt: S.String,
-    durationMs: S.Finite,
+    durationMs: NonNegNum,
   }),
 });
 
@@ -134,7 +137,7 @@ export const GetExtractionStatusRpc = Rpc.make("GetExtractionStatus", {
   }),
   success: S.Struct({
     status: S.Literals(["pending", "running", "complete", "failed"]),
-    progress: S.Finite.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    progress: Percentage.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     startedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     completedAt: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     error: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),

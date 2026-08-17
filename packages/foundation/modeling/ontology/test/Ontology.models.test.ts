@@ -12,7 +12,7 @@ import {
 } from "@beep/ontology/Ontology.models";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Result } from "effect";
+import { Result, SchemaAST } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -99,6 +99,17 @@ const httpValidationErrorWire: S.Codec.Encoded<typeof HTTPValidationError> = {
 };
 
 describe("@beep/ontology models", () => {
+  it("owns constructive HTTP URL metadata and codec statics", () => {
+    expect(SchemaAST.resolve(HttpUrl.ast)?.toArbitrary).toBeDefined();
+    expect(HttpUrl.fromUnknown("https://example.com/ontology.owl")).toBe("https://example.com/ontology.owl");
+  });
+
+  it("accepts only HTTP and HTTPS URL schemes", () => {
+    expect(S.is(HttpUrl)("http://example.com/ontology.owl")).toBe(true);
+    expect(S.is(HttpUrl)("https://example.com/ontology.owl")).toBe(true);
+    expect(S.is(HttpUrl)("ftp://example.com/ontology.owl")).toBe(false);
+  });
+
   it("preserves representative OpenAPI encoded wire shapes", () => {
     expectWireRoundTrip(GraphInfo, graphInfoGithubWire);
     expectWireRoundTrip(GraphInfo, graphInfoHttpWire);

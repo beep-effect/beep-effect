@@ -1,14 +1,19 @@
 import { LangExtractError, LangExtractOptions, LangExtractRequest } from "@beep/langextract/Extraction";
 import {
+  allowRemoteExtractionPolicy,
   allowRemoteExtractionPolicyLayer,
+  buildPrompt,
+  ensureRemoteExtractionAllowed,
   layer as LangExtractLayer,
   LangExtractService,
 } from "@beep/langextract/Service";
-import { ExtractionTarget } from "@beep/langextract/Target";
+import { ExtractionExample, ExtractionExampleItem, ExtractionTarget } from "@beep/langextract/Target";
 import { DocumentId } from "@beep/nlp/Core";
 import { NonNegativeInt } from "@beep/schema";
-import { describe, expect, layer } from "@effect/vitest";
+import * as O from "@beep/utils/Option";
+import { describe, expect, it, layer } from "@effect/vitest";
 import { Duration, Effect, Fiber, Layer, Stream } from "effect";
+import * as Str from "effect/String";
 import { TestClock } from "effect/testing";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as Response from "effect/unstable/ai/Response";
@@ -35,6 +40,53 @@ const makeLanguageModelLayerFromEffect = (
 
 const makeLanguageModelLayer = (text: string): Layer.Layer<LanguageModel.LanguageModel> =>
   makeLanguageModelLayerFromEffect(Effect.succeed({ text }));
+
+describe("buildPrompt", () => {
+  it.effect(
+    "renders schema-defaulted targets and few-shot examples without throwing",
+    Effect.fnUntraced(function* () {
+      const prompt = yield* buildPrompt(
+        LangExtractRequest.make({
+          documentId: DocumentId.make("doc-1"),
+          examples: [
+            ExtractionExample.make({
+              extractions: [ExtractionExampleItem.make({ label: "person", text: "Ada Lovelace" })],
+              text: "Ada Lovelace wrote notes.",
+            }),
+          ],
+          targets: [
+            ExtractionTarget.make({
+              attributes: ["birth_year"],
+              description: O.some("Named people"),
+              kind: "entity",
+              name: "person",
+            }),
+          ],
+          text: "Grace Hopper wrote compilers.",
+        })
+      );
+
+      expect(Str.includes("attributes=birth_year")(prompt)).toBe(true);
+      expect(Str.includes("description=Named people")(prompt)).toBe(true);
+      expect(Str.includes('"text":"Ada Lovelace"')(prompt)).toBe(true);
+    })
+  );
+});
+
+describe("ensureRemoteExtractionAllowed", () => {
+  it.effect(
+    "supports the data-last policy form",
+    Effect.fnUntraced(function* () {
+      const request = LangExtractRequest.make({
+        documentId: DocumentId.make("doc-1"),
+        targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
+        text: "Ada Lovelace wrote notes.",
+      });
+
+      yield* ensureRemoteExtractionAllowed(request)(O.some(allowRemoteExtractionPolicy));
+    })
+  );
+});
 
 describe("LangExtractService", () => {
   layer(
@@ -64,7 +116,7 @@ describe("LangExtractService", () => {
         expect(result.extractions).toHaveLength(2);
         expect(result.diagnostics.alignedCount).toBe(2);
         expect(result.annotatedDocument.entities).toHaveLength(2);
-        expect(result.annotatedDocument.chunks[0]?.span.end).toBe("Alice founded Acme.".length);
+        expect(result.annotatedDocument.chunks[0]?.span.end).toBe(Str.length("Alice founded Acme."));
       })
     );
 
@@ -73,7 +125,7 @@ describe("LangExtractService", () => {
       Effect.fnUntraced(function* () {
         const request = LangExtractRequest.make({
           documentId: DocumentId.make("doc-1"),
-          options: LangExtractOptions.make({ maxExtractions: NonNegativeInt.make(1) }),
+          options: LangExtractOptions.make({ maxExtractions: O.some(NonNegativeInt.make(1)) }),
           targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
           text: "Alice founded Acme.",
         });
@@ -111,7 +163,7 @@ describe("LangExtractService", () => {
 
         expect(error).toBeInstanceOf(LangExtractError);
         expect(error.reason).toBe("model-generation-timeout");
-        expect(error.details?.cause).toBe("language-model-generate-text-timeout");
+        expect(O.getOrUndefined(error.details)?.cause).toBe("language-model-generate-text-timeout");
       })
     );
   });

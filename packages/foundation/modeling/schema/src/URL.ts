@@ -38,8 +38,11 @@ const urlStr = Brand.check<URLStr>(filterURLStr);
  * @category validation
  * @since 0.0.0
  */
-export const URLStr = NonEmptyTrimmedStr.pipe(
+export const URLStr = NonEmptyTrimmedStr.annotate({
+  toArbitrary: () => (fc) => fc.webUrl().map(urlStr),
+}).pipe(
   S.fromBrand("URLStr", urlStr),
+  SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics(() => ({
     filter: filterURLStr,
     is: isURLStr,
@@ -47,6 +50,7 @@ export const URLStr = NonEmptyTrimmedStr.pipe(
   })),
   $I.annoteSchema("URLStr", {
     description: "A URL encoded as a string",
+    toArbitrary: () => (fc) => fc.webUrl().map(urlStr),
   })
 );
 
@@ -83,6 +87,8 @@ const filterHttpsUrl = S.makeFilter(
   }
 );
 
+const HttpsUrlDefinition = S.String.pipe(S.check(filterHttpsUrl), S.brand("HttpsUrl"));
+
 /**
  * Branded schema for absolute URL strings that use the `https:` protocol.
  *
@@ -99,11 +105,15 @@ const filterHttpsUrl = S.makeFilter(
  * @category validation
  * @since 0.0.0
  */
-export const HttpsUrl = S.String.pipe(
-  S.check(filterHttpsUrl),
-  S.brand("HttpsUrl"),
+export const HttpsUrl = HttpsUrlDefinition.annotate({
+  toArbitrary: () => (fc) =>
+    fc.uuid().map((id) => S.decodeSync(HttpsUrlDefinition)(`https://example.test/resource/${id}`)),
+}).pipe(
+  SchemaUtils.withCodecStatics,
   $I.annoteSchema("HttpsUrl", {
     description: "An absolute URL string constrained to the https protocol.",
+    toArbitrary: () => (fc) =>
+      fc.uuid().map((id) => S.decodeSync(HttpsUrlDefinition)(`https://example.test/resource/${id}`)),
   })
 );
 

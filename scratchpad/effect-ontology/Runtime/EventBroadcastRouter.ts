@@ -20,6 +20,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema/Int";
 import { PubSub as GCloudPubSub } from "@google-cloud/pubsub";
 import { Config, Context, Effect, FiberMap, Layer, MutableHashMap, Option, PubSub, Schema, Stream } from "effect";
 import * as Clock from "effect/Clock";
@@ -45,7 +46,7 @@ export const BroadcastEvent = Schema.Struct({
   primaryKey: Schema.String,
   payload: Schema.Unknown,
   ontologyId: Schema.String,
-  timestamp: Schema.Finite,
+  timestamp: NonNegativeInt,
 });
 export type BroadcastEvent = typeof BroadcastEvent.Type;
 
@@ -54,7 +55,7 @@ export type BroadcastEvent = typeof BroadcastEvent.Type;
  */
 export const PingMessage = Schema.Struct({
   type: Schema.tag("ping"),
-  timestamp: Schema.Finite,
+  timestamp: NonNegativeInt,
 });
 
 /**
@@ -64,7 +65,7 @@ export const ConnectedMessage = Schema.Struct({
   type: Schema.tag("connected"),
   ontologyId: Schema.String,
   serverId: Schema.String,
-  timestamp: Schema.Finite,
+  timestamp: NonNegativeInt,
 });
 
 /**
@@ -230,7 +231,7 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
           primaryKey: message.attributes?.primaryKey ?? data.value.primaryKey ?? message.id,
           payload: data.value,
           ontologyId,
-          timestamp: message.publishTime?.getTime() ?? 0,
+          timestamp: NonNegativeInt.make(message.publishTime?.getTime() ?? 0),
         };
 
         // Broadcast to local WebSocket clients
@@ -411,7 +412,7 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
     type: "connected",
     ontologyId,
     serverId,
-    timestamp: yield* Clock.currentTimeMillis,
+    timestamp: NonNegativeInt.make(yield* Clock.currentTimeMillis),
   };
   yield* writer(new TextEncoder().encode(yield* encodeServerMessage(connected)));
   yield* Effect.logInfo("WebSocket client connected", { ontologyId });
@@ -436,7 +437,7 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
     "ping"
   )(
     Effect.gen(function* () {
-      const ping: ServerMessage = { type: "ping", timestamp: yield* Clock.currentTimeMillis };
+      const ping: ServerMessage = { type: "ping", timestamp: NonNegativeInt.make(yield* Clock.currentTimeMillis) };
       yield* writer(new TextEncoder().encode(yield* encodeServerMessage(ping)));
     }).pipe(Effect.delay("30 seconds"), Effect.forever, Effect.ignore)
   );
@@ -479,7 +480,7 @@ export const broadcastDomainEvent = Effect.fn("broadcastDomainEvent")(function* 
     primaryKey: event.primaryKey,
     payload: event.payload,
     ontologyId,
-    timestamp: yield* Clock.currentTimeMillis,
+    timestamp: NonNegativeInt.make(yield* Clock.currentTimeMillis),
   };
   yield* hub.broadcast(ontologyId, broadcastEvent);
 });

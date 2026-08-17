@@ -10,6 +10,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema/Int";
 import { Context, Effect, Fiber, Layer, Stream } from "effect";
 import * as P from "effect/Predicate";
 import { EventBusService } from "../Service/EventBus.ts";
@@ -77,7 +78,7 @@ const makeEventBridge = Effect.gen(function* () {
             primaryKey: entry.primaryKey,
             payload: entry.payload,
             ontologyId,
-            timestamp: entry.createdAt.epochMilliseconds,
+            timestamp: NonNegativeInt.make(entry.createdAt.epochMilliseconds),
           };
           yield* broadcastHub.broadcast(ontologyId, broadcastEvent);
           yield* Effect.logDebug("Event bridged to WebSocket", {

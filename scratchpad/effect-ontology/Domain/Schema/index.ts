@@ -155,7 +155,7 @@ export * from "./OntologyRegistry.ts";
 export * from "./Search.ts";
 export {
   /**
-   * Standards-level SHACL conformance report with normalized results.
+   * Experiment execution report wrapping the canonical SHACL validation result.
    *
    * @example
    * ```ts
@@ -167,19 +167,6 @@ export {
    * @since 0.0.0
    */
   ShaclValidationReport,
-  /**
-   * Severity-tagged SHACL validation result.
-   *
-   * @example
-   * ```ts
-   * import { ShaclViolation } from "@effect-ontology/Schema/index.ts"
-   * console.log(ShaclViolation.discriminants)
-   * ```
-   *
-   * @category validation
-   * @since 0.0.0
-   */
-  ShaclViolation,
 } from "./Shacl.ts";
 export {
   /**

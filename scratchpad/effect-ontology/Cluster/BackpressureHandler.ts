@@ -10,11 +10,21 @@
  * @module Cluster/BackpressureHandler
  */
 
-import { Effect, Fiber, Queue, Stream } from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import { PosInt } from "@beep/schema/Int";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as P from "effect/Predicate";
+import * as Queue from "effect/Queue";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import type { ProgressEvent } from "../Contract/ProgressStreaming.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Cluster/BackpressureHandler");
 
 /**
  * Alias for backward compatibility - maps to ProgressEvent from Contract
@@ -28,23 +38,34 @@ export type ExtractionProgressEvent = ProgressEvent;
 /**
  * Backpressure configuration
  */
-export interface BackpressureConfig {
-  /** Maximum queued events before dropping starts */
-  readonly maxQueuedEvents: number;
-  /** Queue load threshold (0-1) to start sampling */
-  readonly samplingThreshold: number;
-  /** Sampling rate when threshold exceeded (0-1, e.g., 0.1 = keep 10%) */
-  readonly samplingRate: number;
-}
-
-/**
- * Default backpressure configuration
- */
-export const DEFAULT_BACKPRESSURE_CONFIG: BackpressureConfig = {
-  maxQueuedEvents: 1000,
-  samplingThreshold: 0.8, // Start sampling at 80% capacity
-  samplingRate: 0.1, // Keep 10% of non-critical events
-};
+export class BackpressureConfig extends S.Class<BackpressureConfig>($I`BackpressureConfig`)(
+  {
+    /** Maximum queued events before dropping starts */
+    maxQueuedEvents: PosInt.pipe(
+      SchemaUtils.withKeyDefaults(PosInt.make(1000)),
+      $I.annoteKey("BackpressureConfig.maxQueuedEvents", {
+        description: "Maximum queued events before dropping starts",
+      })
+    ),
+    /** Queue load threshold (0-1) to start sampling */
+    samplingThreshold: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0.8)),
+      $I.annoteKey("BackpressureConfig.samplingThreshold", {
+        description: "Queue load threshold (0-1) to start sampling",
+      })
+    ),
+    /** Sampling rate when threshold exceeded (0-1, e.g., 0.1 = keep 10%) */
+    samplingRate: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0.1)),
+      $I.annoteKey("BackpressureConfig.samplingRate", {
+        description: "Sampling rate when threshold exceeded (0-1, e.g., 0.1 = keep 10%)",
+      })
+    ),
+  },
+  $I.annote("BackpressureConfig", {
+    description: "Queue capacity and bounded sampling ratios for extraction progress backpressure.",
+  })
+) {}
 
 // =============================================================================
 // Critical Events

@@ -5,46 +5,16 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, URLStr } from "@beep/schema";
+import { HttpUrl } from "@beep/ontology/Ontology.models";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { Match } from "effect";
 import * as A from "effect/Array";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { ContentHash, GcsUri, OntologyName } from "../Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/LinkIngestion");
 
-const isHttpUrl = P.or(Str.startsWith("http://"), Str.startsWith("https://"));
-
-const HttpUrlDefinition = URLStr.check(
-  S.makeFilter(isHttpUrl, {
-    identifier: $I`HttpUrlSchemeCheck`,
-    title: "HTTP(S) URL",
-    description: "A valid absolute URL whose scheme is HTTP or HTTPS.",
-    message: "Link-ingestion URL must use the http or https scheme.",
-    arbitrary: {
-      candidate: {
-        make: (fc) => fc.constantFrom("https://example.com/article", "http://example.test/document"),
-      },
-    },
-  })
-);
-
-const HttpUrlFromSelf = S.declare((input: unknown): input is typeof HttpUrlDefinition.Type =>
-  S.is(HttpUrlDefinition)(input)
-).annotate({
-  toArbitrary: () => (fc) =>
-    fc.constantFrom(URLStr.make("https://example.com/article"), URLStr.make("http://example.test/document")),
-});
-
-const HttpUrl = HttpUrlDefinition.pipe(
-  S.decodeTo(HttpUrlFromSelf),
-  $I.annoteSchema("HttpUrl", {
-    description: "Valid absolute HTTP or HTTPS URL accepted by link ingestion.",
-  }),
-  SchemaUtils.withCodecStatics
-);
+export { HttpUrl };
 
 const SourceType = LiteralKit(["news", "blog", "press_release", "official", "academic", "unknown"])
   .annotate({

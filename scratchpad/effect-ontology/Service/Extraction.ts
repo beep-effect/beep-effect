@@ -9,6 +9,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import { Chunk, Context, Duration, Effect, Layer, Match, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -21,9 +22,9 @@ import {
   MentionExtractionFailed,
   RelationExtractionFailed,
 } from "../Domain/Error/Extraction.ts";
-import { Entity, EvidenceSpan, Relation, RelationObject } from "../Domain/Model/Entity.ts";
+import { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
-import { EntityId, IRI } from "../Domain/Model/shared.ts";
+import { EntityId } from "../Domain/Model/shared.ts";
 import {
   generateStructuredEntityPrompt,
   generateStructuredMentionPrompt,
@@ -32,7 +33,8 @@ import {
 import { makeEntitySchema } from "../Schema/EntityFactory.ts";
 import type { Mention } from "../Schema/MentionFactory.ts";
 import { MentionGraphSchema } from "../Schema/MentionFactory.ts";
-import { makeRelationSchema, type RelationGraphType } from "../Schema/RelationFactory.ts";
+import type { RelationGraphType } from "../Schema/RelationFactory.ts";
+import { makeRelationSchema } from "../Schema/RelationFactory.ts";
 import { annotateExtraction, annotateLlmCall, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { sha256Sync } from "../Utils/Hash.ts";
 import { buildLocalNameToIriMapSafe, expandLocalNameToIri, expandTypesToIris } from "../Utils/Iri.ts";
@@ -181,7 +183,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
               })
             )
           );
-        const propertyIris: ReadonlyArray<IRI> = (datatypeProps ?? []).map((p) => p.id as IRI);
+        const propertyIris: ReadonlyArray<IRI> = (datatypeProps ?? []).map((p) => IRI.fromUnknown(p.id));
         const propertyMapResult = buildLocalNameToIriMapSafe(propertyIris);
         const propertyLocalNameToIriMap = propertyMapResult.map;
         if (propertyMapResult.hasCollisions) {
@@ -236,10 +238,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
               mention: entityData.mention,
               types: expandedTypes,
               attributes,
-              mentions: A.map(
-                O.getOrElse(entityData.mentions, () => []),
-                (mention) => EvidenceSpan.fromUnknown(mention)
-              ),
+              mentions: O.getOrElse(entityData.mentions, () => []),
             })
           );
         };
@@ -542,7 +541,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
               })
             )
           );
-        const propertyIris: ReadonlyArray<IRI> = properties.map((p) => p.id as IRI);
+        const propertyIris: ReadonlyArray<IRI> = properties.map((p) => IRI.fromUnknown(p.id));
         const relationPropertyMapResult = buildLocalNameToIriMapSafe(propertyIris);
         const localNameToIriMap = relationPropertyMapResult.map;
         if (relationPropertyMapResult.hasCollisions) {
@@ -621,14 +620,12 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
               subjectId: EntityId.make(relationData.subjectId),
               predicate: expandedPredicate.value,
               object,
-              evidence: O.map(relationData.evidence, EvidenceSpan.fromUnknown),
+              evidence: relationData.evidence,
             })
           );
         };
         const relations = Chunk.fromIterable(
-          A.flatMap(A.take(response.value.relations, 5000), (relationData) =>
-            O.toArray(toRelation(relationData))
-          )
+          A.flatMap(A.take(response.value.relations, 5000), (relationData) => O.toArray(toRelation(relationData)))
         );
         if (skippedRelationCount > 0) {
           yield* Effect.logWarning("Skipped relations with invalid predicates after expansion", {

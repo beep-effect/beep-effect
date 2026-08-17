@@ -28,7 +28,6 @@
     "@beep/utils": "workspace:^",
     "@biomejs/biome": "catalog:",
     "@effect/platform-node": "catalog:",
-    "@effect/vitest": "catalog:",
     "@oxlint/plugins": "catalog:",
     "@types/node": "catalog:",
     "effect": "catalog:",

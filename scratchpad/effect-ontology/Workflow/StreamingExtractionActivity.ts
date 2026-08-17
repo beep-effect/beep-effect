@@ -16,7 +16,9 @@
  * @packageDocumentation
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
 import { DateTime, Duration, Effect, Schedule } from "effect";
 import * as Crypto from "effect/Crypto";
 import * as Encoding from "effect/Encoding";
@@ -26,8 +28,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Activity } from "effect/unstable/workflow";
 import { ActivityError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts";
-import type { BatchId, Namespace, OntologyName } from "../Domain/Identity.ts";
-import { ContentHash, DocumentId, GcsUri } from "../Domain/Identity.ts";
+import type { BatchId } from "../Domain/Identity.ts";
+import { ContentHash, DocumentId, GcsUri, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts";
 import { ChunkingConfig, LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
@@ -37,7 +39,7 @@ import type { ExtractionActivityInput } from "../Domain/Schema/Batch.ts";
 // via makeClaimPersistenceActivity in WorkflowOrchestrator
 import { ConfigService } from "../Service/Config.ts";
 import { ExtractionWorkflow } from "../Service/ExtractionWorkflow.ts";
-import { RdfBuilder } from "../Service/Rdf.ts";
+import { RdfBuilder, rdfStoreAddQuad } from "../Service/Rdf.ts";
 import { StorageService } from "../Service/Storage.ts";
 import { claimsDataToQuads, knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
 import { dual3 } from "../Utils/Dual.ts";
@@ -77,25 +79,25 @@ export const StreamingExtractionOutput = S.Struct({
     })
   ),
   /** Number of entities written to the graph. */
-  entityCount: S.Finite.pipe(
+  entityCount: NonNegativeInt.pipe(
     $I.annoteKey("StreamingExtractionOutput.entityCount", {
       description: "Number of entities written to the graph.",
     })
   ),
   /** Number of relations written to the graph. */
-  relationCount: S.Finite.pipe(
+  relationCount: NonNegativeInt.pipe(
     $I.annoteKey("StreamingExtractionOutput.relationCount", {
       description: "Number of relations written to the graph.",
     })
   ),
   /** Number of claims derived from the extracted graph. */
-  claimCount: S.Finite.pipe(
+  claimCount: NonNegativeInt.pipe(
     $I.annoteKey("StreamingExtractionOutput.claimCount", {
       description: "Number of claims derived from the extracted graph.",
     })
   ),
   /** Total extraction duration in milliseconds. */
-  durationMs: S.Finite.pipe(
+  durationMs: NonNegNum.pipe(
     $I.annoteKey("StreamingExtractionOutput.durationMs", {
       description: "Total extraction duration in milliseconds.",
     })
@@ -155,7 +157,7 @@ const extractOntologyName = (uri: string): OntologyName => {
   const name = filename.replace(/\.(ttl|rdf|owl|n3)$/, "");
   // Ensure valid OntologyName pattern (alphanumeric + hyphens + underscores)
   const sanitized = name.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
-  return (sanitized || "ontology") as OntologyName;
+  return OntologyName.make(sanitized || "ontology");
 };
 
 /**
@@ -183,23 +185,23 @@ export const buildRunConfig = dual3(
     // Build OntologyRef from the ontology URI
     // Use content hash for cache invalidation when ontology changes
     const ontologyRef = OntologyRef.make({
-      namespace: input.targetNamespace as Namespace,
+      namespace: Namespace.make(input.targetNamespace),
       name: extractOntologyName(input.ontologyUri),
       contentHash: ontologyContentHash,
     });
 
     // Build ChunkingConfig - use preprocessing hints if available, otherwise defaults
     const chunkingConfig = ChunkingConfig.make({
-      maxChunkSize: 500, // Default chunk size (TODO: get from preprocessing hints)
+      maxChunkSize: PosInt.make(500), // Default chunk size (TODO: get from preprocessing hints)
       preserveSentences: true,
-      overlapTokens: 50,
+      overlapTokens: NonNegativeInt.make(50),
     });
 
     // Build LlmConfig from service config
     const llmConfigSchema = LlmConfig.make({
       model: llmConfig.model,
       temperature: llmConfig.temperature,
-      maxTokens: llmConfig.maxTokens,
+      maxTokens: PosInt.make(llmConfig.maxTokens),
       timeout: Duration.millis(llmConfig.timeoutMs),
     });
 
@@ -207,7 +209,7 @@ export const buildRunConfig = dual3(
       ontology: ontologyRef,
       chunking: chunkingConfig,
       llm: llmConfigSchema,
-      concurrency: 5, // Default concurrency
+      concurrency: PosInt.make(5), // Default concurrency
       enableGrounding: true, // Always enable grounding for quality
     });
   }
@@ -388,7 +390,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
         baseNamespace,
         documentId: input.documentId,
         ontologyId: input.ontologyId,
-        defaultConfidence: 0.85,
+        defaultConfidence: Confidence.make(0.85),
       });
 
       // Convert claims to RDF quads and add to store
@@ -396,29 +398,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
 
       // Add claim quads to the store
       for (const quad of claimQuads) {
-        const n3 = yield* Effect.promise(() => import("n3"));
-        const { DataFactory } = n3;
-        const subject = DataFactory.namedNode(quad.subject as string);
-        const predicate = DataFactory.namedNode(quad.predicate as string);
-
-        // Handle object (IRI or Literal)
-        let object: ReturnType<typeof DataFactory.namedNode> | ReturnType<typeof DataFactory.literal>;
-        if (typeof quad.object === "string") {
-          object = DataFactory.namedNode(quad.object);
-        } else {
-          const lit = quad.object;
-          if (O.isSome(lit.datatype)) {
-            object = DataFactory.literal(lit.value, DataFactory.namedNode(lit.datatype.value));
-          } else if (O.isSome(lit.language)) {
-            object = DataFactory.literal(lit.value, lit.language.value);
-          } else {
-            object = DataFactory.literal(lit.value);
-          }
-        }
-
-        const graphNode = O.isSome(quad.graph) ? DataFactory.namedNode(quad.graph.value) : DataFactory.defaultGraph();
-
-        store._store.addQuad(DataFactory.quad(subject, predicate, object, graphNode));
+        rdfStoreAddQuad(store, quad);
       }
 
       yield* Effect.logInfo("Claims created from extraction", {
@@ -452,19 +432,19 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       yield* Effect.logInfo("Streaming extraction activity complete", {
         batchId: input.batchId,
         documentId: input.documentId,
-        entityCount: graph.entities.length,
-        relationCount: graph.relations.length,
-        claimCount: claims.length,
-        durationMs: Duration.toMillis(DateTime.distance(start, end)),
+        entityCount: NonNegativeInt.make(graph.entities.length),
+        relationCount: NonNegativeInt.make(graph.relations.length),
+        claimCount: NonNegativeInt.make(claims.length),
+        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       });
 
       return {
         documentId: input.documentId,
         graphUri,
-        entityCount: graph.entities.length,
-        relationCount: graph.relations.length,
-        claimCount: claims.length,
-        durationMs: Duration.toMillis(DateTime.distance(start, end)),
+        entityCount: NonNegativeInt.make(graph.entities.length),
+        relationCount: NonNegativeInt.make(graph.relations.length),
+        claimCount: NonNegativeInt.make(claims.length),
+        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(toActivityError)),
     interruptRetryPolicy: activityRetryPolicy,

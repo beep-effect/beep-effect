@@ -142,7 +142,6 @@ const blockToHtml = (block: Block): HtmlChildNode =>
     Match.tagsExhaustive({
       heading: ({ children, level }) => {
         const rendered = inlineChildrenToHtml(children, rootInlineContext);
-
         return Match.value(level).pipe(
           Match.when(1, () => HtmlModel.H1.make({ children: rendered })),
           Match.when(2, () => HtmlModel.H2.make({ children: rendered })),

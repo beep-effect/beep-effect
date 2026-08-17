@@ -9,6 +9,7 @@ import { $WorkspaceDomainId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
 import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import * as S from "effect/Schema";
 import { MessageRole } from "./Message.values.ts";
 
 const $I = $WorkspaceDomainId.create("entities/Message/Message.model");
@@ -53,4 +54,6 @@ export class Message extends MessageEntity.Entity<Message>(MessageEntity.tableNa
     MessageEntity.Table.index("workspace_message_turn_id_btree_idx", [columns.turnId]),
     ...MessageEntity.entityExtras(columns),
   ]
-) {}
+) {
+  static readonly decodeUnknownSync = S.decodeUnknownSync(Message);
+}

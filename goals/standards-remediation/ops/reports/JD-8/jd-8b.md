@@ -127,7 +127,6 @@ entries above it, then route the two classes' third argument through
 - `packages/drivers/ffmpeg/src/FFmpeg.models.ts`
 - `packages/agents/client/src/Chat.atoms.ts`
 - `packages/drivers/libpff/src/Libpff.pffexport.ts`
-- `packages/drivers/box/src/experimental/Box.schemas.ts`
 - `packages/drivers/runpod/src/{Runpod.config.ts,Runpod.service.ts}`
 - `packages/drivers/onepassword-cli/src/{OnePasswordCli.models.ts,OnePasswordCli.service.ts}`
 - `packages/drivers/hubspot/src/HubSpot.config.ts`

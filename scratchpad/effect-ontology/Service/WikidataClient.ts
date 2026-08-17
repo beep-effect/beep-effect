@@ -11,6 +11,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { Percentage } from "@beep/schema/Percentage";
 import { Context, Data, Duration, Effect, Layer, Schema } from "effect";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -61,7 +63,7 @@ export const WikidataCandidate = Schema.Struct({
   /** Language of the match */
   matchLanguage: Schema.String,
   /** Normalized score (0-100) */
-  score: Schema.Finite,
+  score: Percentage,
   /** Wikidata concept URI */
   conceptUri: Schema.String,
 });
@@ -94,7 +96,7 @@ const WikidataSearchMatch = Schema.Struct({
 const WikidataSearchResult = Schema.Struct({
   id: Schema.String,
   title: Schema.String,
-  pageid: Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  pageid: PosInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   concepturi: Schema.String,
   url: Schema.String,
   label: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -108,8 +110,8 @@ const WikidataSearchResponse = Schema.Struct({
     search: Schema.String,
   }).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   search: Schema.Array(WikidataSearchResult),
-  success: Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  "search-continue": Schema.Finite.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  success: NonNegativeInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  "search-continue": NonNegativeInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
 
 type WikidataSearchResultType = typeof WikidataSearchResult.Type;
@@ -267,7 +269,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
             description: result.description,
             matchType: result.match.type === "label" ? ("label" as const) : ("alias" as const),
             matchLanguage: result.match.language,
-            score: calculateScore(query, result, index, parsed.search.length),
+            score: Percentage.make(calculateScore(query, result, index, parsed.search.length)),
             conceptUri: result.concepturi,
           })
         );
@@ -339,7 +341,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
           description: O.fromUndefinedOr(description),
           matchType: "label" as const,
           matchLanguage: language,
-          score: 100, // Direct lookup
+          score: Percentage.make(100), // Direct lookup
           conceptUri: `http://www.wikidata.org/entity/${qid}`,
         };
       });

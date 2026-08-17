@@ -8,13 +8,15 @@
  * @module Utils/QuadDelta
  */
 
+import type { Quad } from "@beep/rdf/Rdf";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
-import type * as N3 from "n3";
 import type { RdfStore } from "../Service/Rdf.ts";
+import { rdfStoreAllQuads } from "../Service/Rdf.ts";
 import { dual2 } from "./Dual.ts";
 
 /**
@@ -23,14 +25,14 @@ import { dual2 } from "./Dual.ts";
  *
  * @internal
  */
-const serializeQuad = (quad: N3.Quad): string => {
+const serializeQuad = (quad: Quad): string => {
   const subject = quad.subject.termType === "NamedNode" ? quad.subject.value : `_:${quad.subject.value}`;
 
   const predicate = quad.predicate.value;
 
   const object =
     quad.object.termType === "Literal"
-      ? `"${quad.object.value}"^^${(quad.object as N3.Literal).datatype?.value ?? "xsd:string"}`
+      ? `"${quad.object.value}"^^${quad.object.datatype.value}`
       : quad.object.termType === "BlankNode"
         ? `_:${quad.object.value}`
         : quad.object.value;
@@ -48,7 +50,7 @@ const serializeQuad = (quad: N3.Quad): string => {
  */
 export interface QuadDelta {
   /** Quads present in enriched but not in original */
-  readonly newQuads: ReadonlyArray<N3.Quad>;
+  readonly newQuads: ReadonlyArray<Quad>;
   /** Count of original quads */
   readonly originalCount: number;
   /** Count of enriched quads */
@@ -75,8 +77,8 @@ export interface QuadDelta {
 export const computeQuadDelta = dual2(
   (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta> =>
     Effect.sync(() => {
-      const originalQuads = original._store.getQuads(null, null, null, null);
-      const enrichedQuads = enriched._store.getQuads(null, null, null, null);
+      const originalQuads = rdfStoreAllQuads(original);
+      const enrichedQuads = rdfStoreAllQuads(enriched);
 
       // Build set of serialized original quads for O(1) lookup
       const originalSet = MutableHashSet.empty<string>();
@@ -85,7 +87,7 @@ export const computeQuadDelta = dual2(
       }
 
       // Find quads in enriched that aren't in original
-      const newQuads: Array<N3.Quad> = [];
+      const newQuads: Array<Quad> = [];
       for (const quad of enrichedQuads) {
         const serialized = serializeQuad(quad);
         if (!MutableHashSet.has(originalSet, serialized)) {
@@ -111,8 +113,8 @@ export const computeQuadDelta = dual2(
  * @since 2.0.0
  * @category Functions
  */
-export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string, ReadonlyArray<N3.Quad>> => {
-  let grouped = HashMap.empty<string, ReadonlyArray<N3.Quad>>();
+export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string, ReadonlyArray<Quad>> => {
+  let grouped = HashMap.empty<string, ReadonlyArray<Quad>>();
 
   for (const quad of delta.newQuads) {
     const predicate = quad.predicate.value;
@@ -129,10 +131,8 @@ export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string,
  * @since 2.0.0
  * @category Functions
  */
-export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<N3.Quad> => {
-  const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-  return A.filter(delta.newQuads, (quad) => quad.predicate.value === RDF_TYPE);
-};
+export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<Quad> =>
+  A.filter(delta.newQuads, (quad) => quad.predicate.value === RDF_TYPE.value);
 
 /**
  * Creates a summary of the delta for logging/telemetry.

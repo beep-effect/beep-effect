@@ -9,10 +9,10 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import type { IRI } from "@beep/rdf";
 import { Chunk, Context, Effect, HashSet, Layer, Option } from "effect";
 import { Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts";
-import type { IRI } from "../Domain/Model/shared.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { getCanonicalId } from "./EntityLinker.ts";
 

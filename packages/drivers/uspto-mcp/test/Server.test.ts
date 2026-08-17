@@ -33,6 +33,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Equal, Layer, Redacted } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { McpServerClient } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -81,6 +82,27 @@ const respondWith = (body: string): Layer.Layer<HttpClient.HttpClient> =>
 const testUsptoLayer = (http: Layer.Layer<HttpClient.HttpClient>): Layer.Layer<Uspto> =>
   Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("test-key") })).pipe(Layer.provide(http));
 
+// `McpServer.McpServer.layer` is typed as providing `McpServerClient` but only
+// builds `McpServer`, so a direct `callTool` — one with no transport middleware
+// in front of it — has to supply the caller itself.
+const stubClientInfo = { name: "uspto-mcp-test-client", version: "0.0.0" };
+
+const StubMcpClientLayer = Layer.succeed(
+  McpServerClient,
+  McpServerClient.of({
+    clientId: 1,
+    protocolVersion: "2025-06-18",
+    clientCapabilities: {},
+    clientInfo: stubClientInfo,
+    getClient: Effect.die("the fixture client is never dereferenced") as never,
+    initializePayload: {
+      capabilities: {},
+      clientInfo: stubClientInfo,
+      protocolVersion: "2025-06-18",
+    } as never,
+  })
+);
+
 const buildLayer = (env: Record<string, string>, http: Layer.Layer<HttpClient.HttpClient>) => {
   const usptoToolkitLayer = sanitizedToolkit(UsptoToolkit).pipe(
     Layer.provide(UsptoToolkitHandlersLive),
@@ -93,6 +115,7 @@ const buildLayer = (env: Record<string, string>, http: Layer.Layer<HttpClient.Ht
   // while this layer builds.
   return Layer.mergeAll(
     McpServer.McpServer.layer,
+    StubMcpClientLayer,
     composeGatedLayers(gatedLayer(UsptoSourceAuthRegistration, usptoToolkitLayer)),
     ConfigProvider.layer(ConfigProvider.fromUnknown(env))
   );

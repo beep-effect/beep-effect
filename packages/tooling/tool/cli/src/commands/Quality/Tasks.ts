@@ -1575,11 +1575,19 @@ const rootBuildSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
     args: turboRunArgs(["build"], boundedRootTurboArgs(args)),
     cwd: repoRoot,
     useLocalEnv: true,
+    flakeQuarantine: "ts2589-no-location",
   }),
 ];
 
 const rootCheckSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
-  turboStep(repoRoot, "check", ["check"], boundedRootTurboArgs(args)),
+  QualityTaskStep.make({
+    ...turboStep(repoRoot, "check", ["check"], boundedRootTurboArgs(args)),
+    flakeQuarantine: "ts2589-no-location",
+  }),
+  ...optionalQualityTaskStep({
+    enabled: shouldRunRepoWideSteps(args),
+    step: () => repoCliStep(repoRoot, "check:tsgo:rules", ["quality", "tsgo-rules"]),
+  }),
   ...optionalQualityTaskStep({
     enabled: shouldRunRepoWideSteps(args),
     step: () => repoCliStep(repoRoot, "check:tsgo:tests", ["quality", "test-tsgo"]),
@@ -2140,7 +2148,7 @@ const runRootTask = Effect.fn("QualityTasks.runRootTask")(function* (
 
   const steps = rootStepsFor(repoRoot, invocation);
   const step = A.head(steps);
-  if (A.length(steps) === 1 && O.isSome(step)) {
+  if (A.length(steps) === 1 && O.isSome(step) && step.value.flakeQuarantine === undefined) {
     yield* runStep(step.value);
     return;
   }

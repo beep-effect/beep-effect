@@ -10,14 +10,17 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { AbsoluteIRI, NamedNode, ObjectTerm } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { SchemaGetter } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
-import type { FastCheck } from "effect/testing";
 import { ContentHash, GcsUri } from "../Identity.ts";
-import { Confidence } from "../Model/index.ts";
-import { AbsoluteIRI, NamedNode, ObjectTerm } from "../Rdf/index.ts";
+import { EventId as CanonicalEventId } from "../Model/CoreOntology.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/KnowledgeModel");
 
@@ -25,7 +28,6 @@ const claimIdPattern = /^claim-[0-9a-f]{12}$/;
 const assertionIdPattern = /^assertion-[0-9a-f]{12}$/;
 const derivedAssertionIdPattern = /^derived-[0-9a-f]{12}$/;
 const ruleIdPattern = /^rule-[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const eventIdPattern = /^event-[0-9a-f]{12}$/;
 const decodeDateTimeUtcFromMillis = S.decodeUnknownSync(S.DateTimeUtcFromMillis);
 
 /**
@@ -242,56 +244,18 @@ export const RuleId = S.String.check(
  */
 export type RuleId = typeof RuleId.Type;
 
-class TextSpanFields extends S.Class<TextSpanFields>($I`TextSpanFields`)(
-  {
-    start: NonNegativeInt.annotateKey({
-      description: "Inclusive zero-based character offset in the source text.",
-    }),
-    end: NonNegativeInt.annotateKey({
-      description: "Exclusive zero-based character offset in the source text.",
-    }),
-    text: S.String.annotateKey({
-      description: "Exact text covered by the half-open span.",
-    }),
-  },
-  $I.annote("TextSpanFields", {
-    description: "Internal text-span fields with non-negative character offsets.",
-  })
-) {}
-
-const makeTextSpanArbitrary = (fc: typeof FastCheck) =>
-  fc
-    .tuple(fc.integer({ min: 0, max: 1_000_000 }), fc.integer({ min: 0, max: 4_096 }), fc.string({ maxLength: 4_096 }))
-    .map(([start, length, text]) =>
-      TextSpanFields.make({
-        start: NonNegativeInt.make(start),
-        end: NonNegativeInt.make(start + length),
-        text,
-      })
-    );
-
-const TextSpanDefinition = TextSpanFields.check(
-  S.makeFilter(
-    (span) =>
-      span.start <= span.end
-        ? undefined
-        : {
-            path: ["end"],
-            issue: "Text-span end must be greater than or equal to start.",
-          },
-    {
-      identifier: $I`TextSpanOrderCheck`,
-      title: "Ordered Text Span",
-      description: "A half-open text span whose end offset is not before its start offset.",
-      message: "Text-span end must be greater than or equal to start.",
-      arbitrary: {
-        candidate: {
-          make: makeTextSpanArbitrary,
-        },
-      },
-    }
-  )
-);
+const LegacyTextSpan = S.Struct({
+  start: NonNegativeInt.annotateKey({
+    description: "Inclusive zero-based character offset in the source text.",
+  }),
+  end: NonNegativeInt.annotateKey({
+    description: "Exclusive zero-based character offset in the source text.",
+  }),
+  text: S.NonEmptyString.annotateKey({
+    description: "Exact text covered by the half-open span.",
+  }),
+});
+type LegacyTextSpanValue = typeof LegacyTextSpan.Type;
 
 /**
  * Half-open source-text evidence span `[start, end)`.
@@ -301,18 +265,30 @@ const TextSpanDefinition = TextSpanFields.check(
  * import { TextSpan } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
  * const span = TextSpan.fromUnknown({ start: 0, end: 5, text: "Alice" })
- * console.log(span.end) // 5
+ * console.log(span.endChar) // 5
  * ```
  *
- * @invariant Both offsets are non-negative integers and `start <= end`.
+ * @invariant The range is non-empty and `endChar - startChar` equals the UTF-16 width of `quote`.
  * @category evidence
  * @since 0.0.0
  */
-export const TextSpan = TextSpanDefinition.annotate({
-  toArbitrary: () => makeTextSpanArbitrary,
-}).pipe(
+export const TextSpan = LegacyTextSpan.pipe(
+  S.decodeTo(TextAnchor, {
+    decode: SchemaGetter.transform((span: LegacyTextSpanValue): typeof TextAnchor.Encoded => ({
+      startChar: span.start,
+      endChar: span.end,
+      quote: span.text,
+    })),
+    encode: SchemaGetter.transform(
+      (anchor: typeof TextAnchor.Encoded): LegacyTextSpanValue => ({
+        start: NonNegativeInt.make(anchor.startChar),
+        end: NonNegativeInt.make(anchor.endChar),
+        text: anchor.quote,
+      })
+    ),
+  }),
   $I.annoteSchema("TextSpan", {
-    description: "Validated half-open character span carrying its exact source text.",
+    description: "Legacy text-span ingress decoding to the canonical provenance TextAnchor.",
   }),
   SchemaUtils.withCodecStatics
 );
@@ -324,7 +300,7 @@ export const TextSpan = TextSpanDefinition.annotate({
  * ```ts
  * import type { TextSpan } from "@effect-ontology/Schema/KnowledgeModel.ts"
  *
- * const width = (span: TextSpan) => span.end - span.start
+ * const width = (span: TextSpan) => span.endChar - span.startChar
  * console.log(width)
  * ```
  *
@@ -731,27 +707,7 @@ export class DerivedAssertion extends S.Class<DerivedAssertion>($I`DerivedAssert
  * @category identifiers
  * @since 0.0.0
  */
-export const EventId = S.String.check(
-  S.isPattern(eventIdPattern, {
-    identifier: $I`EventIdPatternCheck`,
-    title: "Event Identifier",
-    description: "An event- prefix followed by exactly twelve lowercase hexadecimal characters.",
-    message: "Event ID must use event- followed by exactly twelve lowercase hexadecimal characters.",
-  })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.stringMatching(eventIdPattern),
-  })
-  .pipe(
-    S.brand("EventId"),
-    $I.annoteSchema("EventId", {
-      description: "Deterministic compact identifier for one real-world event node.",
-    }),
-    SchemaUtils.withCodecStatics,
-    SchemaUtils.withStatics((schema) => ({
-      fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`event-${ContentHash.idFragment(hash)}`),
-    }))
-  );
+export const EventId = CanonicalEventId;
 
 /**
  * Runtime value decoded by {@link EventId}.

@@ -5,7 +5,10 @@
  * @since 0.0.0
  */
 
+import * as S from "effect/Schema";
 import { MappedLiteralKit } from "../MappedLiteralKit/index.ts";
+import { NonNegativeInt } from "../Number.ts";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HttpStatus4XX } from "./HttpStatus.client-error.ts";
 import { HttpStatus1XX } from "./HttpStatus.informational.ts";
 import { HttpStatus3XX } from "./HttpStatus.redirection.ts";
@@ -13,6 +16,54 @@ import { HttpStatus5XX } from "./HttpStatus.server-error.aggregate.ts";
 import { $I } from "./HttpStatus.shared.ts";
 import { HttpStatus2XX } from "./HttpStatus.success.ts";
 import { HttpStatusUnofficial } from "./HttpStatus.unofficial.aggregate.ts";
+
+// =============================================================================
+// HttpStatusCode
+// =============================================================================
+
+/**
+ * Any HTTP response status code in the standard three-digit range.
+ *
+ * **Details**
+ *
+ * Unlike {@link HttpStatus}, this schema accepts extension and unassigned
+ * status codes in addition to the named codes catalogued by this package.
+ *
+ * **Example** (Decode an extension status code)
+ *
+ * ```ts
+ * import { HttpStatusCode } from "@beep/schema/HttpStatus"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.decodeUnknownSync(HttpStatusCode)(599)) // 599
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
+  $I.annoteSchema("HttpStatusCode", {
+    description: "HTTP response status code in the standard three-digit range from 100 through 599.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime value accepted by {@link HttpStatusCode}.
+ *
+ * **Example** (Type an HTTP response status)
+ *
+ * ```ts
+ * import { HttpStatusCode } from "@beep/schema/HttpStatus"
+ *
+ * const status: HttpStatusCode = HttpStatusCode.make(404)
+ * console.log(status) // 404
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HttpStatusCode = typeof HttpStatusCode.Type;
 
 // =============================================================================
 // HttpStatus
