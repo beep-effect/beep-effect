@@ -21,9 +21,10 @@ export default mergeConfig(
     test: {
       coverage: {
         include: [
+          "src/entities/**/*.ts",
           "src/entity/*.ts",
           "src/identity/*.ts",
-          "src/values/ClaimLifecycle/*.ts",
+          "src/values/LocalDate/*.ts",
           "src/values/OnePasswordReference/*.ts",
         ],
         ...coverageThresholds,

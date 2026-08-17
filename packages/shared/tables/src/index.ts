@@ -1,22 +1,15 @@
 /**
- * Shared-kernel table helpers.
+ * Shared-kernel table metadata for product concepts used across slices.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 /**
- * Compatibility `EntityTable` re-export namespace.
- *
- * **Example** (Import table helpers)
- *
- * ```ts
- * import { Table } from "@beep/shared-tables"
- *
- * console.log(Table)
- * ```
+ * Concrete table namespaces for shared `Membership`, `Organization`, and `User`
+ * persistence metadata.
  *
  * @category tables
  * @since 0.0.0
  */
-export * as Table from "./table/index.ts";
+export * as Entities from "./entities/index.ts";

@@ -280,9 +280,10 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<Du
  *
  * ```ts
  * import { DocumentSafetyViolation, RawNodeSafetyViolation } from "@beep/md/Md.safe"
+ * import * as S from "effect/Schema"
  *
  * const issue = RawNodeSafetyViolation.make({ path: [], nodeTag: "rawMarkdown" })
- * console.log(DocumentSafetyViolation.is(issue)) // true
+ * console.log(S.is(DocumentSafetyViolation)(issue)) // true
  * ```
  *
  * @category errors

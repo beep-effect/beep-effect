@@ -512,3 +512,10 @@ export const GroundedExtractionsFromCandidates: S.Codec<
     description: "Context-aware codec from candidate batches to source-grounded extractions.",
   })
 );
+
+/**
+ * {@inheritDoc GroundedExtractionsFromCandidates}
+ * @category models
+ * @since 0.0.0
+ */
+export type GroundedExtractionsFromCandidates = typeof GroundedExtractionsFromCandidates.Type;

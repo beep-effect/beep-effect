@@ -14,7 +14,6 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { IdentityComposer } from "@beep/identity";
-import type { SchemaAST } from "effect";
 import type * as BrandNS from "effect/Brand";
 
 const $I = $SharedDomainId.create("entity/EntityId");
@@ -383,26 +382,8 @@ export type DefinitionFor<
   readonly tableName: TTableName;
 };
 
-type EntityIdCodec<TBrand extends string> = S.Codec<EntityIdValueFor<TBrand>, number>;
-
 /**
- * Applied Effect `encodeSync` / `decodeSync` quartet for one branded entity id.
- *
- * Signatures match the already-applied parsers from `effect/Schema`:
- * `decodeSync` takes `Encoded` (`number`), `encodeSync` takes `Type`.
- */
-type EntityIdSyncCodecs<TBrand extends string> = {
-  asserts(input: unknown): asserts input is EntityIdValueFor<TBrand>;
-  readonly decodeSync: (input: number, options?: SchemaAST.ParseOptions) => EntityIdValueFor<TBrand>;
-  readonly decodeUnknownSync: (input: unknown, options?: SchemaAST.ParseOptions) => EntityIdValueFor<TBrand>;
-  readonly encodeSync: (input: EntityIdValueFor<TBrand>, options?: SchemaAST.ParseOptions) => number;
-  readonly encodeUnknownSync: (input: unknown, options?: SchemaAST.ParseOptions) => number;
-  readonly is: (input: unknown) => input is EntityIdValueFor<TBrand>;
-};
-
-/**
- * Branded schema with deterministic entity metadata statics and the applied
- * Effect sync codec quartet.
+ * Branded schema with deterministic entity metadata statics.
  *
  * **Example** (Factory branded organization schema)
  *
@@ -413,7 +394,6 @@ type EntityIdSyncCodecs<TBrand extends string> = {
  * const $I = $SharedDomainId.create("identity/Shared")
  * const OrganizationId: EntityId.EntityId<"shared", "organization"> = EntityId.factory("shared", $I)("organization")
  * console.log(OrganizationId.tableName)
- * console.log(OrganizationId.encodeSync(OrganizationId.decodeUnknownSync(1)))
  * ```
  *
  * @category models
@@ -426,9 +406,8 @@ export type EntityId<
   TResource extends string = Resource<Slice, Name>,
   TEntityType extends string = EntityType<Slice, Name>,
   TBrand extends string = Brand<Slice, Name>,
-> = EntityIdCodec<TBrand> &
-  EntityIdStatics<Slice, Name, TTableName, TResource, TEntityType, TBrand> &
-  EntityIdSyncCodecs<TBrand>;
+> = S.Codec<EntityIdValueFor<TBrand>, number> &
+  EntityIdStatics<Slice, Name, TTableName, TResource, TEntityType, TBrand>;
 
 type EntityIdStatics<
   Slice extends string,
@@ -455,14 +434,6 @@ const decodeOptionsResult = S.decodeUnknownResult(Options);
 /**
  * Any entity id schema produced by {@link factory}.
  *
- * **Details**
- *
- * This is an Effect `Codec<EntityIdValue, number>` view plus metadata. Concrete
- * factory ids refine `Type` with a brand; `Schema.Codec` is covariant in
- * `Type`, so they remain assignable here. Applied `encodeSync` parsers stay on
- * the concrete `EntityId<...>` type because `encodeSync` is contravariant in
- * its `Type` input.
- *
  * **Example** (Any factory entity id)
  *
  * ```ts
@@ -477,7 +448,7 @@ const decodeOptionsResult = S.decodeUnknownResult(Options);
  * @category models
  * @since 0.0.0
  */
-export type Any = S.Codec<EntityIdValue, number> & EntityIdStatics<string, string, string, string, string, string>;
+export type Any = EntityId<string, string, string, string, string, string>;
 
 type Maker<Slice extends string> = <
   const Name extends string,
@@ -539,7 +510,7 @@ const attachEntityIdStatics = <
   const TResource extends string,
   const TEntityType extends string,
   const TBrand extends string,
-  const Schema extends S.Codec<EntityIdValueFor<TBrand>, number>,
+  const Schema extends S.Codec<EntityIdValueFor<TBrand>, number, never, never>,
 >(
   schema: Schema,
   statics: EntityIdStatics<Slice, Name, TTableName, TResource, TEntityType, TBrand>
@@ -621,8 +592,7 @@ export const factory: Factory = dual(
         S.brand(definition.brand),
         identity.annoteSchema(definition.brand, {
           description: definition.description,
-        }),
-        SchemaUtils.withSyncCodecStatics
+        })
       );
       const typedSchema = schema as S.Codec<EntityIdValueFor<ResolvedBrand<Slice, Name, Overrides>>, number>;
 
@@ -634,13 +604,6 @@ export const factory: Factory = dual(
         resource: definition.resource,
         slice,
         tableName: definition.tableName,
-      }) as EntityId<
-        Slice,
-        Name,
-        ResolvedTableName<Slice, Name, Overrides>,
-        ResolvedResource<Slice, Name, Overrides>,
-        ResolvedEntityType<Slice, Name, Overrides>,
-        ResolvedBrand<Slice, Name, Overrides>
-      >;
+      });
     }
 );

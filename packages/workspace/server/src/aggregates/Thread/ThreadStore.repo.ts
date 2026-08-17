@@ -34,10 +34,10 @@ const THREAD_TABLE_NAME = "workspace_thread" as const;
 const TURN_TABLE_NAME = "workspace_turn" as const;
 const MESSAGE_TABLE_NAME = "workspace_message" as const;
 
-const encodeWorkspaceId = WorkspaceIdentity.WorkspaceId.encodeSync;
-const encodeThreadId = WorkspaceIdentity.ThreadId.encodeSync;
-const encodeTurnId = WorkspaceIdentity.TurnId.encodeSync;
-const encodeMessageId = WorkspaceIdentity.MessageId.encodeSync;
+const encodeWorkspaceId = S.encodeSync(WorkspaceIdentity.WorkspaceId);
+const encodeThreadId = S.encodeSync(WorkspaceIdentity.ThreadId);
+const encodeTurnId = S.encodeSync(WorkspaceIdentity.TurnId);
+const encodeMessageId = S.encodeSync(WorkspaceIdentity.MessageId);
 const encodeDocument = S.encodeSync(Document);
 
 const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
