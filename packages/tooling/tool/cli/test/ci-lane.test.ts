@@ -58,7 +58,7 @@ describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(23);
+    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(24);
   });
 
   it("covers every runnable lane id", () => {
@@ -90,6 +90,16 @@ describe("CI lane descriptors", () => {
     expect(descriptor.required).toBe(false);
   });
 
+  // lab-apps-lifecycle P2 (ratified row 10): the labs lane is PERMANENTLY
+  // non-required — its context must never join ruleset 10240248.
+  it("keeps the labs lane visible, workflow-gated, and permanently non-required", () => {
+    const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "labs"));
+    expect(descriptor.contextName).toBe("Labs");
+    expect(descriptor.required).toBe(false);
+    expect(descriptor.laneClass).toBe("workflow-gated");
+    expect(A.contains(REQUIRED_CONTEXT_NAMES, descriptor.contextName)).toBe(false);
+  });
+
   it("marks the CI-only residue as unreplayable", () => {
     const residue = pipe(
       CI_LANE_DESCRIPTORS,
@@ -113,14 +123,57 @@ describe("ciLaneStepsForTesting", () => {
     expect(A.length(steps)).toBe(1);
     const step = firstOf(steps);
     expect(step.command).toBe("bunx");
-    expect([...step.args]).toEqual(["turbo", "run", "lint", "--concurrency=2", "--affected", "--summarize"]);
+    expect([...step.args]).toEqual([
+      "turbo",
+      "run",
+      "lint",
+      "--concurrency=2",
+      "--filter=!./apps/labs/**",
+      "--affected",
+      "--summarize",
+    ]);
     expect(step.env).toEqual({ TURBO_SCM_BASE: "origin/main" });
   });
 
   it("builds the push-shape lint lane with the hosted-runner turbo cap", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint", baseOptions));
-    expect([...step.args]).toEqual(["turbo", "run", "lint", "--concurrency=2"]);
+    expect([...step.args]).toEqual(["turbo", "run", "lint", "--concurrency=2", "--filter=!./apps/labs/**"]);
     expect(step.env).toBeUndefined();
+  });
+
+  // lab-apps-lifecycle P2 (ratified row 10): one bundled positively-filtered
+  // turbo run, never --affected (turbo unions filter selectors), never
+  // TURBO_SCM_BASE — the workflow path gate provides PR scoping.
+  it("bundles the labs lane as one positively-filtered turbo run without --affected", () => {
+    const steps = ciLaneStepsForTesting(REPO_ROOT, "labs", baseOptions);
+    expect(A.length(steps)).toBe(1);
+    const step = firstOf(steps);
+    expect(step.label).toBe("ci:labs");
+    expect(step.command).toBe("bunx");
+    expect([...step.args]).toEqual([
+      "turbo",
+      "run",
+      "check",
+      "lint",
+      "test",
+      "--filter=./apps/labs/**",
+      "--concurrency=2",
+    ]);
+    expect(step.env).toBeUndefined();
+
+    const prShaped = firstOf(ciLaneStepsForTesting(REPO_ROOT, "labs", prShapeOptions));
+    expect([...prShaped.args]).toEqual([
+      "turbo",
+      "run",
+      "check",
+      "lint",
+      "test",
+      "--filter=./apps/labs/**",
+      "--concurrency=2",
+      "--summarize",
+    ]);
+    expect(prShaped.args).not.toContain("--affected");
+    expect(prShaped.env).toBeUndefined();
   });
 
   it("splits the test lanes into CI's unit and integration shapes", () => {
@@ -237,6 +290,16 @@ describe("ciLaneStepsForTesting", () => {
       CiLaneRunOptions.make({ ...baseOptions, changesetStatus: true })
     );
     expect(A.map(withFlag, (step) => step.label)).toEqual(["ci:repo-sanity", "ci:repo-sanity:changeset-status"]);
+    // lab-apps-lifecycle P2 (ratified row 8): CI's changeset gate routes
+    // through the path-aware wrapper so lab-only changes are ceremony-exempt.
+    expect([...lastOf(withFlag).args]).toEqual([
+      "run",
+      "beep",
+      "quality",
+      "changeset-status",
+      "--since",
+      "origin/main",
+    ]);
   });
 
   it("plans the fallow lane as promoted blocking, advisory, then optional validation", () => {
@@ -313,6 +376,12 @@ describe("ciLocalStepsForTesting", () => {
   it("dispatches each lane through beep ci lane", () => {
     const step = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["knip"], branchPlan));
     expect([...step.args]).toEqual(["run", "beep", "ci", "lane", "knip"]);
+  });
+
+  it("dispatches the labs lane bare, without affected shaping", () => {
+    const affectedPlan = CiLocalStepPlan.make({ ...branchPlan, affected: true });
+    const step = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["labs"], affectedPlan));
+    expect([...step.args]).toEqual(["run", "beep", "ci", "lane", "labs"]);
   });
 
   it("forwards the affected shape to turbo-backed lanes", () => {

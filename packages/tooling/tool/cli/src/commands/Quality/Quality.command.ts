@@ -21,11 +21,13 @@ import { FetchHttpClient } from "effect/unstable/http";
 import { XMLParser } from "fast-xml-parser";
 import { parse } from "jsonc-parser";
 import { configStringEqualsSync } from "../../internal/cli/EnvConfig.ts";
+import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { unknownRecordKeys, unknownRecordProperty } from "../../internal/cli/UnknownProbe.ts";
 import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.ts";
 import { GITHUB_CHECK_MODE_VALUES } from "../../internal/repo-run/index.ts";
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
+import { changesetStatusCommand } from "./ChangesetStatus.ts";
 import { qualityFallowCommand } from "./FallowQuality.command.ts";
 import {
   githubCheckChangesetStatusLane,
@@ -2039,6 +2041,32 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
 });
 
 /**
+ * Predicate deciding whether a tracked file joins the module-tags scan.
+ *
+ * **Details**
+ *
+ * Lab apps under `apps/labs` are ceremony-exempt (goals/lab-apps-lifecycle D2)
+ * and never enter the scan; every other scanned root keeps its coverage.
+ *
+ * **Example** (Run a quality command)
+ *
+ * ```ts
+ * import { isModuleTagScannedPathForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof isModuleTagScannedPathForTesting !== "undefined") // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const isModuleTagScannedPathForTesting =
+  (path: Path.Path) =>
+  (filePath: string): boolean =>
+    A.some(moduleTagScannedRoots, (root) => filePath === root || Str.startsWith(`${root}/`)(filePath)) &&
+    !isLabsWorkspacePath(filePath) &&
+    A.contains(moduleTagScannedExtensions as ReadonlyArray<string>, path.extname(filePath));
+
+/**
  * Verify tracked fileoverview comments do not use the legacy `@module` tag.
  *
  * **Example** (Run a quality command)
@@ -2076,9 +2104,7 @@ export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDoc
       return yield* withExitCode("lint:jsdoc-module-tags", "git", ["ls-files"], result.exitCode);
     }
 
-    const isScannedPath = (filePath: string): boolean =>
-      A.some(moduleTagScannedRoots, (root) => filePath === root || Str.startsWith(`${root}/`)(filePath)) &&
-      A.contains(moduleTagScannedExtensions as ReadonlyArray<string>, path.extname(filePath));
+    const isScannedPath = isModuleTagScannedPathForTesting(path);
     const violations = yield* Effect.forEach(
       pipe(Str.split(result.output, "\n"), A.filter(Str.isNonEmpty), A.filter(isScannedPath)),
       Effect.fn(function* (filePath) {
@@ -2666,6 +2692,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     qualityProfileCommand,
     packageVerifyCommand,
     changesetGraphCommand,
+    changesetStatusCommand,
     qualityFallowCommand,
   ])
 );

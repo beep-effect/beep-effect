@@ -78,7 +78,9 @@ const urlFlag = Flag.string("url").pipe(
   Flag.optional
 );
 const appFlag = Flag.string("app").pipe(
-  Flag.withDescription("Portless app name, expanded to http://<app>.beep.localhost:1355"),
+  Flag.withDescription(
+    "Portless app name; apps expand to http://<app>.beep.localhost:1355, labs (apps/labs/<app>) to http://<app>.labs.beep.localhost:1355"
+  ),
   Flag.optional
 );
 const roundFlag = Flag.integer("round").pipe(

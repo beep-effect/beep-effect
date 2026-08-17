@@ -11,6 +11,7 @@ import { Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { isLabsWorkspacePath } from "../../../internal/cli/Labs/index.ts";
 
 const $I = $RepoCliId.create("commands/Quality/internal/CoverageScope");
 
@@ -463,6 +464,13 @@ const fullReasonForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePath: 
     return O.some(`${filePath}: global coverage input changed`);
   }
 
+  // Lab-app paths are coverage-inert (goals/lab-apps-lifecycle D2): a lab-only
+  // change must neither force a full run ("no current workspace owner" /
+  // package-identity reasons) nor join a selected scope.
+  if (isLabsWorkspacePath(filePath)) {
+    return O.none();
+  }
+
   if (O.isSome(repositoryFixtureOwnerNameForFile(filePath))) {
     return O.isSome(repositoryFixtureCoverageOwnerForFile(owners, filePath))
       ? O.none()
@@ -489,7 +497,7 @@ const selectedOwnerForFile = (owners: ReadonlyArray<CoverageScopeOwner>, filePat
   pipe(
     repositoryFixtureCoverageOwnerForFile(owners, filePath),
     O.orElse(() => ownerForFile(owners, filePath)),
-    O.filter((owner) => owner.hasCoverage),
+    O.filter((owner) => owner.hasCoverage && !isLabsWorkspacePath(owner.packagePath)),
     O.map((owner) => owner.packageName)
   );
 

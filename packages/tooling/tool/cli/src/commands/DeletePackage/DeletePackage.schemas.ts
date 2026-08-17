@@ -6,7 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { PosixPath } from "@beep/schema/PosixPath";
 import { Tuple } from "effect";
 import * as S from "effect/Schema";
 
@@ -33,6 +34,11 @@ const $I = $RepoCliId.create("commands/DeletePackage/schemas");
  *   livePromotionRecord: false,
  *   cascadeClosureAllowed: false,
  *   catalogUniquenessProven: false,
+ *   dropData: false,
+ *   allowNonLocalData: false,
+ *   dataResourceDeclared: false,
+ *   dataConnectionNonLocal: false,
+ *   dataOwnershipProven: false,
  * })
  * console.log(policy.force) // false
  * ```
@@ -54,6 +60,11 @@ export class DeletePackagePolicy extends S.Class<DeletePackagePolicy>($I`DeleteP
     livePromotionRecord: S.Boolean,
     cascadeClosureAllowed: S.Boolean,
     catalogUniquenessProven: S.Boolean,
+    dropData: S.Boolean,
+    allowNonLocalData: S.Boolean,
+    dataResourceDeclared: S.Boolean,
+    dataConnectionNonLocal: S.Boolean,
+    dataOwnershipProven: S.Boolean,
   },
   $I.annote("DeletePackagePolicy", {
     description: "Decoded delete-package flags and preflight facts consumed by refusal policy.",
@@ -85,6 +96,8 @@ export const DeletePackageRefusalKind = LiteralKit([
   "ci-skip-baselines",
   "catalog-uniqueness",
   "packet-claim",
+  "data-non-local",
+  "data-ownership",
 ]).pipe(
   $I.annoteSchema("DeletePackageRefusalKind", {
     description: "Closed hard and soft refusal reasons emitted before deletion.",
@@ -178,5 +191,133 @@ export class DeletePackageManifest extends S.Class<DeletePackageManifest>($I`Del
   },
   $I.annote("DeletePackageManifest", {
     description: "Minimal package manifest fields required by deletion preflight.",
+  })
+) {}
+
+/**
+ * Closed exit policy for one delete-package baseline writer step.
+ *
+ * **Details**
+ *
+ * `zero-only` fails on any nonzero exit. `tolerate-finding-exit` additionally
+ * tolerates exit code 1 when the step's verified output file was provably
+ * (re)written — the fallow health baseline writer exits 1 on pre-existing
+ * findings even though the baseline write succeeded.
+ *
+ * **Example** (Guard an exit policy)
+ *
+ * ```ts
+ * import { BaselineWriterExitPolicy } from "@beep/repo-cli/commands/DeletePackage"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(BaselineWriterExitPolicy)("tolerate-finding-exit")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BaselineWriterExitPolicy = LiteralKit(["zero-only", "tolerate-finding-exit"]).pipe(
+  $I.annoteSchema("BaselineWriterExitPolicy", {
+    description: "Closed exit policy for one delete-package baseline writer step.",
+  })
+);
+/**
+ * Type represented by {@link BaselineWriterExitPolicy}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BaselineWriterExitPolicy = typeof BaselineWriterExitPolicy.Type;
+
+/**
+ * Closed outcome of one baseline writer invocation.
+ *
+ * **Example** (Guard an outcome)
+ *
+ * ```ts
+ * import { BaselineStepOutcome } from "@beep/repo-cli/commands/DeletePackage"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(BaselineStepOutcome)("tolerated")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BaselineStepOutcome = LiteralKit(["ok", "tolerated", "failed"]).pipe(
+  $I.annoteSchema("BaselineStepOutcome", {
+    description: "Closed outcome of one baseline writer invocation: ok, tolerated, or failed.",
+  })
+);
+/**
+ * Type represented by {@link BaselineStepOutcome}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BaselineStepOutcome = typeof BaselineStepOutcome.Type;
+
+/**
+ * `(mtime, size)` stamp of a baseline output file proving a write happened.
+ *
+ * **Details**
+ *
+ * Comparing stamps instead of mtime alone keeps the write proof honest on
+ * filesystems with coarse timestamps: an equal-mtime rewrite still counts as
+ * written when the size changed.
+ *
+ * **Example** (Stamp a baseline output)
+ *
+ * ```ts
+ * import { BaselineOutputStamp } from "@beep/repo-cli/commands/DeletePackage"
+ *
+ * const stamp = BaselineOutputStamp.make({ mtimeMillis: 1_723_000_000_000, size: 2048 })
+ * console.log(stamp.size) // 2048
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class BaselineOutputStamp extends S.Class<BaselineOutputStamp>($I`BaselineOutputStamp`)(
+  {
+    mtimeMillis: S.Finite,
+    size: S.Finite,
+  },
+  $I.annote("BaselineOutputStamp", {
+    description: "(mtime, size) stamp of a baseline output file proving a write happened.",
+  })
+) {}
+
+/**
+ * One delete-package baseline writer step with its exit policy and optional
+ * verified output file.
+ *
+ * **Details**
+ *
+ * `exitPolicy` defaults to `zero-only` and `verifiedOutput` to `Option.none()`
+ * at construction, so only the deliberately tolerant step declares them —
+ * guarding against tolerance creep in the writer table.
+ *
+ * **Example** (Declare a zero-only writer step)
+ *
+ * ```ts
+ * import { BaselineWriterStep } from "@beep/repo-cli/commands/DeletePackage"
+ *
+ * const step = BaselineWriterStep.make({ label: "Knip baseline", args: ["run", "beep", "quality", "knip"] })
+ * console.log(step.exitPolicy) // "zero-only"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class BaselineWriterStep extends S.Class<BaselineWriterStep>($I`BaselineWriterStep`)(
+  {
+    label: S.NonEmptyString,
+    args: S.Array(S.NonEmptyString),
+    exitPolicy: BaselineWriterExitPolicy.pipe(SchemaUtils.withConstantDefault<BaselineWriterExitPolicy>("zero-only")),
+    verifiedOutput: S.OptionFromOptionalKey(PosixPath).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("BaselineWriterStep", {
+    description: "One delete-package baseline writer step with exit policy and optional verified output file.",
   })
 ) {}

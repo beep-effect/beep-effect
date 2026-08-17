@@ -482,7 +482,7 @@ export const runQaRecord = Effect.fn("QaRecord.run")(function* (
   const layout = yield* store
     .prepareRound(qaRoot, round)
     .pipe(QaCommandError.mapError(`qa record could not prepare ${qaRoot}/round-${round}.`));
-  const target = yield* resolveCaptureTarget(CaptureTargetRequest.make({ app: options.app, url: options.url }));
+  const target = yield* resolveCaptureTarget(cwd, CaptureTargetRequest.make({ app: options.app, url: options.url }));
   yield* writeArtifactBudget(
     artifactBudgetPath(path, layout),
     ArtifactBudget.make({ maxTotalBytes: options.budgetMb * BYTES_PER_MIB })

@@ -245,7 +245,33 @@ const readRetiredChangesetPackageNames = Effect.fn("ChangesetGraph.readRetiredCh
   );
 });
 
-const collectWorkspacePackageJsonFiles = Effect.fn("ChangesetGraph.collectWorkspacePackageJsonFiles")(function* (
+/**
+ * Collect the repo-relative workspace `package.json` paths declared by the
+ * root workspace globs.
+ *
+ * **Details**
+ *
+ * The catalog is derived from the root `package.json` workspaces patterns via
+ * `git ls-files` glob pathspecs, so it names exactly the tracked workspace
+ * manifests — the same derivation the changeset graph guard uses. The
+ * path-aware changeset status wrapper reuses it so both lanes agree on
+ * workspace membership.
+ *
+ * **Example** (Collect workspace manifests)
+ *
+ * ```ts
+ * import { collectWorkspacePackageJsonFiles } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
+ *
+ * const program = collectWorkspacePackageJsonFiles(process.cwd())
+ * console.log(program) // example value
+ * ```
+ *
+ * @param repoRoot - Repository root used as the git working directory.
+ * @returns Sorted repo-relative workspace `package.json` paths (root excluded).
+ * @category utilities
+ * @since 0.0.0
+ */
+export const collectWorkspacePackageJsonFiles = Effect.fn("ChangesetGraph.collectWorkspacePackageJsonFiles")(function* (
   repoRoot: string
 ): Effect.fn.Return<
   ReadonlyArray<string>,

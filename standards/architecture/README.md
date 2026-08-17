@@ -86,6 +86,7 @@ back here for the rationale once the shape clicks.
 | [`12-observability.md`](./12-observability.md)                       | Span naming, attribute conventions, logging vs tracing vs Console; slice boundaries as span boundaries. |
 | [`13-onboarding-the-minimum-viable-slice.md`](./13-onboarding-the-minimum-viable-slice.md) | Scratchpad lane, minimum-viable-slice walkthrough, first cross-slice promotion, slice-path reading guide. |
 | [`14-ecosystem-packages.md`](./14-ecosystem-packages.md) | Why publishable repo-authored libraries get their own flat family: inverted `@beep/*` gate, style-law scoping, artifact/peer policy, release lane, gate profile, promotion/demotion. |
+| [`15-lab-apps.md`](./15-lab-apps.md) | Why law-abiding experiments get `apps/labs/*`: full code law with path-scoped ceremony exemption, zero-root-churn registration geometry, manifest/disposition lifecycle, promotion runbook, pre-v1 retirement class. |
 
 ## Known Unknowns
 

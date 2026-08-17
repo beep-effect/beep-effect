@@ -6,7 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Glob } from "@beep/schema/Glob";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Tuple } from "effect";
@@ -130,6 +130,14 @@ export class AuthoredReferenceSurface extends S.Class<AuthoredReferenceSurface>(
   })
 ) {}
 
+export const DeletionNotePolicy = LiteralKit(["emit-empty-note", "labs-exempt"]).pipe(
+  $I.annoteSchema("DeletionNotePolicy", {
+    description:
+      "Whether deleting this package emits the canonical `{}` deletion changeset or is ceremony-exempt by labs path.",
+  })
+);
+export type DeletionNotePolicy = typeof DeletionNotePolicy.Type;
+
 export class PendingChangesetSurface extends S.Class<PendingChangesetSurface>($I`PendingChangesetSurface`)(
   {
     kind: S.tag("pending-changeset"),
@@ -137,6 +145,7 @@ export class PendingChangesetSurface extends S.Class<PendingChangesetSurface>($I
     changesetGlob: Glob,
     retiredRegistry: PosixPath,
     packageName: S.NonEmptyString,
+    deletionNotePolicy: DeletionNotePolicy,
   },
   $I.annote("PendingChangesetSurface", {
     description: "Pending changeset keys and retired-name policy for one package name.",
@@ -201,11 +210,23 @@ export const RegistrationSurface = RegistrationSurfaceKind.mapMembers(
 );
 export type RegistrationSurface = typeof RegistrationSurface.Type;
 
+export class LabTargetFacts extends S.Class<LabTargetFacts>($I`LabTargetFacts`)(
+  {
+    manifestFile: PosixPath,
+    postgresSchema: S.OptionFromOptionalKey(S.NonEmptyString),
+    localOnly: S.Boolean,
+  },
+  $I.annote("LabTargetFacts", {
+    description: "Decoded lab-manifest facts (manifest path, optional Postgres schema, locality) for a labs target.",
+  })
+) {}
+
 export class RegistrationTarget extends S.Class<RegistrationTarget>($I`RegistrationTarget`)(
   {
     packageName: S.NonEmptyString,
     packagePath: PosixPath,
     private: S.Boolean,
+    lab: S.OptionFromOptionalKey(LabTargetFacts).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("RegistrationTarget", {
     description: "Resolved workspace identity used to instantiate registration geometry.",

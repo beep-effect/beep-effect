@@ -12,6 +12,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
+import { isLabsWorkspacePath } from "../Labs/index.ts";
 import { RegistrationGeometryError } from "./RegistrationGeometry.errors.ts";
 import { surfacesForTarget } from "./RegistrationGeometry.plan.ts";
 import {
@@ -138,7 +139,12 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
     }),
     "derived-rebuild": Effect.fn(function* (derived) {
       const evidence = yield* existingEvidence(repoRoot, derived.outputs, [target.packageName, target.packagePath]);
-      return observation(derived.id, A.isReadonlyArrayNonEmpty(evidence) ? "drift" : "clean", evidence);
+      // Labs are excluded from the root TS solution: a labs target referenced by
+      // tsconfig.packages.json is registration residue, not rebuildable drift.
+      const labsRootReference =
+        isLabsWorkspacePath(target.packagePath) && A.some(evidence, Str.equivalence("tsconfig.packages.json"));
+      const dirtyStatus = labsRootReference ? "residue" : "drift";
+      return observation(derived.id, A.isReadonlyArrayNonEmpty(evidence) ? dirtyStatus : "clean", evidence);
     }),
     "generated-inventory": Effect.fn(function* (inventory) {
       const evidence = yield* existingEvidence(repoRoot, inventory.outputs, [inventory.membershipKey]);
@@ -203,7 +209,11 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
       );
     }),
     "data-resource": (data) =>
-      Effect.succeed(observation(data.id, "consent-required", [`manual cleanup: ${data.resourceName}`])),
+      Effect.succeed(
+        observation(data.id, "consent-required", [
+          `manual cleanup: DROP SCHEMA IF EXISTS "${data.resourceName}" CASCADE; (owner ${data.owner}, consent flag ${data.destructiveConsentFlag})`,
+        ])
+      ),
     "historical-record": Effect.fn(function* (historical) {
       const files = yield* collectFiles(repoRoot, [".md", ".json", ".jsonc", ".tsv"]);
       let evidence = A.empty<string>();

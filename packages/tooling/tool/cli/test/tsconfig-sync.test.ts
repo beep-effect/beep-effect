@@ -879,4 +879,157 @@ describe("tsconfig-sync", () => {
       ),
     20_000
   );
+
+  it(
+    "excludes lab workspaces from root references while keeping package-local refs and syncpack visibility",
+    () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const rootDir = process.cwd();
+
+            yield* bootstrapRootConfig(rootDir, {
+              workspaces: ["packages/example-domain", "apps/labs/*"],
+              references: ["apps/labs/probe", "packages/example-domain"],
+              paths: {},
+              syncpackSources: ["package.json"],
+            });
+            yield* bootstrapWorkspace(rootDir, {
+              relativeDir: "packages/example-domain",
+              packageName: "@beep/example-domain",
+            });
+            // The lab workspace is written manually: bootstrapWorkspace always
+            // emits an exports map, while the ratified planRootAliasSync
+            // no-edit relies on lab scaffolds staying exportless.
+            yield* writeJsonFile(path.join(rootDir, "apps", "labs", "probe", "package.json"), {
+              name: "@beep/probe",
+              version: "0.0.0",
+              dependencies: {
+                "@beep/example-domain": "workspace:*",
+              },
+            });
+            yield* writeJsonFile(path.join(rootDir, "apps", "labs", "probe", "tsconfig.json"), {
+              compilerOptions: {
+                outDir: "dist",
+                rootDir: "src",
+              },
+            });
+            yield* writeTextFile(
+              path.join(rootDir, "apps", "labs", "probe", "src", "index.ts"),
+              `export const workspaceName = "@beep/probe";\n`
+            );
+
+            yield* syncTsconfigAtRoot(rootDir, {
+              mode: "sync",
+              filter: undefined,
+              verbose: false,
+            });
+
+            // Ratified lab-apps row 2: the hand-added lab root reference is
+            // actively removed while non-lab workspaces stay referenced.
+            const rootRefs = decodeTsconfigReferences(
+              yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"))
+            );
+            expect(A.map(rootRefs.references, (entry) => entry.path)).toEqual(["packages/example-domain"]);
+
+            // Package-local reference planning still sees the lab workspace.
+            const labRefs = decodeTsconfigReferences(
+              yield* readJsoncFile(path.join(rootDir, "apps", "labs", "probe", "tsconfig.json"))
+            );
+            expect(A.map(labRefs.references, (entry) => entry.path)).toEqual([
+              "../../../packages/example-domain/tsconfig.json",
+            ]);
+
+            // The exportless lab produces zero root aliases; non-lab aliases land.
+            const paths = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
+            expect(paths.compilerOptions.paths).toMatchObject({
+              "@beep/example-domain": ["./packages/example-domain/src/index.ts"],
+              "@beep/example-domain/*": ["./packages/example-domain/src/*"],
+            });
+            expect(paths.compilerOptions.paths).not.toHaveProperty("@beep/probe");
+            expect(paths.compilerOptions.paths).not.toHaveProperty("@beep/probe/*");
+
+            // Workspace-glob-derived syncpack sources keep labs visible.
+            const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
+            expect(syncpackConfig).toContain(`"apps/labs/*/package.json"`);
+
+            // Steady state: a present lab causes zero root churn in check mode.
+            const steadyState = yield* syncTsconfigAtRoot(rootDir, {
+              mode: "check",
+              filter: undefined,
+              verbose: false,
+            });
+            expect(steadyState.changes).toHaveLength(0);
+          })
+        )
+      ),
+    20_000
+  );
+
+  it(
+    "reports a hand-added lab root reference as drift in check mode",
+    () =>
+      Effect.runPromise(
+        withTempRepo(
+          Effect.gen(function* () {
+            const path = yield* Path.Path;
+            const rootDir = process.cwd();
+
+            // Aliases, syncpack sources, and the lab's package-local reference
+            // are pre-synced so fileCount isolates the root-references drift.
+            yield* bootstrapRootConfig(rootDir, {
+              workspaces: ["packages/example-domain", "apps/labs/*"],
+              references: ["apps/labs/probe", "packages/example-domain"],
+              paths: {
+                "@beep/example-domain": ["./packages/example-domain/src/index.ts"],
+                "@beep/example-domain/*": ["./packages/example-domain/src/*"],
+              },
+              syncpackSources: ["package.json", "packages/example-domain/package.json", "apps/labs/*/package.json"],
+            });
+            yield* bootstrapWorkspace(rootDir, {
+              relativeDir: "packages/example-domain",
+              packageName: "@beep/example-domain",
+            });
+            yield* writeJsonFile(path.join(rootDir, "apps", "labs", "probe", "package.json"), {
+              name: "@beep/probe",
+              version: "0.0.0",
+              dependencies: {
+                "@beep/example-domain": "workspace:*",
+              },
+            });
+            yield* writeJsonFile(path.join(rootDir, "apps", "labs", "probe", "tsconfig.json"), {
+              references: [{ path: "../../../packages/example-domain/tsconfig.json" }],
+              compilerOptions: {
+                outDir: "dist",
+                rootDir: "src",
+              },
+            });
+            yield* writeTextFile(
+              path.join(rootDir, "apps", "labs", "probe", "src", "index.ts"),
+              `export const workspaceName = "@beep/probe";\n`
+            );
+
+            const drift = yield* syncTsconfigAtRoot(rootDir, {
+              mode: "check",
+              filter: undefined,
+              verbose: false,
+            }).pipe(
+              Effect.match({
+                onFailure: (error) => error,
+                onSuccess: () => undefined,
+              })
+            );
+
+            expect(drift?._tag).toBe("TsconfigSyncDriftError");
+            if (drift?._tag !== "TsconfigSyncDriftError") {
+              return;
+            }
+            expect(drift.fileCount).toBe(1);
+          })
+        )
+      ),
+    20_000
+  );
 });

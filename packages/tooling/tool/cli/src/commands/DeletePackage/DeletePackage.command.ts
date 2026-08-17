@@ -8,6 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError, decodePackageJsonEffect, findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
+import { PosixPath } from "@beep/schema/PosixPath";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import { Config, Console, Effect, FileSystem, Path, pipe } from "effect";
 import * as O from "effect/Option";
@@ -16,17 +17,33 @@ import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { applyJsoncModification } from "../../internal/cli/Jsonc.ts";
-import { makeRegistrationGeometryService, RegistrationTarget } from "../../internal/cli/RegistrationGeometry/index.ts";
+import { decodeLabManifestJson, isLabsWorkspacePath, LAB_MANIFEST_FILENAME } from "../../internal/cli/Labs/index.ts";
+import {
+  DeletionNotePolicy,
+  LabTargetFacts,
+  makeRegistrationGeometryService,
+  RegistrationSurface,
+  RegistrationTarget,
+  surfacesForTarget,
+} from "../../internal/cli/RegistrationGeometry/index.ts";
 import { runToExit } from "../../internal/process/index.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
+import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
 import { changesetPackageReferencesFromText } from "../Quality/ChangesetGraph.ts";
 import { syncTsconfigAtRoot } from "../TsconfigSync/index.ts";
 import { DeletePackagePolicyEvaluation } from "./DeletePackage.policy.ts";
-import { DeletePackageManifest, DeletePackagePolicy } from "./DeletePackage.schemas.ts";
+import {
+  BaselineOutputStamp,
+  BaselineStepOutcome,
+  BaselineWriterExitPolicy,
+  BaselineWriterStep,
+  DeletePackageManifest,
+  DeletePackagePolicy,
+} from "./DeletePackage.schemas.ts";
+import { DeletePackageDataResource } from "./internal/DataResource.ts";
 import type {
   DependentsReport,
   RegistrationGeometryServiceShape,
-  RegistrationObservation,
   RegistrationPlan,
 } from "../../internal/cli/RegistrationGeometry/index.ts";
 
@@ -100,6 +117,37 @@ const findDeletedTargetPath = Effect.fn("DeletePackage.findDeletedTargetPath")(f
   return O.none<string>();
 });
 
+// P2-D18: a labs directory with a missing or corrupt lab.manifest.json WARNS
+// and proceeds with no lab facts in BOTH check and apply modes, so
+// delete-package stays the cheap escape valve for half-created labs.
+const resolveLabFacts = Effect.fn("DeletePackage.resolveLabFacts")(function* (repoRoot: string, relativeDir: string) {
+  if (!isLabsWorkspacePath(relativeDir)) return O.none<LabTargetFacts>();
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const manifestFile = `${relativeDir}/${LAB_MANIFEST_FILENAME}`;
+  const decoded = yield* fs
+    .readFileString(path.join(repoRoot, manifestFile))
+    .pipe(Effect.flatMap(decodeLabManifestJson), Effect.option);
+  return yield* O.match(decoded, {
+    onNone: () =>
+      Console.error(
+        `[delete-package] warning: ${manifestFile} is missing or invalid; continuing without lab manifest facts.`
+      ).pipe(Effect.as(O.none<LabTargetFacts>())),
+    onSome: (labManifest) =>
+      Effect.succeed(
+        O.some(
+          LabTargetFacts.make({
+            manifestFile: PosixPath.make(manifestFile),
+            postgresSchema: labManifest.postgresSchema,
+            // P2 treats every lab as local-by-default (P2-D2: the manifest
+            // declares no locality field).
+            localOnly: true,
+          })
+        )
+      ),
+  });
+});
+
 const resolveDeleteTarget = Effect.fn("DeletePackage.resolveTarget")(function* (
   repoRoot: string,
   input: string,
@@ -124,11 +172,13 @@ const resolveDeleteTarget = Effect.fn("DeletePackage.resolveTarget")(function* (
     const manifest = yield* fs
       .readFileString(manifestPath)
       .pipe(Effect.flatMap((content) => decodeManifest(manifestPath, content)));
+    const lab = yield* resolveLabFacts(repoRoot, relativeDir);
     return ResolvedDeleteTarget.make({
       target: RegistrationTarget.make({
         packageName: name,
         packagePath: relativeDir,
         private: manifest.private !== false,
+        lab,
       }),
       liveWorkspace: true,
     });
@@ -277,9 +327,35 @@ const pruneChangesetFile = Effect.fn("DeletePackage.pruneChangesetFile")(functio
   yield* fs.writeFileString(file, stripPackageFromFrontmatter(content, packageName));
 });
 
-const rewritePendingChangesets = Effect.fn("DeletePackage.rewritePendingChangesets")(function* (
+/**
+ * Prune pending changesets naming the package, then emit the canonical `{}`
+ * deletion note — or skip the note entirely under the labs-exempt policy.
+ *
+ * **Details**
+ *
+ * The prune loop is policy-independent: every other pending changeset naming
+ * the package is deleted (single-package) or key-stripped (multi-package)
+ * even for labs targets. Only the dedicated `delete-<slug>.md` deletion note
+ * is gated by {@link DeletionNotePolicy}: labs deletions are ceremony-exempt
+ * and emit no changeset.
+ *
+ * **Example** (Build a labs-exempt rewrite effect)
+ *
+ * ```ts
+ * import { rewritePendingChangesets } from "@beep/repo-cli/commands/DeletePackage"
+ * import { Effect } from "effect"
+ *
+ * const program = rewritePendingChangesets("/repo", "@beep/probe", "labs-exempt")
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const rewritePendingChangesets = Effect.fn("DeletePackage.rewritePendingChangesets")(function* (
   repoRoot: string,
-  packageName: string
+  packageName: string,
+  deletionNotePolicy: DeletionNotePolicy
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -294,10 +370,14 @@ const rewritePendingChangesets = Effect.fn("DeletePackage.rewritePendingChangese
 
   const slug = pipe(packageName, Str.replace("@beep/", Str.empty));
   const deletionNote = path.join(changesetDir, `delete-${slug}.md`);
-  yield* fs.writeFileString(
-    deletionNote,
-    Text.joinLines(["---", "{}", "---", "", `No release: remove \`${packageName}\` from the workspace.`, ""])
-  );
+  yield* DeletionNotePolicy.$match(deletionNotePolicy, {
+    "emit-empty-note": () =>
+      fs.writeFileString(
+        deletionNote,
+        Text.joinLines(["---", "{}", "---", "", `No release: remove \`${packageName}\` from the workspace.`, ""])
+      ),
+    "labs-exempt": () => Effect.void,
+  });
 });
 
 const runStep = Effect.fn("DeletePackage.runStep")(function* (
@@ -313,19 +393,124 @@ const runStep = Effect.fn("DeletePackage.runStep")(function* (
   if (exitCode !== 0) return yield* DomainError.newMessage(`${label} failed with exit code ${exitCode}.`);
 });
 
+// Every writer stays zero-only except the fallow health baseline: fallow
+// exposes no write-only mode and exits 1 on pre-existing findings even though
+// the --save-baseline write succeeded (P1 round-trip proof), so that one step
+// tolerates exit 1 iff its verified output was provably written. Exit >= 2 is
+// a real fallow fault and always fails.
+const BASELINE_WRITER_STEPS: ReadonlyArray<BaselineWriterStep> = [
+  BaselineWriterStep.make({ label: "fallow boundaries", args: ["run", "beep", "fallow", "boundaries", "--write"] }),
+  BaselineWriterStep.make({
+    label: "fallow health baseline",
+    args: ["run", "fallow:health:baseline:write"],
+    exitPolicy: "tolerate-finding-exit",
+    verifiedOutput: O.some(PosixPath.make("standards/fallow.health.regression-baseline.jsonc")),
+  }),
+  BaselineWriterStep.make({ label: "fallow dead-code baseline", args: ["run", "fallow:dead-code:baseline:write"] }),
+  BaselineWriterStep.make({ label: "JSDoc inventory pair", args: ["run", "beep", "quality", "jsdoc-inventory"] }),
+  BaselineWriterStep.make({
+    label: "schema-first inventory",
+    args: ["run", "beep", "lint", "schema-first", "--write"],
+  }),
+  BaselineWriterStep.make({
+    label: "test typecheck baseline",
+    args: ["run", "beep", "lint", "package-test-typecheck", "--write-baseline"],
+  }),
+  BaselineWriterStep.make({ label: "schema catalog", args: ["run", "beep", "lint", "schema-catalog", "--write"] }),
+  BaselineWriterStep.make({ label: "Knip baseline", args: ["run", "beep", "quality", "knip", "--write-baseline"] }),
+  BaselineWriterStep.make({ label: "coverage replacement baseline", args: ["run", "coverage:baseline:write"] }),
+];
+
+const baselineOutputWritten = (before: O.Option<BaselineOutputStamp>, after: O.Option<BaselineOutputStamp>): boolean =>
+  O.match(after, {
+    onNone: thunkFalse,
+    onSome: (afterStamp) =>
+      O.match(before, {
+        onNone: () => true,
+        onSome: (beforeStamp) =>
+          beforeStamp.mtimeMillis !== afterStamp.mtimeMillis || beforeStamp.size !== afterStamp.size,
+      }),
+  });
+
+const baselineStepOutcome = (
+  exitCode: number,
+  exitPolicy: BaselineWriterExitPolicy,
+  before: O.Option<BaselineOutputStamp>,
+  after: O.Option<BaselineOutputStamp>
+): BaselineStepOutcome => {
+  if (exitCode === 0) return "ok";
+  return BaselineWriterExitPolicy.$match(exitPolicy, {
+    "zero-only": (): BaselineStepOutcome => "failed",
+    "tolerate-finding-exit": (): BaselineStepOutcome =>
+      exitCode === 1 && baselineOutputWritten(before, after) ? "tolerated" : "failed",
+  });
+};
+
+const statBaselineOutput = Effect.fn("DeletePackage.statBaselineOutput")(function* (
+  repoRoot: string,
+  verifiedOutput: O.Option<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* O.match(verifiedOutput, {
+    onNone: () => Effect.succeed(O.none<BaselineOutputStamp>()),
+    onSome: (output) =>
+      fs.stat(path.join(repoRoot, output)).pipe(
+        Effect.option,
+        Effect.map(
+          O.map((info) =>
+            BaselineOutputStamp.make({
+              mtimeMillis: O.match(info.mtime, { onNone: () => 0, onSome: (mtime) => mtime.getTime() }),
+              size: Number(info.size),
+            })
+          )
+        )
+      ),
+  });
+});
+
+/**
+ * Baseline-writer step table and the pure exit-outcome decision helper.
+ *
+ * **Details**
+ *
+ * `baselineStepOutcome` classifies one writer invocation: exit 0 is `ok`;
+ * exit 1 under `tolerate-finding-exit` is `tolerated` only when the verified
+ * output's `(mtime, size)` stamp changed or the file was created; everything
+ * else — including every exit >= 2 — is `failed`.
+ *
+ * **Example** (Classify a finding exit without a written baseline)
+ *
+ * ```ts
+ * import { DeletePackageBaselineWriters } from "@beep/repo-cli/commands/DeletePackage"
+ * import * as O from "effect/Option"
+ *
+ * const outcome = DeletePackageBaselineWriters.baselineStepOutcome(1, "tolerate-finding-exit", O.none(), O.none())
+ * console.log(outcome) // "failed"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const DeletePackageBaselineWriters = { baselineStepOutcome, steps: BASELINE_WRITER_STEPS } as const;
+
 const runBaselineWriters = Effect.fn("DeletePackage.runBaselineWriters")(function* (repoRoot: string) {
-  const steps: ReadonlyArray<readonly [label: string, args: ReadonlyArray<string>]> = [
-    ["fallow boundaries", ["run", "beep", "fallow", "boundaries", "--write"]],
-    ["fallow health baseline", ["run", "fallow:health:baseline:write"]],
-    ["fallow dead-code baseline", ["run", "fallow:dead-code:baseline:write"]],
-    ["JSDoc inventory pair", ["run", "beep", "quality", "jsdoc-inventory"]],
-    ["schema-first inventory", ["run", "beep", "lint", "schema-first", "--write"]],
-    ["test typecheck baseline", ["run", "beep", "lint", "package-test-typecheck", "--write-baseline"]],
-    ["schema catalog", ["run", "beep", "lint", "schema-catalog", "--write"]],
-    ["Knip baseline", ["run", "beep", "quality", "knip", "--write-baseline"]],
-    ["coverage replacement baseline", ["run", "coverage:baseline:write"]],
-  ];
-  for (const [label, args] of steps) yield* runStep(repoRoot, label, "bun", args);
+  for (const step of BASELINE_WRITER_STEPS) {
+    yield* Console.log(`[delete-package] ${step.label}: bun ${A.join(step.args, " ")}`);
+    const before = yield* statBaselineOutput(repoRoot, step.verifiedOutput);
+    const exitCode = yield* runToExit({ command: "bun", args: step.args, cwd: repoRoot, stdio: "inherit" }).pipe(
+      Effect.mapError(DomainError.newCause("Failed to spawn bun."))
+    );
+    const after = yield* statBaselineOutput(repoRoot, step.verifiedOutput);
+    yield* BaselineStepOutcome.$match(baselineStepOutcome(exitCode, step.exitPolicy, before, after), {
+      ok: () => Effect.void,
+      tolerated: () =>
+        Console.log(
+          `[delete-package] ${step.label}: baseline written; pre-existing findings exit tolerated (exit ${exitCode}).`
+        ),
+      failed: () => DomainError.newMessage(`${step.label} failed with exit code ${exitCode}.`),
+    });
+  }
 });
 
 const invalidateCiMirrors = Effect.fn("DeletePackage.invalidateCiMirrors")(function* (repoRoot: string) {
@@ -362,9 +547,6 @@ const hasRetiredCollision = Effect.fn("DeletePackage.hasRetiredCollision")(funct
   return Str.includes(packageName)(content);
 });
 
-const doctorIsClean = (observations: ReadonlyArray<RegistrationObservation>): boolean =>
-  A.every(observations, (item) => Str.equivalence(item.status, "clean") || Str.equivalence(item.status, "historical"));
-
 type DeletePackageHandlerOptions = {
   readonly target: string;
   readonly dryRun: boolean;
@@ -380,6 +562,8 @@ type DeletePackageHandlerOptions = {
   readonly allowPublished: boolean;
   readonly pruneCatalog: boolean;
   readonly force: boolean;
+  readonly dropData: boolean;
+  readonly allowNonLocalData: boolean;
 };
 
 const planPrintPrefix = (options: DeletePackageHandlerOptions): string =>
@@ -395,6 +579,9 @@ const assembleDeletePolicy = Effect.fn("DeletePackage.assembleDeletePolicy")(fun
     resolved.liveWorkspace && (yield* hasRetiredCollision(repoRoot, resolved.target.packageName));
   const livePromotionRecord =
     resolved.liveWorkspace && (yield* hasLivePromotionRecord(repoRoot, resolved.target.packagePath));
+  const dataSurface = A.findFirst(surfacesForTarget(resolved.target), RegistrationSurface.guards["data-resource"]);
+  const databaseUrl = yield* Config.string("DATABASE_URL").pipe(Config.option);
+  const slug = pipe(resolved.target.packageName, Str.replace("@beep/", Str.empty));
   return DeletePackagePolicy.make({
     allowPublished: options.allowPublished,
     allowStalePackets: options.allowStalePackets,
@@ -408,6 +595,13 @@ const assembleDeletePolicy = Effect.fn("DeletePackage.assembleDeletePolicy")(fun
     livePromotionRecord,
     cascadeClosureAllowed: false,
     catalogUniquenessProven: false,
+    dropData: options.dropData,
+    allowNonLocalData: options.allowNonLocalData,
+    dataResourceDeclared: O.isSome(dataSurface),
+    dataConnectionNonLocal: O.exists(databaseUrl, (url) => !DeletePackageDataResource.isLocalDatabaseUrl(url)),
+    dataOwnershipProven: O.exists(dataSurface, (surface) =>
+      DeletePackageDataResource.labSchemaOwnershipProven(slug, surface.resourceName)
+    ),
   });
 });
 
@@ -421,7 +615,8 @@ const runCheckMode = Effect.fn("DeletePackage.runCheckMode")(function* (
       yield* Console.log(`[check] ${item.surfaceId}: ${item.status} ${A.join(item.evidence, ", ")}`);
   }
   if (!resolved.liveWorkspace) {
-    if (!doctorIsClean(observations)) return yield* failWithReportedExit("delete-package --check: residue found.");
+    if (!DeletePackagePolicyEvaluation.doctorIsClean(resolved.target, observations))
+      return yield* failWithReportedExit("delete-package --check: residue found.");
     yield* Console.log("[delete-package --check] clean: no registration residue remains for the deleted target.");
     return;
   }
@@ -433,18 +628,23 @@ const runCheckMode = Effect.fn("DeletePackage.runCheckMode")(function* (
 
 const runApplyMode = Effect.fn("DeletePackage.runApplyMode")(function* (
   geometry: RegistrationGeometryServiceShape,
-  plan: RegistrationPlan,
-  packageName: string
+  plan: RegistrationPlan
 ) {
   const observations = yield* geometry.apply(plan);
-  if (!doctorIsClean(observations)) {
+  if (!DeletePackagePolicyEvaluation.doctorIsClean(plan.target, observations)) {
     for (const item of observations) {
       if (!Str.equivalence(item.status, "clean"))
         yield* Console.error(`[delete-package] residue ${item.surfaceId}: ${A.join(item.evidence, ", ")}`);
     }
     return yield* failWithReportedExit("delete-package: post-apply doctor found residue.");
   }
-  yield* Console.log(`[delete-package] complete: ${packageName} removed with zero declared residue.`);
+  // The accepted consent-required lab data-resource observation carries the
+  // manual DROP SCHEMA step; surface it so the manual step is never silent.
+  for (const item of observations) {
+    if (Str.equivalence(item.status, "consent-required"))
+      yield* Console.log(`[delete-package] data-resource ${item.surfaceId}: ${A.join(item.evidence, ", ")}`);
+  }
+  yield* Console.log(`[delete-package] complete: ${plan.target.packageName} removed with zero declared residue.`);
 });
 
 const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePackageHandlerOptions) {
@@ -462,14 +662,41 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
         "[delete-package] --identity-major requested; the deletion note remains empty until an identity release policy writer is ratified."
       );
 
+    // P2-D16: the data phase is print-only — policy gates ran in preflight and
+    // the live DROP executor is deferred, so the manual step is printed here
+    // whether or not consent was given.
+    const dataSurface = A.findFirst(surfacesForTarget(plan.target), RegistrationSurface.guards["data-resource"]);
+    yield* O.match(dataSurface, {
+      onNone: () => Effect.void,
+      onSome: (surface) =>
+        Console.log(
+          options.dropData
+            ? `[delete-package] data-resource ${surface.id}: consent received; the live drop is deferred in P2 — run manually: ${DeletePackageDataResource.renderManualDropStep(surface.resourceName)}`
+            : `[delete-package] data-resource ${surface.id}: requires ${surface.destructiveConsentFlag}; manual step: ${DeletePackageDataResource.renderManualDropStep(surface.resourceName)}`
+        ),
+    });
+
+    const deletionNotePolicy = pipe(
+      A.findFirst(surfacesForTarget(plan.target), RegistrationSurface.guards["pending-changeset"]),
+      O.map((surface) => surface.deletionNotePolicy),
+      O.getOrElse((): DeletionNotePolicy => "emit-empty-note")
+    );
+
     yield* CreatePackageIdentityRegistration.removeIdentityPackageRegistration(
       path.join(repoRoot, "packages/foundation/modeling/identity/src/packages.ts"),
       pipe(plan.target.packageName, Str.replace("@beep/", Str.empty))
     );
     yield* removeShapeTestRow(repoRoot, plan.target.packageName);
     yield* removeWorkspaceLiteral(repoRoot, plan.target.packagePath);
-    yield* rewritePendingChangesets(repoRoot, plan.target.packageName);
+    yield* rewritePendingChangesets(repoRoot, plan.target.packageName, deletionNotePolicy);
     yield* fs.remove(path.join(repoRoot, plan.target.packagePath), { recursive: true, force: true });
+    // Belt-and-braces reconstructive inverse: the flat removal above already
+    // swept the compose call, and the labs segment sync re-renders both
+    // generated regions from the now-smaller apps/labs/* catalog.
+    if (isLabsWorkspacePath(plan.target.packagePath))
+      yield* LabIdentitySegment.syncLabIdentitySegment(repoRoot).pipe(
+        Effect.mapError(DomainError.newCause("labs identity-segment sync failed after tree removal."))
+      );
     yield* syncTsconfigAtRoot(repoRoot, { mode: "sync", filter: undefined, verbose: false }).pipe(
       Effect.mapError(DomainError.newCause("tsconfig-sync failed after package deletion."))
     );
@@ -490,7 +717,7 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
 
   if (options.dryRun) return;
   if (options.check) return yield* runCheckMode(geometry, resolved);
-  return yield* runApplyMode(geometry, plan, resolved.target.packageName);
+  return yield* runApplyMode(geometry, plan);
 });
 
 /**
@@ -522,6 +749,8 @@ export const deletePackageCommand = Command.make(
     allowPublished: Flag.boolean("allow-published"),
     pruneCatalog: Flag.boolean("prune-catalog"),
     force: Flag.boolean("force"),
+    dropData: Flag.boolean("drop-data"),
+    allowNonLocalData: Flag.boolean("allow-non-local-data"),
   },
   handler
 ).pipe(Command.withDescription("Delete a leaf workspace package or doctor a deleted package for registration residue"));

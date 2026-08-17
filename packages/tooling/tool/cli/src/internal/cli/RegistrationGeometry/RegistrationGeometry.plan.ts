@@ -2,8 +2,11 @@ import { Glob } from "@beep/schema/Glob";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, Str } from "@beep/utils";
 import * as O from "effect/Option";
+import { isLabsWorkspacePath, LAB_MANIFEST_FILENAME } from "../Labs/index.ts";
 import {
   AuthoredReferenceSurface,
+  DataResourceSurface,
+  DeletionNotePolicy,
   DerivedRebuildSurface,
   GeneratedInventorySurface,
   HistoricalRecordSurface,
@@ -30,14 +33,31 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
   const slug = slugOf(target.packageName);
   const packagePath = PosixPath.make(target.packagePath);
   const packageNeedles = [target.packageName, target.packagePath, `$${Str.pascalCase(slug)}Id`];
+  const isLab = isLabsWorkspacePath(target.packagePath);
+  const dataResourceSurfaces = O.toArray(
+    O.flatMap(target.lab, (facts) =>
+      O.map(facts.postgresSchema, (resourceName) =>
+        DataResourceSurface.make({
+          id: "lab-postgres-schema",
+          owner: target.packageName,
+          resourceName,
+          localOnly: facts.localOnly,
+          destructiveConsentFlag: "--drop-data",
+        })
+      )
+    )
+  );
 
   return [
     OwnedTreeSurface.make({
       id: "owned-tree",
       root: packagePath,
-      artifacts: A.map(
-        [".beep", ".turbo", "dist", "coverage", "node_modules", "docs", ".next", "src-tauri/target"],
-        (artifact) => Glob.make(`${target.packagePath}/${artifact}/**`)
+      artifacts: A.appendAll(
+        A.map(
+          [".beep", ".turbo", "dist", "coverage", "node_modules", "docs", ".next", "src-tauri/target"],
+          (artifact) => Glob.make(`${target.packagePath}/${artifact}/**`)
+        ),
+        isLab ? [Glob.make(`${target.packagePath}/${LAB_MANIFEST_FILENAME}`)] : A.empty<Glob>()
       ),
     }),
     WorkspaceLiteralSurface.make({
@@ -51,7 +71,7 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
       packageName: target.packageName,
       slug,
       accessor: `$${Str.pascalCase(slug)}Id`,
-      generatedGroup: O.none(),
+      generatedGroup: isLab ? O.some("generatedLabComposers") : O.none(),
     }),
     DerivedRebuildSurface.make({
       id: "tsconfig-sync",
@@ -148,6 +168,7 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
       changesetGlob: Glob.make(".changeset/*.md"),
       retiredRegistry: PosixPath.make("standards/changesets.retired-packages.json"),
       packageName: target.packageName,
+      deletionNotePolicy: isLab ? "labs-exempt" : "emit-empty-note",
     }),
     RuntimeArtifactSurface.make({
       id: "runtime-artifacts",
@@ -160,6 +181,7 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
       ),
       needles: packageNeedles,
     }),
+    ...dataResourceSurfaces,
   ];
 };
 
@@ -176,7 +198,10 @@ const forwardOperation = RegistrationSurface.match({
     RegistrationOperation.make({
       surfaceId: surface.id,
       operation: "write",
-      detail: `register ${surface.slug} and ${surface.accessor}`,
+      detail: O.match(surface.generatedGroup, {
+        onNone: () => `register ${surface.slug} and ${surface.accessor}`,
+        onSome: (group) => `sync ${surface.slug} and ${surface.accessor} into the generated ${group} group`,
+      }),
     }),
   "derived-rebuild": (surface) =>
     RegistrationOperation.make({ surfaceId: surface.id, operation: "rebuild", detail: `run ${surface.writer}` }),
@@ -196,7 +221,10 @@ const forwardOperation = RegistrationSurface.match({
     RegistrationOperation.make({
       surfaceId: surface.id,
       operation: "write",
-      detail: `preserve pending policy for ${surface.packageName}`,
+      detail: DeletionNotePolicy.$match(surface.deletionNotePolicy, {
+        "emit-empty-note": () => `preserve pending policy for ${surface.packageName}`,
+        "labs-exempt": () => `preserve pending policy for ${surface.packageName}; labs are changeset-exempt`,
+      }),
     }),
   "runtime-artifact": (surface) =>
     RegistrationOperation.make({
@@ -235,7 +263,10 @@ const inverseOperation = RegistrationSurface.match({
     RegistrationOperation.make({
       surfaceId: surface.id,
       operation: "remove",
-      detail: `remove compose slug ${surface.slug}, export ${surface.accessor}, aliases, and shape row`,
+      detail: O.match(surface.generatedGroup, {
+        onNone: () => `remove compose slug ${surface.slug}, export ${surface.accessor}, aliases, and shape row`,
+        onSome: (group) => `remove ${surface.slug} and ${surface.accessor} from the generated ${group} composer group`,
+      }),
     }),
   "derived-rebuild": (surface) =>
     RegistrationOperation.make({
@@ -259,7 +290,12 @@ const inverseOperation = RegistrationSurface.match({
     RegistrationOperation.make({
       surfaceId: surface.id,
       operation: "remove",
-      detail: `delete dedicated pending files, strip multi-package key ${surface.packageName}, and emit an empty deletion changeset`,
+      detail: DeletionNotePolicy.$match(surface.deletionNotePolicy, {
+        "emit-empty-note": () =>
+          `delete dedicated pending files, strip multi-package key ${surface.packageName}, and emit an empty deletion changeset`,
+        "labs-exempt": () =>
+          `delete dedicated pending files and strip multi-package key ${surface.packageName}; labs deletion emits no changeset (ceremony-exempt)`,
+      }),
     }),
   "runtime-artifact": (surface) =>
     RegistrationOperation.make({

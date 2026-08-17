@@ -6,6 +6,21 @@
  */
 
 export * from "@beep/repo-cli/commands/Quality/ChangesetGraph";
+export {
+  CHANGESET_STATUS_NEUTRAL_PATH_PREFIXES,
+  ChangesetStatusError,
+  ChangesetStatusPartition,
+  ChangesetStatusVerdict,
+  ChangesetStatusWorkspacePackage,
+  changesetStatusCommand,
+  changesetStatusPassthroughSteps,
+  changesetStatusPlanSteps,
+  changesetStatusVerdict,
+  LAB_EXEMPT_COMPANION_PATHS,
+  partitionChangedFilesForStatus,
+  runChangesetStatus,
+  uncoveredWorkspacePackageNames,
+} from "@beep/repo-cli/commands/Quality/ChangesetStatus";
 export * from "@beep/repo-cli/commands/Quality/Quality.command";
 export * from "@beep/repo-cli/commands/Quality/Quality.render";
 export {

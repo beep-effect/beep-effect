@@ -4,7 +4,9 @@
  * Enforces the canonical `@beep/identity` composer registry invariant:
  * every `@beep/*` workspace package (apps included) has a slug in the
  * `$I.compose(...)` call and a dedicated `export const $XxxId` block in
- * `packages/foundation/modeling/identity/src/packages.ts`, and no package
+ * `packages/foundation/modeling/identity/src/packages.ts`, lab workspaces
+ * under `apps/labs/` live exactly in the marker-fenced generated labs
+ * segment (both directions, with misplacement detection), and no package
  * outside `@beep/identity` constructs a local root composer via the
  * identity `make(...)` export.
  *
@@ -14,15 +16,18 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
-import { normalizePath } from "@beep/schema";
+import { LiteralKit, normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
-import { Console, Effect, FileSystem, HashSet, Order, Path } from "effect";
+import { Console, Effect, FileSystem, HashSet, Order, Path, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { Node, Project } from "ts-morph";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
+import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/internal/IdentityBulkRegistration.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
+import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
+import type { LabIdentitySegmentState } from "../CreatePackage/internal/LabIdentitySegment.ts";
 
 const $I = $RepoCliId.create("commands/Lint/IdentityRegistry");
 
@@ -42,9 +47,23 @@ const EXCLUDED_SCAN_DIRECTORIES = HashSet.fromIterable([
   "test",
 ]);
 
+const IdentityRegistryViolationKind = LiteralKit([
+  "missing-registration",
+  "orphan-registration",
+  "local-root-composer",
+  "labs-segment-missing",
+  "labs-segment-extra",
+  "labs-segment-misplaced",
+]).pipe(
+  $I.annoteSchema("IdentityRegistryViolationKind", {
+    description:
+      "Closed identity-registry violation kind: registry completeness, orphaned registrations, local root composers, and generated-labs-segment drift.",
+  })
+);
+
 class IdentityRegistryViolation extends S.Class<IdentityRegistryViolation>($I`IdentityRegistryViolation`)(
   {
-    kind: S.String,
+    kind: IdentityRegistryViolationKind,
     subject: S.String,
     detail: S.String,
   },
@@ -172,6 +191,21 @@ const collectLocalRootComposerUses = (
   return violations;
 };
 
+/**
+ * Slugs present in the generated labs segment (composer group or export
+ * block) with no live lab workspace behind them, sorted.
+ */
+const staleGeneratedLabSlugs = (state: LabIdentitySegmentState): ReadonlyArray<string> =>
+  A.sort(
+    A.fromIterable(
+      HashSet.difference(
+        HashSet.union(HashSet.fromIterable(state.actualComposerSlugs), HashSet.fromIterable(state.actualExportSlugs)),
+        HashSet.fromIterable(state.expectedSlugs)
+      )
+    ),
+    Order.String
+  );
+
 const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryLint")(function* (options: {
   readonly fix: boolean;
 }) {
@@ -184,12 +218,36 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
 
   const slugs = A.map(slugsToDirs, ([slug]) => slug);
 
+  const labsBefore = yield* Effect.result(LabIdentitySegment.diffLabIdentitySegment(repoRoot));
+
+  if (Result.isFailure(labsBefore)) {
+    yield* Console.error(`[lint:identity-registry] ${labsBefore.failure.message}`);
+    return yield* failWithReportedExit("lint identity-registry: generated labs segment markers are invalid.");
+  }
+
+  let labsState = labsBefore.success;
+
   if (options.fix) {
-    const registeredSlugs = yield* CreatePackageIdentityRegistration.registerMissingWorkspaceIdentityPackages(repoRoot);
+    for (const slug of labsState.misplacedSlugs) {
+      yield* CreatePackageIdentityRegistration.removeIdentityPackageRegistration(identityPackagesFilePath, slug);
+      yield* Console.log(
+        `[lint:identity-registry] removed misplaced lab "${slug}" from outside the generated labs segment in ${identityPackagesFilePath}`
+      );
+    }
+
+    const registeredSlugs = yield* registerMissingWorkspaceIdentityPackages(repoRoot);
 
     for (const slug of registeredSlugs) {
       yield* Console.log(`[lint:identity-registry] registered "${slug}" in ${identityPackagesFilePath}`);
     }
+
+    for (const slug of staleGeneratedLabSlugs(labsState)) {
+      yield* Console.log(
+        `[lint:identity-registry] removed "${slug}" from the generated labs segment in ${identityPackagesFilePath}`
+      );
+    }
+
+    labsState = yield* LabIdentitySegment.diffLabIdentitySegment(repoRoot);
   }
 
   const registryContent = yield* fs.readFileString(identityPackagesAbsolutePath);
@@ -228,6 +286,38 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
     });
   });
 
+  const labComposerSet = HashSet.fromIterable(labsState.actualComposerSlugs);
+  const labExportSet = HashSet.fromIterable(labsState.actualExportSlugs);
+  const misplacedLabSet = HashSet.fromIterable(labsState.misplacedSlugs);
+  const labsMissingViolations = A.map(
+    A.filter(
+      labsState.expectedSlugs,
+      (slug) =>
+        (!HashSet.has(labComposerSet, slug) || !HashSet.has(labExportSet, slug)) && !HashSet.has(misplacedLabSet, slug)
+    ),
+    (slug) =>
+      IdentityRegistryViolation.make({
+        kind: "labs-segment-missing",
+        subject: `@beep/${slug}`,
+        detail: `Lab "@beep/${slug}" is not registered in the generated labs segment of ${identityPackagesFilePath}. ${FIX_HINT}`,
+      })
+  );
+  const labsExtraViolations = A.map(staleGeneratedLabSlugs(labsState), (slug) =>
+    IdentityRegistryViolation.make({
+      kind: "labs-segment-extra",
+      subject: `@beep/${slug}`,
+      detail: `The generated labs segment of ${identityPackagesFilePath} contains "${slug}" with no live lab under apps/labs. ${FIX_HINT}`,
+    })
+  );
+  const labsMisplacedViolations = A.map(labsState.misplacedSlugs, (slug) =>
+    IdentityRegistryViolation.make({
+      kind: "labs-segment-misplaced",
+      subject: `@beep/${slug}`,
+      detail: `Lab "${slug}" is registered outside the generated labs segment of ${identityPackagesFilePath}. ${FIX_HINT}`,
+    })
+  );
+  const labsViolations = A.appendAll(A.appendAll(labsMissingViolations, labsExtraViolations), labsMisplacedViolations);
+
   const project = new Project({ skipAddingFilesFromTsConfig: true });
   let localRootViolations = A.empty<IdentityRegistryViolation>();
 
@@ -253,7 +343,10 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
     }
   }
 
-  const violations = A.appendAll(A.appendAll(completenessViolations, orphanViolations), localRootViolations);
+  const violations = A.appendAll(
+    A.appendAll(A.appendAll(completenessViolations, orphanViolations), labsViolations),
+    localRootViolations
+  );
 
   if (A.isReadonlyArrayNonEmpty(violations)) {
     yield* Console.error(`[lint:identity-registry] found ${A.length(violations)} violation(s).`);
@@ -266,7 +359,7 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
   }
 
   yield* Console.log(
-    `[lint:identity-registry] OK: ${A.length(slugs)} workspace packages registered; no orphan or local root composers.`
+    `[lint:identity-registry] OK: ${A.length(slugs)} workspace packages registered; ${A.length(labsState.expectedSlugs)} lab(s) in the generated labs segment; no orphan or local root composers.`
   );
 });
 
