@@ -1,5 +1,16 @@
 # Decisions
 
+## 2026-08-17 — BRIEF ratified with amendments; advance to decompose
+
+**Decision:** Operator signed off BRIEF.md with two amendments: (1) name the
+first consumer (professional runtime approval gate references an
+admission-disposition id) and the first fixture (admit the repo's own live
+pinned arrangement) so the schemas bind to a real consumer and real record
+from day one; (2) record that the role/modality/data-class kits are
+admission-local net-new LiteralKits. Stage advances to decompose; next gate
+is the MAP draft and operator MAP review.
+
+
 ## 2026-08-17 — Align closed: assurance floor, requal matrix, disposition
 
 All three align questions ratified by the operator in one grilled round,

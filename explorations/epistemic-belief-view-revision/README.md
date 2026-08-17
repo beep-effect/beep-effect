@@ -2,13 +2,13 @@
 
 ## Status
 
-Stage: `shape`
+Stage: `decompose`
 Status: `active`
 
 Align closed 2026-08-17: verdict family + ownership law, `BeliefContentionKey`
 v1 (identity minus evidenceScope, qualifiers in, versioned), and on-demand
-delivery all ratified — see [`DECISIONS.md`](./DECISIONS.md). Next gate:
-operator review of the drafted [`BRIEF.md`](./BRIEF.md).
+delivery all ratified — see [`DECISIONS.md`](./DECISIONS.md). BRIEF ratified with
+amendments 2026-08-17; next gate: MAP draft + operator MAP review.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

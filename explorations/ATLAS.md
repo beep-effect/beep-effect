@@ -66,15 +66,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   single-user parity. First goal graduated:
   [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md).
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
-  shape-stage: align closed 2026-08-17 (three-tier identity-assurance floor;
-  conservative full-vs-bounded requalification matrix with sentinel
-  escalation; five-status immutable disposition, human-only supersession).
-  Next gate: operator review of the drafted BRIEF.
+  decompose-stage: BRIEF ratified with amendments 2026-08-17 (first consumer
+  = approval-gate disposition reference; first fixture = admit the repo's own
+  pinned arrangement; admission-local vocabularies). Next gate: MAP draft +
+  operator MAP review.
 - [`epistemic-belief-view-revision`](./epistemic-belief-view-revision/README.md) —
-  shape-stage: align closed 2026-08-17 (verdict-family names + ownership law;
-  `BeliefContentionKey` v1 = authority identity minus evidenceScope with
-  qualifiers in, versioned; on-demand replayable views, no materialization).
-  Next gate: operator review of the drafted BRIEF.
+  decompose-stage: BRIEF ratified with amendments 2026-08-17 (adds the
+  scope-wide EdgeAuthority read as the one server-side addition; as-of
+  queryability required of every policy input). Next gate: MAP draft +
+  operator MAP review.
 - **Gold-Intake cohort** (opened 2026-06-29, all at `research`-complete) — 13 new exploration
   packets reconciled from the 219-nugget gold-intake corpus; full matrix +
   provenance in [`_gold-intake/ROUTING.md`](./_gold-intake/ROUTING.md) /

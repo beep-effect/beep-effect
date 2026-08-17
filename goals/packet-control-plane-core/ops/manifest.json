@@ -61,11 +61,16 @@
     },
     {
       "id": "P3",
-      "name": "Yeet: PR to mergeable",
+      "name": "Remaining core rungs (risk tier, trace projection, fork repair)",
       "status": "pending"
     },
     {
       "id": "P4",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
       "name": "Close",
       "status": "pending"
     }

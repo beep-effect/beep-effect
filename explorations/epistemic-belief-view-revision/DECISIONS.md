@@ -1,5 +1,16 @@
 # Decisions
 
+## 2026-08-17 — BRIEF ratified with amendments; advance to decompose
+
+**Decision:** Operator signed off BRIEF.md with two amendments: (1) the
+sketch names the one server-side addition — a scope-wide EdgeAuthority read
+(all open lineages for org/matter at the two-axis cut), confirmed absent from
+the live repository interface; (2) a new rabbit hole requires every policy
+input to be as-of queryable or excluded from v1, and graduation must
+propagate the verdict-family ownership law to its owning surfaces. Stage
+advances to decompose; next gate is the MAP draft and operator MAP review.
+
+
 ## 2026-08-17 — Align closed: verdict family, contention key, on-demand views
 
 All three align questions ratified by the operator in one grilled round,

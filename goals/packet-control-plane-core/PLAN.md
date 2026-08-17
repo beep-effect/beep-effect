@@ -34,16 +34,27 @@ campaign. No fleet adoption, no blocking checks.
 **Exit:** this packet's own transitions flow through the preview path and the
 projection reports them truthfully.
 
-## P3 — Yeet: PR to mergeable
+## P3 — Remaining core rungs
+
+Only after the P1 proofs hold and P2 advisory self-hosting runs: risk-tier
+floor/override (the `PacketRiskTier` type and operator-only override event —
+tier *computation from change trees* stays in the gated design-gate
+candidate), the full trace projection, and the fork-repair plan surface. Each
+rung is a separate small PR; none may weaken the P1 proof fixtures.
+
+## P4 — Yeet: PR to mergeable
 
 `bun run beep yeet repair → verify → publish --pr → monitor` until
-`merge-ready: yes`.
+`merge-ready: yes` (per-rung; this phase is the terminal gate).
 
-## P4 — Close
+## P5 — Close
 
 `/reflect` closeout under `history/reflections/`; flip lifecycle in the same
 PR as final work. Fired downstream gates (candidates 2–4) reopen the parent
 exploration at decompose — they do not extend this goal.
+
+Also reuse, not reinvent: the explore check reports through the existing
+`goals doctor` finding/baseline shape rather than minting a new report type.
 
 ## Current blockers
 

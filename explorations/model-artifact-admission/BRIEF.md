@@ -1,6 +1,6 @@
 # Brief — Model Artifact Admission
 
-Status: DRAFT FOR OPERATOR BRIEF REVIEW 2026-08-17 (align closed same day).
+Status: OPERATOR-RATIFIED 2026-08-17 WITH AMENDMENTS (align closed same day).
 
 ## Problem
 
@@ -43,6 +43,12 @@ the professional runtime's existing approval gate can consume.
    scope, immutable records, human-only supersession, recorded expiry,
    two-axis as-of queries. Owned model-admission-local (`ClaimDisposition`
    is shape precedent, not a reusable type).
+6. **First consumer and fixture (amendment).** First intended consumer: the
+   professional runtime approval gate references an admission-disposition id
+   for the arrangement in use (wiring may land later; the reference contract
+   is named now). First fixture: admit the repo's own live pinned arrangement
+   (the Anthropic driver's pinned default plus its controlled components) so
+   every schema is proven against a real record on day one.
 
 ## Rabbit Holes
 
@@ -54,6 +60,10 @@ the professional runtime's existing approval gate can consume.
   "qualifies" is not an edge relation.
 - Building the evaluation harness inside this packet — it consumes frozen
   eval-plan revisions; authoring them is separate work.
+- Vocabulary centralization (amendment): the role/modality/data-class kits on
+  `restricted` are admission-local net-new LiteralKits — no reusable role
+  taxonomy exists in the agents domain, and the ratified ownership law
+  forbids centralizing them elsewhere.
 
 ## No-Gos
 

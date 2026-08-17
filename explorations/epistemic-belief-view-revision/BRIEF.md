@@ -1,6 +1,6 @@
 # Brief — Epistemic Belief View Revision
 
-Status: DRAFT FOR OPERATOR BRIEF REVIEW 2026-08-17 (align closed same day).
+Status: OPERATOR-RATIFIED 2026-08-17 WITH AMENDMENTS (align closed same day).
 
 ## Problem
 
@@ -38,7 +38,14 @@ authority read — no storage, no UI, no triage changes.
    derives from two recomputed revisions. Materialization is a later cache.
 5. **Verdict-family law (ratified).** The view consumes `SemanticStance`,
    `AnchorVerificationResult`, `SourceAuthorityAssessment`, dispositions —
-   and owns none of their semantics.
+   and owns none of their semantics. At graduation, the ownership law must be
+   propagated to its owning surfaces (the epistemic goals' SPECs or a
+   glossary entry) rather than remaining only in this packet's DECISIONS.
+6. **The one server-side addition (amendment).** `EdgeAuthorityRepository`
+   reads per `logicalKey` only; the engine needs a scope-wide read — all open
+   lineages for an organization/matter at (`validAt`, `knownAt`) — added to
+   the epistemic server behind the same half-open two-axis predicate. This is
+   the only authority-surface change in the appetite.
 
 ## Rabbit Holes
 
@@ -50,6 +57,9 @@ authority read — no storage, no UI, no triage changes.
   ledger.
 - Triage entanglement: unresolved candidates are a typed abstention input,
   never a review call or supersession path.
+- Non-bitemporal inputs (amendment): every policy input must itself be as-of
+  queryable at `knownAt`, or it is excluded from v1 policies — otherwise
+  byte-identical replay silently breaks.
 
 ## No-Gos
 

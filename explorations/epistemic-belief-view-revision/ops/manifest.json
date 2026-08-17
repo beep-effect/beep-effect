@@ -4,9 +4,9 @@
     "slug": "epistemic-belief-view-revision",
     "title": "Epistemic Belief View Revision",
     "status": "active",
-    "stage": "shape",
+    "stage": "decompose",
     "openQuestions": [
-      "Operator BRIEF review gate: does BRIEF.md correctly frame the problem, appetite, ratified sketch, rabbit holes, and no-gos before decompose?"
+      "Draft MAP.md (candidate goal packets, dependencies, capability composition, first vertical slice) for operator MAP review."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
