@@ -5,9 +5,11 @@ import {
   LAB_EXPORTS_END_MARKER,
   LAB_EXPORTS_START_MARKER,
 } from "@beep/repo-cli/commands/CreatePackage/internal/LabIdentitySegment";
+import * as RetiredNameRegistry from "@beep/repo-cli/commands/CreatePackage/internal/RetiredNameRegistry";
 import {
   decodeLabManifestJson,
   LAB_MANIFEST_FILENAME,
+  LABS_WORKSPACE_ROOT,
   LabManifest,
   LabManifestFromJsonString,
   RETIRED_REGISTRY_PATH,
@@ -174,6 +176,20 @@ const TestRootTypeScriptPlugins = [
   },
 ];
 
+// create-package runs `biome check --write` over the generated tree. Without a
+// root biome config the fixture falls back to biome's defaults — notably
+// indentStyle "tab" — so generated JSON lands tab-indented while the repo's
+// canonical renderer emits two spaces, and every tsconfig-sync comparison then
+// reports drift. Mirror the real root's formatter settings so the fixture
+// exercises the same formatting the repo does.
+const TestRootBiomeConfig = {
+  formatter: { enabled: true, lineWidth: 120, indentStyle: "space", indentWidth: 2 },
+  json: {
+    formatter: { indentStyle: "space", indentWidth: 2, trailingCommas: "none", lineWidth: 80 },
+    parser: { allowComments: true },
+  },
+} as const;
+
 const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootConfigOptions) {
   const path = yield* Path.Path;
 
@@ -198,6 +214,7 @@ const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootC
   yield* writeJsonFile(path.join(rootDir, "tsconfig.packages.json"), {
     references: A.map(options.references, (referencePath) => ({ path: referencePath })),
   });
+  yield* writeJsonFile(path.join(rootDir, "biome.json"), TestRootBiomeConfig);
   yield* writeSyncpackConfig(path.join(rootDir, "syncpack.config.ts"), options.syncpackSources);
 });
 
@@ -387,16 +404,19 @@ describe("create-package --lab", { concurrent: false }, () => {
             const manifest = decodeGeneratedPackageManifest(yield* readJsonFile(path.join(packageDir, "package.json")));
             expect(manifest.scripts.dev).toBe("portless web-lab.labs.beep next dev --turbopack");
             expectNoPackageCeremony(manifest);
+            // Exactly what the emitted templates import: @beep/repo-configs in
+            // next.config.ts, @beep/ui via postcss.config.mjs + globals.css.
+            // Anything further fails the required Knip context on a real lab.
             expect(manifest.dependencies).toMatchObject({
               next: "catalog:",
               react: "catalog:",
-              "@beep/identity": "workspace:^",
               "@beep/repo-configs": "workspace:^",
-              "@beep/schema": "workspace:^",
               "@beep/ui": "workspace:^",
-              "@beep/utils": "workspace:^",
-              effect: "catalog:",
             });
+            expect(manifest.dependencies?.["@beep/identity"]).toBeUndefined();
+            expect(manifest.dependencies?.["@beep/schema"]).toBeUndefined();
+            expect(manifest.dependencies?.["@beep/utils"]).toBeUndefined();
+            expect(manifest.dependencies?.effect).toBeUndefined();
 
             const labManifest = yield* decodeManifestAt(context, "web-lab");
             expect(labManifest.schemaVersion).toBe("lab-manifest/v1");
@@ -468,9 +488,10 @@ describe("create-package --lab", { concurrent: false }, () => {
               react: "catalog:",
               "react-dom": "catalog:",
               "@beep/ui": "workspace:^",
-              effect: "catalog:",
             });
             expect(manifest.dependencies?.next).toBeUndefined();
+            expect(manifest.dependencies?.effect).toBeUndefined();
+            expect(manifest.dependencies?.["@beep/identity"]).toBeUndefined();
 
             const labManifest = yield* decodeManifestAt(context, "graph-lab");
             expect(labManifest.purpose).toBe("Vite lab probe");
@@ -515,13 +536,16 @@ describe("create-package --lab", { concurrent: false }, () => {
             const manifest = decodeGeneratedPackageManifest(yield* readJsonFile(path.join(packageDir, "package.json")));
             expect(manifest.scripts.dev).toBe("portless probe-svc.labs.beep sh -c 'bun --watch src/main.ts'");
             expectNoPackageCeremony(manifest);
+            // src/Api.ts imports the identity accessor; main.ts imports
+            // platform-bun and effect. Nothing emitted imports @beep/schema or
+            // @beep/utils (the template `S` is `effect/Schema`).
             expect(manifest.dependencies).toMatchObject({
               "@beep/identity": "workspace:^",
-              "@beep/schema": "workspace:^",
-              "@beep/utils": "workspace:^",
               "@effect/platform-bun": "catalog:",
               effect: "catalog:",
             });
+            expect(manifest.dependencies?.["@beep/schema"]).toBeUndefined();
+            expect(manifest.dependencies?.["@beep/utils"]).toBeUndefined();
             expect(manifest.dependencies?.react).toBeUndefined();
             expect(manifest.devDependencies?.vite).toBeUndefined();
 
@@ -673,6 +697,42 @@ describe("create-package --lab", { concurrent: false }, () => {
   );
 
   it(
+    "refuses a non-lab package targeted into the labs root via --parent-dir",
+    () =>
+      Effect.runPromise(
+        withLabsFixture(LabsRootConfig, ({ fs, path, rootDir }) =>
+          Effect.gen(function* () {
+            // The inverse of the D5 guard: landing inside apps/labs without
+            // --lab would skip every lab construction rule (manifest, labs
+            // portless label, generated identity segment, ceremony exemptions)
+            // and leave a workspace the identity-registry lint calls misplaced.
+            const result = yield* runCreatePackageCommand([
+              "sneaky-lab",
+              "--type",
+              "app",
+              "--app-kind",
+              "vite",
+              "--parent-dir",
+              LABS_WORKSPACE_ROOT,
+              "--description",
+              "Lab root without --lab",
+            ]).pipe(
+              Effect.match({
+                onFailure: toFailureMessage,
+                onSuccess: () => "success",
+              })
+            );
+
+            expect(result).toContain(`is inside the ${LABS_WORKSPACE_ROOT} root`);
+            expect(result).toContain("--lab");
+            expect(yield* fs.exists(path.join(rootDir, "apps", "labs", "sneaky-lab"))).toBe(false);
+          })
+        )
+      ),
+    CreatePackageLabTestTimeoutMs
+  );
+
+  it(
     "gates every create on the retired-packages registry, dry-run included",
     () =>
       Effect.runPromise(
@@ -714,10 +774,49 @@ describe("create-package --lab", { concurrent: false }, () => {
             const dryRunOutput = A.join(A.map(yield* TestConsole.logLines, String), "\n");
             expect(dryRunOutput).toContain('[dry-run] Retired name: reusing "@beep/probe" (--reuse-retired-name)');
 
+            // A dry run must not mutate the registry.
+            const afterDryRun = yield* fs.readFileString(path.join(rootDir, RETIRED_REGISTRY_PATH));
+            expect(afterDryRun).toContain("@beep/probe");
+
             yield* runCreatePackageCommand(["probe", "--description", "Recreated probe", "--reuse-retired-name"]);
             expect(
               yield* fs.exists(path.join(rootDir, "packages", "tooling", "library", "probe", "package.json"))
             ).toBe(true);
+
+            // Sanctioned reuse restores the name's provenance: leaving the entry
+            // would leave the registry claiming a live package is retired, and
+            // would wedge the later delete-package retirement of that name.
+            const registryAfterCreate = yield* fs.readFileString(path.join(rootDir, RETIRED_REGISTRY_PATH));
+            expect(registryAfterCreate).not.toContain("@beep/probe");
+            const createOutput = A.join(A.map(yield* TestConsole.logLines, String), "\n");
+            expect(createOutput).toContain(`${RETIRED_REGISTRY_PATH}: removed the retired entry for "@beep/probe"`);
+          })
+        )
+      ),
+    CreatePackageLabTestTimeoutMs
+  );
+
+  it(
+    "leaves the retired registry untouched when the name is absent",
+    () =>
+      Effect.runPromise(
+        withLabsFixture(LabsRootConfig, ({ fs, path, rootDir }) =>
+          Effect.gen(function* () {
+            // The no-op path is unreachable through the command surface —
+            // create-package only calls the writer once it has established the
+            // name IS retired — so it is exercised directly. Absent names must
+            // not rewrite the file, or every sanctioned reuse would churn the
+            // registry's formatting for unrelated entries.
+            const registryPath = path.join(rootDir, RETIRED_REGISTRY_PATH);
+            yield* writeJsonFile(registryPath, {
+              packages: [{ name: "@beep/other", rationale: "Retired to keep historical changesets resolvable." }],
+            });
+            const before = yield* fs.readFileString(registryPath);
+
+            const removed = yield* RetiredNameRegistry.removeRetiredPackageName(rootDir, "@beep/absent");
+
+            expect(removed).toBe(false);
+            expect(yield* fs.readFileString(registryPath)).toBe(before);
           })
         )
       ),

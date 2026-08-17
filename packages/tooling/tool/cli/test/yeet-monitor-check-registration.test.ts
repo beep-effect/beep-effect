@@ -28,7 +28,7 @@ import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 const watchResult = (exitCode: number, output: string): RepoStepRunResult =>
   RepoStepRunResult.make({
     stepId: "monitor:02-pr-checks-watch",
-    commandText: "gh pr checks --watch",
+    commandText: "gh pr checks --watch --fail-fast",
     exitCode,
     output,
   });
@@ -68,7 +68,7 @@ describe("yeetCheckRegistration", () => {
       yeetCheckRegistration(
         RepoStepRunResult.make({
           stepId: "monitor:02-pr-checks-watch",
-          commandText: "gh pr checks --watch",
+          commandText: "gh pr checks --watch --fail-fast",
           exitCode: 1,
         })
       )
@@ -232,7 +232,7 @@ const monitorSteps = (cwd: string): ReadonlyArray<RepoPlanStep> => [
     label: "monitor:pr-checks:watch",
     phase: "monitor",
     command: "gh",
-    args: ["pr", "checks", "--watch"],
+    args: ["pr", "checks", "--watch", "--fail-fast"],
     cwd,
     scope: "repo",
     mutability: "readonly",

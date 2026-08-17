@@ -1,5 +1,13 @@
 # GOAL: Drain the active goal portfolio
 
+> **PAUSED 2026-08-17 — DO NOT EXECUTE.** This packet's lifecycle is `paused`
+> behind a revisit gate (exploration wrap-up complete AND
+> goals/packet-control-plane-core closed — see README.md). A `/goal` launch
+> of this file before the gate holds must stop here and report. The locked
+> queue below is stale and will be relocked from control-plane derived state
+> at revisit.
+
+
 Run one long-lived Claude Fable driver in this worktree until every queued slug is merged and
 `completed-retained` with evidence, then close this packet by final PR.
 

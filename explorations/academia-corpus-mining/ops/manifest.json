@@ -6,7 +6,7 @@
     "status": "parked",
     "stage": "align",
     "openQuestions": [
-      "Parked revival trigger: the operator triages the wave-2 routing proposals in the synthesis routing table; proposals never auto-enter the packet tree."
+      "Parked revival trigger: a new paper corpus wave lands in the machine-local academia-2026-07 research corpus (or a successor library)."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -15,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-07-25",
-    "updated": "2026-08-13"
+    "updated": "2026-08-17"
   }
 }

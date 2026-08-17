@@ -57,9 +57,7 @@ answer-annex fields, and the hypothesis-only status of the T3-F5 and
 T1-F10 retrieval claims →
 `research/02-drafting-episode-frame.md`. On top of both lanes, `RESEARCH.md`
 is authored as the canonical stage-1 synthesis before the packet advances to
-align; all three land together in PR 2. No client or pre-publication material
-touches any cloud model (standing OIP confidentiality rule); every Lane B
-source is public.
+align; all three land together in PR 2. Every Lane B source is public; no client material was used in this research.
 
 **Rationale:** The campaign corpus verified nine of the eleven nuggets, but
 the wedge's hardest boundaries — product-record authority vs projection,

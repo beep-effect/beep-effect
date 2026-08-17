@@ -37,7 +37,8 @@ read-aloud, cloud voice, and voice-to-voice remain later bets in the MAP.
 
 ## Solution Sketch
 
-**Posture:** local-first, privilege-safe, pipeline, desktop-first.
+**Posture:** local-first (for latency and offline dictation, not for
+compliance), pipeline, desktop-first. Hosted providers remain an option.
 
 ```
  push-to-talk ─▶ thin AudioWorklet capture ─▶ resample/PCM ─▶ local worker

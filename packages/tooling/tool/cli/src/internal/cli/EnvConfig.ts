@@ -20,14 +20,16 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { thunkFalse } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Config, ConfigProvider, Effect, FileSystem, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runToExit } from "../process/StepExec.ts";
+import { TurboCacheEnvironment, TurboCacheMode, turboCacheValueSourceFor } from "./TurboCache.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { TurboCacheValueSource } from "./TurboCache.ts";
 
 const $I = $RepoCliId.create("internal/cli/EnvConfig");
 
@@ -251,15 +253,55 @@ export const booleanEnvValue: {
 export const isUnresolvedSecretReference = (value: string | undefined): boolean =>
   value !== undefined && Str.startsWith("op://")(value);
 
+const OP_RUN_ARGUMENT_SEPARATOR = "--";
+
+const isBunxTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
+  command === "bunx" &&
+  pipe(
+    A.head(args),
+    O.exists((arg) => arg === "turbo")
+  );
+
+// `op run --env-file=.env -- bunx turbo ...` is still a turbo spawn: the
+// overrides below must reach it, or an op-wrapped lane silently loses the
+// mouse-capture guard and the fail-closed cache posture.
+const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
+  command === "op" &&
+  pipe(
+    A.findFirstIndex(args, (arg) => arg === OP_RUN_ARGUMENT_SEPARATOR),
+    O.map((index) => A.drop(args, index + 1)),
+    O.exists((childArgs) =>
+      pipe(
+        A.head(childArgs),
+        O.exists((childCommand) => isBunxTurbo(childCommand, A.drop(childArgs, 1)))
+      )
+    )
+  );
+
 /**
- * Compute the environment overrides applied when spawning `turbo` via `bunx`.
+ * Compute the environment overrides applied when spawning `turbo`, directly via
+ * `bunx` or wrapped in `op run`.
  *
  * **Details**
  *
  * Forces `TURBO_UI=false` so the child never enables its interactive TUI (which
  * can leave the terminal in mouse-capture mode when a task tears down), and
- * scrubs `TURBO_TOKEN`/`TURBO_TEAM` when they are unresolved `op://` references.
- * Returns an empty object for any non-turbo command.
+ * scrubs `TURBO_API`/`TURBO_TOKEN`/`TURBO_TEAM` when they are unresolved
+ * `op://` references. Returns an empty object for any non-turbo command.
+ *
+ * **Gotchas**
+ *
+ * Scrubbing a credential and leaving a remote cache posture in place would ask
+ * turbo to read a remote cache it has no usable token for, so a scrub also
+ * pins `TURBO_CACHE` to local-only. That is the environment half of failing
+ * closed; the argument half is `localOnlyTurboCacheArgs`, because a `--cache`
+ * flag outranks the environment variable.
+ *
+ * The scrub applies to a *direct* turbo spawn only. `op run` resolves `op://`
+ * references out of the environment it is handed — not just out of its
+ * `--env-file` — so scrubbing them from a wrapped spawn would delete the very
+ * references it exists to resolve, leaving the wrapped turbo with no
+ * credential at all.
  *
  * **Example** (Turbo and non-turbo overrides)
  *
@@ -281,20 +323,24 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
   command: string,
   args: ReadonlyArray<string>
 ) {
-  if (
-    command !== "bunx" ||
-    !pipe(
-      A.head(args),
-      O.exists((arg) => arg === "turbo")
-    )
-  ) {
+  const directTurbo = isBunxTurbo(command, args);
+  if (!directTurbo && !isOpRunTurbo(command, args)) {
     return {};
   }
 
+  // A wrapped spawn hands its environment to `op run`, which resolves the
+  // `op://` references in it. Scrubbing them here would strip the credential
+  // before it can be resolved, so a wrapped spawn takes the TUI guard only.
+  if (!directTurbo) {
+    return { TURBO_UI: "false" };
+  }
+
+  const turboApi = yield* configStringOption("TURBO_API");
   const turboToken = yield* configStringOption("TURBO_TOKEN");
   const turboTeam = yield* configStringOption("TURBO_TEAM");
-  const turboTokenValue = pipe(turboToken, O.getOrUndefined);
-  const turboTeamValue = pipe(turboTeam, O.getOrUndefined);
+  const unresolvedApi = isUnresolvedSecretReference(pipe(turboApi, O.getOrUndefined));
+  const unresolvedToken = isUnresolvedSecretReference(pipe(turboToken, O.getOrUndefined));
+  const unresolvedTeam = isUnresolvedSecretReference(pipe(turboTeam, O.getOrUndefined));
   return {
     // Spawned turbo inherits the parent TTY; its interactive TUI enables
     // crossterm mouse capture (DECSET ?1000/?1002/?1003/?1006) and, when a
@@ -302,10 +348,53 @@ export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(functi
     // the terminal — leaving it emitting mouse-motion reports and swallowing
     // Ctrl-C. Force turbo's stream renderer so it never enables mouse capture.
     TURBO_UI: "false",
-    ...(isUnresolvedSecretReference(turboTokenValue) ? { TURBO_TOKEN: undefined } : {}),
-    ...(isUnresolvedSecretReference(turboTeamValue) ? { TURBO_TEAM: undefined } : {}),
+    ...(unresolvedApi ? { TURBO_API: undefined } : {}),
+    ...(unresolvedToken ? { TURBO_TOKEN: undefined } : {}),
+    ...(unresolvedTeam ? { TURBO_TEAM: undefined } : {}),
+    ...(unresolvedApi || unresolvedToken || unresolvedTeam ? { TURBO_CACHE: TurboCacheMode.Enum.LocalOnly } : {}),
   };
 });
+
+const turboCacheValueSource = (name: string): O.Option<TurboCacheValueSource> =>
+  pipe(
+    configStringOptionSync(name),
+    O.map(Str.trim),
+    O.filter(Str.isNonEmpty),
+    O.map((value) => turboCacheValueSourceFor(isUnresolvedSecretReference(value)))
+  );
+
+/**
+ * Read the checkout's Turbo remote-read configuration from the ambient
+ * environment.
+ *
+ * **Details**
+ *
+ * Evaluated at call time, like every other reader here. Credential *values*
+ * never leave this function: `TURBO_API`, `TURBO_TOKEN`, and `TURBO_TEAM` are
+ * reduced to whether they are literal or still an unresolved `op://` reference,
+ * and only the non-secret `TURBO_CACHE` posture is carried through verbatim.
+ *
+ * **Example** (Read the ambient cache configuration)
+ *
+ * ```ts
+ * import { readTurboCacheEnvironmentSync } from "@beep/repo-cli/internal/cli/EnvConfig"
+ *
+ * console.log(typeof readTurboCacheEnvironmentSync().cache)
+ * ```
+ *
+ * @returns The remote-read configuration this checkout carries.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const readTurboCacheEnvironmentSync = (): TurboCacheEnvironment =>
+  TurboCacheEnvironment.make(
+    O.getSomesStruct({
+      api: turboCacheValueSource("TURBO_API"),
+      token: turboCacheValueSource("TURBO_TOKEN"),
+      team: turboCacheValueSource("TURBO_TEAM"),
+      cache: pipe(configStringOptionSync("TURBO_CACHE"), O.map(Str.trim), O.filter(Str.isNonEmpty)),
+    })
+  );
 
 /**
  * A subprocess step shape recognized by the local-env wrapper.

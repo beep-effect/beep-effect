@@ -84,8 +84,13 @@ New manifests must index launchers near the agent asset metadata:
 ```
 
 Some existing manifests still use compatibility schema names such as
-`initiative-manifest/v1`, `1.0.0`, or custom legacy shapes. Preserve existing
-wire shapes unless a dedicated manifest migration is planned.
+`initiative-manifest/v1`, `1.0.0`, or custom legacy shapes. A dedicated
+fleet migration **is planned** (2026-08-17): once
+`goals/packet-control-plane-core` lands, an adversarial quality loop
+migrates every non-`completed-retained` packet to this standard and zeroes
+the doctor baseline (see `docs/ROADMAP.md`, Machinery lane). Until that
+campaign runs, preserve existing wire shapes; do not hand-migrate
+piecemeal — partial migration is how majority-pattern gravity persists.
 
 ## Lifecycle
 

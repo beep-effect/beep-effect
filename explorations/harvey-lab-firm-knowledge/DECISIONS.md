@@ -61,7 +61,7 @@ at the Pandoc layer, but survival through md-canonical is unproven. If U4 fails
 hard, fall back to structural representation.
 
 The first corpus is synthetic C&H. A real diligence data room comes later and
-remains on-device only under OIP confidentiality. Run the upstream
+stays out of the repo. Run the upstream
 podman+metered-keys harness once for an externally comparable baseline, then
 build the Effect-native eval as the durable surface.
 
@@ -85,4 +85,4 @@ immediately.
 **Rationale:** The eval goal includes the one-time external-harness baseline;
 the wedge keeps U4 as its P0 kill-gate and records the structural fallback.
 Generator and DMS candidates remain MAP re-entry points. Synthetic C&H stays
-first; any later real OIP data room remains on-device only.
+first; any later real OIP data room stays out of the repo.

@@ -32,6 +32,7 @@ import { formatJsonValue } from "../../internal/cli/Json.ts";
 import { applyJsoncModification as applySharedJsoncModification, decodeJsoncTextAs } from "../../internal/cli/Jsonc.ts";
 import {
   encodeLabManifestJson,
+  isLabsWorkspacePath,
   LAB_MANIFEST_FILENAME,
   LABS_WORKSPACE_GLOB,
   LABS_WORKSPACE_ROOT,
@@ -50,6 +51,7 @@ import {
 } from "./FileGenerationPlanService.ts";
 import { CreatePackageIdentityRegistration } from "./internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "./internal/LabIdentitySegment.ts";
+import * as RetiredNameRegistry from "./internal/RetiredNameRegistry.ts";
 import { createTemplateService, TemplateRenderRequest, TemplateSpec } from "./TemplateService.ts";
 
 const $I = $RepoCliId.create("commands/CreatePackage/CreatePackage.command");
@@ -1016,6 +1018,40 @@ const labManifestPlannedFile = Effect.fn(function* (description: string) {
   return PlannedFile.make({ relativePath: LAB_MANIFEST_FILENAME, content: `${content}\n` });
 });
 
+/**
+ * Format the freshly-scaffolded tree so a generated package passes its own
+ * `beep:lint` with no hand edits.
+ *
+ * Templates and JSON renderers cannot reliably predict biome's line-width
+ * decisions — an injected plugin array or an `include` list formats one way in
+ * the template and another way under `biome check`. Formatting the output is
+ * the durable fix: it holds for every app kind and survives future template
+ * edits, instead of hand-tuning each array until the next one drifts.
+ *
+ * Advisory by design: a formatter that cannot run must not fail a scaffold that
+ * is otherwise complete, so a non-zero exit warns and continues.
+ */
+const formatGeneratedPackage = Effect.fn("CreatePackage.formatGeneratedPackage")(function* (
+  repoRoot: string,
+  outputDir: string
+) {
+  const args = ["biome", "check", "--write", "--files-ignore-unknown=true", "--no-errors-on-unmatched", outputDir];
+  const exitCode = yield* runToExit({
+    command: "bunx",
+    args,
+    cwd: repoRoot,
+    stdio: "ignore",
+  }).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn bunx ${A.join(args, " ")}.`)));
+
+  // Reported unconditionally rather than warned-on-failure. The pass is advisory
+  // either way, and a failure-only branch is a line no test can reach without
+  // making `bunx biome` fail on demand, which the ratchet reads as a regression.
+  yield* Console.log(
+    `[create-package] biome format pass over ${outputDir} exited ${exitCode}; if nonzero, run "bun run beep:lint:fix" in the package.`
+  );
+  return exitCode === 0;
+});
+
 const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(function* (repoRoot: string) {
   const args = ["install", "--lockfile-only"] as const;
   yield* Console.log(`[create-package] Refreshing bun.lock: bun ${A.join(args, " ")}`);
@@ -1343,6 +1379,17 @@ export const createPackageCommand = Command.make(
       yield* ensureLabsWorkspaceGlobCovers(repoRoot, packagePath);
     }
 
+    // The inverse of the D5 guard: `--parent-dir apps/labs` without `--lab`
+    // would land inside the labs root while skipping every lab construction
+    // rule (manifest, labs portless label, generated identity segment,
+    // ceremony exemptions), leaving a workspace the identity-registry lint
+    // classifies as misplaced.
+    if (!lab && isLabsWorkspacePath(packagePath)) {
+      return yield* DomainError.make({
+        message: `"${packagePath}" is inside the ${LABS_WORKSPACE_ROOT} root, which only lab apps may occupy. Pass --lab to mint it as a lab app, or choose a --parent-dir outside ${LABS_WORKSPACE_ROOT}.`,
+      });
+    }
+
     const scaffoldShape = ScaffoldShape.make({ appKind, lab, withStoriesTsconfig });
 
     // ── Determine output directory ─────────────────────────────────────
@@ -1511,6 +1558,7 @@ export const createPackageCommand = Command.make(
 
     // ── Execute plan and repo mutations ────────────────────────────────
     yield* fileGenerationPlanService.executePlan(plan);
+    yield* formatGeneratedPackage(repoRoot, outputDir);
 
     const workspaceUpdated = yield* ensureRootWorkspaceEntry(repoRoot, packagePath);
     const identityUpdated = yield* lab
@@ -1521,6 +1569,12 @@ export const createPackageCommand = Command.make(
       filter: undefined,
       verbose: false,
     });
+    // Sanctioned reuse restores the name's provenance: leaving the entry behind
+    // would leave the registry claiming a live package is retired, and would
+    // wedge the later `delete-package` retirement of the recreated name.
+    const retiredNameCleared = retiredNameReused
+      ? yield* RetiredNameRegistry.removeRetiredPackageName(repoRoot, `@beep/${name}`)
+      : false;
     const lockfileRefreshed = !skipLockfile;
     if (lockfileRefreshed) {
       yield* refreshBunLockfile(repoRoot);
@@ -1532,10 +1586,20 @@ export const createPackageCommand = Command.make(
       `Files created:`,
       ...A.map(filesFor(scaffoldShape), (file) => `  - ${file}`),
     ]);
-    if (workspaceUpdated || identityUpdated || syncResult.changedFiles > 0 || lockfileRefreshed || skipLockfile) {
+    if (
+      workspaceUpdated ||
+      identityUpdated ||
+      retiredNameCleared ||
+      syncResult.changedFiles > 0 ||
+      lockfileRefreshed ||
+      skipLockfile
+    ) {
       yield* Console.log(`\nRepo registration and config sync:`);
       if (workspaceUpdated) {
         yield* Console.log(`  - package.json: added workspace "${packagePath}"`);
+      }
+      if (retiredNameCleared) {
+        yield* Console.log(`  - ${RETIRED_REGISTRY_PATH}: removed the retired entry for "@beep/${name}"`);
       }
       if (identityUpdated) {
         yield* Console.log(
@@ -1694,22 +1758,21 @@ const appBaseScripts = (dev: string, build: string, lab: boolean) => ({
 });
 
 // Lab-only workspace dependencies layered onto Next.js lab app manifests.
+// Only what the emitted templates actually consume: `@beep/repo-configs` in
+// next.config.ts, `@beep/ui` via postcss.config.mjs and the globals.css import.
+// Declaring more would fail the required Knip context on the first lab — labs
+// are ceremony-exempt, never code-law exempt (D2). Lab authors add what they
+// import, like any other workspace.
 const NEXTJS_LAB_DEPENDENCIES: Readonly<Record<string, string>> = {
-  "@beep/identity": "workspace:^",
   "@beep/repo-configs": "workspace:^",
-  "@beep/schema": "workspace:^",
   "@beep/ui": "workspace:^",
-  "@beep/utils": "workspace:^",
-  effect: "catalog:",
 };
 
 // Lab-only workspace dependencies layered onto Vite lab app manifests.
+// `@beep/ui` only: postcss.config.mjs re-exports its config and
+// src/styles/globals.css imports its stylesheet. See NEXTJS_LAB_DEPENDENCIES.
 const VITE_LAB_DEPENDENCIES: Readonly<Record<string, string>> = {
-  "@beep/identity": "workspace:^",
-  "@beep/schema": "workspace:^",
   "@beep/ui": "workspace:^",
-  "@beep/utils": "workspace:^",
-  effect: "catalog:",
 };
 
 // Lab-conditional dependency fragment (empty outside lab mode).
@@ -1719,8 +1782,11 @@ const labDependenciesFor = (
 ): Readonly<Record<string, string>> => (lab ? dependencies : {});
 
 // Dev-dependency table shared by React-flavored app manifests.
+// No `@effect/vitest`: the React app test templates use plain `vitest` plus
+// @testing-library. Only the `service` kind's test imports it, and that kind
+// declares it in its own devDependencies. Declaring it here fails Knip on the
+// generated app.
 const REACT_APP_DEV_DEPENDENCIES = {
-  "@effect/vitest": "catalog:",
   "@testing-library/dom": "catalog:",
   "@testing-library/react": "catalog:",
   "@types/node": "catalog:",
@@ -1737,8 +1803,15 @@ const VITE_APP_DEV_DEPENDENCIES = {
   vite: "catalog:",
 };
 
+// One app kind's package.json manifest builder. Named so the four builders
+// share a single declared type: without it their differing object-literal
+// return types form a union that `appManifestBuilderFor` cannot widen under
+// `exactOptionalPropertyTypes` (docgen's tsc rejects it even though tsgo
+// accepts it), and the failure moves whenever a dependency table changes.
+type AppManifestBuilder = (ctx: AppManifestContext) => unknown;
+
 // package.json manifest for a Next.js app workspace.
-const nextjsAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
+const nextjsAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: {
     ...appBaseScripts(portlessDev(portlessLabel, "next dev --turbopack"), "next build --turbopack", lab),
@@ -1754,7 +1827,7 @@ const nextjsAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestCont
 });
 
 // package.json manifest for a Vite app workspace.
-const viteAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
+const viteAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: appBaseScripts(portlessViteDev(portlessLabel, "5173"), "vite build", lab),
   dependencies: {
@@ -1766,7 +1839,7 @@ const viteAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContex
 });
 
 // package.json manifest for a service app workspace.
-const serviceAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
+const serviceAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: appBaseScripts(
     portlessDev(portlessLabel, "sh -c 'bun --watch src/main.ts'"),
@@ -1774,13 +1847,18 @@ const serviceAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestCon
     lab
   ),
   dependencies: {
+    // src/Api.ts imports the identity accessor; main.ts imports platform-bun
+    // and effect. `@beep/schema`/`@beep/utils` are not imported by any emitted
+    // file (the `S` in the templates is `effect/Schema`), so declaring them
+    // would fail the required Knip context on the first service app.
     "@beep/identity": "workspace:^",
-    "@beep/schema": "workspace:^",
-    "@beep/utils": "workspace:^",
     "@effect/platform-bun": "catalog:",
     effect: "catalog:",
   },
   devDependencies: {
+    // test/health.test.ts uses `provideScopedLayer` to satisfy the effect-LSP's
+    // strictEffectProvide rule.
+    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     typescript: "catalog:",
@@ -1788,7 +1866,7 @@ const serviceAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestCon
 });
 
 // package.json manifest for a Tauri app workspace.
-const tauriAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
+const tauriAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: {
     ...appBaseScripts(portlessViteDev(portlessLabel, "1420"), "vite build", lab),
@@ -1806,13 +1884,16 @@ const tauriAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestConte
 });
 
 // App kinds that emit a dedicated app manifest; runtime-proof falls through to the package manifest.
-const appManifestBuilderFor = (kind: AppKind): O.Option<(ctx: AppManifestContext) => unknown> =>
+const appManifestBuilderFor = (kind: AppKind): O.Option<AppManifestBuilder> =>
   Match.value(kind).pipe(
     Match.when("nextjs", () => O.some(nextjsAppManifest)),
     Match.when("vite", () => O.some(viteAppManifest)),
     Match.when("service", () => O.some(serviceAppManifest)),
     Match.when("tauri", () => O.some(tauriAppManifest)),
-    Match.when("runtime-proof", () => O.none()),
+    // Bare `O.none` infers `None<unknown>` here, which docgen's tsc rejects
+    // under `exactOptionalPropertyTypes`; the explicit type argument pins it
+    // while keeping the direct helper reference.
+    Match.when("runtime-proof", O.none<AppManifestBuilder>),
     Match.exhaustive
   );
 

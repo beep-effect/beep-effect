@@ -1,0 +1,23 @@
+{
+  "sketch": "CadFigure is a PatentAsset child whose source of truth is the ingested .ai/.svg bytes, held in a new content-addressed local blob store so the Tauri sidecar can read the sheet back after intake (today it cannot). A GeometricWitness node stores only the SHA-256 of a STEP or DWG plus a three.js mesh handle from occt-import-js; a bitemporal epistemic edge `witnesses` points witness→figure with an asOf, never the reverse. An Effect Context.Service parses SVG/AI text into a NumeralOccurrence HashSet and the existing MCP graph exposes `CadFigure —hasNumeral→ N —refersTo→ Claim element` so a local agent can audit the 37 CFR 1.84(p) bijection without leaving the machine. Clicking a numeral in the React 19 sheet viewer highlights that id on every sibling figure and, only when a registration exists, the matching face on the witness mesh. Draft quality is enough: Tom snaps and audits, a human illustrator still finishes the sheet. Success is him opening a live privileged matter, seeing this month’s .ai as the figure, and treating the DWG as supporting geometry rather than the thing he draws from.",
+  "load_bearing_risk": "The live .ai/.svg sheets are spatially registrable to the matching STEP/DWG (same topology and views), not schematic or exploded art that merely depicts the same invention — if they will not overlay, numeral-snap onto a geometric witness is fiction and the inversion collapses to two unrelated file types sitting next to each other.",
+  "first_step": "This week, schema-first: add Effect v4 CadFigure + GeometricWitness codecs as PatentAsset children, a content-addressed local blob store that can retrieve original bytes after intake, and prove the link by ingesting one real .svg sheet plus its matching .dwg from the 837/552 corpus and reading both back by hash.",
+  "children": [
+    {
+      "text": "Extract the numeral bijection from SVG/AI text layers into the existing Claim graph and MCP-audit 37 CFR 1.84(p) locally.",
+      "why": "ClaimMaster/Patent Bots already do this but only on text-layer files inside their hostage workspace; Tom’s own .svg/.ai edited this month are the one place the legally operative figure already has a text layer the local graph can own."
+    },
+    {
+      "text": "Optional view-registration: Python HLR sidecar projects the witness, then a homography (or manual pin set) maps artwork numerals onto the mesh.",
+      "why": "This is the only path that makes the CAD witness more than a thumbnail; it stays a child feature, so a failed overlay does not block the figure node itself."
+    },
+    {
+      "text": "Bitemporal numeral identity: same numeral N can refer to part X in spec v3 and part Y after amendment, with edges versioned like the rest of the epistemic layer.",
+      "why": "Office-action practice is where numerals actually break; locking identity to the current sheet without asOf would make the graph lie the first time Tom amends."
+    },
+    {
+      "text": "Agent figure PLAN as a first-class node: disclosure → proposed views + numeral map attached to existing CadFigures, never a generated drawing.",
+      "why": "Nobody sells disclosure→plan+numeral map, it is 80% of the attorney’s figure thinking, and it only works once the artwork—not the CAD—is the node the plan cites."
+    }
+  ]
+}

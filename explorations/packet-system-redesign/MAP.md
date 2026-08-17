@@ -1,16 +1,38 @@
 # Map — Exploration & Goal Packet System Redesign
 
-Status: DRAFT FOR OPERATOR MAP REVIEW 2026-08-13.
+Status: RATIFIED BY OPERATOR 2026-08-17 (drafted 2026-08-13), with the two
+amendments and the promised-now/gated split recorded below.
 
-No candidate goal below has been created. Per the prospective-path rule, each
-is named by slug only until the operator ratifies this MAP and graduation
-creates the packet.
+## Ratification amendments (2026-08-17)
+
+- **Amendment A — live capability update.** Yeet's publish-time portfolio
+  index guard (PR #736: `PortfolioIndexGuard.ts`, `PublishScope.ts` under the
+  Yeet command tree) is a merged, live instance of the guarded-writer +
+  derived-projection-at-the-commit-boundary pattern candidates 1 and 3
+  propose. Cite and reuse it; it is no longer net-new territory.
+- **Amendment B — React candidate home.** The `apps/labs` substrate landed
+  (PR #732) after this MAP was drafted. If `packets-app-react-v2`'s gate ever
+  fires, its presumptive home is a lab app under `apps/labs`, resolving
+  D12's deferred-home question with the repo's own experimental-app
+  lifecycle; the package-creation command remains mandatory.
+- **Promised-now vs gated.** Only `packet-control-plane-core` is promised-now
+  and scaffolds at graduation. `packet-design-approval-gate` and
+  `packet-projection-migration` gate on the packet-core fold contract
+  stabilizing (first slice proven, advisory self-hosting running);
+  `packet-evidence-closure` gates on the self-hosting slice exposing real
+  friction; `packets-app-react-v2` keeps its existing KSA-v1 daily-use gate.
+  Fired gates reopen this exploration at `decompose` per the ratified
+  convention.
+
+Graduation status: `packet-control-plane-core` was created at ratification
+(2026-08-17); candidates 2–5 remain named by slug only (prospective-path rule)
+until their gates fire and reopen this packet at decompose.
 
 ## Candidate Goal Packets
 
 | Order | Proposed slug | Mission | Dependencies | Live capability composition |
 | --- | --- | --- | --- | --- |
-| 1 | `packet-control-plane-core` (not yet created) | Build the D8 single internal packet-core library in the existing Goals CLI area: versioned per-event CAS records, fork detection, deterministic fold, derived `furthestStage`/`resumeStage`, risk-tier floor/override, and trace projection; expose it first through guarded `beep goals` writers and a minimal read-only `beep explore --check`/doctor surface. | Current packet templates/manifests and existing Goals CLI; implemented with the current process, then self-hosted per D9. | Extend `packages/tooling/tool/cli/src/commands/Goals/Inventory.ts`, `Goals.schemas.ts`, `Doctor.ts`, `SetStatus.ts`, and `Goals.command.ts`: live inventory, schema decode, doctor/index, and the existing single writer. NET-NEW: exploration command/check, event schema/store/fold, fork repair, derived stages, tier computation, and packet-core tests. No new package unless the colocated core later proves a real extraction need. |
+| 1 | `packet-control-plane-core` (created 2026-08-17) | Build the D8 single internal packet-core library in the existing Goals CLI area: versioned per-event CAS records, fork detection, deterministic fold, derived `furthestStage`/`resumeStage`, risk-tier floor/override, and trace projection; expose it first through guarded `beep goals` writers and a minimal read-only `beep explore --check`/doctor surface. | Current packet templates/manifests and existing Goals CLI; implemented with the current process, then self-hosted per D9. | Extend `packages/tooling/tool/cli/src/commands/Goals/Inventory.ts`, `Goals.schemas.ts`, `Doctor.ts`, `SetStatus.ts`, and `Goals.command.ts`: live inventory, schema decode, doctor/index, and the existing single writer. NET-NEW: exploration command/check, event schema/store/fold, fork repair, derived stages, tier computation, and packet-core tests. No new package unless the colocated core later proves a real extraction need. |
 | 2 | `packet-design-approval-gate` (not yet created) | Add the fifth graduation readiness check: exact change tree, significant-symbol ledger, Light/Standard/Full routing, seeded DESIGN for Standard/Full, and protected docs-PR approval references whose subject digests are revalidated for staleness. | `packet-control-plane-core`; GitHub protected-review evidence supplied through the existing delivery workflow. | Reuse goal/exploration packet contracts, Yeet’s hosted PR/check evidence boundary, and architecture proof-manifest patterns. NET-NEW: change-tree/significant-symbol schemas, digest subjects, approval-reference events, staleness derivation, amendment events, and exploration graduation enforcement. |
 | 3 | `packet-projection-migration` (not yet created) | Migrate packet control state onto the event fold and generated projections: ATLAS wholesale, README status blocks, by-state tree, guarded status writes, and fleet adoption with this campaign as the D9 self-hosting pilot. | `packet-control-plane-core`; design-gate fields from `packet-design-approval-gate` where tier requires them; KSA Workstream D projection contract. | Reuse `packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts`, `Inventory.ts`, `Doctor.ts`, and `goals/knowledge-surface-automation/SPEC.md` Workstream D’s deterministic single-projector/JSON/Mermaid/static-HTML contract. NET-NEW: exploration projection/migration, generated ATLAS and README regions, by-state tree, golden event streams, upcasters, fork-repair flow, and advisory-to-blocking ratchet. |
 | 4 | `packet-evidence-closure` (not yet created) | Make landed-versus-closed derivable: schema-valid digest-bound evidence receipts, proof-cache keys, systemic OPPORTUNITIES receipts/roll-up, and the four observational flow metrics. | `packet-control-plane-core`; projection consumers from `packet-projection-migration`; lands after the initial self-hosting slice exposes real friction. | Reuse docgen proof-manifest verification/memoization in `packages/tooling/tool/cli/src/commands/Docgen/internal/Targets.ts` and `Local.ts`, the existing reflection/Yeet evidence surfaces, and per-packet `research/OPPORTUNITIES.md`. NET-NEW: canonical receipt schema, merged-commit subject sealing, landed/closed derivation, opportunity schema/roll-up/mechanical drafts, and approval-wait/parked-age/gate-wall-cache/amendment-rate projections. |
@@ -24,7 +46,7 @@ seeds; implementation may amend them only through the ratified amendment path.
 
 | Candidate | Exact change-tree envelope | Significant-symbol ledger |
 | --- | --- | --- |
-| `packet-control-plane-core` (not yet created) | Extend `packages/tooling/tool/cli/src/commands/Goals/{Goals.schemas.ts,Inventory.ts,Doctor.ts,SetStatus.ts,Goals.command.ts,index.ts}`; add a colocated `PacketCore/` internal module inside the Goals command tree (not yet created); add a minimal read-only `Explore/` command family in the repo CLI commands tree (not yet created); focused CLI tests only. | `PacketEvent`, `PacketEventId`, `PacketTip`, `PacketRevision`, `PacketEventStore`, `PacketFold`, `PacketDerivedState`, `PacketRiskTier`, `PacketTraceProjection`, guarded transition plan/write, exploration check result, fork verdict/repair plan. |
+| `packet-control-plane-core` (created 2026-08-17) | Extend `packages/tooling/tool/cli/src/commands/Goals/{Goals.schemas.ts,Inventory.ts,Doctor.ts,SetStatus.ts,Goals.command.ts,index.ts}`; add a colocated `PacketCore/` internal module inside the Goals command tree (not yet created); add a minimal read-only `Explore/` command family in the repo CLI commands tree (not yet created); focused CLI tests only. | `PacketEvent`, `PacketEventId`, `PacketTip`, `PacketRevision`, `PacketEventStore`, `PacketFold`, `PacketDerivedState`, `PacketRiskTier`, `PacketTraceProjection`, guarded transition plan/write, exploration check result, fork verdict/repair plan. |
 | `packet-design-approval-gate` (not yet created) | Add design/approval modules under the same packet-core; extend goal/exploration template and doctor/graduation contracts; seed `DESIGN.md` only for Standard/Full packet fixtures; add digest/staleness tests. | `PacketChangeTree`, `SignificantSymbol`, `DesignSubject`, `ApprovalReference`, `ApprovalFreshness`, `DesignAmendment`, risk-floor/override event, fifth-readiness verdict. |
 | `packet-projection-migration` (not yet created) | Extend the packet-core projector and Goals/Explore doctor/index surfaces; add generated-region support for `explorations/ATLAS.md` and packet README status blocks; add migration/upcaster/golden-stream fixtures and the generated by-state tree. | `PacketProjector`, `PacketProjection`, `sourceTip`, `projectorVersion`, `PacketUpcaster`, `ForkRepairPlan`, `AtlasProjection`, `ReadmeStatusProjection`, `PacketByStateTree`, adoption/migration plan. |
 | `packet-evidence-closure` (not yet created) | Add receipt/closure/opportunity/metric modules under packet-core; extend Yeet/reflection evidence adapters and packet doctor projections; add per-packet opportunity-schema and fleet-roll-up fixtures. | `EvidenceSubject`, `EvidenceReceipt`, `ProofCacheKey`, `LandedState`, `ClosedState`, `OpportunityReceipt`, `FlowMetricSnapshot`, merged-commit seal verifier. |

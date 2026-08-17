@@ -93,7 +93,7 @@ paths, filenames, local username, or corpus content behind these labels.
   bytes and this run's `provenance.jsonl`.
 - Archive policy: after verified salvage, move originals to
   `pre-consolidation-2026-07` with relative structure preserved; never delete.
-- Execution is local-only. Dynamic Codex workflows may handle paths, hashes,
+- Dynamic Codex workflows may handle paths, hashes,
   counts, and names, but must never see or log document content.
 - Repo quality gates use Yeet: `bun run beep yeet repair`,
   `bun run beep yeet verify`, and `bun run beep yeet publish --message "..."`.

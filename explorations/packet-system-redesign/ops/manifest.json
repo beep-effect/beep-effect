@@ -3,18 +3,16 @@
   "exploration": {
     "slug": "packet-system-redesign",
     "title": "Exploration & Goal Packet System Redesign",
-    "status": "active",
-    "stage": "decompose",
-    "openQuestions": [
-      "Operator MAP review gate: does MAP.md correctly name the goal boundaries, dependencies, capability composition, sequencing, and first vertical slice?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/packet-control-plane-core"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-08-10",
-    "updated": "2026-08-13"
+    "updated": "2026-08-17"
   }
 }

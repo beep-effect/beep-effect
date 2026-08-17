@@ -35,8 +35,7 @@ Normative here — four wedge-scoped (1–4) and six align (5–10), plus the tw
 decompose settlements (11–12):
 
 1. **Research depth** — two lanes (repo surfaces; bounded legal-theory frame
-   over public primary sources only), synthesized before align. No client or
-   pre-publication material touches any cloud model.
+   over public primary sources only), synthesized before align. All sources are public; no client material was used.
 2. **Dependency posture** — live source + SPEC-bound. Rung 1 composes only live
    code. All carried contradiction vocabulary is written against
    `goals/epistemic-contradiction-triage`'s SPEC as a binding contract: that

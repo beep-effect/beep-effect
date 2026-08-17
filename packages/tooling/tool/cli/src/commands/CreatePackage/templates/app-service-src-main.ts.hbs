@@ -8,7 +8,10 @@ import { ApiLive } from "./runtime/Layer.ts";
 // keeps the PORTLESS=0 diagnostic bypass usable.
 const main = Effect.fnUntraced(function* () {
   const port = yield* Config.port("PORT").pipe(Config.withDefault(8787));
-  yield* Layer.launch(
+  // `return yield*` keeps a definitive generator exit point: `Layer.launch`
+  // never succeeds, and the effect-LSP requires the explicit return for
+  // narrowing (TS377006 missingReturnYieldStar).
+  return yield* Layer.launch(
     HttpRouter.serve(ApiLive).pipe(Layer.provideMerge(BunHttpServer.layer({ hostname: "127.0.0.1", port })))
   );
 });

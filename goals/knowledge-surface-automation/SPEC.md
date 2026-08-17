@@ -55,8 +55,9 @@ infrastructure.
 - **E**: all four feature groups in v1 (bypass funnels, plan contract, lineage +
   provisioning, rematerialize + capsules).
 - **Spin-offs**: context-rent telemetry and bitemporal `--as-of` roadmap are captured as
-  `explorations/` packets, not workstreams here. The ASLR torture lane folds INTO
-  Workstream A.
+  `explorations/` packets, not workstreams here. The ASLR torture lane was folded into
+  Workstream A and then retired 2026-08-17 (`research/p3-hermetic-lane-decisions.md` H2);
+  its real control (nested spaced/Unicode checkout paths) moves to the H3 follow-up.
 
 ## Workstream A — clone-agnostic references
 
@@ -85,9 +86,15 @@ Reference-integrity architecture (incremental, behind `beep knowledge`):
 - `beep knowledge rename` is a governed migration: `--plan` emits a deterministic JSON
   artifact (move + reference rewrites + expiring tombstone alias) that review approves
   and CI replays.
-- Hermetic proof: clean-clone lane with emptied `$HOME`; plus an optional scheduled ASLR
-  torture variant (randomized clone depth, spaced/Unicode directory names, read-only
-  home) to flush hidden base-address assumptions.
+- Hermetic proof: delivered as code, not a lane (amended 2026-08-17,
+  `research/p3-hermetic-lane-decisions.md`). Probe children run under `makeHermeticEnv`;
+  byte-emitting git children pin canonical config at the call site (`gitArchiveArgs` +
+  `gitArchiveEnv`). The standing gate is the hostile-profile differential test in
+  `@beep/repo-cli`: archive bytes under each declared hostile profile must be
+  byte-identical to the clean profile, and every profile carries a negative-control
+  witness — the unpinned vector must differ, else the test fails as "profile inert".
+  The formerly specced clean-clone/empty-`$HOME` lane and optional ASLR variant are
+  dropped as vacuous (`research/p3-hermetic-lane-design.md`).
 
 First step (read-only): `beep knowledge refs --tree HEAD --json` inventories the current
 repo-relative and machine-local reference forms across agent-facing files and exercises

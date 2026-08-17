@@ -9,7 +9,8 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Spark
 
-519 research PDFs landed in the machine-local `research-7-24-26` download pile from Academia.edu
+519 research PDFs landed in the machine-local `research-7-24-26` download
+pile (**no longer present — see Corpus location below**) from Academia.edu
 interest recommendations — two waves (June 29: LLM agents, memory,
 metacognition, neuro-symbolic, document understanding; July 24–25: legal
 ontologies, AI-and-law). With five non-PDF papers that is 524 files,
@@ -17,11 +18,79 @@ normalized to **443 canonical papers** (the early "444 unique titles" figure
 was the preliminary filename estimate). Mine them against the repo's live
 work streams and land the intelligence here for later goal graduation.
 
+## Corpus location (verified 2026-08-17)
+
+The source PDFs were **not retained**. The machine-local `research-7-24-26`
+download pile was a transient acquisition site and no longer exists. Nothing is lost that this
+packet depends on: the durable artifact is the normalized library, and every
+paper's extracted text survived.
+
+**Durable library:** the machine-local `academia-2026-07` research corpus
+(out-of-repo, under the operator's research root)
+
+| Directory | Files | What it holds |
+| --- | ---: | --- |
+| `text/` | **443** | Full extracted text, one per canonical paper |
+| `meta/` | **443** | Per-paper metadata (sha256, pages, size, pdfTitle, extractStatus) |
+| `firstpages/` | **443** | First-page extracts used for triage |
+| `notes/` | 231 | Deep-read notes |
+| `synthesis/` | 10 | Tier-3 syntheses |
+| `state/` | 24 | Pipeline state and dispatch records |
+
+Verified counts, not claimed ones: **443/443 records report
+`extractStatus: "ok"`** — zero failures and zero sub-1k-char extractions. Text
+volume is 330 papers at 20k–100k chars, 49 above 100k, 64 at 1k–20k. The
+citable content of all 443 papers is intact.
+
+**Two real gaps, both non-blocking:**
+
+1. **No PDFs.** Figures, tables, and page layout are unrecoverable from the
+   text extracts. This only matters for a paper whose figures carry the
+   argument.
+2. **No DOIs or URLs were recorded** in any of the 443 meta records
+   (`srcPath` points at the dead download-pile path). Re-acquisition would be
+   title-based search per paper, not a link fetch.
+
+### Identifier backfill (2026-08-17)
+
+The original meta records carried no DOI or URL. A resolver pass over the 443
+first-page extracts recovered identifiers where the source PDFs had them
+embedded — ResearchGate and arXiv headers usually do; Academia.edu-native
+uploads usually do not.
+
+| Outcome | Papers |
+| --- | ---: |
+| DOI verified via OpenAlex (title, year, OA link) | 100 |
+| arXiv ID verified via OpenAlex | 50 |
+| Matched by title search (>= 0.72 similarity) | 30 |
+| Identifier extracted offline, unverified | 6 |
+| **No identifier anywhere on the first page** | **257** |
+| **Total carrying a DOI or arXiv id** | **186 / 443 (42%)** |
+
+Index: `resolved-index.jsonl` at the corpus root, one record
+per paper keyed by the same 12-char `id` used across `text/`, `meta/`, and
+`firstpages/`.
+
+**Open-access PDFs recovered:** 42 and counting, into
+the corpus's `pdf/<id>.pdf`, fetched from the
+`best_oa_location` OpenAlex reports. 101 papers had an OA PDF URL.
+
+**Why 257 resolve to nothing, honestly:** they are Academia.edu-native
+uploads, book chapters, and non-indexed preprints with no DOI printed on the
+page and no usable PDF metadata (only 6 of 443 records had a non-empty
+`pdfTitle`). Title-search against a truncated Academia filename is not
+reliable enough to assert a match, so those are left unresolved rather than
+guessed. Their extracted text is unaffected and remains complete.
+
+**Reproduce:** `resolve-identifiers.py` and `fetch-oa-pdfs.py` are stored in
+the library. Both are resumable and safe to re-run; OpenAlex throttles at
+roughly 10 req/s, so the resolver backs off on 429.
+
 ## Next Open Question
 
-Parked revival trigger: the operator triages the wave-2 routing proposals in
-the external synthesis routing table. Proposals never auto-enter the packet
-tree.
+Parked revival trigger: a new paper corpus wave lands in the machine-local
+academia-2026-07 research corpus (or a successor library). The wave-2 routing
+triage completed 2026-08-17 — all 14 proposals dispatched.
 
 ## Read This First
 
@@ -35,6 +104,16 @@ tree.
 8. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-08-17: wave-2 routing TRIAGED (operator). All ten attach-to/extend
+  proposals routed as dated notes (completed-retained targets receive
+  re-entry notes; `identity-iri-fold` retargeted to `identity-iri-fibered`);
+  all four proposed explorations spawned parked-at-capture
+  (`legal-inference-policy`, `ontology-curation-governance`,
+  `evidence-source-policy-calibration`, `ontology-lifecycle-qa`). Same day:
+  identifier backfill recovered 186/443 DOIs/arXiv ids and OA PDFs into the
+  library (`resolved-index.jsonl`). Packet re-parked; new trigger = a new
+  corpus wave lands.
 
 - 2026-08-13: wave 2 EXECUTED. The approved “97 legal-NLP/extraction papers”
   count was aggregate-only and largely consumed by July wave-1 deep reads

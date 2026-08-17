@@ -124,6 +124,13 @@ be closed, not tolerated.
   config instead of force-injecting `--cache=local:rw` (`Quality/Tasks.ts:481-489`); op-run env
   for all Turbo steps; fail closed to local-only. Template applied to every `../beep-effect*`
   checkout. `.env.example` + operator doc updated.
+  **Acceptance boundary (decision note, 2026-08-17, ratified at P1 closeout):** "fail closed to
+  local-only" covers configuration completeness (any missing/blank quad member, any unsupported
+  cache mode, explicit argv, CI posture) and 1Password *session* availability — all shipped in
+  #743 and matrix-tested. It does **not** cover per-reference *resolvability*: a live `op` session
+  holding a stale `op://` reference still hard-fails the wrapped lane, because probing every
+  reference needs a cached subprocess check that deserves its own review. That remainder is
+  tracked as C6 (deferred out of #743 deliberately) and is the acceptance target there, not here.
 - **C2 PR remote reads.** Reopen the #696/CSF-014 decision explicitly: same-repo PRs get
   `remote:r` (the Lambda authorizer was built for untrusted reads; fork PRs stay local-only) —
   or a funded Actions-cache fallback seed if the security ruling stands. Operator sign-off
@@ -139,6 +146,53 @@ be closed, not tolerated.
   eligible-remote-hit rate, forced/disabled excluded, p50/p95 lane wall time by cache mode.
   Then de-fragment keys (stop hashing per-clone `.env*` globally, localize story globs) with
   before/after probes. Prior audit: 24% hits, 93.6% of misses in all-miss (cold/forced) groups.
+  **Metric definition (locked 2026-08-17, from C1's first measured run — do not build the
+  dashboard on the naive ratio):** count remote hits on the **first cold lane touching each
+  task**, never remote/attempted across a whole proof. A remote restore lands in the local cache,
+  so every later lane touching the same task scores a *local* hit — one remote read can be counted
+  remote exactly once, and the denominator therefore punishes success. C1's proof measured raw
+  whole-proof counts of attempted=528, local-hit=312, remote-hit=60, miss=156 — recorded here
+  only to demonstrate the distortion, never as rates: any percentage computed over that 528 is
+  the forbidden denominator, and no first-cold-lane accounting exists for this run to compute the
+  real metric from. The honest evidence was a single lane read as a lane: lint at 30/31
+  `source: REMOTE` on artifacts never built in that worktree. Two further
+  cautions from the same run: `local-hit` is **not attributable** (a prior local run populates the
+  same closure and is indistinguishable after the fact), and hosted lane wall-clock is confounded
+  by #740's `filter: blob:none` checkout change, which is unrelated to cache posture. Correctness
+  tripwire worth keeping in the dashboard: tasks of a package whose source the branch changed must
+  be misses — a hit there means a key that cannot see the edit.
+- **C6 op-run reference resolvability.** C1 leaves the degrade-to-local-only contract unmet for
+  one case: `op run` fails hard when any `op://` reference in scope cannot be resolved, while
+  `canUseLocalEnv` probes only `op whoami` — session alive, references unverified. A stale
+  reference anywhere in `.env` therefore fails the lane instead of degrading it. Pre-existing
+  (the root build step has carried `useLocalEnv` all along), but C1 widens it from one step to
+  every cacheable Turbo step in an `op://`-configured checkout. Fix: probe reference
+  resolvability before wrapping, cache the verdict per run (not per step — the probe is a
+  subprocess), and fall back to an unwrapped local-only spawn on failure. Deferred out of C1
+  deliberately: it changes shared `canUseLocalEnv` semantics that B1 also touches, and its
+  caching deserves its own review. Cannot affect a checkout whose credentials are literal.
+- **C7 The Turbo local-fallback cache is never populated, on any event.** Verified at source
+  2026-08-17; noticed by a sibling session during lane-cost auditing, re-derived here, then
+  **corrected by the #747 review wave** — the first published mechanism claimed build was "the
+  only PR lane with a hit chance," which was wrong three ways, so this is the replacing account.
+  The pieces: (1) PR events are tokenless by design — `check.yml:130-133` resolve
+  `TURBO_API`/`TURBO_TOKEN`/`TURBO_TEAM` to `''` and `TURBO_CACHE` to `local:rw` unless
+  `github.event_name == 'push'`, and `ci-runner-security.test.ts` pins those expressions.
+  (2) The fallback **restore** (`setup-monorepo-ci/action.yml:95`) runs on every tokenless lane,
+  and its `restore-keys` carry a job-agnostic prefix (`:103-105`) — the fallback is a shared pool,
+  not job-isolated. (3) The fallback **save** (`:124-130`) requires `cache-write == 'true'` AND an
+  empty `TURBO_TOKEN`, and runs **inside setup, before the lane executes** — so even where it
+  fires it can only snapshot a pre-lane `.turbo/cache`. (4) The sole `cache-write: "true"` job,
+  build (`:653`), is `if: github.event_name == 'push'` (`:622`) — not a PR lane — and on push it
+  holds `TURBO_TOKEN`, which disables the fallback save. Net: with remote credentials configured,
+  **no job on any event ever writes the local fallback**, and every tokenless (PR) lane restores
+  from a pool nothing populates. Fix shape (needs an operator decision note on actions/cache
+  storage cost first): a **post-lane** save step — the in-setup save is structurally unable to
+  capture lane outputs — on some cheap donor lane(s), writing the shared-prefix key PR restores
+  already match; PR lanes stay tokenless throughout. Corollary: lane-timing censuses since #696
+  have no valid local-fallback hit rates at all. Stable citations are this item and shared memory
+  `coverage-ratchet-treadmill-and-ci-cold-cache.md` §"PR turbo lanes are ~100% cold" — not the PR
+  the finder happened to be working in.
 
 ## Workstream D — Concurrency: install the gate the profile describes
 

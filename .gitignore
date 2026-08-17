@@ -37,6 +37,7 @@ service-account*.json
 .firecrawl/
 # Client
 stats.html
+map.html
 .env.tmp
 .aider*
 # Turborepo

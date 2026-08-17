@@ -62,7 +62,7 @@ or digest-computation behavior into provenance or langextract.
 
 1. The six-week three-goal appetite belongs to the full program. This first
    goal protects the invariant: cut breadth or ergonomics before exact-source
-   equality, local-only privilege safety, or fail-closed behavior.
+   equality or fail-closed behavior.
 2. P0 must execute the deferred fixture spike over surrogate pairs, combining
    marks, ligatures, curly quotes, collapsed whitespace, duplicate occurrences,
    page boundaries, and source drift. Its executable result locks conversion
@@ -107,7 +107,7 @@ The exploration retains the full rationale and rejected options. These
 | 2026-07-14 | Port/reimplement the later engine in Effect over existing law-practice values; do not depend on `eyecite-js`. | [`Q1 LOCKED`](../../explorations/citation-grounding-hallucination-guard/DECISIONS.md#q1-locked-build-or-adopt-the-citation-extraction-engine) |
 | 2026-07-14 | Split the program into generic substrate, legal extraction/resolution, and ground-before-cite integration; matter-wall enforcement remains separate. | [`Q2 LOCKED`](../../explorations/citation-grounding-hallucination-guard/DECISIONS.md#q2-locked-what-is-the-program-boundary) |
 | 2026-07-14 | Build verified-span-first from `GroundedExtraction[]`; exact raw-slice evidence must fail closed before parser coupling. | [`Q3 LOCKED`](../../explorations/citation-grounding-hallucination-guard/DECISIONS.md#q3-locked-what-is-the-first-vertical-slice) |
-| 2026-07-14 | Keep v1 local-only; privileged text never leaves the box and hosted enrichment cannot establish grounding. | [`Q4 LOCKED`](../../explorations/citation-grounding-hallucination-guard/DECISIONS.md#q4-locked-may-v1-send-text-to-courtlistener) |
+| 2026-07-14 (language revised 2026-08-17) | Hosted enrichment cannot *establish* grounding — grounding requires an exact local source slice. Provider use for other steps is configuration. | [`Q4 LOCKED`](../../explorations/citation-grounding-hallucination-guard/DECISIONS.md#q4-locked-may-v1-send-text-to-courtlistener) |
 | 2026-07-14 | Place verified-anchor modeling in provenance and normalization/straddle mechanics in langextract; legal vocabulary stays in law-practice. | [`Q5 LOCKED`](../../explorations/citation-grounding-hallucination-guard/DECISIONS.md#q5-locked-where-do-the-capabilities-live) |
 | 2026-07-14 | Keep durable law-practice bookkeeping separate from hosted wire statuses; persist `NO_CITATION` as a negative attempt with no entity. | [`Q6 LOCKED`](../../explorations/citation-grounding-hallucination-guard/DECISIONS.md#q6-locked-how-are-durable-and-transient-resolution-states-modeled) |
 | 2026-07-14 | Locate with bounded normalization, emit raw, retain source digest/version, use half-open UTF-16, and fail ambiguous occurrences closed. | [`Q7 LOCKED`](../../explorations/citation-grounding-hallucination-guard/DECISIONS.md#q7-locked-what-counts-as-verbatim-grounding) |

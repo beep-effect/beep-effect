@@ -191,7 +191,7 @@ const generatedComposers = $I.compose(
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
-const generatedLabComposers = {};
+const generatedLabComposers = $I.compose("trustgraph-workbench");
 // GENERATED LAB COMPOSERS END
 
 const composers = {
@@ -201,6 +201,24 @@ const composers = {
 };
 
 // GENERATED LAB EXPORTS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
+
+/**
+ * Identity composer for `@beep/trustgraph-workbench`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts
+ * import { $TrustgraphWorkbenchId } from "@beep/identity"
+ *
+ * const id = $TrustgraphWorkbenchId.make("TrustgraphWorkbench")
+ * void id
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $TrustgraphWorkbenchId: Identity.IdentityComposer<"@beep/trustgraph-workbench"> =
+  composers.$TrustgraphWorkbenchId;
 // GENERATED LAB EXPORTS END
 
 // --- foundation ---
