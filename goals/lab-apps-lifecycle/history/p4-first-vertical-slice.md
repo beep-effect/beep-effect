@@ -89,9 +89,35 @@ What remained was regenerated-baseline drift under `standards/`, reverted with
 
 That drift was **not** probe removal. Neither `HEAD` nor the working copy
 mentions `round-trip-probe` anywhere under `standards/` — the probe was minted
-after `HEAD` and never appeared in a committed baseline — yet the interrupted
-regeneration rewrote six files by 23,007 insertions / 26,176 deletions, a net
-loss of ~3,169 lines dominated by `jsdoc-documentation.inventory.jsonc`.
+after `HEAD` and never appeared in a committed baseline — yet the regeneration
+rewrote six files by 23,007 insertions / 26,176 deletions, a net loss of ~3,169
+lines dominated by `jsdoc-documentation.inventory.jsonc`.
+
+### 4b. Re-measured after PR review — the default path *fails*
+
+Review of PR #756 correctly objected that the section above proved a phase on a
+delete that never finished. Re-run with no timeout ceiling, the default command
+**exited 1 on its own after 718s**:
+
+| run | outcome | `standards/` drift |
+| --- | --- | --- |
+| 1 (600s ceiling) | killed mid-regeneration | 6 files, +23,007 / −26,176 |
+| 2 (no ceiling) | **exited 1 after 718s** | 7 files, +23,304 / −26,354 |
+
+Two conclusions, both replacing weaker claims made above:
+
+1. **The drift is deterministic**, not interrupt damage — the two runs match to
+   within a few dozen lines.
+2. **The failure is structural, not duration.** The `coverage-baseline` rebuild
+   runs the repo-wide coverage suite; a pre-existing unrelated test fails there
+   (`@beep/wink` — `corpus "missing-corpus" does not exist`, reproducible with
+   no delete in play) and fails the delete. Deleting one leaf package is
+   coupled to every other package's tests passing, and the registration work
+   completes first, so the command destroys and then reports failure.
+
+A third finding came from attempting the re-run at all: `delete-package` now
+refuses with `REFUSE [packet-claim/soft]` because six lines of *this file* name
+the probe. Recording the proof makes the proof unrepeatable (ledger receipt 11).
 
 ## 5. Doctor
 
@@ -111,9 +137,24 @@ tree are in `SPEC.md`, where the slice itself is specified.
 
 ## Verdict
 
-The slice passes. Glob membership, identity add/remove, tsconfig-sync
+**The slice passes on the SPEC's stated bar, with baseline regeneration
+excluded from the proof.** Glob membership, identity add/remove, tsconfig-sync
 reconstruction, lockfile refresh, the portless labs route, and residue
-detection were each exercised in one loop and each produced evidence. The one
-defect the loop surfaced is operational rather than structural: an unscoped
-delete's baseline regeneration is slower than a ten-minute ceiling and
-contaminates `standards/` when interrupted.
+detection were each exercised in one loop and each produced evidence; the
+deleted-target doctor is green and the tree is clean.
+
+Read that scope precisely, because §4b narrows it:
+
+- **Proven:** the delete's registration work with `--skip-baselines`
+  semantics, plus doctor and a clean tree.
+- **Not proven, and currently unprovable:** full baseline regeneration. A2's
+  regenerated-baselines clause is waived for lab targets — see `SPEC.md`'s
+  evidence table, which says so explicitly.
+
+The defect the loop surfaced is **structural, not operational**. An earlier
+draft of this file called it "slower than a ten-minute ceiling"; that was
+wrong, and PR review caught it. The default `delete-package` cannot complete on
+a tree with any failing test anywhere, because its baseline step runs the
+repo-wide coverage suite — and it removes the package before discovering that.
+Tracked as ledger receipt 9, with receipts 3 (half-deleted state) and 11
+(evidence blocks re-proof) adjacent.
