@@ -10,6 +10,14 @@
  * transition on stdout. Prose for the operator goes to stderr, so stdout stays
  * a machine surface a consumer can pipe line-by-line into a decoder.
  *
+ * The stream is also the backpressure writer: after every poll the inbox is
+ * *converged* to the snapshot — each failing check dispatches through
+ * `Remediation` on the tick that observed it, appending a failure capsule and
+ * advancing the wave record, with deterministic capsule ids making the
+ * convergence idempotent. A head change supersedes the wave before the new
+ * push's snapshot converges, and a zero-check snapshot inside the
+ * registration window is polled through rather than believed.
+ *
  * The collector's schemas are deliberately minimal — the watch needs the head,
  * the PR state, mergeability, check names with raw bucket/state strings, and
  * thread resolution. Yeet status owns the richer shapes; duplicating its deep
@@ -31,15 +39,19 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Console, DateTime, Duration, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { NO_CHECKS_REPORTED } from "./MonitorChecks.ts";
+import { dispatchYeetCheckFailure, supersedeYeetDispatchState } from "./Remediation.ts";
 import {
   classifyYeetCheckOutcome,
   countYeetWatchFailures,
   diffYeetWatchSnapshots,
   renderYeetWatchEventLine,
+  YeetCheckOutcome,
   YeetCheckSignal,
   YeetWatchCheck,
   YeetWatchDiffInput,
@@ -50,6 +62,7 @@ import {
   YeetWatchThread,
   yeetWatchEndReason,
 } from "./WatchStream.ts";
+import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetWatchEvent } from "./WatchStream.ts";
@@ -61,6 +74,7 @@ class WatchPullRequestView extends S.Class<WatchPullRequestView>($I`WatchPullReq
     headRefOid: S.NonEmptyString,
     id: S.NonEmptyString,
     mergeable: S.NullOr(S.String),
+    number: S.Finite,
     state: S.String,
   },
   $I.annote("WatchPullRequestView", {
@@ -71,11 +85,13 @@ class WatchPullRequestView extends S.Class<WatchPullRequestView>($I`WatchPullReq
 class WatchCheckRow extends S.Class<WatchCheckRow>($I`WatchCheckRow`)(
   {
     bucket: S.String,
+    link: S.NullOr(S.String),
     name: S.String,
     state: S.String,
+    workflow: S.NullOr(S.String),
   },
   $I.annote("WatchCheckRow", {
-    description: "One raw gh pr checks row: name plus unclassified bucket and state strings.",
+    description: "One raw gh pr checks row: name, unclassified bucket/state strings, job link, and workflow.",
   })
 ) {}
 
@@ -107,16 +123,23 @@ const decodeThreadsDocument = S.decodeUnknownEffect(S.fromJsonString(WatchThread
 const watchThreadsQuery =
   "query($id:ID!){node(id:$id){... on PullRequest{reviewThreads(first:100){nodes{id isResolved}}}}}";
 
+// gh renders an absent link or workflow as "" in some check sources (plain
+// commit statuses); the domain speaks null for "the record has no such field".
+const presentOrNull = (value: string | null): string | null =>
+  P.isNotNull(value) && Str.isNonEmpty(value) ? value : null;
+
 /**
  * Collect one typed snapshot of the current branch's pull request.
  *
  * **Details**
  *
  * Three reads, same argv surfaces yeet status uses: `gh pr view` for identity
- * and mergeability, `gh pr checks --json name,state,bucket` for the rollup,
- * and one GraphQL thread query for resolution states. Raw bucket/state strings
- * classify into the closed outcome domain at this boundary, so everything
- * downstream speaks {@link YeetWatchSnapshot}.
+ * and mergeability, `gh pr checks --json name,state,bucket,link,workflow` for
+ * the rollup, and one GraphQL thread query for resolution states. Raw
+ * bucket/state strings classify into the closed outcome domain at this
+ * boundary, and each check keeps its own record fields (link, workflow, raw
+ * signal) so a failure capsule can derive from the failing check's record, so
+ * everything downstream speaks {@link YeetWatchSnapshot}.
  *
  * A PR with zero checks yet is returned as-is; the caller decides whether that
  * ends the watch. Only `gh pr checks`' "no checks reported" exit reads as an
@@ -157,7 +180,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
 ): Effect.fn.Return<YeetWatchSnapshot, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   const viewResult = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "view", "--json", "id,state,mergeable,headRefOid"],
+    ["pr", "view", "--json", "id,number,state,mergeable,headRefOid"],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to read the pull request for yeet watch.")));
   if (viewResult.exitCode !== 0) {
@@ -172,7 +195,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
 
   const checksResult = yield* runRepoCommandCapture(
     "gh",
-    ["pr", "checks", "--json", "name,state,bucket"],
+    ["pr", "checks", "--json", "name,state,bucket,link,workflow"],
     context.repoRoot
   ).pipe(Effect.mapError(YeetCommandError.new("Failed to read PR checks for yeet watch.")));
   if (checksResult.exitCode !== 0 && !NO_CHECKS_REPORTED.test(checksResult.output)) {
@@ -205,14 +228,19 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   );
 
   return YeetWatchSnapshot.make({
-    checks: A.map(checkRows, (row) =>
-      YeetWatchCheck.make({
+    checks: A.map(checkRows, (row) => {
+      const signal = YeetCheckSignal.make({ bucket: row.bucket, state: row.state });
+      return YeetWatchCheck.make({
         name: row.name,
-        outcome: classifyYeetCheckOutcome(YeetCheckSignal.make({ bucket: row.bucket, state: row.state })),
-      })
-    ),
+        outcome: classifyYeetCheckOutcome(signal),
+        link: presentOrNull(row.link),
+        signal,
+        workflow: presentOrNull(row.workflow),
+      });
+    }),
     headSha: view.headRefOid,
     mergeable: view.mergeable ?? "UNKNOWN",
+    prNumber: view.number,
     state: view.state,
     threads: A.map(threadNodes, (node) => YeetWatchThread.make({ id: node.id, isResolved: node.isResolved })),
   });
@@ -226,25 +254,119 @@ const emitWatchEvent = (event: YeetWatchEvent): Effect.Effect<void, YeetCommandE
     Effect.flatMap(Console.log)
   );
 
+// Converge the inbox to the snapshot: dispatch every check it reports
+// failing, passing each failing check's own record — never a name to
+// re-resolve, because a rollup can carry two same-named checks. Row ids are
+// deterministic and the wave record drops known ids as duplicates, so running
+// this on every tick is idempotent — which is also the retry path for a
+// capsule whose append failed while its red stayed steady.
+const convergeYeetWatchDispatch = (
+  context: RepoRunContext,
+  snapshot: YeetWatchSnapshot,
+  at: string
+): Effect.Effect<void, never, FileSystem.FileSystem | Path.Path> =>
+  Effect.forEach(
+    A.filter(snapshot.checks, (check) => YeetCheckOutcome.is.fail(check.outcome)),
+    (check) => dispatchYeetCheckFailure(context.repoRoot, snapshot, check, at),
+    { discard: true }
+  );
+
+// How many consecutive zero-check polls the watch sits through before it
+// believes an empty rollup. GitHub registers a push's checks a few seconds
+// after gh starts answering "no checks reported"; ending the watch on that
+// window would report a green settle for a wave whose checks never ran. Ten
+// polls at the 10s interval ≈ the ~95s patience the classic monitor's
+// registration backoff (MonitorChecks) grants the same gap.
+const YEET_WATCH_REGISTRATION_PATIENCE = 10;
+
+// Emit the terminal row and hand it back as the stream's return value.
+const emitWatchEnded = Effect.fn("Yeet.emitWatchEnded")(function* (
+  snapshot: YeetWatchSnapshot,
+  reason: YeetWatchEndReason
+) {
+  const ended = YeetWatchEnded.make({
+    at: yield* isoNow,
+    failing: countYeetWatchFailures(snapshot),
+    headSha: snapshot.headSha,
+    reason,
+  });
+  yield* emitWatchEvent(ended);
+  return ended;
+});
+
+// A zero-check OPEN snapshot inside the registration window is not a verdict:
+// gh answers "no checks reported" for seconds after a push, and believing it
+// would end the watch green while the wave's checks are about to run.
+// Merged/closed endings pass through regardless.
+const watchTickEnd = (snapshot: YeetWatchSnapshot, emptyPolls: number): O.Option<YeetWatchEndReason> =>
+  O.filter(
+    yeetWatchEndReason(snapshot),
+    (reason) =>
+      !(
+        YeetWatchEndReason.is["all-terminal"](reason) &&
+        A.isReadonlyArrayEmpty(snapshot.checks) &&
+        emptyPolls <= YEET_WATCH_REGISTRATION_PATIENCE
+      )
+  );
+
+// One post-sleep tick: poll, emit the diff, supersede on a head change, and
+// converge the inbox. `None` means the poll itself failed and the stream must
+// end as a typed poll-error.
+const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
+  context: RepoRunContext,
+  prev: YeetWatchSnapshot,
+  emptyPolls: number
+) {
+  const polled = yield* collectYeetWatchSnapshot(context).pipe(
+    Effect.map(O.some),
+    Effect.catch((error) =>
+      Console.error(`[yeet] watch poll failed: ${error.message}`).pipe(Effect.as(O.none<YeetWatchSnapshot>()))
+    )
+  );
+  if (O.isNone(polled)) {
+    return O.none<{ readonly emptyPolls: number; readonly snapshot: YeetWatchSnapshot }>();
+  }
+  const next = polled.value;
+  const observedAt = yield* isoNow;
+  const events = diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: observedAt, next, prev }));
+  yield* Effect.forEach(events, emitWatchEvent, { discard: true });
+  const headChanged = next.headSha !== prev.headSha;
+  if (headChanged) {
+    yield* supersedeYeetDispatchState(context.repoRoot, next.headSha, next.prNumber, observedAt);
+  }
+  yield* convergeYeetWatchDispatch(context, next, observedAt);
+  // The registration window belongs to a head: a new push starts its own
+  // patience budget rather than inheriting whatever the superseded head spent.
+  return O.some({
+    emptyPolls: A.isReadonlyArrayEmpty(next.checks) ? (headChanged ? 1 : emptyPolls + 1) : 0,
+    snapshot: next,
+  });
+});
+
 /**
  * Poll the pull request and stream one NDJSON row per state transition.
  *
  * **Details**
  *
  * The loop collects a snapshot, emits `watch-started`, then polls on the given
- * interval: each poll's snapshot diffs against the previous one and every
- * derived event is emitted in order. The stream ends when the snapshot is
- * terminal — merged, closed, or no check pending — with a final `watch-ended`
- * row carrying the failure census, which is also the returned count so the
- * command can exit non-zero on a red wave.
+ * interval: each poll's snapshot diffs against the previous one, every derived
+ * event is emitted in order, and the inbox converges to the snapshot's failing
+ * set on the same tick. The stream ends when the snapshot is terminal —
+ * merged, closed, or no check pending — with a final `watch-ended` row
+ * carrying the failure census, which is also the returned count so the
+ * command can exit non-zero on a red wave. One exception: a zero-check OPEN
+ * snapshot within {@link collectYeetWatchSnapshot}'s registration gap is
+ * polled through for a bounded number of ticks instead of ending the watch as
+ * a green `all-terminal` while the push's checks are still registering.
  *
  * **Gotchas**
  *
  * A head change does not end the stream: the new wave's transitions simply
  * start diffing against the post-change baseline, which is how "a new push
- * supersedes the prior wave" reads in stream form. The consumer that dispatches
- * remediation keys its dedup on `headSha`, so superseded-wave rows cannot leak
- * into the new wave's session.
+ * supersedes the prior wave" reads in stream form. A head change also
+ * supersedes the persisted wave record before the new snapshot converges, and
+ * because capsule ids are keyed on `(prNumber, headSha)`, superseded-wave
+ * rows cannot leak into the new wave's session.
  *
  * A failed poll after the stream has started does not escape as an untyped
  * error: the stream ends with a `watch-ended` row whose reason is
@@ -281,50 +403,45 @@ const emitWatchEvent = (event: YeetWatchEvent): Effect.Effect<void, YeetCommandE
 export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function* (
   context: RepoRunContext,
   config: { readonly intervalMillis: number }
-): Effect.fn.Return<YeetWatchEnded, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  YeetWatchEnded,
+  YeetCommandError,
+  ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path
+> {
   let current = yield* collectYeetWatchSnapshot(context);
+  const startedAt = yield* isoNow;
   yield* emitWatchEvent(
     YeetWatchStarted.make({
-      at: yield* isoNow,
+      at: startedAt,
       checks: A.length(current.checks),
       headSha: current.headSha,
     })
   );
+  // Converge the wave record before seeding: a stale record left by a prior
+  // push (or a dead PR on the same branch tip) must not capture this wave's
+  // first red as a mere queue entry. Both calls are idempotent when nothing
+  // changed.
+  yield* supersedeYeetDispatchState(context.repoRoot, current.headSha, current.prNumber, startedAt);
+  yield* convergeYeetWatchDispatch(context, current, startedAt);
+  let emptyPolls = A.isReadonlyArrayEmpty(current.checks) ? 1 : 0;
 
   while (true) {
-    const end = yeetWatchEndReason(current);
+    const end = watchTickEnd(current, emptyPolls);
     if (O.isSome(end)) {
-      const ended = YeetWatchEnded.make({
-        at: yield* isoNow,
-        failing: countYeetWatchFailures(current),
-        headSha: current.headSha,
-        reason: end.value,
-      });
-      yield* emitWatchEvent(ended);
-      return ended;
+      return yield* emitWatchEnded(current, end.value);
     }
-
+    if (A.isReadonlyArrayEmpty(current.checks)) {
+      yield* Console.error(
+        `[yeet] no checks registered for head ${Str.slice(0, 7)(current.headSha)} yet (${emptyPolls}/${YEET_WATCH_REGISTRATION_PATIENCE}); continuing to poll.`
+      );
+    }
     yield* Effect.sleep(Duration.millis(config.intervalMillis));
-    const polled = yield* collectYeetWatchSnapshot(context).pipe(
-      Effect.map(O.some),
-      Effect.catch((error) =>
-        Console.error(`[yeet] watch poll failed: ${error.message}`).pipe(Effect.as(O.none<YeetWatchSnapshot>()))
-      )
-    );
-    if (O.isNone(polled)) {
-      const ended = YeetWatchEnded.make({
-        at: yield* isoNow,
-        failing: countYeetWatchFailures(current),
-        headSha: current.headSha,
-        reason: "poll-error",
-      });
-      yield* emitWatchEvent(ended);
-      return ended;
+    const advanced = yield* advanceYeetWatchTick(context, current, emptyPolls);
+    if (O.isNone(advanced)) {
+      return yield* emitWatchEnded(current, YeetWatchEndReason.Enum["poll-error"]);
     }
-    const next = polled.value;
-    const events = diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: yield* isoNow, next, prev: current }));
-    yield* Effect.forEach(events, emitWatchEvent, { discard: true });
-    current = next;
+    current = advanced.value.snapshot;
+    emptyPolls = advanced.value.emptyPolls;
   }
 });
 

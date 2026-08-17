@@ -46,7 +46,17 @@ the C5 metric correction and the new C7 item below.
 
 ## P2 — Backpressure engine
 
-- A1 `yeet monitor --watch` transition stream + failure capsules + remediation dispatch.
+- ~~A1 `yeet monitor --watch` transition stream + failure capsules + remediation dispatch.~~
+  Done 2026-08-17 across three PRs: #749 (`gh pr checks --watch --fail-fast` in the publish
+  monitor), #751 (typed `yeet-watch/v1` NDJSON transition stream), and the capsule/dispatch PR
+  (failure capsules derived from the failing check's own record into
+  `.beep/inbox/failures.ndjson` — `yeet-inbox/v1`, the row shape A2's adapters consume — plus
+  the `yeet-dispatch/v1` wave record: first red for a head opens the repair session, later reds
+  queue with headSha+lane dedup, re-run reds drop as duplicates, a push supersedes the wave).
+  Acceptance holds: capsules land on the observing poll tick (≤ one 10s interval, inside the
+  15s p95), and three reds on one head produce one session record with three queued capsules.
+  Live session attach/spawn is deliberately not part of A1: attaching consumes the inbox via
+  A2's hook adapters, and spawn-when-owner-busy needs A4's leases.
 - A2 hook-mutex + ACK inbox (Claude deny / Codex inject / Grok tail adapters).
 - A3 can't-leave-the-scene (Stop-hook veto + yeet poison-pill + waives).
 - A5 package-scoped gates (skill instructions + script gap fill + create-package templates).
