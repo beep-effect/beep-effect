@@ -26,8 +26,11 @@ phase flips ride the final PR of each phase.
   (`PortfolioIndexGuard.ts`; renders the projection after the staged-only stash, stages it when it
   differs, refuses a hand-staged copy that disagrees).
 - C1 local remote-cache read path + checkout env template.
-- A7 monitor hardening quick items (`yeet reply` exit code, cursor persistence, registration
-  backoff).
+- ~~A7 monitor hardening quick items (`yeet reply` exit code, cursor persistence, registration
+  backoff).~~ Done 2026-08-16 (reply exits non-zero on any `failed` outcome; comment cursors
+  persist through a versioned `monitor-comments.json`; comment-poll failures degrade without
+  cancelling the check watch; bounded post-push check-registration backoff. The lane
+  success-exit hang was already closed on main by the `run_lane` process-group reap in #718.)
 
 ## P2 — Backpressure engine
 

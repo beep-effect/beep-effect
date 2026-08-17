@@ -58,7 +58,16 @@ import { artifactDirForContext } from "./ArtifactPaths.ts";
 import { decodeGhRepoView } from "./closeout/Gh.schemas.ts";
 import { REPLY_THREAD_MUTATION, RESOLVE_THREAD_MUTATION } from "./closeout/WritePlan.ts";
 import { writeTextFile } from "./IssueArtifacts.ts";
-import { ReplyDraft, ReplyDraftOutcome, ReplyDraftsJson, ReplyReport, ReplyReportJson } from "./Reply.schemas.ts";
+import {
+  failedReplyOutcomes,
+  ReplyDraft,
+  ReplyDraftOutcome,
+  ReplyDraftsJson,
+  ReplyReport,
+  ReplyReportJson,
+  replyOutcomesWithStatus,
+  replyOutcomeTarget,
+} from "./Reply.schemas.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { GhCommandFailure } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
@@ -872,7 +881,7 @@ const executeReplyAction = (
   );
 
 const countStatus = (outcomes: ReadonlyArray<ReplyDraftOutcome>, status: ReplyOutcomeStatus): number =>
-  A.length(A.filter(outcomes, (outcome) => outcome.status === status));
+  A.length(replyOutcomesWithStatus(outcomes, status));
 
 const replyPreflight = Effect.fn("Yeet.replyPreflight")(function* (
   context: RepoRunContext,
@@ -931,10 +940,15 @@ const preflightFailureOutcomes = (drafts: ReplyDrafts, failure: YeetCommandError
  *
  * **Gotchas**
  *
- * Per-draft failures exit 0 — the batch ran and the report is authoritative.
- * Only the preflight (nothing attempted) fails the run, and with no drafts
- * loaded it fails without a report: there is no outcome to attach the failure
- * to, so an exit-0 empty report would be a silent green.
+ * This engine returns the report for every pass that attempted work; the
+ * *command* turns a report carrying `failed` outcomes into a non-zero exit
+ * (`failedReplyOutcomes` at the `yeet reply` seam). Splitting it that way
+ * keeps the batch semantics — every remaining draft still gets its turn — while
+ * denying a `yeet reply && ...` chain the false green it used to get from a
+ * pass whose replies were all rejected. Only the preflight (nothing attempted)
+ * fails here, and with no drafts loaded it fails without a report: there is no
+ * outcome to attach the failure to, so an exit-0 empty report would be a silent
+ * green.
  *
  * **Example** (Build the reply run effect)
  *
@@ -981,10 +995,7 @@ export const runYeetReply = Effect.fn("Yeet.runReply")(function* (
     : preflightFailureOutcomes(drafts, preflight.failure);
   yield* Effect.forEach(
     outcomes,
-    (outcome) =>
-      Console.log(
-        `[yeet] reply ${outcome.status} ${O.getOrElse(outcome.threadId, () => `comment ${O.getOrElse(O.map(outcome.commentId, String), () => "?")}`)}: ${outcome.detail}`
-      ),
+    (outcome) => Console.log(`[yeet] reply ${outcome.status} ${replyOutcomeTarget(outcome)}: ${outcome.detail}`),
     { concurrency: 1 }
   );
 
@@ -1014,3 +1025,54 @@ export const runYeetReply = Effect.fn("Yeet.runReply")(function* (
 
   return report;
 });
+
+/**
+ * The operator verdict for a reply pass that could not write every draft.
+ *
+ * **Details**
+ *
+ * `None` is the whole contract for a clean pass: nothing failed, so there is
+ * nothing to say and nothing to exit non-zero over. `Some` names how many
+ * drafts failed out of how many ran and which handles they were, then points at
+ * the report — deliberately *not* at a retry command. Failures do not share one
+ * retry: a draft whose post was rejected is retried by re-running the pass,
+ * while a draft that posted and only failed to resolve must never be re-run
+ * that way or the body posts twice. Each outcome's own `detail` already carries
+ * the correct instruction, so the verdict routes the operator to them instead
+ * of overwriting them with a wrong one.
+ *
+ * **Example** (A clean pass has no verdict)
+ *
+ * ```ts
+ * import { renderYeetReplyFailureVerdict, ReplyReport } from "@beep/repo-cli/test/Yeet"
+ *
+ * const report = ReplyReport.make({
+ *   schemaVersion: "yeet-reply-report/v1",
+ *   prNumber: 558,
+ *   createdAt: "2026-08-16T00:00:00.000Z",
+ *   outcomes: [],
+ * })
+ * console.log(renderYeetReplyFailureVerdict(report, ".beep/yeet/reply-report.json"))
+ * ```
+ *
+ * @param report - The report written by one reply pass.
+ * @param reportPath - Where that report was written, quoted in the verdict.
+ * @returns The verdict line when any draft failed, else `None`.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderYeetReplyFailureVerdict: {
+  (reportPath: string): (report: ReplyReport) => O.Option<string>;
+  (report: ReplyReport, reportPath: string): O.Option<string>;
+} = dual(
+  2,
+  (report: ReplyReport, reportPath: string): O.Option<string> =>
+    pipe(
+      failedReplyOutcomes(report),
+      O.liftPredicate(A.isReadonlyArrayNonEmpty),
+      O.map(
+        (failed) =>
+          `[yeet] reply failed for ${A.length(failed)} of ${A.length(report.outcomes)} drafts (${A.join(A.map(failed, replyOutcomeTarget), ", ")}); those review threads are still open. Each failed outcome in ${reportPath} carries its own retry.`
+      )
+    )
+);

@@ -60,6 +60,12 @@ import {
   writeTextFile,
 } from "./IssueArtifacts.ts";
 import { installYeetMergePreview, withYeetMergePreview, yeetMergedPreviewContext } from "./MergedPreview.ts";
+import {
+  awaitYeetCheckRegistration,
+  isAwaitingYeetCheckRegistration,
+  renderYeetCheckRegistrationExhausted,
+  YEET_CHECK_REGISTRATION_BACKOFF,
+} from "./MonitorChecks.ts";
 import { runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
 import {
   buildYeetRunPlanWithMode,
@@ -679,6 +685,36 @@ const assertNoUnresolvedReviewThreads = Effect.fn("Yeet.assertNoUnresolvedReview
   });
 });
 
+// A pushed head whose checks have not registered yet is not a head with
+// nothing to watch. The watch re-attempts on a bounded backoff, and only an
+// exhausted backoff lets the empty answer stand — as a failure naming that
+// condition, never as a pass.
+const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
+  context: RepoRunContext,
+  checkSteps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  failureMessage: string
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const results = yield* runPhase(context, checkSteps, recorder).pipe(
+    awaitYeetCheckRegistration(YEET_CHECK_REGISTRATION_BACKOFF)
+  );
+  if (A.every(results, (result) => result.exitCode === 0)) {
+    return;
+  }
+  return yield* failWithIssueArtifacts(
+    context,
+    checkSteps,
+    results,
+    isAwaitingYeetCheckRegistration(results)
+      ? `${failureMessage} ${renderYeetCheckRegistrationExhausted(YEET_CHECK_REGISTRATION_BACKOFF)}`
+      : failureMessage
+  );
+});
+
 const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
   context: RepoRunContext,
   monitorSteps: ReadonlyArray<RepoPlanStep>,
@@ -714,7 +750,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
     Effect.mapError(YeetCommandError.new("Failed to decode pull request number for yeet monitor."))
   );
   yield* Effect.raceFirst(
-    runRequiredPhase(context, checkSteps, recorder, failureMessage),
+    runMonitorCheckWatch(context, checkSteps, recorder, failureMessage),
     runYeetPullRequestCommentMonitor(context, pullRequestNumber)
   );
 });
