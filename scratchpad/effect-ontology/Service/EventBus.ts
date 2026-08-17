@@ -13,6 +13,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Clock, Context, DateTime, Effect, Layer, Queue, Ref, Stream } from "effect";
+import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -570,9 +571,18 @@ export const EventBusServiceSql = Layer.effect(
       )
     );
 
-    // Note: takeJob for SQL implementation works differently - jobs are taken via processJob
-    // which handles the full lifecycle (take + complete/retry)
-    const takeJob: EventBusServiceMethods["takeJob"] = Effect.succeed(O.none());
+    const takeJob: EventBusServiceMethods["takeJob"] = jobQueue
+      .take((job, { attempts, id }) => Effect.succeed({ attempts, id, job }), { maxAttempts: 1 })
+      .pipe(
+        Effect.timeoutOption(Duration.millis(10)),
+        Effect.mapError((cause) =>
+          EventBusError.make({
+            method: "takeJob",
+            message: "Failed to take persisted job",
+            cause: O.some(cause),
+          })
+        )
+      );
 
     const processJob: EventBusServiceMethods["processJob"] = Effect.fn("processJob")(
       function* (handler, options) {
@@ -688,9 +698,13 @@ export const EventBusServiceSqlLayers = Layer.mergeAll(
     entryTable: "effect_event_journal",
     remotesTable: "effect_event_remotes",
   }),
-  PersistedQueue.layerStoreSql({
-    tableName: "effect_queue",
-  })
+  PersistedQueue.layer.pipe(
+    Layer.provide(
+      PersistedQueue.layerStoreSql({
+        tableName: "effect_queue",
+      })
+    )
+  )
 );
 
 /**

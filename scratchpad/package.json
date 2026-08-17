@@ -59,8 +59,8 @@
     "yaml": "catalog:"
   },
   "devDependencies": {
-    "@effect/vitest": "catalog:",
     "@beep/pglite": "workspace:^",
+    "@effect/vitest": "catalog:",
     "@types/n3": "catalog:",
     "@types/node": "catalog:",
     "drizzle-kit": "catalog:",

@@ -2024,6 +2024,10 @@
         "react-dom": "^19",
       },
     },
+    "packages/foundation/ui-system/form": {
+      "name": "form",
+      "version": "0.0.0",
+    },
     "packages/foundation/ui-system/ui": {
       "name": "@beep/ui",
       "version": "0.1.2",
@@ -2680,6 +2684,7 @@
         "@beep/dock": "workspace:^",
         "@beep/dock-react": "workspace:^",
         "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
@@ -2714,9 +2719,11 @@
         "yaml": "catalog:",
       },
       "devDependencies": {
+        "@beep/pglite": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/n3": "catalog:",
         "@types/node": "catalog:",
+        "drizzle-kit": "catalog:",
         "typescript": "catalog:",
         "vitest": "catalog:",
       },
@@ -6081,6 +6088,8 @@
     "for-in": ["for-in@1.0.2", "", {}, "sha512-7EwmXrOjyL+ChxMhmG5lnW9MPt1aIeZEwKhQzoBUdTV0N3zuwWDZYVJatDvZ2OyzPUvdIAZDsCetk3coyMfcnQ=="],
 
     "foreground-child": ["foreground-child@3.3.1", "", { "dependencies": { "cross-spawn": "^7.0.6", "signal-exit": "^4.0.1" } }, "sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw=="],
+
+    "form": ["form@workspace:packages/foundation/ui-system/form"],
 
     "form-data": ["form-data@4.0.6", "", { "dependencies": { "asynckit": "^0.4.0", "combined-stream": "^1.0.8", "es-set-tostringtag": "^2.1.0", "hasown": "^2.0.4", "mime-types": "^2.1.35" } }, "sha512-vKatAh4SlVfgbv+YtmhiRjhEMJsYpsG1Y2rMQtR+SVSbytsSD1YGzDIcrAJmdFec88u/+VoGmxnl+80gL1tRCQ=="],
 

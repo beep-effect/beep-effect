@@ -247,7 +247,7 @@ export const BatchStage = LiteralKit([
  */
 export type BatchStage = typeof BatchStage.Type;
 
-const BatchStateDefinition = S.TaggedUnion({
+export const BatchStateDefinition = S.TaggedUnion({
   Pending: {
     ...BatchIdentityFields,
     documentCount: NonNegativeInt,

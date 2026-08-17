@@ -16,9 +16,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { makeDrizzleLayer } from "@beep/postgres";
 import { BunHttpServer, BunRuntime, BunServices } from "@effect/platform-bun";
-import { PgClient } from "@effect/sql-pg";
 import { Cause, Config, Effect, Layer, Schedule } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -36,6 +34,7 @@ import { HealthCheckService } from "./Runtime/HealthCheck.ts";
 import { HttpServerLive, HttpServerWithoutRepositoriesLive } from "./Runtime/HttpServer.ts";
 import { InferenceJobStoreLive } from "./Runtime/InferenceRouter.ts";
 import { migrateOnBoot } from "./Runtime/Persistence/MigrationRunner.ts";
+import { PgClientLive, PgDrizzleLive } from "./Runtime/Persistence/PostgresLayer.ts";
 import { ShutdownService } from "./Runtime/Shutdown.ts";
 import { ActivityDependenciesLayer, WorkflowOrchestratorFullLayer } from "./Runtime/WorkflowLayers.ts";
 import { BatchStateHubLayer, BatchStatePersistenceLayer } from "./Service/BatchState.ts";
@@ -66,17 +65,6 @@ const useCaching = Effect.runSync(Config.boolean("ENABLE_REPO_CACHING").pipe(Con
 
 // Base platform layer (provides FileSystem, Path, etc.)
 const PlatformLayer = BunServices.layer;
-
-// PostgreSQL client layer (when POSTGRES_HOST is set)
-const PgClientLive = PgClient.layerConfig({
-  host: Config.string("POSTGRES_HOST"),
-  port: Config.number("POSTGRES_PORT").pipe(Config.withDefault(5432)),
-  database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
-  username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
-  password: Config.redacted("POSTGRES_PASSWORD"),
-});
-
-const PgDrizzleLive = makeDrizzleLayer().pipe(Layer.provideMerge(PgClientLive));
 
 // Durable WorkflowEngine backed by PostgreSQL via @effect/cluster
 // SingleRunner with SQL storage enables durable execution with crash recovery

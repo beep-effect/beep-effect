@@ -26,13 +26,13 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { HashSet as StoredHashSet } from "@beep/schema/HashSet";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { ActFrameElementLabel } from "../../values/ActFrameElementRef/index.ts";
 import { HohfeldPosition } from "../../values/HohfeldPosition/index.ts";
 import { NormSourceReference } from "../../values/NormSourceReference/index.ts";
-import { hasActorSlot, hasDistinctLabels } from "./ActFrame.behavior.ts";
 
 const $I = $LawPracticeDomainId.create("entities/ActFrame/ActFrame.values");
 
@@ -322,6 +322,39 @@ export const ActFrameSlot = ActFrameSlotKind.mapMembers(
 );
 
 export type ActFrameSlot = typeof ActFrameSlot.Type;
+
+/**
+ * Tests whether every frame element carries a distinct label.
+ *
+ * **Example** (Reject a repeated label)
+ *
+ * ```ts
+ * import { hasDistinctLabels } from "@beep/law-practice-domain/entities/ActFrame"
+ *
+ * console.log(hasDistinctLabels([{ label: "actor" }, { label: "actor" }])) // false
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const hasDistinctLabels = (elements: ReadonlyArray<{ readonly label: ActFrameElementLabel }>): boolean =>
+  HashSet.size(HashSet.fromIterable(A.map(elements, (element) => element.label))) === elements.length;
+
+/**
+ * Tests whether a frame declares the actor slot required by its grammar.
+ *
+ * **Example** (Recognize an actor slot)
+ *
+ * ```ts
+ * import { ActFrameSlot, hasActorSlot } from "@beep/law-practice-domain/entities/ActFrame"
+ *
+ * console.log(typeof hasActorSlot === "function")
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const hasActorSlot = (slots: ReadonlyArray<ActFrameSlot>): boolean => A.some(slots, ActFrameSlot.guards.actor);
 
 /**
  * One condition a recorded act frame states for its act.

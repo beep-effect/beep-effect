@@ -10,14 +10,13 @@
  * @since 0.0.0
  */
 
-import { makeDrizzleLayer } from "@beep/postgres";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
-import { PgClient } from "@effect/sql-pg";
 import { Config, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import { Command } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
 import { makeLanguageModelLayer } from "../Runtime/ProductionRuntime.ts";
+import { PgDrizzleLive } from "../Runtime/Persistence/PostgresLayer.ts";
 import { ConfigServiceDefault } from "../Service/Config.ts";
 import { ContentEnrichmentAgent } from "../Service/ContentEnrichmentAgent.ts";
 import { ImageExtractor } from "../Service/ImageExtractor.ts";
@@ -64,28 +63,12 @@ const rootCommand = Command.make("effect-onto").pipe(
 // =============================================================================
 
 /**
- * PostgreSQL client layer
- */
-const PgClientLayer = PgClient.layerConfig({
-  host: Config.string("POSTGRES_HOST"),
-  port: Config.number("POSTGRES_PORT").pipe(Config.withDefault(5432)),
-  database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
-  username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
-  password: Config.redacted("POSTGRES_PASSWORD"),
-});
-
-/**
- * PgDrizzle layer with PgClient dependency
- */
-const PgDrizzleLayer = makeDrizzleLayer().pipe(Layer.provideMerge(PgClientLayer));
-
-/**
  * Full LinkIngestion stack when PostgreSQL is configured
  */
 const LinkIngestionLive = LinkIngestionService.Default.pipe(
   Layer.provideMerge(ContentEnrichmentAgent.Default),
   Layer.provideMerge(JinaReaderClient.Default),
-  Layer.provideMerge(PgDrizzleLayer),
+  Layer.provideMerge(PgDrizzleLive),
   Layer.provideMerge(ImageExtractor.Default),
   Layer.provideMerge(ImageFetcher.Default),
   Layer.provideMerge(ImageStore.Default),

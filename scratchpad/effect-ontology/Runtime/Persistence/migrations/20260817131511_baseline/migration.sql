@@ -1,3 +1,5 @@
+-- Drizzle Kit emits extension-dependent vector columns but cannot declare their
+-- prerequisite extensions. Keep this reviewed prelude before every CREATE TABLE.
 CREATE EXTENSION IF NOT EXISTS vector;--> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS pg_trgm;--> statement-breakpoint
 CREATE TABLE "articles" (

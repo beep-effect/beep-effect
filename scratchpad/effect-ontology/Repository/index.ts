@@ -10,9 +10,13 @@
  * @since 0.0.0
  */
 
-import { makeDrizzleLayer } from "@beep/postgres";
 import { PgClient } from "@effect/sql-pg";
-import { Config, Layer, Redacted } from "effect";
+import { Layer, Redacted } from "effect";
+import {
+  DrizzleLive as CanonicalDrizzleLive,
+  PgClientLive as CanonicalPgClientLive,
+  PgDrizzleLive,
+} from "../Runtime/Persistence/PostgresLayer.ts";
 import { ArticleRepository } from "./Article.ts";
 import { ClaimRepository } from "./Claim.ts";
 import { EmbeddingRepository } from "./Embedding.ts";
@@ -54,7 +58,7 @@ export * from "./types.ts";
  * @category layers
  * @since 0.0.0
  */
-export const DrizzleLive = makeDrizzleLayer();
+export const DrizzleLive = CanonicalDrizzleLive;
 
 /**
  * PgClient layer from environment variables
@@ -80,14 +84,7 @@ export const DrizzleLive = makeDrizzleLayer();
  * @category layers
  * @since 0.0.0
  */
-export const PgClientLive = PgClient.layerConfig({
-  host: Config.string("POSTGRES_HOST").pipe(Config.withDefault("localhost")),
-  port: Config.number("POSTGRES_PORT").pipe(Config.withDefault(5432)),
-  database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
-  username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
-  password: Config.redacted("POSTGRES_PASSWORD"),
-  ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
-});
+export const PgClientLive = CanonicalPgClientLive;
 
 /**
  * Full Drizzle layer with Postgres connection
@@ -103,7 +100,7 @@ export const PgClientLive = PgClient.layerConfig({
  * @category layers
  * @since 0.0.0
  */
-export const DrizzleWithPgLive = DrizzleLive.pipe(Layer.provide(PgClientLive));
+export const DrizzleWithPgLive = PgDrizzleLive;
 
 /**
  * ClaimRepository with Drizzle

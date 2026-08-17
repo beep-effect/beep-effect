@@ -17,6 +17,7 @@
 
 import { Port } from "@beep/schema/Port";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import { makeDrizzleLayer } from "@beep/postgres";
 import { PgClient } from "@effect/sql-pg";
 import { Config, Effect, Layer, Redacted } from "effect";
 import * as S from "effect/Schema";
@@ -138,6 +139,15 @@ export const PgClientLive = PgClient.layerConfig({
   password: Config.redacted("POSTGRES_PASSWORD"),
   ssl: Config.boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
 });
+
+/**
+ * Canonical shared PostgreSQL client and Drizzle context.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const DrizzleLive = makeDrizzleLayer();
+export const PgDrizzleLive = DrizzleLive.pipe(Layer.provideMerge(PgClientLive));
 
 /**
  * PgClient layer with explicit config

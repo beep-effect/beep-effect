@@ -1,3 +1,4 @@
+import { PgliteTestLayer } from "@beep/pglite";
 import { assert, describe, it } from "@effect/vitest";
 import { DateTime, Effect, Layer, PubSub, Stream } from "effect";
 import * as A from "effect/Array";
@@ -5,11 +6,16 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { BatchId, OntologyName } from "../../Domain/Identity.ts";
+import { BackgroundJobId, PromptCacheJob } from "../../Domain/Schema/JobSchema.ts";
 import { BatchState } from "../../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../../Domain/PathLayout.ts";
 import { BatchStateHub, BatchStateHubLayer, getBatchStateFromStore, publishState } from "../../Service/BatchState.ts";
 import { BatchStateBridge, BatchStateBridgeLive } from "../../Service/BatchStateBridge.ts";
-import { EventBusService, EventBusServiceMemory } from "../../Service/EventBus.ts";
+import {
+  EventBusService,
+  EventBusServiceMemory,
+  EventBusServiceSqlLive,
+} from "../../Service/EventBus.ts";
 import { StorageService, StorageServiceTest } from "../../Service/Storage.ts";
 
 const makePendingState = Effect.fn("BatchStateEventBusTest.makePendingState")(function* (batchId: BatchId) {
@@ -59,6 +65,35 @@ const FailingStateTestLayer = Layer.merge(BatchStateHubLayer, FailingStorageServ
 const BridgeTestLayer = BatchStateBridgeLive.pipe(
   Layer.provideMerge(Layer.merge(BatchStateHubLayer, EventBusServiceMemory))
 );
+
+const SqlEventBusTestLayer = EventBusServiceSqlLive.pipe(Layer.provideMerge(PgliteTestLayer));
+
+const queueLifecycle = Effect.fn("BatchStateEventBusTest.queueLifecycle")(function* () {
+  const eventBus = yield* EventBusService;
+  const now = yield* DateTime.now;
+  const makeJob = (id: BackgroundJobId, exampleId: string) =>
+    PromptCacheJob.make({
+      id,
+      ontologyId: OntologyName.make("queue_test"),
+      exampleId,
+      isNegative: false,
+      createdAt: now,
+    });
+
+  yield* eventBus.enqueueJob(makeJob(BackgroundJobId.make("job-000000000001"), "take-example"));
+  const afterEnqueueForTake = yield* eventBus.pendingJobCount;
+  const taken = yield* eventBus.takeJob;
+  const afterTake = yield* eventBus.pendingJobCount;
+
+  yield* eventBus.enqueueJob(makeJob(BackgroundJobId.make("job-000000000002"), "process-example"));
+  const afterEnqueueForProcess = yield* eventBus.pendingJobCount;
+  const processed = yield* eventBus.processJob(() => Effect.succeed("processed"));
+  const afterProcess = yield* eventBus.pendingJobCount;
+
+  assert.isTrue(O.isSome(taken));
+  assert.deepEqual(processed, O.some("processed"));
+  return [afterEnqueueForTake, afterTake, afterEnqueueForProcess, afterProcess];
+});
 
 describe("BatchState persistence", () => {
   it.layer(StateTestLayer)("with in-memory storage", (it) => {
@@ -146,6 +181,24 @@ describe("BatchStateBridge", () => {
         yield* PubSub.shutdown(hub);
         yield* Effect.repeat(Effect.yieldNow, { times: 4 });
         assert.isFalse(yield* bridge.isRunning);
+      })
+    );
+  });
+});
+
+describe("EventBus queue backend parity", () => {
+  it.layer(EventBusServiceMemory)("with the memory backend", (it) => {
+    it.effect("tracks enqueue, take, and process lifecycle counts", () =>
+      Effect.gen(function* () {
+        assert.deepEqual(yield* queueLifecycle(), [1, 0, 1, 0]);
+      })
+    );
+  });
+
+  it.layer(SqlEventBusTestLayer)("with the SQL backend", (it) => {
+    it.effect("tracks enqueue, take, and process lifecycle counts", () =>
+      Effect.gen(function* () {
+        assert.deepEqual(yield* queueLifecycle(), [1, 0, 1, 0]);
       })
     );
   });

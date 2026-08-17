@@ -23,6 +23,9 @@
       "path": "../packages/drivers/oxigraph/tsconfig.json"
     },
     {
+      "path": "../packages/drivers/pglite/tsconfig.json"
+    },
+    {
       "path": "../packages/drivers/postgres/tsconfig.json"
     },
     {
@@ -33,6 +36,9 @@
     },
     {
       "path": "../packages/drivers/wink/tsconfig.json"
+    },
+    {
+      "path": "../packages/ecosystem/effect-drizzle/tsconfig.json"
     },
     {
       "path": "../packages/epistemic/domain/tsconfig.json"

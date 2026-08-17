@@ -790,6 +790,12 @@
         "patterns": [
           "packages/drivers/xai/src/**"
         ]
+      },
+      {
+        "name": "form",
+        "patterns": [
+          "packages/foundation/ui-system/form/src/**"
+        ]
       }
     ],
     "rules": [
@@ -3006,6 +3012,7 @@
           "@beep/dock",
           "@beep/dock-react",
           "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/file-processing",
           "@beep/identity",
@@ -3015,10 +3022,12 @@
           "@beep/nlp-processing",
           "@beep/ontology",
           "@beep/oxigraph",
+          "@beep/pglite",
           "@beep/postgres",
           "@beep/pretext",
           "@beep/provenance",
           "@beep/rdf",
+          "@beep/repo-utils",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/semantic-web",
@@ -3031,6 +3040,7 @@
           "@beep/dock",
           "@beep/dock-react",
           "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/file-processing",
           "@beep/identity",
@@ -3040,10 +3050,12 @@
           "@beep/nlp-processing",
           "@beep/ontology",
           "@beep/oxigraph",
+          "@beep/pglite",
           "@beep/postgres",
           "@beep/pretext",
           "@beep/provenance",
           "@beep/rdf",
+          "@beep/repo-utils",
           "@beep/schema",
           "@beep/scratchpad",
           "@beep/semantic-web",
@@ -3448,6 +3460,15 @@
           "@beep/test-utils",
           "@beep/utils",
           "@beep/xai"
+        ]
+      },
+      {
+        "from": "form",
+        "allow": [
+          "form"
+        ],
+        "allowTypeOnly": [
+          "form"
         ]
       }
     ]

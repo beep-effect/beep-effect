@@ -29,7 +29,7 @@ const FutureProbe = {
 const DatabaseTestLayer = makeDrizzleLayer().pipe(Layer.provideMerge(PgliteTestLayer));
 const MigrationRunnerTestLayer = Layer.merge(DatabaseTestLayer, BunServices.layer);
 
-describe("effect-ontology migrations", () => {
+describe.sequential("effect-ontology migrations", () => {
   it.layer(BunServices.layer)("with generated migration files", (it) => {
     it.effect("keeps unsupported PostgreSQL features in the reviewed custom migration", () =>
       Effect.gen(function* () {
@@ -52,6 +52,8 @@ describe("effect-ontology migrations", () => {
         assert.include(sql, "idx_llm_examples_input_text_trgm");
         assert.include(sql, "idx_ingested_links_topics");
         assert.include(sql, "CREATE TRIGGER ingested_links_updated_at");
+        assert.include(baseline, "CREATE EXTENSION IF NOT EXISTS vector");
+        assert.include(baseline, "CREATE EXTENSION IF NOT EXISTS pg_trgm");
         assert.isBelow(baseline.indexOf("CREATE EXTENSION IF NOT EXISTS vector"), baseline.indexOf('vector(768)'));
         assert.include(baseline, 'CONSTRAINT "claims_rank_check"');
         assert.include(baseline, 'CONSTRAINT "different_claims"');
@@ -99,10 +101,12 @@ describe("effect-ontology migrations", () => {
     );
   });
 
-  it.layer(MigrationRunnerTestLayer)("with a legacy scratch migration journal", (it) => {
-    it.effect("refuses an unsafe in-place rebaseline with reset guidance", () =>
+  it.layer(MigrationRunnerTestLayer)("with non-canonical migration history", (it) => {
+    it.effect("refuses an empty legacy journal with reset guidance", () =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
+        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
+        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
         yield* sql`
           CREATE TABLE schema_migrations (
             version INTEGER PRIMARY KEY,
@@ -113,6 +117,85 @@ describe("effect-ontology migrations", () => {
         const error = yield* migrateOnBoot.pipe(Effect.flip);
         assert.instanceOf(error, LegacyMigrationHistoryError);
         assert.include(error.message, "Recreate the scratch database");
+      })
+    );
+
+    it.effect("refuses partial and mixed known legacy histories", () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
+        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
+        yield* sql`CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL)`;
+        yield* sql`
+          INSERT INTO schema_migrations (version, name)
+          VALUES (1, '001_claims_schema'), (99, 'unrelated_migration')
+        `;
+
+        const error = yield* migrateOnBoot.pipe(Effect.flip);
+        assert.instanceOf(error, LegacyMigrationHistoryError);
+        assert.include(error.message, "partial or mixed");
+      })
+    );
+
+    it.effect("allows an empty canonical journal to resume canonical migration", () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
+        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
+        yield* sql`CREATE SCHEMA effect_ontology`;
+        yield* sql`
+          CREATE TABLE effect_ontology.__drizzle_migrations (
+            id SERIAL PRIMARY KEY,
+            hash TEXT NOT NULL DEFAULT '',
+            name TEXT NOT NULL,
+            created_at BIGINT
+          )
+        `;
+
+        const error = yield* migrateOnBoot.pipe(Effect.flip);
+        assert.notInstanceOf(error, LegacyMigrationHistoryError);
+      })
+    );
+
+    it.effect("refuses mixed canonical journal names", () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const fs = yield* FileSystem.FileSystem;
+        const baselineName = A.filter(yield* fs.readDirectory(migrationsFolder), Str.endsWith("_baseline"));
+        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
+        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
+        yield* sql`CREATE SCHEMA effect_ontology`;
+        yield* sql`
+          CREATE TABLE effect_ontology.__drizzle_migrations (
+            id SERIAL PRIMARY KEY,
+            hash TEXT NOT NULL DEFAULT '',
+            name TEXT NOT NULL,
+            created_at BIGINT
+          )
+        `;
+        yield* Effect.forEach(
+          baselineName,
+          (name) => sql`INSERT INTO effect_ontology.__drizzle_migrations (name) VALUES (${name})`,
+          { discard: true }
+        );
+        yield* sql`INSERT INTO effect_ontology.__drizzle_migrations (name) VALUES ('19990101000000_unknown')`;
+
+        const error = yield* migrateOnBoot.pipe(Effect.flip);
+        assert.instanceOf(error, LegacyMigrationHistoryError);
+        assert.include(error.message, "unknown or out-of-order");
+      })
+    );
+
+    it.effect("does not misclassify an unrelated journal as legacy ontology history", () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
+        yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
+        yield* sql`CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL)`;
+        yield* sql`INSERT INTO schema_migrations (version, name) VALUES (99, 'unrelated_migration')`;
+
+        const error = yield* migrateOnBoot.pipe(Effect.flip);
+        assert.notInstanceOf(error, LegacyMigrationHistoryError);
       })
     );
   });

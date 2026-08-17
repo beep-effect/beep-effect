@@ -7,7 +7,7 @@
 import { fileURLToPath } from "node:url";
 import { $ScratchpadId } from "@beep/identity";
 import { migrate, PostgresDrizzle } from "@beep/postgres";
-import { Effect, Equal, FileSystem, HashSet } from "effect";
+import { Effect, Equal, FileSystem, HashSet, Order } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { SqlClient, SqlSchema } from "effect/unstable/sql";
@@ -113,7 +113,7 @@ export const migrateOnBoot = Effect.gen(function* () {
     `,
   });
   const history = yield* readHistoryState(undefined);
-  const expectedCanonicalNames = HashSet.fromIterable(yield* fs.readDirectory(migrationsFolder));
+  const expectedCanonicalNames = A.sort(yield* fs.readDirectory(migrationsFolder), Order.String);
 
   let knownLegacyRows = 0;
   let legacyRows = 0;
@@ -137,10 +137,10 @@ export const migrateOnBoot = Effect.gen(function* () {
       Result: CanonicalMigrationRow,
       execute: () => sql`SELECT name FROM effect_ontology.__drizzle_migrations ORDER BY id`,
     });
-    const actualCanonicalNames = HashSet.fromIterable(A.map(yield* readCanonicalRows(undefined), (row) => row.name));
-    if (!Equal.equals(actualCanonicalNames, expectedCanonicalNames)) {
+    const actualCanonicalNames = A.map(yield* readCanonicalRows(undefined), (row) => row.name);
+    if (!Equal.equals(actualCanonicalNames, A.take(expectedCanonicalNames, actualCanonicalNames.length))) {
       return yield* migrationHistoryError(
-        "The canonical effect-ontology migration journal is empty, partial, or from a different baseline."
+        "The canonical effect-ontology migration journal contains unknown or out-of-order migration names."
       );
     }
   }
