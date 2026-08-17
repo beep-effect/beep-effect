@@ -12,19 +12,23 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { isNonNegative } from "./Number.ts";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Jsonl");
 const JsonlValues = S.Array(S.Unknown).pipe(S.toType);
 const decodeJsonlValues = S.decodeUnknownEffect(JsonlValues);
+
 class JsonlChunkParseError extends S.Class<JsonlChunkParseError>($I`JsonlChunkParseError`)({
   message: S.String,
 }) {}
+
 class JsonlChunkParseResult extends S.Class<JsonlChunkParseResult>($I`JsonlChunkParseResult`)({
   done: S.Boolean,
   error: S.NullOr(JsonlChunkParseError),
   read: S.Int.check(isNonNegative),
   values: S.Unknown,
 }) {}
+
 const decodeJsonlChunkParseResult = S.decodeUnknownEffect(JsonlChunkParseResult);
 type JsonlParseChunk = (content: string) => unknown;
 
@@ -106,6 +110,9 @@ export const JsonlTextToUnknown = S.String.pipe(
     decode: SchemaGetter.transformOrFail(decodeJsonlUnknown),
     encode: SchemaGetter.transformOrFail(encodeUnsupported),
   }),
+  SchemaUtils.withStatics((schema) => ({
+    decodeUnknownEffect: S.decodeUnknownEffect(schema),
+  })),
   $I.annoteSchema("JsonlTextToUnknown", {
     description: "Schema transformation that parses strict JSONL text into unknown values.",
   })
@@ -143,11 +150,10 @@ export type JsonlTextToUnknown = typeof JsonlTextToUnknown.Type;
  * @since 0.0.0
  */
 export const decodeJsonlTextAs = <Schema extends S.Top>(schema: Schema) => {
-  const decodeJsonlUnknownText = S.decodeUnknownEffect(JsonlTextToUnknown);
   const decodeTargetSchema = S.decodeUnknownEffect(schema);
   const decodeTarget = Effect.fnUntraced(function* (input: Parameters<typeof decodeTargetSchema>[0]) {
     return yield* decodeTargetSchema(input);
   });
 
-  return flow(decodeJsonlUnknownText, Effect.flatMap(decodeTarget));
+  return flow(JsonlTextToUnknown.decodeUnknownEffect, Effect.flatMap(decodeTarget));
 };

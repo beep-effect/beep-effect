@@ -10,6 +10,7 @@ import { ConfigProvider, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 import { Tool, Toolkit } from "effect/unstable/ai";
 import * as McpServer from "effect/unstable/ai/McpServer";
+import { StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
 const HardTool = Tool.make("hard_source_tool", {
   description: "Fixture hard-gated tool.",
@@ -36,6 +37,7 @@ const hardRegistration = SourceAuthRegistration.make({
 const buildComposedLayer = (env: Record<string, string>) =>
   Layer.mergeAll(
     McpServer.McpServer.layer,
+    StubMcpClientLayer,
     composeGatedLayers(gatedLayer(hardRegistration, hardSourceLayer)).pipe(
       Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
     )

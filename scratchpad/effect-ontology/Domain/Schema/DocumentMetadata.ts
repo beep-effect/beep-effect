@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MimeType, NonNegativeInt, NonNegNum, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MimeType, NonNegativeInt, NonNegNum, PosInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Match } from "effect";
 import * as N from "effect/Number";
@@ -182,7 +182,7 @@ export const ChunkingStrategy = ChunkingStrategyDefinition.pipe(
   }))
 );
 
-const ChunkSize = S.Int.check(
+const ChunkSize = PosInt.check(
   S.makeFilterGroup(
     [
       S.isGreaterThan(0, {
@@ -206,7 +206,7 @@ const ChunkSize = S.Int.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 10_000 }),
+    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 10_000 }).map(PosInt.make),
   })
   .pipe(
     S.brand("ChunkSize"),
@@ -215,7 +215,7 @@ const ChunkSize = S.Int.check(
     })
   );
 
-const SentenceOverlap = S.Int.check(
+const SentenceOverlap = NonNegativeInt.check(
   S.makeFilterGroup(
     [
       S.isGreaterThanOrEqualTo(0, {
@@ -239,7 +239,7 @@ const SentenceOverlap = S.Int.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 0, max: 10 }),
+    toArbitrary: () => (fc) => fc.integer({ min: 0, max: 10 }).map(NonNegativeInt.make),
   })
   .pipe(
     S.brand("SentenceOverlap"),
@@ -331,7 +331,7 @@ export const defaultChunkingParams: Readonly<Record<ChunkingStrategy, ChunkingPa
   }),
 };
 
-const ClassificationBatchSize = S.Int.check(
+const ClassificationBatchSize = PosInt.check(
   S.makeFilterGroup(
     [
       S.isGreaterThan(0, {
@@ -355,7 +355,7 @@ const ClassificationBatchSize = S.Int.check(
   )
 )
   .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 50 }),
+    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 50 }).map(PosInt.make),
   })
   .pipe(
     S.brand("ClassificationBatchSize"),

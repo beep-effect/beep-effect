@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { SchemaGetter } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as S from "effect/Schema";
 import { OptionalConfidence } from "../Model/shared.ts";
-import { IRI } from "../Rdf/Types.ts";
 import { ClaimId, ClaimRank, RdfObject, TextSpan } from "./KnowledgeModel.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Timeline");
@@ -45,69 +45,25 @@ const BooleanQueryValue = BooleanQueryValueDefinition.annotate({
   })
 );
 
-const NonNegativeIntQuery = S.FiniteFromString.check(
-  S.makeFilterGroup(
-    [
-      S.isInt({
-        identifier: $I`NonNegativeIntQueryIntegerCheck`,
-        title: "Integer Query Value",
-        description: "A URL-query number with no fractional component.",
-        message: "Pagination query value must be an integer.",
-      }),
-      S.isGreaterThanOrEqualTo(0, {
-        identifier: $I`NonNegativeIntQueryLowerBoundCheck`,
-        title: "Non-Negative Query Value",
-        description: "A URL-query integer greater than or equal to zero.",
-        message: "Pagination query value must be non-negative.",
-      }),
-    ],
-    {
-      identifier: $I`NonNegativeIntQueryChecks`,
-      title: "Non-Negative Integer Query",
-      description: "Checks for a non-negative integer decoded from a URL-query string.",
-    }
-  )
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.nat(),
+const NonNegativeIntQuery = S.FiniteFromString.pipe(
+  S.decodeTo(NonNegativeInt, {
+    decode: SchemaGetter.transform(NonNegativeInt.make),
+    encode: SchemaGetter.transform((value): number => value),
+  }),
+  $I.annoteSchema("NonNegativeIntQuery", {
+    description: "URL-query string decoded to a finite non-negative integer.",
   })
-  .pipe(
-    $I.annoteSchema("NonNegativeIntQuery", {
-      description: "URL-query string decoded to a finite non-negative integer.",
-    })
-  );
+);
 
-const PositiveIntQuery = S.FiniteFromString.check(
-  S.makeFilterGroup(
-    [
-      S.isInt({
-        identifier: $I`PositiveIntQueryIntegerCheck`,
-        title: "Integer Query Value",
-        description: "A URL-query number with no fractional component.",
-        message: "Limit query value must be an integer.",
-      }),
-      S.isGreaterThan(0, {
-        identifier: $I`PositiveIntQueryLowerBoundCheck`,
-        title: "Positive Query Value",
-        description: "A URL-query integer strictly greater than zero.",
-        message: "Limit query value must be positive.",
-      }),
-    ],
-    {
-      identifier: $I`PositiveIntQueryChecks`,
-      title: "Positive Integer Query",
-      description: "Checks for a positive integer decoded from a URL-query string.",
-    }
-  )
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: Number.MAX_SAFE_INTEGER }),
+const PositiveIntQuery = S.FiniteFromString.pipe(
+  S.decodeTo(PosInt, {
+    decode: SchemaGetter.transform(PosInt.make),
+    encode: SchemaGetter.transform((value): number => value),
+  }),
+  $I.annoteSchema("PositiveIntQuery", {
+    description: "URL-query string decoded to a finite positive integer.",
   })
-  .pipe(
-    $I.annoteSchema("PositiveIntQuery", {
-      description: "URL-query string decoded to a finite positive integer.",
-    })
-  );
+);
 
 const TimelineRangeFields = S.Struct({
   from: S.DateTimeUtcFromString.annotateKey({

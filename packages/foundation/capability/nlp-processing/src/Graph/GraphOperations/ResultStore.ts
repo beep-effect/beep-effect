@@ -120,7 +120,13 @@ export class ResultKey extends S.Class<ResultKey>($I`ResultKey`)(
   static readonly new: {
     (operationName: string, nodeId: NodeId): ResultKey;
     (nodeId: NodeId): (operationName: string) => ResultKey;
-  } = dual(2, (operationName: string, nodeId: NodeId): ResultKey => ({ nodeId, operationName }));
+  } = dual(
+    2,
+    (operationName: string, nodeId: NodeId): ResultKey => ({
+      nodeId,
+      operationName,
+    })
+  );
 
   static override readonly toString = (key: ResultKey): string => `${key.operationName}:${key.nodeId}`;
 }
@@ -255,7 +261,7 @@ const makeResultStore = Effect.gen(function* () {
     clear: Ref.set(storeRef, HashMap.empty()),
 
     delete: Effect.fn("ResultStore.delete")(function* (key: ResultKey) {
-      yield* Ref.update(storeRef, (map) => HashMap.remove(map, ResultKey.toString(key)));
+      yield* Ref.update(storeRef, HashMap.remove(ResultKey.toString(key)));
     }),
 
     gc: Effect.fn("ResultStore.gc")(function* (olderThanMs: number) {
@@ -321,7 +327,7 @@ const makeResultStore = Effect.gen(function* () {
           result: AnyOperationResult.make(result),
           timestamp,
         });
-        yield* Ref.update(storeRef, (map) => HashMap.set(map, ResultKey.toString(key), stored));
+        yield* Ref.update(storeRef, HashMap.set(ResultKey.toString(key), stored));
       })
     ),
   });

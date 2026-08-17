@@ -5,29 +5,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MimeType, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { LiteralKit, MimeType, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex, URLStr } from "@beep/schema";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import { URLStr } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/Image");
-
-const PositiveInt = S.Int.check(
-  S.isGreaterThan(0, {
-    identifier: $I`PositiveIntCheck`,
-    title: "Positive Integer",
-    description: "An integer greater than zero.",
-    message: "Expected a positive integer.",
-  })
-)
-  .annotate({
-    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 2_147_483_647 }),
-  })
-  .pipe(
-    $I.annoteSchema("PositiveInt", {
-      description: "Positive integer used for byte sizes and pixel dimensions.",
-    })
-  );
 
 const Base64ImageData = S.NonEmptyString.check(
   S.isPattern(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/, {
@@ -189,14 +171,14 @@ const ImageAssetFields = {
   contentType: MimeType.kinds.Image.annotateKey({
     description: "IANA image media type of the stored bytes.",
   }),
-  sizeBytes: PositiveInt.annotateKey({
+  sizeBytes: PosInt.annotateKey({
     description: "Strictly positive encoded size in bytes.",
   }),
-  width: S.OptionFromOptionalKey(PositiveInt).pipe(
+  width: S.OptionFromOptionalKey(PosInt).pipe(
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "Pixel width when image metadata is available." })
   ),
-  height: S.OptionFromOptionalKey(PositiveInt).pipe(
+  height: S.OptionFromOptionalKey(PosInt).pipe(
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "Pixel height when image metadata is available." })
   ),
@@ -248,15 +230,13 @@ export class ImageAsset extends S.Class<ImageAsset>($I`ImageAsset`)(
   /** Non-throwing asset decoder. */
   static readonly decodeOption = S.decodeUnknownOption(ImageAsset);
 
-  static readonly decodeJsonStringEffect = S.decodeEffect(
-    S.fromJsonString(ImageAsset)
-  )
+  static readonly decodeJsonStringEffect = S.decodeEffect(S.fromJsonString(ImageAsset));
 
-  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ImageAsset, { space: 2 }))
+  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ImageAsset, { space: 2 }));
 
-  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ImageAsset)
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ImageAsset);
 
-  static readonly encodeEffect = S.encodeEffect(ImageAsset)
+  static readonly encodeEffect = S.encodeEffect(ImageAsset);
 }
 
 const ImageRefFields = {

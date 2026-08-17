@@ -1,31 +1,40 @@
+import * as Rdf from "@beep/rdf/Rdf";
+import {
+  ShaclSeverity,
+  ShaclValidationResult,
+  ShaclValidationViolation,
+} from "@beep/semantic-web/services/shacl-validation";
 import { describe, expect, it } from "@effect/vitest";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import {
-  ShaclValidationReport,
-  ShaclViolation,
-  ShaclViolationSeverity,
-  ValidationPolicy,
-} from "../../../Domain/Schema/Shacl.ts";
+import { ShaclValidationReport, ValidationPolicy } from "../../../Domain/Schema/Shacl.ts";
 
-const violation = ShaclViolation.cases.Violation.make({
+const path = Rdf.makeNamedNode("https://schema.org/name");
+const sourceConstraintComponent = Rdf.makeNamedNode("http://www.w3.org/ns/shacl#MinCountConstraintComponent");
+
+const violation = ShaclValidationViolation.make({
   focusNode: "https://example.com/alice",
+  path,
   message: "Expected at least one value.",
-  sourceConstraintComponent: "http://www.w3.org/ns/shacl#MinCountConstraintComponent",
+  severity: "violation",
+  sourceConstraintComponent: O.some(sourceConstraintComponent),
 });
 
-const warning = ShaclViolation.cases.Warning.make({
+const warning = ShaclValidationViolation.make({
   focusNode: "https://example.com/alice",
+  path,
   message: "A preferred label is recommended.",
-  sourceConstraintComponent: "http://www.w3.org/ns/shacl#MinCountConstraintComponent",
+  severity: "warning",
+  sourceConstraintComponent: O.some(sourceConstraintComponent),
 });
 
 describe("effect-ontology SHACL schemas", () => {
   it("derives schema-valid values for every public SHACL schema", () => {
     const schemas: ReadonlyArray<S.Constraint> = [
-      ShaclViolationSeverity,
-      ShaclViolation,
+      ShaclSeverity,
+      ShaclValidationViolation,
       ShaclValidationReport,
       ValidationPolicy,
     ];
@@ -41,17 +50,18 @@ describe("effect-ontology SHACL schemas", () => {
     }
   });
 
-  it("enforces SHACL conformance as an exact function of result emptiness", () => {
+  it("wraps the canonical SHACL result with experiment execution metadata", () => {
     const emptyReport = S.decodeResult(ShaclValidationReport)({
-      conforms: true,
+      validation: { conforms: true, violations: [], truncated: false },
       validatedAt: "2026-07-25T12:00:00.000Z",
       dataGraphTripleCount: 42,
       shapesGraphTripleCount: 8,
       durationMs: 12.5,
     });
-    const inconsistentReport = S.decodeUnknownResult(ShaclValidationReport)({
-      conforms: true,
-      violations: [violation],
+    const reportWithResult = ShaclValidationReport.fromUnknown({
+      validation: S.encodeSync(ShaclValidationResult)(
+        ShaclValidationResult.make({ conforms: false, violations: [violation], truncated: false })
+      ),
       validatedAt: "2026-07-25T12:00:00.000Z",
       dataGraphTripleCount: 42,
       shapesGraphTripleCount: 8,
@@ -59,7 +69,8 @@ describe("effect-ontology SHACL schemas", () => {
     });
 
     expect(Result.isSuccess(emptyReport)).toBe(true);
-    expect(Result.isFailure(inconsistentReport)).toBe(true);
+    expect(reportWithResult.validation.conforms).toBe(false);
+    expect(reportWithResult.validation.violations).toEqual([violation]);
   });
 
   it("applies schema defaults and keeps workflow policy separate from report conformance", () => {

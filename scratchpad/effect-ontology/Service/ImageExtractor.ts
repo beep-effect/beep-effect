@@ -9,13 +9,13 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { URLStr } from "@beep/schema";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Context, Layer } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type { JinaContent } from "../Domain/Model/EnrichedContent.ts";
 import { ImageCandidate } from "../Domain/Model/Image.ts";
-import { URLStr } from "../Domain/Model/shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ImageExtractor");
 

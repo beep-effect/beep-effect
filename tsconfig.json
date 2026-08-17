@@ -198,35 +198,11 @@
       "@beep/ffmpeg": ["./packages/drivers/ffmpeg/src/index.ts"],
       "@beep/ffmpeg/*": ["./packages/drivers/ffmpeg/src/*"],
       "@beep/postgres": ["./packages/drivers/postgres/src/index.ts"],
-      "@beep/shared-domain/aggregates": [
-        "./packages/shared/domain/src/aggregates.ts"
-      ],
-      "@beep/shared-domain/entities": [
-        "./packages/shared/domain/src/entities.ts"
-      ],
-      "@beep/shared-domain/entities/Membership": [
-        "./packages/shared/domain/src/entities/Membership/index.ts"
-      ],
-      "@beep/shared-domain/entities/Organization": [
-        "./packages/shared/domain/src/entities/Organization/index.ts"
-      ],
-      "@beep/shared-domain/entities/User": [
-        "./packages/shared/domain/src/entities/User/index.ts"
-      ],
       "@beep/shared-domain/entity": ["./packages/shared/domain/src/entity.ts"],
       "@beep/shared-domain/identity": [
         "./packages/shared/domain/src/identity.ts"
       ],
       "@beep/shared-domain/values": ["./packages/shared/domain/src/values.ts"],
-      "@beep/shared-domain/values/LocalDate": [
-        "./packages/shared/domain/src/values/LocalDate/index.ts"
-      ],
-      "@beep/shared-tables/entities": [
-        "./packages/shared/tables/src/entities/index.ts"
-      ],
-      "@beep/shared-tables/entities/Organization": [
-        "./packages/shared/tables/src/entities/Organization/index.ts"
-      ],
       "@beep/agents-domain/entities": [
         "./packages/agents/domain/src/entities/index.ts"
       ],
@@ -1912,6 +1888,30 @@
       ],
       "@beep/repo-cli/test/DeletePackage": [
         "./packages/tooling/tool/cli/src/test/DeletePackage.test-kit.ts"
+      ],
+      "@beep/shared-tables/entities": [
+        "./packages/shared/tables/src/entities/index.ts"
+      ],
+      "@beep/shared-tables/entities/Organization": [
+        "./packages/shared/tables/src/entities/Organization/index.ts"
+      ],
+      "@beep/shared-domain/aggregates": [
+        "./packages/shared/domain/src/aggregates.ts"
+      ],
+      "@beep/shared-domain/entities": [
+        "./packages/shared/domain/src/entities.ts"
+      ],
+      "@beep/shared-domain/entities/Membership": [
+        "./packages/shared/domain/src/entities/Membership/index.ts"
+      ],
+      "@beep/shared-domain/entities/Organization": [
+        "./packages/shared/domain/src/entities/Organization/index.ts"
+      ],
+      "@beep/shared-domain/entities/User": [
+        "./packages/shared/domain/src/entities/User/index.ts"
+      ],
+      "@beep/shared-domain/values/LocalDate": [
+        "./packages/shared/domain/src/values/LocalDate/index.ts"
       ]
     }
   }

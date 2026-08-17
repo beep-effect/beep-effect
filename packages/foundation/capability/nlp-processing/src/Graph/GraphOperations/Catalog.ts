@@ -55,7 +55,7 @@ export const sentencize: Op.GraphOperation<string, string, Backend.NLPBackend, B
   apply: Effect.fn("Catalog.sentencize")(function* (node) {
     const backend = yield* Backend.NLPBackend;
     const sentences = yield* backend.sentencize(node.data);
-    return yield* Effect.forEach(sentences, (sentence) => makeNode(sentence, O.some(node.id), O.some("sentencize")));
+    return yield* Effect.forEach(sentences, makeNode(O.some(node.id), O.some("sentencize")));
   }),
   category: "expansion",
   description: "Split text into sentences using sentence boundary detection.",
@@ -85,7 +85,7 @@ export const tokenize: Op.GraphOperation<string, string, Backend.NLPBackend, Bac
   apply: Effect.fn("Catalog.tokenize")(function* (node) {
     const backend = yield* Backend.NLPBackend;
     const tokens = yield* backend.tokenize(node.data);
-    return yield* Effect.forEach(tokens, (token) => makeNode(token, O.some(node.id), O.some("tokenize")));
+    return yield* Effect.forEach(tokens, makeNode(O.some(node.id), O.some("tokenize")));
   }),
   category: "expansion",
   description: "Split text into tokens using the backend tokenizer.",
@@ -116,7 +116,7 @@ export const posTag: Op.GraphOperation<string, POSNode, Backend.NLPBackend, Back
   apply: Effect.fn("Catalog.posTag")(function* (node) {
     const backend = yield* Backend.NLPBackend;
     const tags = yield* backend.posTag(node.data);
-    return yield* Effect.forEach(tags, (tag) => makeNode(tag, O.some(node.id), O.some("posTag")));
+    return yield* Effect.forEach(tags, makeNode(O.some(node.id), O.some("posTag")));
   }),
   category: "expansion",
   description: "Tag each token with its part-of-speech label.",
@@ -146,7 +146,7 @@ export const lemmatize: Op.GraphOperation<string, LemmaNode, Backend.NLPBackend,
   apply: Effect.fn("Catalog.lemmatize")(function* (node) {
     const backend = yield* Backend.NLPBackend;
     const lemmas = yield* backend.lemmatize(node.data);
-    return yield* Effect.forEach(lemmas, (lemma) => makeNode(lemma, O.some(node.id), O.some("lemmatize")));
+    return yield* Effect.forEach(lemmas, makeNode(O.some(node.id), O.some("lemmatize")));
   }),
   category: "expansion",
   description: "Reduce each token to its canonical lemma.",
@@ -176,7 +176,7 @@ export const extractEntities: Op.GraphOperation<string, EntityNode, Backend.NLPB
     apply: Effect.fn("Catalog.extractEntities")(function* (node) {
       const backend = yield* Backend.NLPBackend;
       const entities = yield* backend.extractEntities(node.data);
-      return yield* Effect.forEach(entities, (entity) => makeNode(entity, O.some(node.id), O.some("extractEntities")));
+      return yield* Effect.forEach(entities, makeNode(O.some(node.id), O.some("extractEntities")));
     }),
     category: "expansion",
     description: "Extract named entities from text.",
@@ -207,7 +207,7 @@ export const parseDependencies: Op.GraphOperation<string, DependencyNode, Backen
     apply: Effect.fn("Catalog.parseDependencies")(function* (node) {
       const backend = yield* Backend.NLPBackend;
       const deps = yield* backend.parseDependencies(node.data);
-      return yield* Effect.forEach(deps, (dep) => makeNode(dep, O.some(node.id), O.some("parseDependencies")));
+      return yield* Effect.forEach(deps, makeNode(O.some(node.id), O.some("parseDependencies")));
     }),
     category: "expansion",
     description: "Parse syntactic dependency arcs within a sentence.",
@@ -239,9 +239,7 @@ export const extractRelations: Op.GraphOperation<string, RelationNode, Backend.N
     apply: Effect.fn("Catalog.extractRelations")(function* (node) {
       const backend = yield* Backend.NLPBackend;
       const relations = yield* backend.extractRelations(node.data);
-      return yield* Effect.forEach(relations, (relation) =>
-        makeNode(relation, O.some(node.id), O.some("extractRelations"))
-      );
+      return yield* Effect.forEach(relations, makeNode(O.some(node.id), O.some("extractRelations")));
     }),
     category: "expansion",
     description: "Extract semantic relations between entities.",

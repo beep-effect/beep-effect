@@ -533,6 +533,8 @@ export class DefaultGraph extends S.Class<DefaultGraph>($I`DefaultGraph`)(
   })
 ) {}
 
+const TermDefinition = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]).pipe(S.toTaggedUnion("termType"));
+
 /**
  * RDF term union.
  *
@@ -552,10 +554,10 @@ export class DefaultGraph extends S.Class<DefaultGraph>($I`DefaultGraph`)(
  * @category models
  * @since 0.0.0
  */
-export const Term = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]).pipe(
-  S.toTaggedUnion("termType"),
+export const Term = TermDefinition.pipe(
   $I.annoteSchema("Term", {
     description: "RDF term union aligned with RDF/JS.",
+    toArbitrary: () => S.toArbitrary(TermDefinition),
     semanticSchemaMetadata: makeSemanticSchemaMetadata({
       kind: "rdfConstruct",
       canonicalName: "Term",
@@ -593,6 +595,8 @@ export const Term = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]).pipe(
  */
 export type Term = typeof Term.Type;
 
+const SubjectDefinition = S.Union([NamedNode, BlankNode]).pipe(S.toTaggedUnion("termType"));
+
 /**
  * RDF subject term union.
  *
@@ -612,10 +616,10 @@ export type Term = typeof Term.Type;
  * @category models
  * @since 0.0.0
  */
-export const Subject = S.Union([NamedNode, BlankNode]).pipe(
-  S.toTaggedUnion("termType"),
+export const Subject = SubjectDefinition.pipe(
   $I.annoteSchema("Subject", {
     description: "RDF subject term union.",
+    toArbitrary: () => S.toArbitrary(SubjectDefinition),
   }),
   SchemaUtils.withCodecStatics
 );
@@ -637,6 +641,8 @@ export const Subject = S.Union([NamedNode, BlankNode]).pipe(
  */
 export type Subject = typeof Subject.Type;
 
+const ObjectTermDefinition = S.Union([NamedNode, BlankNode, Literal]).pipe(S.toTaggedUnion("termType"));
+
 /**
  * RDF object term union.
  *
@@ -657,10 +663,10 @@ export type Subject = typeof Subject.Type;
  * @category models
  * @since 0.0.0
  */
-export const ObjectTerm = S.Union([NamedNode, BlankNode, Literal]).pipe(
-  S.toTaggedUnion("termType"),
+export const ObjectTerm = ObjectTermDefinition.pipe(
   $I.annoteSchema("ObjectTerm", {
     description: "RDF object term union.",
+    toArbitrary: () => S.toArbitrary(ObjectTermDefinition),
   }),
   SchemaUtils.withCodecStatics
 );
@@ -682,6 +688,8 @@ export const ObjectTerm = S.Union([NamedNode, BlankNode, Literal]).pipe(
  */
 export type ObjectTerm = typeof ObjectTerm.Type;
 
+const GraphTermDefinition = S.Union([NamedNode, BlankNode, DefaultGraph]).pipe(S.toTaggedUnion("termType"));
+
 /**
  * RDF graph term union.
  *
@@ -701,10 +709,10 @@ export type ObjectTerm = typeof ObjectTerm.Type;
  * @category models
  * @since 0.0.0
  */
-export const GraphTerm = S.Union([NamedNode, BlankNode, DefaultGraph]).pipe(
-  S.toTaggedUnion("termType"),
+export const GraphTerm = GraphTermDefinition.pipe(
   $I.annoteSchema("GraphTerm", {
     description: "RDF graph term union.",
+    toArbitrary: () => S.toArbitrary(GraphTermDefinition),
   }),
   SchemaUtils.withCodecStatics
 );

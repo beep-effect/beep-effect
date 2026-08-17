@@ -46,7 +46,6 @@ export { EntityExtractor, RelationExtractor } from "./Service/Extraction.ts";
 export { ExtractionWorkflow } from "./Service/ExtractionWorkflow.ts";
 export { NlpService } from "./Service/Nlp.ts";
 export { OntologyService } from "./Service/Ontology.ts";
-export { RdfBuilder } from "./Service/Rdf.ts";
 // New Phase 3 Services
 export { type LinkedRelation, type LinkingResult, RelationLinker } from "./Service/RelationLinker.ts";
 export { type SimilarityResult, SimilarityScorer } from "./Service/SimilarityScorer.ts";

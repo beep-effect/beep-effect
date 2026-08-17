@@ -57,7 +57,6 @@
   "devDependencies": {
     "@beep/repo-utils": "workspace:^",
     "@beep/test-utils": "workspace:^",
-    "@effect/vitest": "catalog:",
     "@mdx-js/loader": "catalog:",
     "@tailwindcss/postcss": "catalog:",
     "@testing-library/dom": "catalog:",

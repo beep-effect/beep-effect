@@ -26,7 +26,7 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
-import { A, dual, P } from "@beep/utils";
+import { A, dual, flow, P } from "@beep/utils";
 import { Clock, Context, Duration, Effect, Layer, Match, Number as N, Result } from "effect";
 import * as O from "effect/Option";
 import * as Obs from "../../internal/observability.ts";
@@ -143,14 +143,17 @@ const getLeafNodes = <A>(graph: EffectGraph<A>): ReadonlyArray<GraphNode<A>> =>
  */
 const clampConcurrency = (requested: number): number =>
   Number.isFinite(requested) && requested >= 1
-    ? N.clamp(Math.floor(requested), { maximum: Types.MAX_PARALLEL_CONCURRENCY, minimum: 1 })
+    ? N.clamp(Math.floor(requested), {
+        maximum: Types.MAX_PARALLEL_CONCURRENCY,
+        minimum: 1,
+      })
     : 1;
 
-const concurrencyOf = (strategy: Types.ExecutionStrategy): number =>
-  Match.value(strategy).pipe(
-    Match.tag("Parallel", (s) => clampConcurrency(s.concurrency)),
-    Match.orElse(() => 1)
-  );
+const concurrencyOf: (strategy: Types.ExecutionStrategy) => number = Match.type<Types.ExecutionStrategy>().pipe(
+  Match.withReturnType<number>(),
+  Match.tag("Parallel", (s) => clampConcurrency(s.concurrency)),
+  Match.orElse(() => 1)
+);
 
 const isEffectGraph = (value: unknown): value is EffectGraph<unknown> =>
   P.hasProperties(value, ["graph", "indexToNodeId", "nodeIdToIndex"]);
@@ -351,7 +354,10 @@ const runStrategy: {
       concurrency: `${concurrency}`,
       leaf_count: `${A.length(leafNodes)}`,
       operation: operation.name,
-      timeout_ms: O.match(timeout, { onNone: () => "none", onSome: (d) => `${Duration.toMillis(d)}` }),
+      timeout_ms: O.match(timeout, {
+        onNone: () => "none",
+        onSome: (d) => `${Duration.toMillis(d)}`,
+      }),
     };
     return yield* Effect.gen(function* () {
       const startTime = yield* Clock.currentTimeMillis;
@@ -389,8 +395,7 @@ const estimateCost: GraphExecutorShape["estimateCost"] = dual(
     const leafNodes = getLeafNodes(graph);
     return yield* O.match(A.head(leafNodes), {
       onNone: () => Effect.succeed(Types.OperationCost.zero()),
-      onSome: (sample) =>
-        Effect.map(operation.estimateCost(sample), (cost) => Types.OperationCost.scale(cost, A.length(leafNodes))),
+      onSome: flow(operation.estimateCost, Effect.map(Types.OperationCost.scale(A.length(leafNodes)))),
     });
   })
 );
@@ -412,19 +417,21 @@ const execute: GraphExecutorShape["execute"] = dual(
       leaf_count: `${A.length(leafNodes)}`,
       operation: operation.name,
       strategy: opts.strategy._tag,
-      timeout_ms: O.match(opts.timeout, { onNone: () => "none", onSome: (d) => `${Duration.toMillis(d)}` }),
+      timeout_ms: O.match(opts.timeout, {
+        onNone: () => "none",
+        onSome: (d) => `${Duration.toMillis(d)}`,
+      }),
     };
 
     return yield* Effect.gen(function* () {
       const store = yield* ResultStore.ResultStore;
-      const fold: ExecutionFold =
-        A.length(leafNodes) === 0
-          ? {
-              errors: A.empty<unknown>(),
-              metrics: Types.ExecutionMetrics.empty(),
-              newNodes: A.empty<GraphNode<unknown>>(),
-            }
-          : yield* runStrategy(store, leafNodes, operation, opts.cache, concurrencyOf(opts.strategy), opts.timeout);
+      const fold: ExecutionFold = A.isReadonlyArrayEmpty(leafNodes)
+        ? {
+            errors: A.empty<unknown>(),
+            metrics: Types.ExecutionMetrics.empty(),
+            newNodes: A.empty<GraphNode<unknown>>(),
+          }
+        : yield* runStrategy(store, leafNodes, operation, opts.cache, concurrencyOf(opts.strategy), opts.timeout);
 
       yield* Obs.annotateNlpSpan({
         ...attributes,
@@ -452,15 +459,15 @@ const validate: GraphExecutorShape["validate"] = dual(
     operation: GraphOperation<A, B, R, E>
   ) {
     const leafNodes = getLeafNodes(graph);
-    if (A.length(leafNodes) === 0) {
+    if (A.isReadonlyArrayEmpty(leafNodes)) {
       return Types.ValidationResult.withWarnings(Types.ValidationResult.valid(), [
         "No leaf nodes to apply operation to",
       ]);
     }
-    const validations = yield* Effect.forEach(leafNodes, (node) => operation.validate(node), { concurrency: 4 });
+    const validations = yield* Effect.forEach(leafNodes, operation.validate, { concurrency: 4 });
     const errors = A.flatMap(validations, (v) => v.errors);
     const warnings = A.flatMap(validations, (v) => v.warnings);
-    return A.length(errors) === 0
+    return A.isReadonlyArrayEmpty(errors)
       ? { errors: A.empty<string>(), valid: true, warnings }
       : { errors, valid: false, warnings };
   })

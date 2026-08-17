@@ -15,9 +15,11 @@ providers, provider SDKs, provider environment/config loading, live provider
 smoke tests, CLI workflows, rendering, and visualization belong outside this
 package.
 
-Initial consumer proof is recorded as a platform-capability rationale. Expected
-first consumers are `@beep/nlp-mcp`, agent workflows, and future use-case
-packages that need provider-neutral structured extraction.
+Current consumer proof is `@beep/law-practice-use-cases`, which uses the
+capability for office-action extraction and its grounded IR-to-law mapping.
+The platform-capability rationale is a shared provider-neutral boundary that
+future `@beep/nlp-mcp` and agent workflows can reuse without importing a
+provider SDK or product semantics.
 
 ## Reuse Audit
 
@@ -36,6 +38,7 @@ packages that need provider-neutral structured extraction.
 - `@beep/langextract/Alignment`
 - `@beep/langextract/Handoff`
 - `@beep/langextract/Service`
+- `@beep/langextract/VerifiedSpan`
 
 `./internal/*` is intentionally blocked.
 

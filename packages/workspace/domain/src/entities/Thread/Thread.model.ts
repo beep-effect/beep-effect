@@ -44,4 +44,6 @@ export class Thread extends ThreadEntity.Entity<Thread>(ThreadEntity.tableName)(
     ThreadEntity.Table.index("workspace_thread_workspace_id_btree_idx", [columns.workspaceId]),
     ...ThreadEntity.entityExtras(columns),
   ]
-) {}
+) {
+  static readonly decodeUnknownSync = S.decodeUnknownSync(Thread);
+}

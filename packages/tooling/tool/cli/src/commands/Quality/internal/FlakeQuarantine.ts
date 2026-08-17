@@ -378,14 +378,16 @@ export const detectNoLocationTs2589Flake = (output: string): O.Option<A.NonEmpty
  *
  * **Details**
  *
- * Reuses the lane's `bun run <script>` invocation with an explicit package
- * filter appended and the lane's environment preserved verbatim. Preserving an
- * inherited `TURBO_FORCE=true` is deliberate: under a forced sweep an older
- * successful cache entry can exist at the failed task's unchanged hash, and a
- * cache-reading rerun would replay it without invoking the compiler — a
- * vacuous green. Keeping the lane's forcing guarantees the environment-only
- * attribution rests on a real execution; without forcing, a flake implies a
- * cache miss, so the task executes either way.
+ * Appends an explicit package filter to either a nested `bun run <script>` lane
+ * or a direct `bunx turbo run` lane and preserves the lane's environment
+ * verbatim. Nested Bun scripts receive the filter after `--`; direct Turbo
+ * invocations receive it as a Turbo option. Preserving an inherited
+ * `TURBO_FORCE=true` is deliberate: under a forced sweep an older successful
+ * cache entry can exist at the failed task's unchanged hash, and a cache-reading
+ * rerun would replay it without invoking the compiler — a vacuous green.
+ * Keeping the lane's forcing guarantees the environment-only attribution rests
+ * on a real execution; without forcing, a flake implies a cache miss, so the
+ * task executes either way.
  *
  * **Example** (Build standalone rerun step)
  *
@@ -406,17 +408,22 @@ export const detectNoLocationTs2589Flake = (output: string): O.Option<A.NonEmpty
 export const standaloneQuarantineRerunStep: {
   (task: FlakeQuarantineTask): (step: QualityTaskStep) => QualityTaskStep;
   (step: QualityTaskStep, task: FlakeQuarantineTask): QualityTaskStep;
-} = dual(
-  2,
-  (step: QualityTaskStep, task: FlakeQuarantineTask): QualityTaskStep =>
-    QualityTaskStep.make({
-      label: `${step.label}:flake-rerun:${task.packageName}`,
-      command: step.command,
-      args: [...step.args, "--", `--filter=${task.packageName}`],
-      cwd: step.cwd,
-      ...optionalProp("env", O.fromUndefinedOr(step.env)),
-    })
-);
+} = dual(2, (step: QualityTaskStep, task: FlakeQuarantineTask): QualityTaskStep => {
+  const directTurboRun =
+    step.command === "bunx" &&
+    A.get(step.args, 0).pipe(O.contains("turbo")) &&
+    A.get(step.args, 1).pipe(O.contains("run"));
+  return QualityTaskStep.make({
+    label: `${step.label}:flake-rerun:${task.packageName}`,
+    command: step.command,
+    args: directTurboRun
+      ? [...step.args, `--filter=${task.packageName}`]
+      : [...step.args, "--", `--filter=${task.packageName}`],
+    cwd: step.cwd,
+    ...optionalProp("env", O.fromUndefinedOr(step.env)),
+    ...optionalProp("useLocalEnv", O.fromUndefinedOr(step.useLocalEnv)),
+  });
+});
 
 /**
  * Build the full lane rerun step that arbitrates a quarantine attempt.
@@ -449,4 +456,5 @@ export const laneQuarantineRerunStep = (step: QualityTaskStep): QualityTaskStep 
     args: step.args,
     cwd: step.cwd,
     env: { ...(step.env ?? {}), TURBO_FORCE: undefined },
+    ...optionalProp("useLocalEnv", O.fromUndefinedOr(step.useLocalEnv)),
   });

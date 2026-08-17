@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import { NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import { Effect, flow, pipe } from "effect";
 import * as A from "effect/Array";
@@ -15,7 +16,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { FastCheck } from "effect/testing";
 import { ContentHash, GcsUri } from "../Identity.ts";
-import { IRI } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/OntologyEmbeddings");
 const utf8Encoder = new TextEncoder();

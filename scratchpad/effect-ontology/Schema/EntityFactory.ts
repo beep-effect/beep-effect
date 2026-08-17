@@ -11,96 +11,21 @@
  * @since 2.0.0
  */
 
+import type { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
-import { MutableHashMap, MutableHashSet, SchemaGetter } from "effect";
+import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
-import type { IRI } from "../Domain/Rdf/Types.ts";
 import { dual2 } from "../Utils/Dual.ts";
-import {
-  buildCaseInsensitiveIriMap,
-  buildLocalNameToIriMapSafe,
-  expandLocalNameToIri,
-  extractLocalNameFromIri,
-  normalizeIri,
-} from "../Utils/Iri.ts";
+import { buildLocalNameToIriMapSafe, expandLocalNameToIri, extractLocalNameFromIri } from "../Utils/Iri.ts";
 import { EmptyVocabularyError } from "./Errors.ts";
 
 // Re-export for convenience
 export { EmptyVocabularyError };
-
-/**
- * Helper: Creates a Union schema from a non-empty array of string literals
- *
- * @internal
- * @deprecated Use caseInsensitiveIriSchema for IRI validation to handle casing mismatches
- */
-const _unionFromStringArray = <T extends string>(
-  values: ReadonlyArray<T>,
-  errorType: "classes" | "properties"
-): S.Codec<T, T, never, never> => {
-  if (A.isReadonlyArrayEmpty(values)) {
-    throw EmptyVocabularyError.make({
-      message: `Cannot create schema with zero ${errorType} IRIs`,
-      type: errorType,
-    });
-  }
-
-  // Create individual Literal schemas for each IRI
-  return S.Literals(values);
-};
-
-// Silence unused variable warning
-void _unionFromStringArray;
-
-/**
- * Helper: Creates a case-insensitive IRI schema
- *
- * Accepts any string input, normalizes casing to match canonical IRIs,
- * then validates that the normalized value is in the allowed list.
- * This handles the mismatch between ontology IRI local names (PascalCase)
- * and rdfs:label values (camelCase) that LLMs may use interchangeably.
- *
- * @internal
- * @deprecated Use localNameSchema for local name validation and post-extraction IRI expansion
- */
-const caseInsensitiveIriSchema = (
-  values: ReadonlyArray<IRI>,
-  errorType: "classes" | "properties"
-): S.Codec<string, string, never, never> => {
-  if (A.isReadonlyArrayEmpty(values)) {
-    throw EmptyVocabularyError.make({
-      message: `Cannot create schema with zero ${errorType} IRIs`,
-      type: errorType,
-    });
-  }
-
-  // Build case-insensitive lookup map
-  const iriMap = buildCaseInsensitiveIriMap(values);
-  const validIris = MutableHashSet.fromIterable(values);
-
-  // Transform schema: normalize casing on decode, pass through on encode
-  return S.String.pipe(
-    S.decodeTo(S.String, {
-      decode: SchemaGetter.transform((canonical) => canonical),
-      encode: SchemaGetter.transform((input) => normalizeIri(input, iriMap)),
-    }),
-    // After normalization, filter to ensure it's a valid IRI
-    S.check(
-      S.makeFilter((iri) => MutableHashSet.has(validIris, iri as IRI), {
-        message: `IRI not in allowed ${errorType} list (checked case-insensitively). Valid options: ${values
-          .slice(0, 5)
-          .join(", ")}${values.length > 5 ? "..." : ""}`,
-      })
-    )
-  );
-};
-
-// Silence unused variable warnings for deprecated functions
-void caseInsensitiveIriSchema;
 
 /**
  * Helper: Creates a local name schema with case-insensitive validation
@@ -251,30 +176,6 @@ export const makeEntitySchema = dual2(
         description: "Entity attributes as property-value pairs",
       });
     }
-
-    // Evidence span schema for provenance tracking
-    const EvidenceSpan = S.Struct({
-      text: S.String.annotate({
-        description: "Exact text span from source document",
-      }),
-      startChar: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
-        S.annotate({
-          description: "Character offset start (0-indexed)",
-        })
-      ),
-      endChar: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
-        S.annotate({
-          description: "Character offset end (exclusive)",
-        })
-      ),
-      confidence: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 }))
-        .pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault)
-        .annotate({
-          description: "Extraction confidence (0-1)",
-        }),
-    }).annotate({
-      description: "Character-level text evidence for provenance",
-    });
 
     // Single entity schema matching Entity domain model
     const EntitySchema = S.Struct({

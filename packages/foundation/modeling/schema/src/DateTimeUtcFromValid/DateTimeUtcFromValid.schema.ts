@@ -451,7 +451,7 @@ const decodeDateTimeInput = (input: DateTimeInput): Effect.Effect<DateTime.Utc, 
     })
   );
 
-const encodeDateTimeInput = (value: DateTime.Utc): Effect.Effect<DateTimeInput, never> =>
+const encodeDateTimeInput = (value: DateTime.Utc): Effect.Effect<DateTimeInput> =>
   Effect.succeed(DateTimeInputString.makeTagged(DateTime.formatIso(value)));
 
 /**

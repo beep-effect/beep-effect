@@ -217,8 +217,9 @@ one.
 `bun run beep yeet verify` (full tier) is the authoritative local gate. Its
 pre-push proof runs the *same global commands CI runs* — `bun run check` (global
 tsgo with the effect language-service rules), full `bun run docgen` (which
-compiles every JSDoc `@example`), `bun run test`, and the secrets/security/SAST/
-Nix lanes. If `yeet verify` is green, CI should be green on the first push.
+compiles the fenced code in every titled `**Example** (Title)` section),
+`bun run test`, and the secrets/security/SAST/Nix lanes. If `yeet verify` is
+green, CI should be green on the first push.
 
 The full verify tier and every publish push path also run
 `publish:00-head-install-preflight`: a frozen-lockfile install in a detached,
@@ -233,9 +234,10 @@ authoritative** — do not conclude "it's green" from them:
 - `bunx turbo run check --filter=<pkg>` (package-scoped) can pass while the
   global `bun run check` fails an effect-LSP rule (e.g. `strictEffectProvide`
   /TS377032). Only the global check matches CI.
-- `bun run docgen:local ... --reuse-proof-manifest` skips recompiling `@example`
-  blocks when a source hash is unchanged, so it can miss a broken example or an
-  unresolved import subpath that full `bun run docgen` (and CI) catches.
+- `bun run docgen:local ... --reuse-proof-manifest` skips recompiling
+  `**Example**` blocks when a source hash is unchanged, so it can miss a broken
+  example or an unresolved import subpath that full `bun run docgen` (and CI)
+  catches.
 
 When in doubt, prove with `yeet verify` before trusting "green", and always
 prove with it before `publish`.

@@ -52,22 +52,22 @@ const decodeEvidence = S.decodeUnknownSync(Evidence);
  */
 export const officeActionExtractionTargets: LangExtractRequest["targets"] = [
   ExtractionTarget.make({
-    description: "The office-action document identifier or heading.",
+    description: O.some("The office-action document identifier or heading."),
     kind: "entity",
     name: OfficeActionExtractionLabel.Enum.office_action,
   }),
   ExtractionTarget.make({
-    description: "The rejected claim text.",
+    description: O.some("The rejected claim text."),
     kind: "entity",
     name: OfficeActionExtractionLabel.Enum.claim,
   }),
   ExtractionTarget.make({
-    description: "The prior-art reference cited by the rejection.",
+    description: O.some("The prior-art reference cited by the rejection."),
     kind: "entity",
     name: OfficeActionExtractionLabel.Enum.rejection_reference,
   }),
   ExtractionTarget.make({
-    description: "Applicant distinction text copied from the office-action response material.",
+    description: O.some("Applicant distinction text copied from the office-action response material."),
     kind: "custom",
     name: OfficeActionExtractionLabel.Enum.distinction,
   }),

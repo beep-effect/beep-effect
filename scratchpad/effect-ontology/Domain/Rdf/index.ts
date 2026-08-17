@@ -9,12 +9,12 @@
  * @since 0.0.0
  */
 /**
- * Standard and experiment-specific RDF vocabulary constants.
+ * Experiment-owned RDF vocabulary constants.
  *
  * @example
  * ```ts
- * import { RDF } from "@effect-ontology/Rdf/index.ts"
- * console.log(RDF.type.value)
+ * import { CLAIMS } from "@effect-ontology/Rdf/index.ts"
+ * console.log(CLAIMS.Claim.value)
  * ```
  *
  * @category rdf
@@ -22,12 +22,12 @@
  */
 export * from "./Constants.ts";
 /**
- * Canonical RDF/JS terms, datasets, prefix maps, and graph-free triples.
+ * Graph-free RDF statement adapter.
  *
  * @example
  * ```ts
- * import { IRI } from "@effect-ontology/Rdf/index.ts"
- * console.log(IRI.is("https://schema.org/Person")) // true
+ * import { Triple } from "@effect-ontology/Rdf/index.ts"
+ * console.log(Triple)
  * ```
  *
  * @category rdf

@@ -7,12 +7,12 @@
  * @module Cli/Commands/Inference
  */
 
+import * as Struct from "@beep/utils/Struct";
 import { Console, Data, Effect, FileSystem } from "effect";
+import * as A from "effect/Array";
 import * as Str from "effect/String";
 import { Command, Flag as Options } from "effect/unstable/cli";
-import * as Struct from "@beep/utils/Struct";
-import * as A from "effect/Array";
-import { RdfBuilder } from "../../Service/Rdf.ts";
+import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize } from "../../Service/Rdf.ts";
 import { Reasoner, ReasoningConfig } from "../../Service/Reasoner.ts";
 import { computeQuadDelta, summarizeDelta } from "../../Utils/QuadDelta.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
@@ -75,22 +75,20 @@ export const inferenceCommand = Command.make(
       yield* Console.log(`Running ${profile} inference on ${input}...`);
 
       // Read input file
-      const turtle = yield* fs
-        .readFileString(input)
-        .pipe(
-          Effect.mapError(
-            (cause) =>
-              new InferenceCliError({
-                operation: "readInput",
-                message: `Failed to read input file: ${cause.message}`,
-                cause,
-              })
-          )
-        );
+      const turtle = yield* fs.readFileString(input).pipe(
+        Effect.mapError(
+          (cause) =>
+            new InferenceCliError({
+              operation: "readInput",
+              message: `Failed to read input file: ${cause.message}`,
+              cause,
+            })
+        )
+      );
 
       // Parse input graph
       const originalStore = yield* rdfBuilder.parseTurtle(turtle);
-      const originalCount = originalStore._store.size;
+      const originalCount = rdfStoreSize(originalStore);
 
       yield* Console.log(`Parsed ${originalCount} triples from input`);
 
@@ -125,31 +123,29 @@ export const inferenceCommand = Command.make(
       if (deltaOnly) {
         outputStore = yield* rdfBuilder.createStore;
         for (const quad of delta.newQuads) {
-          outputStore._store.addQuad(quad);
+          rdfStoreAddQuad(outputStore, quad);
         }
       }
 
       // Serialize and write output
       const outputTurtle = yield* rdfBuilder.toTurtle(outputStore);
-      yield* fs
-        .writeFileString(output, outputTurtle)
-        .pipe(
-          Effect.mapError(
-            (cause) =>
-              new InferenceCliError({
-                operation: "writeOutput",
-                message: `Failed to write output file: ${cause.message}`,
-                cause,
-              })
-          )
-        );
+      yield* fs.writeFileString(output, outputTurtle).pipe(
+        Effect.mapError(
+          (cause) =>
+            new InferenceCliError({
+              operation: "writeOutput",
+              message: `Failed to write output file: ${cause.message}`,
+              cause,
+            })
+        )
+      );
 
       yield* Console.log(`\n${Str.repeat(50)("=")}`);
       yield* Console.log(`Output written to: ${output}`);
       if (deltaOnly) {
         yield* Console.log(`(delta only - ${delta.newQuads.length} triples)`);
       } else {
-        yield* Console.log(`(full graph - ${enrichedStore._store.size} triples)`);
+        yield* Console.log(`(full graph - ${rdfStoreSize(enrichedStore)} triples)`);
       }
     }).pipe(withErrorHandler)
 ).pipe(Command.withDescription("Run RDFS inference on a Turtle file"));

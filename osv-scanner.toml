@@ -102,11 +102,3 @@ reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
 id = "GHSA-xq3m-2v4x-88gg"
 ignoreUntil = 2026-09-15T00:00:00Z
 reason = "Same nested protobufjs 6.11.6 as GHSA-2pr8-phx7-x9h3."
-
-[[PackageOverrides]]
-name = "effect"
-version = "https://pkg.pr.new/Effect-TS/effect-smol/effect@51f6d19"
-ecosystem = "npm"
-vulnerability.ignore = true
-effectiveUntil = 2026-09-15T00:00:00Z
-reason = "OSV URL-version false positive for root dev-only inspeffct 1.1.0's transitive effect snapshot. This exact effect-smol commit has package version 4.0.0-beta.93 and creates a scheduler dispatcher per fiber, matching the upstream isolation fix. The exact name, ecosystem, and URL version keep every other Effect artifact and version visible to OSV. Re-verified 2026-08-10: inspeffct latest on npm is still 1.1.0 and its published dependencies still pin effect (plus @effect/sql-sqlite-bun and @effect/sql-sqlite-node) to this pkg.pr.new snapshot, so no bump can clear it; extended to align with the sibling ignore expiries. Revisit when inspeffct publishes a semver Effect dependency or OSV classifies URL-pinned versions correctly."

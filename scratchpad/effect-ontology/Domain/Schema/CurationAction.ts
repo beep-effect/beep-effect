@@ -10,12 +10,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { NamedNode } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName } from "../Identity.ts";
-import { Confidence } from "../Model/shared.ts";
-import { NamedNode } from "../Rdf/Types.ts";
 import { ClaimId, RdfObject } from "./KnowledgeModel.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/CurationAction");

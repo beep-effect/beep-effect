@@ -16,6 +16,12 @@ import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
 
 const $I = $RdfId.create("uri");
 
+const UriArbitraryValues = [
+  "https://example.com/path?q=1#fragment",
+  "mailto:user@example.com",
+  "urn:isbn:9780140328721",
+] as const;
+
 const SCHEME_PREFIX = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 const UNRESERVED = /^[A-Za-z0-9._~-]$/;
 
@@ -330,14 +336,18 @@ export type AbsoluteURI = typeof AbsoluteURI.Type;
  * @category models
  * @since 0.0.0
  */
-export const URI = S.String.check(uriChecks).pipe(
-  S.brand("URI"),
-  $I.annoteSchema("URI", {
-    description: "RFC 3986 URI syntax.",
-    semanticSchemaMetadata: uriMetadata,
-  }),
-  SchemaUtils.withCodecStatics
-);
+export const URI = S.String.check(uriChecks)
+  .annotate({
+    toArbitrary: () => (fc) => fc.constantFrom(...UriArbitraryValues),
+  })
+  .pipe(
+    S.brand("URI"),
+    $I.annoteSchema("URI", {
+      description: "RFC 3986 URI syntax.",
+      semanticSchemaMetadata: uriMetadata,
+    }),
+    SchemaUtils.withCodecStatics
+  );
 
 /**
  * Type for {@link URI}.

@@ -17,6 +17,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { loadBM25Vectorizer, normalizeTokenText } from "./internal/bm25.ts";
+import { WinkStringArray } from "./Wink.models.ts";
 import { WinkEngine } from "./Wink.service.ts";
 import { observeWinkWorkflow } from "./WinkObservability.ts";
 import type { Document, DocumentId } from "@beep/nlp/Core/Document";
@@ -96,11 +97,6 @@ type WinkVectorizerShape = {
 const toFiniteRecord = (record: Record<string, number>): Record<string, number> =>
   R.fromEntries(A.map(R.toEntries(record), ([key, value]) => [key, P.isNumber(value) ? value : 0] as const));
 
-const WinkStringArray = S.Array(S.String).pipe(
-  $I.annoteSchema("WinkStringArray", {
-    description: "Array of strings returned by wink vectorizer accessors.",
-  })
-);
 const TermFrequencyPair = S.Tuple([S.String, S.Finite]).pipe(
   $I.annoteSchema("TermFrequencyPair", {
     description: "Term and finite frequency pair returned by wink vectorizer accessors.",

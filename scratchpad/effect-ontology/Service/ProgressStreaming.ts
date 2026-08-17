@@ -8,12 +8,17 @@
  * @module Service/ProgressStreaming
  */
 
+import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { Percentage } from "@beep/schema/Percentage";
+import { UUID } from "@beep/schema/String";
+import { ISOStr } from "@beep/schema/Timestamp";
 import { Chunk, Clock, Data, Effect, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
@@ -33,6 +38,7 @@ import {
   RecoverableErrorEvent,
   RelationFoundEvent,
 } from "../Contract/ProgressStreaming.ts";
+import type { ExtractionRunId } from "../Domain/Identity.ts";
 import { dual2 } from "../Utils/Dual.ts";
 
 // =============================================================================
@@ -42,8 +48,6 @@ import { dual2 } from "../Utils/Dual.ts";
 /**
  * Extraction run ID type (mirrors the pattern from Contract)
  */
-export type ExtractionRunId = `doc-${string}`;
-
 /**
  * Failure caused by progress-stream backpressure policy enforcement.
  *
@@ -60,9 +64,9 @@ export class ProgressStreamingError extends Data.TaggedError("ProgressStreamingE
  */
 export interface ProgressBuilderState {
   readonly runId: ExtractionRunId;
-  readonly totalChunks: number;
-  readonly processedChunks: number;
-  readonly currentPhaseProgress: number;
+  readonly totalChunks: PosInt;
+  readonly processedChunks: NonNegativeInt;
+  readonly currentPhaseProgress: Percentage;
 }
 
 // =============================================================================
@@ -73,12 +77,12 @@ export interface ProgressBuilderState {
  * Create a new progress builder state
  */
 export const makeProgressBuilder = dual2(
-  (runId: ExtractionRunId, totalChunks: number): Effect.Effect<Ref.Ref<ProgressBuilderState>> =>
+  (runId: ExtractionRunId, totalChunks: PosInt): Effect.Effect<Ref.Ref<ProgressBuilderState>> =>
     Ref.make<ProgressBuilderState>({
       runId,
       totalChunks,
-      processedChunks: 0,
-      currentPhaseProgress: 0,
+      processedChunks: NonNegativeInt.make(0),
+      currentPhaseProgress: Percentage.make(0),
     })
 );
 
@@ -97,14 +101,14 @@ export const createExtractionStarted: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
     textMetadata: {
-      characterCount: number;
-      estimatedAvgChunkSize: number;
+      characterCount: PosInt;
+      estimatedAvgChunkSize: PosInt;
       contentType?: string;
     }
   ): Effect.Effect<ExtractionStartedEvent>;
   (textMetadata: {
-    characterCount: number;
-    estimatedAvgChunkSize: number;
+    characterCount: PosInt;
+    estimatedAvgChunkSize: PosInt;
     contentType?: string;
   }): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionStartedEvent>;
 } = dual(
@@ -112,22 +116,22 @@ export const createExtractionStarted: {
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
     textMetadata: {
-      characterCount: number;
-      estimatedAvgChunkSize: number;
+      characterCount: PosInt;
+      estimatedAvgChunkSize: PosInt;
       contentType?: string;
     }
   ): Effect.fn.Return<ExtractionStartedEvent> {
     const state = yield* Ref.get(ref);
     return ExtractionStartedEvent.make({
       _tag: "extraction_started",
-      eventId: uuidv4(),
+      eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: 0,
-      totalChunks: PosInt.make(state.totalChunks),
+      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      overallProgress: Percentage.make(0),
+      totalChunks: state.totalChunks,
       textMetadata: {
-        characterCount: PosInt.make(textMetadata.characterCount),
-        estimatedAvgChunkSize: PosInt.make(textMetadata.estimatedAvgChunkSize),
+        characterCount: textMetadata.characterCount,
+        estimatedAvgChunkSize: textMetadata.estimatedAvgChunkSize,
         contentType: O.fromUndefinedOr(textMetadata.contentType),
       },
     });
@@ -140,33 +144,33 @@ export const createExtractionStarted: {
 export const createChunkingProgress: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunksCompleted: number,
-    chunksProcessing: number,
-    avgChunkSize: number
+    chunksCompleted: NonNegativeInt,
+    chunksProcessing: NonNegativeInt,
+    avgChunkSize: PosInt
   ): Effect.Effect<ChunkingProgressEvent>;
   (
-    chunksCompleted: number,
-    chunksProcessing: number,
-    avgChunkSize: number
+    chunksCompleted: NonNegativeInt,
+    chunksProcessing: NonNegativeInt,
+    avgChunkSize: PosInt
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkingProgressEvent>;
 } = dual(
   4,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunksCompleted: number,
-    chunksProcessing: number,
-    avgChunkSize: number
+    chunksCompleted: NonNegativeInt,
+    chunksProcessing: NonNegativeInt,
+    avgChunkSize: PosInt
   ): Effect.fn.Return<ChunkingProgressEvent> {
     const state = yield* Ref.get(ref);
     return ChunkingProgressEvent.make({
       _tag: "chunking_progress",
-      eventId: uuidv4(),
+      eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: PosInt.make(NonNegativeInt.make(calculateOverallProgress(state, 0))),
-      chunksCompleted: NonNegativeInt.make(chunksCompleted),
-      chunksProcessing: NonNegativeInt.make(chunksProcessing),
-      avgChunkSize: PosInt.make(avgChunkSize),
+      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
+      chunksCompleted,
+      chunksProcessing,
+      avgChunkSize,
     });
   })
 );
@@ -177,32 +181,32 @@ export const createChunkingProgress: {
 export const createChunkProcessingStarted: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
-    chunkTextLength: number,
+    chunkIndex: NonNegativeInt,
+    chunkTextLength: PosInt,
     textPreview: string
   ): Effect.Effect<ChunkProcessingStartedEvent>;
   (
-    chunkIndex: number,
-    chunkTextLength: number,
+    chunkIndex: NonNegativeInt,
+    chunkTextLength: PosInt,
     textPreview: string
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingStartedEvent>;
 } = dual(
   4,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
-    chunkTextLength: number,
+    chunkIndex: NonNegativeInt,
+    chunkTextLength: PosInt,
     textPreview: string
   ): Effect.fn.Return<ChunkProcessingStartedEvent> {
     const state = yield* Ref.get(ref);
     return ChunkProcessingStartedEvent.make({
       _tag: "chunk_processing_started",
-      eventId: uuidv4(),
+      eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 0),
-      chunkIndex: NonNegativeInt.make(chunkIndex),
-      chunkTextLength: PosInt.make(chunkTextLength),
+      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
+      chunkIndex,
+      chunkTextLength,
       textPreview,
     });
   })
@@ -214,37 +218,37 @@ export const createChunkProcessingStarted: {
 export const createEntityFound: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     entityId: string,
     mention: string,
     types: ReadonlyArray<string>,
-    confidence?: number
+    confidence?: Confidence
   ): Effect.Effect<EntityFoundEvent>;
   (
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     entityId: string,
     mention: string,
     types: ReadonlyArray<string>,
-    confidence?: number
+    confidence?: Confidence
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<EntityFoundEvent>;
 } = dual(
   5,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     entityId: string,
     mention: string,
     types: ReadonlyArray<string>,
-    confidence?: number
+    confidence?: Confidence
   ): Effect.fn.Return<EntityFoundEvent> {
     const state = yield* Ref.get(ref);
     return EntityFoundEvent.make({
       _tag: "entity_found",
-      eventId: uuidv4(),
+      eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 40),
-      chunkIndex: NonNegativeInt.make(chunkIndex),
+      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 40)),
+      chunkIndex,
       entityId,
       mention,
       types: A.fromIterable(types),
@@ -259,40 +263,40 @@ export const createEntityFound: {
 export const createRelationFound: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     subjectId: string,
     predicate: string,
     object: string | number | boolean,
     isEntityReference: boolean,
-    confidence?: number
+    confidence?: Confidence
   ): Effect.Effect<RelationFoundEvent>;
   (
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     subjectId: string,
     predicate: string,
     object: string | number | boolean,
     isEntityReference: boolean,
-    confidence?: number
+    confidence?: Confidence
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<RelationFoundEvent>;
 } = dual(
   6,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     subjectId: string,
     predicate: string,
     object: string | number | boolean,
     isEntityReference: boolean,
-    confidence?: number
+    confidence?: Confidence
   ): Effect.fn.Return<RelationFoundEvent> {
     const state = yield* Ref.get(ref);
     return RelationFoundEvent.make({
       _tag: "relation_found",
-      eventId: uuidv4(),
+      eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 60),
-      chunkIndex: NonNegativeInt.make(chunkIndex),
+      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 60)),
+      chunkIndex,
       subjectId,
       predicate,
       object,
@@ -308,40 +312,40 @@ export const createRelationFound: {
 export const createChunkProcessingComplete: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
-    entityCount: number,
-    relationCount: number,
-    durationMs: number,
+    chunkIndex: NonNegativeInt,
+    entityCount: NonNegativeInt,
+    relationCount: NonNegativeInt,
+    durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
   ): Effect.Effect<ChunkProcessingCompleteEvent>;
   (
-    chunkIndex: number,
-    entityCount: number,
-    relationCount: number,
-    durationMs: number,
+    chunkIndex: NonNegativeInt,
+    entityCount: NonNegativeInt,
+    relationCount: NonNegativeInt,
+    durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingCompleteEvent>;
 } = dual(
   6,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
-    entityCount: number,
-    relationCount: number,
-    durationMs: number,
+    chunkIndex: NonNegativeInt,
+    entityCount: NonNegativeInt,
+    relationCount: NonNegativeInt,
+    durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
   ): Effect.fn.Return<ChunkProcessingCompleteEvent> {
     const state = yield* Ref.get(ref);
     return ChunkProcessingCompleteEvent.make({
       _tag: "chunk_processing_complete",
-      eventId: uuidv4(),
+      eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 100),
-      chunkIndex: NonNegativeInt.make(chunkIndex),
-      entityCount: NonNegativeInt.make(entityCount),
-      relationCount: NonNegativeInt.make(relationCount),
-      durationMs: PosInt.make(durationMs),
+      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 100)),
+      chunkIndex,
+      entityCount,
+      relationCount,
+      durationMs,
       errors: O.fromUndefinedOr(errors),
     });
   })
@@ -353,58 +357,58 @@ export const createChunkProcessingComplete: {
 export const createExtractionComplete: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    totalEntities: number,
-    totalRelations: number,
-    uniqueEntityTypes: number,
-    totalDurationMs: number,
-    successfulChunks: number,
-    failedChunks: number
+    totalEntities: NonNegativeInt,
+    totalRelations: NonNegativeInt,
+    uniqueEntityTypes: NonNegativeInt,
+    totalDurationMs: PosInt,
+    successfulChunks: NonNegativeInt,
+    failedChunks: NonNegativeInt
   ): Effect.Effect<ExtractionCompleteEvent>;
   (
-    totalEntities: number,
-    totalRelations: number,
-    uniqueEntityTypes: number,
-    totalDurationMs: number,
-    successfulChunks: number,
-    failedChunks: number
+    totalEntities: NonNegativeInt,
+    totalRelations: NonNegativeInt,
+    uniqueEntityTypes: NonNegativeInt,
+    totalDurationMs: PosInt,
+    successfulChunks: NonNegativeInt,
+    failedChunks: NonNegativeInt
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionCompleteEvent>;
 } = dual(
   7,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    totalEntities: number,
-    totalRelations: number,
-    uniqueEntityTypes: number,
-    totalDurationMs: number,
-    successfulChunks: number,
-    failedChunks: number
+    totalEntities: NonNegativeInt,
+    totalRelations: NonNegativeInt,
+    uniqueEntityTypes: NonNegativeInt,
+    totalDurationMs: PosInt,
+    successfulChunks: NonNegativeInt,
+    failedChunks: NonNegativeInt
   ): Effect.fn.Return<ExtractionCompleteEvent> {
     const state = yield* Ref.get(ref);
     return ExtractionCompleteEvent.make({
       _tag: "extraction_complete",
-      eventId: uuidv4(),
+      eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: 100,
-      totalEntities: NonNegativeInt.make(totalEntities),
-      totalRelations: NonNegativeInt.make(totalRelations),
-      uniqueEntityTypes: NonNegativeInt.make(uniqueEntityTypes),
-      totalDurationMs: PosInt.make(totalDurationMs),
-      successfulChunks: NonNegativeInt.make(successfulChunks),
-      failedChunks: NonNegativeInt.make(failedChunks),
+      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      overallProgress: Percentage.make(100),
+      totalEntities,
+      totalRelations,
+      uniqueEntityTypes,
+      totalDurationMs,
+      successfulChunks,
+      failedChunks,
     });
   })
 );
 
 type CreateExtractionFailedOptions = {
   readonly isTemporary?: boolean;
-  readonly retryAfterMs?: number;
+  readonly retryAfterMs?: PosInt;
   readonly partialResults?: {
-    readonly entityCount: number;
-    readonly relationCount: number;
-    readonly processedChunks: number;
+    readonly entityCount: NonNegativeInt;
+    readonly relationCount: NonNegativeInt;
+    readonly processedChunks: NonNegativeInt;
   };
-  readonly lastSuccessfulChunkIndex?: number;
+  readonly lastSuccessfulChunkIndex?: NonNegativeInt;
 };
 
 /**
@@ -435,28 +439,22 @@ export const createExtractionFailed: {
   ): Effect.fn.Return<ExtractionFailedEvent> {
     const state = yield* Ref.get(ref);
     return ExtractionFailedEvent.make({
-      eventId: uuidv4(),
+      eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 0),
+      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       errorType,
       errorMessage,
       isRecoverable,
       retryStrategy: P.isNotUndefined(options?.isTemporary)
         ? ExtractionFailedRetryStrategy.cases.exponential_backoff.makeOption({
             type: "exponential_backoff" as const,
-            delayMs: O.fromUndefinedOr(options.retryAfterMs).pipe(O.map(PosInt.make)),
+            delayMs: O.fromUndefinedOr(options.retryAfterMs),
             maxAttempts: O.some(PosInt.make(3)),
           })
         : O.none(),
-      partialResults: O.fromUndefinedOr(options?.partialResults).pipe(
-        O.map((results) => ({
-          entityCount: NonNegativeInt.make(results.entityCount),
-          relationCount: NonNegativeInt.make(results.relationCount),
-          processedChunks: NonNegativeInt.make(results.processedChunks),
-        }))
-      ),
-      lastSuccessfulChunkIndex: O.fromUndefinedOr(options?.lastSuccessfulChunkIndex).pipe(O.map(NonNegativeInt.make)),
+      partialResults: O.fromUndefinedOr(options?.partialResults),
+      lastSuccessfulChunkIndex: O.fromUndefinedOr(options?.lastSuccessfulChunkIndex),
     });
   })
 );
@@ -467,14 +465,14 @@ export const createExtractionFailed: {
 export const createRecoverableError: {
   (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     errorType: string,
     errorMessage: string,
     phase: string,
     recoveryAction: string
   ): Effect.Effect<RecoverableErrorEvent>;
   (
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     errorType: string,
     errorMessage: string,
     phase: string,
@@ -484,7 +482,7 @@ export const createRecoverableError: {
   6,
   Effect.fn(function* (
     ref: Ref.Ref<ProgressBuilderState>,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     errorType: string,
     errorMessage: string,
     phase: string,
@@ -492,11 +490,11 @@ export const createRecoverableError: {
   ): Effect.fn.Return<RecoverableErrorEvent> {
     const state = yield* Ref.get(ref);
     return RecoverableErrorEvent.make({
-      eventId: uuidv4(),
+      eventId: UUID.make(uuidv4()),
       runId: state.runId,
-      timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
-      overallProgress: calculateOverallProgress(state, 50),
-      chunkIndex: NonNegativeInt.make(chunkIndex),
+      timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
+      overallProgress: Percentage.make(calculateOverallProgress(state, 50)),
+      chunkIndex,
       errorType,
       errorMessage,
       phase,
@@ -511,17 +509,17 @@ export const createRecoverableError: {
 export const markChunkProcessed = (ref: Ref.Ref<ProgressBuilderState>): Effect.Effect<void> =>
   Ref.update(ref, (state) => ({
     ...state,
-    processedChunks: state.processedChunks + 1,
+    processedChunks: NonNegativeInt.make(state.processedChunks + 1),
   }));
 
 /**
  * Set phase progress
  */
 export const setPhaseProgress = dual2(
-  (ref: Ref.Ref<ProgressBuilderState>, progress: number): Effect.Effect<void> =>
+  (ref: Ref.Ref<ProgressBuilderState>, progress: Percentage): Effect.Effect<void> =>
     Ref.update(ref, (state) => ({
       ...state,
-      currentPhaseProgress: Math.min(100, Math.max(0, progress)),
+      currentPhaseProgress: progress,
     }))
 );
 
@@ -600,37 +598,41 @@ export const enqueueEvent: {
 
     // Handle overflow
     if (ratio > 1.0) {
-      switch (state.config.strategy) {
-        case "drop_oldest": {
-          yield* Ref.update(ref, (s) => ({
+      return yield* Match.value(state.config.strategy).pipe(
+        Match.when("drop_oldest", () =>
+          Ref.update(ref, (s) => ({
             ...s,
             eventQueue: [...s.eventQueue.slice(1), event],
-          }));
-          return O.none();
-        }
-        case "drop_newest":
-          return O.none();
-        case "block_producer": {
-          yield* Effect.sleep(state.config.blockTimeoutMs ?? 5000);
-          const afterWait = yield* Ref.get(ref);
-          if (afterWait.eventQueue.length >= state.config.maxQueueSize) {
-            return yield* new ProgressStreamingError({
-              reason: "BackpressureTimeout",
-              message: "Backpressure timeout: client not consuming events fast enough",
-            });
-          }
-          yield* Ref.update(ref, (s) => ({
-            ...s,
-            eventQueue: [...s.eventQueue, event],
-          }));
-          return O.none();
-        }
-        case "close_stream":
-          return yield* new ProgressStreamingError({
-            reason: "QueueOverflow",
-            message: "Backpressure critical: stream closed due to queue overflow",
-          });
-      }
+          })).pipe(Effect.as(O.none()))
+        ),
+        Match.when("drop_newest", () => Effect.succeed(O.none())),
+        Match.when("block_producer", () =>
+          Effect.gen(function* () {
+            yield* Effect.sleep(state.config.blockTimeoutMs ?? 5000);
+            const afterWait = yield* Ref.get(ref);
+            if (afterWait.eventQueue.length >= state.config.maxQueueSize) {
+              return yield* new ProgressStreamingError({
+                reason: "BackpressureTimeout",
+                message: "Backpressure timeout: client not consuming events fast enough",
+              });
+            }
+            yield* Ref.update(ref, (s) => ({
+              ...s,
+              eventQueue: [...s.eventQueue, event],
+            }));
+            return O.none();
+          })
+        ),
+        Match.when("close_stream", () =>
+          Effect.fail(
+            new ProgressStreamingError({
+              reason: "QueueOverflow",
+              message: "Backpressure critical: stream closed due to queue overflow",
+            })
+          )
+        ),
+        Match.exhaustive
+      );
     }
 
     // Check warning threshold
@@ -645,9 +647,9 @@ export const enqueueEvent: {
         return O.some(
           BackpressureWarningEvent.make({
             _tag: "backpressure_warning",
-            eventId: `bp-${uuidv4()}`,
+            eventId: UUID.make(uuidv4()),
             runId: event.runId,
-            timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
+            timestamp: ISOStr.make(DateTime.toDateUtc(yield* DateTime.now).toISOString()),
             overallProgress: event.overallProgress,
             queuedEvents: PosInt.make(queueSize),
             maxQueueSize: PosInt.make(state.config.maxQueueSize),
@@ -749,17 +751,17 @@ export const withBackpressure = dual2(
  */
 export interface ResumableExtractionState {
   readonly runId: ExtractionRunId;
-  readonly lastSuccessfulChunkIndex: number;
+  readonly lastSuccessfulChunkIndex: NonNegativeInt;
   readonly partialResults: {
-    entityCount: number;
-    relationCount: number;
+    entityCount: NonNegativeInt;
+    relationCount: NonNegativeInt;
   };
   readonly pausedAt: Date;
   readonly pauseReason?: {
     errorType: string;
     message: string;
     isRecoverable: boolean;
-    retryAfterMs?: number;
+    retryAfterMs?: PosInt;
   };
 }
 

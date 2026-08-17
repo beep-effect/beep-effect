@@ -151,9 +151,31 @@ const FailingGovinfoRegistrationLayer = sanitizedToolkit(GovinfoToolkit).pipe(
   Layer.provide(FixtureFailingGovinfo)
 );
 
+// `McpServer.McpServer.layer` is typed as providing `McpServerClient` but only
+// builds `McpServer`, so a direct `callTool` — one with no transport middleware
+// in front of it — has to supply the caller itself.
+const stubClientInfo = { name: "gov-legal-mcp-test-client", version: "0.0.0" };
+
+const StubMcpClientLayer = Layer.succeed(
+  McpSchema.McpServerClient,
+  McpSchema.McpServerClient.of({
+    clientId: 1,
+    protocolVersion: "2025-06-18",
+    clientCapabilities: {},
+    clientInfo: stubClientInfo,
+    getClient: Effect.die("the fixture client is never dereferenced") as never,
+    initializePayload: {
+      capabilities: {},
+      clientInfo: stubClientInfo,
+      protocolVersion: "2025-06-18",
+    } as never,
+  })
+);
+
 const buildFixtureLayer = (environment: Readonly<Record<string, string>>) =>
   Layer.mergeAll(
     McpServer.McpServer.layer,
+    StubMcpClientLayer,
     composeGatedLayers(
       gatedLayer(EcfrSourceAuthRegistration, EcfrRegistrationLayer),
       gatedLayer(GovinfoSourceAuthRegistration, GovinfoRegistrationLayer)
@@ -163,6 +185,7 @@ const buildFixtureLayer = (environment: Readonly<Record<string, string>>) =>
 const buildEcfrOnlyLayer = () =>
   Layer.mergeAll(
     McpServer.McpServer.layer,
+    StubMcpClientLayer,
     composeGatedLayers(gatedLayer(EcfrSourceAuthRegistration, EcfrRegistrationLayer)).pipe(
       Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({}))),
       Layer.orDie
@@ -172,6 +195,7 @@ const buildEcfrOnlyLayer = () =>
 const buildFailingGovinfoLayer = () =>
   Layer.mergeAll(
     McpServer.McpServer.layer,
+    StubMcpClientLayer,
     composeGatedLayers(gatedLayer(GovinfoSourceAuthRegistration, FailingGovinfoRegistrationLayer)).pipe(
       Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ GOVINFO_API_KEY: "fixture-secret" }))),
       Layer.orDie

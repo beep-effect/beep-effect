@@ -4,11 +4,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
-import { Attributes, Confidence, EntityId, IRI } from "./shared.ts";
+import { Attributes, EntityId } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolution");
 

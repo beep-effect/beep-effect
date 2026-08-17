@@ -9,14 +9,16 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { NamedNode } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import * as EventGroup from "effect/unstable/eventlog/EventGroup";
 import { BatchId, GcsUri, OntologyName } from "../Identity.ts";
-import { BatchState, Confidence } from "../Model/index.ts";
-import { NamedNode } from "../Rdf/index.ts";
+import { BatchState } from "../Model/index.ts";
 import { ClaimId } from "./KnowledgeModel.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/EventSchema");
