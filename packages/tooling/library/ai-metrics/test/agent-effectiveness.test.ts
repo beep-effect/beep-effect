@@ -30,7 +30,7 @@ import {
   makeAgentEffectivenessPromptBundle,
   syncAgentEffectivenessPhoenix,
 } from "@beep/repo-ai-metrics";
-import { A, O } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
@@ -253,6 +253,75 @@ const phoenixRuntimeLayer = (duckDbPath: string) =>
     DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))
   );
 
+// Inventory answers; the per-project aggregate query does not. This is the shape a
+// large store actually presents -- identity is cheap, aggregates over the spans
+// table are not -- and the doctor must still report Phoenix as reachable with the
+// counts marked unmeasured rather than collapsing the whole section.
+const phoenixAggregatesUnavailableHttpLayer = Layer.succeed(
+  HttpClient.HttpClient,
+  HttpClient.make((request) =>
+    Effect.gen(function* () {
+      const url = HttpClientRequest.toUrl(request).pipe(
+        O.map((value) => value.toString()),
+        O.getOrElse(() => request.url)
+      );
+
+      if (request.method !== "POST" || url !== "https://phoenix.test/graphql") {
+        return HttpClientResponse.fromWeb(
+          request,
+          Response.json({ ok: true }, { headers: { "x-phoenix-server-version": "9.9.9-test" } })
+        );
+      }
+
+      const body = yield* pipe(
+        request.body._tag === "Uint8Array"
+          ? Effect.succeed(new TextDecoder().decode(request.body.body))
+          : Effect.succeed(""),
+        Effect.orElseSucceed(() => "")
+      );
+
+      if (Str.includes("AgentEffectivenessPhoenixProjectStats")(body)) {
+        return HttpClientResponse.fromWeb(
+          request,
+          Response.json({ errors: [{ message: "timeout" }] }, { status: 500 })
+        );
+      }
+
+      return HttpClientResponse.fromWeb(
+        request,
+        Response.json({
+          data: {
+            datasetCount: 0,
+            evaluatorCount: 0,
+            projectCount: 1,
+            projects: {
+              edges: [
+                {
+                  node: {
+                    name: "beep-jsdoc-worker-eval",
+                    sessionAnnotationNames: [],
+                    spanAnnotationNames: ["agent.loop.status"],
+                    traceAnnotationsNames: ["agent.outcome"],
+                  },
+                },
+              ],
+            },
+            promptCount: 0,
+            serverStatus: { insufficientStorage: false },
+          },
+        })
+      );
+    })
+  )
+);
+
+const phoenixAggregatesUnavailableRuntimeLayer = (duckDbPath: string) =>
+  Layer.mergeAll(
+    NodeServices.layer,
+    phoenixAggregatesUnavailableHttpLayer,
+    DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))
+  );
+
 const phoenixWriteSdk = (
   calls: {
     readonly annotations: Array<string>;
@@ -422,6 +491,42 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
           expect(report.phoenix.version).toBe("9.9.9-test");
           expect(report.phoenix.projects[0]?.traceAnnotationNames).toEqual(["agent.outcome"]);
         }).pipe(provideScopedLayer(phoenixRuntimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))));
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("keeps Phoenix readable when the per-project aggregates do not return", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const path = yield* Path.Path;
+        yield* Effect.gen(function* () {
+          const dataRoot = path.join(tmpDir, "metrics");
+          const report = yield* makeAgentEffectivenessDoctorReport(
+            AgentEffectivenessDoctorInput.make({
+              dataRoot,
+              noPhoenix: false,
+              phoenixBaseUrl: "https://phoenix.test",
+              workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
+            })
+          );
+
+          // Reachable, not `unavailable`: one slow aggregate must not take the section down.
+          expect(report.phoenix.projectCount).toBe(1);
+          expect(report.phoenix.version).toBe("9.9.9-test");
+          expect(report.phoenix.projects[0]?.name).toBe("beep-jsdoc-worker-eval");
+          // Cheap identity fields still populate.
+          expect(report.phoenix.projects[0]?.traceAnnotationNames).toEqual(["agent.outcome"]);
+          // Aggregates report as not-measured rather than as zero or false, so the
+          // report cannot be misread as "Phoenix has no traces".
+          expect(report.phoenix.projects[0]?.hasTraces).toBeNull();
+          expect(report.phoenix.projects[0]?.recordCount).toBeNull();
+          expect(report.phoenix.projects[0]?.traceCount).toBeNull();
+          expect(Str.includes("unmeasured")(report.phoenix.message)).toBe(true);
+        }).pipe(
+          provideScopedLayer(
+            phoenixAggregatesUnavailableRuntimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))
+          )
+        );
       })
     ).pipe(provideScopedLayer(NodeServices.layer))
   );
