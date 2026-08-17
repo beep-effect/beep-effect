@@ -450,6 +450,43 @@ describe("goals bootstrap command gate", () => {
   );
 });
 
+describe("goals adopt command gate", () => {
+  const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
+
+  it(
+    "refuses without --plan, prints a JSON plan for a fixture packet, and gates on packet-not-found",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeProjectFile("goals/_template/README.md", "# <Goal Title>\n");
+            yield* writeProjectFile("goals/_template/ops/manifest.json", "{}\n");
+            yield* writeProjectFile("goals/_template/research/.gitkeep", "\n");
+            yield* writeProjectFile(
+              "goals/fixture-packet/README.md",
+              "# Fixture Packet\n\n## Status\n\nLifecycle: `active`\n\n## Mission\n\nAdopt me.\n"
+            );
+
+            const missingPlan = yield* Effect.exit(runGoalsCommand(["adopt", "fixture-packet"]));
+            expectReportedExit(missingPlan);
+
+            const happy = yield* Effect.exit(runGoalsCommand(["adopt", "fixture-packet", "--plan", "--json"]));
+            expect(Exit.isSuccess(happy)).toBe(true);
+
+            const human = yield* Effect.exit(
+              runGoalsCommand(["adopt", "fixture-packet", "--plan", "--toward", "standard-delivery"])
+            );
+            expect(Exit.isSuccess(human)).toBe(true);
+
+            const notFound = yield* Effect.exit(runGoalsCommand(["adopt", "missing-packet", "--plan"]));
+            expectReportedExit(notFound);
+          })
+        ).pipe(provideScopedLayer(NodeServices.layer))
+      ),
+    30_000
+  );
+});
+
 // The sealed design's empirical zero-write proof: git state is byte-identical
 // around compilation and snapshotting (equality, not emptiness, so a dirty
 // developer tree does not false-fail the suite).
