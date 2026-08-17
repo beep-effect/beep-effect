@@ -144,6 +144,23 @@ type RootConfigOptions = {
   readonly syncpackSources: ReadonlyArray<string>;
 };
 
+const TestRootTypeScriptPlugins = [
+  {
+    name: "@effect/language-service",
+    namespaceImportPackages: ["effect", "@effect/*", "@beep/*"],
+    includeSuggestionsInTsc: true,
+    importAliases: {
+      Array: "A",
+      Schema: "S",
+    },
+    diagnosticSeverity: {
+      canonicalFixtureRule: "error",
+      missedPipeableOpportunity: "error",
+      missingPipeableSignature: "error",
+    },
+  },
+];
+
 const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootConfigOptions) {
   const path = yield* Path.Path;
 
@@ -158,6 +175,11 @@ const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootC
   yield* writeJsonFile(path.join(rootDir, "tsconfig.json"), {
     compilerOptions: {
       paths: options.paths,
+    },
+  });
+  yield* writeJsonFile(path.join(rootDir, "tsconfig.base.json"), {
+    compilerOptions: {
+      plugins: TestRootTypeScriptPlugins,
     },
   });
   yield* writeJsonFile(path.join(rootDir, "tsconfig.packages.json"), {

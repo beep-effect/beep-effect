@@ -1,5 +1,5 @@
 import { createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
-import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
+import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
@@ -63,6 +63,11 @@ const StoriesTsconfig = S.Struct({
 const StoriesDirectoryTsconfig = S.Struct({
   extends: S.Literal("../tsconfig.stories.json"),
 });
+const TypeScriptPluginsConfig = S.Struct({
+  compilerOptions: S.Struct({
+    plugins: S.Array(S.Record(S.String, S.Unknown)),
+  }),
+});
 const GeneratedPackageManifest = S.Struct({
   scripts: S.Record(S.String, S.String),
   exports: S.optionalKey(S.Unknown),
@@ -113,22 +118,15 @@ const EcosystemPackageMetadata = S.Struct({
   bundleDependencies: S.optionalKey(S.Unknown),
   devDependencies: S.Record(S.String, S.String),
 });
-const EcosystemEffectPlugin = S.Struct({
-  name: S.Literal("@effect/language-service"),
-  diagnosticSeverity: S.Struct({
-    missedPipeableOpportunity: S.Literal("off"),
-    missingPipeableSignature: S.Literal("off"),
-  }),
-});
 const EcosystemProductionTsconfig = S.Struct({
   compilerOptions: S.Struct({
     stripInternal: S.Literal(true),
-    plugins: S.Tuple([EcosystemEffectPlugin]),
+    plugins: S.Array(S.Record(S.String, S.Unknown)),
   }),
 });
 const EcosystemTestTsconfig = S.Struct({
   compilerOptions: S.Struct({
-    plugins: S.Tuple([EcosystemEffectPlugin]),
+    plugins: S.Array(S.Record(S.String, S.Unknown)),
   }),
 });
 
@@ -137,6 +135,7 @@ const decodeTsconfigReferences = S.decodeUnknownSync(TsconfigReferences);
 const decodeTsconfigPaths = S.decodeUnknownSync(TsconfigPaths);
 const decodeStoriesTsconfig = S.decodeUnknownSync(StoriesTsconfig);
 const decodeStoriesDirectoryTsconfig = S.decodeUnknownSync(StoriesDirectoryTsconfig);
+const decodeTypeScriptPluginsConfig = S.decodeUnknownEffect(TypeScriptPluginsConfig);
 const decodePackageScripts = S.decodeUnknownSync(PackageScripts);
 const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManifest);
 const decodeFoundationPackageMetadata = S.decodeUnknownSync(FoundationPackageMetadata);
@@ -145,15 +144,52 @@ const decodeDriverPackageMetadata = S.decodeUnknownSync(DriverPackageMetadata);
 const decodeEcosystemPackageMetadata = S.decodeUnknownSync(EcosystemPackageMetadata);
 const decodeEcosystemProductionTsconfig = S.decodeUnknownSync(EcosystemProductionTsconfig);
 const decodeEcosystemTestTsconfig = S.decodeUnknownSync(EcosystemTestTsconfig);
+const decodeUnknownRecord = S.decodeUnknownSync(S.Record(S.String, S.Unknown));
 const StoriesTsconfigArbitrary = S.toArbitrary(StoriesTsconfig)(fc);
 const StoriesDirectoryTsconfigArbitrary = S.toArbitrary(StoriesDirectoryTsconfig)(fc);
+const TestRootTypeScriptPlugins = [
+  {
+    name: "@effect/language-service",
+    namespaceImportPackages: ["effect", "@effect/*", "@beep/*"],
+    includeSuggestionsInTsc: true,
+    importAliases: {
+      Array: "A",
+      Schema: "S",
+    },
+    diagnosticSeverity: {
+      canonicalFixtureRule: "error",
+      missedPipeableOpportunity: "error",
+      missingPipeableSignature: "error",
+    },
+  },
+  {
+    name: "canonical-fixture-plugin",
+    fixtureOption: true,
+  },
+];
+type TypeScriptPluginConfig = (typeof TypeScriptPluginsConfig.Type)["compilerOptions"]["plugins"][number];
+const withSanctionedEcosystemDiagnosticDelta = (
+  plugins: ReadonlyArray<TypeScriptPluginConfig>
+): ReadonlyArray<TypeScriptPluginConfig> =>
+  A.map(plugins, (plugin) =>
+    plugin.name === "@effect/language-service"
+      ? {
+          ...plugin,
+          diagnosticSeverity: {
+            ...decodeUnknownRecord(plugin.diagnosticSeverity),
+            missedPipeableOpportunity: "off",
+            missingPipeableSignature: "off",
+          },
+        }
+      : plugin
+  );
 const ExpectedGeneratedQualityScripts = {
   audit: "bun run --if-present beep:audit",
   babel: "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
   "beep:audit":
     "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
   "beep:build": "tsc -p tsconfig.json && bun run babel",
-  "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+  "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
   "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
@@ -169,7 +205,7 @@ const ExpectedGeneratedQualityScripts = {
 } as const;
 const ExpectedGeneratedStoriesQualityScripts = {
   ...ExpectedGeneratedQualityScripts,
-  "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests && bun run beep:check:stories",
+  "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
   "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit",
 } as const;
 const ExpectedNextjsAppScripts = {
@@ -178,7 +214,7 @@ const ExpectedNextjsAppScripts = {
   dev: "portless marketing-web.beep next dev --turbopack",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "next build --turbopack",
-  "beep:check": "tsgo -b tsconfig.json",
+  "beep:check": "tsgo -p tsconfig.check.json",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
@@ -197,7 +233,7 @@ const ExpectedTauriAppScripts = {
   "dev:tauri": "tauri dev",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "vite build",
-  "beep:check": "tsgo -b tsconfig.json",
+  "beep:check": "tsgo -p tsconfig.check.json",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
@@ -382,6 +418,11 @@ const bootstrapRootConfig = Effect.fn(function* (rootDir: string, options: RootC
       paths: options.paths,
     },
   });
+  yield* writeJsonFile(path.join(rootDir, "tsconfig.base.json"), {
+    compilerOptions: {
+      plugins: TestRootTypeScriptPlugins,
+    },
+  });
   yield* writeJsonFile(path.join(rootDir, "tsconfig.packages.json"), {
     references: A.map(options.references, (referencePath) => ({ path: referencePath })),
   });
@@ -461,6 +502,28 @@ describe("create-package", { concurrent: false }, () => {
       fcRuns(16)
     );
   });
+
+  it(
+    "keeps the checked-in OIP plugin profile aligned with the canonical root profile",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const repoRoot = yield* findRepoRoot();
+          const rootConfig = yield* decodeTypeScriptPluginsConfig(
+            yield* readJsoncFile(path.join(repoRoot, "tsconfig.base.json"))
+          );
+          const oipConfig = yield* decodeTypeScriptPluginsConfig(
+            yield* readJsoncFile(path.join(repoRoot, "apps", "oip-web", "tsconfig.json"))
+          );
+
+          expect(oipConfig.compilerOptions.plugins).toEqual(
+            A.append(rootConfig.compilerOptions.plugins, { name: "next" })
+          );
+        }).pipe(provideScopedLayer(CommandTestLayer), Effect.orDie)
+      ),
+    CreatePackageTestTimeoutMs
+  );
 
   it(
     "refreshes bun.lock with bun install --lockfile-only by default",
@@ -599,10 +662,13 @@ describe("create-package", { concurrent: false }, () => {
             expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
             expect(yield* fs.exists(path.join(packageDir, "src", "app", "page.tsx"))).toBe(true);
 
-            const appTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(packageDir, "tsconfig.json")));
+            const appTsconfigDocument = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
+            const appTsconfig = decodeTsconfigPaths(appTsconfigDocument);
+            const appPlugins = yield* decodeTypeScriptPluginsConfig(appTsconfigDocument);
             expect(appTsconfig.compilerOptions.paths).toMatchObject({
               "@/*": ["./src/*"],
             });
+            expect(appPlugins.compilerOptions.plugins).toEqual(A.append(TestRootTypeScriptPlugins, { name: "next" }));
 
             const rootTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(rootDir, "tsconfig.json")));
             expect(rootTsconfig.compilerOptions.paths["@beep/marketing-web"]).toBeUndefined();
@@ -1162,15 +1228,15 @@ describe("create-package", { concurrent: false }, () => {
               const testTsconfig = decodeEcosystemTestTsconfig(
                 yield* readJsoncFile(path.join(ecosystemPackageDir, "tsconfig.test.json"))
               );
+              const rootTypeScriptPlugins = yield* decodeTypeScriptPluginsConfig(
+                yield* readJsoncFile(path.join(rootDir, "tsconfig.base.json"))
+              );
+              const expectedEcosystemPlugins = withSanctionedEcosystemDiagnosticDelta(
+                rootTypeScriptPlugins.compilerOptions.plugins
+              );
               expect(productionTsconfig.compilerOptions.stripInternal).toBe(true);
-              expect(productionTsconfig.compilerOptions.plugins[0].diagnosticSeverity).toEqual({
-                missedPipeableOpportunity: "off",
-                missingPipeableSignature: "off",
-              });
-              expect(testTsconfig.compilerOptions.plugins[0].diagnosticSeverity).toEqual({
-                missedPipeableOpportunity: "off",
-                missingPipeableSignature: "off",
-              });
+              expect(productionTsconfig.compilerOptions.plugins).toEqual(expectedEcosystemPlugins);
+              expect(testTsconfig.compilerOptions.plugins).toEqual(expectedEcosystemPlugins);
 
               const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
               expect(syncpackConfig).toContain(`"packages/ecosystem/*/package.json"`);

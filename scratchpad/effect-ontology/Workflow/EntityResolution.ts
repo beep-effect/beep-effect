@@ -8,13 +8,13 @@
  * @module Workflow/EntityResolution
  */
 
+import type { IRI } from "@beep/rdf";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
-import type { IRI } from "../Domain/Model/shared.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { combinedSimilarity, overlapRatio } from "../Utils/String.ts";

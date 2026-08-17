@@ -149,18 +149,12 @@
   "@beep/shared-domain/entities/User": [
     "./packages/shared/domain/src/entities/User/index.ts"
   ],
-  "@beep/shared-domain/entity": ["./packages/shared/domain/src/entity.ts"],
-  "@beep/shared-domain/identity": ["./packages/shared/domain/src/identity.ts"],
-  "@beep/shared-domain/values": ["./packages/shared/domain/src/values.ts"],
   "@beep/shared-domain/values/LocalDate": [
     "./packages/shared/domain/src/values/LocalDate/index.ts"
   ],
-  "@beep/shared-tables/entities": [
-    "./packages/shared/tables/src/entities/index.ts"
-  ],
-  "@beep/shared-tables/entities/Organization": [
-    "./packages/shared/tables/src/entities/Organization/index.ts"
-  ],
+  "@beep/shared-domain/entity": ["./packages/shared/domain/src/entity.ts"],
+  "@beep/shared-domain/identity": ["./packages/shared/domain/src/identity.ts"],
+  "@beep/shared-domain/values": ["./packages/shared/domain/src/values.ts"],
   "@beep/agents-domain/entities": [
     "./packages/agents/domain/src/entities/index.ts"
   ],
@@ -1736,6 +1730,12 @@
   ],
   "@beep/shared-use-cases/server": [
     "./packages/shared/use-cases/src/server.ts"
+  ],
+  "@beep/shared-tables/entities": [
+    "./packages/shared/tables/src/entities/index.ts"
+  ],
+  "@beep/shared-tables/entities/Organization": [
+    "./packages/shared/tables/src/entities/Organization/index.ts"
   ],
   "@beep/repo-cli/commands/DeletePackage": [
     "./packages/tooling/tool/cli/src/commands/DeletePackage/index.ts"

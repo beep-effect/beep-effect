@@ -7,6 +7,7 @@ import {
   observeHttpApiEffect,
   observeHttpApiHandler,
 } from "@beep/observability/server";
+import { HttpStatusCode as CanonicalHttpStatusCode } from "@beep/schema/HttpStatus";
 import { fcRuns } from "@beep/test-utils";
 import { Effect, Equal, Metric } from "effect";
 import * as O from "effect/Option";
@@ -17,6 +18,10 @@ import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/ht
 import { describe, expect, it } from "vitest";
 
 describe("HttpApiTelemetry", () => {
+  it("preserves the schema package's canonical HTTP status export", () => {
+    expect(HttpStatusCode).toBe(CanonicalHttpStatusCode);
+  });
+
   it("reads explicit HttpApiSchema statuses", () => {
     expect(httpApiSuccessStatus(S.String.pipe(HttpApiSchema.status(201)))).toBe(201);
     expect(httpApiSuccessStatus(S.String)).toBe(200);

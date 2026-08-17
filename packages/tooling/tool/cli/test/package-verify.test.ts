@@ -26,7 +26,7 @@ const demoWorkspace = PackageVerifyWorkspace.make({
   name: "@beep/demo",
   dir: "/repo/packages/demo",
   scripts: {
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:check": "tsgo -p tsconfig.check.json",
     "beep:lint": "biome check .",
   },
 });

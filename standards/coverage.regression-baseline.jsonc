@@ -2433,15 +2433,15 @@
     },
     "@beep/box": {
       "path": "packages/drivers/box",
-      "lines": 47.64,
-      "statements": 46.72,
+      "lines": 51.16,
+      "statements": 50,
       "branches": 74.15,
-      "functions": 27,
+      "functions": 27.2,
       "uncovered": {
-        "lines": 433,
-        "statements": 472,
+        "lines": 376,
+        "statements": 414,
         "branches": 23,
-        "functions": 400
+        "functions": 396
       },
       "files": {
         "packages/drivers/box/src/Box.errors.ts": {
@@ -2514,1218 +2514,6 @@
             "statements": 69,
             "branches": 3,
             "functions": 66
-          }
-        },
-        "packages/drivers/box/src/experimental/Box.errors.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/Box.schemas.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 4,
-            "statements": 4,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/aggregates/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/AiTaxonomy/AiTaxonomy.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/AiTaxonomy/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/AiTextGen/AiTextGen.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/AiTextGen/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/AppItem/AppItem.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/AppItem/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Collaboration/Collaboration.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Collaboration/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Comment/Comment.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Comment/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/DevicePinner/DevicePinner.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/DevicePinner/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/EmailAlias/EmailAlias.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/EmailAlias/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Event/Event.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Event/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/File/File.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/File/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/FileVersion/FileVersion.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/FileVersion/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Folder/Folder.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Folder/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/FolderReference/FolderReference.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/FolderReference/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Group/Group.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Group/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/GroupMembership/GroupMembership.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/GroupMembership/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/IntegrationMapping/IntegrationMapping.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/IntegrationMapping/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Invite/Invite.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Invite/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Item/Item.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Item/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Outcome/Outcome.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Outcome/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/PLACEHOLDER/PLACEHOLDER.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/PLACEHOLDER/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/RetentionPolicy/RetentionPolicy.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/RetentionPolicy/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/RetentionPolicyAssignment/RetentionPolicyAssignment.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/RetentionPolicyAssignment/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/SignRequest/SignRequest.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/SignRequest/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/SignTemplate/SignTemplate.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/SignTemplate/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/StoragePolicy/StoragePolicy.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/StoragePolicy/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/StoragePolicyAssignment/StoragePolicyAssignment.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/StoragePolicyAssignment/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Task/Task.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Task/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TaskAssignment/TaskAssignment.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TaskAssignment/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashFile/TrashFile.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashFile/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashFileRestored/TrashFileRestored.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashFileRestored/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashFolder/TrashFolder.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashFolder/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashFolderRestored/TrashFolderRestored.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashFolderRestored/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashWebLink/TrashWebLink.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashWebLink/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashWebLinkRestored/TrashWebLinkRestored.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/TrashWebLinkRestored/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/UploadSession/UploadSession.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/UploadSession/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/User/User.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/User/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/WebLink/WebLink.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/WebLink/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Webhook/Webhook.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Webhook/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Workflow/Workflow.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/Workflow/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/ZipDownload/ZipDownload.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/ZipDownload/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/entities/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/errors/ClientError.errors.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/errors/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/Classification/Classification.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/Classification/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/Metadata/Metadata.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/Metadata/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/PLACEHOLDER/PLACEHOLDER.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/PLACEHOLDER/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/Resource/Resource.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/Resource/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/SearchResult/PLACEHOLDER.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/SearchResult/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/SerializedData/SerializedData.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 0,
-          "uncovered": {
-            "lines": 7,
-            "statements": 8,
-            "branches": 0,
-            "functions": 4
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/SerializedData/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/UploadPart/UploadPart.model.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 1,
-            "statements": 1,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/UploadPart/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/domain/values/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/drivers/box/src/experimental/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         },
         "packages/drivers/box/src/index.ts": {
@@ -7464,10 +6252,10 @@
     },
     "@beep/epistemic-domain": {
       "path": "packages/epistemic/domain",
-      "lines": 93.27,
-      "statements": 91.81,
+      "lines": 93.28,
+      "statements": 91.82,
       "branches": 100,
-      "functions": 78.52,
+      "functions": 78.65,
       "uncovered": {
         "lines": 29,
         "statements": 38,
@@ -10459,9 +9247,9 @@
     "@beep/html": {
       "path": "packages/foundation/modeling/html",
       "lines": 99.08,
-      "statements": 99.16,
+      "statements": 99.17,
       "branches": 100,
-      "functions": 98.43,
+      "functions": 98.44,
       "uncovered": {
         "lines": 15,
         "statements": 15,
@@ -10554,10 +9342,10 @@
           }
         },
         "packages/foundation/modeling/html/src/Html.policy.ts": {
-          "lines": 98.05,
-          "statements": 98.19,
+          "lines": 98.09,
+          "statements": 98.23,
           "branches": 100,
-          "functions": 96.77,
+          "functions": 96.96,
           "uncovered": {
             "lines": 2,
             "statements": 2,
@@ -11010,30 +9798,114 @@
     },
     "@beep/langextract": {
       "path": "packages/foundation/capability/langextract",
-      "lines": 96.17,
+      "lines": 96.67,
       "statements": 96.34,
-      "branches": 84.92,
-      "functions": 91.56,
+      "branches": 89.58,
+      "functions": 93.29,
       "uncovered": {
         "lines": 13,
-        "statements": 13,
-        "branches": 19,
-        "functions": 7
+        "statements": 17,
+        "branches": 5,
+        "functions": 12
       },
       "files": {
-        "packages/foundation/capability/langextract/src/Alignment/index.ts": {
-          "lines": 95.78,
-          "statements": 96.26,
-          "branches": 77.5,
-          "functions": 96.29,
+        "packages/foundation/capability/langextract/src/Alignment/Alignment.behavior.ts": {
+          "lines": 95.18,
+          "statements": 92.55,
+          "branches": 75,
+          "functions": 91.83,
           "uncovered": {
             "lines": 4,
-            "statements": 4,
-            "branches": 9,
-            "functions": 1
+            "statements": 7,
+            "branches": 3,
+            "functions": 4
+          }
+        },
+        "packages/foundation/capability/langextract/src/Alignment/Alignment.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/langextract/src/Alignment/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/langextract/src/Extraction/Extraction.behavior.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/langextract/src/Extraction/Extraction.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/langextract/src/Extraction/Extraction.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/foundation/capability/langextract/src/Extraction/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/langextract/src/Handoff/Handoff.behavior.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/langextract/src/Handoff/Handoff.model.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -11057,16 +9929,76 @@
             "functions": 0
           }
         },
-        "packages/foundation/capability/langextract/src/Service/index.ts": {
-          "lines": 88.63,
-          "statements": 88.63,
-          "branches": 58.33,
-          "functions": 73.33,
+        "packages/foundation/capability/langextract/src/Service/Service.layer.ts": {
+          "lines": 90,
+          "statements": 90,
+          "branches": 100,
+          "functions": 60,
           "uncovered": {
-            "lines": 5,
-            "statements": 5,
-            "branches": 5,
-            "functions": 4
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/foundation/capability/langextract/src/Service/Service.policy.ts": {
+          "lines": 88.88,
+          "statements": 88.88,
+          "branches": 100,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/foundation/capability/langextract/src/Service/Service.prompt.ts": {
+          "lines": 95.45,
+          "statements": 95.83,
+          "branches": 100,
+          "functions": 92.85,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/foundation/capability/langextract/src/Service/Service.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/langextract/src/Service/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/langextract/src/Target/Target.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/foundation/capability/langextract/src/Target/index.ts": {
@@ -11081,16 +10013,52 @@
             "functions": 0
           }
         },
-        "packages/foundation/capability/langextract/src/VerifiedSpan/index.ts": {
-          "lines": 97.41,
-          "statements": 97.46,
-          "branches": 92.85,
-          "functions": 92.85,
+        "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.behavior.ts": {
+          "lines": 96.98,
+          "statements": 96.57,
+          "branches": 93.75,
+          "functions": 94.59,
           "uncovered": {
-            "lines": 4,
-            "statements": 4,
-            "branches": 5,
-            "functions": 2
+            "lines": 5,
+            "statements": 6,
+            "branches": 2,
+            "functions": 4
+          }
+        },
+        "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/langextract/src/VerifiedSpan/VerifiedSpan.model.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/capability/langextract/src/VerifiedSpan/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/foundation/capability/langextract/src/index.ts": {
@@ -14418,15 +13386,15 @@
     },
     "@beep/law-practice-use-cases": {
       "path": "packages/law-practice/use-cases",
-      "lines": 72.26,
-      "statements": 72.69,
-      "branches": 88.57,
-      "functions": 58.02,
+      "lines": 75,
+      "statements": 75.4,
+      "branches": 100,
+      "functions": 60,
       "uncovered": {
-        "lines": 66,
-        "statements": 68,
-        "branches": 4,
-        "functions": 34
+        "lines": 58,
+        "statements": 60,
+        "branches": 0,
+        "functions": 32
       },
       "files": {
         "packages/law-practice/use-cases/src/CandorPolicy/CandorPolicy.errors.ts": {
@@ -14550,15 +13518,15 @@
           }
         },
         "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.service.ts": {
-          "lines": 42.22,
-          "statements": 41.3,
-          "branches": 0,
+          "lines": 51.35,
+          "statements": 50,
+          "branches": 100,
           "functions": 0,
           "uncovered": {
-            "lines": 26,
-            "statements": 27,
-            "branches": 4,
-            "functions": 13
+            "lines": 18,
+            "statements": 19,
+            "branches": 0,
+            "functions": 11
           }
         },
         "packages/law-practice/use-cases/src/IrToLaw/index.ts": {
@@ -15264,9 +14232,9 @@
     },
     "@beep/mcp-kit": {
       "path": "packages/foundation/capability/mcp-kit",
-      "lines": 91.9,
-      "statements": 90.37,
-      "branches": 92.72,
+      "lines": 92,
+      "statements": 90.42,
+      "branches": 93.1,
       "functions": 79.51,
       "uncovered": {
         "lines": 14,
@@ -15312,9 +14280,9 @@
           }
         },
         "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts": {
-          "lines": 85.93,
-          "statements": 86.56,
-          "branches": 88.46,
+          "lines": 86.36,
+          "statements": 86.76,
+          "branches": 89.65,
           "functions": 76.31,
           "uncovered": {
             "lines": 9,
@@ -15498,15 +14466,15 @@
     },
     "@beep/n3": {
       "path": "packages/drivers/n3",
-      "lines": 81.39,
-      "statements": 81.81,
+      "lines": 83.72,
+      "statements": 84.09,
       "branches": 50,
-      "functions": 65.21,
+      "functions": 69.56,
       "uncovered": {
-        "lines": 16,
-        "statements": 16,
+        "lines": 14,
+        "statements": 14,
         "branches": 5,
-        "functions": 16
+        "functions": 14
       },
       "files": {
         "packages/drivers/n3/src/N3.errors.ts": {
@@ -15522,15 +14490,15 @@
           }
         },
         "packages/drivers/n3/src/N3.service.ts": {
-          "lines": 80.95,
-          "statements": 81.39,
+          "lines": 83.33,
+          "statements": 83.72,
           "branches": 50,
-          "functions": 65.21,
+          "functions": 69.56,
           "uncovered": {
-            "lines": 16,
-            "statements": 16,
+            "lines": 14,
+            "statements": 14,
             "branches": 5,
-            "functions": 16
+            "functions": 14
           }
         },
         "packages/drivers/n3/src/index.ts": {
@@ -16035,15 +15003,15 @@
     },
     "@beep/nlp-processing": {
       "path": "packages/foundation/capability/nlp-processing",
-      "lines": 63.79,
-      "statements": 63.26,
-      "branches": 66.19,
-      "functions": 57.66,
+      "lines": 63.96,
+      "statements": 63.71,
+      "branches": 68.3,
+      "functions": 58.58,
       "uncovered": {
-        "lines": 336,
-        "statements": 371,
-        "branches": 48,
-        "functions": 174
+        "lines": 334,
+        "statements": 361,
+        "branches": 45,
+        "functions": 164
       },
       "files": {
         "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts": {
@@ -16131,15 +15099,15 @@
           }
         },
         "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Catalog.ts": {
-          "lines": 35.29,
-          "statements": 29.26,
+          "lines": 36.36,
+          "statements": 35.29,
           "branches": 100,
           "functions": 0,
           "uncovered": {
-            "lines": 22,
-            "statements": 29,
+            "lines": 21,
+            "statements": 22,
             "branches": 0,
-            "functions": 15
+            "functions": 8
           }
         },
         "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Errors.ts": {
@@ -16156,14 +15124,14 @@
         },
         "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Executor.ts": {
           "lines": 91.13,
-          "statements": 89.53,
-          "branches": 68.42,
-          "functions": 78.04,
+          "statements": 91.46,
+          "branches": 84.21,
+          "functions": 81.08,
           "uncovered": {
             "lines": 7,
-            "statements": 9,
-            "branches": 6,
-            "functions": 9
+            "statements": 7,
+            "branches": 3,
+            "functions": 7
           }
         },
         "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Operation.ts": {
@@ -16179,7 +15147,7 @@
           }
         },
         "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/ResultStore.ts": {
-          "lines": 84.84,
+          "lines": 85.29,
           "statements": 84.61,
           "branches": 100,
           "functions": 89.47,
@@ -16191,15 +15159,15 @@
           }
         },
         "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts": {
-          "lines": 76.74,
-          "statements": 73.91,
+          "lines": 79.06,
+          "statements": 76.08,
           "branches": 0,
-          "functions": 68,
+          "functions": 72,
           "uncovered": {
-            "lines": 10,
-            "statements": 12,
+            "lines": 9,
+            "statements": 11,
             "branches": 1,
-            "functions": 8
+            "functions": 7
           }
         },
         "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/index.ts": {
@@ -17502,10 +16470,10 @@
     },
     "@beep/ontology": {
       "path": "packages/foundation/modeling/ontology",
-      "lines": 91.95,
-      "statements": 92.07,
-      "branches": 83.25,
-      "functions": 86.95,
+      "lines": 92,
+      "statements": 92.11,
+      "branches": 83.55,
+      "functions": 87,
       "uncovered": {
         "lines": 47,
         "statements": 48,
@@ -20406,10 +19374,10 @@
     },
     "@beep/rdf": {
       "path": "packages/foundation/modeling/rdf",
-      "lines": 96.95,
-      "statements": 97.06,
+      "lines": 97,
+      "statements": 97.11,
       "branches": 100,
-      "functions": 86.3,
+      "functions": 86.84,
       "uncovered": {
         "lines": 20,
         "statements": 20,
@@ -20478,10 +19446,10 @@
           }
         },
         "packages/foundation/modeling/rdf/src/Rdf.ts": {
-          "lines": 82.08,
-          "statements": 82.85,
+          "lines": 84,
+          "statements": 84.61,
           "branches": 100,
-          "functions": 60,
+          "functions": 64.7,
           "uncovered": {
             "lines": 12,
             "statements": 12,
@@ -23921,7 +22889,7 @@
         "packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 90.9,
+          "branches": 92.59,
           "functions": 100,
           "uncovered": {
             "lines": 0,
@@ -27897,15 +26865,15 @@
     },
     "@beep/schema": {
       "path": "packages/foundation/modeling/schema",
-      "lines": 93.22,
-      "statements": 92.25,
-      "branches": 88.51,
-      "functions": 87.43,
+      "lines": 94.11,
+      "statements": 93.21,
+      "branches": 88.7,
+      "functions": 88.01,
       "uncovered": {
-        "lines": 232,
-        "statements": 279,
-        "branches": 124,
-        "functions": 146
+        "lines": 203,
+        "statements": 247,
+        "branches": 122,
+        "functions": 142
       },
       "files": {
         "packages/foundation/modeling/schema/src/AbortSignal.ts": {
@@ -29652,7 +28620,7 @@
           "lines": 84.21,
           "statements": 84.61,
           "branches": 57.14,
-          "functions": 66.66,
+          "functions": 69.23,
           "uncovered": {
             "lines": 6,
             "statements": 6,
@@ -30128,6 +29096,18 @@
             "functions": 2
           }
         },
+        "packages/foundation/modeling/schema/src/SchemaUtils/codecStatics.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/schema/src/SchemaUtils/encoders.ts": {
           "lines": 100,
           "statements": 100,
@@ -30573,15 +29553,15 @@
           }
         },
         "packages/foundation/modeling/schema/src/Timestamp/Timestamp.schema.ts": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 61.22,
+          "statements": 46.96,
           "branches": 0,
-          "functions": 0,
+          "functions": 10.34,
           "uncovered": {
-            "lines": 47,
-            "statements": 66,
+            "lines": 19,
+            "statements": 35,
             "branches": 8,
-            "functions": 29
+            "functions": 26
           }
         },
         "packages/foundation/modeling/schema/src/Timestamp/index.ts": {
@@ -30633,15 +29613,15 @@
           }
         },
         "packages/foundation/modeling/schema/src/URL.ts": {
-          "lines": 92.3,
-          "statements": 85.71,
-          "branches": 25,
-          "functions": 66.66,
+          "lines": 100,
+          "statements": 95,
+          "branches": 75,
+          "functions": 100,
           "uncovered": {
-            "lines": 1,
-            "statements": 2,
-            "branches": 3,
-            "functions": 1
+            "lines": 0,
+            "statements": 1,
+            "branches": 1,
+            "functions": 0
           }
         },
         "packages/foundation/modeling/schema/src/Uint32.ts": {
@@ -34878,10 +33858,10 @@
     },
     "@beep/wink": {
       "path": "packages/drivers/wink",
-      "lines": 46.83,
-      "statements": 45.31,
+      "lines": 46.89,
+      "statements": 45.41,
       "branches": 23.5,
-      "functions": 28.5,
+      "functions": 28.83,
       "uncovered": {
         "lines": 513,
         "statements": 560,
@@ -34914,10 +33894,10 @@
           }
         },
         "packages/drivers/wink/src/Wink.models.ts": {
-          "lines": 41.66,
-          "statements": 41.66,
+          "lines": 48.14,
+          "statements": 50,
           "branches": 9.09,
-          "functions": 28.57,
+          "functions": 37.5,
           "uncovered": {
             "lines": 14,
             "statements": 14,
@@ -35108,18 +34088,6 @@
             "functions": 0
           }
         },
-        "packages/workspace/domain/src/entities/ApprovalGate/ApprovalGate.values.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/workspace/domain/src/entities/ApprovalGate/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -35133,18 +34101,6 @@
           }
         },
         "packages/workspace/domain/src/entities/CandidateDraft/CandidateDraft.model.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/workspace/domain/src/entities/CandidateDraft/CandidateDraft.values.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -35180,18 +34136,6 @@
             "functions": 0
           }
         },
-        "packages/workspace/domain/src/entities/CandidateProject/CandidateProject.values.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/workspace/domain/src/entities/CandidateProject/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -35205,18 +34149,6 @@
           }
         },
         "packages/workspace/domain/src/entities/CandidateTask/CandidateTask.model.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/workspace/domain/src/entities/CandidateTask/CandidateTask.values.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -35252,18 +34184,6 @@
             "functions": 0
           }
         },
-        "packages/workspace/domain/src/entities/ContextPacket/ContextPacket.values.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/workspace/domain/src/entities/ContextPacket/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -35277,18 +34197,6 @@
           }
         },
         "packages/workspace/domain/src/entities/EmailArtifact/EmailArtifact.model.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/workspace/domain/src/entities/EmailArtifact/EmailArtifact.values.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

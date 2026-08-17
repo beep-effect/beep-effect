@@ -9,6 +9,7 @@ import { Match } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HasNullByte, SupportedWindowsNamespace, UsesPosixSeparator, UsesWindowsSeparator } from "./FilePath.guards.ts";
 import { HasLeafSegment } from "./FilePath.roots.ts";
 import { $I, isWindowsDrivePrefix } from "./FilePath.shared.ts";
@@ -21,6 +22,13 @@ const SupportedPathFamilyKit = LiteralKit([
   "windowsUnc",
   "windowsRelative",
 ]);
+
+const FilePathArbitraryValues = [
+  "data/ontology.ttl",
+  "/tmp/ontology.ttl",
+  "fixtures/embeddings.bin",
+  "C:\\ontology\\shapes.ttl",
+] as const;
 
 /**
  * Literal union of file-path families recognized by {@link FilePath}.
@@ -158,12 +166,20 @@ const FilePathChecks = S.makeFilterGroup(
  * @category constructors
  * @since 0.0.0
  */
-export const FilePath = S.String.check(FilePathChecks).pipe(
-  S.brand("FilePath"),
-  $I.annoteSchema("FilePath", {
-    description: "A file path string valid for at least one supported operating-system path family.",
+export const FilePath = S.String.check(FilePathChecks)
+  .annotate({
+    toArbitrary: () => (fc) => fc.constantFrom(...FilePathArbitraryValues),
   })
-);
+  .pipe(
+    S.brand("FilePath"),
+    SchemaUtils.withCodecStatics,
+    SchemaUtils.withStatics((schema) => ({
+      is: S.is(schema),
+    })),
+    $I.annoteSchema("FilePath", {
+      description: "A file path string valid for at least one supported operating-system path family.",
+    })
+  );
 
 /**
  * Branded file path string type extracted from {@link FilePath}.

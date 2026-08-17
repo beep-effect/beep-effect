@@ -15,6 +15,7 @@ import * as ShaclValidationServiceModule from "@beep/semantic-web/services/shacl
 import {
   ShaclNodeShape,
   ShaclPropertyShape,
+  ShaclSeverity,
   ShaclValidationRequest,
 } from "@beep/semantic-web/services/shacl-validation";
 import {
@@ -28,6 +29,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import { FastCheck as fc } from "effect/testing";
 
 const provideScopedLayer =
@@ -72,6 +74,13 @@ const runSparql = <A, E>(effect: Effect.Effect<A, E, SparqlQueryService>) =>
   Effect.runPromise(effect.pipe(provideScopedLayer(UnsupportedSparqlQueryServiceLive), Effect.orDie));
 
 describe("Services and Surface", () => {
+  it("publishes a canonical arbitrary for SHACL severity", () => {
+    expect(SchemaAST.resolve(ShaclSeverity.ast)?.toArbitrary).toBeDefined();
+    expect(fc.sample(S.toArbitrary(ShaclSeverity)(fc), { numRuns: 20, seed: 0x5eed }).every(S.is(ShaclSeverity))).toBe(
+      true
+    );
+  });
+
   it("keeps the package root surface curated to the service contracts", () => {
     const surface = pipe(Object.keys(SemanticWeb), A.sort(Order.String));
     expect(surface).toEqual(

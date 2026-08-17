@@ -16,7 +16,7 @@
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
     "beep:build": "tsc -p tsconfig.json && bun run babel",
-    "beep:check": "tsgo -b tsconfig.json",
+    "beep:check": "tsgo -p tsconfig.check.json",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run --passWithNoTests",
@@ -61,7 +61,6 @@
     "oxigraph": "catalog:"
   },
   "devDependencies": {
-    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "vitest": "catalog:"

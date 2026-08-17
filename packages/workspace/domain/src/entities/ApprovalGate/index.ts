@@ -20,18 +20,3 @@
  * @since 0.0.0
  */
 export * from "./ApprovalGate.model.ts";
-/**
- * Module exports.
- *
- * **Example** (Import ApprovalGate module)
- *
- * ```ts
- * import * as Module from "@beep/workspace-domain/entities/ApprovalGate"
- *
- * console.log(Module)
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export * from "./ApprovalGate.values.ts";

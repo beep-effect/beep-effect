@@ -1,8 +1,8 @@
-// Reclaim the binary backups `effect-tsgo patch` leaves behind, so a long-lived
-// `node_modules` cannot accumulate them without bound.
+// Reclaim the binary backups older `effect-tsgo patch` releases left behind,
+// so a long-lived `node_modules` cannot accumulate them without bound.
 //
-// Why this exists. `effect-tsgo patch` backs the current binary up before
-// writing its own, and it never reuses or removes a backup:
+// Why this exists. Older `effect-tsgo patch` releases backed the current binary
+// up before writing their own and did not reuse or remove numbered backups:
 //
 //   let actualBackupPath = binary + ".original"
 //   while (exists(actualBackupPath)) {
@@ -11,9 +11,9 @@
 //   }
 //   rename(binary, actualBackupPath)
 //
-// So every install adds one ~30 MB file, and at 100 the patch step fails hard.
-// The tool's restore path does not reclaim them either: it reads only the
-// plain `.original` and renames the patched binary aside as a `.patched` file.
+// Repeated installs could therefore add one ~30 MB file each and fail hard at
+// 100. The current prepare lifecycle first restores the genuine `.original`,
+// prunes any historical rotations, and then applies the installed replacement.
 //
 // That ceiling is reachable in practice. A Vercel project restoring its build
 // cache across deployments crossed 100 and could no longer deploy at all - and
@@ -21,11 +21,10 @@
 // cache, so every later deployment restored the same poisoned one and failed
 // identically. A developer checkout here held 42 backups totalling 1.2 GB.
 //
-// What is safe to delete. The plain `<binary>.original` is the genuine
-// pre-patch binary and is kept: it is the one file `patch` cannot regenerate.
-// The numbered `<binary>.original.<n>` files are previously-patched binaries
-// rotated out by later runs, and `*.patched` files are restore leftovers; both
-// are reproducible from the package and are removed.
+// What is safe to delete. The plain `<binary>.original` is kept because an
+// active patch still needs it for restoration. Numbered `.original.<n>` files
+// are old rotated binaries and `*.patched` files are restore leftovers; both
+// are reproducible from installed packages and are removed.
 
 import * as fs from "node:fs";
 import * as path from "node:path";

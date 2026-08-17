@@ -311,4 +311,6 @@ export class TaxonomySeed extends S.Class<TaxonomySeed>($I`TaxonomySeed`)(
     title: S.NonEmptyString,
   },
   $I.annote("TaxonomySeed", { description: "A loadable SKOS taxonomy seed and its filing vocabulary metadata." })
-) {}
+) {
+  static readonly fromUnknownJsonStringEffect = S.decodeUnknownEffect(S.fromJsonString(TaxonomySeed));
+}

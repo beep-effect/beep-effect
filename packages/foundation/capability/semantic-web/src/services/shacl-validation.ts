@@ -30,6 +30,8 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
     ],
   });
 
+const ShaclSeverityDefinition = LiteralKit(["info", "warning", "violation"]);
+
 /**
  * SHACL report severity.
  *
@@ -47,9 +49,10 @@ const serviceContractMetadata = (canonicalName: string, overview: string) =>
  * @category schemas
  * @since 0.0.0
  */
-export const ShaclSeverity = LiteralKit(["info", "warning", "violation"]).pipe(
+export const ShaclSeverity = ShaclSeverityDefinition.pipe(
   $I.annoteSchema("ShaclSeverity", {
     description: "SHACL report severity.",
+    toArbitrary: () => S.toArbitrary(ShaclSeverityDefinition),
   })
 );
 

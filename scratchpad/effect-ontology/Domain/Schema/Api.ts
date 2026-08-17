@@ -10,9 +10,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { HttpsUrl, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { SecureHttpUrl } from "../Identity.ts";
 import { RunConfig } from "../Model/ExtractionRun.ts";
 import { BackgroundJobId } from "./JobSchema.ts";
 
@@ -28,7 +27,7 @@ const SubmitJobSourceDefinition = S.TaggedUnion({
   },
   Remote: {
     value: S.Struct({
-      url: SecureHttpUrl.annotateKey({
+      url: HttpsUrl.annotateKey({
         description: "HTTPS location from which the extraction service fetches the document.",
       }),
     }),

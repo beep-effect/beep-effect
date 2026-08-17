@@ -47,6 +47,7 @@ const textAnchorEquivalent = S.toEquivalence(TextAnchor);
 export const Confidence = UnitInterval.pipe(
   $I.annoteSchema("Confidence", {
     description: "Extraction confidence in the unit interval [0, 1].",
+    toArbitrary: () => S.toArbitrary(UnitInterval),
   }),
   SchemaUtils.withCodecStatics
 );

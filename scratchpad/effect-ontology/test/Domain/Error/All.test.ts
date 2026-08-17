@@ -1,3 +1,5 @@
+import { URLStr } from "@beep/schema";
+import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import { describe, expect, it } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as O from "effect/Option";
@@ -17,21 +19,15 @@ import * as Llm from "../../../Domain/Error/Llm.ts";
 import * as Ontology from "../../../Domain/Error/Ontology.ts";
 import * as Rdf from "../../../Domain/Error/Rdf.ts";
 import * as Shacl from "../../../Domain/Error/Shacl.ts";
-import * as Sparql from "../../../Domain/Error/Sparql.ts";
 import * as Workflow from "../../../Domain/Error/Workflow.ts";
 
 const publicSchemas: ReadonlyArray<S.Constraint> = [
   Base.ErrorMessage,
-  Base.ErrorUrl,
   Base.OptionalErrorUrl,
-  Base.ErrorIri,
   Base.OptionalErrorIri,
-  Base.ErrorUri,
-  Base.ErrorFilePath,
   Base.OptionalErrorCause,
   Base.OptionalErrorMessage,
   Base.OptionalNonNegativeInt,
-  Base.HttpStatusCode,
   Base.OptionalHttpStatusCode,
   Base.Milliseconds,
   Base.OptionalMilliseconds,
@@ -102,14 +98,11 @@ const publicSchemas: ReadonlyArray<S.Constraint> = [
   Rdf.ParsingFailed,
   Rdf.AnyRdfError,
   Shacl.ValidationPolicySeverity,
-  Shacl.ShaclValidationError,
+  ShaclValidationError,
   Shacl.ShapesLoadError,
   Shacl.ValidationReportError,
   Shacl.ValidationPolicyError,
   Shacl.ShaclError,
-  Sparql.SparqlExecutionError,
-  Sparql.SparqlLoadError,
-  Sparql.SparqlError,
   Workflow.WorkflowError,
   Workflow.WorkflowNotFoundError,
   Workflow.WorkflowSuspendedError,
@@ -145,7 +138,7 @@ describe("effect-ontology domain errors", () => {
       message: "Paused.",
     });
     const timeout = Image.ImageTimeoutError.make({
-      url: Base.ErrorUrl.fromUnknown("https://example.com/image.png"),
+      url: URLStr.fromUnknown("https://example.com/image.png"),
       timeoutMs: Base.Milliseconds.make(250),
     });
 

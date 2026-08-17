@@ -1,4 +1,8 @@
-import { IrToLawExtractionError, IrToLawExtractionErrorReason } from "@beep/law-practice-use-cases/IrToLaw";
+import {
+  IrToLawExtractionError,
+  IrToLawExtractionErrorReason,
+  IrToLawShape,
+} from "@beep/law-practice-use-cases/IrToLaw";
 import {
   OfficeActionExtractionLabel,
   OfficeActionReviewError,
@@ -17,7 +21,9 @@ import {
 import { EntityInput } from "@beep/law-practice-use-cases/test";
 import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -140,5 +146,14 @@ describe("@beep/law-practice-use-cases schema parity", () => {
 
     expect(OfficeActionReviewError.is(error)).toBe(true);
     expect(O.isSome(OfficeActionReviewError.decodeOption(encoded))).toBe(true);
+  });
+
+  // `toLaw` is a declared schema whose guard is the only thing standing between
+  // the port and a non-callable value, so both branches are asserted here.
+  it("accepts only a callable toLaw port", () => {
+    const decodeShape = S.decodeUnknownResult(IrToLawShape);
+
+    expect(Result.isSuccess(decodeShape({ toLaw: () => Effect.void }))).toBe(true);
+    expect(Result.isFailure(decodeShape({ toLaw: "not-a-function" }))).toBe(true);
   });
 });

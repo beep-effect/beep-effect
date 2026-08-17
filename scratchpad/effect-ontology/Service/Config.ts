@@ -8,7 +8,8 @@
  * @module Service/Config
  */
 
-import { $ScratchpadId } from "@beep/identity";
+import { $ScratchpadId, CoreVocab } from "@beep/identity";
+import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { Config, ConfigProvider, Context, Effect, Layer, Option, Redacted } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Config");
@@ -234,10 +235,10 @@ const RdfConfig = Config.nested("RDF")(
     ),
     prefixes: Config.succeed({
       schema: "http://schema.org/",
-      rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-      rdfs: "http://www.w3.org/2000/01/rdf-schema#",
-      owl: "http://www.w3.org/2002/07/owl#",
-      xsd: "http://www.w3.org/2001/XMLSchema#",
+      rdf: CoreVocab.rdf.iri,
+      rdfs: CoreVocab.rdfs.iri,
+      owl: CoreVocab.owl.iri,
+      xsd: XSD_NAMESPACE,
     }),
   })
 );
@@ -340,10 +341,10 @@ export const DEFAULT_CONFIG: AppConfig = {
     outputFormat: "Turtle",
     prefixes: {
       schema: "http://schema.org/",
-      rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-      rdfs: "http://www.w3.org/2000/01/rdf-schema#",
-      owl: "http://www.w3.org/2002/07/owl#",
-      xsd: "http://www.w3.org/2001/XMLSchema#",
+      rdf: CoreVocab.rdf.iri,
+      rdfs: CoreVocab.rdfs.iri,
+      owl: CoreVocab.owl.iri,
+      xsd: XSD_NAMESPACE,
     },
   },
   api: {
@@ -411,8 +412,7 @@ const makeConfigService = Effect.gen(function* () {
   } satisfies AppConfig;
 });
 
-
-export class ConfigService extends Context.Service<ConfigService, AppConfig>()($I `ConfigService`) {}
+export class ConfigService extends Context.Service<ConfigService, AppConfig>()($I`ConfigService`) {}
 
 /**
  * Default ConfigService layer reading from environment variables with defaults.

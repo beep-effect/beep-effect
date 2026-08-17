@@ -193,8 +193,6 @@
     "@mdx-js/react",
     // Next apps: loaded by Next when SharedNextConfig defaults reactCompiler: true.
     "babel-plugin-react-compiler",
-    // Root: used by git-tracked scratchpad tests; scratchpad/** is ignored above.
-    "@faker-js/faker",
     // @beep/lexical-schema: unit tests exercise these Lexical dependencies.
     "lexical",
     "@lexical/list",
@@ -417,6 +415,8 @@
   },
   "rules": {
     "duplicate-exports": "off",
+    // Fallow does not count catalog references under Bun root overrides, so enabling this
+    // falsely reports the seven required @effect/tsgo platform pins.
     "unused-catalog-entries": "off",
     "empty-catalog-groups": "off",
     "boundary-violation": "error",

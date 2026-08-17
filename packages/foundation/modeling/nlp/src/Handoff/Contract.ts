@@ -280,6 +280,22 @@ export const Span = SpanFields.check(
 export type Span = typeof Span.Type;
 
 /**
+ * Encoded companion types for the {@link Span} runtime schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Span {
+  /**
+   * Wire representation accepted and emitted by {@link Span}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Span.Encoded;
+}
+
+/**
  * PROV-O-aligned provenance for a piece of derived annotation: where it came
  * from (`source`), what produced it (`generatedBy` ~ `prov:wasGeneratedBy`),
  * when (`timestamp` ~ `prov:generatedAtTime`, epoch ms), and an optional

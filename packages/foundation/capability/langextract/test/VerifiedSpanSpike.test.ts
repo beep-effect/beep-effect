@@ -9,11 +9,13 @@ import {
   TextOffsetRange,
   Utf16TextRange,
 } from "@beep/langextract/VerifiedSpan";
+import { Contract } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
@@ -27,15 +29,14 @@ describe("verified-span hostile-text contract", () => {
     "uses canonical half-open UTF-16 code-unit offsets for surrogate pairs",
     Effect.fnUntraced(function* () {
       const source = "A😀B";
-      const converted = yield* convertTextOffsetRange(
-        source,
+      const converted = yield* convertTextOffsetRange(source)(
         TextOffsetRange.make({
           end: NonNegativeInt.make(2),
           start: NonNegativeInt.make(1),
           unit: "unicode-code-point",
         })
       );
-      const anchor = yield* locateRawText(source, "😀");
+      const anchor = yield* locateRawText("😀")(source);
 
       expect(converted).toEqual({ endChar: 3, startChar: 1 });
       expect(anchor).toEqual({ endChar: 3, quote: "😀", startChar: 1 });
@@ -149,6 +150,26 @@ describe("verified-span hostile-text contract", () => {
   );
 
   it.effect(
+    "fails overlapping exact occurrences as ambiguous",
+    Effect.fnUntraced(function* () {
+      const failure = yield* locateRawText("aaa", "aa").pipe(Effect.flip);
+
+      expect(failure.reason).toBe("ambiguous");
+    })
+  );
+
+  it.effect(
+    "retains prefix fallback state until a unique exact match",
+    Effect.fnUntraced(function* () {
+      const source = "ababaca";
+      const anchor = yield* locateRawText(source, "abaca");
+
+      expect(anchor).toEqual({ endChar: 7, quote: "abaca", startChar: 2 });
+      expectExactRawSlice(source, anchor.startChar, anchor.endChar, anchor.quote);
+    })
+  );
+
+  it.effect(
     "stops repetitive-source enumeration after ambiguity is established",
     Effect.fnUntraced(function* () {
       const failure = yield* locateRawText(Str.repeat(100_000)("a"), "a").pipe(Effect.flip);
@@ -207,43 +228,47 @@ describe("verified-span hostile-text contract", () => {
     "consumes GroundedExtraction arrays directly and ignores legacy fuzzy authorization metadata",
     Effect.fnUntraced(function* () {
       const source = "The court wrote “Affirmed.”";
-      const strict = yield* locateGroundedExtractions(source, [
-        GroundedExtraction.make({
-          alignmentStatus: "unaligned",
-          label: "quotation",
-          text: '"Affirmed."',
-        }),
-      ]);
-      const fuzzyFailure = yield* locateGroundedExtractions(source, [
-        GroundedExtraction.make({
-          alignmentStatus: "match_fuzzy",
-          label: "quotation",
-          matchedText: "“Affirmed.”",
-          text: '"Affrmed."',
-        }),
-      ]).pipe(Effect.flip);
+      const strict = yield* locateGroundedExtractions(
+        [
+          GroundedExtraction.cases.unaligned.make({
+            label: "quotation",
+            text: '"Affirmed."',
+          }),
+        ],
+        source
+      );
+      const fuzzyFailure = yield* locateGroundedExtractions(
+        [
+          GroundedExtraction.cases.match_fuzzy.make({
+            label: "quotation",
+            matchedText: "“Affirmed.”",
+            span: Contract.Span.make({ end: NonNegativeInt.make(27), start: NonNegativeInt.make(16) }),
+            text: '"Affrmed."',
+          }),
+        ],
+        source
+      ).pipe(Effect.flip);
 
       expect(strict).toEqual([{ endChar: 27, quote: "“Affirmed.”", startChar: 16 }]);
       expect(fuzzyFailure.reason).toBe("not-found");
-      expect(fuzzyFailure.candidateIndex).toBe(0);
+      expect(fuzzyFailure.candidateIndex).toEqual(O.some(NonNegativeInt.make(0)));
     })
   );
 
   it.effect(
     "rejects oversized direct extraction batches before scanning source text",
     Effect.fnUntraced(function* () {
-      const extraction = GroundedExtraction.make({
-        alignmentStatus: "unaligned",
+      const extraction = GroundedExtraction.cases.unaligned.make({
         label: "quotation",
         text: "missing",
       });
       const failure = yield* locateGroundedExtractions(
-        "source",
-        A.replicate(extraction, MAX_EXTRACTION_CANDIDATES + 1)
+        A.replicate(extraction, MAX_EXTRACTION_CANDIDATES + 1),
+        "source"
       ).pipe(Effect.flip);
 
       expect(failure.reason).toBe("limit-exceeded");
-      expect(failure.candidateIndex).toBeUndefined();
+      expect(failure.candidateIndex).toEqual(O.none());
     })
   );
 
@@ -264,24 +289,24 @@ describe("verified-span hostile-text contract", () => {
     "validates both declared offset units against source boundaries",
     Effect.fnUntraced(function* () {
       const emptySource = yield* convertTextOffsetRange(
-        "",
-        TextOffsetRange.make({ end: NonNegativeInt.make(1), start: NonNegativeInt.make(0), unit: "utf16-code-unit" })
+        TextOffsetRange.make({ end: NonNegativeInt.make(1), start: NonNegativeInt.make(0), unit: "utf16-code-unit" }),
+        ""
       ).pipe(Effect.flip);
       const utf16Range = yield* convertTextOffsetRange(
-        "A😀B",
-        TextOffsetRange.make({ end: NonNegativeInt.make(3), start: NonNegativeInt.make(1), unit: "utf16-code-unit" })
+        TextOffsetRange.make({ end: NonNegativeInt.make(3), start: NonNegativeInt.make(1), unit: "utf16-code-unit" }),
+        "A😀B"
       );
       const splitSurrogate = yield* convertTextOffsetRange(
-        "A😀B",
-        TextOffsetRange.make({ end: NonNegativeInt.make(2), start: NonNegativeInt.make(1), unit: "utf16-code-unit" })
+        TextOffsetRange.make({ end: NonNegativeInt.make(2), start: NonNegativeInt.make(1), unit: "utf16-code-unit" }),
+        "A😀B"
       ).pipe(Effect.flip);
       const missingCodePoint = yield* convertTextOffsetRange(
-        "A😀B",
         TextOffsetRange.make({
           end: NonNegativeInt.make(4),
           start: NonNegativeInt.make(1),
           unit: "unicode-code-point",
-        })
+        }),
+        "A😀B"
       ).pipe(Effect.flip);
 
       expect(emptySource.reason).toBe("absent-text");
@@ -295,8 +320,7 @@ describe("verified-span hostile-text contract", () => {
     "fails closed at reconstruction and extraction source limits",
     Effect.fnUntraced(function* () {
       const oversizedSource = Str.repeat(1_000_001)("x");
-      const extraction = GroundedExtraction.make({
-        alignmentStatus: "unaligned",
+      const extraction = GroundedExtraction.cases.unaligned.make({
         label: "quotation",
         text: "x",
       });
@@ -304,9 +328,9 @@ describe("verified-span hostile-text contract", () => {
       const oversizedReconstruction = yield* reconstructSourceText([
         RawTextChunk.make({ startChar: NonNegativeInt.make(0), text: oversizedSource }),
       ]).pipe(Effect.flip);
-      const emptyBatch = yield* locateGroundedExtractions("source", []);
-      const absentBatchSource = yield* locateGroundedExtractions("", [extraction]).pipe(Effect.flip);
-      const oversizedBatchSource = yield* locateGroundedExtractions(oversizedSource, [extraction]).pipe(Effect.flip);
+      const emptyBatch = yield* locateGroundedExtractions("source")([]);
+      const absentBatchSource = yield* locateGroundedExtractions([extraction], "").pipe(Effect.flip);
+      const oversizedBatchSource = yield* locateGroundedExtractions([extraction], oversizedSource).pipe(Effect.flip);
 
       expect(emptyReconstruction.reason).toBe("absent-text");
       expect(oversizedReconstruction.reason).toBe("limit-exceeded");

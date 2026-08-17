@@ -13,11 +13,13 @@
 
 import { SafeImageUrlAttribute, SafeUrlAttribute } from "@beep/html/Html.policy";
 import { $MdId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
-import { A } from "@beep/utils";
-import { Match, pipe, Result } from "effect";
-import { dual } from "effect/Function";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import * as A from "@beep/utils/Array";
+import { Number as N, Result, Struct } from "effect";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
@@ -25,10 +27,10 @@ import {
   UserContentImageUrlPolicySpec,
   UserContentLinkUrlPolicySpec,
 } from "./Md.escape.ts";
-import { Document, FootnoteIdentifier, Inline, Inline as InlineSchema } from "./Md.model.ts";
-import type { Effect } from "effect";
+import { Block, Document, FootnoteIdentifier, Inline } from "./Md.model.ts";
+import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
-import type { Block, FootnoteIdentifier as FootnoteIdentifierValue, ListItemChild } from "./Md.model.ts";
+import type { FootnoteIdentifier as FootnoteIdentifierValue, ListItemChild } from "./Md.model.ts";
 
 const $I = $MdId.create("Md.safe");
 
@@ -105,6 +107,80 @@ export class RawNodeSafetyViolation extends S.TaggedClass<RawNodeSafetyViolation
 ) {}
 
 /**
+ * Destination family for a URL-bearing Markdown node.
+ *
+ * **Example** (Check a link destination kind)
+ *
+ * ```ts
+ * import { DestinationKind } from "@beep/md/Md.safe"
+ *
+ * console.log(DestinationKind.is.link("link"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const DestinationKind = LiteralKit(["link", "image"]).pipe(
+  $I.annoteSchema("DestinationKind", {
+    description: "Whether a URL-bearing Markdown node is a link or an image.",
+  })
+);
+
+/**
+ * Runtime type for {@link DestinationKind}.
+ *
+ * **Example** (Type a destination kind)
+ *
+ * ```ts
+ * import type { DestinationKind } from "@beep/md/Md.safe"
+ *
+ * const kind: DestinationKind = "link"
+ * console.log(kind)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type DestinationKind = typeof DestinationKind.Type;
+
+/**
+ * HTML tag names that can carry a URL destination.
+ *
+ * **Example** (Check an anchor tag)
+ *
+ * ```ts
+ * import { UrlNodeTag } from "@beep/md/Md.safe"
+ *
+ * console.log(UrlNodeTag.is.a("a"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UrlNodeTag = LiteralKit(["a", "img", "embed"]).pipe(
+  $I.annoteSchema("UrlNodeTag", {
+    description: "HTML tag that may carry a user-content URL destination.",
+  })
+);
+
+/**
+ * Runtime type for {@link UrlNodeTag}.
+ *
+ * **Example** (Type a URL node tag)
+ *
+ * ```ts
+ * import type { UrlNodeTag } from "@beep/md/Md.safe"
+ *
+ * const tag: UrlNodeTag = "a"
+ * console.log(tag)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UrlNodeTag = typeof UrlNodeTag.Type;
+
+/**
  * A URL-bearing Markdown node whose destination is outside its user-content
  * allow list.
  *
@@ -128,10 +204,10 @@ export class RawNodeSafetyViolation extends S.TaggedClass<RawNodeSafetyViolation
 export class UrlSafetyViolation extends S.TaggedClass<UrlSafetyViolation>($I`UrlSafetyViolation`)(
   "UnsafeUrl",
   {
-    path: S.Array(DocumentSafetyPathSegment),
-    nodeTag: S.Literals(["a", "img", "embed"]),
+    path: DocumentSafetyPathSegment.pipe(S.Array, SchemaUtils.withEmptyArrayDefaults),
+    nodeTag: UrlNodeTag,
     destination: S.String,
-    destinationKind: S.Literals(["link", "image"]),
+    destinationKind: DestinationKind,
   },
   $I.annote("UrlSafetyViolation", {
     description: "Path-located URL rejected by the canonical user-content policy.",
@@ -154,7 +230,7 @@ export class UrlSafetyViolation extends S.TaggedClass<UrlSafetyViolation>($I`Url
  * @category errors
  * @since 0.0.0
  */
-export class ScalarSafetyViolation extends S.TaggedClass<ScalarSafetyViolation>($I`ScalarSafetyViolation`)(
+export class ScalarSafetyViolation extends S.TaggedError<ScalarSafetyViolation>($I`ScalarSafetyViolation`)(
   "InvalidScalar",
   {
     path: S.Array(DocumentSafetyPathSegment),
@@ -183,7 +259,7 @@ export class ScalarSafetyViolation extends S.TaggedClass<ScalarSafetyViolation>(
  * @category errors
  * @since 0.0.0
  */
-export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedClass<DuplicateFootnoteDefinitionSafetyViolation>(
+export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedError<DuplicateFootnoteDefinitionSafetyViolation>(
   $I`DuplicateFootnoteDefinitionSafetyViolation`
 )(
   "DuplicateFootnoteDefinition",
@@ -204,9 +280,10 @@ export class DuplicateFootnoteDefinitionSafetyViolation extends S.TaggedClass<Du
  *
  * ```ts
  * import { DocumentSafetyViolation, RawNodeSafetyViolation } from "@beep/md/Md.safe"
+ * import * as S from "effect/Schema"
  *
  * const issue = RawNodeSafetyViolation.make({ path: [], nodeTag: "rawMarkdown" })
- * console.log(DocumentSafetyViolation.is(issue)) // true
+ * console.log(S.is(DocumentSafetyViolation)(issue)) // true
  * ```
  *
  * @category errors
@@ -220,8 +297,7 @@ export const DocumentSafetyViolation = S.Union([
 ]).pipe(
   $I.annoteSchema("DocumentSafetyViolation", {
     description: "Path-located Markdown user-content safety violation.",
-  }),
-  SchemaUtils.withCodecStatics
+  })
 );
 
 /**
@@ -245,88 +321,142 @@ export type DocumentSafetyViolation = typeof DocumentSafetyViolation.Type;
 type SafetyPath = ReadonlyArray<string | number>;
 
 const invalidScalarPattern = /\u0000|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u;
-const isSafeLinkUrl = S.is(SafeUrlAttribute);
-const isSafeImageUrl = S.is(SafeImageUrlAttribute);
 
 const appendPath = (path: SafetyPath, ...segments: ReadonlyArray<string | number>): SafetyPath => [
   ...path,
   ...segments,
 ];
 
-const scalarSafetyIssues = (value: string, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation> =>
-  invalidScalarPattern.test(value) ? [ScalarSafetyViolation.make({ path })] : [];
+const scalarSafetyIssues: {
+  (value: string, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation>;
+  (path: SafetyPath): (value: string) => ReadonlyArray<DocumentSafetyViolation>;
+} = dual(
+  2,
+  (value: string, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation> =>
+    invalidScalarPattern.test(value) ? A.of(ScalarSafetyViolation.make({ path })) : A.empty()
+);
 
-const optionalScalarSafetyIssues = (
-  value: O.Option<string>,
-  path: SafetyPath
-): ReadonlyArray<DocumentSafetyViolation> =>
-  O.match(value, {
-    onNone: A.emptyReadonly,
-    onSome: (text) => scalarSafetyIssues(text, path),
+const optionalScalarSafetyIssues: {
+  (value: O.Option<string>, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation>;
+  (path: SafetyPath): (value: O.Option<string>) => ReadonlyArray<DocumentSafetyViolation>;
+} = dual(
+  2,
+  (value: O.Option<string>, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation> =>
+    O.match(value, {
+      onNone: A.emptyReadonly,
+      onSome: scalarSafetyIssues(path),
+    })
+);
+
+const childrenSafetyIssues: {
+  (children: ReadonlyArray<Inline>, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation>;
+  (path: SafetyPath): (children: ReadonlyArray<Inline>) => ReadonlyArray<DocumentSafetyViolation>;
+} = dual(
+  2,
+  (children: ReadonlyArray<Inline>, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation> =>
+    pipeChildren(children, (inline, index) => inlineSafetyIssues(inline, appendPath(path, index)))
+);
+
+const pipeChildren: {
+  <Value, Output>(
+    values: ReadonlyArray<Value>,
+    inspect: (value: Value, index: number) => ReadonlyArray<Output>
+  ): ReadonlyArray<Output>;
+  <Value, Output>(
+    inspect: (value: Value, index: number) => ReadonlyArray<Output>
+  ): (values: ReadonlyArray<Value>) => ReadonlyArray<Output>;
+} = dual(
+  2,
+  <Value, Output>(
+    values: ReadonlyArray<Value>,
+    inspect: (value: Value, index: number) => ReadonlyArray<Output>
+  ): ReadonlyArray<Output> => A.flatMap(values, inspect)
+);
+
+const unsafeUrlIssue: {
+  (
+    destination: string,
+    destinationKind: DestinationKind,
+    nodeTag: UrlNodeTag,
+    path: SafetyPath
+  ): ReadonlyArray<DocumentSafetyViolation>;
+  (
+    destinationKind: DestinationKind,
+    nodeTag: UrlNodeTag,
+    path: SafetyPath
+  ): (destination: string) => ReadonlyArray<DocumentSafetyViolation>;
+} = dual(
+  4,
+  (
+    destination: string,
+    destinationKind: DestinationKind,
+    nodeTag: UrlNodeTag,
+    path: SafetyPath
+  ): ReadonlyArray<DocumentSafetyViolation> => {
+    const policy = destinationKind === "image" ? UserContentImageUrlPolicySpec : UserContentLinkUrlPolicySpec;
+    const isSafeHtmlUrl = destinationKind === "image" ? SafeImageUrlAttribute.is : SafeUrlAttribute.is;
+
+    return isUrlDestinationAllowedWithPolicy(destination, policy) && isSafeHtmlUrl(destination)
+      ? []
+      : [
+          UrlSafetyViolation.make({
+            path,
+            nodeTag,
+            destination,
+            destinationKind,
+          }),
+        ];
+  }
+);
+
+const matchSafetyIssueWithPath = (path: SafetyPath) =>
+  Inline.match({
+    text: ({ value }) => scalarSafetyIssues(value, appendPath(path, "value")),
+    rawMarkdown: () =>
+      A.of(
+        RawNodeSafetyViolation.make({
+          path,
+          nodeTag: "rawMarkdown",
+        })
+      ),
+    rawHtml: () =>
+      A.of(
+        RawNodeSafetyViolation.make({
+          path,
+          nodeTag: "rawHtml",
+        })
+      ),
+    strong: ({ children }) => childrenSafetyIssues(children, appendPath(path, "children")),
+    em: ({ children }) => childrenSafetyIssues(children, appendPath(path, "children")),
+    del: ({ children }) => childrenSafetyIssues(children, appendPath(path, "children")),
+    code: ({ value }) => scalarSafetyIssues(value, appendPath(path, "value")),
+    a: ({ children, href, title }) => [
+      ...scalarSafetyIssues(href, appendPath(path, "href")),
+      ...optionalScalarSafetyIssues(title, appendPath(path, "title")),
+      ...unsafeUrlIssue(href, "link", "a", appendPath(path, "href")),
+      ...childrenSafetyIssues(children, appendPath(path, "children")),
+    ],
+    img: ({ alt, src, title }) => [
+      ...scalarSafetyIssues(alt, appendPath(path, "alt")),
+      ...scalarSafetyIssues(src, appendPath(path, "src")),
+      ...optionalScalarSafetyIssues(title, appendPath(path, "title")),
+      ...unsafeUrlIssue(src, "image", "img", appendPath(path, "src")),
+    ],
+    br: A.empty<never>,
+    inlineMath: ({ value }) => scalarSafetyIssues(value, appendPath(path, "value")),
+    footnoteReference: A.empty<never>,
   });
 
-const childrenSafetyIssues = (
-  children: ReadonlyArray<Inline>,
-  path: SafetyPath
-): ReadonlyArray<DocumentSafetyViolation> =>
-  pipeChildren(children, (inline, index) => inlineSafetyIssues(inline, appendPath(path, index)));
-
-const pipeChildren = <Value, Output>(
-  values: ReadonlyArray<Value>,
-  inspect: (value: Value, index: number) => ReadonlyArray<Output>
-): ReadonlyArray<Output> => A.flatMap(values, inspect);
-
-const unsafeUrlIssue = (
-  destination: string,
-  destinationKind: "image" | "link",
-  nodeTag: "a" | "embed" | "img",
-  path: SafetyPath
-): ReadonlyArray<DocumentSafetyViolation> => {
-  const policy = destinationKind === "image" ? UserContentImageUrlPolicySpec : UserContentLinkUrlPolicySpec;
-  const isSafeHtmlUrl = destinationKind === "image" ? isSafeImageUrl : isSafeLinkUrl;
-
-  return isUrlDestinationAllowedWithPolicy(destination, policy) && isSafeHtmlUrl(destination)
-    ? []
-    : [
-        UrlSafetyViolation.make({
-          path,
-          nodeTag,
-          destination,
-          destinationKind,
-        }),
-      ];
-};
-
-const inlineSafetyIssues = (inline: Inline, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation> =>
-  Match.value(inline).pipe(
-    Match.tagsExhaustive({
-      text: ({ value }) => scalarSafetyIssues(value, appendPath(path, "value")),
-      rawMarkdown: () => [RawNodeSafetyViolation.make({ path, nodeTag: "rawMarkdown" })],
-      rawHtml: () => [RawNodeSafetyViolation.make({ path, nodeTag: "rawHtml" })],
-      strong: ({ children }) => childrenSafetyIssues(children, appendPath(path, "children")),
-      em: ({ children }) => childrenSafetyIssues(children, appendPath(path, "children")),
-      del: ({ children }) => childrenSafetyIssues(children, appendPath(path, "children")),
-      code: ({ value }) => scalarSafetyIssues(value, appendPath(path, "value")),
-      a: ({ children, href, title }) => [
-        ...scalarSafetyIssues(href, appendPath(path, "href")),
-        ...optionalScalarSafetyIssues(title, appendPath(path, "title")),
-        ...unsafeUrlIssue(href, "link", "a", appendPath(path, "href")),
-        ...childrenSafetyIssues(children, appendPath(path, "children")),
-      ],
-      img: ({ alt, src, title }) => [
-        ...scalarSafetyIssues(alt, appendPath(path, "alt")),
-        ...scalarSafetyIssues(src, appendPath(path, "src")),
-        ...optionalScalarSafetyIssues(title, appendPath(path, "title")),
-        ...unsafeUrlIssue(src, "image", "img", appendPath(path, "src")),
-      ],
-      br: () => [],
-      inlineMath: ({ value }) => scalarSafetyIssues(value, appendPath(path, "value")),
-      footnoteReference: () => [],
-    })
-  );
+const inlineSafetyIssues: {
+  (inline: Inline, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation>;
+  (path: SafetyPath): (inline: Inline) => ReadonlyArray<DocumentSafetyViolation>;
+} = dual(
+  2,
+  (inline: Inline, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation> => matchSafetyIssueWithPath(path)(inline)
+);
 
 const listItemChildSafetyIssues = (child: ListItemChild, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation> =>
-  InlineSchema.is(child) ? inlineSafetyIssues(child, path) : blockSafetyIssues(child, path);
+  Inline.is(child) ? inlineSafetyIssues(child, path) : blockSafetyIssues(child, path);
 
 const listChildrenSafetyIssues = (
   children: ReadonlyArray<{ readonly children: ReadonlyArray<ListItemChild> }>,
@@ -339,42 +469,37 @@ const listChildrenSafetyIssues = (
   );
 
 const blockSafetyIssues = (block: Block, path: SafetyPath): ReadonlyArray<DocumentSafetyViolation> =>
-  Match.value(block).pipe(
-    Match.tagsExhaustive({
-      heading: ({ children }) => childrenSafetyIssues(children, appendPath(path, "children")),
-      p: ({ children }) => childrenSafetyIssues(children, appendPath(path, "children")),
-      blockquote: ({ children }) =>
-        pipeChildren(children, (child, index) => blockSafetyIssues(child, appendPath(path, "children", index))),
-      pre: ({ value }) => scalarSafetyIssues(value, appendPath(path, "value")),
-      ul: ({ children }) => listChildrenSafetyIssues(children, appendPath(path, "children")),
-      ol: ({ children }) => listChildrenSafetyIssues(children, appendPath(path, "children")),
-      taskList: ({ children }) => listChildrenSafetyIssues(children, appendPath(path, "children")),
-      table: ({ children }) =>
-        pipeChildren(children, (row, rowIndex) =>
-          pipeChildren(row.children, (cell, cellIndex) =>
-            childrenSafetyIssues(
-              cell.children,
-              appendPath(path, "children", rowIndex, "children", cellIndex, "children")
-            )
-          )
-        ),
-      youtube: () => [],
-      mathBlock: ({ value }) => scalarSafetyIssues(value, appendPath(path, "value")),
-      footnoteDefinition: ({ children }) =>
-        pipeChildren(children, (child, index) => blockSafetyIssues(child, appendPath(path, "children", index))),
-      admonition: ({ children, title }) => [
-        ...optionalScalarSafetyIssues(title, appendPath(path, "title")),
-        ...pipeChildren(children, (child, index) => blockSafetyIssues(child, appendPath(path, "children", index))),
-      ],
-      embed: ({ description, kind, src, title }) => [
-        ...scalarSafetyIssues(src, appendPath(path, "src")),
-        ...optionalScalarSafetyIssues(title, appendPath(path, "title")),
-        ...optionalScalarSafetyIssues(description, appendPath(path, "description")),
-        ...unsafeUrlIssue(src, kind === "image" ? "image" : "link", "embed", appendPath(path, "src")),
-      ],
-      hr: () => [],
-    })
-  );
+  Block.match(block, {
+    heading: ({ children }) => childrenSafetyIssues(children, appendPath(path, "children")),
+    p: ({ children }) => childrenSafetyIssues(children, appendPath(path, "children")),
+    blockquote: ({ children }) =>
+      pipeChildren(children, (child, index) => blockSafetyIssues(child, appendPath(path, "children", index))),
+    pre: ({ value }) => scalarSafetyIssues(value, appendPath(path, "value")),
+    ul: ({ children }) => listChildrenSafetyIssues(children, appendPath(path, "children")),
+    ol: ({ children }) => listChildrenSafetyIssues(children, appendPath(path, "children")),
+    taskList: ({ children }) => listChildrenSafetyIssues(children, appendPath(path, "children")),
+    table: ({ children }) =>
+      pipeChildren(children, (row, rowIndex) =>
+        pipeChildren(row.children, (cell, cellIndex) =>
+          childrenSafetyIssues(cell.children, appendPath(path, "children", rowIndex, "children", cellIndex, "children"))
+        )
+      ),
+    youtube: A.empty<never>,
+    mathBlock: ({ value }) => scalarSafetyIssues(value, appendPath(path, "value")),
+    footnoteDefinition: ({ children }) =>
+      pipeChildren(children, (child, index) => blockSafetyIssues(child, appendPath(path, "children", index))),
+    admonition: ({ children, title }) => [
+      ...optionalScalarSafetyIssues(title, appendPath(path, "title")),
+      ...pipeChildren(children, (child, index) => blockSafetyIssues(child, appendPath(path, "children", index))),
+    ],
+    embed: ({ description, kind, src, title }) => [
+      ...scalarSafetyIssues(src, appendPath(path, "src")),
+      ...optionalScalarSafetyIssues(title, appendPath(path, "title")),
+      ...optionalScalarSafetyIssues(description, appendPath(path, "description")),
+      ...unsafeUrlIssue(src, kind === "image" ? "image" : "link", "embed", appendPath(path, "src")),
+    ],
+    hr: () => [],
+  });
 
 type FootnoteDefinitionOccurrence = {
   readonly identifier: FootnoteIdentifierValue;
@@ -385,7 +510,7 @@ const listItemChildFootnoteDefinitionOccurrences = (
   child: ListItemChild,
   path: SafetyPath
 ): ReadonlyArray<FootnoteDefinitionOccurrence> =>
-  InlineSchema.is(child) ? A.emptyReadonly() : blockFootnoteDefinitionOccurrences(child, path);
+  Inline.is(child) ? A.emptyReadonly() : blockFootnoteDefinitionOccurrences(child, path);
 
 const listFootnoteDefinitionOccurrences = (
   children: ReadonlyArray<{ readonly children: ReadonlyArray<ListItemChild> }>,
@@ -401,45 +526,49 @@ const blockFootnoteDefinitionOccurrences = (
   block: Block,
   path: SafetyPath
 ): ReadonlyArray<FootnoteDefinitionOccurrence> =>
-  Match.value(block).pipe(
-    Match.tagsExhaustive({
-      heading: () => A.emptyReadonly(),
-      p: () => A.emptyReadonly(),
-      blockquote: ({ children }) =>
-        pipeChildren(children, (child, index) =>
-          blockFootnoteDefinitionOccurrences(child, appendPath(path, "children", index))
-        ),
-      pre: () => A.emptyReadonly(),
-      ul: ({ children }) => listFootnoteDefinitionOccurrences(children, appendPath(path, "children")),
-      ol: ({ children }) => listFootnoteDefinitionOccurrences(children, appendPath(path, "children")),
-      taskList: ({ children }) => listFootnoteDefinitionOccurrences(children, appendPath(path, "children")),
-      table: () => A.emptyReadonly(),
-      youtube: () => A.emptyReadonly(),
-      mathBlock: () => A.emptyReadonly(),
-      footnoteDefinition: ({ children, identifier }) => [
-        { identifier, path: appendPath(path, "identifier") },
-        ...pipeChildren(children, (child, index) =>
-          blockFootnoteDefinitionOccurrences(child, appendPath(path, "children", index))
-        ),
-      ],
-      admonition: ({ children }) =>
-        pipeChildren(children, (child, index) =>
-          blockFootnoteDefinitionOccurrences(child, appendPath(path, "children", index))
-        ),
-      embed: () => A.emptyReadonly(),
-      hr: () => A.emptyReadonly(),
-    })
-  );
+  Block.match(block, {
+    heading: () => A.emptyReadonly(),
+    p: () => A.emptyReadonly(),
+    blockquote: ({ children }) =>
+      pipeChildren(children, (child, index) =>
+        blockFootnoteDefinitionOccurrences(child, appendPath(path, "children", index))
+      ),
+    pre: () => A.emptyReadonly(),
+    ul: ({ children }) => listFootnoteDefinitionOccurrences(children, appendPath(path, "children")),
+    ol: ({ children }) => listFootnoteDefinitionOccurrences(children, appendPath(path, "children")),
+    taskList: ({ children }) => listFootnoteDefinitionOccurrences(children, appendPath(path, "children")),
+    table: () => A.emptyReadonly(),
+    youtube: () => A.emptyReadonly(),
+    mathBlock: () => A.emptyReadonly(),
+    footnoteDefinition: ({ children, identifier }) => [
+      { identifier, path: appendPath(path, "identifier") },
+      ...pipeChildren(children, (child, index) =>
+        blockFootnoteDefinitionOccurrences(child, appendPath(path, "children", index))
+      ),
+    ],
+    admonition: ({ children }) =>
+      pipeChildren(children, (child, index) =>
+        blockFootnoteDefinitionOccurrences(child, appendPath(path, "children", index))
+      ),
+    embed: () => A.emptyReadonly(),
+    hr: () => A.emptyReadonly(),
+  });
 
 const duplicateFootnoteDefinitionIssues = (document: Document): ReadonlyArray<DocumentSafetyViolation> =>
   pipe(
     pipeChildren(document.children, (block, index) => blockFootnoteDefinitionOccurrences(block, ["children", index])),
     A.groupBy((occurrence) => occurrence.identifier),
     R.values,
-    A.filter((occurrences) => occurrences.length > 1),
-    A.flatMap((occurrences) =>
-      A.map(occurrences, ({ identifier, path }) =>
-        DuplicateFootnoteDefinitionSafetyViolation.make({ identifier, path })
+    A.filter(
+      P.Struct({
+        length: N.isGreaterThan(1),
+      })
+    ),
+    // `make` on a class schema calls `new this(...)`, so it cannot be passed as
+    // a detached reference — the lambda is what keeps the receiver bound.
+    A.flatMap(
+      A.map(
+        flow(Struct.pick(["identifier", "path"]), (fields) => DuplicateFootnoteDefinitionSafetyViolation.make(fields))
       )
     )
   );

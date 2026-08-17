@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import { AbsoluteIRI, IRI } from "@beep/rdf";
 import { NonNegativeInt, SchemaUtils, SemanticVersion } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName } from "../Identity.ts";
-import { AbsoluteIRI, IRI } from "../Rdf/Types.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/OntologyBrowser");
 

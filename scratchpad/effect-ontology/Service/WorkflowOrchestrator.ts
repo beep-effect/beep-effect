@@ -16,6 +16,7 @@
 
 import {$ScratchpadId} from "@beep/identity";
 import {NonNegativeInt} from "@beep/schema/Int";
+import {UnitInterval} from "@beep/schema/UnitInterval";
 import {
   Cause,
   Context,
@@ -41,7 +42,8 @@ import {
   WorkflowNotFoundError,
   WorkflowSuspendedError
 } from "../Domain/Error/Workflow.ts";
-import type {BatchId, DocumentId, GcsUri} from "../Domain/Identity.ts";
+import type {BatchId} from "../Domain/Identity.ts";
+import {DocumentId, GcsUri} from "../Domain/Identity.ts";
 import type {DocumentStatus} from "../Domain/Model/BatchWorkflow.ts";
 import {BatchState} from "../Domain/Model/BatchWorkflow.ts";
 import {BatchManifest, BatchWorkflowPayload} from "../Domain/Schema/Batch.ts";
@@ -419,12 +421,12 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             preprocessing: payload.preprocessing,
           }).execute
           : Effect.succeed({
-            enrichedManifestUri: manifestUri as GcsUri,
-            totalDocuments: manifest.documents.length,
-            classifiedCount: 0,
-            failedCount: 0,
-            totalEstimatedTokens: 0,
-            averageComplexity: 0.5,
+            enrichedManifestUri: GcsUri.fromUnknown(manifestUri),
+            totalDocuments: NonNegativeInt.make(manifest.documents.length),
+            classifiedCount: NonNegativeInt.make(0),
+            failedCount: NonNegativeInt.make(0),
+            totalEstimatedTokens: NonNegativeInt.make(0),
+            averageComplexity: UnitInterval.make(0.5),
             durationMs: 0,
           })
       ).pipe(
@@ -453,12 +455,12 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
               error: String(error),
             });
             return {
-              enrichedManifestUri: manifestUri as GcsUri,
-              totalDocuments: manifest.documents.length,
-              classifiedCount: 0,
-              failedCount: 0,
-              totalEstimatedTokens: 0,
-              averageComplexity: 0.5,
+              enrichedManifestUri: GcsUri.fromUnknown(manifestUri),
+              totalDocuments: NonNegativeInt.make(manifest.documents.length),
+              classifiedCount: NonNegativeInt.make(0),
+              failedCount: NonNegativeInt.make(0),
+              totalEstimatedTokens: NonNegativeInt.make(0),
+              averageComplexity: UnitInterval.make(0.5),
               durationMs: 0,
             };
           })
@@ -511,7 +513,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       // Initialize document status tracking for partial failure visibility
       const documentStatusesRef = yield* Ref.make<Array<DocumentStatus>>(
         A.map(manifest.documents, (doc) => ({
-          documentId: doc.documentId as DocumentId,
+          documentId: DocumentId.fromUnknown(doc.documentId),
           status: "pending" as const,
         }))
       );
@@ -610,7 +612,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
                     status: "success" as const,
                     startedAt,
                     completedAt,
-                    graphUri: result.output.graphUri as GcsUri,
+                    graphUri: GcsUri.fromUnknown(result.output.graphUri),
                     entityCount: NonNegativeInt.make(result.output.entityCount),
                     relationCount: NonNegativeInt.make(result.output.relationCount),
                     claimCount: NonNegativeInt.make(result.output.claimCount),

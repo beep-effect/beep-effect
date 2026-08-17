@@ -57,4 +57,6 @@ export class Turn extends TurnEntity.Entity<Turn>(TurnEntity.tableName)(
     TurnEntity.Table.index("workspace_turn_turn_index_btree_idx", [columns.turnIndex]),
     ...TurnEntity.entityExtras(columns),
   ]
-) {}
+) {
+  static readonly decodeUnknownSync = S.decodeUnknownSync(Turn);
+}

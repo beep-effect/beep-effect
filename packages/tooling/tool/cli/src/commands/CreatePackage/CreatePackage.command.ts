@@ -28,7 +28,8 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { applyJsoncModification as applySharedJsoncModification } from "../../internal/cli/Jsonc.ts";
+import { formatJsonValue } from "../../internal/cli/Json.ts";
+import { applyJsoncModification as applySharedJsoncModification, decodeJsoncTextAs } from "../../internal/cli/Jsonc.ts";
 import {
   encodeLabManifestJson,
   LAB_MANIFEST_FILENAME,
@@ -134,123 +135,80 @@ const VALID_FOUNDATION_KINDS = ["primitive", "modeling", "capability", "ui-syste
 const VALID_TOOLING_KINDS = ["library", "tool", "policy-pack", "test-kit"] as const;
 const PACKAGE_NAME_PATTERN = /^[a-z_][a-z0-9._-]*$/;
 const PARENT_DIR_PATTERN = /^(?!.*\/\/)(?!.*\/$)(?!.*(?:^|\/)\.{1,2}(?:\/|$))[a-z0-9][a-z0-9/_-]*$/;
-const ECOSYSTEM_EFFECT_LANGUAGE_SERVICE_PLUGINS = `[
-  {
-    "name": "@effect/language-service",
-    "namespaceImportPackages": ["effect", "@effect/*", "@beep/*"],
-    "ignoreEffectSuggestionsInTscExitCode": false,
-    "ignoreEffectWarningsInTscExitCode": false,
-    "ignoreEffectErrorsInTscExitCode": false,
-    "includeSuggestionsInTsc": true,
-    "skipDisabledOptimization": false,
-    "effectFn": ["span", "inferred-span", "suggested-span"],
-    "importAliases": {
-      "Array": "A",
-      "Option": "O",
-      "Predicate": "P",
-      "Record": "R",
-      "Schema": "S",
-      "Equal": "Eq"
-    },
-    "diagnosticSeverity": {
-      "abortControllerInEffect": "error",
-      "anyUnknownInErrorContext": "error",
-      "asyncFunction": "error",
-      "catchAllToMapError": "error",
-      "catchChainToFirstSuccessOf": "error",
-      "catchTagToCatchReason": "error",
-      "catchToIgnore": "error",
-      "catchToOrElseSucceed": "error",
-      "catchUnfailableEffect": "error",
-      "classSelfMismatch": "error",
-      "cryptoRandomUUID": "error",
-      "cryptoRandomUUIDInEffect": "error",
-      "deterministicKeys": "error",
-      "duplicatePackage": "error",
-      "effectDoNotation": "error",
-      "effectFnIife": "error",
-      "effectFnImplicitAny": "error",
-      "effectFnOpportunity": "error",
-      "effectGenUsesAdapter": "error",
-      "effectInFailure": "error",
-      "effectInVoidSuccess": "error",
-      "effectMapFlatten": "error",
-      "effectMapVoid": "error",
-      "effectSucceedWithVoid": "error",
-      "extendsNativeError": "error",
-      "flatMapToMap": "error",
-      "floatingEffect": "error",
-      "floatingEffectInVitest": "error",
-      "genericEffectServices": "error",
-      "globalConsole": "error",
-      "globalConsoleInEffect": "error",
-      "globalDate": "error",
-      "globalDateInEffect": "error",
-      "globalErrorInEffectCatch": "error",
-      "globalErrorInEffectFailure": "error",
-      "globalFetch": "error",
-      "globalFetchInEffect": "error",
-      "globalRandom": "error",
-      "globalRandomInEffect": "error",
-      "globalTimers": "error",
-      "globalTimersInEffect": "error",
-      "instanceOfSchema": "error",
-      "layerMergeAllWithDependencies": "error",
-      "lazyEffect": "error",
-      "lazyPromiseInEffectSync": "error",
-      "leakingRequirements": "error",
-      "missedPipeableOpportunity": "off",
-      "missingEffectContext": "error",
-      "missingEffectError": "error",
-      "missingEffectServiceDependency": "error",
-      "missingLayerContext": "error",
-      "missingPipeableSignature": "off",
-      "missingReturnYieldStar": "error",
-      "missingStarInYieldEffectGen": "error",
-      "multipleCatchTag": "error",
-      "multipleEffectProvide": "error",
-      "nestedEffectGenYield": "error",
-      "newPromise": "error",
-      "newSchemaClass": "error",
-      "nodeBuiltinImport": "error",
-      "nonObjectEffectServiceType": "error",
-      "outdatedApi": "error",
-      "overriddenSchemaConstructor": "error",
-      "preferSchemaOverJson": "error",
-      "preferSchemaTypeProperty": "error",
-      "preferTypedSchemaDecoder": "error",
-      "preferUnsafeConstructor": "error",
-      "processEnv": "error",
-      "processEnvInEffect": "error",
-      "promiseInEffectSuccess": "error",
-      "redundantOrDie": "error",
-      "redundantMapError": "error",
-      "redundantSchemaTagIdentifier": "error",
-      "returnEffectInGen": "error",
-      "runEffectInsideEffect": "error",
-      "schemaLiteralNonFinite": "error",
-      "schemaNumber": "error",
-      "schemaOpaqueInstanceMember": "error",
-      "schemaStructWithTag": "error",
-      "schemaSyncInEffect": "error",
-      "schemaUnionOfLiterals": "error",
-      "scopeInLayerEffect": "error",
-      "serviceNotAsClass": "error",
-      "strictBooleanExpressions": "error",
-      "strictEffectProvide": "error",
-      "syncToSucceed": "error",
-      "tryCatchInEffectGen": "error",
-      "unknownInEffectCatch": "error",
-      "unnecessaryArrowBlock": "error",
-      "unnecessaryEffectGen": "error",
-      "unnecessaryFailYieldableError": "error",
-      "unnecessaryPipe": "error",
-      "unnecessaryPipeChain": "error",
-      "unnecessaryTypeofType": "error",
-      "unsafeEffectTypeAssertion": "error"
-    }
+const TypeScriptPluginsConfig = S.Struct({
+  compilerOptions: S.Struct({
+    plugins: S.Array(S.Record(S.String, S.Unknown)),
+  }),
+}).pipe(
+  $I.annoteSchema("TypeScriptPluginsConfig", {
+    description: "TypeScript configuration boundary containing the canonical compiler plugin array.",
+  })
+);
+type TypeScriptPluginsConfig = typeof TypeScriptPluginsConfig.Type;
+type TypeScriptPluginConfig = TypeScriptPluginsConfig["compilerOptions"]["plugins"][number];
+const EFFECT_LANGUAGE_SERVICE_PLUGIN_NAME = "@effect/language-service";
+const EMPTY_LANGUAGE_SERVICE_PLUGIN_PROFILES = {
+  effectLanguageServicePlugins: "[]",
+  nextjsLanguageServicePlugins: "[]",
+} as const;
+
+const renderTemplateJson = flow(formatJsonValue, Str.trim, Str.replaceAll("\n", "\n    "));
+
+const isUnknownRecord = (value: unknown): value is R.ReadonlyRecord<string, unknown> =>
+  P.isObject(value) && !A.isArray(value);
+
+const isEffectLanguageServicePlugin = (plugin: TypeScriptPluginConfig): boolean =>
+  P.isString(plugin.name) && Str.equivalence(plugin.name, EFFECT_LANGUAGE_SERVICE_PLUGIN_NAME);
+
+const readLanguageServicePluginProfiles = Effect.fn("CreatePackage.readLanguageServicePluginProfiles")(function* (
+  repoRoot: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const filePath = path.join(repoRoot, "tsconfig.base.json");
+  const content = yield* fs
+    .readFileString(filePath)
+    .pipe(Effect.mapError(DomainError.newCause(`Failed to read "${filePath}"`)));
+  const config = yield* decodeJsoncTextAs(TypeScriptPluginsConfig)(content).pipe(
+    Effect.mapError(DomainError.newCauseMessage(`Failed to decode canonical TypeScript plugins in "${filePath}"`))
+  );
+  const effectLanguageServicePlugins = A.filter(config.compilerOptions.plugins, isEffectLanguageServicePlugin);
+
+  if (!A.isReadonlyArrayNonEmpty(effectLanguageServicePlugins)) {
+    return yield* DomainError.newMessage(
+      `Canonical TypeScript plugins in "${filePath}" omit ${EFFECT_LANGUAGE_SERVICE_PLUGIN_NAME}`
+    );
   }
-]`;
+  if (A.length(effectLanguageServicePlugins) > 1) {
+    return yield* DomainError.newMessage(
+      `Canonical TypeScript plugins in "${filePath}" contain duplicate ${EFFECT_LANGUAGE_SERVICE_PLUGIN_NAME} entries`
+    );
+  }
+
+  const effectLanguageServicePlugin = effectLanguageServicePlugins[0];
+  if (!isUnknownRecord(effectLanguageServicePlugin.diagnosticSeverity)) {
+    return yield* DomainError.newMessage(
+      `Canonical ${EFFECT_LANGUAGE_SERVICE_PLUGIN_NAME} plugin in "${filePath}" must define diagnosticSeverity`
+    );
+  }
+
+  const ecosystemEffectLanguageServicePlugin = {
+    ...effectLanguageServicePlugin,
+    diagnosticSeverity: {
+      ...effectLanguageServicePlugin.diagnosticSeverity,
+      missedPipeableOpportunity: "off",
+      missingPipeableSignature: "off",
+    },
+  };
+  const ecosystemPlugins = A.map(config.compilerOptions.plugins, (plugin) =>
+    isEffectLanguageServicePlugin(plugin) ? ecosystemEffectLanguageServicePlugin : plugin
+  );
+
+  return {
+    effectLanguageServicePlugins: renderTemplateJson(ecosystemPlugins),
+    nextjsLanguageServicePlugins: renderTemplateJson(A.append(config.compilerOptions.plugins, { name: "next" })),
+  } as const;
+});
 
 const PackageType = LiteralKit(VALID_TYPES).pipe(
   $I.annoteSchema("PackageType", {
@@ -367,6 +325,10 @@ const PACKAGE_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = [
     outputPath: "tsconfig.test.json",
   }),
   TemplateSpec.make({
+    templateName: "tsconfig.check.json.hbs",
+    outputPath: "tsconfig.check.json",
+  }),
+  TemplateSpec.make({
     templateName: "src-index.ts.hbs",
     outputPath: "src/index.ts",
   }),
@@ -414,8 +376,11 @@ const REAL_APP_DOC_TEMPLATE_PAIRS: ReadonlyArray<TemplateSpecPair> = [
   ["app-real-AGENTS.md.hbs", "AGENTS.md"],
 ];
 
+const CHECK_TSCONFIG_TEMPLATE_PAIR: TemplateSpecPair = ["tsconfig.check.json.hbs", "tsconfig.check.json"];
+
 const NEXTJS_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
   ["app-next-tsconfig.json.hbs", "tsconfig.json"],
+  CHECK_TSCONFIG_TEMPLATE_PAIR,
   ["app-next-next-env.d.ts.hbs", "next-env.d.ts"],
   ["app-next-next.config.ts.hbs", "next.config.ts"],
   ["app-next-src-app-globals.css.hbs", "src/app/globals.css"],
@@ -428,6 +393,7 @@ const NEXTJS_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom
 
 const TAURI_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
   ["app-tauri-tsconfig.json.hbs", "tsconfig.json"],
+  CHECK_TSCONFIG_TEMPLATE_PAIR,
   ["app-tauri-index.html.hbs", "index.html"],
   ["app-tauri-src-App.tsx.hbs", "src/App.tsx"],
   ["app-tauri-src-main.tsx.hbs", "src/main.tsx"],
@@ -445,6 +411,7 @@ const TAURI_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom(
 
 const NEXTJS_LAB_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
   ["app-next-tsconfig.json.hbs", "tsconfig.json"],
+  CHECK_TSCONFIG_TEMPLATE_PAIR,
   ["app-next-lab-tsconfig.next.json.hbs", "tsconfig.next.json"],
   ["app-next-next-env.d.ts.hbs", "next-env.d.ts"],
   ["app-next-lab-next.config.ts.hbs", "next.config.ts"],
@@ -459,6 +426,7 @@ const NEXTJS_LAB_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecs
 
 const VITE_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
   ["app-vite-tsconfig.json.hbs", "tsconfig.json"],
+  CHECK_TSCONFIG_TEMPLATE_PAIR,
   ["app-vite-index.html.hbs", "index.html"],
   ["app-vite-src-App.tsx.hbs", "src/App.tsx"],
   ["app-vite-src-main.tsx.hbs", "src/main.tsx"],
@@ -476,6 +444,7 @@ const VITE_LAB_POSTCSS_TEMPLATE_SPEC = TemplateSpec.make({
 
 const SERVICE_APP_TEMPLATE_SPECS: ReadonlyArray<TemplateSpec> = templateSpecsFrom([
   ["app-service-tsconfig.json.hbs", "tsconfig.json"],
+  CHECK_TSCONFIG_TEMPLATE_PAIR,
   ["app-service-src-Api.ts.hbs", "src/Api.ts"],
   ["app-service-src-runtime-Layer.ts.hbs", "src/runtime/Layer.ts"],
   ["app-service-src-main.ts.hbs", "src/main.ts"],
@@ -532,6 +501,7 @@ const PACKAGE_FILES = [
   "package.json",
   "tsconfig.json",
   "tsconfig.test.json",
+  "tsconfig.check.json",
   "src/index.ts",
   "test/.gitkeep",
   "LICENSE",
@@ -549,6 +519,7 @@ const STORIES_TSCONFIG_FILES = [STORIES_TSCONFIG_FILE, STORIES_DIRECTORY_TSCONFI
 const NEXTJS_APP_FILES = [
   "package.json",
   "tsconfig.json",
+  "tsconfig.check.json",
   "next-env.d.ts",
   "next.config.ts",
   "src/app/globals.css",
@@ -565,6 +536,7 @@ const NEXTJS_APP_FILES = [
 const TAURI_APP_FILES = [
   "package.json",
   "tsconfig.json",
+  "tsconfig.check.json",
   "index.html",
   "src/App.tsx",
   "src/main.tsx",
@@ -586,6 +558,7 @@ const TAURI_APP_FILES = [
 const NEXTJS_LAB_APP_FILES = [
   "package.json",
   "tsconfig.json",
+  "tsconfig.check.json",
   "tsconfig.next.json",
   "next-env.d.ts",
   "next.config.ts",
@@ -604,6 +577,7 @@ const NEXTJS_LAB_APP_FILES = [
 const VITE_APP_FILES = [
   "package.json",
   "tsconfig.json",
+  "tsconfig.check.json",
   "index.html",
   "src/App.tsx",
   "src/main.tsx",
@@ -621,6 +595,7 @@ const VITE_LAB_POSTCSS_FILE = "postcss.config.mjs" as const;
 const SERVICE_APP_FILES = [
   "package.json",
   "tsconfig.json",
+  "tsconfig.check.json",
   "src/Api.ts",
   "src/main.ts",
   "src/runtime/Layer.ts",
@@ -747,6 +722,7 @@ export class TemplateContext extends S.Class<TemplateContext>($I`TemplateContext
     rootDirRelative: S.String,
     identityAccessor: S.String,
     effectLanguageServicePlugins: S.String,
+    nextjsLanguageServicePlugins: S.String,
   },
   $I.annote("TemplateContext", {
     description: "Variables passed into every template during package scaffolding.",
@@ -1414,6 +1390,11 @@ export const createPackageCommand = Command.make(
     const currentYear = `${DateTime.getPartUtc(DateTime.nowUnsafe(), "year")}`;
     const rootRelative = toRootRelative(packagePath);
     const portlessLabel = portlessLabelFor(name, lab);
+    const isEcosystem = O.exists(packageFamily, packageFamilyEquivalence("ecosystem"));
+    const languageServicePluginProfiles =
+      isEcosystem || appKindIs(appKind, "nextjs")
+        ? yield* readLanguageServicePluginProfiles(repoRoot)
+        : EMPTY_LANGUAGE_SERVICE_PLUGIN_PROFILES;
     const ctx = TemplateContext.make({
       name,
       scopedName: `@beep/${name}`,
@@ -1434,11 +1415,11 @@ export const createPackageCommand = Command.make(
       isRuntimeProofApp: appKindIs(appKind, "runtime-proof"),
       isRealApp: isRealAppKind(appKind),
       isLab: lab,
-      isEcosystem: O.exists(packageFamily, packageFamilyEquivalence("ecosystem")),
+      isEcosystem,
       portlessLabel,
       rootDirRelative: toRootDirRelative(rootRelative),
       identityAccessor: toIdentityAccessorName(name),
-      effectLanguageServicePlugins: ECOSYSTEM_EFFECT_LANGUAGE_SERVICE_PLUGINS,
+      ...languageServicePluginProfiles,
     });
 
     // ── Render templates and generate plan ─────────────────────────────
@@ -1687,7 +1668,7 @@ const appBaseScripts = (dev: string, build: string) => ({
   dev,
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": build,
-  "beep:check": "tsgo -b tsconfig.json",
+  "beep:check": "tsgo -p tsconfig.check.json",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
@@ -1774,7 +1755,7 @@ const viteAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContex
 // package.json manifest for a service app workspace.
 const serviceAppManifest = ({ baseManifest, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
-  scripts: appBaseScripts(portlessDev(portlessLabel, "sh -c 'bun --watch src/main.ts'"), "tsgo -b tsconfig.json"),
+  scripts: appBaseScripts(portlessDev(portlessLabel, "sh -c 'bun --watch src/main.ts'"), "tsgo -p tsconfig.check.json"),
   dependencies: {
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
@@ -1825,8 +1806,8 @@ const encodeManifestJson = (manifest: unknown): Effect.Effect<string, DomainErro
 // beep:check lane for library/tool packages (stories tsconfig adds a stories lane).
 const packageCheckScript = (withStoriesTsconfig: boolean): string =>
   withStoriesTsconfig
-    ? "tsgo -b tsconfig.json && bun run beep:check:tests && bun run beep:check:stories"
-    : "tsgo -b tsconfig.json && bun run beep:check:tests";
+    ? "tsgo -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories"
+    : "tsgo -p tsconfig.check.json && bun run beep:check:tests";
 
 // Script table for library/tool package manifests.
 const packageScripts = (rootRelative: string, withStoriesTsconfig: boolean) => ({

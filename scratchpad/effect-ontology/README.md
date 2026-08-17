@@ -43,7 +43,7 @@ bun run --cwd scratchpad lint:effect-ontology
 bun run --cwd scratchpad docgen
 ```
 
-The arbitrary audit loads all 55 source modules, derives every uppercase
+The arbitrary audit loads all 54 retained source modules, derives every uppercase
 exported schema with reporting enabled, requires identifier/title/description
 and `toArbitrary` annotations, requires zero derivation warnings, and checks
 eight generated decoded values per export with `Schema.is`.
@@ -54,11 +54,10 @@ schema-backed class behavior, including private implementation classes exposed
 through public schema values; and a user-facing `message` on every locally
 constructed check.
 
-Schemas that sit on top of opaque checks use an encoded-to-declaration codec:
-the encoded side remains the canonical validator, while the declaration side
-owns a constructive `toArbitrary`. This prevents a superficial annotation on a
-brand or refinement from hiding filter warnings in every schema that embeds
-that leaf.
+Canonical schemas own their constructive `toArbitrary` metadata so consumers
+can import them directly without declaration wrappers. An
+encoded-to-declaration codec remains appropriate only for an explicit ingress
+adapter whose wire representation differs from the canonical decoded model.
 
 The focused lane is authoritative for this experiment. Broad repository gates
 remain regression checks and must not be reported as a substitute.

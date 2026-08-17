@@ -5,12 +5,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { URLStr } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EnrichedContent");
 

@@ -193,6 +193,6 @@ Md.ts          — public builder namespace (Md.h1 … Md.table)
 `Effect<A,E,R>` schema legitimately requires a phantom-typed function
 (`export const EffectSchema = <A,E,R>() => S.declare<Effect.Effect<A,E,R>>(isEffect, …)`),
 because `S.declare` can't runtime-check type args. But turning a schema **value** into a
-**function** breaks every value-form consumer: tests and `@example` blocks must now call
+**function** breaks every value-form consumer: tests and `**Example**` blocks must now call
 `EffectSchema()` (or `S.is(EffectSchema())`), not pass the bare function. When you
 parameterize a schema, sweep the guard/decode/example call sites in the same change.

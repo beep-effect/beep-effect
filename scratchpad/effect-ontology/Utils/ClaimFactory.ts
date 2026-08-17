@@ -8,6 +8,11 @@
  * @module Utils/ClaimFactory
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
+import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Effect, Hash } from "effect";
 import * as A from "effect/Array";
 import * as Match from "effect/Match";
@@ -15,9 +20,7 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type { Entity, Relation } from "../Domain/Model/Entity.ts";
-import { CLAIMS, RDF, XSD } from "../Domain/Rdf/Constants.ts";
-import type { IRI, RdfTerm } from "../Domain/Rdf/Types.ts";
-import { Literal, Quad } from "../Domain/Rdf/Types.ts";
+import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import type { ClaimRank } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import type { CreateClaimInput } from "../Service/Claim.ts";
@@ -28,27 +31,28 @@ import { buildIri } from "./Rdf.ts";
 // Constants
 // =============================================================================
 
-const RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+const RDF_SUBJECT = makeCanonicalNamedNode(`${RDF_NAMESPACE}subject`);
+const RDF_PREDICATE = makeCanonicalNamedNode(`${RDF_NAMESPACE}predicate`);
+const RDF_OBJECT = makeCanonicalNamedNode(`${RDF_NAMESPACE}object`);
+const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
 
-const claimLiteral = (input: { readonly value: string; readonly datatype?: IRI }): Literal =>
-  Literal.make({
-    value: input.value,
-    language: O.none(),
-    datatype: O.fromNullishOr(input.datatype),
-  });
+const canonicalNamedNode = (value: IRI | NamedNode): NamedNode => (P.isString(value) ? makeNamedNode(value) : value);
+
+const claimLiteral = (input: { readonly value: string; readonly datatype?: IRI | NamedNode }): Literal =>
+  makeLiteral(input.value, canonicalNamedNode(input.datatype ?? XSD_STRING).value);
 
 const claimQuad = (input: {
-  readonly subject: IRI;
-  readonly predicate: IRI;
-  readonly object: RdfTerm;
-  readonly graph: IRI | undefined;
-}): Quad =>
-  Quad.make({
-    subject: input.subject,
-    predicate: input.predicate,
-    object: input.object,
-    graph: O.fromNullishOr(input.graph),
-  });
+  readonly subject: IRI | Subject;
+  readonly predicate: IRI | NamedNode;
+  readonly object: IRI | ObjectTerm;
+  readonly graph: IRI | GraphTerm | undefined;
+}): Quad => {
+  const subject = P.isString(input.subject) ? makeNamedNode(input.subject) : input.subject;
+  const predicate = canonicalNamedNode(input.predicate);
+  const object = P.isString(input.object) ? makeNamedNode(input.object) : input.object;
+  const graph = P.isString(input.graph) ? makeNamedNode(input.graph) : input.graph;
+  return P.isUndefined(graph) ? makeQuad(subject, predicate, object) : makeQuad(subject, predicate, { object, graph });
+};
 
 // =============================================================================
 // Types
@@ -68,7 +72,7 @@ export interface ClaimFactoryOptions {
   /** Ontology ID for namespace scoping */
   readonly ontologyId: string;
   /** Default confidence score (0-1) */
-  readonly defaultConfidence?: number;
+  readonly defaultConfidence?: Confidence;
   /** Default claim rank */
   readonly defaultRank?: ClaimRank;
 }
@@ -307,7 +311,7 @@ export const generateClaimId = dual4(
  */
 export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOptions): ReadonlyArray<ClaimData> => {
   const claims: Array<ClaimData> = [];
-  const { baseNamespace, defaultConfidence = 0.85, documentId, ontologyId } = options;
+  const { baseNamespace, defaultConfidence = Confidence.make(0.85), documentId, ontologyId } = options;
 
   // Build subject IRI
   const subjectIri = buildIri(baseNamespace, entity.id);
@@ -315,7 +319,7 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
   // Get evidence from entity mentions (first mention if available)
   const firstMention = A.head(entity.mentions);
   const evidence = O.map(firstMention, (mention) => ({
-    text: mention.text,
+    text: mention.quote,
     startOffset: mention.startChar,
     endOffset: mention.endChar,
   }));
@@ -328,12 +332,12 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
 
   // 1. Create claims for each rdf:type
   for (const typeIri of entity.types) {
-    const claimId = generateClaimId(subjectIri, RDF_TYPE, typeIri, documentId);
+    const claimId = generateClaimId(subjectIri, RDF_TYPE.value, typeIri, documentId);
 
     claims.push({
       claimId,
       subjectIri,
-      predicateIri: RDF_TYPE,
+      predicateIri: RDF_TYPE.value,
       objectValue: typeIri,
       objectType: "iri",
       articleId: documentId,
@@ -400,7 +404,7 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
  * @category Transformations
  */
 export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryOptions): ClaimData => {
-  const { baseNamespace, defaultConfidence = 0.85, documentId, ontologyId } = options;
+  const { baseNamespace, defaultConfidence = Confidence.make(0.85), documentId, ontologyId } = options;
 
   // Build subject IRI
   const subjectIri = buildIri(baseNamespace, relation.subjectId);
@@ -417,7 +421,7 @@ export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryO
 
   // Get evidence from relation
   const evidence = O.map(relation.evidence, (span) => ({
-    text: span.text,
+    text: span.quote,
     startOffset: span.startChar,
     endOffset: span.endChar,
   }));
@@ -533,14 +537,14 @@ export const knowledgeGraphToClaims = dual3(
 export const claimDataToQuads = dual3(
   (claim: ClaimData, graphUri: string | undefined, extractedAt: string | undefined): ReadonlyArray<Quad> => {
     const quads: Array<Quad> = [];
-    const claimIri = `${CLAIMS.namespace}${claim.claimId}` as IRI;
-    const graph = graphUri as IRI | undefined;
+    const claimIri = IRI.fromUnknown(`${CLAIMS.namespace}${claim.claimId}`);
+    const graph = P.isUndefined(graphUri) ? undefined : IRI.fromUnknown(graphUri);
 
     // Type assertion: claim:id a claims:Claim
     quads.push(
       claimQuad({
         subject: claimIri,
-        predicate: RDF.type,
+        predicate: RDF_TYPE,
         object: CLAIMS.Claim,
         graph,
       })
@@ -550,8 +554,8 @@ export const claimDataToQuads = dual3(
     quads.push(
       claimQuad({
         subject: claimIri,
-        predicate: RDF.subject,
-        object: claim.subjectIri as IRI,
+        predicate: RDF_SUBJECT,
+        object: IRI.fromUnknown(claim.subjectIri),
         graph,
       })
     );
@@ -560,20 +564,20 @@ export const claimDataToQuads = dual3(
     quads.push(
       claimQuad({
         subject: claimIri,
-        predicate: RDF.predicate,
-        object: claim.predicateIri as IRI,
+        predicate: RDF_PREDICATE,
+        object: IRI.fromUnknown(claim.predicateIri),
         graph,
       })
     );
 
     // RDF reification: rdf:object (IRI or Literal)
     const objectTerm =
-      claim.objectType === "iri" ? (claim.objectValue as IRI) : claimLiteral({ value: claim.objectValue });
+      claim.objectType === "iri" ? IRI.fromUnknown(claim.objectValue) : claimLiteral({ value: claim.objectValue });
 
     quads.push(
       claimQuad({
         subject: claimIri,
-        predicate: RDF.object,
+        predicate: RDF_OBJECT,
         object: objectTerm,
         graph,
       })
@@ -596,7 +600,7 @@ export const claimDataToQuads = dual3(
         predicate: CLAIMS.confidence,
         object: claimLiteral({
           value: String(claim.confidence),
-          datatype: XSD.double,
+          datatype: XSD_DOUBLE,
         }),
         graph,
       })
@@ -610,7 +614,7 @@ export const claimDataToQuads = dual3(
           predicate: CLAIMS.extractedAt,
           object: claimLiteral({
             value: extractedAt,
-            datatype: XSD.dateTime,
+            datatype: XSD_DATE_TIME,
           }),
           graph,
         })
@@ -622,14 +626,14 @@ export const claimDataToQuads = dual3(
       claimQuad({
         subject: claimIri,
         predicate: CLAIMS.statedIn,
-        object: `${CLAIMS.namespace}article/${claim.articleId}` as IRI,
+        object: IRI.fromUnknown(`${CLAIMS.namespace}article/${claim.articleId}`),
         graph,
       })
     );
 
     // Evidence
     if (P.isNotUndefined(claim.evidence)) {
-      const evidenceIri = `${claimIri}/evidence` as IRI;
+      const evidenceIri = IRI.fromUnknown(`${claimIri}/evidence`);
 
       quads.push(
         claimQuad({
@@ -643,7 +647,7 @@ export const claimDataToQuads = dual3(
       quads.push(
         claimQuad({
           subject: evidenceIri,
-          predicate: RDF.type,
+          predicate: RDF_TYPE,
           object: CLAIMS.Evidence,
           graph,
         })
@@ -664,7 +668,7 @@ export const claimDataToQuads = dual3(
           predicate: CLAIMS.startOffset,
           object: claimLiteral({
             value: String(claim.evidence.startOffset),
-            datatype: XSD.integer,
+            datatype: XSD_INTEGER,
           }),
           graph,
         })
@@ -676,7 +680,7 @@ export const claimDataToQuads = dual3(
           predicate: CLAIMS.endOffset,
           object: claimLiteral({
             value: String(claim.evidence.endOffset),
-            datatype: XSD.integer,
+            datatype: XSD_INTEGER,
           }),
           graph,
         })

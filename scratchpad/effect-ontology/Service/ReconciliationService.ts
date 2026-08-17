@@ -9,6 +9,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { PosInt } from "@beep/schema/Int";
+import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Context, Data, Effect, Layer, Option, Schema } from "effect";
 import * as DateTime from "effect/DateTime";
@@ -42,17 +44,13 @@ export class ReconciliationError extends Data.TaggedError("ReconciliationError")
  */
 export class ReconciliationConfig extends Schema.Class<ReconciliationConfig>("ReconciliationConfig")({
   /** Minimum score for automatic linking (default: 90) */
-  autoLinkThreshold: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 100 })).pipe(
-    SchemaUtils.withKeyDefaults(90)
-  ),
+  autoLinkThreshold: Percentage.pipe(SchemaUtils.withKeyDefaults(Percentage.make(90))),
 
   /** Minimum score for queueing for review (default: 50) */
-  queueThreshold: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 100 })).pipe(
-    SchemaUtils.withKeyDefaults(50)
-  ),
+  queueThreshold: Percentage.pipe(SchemaUtils.withKeyDefaults(Percentage.make(50))),
 
   /** Maximum candidates to consider (default: 5) */
-  maxCandidates: Schema.Int.check(Schema.isGreaterThan(0)).pipe(SchemaUtils.withKeyDefaults(5)),
+  maxCandidates: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(5))),
 
   /** Language for Wikidata search (default: "en") */
   language: Schema.String.pipe(SchemaUtils.withKeyDefaults("en")),

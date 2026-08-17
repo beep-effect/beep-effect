@@ -892,6 +892,9 @@ export const IRIReference = S.String.check(iriReferenceChecks)
   })
   .pipe(
     S.brand("IRIReference"),
+    SchemaUtils.withStatics((schema) => ({
+      equivalence: SchemaUtils.toEquivalence(schema),
+    })),
     $I.annoteSchema("IRIReference", {
       description: "RFC 3987 IRI reference syntax, including both absolute and relative forms.",
     }),

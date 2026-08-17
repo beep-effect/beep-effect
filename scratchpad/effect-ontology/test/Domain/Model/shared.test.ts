@@ -3,15 +3,9 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import { Attributes, AttributeValue, Confidence, EntityId, OptionalConfidence } from "../../../Domain/Model/shared.ts";
+import { Attributes, AttributeValue, EntityId, OptionalConfidence } from "../../../Domain/Model/shared.ts";
 
-const sharedSchemas: ReadonlyArray<S.Constraint> = [
-  AttributeValue,
-  Attributes,
-  Confidence,
-  OptionalConfidence,
-  EntityId,
-];
+const sharedSchemas: ReadonlyArray<S.Constraint> = [AttributeValue, Attributes, OptionalConfidence, EntityId];
 
 describe("effect-ontology shared model schemas", () => {
   it("derives arbitraries whose values satisfy every public schema", () => {
