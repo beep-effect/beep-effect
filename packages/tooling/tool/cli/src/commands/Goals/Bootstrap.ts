@@ -34,13 +34,7 @@ import { GoalPlanInputError } from "./Goals.errors.ts";
 import { isCapabilitySlug } from "./Goals.schemas.ts";
 import { listGoalPackets } from "./Inventory.ts";
 import { canonicalJsonText, canonicalJsonTextPretty, sha256Hex } from "./PacketCore/PacketDigest.ts";
-import type {
-  PlanAction,
-  PlanConflictReason,
-  PlanMode,
-  PlanOwnership,
-  ValidationRequirement,
-} from "./Bootstrap.schemas.ts";
+import type { PlanMode, PlanOwnership, ValidationRequirement } from "./Bootstrap.schemas.ts";
 import type { CapabilitySlug } from "./Goals.schemas.ts";
 
 const COMPLETION_GATE_STATEMENT =
@@ -458,22 +452,15 @@ ${provenanceLines}
  *
  * **Details**
  *
- * The compilers hash the plain-value projection of a plan (the rows below)
- * before wrapping rows in schema classes, so the content address never
- * depends on class construction details.
+ * The compilers hash the plain-value projection of a plan (the encoded row
+ * shape) before wrapping rows in schema classes, so the content address never
+ * depends on class construction details. The alias is derived from
+ * {@link PlanEntry}'s encoded side, so it cannot drift from the schema.
  *
  * @category models
  * @since 0.0.0
  */
-export type PlanRow = {
-  readonly path: string;
-  readonly action: PlanAction;
-  readonly ownership: PlanOwnership;
-  readonly reason: string;
-  readonly payload?: string;
-  readonly payloadDigest?: string;
-  readonly existingDigest?: string;
-};
+export type PlanRow = typeof PlanEntry.Encoded;
 
 const createRow = (path: string, ownership: PlanOwnership, reason: string, payload: string): PlanRow => ({
   path,
@@ -495,26 +482,28 @@ const BOOTSTRAP_VALIDATIONS: ReadonlyArray<ValidationRequirement> = [
 /**
  * Plain preservation row assembled before schema-class wrapping.
  *
- * @category models
- * @since 0.0.0
- */
-export type PreservationRow = {
-  readonly path: string;
-  readonly unmodeledKeys: ReadonlyArray<string>;
-  readonly preImageDigest: string;
-  readonly reason: string;
-};
-
-/**
- * Plain conflict row assembled before schema-class wrapping.
+ * **Details**
+ *
+ * Derived from {@link PlanPreservation}'s encoded side, so it cannot drift
+ * from the schema.
  *
  * @category models
  * @since 0.0.0
  */
-export type ConflictRow = {
-  readonly reason: PlanConflictReason;
-  readonly message: string;
-};
+export type PreservationRow = typeof PlanPreservation.Encoded;
+
+/**
+ * Plain conflict row assembled before schema-class wrapping.
+ *
+ * **Details**
+ *
+ * Derived from {@link PlanConflict}'s encoded side, so it cannot drift from
+ * the schema.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ConflictRow = typeof PlanConflict.Encoded;
 
 /**
  * Seals plain plan fields into a content-addressed {@link MaterializationPlan}.
