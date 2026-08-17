@@ -2,7 +2,7 @@ import { PathSafetyError } from "@beep/file-processing/PathSafety";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { assert, describe, it } from "@effect/vitest";
-import { Context, Effect, FileSystem, Layer, Path } from "effect";
+import { Context, Duration, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -22,6 +22,16 @@ import {
 
 const PlatformLayer = Layer.mergeAll(BunFileSystem.layer, BunPath.layer);
 const isPathSafetyError = S.is(PathSafetyError);
+const sqliteWriteLockHolder = `
+import { Database } from "bun:sqlite";
+
+const databasePath = Bun.env.STORAGE_MUTATION_DATABASE;
+if (databasePath === undefined) process.exit(2);
+const database = new Database(databasePath, { create: true });
+database.exec("BEGIN IMMEDIATE");
+console.log("locked");
+Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0);
+`;
 
 const makeLocalStorageLayer = (root: string, prefix = "") =>
   StorageServiceLive.pipe(
@@ -295,30 +305,54 @@ describe.sequential("effect-ontology local StorageService", () => {
     );
   });
 
-  it.layer(makeStorageTestLayer("residual-lock"))("with a residual local mutation lock", (it) => {
+  it.layer(makeStorageTestLayer("process-lock"))("with a SQLite writer in another process", (it) => {
     it.effect(
-      "fails closed with Busy instead of reclaiming another owner",
+      "resumes mutations after the lock-owning process is killed",
       Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const { root } = yield* LocalStorageFixture;
-        const lockPath = path.join(root, "residual-lock", ".effect-ontology-storage", "mutation.lock");
-        yield* fs.writeFileString(lockPath, "0000000000000000000000000000000000000000000000000000000000000000", {
-          flag: "wx",
-          mode: 0o600,
-        });
+        const databasePath = path.join(root, "process-lock", ".effect-ontology-storage", "mutation.sqlite");
         const storage = yield* StorageService;
 
-        const result = yield* TestClock.withLive(
-          Effect.result(storage.setIfGenerationMatch("document.txt", "blocked", "0"))
-        );
+        yield* TestClock.withLive(
+          Effect.acquireUseRelease(
+            Effect.sync(() =>
+              Bun.spawn(["bun", "--eval", sqliteWriteLockHolder], {
+                env: { ...Bun.env, STORAGE_MUTATION_DATABASE: databasePath },
+                stderr: "pipe",
+                stdout: "pipe",
+              })
+            ),
+            Effect.fnUntraced(function* (child) {
+              const readiness = yield* Effect.tryPromise(() => child.stdout.getReader().read()).pipe(
+                Effect.orDie,
+                Effect.timeoutOrElse({
+                  duration: Duration.seconds(5),
+                  orElse: () => Effect.die("Timed out waiting for the SQLite lock holder."),
+                })
+              );
+              if (readiness.done) return yield* Effect.die("SQLite lock holder exited before acquiring the lock.");
+              assert.isTrue(Str.includes("locked")(new TextDecoder().decode(readiness.value)));
 
-        assert(result.pipe(Result.isFailure));
-        const failure = result.pipe(Result.getFailure);
-        assert(failure.pipe(O.isSome));
-        if (O.isNone(failure)) return yield* Effect.die("Expected a typed local lock timeout.");
-        assert.strictEqual(failure.value._tag, "Busy");
-        assert.isTrue(yield* fs.exists(lockPath));
+              const blocked = yield* Effect.result(storage.setIfGenerationMatch("document.txt", "blocked", "0"));
+              assert(blocked.pipe(Result.isFailure));
+              const failure = blocked.pipe(Result.getFailure);
+              assert(failure.pipe(O.isSome));
+              if (O.isNone(failure)) return yield* Effect.die("Expected a typed SQLite lock timeout.");
+              assert.strictEqual(failure.value._tag, "Busy");
+
+              child.kill();
+              yield* Effect.tryPromise(() => child.exited).pipe(Effect.orDie);
+              yield* storage.setIfGenerationMatch("document.txt", "recovered", "0");
+              assert.strictEqual(yield* storage.get("document.txt"), "recovered");
+            }),
+            (child) =>
+              Effect.sync(() => child.kill()).pipe(
+                Effect.andThen(Effect.tryPromise(() => child.exited).pipe(Effect.orDie)),
+                Effect.asVoid
+              )
+          )
+        );
       })
     );
   });

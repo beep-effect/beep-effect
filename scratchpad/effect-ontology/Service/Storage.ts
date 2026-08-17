@@ -12,6 +12,7 @@ import {
 } from "@beep/file-processing/PathSafety";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { SqliteClient } from "@effect/sql-sqlite-bun";
 import { Storage } from "@google-cloud/storage";
 import {
   Clock,
@@ -35,6 +36,8 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { KeyValueStore } from "effect/unstable/persistence";
+import * as SqlClient from "effect/unstable/sql/SqlClient";
+import * as SqlError from "effect/unstable/sql/SqlError";
 import { sha256SyncFull } from "../Utils/Hash.ts";
 import { ConfigService } from "./Config.ts";
 
@@ -44,6 +47,9 @@ const localStorageAbsoluteKeyPattern = /^(?:[\\/]|[A-Za-z]:[\\/])/u;
 const localStorageDotSegmentPattern = /(?:^|[\\/])\.{1,2}(?:[\\/]|$)/u;
 const localStorageMetadataDirectoryName = ".effect-ontology-storage";
 const localStorageMetadataSegmentPattern = /(?:^|[\\/])\.effect-ontology-storage(?:[\\/]|$)/u;
+const localStorageMutationDatabaseName = "mutation.sqlite";
+const localStorageMutationRetryDelay = Duration.millis(5);
+const localStorageMutationRetryAttempts = 200;
 
 const LocalStorageKey = S.NonEmptyString.check(
   S.makeFilterGroup(
@@ -116,8 +122,6 @@ const LocalGenerationRecordJson = S.fromJsonString(LocalGenerationRecord).pipe(
 const decodeLocalGenerationRecord = S.decodeEffect(LocalGenerationRecordJson);
 const encodeLocalGenerationRecord = S.encodeEffect(LocalGenerationRecordJson);
 type LocalGenerationRecord = typeof LocalGenerationRecord.Type;
-
-const localMutationLockAcquireTimeout = Duration.seconds(5);
 
 const isLocalStorageKey = S.is(LocalStorageKey);
 
@@ -519,20 +523,7 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
 
 // --- Local Filesystem Implementation ---
 
-/**
- * Local filesystem security boundary.
- *
- * Caller-controlled keys are validated and resolved against a pinned canonical
- * root before each adapter operation. Traversal, absolute keys, stable symlink
- * escapes, and root or prefix replacement that resolves outside the pinned
- * boundary fail closed.
- *
- * This portable path-based adapter does not defend against another principal
- * renaming path components between resolution and use. Deployments must ensure
- * that untrusted principals cannot mutate the configured root's parent entry or
- * any directory beneath the root while an operation is running.
- */
-const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageConfigValue) {
+const prepareLocalStore = Effect.fn("Storage.prepareLocalStore")(function* (config: StorageConfigValue) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const basePath = config.localPath ?? "./output";
@@ -548,6 +539,36 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
   const prefixedRoot = yield* resolveStorageRoot();
   yield* fs.makeDirectory(prefixedRoot, { recursive: true });
   const canonicalRoot = yield* resolveStorageRoot();
+  const metadataDirectory = yield* resolvePathWithinCanonicalRoot({
+    canonicalRoot,
+    candidate: localStorageMetadataDirectoryName,
+  });
+  yield* fs.makeDirectory(metadataDirectory, { recursive: true, mode: 0o700 });
+  const databasePath = yield* resolvePathWithinCanonicalRoot({
+    canonicalRoot,
+    candidate: path.join(localStorageMetadataDirectoryName, localStorageMutationDatabaseName),
+  });
+  return { canonicalRoot, databasePath };
+});
+
+/**
+ * Local filesystem security boundary.
+ *
+ * Caller-controlled keys are validated and resolved against a pinned canonical
+ * root before each adapter operation. Traversal, absolute keys, stable symlink
+ * escapes, and root or prefix replacement that resolves outside the pinned
+ * boundary fail closed.
+ *
+ * This portable path-based adapter does not defend against another principal
+ * renaming path components between resolution and use. Deployments must ensure
+ * that untrusted principals cannot mutate the configured root's parent entry or
+ * any directory beneath the root while an operation is running.
+ */
+const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageConfigValue, canonicalRoot: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const globalPrefix = config.pathPrefix ?? "";
+  const sql = yield* SqlClient.SqlClient;
   const resolveContainedPath = (candidate: string) =>
     resolvePathWithinCanonicalRoot({
       canonicalRoot,
@@ -596,7 +617,6 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
     );
   });
   const generationDirectory = yield* resolveContainedPath(path.join(localStorageMetadataDirectoryName, "generations"));
-  const lockCandidate = path.join(localStorageMetadataDirectoryName, "mutation.lock");
   yield* fs.makeDirectory(generationDirectory, { recursive: true, mode: 0o700 });
 
   const metadataDecodeError = (key: string, cause: unknown) =>
@@ -608,57 +628,31 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       description: Inspectable.toStringUnknown(cause),
       cause,
     });
-  const isLockContention = (error: PlatformError): boolean => error.reason._tag === "AlreadyExists";
-  const lockBusyError = (method: string, activeLockPath: string) =>
+  const transactionError = (method: string, pathOrDescriptor: string, cause: SqlError.SqlError) =>
     new SystemError({
-      _tag: "Busy",
+      _tag: P.isTagged(cause.reason, "LockTimeoutError") ? "Busy" : "Unknown",
       module: "KeyValueStore",
       method,
-      pathOrDescriptor: activeLockPath,
-      description: "Timed out while waiting for the local storage mutation lock.",
+      pathOrDescriptor,
+      description: cause.message,
+      cause,
     });
-  const decodeLockOwnerOption = (encoded: string) => S.decodeEffect(Sha256Hex)(encoded).pipe(Effect.option);
-  const acquireMutationLock = Effect.fnUntraced(function* () {
-    const activeLockPath = yield* resolveContainedPath(lockCandidate).pipe(
-      Effect.mapError(localPathError("acquireMutationLock", lockCandidate))
-    );
-    return yield* Effect.acquireUseRelease(
-      fs.makeTempFile({ directory: generationDirectory, prefix: "owner-" }),
-      Effect.fnUntraced(function* (ownerFile) {
-        const owner = Sha256Hex.make(sha256SyncFull(ownerFile));
-        yield* fs.writeFileString(activeLockPath, owner, { flag: "wx", mode: 0o600 }).pipe(
-          Effect.retry({
-            while: isLockContention,
-            schedule: Schedule.spaced(Duration.millis(2)),
-          }),
-          Effect.timeoutOrElse({
-            duration: localMutationLockAcquireTimeout,
-            orElse: () => Effect.fail(lockBusyError("acquireMutationLock", activeLockPath)),
-          })
-        );
-        return { activeLockPath, owner };
-      }),
-      (ownerFile) => fs.remove(ownerFile, { force: true })
-    );
-  });
-  const releaseMutationLock = Effect.fnUntraced(function* ({
-    activeLockPath,
-    owner,
-  }: {
-    readonly activeLockPath: string;
-    readonly owner: string;
-  }) {
-    const encoded = yield* fs.readFileString(activeLockPath).pipe(Effect.option);
-    if (O.isNone(encoded)) return;
-    const lockOwner = yield* decodeLockOwnerOption(encoded.value);
-    if (O.isSome(lockOwner) && Eq.equals(lockOwner.value, owner)) {
-      yield* fs.remove(activeLockPath, { force: true });
-    }
-  });
-  const withMutationLock = <A, E, R>(
+  const isSqlLockTimeout = (cause: unknown): cause is SqlError.SqlError =>
+    SqlError.isSqlError(cause) && P.isTagged(cause.reason, "LockTimeoutError");
+  const withMutationTransaction = Effect.fnUntraced(function* <A, E, R>(
+    method: string,
+    pathOrDescriptor: string,
     effect: Effect.Effect<A, E, R>
-  ): Effect.Effect<A, E | PlatformError | SystemError, R> =>
-    Effect.acquireUseRelease(acquireMutationLock(), () => effect, releaseMutationLock);
+  ): Effect.fn.Return<A, E | SystemError, R> {
+    return yield* sql.withTransaction(effect).pipe(
+      Effect.retry({
+        while: isSqlLockTimeout,
+        schedule: Schedule.spaced(localStorageMutationRetryDelay),
+        times: localStorageMutationRetryAttempts,
+      }),
+      Effect.catchIf(SqlError.isSqlError, (cause) => Effect.fail(transactionError(method, pathOrDescriptor, cause)))
+    );
+  });
   const generationRecordCandidate = Effect.fnUntraced(function* (key: string) {
     const resolved = yield* resolvePath(key).pipe(Effect.mapError(localPathError("generationRecordCandidate", key)));
     const storageIdentity = path.relative(canonicalRoot, resolved);
@@ -771,7 +765,9 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       }).pipe(Effect.mapError(localKvError("getUint8Array", key)));
     }),
     set: Effect.fn("Storage.local.set")(function* (key, value) {
-      return yield* withMutationLock(
+      return yield* withMutationTransaction(
+        "set",
+        key,
         Effect.gen(function* () {
           const bytes = P.isString(value) ? new TextEncoder().encode(value) : value;
           const content = P.isString(value) ? value : new TextDecoder().decode(value);
@@ -781,7 +777,9 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       ).pipe(Effect.mapError(localKvError("set", key)));
     }),
     remove: Effect.fn("Storage.local.remove")(function* (key) {
-      return yield* withMutationLock(
+      return yield* withMutationTransaction(
+        "remove",
+        key,
         Effect.gen(function* () {
           const resolved = yield* resolvePath(key);
           if (yield* fs.exists(resolved)) {
@@ -791,7 +789,9 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
         })
       ).pipe(Effect.mapError(localKvError("remove", key)));
     }),
-    clear: withMutationLock(
+    clear: withMutationTransaction(
+      "clear",
+      globalPrefix,
       Effect.gen(function* () {
         const checkedRoot = yield* resolveContainedPath(".");
         if (!(yield* fs.exists(checkedRoot))) {
@@ -836,7 +836,9 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       return yield* walkDirRecursive(dir, "");
     }),
     getWithGeneration: Effect.fn("Storage.local.getWithGeneration")(function* (key: string) {
-      return yield* withMutationLock(
+      return yield* withMutationTransaction(
+        "getWithGeneration",
+        key,
         Effect.gen(function* () {
           const resolved = yield* resolvePath(key).pipe(Effect.mapError(localPathError("getWithGeneration", key)));
           if (!(yield* fs.exists(resolved))) return O.none();
@@ -851,7 +853,9 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       value: string,
       expectedGeneration: string
     ) {
-      yield* withMutationLock(
+      yield* withMutationTransaction(
+        "setIfGenerationMatch",
+        key,
         Effect.gen(function* () {
           const resolved = yield* resolvePath(key).pipe(Effect.mapError(localPathError("setIfGenerationMatch", key)));
           if (!(yield* fs.exists(resolved))) {
@@ -970,6 +974,22 @@ const makeMemoryStore = Effect.sync(() => {
 
 // --- Layer Definition ---
 
+const makeLocalStorageServiceLayer = (config: StorageConfigValue) =>
+  Layer.unwrap(
+    prepareLocalStore(config).pipe(
+      Effect.map(({ canonicalRoot, databasePath }) =>
+        Layer.effect(StorageService, makeLocalStore(config, canonicalRoot)).pipe(
+          Layer.provide(
+            SqliteClient.layer({
+              filename: databasePath,
+              busyTimeout: Duration.zero,
+            })
+          )
+        )
+      )
+    )
+  );
+
 /**
  * Provides the Effect layer for storage service live dependencies.
  *
@@ -984,27 +1004,24 @@ const makeMemoryStore = Effect.sync(() => {
  * @category layers
  * @since 0.0.0
  */
-export const StorageServiceLive = Layer.effect(
-  StorageService,
+export const StorageServiceLive = Layer.unwrap(
   Effect.gen(function* () {
     const config = yield* ConfigService;
     const { bucket, localPath, prefix, type } = config.storage;
 
     // Adapter for internal storage config
-    const storageConfig: StorageConfigValue = {
+    const storageConfig = StorageConfigValue.make({
       type,
       ...(O.isSome(bucket) ? { bucketName: bucket.value } : {}),
       ...(O.isSome(localPath) ? { localPath: localPath.value } : {}),
       pathPrefix: prefix,
-    };
+    });
 
-    if (type === "gcs") {
-      return yield* makeGcsStore(storageConfig);
-    } else if (type === "local") {
-      return yield* makeLocalStore(storageConfig);
-    } else {
-      return yield* makeMemoryStore;
-    }
+    return StorageBackend.$match(type, {
+      gcs: () => Layer.effect(StorageService, makeGcsStore(storageConfig)),
+      local: () => makeLocalStorageServiceLayer(storageConfig),
+      memory: () => Layer.effect(StorageService, makeMemoryStore),
+    });
   })
 );
 
