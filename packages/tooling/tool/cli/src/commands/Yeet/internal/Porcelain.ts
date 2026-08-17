@@ -24,17 +24,21 @@
 
 import { Console, Effect } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as Str from "effect/String";
+import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
 import { mergePr } from "./Merge.ts";
 import { runYeetMonitorUntilMerged } from "./MonitorLoop.ts";
-import { runYeetReply } from "./Reply.ts";
+import { renderYeetReplyFailureVerdict, replyReportPathForContext, runYeetReply } from "./Reply.ts";
 import { SweepPlanJson, SweepReportJson } from "./Sweep.schemas.ts";
 import { executeSweep, overrideSweepBranch, planSweep, renderSweepReport } from "./Sweep.ts";
 import type { FileSystem, Path } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { CliReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import type { YeetMonitorTerminalState } from "./MonitorLoop.ts";
+import type { ReplyReport } from "./Reply.schemas.ts";
 import type { SweepPlan, SweepPlanStep, SweepReport } from "./Sweep.schemas.ts";
 
 /**
@@ -166,6 +170,18 @@ export const runYeetMerge = Effect.fn("Yeet.runMergeCommand")(function* (
  * from any worktree. Every draft gets its turn: a denied scope or a deleted
  * thread becomes that draft's outcome, never an aborted pass.
  *
+ * **Gotchas**
+ *
+ * The batch running to completion is not the same as the batch succeeding, and
+ * this seam is where the two part company. Any `failed` outcome exits non-zero
+ * through {@link CliReportedExit}, because an unwritten reply leaves its review
+ * thread open — an unresolved thread is a hard merge gate, so an exit-0 pass
+ * would hand `yeet reply && bun run beep yeet monitor` a green it has not
+ * earned. `stale` is not a failure: the thread was already resolved upstream,
+ * so there was nothing to write. The exit is silent by construction — the pass
+ * already printed every outcome and the report path, so the sentinel adds the
+ * code and the verdict line, not a second rendering of the same failure.
+ *
  * **Example** (Build the reply runner effect)
  *
  * ```ts
@@ -177,7 +193,7 @@ export const runYeetMerge = Effect.fn("Yeet.runMergeCommand")(function* (
  * ```
  *
  * @param options - Parsed `yeet reply` flag values.
- * @returns Void once every draft outcome has been recorded and reported.
+ * @returns Void once every draft was written; a non-zero exit when any failed.
  * @category commands
  * @since 0.0.0
  */
@@ -185,10 +201,58 @@ export const runYeetReplyPass = Effect.fn("Yeet.runReplyCommand")(function* (
   options: YeetPorcelainOptions
 ): Effect.fn.Return<
   void,
-  YeetCommandError,
+  YeetCommandError | CliReportedExit,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
-  yield* runYeetReply(yield* hydrateYeetReadOnlyContext(options));
+  const context = yield* hydrateYeetReadOnlyContext(options);
+  const report = yield* runYeetReply(context);
+  yield* failYeetReplyOnFailedOutcomes(report, yield* replyReportPathForContext(context));
+});
+
+/**
+ * Exit non-zero when a reply pass left any drafted reply unwritten.
+ *
+ * **Details**
+ *
+ * The report is the accounting and this is the verdict read off it. It is a
+ * separate function because the decision is the interesting part: which
+ * outcomes count as failure (`failed` only — `stale` wrote nothing because
+ * there was nothing to write) and what the operator is told. The exit is
+ * silent, since the pass already printed every outcome; this adds the verdict
+ * line and the code.
+ *
+ * **Example** (A clean report exits normally)
+ *
+ * ```ts
+ * import { failYeetReplyOnFailedOutcomes, ReplyReport } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
+ *
+ * const report = ReplyReport.make({
+ *   schemaVersion: "yeet-reply-report/v1",
+ *   prNumber: 558,
+ *   createdAt: "2026-08-16T00:00:00.000Z",
+ *   outcomes: [],
+ * })
+ * const verdict = failYeetReplyOnFailedOutcomes(report, "reply-report.json").pipe(Effect.as("clean"))
+ * console.log(Effect.runSync(verdict))
+ * ```
+ *
+ * @param report - The report written by one reply pass.
+ * @param reportPath - Where that report was written, quoted in the verdict.
+ * @returns Void when every draft was written; a reported non-zero exit otherwise.
+ * @category commands
+ * @since 0.0.0
+ */
+export const failYeetReplyOnFailedOutcomes = Effect.fn("Yeet.failReplyOnFailedOutcomes")(function* (
+  report: ReplyReport,
+  reportPath: string
+): Effect.fn.Return<void, CliReportedExit> {
+  const verdict = renderYeetReplyFailureVerdict(report, reportPath);
+  if (O.isNone(verdict)) {
+    return;
+  }
+  yield* Console.error(verdict.value);
+  return yield* failWithReportedExit(verdict.value);
 });
 
 /**

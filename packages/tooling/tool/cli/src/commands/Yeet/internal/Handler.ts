@@ -60,6 +60,12 @@ import {
   writeTextFile,
 } from "./IssueArtifacts.ts";
 import { installYeetMergePreview, withYeetMergePreview, yeetMergedPreviewContext } from "./MergedPreview.ts";
+import {
+  awaitYeetCheckRegistration,
+  isAwaitingYeetCheckRegistration,
+  renderYeetCheckRegistrationExhausted,
+  YEET_CHECK_REGISTRATION_BACKOFF,
+} from "./MonitorChecks.ts";
 import { runYeetPullRequestCommentMonitor } from "./MonitorComments.ts";
 import {
   buildYeetRunPlanWithMode,
@@ -679,6 +685,55 @@ const assertNoUnresolvedReviewThreads = Effect.fn("Yeet.assertNoUnresolvedReview
   });
 });
 
+// A pushed head whose checks have not registered yet is not a head with
+// nothing to watch. The watch re-attempts on a bounded backoff, and only an
+// exhausted backoff lets the empty answer stand — as a failure naming that
+// condition, never as a pass.
+const runMonitorCheckWatch = Effect.fn("Yeet.runMonitorCheckWatch")(function* (
+  context: RepoRunContext,
+  checkSteps: ReadonlyArray<RepoPlanStep>,
+  recorder: Ref.Ref<ReadonlyArray<YeetExecutedStep>>,
+  failureMessage: string,
+  delays: ReadonlyArray<Duration.Duration> = YEET_CHECK_REGISTRATION_BACKOFF
+): Effect.fn.Return<
+  void,
+  YeetCommandError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  // `runPhase` appends to the recorder, and the recorder is what the verdict,
+  // the PR body, and `yeet status` all read. A retried attempt must therefore
+  // REPLACE the previous attempt's record rather than add to it: otherwise one
+  // step id carries both a failed entry (no checks registered yet) and a passed
+  // one, and every downstream surface reports the same lane as both — the
+  // misattributed-hint class this packet already has receipts for. Rewinding to
+  // the pre-attempt snapshot before each try makes the last attempt the only
+  // one that survives.
+  const beforeAttempts = yield* Ref.get(recorder);
+  const results = yield* Ref.set(recorder, beforeAttempts).pipe(
+    Effect.andThen(runPhase(context, checkSteps, recorder)),
+    awaitYeetCheckRegistration(delays)
+  );
+  if (A.every(results, (result) => result.exitCode === 0)) {
+    return;
+  }
+  return yield* failWithIssueArtifacts(
+    context,
+    checkSteps,
+    results,
+    isAwaitingYeetCheckRegistration(results)
+      ? `${failureMessage} ${renderYeetCheckRegistrationExhausted(delays)}`
+      : failureMessage
+  );
+});
+
+/**
+ * Run the monitor check watch in isolation, with an injectable backoff.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const runMonitorCheckWatchForTesting = runMonitorCheckWatch;
+
 const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
   context: RepoRunContext,
   monitorSteps: ReadonlyArray<RepoPlanStep>,
@@ -714,7 +769,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
     Effect.mapError(YeetCommandError.new("Failed to decode pull request number for yeet monitor."))
   );
   yield* Effect.raceFirst(
-    runRequiredPhase(context, checkSteps, recorder, failureMessage),
+    runMonitorCheckWatch(context, checkSteps, recorder, failureMessage),
     runYeetPullRequestCommentMonitor(context, pullRequestNumber)
   );
 });

@@ -28,6 +28,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
+import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { JsonStringCodec } from "../../../internal/schema/JsonCodec.ts";
@@ -321,6 +323,110 @@ export class ReplyReport extends S.Class<ReplyReport>($I`ReplyReport`)(
     description: "Result document for one reply run: every drafted reply paired with its outcome.",
   })
 ) {}
+
+/**
+ * Name one reply outcome by the handle its draft used.
+ *
+ * **Details**
+ *
+ * A draft targets a thread either way GitHub exposes one, so the operator-facing
+ * handle has to follow the draft rather than pick a canonical id: printing a
+ * thread id for a draft written against a comment id names something the author
+ * never typed. Shared by the per-draft log line and the run's failure verdict so
+ * both name the same thing.
+ *
+ * **Gotchas**
+ *
+ * It takes the two handles rather than a whole {@link ReplyDraftOutcome} on
+ * purpose. `ReplyTargetPresenceCheck` makes a decoded outcome carrying neither
+ * handle impossible to construct, which would leave the "neither" arm here
+ * unreachable and untestable; accepting the handles alone lets that arm be
+ * exercised directly, and the function never needed the status or detail.
+ *
+ * **Example** (Name a comment-id target)
+ *
+ * ```ts
+ * import { ReplyDraftOutcome, replyOutcomeTarget } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const outcome = ReplyDraftOutcome.make({
+ *   commentId: O.some(2284119001),
+ *   status: "failed",
+ *   detail: "the reply mutation was denied",
+ * })
+ * console.log(replyOutcomeTarget(outcome))
+ * ```
+ *
+ * @param target - The thread id and comment id a draft named, either optional.
+ * @returns The thread id when the draft carried one, else its comment handle.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const replyOutcomeTarget = (target: Pick<ReplyDraftOutcome, "commentId" | "threadId">): string =>
+  O.getOrElse(target.threadId, () => `comment ${O.getOrElse(O.map(target.commentId, String), () => "?")}`);
+
+/**
+ * Select the outcomes a reply run recorded with one status.
+ *
+ * **Example** (Count the stale outcomes)
+ *
+ * ```ts
+ * import { ReplyDraftOutcome, replyOutcomesWithStatus } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const outcomes = [
+ *   ReplyDraftOutcome.make({ threadId: O.some("PRRT_a"), status: "stale", detail: "already resolved" }),
+ * ]
+ * console.log(replyOutcomesWithStatus(outcomes, "stale").length)
+ * ```
+ *
+ * @param outcomes - Every outcome one reply run recorded.
+ * @param status - The status to select.
+ * @returns The outcomes carrying that status, in run order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const replyOutcomesWithStatus: {
+  (status: ReplyOutcomeStatus): (outcomes: ReadonlyArray<ReplyDraftOutcome>) => ReadonlyArray<ReplyDraftOutcome>;
+  (outcomes: ReadonlyArray<ReplyDraftOutcome>, status: ReplyOutcomeStatus): ReadonlyArray<ReplyDraftOutcome>;
+} = dual(
+  2,
+  (outcomes: ReadonlyArray<ReplyDraftOutcome>, status: ReplyOutcomeStatus): ReadonlyArray<ReplyDraftOutcome> =>
+    A.filter(outcomes, (outcome) => outcome.status === status)
+);
+
+/**
+ * The drafts a reply run could not write.
+ *
+ * **Details**
+ *
+ * This is the run's verdict surface: a `failed` outcome means a reply the
+ * operator asked for is not on the pull request, which leaves the thread open
+ * and the merge criterion unmet. `stale` is deliberately not a failure — the
+ * thread was already resolved upstream, so there was nothing to write and
+ * nothing to retry.
+ *
+ * **Example** (Read a report's failures)
+ *
+ * ```ts
+ * import { failedReplyOutcomes, ReplyReport } from "@beep/repo-cli/test/Yeet"
+ *
+ * const report = ReplyReport.make({
+ *   schemaVersion: "yeet-reply-report/v1",
+ *   prNumber: 558,
+ *   createdAt: "2026-08-16T00:00:00.000Z",
+ *   outcomes: [],
+ * })
+ * console.log(failedReplyOutcomes(report).length)
+ * ```
+ *
+ * @param report - The written report for one reply run.
+ * @returns Every outcome the run recorded as `failed`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const failedReplyOutcomes = (report: ReplyReport): ReadonlyArray<ReplyDraftOutcome> =>
+  replyOutcomesWithStatus(report.outcomes, ReplyOutcomeStatus.Enum.failed);
 
 /**
  * JSON-string codec for the reply drafts artifact.
