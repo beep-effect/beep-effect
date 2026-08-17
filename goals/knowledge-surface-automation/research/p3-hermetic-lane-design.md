@@ -78,6 +78,22 @@ Fixed here by leading the archive vector with
 `-c core.autocrlf=false -c core.eol=lf`, kept as the pure exported
 `gitArchiveArgs` so the contract is asserted without spawning a process.
 
+**Review-round addendum (2026-08-17).** PR #741 review proved the same class has
+three sibling vectors the EOL pins alone do not close: a global attributes file
+(`$XDG_CONFIG_HOME/git/attributes`, applying even under `GIT_CONFIG_GLOBAL=/dev/null`,
+or a config-named `core.attributesFile`) attaching `eol=crlf` overrides `-c core.eol`
+at attribute precedence; ambient `tar.umask` rewrites tar header mode bits; and the
+system attributes file has no `-c` override at all. The shipped fix is therefore four
+pins (`core.autocrlf`, `core.eol`, `core.attributesFile=/dev/null`, `tar.umask=0002`)
+plus `GIT_ATTR_NOSYSTEM=1` in the spawn env (exported as `gitArchiveEnv`, also folded
+into `makeHermeticEnv`), each hostile profile gated by a differential test carrying a
+negative-control witness. Measured residual: clone-local `.git/info/attributes`
+outranks every layer and **no invocation can disable it** (`core.attributesFile=/dev/null`,
+`--attr-source=HEAD`, `GIT_ATTR_SOURCE`, `-c attr.tree=HEAD`, and `GIT_ATTR_NOSYSTEM`
+all fail to suppress it, measured against git 2.55.0). It is absent from fresh clones;
+if it must be guarded, stat `git rev-parse --git-path info/attributes` and fail with a
+remediation — a candidate for the ratified witness-test follow-up, option (b)'s heir.
+
 ## Why this is a stop, not a redesign
 
 The useful lane inverts the ratified sentence. As specced it asks "does the
