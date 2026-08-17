@@ -117,8 +117,9 @@ If you touch this, load or run this first. Do not hand-author around it.
 
 ## Tool Routing
 
-- effect v3↔v4 differences: validate against the checked-in Effect source
-  (`.repos/effect`), never training-data priors.
+- effect v3↔v4 differences: validate against the Effect reference checkout
+  (`.repos/effect`, a machine-local symlink provisioned by
+  `scripts/setup-agent-memory.sh`), never training-data priors.
 - shadcn: editor app = app workspace, shared UI package = shared base; prefer
   the shadcn skill + shadcn MCP for registry discovery and installs.
 - UI motion evidence comes from `bun run beep qa` artifacts. There is no QA

@@ -189,8 +189,8 @@ const program = Effect.gen(function* () {
 The Effect version tells you what it needs, what can go wrong, and what it
 returns. The async version *hopes*. I am done hoping.
 
-APIs get validated against the checked-in Effect source in `.repos/effect`,
-not against whatever an agent remembers from training. See
+APIs get validated against the live Effect source referenced at
+`.repos/effect`, not against whatever an agent remembers from training. See
 [`standards/effect-first-development.md`](standards/effect-first-development.md)
 and
 [`standards/schema-first-development-prompt.md`](standards/schema-first-development-prompt.md).
@@ -274,13 +274,15 @@ Agent law: [`AGENTS.md`](AGENTS.md).
 First-party work lives under `packages/`, `apps/`, `infra/`, `goals/`,
 `explorations/`, `standards/`, and the authored `docs/` tree.
 
-`.repos/effect` is a squash-pinned Effect v4 source pin so agents validate
-APIs against checked-in Effect source instead of training-data priors. It is
-force-tracked under an otherwise-ignored `.repos/*` rule.
+`.repos/effect` is a gitignored symlink to a machine-local clone of
+[Effect-TS/effect](https://github.com/Effect-TS/effect), provisioned by
+`scripts/setup-agent-memory.sh`, so agents validate APIs against real Effect
+v4 source instead of training-data priors. Nothing under `.repos/` is part
+of the tracked tree.
 
-Do **not** add new full-history git subtrees. Refresh Effect with a squash.
-Historical subtree imports still sit in git objects and poison naive
-`git log` author counts — those names are not first-party contributors.
+Do **not** add git subtrees under `.repos/`. Historical subtree imports
+still sit in git objects and poison naive `git log` author counts — those
+names are not first-party contributors.
 
 ---
 
