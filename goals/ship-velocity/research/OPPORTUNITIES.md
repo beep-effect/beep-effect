@@ -81,3 +81,30 @@ session/machine ids.
   claiming CI parity must run from the artifact state CI actually has — wipe derived outputs
   first (the cold-world script now does). Fix: check.dependsOn ^build, making the lane's
   input explicit instead of inherited from whatever a -b sub-build left behind.
+
+## 2026-08-16 — E1 implementation
+
+- Placing the derived-INDEX regeneration required reconstructing an undocumented invariant by
+  hand: regeneration is only trustworthy after `stashUnstagedWorktree` runs, because
+  `git stash push --keep-index` is what makes the worktree equal the staged tree. Anywhere
+  earlier, `--staged-only` would render the index from unstaged manifest edits that are not in
+  the commit — a silently wrong INDEX, the exact class E1 exists to prevent. Nothing in
+  `Yeet/internal/` states that the post-stash / pre-commit window is the only point where the
+  worktree provably equals the commit-to-be. Prevention: name that window in the publish
+  pipeline (a comment landed with E1) and reuse it for every E3 derived-file auto-heal instead
+  of each gate re-deriving it.
+- The publish commit phase runs *outside* the stash-restore `Effect.ensuring` that wraps the
+  post-commit phases, so any refusal between the stash and the commit strands the operator's
+  unstaged residue in a stash they were never told about. Pre-existing for commit-hook failures;
+  E1's new refusal had to add its own `Effect.tapError` restore rather than inherit a safe
+  default. Prevention: make stash restoration a property of the whole staged-only publish scope,
+  not of one sub-phase, so future pre-commit gates cannot reintroduce the leak.
+- `packages/tooling/tool/cli/test/tsconfig.json` cannot compile at all: it extends the package
+  config and therefore inherits `rootDir: "src"`, so every file it includes fails TS6059
+  ("not under rootDir"). repo-cli test files consequently have zero typecheck coverage from any
+  gate — a wrong test-kit import surfaces only as a runtime `undefined` deep inside an unrelated
+  call (here, a `path.join` TypeError), not as a missing-export error. The blindspot baseline
+  entry for `@beep/repo-cli` attributes the gap to `include` narrowing, which is not the actual
+  blocker. Verified locally: an otherwise identical config with `rootDir: "."` typechecks the
+  same file at exit 0. Prevention: fix `rootDir` in the test project before B6 counts repo-cli's
+  test surface as covered; the baseline note should record the real cause.

@@ -68,6 +68,7 @@ import {
   YeetRunMode,
   YeetRunPlanModeOptions,
 } from "./Planner.ts";
+import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
 import {
   acquireFullProofLock,
   assertReusableVerifiedState,
@@ -437,6 +438,22 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
         stash = yield* stashUnstagedWorktree(plan.context);
         yield* Ref.update(extras, (state) => ({ ...state, stash }));
       }
+
+      // `goals/INDEX.md` is a derived whole-file projection, so it is rendered
+      // here rather than trusted from the index: the worktree now equals the
+      // staged tree (residue is parked), which makes this the only point where
+      // the projection provably describes the commit being made.
+      yield* enforcePortfolioIndexPublishIntent(plan.context, publishIntent).pipe(
+        Effect.tapError(() =>
+          pipe(
+            stash,
+            O.match({
+              onNone: () => Effect.void,
+              onSome: (state) => restoreStashedWorktree(plan.context, state),
+            })
+          )
+        )
+      );
 
       const commitResults = yield* runPhase(plan.context, commitSteps, recorder);
       if (A.some(commitResults, (result) => result.exitCode !== 0)) {
