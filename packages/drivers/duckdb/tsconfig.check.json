@@ -11,6 +11,7 @@
     "emitDeclarationOnly": false,
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "types": ["node", "bun"]
+    "types": ["node", "bun"],
+    "rootDir": "../../.."
   }
 }

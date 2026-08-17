@@ -124,6 +124,9 @@
           "unsafeEffectTypeAssertion": "error"
         }
       }
-    ]
+    ],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "rootDir": "../../.."
   }
 }
