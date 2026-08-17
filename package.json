@@ -450,6 +450,7 @@
     "apps/oip-web",
     "apps/professional-desktop",
     "apps/storybook",
+    "apps/labs/*",
     "packages/agents/domain",
     "packages/agents/use-cases",
     "packages/agents/client",
