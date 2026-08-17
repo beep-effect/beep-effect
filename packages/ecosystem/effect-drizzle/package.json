@@ -21,7 +21,7 @@
     "beep:build": "tsc -p tsconfig.json && bun run babel",
     "beep:bundle-probe": "bun test/bundle-size.probe.ts",
     "beep:bundle-probe:write": "bun test/bundle-size.probe.ts --write-baseline",
-    "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests && bun run beep:type-test",
+    "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests && bun run beep:type-test",
     "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
     "beep:type-test": "tstyche --config tstyche.config.json --root .",
     "beep:lint": "biome check .",
