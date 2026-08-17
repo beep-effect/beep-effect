@@ -696,16 +696,30 @@ export const markAiMetricsOtlpTurnsExported: (
 
 const AI_METRICS_OTLP_SCOPE_NAME = "@beep/repo-ai-metrics";
 const AI_METRICS_OTLP_SERVICE_NAME = "beep-ai-metrics";
+
+// Kept in lockstep with AGENT_EFFECTIVENESS_PHOENIX_PROJECT in agent-effectiveness.ts,
+// which is the name the doctor and the dataset/prompt bundles look for. Duplicated
+// rather than imported to keep the export path free of a dependency on the reporting
+// module; the pairing is asserted in test/ingest.test.ts.
+const AI_METRICS_OTLP_PHOENIX_PROJECT = "beep-agent-effectiveness";
 const AI_METRICS_OTLP_SERVICE_VERSION = "0.0.0";
 // The OpenTelemetry SDK's own default batch size. Nothing here needs a different one,
 // and matching it keeps request sizes in territory collectors are tuned for.
 const AI_METRICS_OTLP_MAX_EXPORT_BATCH_SIZE = 512;
 
-// Mirrors what `layerNodeSdkServerTraces` used to put on the wire for this exporter,
-// so the resource identity Phoenix already groups these spans under does not move.
+// Phoenix routes spans into a project by this resource attribute, and nothing was
+// setting it -- so forwarder spans landed in `default` alongside every other writer
+// reaching the same server (the coding-harness OTel fan-out, and previously Codex
+// CLI internals). Sharing one project means neither writer can be queried, counted,
+// or retained independently, which is why AGENT_EFFECTIVENESS_PHOENIX_PROJECT named
+// a project that never existed and the read side found nothing.
+//
+// Callers can override it through `endpoint.resourceAttributes`; the default below
+// matches the constant the agent-effectiveness reader already queries for.
 const resourceFor = (input: AiMetricsOtlpExportInput): Resource =>
   resourceFromAttributes({
     deployment_environment: input.target,
+    "openinference.project.name": AI_METRICS_OTLP_PHOENIX_PROJECT,
     ...input.endpoint.resourceAttributes,
     "service.name": AI_METRICS_OTLP_SERVICE_NAME,
     "service.version": AI_METRICS_OTLP_SERVICE_VERSION,

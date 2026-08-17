@@ -21,7 +21,7 @@ import {
 } from "@beep/phoenix";
 import { LiteralKit, SchemaUtils, UnknownRecord } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
-import { DateTime, Effect, FileSystem, flow, Match, Path, pipe } from "effect";
+import { DateTime, Duration, Effect, FileSystem, flow, HashMap, Match, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -81,9 +81,6 @@ query AgentEffectivenessPhoenixInventory {
     edges {
       node {
         name
-        hasTraces
-        recordCount
-        traceCount
         traceAnnotationsNames
         spanAnnotationNames
         sessionAnnotationNames
@@ -92,6 +89,42 @@ query AgentEffectivenessPhoenixInventory {
   }
 }
 `;
+
+/**
+ * Per-project aggregates, split out of the inventory query on purpose.
+ *
+ * `hasTraces`, `recordCount` and `traceCount` are aggregates over the spans
+ * table. On a large store they do not return: measured against a 20 GiB
+ * phoenix.db they exceeded 55s while the identity-only query above answered in
+ * ~7ms. Because they were in the same document, one slow field took the whole
+ * doctor's Phoenix section down to `unavailable` — the tool built to read
+ * Phoenix could not read Phoenix precisely when there was most to read.
+ *
+ * Keeping them in a second, separately-timed request means a store too big to
+ * aggregate degrades to "counts unavailable" instead of "Phoenix unavailable".
+ */
+const phoenixProjectStatsQuery = `
+query AgentEffectivenessPhoenixProjectStats {
+  projects(first: 20) {
+    edges {
+      node {
+        name
+        hasTraces
+        recordCount
+        traceCount
+      }
+    }
+  }
+}
+`;
+
+/**
+ * Ceiling on the per-project aggregate query.
+ *
+ * Deliberately short: these numbers are advisory, and the doctor is more useful
+ * fast-and-partial than slow-and-complete.
+ */
+const phoenixProjectStatsTimeout = Duration.seconds(10);
 
 /**
  * Status emitted by agent-effectiveness reports.
@@ -360,13 +393,13 @@ export class AgentEffectivenessPhoenixProject extends S.Class<AgentEffectiveness
   $I`AgentEffectivenessPhoenixProject`
 )(
   {
-    hasTraces: S.Boolean,
+    hasTraces: S.NullOr(S.Boolean),
     name: S.String,
-    recordCount: S.Finite,
+    recordCount: S.NullOr(S.Finite),
     spanAnnotationNames: S.Array(S.String),
     sessionAnnotationNames: S.Array(S.String),
     traceAnnotationNames: S.Array(S.String),
-    traceCount: S.Finite,
+    traceCount: S.NullOr(S.Finite),
   },
   $I.annote("AgentEffectivenessPhoenixProject", {
     description: "Sanitized Phoenix project inventory row used by the agent-effectiveness doctor.",
@@ -1978,16 +2011,71 @@ class WorkerEvalManifest extends S.Class<WorkerEvalManifest>($I`WorkerEvalManife
 
 class PhoenixGraphqlProjectNode extends S.Class<PhoenixGraphqlProjectNode>($I`PhoenixGraphqlProjectNode`)(
   {
-    hasTraces: S.Boolean,
     name: S.String,
-    recordCount: S.Finite,
     spanAnnotationNames: S.Array(S.String),
     sessionAnnotationNames: S.Array(S.String),
     traceAnnotationsNames: S.Array(S.String),
-    traceCount: S.Finite,
   },
   $I.annote("PhoenixGraphqlProjectNode", {
-    description: "Internal Phoenix GraphQL project node.",
+    description: "Internal Phoenix GraphQL project node (identity and annotation names only).",
+  })
+) {}
+
+class PhoenixGraphqlProjectStatsNode extends S.Class<PhoenixGraphqlProjectStatsNode>(
+  $I`PhoenixGraphqlProjectStatsNode`
+)(
+  {
+    hasTraces: S.Boolean,
+    name: S.String,
+    recordCount: S.Finite,
+    traceCount: S.Finite,
+  },
+  $I.annote("PhoenixGraphqlProjectStatsNode", {
+    description: "Internal Phoenix GraphQL per-project aggregate node.",
+  })
+) {}
+
+class PhoenixGraphqlProjectStatsEdge extends S.Class<PhoenixGraphqlProjectStatsEdge>(
+  $I`PhoenixGraphqlProjectStatsEdge`
+)(
+  {
+    node: PhoenixGraphqlProjectStatsNode,
+  },
+  $I.annote("PhoenixGraphqlProjectStatsEdge", {
+    description: "Internal Phoenix GraphQL per-project aggregate edge.",
+  })
+) {}
+
+class PhoenixGraphqlProjectStatsConnection extends S.Class<PhoenixGraphqlProjectStatsConnection>(
+  $I`PhoenixGraphqlProjectStatsConnection`
+)(
+  {
+    edges: S.Array(PhoenixGraphqlProjectStatsEdge),
+  },
+  $I.annote("PhoenixGraphqlProjectStatsConnection", {
+    description: "Internal Phoenix GraphQL per-project aggregate connection.",
+  })
+) {}
+
+class PhoenixGraphqlProjectStatsData extends S.Class<PhoenixGraphqlProjectStatsData>(
+  $I`PhoenixGraphqlProjectStatsData`
+)(
+  {
+    projects: PhoenixGraphqlProjectStatsConnection,
+  },
+  $I.annote("PhoenixGraphqlProjectStatsData", {
+    description: "Internal Phoenix GraphQL per-project aggregate payload.",
+  })
+) {}
+
+class PhoenixGraphqlProjectStatsResponse extends S.Class<PhoenixGraphqlProjectStatsResponse>(
+  $I`PhoenixGraphqlProjectStatsResponse`
+)(
+  {
+    data: PhoenixGraphqlProjectStatsData,
+  },
+  $I.annote("PhoenixGraphqlProjectStatsResponse", {
+    description: "Internal Phoenix GraphQL per-project aggregate response.",
   })
 ) {}
 
@@ -2052,6 +2140,7 @@ const decodeBenchmarkRunAnnotationRows = S.decodeUnknownEffect(S.Array(Benchmark
 const decodeWorkerEvalManifestJson = S.decodeUnknownEffect(S.fromJsonString(WorkerEvalManifest));
 const decodeRunpodWorkerEvalReportJson = S.decodeUnknownEffect(S.fromJsonString(RunpodWorkerEvalReport));
 const decodePhoenixGraphqlResponse = S.decodeUnknownEffect(PhoenixGraphqlResponse);
+const decodePhoenixGraphqlProjectStatsResponse = S.decodeUnknownEffect(PhoenixGraphqlProjectStatsResponse);
 const encodeDoctorReportJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessDoctorReport));
 const encodeAnnotationPlanJson = S.encodeUnknownEffect(S.fromJsonString(AgentEffectivenessAnnotationPlan));
 const encodeAnnotationPlanJsonSync = S.encodeUnknownSync(S.fromJsonString(AgentEffectivenessAnnotationPlan));
@@ -2254,35 +2343,77 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
     return buildPhoenixUnavailable(input, "Phoenix GraphQL inventory response could not be decoded.");
   }
 
+  // Aggregates run as their own bounded request. A store too large to aggregate
+  // must still yield a reachable, readable inventory, so every failure mode here
+  // -- encode, transport, non-2xx, decode, timeout -- collapses to None and the
+  // section reports counts as unmeasured rather than reporting Phoenix as down.
+  const stats = yield* HttpClientRequest.bodyJson(HttpClientRequest.post(`${input.phoenixBaseUrl}/graphql`), {
+    query: phoenixProjectStatsQuery,
+  }).pipe(
+    Effect.flatMap((statsRequest) => client.execute(pipe(statsRequest, HttpClientRequest.accept("application/json")))),
+    Effect.filterOrFail((statsResponse) => statsResponse.status >= 200 && statsResponse.status < 300),
+    Effect.flatMap(HttpClientResponse.schemaBodyJson(S.Unknown)),
+    Effect.flatMap(decodePhoenixGraphqlProjectStatsResponse),
+    Effect.timeoutOption(phoenixProjectStatsTimeout),
+    Effect.orElseSucceed(() => O.none<PhoenixGraphqlProjectStatsResponse>())
+  );
+
+  const statsByProjectName = pipe(
+    stats,
+    O.map((resolved) =>
+      pipe(
+        resolved.data.projects.edges,
+        A.map((edge) => [edge.node.name, edge.node] as const),
+        HashMap.fromIterable
+      )
+    )
+  );
+
   const version =
     root.value.headers["x-phoenix-server-version"] ?? projects.value.headers["x-phoenix-server-version"] ?? null;
   const data = inventory.value.data;
   const projectsList = pipe(
     data.projects.edges,
-    A.map((edge) =>
-      AgentEffectivenessPhoenixProject.make({
-        hasTraces: edge.node.hasTraces,
+    A.map((edge) => {
+      const nodeStats = pipe(statsByProjectName, O.flatMap(HashMap.get(edge.node.name)));
+      return AgentEffectivenessPhoenixProject.make({
+        hasTraces: pipe(
+          nodeStats,
+          O.map((resolved) => resolved.hasTraces),
+          O.getOrNull
+        ),
         name: edge.node.name,
-        recordCount: edge.node.recordCount,
+        recordCount: pipe(
+          nodeStats,
+          O.map((resolved) => resolved.recordCount),
+          O.getOrNull
+        ),
         spanAnnotationNames: edge.node.spanAnnotationNames,
         sessionAnnotationNames: edge.node.sessionAnnotationNames,
         traceAnnotationNames: edge.node.traceAnnotationsNames,
-        traceCount: edge.node.traceCount,
-      })
-    )
+        traceCount: pipe(
+          nodeStats,
+          O.map((resolved) => resolved.traceCount),
+          O.getOrNull
+        ),
+      });
+    })
   );
+  const statsMeasured = O.isSome(statsByProjectName);
   const hasTraceBearingProject = pipe(
     projectsList,
-    A.some((project) => project.hasTraces)
+    A.some((project) => project.hasTraces === true)
   );
 
   return AgentEffectivenessPhoenixSection.make({
     baseUrl: input.phoenixBaseUrl,
     datasetCount: data.datasetCount,
     evaluatorCount: data.evaluatorCount,
-    message: hasTraceBearingProject
-      ? "Phoenix is reachable and has trace-bearing projects."
-      : "Phoenix is reachable but no trace-bearing projects were reported.",
+    message: !statsMeasured
+      ? "Phoenix is reachable; per-project trace counts timed out and are reported as unmeasured."
+      : hasTraceBearingProject
+        ? "Phoenix is reachable and has trace-bearing projects."
+        : "Phoenix is reachable but no trace-bearing projects were reported.",
     projectCount: data.projectCount,
     projects: projectsList,
     promptCount: data.promptCount,

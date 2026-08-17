@@ -1,5 +1,6 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import {
+  AGENT_EFFECTIVENESS_PHOENIX_PROJECT,
   AgentEffectivenessAnnotationValue,
   AiMetricsBenchmarkCaseInput,
   AiMetricsBenchmarkRunInput,
@@ -1951,10 +1952,13 @@ volumes:
     Effect.fn(function* () {
       yield* Effect.acquireUseRelease(
         Effect.sync(() => {
-          const requests: Array<{ readonly contentType: string }> = [];
+          const requests: Array<{ readonly body: string; readonly contentType: string }> = [];
           const server = Bun.serve({
-            fetch: (request) => {
-              A.appendInPlace(requests, { contentType: request.headers.get("content-type") ?? "" });
+            fetch: async (request) => {
+              // Body is captured as latin1 so protobuf's length-delimited string fields stay
+              // byte-addressable; the resource assertion below reads them straight out.
+              const body = Buffer.from(await request.arrayBuffer()).toString("latin1");
+              A.appendInPlace(requests, { body, contentType: request.headers.get("content-type") ?? "" });
               const rejecting = Str.includes("reject")(new URL(request.url).pathname);
               return new Response(null, { status: rejecting ? 415 : 200 });
             },
@@ -2007,6 +2011,20 @@ volumes:
           expect(exported.spanCount).toBe(1200);
           expect(requests.length).toBe(3);
           expect(A.every(requests, (request) => request.contentType === "application/x-protobuf")).toBe(true);
+
+          // Phoenix routes spans into a project by this resource attribute. Without it every
+          // writer lands in `default` together, which is why AGENT_EFFECTIVENESS_PHOENIX_PROJECT
+          // named a project that never existed. Asserted on the wire, and pinned to the constant
+          // the reader queries for, so the two cannot drift apart silently.
+          expect(AGENT_EFFECTIVENESS_PHOENIX_PROJECT).toBe("beep-agent-effectiveness");
+          expect(
+            A.every(
+              requests,
+              (request) =>
+                Str.includes("openinference.project.name")(request.body) &&
+                Str.includes(AGENT_EFFECTIVENESS_PHOENIX_PROJECT)(request.body)
+            )
+          ).toBe(true);
 
           const retryCalls = yield* Ref.make(0);
           const retryFiber = yield* runAiMetricsOtlpProjectionBatchExport(

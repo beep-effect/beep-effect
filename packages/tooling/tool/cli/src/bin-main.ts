@@ -89,7 +89,7 @@ const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
 const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
 
 const { BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import("@effect/platform-bun");
-const { Cause, Effect, Exit, Layer, Runtime } = await import("effect");
+const { Cause, Effect, Exit, Layer, pipe, Runtime } = await import("effect");
 const O = await import("effect/Option");
 const P = await import("effect/Predicate");
 
@@ -107,6 +107,29 @@ const BaseLayers = Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunCry
 
 const argv = A.slice(process.argv, { start: 2 });
 
+/**
+ * Whether to append the full `Cause` to a rendered CLI failure.
+ *
+ * Causes carry absolute transcript paths and upstream stderr, so this stays off
+ * by default and is opted into with `--log-level debug`/`trace` or `--verbose`.
+ *
+ * argv is read directly rather than through `Config` because rendering happens
+ * after the Effect runtime has already torn down, so neither the parsed CLI
+ * config nor a `Config` provider is reachable at this point. That is also why
+ * there is no environment-variable escape hatch: this repo represents
+ * environment configuration through `Config`, and reaching for `process.env`
+ * here to dodge that would be the wrong trade for a debug toggle.
+ */
+const verboseFailures =
+  A.contains(argv, "--verbose") ||
+  pipe(
+    A.findFirstIndex(argv, (entry) => entry === "--log-level"),
+    O.flatMap((index) => A.get(argv, index + 1)),
+    O.map((level) => level === "debug" || level === "trace"),
+    O.getOrElse(() => false)
+  ) ||
+  A.some(argv, (entry) => entry === "--log-level=debug" || entry === "--log-level=trace");
+
 const renderCliFailure = (exit: import("effect").Exit.Exit<unknown, unknown>) => {
   if (Exit.isSuccess(exit)) {
     return;
@@ -117,8 +140,21 @@ const renderCliFailure = (exit: import("effect").Exit.Exit<unknown, unknown>) =>
     return;
   }
 
+  // Print the message, then the full cause. Previously this returned right after
+  // the message, so every typed error rendered as one bare sentence with no
+  // errno, path, or stack at ANY log level including --log-level debug. That is
+  // why the ai-metrics parquet-export regression sat unexplained for a month
+  // behind `Failed to read transcript input.`, and why the forwarder's systemd
+  // unit -- which captures 2000 bytes of stderr into status/latest.json -- had
+  // nothing useful to capture.
+  //
+  // The cause is appended rather than substituted so the common case still leads
+  // with the human-readable line.
   if (P.hasProperty(error, "message") && P.isString(error.message)) {
     process.stderr.write(`${error.message}\n`);
+    if (verboseFailures) {
+      process.stderr.write(`${Cause.pretty(exit.cause)}\n`);
+    }
     return;
   }
 
