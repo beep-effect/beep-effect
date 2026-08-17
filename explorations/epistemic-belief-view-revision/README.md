@@ -2,13 +2,14 @@
 
 ## Status
 
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 
-Align closed 2026-08-17: verdict family + ownership law, `BeliefContentionKey`
-v1 (identity minus evidenceScope, qualifiers in, versioned), and on-demand
-delivery all ratified — see [`DECISIONS.md`](./DECISIONS.md). BRIEF ratified with
-amendments 2026-08-17; next gate: MAP draft + operator MAP review.
+Graduated 2026-08-17: the [`MAP`](./MAP.md) was ratified with four
+adversarial-review amendments and
+[`goals/belief-view-engine`](../../goals/belief-view-engine/README.md) was
+scaffolded as a paused queue goal in the graduation PR — see
+[`DECISIONS.md`](./DECISIONS.md). Materialization stays gated in the MAP.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -35,10 +36,10 @@ closed `completed-retained` on 2026-07-25.
 
 ## Next Open Question
 
-Align pending: ratify the proposed verdict-family names and owners, the exact
-`BeliefContentionKey` fields, the minimal selection-policy and abstention
-vocabulary, and whether first delivery materializes revisions or computes them
-on demand.
+None — graduated. A fired MAP gate (a real consumer needing revision listing
+without replay cost, for materialization) reopens this exploration at
+decompose; execution questions belong to
+[`goals/belief-view-engine`](../../goals/belief-view-engine/README.md).
 
 ## Read This First
 
@@ -58,3 +59,12 @@ on demand.
   active triage contracts, proposed (without locking) the shared verdict-family
   names, identified the evidence-scope/contention-key gap, and specified
   deterministic view revision and retention semantics. ATLAS synced in this PR.
+- 2026-08-17: align closed -> decompose — verdict family + ownership law,
+  `BeliefContentionKey` v1, and on-demand delivery ratified; BRIEF ratified
+  with amendments (scope-wide read added; as-of queryability required of
+  every policy input).
+- 2026-08-17: MAP ratified -> graduated — 8-lane adversarial review produced
+  amendments A-D (digest-encoding v1 + `expiredAt`-projection replay fix;
+  indexed capped scope read; same-policy delta; ownership-law propagation at
+  graduation). `goals/belief-view-engine` scaffolded paused in the
+  graduation PR; ATLAS synced.

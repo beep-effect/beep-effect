@@ -1,5 +1,17 @@
 # Decisions
 
+## 2026-08-17 — MAP ratified with four adversarial amendments; graduate
+
+Eight adversarial lanes reviewed the MAP (reports in
+`research/2026-08-17-adversarial/`). Operator accepted all four fixes:
+digest-encoding v1 with the `expiredAt`-projection replay fix; the
+scope-read index + hard cap with typed overflow (no pagination); the v1
+delta restricted to same-policy revision pairs; and ownership-law
+propagation at graduation to the owning surfaces. `goals/belief-view-engine`
+scaffolds as a **paused queue goal** (no free lane; resume = a lane slot
+frees or the roadmap pulls it), and this exploration flips to `graduated`.
+
+
 ## 2026-08-17 — BRIEF ratified with amendments; advance to decompose
 
 **Decision:** Operator signed off BRIEF.md with two amendments: (1) the

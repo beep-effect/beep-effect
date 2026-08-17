@@ -1,5 +1,18 @@
 # Decisions
 
+## 2026-08-17 — MAP ratified with five adversarial amendments; graduate
+
+Eight adversarial lanes reviewed the MAP (reports in
+`research/2026-08-17-adversarial/`). Operator accepted all five fixes:
+`restricted` fixture disposition; the chat arrangement with a closed
+component set (repair + filing named as candidates two and three); the
+enumerated v1 kits with the (role, data-class) assurance-floor table;
+envelope+components-only digest payload built server-side; and the
+referential-integrity + explicit-completeness invariants.
+`goals/model-arrangement-admission-core` scaffolds as a **paused queue
+goal**, and this exploration flips to `graduated`.
+
+
 ## 2026-08-17 — BRIEF ratified with amendments; advance to decompose
 
 **Decision:** Operator signed off BRIEF.md with two amendments: (1) name the
