@@ -10,7 +10,9 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import { ConfigService, DEFAULT_CONFIG } from "../../Service/Config.ts";
+import type { StorageServiceMethods } from "../../Service/Storage.ts";
 import {
   GenerationMismatchError,
   StorageService,
@@ -62,6 +64,27 @@ const makeStorageTestLayer = (prefix = "") =>
     Layer.provideMerge(PlatformLayer)
   );
 
+class FirstLocalStorage extends Context.Service<FirstLocalStorage, StorageServiceMethods>()(
+  "@beep/scratchpad/effect-ontology/test/Service/Storage.test/FirstLocalStorage"
+) {}
+
+class SecondLocalStorage extends Context.Service<SecondLocalStorage, StorageServiceMethods>()(
+  "@beep/scratchpad/effect-ontology/test/Service/Storage.test/SecondLocalStorage"
+) {}
+
+const IndependentLocalStoragePairLayer = Layer.unwrap(
+  Effect.map(LocalStorageFixture, ({ root }) =>
+    Layer.merge(
+      Layer.effect(FirstLocalStorage, StorageService).pipe(
+        Layer.provide(makeLocalStorageLayer(root, "independent-pair"))
+      ),
+      Layer.effect(SecondLocalStorage, StorageService).pipe(
+        Layer.provide(makeLocalStorageLayer(root, "independent-pair"))
+      )
+    )
+  )
+).pipe(Layer.provideMerge(LocalStorageFixtureLayer), Layer.provideMerge(PlatformLayer));
+
 const assertLocalPathRejected = (error: unknown): void => {
   const cause = isPathSafetyError(error) ? error : P.hasProperty(error, "cause") ? error.cause : error;
   if (isPathSafetyError(cause)) {
@@ -77,7 +100,7 @@ const assertLocalPathRejected = (error: unknown): void => {
   );
 };
 
-describe("effect-ontology local StorageService", () => {
+describe.sequential("effect-ontology local StorageService", () => {
   it.layer(makeStorageTestLayer("tenant-a"))("with tenant-prefixed local storage", (it) => {
     it.effect(
       "round-trips nested keys beneath the configured local root",
@@ -107,7 +130,79 @@ describe("effect-ontology local StorageService", () => {
         }
 
         yield* storage.clear;
-        assert.deepStrictEqual(yield* fs.readDirectory(path.join(root, "tenant-a")), []);
+        assert.deepStrictEqual(yield* storage.list(""), []);
+        assert.isFalse(yield* fs.exists(path.join(root, "tenant-a", "documents")));
+        assert.deepStrictEqual(yield* fs.readDirectory(path.join(root, "tenant-a")), [".effect-ontology-storage"]);
+      })
+    );
+  });
+
+  it.layer(IndependentLocalStoragePairLayer)("with independently built local storage layers", (it) => {
+    it.effect(
+      "rejects a stale write after another layer updates the object",
+      Effect.fnUntraced(function* () {
+        const first = yield* FirstLocalStorage;
+        const second = yield* SecondLocalStorage;
+        yield* first.set("stale.txt", "first");
+        const before = yield* first.getWithGeneration("stale.txt");
+        if (O.isNone(before)) return yield* Effect.die("Expected the first layer to read its stored object.");
+
+        yield* second.set("stale.txt", "second");
+        const after = yield* first.getWithGeneration("stale.txt");
+        if (O.isNone(after)) return yield* Effect.die("Expected the first layer to observe the update.");
+        assert.notStrictEqual(after.value.generation, before.value.generation);
+
+        const staleWrite = yield* Effect.result(
+          first.setIfGenerationMatch("stale.txt", "stale", before.value.generation)
+        );
+        assert(staleWrite.pipe(Result.isFailure));
+        assert(staleWrite.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
+        assert.strictEqual(yield* first.get("stale.txt"), "second");
+      })
+    );
+
+    it.effect(
+      "permits exactly one concurrent generation-zero create across layers",
+      Effect.fnUntraced(function* () {
+        const first = yield* FirstLocalStorage;
+        const second = yield* SecondLocalStorage;
+        const results = yield* TestClock.withLive(
+          Effect.all(
+            [
+              Effect.result(first.setIfGenerationMatch("create.txt", "first", "0")),
+              Effect.result(second.setIfGenerationMatch("create.txt", "second", "0")),
+            ],
+            { concurrency: "unbounded" }
+          )
+        );
+
+        assert.strictEqual(A.length(A.filter(results, Result.isSuccess)), 1);
+        assert.strictEqual(A.length(A.filter(results, Result.isFailure)), 1);
+        assert(A.some(results, (result) => result.pipe(Result.getFailure, O.exists(GenerationMismatchError.is))));
+      })
+    );
+
+    it.effect(
+      "rejects a pre-delete generation after another layer recreates the object",
+      Effect.fnUntraced(function* () {
+        const first = yield* FirstLocalStorage;
+        const second = yield* SecondLocalStorage;
+        yield* first.set("aba.txt", "same");
+        const before = yield* first.getWithGeneration("aba.txt");
+        if (O.isNone(before)) return yield* Effect.die("Expected the first layer to read its stored object.");
+
+        yield* second.remove("aba.txt");
+        yield* second.setIfGenerationMatch("aba.txt", "same", "0");
+        const recreated = yield* first.getWithGeneration("aba.txt");
+        if (O.isNone(recreated)) return yield* Effect.die("Expected the second layer to recreate the object.");
+        assert.notStrictEqual(recreated.value.generation, before.value.generation);
+
+        const staleWrite = yield* Effect.result(
+          first.setIfGenerationMatch("aba.txt", "stale", before.value.generation)
+        );
+        assert(staleWrite.pipe(Result.isFailure));
+        assert(staleWrite.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
+        assert.strictEqual(yield* first.get("aba.txt"), "same");
       })
     );
   });
@@ -124,12 +219,14 @@ describe("effect-ontology local StorageService", () => {
         assert(staleMissing.pipe(Result.isFailure));
         assert(staleMissing.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
 
-        const createResults = yield* Effect.all(
-          [
-            Effect.result(storage.setIfGenerationMatch("documents/created.txt", "first", "0")),
-            Effect.result(storage.setIfGenerationMatch("documents/created.txt", "second", "0")),
-          ],
-          { concurrency: "unbounded" }
+        const createResults = yield* TestClock.withLive(
+          Effect.all(
+            [
+              Effect.result(storage.setIfGenerationMatch("documents/created.txt", "first", "0")),
+              Effect.result(storage.setIfGenerationMatch("documents/created.txt", "second", "0")),
+            ],
+            { concurrency: "unbounded" }
+          )
         );
         assert.strictEqual(A.length(A.filter(createResults, Result.isSuccess)), 1);
         assert.strictEqual(A.length(A.filter(createResults, Result.isFailure)), 1);
@@ -174,6 +271,29 @@ describe("effect-ontology local StorageService", () => {
     );
   });
 
+  it.layer(makeStorageTestLayer("expired-lock"))("with an abandoned local mutation lease", (it) => {
+    it.effect(
+      "reclaims an expired owner record before mutating",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { root } = yield* LocalStorageFixture;
+        const lockPath = path.join(root, "expired-lock", ".effect-ontology-storage", "mutation.lock");
+        yield* fs.writeFileString(
+          lockPath,
+          '{"owner":"0000000000000000000000000000000000000000000000000000000000000000","expiresAt":0}',
+          { flag: "wx", mode: 0o600 }
+        );
+        const storage = yield* StorageService;
+
+        yield* TestClock.withLive(storage.set("document.txt", "recovered"));
+
+        assert.strictEqual(yield* storage.get("document.txt"), "recovered");
+        assert.isFalse(yield* fs.exists(lockPath));
+      })
+    );
+  });
+
   it.layer(makeStorageTestLayer())("with isolated local storage for key safety", (it) => {
     it.effect(
       "rejects unsafe keys across every key-bearing operation and pre-positioned symlink escapes",
@@ -202,12 +322,14 @@ describe("effect-ontology local StorageService", () => {
           storage.get(absoluteInside).pipe(Effect.flip),
           storage.get("documents/./report.txt").pipe(Effect.flip),
           storage.get("documents/../inside.txt").pipe(Effect.flip),
+          storage.get(".effect-ontology-storage/generations/private.json").pipe(Effect.flip),
           storage.set("../outside/new.txt", "escaped").pipe(Effect.flip),
           storage.set("linked-outside/new.txt", "escaped").pipe(Effect.flip),
           storage.remove("../outside/secret.txt").pipe(Effect.flip),
           storage.remove("linked-outside/secret.txt").pipe(Effect.flip),
           storage.list("../outside").pipe(Effect.flip),
           storage.list("linked-outside").pipe(Effect.flip),
+          storage.list(".effect-ontology-storage").pipe(Effect.flip),
           storage.getWithGeneration("../outside/secret.txt").pipe(Effect.flip),
           storage.getWithGeneration("linked-outside/secret.txt").pipe(Effect.flip),
           storage.setIfGenerationMatch("../outside/new.txt", "escaped", "0").pipe(Effect.flip),
