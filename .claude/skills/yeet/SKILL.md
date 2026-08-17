@@ -215,11 +215,15 @@ one.
 ## Authoritative Gates (green local must mean green CI)
 
 `bun run beep yeet verify` (full tier) is the authoritative local gate. Its
-pre-push proof runs the *same global commands CI runs* — `bun run check` (global
-tsgo with the effect language-service rules), full `bun run docgen` (which
-compiles the fenced code in every titled `**Example** (Title)` section),
-`bun run test`, and the secrets/security/SAST/Nix lanes. If `yeet verify` is
-green, CI should be green on the first push.
+pre-push proof dispatches the *hosted lane bodies themselves* — `beep ci lane`
+`check`, `lint`, `lint-policy`, `test-unit`, and `test-integration`, each with
+the affected shape `check.yml` passes its matrix jobs — alongside the full root
+build, bounded docgen (which compiles the fenced code in every titled
+`**Example** (Title)` section), the repo-wide tsgo test/smoke extras, and the
+secrets/security/SAST/Nix lanes. The command is literally the one CI runs, so if
+`yeet verify` is green, CI should be green on the first push. What it does not
+yet replay is CI's *environment* (`CI=true`, blank PR secrets, PR cache posture)
+or the merged tree — use `verify --merged` for the tree.
 
 The full verify tier and every publish push path also run
 `publish:00-head-install-preflight`: a frozen-lockfile install in a detached,
@@ -232,8 +236,8 @@ The following cheaper commands are convenient inner-loop tools but are **NOT
 authoritative** — do not conclude "it's green" from them:
 
 - `bunx turbo run check --filter=<pkg>` (package-scoped) can pass while the
-  global `bun run check` fails an effect-LSP rule (e.g. `strictEffectProvide`
-  /TS377032). Only the global check matches CI.
+  proof's `beep ci lane check` fails an effect-LSP rule (e.g.
+  `strictEffectProvide`/TS377032). Only the lane matches CI.
 - `bun run docgen:local ... --reuse-proof-manifest` skips recompiling
   `**Example**` blocks when a source hash is unchanged, so it can miss a broken
   example or an unresolved import subpath that full `bun run docgen` (and CI)

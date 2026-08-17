@@ -423,8 +423,18 @@ describe("yeet planner", () => {
     ).toEqual(["readonly", "write"]);
     expect(findStep(plan.steps, "full:pre-push").waves).toEqual([
       expect.objectContaining({ id: "preflight" }),
-      expect.objectContaining({ id: "heavy", laneIds: ["quality:build", "quality:lint", "quality:check"] }),
-      expect.objectContaining({ id: "test", laneIds: ["quality:test"] }),
+      expect.objectContaining({
+        id: "heavy",
+        laneIds: [
+          "quality:build",
+          "quality:lint",
+          "quality:lint-policy",
+          "quality:check",
+          "quality:check:tsgo-tests",
+          "quality:check:tsgo-smoke",
+        ],
+      }),
+      expect.objectContaining({ id: "test", laneIds: ["quality:test-unit", "quality:test-integration"] }),
       expect.objectContaining({ id: "documentation", laneIds: ["quality:jsdoc-ratchet", "quality:docgen"] }),
     ]);
   });

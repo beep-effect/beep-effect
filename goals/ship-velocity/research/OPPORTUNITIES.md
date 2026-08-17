@@ -148,3 +148,20 @@ session/machine ids.
   window in `PublishScope.ts` (where `stashUnstagedWorktree`/`restoreStashedWorktree` already live
   and are covered), restoring on interruption as well as failure. Confirms the prevention note:
   restoration belongs to the staged-only publish scope, not to whichever sub-phase last needed it.
+
+## 2026-08-16 — B1 implementation
+
+- B1 (2026-08-16): two lanes took their *scope* from ambient env rather than argv, so "same
+  command" would not have meant "same work". `beep lint policy` picks full-repo vs changed-file
+  scope from `isCi()`, so a local replay of the required Lint Policy context would have scanned
+  strictly less than hosted — in a lane with 11 recorded failures. Likewise the affected-scoped
+  Check lane suppresses the two repo-wide tsgo extras that root `bun run check` carried, which
+  are the only gate on Effect tsgo diagnostics in test files. Fixed by putting `--full` in the
+  lane body and re-adding the extras as their own local lanes. Prevention law for the rest of
+  B-track: a lane's scope must be stated in its argv, never inherited from the environment —
+  otherwise argv parity is cosmetic and the audit that reads only the command lies.
+- B1 (2026-08-16): `A.filterMap(xs, (x) => Option)` compiles and silently yields `[]` — effect
+  v4's `filterMap` takes a `Filter` (Result-returning), not an Option-returning function. Cost a
+  debug cycle on a test that reported "no lane carries the flake quarantine" when both lanes
+  did. Already recorded as agent memory; worth a lint rule or a v3→v4 migration note, since the
+  failure mode is a wrong answer rather than a type error.
