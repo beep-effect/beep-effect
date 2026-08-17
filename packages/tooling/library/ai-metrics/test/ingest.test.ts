@@ -1954,14 +1954,20 @@ volumes:
         Effect.sync(() => {
           const requests: Array<{ readonly body: string; readonly contentType: string }> = [];
           const server = Bun.serve({
-            fetch: async (request) => {
-              // Body is captured as latin1 so protobuf's length-delimited string fields stay
-              // byte-addressable; the resource assertion below reads them straight out.
-              const body = Buffer.from(await request.arrayBuffer()).toString("latin1");
-              A.appendInPlace(requests, { body, contentType: request.headers.get("content-type") ?? "" });
-              const rejecting = Str.includes("reject")(new URL(request.url).pathname);
-              return new Response(null, { status: rejecting ? 415 : 200 });
-            },
+            // Continuation-passing rather than `async`/`await`: this repo represents async
+            // control flow with Effect, and a bare `async function` here trips the
+            // check:tsgo:tests Effect diagnostic. `Bun.serve` accepts a `Promise<Response>`
+            // either way. Body is captured as latin1 so protobuf's length-delimited string
+            // fields stay byte-addressable for the resource assertion below.
+            fetch: (request) =>
+              request.arrayBuffer().then((buffer) => {
+                A.appendInPlace(requests, {
+                  body: Buffer.from(buffer).toString("latin1"),
+                  contentType: request.headers.get("content-type") ?? "",
+                });
+                const rejecting = Str.includes("reject")(new URL(request.url).pathname);
+                return new Response(null, { status: rejecting ? 415 : 200 });
+              }),
             hostname: "127.0.0.1",
             port: 0,
           });
