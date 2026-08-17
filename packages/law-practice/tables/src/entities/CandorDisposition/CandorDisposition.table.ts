@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { CandorDisposition } from "@beep/law-practice-domain/entities/CandorDisposition";
 
 /**
@@ -27,11 +27,12 @@ import { CandorDisposition } from "@beep/law-practice-domain/entities/CandorDisp
  *
  * ```ts
  * import { CandorDisposition } from "@beep/law-practice-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(CandorDisposition.Table.definition.tableName) // "law_practice_candor_disposition"
+ * console.log(getTableName(CandorDisposition.Table)) // "law_practice_candor_disposition"
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(CandorDisposition);
+export const Table = toPgTable(CandorDisposition);

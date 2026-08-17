@@ -6,20 +6,53 @@
  */
 
 /**
- * Product-facing persisted entity base constructor.
+ * Shared domain package version.
  *
- * **Example** (Inspect createdAt column name)
+ * **Example** (Import and check VERSION)
  *
  * ```ts
- * import { BaseEntity } from "@beep/shared-domain"
+ * import { VERSION } from "@beep/shared-domain"
  *
- * console.log(BaseEntity.BaseEntity.definition.persisted.createdAt.columnName)
+ * const packageVersion = VERSION
+ *
+ * console.log(packageVersion === "0.0.0") // true
  * ```
  *
- * @category constructors
+ * @category configuration
  * @since 0.0.0
  */
-export * as BaseEntity from "./entity/BaseEntity.ts";
+export const VERSION = "0.0.0" as const;
+
+/**
+ * Shared-kernel aggregate concepts.
+ *
+ * **Example** (Import Aggregates namespace)
+ *
+ * ```ts
+ * import { Aggregates } from "@beep/shared-domain"
+ *
+ * console.log(Aggregates)
+ * ```
+ *
+ * @category aggregates
+ * @since 0.0.0
+ */
+export * as Aggregates from "./aggregates/index.ts";
+/**
+ * Shared-kernel entity concepts.
+ *
+ * **Example** (Log organization table name)
+ *
+ * ```ts
+ * import { Entities } from "@beep/shared-domain"
+ *
+ * console.log(Entities.Organization.Model.sql.tableName)
+ * ```
+ *
+ * @category entities
+ * @since 0.0.0
+ */
+export * as Entities from "./entities/index.ts";
 /**
  * Entity identifier constructor namespace.
  *
@@ -65,6 +98,13 @@ export * as EntityRef from "./entity/EntityRef.ts";
  * @since 0.0.0
  */
 export * as Principal from "./entity/Principal.ts";
+/**
+ * Effect-drizzle product entity kit.
+ *
+ * @category factories
+ * @since 0.0.0
+ */
+export * as ProductEntity from "./entity/ProductEntity.ts";
 /**
  * URL-safe public entity identifier constructor namespace.
  *
@@ -113,12 +153,12 @@ export * as Identity from "./identity/index.ts";
 /**
  * Shared-kernel value objects.
  *
- * **Example** (Import shared values namespace)
+ * **Example** (Format today's local date)
  *
  * ```ts
  * import { Values } from "@beep/shared-domain"
  *
- * console.log(Values.ClaimLifecycle)
+ * console.log(Values.LocalDate.today().toISOString())
  * ```
  *
  * @category value-objects

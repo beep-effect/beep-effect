@@ -46,9 +46,9 @@ const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): PosInt =>
   PosInt.make(A.reduce(rows, 0, (max, row) => N.max(max, row.id)) + 1);
 
 /**
- * Build the encoded BaseEntity audit prefix shared by every workspace row.
+ * Build the encoded ProductEntity audit prefix shared by every workspace row.
  *
- * Persisted BaseEntity columns are all NOT NULL with no database defaults, so
+ * Persisted ProductEntity columns are all NOT NULL with no database defaults, so
  * every audit field is supplied here. The conversation-persistence increment
  * does not yet wire a request principal, so a system principal stands in.
  */

@@ -28,7 +28,7 @@ export * from "./UsageRecord.converters.ts";
  * ```ts
  * import * as UsageRecord from "@beep/epistemic-tables/entities/UsageRecord"
  *
- * console.log(UsageRecord.Table.definition.entityId.entityType)
+ * console.log(UsageRecord.TABLE_NAME)
  * ```
  *
  * @category tables

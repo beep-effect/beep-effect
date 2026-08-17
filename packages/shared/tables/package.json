@@ -30,8 +30,8 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./table": "./src/table/index.ts",
-    "./table/Table": "./src/table/Table.ts",
+    "./entities": "./src/entities/index.ts",
+    "./entities/Organization": "./src/entities/Organization/index.ts",
     "./*": "./src/*.ts",
     "./internal/*": null,
     "./package.json": "./package.json"
@@ -49,17 +49,22 @@
     "provenance": true,
     "exports": {
       ".": "./dist/index.js",
-      "./table": "./dist/table/index.js",
-      "./table/Table": "./dist/table/Table.js",
+      "./entities": "./dist/entities/index.js",
+      "./entities/Organization": "./dist/entities/Organization/index.js",
       "./*": "./dist/*.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
   },
   "dependencies": {
-    "@beep/drizzle": "workspace:^"
+    "@beep/effect-drizzle": "workspace:^",
+    "@beep/shared-domain": "workspace:^",
+    "drizzle-orm": "catalog:",
+    "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/utils": "workspace:^",
+    "@effect/vitest": "catalog:",
     "@types/node": "catalog:"
   }
 }

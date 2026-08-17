@@ -1,5 +1,6 @@
 import * as SyncItem from "@beep/documents-domain/entities/SyncItem";
-import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
+import * as DocumentsIdentity from "@beep/shared-domain/identity/Documents";
+import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
@@ -24,7 +25,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema:
 };
 
 const fileRow = {
-  ...baseEntityFixtureInput(SyncItem.SyncItemId.entityType, 1),
+  ...productEntityFixtureInput(DocumentsIdentity.SyncItemId.entityType, 1),
   contentDigest: "abc123",
   contentSizeBytes: 2048,
   itemKind: "file",
@@ -43,12 +44,13 @@ const fileRow = {
 
 describe("SyncItem entity", () => {
   it("wires SyncItem to the documents identity", () => {
-    expect(SyncItem.SyncItem.definition.entityId.tableName).toBe("documents_sync_item");
-    expect(SyncItem.SyncItem.definition.entityId.entityType).toBe("DocumentsSyncItem");
-    expect(SyncItem.SyncItem.definition.persisted.workspaceId.columnName).toBe("workspace_id");
-    expect(SyncItem.SyncItem.definition.persisted.localRelPath.columnName).toBe("local_rel_path");
-    expect(SyncItem.SyncItem.definition.persisted.syncState.columnName).toBe("sync_state");
-    expect(SyncItem.SyncItem.definition.persisted.workspaceId.storageKind).toBe("entityId");
+    expect(SyncItem.SyncItem.sql.tableName).toBe(DocumentsIdentity.SyncItemId.tableName);
+    expect(Object.keys(SyncItem.SyncItem.insert.fields)).not.toContain("id");
+    expect(Object.keys(SyncItem.SyncItem.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(SyncItem.SyncItem.update.fields)).toContain("id");
+    expect(Object.keys(SyncItem.SyncItem.update.fields)).toContain("rowVersion");
+    expect(Object.keys(SyncItem.SyncItem.jsonCreate.fields)).toHaveLength(14);
+    expect(Object.keys(SyncItem.SyncItem.jsonUpdate.fields)).toHaveLength(14);
   });
 
   it("decodes and encodes a full file row", () => {

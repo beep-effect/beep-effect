@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 
 /**
@@ -15,11 +15,12 @@ import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
  *
  * ```ts
  * import { Evidence } from "@beep/epistemic-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(Evidence.Table.definition.tableName)
+ * console.log(getTableName(Evidence.Table))
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(Evidence);
+export const Table = toPgTable(Evidence);

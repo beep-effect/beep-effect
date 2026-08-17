@@ -1,19 +1,23 @@
 import { fileURLToPath } from "node:url";
 import { inspect } from "node:util";
+import { CandidateClaim } from "@beep/epistemic-domain/entities/CandidateClaim";
+import { EdgeVersion } from "@beep/epistemic-domain/entities/EdgeVersion";
+import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
 import { toCandidateClaimInsert } from "@beep/epistemic-tables/entities/CandidateClaim";
 import { fromEdgeVersionRow, toEdgeVersionInsert } from "@beep/epistemic-tables/entities/EdgeVersion";
 import { toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { makeDrizzle, migrate } from "@beep/postgres";
 import {
-  baseEntityFixtureInput,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
+  productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { btree_gist } from "@electric-sql/pglite/contrib/btree_gist";
+import { getTableName } from "drizzle-orm";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
@@ -29,15 +33,15 @@ const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url)
 const makeMigrationProofLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
-const decodeCandidateClaim = S.decodeUnknownEffect(EpistemicDbSchema.candidateClaim.entitySchema);
-const decodeEvidence = S.decodeUnknownEffect(EpistemicDbSchema.evidence.entitySchema);
-const decodeEdgeVersion = S.decodeUnknownEffect(EpistemicDbSchema.edgeVersion.entitySchema);
+const decodeCandidateClaim = S.decodeUnknownEffect(CandidateClaim);
+const decodeEvidence = S.decodeUnknownEffect(Evidence);
+const decodeEdgeVersion = S.decodeUnknownEffect(EdgeVersion);
 
 const edgeTableNames: ReadonlyArray<string> = [
-  EpistemicDbSchema.candidateClaim.definition.tableName,
-  EpistemicDbSchema.evidence.definition.tableName,
-  EpistemicDbSchema.edgeVersion.definition.tableName,
-  EpistemicDbSchema.claimDisposition.definition.tableName,
+  getTableName(EpistemicDbSchema.candidateClaim),
+  getTableName(EpistemicDbSchema.evidence),
+  getTableName(EpistemicDbSchema.edgeVersion),
+  getTableName(EpistemicDbSchema.claimDisposition),
 ];
 
 // Every name below is load-bearing: the repository maps constraint violations
@@ -76,7 +80,7 @@ const expectedIndexNames: ReadonlyArray<string> = [
 const logicalKey = "abadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafeabadcafe";
 
 const edgeVersionFixture = (id: number, validFrom: number) => ({
-  ...baseEntityFixtureInput(EpistemicDbSchema.edgeVersion.definition.entityId.entityType, id),
+  ...productEntityFixtureInput("EpistemicEdgeVersion", id),
   evidenceScope: null,
   expiredAt: null,
   fact: { note: "cited in the office action" },
@@ -148,13 +152,13 @@ if (!shouldRunPgliteIntegration) {
           expect(indexNames).toEqual(expectedIndexNames);
 
           const claim = yield* decodeCandidateClaim({
-            ...baseEntityFixtureInput(EpistemicDbSchema.candidateClaim.definition.entityId.entityType, 1),
+            ...productEntityFixtureInput("EpistemicCandidateClaim", 1),
             fixtureKey: "claim:patentability",
             lifecycle: "candidate",
             snapshot: { text: "The application describes a processor." },
           });
           const evidence = yield* decodeEvidence({
-            ...baseEntityFixtureInput(EpistemicDbSchema.evidence.definition.entityId.entityType, 1),
+            ...productEntityFixtureInput("EpistemicEvidence", 1),
             artifactFixtureKey: "artifact:oa-1",
             span: {
               confidence: 0.92,

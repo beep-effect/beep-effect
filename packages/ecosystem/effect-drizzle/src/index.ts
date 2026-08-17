@@ -35,6 +35,13 @@ export {
   Model,
   VariantField,
 } from "./pg/model.ts";
+/**
+ * Public field-carrier types retained by downstream declaration emit.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type { Input as FieldInput, Patched as PatchedField } from "./core/Field.ts";
 /** Repository result and version-column types.
  * @category type-level
  * @since 0.0.0

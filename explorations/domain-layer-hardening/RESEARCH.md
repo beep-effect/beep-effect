@@ -48,8 +48,8 @@ supply the bricks the slices compose, by design.
 Primitives in `packages/foundation/modeling/*` (`@beep/schema`, `@beep/identity`,
 `@beep/provenance`) + `@beep/shared-domain`.
 - **Persisted entity:** `BaseEntity.Class<Self>($I\`Name\`)(EntityId, { fields,
-  persisted }, annote)` — `packages/shared/domain/src/entity/BaseEntity.ts`; over
-  `EntitySchema.ClassFactory` (`packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.factory.ts`).
+  persisted }, annote)` — `packages/shared/domain/src/entity/ProductEntity.ts`; over
+  `EntitySchema.ClassFactory` (`packages/foundation/modeling/schema/src/index.ts`).
   Tables projected via `@beep/drizzle pgTableFrom`, never hand-mapped.
 - **Identity:** `EntityId.factory` (branded PosInt + statics) —
   `packages/shared/domain/src/entity/EntityId.ts`; per-slice registries

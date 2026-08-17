@@ -26,7 +26,7 @@ import {
   fromPatentCitationEventRow,
   toPatentCitationEventInsert,
 } from "@beep/law-practice-tables/entities/PatentCitationEvent";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Order, Result } from "effect";
 import * as A from "effect/Array";
@@ -49,7 +49,7 @@ const sourceIdentity = {
 };
 
 const eventInput = {
-  ...baseEntityFixtureInput("LawPracticePatentCitationEvent", 1),
+  ...productEntityFixtureInput("LawPracticePatentCitationEvent", 1),
   actor: "Applicant",
   citingApplication,
   discovery: { kind: "AiDiscovered", model: { name: "reference-extractor", version: "3" } },
@@ -65,7 +65,7 @@ const eventInput = {
 };
 
 const dispositionInput = {
-  ...baseEntityFixtureInput("LawPracticeCandorDisposition", 1),
+  ...productEntityFixtureInput("LawPracticeCandorDisposition", 1),
   citingApplication,
   decidedAt: 2,
   disposes: { eventId: 1, textDigest: digest },
@@ -76,7 +76,7 @@ const dispositionInput = {
 };
 
 const submissionFactInput = {
-  ...baseEntityFixtureInput("LawPracticeIdsSubmissionFact", 1),
+  ...productEntityFixtureInput("LawPracticeIdsSubmissionFact", 1),
   candidateWindow: {
     applicationFilingDate: null,
     candidateWindow: "indeterminate",

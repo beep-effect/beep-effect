@@ -12,8 +12,9 @@
  *
  * ```ts
  * import { CandidateClaim } from "@beep/epistemic-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(CandidateClaim.Table.definition.tableName)
+ * console.log(getTableName(CandidateClaim.Table))
  * ```
  *
  * @category tables
@@ -27,8 +28,9 @@ export * as CandidateClaim from "./CandidateClaim/index.ts";
  *
  * ```ts
  * import { ClaimDisposition } from "@beep/epistemic-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(ClaimDisposition.Table.definition.tableName)
+ * console.log(getTableName(ClaimDisposition.Table))
  * ```
  *
  * @category tables
@@ -42,8 +44,9 @@ export * as ClaimDisposition from "./ClaimDisposition/index.ts";
  *
  * ```ts
  * import { Contradiction } from "@beep/epistemic-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(Contradiction.candidateTable.definition.tableName)
+ * console.log(getTableName(Contradiction.candidateTable))
  * ```
  *
  * @category tables
@@ -57,8 +60,9 @@ export * as Contradiction from "./Contradiction/index.ts";
  *
  * ```ts
  * import { EdgeVersion } from "@beep/epistemic-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(EdgeVersion.Table.definition.tableName)
+ * console.log(getTableName(EdgeVersion.Table))
  * ```
  *
  * @category tables
@@ -72,8 +76,9 @@ export * as EdgeVersion from "./EdgeVersion/index.ts";
  *
  * ```ts
  * import { Evidence } from "@beep/epistemic-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(Evidence.Table.definition.tableName)
+ * console.log(getTableName(Evidence.Table))
  * ```
  *
  * @category tables
@@ -87,8 +92,9 @@ export * as Evidence from "./Evidence/index.ts";
  *
  * ```ts
  * import { EvidenceVerification } from "@beep/epistemic-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(EvidenceVerification.Table.definition.tableName)
+ * console.log(getTableName(EvidenceVerification.Table))
  * ```
  *
  * @category tables
@@ -103,7 +109,7 @@ export * as EvidenceVerification from "./EvidenceVerification/index.ts";
  * ```ts
  * import { UsageRecord } from "@beep/epistemic-tables/entities"
  *
- * console.log(UsageRecord.Table.definition.tableName)
+ * console.log(UsageRecord.TABLE_NAME)
  * ```
  *
  * @category tables

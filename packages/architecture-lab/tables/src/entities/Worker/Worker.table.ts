@@ -7,7 +7,8 @@
  */
 
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
+import { getTableName } from "drizzle-orm";
 import { Result } from "effect";
 import * as S from "effect/Schema";
 
@@ -32,7 +33,7 @@ import * as S from "effect/Schema";
  * @category tables
  * @since 0.0.0
  */
-export const workerTable = EntityTable.pgTableFrom(DomainWorker.Worker);
+export const workerTable = toPgTable(DomainWorker.Worker);
 
 /**
  * Physical Postgres table name derived from the Worker entity definition.
@@ -53,7 +54,7 @@ export const workerTable = EntityTable.pgTableFrom(DomainWorker.Worker);
  * @category tables
  * @since 0.0.0
  */
-export const WORKER_TABLE_NAME = workerTable.definition.tableName;
+export const WORKER_TABLE_NAME = getTableName(workerTable);
 
 /**
  * Selected row shape returned by queries against {@link workerTable}.
@@ -63,10 +64,10 @@ export const WORKER_TABLE_NAME = workerTable.definition.tableName;
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert, type WorkerRow } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *
@@ -97,10 +98,10 @@ export type WorkerRow = typeof workerTable.$inferSelect;
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert, type WorkerInsert } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *
@@ -133,10 +134,10 @@ const decodeWorker = S.decodeUnknownResult(DomainWorker.Worker);
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { toWorkerInsert } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *
@@ -169,10 +170,10 @@ export const toWorkerInsert = (worker: DomainWorker.Worker): WorkerInsert => Res
  * ```ts
  * import {
  *   CreateWorkerInput,
- *   WorkerId,
  *   WorkerOrganizationId,
  *   create
  * } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { fromWorkerRow, toWorkerInsert, type WorkerRow } from "@beep/architecture-lab-tables/entities/Worker"
  * import * as S from "effect/Schema"
  *

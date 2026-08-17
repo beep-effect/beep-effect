@@ -222,3 +222,27 @@ Record receipts at the moment friction happens; redact for the public repo.
   posture a wedge diagnosis needs), and lane process groups are reaped
   after the lane exits. Feeds ship-velocity SPEC A7: buffered child pipes
   are a hang class of their own, distinct from success-exit wedges.
+
+## 2026-08-16 — activation validated live; rollback previews need --refresh
+
+- What: post-merge (#718, admin-merged past the wedged Docgen gate with the
+  ruleset's Docgen requirement lifted for under a minute and restored), the
+  activation deployed in 53s (SSM runner-ami -> ami-07fb13d84a42d3584,
+  marker-gated toolbelt live). The first fleet-lane probe was the discovery
+  run for the baked image's missing bunx symlink ("Failed to spawn bunx
+  turbo") — fixed in parallel as #725 (bake + setup-action self-heal); the
+  second probe passed end-to-end: "baked runner repair: created missing
+  bunx symlink", "Baked fast path: true", full test-integration green on a
+  baked worker. Rollback gotcha: a plain `pulumi preview` after reverting
+  the pin reports NO diff — aws.ssm.Parameter values are pulumi secrets
+  and their diffs are suppressed without state refresh; with
+  `pulumi preview --refresh` the revert plans exactly
+  `runner-ami update [diff: ~value,version]`.
+- Evidence: probe runs 31969468654 (bunx discovery, failed) and
+  31971776803 (success); rollback previews with and without --refresh;
+  superseded AMIs ami-076e22e205ce6a512 and ami-012c2a9252a1bbd6f
+  deregistered with their snapshots; IAM: beep-ci-bake policy v4 drops the
+  vestigial PassRole, beep-ci-bake-instance role/profile deleted.
+- Prevention: the rollback recipe is `pulumi config set
+  ciFleetController:amiId <prior> && pulumi up --refresh --yes` — never
+  trust a no-diff preview on secret-valued resources without refresh.

@@ -13,7 +13,7 @@
  * ```ts
  * import { CandidateClaim } from "@beep/epistemic-domain/entities/CandidateClaim"
  *
- * console.log(CandidateClaim.definition.entityId.resource)
+ * console.log(CandidateClaim.sql.tableName)
  * ```
  *
  * @category entities

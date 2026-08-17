@@ -9,6 +9,7 @@
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.commands");
@@ -21,10 +22,11 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.commands");
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { CreateWorkerCommand } from "@beep/architecture-lab-use-cases/entities/Worker"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const command = CreateWorkerCommand.make({
- *   id: S.decodeUnknownSync(DomainWorker.WorkerId)(1),
+ *   id: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1),
  *   organizationId: S.decodeUnknownSync(DomainWorker.WorkerOrganizationId)(10),
  *   displayName: "Avery Reviewer"
  * })
@@ -37,7 +39,7 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.commands");
  */
 export class CreateWorkerCommand extends S.Class<CreateWorkerCommand>($I`CreateWorkerCommand`)(
   {
-    id: DomainWorker.WorkerId.annotateKey({
+    id: ArchitectureLabIdentity.WorkerId.annotateKey({
       description: "Worker identity assigned by the caller.",
     }),
     organizationId: DomainWorker.WorkerOrganizationId.annotateKey({
@@ -61,10 +63,11 @@ export class CreateWorkerCommand extends S.Class<CreateWorkerCommand>($I`CreateW
  * ```ts
  * import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker"
  * import { GetWorkerQuery } from "@beep/architecture-lab-use-cases/entities/Worker"
+ * import * as ArchitectureLabIdentity from "@beep/shared-domain/identity/ArchitectureLab"
  * import * as S from "effect/Schema"
  *
  * const query = GetWorkerQuery.make({
- *   id: S.decodeUnknownSync(DomainWorker.WorkerId)(1)
+ *   id: S.decodeUnknownSync(ArchitectureLabIdentity.WorkerId)(1)
  * })
  *
  * console.log(query.id) // 1
@@ -75,7 +78,7 @@ export class CreateWorkerCommand extends S.Class<CreateWorkerCommand>($I`CreateW
  */
 export class GetWorkerQuery extends S.Class<GetWorkerQuery>($I`GetWorkerQuery`)(
   {
-    id: DomainWorker.WorkerId.annotateKey({
+    id: ArchitectureLabIdentity.WorkerId.annotateKey({
       description: "Worker identity to load.",
     }),
   },

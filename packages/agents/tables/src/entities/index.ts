@@ -13,7 +13,7 @@
  * ```ts
  * import { ProviderInstance } from "@beep/agents-tables/entities"
  *
- * console.log(ProviderInstance.providerInstanceTable.definition.tableName)
+ * console.log(ProviderInstance.PROVIDER_INSTANCE_TABLE_NAME)
  * ```
  *
  * @category tables

@@ -6,7 +6,7 @@ import {
 import { ProviderInstance } from "@beep/agents-domain/entities/ProviderInstance";
 import { ProviderInstanceRpcs, ProviderUnauthenticated } from "@beep/agents-use-cases/public";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Layer } from "effect";
 import * as O from "effect/Option";
@@ -16,7 +16,7 @@ import * as AsyncResult from "effect/unstable/reactivity/AsyncResult";
 import * as RpcTest from "effect/unstable/rpc/RpcTest";
 
 const instance = S.decodeUnknownSync(ProviderInstance)({
-  ...baseEntityFixtureInput("AgentsProviderInstance", 7),
+  ...productEntityFixtureInput("AgentsProviderInstance", 7),
   binaryPath: "/usr/bin/codex",
   envVars: {},
   homePath: null,

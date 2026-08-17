@@ -30,6 +30,7 @@ import * as S from "effect/Schema";
 import { ActFrameElementLabel } from "../../values/ActFrameElementRef/index.ts";
 import { HohfeldPosition } from "../../values/HohfeldPosition/index.ts";
 import { NormSourceReference } from "../../values/NormSourceReference/index.ts";
+import { hasActorSlot, hasDistinctLabels } from "./ActFrame.behavior.ts";
 
 const $I = $LawPracticeDomainId.create("entities/ActFrame/ActFrame.values");
 
@@ -444,3 +445,101 @@ export class PositionTransition extends S.Class<PositionTransition>($I`PositionT
     description: "One position a recorded act frame creates or terminates, between two of its slots.",
   })
 ) {}
+
+/**
+ * Non-empty frame slots with unique labels and an actor slot.
+ *
+ * **Example** (Inspect slot schema)
+ *
+ * ```ts
+ * import { ActFrameSlots } from "@beep/law-practice-domain/entities/ActFrame"
+ *
+ * console.log(ActFrameSlots.ast._tag)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ActFrameSlots = S.NonEmptyArray(ActFrameSlot).check(
+  S.makeFilter(hasDistinctLabels, {
+    identifier: $I`ActFrameElementLabelsCheck`,
+    title: "Act Frame Element Labels",
+    description: "An act frame's elements must carry distinct labels within the part they belong to.",
+    message: "Expected act frame element labels within a part to be distinct.",
+  }),
+  S.makeFilter(hasActorSlot, {
+    identifier: $I`ActFrameActorSlotCheck`,
+    title: "Act Frame Actor Slot",
+    description: "An act frame must name the slot the act is done by.",
+    message: "Expected an act frame to carry a slot of kind actor.",
+  })
+);
+
+const DistinctLabels = S.makeFilter(hasDistinctLabels, {
+  identifier: $I`ActFrameElementLabelsCheck`,
+  title: "Act Frame Element Labels",
+  description: "An act frame's elements must carry distinct labels within the part they belong to.",
+  message: "Expected act frame element labels within a part to be distinct.",
+});
+
+/**
+ * Frame preconditions constrained to distinct element labels.
+ *
+ * **Example** (Inspect precondition schema)
+ *
+ * ```ts
+ * import { ActFramePreconditions } from "@beep/law-practice-domain/entities/ActFrame"
+ *
+ * console.log(ActFramePreconditions.ast._tag)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ActFramePreconditions = S.Array(ActFramePrecondition)
+  .check(DistinctLabels)
+  .pipe(
+    $I.annoteSchema("ActFramePreconditions", {
+      description: "The preconditions a recorded act frame states, with distinct element labels.",
+    })
+  );
+
+/**
+ * Runtime type for {@link ActFramePreconditions}.
+ *
+ * @see {@link ActFramePreconditions} for the runtime schema.
+ * @category models
+ * @since 0.0.0
+ */
+export type ActFramePreconditions = typeof ActFramePreconditions.Type;
+
+/**
+ * Position transitions constrained to distinct element labels.
+ *
+ * **Example** (Inspect transition schema)
+ *
+ * ```ts
+ * import { PositionTransitions } from "@beep/law-practice-domain/entities/ActFrame"
+ *
+ * console.log(PositionTransitions.ast._tag)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PositionTransitions = S.Array(PositionTransition)
+  .check(DistinctLabels)
+  .pipe(
+    $I.annoteSchema("PositionTransitions", {
+      description: "The position transitions a recorded act frame creates or terminates, with distinct element labels.",
+    })
+  );
+
+/**
+ * Runtime type for {@link PositionTransitions}.
+ *
+ * @see {@link PositionTransitions} for the runtime schema.
+ * @category models
+ * @since 0.0.0
+ */
+export type PositionTransitions = typeof PositionTransitions.Type;

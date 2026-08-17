@@ -6,14 +6,14 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { ClaimLifecycle } from "@beep/shared-domain/values/ClaimLifecycle";
 import { LawPracticeFixtureKey } from "../LawPracticeEntity.fields.ts";
 import { DistinctionDetail } from "./Distinction.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.model");
+const DistinctionEntity = ProductEntity.make(LawPractice.DistinctionId);
 
 /**
  * Distinction entity asserted to overcome a rejection against a claim.
@@ -59,51 +59,30 @@ const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.model")
  * @category entities
  * @since 0.0.0
  */
-export class Distinction extends BaseEntity.Class<Distinction>($I`Distinction`)(
-  LawPractice.DistinctionId,
+export class Distinction extends DistinctionEntity.Entity<Distinction>(DistinctionEntity.tableName)(
   {
-    fields: {
-      anchor: TextAnchor.annotateKey({
-        description: "Source text anchor for the asserted distinction.",
-      }),
-      claimFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the claim defended by this distinction.",
-      }),
-      detail: DistinctionDetail.annotateKey({
-        description: "Substantive distinction detail.",
-      }),
-      fixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Stable fixture key for the distinction.",
-      }),
-      lifecycleState: ClaimLifecycle.annotateKey({
-        description: "Lifecycle state of the distinction claim.",
-      }),
-      rejectionFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the rejection answered by this distinction.",
-      }),
-    },
-    persisted: {
-      anchor: EntitySchema.persist.jsonb({
-        columnName: "anchor",
-      }),
-      claimFixtureKey: EntitySchema.persist.text({
-        columnName: "claim_fixture_key",
-      }),
-      detail: EntitySchema.persist.jsonb({
-        columnName: "detail",
-      }),
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      lifecycleState: EntitySchema.persist.literal({
-        columnName: "lifecycle_state",
-      }),
-      rejectionFixtureKey: EntitySchema.persist.text({
-        columnName: "rejection_fixture_key",
-      }),
-    },
+    anchor: TextAnchor.annotateKey({
+      description: "Source text anchor for the asserted distinction.",
+    }).pipe(DistinctionEntity.pg.jsonb()),
+    claimFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the claim defended by this distinction.",
+    }).pipe(DistinctionEntity.pg.text(), DistinctionEntity.pg.columnName("claim_fixture_key")),
+    detail: DistinctionDetail.annotateKey({
+      description: "Substantive distinction detail.",
+    }).pipe(DistinctionEntity.pg.jsonb()),
+    fixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Stable fixture key for the distinction.",
+    }).pipe(DistinctionEntity.pg.text(), DistinctionEntity.pg.columnName("fixture_key")),
+    lifecycleState: ClaimLifecycle.annotateKey({
+      description: "Lifecycle state of the distinction claim.",
+    }).pipe(DistinctionEntity.pg.text(), DistinctionEntity.pg.columnName("lifecycle_state")),
+    rejectionFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the rejection answered by this distinction.",
+    }).pipe(DistinctionEntity.pg.text(), DistinctionEntity.pg.columnName("rejection_fixture_key")),
+    ...DistinctionEntity.identityFields,
   },
   $I.annote("Distinction", {
     description: "Distinction entity asserted to overcome a rejection against a claim.",
-  })
+  }),
+  DistinctionEntity.entityExtras
 ) {}

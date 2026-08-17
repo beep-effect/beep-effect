@@ -6,147 +6,17 @@
  */
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { LiteralKit, UnknownRecord } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import { UnknownRecord } from "@beep/schema";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
+import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
+import { SyncItemId } from "@beep/shared-domain/identity/Documents/SyncItemId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
-import * as Documents from "../../identity/Documents.ts";
 import { DmsProvider, RemoteItemId, VaultRelPath } from "../../values/Sync/index.ts";
+import { SyncConflictKind, SyncConflictResolution } from "./SyncConflict.values.ts";
 
 const $I = $DocumentsDomainId.create("entities/SyncConflict/SyncConflict.model");
-
-/**
- * Entity identifier for a persisted documents SyncConflict.
- *
- * **Example** (Decode SyncConflictId value)
- *
- * ```ts
- * import { SyncConflictId, type SyncConflictId as SyncConflictIdValue } from "@beep/documents-domain/entities/SyncConflict"
- * import * as S from "effect/Schema"
- *
- * const id: SyncConflictIdValue = S.decodeUnknownSync(SyncConflictId)(1)
- *
- * if (id !== 1 || SyncConflictId.tableName !== "documents_sync_conflict") {
- *   throw new Error("expected decoded SyncConflict id")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export const SyncConflictId = Documents.SyncConflictId;
-
-/**
- * Runtime type for {@link SyncConflictId}.
- *
- * **Example** (Type SyncConflictId array)
- *
- * ```ts
- * import { SyncConflictId, type SyncConflictId as SyncConflictIdValue } from "@beep/documents-domain/entities/SyncConflict"
- * import * as S from "effect/Schema"
- *
- * const id: SyncConflictIdValue = S.decodeUnknownSync(SyncConflictId)(1)
- * const ids: ReadonlyArray<SyncConflictIdValue> = [id]
- *
- * if (ids.length !== 1) {
- *   throw new Error("expected SyncConflict id evidence")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export type SyncConflictId = typeof SyncConflictId.Type;
-
-/**
- * Kind of remote drift detected against the one-way mirror.
- *
- * **Example** (Check remoteEdit kind)
- *
- * ```ts
- * import { SyncConflictKind } from "@beep/documents-domain/entities/SyncConflict"
- *
- * const kind: SyncConflictKind = SyncConflictKind.Enum.remoteEdit
- *
- * if (!SyncConflictKind.is.remoteEdit(kind)) {
- *   throw new Error("expected remoteEdit conflict kind")
- * }
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export const SyncConflictKind = LiteralKit([
-  "remoteCreate",
-  "remoteEdit",
-  "remoteMove",
-  "remoteRename",
-  "remoteDelete",
-  "remoteUnknown",
-]).pipe(
-  $I.annoteSchema("SyncConflictKind", {
-    description: "Kind of remote drift detected against the one-way mirror.",
-  })
-);
-
-/**
- * Runtime type for {@link SyncConflictKind}.
- *
- * **Example** (Assign remoteDelete kind)
- *
- * ```ts
- * import type { SyncConflictKind } from "@beep/documents-domain/entities/SyncConflict"
- *
- * const kind: SyncConflictKind = "remoteDelete"
- * console.log(kind)
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export type SyncConflictKind = typeof SyncConflictKind.Type;
-
-/**
- * Review status for a surfaced remote-drift record.
- *
- * **Example** (Check open resolution)
- *
- * ```ts
- * import { SyncConflictResolution } from "@beep/documents-domain/entities/SyncConflict"
- *
- * const resolution: SyncConflictResolution = SyncConflictResolution.Enum.open
- *
- * if (!SyncConflictResolution.is.open(resolution)) {
- *   throw new Error("expected open conflict resolution")
- * }
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export const SyncConflictResolution = LiteralKit(["open", "reviewed"]).pipe(
-  $I.annoteSchema("SyncConflictResolution", {
-    description: "Review status for a surfaced remote-drift record.",
-  })
-);
-
-/**
- * Runtime type for {@link SyncConflictResolution}.
- *
- * **Example** (Assign reviewed resolution)
- *
- * ```ts
- * import type { SyncConflictResolution } from "@beep/documents-domain/entities/SyncConflict"
- *
- * const resolution: SyncConflictResolution = "reviewed"
- * console.log(resolution)
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export type SyncConflictResolution = typeof SyncConflictResolution.Type;
+const SyncConflictEntity = ProductEntity.make(SyncConflictId);
 
 /**
  * Remote-drift record surfaced for review; v1 never auto-merges or mutates local vault content (SPEC D4).
@@ -154,7 +24,8 @@ export type SyncConflictResolution = typeof SyncConflictResolution.Type;
  * **Example** (Decode SyncConflict entity)
  *
  * ```ts
- * import { SyncConflict, SyncConflictId } from "@beep/documents-domain/entities/SyncConflict"
+ * import { SyncConflict } from "@beep/documents-domain/entities/SyncConflict"
+ * import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId"
  * import * as S from "effect/Schema"
  *
  * const conflict = S.decodeUnknownSync(SyncConflict)({
@@ -185,74 +56,54 @@ export type SyncConflictResolution = typeof SyncConflictResolution.Type;
  * @category entities
  * @since 0.0.0
  */
-export class SyncConflict extends BaseEntity.Class<SyncConflict>($I`SyncConflict`)(
-  SyncConflictId,
+export class SyncConflict extends SyncConflictEntity.Entity<SyncConflict>(SyncConflictEntity.tableName)(
   {
-    fields: {
-      conflictKind: SyncConflictKind.annotateKey({
-        description: "Kind of remote drift detected for the mirrored item.",
-      }),
-      localRelPath: VaultRelPath.pipe(S.OptionFromNullOr).annotateKey({
+    conflictKind: SyncConflictKind.annotateKey({
+      description: "Kind of remote drift detected for the mirrored item.",
+    }).pipe(SyncConflictEntity.pg.text(), SyncConflictEntity.pg.columnName("conflict_kind")),
+    localRelPath: VaultRelPath.pipe(S.OptionFromNullOr)
+      .annotateKey({
         description: "Vault-relative path of the affected local item; none when unmapped locally.",
-      }),
-      provider: DmsProvider.annotateKey({
-        description: "DMS provider whose event stream reported the drift.",
-      }),
-      remoteEventId: S.NonEmptyString.pipe(S.OptionFromNullOr).annotateKey({
+      })
+      .pipe(SyncConflictEntity.pg.text(), SyncConflictEntity.pg.columnName("local_rel_path")),
+    provider: DmsProvider.annotateKey({
+      description: "DMS provider whose event stream reported the drift.",
+    }).pipe(SyncConflictEntity.pg.text()),
+    remoteEventId: S.NonEmptyString.pipe(S.OptionFromNullOr)
+      .annotateKey({
         description: "Provider event identifier that surfaced the drift; none for synthetic detections.",
-      }),
-      remoteId: RemoteItemId.pipe(S.OptionFromNullOr).annotateKey({
+      })
+      .pipe(SyncConflictEntity.pg.text(), SyncConflictEntity.pg.columnName("remote_event_id")),
+    remoteId: RemoteItemId.pipe(S.OptionFromNullOr)
+      .annotateKey({
         description: "Provider identifier of the drifted remote item; none when the event omits it.",
-      }),
-      remotePayload: UnknownRecord.annotateKey({
-        description: "Remote event snapshot preserved verbatim for review.",
-      }),
-      resolutionStatus: SyncConflictResolution.annotateKey({
-        description: "Review status of the drift record.",
-      }),
-      syncItemId: Documents.SyncItemId.pipe(S.OptionFromNullOr).annotateKey({
+      })
+      .pipe(SyncConflictEntity.pg.text(), SyncConflictEntity.pg.columnName("remote_id")),
+    remotePayload: UnknownRecord.annotateKey({
+      description: "Remote event snapshot preserved verbatim for review.",
+    }).pipe(SyncConflictEntity.pg.jsonb(), SyncConflictEntity.pg.columnName("remote_payload")),
+    resolutionStatus: SyncConflictResolution.annotateKey({
+      description: "Review status of the drift record.",
+    }).pipe(SyncConflictEntity.pg.text(), SyncConflictEntity.pg.columnName("resolution_status")),
+    syncItemId: SyncItemId.pipe(S.OptionFromNullOr)
+      .annotateKey({
         description: "Sync-tracking row the drift maps to; none when the remote item is unknown locally.",
-      }),
-      workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
-        description: "Workspace whose mirror observed the remote drift.",
-      }),
-    },
-    persisted: {
-      conflictKind: EntitySchema.persist.literal({
-        columnName: "conflict_kind",
-        indexHints: [EntitySchema.IndexHint.lookup],
-      }),
-      localRelPath: EntitySchema.persist.text({
-        columnName: "local_rel_path",
-      }),
-      provider: EntitySchema.persist.literal({
-        columnName: "provider",
-      }),
-      remoteEventId: EntitySchema.persist.text({
-        columnName: "remote_event_id",
-        indexHints: [EntitySchema.IndexHint.lookup],
-      }),
-      remoteId: EntitySchema.persist.text({
-        columnName: "remote_id",
-      }),
-      remotePayload: EntitySchema.persist.jsonb({
-        columnName: "remote_payload",
-      }),
-      resolutionStatus: EntitySchema.persist.literal({
-        columnName: "resolution_status",
-        indexHints: [EntitySchema.IndexHint.lookup],
-      }),
-      syncItemId: EntitySchema.persist.entityId({
-        columnName: "sync_item_id",
-      }),
-      workspaceId: EntitySchema.persist.entityId({
-        columnName: "workspace_id",
-        indexHints: [EntitySchema.IndexHint.btree, EntitySchema.IndexHint.lookup],
-      }),
-    },
+      })
+      .pipe(SyncConflictEntity.pg.integer(), SyncConflictEntity.pg.columnName("sync_item_id")),
+    workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
+      description: "Workspace whose mirror observed the remote drift.",
+    }).pipe(SyncConflictEntity.pg.integer(), SyncConflictEntity.pg.columnName("workspace_id")),
+    ...SyncConflictEntity.identityFields,
   },
   $I.annote("SyncConflict", {
     description:
       "Remote-drift record surfaced for review; v1 never auto-merges or mutates local vault content (SPEC D4).",
-  })
+  }),
+  (columns) => [
+    SyncConflictEntity.Table.index("documents_sync_conflict_conflict_kind_lookup_idx", [columns.conflictKind]),
+    SyncConflictEntity.Table.index("documents_sync_conflict_remote_event_id_lookup_idx", [columns.remoteEventId]),
+    SyncConflictEntity.Table.index("documents_sync_conflict_resolution_status_lookup_idx", [columns.resolutionStatus]),
+    SyncConflictEntity.Table.index("documents_sync_conflict_workspace_id_btree_idx", [columns.workspaceId]),
+    ...SyncConflictEntity.entityExtras(columns),
+  ]
 ) {}

@@ -3,8 +3,11 @@
 Shared-kernel persistence boundary for cross-slice table and read-model shapes
 tied to shared product language.
 
-This package is the narrow shared-kernel Drizzle exception: compatibility
-`EntityTable` helpers may live here. Live database access remains banned.
+This package owns shared-kernel table metadata and the shared entity table
+proofs for `Membership`, `Organization`, and `User`. It is the narrow
+shared-kernel Drizzle exception: metadata-only `pgTable` definitions and index
+metadata may live here when they encode shared product language, but live
+database access remains banned.
 
 ## Belongs Here
 
@@ -27,18 +30,19 @@ This package is the narrow shared-kernel Drizzle exception: compatibility
 
 | Export | Role |
 | --- | --- |
-| `@beep/shared-tables` | Entry point exposing the compatibility `Table` namespace. |
-| `@beep/shared-tables/table/Table` | Compatibility subpath re-exporting `@beep/drizzle` `EntityTable` type helpers. |
+| `@beep/shared-tables` | Entry point exposing shared concrete table namespaces. |
+| `Entities.Membership` | Shared Membership table metadata projected with `toPgTable(Membership.Model)`. |
+| `Entities.Organization` | Shared Organization table metadata projected with `toPgTable(Organization.Model)`. |
+| `Entities.User` | Shared User table metadata projected with `toPgTable(User.Model)`. |
+| `DbSchema` | Metadata-only aggregate for exported shared tables. |
 
 Generic schema-derived projection now lives in-tree at
 `@beep/effect-drizzle` (member root
 `packages/ecosystem/effect-drizzle/**`). It graduated from `scratchpad/bsl`
 (PR #651). `@beep/drizzle` keeps execution (the SQL service, transactions, and
-error normalization) permanently. Shared and slice tables keep their existing
-`@beep/drizzle` `EntityTable` projection patterns until the future beep-adoption
-packet; BaseEntity parity is explicitly outside this graduation packet. Shared
-table packages publish concrete shared product table metadata; they do not own
-a separate SQL DSL or a domain-to-persistence mapping layer.
+error normalization) permanently. Shared and slice tables use `toPgTable` and
+publish concrete product table metadata; they do not own a separate SQL DSL or
+a domain-to-persistence mapping layer.
 
 ## Development
 

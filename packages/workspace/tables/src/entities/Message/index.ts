@@ -28,7 +28,7 @@ export * from "./Message.converters.ts";
  * ```ts
  * import * as Message from "@beep/workspace-tables/entities/Message"
  *
- * console.log(Message.Table.definition.entityId.entityType)
+ * console.log(Message.TABLE_NAME)
  * ```
  *
  * @category tables

@@ -14,7 +14,6 @@ import {
 } from "@beep/file-processing/SourceText";
 import { makeDrizzleLayer, PostgresDrizzle } from "@beep/postgres";
 import { NonNegativeInt, PosInt } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { makePgliteSqlTestLayer, provideScopedLayer } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
@@ -42,7 +41,7 @@ import { migrateOnBoot } from "@/runtime/Migrations";
 import type { Context } from "effect";
 
 const desktopWorkspaceId = WorkspaceIdentity.WorkspaceId.make(1);
-const instant = flow(S.decodeUnknownResult(EntitySchema.DateTimeFromMillis), Result.getOrThrow);
+const instant = flow(S.decodeUnknownResult(S.DateTimeUtcFromMillis), Result.getOrThrow);
 const decodeVaultRoot = S.decodeUnknownEffect(WorkspaceVaultRootPath);
 
 const makeInProcessPgliteLayer = () =>

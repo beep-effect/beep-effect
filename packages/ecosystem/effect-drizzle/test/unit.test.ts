@@ -122,7 +122,9 @@ import {
   ExplicitVariantModel,
   effectDrizzleSchema,
   exactKeyResolutionSchema,
+  extraCoverageRecordTable,
   mechanicalTable,
+  namedUniqueRecordTable,
   Organization,
   OrganizationId,
   pgBoundedInteger,
@@ -281,6 +283,17 @@ describe("toPgTable", () => {
     expect(membershipPrimaryKey.name).toBe("membership_pk");
     expect(membershipPrimaryKey.columns.map((candidate) => candidate.name)).toEqual(["organization_id", "user_id"]);
   });
+
+  it("emits partial unique indexes and explicitly unsafe checks", () => {
+    const config = getTableConfig(extraCoverageRecordTable);
+
+    expect(config.indexes.map((candidate) => candidate.config.name)).toContain(
+      "extra_coverage_record_email_unique_idx"
+    );
+    expect(config.checks.map((candidate) => candidate.name)).toContain("extra_coverage_record_code_check");
+    expect(pg.Table.Node.is(pg.Table.unsafeCheckSql("positive_count", "count > 0"))).toBe(true);
+    expect(pg.Table.Node.is({ _tag: "unknown", name: "unknown" })).toBe(false);
+  });
 });
 
 describe("variant truth table", () => {
@@ -379,6 +392,16 @@ describe("kit write strategies", () => {
       "audited_record_row_version_positive",
       "audited_record_name_non_empty",
     ]);
+  });
+});
+
+describe("named unique indexes", () => {
+  it("emits a unique index while retaining model annotations", () => {
+    const config = getTableConfig(namedUniqueRecordTable);
+    const emitted = first(config.indexes, "named unique index");
+
+    expect(emitted.config.name).toBe("named_unique_record_email_unique_idx");
+    expect(emitted.config.unique).toBe(true);
   });
 });
 

@@ -104,7 +104,6 @@ export * from "./Did.ts";
  * @since 0.0.0
  * @category validation
  */
-export * as DomainModel from "./DomainModel.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -137,11 +136,6 @@ export * from "./EffectSchema.ts";
  * @category validation
  */
 export * from "./Email.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * as EntitySchema from "./EntitySchema/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -318,11 +312,6 @@ export * from "./Markdown.ts";
  * @category validation
  */
 export * from "./MimeType.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * as Model from "./Model/index.ts";
 /**
  * @since 0.0.0
  * @category validation
@@ -511,11 +500,6 @@ export * from "./Uint64.ts";
  * @category validation
  */
 export * from "./URL.ts";
-/**
- * @since 0.0.0
- * @category validation
- */
-export * as VariantSchema from "./VariantSchema/index.ts";
 /**
  * @since 0.0.0
  * @category validation

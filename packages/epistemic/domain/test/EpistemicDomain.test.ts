@@ -18,7 +18,7 @@ import {
 } from "@beep/epistemic-domain";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import { baseEntityFixtureInput, fcRuns, systemPrincipal } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
@@ -77,12 +77,10 @@ describe("@beep/epistemic-domain", () => {
     expect(SchemaAST.resolve(Confidence.ast)?.toArbitrary).toBeDefined();
   });
 
-  it("wires CandidateClaim to the epistemic BaseEntity identity", () => {
-    expect(CandidateClaim.definition.entityId).toBe(Epistemic.CandidateClaimId);
-    expect(CandidateClaim.definition.entityId.tableName).toBe("epistemic_candidate_claim");
-    expect(CandidateClaim.definition.entityId.entityType).toBe("EpistemicCandidateClaim");
-    expect(CandidateClaim.definition.persisted.id.storageKind).toBe("entityId");
-    expect(CandidateClaim.definition.persisted.snapshot.storageKind).toBe("jsonb");
+  it("wires CandidateClaim to the epistemic product identity", () => {
+    expect(CandidateClaim.sql.tableName).toBe(Epistemic.CandidateClaimId.tableName);
+    expect(Epistemic.CandidateClaimId.entityType).toBe("EpistemicCandidateClaim");
+    expect(Object.keys(CandidateClaim.fields)).toEqual(expect.arrayContaining(["id", "snapshot"]));
   });
 
   it("rejects inconsistent evidence-span widths and derives only consistent spans", () => {
@@ -156,7 +154,7 @@ describe("@beep/epistemic-domain", () => {
 
   it("decodes and constructs a CandidateClaim row", () => {
     const decoded = S.decodeUnknownSync(CandidateClaim)({
-      ...baseEntityFixtureInput("EpistemicCandidateClaim", 3),
+      ...productEntityFixtureInput("EpistemicCandidateClaim", 3),
       fixtureKey: "claim.patentability",
       lifecycle: "candidate",
       snapshot: { confidence: 0.92, label: "Patentability" },
@@ -172,7 +170,7 @@ describe("@beep/epistemic-domain", () => {
 
   it("appends a UsageRecord from turn-finalization activity", () => {
     const decoded = S.decodeUnknownSync(TurnFinalizationUsageAppend)({
-      ...baseEntityFixtureInput("EpistemicUsageRecord", 7),
+      ...productEntityFixtureInput("EpistemicUsageRecord", 7),
       activityId: 5,
       actor: systemPrincipal,
       costUsdApproxMicros: 3000,
@@ -198,18 +196,18 @@ describe("@beep/epistemic-domain", () => {
 
   it("preserves encoded wire shapes for crispened schemas", () => {
     expectMadeValueEncodedRoundTrip(Activity, {
-      ...baseEntityFixtureInput("EpistemicActivity", 1),
+      ...productEntityFixtureInput("EpistemicActivity", 1),
       fixtureKey: "runtime-proof:turn-1",
       snapshot: { status: "completed" },
     });
     expectMadeValueEncodedRoundTrip(CandidateClaim, {
-      ...baseEntityFixtureInput("EpistemicCandidateClaim", 3),
+      ...productEntityFixtureInput("EpistemicCandidateClaim", 3),
       fixtureKey: "claim.patentability",
       lifecycle: "candidate",
       snapshot: { confidence: 0.92, label: "Patentability" },
     });
     expectMadeValueEncodedRoundTrip(Evidence, {
-      ...baseEntityFixtureInput("EpistemicEvidence", 4),
+      ...productEntityFixtureInput("EpistemicEvidence", 4),
       artifactFixtureKey: "artifact.office-action",
       span: {
         confidence: 0.92,
@@ -220,7 +218,7 @@ describe("@beep/epistemic-domain", () => {
       spanFixtureKey: "span.claim-1",
     });
     expectMadeValueEncodedRoundTrip(UsageRecord, {
-      ...baseEntityFixtureInput("EpistemicUsageRecord", 7),
+      ...productEntityFixtureInput("EpistemicUsageRecord", 7),
       activityId: 5,
       actor: systemPrincipal,
       costUsdApproxMicros: 3000,
@@ -235,7 +233,7 @@ describe("@beep/epistemic-domain", () => {
       unitCount: null,
     });
     expectMadeValueEncodedRoundTrip(TurnFinalizationUsageAppend, {
-      ...baseEntityFixtureInput("EpistemicUsageRecord", 8),
+      ...productEntityFixtureInput("EpistemicUsageRecord", 8),
       activityId: 5,
       actor: systemPrincipal,
       costUsdApproxMicros: 3000,

@@ -99,7 +99,7 @@ describe("law-practice tables", () => {
 
 describe("PatentCitationEventTable", () => {
   it("projects the recorded observation column shape", () => {
-    expect(PatentCitationEvent.Table.definition.tableName).toBe("law_practice_patent_citation_event");
+    expect(getTableName(PatentCitationEvent.Table)).toBe("law_practice_patent_citation_event");
     expect(getTableConfig(PatentCitationEvent.Table).name).toBe("law_practice_patent_citation_event");
     expect(R.map(getColumns(PatentCitationEvent.Table), (column) => column.name)).toStrictEqual({
       ...baseEntityColumns,
@@ -142,7 +142,7 @@ describe("PatentCitationEventTable", () => {
 
 describe("CandorDispositionTable", () => {
   it("projects the recorded judgment column shape", () => {
-    expect(CandorDisposition.Table.definition.tableName).toBe("law_practice_candor_disposition");
+    expect(getTableName(CandorDisposition.Table)).toBe("law_practice_candor_disposition");
     expect(getTableConfig(CandorDisposition.Table).name).toBe("law_practice_candor_disposition");
     expect(R.map(getColumns(CandorDisposition.Table), (column) => column.name)).toStrictEqual({
       ...baseEntityColumns,
@@ -180,7 +180,7 @@ describe("CandorDispositionTable", () => {
 
 describe("IdsSubmissionFactTable", () => {
   it("projects the recorded submission-fact column shape", () => {
-    expect(IdsSubmissionFact.Table.definition.tableName).toBe("law_practice_ids_submission_fact");
+    expect(getTableName(IdsSubmissionFact.Table)).toBe("law_practice_ids_submission_fact");
     expect(getTableConfig(IdsSubmissionFact.Table).name).toBe("law_practice_ids_submission_fact");
     expect(R.map(getColumns(IdsSubmissionFact.Table), (column) => column.name)).toStrictEqual({
       ...baseEntityColumns,

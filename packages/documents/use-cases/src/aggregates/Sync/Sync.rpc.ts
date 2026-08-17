@@ -6,8 +6,8 @@
  */
 
 import { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 import * as Rpc from "effect/unstable/rpc/Rpc";
@@ -54,7 +54,7 @@ export class VaultSyncWorkspacePayload extends S.Class<VaultSyncWorkspacePayload
  * **Example** (Make conflict reviewed payload)
  *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { MarkVaultSyncConflictReviewedPayload } from "@beep/documents-use-cases/public"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"

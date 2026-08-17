@@ -8,10 +8,10 @@
 
 import { DocumentContentDigest } from "@beep/documents-domain/aggregates/Document";
 import * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import * as Documents from "@beep/documents-domain/identity/Documents";
 import { DmsProvider, VaultRelPath } from "@beep/documents-domain/values/Sync";
 import { $DocumentsUseCasesId } from "@beep/identity/packages";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import * as Documents from "@beep/shared-domain/identity/Documents";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Context } from "effect";
 import * as S from "effect/Schema";
@@ -20,12 +20,12 @@ import type { Effect } from "effect";
 const $I = $DocumentsUseCasesId.create("entities/SyncOperation/SyncOperation.repository");
 
 /**
- * Creation input for one push-outbox operation, excluding BaseEntity bookkeeping fields.
+ * Creation input for one push-outbox operation, excluding ProductEntity audit fields.
  *
  * **Example** (Make uploadFile seed)
  *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { VaultRelPath } from "@beep/documents-domain/values/Sync"
  * import { SyncOperationSeed } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import { NonNegativeInt } from "@beep/schema"
@@ -93,7 +93,7 @@ export class SyncOperationSeed extends S.Class<SyncOperationSeed>($I`SyncOperati
     }),
   },
   $I.annote("SyncOperationSeed", {
-    description: "Creation input for one push-outbox operation, excluding BaseEntity bookkeeping fields.",
+    description: "Creation input for one push-outbox operation, excluding ProductEntity audit fields.",
   })
 ) {}
 
@@ -141,7 +141,7 @@ export class SyncOperationRepositoryConflict extends S.TaggedError<SyncOperation
  * **Example** (Construct not-found error)
  *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { SyncOperationRepositoryNotFound } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import * as S from "effect/Schema"
  *
@@ -245,7 +245,7 @@ export class ListQueuedSyncOperationsInput extends S.Class<ListQueuedSyncOperati
  * **Example** (Build list-for-item input)
  *
  * ```ts
- * import * as Documents from "@beep/documents-domain/identity/Documents"
+ * import * as Documents from "@beep/shared-domain/identity/Documents"
  * import { ListQueuedSyncOperationsForItemInput } from "@beep/documents-use-cases/entities/SyncOperation/server"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
  * import * as S from "effect/Schema"

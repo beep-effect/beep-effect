@@ -61,6 +61,16 @@ const jobTimeoutLog = ghLog("Test Unit", "Complete job", [
 
 const cancelledSiblingLog = ghLog("Test Unit", "Run vitest", ["##[error]The operation was canceled."]);
 
+// Mirrors main Build job 95216658480 (2026-08-16): a torn cross-package read
+// under concurrent builds reports the source-mapped path as "not a module" and
+// cascades into downstream diagnostics; the cascade is part of the fingerprint.
+const ts2306TornReadLog = ghLog("Build", "Run bun run beep ci lane build", [
+  "##[error]../../foundation/modeling/schema/src/Cuid.ts(10,27): error TS2306: File '/opt/actions-runner/_work/beep-effect/beep-effect/packages/foundation/modeling/utils/src/DateTime.ts' is not a module.",
+  "##[error]../../foundation/modeling/schema/src/Cuid.ts(187,19): error TS377030: This has unknown in the requirements channel and unknown in the error channel which is not recommended.",
+  "##[error]command (/opt/actions-runner/_work/beep-effect/beep-effect/packages/ontology/config) /home/ec2-user/.bun/bin/bun run build exited (2)",
+  "Failed:    @beep/ontology-config#build",
+]);
+
 const failedJob = (databaseId: number, name: string, flakeClass: O.Option<YeetMonitorFlakeClass>) =>
   YeetMonitorFailedJob.make({ databaseId, name, flakeClass });
 
@@ -104,6 +114,10 @@ describe("yeet monitor flake fingerprints", () => {
     // A job cancelled because a sibling failed carries no timeout evidence;
     // classifying it would spend a rerun on a fail-fast side effect.
     expect(detectYeetMonitorFlakeClass(cancelledSiblingLog)).toStrictEqual(O.none());
+  });
+
+  it("recognizes the torn-read TS2306 signature despite its cascade", () => {
+    expect(detectYeetMonitorFlakeClass(ts2306TornReadLog)).toStrictEqual(O.some("ts2306-not-a-module"));
   });
 });
 
@@ -240,6 +254,7 @@ describe("yeet monitor job-shape fingerprints", () => {
     expect(YeetMonitorFlakeClass.Options).toStrictEqual([
       "ts2589-no-location",
       "ci-timeout",
+      "ts2306-not-a-module",
       "setup-5xx",
       "runner-loss",
       "install-failure",

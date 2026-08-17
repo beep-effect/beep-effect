@@ -306,7 +306,7 @@ READMEs, both SOURCES ledgers, and ATLAS):
    deferral-of-the-final-pick is recorded here rather than silently
    reassigned.
 2. **Entity-identity surface.** Every law-practice entity takes its EntityId
-   from `packages/shared/domain/src/identity/LawPractice.ts` (precedent
+   from `packages/shared/domain/src/identity/LawPractice` (precedent
    `PriorArtReferenceId`), so the goal's target surfaces include the two new
    id registrations there — identity infrastructure, not a shared-kernel
    product-language promotion.

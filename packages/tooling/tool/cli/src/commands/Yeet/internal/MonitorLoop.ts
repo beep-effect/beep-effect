@@ -92,9 +92,14 @@ const mergeLoopPollInterval = Duration.seconds(30);
  * checker threads and tipping a near-ceiling package over the limit — it emits
  * `error TS2589` with no file location and never reproduces standalone.
  * `ci-timeout` is a heavy or property-based suite exceeding a runner limit that
- * it clears locally in seconds. The remaining three are shape classes shared
- * with the lane-timings collector and defined in `internal/github/JobShape`:
- * `setup-5xx`, `runner-loss`, and `install-failure`.
+ * it clears locally in seconds. `ts2306-not-a-module` is a torn cross-package
+ * read during concurrently scheduled builds — tsc resolves a sibling package's
+ * output mid-write and reports the source-mapped path as "not a module", with a
+ * cascade of downstream diagnostics; six occurrences across six runners all
+ * replayed green serially (main run 31968275700, PRs #720/#723, 2026-08-14/16).
+ * The remaining three are shape classes shared with the lane-timings collector
+ * and defined in `internal/github/JobShape`: `setup-5xx`, `runner-loss`, and
+ * `install-failure`.
  *
  * Anything outside this domain is a code failure by default. Widening it is a
  * decision, not a convenience: every member is a licence to spend a rerun.
@@ -113,6 +118,12 @@ const mergeLoopPollInterval = Duration.seconds(30);
  * SHA, after which the second occurrence reports `rerun-spent` and the operator
  * sees a real signal instead of a loop.
  *
+ * `ts2306-not-a-module` is admitted on the same population argument: a source
+ * file that genuinely exports nothing would match too, but it fails the rerun
+ * deterministically and surfaces as `rerun-spent`. The cascade that follows a
+ * torn read means the detector cannot demand "no other diagnostics" the way the
+ * TS2589 fingerprint does — the downstream errors are part of the signature.
+ *
  * **Example** (List the fingerprinted flake classes)
  *
  * ```ts
@@ -127,6 +138,7 @@ const mergeLoopPollInterval = Duration.seconds(30);
 export const YeetMonitorFlakeClass = LiteralKit([
   "ts2589-no-location",
   "ci-timeout",
+  "ts2306-not-a-module",
   "setup-5xx",
   "runner-loss",
   "install-failure",
@@ -186,6 +198,8 @@ const CI_TIMEOUT_PATTERNS: ReadonlyArray<RegExp> = [
   /timed out after \d+\s*(?:ms|s|m|seconds?|minutes?)/u,
 ];
 
+const TS2306_NOT_A_MODULE_PATTERN = /error TS2306: File '[^']+' is not a module/u;
+
 const stripGithubLogPrefix: (line: string) => string = flow(
   Str.replace(GITHUB_LOG_JOB_STEP_PREFIX_PATTERN, ""),
   Str.replace(GITHUB_LOG_TIMESTAMP_PATTERN, ""),
@@ -227,7 +241,11 @@ export const stripYeetMonitorLogDecoration = (log: string): string =>
  * The TS2589 arm delegates to the quality lane's
  * `detectNoLocationTs2589Flake`, so the strictness rules stay defined in one
  * place: every TS2589 line must be attributed to a Turbo task, no other TS
- * diagnostic may appear, and Turbo's `Failed:` footer must agree.
+ * diagnostic may appear, and Turbo's `Failed:` footer must agree. The TS2306
+ * arm matches the compiler's canonical "File '…' is not a module" line and
+ * deliberately tolerates surrounding diagnostics — a torn cross-package read
+ * cascades into hundreds of downstream errors, so their presence is part of
+ * the fingerprint, not a disqualifier.
  *
  * **Gotchas**
  *
@@ -254,8 +272,11 @@ export const detectYeetMonitorFlakeClass = (log: string): O.Option<YeetMonitorFl
   if (O.isSome(detectNoLocationTs2589Flake(normalized))) {
     return O.some(YeetMonitorFlakeClass.Enum["ts2589-no-location"]);
   }
-  return A.some(CI_TIMEOUT_PATTERNS, (pattern) => pattern.test(normalized))
-    ? O.some(YeetMonitorFlakeClass.Enum["ci-timeout"])
+  if (A.some(CI_TIMEOUT_PATTERNS, (pattern) => pattern.test(normalized))) {
+    return O.some(YeetMonitorFlakeClass.Enum["ci-timeout"]);
+  }
+  return TS2306_NOT_A_MODULE_PATTERN.test(normalized)
+    ? O.some(YeetMonitorFlakeClass.Enum["ts2306-not-a-module"])
     : O.none();
 };
 

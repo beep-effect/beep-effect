@@ -23,9 +23,9 @@ G1-G14) — read by reference, do not copy.
 
 Scope:
 
-- In: `packages/shared/domain/src/entity/BaseEntity.ts` (add `deletedAt` +
+- In: `packages/shared/domain/src/entity/ProductEntity.ts` (add `deletedAt` +
   `deletedByPrincipal`, Principal-typed, nullable→`null`, with an
-  `EntitySchema.persist.*` descriptor); `packages/foundation/modeling/schema/src/DomainModel.ts`
+  `EntitySchema.persist.*` descriptor); `packages/foundation/modeling/schema/src/index.ts`
   (retire or deprecate-alias — `rowVersion` already covers `version`); the kernel
   `.errors.ts` convention; tests + docgen.
 - Out: NO new shared VOs (`TemporalValidity`/`DomainEvent` are deferred to their

@@ -12,11 +12,14 @@ import {
   index as drizzleIndex,
   primaryKey as drizzlePrimaryKey,
   unique as drizzleUnique,
+  uniqueIndex as drizzleUniqueIndex,
   PgDialect,
 } from "drizzle-orm/pg-core";
+import { Match } from "effect";
 import { isArray } from "effect/Array";
 import { taggedEnum } from "effect/Data";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import { fromUndefinedOr, match } from "effect/Option";
 import { hasProperty, isObject, isString, isUndefined } from "effect/Predicate";
 import { String as StringSchema, TaggedError } from "effect/Schema";
@@ -126,6 +129,11 @@ type NodeDefinition = {
     readonly using: PgIndexMethod | undefined;
     readonly where: SQL<boolean> | undefined;
   };
+  uniqueIndex: {
+    readonly name: string;
+    readonly columns: NonEmptyColumns;
+    readonly where: SQL<boolean> | undefined;
+  };
   check: { readonly name: string; readonly expression: SQL<boolean> };
   unsafeCheckSql: { readonly name: string; readonly sql: string };
 };
@@ -157,6 +165,7 @@ type NodeDefinition = {
  *   compositePrimaryKey: () => "primary",
  *   compositeUnique: () => "unique",
  *   index: () => "index",
+ *   uniqueIndex: () => "unique-index",
  *   unsafeCheckSql: () => "unsafe"
  * }) // => "unsafe"
  * ```
@@ -235,6 +244,32 @@ export type CompositePrimaryKey = Extract<Node, { readonly _tag: "compositePrima
  * @since 0.0.0
  */
 export type Index = Extract<Node, { readonly _tag: "index" }>;
+
+/**
+ * Describes a named unique index over one or more PostgreSQL columns.
+ *
+ * **Example** (Construct a unique index node)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import { Table } from "@beep/effect-drizzle/pg"
+ *
+ * const extras: Table.Callback<{ email: typeof String }> = (columns) => [
+ *   Table.UniqueIndex.make({
+ *     name: "user_email_unique_idx",
+ *     columns: [columns.email],
+ *     where: undefined
+ *   })
+ * ]
+ *
+ * console.log(extras)
+ * ```
+ *
+ * @see {@link uniqueIndex} for the concise constructor.
+ * @category models
+ * @since 0.0.0
+ */
+export type UniqueIndex = Extract<Node, { readonly _tag: "uniqueIndex" }>;
 
 /**
  * Describes a check backed by a typed Drizzle SQL expression.
@@ -340,6 +375,30 @@ export const CompositePrimaryKey = { make: Nodes.compositePrimaryKey };
  */
 export const Index = { make: Nodes.index };
 /**
+ * Constructs a named unique-index node.
+ *
+ * **Example** (Infer the constructed node type)
+ *
+ * ```ts
+ * import { Table } from "@beep/effect-drizzle/pg"
+ * import { pgTable, text } from "drizzle-orm/pg-core"
+ *
+ * const user = pgTable("user", { email: text("email").notNull() }, (columns) => [
+ *   Table.UniqueIndex.make({
+ *     name: "user_email_unique_idx",
+ *     columns: [columns.email],
+ *     where: undefined
+ *   })
+ * ])
+ * console.log(user.email.name)
+ * ```
+ *
+ * @see {@link uniqueIndex} for the validated factory used in table extras.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const UniqueIndex = { make: Nodes.uniqueIndex };
+/**
  * Constructs a typed check-constraint node.
  *
  * **Example** (Infer the constructed node type)
@@ -381,6 +440,22 @@ const hasColumns = (value: unknown, minimum: number): boolean =>
   isArray(value.columns) &&
   value.columns.length >= minimum &&
   value.columns.every(isColumn);
+const hasOptionalWhere = (value: unknown): boolean =>
+  hasProperty(value, "where") && (isUndefined(value.where) || isDrizzleEntity(value.where, SQL));
+const hasOptionalIndexMethod = (value: unknown): boolean =>
+  hasProperty(value, "using") && (isUndefined(value.using) || isString(value.using));
+const hasValidNodeDefinition: (value: unknown) => boolean = Match.type<unknown>().pipe(
+  Match.when(Nodes.$is("compositeUnique"), (value) => hasColumns(value, 2)),
+  Match.when(Nodes.$is("compositePrimaryKey"), (value) => hasColumns(value, 2)),
+  Match.when(
+    Nodes.$is("index"),
+    (value) => hasColumns(value, 1) && hasOptionalIndexMethod(value) && hasOptionalWhere(value)
+  ),
+  Match.when(Nodes.$is("uniqueIndex"), (value) => hasColumns(value, 1) && hasOptionalWhere(value)),
+  Match.when(Nodes.$is("check"), (value) => hasProperty(value, "expression") && isDrizzleEntity(value.expression, SQL)),
+  Match.when(Nodes.$is("unsafeCheckSql"), (value) => hasProperty(value, "sql") && isString(value.sql)),
+  Match.orElse(() => false)
+);
 
 /**
  * Guards the tag and required outer shape of an author-returned extra node.
@@ -408,21 +483,7 @@ const hasColumns = (value: unknown, minimum: number): boolean =>
  * @category guards
  * @since 0.0.0
  */
-export const isNode = (value: unknown): value is Node =>
-  isNamed(value) &&
-  (Nodes.$is("compositeUnique")(value)
-    ? hasColumns(value, 2)
-    : Nodes.$is("compositePrimaryKey")(value)
-      ? hasColumns(value, 2)
-      : Nodes.$is("index")(value)
-        ? hasColumns(value, 1) &&
-          hasProperty(value, "using") &&
-          (isUndefined(value.using) || isString(value.using)) &&
-          hasProperty(value, "where") &&
-          (isUndefined(value.where) || isDrizzleEntity(value.where, SQL))
-        : Nodes.$is("check")(value)
-          ? hasProperty(value, "expression") && isDrizzleEntity(value.expression, SQL)
-          : Nodes.$is("unsafeCheckSql")(value) && hasProperty(value, "sql") && isString(value.sql));
+export const isNode = (value: unknown): value is Node => isNamed(value) && hasValidNodeDefinition(value);
 
 /**
  * Constructors, guard, and exhaustive matcher for table-extra nodes.
@@ -568,6 +629,41 @@ export const index = <const Name extends string, const Columns extends NonEmptyC
   });
 
 /**
+ * Constructs a named unique index over one or more columns.
+ *
+ * **When to use**
+ *
+ * Use when DDL compatibility requires an index rather than a table-level
+ * unique constraint.
+ *
+ * **Example** (Define a public-id unique index)
+ *
+ * ```ts
+ * import { String } from "effect/Schema"
+ * import { Table } from "@beep/effect-drizzle/pg"
+ *
+ * const extras: Table.Callback<{ publicId: typeof String }> = (columns) => [
+ *   Table.uniqueIndex("account_public_id_unique_idx", [columns.publicId])
+ * ]
+ *
+ * console.log(extras)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const uniqueIndex = <const Name extends string, const Columns extends NonEmptyColumns>(
+  name: Name & ValidateSqlName<Name, "Table.uniqueIndex name must be a lowercase SQL identifier">,
+  columns: Columns & ValidateDistinctColumns<Columns>,
+  options?: { readonly where?: SQL<boolean> }
+): UniqueIndex =>
+  Nodes.uniqueIndex({
+    name: validateName(name),
+    columns,
+    where: options?.where,
+  });
+
+/**
  * Constructs a typed SQL check in data-first or data-last form.
  *
  * **When to use**
@@ -649,10 +745,24 @@ const emitIndex = (node: Index): PgTableExtraConfigValue => {
   });
 };
 
+const emitUniqueIndex = (node: UniqueIndex): PgTableExtraConfigValue => {
+  const builder = drizzleUniqueIndex(node.name).on(...node.columns);
+  return match(fromUndefinedOr(node.where), {
+    onNone: () => builder,
+    onSome: (where) => {
+      Meta.assertNoSqlParameters(
+        pgDialect.sqlToQuery(where).params,
+        `PostgreSQL partial unique-index predicate '${node.name}'`
+      );
+      return builder.where(where);
+    },
+  });
+};
+
 const validateColumns = (node: Node): void => {
   if (!hasProperty(node, "columns") || !isArray(node.columns)) return;
   const names = node.columns.map((column) => column.name);
-  if (new Set(names).size !== names.length) {
+  if (HashSet.size(HashSet.fromIterable(names)) !== names.length) {
     fail(`PostgreSQL table extra '${node.name}' repeats a physical column.`);
   }
   if (names.length > 32) {
@@ -672,7 +782,7 @@ const validateColumns = (node: Node): void => {
  */
 export const validateNodes = (nodes: ReadonlyArray<Node>, inlinePrimaryKeys: number): void => {
   const names = nodes.map((node) => node.name);
-  if (new Set(names).size !== names.length) {
+  if (HashSet.size(HashSet.fromIterable(names)) !== names.length) {
     fail("PostgreSQL table-extra names must be unique within their owning table.");
   }
   const primaryKeys = inlinePrimaryKeys + nodes.filter(Nodes.$is("compositePrimaryKey")).length;
@@ -711,5 +821,6 @@ export const emit = (node: Node): PgTableExtraConfigValue =>
     compositePrimaryKey: (current) => drizzlePrimaryKey({ name: current.name, columns: [...current.columns] }),
     compositeUnique: (current) => drizzleUnique(current.name).on(...current.columns),
     index: emitIndex,
+    uniqueIndex: emitUniqueIndex,
     unsafeCheckSql: (current) => drizzleCheck(current.name, sql.raw(current.sql)),
   });

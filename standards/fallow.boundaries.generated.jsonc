@@ -884,12 +884,12 @@
         "allow": [
           "@beep/agents-domain",
           "@beep/agents-tables",
-          "@beep/drizzle"
+          "@beep/effect-drizzle"
         ],
         "allowTypeOnly": [
           "@beep/agents-domain",
           "@beep/agents-tables",
-          "@beep/drizzle"
+          "@beep/effect-drizzle"
         ]
       },
       {
@@ -1023,12 +1023,14 @@
         "from": "@beep/architecture-lab-domain",
         "allow": [
           "@beep/architecture-lab-domain",
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-domain",
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain"
@@ -1066,6 +1068,7 @@
           "@beep/identity",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1078,6 +1081,7 @@
           "@beep/identity",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1087,13 +1091,15 @@
         "allow": [
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-tables",
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-tables",
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ]
       },
@@ -1105,6 +1111,7 @@
           "@beep/architecture-lab-ui",
           "@beep/identity",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1114,6 +1121,7 @@
           "@beep/architecture-lab-ui",
           "@beep/identity",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1125,6 +1133,7 @@
           "@beep/architecture-lab-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils"
         ],
@@ -1133,6 +1142,7 @@
           "@beep/architecture-lab-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/utils"
         ]
@@ -1307,6 +1317,7 @@
         "from": "@beep/documents-domain",
         "allow": [
           "@beep/documents-domain",
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/rdf",
           "@beep/schema",
@@ -1316,6 +1327,7 @@
         ],
         "allowTypeOnly": [
           "@beep/documents-domain",
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/rdf",
           "@beep/schema",
@@ -1360,13 +1372,15 @@
         "allow": [
           "@beep/documents-domain",
           "@beep/documents-tables",
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/documents-domain",
           "@beep/documents-tables",
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ]
       },
@@ -1507,6 +1521,7 @@
       {
         "from": "@beep/epistemic-domain",
         "allow": [
+          "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/identity",
           "@beep/provenance",
@@ -1516,6 +1531,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/identity",
           "@beep/provenance",
@@ -1571,15 +1587,17 @@
       {
         "from": "@beep/epistemic-tables",
         "allow": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/epistemic-domain",
           "@beep/epistemic-tables",
+          "@beep/shared-domain",
           "@beep/test-utils"
         ]
       },
@@ -1592,6 +1610,7 @@
           "@beep/epistemic-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/ui"
         ],
@@ -1602,6 +1621,7 @@
           "@beep/epistemic-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/test-utils",
           "@beep/ui"
         ]
@@ -1944,14 +1964,14 @@
       {
         "from": "@beep/law-practice-tables",
         "allow": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/schema",
           "@beep/test-utils"
         ],
         "allowTypeOnly": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/law-practice-domain",
           "@beep/law-practice-tables",
           "@beep/schema",
@@ -3050,6 +3070,7 @@
       {
         "from": "@beep/shared-domain",
         "allow": [
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
@@ -3057,6 +3078,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
@@ -3067,12 +3089,16 @@
       {
         "from": "@beep/shared-tables",
         "allow": [
-          "@beep/drizzle",
-          "@beep/shared-tables"
+          "@beep/effect-drizzle",
+          "@beep/shared-domain",
+          "@beep/shared-tables",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
-          "@beep/drizzle",
-          "@beep/shared-tables"
+          "@beep/effect-drizzle",
+          "@beep/shared-domain",
+          "@beep/shared-tables",
+          "@beep/utils"
         ]
       },
       {
@@ -3281,6 +3307,7 @@
       {
         "from": "@beep/workspace-domain",
         "allow": [
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/md",
           "@beep/schema",
@@ -3289,6 +3316,7 @@
           "@beep/workspace-domain"
         ],
         "allowTypeOnly": [
+          "@beep/effect-drizzle",
           "@beep/identity",
           "@beep/md",
           "@beep/schema",
@@ -3335,13 +3363,13 @@
       {
         "from": "@beep/workspace-tables",
         "allow": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-tables"
         ],
         "allowTypeOnly": [
-          "@beep/drizzle",
+          "@beep/effect-drizzle",
           "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-tables"

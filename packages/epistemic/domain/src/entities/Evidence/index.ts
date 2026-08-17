@@ -13,7 +13,7 @@
  * ```ts
  * import { Evidence } from "@beep/epistemic-domain/entities/Evidence"
  *
- * console.log(Evidence.definition.entityId.resource)
+ * console.log(Evidence.sql.tableName)
  * ```
  *
  * @category entities

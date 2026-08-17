@@ -10,6 +10,7 @@ import {
   ContradictionCandidate,
   ContradictionDisposition,
   ContradictionReceipt,
+  hasValidSeals,
 } from "@beep/epistemic-domain/entities/Contradiction";
 import { DateTime, Match, pipe, Result, SchemaIssue } from "effect";
 import * as A from "effect/Array";
@@ -137,7 +138,7 @@ const decodeDisposition = S.decodeUnknownResult(ContradictionDisposition);
 const validateCandidateSeals = (
   candidate: ContradictionCandidate
 ): Result.Result<ContradictionCandidate, S.SchemaError> =>
-  Result.flatMap(candidate.hasValidSeals(), (isValid) =>
+  Result.flatMap(hasValidSeals(candidate), (isValid) =>
     isValid
       ? Result.succeed(candidate)
       : Result.fail(

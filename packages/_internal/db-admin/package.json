@@ -38,6 +38,7 @@
     "@beep/law-practice-tables": "workspace:^",
     "@beep/postgres": "workspace:^",
     "@beep/workspace-tables": "workspace:^",
+    "drizzle-orm": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

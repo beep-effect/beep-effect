@@ -6,8 +6,7 @@
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as S from "effect/Schema";
 import { LegalOppositionCandidateInput } from "../../values/LegalOppositionCandidateInput/index.ts";
@@ -15,6 +14,7 @@ import { PriorityBasis } from "../../values/PriorityBasis/index.ts";
 import { LegalVerdictAssignment } from "./LegalOppositionCandidate.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/LegalOppositionCandidate/LegalOppositionCandidate.model");
+const LegalOppositionCandidateEntity = ProductEntity.make(LawPractice.LegalOppositionCandidateId);
 
 /**
  * One appended law-side record that two stored relations were screened as
@@ -65,33 +65,25 @@ const $I = $LawPracticeDomainId.create("entities/LegalOppositionCandidate/LegalO
  * @category entities
  * @since 0.0.0
  */
-export class LegalOppositionCandidate extends BaseEntity.Class<LegalOppositionCandidate>($I`LegalOppositionCandidate`)(
-  LawPractice.LegalOppositionCandidateId,
+export class LegalOppositionCandidate extends LegalOppositionCandidateEntity.Entity<LegalOppositionCandidate>(
+  LegalOppositionCandidateEntity.tableName
+)(
   {
-    fields: {
-      candidate: LegalOppositionCandidateInput.annotateKey({
-        description: "Screening result as the policy emitted it, with its unordered pair of stored relations.",
-      }),
-      priorityBasis: S.OptionFromNullOr(PriorityBasis).pipe(SchemaUtils.withNoneDefault).annotateKey({
-        description: "Basis a party offered for its position prevailing; absent until one is recorded.",
-      }),
-      verdictFamily: S.OptionFromNullOr(LegalVerdictAssignment).pipe(SchemaUtils.withNoneDefault).annotateKey({
-        description: "Attorney-assigned family with its assigner; absent until an attorney assigns one.",
-      }),
-    },
-    persisted: {
-      candidate: EntitySchema.persist.jsonb({
-        columnName: "candidate",
-      }),
-      priorityBasis: EntitySchema.persist.jsonb({
-        columnName: "priority_basis",
-      }),
-      verdictFamily: EntitySchema.persist.jsonb({
-        columnName: "verdict_family",
-      }),
-    },
+    candidate: LegalOppositionCandidateInput.annotateKey({
+      description: "Screening result as the policy emitted it, with its unordered pair of stored relations.",
+    }).pipe(LegalOppositionCandidateEntity.pg.jsonb()),
+    priorityBasis: S.OptionFromNullOr(PriorityBasis)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Basis a party offered for its position prevailing; absent until one is recorded." })
+      .pipe(LegalOppositionCandidateEntity.pg.jsonb(), LegalOppositionCandidateEntity.pg.columnName("priority_basis")),
+    verdictFamily: S.OptionFromNullOr(LegalVerdictAssignment)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Attorney-assigned family with its assigner; absent until an attorney assigns one." })
+      .pipe(LegalOppositionCandidateEntity.pg.jsonb(), LegalOppositionCandidateEntity.pg.columnName("verdict_family")),
+    ...LegalOppositionCandidateEntity.identityFields,
   },
   $I.annote("LegalOppositionCandidate", {
     description: "One appended record that two stored relations were screened as prima facie opposed.",
-  })
+  }),
+  LegalOppositionCandidateEntity.entityExtras
 ) {}

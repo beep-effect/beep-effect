@@ -13,7 +13,7 @@
  * ```ts
  * import { Agent } from "@beep/agents-domain/entities"
  *
- * console.log(Agent.definition.entityId.entityType)
+ * console.log(Agent.sql.tableName)
  * ```
  *
  * @category entities
@@ -44,7 +44,7 @@ export * from "./Fixture.values.ts";
  * ```ts
  * import { ProviderInstance } from "@beep/agents-domain/entities"
  *
- * console.log(ProviderInstance.definition.entityId.entityType)
+ * console.log(ProviderInstance.sql.tableName)
  * ```
  *
  * @category entities
@@ -59,7 +59,7 @@ export * from "./ProviderInstance/index.ts";
  * ```ts
  * import { Skill } from "@beep/agents-domain/entities"
  *
- * console.log(Skill.definition.entityId.tableName)
+ * console.log(Skill.sql.tableName)
  * ```
  *
  * @category entities

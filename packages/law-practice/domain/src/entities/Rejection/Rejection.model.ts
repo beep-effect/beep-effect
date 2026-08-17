@@ -5,13 +5,13 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { LawPracticeFixtureKey } from "../LawPracticeEntity.fields.ts";
 import { RejectionGround } from "./Rejection.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Rejection/Rejection.model");
+const RejectionEntity = ProductEntity.make(LawPractice.RejectionId);
 
 /**
  * Rejection entity raised against a claim by an office action.
@@ -52,39 +52,24 @@ const $I = $LawPracticeDomainId.create("entities/Rejection/Rejection.model");
  * @category entities
  * @since 0.0.0
  */
-export class Rejection extends BaseEntity.Class<Rejection>($I`Rejection`)(
-  LawPractice.RejectionId,
+export class Rejection extends RejectionEntity.Entity<Rejection>(RejectionEntity.tableName)(
   {
-    fields: {
-      claimFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the rejected claim.",
-      }),
-      fixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Stable fixture key for the rejection.",
-      }),
-      ground: RejectionGround.annotateKey({
-        description: "Statutory rejection ground.",
-      }),
-      officeActionFixtureKey: LawPracticeFixtureKey.annotateKey({
-        description: "Fixture key for the office action that raised this rejection.",
-      }),
-    },
-    persisted: {
-      claimFixtureKey: EntitySchema.persist.text({
-        columnName: "claim_fixture_key",
-      }),
-      fixtureKey: EntitySchema.persist.text({
-        columnName: "fixture_key",
-      }),
-      ground: EntitySchema.persist.jsonb({
-        columnName: "ground",
-      }),
-      officeActionFixtureKey: EntitySchema.persist.text({
-        columnName: "office_action_fixture_key",
-      }),
-    },
+    claimFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the rejected claim.",
+    }).pipe(RejectionEntity.pg.text(), RejectionEntity.pg.columnName("claim_fixture_key")),
+    fixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Stable fixture key for the rejection.",
+    }).pipe(RejectionEntity.pg.text(), RejectionEntity.pg.columnName("fixture_key")),
+    ground: RejectionGround.annotateKey({
+      description: "Statutory rejection ground.",
+    }).pipe(RejectionEntity.pg.jsonb()),
+    officeActionFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the office action that raised this rejection.",
+    }).pipe(RejectionEntity.pg.text(), RejectionEntity.pg.columnName("office_action_fixture_key")),
+    ...RejectionEntity.identityFields,
   },
   $I.annote("Rejection", {
     description: "A statutory rejection raised against a claim by an office action.",
-  })
+  }),
+  RejectionEntity.entityExtras
 ) {}

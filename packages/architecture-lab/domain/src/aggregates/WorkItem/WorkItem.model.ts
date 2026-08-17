@@ -8,10 +8,10 @@
 
 import { $ArchitectureLabDomainId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { WorkerId } from "../../entities/Worker/index.ts";
 import { defaultWorkPriority, WorkPriority } from "../../values/WorkPriority/index.ts";
 import { WorkItemAlreadyArchived, WorkItemAssigneeRequired, WorkItemInvalidTransition } from "./WorkItem.errors.ts";
 import { WorkItemId, WorkItemStatus, WorkItemTitle } from "./WorkItem.values.ts";
@@ -25,7 +25,7 @@ const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.model")
  *
  * ```ts
  * import { WorkItem, WorkItemId, WorkItemTitle, type WorkItemStatus } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import { WorkerId } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { WorkPriority } from "@beep/architecture-lab-domain/values/WorkPriority"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -211,7 +211,7 @@ const requireTransition = (
  *
  * ```ts
  * import { CreateWorkItemInput, WorkItemId, assign, create } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import { WorkerId } from "@beep/architecture-lab-domain/entities/Worker"
+ * import { WorkerId } from "@beep/shared-domain/identity/ArchitectureLab/WorkerId"
  * import { Effect } from "effect"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"

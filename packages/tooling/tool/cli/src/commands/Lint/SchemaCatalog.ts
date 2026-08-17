@@ -270,6 +270,16 @@ const hasIdentifierCall = <const T extends string>(
   identifiers: readonly T[]
 ): boolean => A.some(calls, (callExpression) => isIdentifierCall(callExpression, identifiers));
 
+const hasProductEntityClassCall = (calls: ReadonlyArray<CallExpression>): boolean =>
+  A.some(calls, (callExpression) => {
+    const expression = callExpression.getExpression();
+    return (
+      Node.isPropertyAccessExpression(expression) &&
+      Str.Equivalence(expression.getName(), "Entity") &&
+      /Entity$/u.test(expression.getExpression().getText())
+    );
+  });
+
 const SCHEMA_PRIMITIVE_PROPERTY_NAMES = [
   "Boolean",
   "Finite",
@@ -343,7 +353,10 @@ const SCHEMA_KIND_RULES: ReadonlyArray<SchemaKindRule> = [
   },
   { kind: "error-class", matches: (calls) => hasPropertyAccessCall(calls, "S", ["ErrorClass"]) },
   { kind: "tagged-class", matches: (calls) => hasPropertyAccessCall(calls, "S", ["TaggedClass"]) },
-  { kind: "schema-class", matches: (calls) => hasPropertyAccessCall(calls, "S", ["Class"]) },
+  {
+    kind: "schema-class",
+    matches: (calls) => hasPropertyAccessCall(calls, "S", ["Class"]) || hasProductEntityClassCall(calls),
+  },
   { kind: "literal-kit", matches: (calls) => hasIdentifierCall(calls, ["LiteralKit", "MappedLiteralKit"]) },
   { kind: "tagged-union", matches: (calls) => hasPropertyAccessCall(calls, "S", ["TaggedUnion", "toTaggedUnion"]) },
   { kind: "union", matches: (calls) => hasPropertyAccessCall(calls, "S", ["Union"]) },

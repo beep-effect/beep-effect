@@ -37,7 +37,7 @@ import {
 } from "@beep/law-practice-tables/entities/LegalPositionRelator";
 import { fromPowerExerciseRow, toPowerExerciseInsert } from "@beep/law-practice-tables/entities/PowerExercise";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Order, Result } from "effect";
 import * as A from "effect/Array";
@@ -73,7 +73,7 @@ const scopeInput = {
 };
 
 const relatorInput = {
-  ...baseEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, ROW_ID),
+  ...productEntityFixtureInput(LawPractice.LegalPositionRelatorId.entityType, ROW_ID),
   assertingInterpreter: { kind: "User", userId: 1 },
   bearer: roleInput("lessee", 1),
   content: { description: ACT, polarity: "act" },
@@ -99,7 +99,7 @@ const transition = (label: string, kind: string, polarity: "act" | "omission") =
 });
 
 const actFrameInput = {
-  ...baseEntityFixtureInput(LawPractice.ActFrameId.entityType, ROW_ID),
+  ...productEntityFixtureInput(LawPractice.ActFrameId.entityType, ROW_ID),
   act: { description: "assign the lease", polarity: "act" },
   creates: [transition("assignee-claim", "claim", "omission")],
   derivationKind: { kinds: ["create", "extinguish"] },
@@ -118,7 +118,7 @@ const actFrameInput = {
 };
 
 const powerExerciseInput = {
-  ...baseEntityFixtureInput(LawPractice.PowerExerciseId.entityType, ROW_ID),
+  ...productEntityFixtureInput(LawPractice.PowerExerciseId.entityType, ROW_ID),
   attemptedAt: 1_700_000_000_000,
   authorityBasis: {
     claimedRole: roleInput("lessee", 4),
@@ -137,7 +137,7 @@ const powerExerciseInput = {
 };
 
 const correctionDeltaInput = {
-  ...baseEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, ROW_ID),
+  ...productEntityFixtureInput(LawPractice.CorrectionDeltaId.entityType, ROW_ID),
   candidateRouting: "contradiction-candidate-input",
   correctedElements: [
     { element: { label: "no-objection", part: "precondition" }, source: norm("cl. 4.2", "within ten days") },
@@ -154,7 +154,7 @@ const correctionDeltaInput = {
 };
 
 const candidateInput = {
-  ...baseEntityFixtureInput(LawPractice.LegalOppositionCandidateId.entityType, ROW_ID),
+  ...productEntityFixtureInput(LawPractice.LegalOppositionCandidateId.entityType, ROW_ID),
   candidate: { act: ACT, overlappingScope: scopeInput, relators: [1, 2] },
   priorityBasis: {
     authority: null,

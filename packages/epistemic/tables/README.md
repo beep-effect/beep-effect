@@ -11,7 +11,7 @@ real UsageRecord sink used by the desktop chat surface.
 - Epistemic slice table metadata projected from epistemic domain entity schemas.
 - Read-model and table shapes when they are epistemic product language.
 - Metadata-only Drizzle table definitions created with
-  `EntityTable.pgTableFrom(entity)`.
+  `toPgTable(entity)` from `@beep/effect-drizzle/pg`.
 
 ## Does Not Belong Here
 

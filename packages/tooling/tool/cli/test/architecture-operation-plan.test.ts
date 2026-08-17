@@ -386,7 +386,7 @@ describe("architecture operation plan", () => {
       yield* removePath(tempRoot);
       expect(firstApply.writtenPaths).toContain("packages/research-lab/domain/package.json");
       expect(firstApply.writtenPaths).toContain("packages/research-lab/domain/src/index.ts");
-      expect(firstApply.writtenPaths).toContain("packages/research-lab/domain/src/identity/ResearchLab.ts");
+      expect(firstApply.writtenPaths).not.toContain("packages/research-lab/domain/src/identity/ResearchLab.ts");
       expect(firstApply.writtenPaths).toContain("packages/research-lab/domain/src/aggregates/Ticket/Ticket.model.ts");
       expect(check.idempotent).toBe(true);
     })

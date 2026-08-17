@@ -107,7 +107,7 @@ literal member-composition would have misclassified:
   `packages/foundation/capability/chalk/src/{Chalk,Chalk.browser}.ts` shape.
 
 Both are driver-challengeable per D-C; I verified each against the real
-source before adding it (`packages/foundation/modeling/schema/src/Model/Model.datetime.ts`,
+source before adding it (`packages/foundation/modeling/schema/src/index.ts`,
 `packages/foundation/capability/chalk/src/internal/PublicSurface.ts`).
 
 ### Deferred/simplified signals (R11-1 (2) and (4))

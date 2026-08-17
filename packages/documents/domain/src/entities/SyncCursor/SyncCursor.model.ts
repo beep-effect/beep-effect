@@ -6,99 +6,15 @@
  */
 
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
-import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
+import * as ProductEntity from "@beep/shared-domain/entity/ProductEntity";
+import { SyncCursorId } from "@beep/shared-domain/identity/Documents/SyncCursorId";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
-import * as Documents from "../../identity/Documents.ts";
 import { DmsProvider } from "../../values/Sync/index.ts";
+import { SyncCursorStatus } from "./SyncCursor.values.ts";
 
 const $I = $DocumentsDomainId.create("entities/SyncCursor/SyncCursor.model");
-
-/**
- * Entity identifier for a persisted documents SyncCursor.
- *
- * **Example** (Decode SyncCursorId identifier)
- *
- * ```ts
- * import { SyncCursorId, type SyncCursorId as SyncCursorIdValue } from "@beep/documents-domain/entities/SyncCursor"
- * import * as S from "effect/Schema"
- *
- * const id: SyncCursorIdValue = S.decodeUnknownSync(SyncCursorId)(1)
- *
- * if (id !== 1 || SyncCursorId.tableName !== "documents_sync_cursor") {
- *   throw new Error("expected decoded SyncCursor id")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export const SyncCursorId = Documents.SyncCursorId;
-
-/**
- * Runtime type for {@link SyncCursorId}.
- *
- * **Example** (Type array of SyncCursorIds)
- *
- * ```ts
- * import { SyncCursorId, type SyncCursorId as SyncCursorIdValue } from "@beep/documents-domain/entities/SyncCursor"
- * import * as S from "effect/Schema"
- *
- * const id: SyncCursorIdValue = S.decodeUnknownSync(SyncCursorId)(1)
- * const ids: ReadonlyArray<SyncCursorIdValue> = [id]
- *
- * if (ids.length !== 1) {
- *   throw new Error("expected SyncCursor id evidence")
- * }
- * ```
- *
- * @category entity-ids
- * @since 0.0.0
- */
-export type SyncCursorId = typeof SyncCursorId.Type;
-
-/**
- * Health status for a remote-event stream cursor.
- *
- * **Example** (Assert active SyncCursorStatus)
- *
- * ```ts
- * import { SyncCursorStatus } from "@beep/documents-domain/entities/SyncCursor"
- *
- * const status: SyncCursorStatus = SyncCursorStatus.Enum.active
- *
- * if (!SyncCursorStatus.is.active(status)) {
- *   throw new Error("expected active cursor status")
- * }
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export const SyncCursorStatus = LiteralKit(["active", "error"]).pipe(
-  $I.annoteSchema("SyncCursorStatus", {
-    description: "Health status for a remote-event stream cursor.",
-  })
-);
-
-/**
- * Runtime type for {@link SyncCursorStatus}.
- *
- * **Example** (Assign error status string)
- *
- * ```ts
- * import type { SyncCursorStatus } from "@beep/documents-domain/entities/SyncCursor"
- *
- * const status: SyncCursorStatus = "error"
- * console.log(status)
- * ```
- *
- * @category value-objects
- * @since 0.0.0
- */
-export type SyncCursorStatus = typeof SyncCursorStatus.Type;
+const SyncCursorEntity = ProductEntity.make(SyncCursorId);
 
 /**
  * Durable remote-event stream cursor enabling drift detection to survive app restarts.
@@ -106,7 +22,8 @@ export type SyncCursorStatus = typeof SyncCursorStatus.Type;
  * **Example** (Decode full SyncCursor entity)
  *
  * ```ts
- * import { SyncCursor, SyncCursorId } from "@beep/documents-domain/entities/SyncCursor"
+ * import { SyncCursor } from "@beep/documents-domain/entities/SyncCursor"
+ * import { SyncCursorId } from "@beep/shared-domain/identity/Documents/SyncCursorId"
  * import * as S from "effect/Schema"
  *
  * const cursor = S.decodeUnknownSync(SyncCursor)({
@@ -134,52 +51,37 @@ export type SyncCursorStatus = typeof SyncCursorStatus.Type;
  * @category entities
  * @since 0.0.0
  */
-export class SyncCursor extends BaseEntity.Class<SyncCursor>($I`SyncCursor`)(
-  SyncCursorId,
+export class SyncCursor extends SyncCursorEntity.Entity<SyncCursor>(SyncCursorEntity.tableName)(
   {
-    fields: {
-      lastError: S.NonEmptyString.pipe(S.OptionFromNullOr).annotateKey({
+    lastError: S.NonEmptyString.pipe(S.OptionFromNullOr)
+      .annotateKey({
         description: "Most recent stream-read failure message; none while the cursor is healthy.",
-      }),
-      lastEventId: S.NonEmptyString.pipe(S.OptionFromNullOr).annotateKey({
+      })
+      .pipe(SyncCursorEntity.pg.text(), SyncCursorEntity.pg.columnName("last_error")),
+    lastEventId: S.NonEmptyString.pipe(S.OptionFromNullOr)
+      .annotateKey({
         description: "Identifier of the last remote event processed; none before the first event.",
-      }),
-      provider: DmsProvider.annotateKey({
-        description: "DMS provider whose event stream this cursor tracks.",
-      }),
-      status: SyncCursorStatus.annotateKey({
-        description: "Health status of the cursor.",
-      }),
-      streamPosition: S.NonEmptyString.annotateKey({
-        description: "Opaque provider stream position to resume reading from.",
-      }),
-      workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
-        description: "Workspace whose mirror this cursor watches for remote drift.",
-      }),
-    },
-    persisted: {
-      lastError: EntitySchema.persist.text({
-        columnName: "last_error",
-      }),
-      lastEventId: EntitySchema.persist.text({
-        columnName: "last_event_id",
-      }),
-      provider: EntitySchema.persist.literal({
-        columnName: "provider",
-      }),
-      status: EntitySchema.persist.literal({
-        columnName: "status",
-      }),
-      streamPosition: EntitySchema.persist.text({
-        columnName: "stream_position",
-      }),
-      workspaceId: EntitySchema.persist.entityId({
-        columnName: "workspace_id",
-        indexHints: [EntitySchema.IndexHint.btree, EntitySchema.IndexHint.lookup],
-      }),
-    },
+      })
+      .pipe(SyncCursorEntity.pg.text(), SyncCursorEntity.pg.columnName("last_event_id")),
+    provider: DmsProvider.annotateKey({
+      description: "DMS provider whose event stream this cursor tracks.",
+    }).pipe(SyncCursorEntity.pg.text()),
+    status: SyncCursorStatus.annotateKey({
+      description: "Health status of the cursor.",
+    }).pipe(SyncCursorEntity.pg.text()),
+    streamPosition: S.NonEmptyString.annotateKey({
+      description: "Opaque provider stream position to resume reading from.",
+    }).pipe(SyncCursorEntity.pg.text(), SyncCursorEntity.pg.columnName("stream_position")),
+    workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
+      description: "Workspace whose mirror this cursor watches for remote drift.",
+    }).pipe(SyncCursorEntity.pg.integer(), SyncCursorEntity.pg.columnName("workspace_id")),
+    ...SyncCursorEntity.identityFields,
   },
   $I.annote("SyncCursor", {
     description: "Durable remote-event stream cursor enabling drift detection to survive app restarts.",
-  })
+  }),
+  (columns) => [
+    SyncCursorEntity.Table.index("documents_sync_cursor_workspace_id_btree_idx", [columns.workspaceId]),
+    ...SyncCursorEntity.entityExtras(columns),
+  ]
 ) {}

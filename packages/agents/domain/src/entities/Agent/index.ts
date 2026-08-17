@@ -13,7 +13,7 @@
  * ```ts
  * import { Agent } from "@beep/agents-domain/entities/Agent"
  *
- * console.log(Agent.definition.entityId.entityType)
+ * console.log(Agent.sql.tableName)
  * ```
  *
  * @category entities

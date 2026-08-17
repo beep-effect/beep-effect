@@ -33,7 +33,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FastCheck as fc } from "effect/testing";
 import type * as DomainSyncOperation from "@beep/documents-domain/entities/SyncOperation";
-import type * as Documents from "@beep/documents-domain/identity/Documents";
+import type * as Documents from "@beep/shared-domain/identity/Documents";
 
 const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
   const arbitrary = S.toArbitrary(schema)(fc);

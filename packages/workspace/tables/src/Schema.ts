@@ -24,10 +24,7 @@ type DbSchemaShape = {
  * ```ts
  * import { DbSchema } from "@beep/workspace-tables"
  *
- * const messageTableName: "workspace_message" = DbSchema.message.definition.tableName
- * const lifecycleStorage = DbSchema.candidateDraft.definition.persisted.lifecycle.storageKind
- *
- * console.log(`${messageTableName}:${lifecycleStorage}`)
+ * console.log(DbSchema.message)
  * ```
  *
  * @category tables
@@ -51,9 +48,7 @@ export const DbSchema: DbSchemaShape = {
  * import { DbSchema, type DbSchema as DbSchemaType } from "@beep/workspace-tables"
  *
  * const schema: DbSchemaType = DbSchema
- * const turnTableName: "workspace_turn" = schema.turn.definition.tableName
- *
- * console.log(turnTableName)
+ * console.log(schema.turn)
  * ```
  *
  * @category tables

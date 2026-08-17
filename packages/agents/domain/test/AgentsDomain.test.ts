@@ -19,7 +19,7 @@ import {
 } from "@beep/agents-domain/values/AssistantContent";
 import * as Md from "@beep/md/Md.model";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import { baseEntityFixtureInput, fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
@@ -61,17 +61,20 @@ describe("@beep/agents-domain", () => {
     expect(AgentMode.is.deterministic_fixture("deterministic_fixture")).toBe(true);
   });
 
-  it("wires Agent to the agents BaseEntity identity", () => {
-    expect(Agent.definition.entityId).toBe(Agents.AgentId);
-    expect(Agent.definition.entityId.tableName).toBe("agents_agent");
-    expect(Agent.definition.entityId.entityType).toBe("AgentsAgent");
-    expect(Agent.definition.persisted.id.storageKind).toBe("entityId");
-    expect(Agent.definition.persisted.mode.storageKind).toBe("literal");
+  it("wires Agent to the agents product-entity identity", () => {
+    expect(Agent.sql.tableName).toBe(Agents.AgentId.tableName);
+    expect(Agents.AgentId.entityType).toBe("AgentsAgent");
+    expect(Object.keys(Agent.insert.fields)).not.toContain("id");
+    expect(Object.keys(Agent.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(Agent.update.fields)).toContain("id");
+    expect(Object.keys(Agent.update.fields)).toContain("rowVersion");
+    expect(Object.keys(Agent.jsonCreate.fields)).toEqual(["fixtureKey", "mode", "name", "skillFixtureKey"]);
+    expect(Object.keys(Agent.jsonUpdate.fields)).toEqual(["fixtureKey", "mode", "name", "skillFixtureKey"]);
   });
 
   it("decodes and constructs an Agent row", () => {
     const encoded = {
-      ...baseEntityFixtureInput("AgentsAgent", 4),
+      ...productEntityFixtureInput("AgentsAgent", 4),
       fixtureKey: "agent.reviewer",
       mode: "deterministic_fixture",
       name: "Reviewer Agent",
@@ -90,7 +93,7 @@ describe("@beep/agents-domain", () => {
 
   it("decodes and constructs a Skill row", () => {
     const encoded = {
-      ...baseEntityFixtureInput("AgentsSkill", 5),
+      ...productEntityFixtureInput("AgentsSkill", 5),
       fixtureKey: "skill.review",
       name: "Review Skill",
     };
@@ -101,6 +104,11 @@ describe("@beep/agents-domain", () => {
     expect(constructed).toBeInstanceOf(Skill);
     expect(constructed.entityType).toBe("AgentsSkill");
     expect(constructed.fixtureKey).toBe("skill.review");
+    expect(Skill.sql.tableName).toBe("agents_skill");
+    expect(Object.keys(Skill.insert.fields)).not.toContain("id");
+    expect(Object.keys(Skill.insert.fields)).not.toContain("rowVersion");
+    expect(Object.keys(Skill.update.fields)).toContain("id");
+    expect(Object.keys(Skill.update.fields)).toContain("rowVersion");
     expect(Result.getOrThrow(S.encodeResult(Skill)(decoded))).toStrictEqual(encoded);
   });
 

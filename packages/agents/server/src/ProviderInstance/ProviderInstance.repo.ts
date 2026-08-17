@@ -62,7 +62,7 @@ const insertFromCommand = Effect.fn("Agents.ProviderInstanceRepository.insertFro
     binaryPath: command.binaryPath,
     createdAt: now,
     createdByPrincipal: scope.principal,
-    entityType: Domain.ProviderInstance.definition.entityId.entityType,
+    entityType: Agents.ProviderInstanceId.entityType,
     envVars: command.envVars,
     homePath: O.getOrNull(command.homePath),
     kind: command.kind,

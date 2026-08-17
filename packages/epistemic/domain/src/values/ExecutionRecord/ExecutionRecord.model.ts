@@ -21,7 +21,6 @@
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import { A, O } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
@@ -325,7 +324,7 @@ const decisionCommonFields = {
   policyRevision: PolicyRevision.annotateKey({
     description: "Policy revision pinned at freeze time.",
   }),
-  decidedAt: EntitySchema.DateTimeFromMillis.annotateKey({
+  decidedAt: S.DateTimeUtcFromMillis.annotateKey({
     description: "Instant the decision was made — before the effect ran.",
   }),
 } as const;
@@ -444,7 +443,7 @@ export class ExecutionOutcomeRecord extends S.Class<ExecutionOutcomeRecord>($I`E
     settlement: ExecutionSettlement.annotateKey({
       description: "Bounded settlement; never an Exit, so no failure payload can enter.",
     }),
-    recordedAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    recordedAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Instant the settlement was recorded — after the effect settled.",
     }),
     hash: OutcomeRecordHash.annotateKey({

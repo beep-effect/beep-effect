@@ -28,7 +28,7 @@ type DbSchemaShape = {
  * import { getTableName } from "drizzle-orm"
  *
  * const syncItemTableName = getTableName(DbSchema.syncItem)
- * const syncOperationTableName = DbSchema.syncOperation.definition.tableName
+ * const syncOperationTableName = getTableName(DbSchema.syncOperation)
  * if (syncItemTableName !== "documents_sync_item" || syncOperationTableName !== "documents_sync_operation") {
  *   throw new Error("unexpected documents schema")
  * }
@@ -53,9 +53,10 @@ export const DbSchema: DbSchemaShape = {
  *
  * ```ts
  * import { DbSchema, type DbSchema as DbSchemaType } from "@beep/documents-tables/tables"
+ * import { getTableName } from "drizzle-orm"
  *
  * const schema: DbSchemaType = DbSchema
- * const syncCursorTableName: "documents_sync_cursor" = schema.syncCursor.definition.tableName
+ * const syncCursorTableName = getTableName(schema.syncCursor)
  *
  * console.log(syncCursorTableName)
  * ```

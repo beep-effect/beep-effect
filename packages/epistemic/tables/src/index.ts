@@ -13,7 +13,7 @@
  * ```ts
  * import { Entities } from "@beep/epistemic-tables"
  *
- * console.log(Entities.UsageRecord.Table.definition.tableName)
+ * console.log(Entities.UsageRecord.TABLE_NAME)
  * ```
  *
  * @category tables

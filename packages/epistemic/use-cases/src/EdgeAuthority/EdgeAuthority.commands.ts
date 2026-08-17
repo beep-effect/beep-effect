@@ -27,7 +27,6 @@
 import { LogicalEdgeIdentity, LogicalEdgeKey } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { UnknownRecord } from "@beep/schema";
-import * as EntitySchema from "@beep/schema/EntitySchema";
 import { PosInt } from "@beep/schema/Int";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { Principal } from "@beep/shared-domain/entity/Principal";
@@ -103,13 +102,13 @@ const RecordEdgeFactFields = S.Struct({
   identity: LogicalEdgeIdentity.annotateKey({
     description: "Time-independent identity of the logical edge being asserted.",
   }),
-  recordedAt: EntitySchema.DateTimeFromMillis.annotateKey({
+  recordedAt: S.DateTimeUtcFromMillis.annotateKey({
     description: "Inclusive transaction-time lower bound: when the assertion became known.",
   }),
-  validFrom: EntitySchema.DateTimeFromMillis.annotateKey({
+  validFrom: S.DateTimeUtcFromMillis.annotateKey({
     description: "Inclusive valid-time lower bound: when the fact started being true.",
   }),
-  validTo: EntitySchema.DateTimeFromMillis.pipe(S.OptionFromNullOr).annotateKey({
+  validTo: S.DateTimeUtcFromMillis.pipe(S.OptionFromNullOr).annotateKey({
     description: "Exclusive valid-time upper bound; absent while the fact is still held true.",
   }),
 }).pipe(S.check(OrgScopeAgreementCheck));
@@ -178,13 +177,13 @@ const SupersedeEdgeFactFields = S.Struct({
   identity: LogicalEdgeIdentity.annotateKey({
     description: "Time-independent identity of the logical edge being superseded.",
   }),
-  recordedAt: EntitySchema.DateTimeFromMillis.annotateKey({
+  recordedAt: S.DateTimeUtcFromMillis.annotateKey({
     description: "Inclusive transaction-time lower bound: when the correction became known.",
   }),
-  validFrom: EntitySchema.DateTimeFromMillis.annotateKey({
+  validFrom: S.DateTimeUtcFromMillis.annotateKey({
     description: "Inclusive valid-time lower bound of the replacement assertion.",
   }),
-  validTo: EntitySchema.DateTimeFromMillis.pipe(S.OptionFromNullOr).annotateKey({
+  validTo: S.DateTimeUtcFromMillis.pipe(S.OptionFromNullOr).annotateKey({
     description: "Exclusive valid-time upper bound of the replacement; the invalidating fact's valid time.",
   }),
 }).pipe(S.check(OrgScopeAgreementCheck));
@@ -276,13 +275,13 @@ export class SupersedeEdgeFact extends S.Class<SupersedeEdgeFact>($I`SupersedeEd
  */
 export class EdgeAsOfQuery extends S.Class<EdgeAsOfQuery>($I`EdgeAsOfQuery`)(
   {
-    knownAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    knownAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Transaction-time instant the answer is asked as-of: what was known then.",
     }),
     logicalKey: LogicalEdgeKey.annotateKey({
       description: "Digest naming the logical edge being read.",
     }),
-    validAt: EntitySchema.DateTimeFromMillis.annotateKey({
+    validAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "Valid-time instant the answer is asked about: what was true then.",
     }),
   },

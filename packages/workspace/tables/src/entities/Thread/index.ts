@@ -28,7 +28,7 @@ export * from "./Thread.converters.ts";
  * ```ts
  * import * as Thread from "@beep/workspace-tables/entities/Thread"
  *
- * console.log(Thread.Table.definition.entityId.entityType)
+ * console.log(Thread.TABLE_NAME)
  * ```
  *
  * @category tables

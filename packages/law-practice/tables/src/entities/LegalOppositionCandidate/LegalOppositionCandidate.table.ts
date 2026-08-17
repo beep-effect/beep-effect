@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { LegalOppositionCandidate } from "@beep/law-practice-domain/entities/LegalOppositionCandidate";
 
 /**
@@ -32,11 +32,12 @@ import { LegalOppositionCandidate } from "@beep/law-practice-domain/entities/Leg
  *
  * ```ts
  * import { LegalOppositionCandidate } from "@beep/law-practice-tables/entities"
+ * import { getTableName } from "drizzle-orm"
  *
- * console.log(LegalOppositionCandidate.Table.definition.tableName) // "law_practice_legal_opposition_candidate"
+ * console.log(getTableName(LegalOppositionCandidate.Table)) // "law_practice_legal_opposition_candidate"
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(LegalOppositionCandidate);
+export const Table = toPgTable(LegalOppositionCandidate);

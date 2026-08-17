@@ -25,7 +25,7 @@ import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { Sha256HexFromBytes } from "@beep/schema";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as Shared from "@beep/shared-domain/identity/Shared";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { productEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -126,7 +126,7 @@ type EventOptions = {
 
 const eventFixture = (id: number, o: Observation, options: EventOptions = {}) =>
   S.decodeUnknownEffect(PatentCitationEvent)({
-    ...baseEntityFixtureInput(LawPractice.PatentCitationEventId.entityType, id),
+    ...productEntityFixtureInput(LawPractice.PatentCitationEventId.entityType, id),
     actor: "Applicant",
     citingApplication: FILING_ENCODED,
     discovery:
@@ -154,7 +154,7 @@ const dispositionFixture = (
   options: DispositionOptions = {}
 ) =>
   S.decodeUnknownEffect(CandorDisposition)({
-    ...baseEntityFixtureInput(LawPractice.CandorDispositionId.entityType, id),
+    ...productEntityFixtureInput(LawPractice.CandorDispositionId.entityType, id),
     citingApplication: FILING_ENCODED,
     createdByPrincipal: options.principal ?? userPrincipal,
     decidedAt: id,

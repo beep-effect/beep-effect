@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { CandidateProject } from "@beep/workspace-domain/entities/CandidateProject";
+import { getTableName } from "drizzle-orm";
 
 /**
  * PGLite/Postgres Drizzle table for the workspace CandidateProject entity.
@@ -16,13 +17,27 @@ import { CandidateProject } from "@beep/workspace-domain/entities/CandidateProje
  * ```ts
  * import { CandidateProject } from "@beep/workspace-tables/entities"
  *
- * const tableName: "workspace_candidate_project" = CandidateProject.Table.definition.tableName
- * const lifecycleStorage: "literal" = CandidateProject.Table.definition.persisted.lifecycle.storageKind
- *
- * console.log(`${tableName}:${lifecycleStorage}`)
+ * const tableName = CandidateProject.TABLE_NAME
+ * console.log(tableName)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(CandidateProject);
+export const Table = toPgTable(CandidateProject);
+
+/**
+ * Physical Postgres table name derived from the CandidateProject entity.
+ *
+ * **Example** (Read the table name)
+ *
+ * ```ts
+ * import { TABLE_NAME } from "@beep/workspace-tables/entities/CandidateProject"
+ *
+ * console.log(TABLE_NAME)
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export const TABLE_NAME = getTableName(Table);

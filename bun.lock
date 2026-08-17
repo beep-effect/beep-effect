@@ -284,6 +284,7 @@
         "@beep/law-practice-tables": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/workspace-tables": "workspace:^",
+        "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -361,7 +362,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/agents-domain": "workspace:^",
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
@@ -429,8 +430,10 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/effect-drizzle": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "drizzle-orm": "catalog:",
       },
     },
     "packages/architecture-lab/server": {
@@ -444,6 +447,7 @@
         "@beep/identity": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
@@ -460,7 +464,8 @@
       "version": "0.0.2",
       "dependencies": {
         "@beep/architecture-lab-domain": "workspace:^",
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
@@ -482,6 +487,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/shared-domain": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -494,6 +500,7 @@
         "@beep/architecture-lab-domain": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
         "effect": "catalog:",
       },
@@ -515,10 +522,12 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",
+        "drizzle-orm": "catalog:",
       },
     },
     "packages/documents/server": {
@@ -553,7 +562,8 @@
       "version": "0.0.2",
       "dependencies": {
         "@beep/documents-domain": "workspace:^",
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
@@ -707,7 +717,6 @@
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
-        "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -1417,9 +1426,11 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "drizzle-orm": "catalog:",
       },
     },
     "packages/epistemic/server": {
@@ -1459,12 +1470,13 @@
       "name": "@beep/epistemic-tables",
       "version": "0.0.2",
       "dependencies": {
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/shared-domain": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1479,6 +1491,7 @@
         "@beep/epistemic-use-cases": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "@beep/ui": "workspace:^",
         "@effect/atom-react": "catalog:",
         "@phosphor-icons/react": "catalog:",
@@ -1845,7 +1858,6 @@
         "jsonc-parser": "catalog:",
         "micromark": "catalog:",
         "micromark-extension-gfm": "catalog:",
-        "uuid": "catalog:",
         "yaml": "catalog:",
       },
       "devDependencies": {
@@ -2110,7 +2122,7 @@
       "name": "@beep/law-practice-tables",
       "version": "0.0.0",
       "dependencies": {
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/law-practice-domain": "workspace:^",
         "@beep/schema": "workspace:^",
         "drizzle-orm": "catalog:",
@@ -2268,9 +2280,11 @@
       "name": "@beep/shared-domain",
       "version": "0.0.2",
       "dependencies": {
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
+        "drizzle-orm": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -2283,9 +2297,14 @@
       "name": "@beep/shared-tables",
       "version": "0.0.2",
       "dependencies": {
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
+        "drizzle-orm": "catalog:",
+        "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/utils": "workspace:^",
+        "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
       },
     },
@@ -2559,9 +2578,11 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "drizzle-orm": "catalog:",
       },
     },
     "packages/workspace/server": {
@@ -2596,7 +2617,7 @@
       "name": "@beep/workspace-tables",
       "version": "0.0.2",
       "dependencies": {
-        "@beep/drizzle": "workspace:^",
+        "@beep/effect-drizzle": "workspace:^",
         "@beep/workspace-domain": "workspace:^",
         "drizzle-orm": "catalog:",
         "effect": "catalog:",
@@ -7609,7 +7630,7 @@
 
     "utility-types": ["utility-types@3.11.0", "", {}, "sha512-6Z7Ma2aVEWisaL6TvBCy7P8rm2LQoPv6dJ7ecIaIixHcwfbJ0x7mWdbcwlIM5IGQxPZSFYeqRCqlOOeKoJYMkw=="],
 
-    "uuid": ["uuid@14.0.1", "", { "bin": { "uuid": "dist-node/bin/uuid" } }, "sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew=="],
+    "uuid": ["uuid@11.1.1", "", { "bin": { "uuid": "dist/esm/bin/uuid" } }, "sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ=="],
 
     "validate-iri": ["validate-iri@1.0.1", "", {}, "sha512-gLXi7351CoyVVQw8XE5sgpYawRKatxE7kj/xmCxXOZS1kMdtcqC0ILIqLuVEVnAUQSL/evOGG3eQ+8VgbdnstA=="],
 
@@ -7788,10 +7809,6 @@
     "@commitlint/config-validator/ajv": ["ajv@8.18.0", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-PlXPeEWMXMZ7sPYOHqmDyCJzcfNrUr3fGNKtezX14ykXOEIvyK81d+qydx89KY5O71FKMPaQ2vBfBFI5NHR63A=="],
 
     "@comunica/actor-abstract-parse/@comunica/core": ["@comunica/core@4.5.0", "", { "dependencies": { "@comunica/types": "^4.5.0", "immutable": "^5.1.3" } }, "sha512-UFHBboFaY0eESH0H8qJRIRuRfda2QduS886l2sRum/V4qhzJkMpf3zdOoZoBbRDU24PBmliWysi9TEsaPsyRwg=="],
-
-    "@comunica/actor-function-factory-term-str-uuid/uuid": ["uuid@11.1.1", "", { "bin": { "uuid": "dist/esm/bin/uuid" } }, "sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ=="],
-
-    "@comunica/actor-function-factory-term-uuid/uuid": ["uuid@11.1.1", "", { "bin": { "uuid": "dist/esm/bin/uuid" } }, "sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ=="],
 
     "@comunica/actor-http-fetch/@comunica/bus-http": ["@comunica/bus-http@4.5.0", "", { "dependencies": { "@comunica/core": "^4.5.0", "@jeswr/stream-to-string": "^2.0.0", "is-stream": "^2.0.1", "readable-from-web": "^1.0.0", "readable-stream-node-to-web": "^1.0.1" } }, "sha512-wWyPNNOl6shDbtibdBl/pa9OIcoEMemNIo/J4tUViXxYXZ8i1h4FZ6PqaLtAls6O+pV71mR4SKJzKEUuiZiXPg=="],
 
@@ -8067,8 +8084,6 @@
 
     "body-parser/iconv-lite": ["iconv-lite@0.7.3", "", { "dependencies": { "safer-buffer": ">= 2.1.2 < 3.0.0" } }, "sha512-IKXpvIzjnC9XTAUbVBcMfGS0EPaIXtW6v+zr+RRp+hqULEpo0owZax6wyRwPOJbWbzjYspQwusTsfVr0ifh4uQ=="],
 
-    "box-node-sdk/uuid": ["uuid@11.1.1", "", { "bin": { "uuid": "dist/esm/bin/uuid" } }, "sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ=="],
-
     "braces/fill-range": ["fill-range@7.1.1", "", { "dependencies": { "to-regex-range": "^5.0.1" } }, "sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg=="],
 
     "buffer-image-size/@types/node": ["@types/node@26.1.2", "", { "dependencies": { "undici-types": "~8.3.0" } }, "sha512-Vu4a5UFA9rIIFJ7rB/Vaafh9lrCQszopTCx6KjFboXTGQbPNasehVR5TEiithSDGyd1DEiUByggTZsg8jukeIg=="],
@@ -8234,6 +8249,8 @@
     "magicast/@babel/parser": ["@babel/parser@7.29.8", "", { "dependencies": { "@babel/types": "^7.29.8" }, "bin": "./bin/babel-parser.js" }, "sha512-E8lTAYNB1KW+FH+VGJuZM1ioAx2E6oVlvQFRrf5P8ZZmsiJXYAD9vTFV7yyEURNzgh1dFqMZuO6tUwcARbqFCA=="],
 
     "magicast/@babel/types": ["@babel/types@7.29.8", "", { "dependencies": { "@babel/helper-string-parser": "^7.29.7", "@babel/helper-validator-identifier": "^7.29.7" } }, "sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg=="],
+
+    "mermaid/uuid": ["uuid@14.0.1", "", { "bin": { "uuid": "dist-node/bin/uuid" } }, "sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew=="],
 
     "microdata-rdf-streaming-parser/htmlparser2": ["htmlparser2@8.0.2", "", { "dependencies": { "domelementtype": "^2.3.0", "domhandler": "^5.0.3", "domutils": "^3.0.1", "entities": "^4.4.0" } }, "sha512-GYdjWKDkbRLkZ5geuHs5NY1puJ+PXwP7+fHPRz06Eirsb9ugf6d8kkXav6ADhcODhFFPMIXyxkxSuMf3D6NCFA=="],
 

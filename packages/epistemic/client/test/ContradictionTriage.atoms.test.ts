@@ -23,7 +23,7 @@ import {
   ReviewContradictionCandidate,
 } from "@beep/epistemic-use-cases/public";
 import { NonNegativeInt } from "@beep/schema/Int";
-import { baseEntityFixtureInput, fcRuns, systemPrincipal } from "@beep/test-utils";
+import { fcRuns, productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { DateTime, Effect, Layer, Ref } from "effect";
 import * as A from "effect/Array";
@@ -48,7 +48,7 @@ const detailValidAtMillis = 1_500;
 const reviewResolvedAtMillis = 3_000;
 const reviewedDisposition = Result.getOrThrow(
   S.decodeUnknownResult(ContradictionDisposition)({
-    ...baseEntityFixtureInput("EpistemicContradictionDisposition", 9),
+    ...productEntityFixtureInput("EpistemicContradictionDisposition", 9),
     candidateId: 7,
     decision: {
       reason: "The evidence concerns different periods.",

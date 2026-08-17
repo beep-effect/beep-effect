@@ -1,14 +1,18 @@
 import { fileURLToPath } from "node:url";
 import { inspect } from "node:util";
-import { EvidenceVerification as EvidenceVerificationModel } from "@beep/epistemic-domain/entities/EvidenceVerification";
+import { Evidence } from "@beep/epistemic-domain/entities/Evidence";
+import {
+  EvidenceVerification as EvidenceVerificationModel,
+  manifestationKeyFor,
+} from "@beep/epistemic-domain/entities/EvidenceVerification";
 import { DbSchema as EpistemicDbSchema } from "@beep/epistemic-tables";
 import { fromEvidenceRow, toEvidenceInsert } from "@beep/epistemic-tables/entities/Evidence";
 import { toEvidenceVerificationInsert } from "@beep/epistemic-tables/entities/EvidenceVerification";
 import { makeDrizzle, migrate } from "@beep/postgres";
 import {
-  baseEntityFixtureInput,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
+  productEntityFixtureInput,
   TestDatabaseInfo,
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
@@ -25,8 +29,8 @@ const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url)
 const makeMigrationProofLayer = () =>
   Layer.fresh(makePgliteSqlTestLayer({ inProcess: { extensions: { btree_gist } }, mode: "in-process" }));
 
-const decodeEvidence = S.decodeUnknownEffect(EpistemicDbSchema.evidence.entitySchema);
-const decodeEvidenceVerification = S.decodeUnknownEffect(EpistemicDbSchema.evidenceVerification.entitySchema);
+const decodeEvidence = S.decodeUnknownEffect(Evidence);
+const decodeEvidenceVerification = S.decodeUnknownEffect(EvidenceVerificationModel);
 
 const expectedVerificationConstraints: ReadonlyArray<string> = [
   "epistemic_evidence_verification_evidence_fk",
@@ -78,7 +82,7 @@ if (!shouldRunPgliteIntegration) {
           expect(sortedNames(A.map(triggerRows, (row) => row.tgname))).toEqual(expectedVerificationTriggers);
 
           const evidence = yield* decodeEvidence({
-            ...baseEntityFixtureInput("EpistemicEvidence", 41),
+            ...productEntityFixtureInput("EpistemicEvidence", 41),
             artifactFixtureKey: "artifact:contradiction-migration",
             span: {
               confidence: 0.95,
@@ -101,7 +105,7 @@ if (!shouldRunPgliteIntegration) {
             })
           );
           const uncheckedVerification = yield* decodeEvidenceVerification({
-            ...baseEntityFixtureInput("EpistemicEvidenceVerification", 41),
+            ...productEntityFixtureInput("EpistemicEvidenceVerification", 41),
             evidenceId: persistedEvidence.id,
             manifestationKey: "a".repeat(64),
             verifiedAnchor: {
@@ -125,10 +129,7 @@ if (!shouldRunPgliteIntegration) {
             },
           });
           const manifestationKey = yield* Effect.fromResult(
-            EvidenceVerificationModel.manifestationKeyFor(
-              uncheckedVerification.evidenceId,
-              uncheckedVerification.verifiedAnchor
-            )
+            manifestationKeyFor(uncheckedVerification.evidenceId, uncheckedVerification.verifiedAnchor)
           );
           const verification = EvidenceVerificationModel.make({
             ...uncheckedVerification,

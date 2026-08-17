@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 
-import { EntityTable } from "@beep/drizzle";
+import { toPgTable } from "@beep/effect-drizzle/pg";
 import { Turn } from "@beep/workspace-domain/entities/Turn";
+import { getTableName } from "drizzle-orm";
 
 /**
  * PGLite/Postgres Drizzle table for the workspace Turn entity.
@@ -16,13 +17,27 @@ import { Turn } from "@beep/workspace-domain/entities/Turn";
  * ```ts
  * import { Turn } from "@beep/workspace-tables/entities"
  *
- * const tableName: "workspace_turn" = Turn.Table.definition.tableName
- * const itemsStorage: "jsonb" = Turn.Table.definition.persisted.items.storageKind
- *
- * console.log(`${tableName}:${itemsStorage}`)
+ * const tableName = Turn.TABLE_NAME
+ * console.log(tableName)
  * ```
  *
  * @category tables
  * @since 0.0.0
  */
-export const Table = EntityTable.pgTableFrom(Turn);
+export const Table = toPgTable(Turn);
+
+/**
+ * Physical Postgres table name derived from the Turn entity.
+ *
+ * **Example** (Read the table name)
+ *
+ * ```ts
+ * import { TABLE_NAME } from "@beep/workspace-tables/entities/Turn"
+ *
+ * console.log(TABLE_NAME)
+ * ```
+ *
+ * @category tables
+ * @since 0.0.0
+ */
+export const TABLE_NAME = getTableName(Table);
