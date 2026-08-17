@@ -22,14 +22,12 @@ export const makeStubMcpClient = (clientId: number) =>
   McpServerClient.of({
     clientId,
     protocolVersion: "2025-06-18",
-    clientCapabilities: {},
-    clientInfo: fixtureClientInfo,
     getClient: Effect.die("the fixture client is never dereferenced") as never,
     initializePayload: {
       capabilities: {},
       clientInfo: fixtureClientInfo,
       protocolVersion: "2025-06-18",
-    } as never,
+    },
   });
 
 /**

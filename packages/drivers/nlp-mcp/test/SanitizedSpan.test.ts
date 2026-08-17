@@ -47,14 +47,12 @@ const stubClientInfo = { name: "nlp-mcp-sanitized-span-test", version: "0.0.0" }
 const stubMcpClient = McpServerClient.of({
   clientId: 1,
   protocolVersion: "2025-06-18",
-  clientCapabilities: {},
-  clientInfo: stubClientInfo,
   getClient: Effect.die("the fixture client is never dereferenced") as never,
   initializePayload: {
     capabilities: {},
     clientInfo: stubClientInfo,
     protocolVersion: "2025-06-18",
-  } as never,
+  },
 });
 
 const registrationLayer = sanitizedToolkit(NlpToolkit).pipe(Layer.provide(WinkNlpToolkitLive));

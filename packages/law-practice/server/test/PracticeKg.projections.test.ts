@@ -379,14 +379,12 @@ const stubClientInfo = { name: "practice-kg-projections-test", version: "0.0.0" 
 const stubMcpClient = McpServerClient.of({
   clientId: 1,
   protocolVersion: "2025-06-18",
-  clientCapabilities: {},
-  clientInfo: stubClientInfo,
   getClient: Effect.die("the fixture client is never dereferenced") as never,
   initializePayload: {
     capabilities: {},
     clientInfo: stubClientInfo,
     protocolVersion: "2025-06-18",
-  } as never,
+  },
 });
 
 const callToolText = Effect.fn("PracticeKgTest.callToolText")(function* (
