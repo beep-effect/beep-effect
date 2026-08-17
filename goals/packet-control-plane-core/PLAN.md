@@ -72,6 +72,20 @@ P1 fixtures are byte-identical — proved by the untouched golden fixtures plus
 a new `risk-override` replay fixture. Self-hosted per D9: this packet's own
 stream carries the first live override (event 3, tier `standard`).
 
+**Rung 2 — full trace projection (COMPLETE 2026-08-17).** The PLAN phrase is
+interpreted (and recorded here) as: the projection carries the packet's full
+event timeline, not just the terminal derived state. `PacketTraceEntry`
+embeds each linear-prefix event verbatim (seq, digest, timestamp, actor,
+body); events past a fork stay out of the timeline and surface through fork
+verdicts. This is the first real `PACKET_PROJECTOR_VERSION` bump (1 → 2):
+every previously valid trace changes bytes, so committed v1 traces retire by
+decode failure — projections are disposable derived copies, regenerated from
+the stream, never upcast (`schemaVersion` stays `packet-trace/v1`; the
+projector version is the evolution axis for traces). Proof: regenerated
+byte-exact expected traces for both fixtures, a committed
+`expected-trace.v1.json` retirement witness, and the live packet's
+regenerated `ops/trace.json` (fresh under `beep explore --check`).
+
 ## P4 — Yeet: PR to mergeable
 
 `bun run beep yeet repair → verify → publish --pr → monitor` until
@@ -95,7 +109,7 @@ merely to pass this packet.
 
 ## Current blockers
 
-None. P1, P2, and P3 rung 1 (risk-tier floor/override) shipped 2026-08-17;
-the remaining P3 rungs (full trace projection, fork-repair plan surface, and
-the queued idempotent-skip refinement for self-transitions) are startable —
-one small PR per rung.
+None. P1, P2, and P3 rungs 1–2 (risk-tier floor/override; full trace
+projection) shipped 2026-08-17; the remaining P3 rungs (fork-repair plan
+surface, and the queued idempotent-skip refinement for self-transitions) are
+startable — one small PR per rung.

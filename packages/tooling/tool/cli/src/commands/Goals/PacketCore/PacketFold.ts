@@ -31,6 +31,7 @@ import {
   PacketForkVerdict,
   PacketRiskTierOverrideState,
   PacketTip,
+  PacketTraceEntry,
   PacketTraceProjection,
 } from "./PacketCore.schemas.ts";
 import { canonicalJsonTextPretty } from "./PacketDigest.ts";
@@ -335,30 +336,60 @@ export const foldPacketEvents = (input: {
   });
 };
 
+const timelineOf = (events: ReadonlyArray<StoredPacketEvent>): ReadonlyArray<PacketTraceEntry> => {
+  const sorted = A.sort(events, storedBySeqThenId);
+  const { prefix } = walkLinearPrefix(buildChildIndex(sorted));
+  return A.map(prefix, (stored) =>
+    PacketTraceEntry.make({
+      seq: stored.event.seq,
+      id: stored.id,
+      at: stored.event.at,
+      actor: stored.event.actor,
+      body: stored.event.body,
+    })
+  );
+};
+
 /**
- * Project a derived state into the read-only trace projection.
+ * Project a derived state plus its stored events into the trace projection.
+ *
+ * **Details**
+ *
+ * The projection carries the full event timeline of the unambiguous linear
+ * prefix alongside the derived state, so a committed `ops/trace.json` shows
+ * the packet's history without parsing CAS files. Events past a fork are
+ * excluded from the timeline — they are ambiguous history and surface
+ * through the derived state's fork verdicts instead.
  *
  * **Example** (Project an empty stream)
  *
  * ```ts
  * import { foldPacketEvents, projectPacketTrace } from "@beep/repo-cli/test/Goals"
  *
- * const trace = projectPacketTrace(foldPacketEvents({ packet: "demo", root: "goals", events: [] }))
+ * const trace = projectPacketTrace(foldPacketEvents({ packet: "demo", root: "goals", events: [] }), [])
  * console.log(trace.schemaVersion) // "packet-trace/v1"
  * ```
  *
  * @param derived - Fold result to project.
+ * @param events - Stored events the fold consumed; the timeline source.
  * @returns The trace projection bound to the fold's tip and projector version.
  * @category folding
  * @since 0.0.0
  */
-export const projectPacketTrace = (derived: PacketDerivedState): PacketTraceProjection =>
-  PacketTraceProjection.make({
-    schemaVersion: "packet-trace/v1",
-    projectorVersion: PACKET_PROJECTOR_VERSION,
-    ...optionalProp("sourceTip", O.fromUndefinedOr(derived.tip)),
-    derived,
-  });
+export const projectPacketTrace: {
+  (derived: PacketDerivedState, events: ReadonlyArray<StoredPacketEvent>): PacketTraceProjection;
+  (events: ReadonlyArray<StoredPacketEvent>): (derived: PacketDerivedState) => PacketTraceProjection;
+} = dual(
+  2,
+  (derived: PacketDerivedState, events: ReadonlyArray<StoredPacketEvent>): PacketTraceProjection =>
+    PacketTraceProjection.make({
+      schemaVersion: "packet-trace/v1",
+      projectorVersion: PACKET_PROJECTOR_VERSION,
+      ...optionalProp("sourceTip", O.fromUndefinedOr(derived.tip)),
+      timeline: timelineOf(events),
+      derived,
+    })
+);
 
 /**
  * Decide whether a committed trace projection is stale against a fresh fold.
@@ -376,7 +407,7 @@ export const projectPacketTrace = (derived: PacketDerivedState): PacketTraceProj
  * import { foldPacketEvents, packetTraceIsStale, projectPacketTrace } from "@beep/repo-cli/test/Goals"
  *
  * const derived = foldPacketEvents({ packet: "demo", root: "goals", events: [] })
- * console.log(packetTraceIsStale(projectPacketTrace(derived), derived)) // false
+ * console.log(packetTraceIsStale(projectPacketTrace(derived, []), derived)) // false
  * ```
  *
  * @param trace - Committed trace projection.
@@ -414,7 +445,7 @@ const encodePacketTrace = S.encodeUnknownEffect(PacketTraceProjection);
  * import { foldPacketEvents, projectPacketTrace, renderPacketTraceFile } from "@beep/repo-cli/test/Goals"
  * import { Effect } from "effect"
  *
- * const trace = projectPacketTrace(foldPacketEvents({ packet: "demo", root: "goals", events: [] }))
+ * const trace = projectPacketTrace(foldPacketEvents({ packet: "demo", root: "goals", events: [] }), [])
  * console.log(Effect.isEffect(renderPacketTraceFile(trace))) // true
  * ```
  *
