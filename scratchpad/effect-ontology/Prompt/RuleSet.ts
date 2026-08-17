@@ -10,9 +10,9 @@ import { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
 import { HashMap, Match, pipe, Result, Tuple } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
@@ -168,28 +168,9 @@ export class AllowedIriSet extends S.Class<AllowedIriSet>($I`AllowedIriSet`)(
   }
 }
 
-/**
- * Static and ontology-derived constraints governing one extraction stage.
- *
- * **Example** (Inspect an empty mention rule set)
- *
- * ```ts
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
- *
- * console.log(makeMentionRuleSet().stage) // "mention"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class RuleSet extends S.Class<RuleSet>($I`RuleSet`)(
+/** Shared schema-backed collections and behavior for stage-specific rule sets. */
+class RuleSetBase extends S.Class<RuleSetBase>($I`RuleSetBase`)(
   {
-    /** Extraction stage governed by this collection. */
-    stage: ExtractionStage.pipe(
-      $I.annoteKey("RuleSet.stage", {
-        description: "Extraction stage governed by this collection.",
-      })
-    ),
     /** Rules that do not depend on ontology content. */
     staticRules: S.Array(ExtractionRule).pipe(
       $I.annoteKey("RuleSet.staticRules", {
@@ -209,8 +190,8 @@ export class RuleSet extends S.Class<RuleSet>($I`RuleSet`)(
       })
     ),
   },
-  $I.annote("RuleSet", {
-    description: "Static and ontology-derived extraction constraints for one pipeline stage.",
+  $I.annote("RuleSetBase", {
+    description: "Shared rule collections and behavior for extraction-stage rule sets.",
   })
 ) {
   /**
@@ -279,11 +260,91 @@ export class RuleSet extends S.Class<RuleSet>($I`RuleSet`)(
    * @returns Result produced by this operation.
    */
   getRulesByCategory(category: RuleCategory): ReadonlyArray<ExtractionRule> {
-    return A.filter(this.allRules, P.Struct({
-      category: Eq.equals(category)
-    }));
+    return A.filter(
+      this.allRules,
+      P.Struct({
+        category: Eq.equals(category),
+      })
+    );
   }
 }
+
+class MentionRuleSet extends RuleSetBase.extend<MentionRuleSet>($I`MentionRuleSet`)(
+  {
+    stage: S.tag(ExtractionStage.Enum.mention),
+  },
+  $I.annote("MentionRuleSet", {
+    description: "Static and ontology-derived constraints for mention extraction.",
+  })
+) {}
+
+class EntityRuleSet extends RuleSetBase.extend<EntityRuleSet>($I`EntityRuleSet`)(
+  {
+    stage: S.tag(ExtractionStage.Enum.entity),
+  },
+  $I.annote("EntityRuleSet", {
+    description: "Static and ontology-derived constraints for entity extraction.",
+  })
+) {}
+
+class RelationRuleSet extends RuleSetBase.extend<RelationRuleSet>($I`RelationRuleSet`)(
+  {
+    stage: S.tag(ExtractionStage.Enum.relation),
+  },
+  $I.annote("RelationRuleSet", {
+    description: "Static and ontology-derived constraints for relation extraction.",
+  })
+) {}
+
+/**
+ * Static and ontology-derived constraints discriminated by extraction stage.
+ *
+ * **Example** (Construct a mention rule set)
+ *
+ * ```ts
+ * import { HashMap } from "effect"
+ * import { AllowedIriSet, RuleSet } from "@effect-ontology/Prompt/RuleSet"
+ *
+ * const ruleSet = RuleSet.cases.mention.make({
+ *   staticRules: [],
+ *   dynamicRules: [],
+ *   allowedIris: AllowedIriSet.make({
+ *     classIriMap: HashMap.empty(),
+ *     propertyIriMap: HashMap.empty()
+ *   })
+ * })
+ * console.log(RuleSet.guards.mention(ruleSet))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RuleSet = ExtractionStage.mapMembers(
+  Tuple.evolve([() => MentionRuleSet, () => EntityRuleSet, () => RelationRuleSet])
+).pipe(
+  S.toTaggedUnion("stage"),
+  $I.annoteSchema("RuleSet", {
+    description: "Static and ontology-derived extraction constraints discriminated by pipeline stage.",
+  })
+);
+
+/**
+ * Type for {@link RuleSet}.
+ *
+ * **Example** (Type a relation rule set)
+ *
+ * ```ts
+ * import { makeRelationRuleSet } from "@effect-ontology/Prompt/RuleSet"
+ * import type { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+ *
+ * const ruleSet: RuleSet = makeRelationRuleSet([], [])
+ * console.log(ruleSet.stage)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RuleSet = typeof RuleSet.Type;
 
 const makeExtractionRule = (input: unknown): ExtractionRule =>
   pipe(ExtractionRule.decodeUnknownResult(input), Result.getOrThrow);
@@ -840,8 +901,7 @@ export const makeEntityRuleSet = dual2(
       [] // No entity IDs yet
     );
 
-    return RuleSet.make({
-      stage: "entity",
+    return RuleSet.cases.entity.make({
       staticRules: ENTITY_STATIC_RULES,
       dynamicRules,
       allowedIris,
@@ -954,8 +1014,7 @@ export const makeRelationRuleSet = dual2(
       entityIds
     );
 
-    return RuleSet.make({
-      stage: "relation",
+    return RuleSet.cases.relation.make({
       staticRules: RELATION_STATIC_RULES,
       dynamicRules,
       allowedIris,
@@ -1041,8 +1100,7 @@ export const makeMentionRuleSet = (): RuleSet => {
     }),
   ];
 
-  return RuleSet.make({
-    stage: "mention",
+  return RuleSet.cases.mention.make({
     staticRules,
     dynamicRules: [],
     allowedIris: AllowedIriSet.make({
