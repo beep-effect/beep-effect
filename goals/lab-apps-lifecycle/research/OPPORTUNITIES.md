@@ -160,3 +160,37 @@ Numbers are STABLE IDS — never renumber to express priority.
    that templates are text-only. The new tests assert PNG signature bytes rather
    than file existence, because existence passes even when the bytes are
    mangled.
+
+8. **A configured workstation cannot reproduce the coverage ratchet, because
+   production code branches on environment the baseline was generated
+   without.** — `unowned`
+
+   *Doing:* running the coverage ratchet locally before publishing, precisely
+   because `yeet verify` never runs `coverage` (the #742 lesson).
+
+   *Evidence:* a full-package repo-cli coverage run reports
+   `Quality/Tasks.ts` branches 64.48 → 63.63, uncovered 103 → 104, which is a
+   genuine ratchet failure by the `fileMetricRegressed` rule. It is not
+   introduced: **clean `main` with zero branch changes reproduces the identical
+   numbers**, and #743's own Coverage Regression lane passed in CI. The cause is
+   `resolveTurboCachePlan` (added by #743), which branches on `TURBO_API`,
+   `TURBO_TOKEN`, `TURBO_TEAM` and `TURBO_CACHE`. All four are set on a
+   remote-read-configured workstation; `check.yml` supplies them only on push
+   events, so PR runs — and the baseline those runs generated — take the other
+   branch. #743's own commit message names the hazard from the opposite side:
+   those tests' "green was conditional on the machine being unconfigured".
+
+   *Would have prevented it:* generating and comparing the baseline under a
+   pinned environment, so the ratchet compares like with like — e.g. the
+   coverage task clearing or fixing the turbo quad, the way a fixed
+   `BEEP_FC_SEED` already makes the property lane environment-independent. As
+   it stands the local ratchet check is only sound for files whose branches do
+   not read configuration, and a developer cannot tell which those are without
+   reading the source.
+
+   *Second-order:* this is the mirror image of receipt 5. There, a *missing*
+   fixture config made local behavior diverge from production; here a *present*
+   workstation config makes local behavior diverge from CI. Both are the same
+   underlying defect class — a gate whose result depends on ambient
+   configuration that nobody declared — and both cost an attribution
+   investigation before any code could be written.
