@@ -910,18 +910,28 @@ const rootWorkspaceEntryNeeded = Effect.fn(function* (repoRoot: string, packageP
 /**
  * Portless route label for an app scaffold: labs get the `<name>.labs.beep`
  * namespace, every other app keeps the flat `<name>.beep` label.
+ *
+ * @param name - Package name that leads the portless host label.
+ * @param lab - Whether the scaffold targets the labs namespace.
+ * @returns The portless label used by generated `dev` scripts.
  */
 const portlessLabelFor = (name: string, lab: boolean): string => (lab ? `${name}.labs.beep` : `${name}.beep`);
 
 /**
  * Convert the trailing-slash `rootRelative` prefix into the slash-free
  * `rootDir` form used by app tsconfig templates (`../../` becomes `../..`).
+ *
+ * @param rootRelative - Trailing-slash repo-root prefix from the template context.
+ * @returns The prefix without its trailing slash.
  */
 const toRootDirRelative = (rootRelative: string): string =>
   Str.endsWith("/")(rootRelative) ? Str.slice(0, Str.length(rootRelative) - 1)(rootRelative) : rootRelative;
 
 /**
  * First applicable `--lab` misuse refusal, if any (lab-apps P2-D20).
+ *
+ * @param options - Decoded create-package flag facts consulted by the refusal rules.
+ * @returns The first refusal message, or none when `--lab` usage is legal.
  */
 const labFlagRefusal = (options: {
   readonly appKind: O.Option<AppKind>;

@@ -258,8 +258,8 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
  *
  * **Details**
  *
- * Routes through the path-aware wrapper (`beep quality changeset-status
- * --since origin/main`) so lab-only branches stay changeset-ceremony exempt
+ * Routes through the path-aware wrapper — `beep quality changeset-status`
+ * with `--since origin/main` — so lab-only branches stay changeset-ceremony exempt
  * (lab-apps-lifecycle P2, ratified row 8).
  *
  * **Example** (Inspect the changeset preflight)

@@ -194,6 +194,9 @@ const collectLocalRootComposerUses = (
 /**
  * Slugs present in the generated labs segment (composer group or export
  * block) with no live lab workspace behind them, sorted.
+ *
+ * @param state - Labs segment diff produced by `LabIdentitySegment.diffLabIdentitySegment`.
+ * @returns Sorted stale generated-lab slugs.
  */
 const staleGeneratedLabSlugs = (state: LabIdentitySegmentState): ReadonlyArray<string> =>
   A.sort(

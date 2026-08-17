@@ -55,13 +55,26 @@ const GeneratedPackageManifest = S.Struct({
   devDependencies: S.optionalKey(S.Record(S.String, S.String)),
 });
 const AppTsconfig = S.Struct({
+  extends: S.optionalKey(S.String),
   compilerOptions: S.Struct({
+    rootDir: S.String,
+  }),
+});
+const LabCheckTsconfig = S.Struct({
+  extends: S.String,
+  references: S.Array(S.Unknown),
+  compilerOptions: S.Struct({
+    composite: S.Boolean,
+    noEmit: S.Boolean,
     rootDir: S.String,
   }),
 });
 const decodeRootPackage = S.decodeUnknownSync(RootPackage);
 const decodeGeneratedPackageManifest = S.decodeUnknownSync(GeneratedPackageManifest);
 const decodeAppTsconfig = S.decodeUnknownSync(AppTsconfig);
+const decodeLabCheckTsconfig = S.decodeUnknownSync(LabCheckTsconfig);
+const LabTsconfigArbitrary = S.toArbitrary(AppTsconfig)(fc);
+const LabCheckTsconfigArbitrary = S.toArbitrary(LabCheckTsconfig)(fc);
 
 const withTempRepoCommand = <A2, E, R>(use: Effect.Effect<A2, E, R>) =>
   Effect.acquireUseRelease(
@@ -310,14 +323,38 @@ const expectNoPackageCeremony = (manifest: {
 };
 
 describe("create-package --lab", { concurrent: false }, () => {
-  it("property: lab manifests round-trip the lab.manifest.json codec", () => {
-    const LabManifestArbitrary = S.toArbitrary(LabManifest)(fc);
+  it("property: lab tsconfig schemas round-trip derived values", () => {
+    fc.assert(
+      fc.property(LabTsconfigArbitrary, LabCheckTsconfigArbitrary, (labTsconfig, labCheckTsconfig) => {
+        expect(decodeAppTsconfig(S.encodeSync(AppTsconfig)(labTsconfig))).toEqual(labTsconfig);
+        expect(decodeLabCheckTsconfig(S.encodeSync(LabCheckTsconfig)(labCheckTsconfig))).toEqual(labCheckTsconfig);
+      }),
+      fcRuns(16)
+    );
+  });
+
+  it("property: lab manifests round-trip the lab.manifest.json codec from valid encoded dates", () => {
     const decodeManifest = S.decodeUnknownSync(LabManifestFromJsonString);
     const encodeManifest = S.encodeSync(LabManifestFromJsonString);
     const manifestEquivalence = S.toEquivalence(LabManifest);
+    const isoDate = fc
+      .tuple(fc.integer({ min: 1970, max: 2100 }), fc.integer({ min: 1, max: 12 }), fc.integer({ min: 1, max: 28 }))
+      .map(
+        ([year, month, day]) =>
+          `${Str.padStart(4, "0")(String(year))}-${Str.padStart(2, "0")(String(month))}-${Str.padStart(2, "0")(String(day))}`
+      );
+    const encodedManifest = fc.record({
+      schemaVersion: fc.constant("lab-manifest/v1" as const),
+      purpose: fc.string({ minLength: 1 }),
+      created: isoDate,
+      disposition: fc.constantFrom("active", "promote", "expired"),
+      postgresSchema: fc.option(fc.constant("lab_a"), { nil: undefined }),
+    });
     fc.assert(
-      fc.property(LabManifestArbitrary, (manifest) => {
-        expect(manifestEquivalence(decodeManifest(encodeManifest(manifest)), manifest)).toBe(true);
+      fc.property(encodedManifest, (encoded) => {
+        const json = JSON.stringify(encoded, null, 2);
+        const decoded = decodeManifest(json);
+        expect(manifestEquivalence(decodeManifest(encodeManifest(decoded)), decoded)).toBe(true);
       }),
       fcRuns(16)
     );
@@ -364,7 +401,13 @@ describe("create-package --lab", { concurrent: false }, () => {
             expect(labManifest.created.toISOString()).toBe(today().toISOString());
 
             expect(yield* fs.exists(path.join(packageDir, "tsconfig.next.json"))).toBe(true);
+            expect(yield* fs.exists(path.join(packageDir, "tsconfig.check.json"))).toBe(true);
             expect(yield* fs.exists(path.join(packageDir, "postcss.config.mjs"))).toBe(true);
+            const labCheckTsconfig = decodeLabCheckTsconfig(
+              yield* readJsoncFile(path.join(packageDir, "tsconfig.check.json"))
+            );
+            expect(labCheckTsconfig.extends).toBe("./tsconfig.json");
+            expect(labCheckTsconfig.compilerOptions.noEmit).toBe(true);
             expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
             const nextConfig = yield* fs.readFileString(path.join(packageDir, "next.config.ts"));
             expect(nextConfig).toContain("defineBeepNextConfig");

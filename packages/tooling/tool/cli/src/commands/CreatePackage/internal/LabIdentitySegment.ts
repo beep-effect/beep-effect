@@ -200,6 +200,9 @@ const regionBody = Effect.fnUntraced(function* (content: string, startMarker: st
  * Render the labs composer group body: the empty-object state for zero labs
  * (`$I.compose` requires at least one segment) or a `$I.compose(...)` call
  * over the sorted slugs in biome-canonical layout.
+ *
+ * @param slugs - Lab workspace slugs to render into the composer group.
+ * @returns The composer-region body text.
  */
 const renderLabComposersRegion = (slugs: ReadonlyArray<string>): string => {
   if (A.isReadonlyArrayEmpty(slugs)) {
@@ -227,6 +230,9 @@ const renderLabComposersRegion = (slugs: ReadonlyArray<string>): string => {
 /**
  * Render one lab's typed export block, breaking the export statement the way
  * biome would when it exceeds the configured line width.
+ *
+ * @param slug - Lab workspace slug the export block targets.
+ * @returns The rendered typed export block.
  */
 const labExportBlock = (slug: string): string => {
   const block = CreatePackageIdentityRegistration.typedIdentityExportBlock(slug);
@@ -241,6 +247,9 @@ const labExportBlock = (slug: string): string => {
  * Render the labs export-block body: one typed identity export per sorted
  * slug, reusing the `typedIdentityExportBlock` JSDoc template so the
  * `@beep/identity` docgen and JSDoc lint lanes stay green; empty for zero labs.
+ *
+ * @param slugs - Lab workspace slugs to render into the export block.
+ * @returns The export-region body text.
  */
 const renderLabExportsRegion = (slugs: ReadonlyArray<string>): string =>
   A.join(A.map(A.sort(slugs, Order.String), labExportBlock), "\n");

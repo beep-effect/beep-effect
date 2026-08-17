@@ -616,8 +616,9 @@ const runMixedReimplementedCheck = Effect.fn("ChangesetStatus.runMixedReimplemen
  *
  * **Details**
  *
- * Without `--since` this is a stock passthrough: it spawns `bunx changeset
- * status` unchanged and propagates its exit. With `--since` it partitions the
+ * Without `--since` this is a stock passthrough: it spawns stock
+ * `bunx changeset status` unchanged and propagates its exit. With `--since`
+ * it partitions the
  * merge-base diff and applies the P2-D12 verdicts: `lab-exempt` succeeds
  * without spawning, `stock-parity` spawns stock `changeset status --since`,
  * and `mixed-reimplemented` verifies changeset coverage in-process, failing

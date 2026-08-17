@@ -478,7 +478,7 @@ const statBaselineOutput = Effect.fn("DeletePackage.statBaselineOutput")(functio
  * `baselineStepOutcome` classifies one writer invocation: exit 0 is `ok`;
  * exit 1 under `tolerate-finding-exit` is `tolerated` only when the verified
  * output's `(mtime, size)` stamp changed or the file was created; everything
- * else — including every exit >= 2 — is `failed`.
+ * else — including every exit `>= 2` — is `failed`.
  *
  * **Example** (Classify a finding exit without a written baseline)
  *
