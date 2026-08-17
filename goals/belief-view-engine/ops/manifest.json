@@ -1,0 +1,80 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "belief-view-engine",
+    "title": "Belief View Engine",
+    "status": "paused",
+    "created": "2026-08-17",
+    "updated": "2026-08-17",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/belief-view-engine",
+  "lifecycle": "paused",
+  "mission": "One working belief per contention set, on demand: BeliefContentionKey v1, the total selection-policy contract, the content-addressed BeliefViewRevision with digest-encoding v1, the same-policy typed delta, and the capped, indexed scope-wide EdgeAuthority read.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/epistemic-belief-view-revision",
+    "graduated": "2026-08-17"
+  },
+  "statusNote": "Paused at scaffold (queue goal): authored-but-not-started; no free program-lane slot at graduation. Resume when a lane slot frees or the roadmap pulls it.",
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/belief-view-engine/README.md",
+    "goals/belief-view-engine/SPEC.md",
+    "goals/belief-view-engine/PLAN.md",
+    "goals/belief-view-engine/GOAL.md",
+    "goals/belief-view-engine/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/belief-view-engine/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research (inherited from exploration)",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "First slice (contention key + policy + digest v1 + capped scope read + delta)",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/belief-view-engine/GOAL.md)\" -le 4000",
+    "jq . goals/belief-view-engine/ops/manifest.json",
+    "git diff --check -- goals/belief-view-engine",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The digest cannot be replay-stable without storing state.",
+    "The scope read cannot meet the cap contract under the new index.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
+  ]
+}

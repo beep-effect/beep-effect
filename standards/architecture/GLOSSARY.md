@@ -457,3 +457,26 @@ them local to the concept that uses them.
 A durable application process. Workflow declarations belong in `use-cases` when
 they are product/application concepts. Runtime workflow handlers belong in
 `server`; engines and storage belong in `drivers`.
+
+## Verdict family (epistemic vocabulary law)
+
+Ratified 2026-08-17 at the `epistemic-belief-view-revision` graduation. The
+canonical stems for evaluation outcomes, and the ownership law binding them:
+
+| Concern | Canonical stem | Owner |
+| --- | --- | --- |
+| Shape validity | `ShapeValidationResult` | the schema-owning domain |
+| Anchor fidelity | `AnchorVerificationResult` | `@beep/provenance` |
+| Semantic stance | `SemanticStance` | epistemic domain |
+| Source authority | `SourceAuthorityAssessment` | the consuming legal/domain slice |
+| Human decision | `HumanDisposition` stem; domain-qualified concretes (e.g. `ClaimDisposition`) | the domain owning the reviewed subject |
+| Action authorization | `ExecutionVerdict` | governed-execution boundary |
+| Release | `ReleaseDisposition` | the release-owning boundary |
+
+**Law:** names may be shared; vocabularies stay decentralized. Structural
+verification lives with the structure it verifies; human dispositions with
+the reviewed subject; authorization at the enforcement boundary. A consumer
+(e.g. a belief-view policy) may read typed values from several families and
+owns none of their truth or disposition semantics. Uniform `...Verdict`
+naming is rejected: it erases the distinction between validation,
+classification, assessment, recorded disposition, authorization, and release.

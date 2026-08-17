@@ -4,9 +4,9 @@
     "slug": "oppold-corpus-overhaul",
     "title": "Oppold Corpus Overhaul",
     "status": "active",
-    "stage": "capture",
+    "stage": "align",
     "openQuestions": [
-      "Salvage restoration and data-loss proof: what is the restoration inventory (recycle-bin re-pairing, libpff attachment repair, fidelity-verified doc conversion) and the no-loss acceptance bar, given the salvage sits on a removable drive?"
+      "Bound the four open capture bullets (pipeline re-eval scope, capability incorporation, per-step self-improvement, enrichment avenues) with stop conditions, then draft the BRIEF (mail-first restoration slice + bounded pipeline re-eval) for operator review."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
