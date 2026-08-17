@@ -59,7 +59,9 @@ export class GenerateWithFeedbackPolicy extends S.Class<GenerateWithFeedbackPoli
   $I.annote("GenerateWithFeedbackPolicy", {
     description: "Validated retry, naming, and prompt-caching policy for structured generation.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeEffect(GenerateWithFeedbackPolicy);
+}
 
 /**
  * Constructor input accepted by {@link GenerateWithFeedbackPolicy}.
@@ -129,7 +131,7 @@ export const generateObjectWithFeedback = Effect.fn("generateObjectWithFeedback"
   LanguageModel.LanguageModel | StructuredOutputSchema["DecodingServices"]
 > {
   const policy = yield* S.decodeEffect(GenerateWithFeedbackPolicy)(options);
-  const retryPolicy = yield* S.decodeEffect(RetryPolicy)({ ...policy.retryPolicy, serviceName: policy.serviceName });
+  const retryPolicy = yield* RetryPolicy.decodeEffect({ ...policy.retryPolicy, serviceName: policy.serviceName });
   const llm = yield* LanguageModel.LanguageModel;
   const promptRef = yield* Ref.make(makePrompt(options.prompt, policy.enablePromptCaching));
   const attemptRef = yield* Ref.make(0);

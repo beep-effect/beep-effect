@@ -105,132 +105,118 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
      * Process a background job based on its type
      */
     const processJobByType = Match.type<BackgroundJob>().pipe(
-        Match.tag(
-          "EmbeddingJob",
-          (j) =>
-            Effect.fn("CurationJobProcessor.processEmbeddingJob")(function* (meta: JobMeta) {
-              yield* Effect.logDebug("Processing EmbeddingJob", {
-                id: j.id,
-                entityId: j.canonicalEntityId,
-                reason: j.reason,
-                attempts: meta.attempts,
-              });
+      Match.tag("EmbeddingJob", (j) =>
+        Effect.fn("CurationJobProcessor.processEmbeddingJob")(function* (meta: JobMeta) {
+          yield* Effect.logDebug("Processing EmbeddingJob", {
+            id: j.id,
+            entityId: j.canonicalEntityId,
+            reason: j.reason,
+            attempts: meta.attempts,
+          });
 
-              // Get canonical entity
-              const entityOpt = yield* entityRegistry.getCanonicalEntity(j.ontologyId, j.canonicalEntityId);
-              if (O.isNone(entityOpt)) {
-                yield* Effect.logWarning("Canonical entity not found for embedding job", {
-                  canonicalEntityId: j.canonicalEntityId,
-                });
-                return;
-              }
+          // Get canonical entity
+          const entityOpt = yield* entityRegistry.getCanonicalEntity(j.ontologyId, j.canonicalEntityId);
+          if (O.isNone(entityOpt)) {
+            yield* Effect.logWarning("Canonical entity not found for embedding job", {
+              canonicalEntityId: j.canonicalEntityId,
+            });
+            return;
+          }
 
-              const entity = entityOpt.value;
+          const entity = entityOpt.value;
 
-              // Get all aliases for this entity
-              const aliases = yield* entityRegistry.getAliasesForCanonical(j.ontologyId, j.canonicalEntityId);
+          // Get all aliases for this entity
+          const aliases = yield* entityRegistry.getAliasesForCanonical(j.ontologyId, j.canonicalEntityId);
 
-              // Combine mention and aliases for embedding
-              const allMentions = [entity.canonicalMention, ...aliases.map((a) => a.mention)];
-              const combinedText = `${j.ontologyId}: ${allMentions.join(" | ")}`;
+          // Combine mention and aliases for embedding
+          const allMentions = [entity.canonicalMention, ...aliases.map((a) => a.mention)];
+          const combinedText = `${j.ontologyId}: ${allMentions.join(" | ")}`;
 
-              // Generate new embedding
-              const embedding = yield* embeddingService.embed(combinedText);
+          // Generate new embedding
+          const embedding = yield* embeddingService.embed(combinedText);
 
-              yield* Effect.logInfo("Entity embedding updated", {
-                canonicalEntityId: j.canonicalEntityId,
-                aliasCount: aliases.length,
-                embeddingDim: embedding.length,
-              });
-            })
-        ),
-        Match.tag(
-          "PromptCacheJob",
-          (j) =>
-            Effect.fn("CurationJobProcessor.processPromptCacheJob")(function* (meta: JobMeta) {
-              yield* Effect.logDebug("Processing PromptCacheJob", {
-                id: j.id,
-                exampleId: j.exampleId,
-                isNegative: j.isNegative,
-                attempts: meta.attempts,
-              });
+          yield* Effect.logInfo("Entity embedding updated", {
+            canonicalEntityId: j.canonicalEntityId,
+            aliasCount: aliases.length,
+            embeddingDim: embedding.length,
+          });
+        })
+      ),
+      Match.tag("PromptCacheJob", (j) =>
+        Effect.fn("CurationJobProcessor.processPromptCacheJob")(function* (meta: JobMeta) {
+          yield* Effect.logDebug("Processing PromptCacheJob", {
+            id: j.id,
+            exampleId: j.exampleId,
+            isNegative: j.isNegative,
+            attempts: meta.attempts,
+          });
 
-              // Prompt cache update would go here
-              // This could involve:
-              // 1. Pre-computing prompt segments for the example
-              // 2. Updating a cache key for the ontology
-              // 3. Invalidating stale cache entries
+          // Prompt cache update would go here
+          // This could involve:
+          // 1. Pre-computing prompt segments for the example
+          // 2. Updating a cache key for the ontology
+          // 3. Invalidating stale cache entries
 
-              yield* Effect.logInfo("Prompt cache updated", {
-                ontologyId: j.ontologyId,
-                exampleId: j.exampleId,
-                isNegative: j.isNegative,
-              });
-            })
-        ),
-        Match.tag(
-          "SimilarityRecomputeJob",
-          (j) =>
-            Effect.fn("CurationJobProcessor.processSimilarityRecomputeJob")(function* (meta: JobMeta) {
-              yield* Effect.logDebug("Processing SimilarityRecomputeJob", {
-                id: j.id,
-                entityId: j.entityId,
-                reason: j.reason,
-                attempts: meta.attempts,
-              });
+          yield* Effect.logInfo("Prompt cache updated", {
+            ontologyId: j.ontologyId,
+            exampleId: j.exampleId,
+            isNegative: j.isNegative,
+          });
+        })
+      ),
+      Match.tag("SimilarityRecomputeJob", (j) =>
+        Effect.fn("CurationJobProcessor.processSimilarityRecomputeJob")(function* (meta: JobMeta) {
+          yield* Effect.logDebug("Processing SimilarityRecomputeJob", {
+            id: j.id,
+            entityId: j.entityId,
+            reason: j.reason,
+            attempts: meta.attempts,
+          });
 
-              // Similarity recomputation would go here
-              yield* Effect.logInfo("Similarity recomputed", {
-                ontologyId: j.ontologyId,
-                entityId: j.entityId,
-              });
-            })
-        ),
-        Match.tag(
-          "BlockingTokenJob",
-          (j) =>
-            Effect.fn("CurationJobProcessor.processBlockingTokenJob")(function* (meta: JobMeta) {
-              yield* Effect.logDebug("Processing BlockingTokenJob", {
-                id: j.id,
-                entityId: j.entityId,
-                attempts: meta.attempts,
-              });
+          // Similarity recomputation would go here
+          yield* Effect.logInfo("Similarity recomputed", {
+            ontologyId: j.ontologyId,
+            entityId: j.entityId,
+          });
+        })
+      ),
+      Match.tag("BlockingTokenJob", (j) =>
+        Effect.fn("CurationJobProcessor.processBlockingTokenJob")(function* (meta: JobMeta) {
+          yield* Effect.logDebug("Processing BlockingTokenJob", {
+            id: j.id,
+            entityId: j.entityId,
+            attempts: meta.attempts,
+          });
 
-              // Blocking token rebuild would go here
-              yield* Effect.logInfo("Blocking tokens rebuilt", {
-                ontologyId: j.ontologyId,
-                entityId: j.entityId,
-              });
-            })
-        ),
-        Match.tag(
-          "WebhookJob",
-          (j) =>
-            Effect.fn("CurationJobProcessor.processWebhookJob")(function* (meta: JobMeta) {
-              yield* Effect.logDebug("Processing WebhookJob", {
-                id: j.id,
-                url: j.url,
-                eventType: j.eventType,
-                attempts: meta.attempts,
-              });
+          // Blocking token rebuild would go here
+          yield* Effect.logInfo("Blocking tokens rebuilt", {
+            ontologyId: j.ontologyId,
+            entityId: j.entityId,
+          });
+        })
+      ),
+      Match.tag("WebhookJob", (j) =>
+        Effect.fn("CurationJobProcessor.processWebhookJob")(function* (meta: JobMeta) {
+          yield* Effect.logDebug("Processing WebhookJob", {
+            id: j.id,
+            url: j.url,
+            eventType: j.eventType,
+            attempts: meta.attempts,
+          });
 
-              // Webhook delivery would go here
-              yield* Effect.logInfo("Webhook delivered", {
-                url: j.url,
-                eventType: j.eventType,
-              });
-            })
-        ),
-        Match.exhaustive
-      );
+          // Webhook delivery would go here
+          yield* Effect.logInfo("Webhook delivered", {
+            url: j.url,
+            eventType: j.eventType,
+          });
+        })
+      ),
+      Match.exhaustive
+    );
 
-    const processJob: (
-      job: BackgroundJob,
-      meta: JobMeta
-    ) => Effect.Effect<void, JobProcessorError> = Effect.fn("CurationJobProcessor.processJob")(function* (
-      job,
-      meta
-    ) {
+    const processJob: (job: BackgroundJob, meta: JobMeta) => Effect.Effect<void, JobProcessorError> = Effect.fn(
+      "CurationJobProcessor.processJob"
+    )(function* (job, meta) {
       return yield* processJobByType(job)(meta);
     });
 

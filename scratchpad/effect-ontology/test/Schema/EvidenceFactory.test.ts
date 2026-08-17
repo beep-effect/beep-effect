@@ -26,7 +26,9 @@ const legacyEvidence = {
 };
 
 describe("extraction factory evidence", () => {
-  it.effect("decodes entity-factory evidence to the canonical quote representation", Effect.fnUntraced(function* () {
+  it.effect(
+    "decodes entity-factory evidence to the canonical quote representation",
+    Effect.fnUntraced(function* () {
       const person = yield* decodePerson;
       const schema = makeEntitySchema([person], []);
       const output = yield* S.decodeEffect(schema)({
@@ -46,7 +48,9 @@ describe("extraction factory evidence", () => {
     })
   );
 
-  it.effect("shares canonical width validation across relation-factory evidence", Effect.fnUntraced(function* () {
+  it.effect(
+    "shares canonical width validation across relation-factory evidence",
+    Effect.fnUntraced(function* () {
       const knows = yield* decodeKnows;
       const schema = makeRelationSchema(["ada", "bob"], [knows]);
       const valid = yield* S.decodeEffect(schema)({

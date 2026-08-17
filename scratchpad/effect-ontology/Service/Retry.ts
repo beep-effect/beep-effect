@@ -131,7 +131,9 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)(
   $I.annote("RetryPolicy", {
     description: "Validated exponential-backoff policy with compatible attempt and overall deadlines.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeEffect(RetryPolicy);
+}
 
 /**
  * Constructor input accepted by {@link RetryPolicy}.

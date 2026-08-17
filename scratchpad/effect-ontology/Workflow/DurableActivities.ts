@@ -1152,7 +1152,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
           // Convert to claims
           // Convert Namespace identifier to full IRI
           const match = config.rdf.baseNamespace.match(/^https?:\/\/[^/]+\//);
-          const baseDomain = P.isNotNull(match) ? match[0] : "http://example.org/";
+          const baseDomain = P.isNotNull(match) ? match[0] : "https://example.org/";
           const baseNamespace = `${baseDomain}${input.targetNamespace}/`;
           const claims = knowledgeGraphToClaims(knowledgeGraph.entities, knowledgeGraph.relations, {
             baseNamespace,
@@ -1559,7 +1559,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
               makeNamedNode(p),
               Str.startsWith("http")(o) || Str.startsWith("urn:")(o)
                 ? makeNamedNode(o)
-                : makeLiteral(o, "http://www.w3.org/2001/XMLSchema#string")
+                : makeLiteral(o, "https://www.w3.org/2001/XMLSchema#string")
             )
           );
         };

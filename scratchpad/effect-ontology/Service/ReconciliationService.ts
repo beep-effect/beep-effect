@@ -352,7 +352,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
      * Store a Wikidata link (owl:sameAs)
      */
     const storeWikidataLink = Effect.fn("storeWikidataLink")(function* (entityIri: string, qid: string) {
-      const wikidataUri = `http://www.wikidata.org/entity/${qid}`;
+      const wikidataUri = `https://www.wikidata.org/entity/${qid}`;
       const linkData = yield* encodeWikidataLink({
         entityIri,
         qid,

@@ -134,7 +134,7 @@ To create a link, run:`);
     return;
   }
   const sameAsTriple = `
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix owl: <https://www.w3.org/2002/07/owl#> .
 
 <${entityIri}> owl:sameAs <${wikidataEntity.conceptUri}> .
 `;

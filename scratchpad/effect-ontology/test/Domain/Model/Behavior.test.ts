@@ -52,7 +52,9 @@ describe("effect-ontology model behavior", () => {
     expect(Result.isFailure(interval)).toBe(true);
   });
 
-  it.effect("decodes legacy evidence into canonical quote fields and rejects width mismatches", Effect.fnUntraced(function* () {
+  it.effect(
+    "decodes legacy evidence into canonical quote fields and rejects width mismatches",
+    Effect.fnUntraced(function* () {
       const span = yield* S.decodeEffect(EvidenceSpan)({
         text: "Seattle",
         startChar: 10,
@@ -78,7 +80,9 @@ describe("effect-ontology model behavior", () => {
     })
   );
 
-  it.effect("decodes legacy mention evidence to the canonical text-anchor shape", Effect.fnUntraced(function* () {
+  it.effect(
+    "decodes legacy mention evidence to the canonical text-anchor shape",
+    Effect.fnUntraced(function* () {
       const evidence = yield* S.decodeEffect(MentionEvidence)({
         text: "Seattle",
         startOffset: 10,
@@ -113,7 +117,9 @@ describe("effect-ontology model behavior", () => {
     expect(relation.object._tag).toBe("Text");
   });
 
-  it.effect("enforces batch transitions and derives progress from stage payloads", Effect.fnUntraced(function* () {
+  it.effect(
+    "enforces batch transitions and derives progress from stage payloads",
+    Effect.fnUntraced(function* () {
       const manifestUri = yield* S.decodeEffect(GcsUri)("gs://beep-ontology/manifest.json");
       const batch = BatchIdentity.make({
         batchId: BatchId.make("batch-deadbeefcafe"),
@@ -149,14 +155,16 @@ describe("effect-ontology model behavior", () => {
     expect(chunkId).toBe("doc-deadbeefcafe-chunk-2");
   });
 
-  it.effect("traverses cyclic class hierarchies without recursion failure", Effect.fnUntraced(function* () {
+  it.effect(
+    "traverses cyclic class hierarchies without recursion failure",
+    Effect.fnUntraced(function* () {
       const parent = IRI.make("https://example.org/Parent");
       const child = IRI.make("https://example.org/Child");
       const property = yield* S.decodeEffect(PropertyDefinition)({
         id: IRI.make("https://example.org/name"),
         label: "name",
         domain: [parent],
-        range: [IRI.make("http://www.w3.org/2001/XMLSchema#string")],
+        range: [IRI.make("https://www.w3.org/2001/XMLSchema#string")],
         rangeType: "datatype",
       });
       const propertyInput = yield* S.encodeEffect(PropertyDefinition)(property);
@@ -178,7 +186,9 @@ describe("effect-ontology model behavior", () => {
     })
   );
 
-  it.effect("normalizes obvious agent and extraction defaults at schema construction", Effect.fnUntraced(function* () {
+  it.effect(
+    "normalizes obvious agent and extraction defaults at schema construction",
+    Effect.fnUntraced(function* () {
       const config = OntologyAgentConfig.default();
       const options = yield* S.decodeEffect(ExtractWithClaimsOptions)({
         ontologyId: "seattle",
@@ -193,7 +203,9 @@ describe("effect-ontology model behavior", () => {
     })
   );
 
-  it.effect("derives enhanced validation counts instead of storing stale duplicates", Effect.fnUntraced(function* () {
+  it.effect(
+    "derives enhanced validation counts instead of storing stale duplicates",
+    Effect.fnUntraced(function* () {
       const grouped = yield* S.decodeEffect(ViolationsByLevel)({
         violations: ["Expected one name."],
         warnings: ["A preferred label is recommended."],

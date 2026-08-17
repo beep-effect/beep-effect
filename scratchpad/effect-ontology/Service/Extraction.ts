@@ -283,7 +283,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
               mention: "Test Entity",
               types: [
                 O.match(A.head(candidates), {
-                  onNone: () => IRI.fromUnknown("http://example.org/TestEntity"),
+                  onNone: () => IRI.fromUnknown("https://example.org/TestEntity"),
                   onSome: (candidate) => candidate.id,
                 }),
               ],
@@ -671,7 +671,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           Chunk.fromIterable([
             Relation.make({
               subjectId: entityArray[0].id,
-              predicate: IRI.fromUnknown(_properties.length > 0 ? _properties[0].id : "http://example.org/relatedTo"),
+              predicate: IRI.fromUnknown(_properties.length > 0 ? _properties[0].id : "https://example.org/relatedTo"),
               object: RelationObject.cases.EntityReference.make({ value: entityArray[1].id }),
             }),
           ])

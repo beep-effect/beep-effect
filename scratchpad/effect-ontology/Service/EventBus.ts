@@ -14,6 +14,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Clock, Context, DateTime, Effect, Layer, Queue, Ref, Stream } from "effect";
 import * as Duration from "effect/Duration";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -246,7 +247,8 @@ const decodeEventPayload = Effect.fn("EventBus.decodeEventPayload")(function* (e
       onSome: Effect.succeed,
     })
   );
-  return yield* S.decodeEffect(definition.payloadMsgPack)(new Uint8Array(payload)).pipe(
+  const decodePayloadMsgPack = pipe(definition.payloadMsgPack, S.decodeEffect);
+  return yield* decodePayloadMsgPack(new Uint8Array(payload)).pipe(
     Effect.mapError((cause) =>
       EventBusError.make({
         method: "decodeEventPayload",
@@ -586,11 +588,14 @@ export const EventBusServiceSql = Layer.effect(
     const processJob: EventBusServiceMethods["processJob"] = Effect.fn("processJob")(
       function* (handler, options) {
         const maxAttempts = options?.maxAttempts ?? 5;
-        const result = yield* jobQueue.take(
-          (job, { attempts, id }) => handler(job, { id, attempts }).pipe(Effect.map(O.some)),
+        return yield* jobQueue.take(
+          (job, { attempts, id }) =>
+            handler(job, {
+              id,
+              attempts,
+            }).pipe(Effect.map(O.some)),
           { maxAttempts }
         );
-        return result;
       },
       Effect.mapError((cause) =>
         EventBusError.make({

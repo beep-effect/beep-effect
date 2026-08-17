@@ -10,7 +10,9 @@ import { makeBackpressureHandler, makeProgressBuilder } from "../../Service/Prog
 import { EntityResolutionConfig } from "../../Workflow/EntityResolution.ts";
 
 describe("progress and workflow schema boundaries", () => {
-  it.effect("constructs canonical backpressure defaults and initializes handler state", Effect.fnUntraced(function* () {
+  it.effect(
+    "constructs canonical backpressure defaults and initializes handler state",
+    Effect.fnUntraced(function* () {
       const config = BackpressureConfig.make({});
       const state = yield* makeBackpressureHandler().pipe(Effect.flatMap(Ref.get));
 
@@ -37,7 +39,9 @@ describe("progress and workflow schema boundaries", () => {
     })
   );
 
-  it.effect("constructs schema defaults for entity resolution and progress builder state", Effect.fnUntraced(function* () {
+  it.effect(
+    "constructs schema defaults for entity resolution and progress builder state",
+    Effect.fnUntraced(function* () {
       const config = EntityResolutionConfig.make({});
       const state = yield* makeProgressBuilder(ExtractionRunId.make("doc-0123456789ab"), PosInt.make(3)).pipe(
         Effect.flatMap(Ref.get)

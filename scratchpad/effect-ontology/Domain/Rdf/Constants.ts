@@ -14,10 +14,10 @@ import { IRI, makeNamedNode } from "@beep/rdf";
 
 const vocabularyTerm = (namespace: string, localName: string) => makeNamedNode(`${namespace}${localName}`);
 
-const extractionNamespace = IRI.fromUnknown("http://example.org/kg/");
-const claimsNamespace = IRI.fromUnknown("http://effect-ontology.dev/claims#");
-const correctionsNamespace = IRI.fromUnknown("http://effect-ontology.dev/corrections#");
-const coreNamespace = IRI.fromUnknown("http://effect-ontology.dev/core#");
+const extractionNamespace = IRI.fromUnknown("https://example.org/kg/");
+const claimsNamespace = IRI.fromUnknown("https://effect-ontology.dev/claims#");
+const correctionsNamespace = IRI.fromUnknown("https://effect-ontology.dev/corrections#");
+const coreNamespace = IRI.fromUnknown("https://effect-ontology.dev/core#");
 
 /**
  * Legacy extraction-metadata vocabulary.

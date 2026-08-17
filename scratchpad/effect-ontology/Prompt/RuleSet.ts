@@ -463,7 +463,7 @@ export const ENTITY_STATIC_RULES: ReadonlyArray<ExtractionRule> = [
     instruction: "Map each entity to the MOST SPECIFIC applicable ontology class",
     example: RuleExample.make({
       input: "Cristiano Ronaldo is a footballer",
-      output: "http://ontology/FootballPlayer",
+      output: "https://ontology/FootballPlayer",
       explanation: "Use specific subclass, not generic Person",
     }),
     counterExample: RuleExample.make({
@@ -488,7 +488,7 @@ export const ENTITY_STATIC_RULES: ReadonlyArray<ExtractionRule> = [
     }),
     counterExample: RuleExample.make({
       input: "Player class with label 'player'",
-      output: "http://ontology/Player",
+      output: "https://ontology/Player",
       explanation: "Do not use full URL/IRI",
     }),
     schemaDescription: "Use exact local name from allowed list (case-sensitive)",
@@ -682,7 +682,7 @@ export const RELATION_STATIC_RULES: ReadonlyArray<ExtractionRule> = [
     }),
     counterExample: RuleExample.make({
       input: "uses playsFor property",
-      output: "http://ontology/playsFor",
+      output: "https://ontology/playsFor",
       explanation: "Must use local name only, NOT the full URI",
     }),
     schemaDescription: "Property local name - MUST be from allowed properties list",

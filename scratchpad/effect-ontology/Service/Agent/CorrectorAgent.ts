@@ -36,6 +36,7 @@ import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { NonNegNum } from "@beep/schema/Number";
 import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import type { Config } from "effect";
 import { Clock, Context, Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
@@ -491,6 +492,42 @@ export interface CorrectorInput {
   readonly ontologyContext: OntologyContext;
 }
 
+interface CorrectOperation {
+  (
+    violation: ShaclValidationViolation,
+    store: RdfStore,
+    ontologyContext: OntologyContext
+  ): Effect.Effect<CorrectionResult, CorrectionError | CorrectionApplicationError>;
+  (
+    store: RdfStore,
+    ontologyContext: OntologyContext
+  ): (
+    violation: ShaclValidationViolation
+  ) => Effect.Effect<CorrectionResult, CorrectionError | CorrectionApplicationError>;
+}
+
+interface CorrectorAgentShape {
+  readonly classifyViolation: (violation: ShaclValidationViolation) => CorrectionStrategy;
+  readonly generateCorrection: (
+    violation: ShaclValidationViolation,
+    store: RdfStore,
+    ontologyContext: OntologyContext
+  ) => Effect.Effect<Correction, CorrectionError>;
+  readonly applyCorrection: (
+    correction: Correction,
+    store: RdfStore
+  ) => Effect.Effect<void, CorrectionApplicationError>;
+  readonly correct: CorrectOperation;
+  readonly correctAll: (
+    report: ShaclValidationReport,
+    store: RdfStore,
+    ontologyContext: OntologyContext,
+    options?: { readonly concurrency?: number }
+  ) => Effect.Effect<BatchCorrectionResult, CorrectionError | CorrectionApplicationError>;
+  readonly metadata: AgentMetadata;
+  readonly asAgent: () => Agent<CorrectorInput, BatchCorrectionResult, CorrectionError | CorrectionApplicationError>;
+}
+
 // =============================================================================
 // LLM Schemas
 // =============================================================================
@@ -631,7 +668,7 @@ const correctionFromResponse: (response: CorrectionResponse) => (violation: Shac
  * @category layers
  * @since 0.0.0
  */
-export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`CorrectorAgent`, {
+export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAgentShape>()($I`CorrectorAgent`, {
   make: Effect.gen(function* () {
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
@@ -987,7 +1024,10 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
     };
   }),
 }) {
-  static readonly Default = Layer.effect(this, this.make).pipe(
+  static readonly Default: Layer.Layer<CorrectorAgent, Config.ConfigError, LanguageModel.LanguageModel> = Layer.effect(
+    this,
+    this.make
+  ).pipe(
     Layer.provide([
       ConfigServiceDefault,
       // LanguageModel.LanguageModel provided by parent scope (runtime-selected provider)

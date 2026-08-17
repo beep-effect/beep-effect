@@ -640,7 +640,7 @@ export const EventBroadcastRouter = HttpRouter.addAll([
       }
 
       const request = yield* HttpServerRequest.HttpServerRequest;
-      const ticket = O.fromNullishOr(new URL(request.url, "http://localhost").searchParams.get("ticket")).pipe(
+      const ticket = O.fromNullishOr(new URL(request.url, "https://localhost").searchParams.get("ticket")).pipe(
         O.filter(Str.isNonEmpty)
       );
       if (O.isNone(ticket)) {

@@ -71,9 +71,9 @@ export const AssetRouter = HttpRouter.addAll([
       const content = yield* storage.getOption(path).pipe(
         Effect.tapError((error) =>
           Effect.logWarning("Storage error fetching document content", {
-              path,
-              docId,
-              error: String(error),
+            path,
+            docId,
+            error: String(error),
           })
         )
       );
@@ -126,9 +126,9 @@ export const AssetRouter = HttpRouter.addAll([
       const content = yield* storage.getOption(path).pipe(
         Effect.tapError((error) =>
           Effect.logWarning("Storage error fetching document graph", {
-              path,
-              docId,
-              error: String(error),
+            path,
+            docId,
+            error: String(error),
           })
         )
       );
@@ -199,9 +199,9 @@ export const AssetRouter = HttpRouter.addAll([
       const content = yield* storage.getOption(link.value.storageUri).pipe(
         Effect.tapError((error) =>
           Effect.logWarning("Storage error fetching link content", {
-              storageUri: link.value.storageUri,
-              linkId,
-              error: String(error),
+            storageUri: link.value.storageUri,
+            linkId,
+            error: String(error),
           })
         )
       );
@@ -260,9 +260,9 @@ export const AssetRouter = HttpRouter.addAll([
       const content = yield* storage.getOption(path).pipe(
         Effect.tapError((error) =>
           Effect.logWarning("Storage error fetching validation report", {
-              path,
-              batchId: rawBatchId,
-              error: String(error),
+            path,
+            batchId: rawBatchId,
+            error: String(error),
           })
         )
       );
@@ -332,9 +332,9 @@ export const AssetRouter = HttpRouter.addAll([
       const content = yield* storage.getOption(path).pipe(
         Effect.tapError((error) =>
           Effect.logWarning("Storage error fetching canonical graph", {
-              path,
-              batchId: rawBatchId,
-              error: String(error),
+            path,
+            batchId: rawBatchId,
+            error: String(error),
           })
         )
       );

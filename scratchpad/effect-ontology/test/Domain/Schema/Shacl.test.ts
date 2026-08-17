@@ -13,7 +13,7 @@ import { FastCheck as fc } from "effect/testing";
 import { ShaclValidationReport, ValidationPolicy } from "../../../Domain/Schema/Shacl.ts";
 
 const path = Rdf.makeNamedNode("https://schema.org/name");
-const sourceConstraintComponent = Rdf.makeNamedNode("http://www.w3.org/ns/shacl#MinCountConstraintComponent");
+const sourceConstraintComponent = Rdf.makeNamedNode("https://www.w3.org/ns/shacl#MinCountConstraintComponent");
 
 const violation = ShaclValidationViolation.make({
   focusNode: "https://example.com/alice",
@@ -51,7 +51,9 @@ describe("effect-ontology SHACL schemas", () => {
     }
   });
 
-  it.effect("wraps the canonical SHACL result with experiment execution metadata", Effect.fnUntraced(function* () {
+  it.effect(
+    "wraps the canonical SHACL result with experiment execution metadata",
+    Effect.fnUntraced(function* () {
       const emptyReport = S.decodeResult(ShaclValidationReport)({
         validation: { conforms: true, violations: [], truncated: false },
         validatedAt: "2026-07-25T12:00:00.000Z",
@@ -76,7 +78,9 @@ describe("effect-ontology SHACL schemas", () => {
     })
   );
 
-  it.effect("applies schema defaults and keeps workflow policy separate from report conformance", Effect.fnUntraced(function* () {
+  it.effect(
+    "applies schema defaults and keeps workflow policy separate from report conformance",
+    Effect.fnUntraced(function* () {
       const defaults = yield* S.decodeEffect(ValidationPolicy)({});
       const strict = yield* S.decodeEffect(ValidationPolicy)({ failOnWarning: true });
       const logOnly = yield* S.decodeEffect(ValidationPolicy)({

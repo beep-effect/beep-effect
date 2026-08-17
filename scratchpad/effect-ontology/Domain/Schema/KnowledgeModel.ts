@@ -395,7 +395,7 @@ export class Evidence extends S.Class<Evidence>($I`Evidence`)(
  *
  * const literal = makeLiteral(
  *   "Alice",
- *   "http://www.w3.org/2001/XMLSchema#string"
+ *   "https://www.w3.org/2001/XMLSchema#string"
  * )
  * console.log(RdfObject.is(literal)) // true
  * ```
@@ -549,7 +549,7 @@ const TemporalInterval = TemporalIntervalDefinition.pipe(
  *     value: "Alice",
  *     datatype: {
  *       termType: "NamedNode",
- *       value: "http://www.w3.org/2001/XMLSchema#string"
+ *       value: "https://www.w3.org/2001/XMLSchema#string"
  *     }
  *   },
  *   documentUri: "gs://beep-ontology-state/documents/article.txt",
@@ -647,7 +647,7 @@ export type AssertionStatus = typeof AssertionStatus.Type;
  *     value: "Alice",
  *     datatype: {
  *       termType: "NamedNode",
- *       value: "http://www.w3.org/2001/XMLSchema#string"
+ *       value: "https://www.w3.org/2001/XMLSchema#string"
  *     }
  *   },
  *   assertedAt: "1970-01-01T00:00:00.000Z",

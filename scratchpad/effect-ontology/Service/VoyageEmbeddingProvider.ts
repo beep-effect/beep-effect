@@ -72,6 +72,7 @@ export const VoyageModel = LiteralKit([
   "voyage-multilingual-2",
   "voyage-law-2",
 ]).pipe(
+  SchemaUtils.withEffectCodecStatics,
   $I.annoteSchema("VoyageModel", {
     description: "Voyage embedding models with known output dimensions.",
   })
@@ -474,7 +475,7 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
         ),
     });
 
-  const methods: EmbeddingProviderMethods = {
+  return {
     metadata,
 
     embedBatch: (requests: ReadonlyArray<EmbeddingRequest>) =>
@@ -504,7 +505,7 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
           );
 
           // Execute request with timeout and proper response handling
-          const embeddings = yield* httpClient.execute(request).pipe(
+          return yield* httpClient.execute(request).pipe(
             // Map HTTP client errors (network, connection) to embedding errors
             Effect.mapError((e) => mapVoyageError(e, timeout)),
             Effect.timeout(timeout),
@@ -526,16 +527,12 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
                 (error._tag === "EmbeddingError" && Str.includes("server error")(error.message)),
             })
           );
-
-          return embeddings;
         }),
         () => rateLimiter.release
       ),
 
     cosineSimilarity,
   };
-
-  return methods;
 });
 
 /**
@@ -576,7 +573,7 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
         ),
       onSome: Effect.succeed,
     });
-    const model = yield* S.decodeUnknownEffect(VoyageModel)(config.embedding.voyageModel).pipe(
+    const model = yield* VoyageModel.decodeUnknownEffect(config.embedding.voyageModel).pipe(
       Effect.mapError((cause) =>
         EmbeddingError.make({
           message: `Unsupported Voyage embedding model: ${config.embedding.voyageModel}`,
@@ -586,7 +583,11 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
       )
     );
 
-    return yield* makeVoyageProvider({ apiKey, model, timeout: config.embedding.timeout });
+    return yield* makeVoyageProvider({
+      apiKey,
+      model,
+      timeout: config.embedding.timeout,
+    });
   })
 );
 

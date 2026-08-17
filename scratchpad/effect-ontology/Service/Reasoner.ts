@@ -365,15 +365,15 @@ const OWL_SAMEAS_SYMMETRY_RULE = `
  */
 const getRulesForProfile = Match.type<ReasoningProfile>().pipe(
   Match.when("rdfs", () => [
-      RDFS_SUBCLASS_RULE,
-      RDFS_SUBCLASS_CHAIN_RULE,
-      RDFS_SUBPROPERTY_RULE,
-      RDFS_DOMAIN_RULE,
-      RDFS_RANGE_RULE,
-    ]),
-    Match.when("rdfs-subclass", () => [RDFS_SUBCLASS_RULE, RDFS_SUBCLASS_CHAIN_RULE]),
-    Match.when("owl-sameas", () => [OWL_SAMEAS_RULE, OWL_SAMEAS_SYMMETRY_RULE]),
-    Match.when("custom", () => []),
+    RDFS_SUBCLASS_RULE,
+    RDFS_SUBCLASS_CHAIN_RULE,
+    RDFS_SUBPROPERTY_RULE,
+    RDFS_DOMAIN_RULE,
+    RDFS_RANGE_RULE,
+  ]),
+  Match.when("rdfs-subclass", () => [RDFS_SUBCLASS_RULE, RDFS_SUBCLASS_CHAIN_RULE]),
+  Match.when("owl-sameas", () => [OWL_SAMEAS_RULE, OWL_SAMEAS_SYMMETRY_RULE]),
+  Match.when("custom", () => []),
   Match.exhaustive
 );
 
@@ -401,8 +401,25 @@ const getRulesForProfile = Match.type<ReasoningProfile>().pipe(
  * @category services
  * @since 0.0.0
  */
-export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
-  make: Effect.sync(() => {
+interface ReasonerShape {
+  readonly reason: (
+    store: RdfStore,
+    config: ReasoningConfig
+  ) => Effect.Effect<ReasoningResult, ReasoningError | RuleParseError>;
+  readonly reasonCopy: (
+    store: RdfStore,
+    config: ReasoningConfig
+  ) => Effect.Effect<{ readonly store: RdfStore; readonly result: ReasoningResult }, ReasoningError | RuleParseError>;
+  readonly reasonForValidation: (store: RdfStore) => Effect.Effect<ReasoningResult, ReasoningError | RuleParseError>;
+  readonly wouldInfer: (
+    store: RdfStore,
+    config: ReasoningConfig
+  ) => Effect.Effect<boolean, ReasoningError | RuleParseError>;
+  readonly getRules: (profile: ReasoningProfile) => ReadonlyArray<string>;
+}
+
+const makeReasoner = (): Effect.Effect<ReasonerShape> =>
+  Effect.sync(() => {
     /**
      * Core reasoning function - mutates the store
      */
@@ -556,7 +573,28 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
        */
       getRules: (profile: ReasoningProfile): ReadonlyArray<string> => getRulesForProfile(profile),
     };
-  }),
+  });
+
+/**
+ * Schema-backed RDF reasoner service.
+ *
+ * **Details**
+ *
+ * Applies the selected RDFS, OWL, or custom rule profile to an RDF store.
+ *
+ * **Example** (Inspect the reasoner layer)
+ * ```ts
+ * import { Layer } from "effect"
+ * import { Reasoner } from "@effect-ontology/Service/Reasoner"
+ *
+ * console.log(Layer.isLayer(Reasoner.Default)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class Reasoner extends Context.Service<Reasoner, ReasonerShape>()($I`Reasoner`, {
+  make: makeReasoner(),
 }) {
-  static readonly Default = Layer.effect(this, this.make);
+  static readonly Default: Layer.Layer<Reasoner> = Layer.effect(this, this.make);
 }

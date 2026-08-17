@@ -783,11 +783,14 @@ type BackpressureOverflowContext = {
 };
 
 const backpressureOverflow = Match.type<BackpressureConfig["strategy"]>().pipe(
-  Match.when("drop_oldest", () => ({ ref, event }: BackpressureOverflowContext) =>
-    Ref.update(ref, (state) => ({
-      ...state,
-      eventQueue: [...state.eventQueue.slice(1), event],
-    })).pipe(Effect.as(O.none()))
+  Match.when(
+    "drop_oldest",
+    () =>
+      ({ ref, event }: BackpressureOverflowContext) =>
+        Ref.update(ref, (state) => ({
+          ...state,
+          eventQueue: [...state.eventQueue.slice(1), event],
+        })).pipe(Effect.as(O.none()))
   ),
   Match.when("drop_newest", () => (_context: BackpressureOverflowContext) => Effect.succeed(O.none())),
   Match.when("block_producer", () =>
@@ -811,13 +814,15 @@ const backpressureOverflow = Match.type<BackpressureConfig["strategy"]>().pipe(
       return O.none();
     })
   ),
-  Match.when("close_stream", () => (_context: BackpressureOverflowContext) =>
-    Effect.fail(
-      ProgressStreamingError.make({
-        reason: "QueueOverflow",
-        message: "Backpressure critical: stream closed due to queue overflow",
-      })
-    )
+  Match.when(
+    "close_stream",
+    () => (_context: BackpressureOverflowContext) =>
+      Effect.fail(
+        ProgressStreamingError.make({
+          reason: "QueueOverflow",
+          message: "Backpressure critical: stream closed due to queue overflow",
+        })
+      )
   ),
   Match.exhaustive
 );

@@ -230,7 +230,26 @@ const ExtractionResultFields = {
   ),
 };
 
-class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`ExtractionResult`)(
+/**
+ * Complete result of one ontology extraction operation.
+ *
+ * **Details**
+ *
+ * Turtle and validation absence are explicit `Option` values. Convenience
+ * accessors are colocated with the schema-backed result.
+ *
+ * **Example** (Use ExtractionResult)
+ * ```ts
+ * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
+ *
+ * const count = (result: ExtractionResult): number => result.entities.length
+ * console.log(typeof count) // "function"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionResult`)(
   ExtractionResultFields,
   $I.annote("ExtractionResult", {
     description: "Knowledge graph, metrics, optional Turtle, and optional SHACL validation report.",
@@ -319,51 +338,6 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
     return O.isSome(this.turtle);
   }
 }
-
-/**
- * Complete result of one ontology extraction operation.
- *
- * **Details**
- *
- * * Turtle and validation absence are explicit `Option` values. Convenience
- * accessors are colocated with the schema-backed result.
- *
- * **Example** (Use ExtractionResult)
- * ```ts
- * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
- *
- * const count = (result: ExtractionResult): number => result.entities.length
- * console.log(typeof count) // "function"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const ExtractionResult = ExtractionResultModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(ExtractionResultFields))(fc).map((fields) => ExtractionResultModel.make(fields)),
-}).pipe(
-  $I.annoteSchema("ExtractionResult", {
-    description: "Knowledge graph, metrics, optional Turtle, and optional SHACL validation report.",
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime value decoded by {@link ExtractionResult}.
- *
- * **Example** (Use ExtractionResult)
- * ```ts
- * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
- *
- * const valid = (result: ExtractionResult): boolean => result.isValid
- * console.log(typeof valid) // "function"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ExtractionResult = typeof ExtractionResult.Type;
 
 const ExtractWithClaimsOptionsFields = {
   ontologyId: S.NonEmptyString.annotateKey({
@@ -462,7 +436,22 @@ const ExtractWithClaimsResultFields = {
   }),
 };
 
-class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>($I`ExtractWithClaimsResult`)(
+/**
+ * Extraction result augmented with claim-provenance metadata.
+ *
+ * **Example** (Use ExtractWithClaimsResult)
+ * ```ts
+ * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
+ *
+ * const hasClaims = (result: ExtractWithClaimsResult): boolean => result.hasClaims
+ * console.log(typeof hasClaims) // "function"
+ * ```
+ *
+ * @invariant Claim count is non-negative and article identity is non-empty.
+ * @category models
+ * @since 0.0.0
+ */
+export class ExtractWithClaimsResult extends S.Class<ExtractWithClaimsResult>($I`ExtractWithClaimsResult`)(
   ExtractWithClaimsResultFields,
   $I.annote("ExtractWithClaimsResult", {
     description: "Extraction result extended with claim count and source-article provenance.",
@@ -532,49 +521,6 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
     return this.claimCount > 0;
   }
 }
-
-/**
- * Extraction result augmented with claim-provenance metadata.
- *
- * **Example** (Use ExtractWithClaimsResult)
- * ```ts
- * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
- *
- * const hasClaims = (result: ExtractWithClaimsResult): boolean => result.hasClaims
- * console.log(typeof hasClaims) // "function"
- * ```
- *
- * @invariant Claim count is non-negative and article identity is non-empty.
- * @category models
- * @since 0.0.0
- */
-export const ExtractWithClaimsResult = ExtractWithClaimsResultModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(ExtractWithClaimsResultFields))(fc).map((fields) =>
-      ExtractWithClaimsResultModel.make(fields)
-    ),
-}).pipe(
-  $I.annoteSchema("ExtractWithClaimsResult", {
-    description: "Extraction result extended with claim count and source-article provenance.",
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime value decoded by {@link ExtractWithClaimsResult}.
- *
- * **Example** (Use ExtractWithClaimsResult)
- * ```ts
- * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
- *
- * const count = (result: ExtractWithClaimsResult): number => result.claimCount
- * console.log(typeof count) // "function"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ExtractWithClaimsResult = typeof ExtractWithClaimsResult.Type;
 
 const QueryBindingFields = {
   bindings: S.Record(S.String, S.String).pipe(

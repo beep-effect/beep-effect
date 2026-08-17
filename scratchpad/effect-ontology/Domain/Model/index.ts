@@ -43,8 +43,8 @@ export * from "./BatchWorkflow.ts";
  * ```ts
  * import { CoreClass } from "@effect-ontology/Model/index"
  * console.log(
- *   CoreClass.is["http://effect-ontology.dev/core#TrackedEntity"](
- *     "http://effect-ontology.dev/core#TrackedEntity"
+ *   CoreClass.is["https://effect-ontology.dev/core#TrackedEntity"](
+ *     "https://effect-ontology.dev/core#TrackedEntity"
  *   )
  * ) // true
  * ```

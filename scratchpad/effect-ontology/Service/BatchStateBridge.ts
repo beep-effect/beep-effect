@@ -25,7 +25,6 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { Cause, Context, Effect, Exit, Layer, PubSub, Ref, Stream } from "effect";
-import * as S from "effect/Schema";
 import { OntologyName } from "../Domain/Identity.ts";
 import { BatchStateHub } from "./BatchState.ts";
 import { EventBusService } from "./EventBus.ts";
@@ -103,7 +102,7 @@ const makeBatchStateBridge = Effect.gen(function* () {
   const bridge = Stream.fromSubscription(subscription).pipe(
     Stream.tap(
       Effect.fn("BatchStateBridge.publishStateChanged")(function* (state) {
-        const ontologyId = yield* S.decodeEffect(OntologyName)(state.ontologyId);
+        const ontologyId = yield* OntologyName.decodeEffect(state.ontologyId);
         yield* Effect.logDebug("Publishing canonical batch state event", {
           batchId: state.batchId,
           ontologyId,

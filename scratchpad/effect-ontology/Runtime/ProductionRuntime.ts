@@ -174,7 +174,7 @@ export const ExtractionLayersLive = Layer.mergeAll(
  *
  * Exports spans to Jaeger via OTLP HTTP protocol.
  * Run Jaeger locally with: docker run -d -p 16686:16686 -p 4318:4318 jaegertracing/all-in-one:latest
- * View traces at: http://localhost:16686
+ * View traces at: https://localhost:16686
  *
  * **Example** (Use TracingLive)
  *
@@ -190,7 +190,7 @@ export const ExtractionLayersLive = Layer.mergeAll(
  */
 export const TracingLive = makeTracingLayer({
   serviceName: "effect-ontology-extraction",
-  otlpEndpoint: URLStr.make("http://localhost:4318/v1/traces"),
+  otlpEndpoint: URLStr.make("https://localhost:4318/v1/traces"),
   enabled: true,
 }).pipe(Layer.provide(FetchHttpClient.layer));
 

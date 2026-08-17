@@ -41,7 +41,7 @@ const listHandler = Effect.fn("listHandler")(function* (prefix: O.Option<string>
     return;
   }
   const dirs = MutableHashSet.empty<string>();
-  const files = A.empty<string>()
+  const files = A.empty<string>();
   for (const item of items) {
     const relativePath = P.isTruthy(effectivePrefix)
       ? Str.replace(/^\//, "")(Str.replace(effectivePrefix, "")(item))

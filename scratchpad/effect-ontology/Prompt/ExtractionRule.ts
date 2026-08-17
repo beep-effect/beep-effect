@@ -303,7 +303,7 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
     return pipe(this.validationTemplate, Str.replace("{value}", Inspectable.toStringUnknown(value, 0)));
   }
 
-  static readonly decodeUnknownResult = S.decodeUnknownResult(ExtractionRule)
+  static readonly decodeUnknownResult = S.decodeUnknownResult(ExtractionRule);
 }
 
 /**

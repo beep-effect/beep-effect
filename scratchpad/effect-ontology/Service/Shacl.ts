@@ -38,7 +38,7 @@ import { emptyRdfStore, RdfBuilder, rdfStoreSize, rdfStoreToDataset } from "./Rd
 import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Shacl");
-const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#";
+const SHACL_NAMESPACE = "https://www.w3.org/ns/shacl#";
 
 export { ShaclValidationReport, ValidationPolicy };
 
@@ -211,7 +211,7 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
    * const layerWithViolations = ShaclWorkflowService.Test({
    *   conforms: false,
    *   violations: [{
-   *     focusNode: "http://example.org/entity1",
+   *     focusNode: "https://example.org/entity1",
    *     message: "Missing required property",
    *     severity: "violation"
    *   }]

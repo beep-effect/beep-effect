@@ -447,7 +447,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       const baseDomain = pipe(
         Str.match(/^https?:\/\/[^/]+\//)(config.rdf.baseNamespace),
         O.flatMap(A.head),
-        O.getOrElse(() => "http://example.org/")
+        O.getOrElse(() => "https://example.org/")
       );
       const baseNamespace = `${baseDomain}${input.targetNamespace}/`;
       const claims = knowledgeGraphToClaims(graph.entities, graph.relations, {

@@ -14,7 +14,6 @@
 import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import { FetchHttpClient, HttpClient } from "effect/unstable/http";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
@@ -173,7 +172,7 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
 
     // Create Voyage provider if API key is configured
     const voyageApiKey = O.getOrNull(config.embedding.voyageApiKey);
-    const voyageModel = yield* S.decodeUnknownEffect(VoyageModel)(config.embedding.voyageModel).pipe(
+    const voyageModel = yield* VoyageModel.decodeUnknownEffect(config.embedding.voyageModel).pipe(
       Effect.mapError((cause) =>
         EmbeddingError.make({
           message: `Unsupported Voyage embedding model: ${config.embedding.voyageModel}`,

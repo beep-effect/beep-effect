@@ -63,7 +63,7 @@ interface RdfConstructionPrefixes {
 }
 
 const n3NamedNode = (value: string): N3.NamedNode => N3.DataFactory.namedNode(IRI.fromUnknown(value));
-const isIriObjectString = P.some([Str.startsWith("http://"), Str.startsWith("https://"), Str.startsWith("urn:")]);
+const isIriObjectString = P.some([Str.startsWith("https://"), Str.startsWith("https://"), Str.startsWith("urn:")]);
 
 const valueToN3Literal = (value: string | number | boolean, prefixes: RdfConstructionPrefixes): N3.Literal => {
   if (P.isString(value)) return N3.DataFactory.literal(value);
@@ -102,10 +102,10 @@ const relationObjectToN3Term = (
   prefixes: RdfConstructionPrefixes
 ): N3.Quad_Object =>
   RelationObject.match(object, {
-      EntityReference: ({ value }): N3.Quad_Object => n3NamedNode(buildIri(baseNamespace, value)),
-      Text: ({ value }): N3.Quad_Object => valueToN3Literal(value, prefixes),
-      Number: ({ value }): N3.Quad_Object => valueToN3Literal(value, prefixes),
-      Boolean: ({ value }): N3.Quad_Object => valueToN3Literal(value, prefixes),
+    EntityReference: ({ value }): N3.Quad_Object => n3NamedNode(buildIri(baseNamespace, value)),
+    Text: ({ value }): N3.Quad_Object => valueToN3Literal(value, prefixes),
+    Number: ({ value }): N3.Quad_Object => valueToN3Literal(value, prefixes),
+    Boolean: ({ value }): N3.Quad_Object => valueToN3Literal(value, prefixes),
   });
 
 const relationToN3Quad = (relation: Relation, baseNamespace: string, prefixes: RdfConstructionPrefixes): N3.Quad =>
@@ -550,8 +550,8 @@ export interface AddTriplesOptions {
    * Use this to ensure extracted entities land in the batch's target namespace
    * rather than the deployment's default namespace.
    *
-   * Example: "http://sports.org/football/" will produce IRIs like
-   * "http://sports.org/football/entity123" instead of config default.
+   * Example: "https://sports.org/football/" will produce IRIs like
+   * "https://sports.org/football/entity123" instead of config default.
    */
   readonly targetNamespace?: string;
 }
@@ -680,7 +680,7 @@ export interface RdfBuilderShape {
    *
    * TriG format supports named graphs, outputting quads as:
    * ```trig
-   * @prefix ex: <http://example.org/> .
+   * @prefix ex: <https://example.org/> .
    *
    * ex:graph1 {
    *   ex:s ex:p ex:o .
@@ -975,7 +975,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
               ? (() => {
                   // Extract protocol://domain/ from baseNs
                   const match = baseNs.match(/^https?:\/\/[^/]+\//);
-                  const baseDomain = P.isNotNull(match) ? match[0] : "http://example.org/";
+                  const baseDomain = P.isNotNull(match) ? match[0] : "https://example.org/";
                   return `${baseDomain}${options.targetNamespace}/`;
                 })()
               : baseNs;
@@ -1024,7 +1024,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
               ? (() => {
                   // Extract protocol://domain/ from baseNs
                   const match = baseNs.match(/^https?:\/\/[^/]+\//);
-                  const baseDomain = P.isNotNull(match) ? match[0] : "http://example.org/";
+                  const baseDomain = P.isNotNull(match) ? match[0] : "https://example.org/";
                   return `${baseDomain}${options.targetNamespace}/`;
                 })()
               : baseNs;

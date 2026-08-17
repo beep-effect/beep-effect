@@ -562,7 +562,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
           matchType: "label",
           matchLanguage: language,
           score: Percentage.make(100), // Direct lookup
-          conceptUri: `http://www.wikidata.org/entity/${qid}`,
+          conceptUri: `https://www.wikidata.org/entity/${qid}`,
         };
       });
 

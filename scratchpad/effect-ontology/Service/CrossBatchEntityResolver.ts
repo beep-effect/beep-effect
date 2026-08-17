@@ -161,7 +161,7 @@ export class CrossBatchResolverConfig extends S.Class<CrossBatchResolverConfig>(
   maxBlockingCandidates: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(100))),
 
   /** Namespace prefix for generated canonical IRIs */
-  canonicalNamespace: S.String.pipe(SchemaUtils.withKeyDefaults("http://example.org/entities/")),
+  canonicalNamespace: S.String.pipe(SchemaUtils.withKeyDefaults("https://example.org/entities/")),
 }) {}
 
 const DEFAULT_CONFIG = CrossBatchResolverConfig.make({});

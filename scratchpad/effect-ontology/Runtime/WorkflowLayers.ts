@@ -322,21 +322,13 @@ const ExtractionWorkflowBundle = ExtractionWorkflowLive.pipe(
  */
 const ReasonerBundle = Reasoner.Default;
 
-/**
- * EventBusService for publishing domain events
- *
- * Using in-memory implementation by default.
- * For production with PostgreSQL, use EventBusServiceSqlLive instead.
- */
-const EventBusBundle = EventBusServiceMemory;
-
 const ActivityCoreLayer = Layer.mergeAll(
   StorageBundle,
   CoreDependenciesLayer,
   LlmExtractionBundle,
   OntologyBundle,
   ReasonerBundle,
-  EventBusBundle
+  EventBusServiceMemory
 );
 
 const ActivityEmbeddingLayer = EmbeddingBundle.pipe(Layer.provideMerge(ActivityCoreLayer));

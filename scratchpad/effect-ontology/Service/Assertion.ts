@@ -228,18 +228,18 @@ export class AssertionError extends S.TaggedError<AssertionError>($I`AssertionEr
  * Extends CLAIMS vocabulary with assertion-specific terms
  */
 const ASSERTIONS = {
-  namespace: "http://effect-ontology.dev/assertions#",
-  Assertion: IRI.fromUnknown("http://effect-ontology.dev/assertions#Assertion"),
-  assertedAt: IRI.fromUnknown("http://effect-ontology.dev/assertions#assertedAt"),
-  curatedBy: IRI.fromUnknown("http://effect-ontology.dev/assertions#curatedBy"),
-  derivedFromClaim: IRI.fromUnknown("http://effect-ontology.dev/assertions#derivedFromClaim"),
-  decision: IRI.fromUnknown("http://effect-ontology.dev/assertions#decision"),
-  Status: IRI.fromUnknown("http://effect-ontology.dev/assertions#Status"),
-  Accepted: IRI.fromUnknown("http://effect-ontology.dev/assertions#Accepted"),
-  Rejected: IRI.fromUnknown("http://effect-ontology.dev/assertions#Rejected"),
-  Pending: IRI.fromUnknown("http://effect-ontology.dev/assertions#Pending"),
-  rejectedAt: IRI.fromUnknown("http://effect-ontology.dev/assertions#rejectedAt"),
-  rejectionReason: IRI.fromUnknown("http://effect-ontology.dev/assertions#rejectionReason"),
+  namespace: "https://effect-ontology.dev/assertions#",
+  Assertion: IRI.fromUnknown("https://effect-ontology.dev/assertions#Assertion"),
+  assertedAt: IRI.fromUnknown("https://effect-ontology.dev/assertions#assertedAt"),
+  curatedBy: IRI.fromUnknown("https://effect-ontology.dev/assertions#curatedBy"),
+  derivedFromClaim: IRI.fromUnknown("https://effect-ontology.dev/assertions#derivedFromClaim"),
+  decision: IRI.fromUnknown("https://effect-ontology.dev/assertions#decision"),
+  Status: IRI.fromUnknown("https://effect-ontology.dev/assertions#Status"),
+  Accepted: IRI.fromUnknown("https://effect-ontology.dev/assertions#Accepted"),
+  Rejected: IRI.fromUnknown("https://effect-ontology.dev/assertions#Rejected"),
+  Pending: IRI.fromUnknown("https://effect-ontology.dev/assertions#Pending"),
+  rejectedAt: IRI.fromUnknown("https://effect-ontology.dev/assertions#rejectedAt"),
+  rejectionReason: IRI.fromUnknown("https://effect-ontology.dev/assertions#rejectionReason"),
 };
 
 // =============================================================================
@@ -315,7 +315,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         sourceClaims.reduce((sum, c) => sum + parseFloat(c.confidenceScore ?? "0.5"), 0) / sourceClaims.length;
       const avgConfidence =
         input.confidence ??
-        (yield* S.decodeEffect(Confidence)(meanConfidence).pipe(
+        (yield* Confidence.decodeEffect(meanConfidence).pipe(
           Effect.mapError(() =>
             AssertionError.make({
               operation: "create",

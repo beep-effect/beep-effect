@@ -10,28 +10,20 @@
  * @since 0.0.0
  */
 
-import {RDF_TYPE} from "@beep/rdf/Vocab/Rdf";
-import {RDFS_LABEL} from "@beep/rdf/Vocab/Rdfs";
-import {SCHEMA_NAME} from "@beep/rdf/Vocab/SchemaOrg";
-import {
-  Chunk,
-  Console,
-  Effect,
-  FileSystem,
-  MutableHashMap,
-  MutableHashSet,
-  Order
-} from "effect";
+import { Subject } from "@beep/rdf";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
+import { SCHEMA_NAME } from "@beep/rdf/Vocab/SchemaOrg";
+import { Chunk, Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import {pipe} from "effect/Function";
-import {Command, Flag as Options} from "effect/unstable/cli";
-import {BatchManifest} from "../../Domain/Schema/Batch.ts";
-import {RdfBuilder} from "../../Service/Rdf.ts";
-import {StorageService} from "../../Service/Storage.ts";
-import {withErrorHandler} from "../ErrorHandler.ts";
-import {Subject} from "@beep/rdf";
+import { Command, Flag as Options } from "effect/unstable/cli";
+import { BatchManifest } from "../../Domain/Schema/Batch.ts";
+import { RdfBuilder } from "../../Service/Rdf.ts";
+import { StorageService } from "../../Service/Storage.ts";
+import { withErrorHandler } from "../ErrorHandler.ts";
 
 // =============================================================================
 // Command Options
@@ -307,6 +299,6 @@ export const reconcileCommand = Command.make(
     threshold: thresholdOption,
     verbose: verboseOption,
   },
-  ({batchId, manifest, threshold, verbose}) =>
+  ({ batchId, manifest, threshold, verbose }) =>
     withErrorHandler(reconcileHandler(batchId, manifest, threshold, verbose))
 ).pipe(Command.withDescription("Analyze entities in a batch for potential duplicates and display statistics"));

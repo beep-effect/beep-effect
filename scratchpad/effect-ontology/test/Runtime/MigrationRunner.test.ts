@@ -31,7 +31,9 @@ const MigrationRunnerTestLayer = Layer.merge(DatabaseTestLayer, BunServices.laye
 
 describe.sequential("effect-ontology migrations", () => {
   it.layer(BunServices.layer)("with generated migration files", (it) => {
-    it.effect("keeps unsupported PostgreSQL features in the reviewed custom migration", Effect.fnUntraced(function* () {
+    it.effect(
+      "keeps unsupported PostgreSQL features in the reviewed custom migration",
+      Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const migrationNames = yield* fs.readDirectory(migrationsFolder);
         const customSql = yield* Effect.forEach(A.filter(migrationNames, Str.endsWith("_postgres_features")), (name) =>
@@ -61,7 +63,9 @@ describe.sequential("effect-ontology migrations", () => {
   });
 
   it.layer(DatabaseTestLayer)("with canonical Drizzle migration journaling", (it) => {
-    it.effect("applies fresh, remains idempotent, and discovers a future migration", Effect.fnUntraced(function* () {
+    it.effect(
+      "applies fresh, remains idempotent, and discovers a future migration",
+      Effect.fnUntraced(function* () {
         const database = yield* PostgresDrizzle;
         const sql = yield* SqlClient.SqlClient;
         const config = { migrationsSchema: "effect_ontology", migrations: [BaselineProbe] };
@@ -98,7 +102,9 @@ describe.sequential("effect-ontology migrations", () => {
   });
 
   it.layer(MigrationRunnerTestLayer)("with non-canonical migration history", (it) => {
-    it.effect("refuses an empty legacy journal with reset guidance", Effect.fnUntraced(function* () {
+    it.effect(
+      "refuses an empty legacy journal with reset guidance",
+      Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
         yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
@@ -115,7 +121,9 @@ describe.sequential("effect-ontology migrations", () => {
       })
     );
 
-    it.effect("refuses partial and mixed known legacy histories", Effect.fnUntraced(function* () {
+    it.effect(
+      "refuses partial and mixed known legacy histories",
+      Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
         yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
@@ -131,7 +139,9 @@ describe.sequential("effect-ontology migrations", () => {
       })
     );
 
-    it.effect("classifies a complete known legacy history and refuses an in-place rebaseline", Effect.fnUntraced(function* () {
+    it.effect(
+      "classifies a complete known legacy history and refuses an in-place rebaseline",
+      Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
         yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
@@ -156,7 +166,9 @@ describe.sequential("effect-ontology migrations", () => {
       })
     );
 
-    it.effect("allows an empty canonical journal to resume canonical migration", Effect.fnUntraced(function* () {
+    it.effect(
+      "allows an empty canonical journal to resume canonical migration",
+      Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
         yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
@@ -175,7 +187,9 @@ describe.sequential("effect-ontology migrations", () => {
       })
     );
 
-    it.effect("refuses mixed canonical journal names", Effect.fnUntraced(function* () {
+    it.effect(
+      "refuses mixed canonical journal names",
+      Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         const fs = yield* FileSystem.FileSystem;
         const baselineName = A.filter(yield* fs.readDirectory(migrationsFolder), Str.endsWith("_baseline"));
@@ -203,7 +217,9 @@ describe.sequential("effect-ontology migrations", () => {
       })
     );
 
-    it.effect("does not misclassify an unrelated journal as legacy ontology history", Effect.fnUntraced(function* () {
+    it.effect(
+      "does not misclassify an unrelated journal as legacy ontology history",
+      Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
         yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
@@ -215,7 +231,9 @@ describe.sequential("effect-ontology migrations", () => {
       })
     );
 
-    it.effect("does not query legacy columns on an unrelated journal shape", Effect.fnUntraced(function* () {
+    it.effect(
+      "does not query legacy columns on an unrelated journal shape",
+      Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
         yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;
@@ -227,7 +245,9 @@ describe.sequential("effect-ontology migrations", () => {
       })
     );
 
-    it.effect("refuses a malformed canonical journal with typed reset guidance", Effect.fnUntraced(function* () {
+    it.effect(
+      "refuses a malformed canonical journal with typed reset guidance",
+      Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DROP TABLE IF EXISTS public.schema_migrations`;
         yield* sql`DROP SCHEMA IF EXISTS effect_ontology CASCADE`;

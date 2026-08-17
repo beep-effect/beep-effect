@@ -6,7 +6,9 @@ import { Effect } from "effect";
 
 describe("canonical SPARQL adapter", () => {
   it.layer(OxigraphSparqlQueryServiceLive)("with the canonical Oxigraph adapter", (it) => {
-    it.effect("returns the semantic-web ASK result contract", Effect.fnUntraced(function* () {
+    it.effect(
+      "returns the semantic-web ASK result contract",
+      Effect.fnUntraced(function* () {
         const sparql = yield* SparqlQueryService;
         const result = yield* sparql.execute(
           SparqlQueryRequest.make({
@@ -16,7 +18,7 @@ describe("canonical SPARQL adapter", () => {
               Rdf.makeQuad(
                 Rdf.makeNamedNode("https://example.org/ada"),
                 Rdf.makeNamedNode("https://schema.org/name"),
-                Rdf.makeLiteral("Ada", "http://www.w3.org/2001/XMLSchema#string")
+                Rdf.makeLiteral("Ada", "https://www.w3.org/2001/XMLSchema#string")
               ),
             ]),
           })

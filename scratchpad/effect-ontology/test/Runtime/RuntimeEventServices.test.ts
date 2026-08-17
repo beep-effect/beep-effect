@@ -37,7 +37,9 @@ const IsolatedInferenceStores = Layer.merge(FirstInferenceStoreLive, SecondInfer
 
 describe("InferenceJobStore", () => {
   it.layer(IsolatedInferenceStores)("with isolated runtime-local stores", (it) => {
-    it.effect("isolates two layer instances and evicts the oldest bounded entry", Effect.fnUntraced(function* () {
+    it.effect(
+      "isolates two layer instances and evicts the oldest bounded entry",
+      Effect.fnUntraced(function* () {
         const first = yield* FirstInferenceStore;
         const second = yield* SecondInferenceStore;
         const retained = InferenceRunResponse.make({ jobId: "job-retained", status: "processing" });

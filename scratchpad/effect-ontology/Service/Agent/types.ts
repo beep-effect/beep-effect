@@ -106,7 +106,7 @@ export type AgentGraph = AgentGraphValue;
  * @category schemas
  * @since 0.0.0
  */
-export class AgentTask extends S.Class<AgentTask>("AgentTask")({
+class AgentTaskModel extends S.Class<AgentTaskModel>($I`AgentTask`)({
   /**
    * Unique task identifier
    */
@@ -310,6 +310,83 @@ export class AgentTask extends S.Class<AgentTask>("AgentTask")({
     });
   }
 }
+
+/**
+ * Runtime value decoded by {@link AgentTask}.
+ *
+ * **Example** (Accept an agent task)
+ * ```ts
+ * import type { AgentTask } from "@effect-ontology/Service/Agent/types"
+ *
+ * const taskId = (task: AgentTask): string => task.taskId
+ * console.log(typeof taskId) // "function"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface AgentTask {
+  readonly taskId: string;
+  readonly ontologyId: O.Option<string>;
+  readonly text: O.Option<string>;
+  readonly sourceUrl: O.Option<string>;
+  readonly agentConfig: O.Option<OntologyAgentConfig>;
+  readonly ingestionOptions: O.Option<unknown>;
+  readonly ingestionResult: O.Option<unknown>;
+  readonly graph: O.Option<AgentGraph>;
+  readonly knowledgeGraph: O.Option<KnowledgeGraph>;
+  readonly rdfStore: O.Option<RdfStore>;
+  readonly turtle: O.Option<string>;
+  readonly ontologyContext: O.Option<OntologyContext>;
+  readonly ontologyRef: O.Option<OntologyRef>;
+  readonly validationReport: O.Option<ShaclValidationReport>;
+  readonly validationExplanations: O.Option<ReadonlyArray<ViolationExplanation>>;
+  readonly correctionResult: O.Option<unknown>;
+  readonly documentId: O.Option<string>;
+  readonly context: O.Option<Readonly<Record<string, S.Json>>>;
+  readonly priority: O.Option<NonNegativeInt>;
+}
+
+type AgentTaskInput = Readonly<Pick<AgentTask, "taskId"> & Partial<Omit<AgentTask, "taskId">>>;
+
+interface AgentTaskSchema extends S.Codec<AgentTask, unknown> {
+  readonly make: (props: AgentTaskInput, options?: S.MakeOptions) => AgentTask;
+  readonly forExtraction: (
+    taskId: string,
+    text: string,
+    documentId?: string,
+    agentConfig?: OntologyAgentConfig
+  ) => AgentTask;
+  readonly forValidation: (taskId: string, graph: KnowledgeGraph | RdfStore) => AgentTask;
+  readonly forIngestion: (taskId: string, sourceUrl: string, ingestionOptions?: unknown) => AgentTask;
+  readonly forCorrection: (
+    taskId: string,
+    graph: KnowledgeGraph | RdfStore,
+    validationReport: ShaclValidationReport
+  ) => AgentTask;
+}
+
+/**
+ * Schema-backed unit of work processed by the agent pipeline.
+ *
+ * **Details**
+ *
+ * Optional task payloads are normalized to `Option` values at construction.
+ * The static factories retain the canonical extraction, validation, ingestion,
+ * and correction task policies.
+ *
+ * **Example** (Create an extraction task)
+ * ```ts
+ * import { AgentTask } from "@effect-ontology/Service/Agent/types"
+ *
+ * const task = AgentTask.forExtraction("task-1", "Source text")
+ * console.log(task.taskId) // "task-1"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AgentTask: AgentTaskSchema = AgentTaskModel;
 
 // =============================================================================
 // Pipeline Configuration
@@ -894,32 +971,37 @@ export type AgentRegistry = HashMap.HashMap<AgentIdType, RegisteredAgent>;
  * @category schemas
  * @since 0.0.0
  */
-export class ExecutionContext extends S.Class<ExecutionContext>("ExecutionContext")({
-  /**
-   * Current pipeline state
-   */
-  pipelineState: PipelineState,
+export class ExecutionContext extends S.Class<ExecutionContext>("ExecutionContext")(
+  {
+    /**
+     * Current pipeline state
+     */
+    pipelineState: PipelineState,
 
-  /**
-   * Current iteration (for loop mode)
-   */
-  iteration: NonNegativeInt,
+    /**
+     * Current iteration (for loop mode)
+     */
+    iteration: NonNegativeInt,
 
-  /**
-   * Whether tracing is enabled
-   */
-  tracingEnabled: S.Boolean,
+    /**
+     * Whether tracing is enabled
+     */
+    tracingEnabled: S.Boolean,
 
-  /**
-   * Parent span ID for distributed tracing
-   */
-  parentSpanId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    /**
+     * Parent span ID for distributed tracing
+     */
+    parentSpanId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
-  /**
-   * Correlation ID for request tracking
-   */
-  correlationId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-}) {}
+    /**
+     * Correlation ID for request tracking
+     */
+    correlationId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("AgentTask", {
+    description: "Schema-backed unit of work routed through the agent pipeline.",
+  })
+) {}
 
 // =============================================================================
 // Error Types

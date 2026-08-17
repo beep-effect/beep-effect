@@ -40,11 +40,7 @@ const program = Effect.gen(function* () {
     ? ["--bun", "drizzle-kit", "generate", ...forwardedArguments]
     : ["--bun", "drizzle-kit", "generate", "--config", "drizzle.config.ts", ...forwardedArguments];
   const exitCode = yield* spawner.exitCode(
-    ChildProcess.make(
-      "bunx",
-      drizzleArguments,
-      { cwd: moduleRoot, stderr: "inherit", stdout: "inherit" }
-    )
+    ChildProcess.make("bunx", drizzleArguments, { cwd: moduleRoot, stderr: "inherit", stdout: "inherit" })
   );
   if (exitCode !== 0) {
     return yield* MigrationGenerationError.make({

@@ -285,12 +285,12 @@ export const isValidIdempotencyKey = IdempotencyKey.is;
  * console.log(parseIdempotencyKey)
  * ```
  *
- * @param value - String to parse
+ * @param input - Unknown value decoded as an idempotency key.
  * @returns Effect yielding IdempotencyKey or failing with ParseError
  * @category parsing
  * @since 0.0.0
  */
-export const parseIdempotencyKey = (input: unknown) => S.decodeUnknownEffect(IdempotencyKey)(input);
+export const parseIdempotencyKey = (input: unknown) => IdempotencyKey.decodeUnknownEffect(input);
 
 // =============================================================================
 // Short Key (for display/logging)

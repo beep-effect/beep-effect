@@ -698,7 +698,7 @@ const buildRulesSection = (ruleSet: RuleSet): PromptDoc => {
       Doc.text("=== CRITICAL: USE LOCAL NAMES ==="),
       Doc.text("Use the short class/property names shown above (e.g., 'Player', 'Team')."),
       Doc.text("Do NOT use full URIs - we will expand them automatically."),
-      Doc.text("Example: Use 'Player' NOT 'http://ontology/Player'"),
+      Doc.text("Example: Use 'Player' NOT 'https://ontology/Player'"),
       Doc.empty
     );
   }

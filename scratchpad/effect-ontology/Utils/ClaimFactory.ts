@@ -195,7 +195,7 @@ export interface ClaimData extends CreateClaimInput {
  * ```ts
  * import { detectIriCollisions } from "@effect-ontology/Utils/ClaimFactory"
  *
- * const report = detectIriCollisions([], "http://example.org/")
+ * const report = detectIriCollisions([], "https://example.org/")
  * console.log(report.hasCollisions) // false
  * ```
  *
@@ -363,7 +363,7 @@ export const generateClaimId = dual4(
  * })
  *
  * const claims = O.map(entity, (value) => entityToClaims(value, {
- *   baseNamespace: "http://example.org/",
+ *   baseNamespace: "https://example.org/",
  *   documentId: "doc-123",
  *   ontologyId: "football"
  * }))
@@ -463,7 +463,7 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
  * })
  *
  * const claim = O.map(relation, (value) => relationToClaim(value, {
- *   baseNamespace: "http://example.org/",
+ *   baseNamespace: "https://example.org/",
  *   documentId: "doc-123",
  *   ontologyId: "football"
  * }))

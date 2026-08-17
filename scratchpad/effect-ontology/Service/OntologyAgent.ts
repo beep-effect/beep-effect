@@ -402,7 +402,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             ? (() => {
                 // Extract protocol://domain/ from config.rdf.baseNamespace
                 const match = config.rdf.baseNamespace.match(/^https?:\/\/[^/]+\//);
-                const baseDomain = P.isNotNull(match) ? match[0] : "http://example.org/";
+                const baseDomain = P.isNotNull(match) ? match[0] : "https://example.org/";
                 return `${baseDomain}${options.targetNamespace.value}/`;
               })()
             : config.rdf.baseNamespace;
@@ -1256,7 +1256,7 @@ const groupViolationsBySeverity = Effect.fn("OntologyAgent.groupViolationsBySeve
     violations,
     { violations: A.empty(), warnings: A.empty(), info: A.empty() },
     (byLevel, violation) => {
-    const message = formatViolationExplanation(violation);
+      const message = formatViolationExplanation(violation);
       return appendViolationBySeverity(violation.severity)(byLevel, message);
     }
   );

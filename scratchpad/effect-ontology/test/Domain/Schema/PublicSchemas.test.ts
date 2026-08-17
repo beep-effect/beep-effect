@@ -102,7 +102,9 @@ describe("effect-ontology public schema surface", () => {
     expect(Result.isFailure(empty)).toBe(true);
   });
 
-  it.effect("represents extraction input and terminal output with discriminated variants", Effect.fnUntraced(function* () {
+  it.effect(
+    "represents extraction input and terminal output with discriminated variants",
+    Effect.fnUntraced(function* () {
       const source = yield* S.decodeEffect(Api.SubmitJobSource)({
         _tag: "Remote",
         value: { url: "https://example.com/report.pdf" },

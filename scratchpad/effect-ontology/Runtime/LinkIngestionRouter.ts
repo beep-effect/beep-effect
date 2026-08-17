@@ -13,10 +13,10 @@ import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Cause, DateTime, Effect, HashSet, Random, Schedule } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as A from "effect/Array";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { BatchId, ContentHash, DocumentId, GcsBucket, GcsUri, Namespace } from "../Domain/Identity.ts";
 import { BatchStage, BatchState } from "../Domain/Model/BatchWorkflow.ts";
@@ -33,9 +33,7 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/LinkIngestionRouter");
 const CreateBatchFromLinksBody = S.Struct({
   linkIds: S.Array(S.String),
   targetNamespace: S.optionalKey(S.String),
-}).pipe(
-  SchemaUtils.withOptionCodecStatics,
-);
+}).pipe(SchemaUtils.withOptionCodecStatics);
 
 const NonTerminalBatchStage = BatchStage.pick(BatchStage.omitOptions(["Complete", "Failed"]));
 

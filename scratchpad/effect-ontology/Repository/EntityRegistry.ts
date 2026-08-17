@@ -31,13 +31,7 @@ import type {
   EntityAliasRow,
   EntityBlockingTokenInsertRow,
 } from "./schema.ts";
-import {
-  CanonicalEntities,
-  canonicalEntities,
-  EntityAliases,
-  entityAliases,
-  entityBlockingTokens,
-} from "./schema.ts";
+import { CanonicalEntities, canonicalEntities, EntityAliases, entityAliases, entityBlockingTokens } from "./schema.ts";
 
 // =============================================================================
 // Types

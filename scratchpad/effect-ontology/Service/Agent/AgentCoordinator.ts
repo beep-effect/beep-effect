@@ -34,6 +34,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
+import type { Config } from "effect";
 import { Cause, Clock, Context, DateTime, Duration, Effect, HashMap, Inspectable, Layer, Match, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -141,6 +142,49 @@ export class ExecutionResult extends S.Class<ExecutionResult>($I`ExecutionResult
   $I.annote("ExecutionResult", { description: "Validated state, events, and outputs from one pipeline execution." })
 ) {}
 
+interface AgentCoordinatorShape {
+  readonly register: <E>(agent: Agent<AgentTask, AgentTask, E, never>, agentType?: AgentType) => Effect.Effect<void>;
+  readonly unregister: (agentId: AgentIdType) => Effect.Effect<void>;
+  readonly getAgent: (
+    agentId: AgentIdType
+  ) => Effect.Effect<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>, AgentNotFoundError>;
+  readonly listAgents: Effect.Effect<ReadonlyArray<AgentMetadata>>;
+  readonly executeSequential: (
+    task: AgentTask,
+    agentIds: ReadonlyArray<AgentIdType>,
+    options?: ExecutionOptions
+  ) => Effect.Effect<ExecutionResult, PipelineExecutionError>;
+  readonly executeLoop: (
+    task: AgentTask,
+    agentIds: ReadonlyArray<AgentIdType>,
+    termination: TerminationCondition,
+    options?: ExecutionOptions
+  ) => Effect.Effect<ExecutionResult, PipelineExecutionError>;
+  readonly executeParallel: (
+    task: AgentTask,
+    agentIds: ReadonlyArray<AgentIdType>,
+    options?: ExecutionOptions & { readonly concurrency?: number }
+  ) => Effect.Effect<ExecutionResult, PipelineExecutionError>;
+  readonly execute: (
+    task: AgentTask,
+    pipelineConfig: PipelineConfig,
+    options?: ExecutionOptions
+  ) => Effect.Effect<ExecutionResult, PipelineExecutionError>;
+  readonly runUntil: (
+    task: AgentTask,
+    agentIds: ReadonlyArray<AgentIdType>,
+    condition: (state: PipelineState) => boolean,
+    maxIterations: number,
+    options?: ExecutionOptions
+  ) => Effect.Effect<ExecutionResult, PipelineExecutionError>;
+  readonly refineUntilConformant: (
+    graph: KnowledgeGraph | RdfStore,
+    refinementConfig: RefinementConfig,
+    options?: ExecutionOptions
+  ) => Effect.Effect<RefinementResult, PipelineExecutionError>;
+  readonly metadata: AgentMetadata;
+}
+
 // =============================================================================
 // Service Definition
 // =============================================================================
@@ -164,7 +208,7 @@ export class ExecutionResult extends S.Class<ExecutionResult>($I`ExecutionResult
  * @category layers
  * @since 0.0.0
  */
-export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`AgentCoordinator`, {
+export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoordinatorShape>()($I`AgentCoordinator`, {
   make: Effect.gen(function* () {
     const config = yield* ConfigService;
 
@@ -318,8 +362,8 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
           : agent.execute(input);
 
         const result = yield* executeWithTimeout.pipe(
-          Effect.catch((error) =>
-            Effect.gen(function* () {
+          Effect.catch(
+            Effect.fnUntraced(function* (error) {
               const isTimeout = Cause.isTimeoutError(error);
               const failedAt = yield* DateTime.now;
               const failedEvent = AgentFailed.make({
@@ -771,34 +815,53 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
      * Execute pipeline based on configuration
      */
     const executePipelineMode = Match.type<PipelineConfig["mode"]>().pipe(
-      Match.when("sequential", () => (
-        task: AgentTask,
-        _pipelineConfig: PipelineConfig,
-        agentIds: ReadonlyArray<AgentId>,
-        options: ExecutionOptions | undefined
-      ) => executeSequential(task, agentIds, options)),
-      Match.when("loop", () => (
-        task: AgentTask,
-        pipelineConfig: PipelineConfig,
-        agentIds: ReadonlyArray<AgentId>,
-        options: ExecutionOptions | undefined
-      ) => executeLoop(task, agentIds, O.getOrElse(pipelineConfig.termination, TerminationCondition.default), options)),
-      Match.when("parallel", () => (
-        task: AgentTask,
-        pipelineConfig: PipelineConfig,
-        agentIds: ReadonlyArray<AgentId>,
-        options: ExecutionOptions | undefined
-      ) =>
-        executeParallel(task, agentIds, {
-          ...options,
-          ...(O.isSome(pipelineConfig.concurrency) ? { concurrency: pipelineConfig.concurrency.value } : {}),
-        })),
-      Match.when("graph", () => (
-        task: AgentTask,
-        _pipelineConfig: PipelineConfig,
-        agentIds: ReadonlyArray<AgentId>,
-        options: ExecutionOptions | undefined
-      ) => executeSequential(task, agentIds, options)),
+      Match.when(
+        "sequential",
+        () =>
+          (
+            task: AgentTask,
+            _pipelineConfig: PipelineConfig,
+            agentIds: ReadonlyArray<AgentId>,
+            options: ExecutionOptions | undefined
+          ) =>
+            executeSequential(task, agentIds, options)
+      ),
+      Match.when(
+        "loop",
+        () =>
+          (
+            task: AgentTask,
+            pipelineConfig: PipelineConfig,
+            agentIds: ReadonlyArray<AgentId>,
+            options: ExecutionOptions | undefined
+          ) =>
+            executeLoop(task, agentIds, O.getOrElse(pipelineConfig.termination, TerminationCondition.default), options)
+      ),
+      Match.when(
+        "parallel",
+        () =>
+          (
+            task: AgentTask,
+            pipelineConfig: PipelineConfig,
+            agentIds: ReadonlyArray<AgentId>,
+            options: ExecutionOptions | undefined
+          ) =>
+            executeParallel(task, agentIds, {
+              ...options,
+              ...(O.isSome(pipelineConfig.concurrency) ? { concurrency: pipelineConfig.concurrency.value } : {}),
+            })
+      ),
+      Match.when(
+        "graph",
+        () =>
+          (
+            task: AgentTask,
+            _pipelineConfig: PipelineConfig,
+            agentIds: ReadonlyArray<AgentId>,
+            options: ExecutionOptions | undefined
+          ) =>
+            executeSequential(task, agentIds, options)
+      ),
       Match.exhaustive
     );
 
@@ -1005,7 +1068,10 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
         // Step 1: Validate
         const validationResult = yield* executeAgent(
           validator,
-          AgentTask.make({ taskId: `${pipelineId}:validate:${iteration}`, graph: O.some(currentGraph) }),
+          AgentTask.make({
+            taskId: `${pipelineId}:validate:${iteration}`,
+            graph: O.some(currentGraph),
+          }),
           eventsRef,
           options
         ).pipe(
@@ -1030,7 +1096,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
           )
         );
 
-        const validationTask = yield* S.decodeUnknownEffect(AgentTask)(validationResult.output).pipe(
+        const validationTask = yield* S.decodeEffect(AgentTask)(validationResult.output).pipe(
           Effect.mapError((cause) =>
             PipelineExecutionError.make({
               pipelineId,
@@ -1110,7 +1176,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
           )
         );
 
-        const correctionOutput = yield* S.decodeUnknownEffect(AgentTask)(correctionResult.output).pipe(
+        const correctionOutput = yield* S.decodeEffect(AgentTask)(correctionResult.output).pipe(
           Effect.mapError((cause) =>
             PipelineExecutionError.make({
               pipelineId,
@@ -1288,7 +1354,9 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
     };
   }),
 }) {
-  static readonly Default = Layer.effect(this, this.make).pipe(Layer.provide([ConfigServiceDefault]));
+  static readonly Default: Layer.Layer<AgentCoordinator, Config.ConfigError> = Layer.effect(this, this.make).pipe(
+    Layer.provide([ConfigServiceDefault])
+  );
 }
 
 // =============================================================================

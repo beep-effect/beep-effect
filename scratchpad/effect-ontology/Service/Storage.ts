@@ -143,9 +143,7 @@ export class GenerationMismatchError extends S.TaggedError<GenerationMismatchErr
  */
 export interface StorageServiceMethods extends KeyValueStore.KeyValueStore {
   /** Read text content while representing a missing key explicitly. */
-  readonly getOption: (
-    key: string
-  ) => Effect.Effect<O.Option<string>, KeyValueStore.KeyValueStoreError>;
+  readonly getOption: (key: string) => Effect.Effect<O.Option<string>, KeyValueStore.KeyValueStoreError>;
 
   readonly list: (prefix: string) => Effect.Effect<Array<string>, SystemError | PlatformError>;
 

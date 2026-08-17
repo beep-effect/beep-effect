@@ -29,13 +29,13 @@ const utf8Encoder = new TextEncoder();
  * ```ts
  * import { CORE_NAMESPACE } from "@effect-ontology/Model/CoreOntology"
  *
- * console.log(CORE_NAMESPACE) // "http://effect-ontology.dev/core#"
+ * console.log(CORE_NAMESPACE) // "https://effect-ontology.dev/core#"
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const CORE_NAMESPACE: IRI = IRI.fromUnknown("http://effect-ontology.dev/core#");
+export const CORE_NAMESPACE: IRI = IRI.fromUnknown("https://effect-ontology.dev/core#");
 
 /**
  * Core ontology class IRIs used by tracked objects.
@@ -50,8 +50,8 @@ export const CORE_NAMESPACE: IRI = IRI.fromUnknown("http://effect-ontology.dev/c
  * import { CoreClass } from "@effect-ontology/Model/CoreOntology"
  *
  * console.log(
- *   CoreClass.is["http://effect-ontology.dev/core#Person"](
- *     "http://effect-ontology.dev/core#Person"
+ *   CoreClass.is["https://effect-ontology.dev/core#Person"](
+ *     "https://effect-ontology.dev/core#Person"
  *   )
  * ) // true
  * ```
@@ -60,24 +60,24 @@ export const CORE_NAMESPACE: IRI = IRI.fromUnknown("http://effect-ontology.dev/c
  * @since 0.0.0
  */
 export const CoreClass = LiteralKit([
-  "http://effect-ontology.dev/core#TrackedEntity",
-  "http://effect-ontology.dev/core#TrackedEvent",
-  "http://effect-ontology.dev/core#Mention",
-  "http://effect-ontology.dev/core#Person",
-  "http://effect-ontology.dev/core#Organization",
-  "http://effect-ontology.dev/core#Place",
-  "http://effect-ontology.dev/core#Artifact",
+  "https://effect-ontology.dev/core#TrackedEntity",
+  "https://effect-ontology.dev/core#TrackedEvent",
+  "https://effect-ontology.dev/core#Mention",
+  "https://effect-ontology.dev/core#Person",
+  "https://effect-ontology.dev/core#Organization",
+  "https://effect-ontology.dev/core#Place",
+  "https://effect-ontology.dev/core#Artifact",
 ])
   .annotate({
     toArbitrary: () => (fc) =>
       fc.constantFrom(
-        "http://effect-ontology.dev/core#TrackedEntity",
-        "http://effect-ontology.dev/core#TrackedEvent",
-        "http://effect-ontology.dev/core#Mention",
-        "http://effect-ontology.dev/core#Person",
-        "http://effect-ontology.dev/core#Organization",
-        "http://effect-ontology.dev/core#Place",
-        "http://effect-ontology.dev/core#Artifact"
+        "https://effect-ontology.dev/core#TrackedEntity",
+        "https://effect-ontology.dev/core#TrackedEvent",
+        "https://effect-ontology.dev/core#Mention",
+        "https://effect-ontology.dev/core#Person",
+        "https://effect-ontology.dev/core#Organization",
+        "https://effect-ontology.dev/core#Place",
+        "https://effect-ontology.dev/core#Artifact"
       ),
   })
   .annotate(
@@ -93,7 +93,7 @@ export const CoreClass = LiteralKit([
  * ```ts
  * import type { CoreClass } from "@effect-ontology/Model/CoreOntology"
  *
- * const iri: CoreClass = "http://effect-ontology.dev/core#TrackedEntity"
+ * const iri: CoreClass = "https://effect-ontology.dev/core#TrackedEntity"
  * console.log(iri.endsWith("TrackedEntity")) // true
  * ```
  *
@@ -110,8 +110,8 @@ export type CoreClass = typeof CoreClass.Type;
  * import { CoreProperty } from "@effect-ontology/Model/CoreOntology"
  *
  * console.log(
- *   CoreProperty.is["http://effect-ontology.dev/core#hasParticipant"](
- *     "http://effect-ontology.dev/core#hasParticipant"
+ *   CoreProperty.is["https://effect-ontology.dev/core#hasParticipant"](
+ *     "https://effect-ontology.dev/core#hasParticipant"
  *   )
  * ) // true
  * ```
@@ -120,44 +120,44 @@ export type CoreClass = typeof CoreClass.Type;
  * @since 0.0.0
  */
 export const CoreProperty = LiteralKit([
-  "http://effect-ontology.dev/core#hasEvidentialMention",
-  "http://effect-ontology.dev/core#mentions",
-  "http://effect-ontology.dev/core#hasParticipant",
-  "http://effect-ontology.dev/core#isParticipantIn",
-  "http://effect-ontology.dev/core#canonicalEntity",
-  "http://effect-ontology.dev/core#isCanonicalFormOf",
-  "http://effect-ontology.dev/core#mergedFrom",
-  "http://effect-ontology.dev/core#wasMergedInto",
-  "http://effect-ontology.dev/core#resolutionConfidence",
-  "http://effect-ontology.dev/core#hasLocation",
-  "http://effect-ontology.dev/core#isLocationOf",
-  "http://effect-ontology.dev/core#name",
-  "http://effect-ontology.dev/core#description",
-  "http://effect-ontology.dev/core#occurrenceTime",
-  "http://effect-ontology.dev/core#startTime",
-  "http://effect-ontology.dev/core#endTime",
-  "http://effect-ontology.dev/core#groundingConfidence",
+  "https://effect-ontology.dev/core#hasEvidentialMention",
+  "https://effect-ontology.dev/core#mentions",
+  "https://effect-ontology.dev/core#hasParticipant",
+  "https://effect-ontology.dev/core#isParticipantIn",
+  "https://effect-ontology.dev/core#canonicalEntity",
+  "https://effect-ontology.dev/core#isCanonicalFormOf",
+  "https://effect-ontology.dev/core#mergedFrom",
+  "https://effect-ontology.dev/core#wasMergedInto",
+  "https://effect-ontology.dev/core#resolutionConfidence",
+  "https://effect-ontology.dev/core#hasLocation",
+  "https://effect-ontology.dev/core#isLocationOf",
+  "https://effect-ontology.dev/core#name",
+  "https://effect-ontology.dev/core#description",
+  "https://effect-ontology.dev/core#occurrenceTime",
+  "https://effect-ontology.dev/core#startTime",
+  "https://effect-ontology.dev/core#endTime",
+  "https://effect-ontology.dev/core#groundingConfidence",
 ])
   .annotate({
     toArbitrary: () => (fc) =>
       fc.constantFrom(
-        "http://effect-ontology.dev/core#hasEvidentialMention",
-        "http://effect-ontology.dev/core#mentions",
-        "http://effect-ontology.dev/core#hasParticipant",
-        "http://effect-ontology.dev/core#isParticipantIn",
-        "http://effect-ontology.dev/core#canonicalEntity",
-        "http://effect-ontology.dev/core#isCanonicalFormOf",
-        "http://effect-ontology.dev/core#mergedFrom",
-        "http://effect-ontology.dev/core#wasMergedInto",
-        "http://effect-ontology.dev/core#resolutionConfidence",
-        "http://effect-ontology.dev/core#hasLocation",
-        "http://effect-ontology.dev/core#isLocationOf",
-        "http://effect-ontology.dev/core#name",
-        "http://effect-ontology.dev/core#description",
-        "http://effect-ontology.dev/core#occurrenceTime",
-        "http://effect-ontology.dev/core#startTime",
-        "http://effect-ontology.dev/core#endTime",
-        "http://effect-ontology.dev/core#groundingConfidence"
+        "https://effect-ontology.dev/core#hasEvidentialMention",
+        "https://effect-ontology.dev/core#mentions",
+        "https://effect-ontology.dev/core#hasParticipant",
+        "https://effect-ontology.dev/core#isParticipantIn",
+        "https://effect-ontology.dev/core#canonicalEntity",
+        "https://effect-ontology.dev/core#isCanonicalFormOf",
+        "https://effect-ontology.dev/core#mergedFrom",
+        "https://effect-ontology.dev/core#wasMergedInto",
+        "https://effect-ontology.dev/core#resolutionConfidence",
+        "https://effect-ontology.dev/core#hasLocation",
+        "https://effect-ontology.dev/core#isLocationOf",
+        "https://effect-ontology.dev/core#name",
+        "https://effect-ontology.dev/core#description",
+        "https://effect-ontology.dev/core#occurrenceTime",
+        "https://effect-ontology.dev/core#startTime",
+        "https://effect-ontology.dev/core#endTime",
+        "https://effect-ontology.dev/core#groundingConfidence"
       ),
   })
   .annotate(
@@ -173,7 +173,7 @@ export const CoreProperty = LiteralKit([
  * ```ts
  * import type { CoreProperty } from "@effect-ontology/Model/CoreOntology"
  *
- * const iri: CoreProperty = "http://effect-ontology.dev/core#name"
+ * const iri: CoreProperty = "https://effect-ontology.dev/core#name"
  * console.log(iri.endsWith("name")) // true
  * ```
  *

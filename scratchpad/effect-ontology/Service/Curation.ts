@@ -137,9 +137,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
       const now = yield* DateTime.now;
 
-      const result: CurationResult = yield* curationActionHandler(action)(now);
-
-      return result;
+      return yield* curationActionHandler(action)(now);
     });
 
     /**

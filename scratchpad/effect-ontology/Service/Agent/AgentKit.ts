@@ -170,8 +170,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       }
       const extraOptions = O.match(task.ingestionOptions, {
         onNone: () => ({}),
-        onSome: (value): Record<string, unknown> =>
-          O.getOrElse(S.decodeUnknownOption(UnknownRecord)(value), () => ({})),
+        onSome: (value): Record<string, unknown> => O.getOrElse(UnknownRecord.decodeUnknownOption(value), () => ({})),
       });
       const ingestResult = yield* ingestionOpt.value.ingestUrl(task.sourceUrl.value, {
         ontologyId: task.ontologyId.value,

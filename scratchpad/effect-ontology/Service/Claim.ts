@@ -12,10 +12,12 @@
 
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import type { PostgresDrizzle } from "@beep/postgres";
 import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
 import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import type { Config } from "effect";
 import { Context, DateTime, Effect, Layer, Random } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -130,6 +132,36 @@ export interface DeprecationResult {
   readonly correctionId?: string;
 }
 
+interface ClaimServiceShape {
+  readonly createClaim: (input: CreateClaimInput) => ReturnType<ClaimRepository["Service"]["insertClaim"]>;
+  readonly getClaim: (claimId: string, ontologyId: string) => ReturnType<ClaimRepository["Service"]["getClaim"]>;
+  readonly getClaims: (filter: ClaimFilter) => ReturnType<ClaimRepository["Service"]["getClaims"]>;
+  readonly deprecateClaim: (
+    claimId: string,
+    ontologyId: string,
+    reason: string,
+    correctionId?: string
+  ) => Effect.Effect<DeprecationResult, Effect.Error<ReturnType<ClaimRepository["Service"]["deprecateClaim"]>>>;
+  readonly promoteToPreferred: (
+    claimId: string,
+    ontologyId: string
+  ) => ReturnType<ClaimRepository["Service"]["promoteToPreferred"]>;
+  readonly findConflicting: (
+    claim: ClaimRow | ClaimInsertRow
+  ) => ReturnType<ClaimRepository["Service"]["findConflictingClaims"]>;
+  readonly getClaimHistory: (
+    subjectIri: string,
+    predicateIri: string,
+    ontologyId: string
+  ) => ReturnType<ClaimRepository["Service"]["getClaimHistory"]>;
+  readonly toReifiedTriples: (claim: ClaimRow, graphUri?: string) => Effect.Effect<Array<Quad>>;
+  readonly addClaimToStore: (rdfStore: RdfStore, claim: ClaimRow, graphUri?: string) => Effect.Effect<Array<Quad>>;
+  readonly claimsToTurtle: (
+    claims: Array<ClaimRow>,
+    graphUri?: string
+  ) => ReturnType<RdfBuilder["Service"]["toTurtle"]>;
+}
+
 // =============================================================================
 // Service
 // =============================================================================
@@ -162,7 +194,7 @@ export interface DeprecationResult {
  * @category services
  * @since 0.0.0
  */
-export class ClaimService extends Context.Service<ClaimService>()($I`ClaimService`, {
+export class ClaimService extends Context.Service<ClaimService, ClaimServiceShape>()($I`ClaimService`, {
   make: Effect.gen(function* () {
     const repo = yield* ClaimRepository;
     const rdf = yield* RdfBuilder;
@@ -220,7 +252,7 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
         claimId,
         deprecatedAt: DateTime.toDate(now),
         reason,
-        correctionId,
+        ...(P.isUndefined(correctionId) ? {} : { correctionId }),
       };
     });
 
@@ -556,7 +588,8 @@ export class ClaimService extends Context.Service<ClaimService>()($I`ClaimServic
     };
   }),
 }) {
-  static readonly Default = Layer.effect(this, this.make).pipe(
-    Layer.provide([ClaimRepository.Default, RdfBuilder.Default])
-  );
+  static readonly Default: Layer.Layer<ClaimService, Config.ConfigError, PostgresDrizzle> = Layer.effect(
+    this,
+    this.make
+  ).pipe(Layer.provide([ClaimRepository.Default, RdfBuilder.Default]));
 }

@@ -36,11 +36,11 @@ import * as Str from "effect/String";
  * import * as S from "effect/Schema"
  *
  * const iris = S.decodeUnknownOption(S.Array(IRI))([
- *   "http://ontology/TeamRanking",
- *   "http://ontology/PlayerName"
+ *   "https://ontology/TeamRanking",
+ *   "https://ontology/PlayerName"
  * ])
  * console.log(O.flatMap(iris, (values) =>
- *   MutableHashMap.get(buildCaseInsensitiveIriMap(values), "http://ontology/teamranking")
+ *   MutableHashMap.get(buildCaseInsensitiveIriMap(values), "https://ontology/teamranking")
  * ))
  * ```
  *
@@ -69,9 +69,9 @@ export const buildCaseInsensitiveIriMap = (iris: ReadonlyArray<IRI>): MutableHas
  * import * as S from "effect/Schema"
  *
  * const iris = S.decodeUnknownOption(S.Tuple([IRI, IRI, IRI]))([
- *   "http://ontology/TeamRanking",
- *   "http://ontology/teamranking",
- *   "http://ontology/Unknown"
+ *   "https://ontology/TeamRanking",
+ *   "https://ontology/teamranking",
+ *   "https://ontology/Unknown"
  * ])
  * console.log(O.map(iris, ([canonical, lowerCase, unknown]) => {
  *   const map = buildCaseInsensitiveIriMap([canonical])
@@ -156,8 +156,8 @@ export const iriExistsCaseInsensitive: {
  * ```ts
  * import { extractLocalNameFromIri } from "@effect-ontology/Utils/Iri"
  *
- * extractLocalNameFromIri("http://ontology/Player") // => "Player"
- * extractLocalNameFromIri("http://www.w3.org/2001/XMLSchema#string") // => "string"
+ * extractLocalNameFromIri("https://ontology/Player") // => "Player"
+ * extractLocalNameFromIri("https://www.w3.org/2001/XMLSchema#string") // => "string"
  * ```
  *
  * @param iri - Full IRI string
@@ -222,9 +222,9 @@ export interface LocalNameMapResult {
  * import * as S from "effect/Schema"
  *
  * const iris = S.decodeUnknownOption(S.Array(IRI))([
- *   "http://ontology/Player",
- *   "http://xmlns.com/foaf/0.1/member",
- *   "http://www.w3.org/ns/org#member"
+ *   "https://ontology/Player",
+ *   "https://xmlns.com/foaf/0.1/member",
+ *   "https://www.w3.org/ns/org#member"
  * ])
  * console.log(O.map(iris, (values) => {
  *   const result = buildLocalNameToIriMapSafe(values)
@@ -282,7 +282,7 @@ export const buildLocalNameToIriMapSafe = (iris: ReadonlyArray<IRI>): LocalNameM
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const iri = S.decodeUnknownOption(IRI)("http://ontology/Player")
+ * const iri = S.decodeUnknownOption(IRI)("https://ontology/Player")
  * const map = O.map(iri, (value) => buildLocalNameToIriMapSafe([value]).map)
  * console.log(O.flatMap(map, (value) => expandLocalNameToIri("player", value)))
  * console.log(O.map(map, (value) => O.isNone(expandLocalNameToIri("Unknown", value))))
@@ -319,8 +319,8 @@ export const expandLocalNameToIri: {
  * import * as S from "effect/Schema"
  *
  * const iris = S.decodeUnknownOption(S.Array(IRI))([
- *   "http://ontology/Player",
- *   "http://ontology/Team"
+ *   "https://ontology/Player",
+ *   "https://ontology/Team"
  * ])
  * console.log(O.map(iris, (values) =>
  *   expandTypesToIris(["player", "Team", "Unknown"], buildLocalNameToIriMapSafe(values).map)

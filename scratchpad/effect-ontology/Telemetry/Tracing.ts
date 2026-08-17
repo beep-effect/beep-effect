@@ -37,7 +37,7 @@ const $I = $ScratchpadId.create("effect-ontology/Telemetry/Tracing");
 export class TracingConfig extends S.Class<TracingConfig>($I`TracingConfig`)(
   {
     serviceName: S.NonEmptyString,
-    otlpEndpoint: URLStr.pipe(SchemaUtils.withKeyDefaults(URLStr.make("http://localhost:4318/v1/traces"))),
+    otlpEndpoint: URLStr.pipe(SchemaUtils.withKeyDefaults(URLStr.make("https://localhost:4318/v1/traces"))),
     enabled: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
   },
   $I.annote("TracingConfig", {
@@ -92,7 +92,7 @@ export const makeTracingLayer = (input: TracingConfigInput) => {
   }
 
   // Default to Jaeger's OTLP endpoint (Jaeger supports OTLP natively)
-  // For Jaeger: http://localhost:4318/v1/traces (OTLP HTTP)
+  // For Jaeger: https://localhost:4318/v1/traces (OTLP HTTP)
   return OtlpTracer.layer({
     url: config.otlpEndpoint,
     resource: {

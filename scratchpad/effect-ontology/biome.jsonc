@@ -5,7 +5,7 @@
     "enabled": false
   },
   "files": {
-    "includes": ["**", "!docs", "!node_modules"]
+    "includes": ["**", "!!effect-ontology/docs", "!!effect-ontology/node_modules"]
   },
   "formatter": {
     "enabled": true,

@@ -308,7 +308,7 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
     });
 
     /**
-     * Get ontology entry by IRI (e.g., "http://effect-ontology.dev/seattle")
+     * Get ontology entry by IRI (e.g., "https://effect-ontology.dev/seattle")
      */
     const getByIri = Effect.fn("getByIri")(function* (iri: string) {
       const registry = yield* loadRegistry;
@@ -319,7 +319,7 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
      * Resolve an ontology URI to its storage path
      *
      * Accepts:
-     * - Full IRI: "http://effect-ontology.dev/seattle" -> looks up in registry
+     * - Full IRI: "https://effect-ontology.dev/seattle" -> looks up in registry
      * - Short ID: "seattle" -> looks up in registry
      * - Direct path: "canonical/seattle/ontology.ttl" -> returns as-is
      * - GCS URI: "gs://bucket/path" -> strips prefix, returns path

@@ -825,19 +825,22 @@ const defaultStepExplanation = (step: ReasoningStep): string =>
 
 const generationError = Match.type<AiError.AiError | S.SchemaError | TimeoutError>().pipe(
   Match.tag("TimeoutError", (timeout) => (_query: string, _operation: string) => timeout),
-  Match.tag("SchemaError", (cause) => (query: string, operation: string) =>
-        GraphRAGGenerationError.make({
-          message: `${operation} policy validation failed: ${cause.message}`,
-          query,
-          cause: O.some(cause),
-        })
+  Match.tag(
+    "SchemaError",
+    (cause) => (query: string, operation: string) =>
+      GraphRAGGenerationError.make({
+        message: `${operation} policy validation failed: ${cause.message}`,
+        query,
+        cause: O.some(cause),
+      })
   ),
-  Match.orElse((cause) => (query: string, operation: string) =>
-        GraphRAGGenerationError.make({
-          message: `${operation} failed: ${cause.reason._tag}`,
-          query,
-          cause: O.some(cause),
-        })
+  Match.orElse(
+    (cause) => (query: string, operation: string) =>
+      GraphRAGGenerationError.make({
+        message: `${operation} failed: ${cause.reason._tag}`,
+        query,
+        cause: O.some(cause),
+      })
   )
 );
 

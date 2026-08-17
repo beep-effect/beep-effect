@@ -7,6 +7,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { Context, Effect, Layer, PubSub } from "effect";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { KeyValueStore, Persistence } from "effect/unstable/persistence";
@@ -214,8 +215,10 @@ export const getBatchStateFromStore = Effect.fn(function* (batchId: BatchId) {
   );
 
   return yield* Effect.transposeOption(
-    O.map(O.fromUndefinedOr(stored), (encoded) =>
-      decodeState(encoded).pipe(
+    O.map(
+      O.fromUndefinedOr(stored),
+      flow(
+        decodeState,
         Effect.mapError((cause) =>
           BatchStateDecodeError.make({
             batchId,

@@ -689,44 +689,46 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
     > =>
       Effect.gen(function* () {
         // Run all queries in parallel using Effect.all
-        const [totalResult, byTypeResult, modelsResult] = yield* normalizeExecution(Effect.all(
-          [
-            // Total count query
-            P.isNotUndefined(ontologyId)
-              ? sql`SELECT COUNT(*) ::int as count
+        const [totalResult, byTypeResult, modelsResult] = yield* normalizeExecution(
+          Effect.all(
+            [
+              // Total count query
+              P.isNotUndefined(ontologyId)
+                ? sql`SELECT COUNT(*) ::int as count
                     FROM embeddings
                     WHERE ontology_id = ${ontologyId}`
-              : sql`SELECT COUNT(*) ::int as count
+                : sql`SELECT COUNT(*) ::int as count
                     FROM embeddings`,
-            // By type query
-            P.isNotUndefined(ontologyId)
-              ? sql`
+              // By type query
+              P.isNotUndefined(ontologyId)
+                ? sql`
                 SELECT entity_type as "entityType", COUNT(*) ::int as count
                 FROM embeddings
                 WHERE ontology_id = ${ontologyId}
                 GROUP BY entity_type
               `
-              : sql`
+                : sql`
                 SELECT entity_type as "entityType", COUNT(*) ::int as count
                 FROM embeddings
                 GROUP BY entity_type
               `,
-            // Models query
-            P.isNotUndefined(ontologyId)
-              ? sql`
+              // Models query
+              P.isNotUndefined(ontologyId)
+                ? sql`
                 SELECT model, COUNT(*) ::int as count
                 FROM embeddings
                 WHERE ontology_id = ${ontologyId}
                 GROUP BY model
               `
-              : sql`
+                : sql`
                 SELECT model, COUNT(*) ::int as count
                 FROM embeddings
                 GROUP BY model
               `,
-          ],
-          { concurrency: "unbounded" }
-        ));
+            ],
+            { concurrency: "unbounded" }
+          )
+        );
 
         const [[total], byTypeRows, modelRows] = yield* Effect.all(
           [
@@ -762,10 +764,7 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
     /**
      * Check if embeddings exist for a given entity type
      */
-    const hasEmbeddings = (
-      ontologyId: string,
-      entityType: EmbeddingEntityType
-    ): Effect.Effect<boolean, DrizzleError> =>
+    const hasEmbeddings = (ontologyId: string, entityType: EmbeddingEntityType): Effect.Effect<boolean, DrizzleError> =>
       Effect.gen(function* () {
         const result = yield* normalizeExecution(sql`
           SELECT EXISTS(SELECT 1
@@ -812,5 +811,8 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
  * Format a vector array as PostgreSQL vector literal
  */
 function formatVector(vector: ReadonlyArray<number>): string {
-  return `[${A.join(A.map(vector, (entry) => `${entry}`), ",")}]`;
+  return `[${A.join(
+    A.map(vector, (entry) => `${entry}`),
+    ","
+  )}]`;
 }

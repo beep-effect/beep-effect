@@ -217,8 +217,8 @@ const extractHandler = Effect.fn("extractHandler")(function* (
   } else {
     const rdf = yield* RdfBuilder;
     const store = yield* rdf.makeStore;
-    yield* rdf.addEntities(store, graph.entities, { targetNamespace: "http://cli.example.org/data/" });
-    yield* rdf.addRelations(store, graph.relations, { targetNamespace: "http://cli.example.org/data/" });
+    yield* rdf.addEntities(store, graph.entities, { targetNamespace: "https://cli.example.org/data/" });
+    yield* rdf.addRelations(store, graph.relations, { targetNamespace: "https://cli.example.org/data/" });
     const turtle = yield* rdf.toTurtle(store);
     yield* Console.log(turtle);
   }

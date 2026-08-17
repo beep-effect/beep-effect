@@ -70,7 +70,9 @@ describe("effect-ontology identity schemas", () => {
     expect(BatchId.fromContentHash(emptySha256)).toBe("batch-e3b0c44298fc");
   });
 
-  it.effect("constructs and resolves canonical GCS URIs without duplicating existing URIs", Effect.fnUntraced(function* () {
+  it.effect(
+    "constructs and resolves canonical GCS URIs without duplicating existing URIs",
+    Effect.fnUntraced(function* () {
       const bucket = yield* S.decodeEffect(GcsBucket)("beep-ontology-state");
       const objectPath = yield* S.decodeEffect(GcsObject)("snapshots/ontology-v1.ttl");
       const uri = GcsUri.fromParts(bucket, objectPath);

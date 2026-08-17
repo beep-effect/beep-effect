@@ -263,7 +263,7 @@ export const IdempotencyKey = Sha256Hex.annotate({
     documentation:
       "The schema validates digest shape only; uniqueness depends on the canonical operation data supplied to the hash.",
   }),
-  SchemaUtils.withCodecStatics
+  SchemaUtils.withEffectCodecStatics
 );
 
 /**

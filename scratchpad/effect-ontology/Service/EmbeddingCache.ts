@@ -434,9 +434,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
   };
 
   // Load embedding from GCS
-  const loadFromStorage = Effect.fn(function* (
-    hash: string
-  ): Effect.fn.Return<O.Option<Embedding>, EmbeddingError> {
+  const loadFromStorage = Effect.fn(function* (hash: string): Effect.fn.Return<O.Option<Embedding>, EmbeddingError> {
     const blobPath = `${cachePath}/${Str.takeLeft(2)(hash)}/${hash}.json`;
     const content = yield* storage.getOption(blobPath).pipe(Effect.mapError(storageError));
     if (O.isNone(content)) return O.none();

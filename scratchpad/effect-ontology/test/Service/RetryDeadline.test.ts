@@ -27,7 +27,9 @@ const succeedOnThirdAttempt = (attempts: Ref.Ref<number>) =>
   );
 
 describe("RetryPolicy", () => {
-  it.effect("retries the configured number of attempts in both dual forms", Effect.fnUntraced(function* () {
+  it.effect(
+    "retries the configured number of attempts in both dual forms",
+    Effect.fnUntraced(function* () {
       const dataFirstAttempts = yield* Ref.make(0);
       const dataFirstFiber = yield* retryEffect(succeedOnThirdAttempt(dataFirstAttempts), retryPolicy).pipe(
         Effect.forkChild
@@ -49,7 +51,9 @@ describe("RetryPolicy", () => {
     })
   );
 
-  it.effect("applies the attempt timeout inside the bounded retry loop", Effect.fnUntraced(function* () {
+  it.effect(
+    "applies the attempt timeout inside the bounded retry loop",
+    Effect.fnUntraced(function* () {
       const attempts = yield* Ref.make(0);
       const policy = RetryPolicy.make({
         attemptTimeout: Duration.seconds(1),
@@ -74,7 +78,9 @@ describe("RetryPolicy", () => {
     })
   );
 
-  it.effect("returns a typed schema failure before executing an invalid policy", Effect.fnUntraced(function* () {
+  it.effect(
+    "returns a typed schema failure before executing an invalid policy",
+    Effect.fnUntraced(function* () {
       const invalidPolicy = {
         attemptTimeout: Duration.seconds(2),
         overallTimeout: Duration.seconds(6),
@@ -102,7 +108,9 @@ describe("StageTimeoutService", () => {
       },
     })
   )("with deterministic stage deadlines", (it) => {
-    it.effect("runs the soft warning before returning the typed hard timeout", Effect.fnUntraced(function* () {
+    it.effect(
+      "runs the soft warning before returning the typed hard timeout",
+      Effect.fnUntraced(function* () {
         const timeouts = yield* StageTimeoutService;
         const softWarningObserved = yield* Ref.make(false);
         const fiber = yield* timeouts
@@ -119,7 +127,9 @@ describe("StageTimeoutService", () => {
       })
     );
 
-    it.effect("interrupts the soft-warning watcher when the stage completes", Effect.fnUntraced(function* () {
+    it.effect(
+      "interrupts the soft-warning watcher when the stage completes",
+      Effect.fnUntraced(function* () {
         const timeouts = yield* StageTimeoutService;
         const softWarningObserved = yield* Ref.make(false);
         const result = yield* timeouts.withTimeout("chunking", Effect.succeed("complete"), () =>

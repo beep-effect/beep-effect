@@ -135,17 +135,17 @@ export class ShutdownService extends Context.Service<ShutdownService>()($I`Shutd
        * Track a request for graceful shutdown
        */
       trackRequest: Effect.fn("ShutdownService.trackRequest")(function* <A, E, R>(effect: Effect.Effect<A, E, R>) {
-          const isShuttingDown = yield* Ref.get(shuttingDownRef);
-          if (isShuttingDown) {
-            return yield* ShutdownError.make({
-              message: "Service is shutting down, not accepting new requests",
-            });
-          }
+        const isShuttingDown = yield* Ref.get(shuttingDownRef);
+        if (isShuttingDown) {
+          return yield* ShutdownError.make({
+            message: "Service is shutting down, not accepting new requests",
+          });
+        }
 
-          yield* Ref.update(inFlightRef, (n) => n + 1);
+        yield* Ref.update(inFlightRef, (n) => n + 1);
 
-          return yield* effect.pipe(Effect.ensuring(Ref.update(inFlightRef, (n) => n - 1)));
-        }),
+        return yield* effect.pipe(Effect.ensuring(Ref.update(inFlightRef, (n) => n - 1)));
+      }),
 
       /**
        * Get current in-flight request count

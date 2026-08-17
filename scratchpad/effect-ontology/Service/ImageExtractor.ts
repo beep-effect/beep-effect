@@ -130,7 +130,7 @@ const MARKDOWN_IMAGE_PATTERN = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g;
 const normalizeImageUrl = (imageUrl: string, sourceUrl: string): O.Option<URLStr> => {
   if (Str.startsWith("data:")(imageUrl)) return O.none();
   if (Str.startsWith("//")(imageUrl)) return URLStr.decodeOption(`https:${imageUrl}`);
-  if (Str.startsWith("http://")(imageUrl) || Str.startsWith("https://")(imageUrl)) {
+  if (Str.startsWith("https://")(imageUrl) || Str.startsWith("https://")(imageUrl)) {
     return URLStr.decodeOption(imageUrl);
   }
   return O.flatMap(O.fromNullishOr(URL.parse(imageUrl, sourceUrl)), (resolved) =>

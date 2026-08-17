@@ -216,7 +216,7 @@ const EntityRegistrySettings = S.Struct({
     S.annotateKey({ description: "Maximum token-blocking candidates retained per entity." })
   ),
   canonicalNamespace: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("http://example.org/entities/"),
+    SchemaUtils.withKeyDefaults("https://example.org/entities/"),
     S.annotateKey({ description: "Namespace used for generated canonical entity IRIs." })
   ),
 });
@@ -253,7 +253,7 @@ const ValidationSettings = S.Struct({
 
 const RdfSettings = S.Struct({
   baseNamespace: S.NonEmptyString.pipe(
-    SchemaUtils.withKeyDefaults("http://example.org/kg/"),
+    SchemaUtils.withKeyDefaults("https://example.org/kg/"),
     S.annotateKey({ description: "Base namespace used for generated graph identifiers." })
   ),
   outputFormat: RdfOutputFormat.pipe(
@@ -407,7 +407,7 @@ const RetryPolicyConfig = Config.all({
   jitter: Config.boolean("RETRY_JITTER").pipe(Config.withDefault(DEFAULT_CONFIG.llm.retryPolicy.jitter)),
 }).pipe(
   Config.mapOrFail((input) =>
-    S.decodeEffect(RetryPolicy)(input).pipe(Effect.mapError((error) => new Config.ConfigError(error)))
+    RetryPolicy.decodeEffect(input).pipe(Effect.mapError((error) => new Config.ConfigError(error)))
   )
 );
 

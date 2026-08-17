@@ -22,7 +22,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/OntologyBrowser")
  * import { VocabularyRef } from "@effect-ontology/Schema/OntologyBrowser"
  *
  * const vocabulary = S.decodeUnknownOption(VocabularyRef)({
- *   iri: "http://www.w3.org/ns/prov#",
+ *   iri: "https://www.w3.org/ns/prov#",
  *   prefix: "prov",
  *   name: "PROV-O"
  * })

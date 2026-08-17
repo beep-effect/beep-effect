@@ -85,7 +85,7 @@ const InferenceGraphFormat = LiteralKit(["turtle", "trig"])
  *   enrichedTriples: 13,
  *   inferredTriples: 3,
  *   inferenceRatio: 0.3,
- *   predicateBreakdown: { "http://www.w3.org/2000/01/rdf-schema#type": 3 },
+ *   predicateBreakdown: { "https://www.w3.org/2000/01/rdf-schema#type": 3 },
  *   durationMs: 8
  * })
  * console.log(O.map(stats, (value) => value.inferredTriples)) // 3

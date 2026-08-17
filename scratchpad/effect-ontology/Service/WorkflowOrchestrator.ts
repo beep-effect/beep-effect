@@ -220,14 +220,14 @@ const expectValue = <A>(opt: O.Option<A>, key: string) =>
   });
 
 const stageFromState = Match.type<BatchState>().pipe(
-    Match.tag("Pending", (): PipelineStage => "pending"),
-    Match.tag("Preprocessing", (): PipelineStage => "preprocessing"),
-    Match.tag("Extracting", (): PipelineStage => "extracting"),
-    Match.tag("Resolving", (): PipelineStage => "resolving"),
-    Match.tag("Validating", (): PipelineStage => "validating"),
-    Match.tag("Ingesting", (): PipelineStage => "ingesting"),
-    Match.tag("Complete", (): PipelineStage => "ingesting"),
-    Match.tag("Failed", (s) => s.failedInStage),
+  Match.tag("Pending", (): PipelineStage => "pending"),
+  Match.tag("Preprocessing", (): PipelineStage => "preprocessing"),
+  Match.tag("Extracting", (): PipelineStage => "extracting"),
+  Match.tag("Resolving", (): PipelineStage => "resolving"),
+  Match.tag("Validating", (): PipelineStage => "validating"),
+  Match.tag("Ingesting", (): PipelineStage => "ingesting"),
+  Match.tag("Complete", (): PipelineStage => "ingesting"),
+  Match.tag("Failed", (s) => s.failedInStage),
   Match.exhaustive
 );
 
@@ -263,28 +263,32 @@ type PollContext = {
 };
 
 const pollResultToBatchState = Match.type<Workflow.Result<BatchState, AnyWorkflowError>>().pipe(
-  Match.tag("Complete", (complete) => (context: PollContext) =>
-    Exit.match(complete.exit, {
-      onSuccess: Effect.succeed,
-      onFailure: Effect.fn("WorkflowOrchestrator.pollToBatchState.onFailure")(function* (cause) {
-        const stored = yield* getBatchStateFromStore(context.batchId);
-        const fallback = O.getOrUndefined(stored);
-        if (P.isNotUndefined(fallback)) {
-          return toFailedState(fallback, cause);
-        }
-        return yield* WorkflowError.make({
-          message: `Workflow ${context.executionId} failed`,
-          cause: O.some(Cause.squash(cause)),
-        });
-      }),
-    })
+  Match.tag(
+    "Complete",
+    (complete) => (context: PollContext) =>
+      Exit.match(complete.exit, {
+        onSuccess: Effect.succeed,
+        onFailure: Effect.fn("WorkflowOrchestrator.pollToBatchState.onFailure")(function* (cause) {
+          const stored = yield* getBatchStateFromStore(context.batchId);
+          const fallback = O.getOrUndefined(stored);
+          if (P.isNotUndefined(fallback)) {
+            return toFailedState(fallback, cause);
+          }
+          return yield* WorkflowError.make({
+            message: `Workflow ${context.executionId} failed`,
+            cause: O.some(Cause.squash(cause)),
+          });
+        }),
+      })
   ),
-  Match.tag("Suspended", (suspended) => (context: PollContext) =>
-    WorkflowSuspendedError.make({
-      message: `Workflow ${context.executionId} suspended`,
-      cause: O.map(O.fromNullishOr(suspended.cause), Cause.pretty),
-      isResumable: true,
-    })
+  Match.tag(
+    "Suspended",
+    (suspended) => (context: PollContext) =>
+      WorkflowSuspendedError.make({
+        message: `Workflow ${context.executionId} suspended`,
+        cause: O.map(O.fromNullishOr(suspended.cause), Cause.pretty),
+        isResumable: true,
+      })
   ),
   Match.exhaustive
 );
@@ -305,7 +309,7 @@ const pollResultToBatchState = Match.type<Workflow.Result<BatchState, AnyWorkflo
  */
 export const pollToBatchState = Effect.fn("WorkflowOrchestrator.pollToBatchState")(function* (executionId: string) {
   const engine = yield* WorkflowEngine.WorkflowEngine;
-  const batchId = yield* S.decodeEffect(BatchId)(executionId).pipe(
+  const batchId = yield* BatchId.decodeEffect(executionId).pipe(
     Effect.mapError(() => WorkflowError.make({ message: `Invalid batch workflow execution ID: ${executionId}` }))
   );
   const result = yield* engine.poll(BatchExtractionWorkflow, executionId);

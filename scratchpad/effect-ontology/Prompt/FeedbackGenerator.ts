@@ -7,7 +7,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { Formatter, HashSet, Inspectable, pipe, flow, SchemaIssue } from "effect";
+import { Formatter, flow, HashSet, Inspectable, pipe, SchemaIssue } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -104,7 +104,11 @@ export const extractViolations = (error: S.SchemaError): ReadonlyArray<Violation
     Violation.make({
       path: O.match(O.fromUndefinedOr(issue.path), {
         onNone: () => "root",
-        onSome: (path) => A.join(A.map(path, (segment) => Formatter.format(segment)), "."),
+        onSome: (path) =>
+          A.join(
+            A.map(path, (segment) => Formatter.format(segment)),
+            "."
+          ),
       }),
       message: issue.message,
     })
@@ -218,19 +222,18 @@ export const generateFeedback = dual2((error: S.SchemaError, ruleSet: RuleSet): 
     extractViolations(error),
     A.match({
       onEmpty: () => "Validation failed. Please check the output format.",
-      onNonEmpty:
-        flow(
-          A.map((violation) =>
-            pipe(
-              findMatchingRule(violation, ruleSet),
-              O.flatMap((rule) =>
-                O.map(violation.actual, (actual) => interpolate(rule.validationTemplate, { value: actual }))
-              ),
-              O.getOrElse(() => `Error at ${violation.path}: ${violation.message}`)
-            )
-          ),
-          A.join("\n")
+      onNonEmpty: flow(
+        A.map((violation) =>
+          pipe(
+            findMatchingRule(violation, ruleSet),
+            O.flatMap((rule) =>
+              O.map(violation.actual, (actual) => interpolate(rule.validationTemplate, { value: actual }))
+            ),
+            O.getOrElse(() => `Error at ${violation.path}: ${violation.message}`)
+          )
         ),
+        A.join("\n")
+      ),
     })
   )
 );

@@ -20,7 +20,9 @@ import { ExplanationError } from "../../Service/ViolationExplainer.ts";
 import { WikidataApiError, WikidataRateLimitError } from "../../Service/WikidataClient.ts";
 
 describe("schema-backed service errors", () => {
-  it.effect("constructs every migrated error through its schema API", Effect.fnUntraced(function* () {
+  it.effect(
+    "constructs every migrated error through its schema API",
+    Effect.fnUntraced(function* () {
       const cause = AssertionError.make({ operation: "create", message: "No claims were available." });
       const violation = ShaclValidationViolation.make({
         focusNode: "https://example.com/person/ada",

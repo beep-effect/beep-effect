@@ -29,7 +29,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Rdf/Types");
  * const triple = Triple.make({
  *   subject: makeNamedNode("https://example.org/ada"),
  *   predicate: makeNamedNode("https://schema.org/name"),
- *   object: makeLiteral("Ada", "http://www.w3.org/2001/XMLSchema#string")
+ *   object: makeLiteral("Ada", "https://www.w3.org/2001/XMLSchema#string")
  * })
  * console.log(triple.toQuad().graph.termType) // "DefaultGraph"
  * ```
@@ -59,7 +59,7 @@ export class Triple extends S.Class<Triple>($I`Triple`)(
    * const quad = makeQuad(
    *   makeNamedNode("https://example.org/ada"),
    *   makeNamedNode("https://schema.org/name"),
-   *   makeLiteral("Ada", "http://www.w3.org/2001/XMLSchema#string")
+   *   makeLiteral("Ada", "https://www.w3.org/2001/XMLSchema#string")
    * )
    * console.log(Triple.fromQuad(quad).predicate.value)
    * ```
@@ -87,7 +87,7 @@ export class Triple extends S.Class<Triple>($I`Triple`)(
    * const triple = Triple.make({
    *   subject: makeNamedNode("https://example.org/ada"),
    *   predicate: makeNamedNode("https://schema.org/name"),
-   *   object: makeLiteral("Ada", "http://www.w3.org/2001/XMLSchema#string")
+   *   object: makeLiteral("Ada", "https://www.w3.org/2001/XMLSchema#string")
    * })
    * console.log(triple.toQuad(makeNamedNode("https://example.org/people")).graph.termType)
    * ```
