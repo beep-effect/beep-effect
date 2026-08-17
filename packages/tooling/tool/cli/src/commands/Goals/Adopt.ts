@@ -56,48 +56,66 @@ const REFLECTION_TEMPLATE_BASENAME = "_TEMPLATE.md";
 
 const isGitkeepPath = (relativePath: string): boolean => Str.endsWith(".gitkeep")(relativePath);
 
-const walkDirectory = Effect.fn("Goals.walkPacketDirectory")(function* (root: string) {
+const readSnapshotFile = Effect.fn("Goals.readSnapshotFile")(function* (root: string, entryRelative: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  let files = A.empty<PacketSnapshotFile>();
-  let pending: ReadonlyArray<string> = [""];
-  while (A.isReadonlyArrayNonEmpty(pending)) {
-    const relative = A.headNonEmpty(pending);
-    pending = A.tailNonEmpty(pending);
-    const absolute = relative === "" ? root : path.join(root, relative);
-    const entries = yield* fs
-      .readDirectory(absolute)
-      .pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to read directory "${absolute}".`)));
-    for (const entry of A.sort(entries, Order.String)) {
-      const entryRelative = relative === "" ? entry : `${relative}/${entry}`;
-      const entryAbsolute = path.join(root, entryRelative);
-      const info = yield* fs
-        .stat(entryAbsolute)
-        .pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to stat "${entryAbsolute}".`)));
-      if (info.type === "Directory") {
-        pending = A.append(pending, entryRelative);
-      } else if (info.type === "File") {
-        // Digest the raw bytes: decoding first is lossy for non-UTF-8 content
-        // (binary evidence under history/), which would break hash-pinning.
-        const bytes = yield* fs
-          .readFile(entryAbsolute)
-          .pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to read "${entryAbsolute}".`)));
-        files = A.append(
-          files,
-          PacketSnapshotFile.make({
-            path: entryRelative,
-            text: new TextDecoder().decode(bytes),
-            digest: sha256HexBytes(bytes),
-          })
-        );
-      }
-    }
-  }
-  return A.sort(
-    files,
-    Order.mapInput(Order.String, (file: PacketSnapshotFile) => file.path)
-  );
+  const entryAbsolute = path.join(root, entryRelative);
+  // Digest the raw bytes: decoding first is lossy for non-UTF-8 content
+  // (binary evidence under history/), which would break hash-pinning.
+  const bytes = yield* fs
+    .readFile(entryAbsolute)
+    .pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to read "${entryAbsolute}".`)));
+  return PacketSnapshotFile.make({
+    path: entryRelative,
+    text: new TextDecoder().decode(bytes),
+    digest: sha256HexBytes(bytes),
+  });
 });
+
+const walkEntry: (
+  root: string,
+  entryRelative: string
+) => Effect.Effect<ReadonlyArray<PacketSnapshotFile>, GoalPlanOperationalError, FileSystem.FileSystem | Path.Path> =
+  Effect.fn("Goals.walkPacketEntry")(function* (root: string, entryRelative: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const entryAbsolute = path.join(root, entryRelative);
+    const info = yield* fs
+      .stat(entryAbsolute)
+      .pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to stat "${entryAbsolute}".`)));
+    if (info.type === "Directory") {
+      return yield* walkEntries(root, entryRelative);
+    }
+    if (info.type === "File") {
+      return [yield* readSnapshotFile(root, entryRelative)];
+    }
+    return A.empty<PacketSnapshotFile>();
+  });
+
+const walkEntries = Effect.fn("Goals.walkPacketEntries")(function* (root: string, relative: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolute = relative === "" ? root : path.join(root, relative);
+  const entries = yield* fs
+    .readDirectory(absolute)
+    .pipe(Effect.mapError(GoalPlanOperationalError.new(`Failed to read directory "${absolute}".`)));
+  let files = A.empty<PacketSnapshotFile>();
+  for (const entry of A.sort(entries, Order.String)) {
+    const entryRelative = relative === "" ? entry : `${relative}/${entry}`;
+    files = A.appendAll(files, yield* walkEntry(root, entryRelative));
+  }
+  return files;
+});
+
+const walkDirectory = (
+  root: string
+): Effect.Effect<ReadonlyArray<PacketSnapshotFile>, GoalPlanOperationalError, FileSystem.FileSystem | Path.Path> =>
+  Effect.map(walkEntries(root, ""), (files) =>
+    A.sort(
+      files,
+      Order.mapInput(Order.String, (file: PacketSnapshotFile) => file.path)
+    )
+  );
 
 const directoryExists = Effect.fn("Goals.packetDirectoryExists")(function* (target: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -277,134 +295,25 @@ export const compileAdoptionPlan: {
   };
 
   if (!snapshot.exists) {
-    return sealMaterializationPlan({
-      ...base,
-      entries: [],
-      preservations: [],
-      validations: [],
-      conflicts: [
-        {
-          reason: "packet-not-found",
-          message: `No goal packet directory "${snapshot.packetPath}".`,
-        },
-      ],
-    });
+    return conflictedAdoptionPlan(base, "packet-not-found", `No goal packet directory "${snapshot.packetPath}".`);
   }
 
   const manifestFile = A.findFirst(snapshot.files, (file) => file.path === MANIFEST_RELATIVE_PATH);
   const parsedManifest = O.flatMap(manifestFile, (file) => parseGoalManifestText(file.text));
   if (O.isSome(manifestFile) && O.isNone(parsedManifest)) {
-    return sealMaterializationPlan({
-      ...base,
-      entries: [],
-      preservations: [],
-      validations: [],
-      conflicts: [
-        {
-          reason: "manifest-unparseable",
-          message: `"${snapshot.packetPath}/${MANIFEST_RELATIVE_PATH}" does not parse as JSON; adoption cannot classify it.`,
-        },
-      ],
-    });
+    return conflictedAdoptionPlan(
+      base,
+      "manifest-unparseable",
+      `"${snapshot.packetPath}/${MANIFEST_RELATIVE_PATH}" does not parse as JSON; adoption cannot classify it.`
+    );
   }
 
-  let entries = A.empty<PlanRow>();
-  let preservations = A.empty<PreservationRow>();
-  const conflicts = A.empty<ConflictRow>();
-
-  for (const file of snapshot.files) {
-    const fullPath = `${snapshot.packetPath}/${file.path}`;
-    if (file.path === MANIFEST_RELATIVE_PATH) {
-      const unmodeledKeys = pipe(
-        parsedManifest,
-        O.filter(isJsonRecord),
-        O.map((record) => A.sort(A.difference(R.keys(record), MODELED_GOAL_MANIFEST_KEYS), Str.Order)),
-        O.getOrElse(A.empty<string>)
-      );
-      entries = A.append(entries, {
-        path: fullPath,
-        action: "preserve",
-        ownership: "preserved",
-        reason: "Manifest bytes survive only through byte-preserving JSONC edits; re-encoding strips unmodeled keys.",
-        existingDigest: file.digest,
-      });
-      preservations = A.append(preservations, {
-        path: fullPath,
-        unmodeledKeys,
-        preImageDigest: file.digest,
-        reason: "The canonical decoder strips these top-level keys from decoded output.",
-      });
-    } else if (isGitkeepPath(file.path)) {
-      entries = A.append(entries, {
-        path: fullPath,
-        action: "retain",
-        ownership: "generated",
-        reason: "Machine-derivable directory marker already present.",
-        existingDigest: file.digest,
-      });
-    } else {
-      entries = A.append(entries, {
-        path: fullPath,
-        action: "retain",
-        ownership: "authored",
-        reason: "Tracked packet file conforms to the standard and stays human-owned.",
-        existingDigest: file.digest,
-      });
-    }
-  }
-
+  const present = A.map(snapshot.files, (file) => presentFileRow(snapshot.packetPath, file, parsedManifest));
   const packetPaths = A.map(snapshot.files, (file) => file.path);
-  for (const templateFile of snapshot.templateFiles) {
-    if (A.contains(packetPaths, templateFile.path)) {
-      continue;
-    }
-    const fullPath = `${snapshot.packetPath}/${templateFile.path}`;
-    if (templateFile.path === MANIFEST_RELATIVE_PATH) {
-      const readme = A.findFirst(snapshot.files, (file) => file.path === README_RELATIVE_PATH);
-      const readmeText = O.map(readme, (file) => file.text);
-      const status = pipe(
-        readmeText,
-        O.flatMap(readmeLifecycleToken),
-        O.filter(isGoalStatus),
-        O.getOrElse((): GoalStatus => "active")
-      );
-      const payload = seededManifestPayload({
-        slug: snapshot.slug,
-        title: pipe(
-          readmeText,
-          O.flatMap(readmeTitle),
-          O.getOrElse(() => snapshot.slug)
-        ),
-        status,
-        mission: O.flatMap(readmeText, readmeMissionLine),
-        archetype,
-      });
-      entries = A.append(entries, {
-        path: fullPath,
-        action: "create",
-        ownership: "generated",
-        reason: "Manifest-less packet: seed a manifest from README-extractable fields.",
-        payload,
-        payloadDigest: sha256Hex(payload),
-      });
-    } else if (isGitkeepPath(templateFile.path)) {
-      entries = A.append(entries, {
-        path: fullPath,
-        action: "create",
-        ownership: "generated",
-        reason: "Machine-derivable directory marker the standard ships.",
-        payload: templateFile.text,
-        payloadDigest: templateFile.digest,
-      });
-    } else {
-      entries = A.append(entries, {
-        path: fullPath,
-        action: "report",
-        ownership: "authored",
-        reason: "Standard artifact absent; a human authors it — diagnosis never invents prose.",
-      });
-    }
-  }
+  const missing = A.map(
+    A.filter(snapshot.templateFiles, (templateFile) => !A.contains(packetPaths, templateFile.path)),
+    (templateFile) => missingTemplateRow(snapshot, archetype, templateFile)
+  );
 
   const validations: ReadonlyArray<ValidationRequirement> = A.some(snapshot.files, (file) =>
     isReflectionArtifact(file.path)
@@ -414,12 +323,157 @@ export const compileAdoptionPlan: {
 
   return sealMaterializationPlan({
     ...base,
-    entries,
-    preservations,
+    entries: A.map([...present, ...missing], (classified) => classified.entry),
+    preservations: A.getSomes(A.map(present, (classified) => classified.preservation)),
     validations,
-    conflicts,
+    conflicts: [],
   });
 });
+
+type AdoptionPlanBase = {
+  readonly mode: PlanMode;
+  readonly slug: string;
+  readonly packetPath: string;
+  readonly towardArchetype: PhaseArchetype;
+  readonly templateSnapshotHash: string;
+};
+
+type ClassifiedRow = {
+  readonly entry: PlanRow;
+  readonly preservation: O.Option<PreservationRow>;
+};
+
+const conflictedAdoptionPlan = (
+  base: AdoptionPlanBase,
+  reason: ConflictRow["reason"],
+  message: string
+): MaterializationPlan =>
+  sealMaterializationPlan({
+    ...base,
+    entries: [],
+    preservations: [],
+    validations: [],
+    conflicts: [{ reason, message }],
+  });
+
+// Present manifest → preserve + preservation row; present .gitkeep → generated retain;
+// anything else present → authored retain.
+const presentFileRow = (
+  packetPath: string,
+  file: PacketSnapshotFile,
+  parsedManifest: O.Option<unknown>
+): ClassifiedRow => {
+  const fullPath = `${packetPath}/${file.path}`;
+  if (file.path === MANIFEST_RELATIVE_PATH) {
+    const unmodeledKeys = pipe(
+      parsedManifest,
+      O.filter(isJsonRecord),
+      O.map((record) => A.sort(A.difference(R.keys(record), MODELED_GOAL_MANIFEST_KEYS), Str.Order)),
+      O.getOrElse(A.empty<string>)
+    );
+    return {
+      entry: {
+        path: fullPath,
+        action: "preserve",
+        ownership: "preserved",
+        reason: "Manifest bytes survive only through byte-preserving JSONC edits; re-encoding strips unmodeled keys.",
+        existingDigest: file.digest,
+      },
+      preservation: O.some({
+        path: fullPath,
+        unmodeledKeys,
+        preImageDigest: file.digest,
+        reason: "The canonical decoder strips these top-level keys from decoded output.",
+      }),
+    };
+  }
+  if (isGitkeepPath(file.path)) {
+    return {
+      entry: {
+        path: fullPath,
+        action: "retain",
+        ownership: "generated",
+        reason: "Machine-derivable directory marker already present.",
+        existingDigest: file.digest,
+      },
+      preservation: O.none(),
+    };
+  }
+  return {
+    entry: {
+      path: fullPath,
+      action: "retain",
+      ownership: "authored",
+      reason: "Tracked packet file conforms to the standard and stays human-owned.",
+      existingDigest: file.digest,
+    },
+    preservation: O.none(),
+  };
+};
+
+const seededManifestRow = (snapshot: PacketSnapshot, archetype: PhaseArchetype, fullPath: string): PlanRow => {
+  const readme = A.findFirst(snapshot.files, (file) => file.path === README_RELATIVE_PATH);
+  const readmeText = O.map(readme, (file) => file.text);
+  const payload = seededManifestPayload({
+    slug: snapshot.slug,
+    title: pipe(
+      readmeText,
+      O.flatMap(readmeTitle),
+      O.getOrElse(() => snapshot.slug)
+    ),
+    status: pipe(
+      readmeText,
+      O.flatMap(readmeLifecycleToken),
+      O.filter(isGoalStatus),
+      O.getOrElse((): GoalStatus => "active")
+    ),
+    mission: O.flatMap(readmeText, readmeMissionLine),
+    archetype,
+  });
+  return {
+    path: fullPath,
+    action: "create",
+    ownership: "generated",
+    reason: "Manifest-less packet: seed a manifest from README-extractable fields.",
+    payload,
+    payloadDigest: sha256Hex(payload),
+  };
+};
+
+// Template artifact absent from the packet: manifest → generated seed; .gitkeep →
+// generated marker copy; prose → report row (diagnosis never invents prose).
+const missingTemplateRow = (
+  snapshot: PacketSnapshot,
+  archetype: PhaseArchetype,
+  templateFile: PacketSnapshotFile
+): ClassifiedRow => {
+  const fullPath = `${snapshot.packetPath}/${templateFile.path}`;
+  if (templateFile.path === MANIFEST_RELATIVE_PATH) {
+    return { entry: seededManifestRow(snapshot, archetype, fullPath), preservation: O.none() };
+  }
+  if (isGitkeepPath(templateFile.path)) {
+    return {
+      entry: {
+        path: fullPath,
+        action: "create",
+        ownership: "generated",
+        reason: "Machine-derivable directory marker the standard ships.",
+        payload: templateFile.text,
+        payloadDigest: templateFile.digest,
+      },
+      preservation: O.none(),
+    };
+  }
+  return {
+    entry: {
+      path: fullPath,
+      action: "report",
+      ownership: "authored",
+      reason: "Standard artifact absent; a human authors it — diagnosis never invents prose.",
+    },
+    preservation: O.none(),
+  };
+};
 
 const slugArgument = Argument.string("slug").pipe(Argument.withDescription("Goal packet slug under goals/"));
 const towardFlag = Flag.choice("toward", PhaseArchetype.Options).pipe(
