@@ -247,6 +247,22 @@ describe("GraphExecutor", () => {
   );
 
   it.effect(
+    "clamps an over-large parallel concurrency and still applies the operation",
+    Effect.fnUntraced(function* () {
+      const graph = yield* EG.singleton("hello");
+      const executor = yield* Executor.GraphExecutor;
+      // Far above MAX_PARALLEL_CONCURRENCY, so this exercises the clamp rather
+      // than the sequential default.
+      const result = yield* executor.execute(graph, upper, {
+        strategy: Types.ExecutionStrategy.Parallel(1_000),
+      });
+
+      expect(result.newNodes.map((n) => n.data)).toEqual(["HELLO"]);
+      expect(result.errors.length).toBe(0);
+    }, provideScopedLayer(Executor.GraphExecutorTest))
+  );
+
+  it.effect(
     "supports pipe-friendly dual service methods",
     Effect.fnUntraced(function* () {
       const graph = yield* EG.singleton("hello");

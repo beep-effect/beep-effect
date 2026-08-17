@@ -38,9 +38,7 @@ const urlStr = Brand.check<URLStr>(filterURLStr);
  * @category validation
  * @since 0.0.0
  */
-export const URLStr = NonEmptyTrimmedStr.annotate({
-  toArbitrary: () => (fc) => fc.webUrl().map(urlStr),
-}).pipe(
+export const URLStr = NonEmptyTrimmedStr.pipe(
   S.fromBrand("URLStr", urlStr),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withStatics(() => ({
@@ -105,10 +103,7 @@ const HttpsUrlDefinition = S.String.pipe(S.check(filterHttpsUrl), S.brand("Https
  * @category validation
  * @since 0.0.0
  */
-export const HttpsUrl = HttpsUrlDefinition.annotate({
-  toArbitrary: () => (fc) =>
-    fc.uuid().map((id) => S.decodeSync(HttpsUrlDefinition)(`https://example.test/resource/${id}`)),
-}).pipe(
+export const HttpsUrl = HttpsUrlDefinition.pipe(
   SchemaUtils.withCodecStatics,
   $I.annoteSchema("HttpsUrl", {
     description: "An absolute URL string constrained to the https protocol.",

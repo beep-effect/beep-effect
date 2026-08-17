@@ -91,9 +91,7 @@ const HttpUrlDefinition = S.String.check(
     title: "HTTP URL Max Length",
     description: "HTTP URL values must not exceed 2083 characters.",
   })
-).annotate({
-  toArbitrary: () => makeHttpUrlArbitrary,
-});
+);
 
 /**
  * HTTP or HTTPS URL string metadata shape from the OpenAPI document.
