@@ -1,6 +1,8 @@
 /**
  * Service: Extraction Services
  *
+ * **Details**
+ *
  * EntityExtractor and RelationExtractor service contracts.
  * Implements two-stage extraction using LLM with structured output.
  *
@@ -10,12 +12,15 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import { Chunk, Context, Duration, Effect, Layer, Match, Schedule } from "effect";
+import { PosInt } from "@beep/schema";
+import { Chunk, Context, Duration, Effect, Inspectable, Layer, Match, MutableHashMap, Schedule } from "effect";
 import * as A from "effect/Array";
-import * as MutableHashMap from "effect/MutableHashMap";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
 import {
   EntityExtractionFailed,
@@ -52,22 +57,35 @@ export type { Mention };
  *
  * @internal
  */
-const generateEntityId = (mention: string): string =>
-  mention
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "") // Remove special chars
-    .replace(/\s+/g, "_") // Spaces to underscores
-    .replace(/_+/g, "_") // Multiple underscores to single
-    .replace(/^_|_$/g, "") // Trim leading/trailing underscores
-    .replace(/^[0-9]/, "e$&");
+const generateEntityId = flow(
+  Str.toLowerCase,
+  Str.replace(/[^\w\s-]/g, ""),
+  Str.replace(/\s+/g, "_"),
+  Str.replace(/_+/g, "_"),
+  Str.replace(/^_|_$/g, ""),
+  Str.replace(/^[0-9]/, "e$&")
+);
+
+const isAttributeValue = (value: unknown): value is string | number | boolean =>
+  P.isString(value) || P.isNumber(value) || P.isBoolean(value);
 
 /**
  * EntityExtractor - Stage 1 extraction service
  *
+ * **Details**
+ *
  * Extracts entities from text using LLM with structured output.
  *
+ * **Example** (Inspect entity extractor)
+ *
+ * ```ts
+ * import { EntityExtractor } from "@effect-ontology/Service/Extraction"
+ *
+ * console.log(EntityExtractor)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class EntityExtractor extends Context.Service<EntityExtractor>()($I`EntityExtractor`, {
   make: Effect.gen(function* () {
@@ -132,9 +150,9 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
               prompt: structuredPrompt,
               schema,
               objectName: "EntityGraph",
-              maxAttempts: config.runtime.retryMaxAttempts,
+              maxAttempts: PosInt.make(config.runtime.retryMaxAttempts),
               serviceName: "EntityExtractor",
-              timeoutMs: config.llm.timeoutMs,
+              timeout: Duration.millis(config.llm.timeoutMs),
               retrySchedule,
               enablePromptCaching: config.llm.enablePromptCaching,
             }),
@@ -177,7 +195,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
             }),
             Effect.mapError((error) =>
               EntityExtractionFailed.make({
-                message: `LLM entity extraction failed: ${error instanceof Error ? error.message : String(error)}`,
+                message: `LLM entity extraction failed: ${Inspectable.toStringUnknown(error)}`,
                 cause: O.some(error),
                 text: O.some(text),
               })
@@ -189,7 +207,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
         if (propertyMapResult.hasCollisions) {
           yield* Effect.logWarning("Property local name collisions detected - LLM output may map to wrong IRI", {
             collisionCount: MutableHashMap.size(propertyMapResult.collisions),
-            collisions: Object.fromEntries(propertyMapResult.collisions),
+            collisions: R.fromEntries(propertyMapResult.collisions),
           });
         }
         const classIris: ReadonlyArray<IRI> = candidates.map((c) => c.id);
@@ -198,7 +216,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
         if (classMapResult.hasCollisions) {
           yield* Effect.logWarning("Class local name collisions detected - LLM output may map to wrong IRI", {
             collisionCount: MutableHashMap.size(classMapResult.collisions),
-            collisions: Object.fromEntries(classMapResult.collisions),
+            collisions: R.fromEntries(classMapResult.collisions),
           });
         }
         let filteredAttributeCount = 0;
@@ -216,14 +234,14 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           }
           const attributes: Record<string, string | number | boolean> = {};
           if (O.isSome(entityData.attributes)) {
-            for (const [key, value] of Object.entries(entityData.attributes.value)) {
+            for (const [key, value] of R.toEntries(entityData.attributes.value)) {
               const expandedKey = expandLocalNameToIri(key, propertyLocalNameToIriMap);
               if (O.isSome(expandedKey)) {
-                if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+                if (isAttributeValue(value)) {
                   attributes[expandedKey.value] = value;
                 }
               } else if (MutableHashMap.size(propertyLocalNameToIriMap) === 0) {
-                if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+                if (isAttributeValue(value)) {
                   attributes[key] = value;
                 }
               } else {
@@ -313,11 +331,21 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
 /**
  * MentionExtractor - Pre-Stage 1 mention detection
  *
+ * **Details**
+ *
  * Extracts entity mentions from text without type assignment.
  * This enables entity-level semantic search for better class retrieval.
  *
+ * **Example** (Inspect mention extractor)
+ *
+ * ```ts
+ * import { MentionExtractor } from "@effect-ontology/Service/Extraction"
+ *
+ * console.log(MentionExtractor)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class MentionExtractor extends Context.Service<MentionExtractor>()($I`MentionExtractor`, {
   make: Effect.gen(function* () {
@@ -373,7 +401,7 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
             ),
             Effect.mapError((error) =>
               MentionExtractionFailed.make({
-                message: `LLM mention extraction failed: ${error instanceof Error ? error.message : String(error)}`,
+                message: `LLM mention extraction failed: ${Inspectable.toStringUnknown(error)}`,
                 cause: O.some(error),
                 text: O.some(text),
               })
@@ -421,10 +449,20 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
 /**
  * RelationExtractor - Stage 2 extraction service
  *
+ * **Details**
+ *
  * Extracts relations between entities using LLM with structured output.
  *
+ * **Example** (Inspect relation extractor)
+ *
+ * ```ts
+ * import { RelationExtractor } from "@effect-ontology/Service/Extraction"
+ *
+ * console.log(RelationExtractor)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class RelationExtractor extends Context.Service<RelationExtractor>()($I`RelationExtractor`, {
   make: Effect.gen(function* () {
@@ -535,7 +573,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
             ),
             Effect.mapError((error) =>
               RelationExtractionFailed.make({
-                message: `LLM relation extraction failed: ${error instanceof Error ? error.message : String(error)}`,
+                message: `LLM relation extraction failed: ${Inspectable.toStringUnknown(error)}`,
                 cause: O.some(error),
                 text: O.some(text),
               })
@@ -547,7 +585,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
         if (relationPropertyMapResult.hasCollisions) {
           yield* Effect.logWarning("Relation property local name collisions detected", {
             collisionCount: MutableHashMap.size(relationPropertyMapResult.collisions),
-            collisions: Object.fromEntries(relationPropertyMapResult.collisions),
+            collisions: R.fromEntries(relationPropertyMapResult.collisions),
           });
         }
         let skippedRelationCount = 0;
@@ -668,12 +706,16 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
         yield* Effect.logInfo("Relation extraction complete", {
           stage: "relation-extraction",
           extractedCount: relationArray.length,
-          relations: relationArray
-            .slice(0, 10)
-            .map(
-              (r: Relation) =>
-                `${r.subjectId} --[${r.predicate}]--> ${typeof r.object === "string" ? r.object : String(r.object)}`
-            ),
+          relations: A.map(
+            A.take(relationArray, 10),
+            (relation: Relation) =>
+              `${relation.subjectId} --[${relation.predicate}]--> ${RelationObject.match(relation.object, {
+                EntityReference: ({ value }) => value,
+                Text: ({ value }) => value,
+                Number: ({ value }) => `${value}`,
+                Boolean: ({ value }) => `${value}`,
+              })}`
+          ),
         });
         return Chunk.fromIterable(relations);
       }),

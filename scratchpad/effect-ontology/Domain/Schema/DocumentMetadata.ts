@@ -13,8 +13,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, MimeType, NonNegativeInt, NonNegNum, PosInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Match } from "effect";
-import * as N from "effect/Number";
+import { Match, Number as N } from "effect";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyVersion } from "../Identity.ts";
 
@@ -25,7 +24,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/DocumentMetadata"
  *
  * **Example** (Use DocumentType)
  * ```ts
- * import { DocumentType } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { DocumentType } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * console.log(DocumentType.is.transcript("transcript")) // true
  * ```
@@ -69,7 +68,7 @@ export const DocumentType = LiteralKit([
  *
  * **Example** (Use DocumentType)
  * ```ts
- * import type { DocumentType } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import type { DocumentType } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * const type: DocumentType = "article"
  * console.log(type)
@@ -85,7 +84,7 @@ export type DocumentType = typeof DocumentType.Type;
  *
  * **Example** (Use EntityDensity)
  * ```ts
- * import { EntityDensity } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { EntityDensity } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * console.log(EntityDensity.is.dense("dense")) // true
  * ```
@@ -108,7 +107,7 @@ export const EntityDensity = LiteralKit(["sparse", "moderate", "dense"])
  *
  * **Example** (Use EntityDensity)
  * ```ts
- * import type { EntityDensity } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import type { EntityDensity } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * const density: EntityDensity = "moderate"
  * console.log(density)
@@ -136,7 +135,7 @@ const ChunkingStrategyDefinition = LiteralKit([
  *
  * **Example** (Use ChunkingStrategy)
  * ```ts
- * import type { ChunkingStrategy } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import type { ChunkingStrategy } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * const strategy: ChunkingStrategy = "standard"
  * console.log(strategy)
@@ -157,7 +156,7 @@ export type ChunkingStrategy = typeof ChunkingStrategyDefinition.Type;
  *
  * **Example** (Use ChunkingStrategy)
  * ```ts
- * import { ComplexityScore, ChunkingStrategy } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { ComplexityScore, ChunkingStrategy } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * const strategy = ChunkingStrategy.recommend(
  *   "transcript",
@@ -255,14 +254,15 @@ const SentenceOverlap = NonNegativeInt.check(
  *
  * **Example** (Use ChunkingParams)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ChunkingParams } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { ChunkingParams } from "@effect-ontology/Schema/DocumentMetadata"
  *
- * const params = S.decodeUnknownSync(ChunkingParams)({
+ * const params = S.decodeUnknownOption(ChunkingParams)({
  *   chunkSize: 500,
  *   overlapSentences: 2
  * })
- * console.log(params.preserveSentences) // true
+ * console.log(O.map(params, (value) => value.preserveSentences)) // true
  * ```
  *
  * @invariant Chunk size is in `[1, 10000]` and overlap is in `[0, 10]`.
@@ -296,7 +296,7 @@ export class ChunkingParams extends S.Class<ChunkingParams>($I`ChunkingParams`)(
  *
  * **Example** (Use defaultChunkingParams)
  * ```ts
- * import { defaultChunkingParams } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { defaultChunkingParams } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * console.log(defaultChunkingParams.fine_grained.chunkSize) // 300
  * ```
@@ -376,7 +376,7 @@ const ClassificationBatchSize = PosInt.check(
  *
  * **Example** (Use PreprocessingOptions)
  * ```ts
- * import { PreprocessingOptions } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { PreprocessingOptions } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * const options = PreprocessingOptions.make({})
  * console.log(options.enabled) // true
@@ -410,7 +410,7 @@ export class PreprocessingOptions extends S.Class<PreprocessingOptions>($I`Prepr
  *
  * **Example** (Use defaultPreprocessingOptions)
  * ```ts
- * import { defaultPreprocessingOptions } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { defaultPreprocessingOptions } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * console.log(defaultPreprocessingOptions.adaptiveChunking) // true
  * ```
@@ -433,7 +433,7 @@ const languageCodePattern = /^[a-z]{2}$/;
  *
  * **Example** (Use LanguageCode)
  * ```ts
- * import { LanguageCode } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { LanguageCode } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * console.log(LanguageCode.is("en")) // true
  * ```
@@ -466,7 +466,7 @@ export const LanguageCode = S.String.check(
  *
  * **Example** (Use LanguageCode)
  * ```ts
- * import { LanguageCode, type LanguageCode as LanguageCodeValue } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { LanguageCode, type LanguageCode as LanguageCodeValue } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * const language: LanguageCodeValue = LanguageCode.make("en")
  * console.log(language)
@@ -482,7 +482,7 @@ export type LanguageCode = typeof LanguageCode.Type;
  *
  * **Example** (Use ComplexityScore)
  * ```ts
- * import { ComplexityScore } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { ComplexityScore } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * console.log(ComplexityScore.is(0.75)) // true
  * ```
@@ -505,7 +505,7 @@ export const ComplexityScore = UnitInterval.annotate({
  *
  * **Example** (Use ComplexityScore)
  * ```ts
- * import { ComplexityScore, type ComplexityScore as ComplexityScoreValue } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { ComplexityScore, type ComplexityScore as ComplexityScoreValue } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * const score: ComplexityScoreValue = ComplexityScore.make(0.5)
  * console.log(score)
@@ -578,7 +578,7 @@ const recommendChunkingStrategy = (
  * **Example** (Use DocumentMetadata)
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
- * import { DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * console.log(DocumentMetadata.estimateTokens(NonNegativeInt.make(1_001))) // 251
  * ```
@@ -622,7 +622,7 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
    * @returns The heuristic token count, rounded upward at four characters per token.
    * **Example** (Use estimateTokens)
    * ```ts
-   * import { DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata.ts"
+   * import { DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata"
    *
    * console.log(DocumentMetadata.estimateTokens(9)) // 3
    * ```
@@ -641,7 +641,7 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
    * @returns A non-negative integer priority where lower values run first.
    * **Example** (Use computePriority)
    * ```ts
-   * import { ComplexityScore, DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata.ts"
+   * import { ComplexityScore, DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata"
    *
    * console.log(DocumentMetadata.computePriority(
    *   ComplexityScore.make(0.5),
@@ -668,7 +668,7 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
    * @returns Complete metadata using neutral classification and standard chunking defaults.
    * **Example** (Use fallback)
    * ```ts
-   * import { DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata.ts"
+   * import { DocumentMetadata } from "@effect-ontology/Schema/DocumentMetadata"
    *
    * console.log(DocumentMetadata.fallback)
    * ```
@@ -707,7 +707,7 @@ export class DocumentMetadata extends S.Class<DocumentMetadata>($I`DocumentMetad
  *
  * **Example** (Use PreprocessingStats)
  * ```ts
- * import type { PreprocessingStats } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import type { PreprocessingStats } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * const failures = (stats: PreprocessingStats) => stats.failedCount
  * console.log(failures)
@@ -740,7 +740,7 @@ export class PreprocessingStats extends S.Class<PreprocessingStats>($I`Preproces
  *
  * **Example** (Use EnrichedManifest)
  * ```ts
- * import type { EnrichedManifest } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import type { EnrichedManifest } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * const count = (manifest: EnrichedManifest) => manifest.documents.length
  * console.log(count)
@@ -765,7 +765,7 @@ export class EnrichedManifest extends S.Class<EnrichedManifest>($I`EnrichedManif
     description: "Versioned batch manifest containing normalized document metadata and preprocessing statistics.",
   })
 ) {
-  static readonly decodeFromString = S.decodeEffect(S.fromJsonString(this))
+  static readonly decodeFromString = S.decodeEffect(S.fromJsonString(this));
 }
 
 /**
@@ -778,14 +778,15 @@ export class EnrichedManifest extends S.Class<EnrichedManifest>($I`EnrichedManif
  *
  * **Example** (Use PreprocessingActivityInput)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { PreprocessingActivityInput } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import { PreprocessingActivityInput } from "@effect-ontology/Schema/DocumentMetadata"
  *
- * const input = S.decodeUnknownSync(PreprocessingActivityInput)({
+ * const input = S.decodeUnknownOption(PreprocessingActivityInput)({
  *   batchId: "batch-abc123def456",
  *   manifestUri: "gs://beep-ontology-state/batches/manifest.json"
  * })
- * console.log(input.preprocessing.enabled) // true
+ * console.log(O.map(input, (value) => value.preprocessing.enabled)) // true
  * ```
  *
  * @category dtos
@@ -807,7 +808,7 @@ export class PreprocessingActivityInput extends S.Class<PreprocessingActivityInp
  *
  * **Example** (Use PreprocessingActivityOutput)
  * ```ts
- * import type { PreprocessingActivityOutput } from "@effect-ontology/Schema/DocumentMetadata.ts"
+ * import type { PreprocessingActivityOutput } from "@effect-ontology/Schema/DocumentMetadata"
  *
  * const duration = (output: PreprocessingActivityOutput) => output.durationMs
  * console.log(duration)

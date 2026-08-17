@@ -1,6 +1,8 @@
 /**
  * Claim Repository
  *
+ * **Details**
+ *
  * Effect-native repository for claims metadata using Drizzle ORM.
  * Provides typed access to the claims table with support for
  * querying, deprecation, and conflict detection.
@@ -12,13 +14,14 @@
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { Context, Layer } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Claim");
 
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
-import { DateTime, Effect, Option } from "effect";
+import { DateTime, Effect } from "effect";
 import type { ClaimInsertRow, ClaimRow, CorrectionInsertRow } from "./schema.ts";
 import { claims, correctionClaims, corrections } from "./schema.ts";
 
@@ -26,10 +29,74 @@ import { claims, correctionClaims, corrections } from "./schema.ts";
 // Types
 // =============================================================================
 
+/**
+ * Describes the claim id data exposed by this module.
+ *
+ * **Example** (Create ClaimId)
+ *
+ * ```ts
+ * import type { ClaimId } from "@effect-ontology/Repository/Claim"
+ *
+ * const claimId: ClaimId = "claim-id-1"
+ *
+ * console.log(claimId)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ClaimId = string;
+/**
+ * Describes the article id data exposed by this module.
+ *
+ * **Example** (Create ArticleId)
+ *
+ * ```ts
+ * import type { ArticleId } from "@effect-ontology/Repository/Claim"
+ *
+ * const articleId: ArticleId = "article-id-1"
+ *
+ * console.log(articleId)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ArticleId = string;
+/**
+ * Describes the correction id data exposed by this module.
+ *
+ * **Example** (Create CorrectionId)
+ *
+ * ```ts
+ * import type { CorrectionId } from "@effect-ontology/Repository/Claim"
+ *
+ * const correctionId: CorrectionId = "correction-id-1"
+ *
+ * console.log(correctionId)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CorrectionId = string;
 
+/**
+ * Describes the claim filter data exposed by this module.
+ *
+ * **Example** (Reference ClaimFilter fields)
+ *
+ * ```ts
+ * import type { ClaimFilter } from "@effect-ontology/Repository/Claim"
+ *
+ * const claimFilterFields: ReadonlyArray<keyof ClaimFilter> = ["ontologyId", "articleId", "subjectIri"]
+ *
+ * console.log(claimFilterFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ClaimFilter {
   readonly ontologyId?: string;
   readonly articleId?: ArticleId;
@@ -41,6 +108,22 @@ export interface ClaimFilter {
   readonly offset?: number;
 }
 
+/**
+ * Describes the conflict candidate data exposed by this module.
+ *
+ * **Example** (Reference ConflictCandidate fields)
+ *
+ * ```ts
+ * import type { ConflictCandidate } from "@effect-ontology/Repository/Claim"
+ *
+ * const conflictCandidateFields: ReadonlyArray<keyof ConflictCandidate> = ["existingClaim", "conflictType"]
+ *
+ * console.log(conflictCandidateFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ConflictCandidate {
   readonly existingClaim: ClaimRow;
   readonly conflictType: "position" | "temporal" | "contradictory";
@@ -50,6 +133,20 @@ export interface ConflictCandidate {
 // Service
 // =============================================================================
 
+/**
+ * Provides repository access for claim repository.
+ *
+ * **Example** (Inspect claim repository)
+ *
+ * ```ts
+ * import { ClaimRepository } from "@effect-ontology/Repository/Claim"
+ *
+ * console.log(ClaimRepository)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class ClaimRepository extends Context.Service<ClaimRepository>()($I`ClaimRepository`, {
   make: Effect.gen(function* () {
     const drizzle = yield* PostgresDrizzle;
@@ -74,7 +171,7 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      */
     const getClaim = Effect.fn("getClaim")(function* (id: ClaimId) {
       const [result] = yield* drizzle.select().from(claims).where(eq(claims.id, id)).limit(1);
-      return Option.fromNullishOr(result);
+      return O.fromNullishOr(result);
     });
 
     /**
@@ -110,15 +207,15 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      */
     const getClaims = Effect.fn("getClaims")(function* (filter: ClaimFilter) {
       const conditions = buildWhereConditions(filter);
-      let query = drizzle.select().from(claims).orderBy(desc(claims.assertedAt));
+      let query = drizzle.select().from(claims).orderBy(desc(claims.assertedAt)).$dynamic();
       if (conditions.length > 0) {
-        query = query.where(and(...conditions)) as typeof query;
+        query = query.where(and(...conditions));
       }
       if (P.isNotUndefined(filter.limit)) {
-        query = query.limit(filter.limit) as typeof query;
+        query = query.limit(filter.limit);
       }
       if (P.isNotUndefined(filter.offset)) {
-        query = query.offset(filter.offset) as typeof query;
+        query = query.offset(filter.offset);
       }
       return yield* query;
     });
@@ -187,7 +284,7 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      */
     const getCorrection = Effect.fn("getCorrection")(function* (id: CorrectionId) {
       const [result] = yield* drizzle.select().from(corrections).where(eq(corrections.id, id)).limit(1);
-      return Option.fromNullishOr(result);
+      return O.fromNullishOr(result);
     });
 
     /**
@@ -259,11 +356,9 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
             const claimStart =
               claim.validFrom instanceof Date
                 ? claim.validFrom
-                : DateTime.toDateUtc(DateTime.makeUnsafe(claim.validFrom as string));
+                : DateTime.toDateUtc(DateTime.makeUnsafe(claim.validFrom));
             const claimEnd =
-              claim.validTo instanceof Date
-                ? claim.validTo
-                : DateTime.toDateUtc(DateTime.makeUnsafe(claim.validTo as string));
+              claim.validTo instanceof Date ? claim.validTo : DateTime.toDateUtc(DateTime.makeUnsafe(claim.validTo));
             const existingStart = existing.validFrom;
             const existingEnd = existing.validTo;
 
@@ -317,9 +412,9 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      */
     const countClaims = Effect.fn("countClaims")(function* (filter: ClaimFilter) {
       const conditions = buildWhereConditions(filter);
-      let query = drizzle.select({ count: sql<number>`count(*)::int` }).from(claims);
+      let query = drizzle.select({ count: sql<number>`count(*)::int` }).from(claims).$dynamic();
       if (conditions.length > 0) {
-        query = query.where(and(...conditions)) as typeof query;
+        query = query.where(and(...conditions));
       }
       const result = yield* query;
       return result[0]?.count ?? 0;

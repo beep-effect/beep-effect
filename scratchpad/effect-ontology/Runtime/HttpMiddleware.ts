@@ -1,6 +1,8 @@
 /**
  * Runtime: HTTP Middleware
  *
+ * **Details**
+ *
  * Middleware for the HTTP server, including shutdown tracking, authentication,
  * and request logging.
  *
@@ -8,10 +10,10 @@
  * @since 0.0.0
  */
 
-import { Clock, Effect, HashSet, Option, Redacted } from "effect";
+import { Clock, Effect, HashSet, Random, Redacted } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Random from "effect/Random";
 import * as Str from "effect/String";
 import { HttpMiddleware, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { ConfigService } from "../Service/Config.ts";
@@ -26,7 +28,7 @@ const PUBLIC_PATHS = ["/", "/health", "/health/live", "/health/ready", "/health/
  * Check if a path is public (exempt from auth)
  */
 const isEventStreamPath = (path: string): boolean => {
-  const pathname = Option.getOrElse(A.head(Str.split(path, "?")), () => path);
+  const pathname = O.getOrElse(A.head(Str.split(path, "?")), () => path);
   return Str.includes("/events/stream")(pathname);
 };
 
@@ -44,13 +46,23 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
 /**
  * Middleware to enforce API key authentication
  *
+ * **Details**
+ *
  * When API.REQUIRE_AUTH is true:
  * - All /v1/* endpoints require valid X-API-Key header
  * - Health endpoints remain public
  * - Invalid/missing key returns 401
  *
+ * **Example** (Inspect make auth middleware)
+ *
+ * ```ts
+ * import { makeAuthMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
+ *
+ * console.log(makeAuthMiddleware)
+ * ```
+ *
+ * @category constructors
  * @since 0.0.0
- * @category handlers
  */
 export const makeAuthMiddleware = Effect.gen(function* () {
   const config = yield* ConfigService;
@@ -61,7 +73,7 @@ export const makeAuthMiddleware = Effect.gen(function* () {
   }
 
   // Parse API keys
-  const apiKeys = Option.match(config.api.keys, {
+  const apiKeys = O.match(config.api.keys, {
     onNone: () => HashSet.empty<string>(),
     onSome: parseApiKeys,
   });
@@ -111,8 +123,16 @@ export const makeAuthMiddleware = Effect.gen(function* () {
 /**
  * Middleware to track active requests for graceful shutdown
  *
+ * **Example** (Inspect make shutdown middleware)
+ *
+ * ```ts
+ * import { makeShutdownMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
+ *
+ * console.log(makeShutdownMiddleware)
+ * ```
+ *
+ * @category constructors
  * @since 0.0.0
- * @category handlers
  */
 export const makeShutdownMiddleware = Effect.gen(function* () {
   const shutdown = yield* ShutdownService;
@@ -123,13 +143,23 @@ export const makeShutdownMiddleware = Effect.gen(function* () {
 /**
  * Middleware to log HTTP requests with timing
  *
+ * **Details**
+ *
  * Logs:
  * - Request method, path, and timing
  * - Response status code
  * - Configurable log level (debug for health checks, info for API)
  *
+ * **Example** (Inspect make logging middleware)
+ *
+ * ```ts
+ * import { makeLoggingMiddleware } from "@effect-ontology/Runtime/HttpMiddleware"
+ *
+ * console.log(makeLoggingMiddleware)
+ * ```
+ *
+ * @category constructors
  * @since 0.0.0
- * @category handlers
  */
 export const makeLoggingMiddleware = Effect.sync(() =>
   HttpMiddleware.make((app) =>

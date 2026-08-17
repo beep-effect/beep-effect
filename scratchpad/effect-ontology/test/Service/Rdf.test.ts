@@ -2,7 +2,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Exit, Layer } from "effect";
-import { RdfBuilder, rdfStoreSize, rdfStoreToDataset } from "../../Service/Rdf.ts";
+import { RdfBuilder, rdfStoreApplyRules, rdfStoreSize, rdfStoreToDataset } from "../../Service/Rdf.ts";
 
 const RdfBuilderTest = RdfBuilder.Default.pipe(
   Layer.provide(
@@ -38,6 +38,20 @@ describe("RdfBuilder", () => {
         assert.strictEqual(rdfStoreSize(reparsed), 1);
         assert.isFalse("_store" in reparsed);
         assert.strictEqual(rdfStoreToDataset(reparsed).quads.length, 1);
+      })
+    );
+
+    it.effect("applies RDF rules in data-first and data-last forms", () =>
+      Effect.gen(function* () {
+        const rdf = yield* RdfBuilder;
+        const dataFirstStore = yield* rdf.createStore;
+        const dataLastStore = yield* rdf.createStore;
+
+        yield* rdfStoreApplyRules(dataFirstStore, []);
+        yield* rdfStoreApplyRules([])(dataLastStore);
+
+        assert.strictEqual(rdfStoreSize(dataFirstStore), 0);
+        assert.strictEqual(rdfStoreSize(dataLastStore), 0);
       })
     );
 

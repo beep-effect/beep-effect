@@ -2,6 +2,8 @@
 /**
  * CLI: Effect Ontology Entry Point
  *
+ * **Details**
+ *
  * Main entry point for the effect-onto CLI.
  *
  * @packageDocumentation

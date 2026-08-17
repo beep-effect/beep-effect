@@ -1,6 +1,8 @@
 /**
  * Service: Extraction Run Service
  *
+ * **Details**
+ *
  * Manages extraction runs with unique IDs and artifact storage in GCS.
  * Uses StorageService for cloud-native storage that works across multiple instances.
  *
@@ -15,31 +17,28 @@
  * @since 0.0.0
  */
 
-import {createHash} from "node:crypto";
-import {$ScratchpadId} from "@beep/identity";
-import {Sha256Hex, SchemaUtils} from "@beep/schema";
-import {NonNegativeInt} from "@beep/schema/Int";
-import {Context, Data, DateTime, Effect, Layer} from "effect";
+import { createHash } from "node:crypto";
+import { $ScratchpadId } from "@beep/identity";
+import { SchemaUtils, Sha256Hex } from "@beep/schema";
+import { NonNegativeInt } from "@beep/schema/Int";
+import { Context, DateTime, Effect, Layer } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { ExtractionRunId, IdempotencyKey } from "../Domain/Identity.ts";
-import { ChunkId, ContentHash, DocumentId, ExtractionRunId as ExtractionRunIdSchema, OntologyVersion } from "../Domain/Identity.ts";
-import type {
-  AuditErrorType,
-  AuditEventType,
-  RunConfig,
-  RunStats
-} from "../Domain/Model/ExtractionRun.ts";
 import {
-  AuditError,
-  AuditEvent,
-  ExtractionRun,
-  OutputMetadata,
-  RunStatus
-} from "../Domain/Model/ExtractionRun.ts";
-import {OutputType} from "../Domain/Model/OutputType.ts";
-import {StorageService} from "./Storage.ts";
+  ChunkId,
+  ContentHash,
+  DocumentId,
+  ExtractionRunId as ExtractionRunIdSchema,
+  OntologyVersion,
+} from "../Domain/Identity.ts";
+import type { AuditErrorType, AuditEventType, RunConfig, RunStats } from "../Domain/Model/ExtractionRun.ts";
+import { AuditError, AuditEvent, ExtractionRun, OutputMetadata, RunStatus } from "../Domain/Model/ExtractionRun.ts";
+import { OutputType } from "../Domain/Model/OutputType.ts";
+import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ExtractionRun");
 
@@ -75,6 +74,17 @@ const generateDocumentId = (text: string): ExtractionRunId => {
 
 /**
  * Get run ID from text (deterministic hash)
+ *
+ * **Example** (Inspect get run id from text)
+ *
+ * ```ts
+ * import { getRunIdFromText } from "@effect-ontology/Service/ExtractionRun"
+ *
+ * console.log(getRunIdFromText)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const getRunIdFromText = (text: string): ExtractionRunId => generateDocumentId(text);
 
@@ -86,7 +96,7 @@ const hashContent = (content: string): string => sha256Hex(content);
 /**
  * Decode JSON string to ExtractionRun
  *
- * Uses S.decodeUnknownSync to properly construct all nested
+ * Uses S.decodeUnknownOption to properly construct all nested
  * S.Class instances (RunConfig, OntologyRef, etc.)
  */
 const decodeExtractionRun = S.decodeUnknownEffect(S.fromJsonString(ExtractionRun));
@@ -109,17 +119,64 @@ const chunkKey = (runId: ExtractionRunId, chunkIndex: NonNegativeInt): string =>
 
 const outputKey = (runId: ExtractionRunId, filename: string): string => runKey(runId, "outputs", filename);
 
-export class ExtractionRunError extends Data.TaggedError("ExtractionRunError")<{
-  readonly message: string;
-  readonly runId?: ExtractionRunId;
-  readonly cause?: unknown;
-}> {
+/**
+ * Provides the extraction run error service capability.
+ *
+ * **Example** (Inspect extraction run error)
+ *
+ * ```ts
+ * import { ExtractionRunError } from "@effect-ontology/Service/ExtractionRun"
+ *
+ * console.log(ExtractionRunError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ExtractionRunError extends S.TaggedError<ExtractionRunError>($I`ExtractionRunError`)(
+  "ExtractionRunError",
+  {
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable extraction-run failure diagnostic.",
+    }),
+    runId: S.OptionFromOptionalKey(ExtractionRunIdSchema).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Optional extraction run associated with the failure.",
+      })
+    ),
+    cause: OptionalErrorCause.annotateKey({
+      description: "Optional underlying storage or decoding defect.",
+    }),
+  },
+  $I.annote("ExtractionRunError", {
+    description: "Failure while reading, writing, or updating an extraction run.",
+  })
+) {
+  static readonly is = S.is(this);
 }
 
 // =============================================================================
 // Service Interface
 // =============================================================================
 
+/**
+ * Describes the extraction run service methods data exposed by this module.
+ *
+ *
+ * **Example** (Use the ExtractionRunServiceMethods contract)
+ *
+ * ```ts
+ * import type { ExtractionRunServiceMethods } from "@effect-ontology/Service/ExtractionRun"
+ *
+ * const acceptsExtractionRunServiceMethods = (_value: ExtractionRunServiceMethods): void => undefined
+ *
+ * console.log(acceptsExtractionRunServiceMethods)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ExtractionRunServiceMethods {
   /**
    * Create a new extraction run with embedded audit tracking
@@ -220,10 +277,23 @@ export interface ExtractionRunServiceMethods {
   ): Effect.Effect<void, ExtractionRunError>;
 }
 
+/**
+ * Provides the extraction run service service capability.
+ *
+ * **Example** (Inspect extraction run service)
+ *
+ * ```ts
+ * import { ExtractionRunService } from "@effect-ontology/Service/ExtractionRun"
+ *
+ * console.log(ExtractionRunService)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export class ExtractionRunService extends Context.Service<ExtractionRunService, ExtractionRunServiceMethods>()(
   $I`ExtractionRunService`
-) {
-}
+) {}
 
 // =============================================================================
 // Implementation
@@ -233,7 +303,7 @@ const makeExtractionRunService = Effect.gen(function* () {
   const storage = yield* StorageService;
 
   const KeyIndex = S.Record(S.String, DocumentId);
-  const KeyIndexJson = S.fromJsonString(KeyIndex, {space: 2}).pipe(
+  const KeyIndexJson = S.fromJsonString(KeyIndex, { space: 2 }).pipe(
     SchemaUtils.withStatics((schema) => ({
       decodeKeyIndex: S.decodeUnknownEffect(schema),
       encodeKeyIndex: S.encodeEffect(schema),
@@ -242,15 +312,15 @@ const makeExtractionRunService = Effect.gen(function* () {
 
   const JsonRecord = S.Record(S.String, S.Json).pipe(
     SchemaUtils.withStatics((schema) => ({
-      decodeUnknownEffect: S.decodeUnknownEffect(schema)
+      decodeUnknownEffect: S.decodeUnknownEffect(schema),
     }))
-  )
+  );
 
   const mapRunError = (message: string, runId?: ExtractionRunId) => (cause: unknown) =>
-    new ExtractionRunError({
+    ExtractionRunError.make({
       message,
-      cause,
-      ...(P.isNotUndefined(runId) ? {runId} : {}),
+      cause: O.some(cause),
+      runId: O.fromUndefinedOr(runId),
     });
 
   const updateMetadata = Effect.fn("ExtractionRunService.updateMetadata")(function* (
@@ -259,9 +329,9 @@ const makeExtractionRunService = Effect.gen(function* () {
   ) {
     const content = yield* storage.get(metadataKey(runId));
     if (P.isUndefined(content)) {
-      return yield* new ExtractionRunError({
+      return yield* ExtractionRunError.make({
         message: `Run not found: ${runId}`,
-        runId
+        runId: O.some(runId),
       });
     }
     const run = yield* decodeExtractionRun(content);
@@ -272,9 +342,9 @@ const makeExtractionRunService = Effect.gen(function* () {
 
   const getKeyIndex = storage.get(KEY_INDEX_FILE).pipe(
     Effect.flatMap((content) =>
-      P.isUndefined(content) ? Effect.succeed({} as Record<string, ExtractionRunId>) : KeyIndexJson.decodeKeyIndex(content)
+      P.isUndefined(content) ? S.decodeEffect(KeyIndex)({}) : KeyIndexJson.decodeKeyIndex(content)
     ),
-    Effect.orElseSucceed(() => ({}) as Record<string, ExtractionRunId>)
+    Effect.catch(() => S.decodeEffect(KeyIndex)({}))
   );
 
   const updateKeyIndex = Effect.fn("ExtractionRunService.updateKeyIndex")(function* (
@@ -282,7 +352,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     runId: ExtractionRunId
   ) {
     const index = yield* getKeyIndex;
-    const updated = {...index, [key]: runId};
+    const updated = { ...index, [key]: runId };
     yield* storage.set(KEY_INDEX_FILE, yield* KeyIndexJson.encodeKeyIndex(updated));
   });
 
@@ -309,7 +379,7 @@ const makeExtractionRunService = Effect.gen(function* () {
       config: runConfig,
       outputDir: runKey(runId),
       outputs: [],
-      events: [AuditEvent.make({timestamp: now, type: "started"})],
+      events: [AuditEvent.make({ timestamp: now, type: "started" })],
       errors: [],
       idempotencyKey: O.fromNullishOr(options?.idempotencyKey),
       ontologyVersion: O.map(O.fromNullishOr(options?.ontologyVersion), OntologyVersion.fromUnknown),
@@ -353,10 +423,12 @@ const makeExtractionRunService = Effect.gen(function* () {
       size: NonNegativeInt.make(Buffer.byteLength(content, "utf8")),
       savedAt: now,
     });
-    yield* updateMetadata(runId, (run) => ExtractionRun.make({
-      ...run,
-      outputs: [...run.outputs, metadata]
-    }));
+    yield* updateMetadata(runId, (run) =>
+      ExtractionRun.make({
+        ...run,
+        outputs: [...run.outputs, metadata],
+      })
+    );
     return metadata;
   });
   const saveOutput = (runId: ExtractionRunId, outputType: OutputType, content: string) =>
@@ -365,25 +437,27 @@ const makeExtractionRunService = Effect.gen(function* () {
     );
 
   const updateStats = (runId: ExtractionRunId, stats: RunStats) =>
-    updateMetadata(runId, (run) => ExtractionRun.make({
-      ...run,
-      stats: O.some(stats)
-    })).pipe(
-      Effect.asVoid,
-      Effect.mapError(mapRunError("Failed to update extraction statistics", runId))
-    );
+    updateMetadata(runId, (run) =>
+      ExtractionRun.make({
+        ...run,
+        stats: O.some(stats),
+      })
+    ).pipe(Effect.asVoid, Effect.mapError(mapRunError("Failed to update extraction statistics", runId)));
 
   const completeRunRaw = Effect.fn("ExtractionRunService.completeRun")(function* (runId: ExtractionRunId) {
     const now = yield* DateTime.now;
     return yield* updateMetadata(runId, (run) =>
       ExtractionRun.make({
         ...run,
-        status: RunStatus.cases.Complete.make({completedAt: now}),
+        status: RunStatus.cases.Complete.make({ completedAt: now }),
         updatedAt: O.some(now),
-        events: [...run.events, AuditEvent.make({
-          timestamp: now,
-          type: "completed"
-        })],
+        events: [
+          ...run.events,
+          AuditEvent.make({
+            timestamp: now,
+            type: "completed",
+          }),
+        ],
       })
     );
   });
@@ -396,9 +470,9 @@ const makeExtractionRunService = Effect.gen(function* () {
     const mapError = mapRunError("Failed to read extraction run", runId);
     const content = yield* storage.get(metadataKey(runId)).pipe(Effect.mapError(mapError));
     if (P.isUndefined(content)) {
-      return yield* new ExtractionRunError({
+      return yield* ExtractionRunError.make({
         message: `Run not found: ${runId}`,
-        runId
+        runId: O.some(runId),
       });
     }
     return yield* decodeExtractionRun(content).pipe(Effect.mapError(mapError));
@@ -414,7 +488,7 @@ const makeExtractionRunService = Effect.gen(function* () {
           return P.isUndefined(runId) || !DocumentId.is(runId) ? [] : [runId];
         }),
         (runId) => getRun(runId),
-        {concurrency: 10}
+        { concurrency: 10 }
       )
     ),
     Effect.map((runs) =>
@@ -423,16 +497,16 @@ const makeExtractionRunService = Effect.gen(function* () {
   );
 
   const existsByKeyRaw = Effect.fn("ExtractionRunService.existsByKey")(function* (key: IdempotencyKey) {
-    const runId = (yield* getKeyIndex)[key];
-    return P.isUndefined(runId) ? false : P.isNotUndefined(yield* storage.get(metadataKey(runId)));
+    const runId = R.get(yield* getKeyIndex, key);
+    return O.isNone(runId) ? false : P.isNotUndefined(yield* storage.get(metadataKey(runId.value)));
   });
   const existsByKey = (key: IdempotencyKey) =>
     existsByKeyRaw(key).pipe(Effect.mapError(mapRunError("Failed to check extraction idempotency key")));
 
   const getByKeyRaw = Effect.fn("ExtractionRunService.getByKey")(function* (key: IdempotencyKey) {
-    const runId = (yield* getKeyIndex)[key];
-    if (P.isUndefined(runId)) return null;
-    const content = yield* storage.get(metadataKey(runId));
+    const runId = R.get(yield* getKeyIndex, key);
+    if (O.isNone(runId)) return null;
+    const content = yield* storage.get(metadataKey(runId.value));
     return P.isUndefined(content) ? null : yield* decodeExtractionRun(content);
   });
   const getByKey = (key: IdempotencyKey) =>
@@ -449,11 +523,14 @@ const makeExtractionRunService = Effect.gen(function* () {
       ExtractionRun.make({
         ...run,
         updatedAt: O.some(now),
-        events: [...run.events, AuditEvent.make({
-          timestamp: now,
-          type,
-          data: decodedData
-        })],
+        events: [
+          ...run.events,
+          AuditEvent.make({
+            timestamp: now,
+            type,
+            data: decodedData,
+          }),
+        ],
       })
     );
   });
@@ -472,13 +549,13 @@ const makeExtractionRunService = Effect.gen(function* () {
       timestamp: now,
       type,
       message,
-      context: decodedContext
+      context: decodedContext,
     });
     yield* updateMetadata(runId, (run) =>
       ExtractionRun.make({
         ...run,
         updatedAt: O.some(now),
-        errors: [...run.errors, error]
+        errors: [...run.errors, error],
       })
     );
   });
@@ -493,7 +570,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     );
 
   const setStatus = (runId: ExtractionRunId, status: ExtractionRun["status"]) =>
-    updateMetadata(runId, (run) => ExtractionRun.make({...run, status})).pipe(
+    updateMetadata(runId, (run) => ExtractionRun.make({ ...run, status })).pipe(
       Effect.asVoid,
       Effect.mapError(mapRunError("Failed to update extraction status", runId))
     );
@@ -510,17 +587,20 @@ const makeExtractionRunService = Effect.gen(function* () {
       timestamp: now,
       type: errorType,
       message,
-      context: decodedContext
+      context: decodedContext,
     });
     yield* updateMetadata(runId, (run) =>
       ExtractionRun.make({
         ...run,
-        status: RunStatus.cases.Failed.make({failedAt: now, error}),
+        status: RunStatus.cases.Failed.make({ failedAt: now, error }),
         updatedAt: O.some(now),
-        events: [...run.events, AuditEvent.make({
-          timestamp: now,
-          type: "failed"
-        })],
+        events: [
+          ...run.events,
+          AuditEvent.make({
+            timestamp: now,
+            type: "failed",
+          }),
+        ],
         errors: [...run.errors, error],
       })
     );
@@ -556,7 +636,34 @@ const makeExtractionRunService = Effect.gen(function* () {
 // Layer
 // =============================================================================
 
+/**
+ * Provides the Effect layer for extraction run service live dependencies.
+ *
+ * **Example** (Inspect extraction run service live)
+ *
+ * ```ts
+ * import { ExtractionRunServiceLive } from "@effect-ontology/Service/ExtractionRun"
+ *
+ * console.log(ExtractionRunServiceLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const ExtractionRunServiceLive = Layer.effect(ExtractionRunService, makeExtractionRunService);
 
-/** Alias for convenience */
+/**
+ *  Alias for convenience
+ *
+ * **Example** (Inspect extraction run service default)
+ *
+ * ```ts
+ * import { ExtractionRunServiceDefault } from "@effect-ontology/Service/ExtractionRun"
+ *
+ * console.log(ExtractionRunServiceDefault)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const ExtractionRunServiceDefault = ExtractionRunServiceLive;

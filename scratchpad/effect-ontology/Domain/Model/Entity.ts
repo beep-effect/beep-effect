@@ -10,8 +10,9 @@ import { $ScratchpadId } from "@beep/identity";
 import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance/TextAnchor";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Equal, Hash, pipe, SchemaGetter } from "effect";
+import { Hash, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -29,7 +30,7 @@ const EvidenceSpanFields = {
       description: "System confidence in the evidence span when measured.",
     })
   ),
-} as const;
+};
 
 class EvidenceSpanModel extends S.Class<EvidenceSpanModel>($I`EvidenceSpanModel`)(
   EvidenceSpanFields,
@@ -76,20 +77,23 @@ type CanonicalEvidenceSpanEncoded = typeof CanonicalEvidenceSpan.Encoded;
  * inclusive and `endChar` is exclusive.
  *
  * **Example** (Use EvidenceSpan)
- * ```ts
- * import { EvidenceSpan } from "@effect-ontology/Model/Entity.ts"
  *
- * const span = EvidenceSpan.fromUnknown({
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EvidenceSpan } from "@effect-ontology/Model/Entity"
+ *
+ * const span = S.decodeUnknownOption(EvidenceSpan)({
  *   text: "Cristiano Ronaldo",
  *   startChar: 42,
  *   endChar: 59
  * })
- * console.log(span.endChar) // 59
+ * console.log(O.map(span, (value) => value.endChar)) // Some(59)
  * ```
  *
  * @invariant `0 <= startChar <= endChar`.
- * @see {@link https://www.w3.org/TR/annotation-model/#text-position-selector | Text Position Selector}
- * @category value-objects
+ * @see {@link https://www.w3.org/TR/annotation-model/#text-position-selector | Text Position Selector} for related behavior and composition guidance.
+ * @category schemas
  * @since 0.0.0
  */
 export const EvidenceSpan = LegacyEvidenceSpan.pipe(
@@ -127,8 +131,9 @@ export const EvidenceSpan = LegacyEvidenceSpan.pipe(
  * Runtime value decoded by {@link EvidenceSpan}.
  *
  * **Example** (Use EvidenceSpan)
+ *
  * ```ts
- * import type { EvidenceSpan } from "@effect-ontology/Model/Entity.ts"
+ * import type { EvidenceSpan } from "@effect-ontology/Model/Entity"
  *
  * const length = (span: EvidenceSpan): number => span.endChar - span.startChar
  * console.log(typeof length) // "function"
@@ -187,7 +192,7 @@ const EntityFields = {
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "System-measured source-grounding confidence." })
   ),
-} as const;
+};
 
 /**
  * Entity extracted from text and classified by an ontology.
@@ -200,16 +205,17 @@ const EntityFields = {
  *
  * **Example** (Use Entity)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { Entity } from "@effect-ontology/Model/Entity.ts"
+ * import { Entity } from "@effect-ontology/Model/Entity"
  *
- * const entity = S.decodeUnknownSync(Entity)({
+ * const entity = S.decodeUnknownOption(Entity)({
  *   id: "cristiano_ronaldo",
  *   mention: "Cristiano Ronaldo",
  *   types: ["https://schema.org/Person"]
  * })
  *
- * console.log(entity.types.length) // 1
+ * console.log(O.map(entity, (value) => value.types.length)) // 1
  * ```
  *
  * @invariant Every entity has a non-empty mention and at least one ontology type.
@@ -240,13 +246,15 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
  *
  * **Example** (Use RelationObject)
  * ```ts
- * import { EntityId } from "@effect-ontology/Model/shared.ts"
- * import { RelationObject } from "@effect-ontology/Model/Entity.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { RelationObject } from "@effect-ontology/Model/Entity"
  *
- * const object = RelationObject.cases.EntityReference.make({
- *   value: EntityId.fromUnknown("al_nassr_fc")
+ * const object = S.decodeUnknownOption(RelationObject)({
+ *   _tag: "EntityReference",
+ *   value: "al_nassr_fc"
  * })
- * console.log(object._tag) // "EntityReference"
+ * console.log(O.map(object, (value) => value._tag)) // Some("EntityReference")
  * ```
  *
  * @category schemas
@@ -277,7 +285,7 @@ export const RelationObject = S.TaggedUnion({
  *
  * **Example** (Use RelationObject)
  * ```ts
- * import type { RelationObject } from "@effect-ontology/Model/Entity.ts"
+ * import type { RelationObject } from "@effect-ontology/Model/Entity"
  *
  * const literal: RelationObject = { _tag: "Boolean", value: true }
  * console.log(literal.value) // true
@@ -302,25 +310,24 @@ const RelationFields = {
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "Source span supporting the relation when available." })
   ),
-} as const;
+};
 
 /**
  * Ontology relation between an extracted subject and a typed object value.
  *
  * **Example** (Use Relation)
  * ```ts
- * import { EntityId, IRI } from "@effect-ontology/Model/shared.ts"
- * import { Relation, RelationObject } from "@effect-ontology/Model/Entity.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { Relation } from "@effect-ontology/Model/Entity"
  *
- * const relation = Relation.make({
- *   subjectId: EntityId.fromUnknown("cristiano_ronaldo"),
- *   predicate: IRI.fromUnknown("https://schema.org/memberOf"),
- *   object: RelationObject.cases.EntityReference.make({
- *     value: EntityId.fromUnknown("al_nassr_fc")
- *   })
+ * const relation = S.decodeUnknownOption(Relation)({
+ *   subjectId: "cristiano_ronaldo",
+ *   predicate: "https://schema.org/memberOf",
+ *   object: { _tag: "EntityReference", value: "al_nassr_fc" }
  * })
  *
- * console.log(relation.isEntityReference) // true
+ * console.log(O.map(relation, (value) => value.isEntityReference)) // Some(true)
  * ```
  *
  * @invariant Entity references are explicitly tagged and cannot be confused
@@ -339,17 +346,16 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
    *
    * **Example** (Use Entity)
    * ```ts
-   * import { EntityId, IRI } from "@effect-ontology/Model/shared.ts"
-   * import { Relation, RelationObject } from "@effect-ontology/Model/Entity.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { Relation } from "@effect-ontology/Model/Entity"
    *
-   * const relation = Relation.make({
-   *   subjectId: EntityId.fromUnknown("alice"),
-   *   predicate: IRI.fromUnknown("https://schema.org/knows"),
-   *   object: RelationObject.cases.EntityReference.make({
-   *     value: EntityId.fromUnknown("bob")
-   *   })
+   * const relation = S.decodeUnknownOption(Relation)({
+   *   subjectId: "alice",
+   *   predicate: "https://schema.org/knows",
+   *   object: { _tag: "EntityReference", value: "bob" }
    * })
-   * console.log(relation.isEntityReference) // true
+   * console.log(O.map(relation, (value) => value.isEntityReference)) // Some(true)
    * ```
    *
    * @returns `true` only for the `EntityReference` object variant.
@@ -361,53 +367,54 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
   /**
    * Structural equality over the RDF-like subject-predicate-object signature.
    *
-   * @param that - Relation to compare with this value.
-   * @returns `true` when subject, predicate, and object are structurally equal.
-   *
    * **Example** (Use return)
+   *
    * ```ts
    * import { Equal } from "effect"
-   * import { EntityId, IRI } from "@effect-ontology/Model/shared.ts"
-   * import { Relation, RelationObject } from "@effect-ontology/Model/Entity.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { Relation } from "@effect-ontology/Model/Entity"
    *
-   * const relation = Relation.make({
-   *   subjectId: EntityId.fromUnknown("alice"),
-   *   predicate: IRI.fromUnknown("https://schema.org/knows"),
-   *   object: RelationObject.cases.EntityReference.make({
-   *     value: EntityId.fromUnknown("bob")
-   *   })
+   * const relation = S.decodeUnknownOption(Relation)({
+   *   subjectId: "alice",
+   *   predicate: "https://schema.org/knows",
+   *   object: { _tag: "EntityReference", value: "bob" }
    * })
-   * console.log(Equal.equals(relation, relation)) // true
+   * console.log(O.map(relation, (value) => Equal.equals(value, value))) // Some(true)
    * ```
+   *
+   * @param that - Relation to compare with this value.
+   * @returns `true` when subject, predicate, and object are structurally equal.
    */
-  [Equal.symbol](that: Relation): boolean {
+  [Eq.symbol](that: Relation): boolean {
     return (
-      Equal.equals(this.subjectId, that.subjectId) &&
-      Equal.equals(this.predicate, that.predicate) &&
-      Equal.equals(this.object, that.object)
+      Eq.equals(this.subjectId, that.subjectId) &&
+      Eq.equals(this.predicate, that.predicate) &&
+      Eq.equals(this.object, that.object)
     );
   }
 
   /**
    * Structural hash over the RDF-like subject-predicate-object signature.
    *
-   * @returns A deterministic hash consistent with relation equality.
-   *
    * **Example** (Use KnowledgeGraphFields)
+   *
    * ```ts
    * import { Hash } from "effect"
-   * import { EntityId, IRI } from "@effect-ontology/Model/shared.ts"
-   * import { Relation, RelationObject } from "@effect-ontology/Model/Entity.ts"
+   * import { N } from "@beep/utils"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { Relation } from "@effect-ontology/Model/Entity"
    *
-   * const relation = Relation.make({
-   *   subjectId: EntityId.fromUnknown("alice"),
-   *   predicate: IRI.fromUnknown("https://schema.org/knows"),
-   *   object: RelationObject.cases.EntityReference.make({
-   *     value: EntityId.fromUnknown("bob")
-   *   })
+   * const relation = S.decodeUnknownOption(Relation)({
+   *   subjectId: "alice",
+   *   predicate: "https://schema.org/knows",
+   *   object: { _tag: "EntityReference", value: "bob" }
    * })
-   * console.log(Number.isInteger(Hash.hash(relation))) // true
+   * console.log(O.map(relation, (value) => N.isInteger(Hash.hash(value)))) // Some(true)
    * ```
+   *
+   * @returns A deterministic hash consistent with relation equality.
    */
   [Hash.symbol](): number {
     return pipe(
@@ -431,7 +438,7 @@ const KnowledgeGraphFields = {
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "Original source text when retained for provenance." })
   ),
-} as const;
+};
 
 /**
  * Complete entity-and-relation extraction result.
@@ -440,17 +447,18 @@ const KnowledgeGraphFields = {
  * ```ts
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { EntityId } from "@effect-ontology/Model/shared.ts"
- * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity.ts"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"
  *
- * const entity = S.decodeUnknownSync(Entity)({
+ * const entity = S.decodeUnknownOption(Entity)({
  *   id: "alice",
  *   mention: "Alice",
  *   types: ["https://schema.org/Person"]
  * })
- * const graph = KnowledgeGraph.make({ entities: [entity] })
+ * const graph = O.map(entity, (value) => KnowledgeGraph.make({ entities: [value] }))
+ * const aliceId = S.decodeUnknownOption(EntityId)("alice")
  *
- * console.log(O.isSome(graph.getEntity(EntityId.fromUnknown("alice")))) // true
+ * console.log(O.isSome(O.flatMap(O.all({ graph, aliceId }), ({ graph, aliceId }) => graph.getEntity(aliceId)))) // true
  * ```
  *
  * @category aggregates
@@ -465,18 +473,21 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
   /**
    * Finds an entity by stable identifier.
    *
-   * @param id - Stable entity identifier to locate.
-   * @returns The matching entity, or `Option.none()` when it is absent.
-   *
    * **Example** (Use getEntity)
+   *
    * ```ts
    * import * as O from "effect/Option"
-   * import { EntityId } from "@effect-ontology/Model/shared.ts"
-   * import { KnowledgeGraph } from "@effect-ontology/Model/Entity.ts"
+   * import * as S from "effect/Schema"
+   * import { EntityId } from "@effect-ontology/Model/shared"
+   * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    *
    * const graph = KnowledgeGraph.make({})
-   * console.log(O.isNone(graph.getEntity(EntityId.fromUnknown("alice")))) // true
+   * const id = S.decodeUnknownOption(EntityId)("alice")
+   * console.log(O.exists(id, (value) => O.isNone(graph.getEntity(value)))) // true
    * ```
+   *
+   * @param id - Stable entity identifier to locate.
+   * @returns The matching entity, or `Option.none()` when it is absent.
    */
   getEntity(id: EntityId): O.Option<Entity> {
     return A.findFirst(this.entities, (entity) => EntityId.equivalence(entity.id, id));
@@ -485,17 +496,21 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
   /**
    * Returns all relations whose subject is the requested entity.
    *
-   * @param subjectId - Stable identifier of the relation subject.
-   * @returns Relations whose subject equals `subjectId`, preserving graph order.
-   *
    * **Example** (Use getRelationsFrom)
+   *
    * ```ts
-   * import { EntityId } from "@effect-ontology/Model/shared.ts"
-   * import { KnowledgeGraph } from "@effect-ontology/Model/Entity.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { EntityId } from "@effect-ontology/Model/shared"
+   * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    *
    * const graph = KnowledgeGraph.make({})
-   * console.log(graph.getRelationsFrom(EntityId.fromUnknown("alice"))) // []
+   * const id = S.decodeUnknownOption(EntityId)("alice")
+   * console.log(O.map(id, (value) => graph.getRelationsFrom(value))) // Some([])
    * ```
+   *
+   * @param subjectId - Stable identifier of the relation subject.
+   * @returns Relations whose subject equals `subjectId`, preserving graph order.
    */
   getRelationsFrom(subjectId: EntityId): ReadonlyArray<Relation> {
     return A.filter(this.relations, (relation) => EntityId.equivalence(relation.subjectId, subjectId));
@@ -504,17 +519,21 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
   /**
    * Returns relations whose object explicitly references one entity.
    *
-   * @param entityId - Stable identifier of the referenced entity.
-   * @returns Entity-reference relations targeting `entityId`, preserving graph order.
-   *
    * **Example** (Use getRelationsTo)
+   *
    * ```ts
-   * import { EntityId } from "@effect-ontology/Model/shared.ts"
-   * import { KnowledgeGraph } from "@effect-ontology/Model/Entity.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { EntityId } from "@effect-ontology/Model/shared"
+   * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    *
    * const graph = KnowledgeGraph.make({})
-   * console.log(graph.getRelationsTo(EntityId.fromUnknown("alice"))) // []
+   * const id = S.decodeUnknownOption(EntityId)("alice")
+   * console.log(O.map(id, (value) => graph.getRelationsTo(value))) // Some([])
    * ```
+   *
+   * @param entityId - Stable identifier of the referenced entity.
+   * @returns Entity-reference relations targeting `entityId`, preserving graph order.
    */
   getRelationsTo(entityId: EntityId): ReadonlyArray<Relation> {
     return A.filter(

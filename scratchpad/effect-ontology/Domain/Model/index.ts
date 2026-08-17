@@ -15,7 +15,7 @@
  *
  * **Example** (Use index)
  * ```ts
- * import { AgentId } from "@effect-ontology/Model/index.ts"
+ * import { AgentId } from "@effect-ontology/Model/index"
  * console.log(AgentId.is("validator")) // true
  * ```
  *
@@ -28,7 +28,7 @@ export * from "./Agent.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { BatchState } from "@effect-ontology/Model/index.ts"
+ * import { BatchState } from "@effect-ontology/Model/index"
  * console.log(BatchState.isValidTransition("Pending", "Preprocessing")) // true
  * ```
  *
@@ -41,7 +41,7 @@ export * from "./BatchWorkflow.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { CoreClass } from "@effect-ontology/Model/index.ts"
+ * import { CoreClass } from "@effect-ontology/Model/index"
  * console.log(
  *   CoreClass.is["http://effect-ontology.dev/core#TrackedEntity"](
  *     "http://effect-ontology.dev/core#TrackedEntity"
@@ -58,7 +58,7 @@ export * from "./CoreOntology.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { SourceType } from "@effect-ontology/Model/index.ts"
+ * import { SourceType } from "@effect-ontology/Model/index"
  * console.log(SourceType.is.news("news")) // true
  * ```
  *
@@ -71,7 +71,7 @@ export * from "./EnrichedContent.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { RelationObject } from "@effect-ontology/Model/index.ts"
+ * import { RelationObject } from "@effect-ontology/Model/index"
  * console.log(RelationObject.cases.Text.make({ value: "Alice" }))
  * ```
  *
@@ -84,7 +84,7 @@ export * from "./Entity.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { EntityResolutionConfig } from "@effect-ontology/Model/index.ts"
+ * import { EntityResolutionConfig } from "@effect-ontology/Model/index"
  * console.log(EntityResolutionConfig.default().similarityThreshold)
  * ```
  *
@@ -97,7 +97,7 @@ export * from "./EntityResolution.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { EntityResolutionGraph } from "@effect-ontology/Model/index.ts"
+ * import { EntityResolutionGraph } from "@effect-ontology/Model/index"
  * console.log(EntityResolutionGraph)
  * ```
  *
@@ -110,7 +110,7 @@ export * from "./EntityResolutionGraph.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { ExtractionRun } from "@effect-ontology/Model/index.ts"
+ * import { ExtractionRun } from "@effect-ontology/Model/index"
  * console.log(ExtractionRun.chunkId)
  * ```
  *
@@ -123,7 +123,7 @@ export * from "./ExtractionRun.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { ImageAsset } from "@effect-ontology/Model/index.ts"
+ * import { ImageAsset } from "@effect-ontology/Model/index"
  * console.log(ImageAsset)
  * ```
  *
@@ -136,8 +136,11 @@ export * from "./Image.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { OntologyContext } from "@effect-ontology/Model/index.ts"
- * console.log(OntologyContext.fromUnknown({}).classes.length) // 0
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { OntologyContext } from "@effect-ontology/Model/index"
+ * const context = S.decodeUnknownOption(OntologyContext)({})
+ * console.log(O.map(context, (value) => value.classes.length)) // Some(0)
  * ```
  *
  * @category models
@@ -149,7 +152,7 @@ export * from "./Ontology.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { OntologyAgentConfig } from "@effect-ontology/Model/index.ts"
+ * import { OntologyAgentConfig } from "@effect-ontology/Model/index"
  * console.log(OntologyAgentConfig.default().concurrency) // 4
  * ```
  *
@@ -162,7 +165,7 @@ export * from "./OntologyAgent.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { OntologyEmbeddings } from "@effect-ontology/Model/index.ts"
+ * import { OntologyEmbeddings } from "@effect-ontology/Model/index"
  * console.log(OntologyEmbeddings.computeVersion)
  * ```
  *
@@ -175,7 +178,7 @@ export * from "./OntologyEmbeddings.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { OutputType } from "@effect-ontology/Model/index.ts"
+ * import { OutputType } from "@effect-ontology/Model/index"
  * console.log(OutputType.filename("rdf-jsonld")) // "graph.jsonld"
  * ```
  *
@@ -188,7 +191,7 @@ export * from "./OutputType.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { Confidence } from "@effect-ontology/Model/index.ts"
+ * import { Confidence } from "@effect-ontology/Model/index"
  * console.log(Confidence.is(0.8)) // true
  * ```
  *

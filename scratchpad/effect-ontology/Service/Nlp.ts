@@ -1,6 +1,8 @@
 /**
  * Service: NLP Services
  *
+ * **Details**
+ *
  * Stateless NLP operations using wink-nlp.
  * Provides tokenization, BM25 search, and text chunking.
  *
@@ -19,12 +21,12 @@ import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { WinkStringArray } from "@beep/wink/Wink.models";
 import { WinkEngine } from "@beep/wink/Wink.service";
 import { WinkCorpusManager } from "@beep/wink/WinkCorpus.service";
-import { Context, Duration, Effect, Layer, Order, Schedule } from "effect";
+import { Context, Duration, Effect, Layer, MutableHashMap, Order, Schedule } from "effect";
 import * as A from "effect/Array";
-import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { ClassDefinition, OntologyContext, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import type { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import type { ChunkingStrategy } from "../Domain/Schema/DocumentMetadata.ts";
@@ -36,6 +38,20 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Nlp");
 
 /**
  * Tokenization result
+ *
+ *
+ * **Example** (Use the TokenizeResult contract)
+ *
+ * ```ts
+ * import type { TokenizeResult } from "@effect-ontology/Service/Nlp"
+ *
+ * const acceptsTokenizeResult = (_value: TokenizeResult): void => undefined
+ *
+ * console.log(acceptsTokenizeResult)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface TokenizeResult {
   readonly tokens: ReadonlyArray<string>;
@@ -45,6 +61,20 @@ export interface TokenizeResult {
 
 /**
  * BM25 similarity result
+ *
+ *
+ * **Example** (Use the SimilarityResult contract)
+ *
+ * ```ts
+ * import type { SimilarityResult } from "@effect-ontology/Service/Nlp"
+ *
+ * const acceptsSimilarityResult = (_value: SimilarityResult): void => undefined
+ *
+ * console.log(acceptsSimilarityResult)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface SimilarityResult {
   readonly doc: string;
@@ -54,6 +84,20 @@ export interface SimilarityResult {
 
 /**
  * Text chunk with offset information
+ *
+ *
+ * **Example** (Use the TextChunk contract)
+ *
+ * ```ts
+ * import type { TextChunk } from "@effect-ontology/Service/Nlp"
+ *
+ * const acceptsTextChunk = (_value: TextChunk): void => undefined
+ *
+ * console.log(acceptsTextChunk)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface TextChunk {
   readonly index: number;
@@ -64,6 +108,20 @@ export interface TextChunk {
 
 /**
  * Chunking options
+ *
+ *
+ * **Example** (Use the ChunkOptions contract)
+ *
+ * ```ts
+ * import type { ChunkOptions } from "@effect-ontology/Service/Nlp"
+ *
+ * const acceptsChunkOptions = (_value: ChunkOptions): void => undefined
+ *
+ * console.log(acceptsChunkOptions)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ChunkOptions {
   readonly preserveSentences?: boolean;
@@ -92,6 +150,20 @@ export interface ChunkOptions {
 
 /**
  * Opaque BM25 index for ontology search
+ *
+ *
+ * **Example** (Use the OntologyBM25Index contract)
+ *
+ * ```ts
+ * import type { OntologyBM25Index } from "@effect-ontology/Service/Nlp"
+ *
+ * const acceptsOntologyBM25Index = (_value: OntologyBM25Index): void => undefined
+ *
+ * console.log(acceptsOntologyBM25Index)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface OntologyBM25Index {
   readonly _tag: "OntologyBM25Index";
@@ -103,6 +175,20 @@ export interface OntologyBM25Index {
 
 /**
  * Opaque semantic index for ontology search
+ *
+ *
+ * **Example** (Use the OntologySemanticIndex contract)
+ *
+ * ```ts
+ * import type { OntologySemanticIndex } from "@effect-ontology/Service/Nlp"
+ *
+ * const acceptsOntologySemanticIndex = (_value: OntologySemanticIndex): void => undefined
+ *
+ * console.log(acceptsOntologySemanticIndex)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface OntologySemanticIndex {
   readonly _tag: "OntologySemanticIndex";
@@ -115,8 +201,16 @@ export interface OntologySemanticIndex {
 /**
  * Indicates that an ontology search received an invalid opaque index.
  *
- * @since 0.0.0
+ * **Example** (Inspect nlp index error)
+ *
+ * ```ts
+ * import { NlpIndexError } from "@effect-ontology/Service/Nlp"
+ *
+ * console.log(NlpIndexError)
+ * ```
+ *
  * @category errors
+ * @since 0.0.0
  */
 export class NlpIndexError extends S.TaggedError<NlpIndexError>($I`NlpIndexError`)(
   "NlpIndexError",
@@ -137,6 +231,20 @@ const decodeWinkStrings = (value: unknown, operation: string, text: string) =>
 
 /**
  * Search result from ontology BM25 index
+ *
+ *
+ * **Example** (Use the OntologySearchResult contract)
+ *
+ * ```ts
+ * import type { OntologySearchResult } from "@effect-ontology/Service/Nlp"
+ *
+ * const acceptsOntologySearchResult = (_value: OntologySearchResult): void => undefined
+ *
+ * console.log(acceptsOntologySearchResult)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface OntologySearchResult {
   /**
@@ -358,10 +466,10 @@ function chunkByParagraphs(text: string, maxChunkSize: number, _overlapSentences
   let currentOffset = 0;
 
   // Split by paragraph separators
-  const paragraphs = text.split(PARAGRAPH_SEPARATOR);
+  const paragraphs = Str.split(PARAGRAPH_SEPARATOR)(text);
 
   for (const paragraph of paragraphs) {
-    const trimmedParagraph = paragraph.trim();
+    const trimmedParagraph = Str.trim(paragraph);
     if (trimmedParagraph.length === 0) {
       // Skip empty paragraphs but track offset
       currentOffset += paragraph.length + 2; // +2 for the \n\n
@@ -436,7 +544,7 @@ function chunkBySize(text: string, maxChunkSize: number, startIndex: number): Ar
     if (currentChunk.length + sentence.length > maxChunkSize && currentChunk.length > 0) {
       chunks.push({
         index: chunkIndex++,
-        text: currentChunk.trim(),
+        text: Str.trim(currentChunk),
         startOffset,
         endOffset: currentOffset,
       });
@@ -448,10 +556,10 @@ function chunkBySize(text: string, maxChunkSize: number, startIndex: number): Ar
   }
 
   // Add final chunk
-  if (currentChunk.trim().length > 0) {
+  if (Str.length(Str.trim(currentChunk)) > 0) {
     chunks.push({
       index: chunkIndex++,
-      text: currentChunk.trim(),
+      text: Str.trim(currentChunk),
       startOffset,
       endOffset: currentOffset,
     });
@@ -466,6 +574,20 @@ type WinkSentenceView = {
   readonly out: () => string;
 };
 
+/**
+ * Provides the nlp service service capability.
+ *
+ * **Example** (Inspect nlp service)
+ *
+ * ```ts
+ * import { NlpService } from "@effect-ontology/Service/Nlp"
+ *
+ * console.log(NlpService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
   make: Effect.gen(function* () {
     const embedding = yield* EmbeddingService;
@@ -571,7 +693,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
             if (currentChunk.length + sentence.length > maxChunkSize && P.isTruthy(currentChunk)) {
               chunks.push({
                 index: chunks.length,
-                text: currentChunk.trim(),
+                text: Str.trim(currentChunk),
                 startOffset,
                 endOffset: startOffset + currentChunk.length,
               });
@@ -583,7 +705,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
           if (P.isTruthy(currentChunk)) {
             chunks.push({
               index: chunks.length,
-              text: currentChunk.trim(),
+              text: Str.trim(currentChunk),
               startOffset,
               endOffset: startOffset + currentChunk.length,
             });

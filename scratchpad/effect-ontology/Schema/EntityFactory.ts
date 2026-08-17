@@ -1,6 +1,8 @@
 /**
  * Entity Schema Factory (Stage 1)
  *
+ * **Details**
+ *
  * Creates Effect Schemas for entity extraction in the two-stage ODKE pipeline.
  * Stage 1: Extract all named entities and map them to ontology classes.
  *
@@ -83,37 +85,50 @@ const localNameSchema = (
 /**
  * Creates Effect Schema for entity extraction (Stage 1)
  *
+ * **Details**
+ *
  * This is the first stage of the two-stage ODKE pipeline:
  * 1. Extract all named entities from text
  * 2. Map them to ontology classes
  * 3. Assign unique IDs for Stage 2 linking
  *
+ * **Example** (Use makeEntitySchema)
+ *
+ * ```ts
+ * import { ClassDefinition, PropertyDefinition } from "@effect-ontology/Model/Ontology"
+ * import { makeEntitySchema } from "@effect-ontology/Schema/EntityFactory"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const ontology = S.decodeUnknownOption(S.Struct({
+ *   classes: S.Array(ClassDefinition),
+ *   properties: S.Array(PropertyDefinition)
+ * }))({
+ *   classes: [{ id: "https://schema.org/Person", label: "Person" }],
+ *   properties: [{
+ *     id: "https://schema.org/age",
+ *     label: "age",
+ *     rangeType: "datatype"
+ *   }]
+ * })
+ * const decoded = O.flatMap(ontology, ({ classes, properties }) =>
+ *   S.decodeUnknownOption(makeEntitySchema(classes, properties))({
+ *     entities: [
+ *       {
+ *         mention: "Cristiano Ronaldo",
+ *         id: "cristiano_ronaldo",
+ *         types: ["Person"],
+ *         attributes: { age: 39 }
+ *       }
+ *     ]
+ *   })
+ * )
+ * console.log(O.isSome(decoded)) // true
+ * ```
+ *
  * @param classes - Array of ClassDefinition objects from ontology context
  * @param datatypeProperties - Optional array of datatype properties to constrain attribute keys
  * @returns Entity schema for LLM structured output
- *
- * **Example** (Use makeEntitySchema)
- * ```ts
- * const schema = makeEntitySchema([
- *   new ClassDefinition({ id: "http://schema.org/Person", label: "Person", ... }),
- *   new ClassDefinition({ id: "http://schema.org/Organization", label: "Organization", ... })
- * ], [
- *   new PropertyDefinition({ id: "http://schema.org/age", rangeType: "datatype", ... })
- * ])
- *
- * // Valid output:
- * {
- *   entities: [
- *     {
- *       mention: "Cristiano Ronaldo",
- *       id: "cristiano_ronaldo",
- *       types: ["http://schema.org/Person"],
- *       attributes: { "http://schema.org/age": 39 }
- *     }
- *   ]
- * }
- * ```
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -180,7 +195,11 @@ export const makeEntitySchema = dual2(
     // Single entity schema matching Entity domain model
     const EntitySchema = S.Struct({
       id: S.String.pipe(
-        S.check(S.isPattern(/^[a-z][a-z0-9_]*$/)),
+        S.check(
+          S.isPattern(/^[a-z][a-z0-9_]*$/, {
+            message: "Expected a snake_case entity identifier beginning with a lowercase letter",
+          })
+        ),
         S.annotate({
           description:
             "Snake_case unique identifier for this entity - use this exact ID when referring to this entity in relations (e.g., 'cristiano_ronaldo')",
@@ -234,9 +253,36 @@ CRITICAL RULES:
 /**
  * Type helpers
  *
+ * **Example** (Reference the entity graph schema factory result)
+ *
+ * ```ts
+ * import { makeEntitySchema, type EntityGraphSchema } from "@effect-ontology/Schema/EntityFactory"
+ *
+ * const entityGraphSchemaFactory: typeof makeEntitySchema = makeEntitySchema
+ * const describeEntityGraphSchema = (_schema: EntityGraphSchema): string => "entity graph schema"
+ *
+ * console.log(entityGraphSchemaFactory.length, describeEntityGraphSchema.length)
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
 export type EntityGraphSchema = ReturnType<typeof makeEntitySchema>;
 
+/**
+ * Describes the entity graph type data exposed by this module.
+ *
+ * **Example** (Reference EntityGraphType fields)
+ *
+ * ```ts
+ * import type { EntityGraphType } from "@effect-ontology/Schema/EntityFactory"
+ *
+ * const entityGraphTypeFields: ReadonlyArray<keyof EntityGraphType> = ["entities"]
+ *
+ * console.log(entityGraphTypeFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EntityGraphType = S.Schema.Type<EntityGraphSchema>;

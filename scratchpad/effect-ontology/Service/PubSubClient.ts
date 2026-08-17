@@ -1,6 +1,8 @@
 /**
  * Cloud Pub/Sub Client Service
  *
+ * **Details**
+ *
  * Effect-wrapped Google Cloud Pub/Sub client for event distribution
  * and job queue integration.
  *
@@ -11,9 +13,8 @@
 import { $ScratchpadId } from "@beep/identity";
 import type { Topic } from "@google-cloud/pubsub";
 import { PubSub } from "@google-cloud/pubsub";
-import { Config, Context, DateTime, Effect, Layer, Stream } from "effect";
+import { Config, Context, DateTime, Effect, Layer, MutableHashMap, Stream } from "effect";
 import * as O from "effect/Option";
-import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
 import * as EventJournal from "effect/unstable/eventlog/EventJournal";
 import { PubSubError } from "../Domain/Error/EventBus.ts";
@@ -27,6 +28,18 @@ const $I = $ScratchpadId.create("effect-ontology/Service/PubSubClient");
 /**
  * Published message result
  *
+ *
+ * **Example** (Use the PublishResult contract)
+ *
+ * ```ts
+ * import type { PublishResult } from "@effect-ontology/Service/PubSubClient"
+ *
+ * const acceptsPublishResult = (_value: PublishResult): void => undefined
+ *
+ * console.log(acceptsPublishResult)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export interface PublishResult {
@@ -37,6 +50,18 @@ export interface PublishResult {
 /**
  * Received message from subscription
  *
+ *
+ * **Example** (Use the ReceivedMessage contract)
+ *
+ * ```ts
+ * import type { ReceivedMessage } from "@effect-ontology/Service/PubSubClient"
+ *
+ * const acceptsReceivedMessage = (_value: ReceivedMessage): void => undefined
+ *
+ * console.log(acceptsReceivedMessage)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export interface ReceivedMessage {
@@ -51,6 +76,18 @@ export interface ReceivedMessage {
 /**
  * Pub/Sub client configuration
  *
+ *
+ * **Example** (Use the PubSubClientConfig contract)
+ *
+ * ```ts
+ * import type { PubSubClientConfig } from "@effect-ontology/Service/PubSubClient"
+ *
+ * const acceptsPubSubClientConfig = (_value: PubSubClientConfig): void => undefined
+ *
+ * console.log(acceptsPubSubClientConfig)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export interface PubSubClientConfig {
@@ -68,6 +105,18 @@ export interface PubSubClientConfig {
 /**
  * PubSubClient service interface
  *
+ *
+ * **Example** (Use the PubSubClientMethods contract)
+ *
+ * ```ts
+ * import type { PubSubClientMethods } from "@effect-ontology/Service/PubSubClient"
+ *
+ * const acceptsPubSubClientMethods = (_value: PubSubClientMethods): void => undefined
+ *
+ * console.log(acceptsPubSubClientMethods)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export interface PubSubClientMethods {
@@ -117,6 +166,15 @@ export interface PubSubClientMethods {
 /**
  * PubSubClient context tag
  *
+ * **Example** (Inspect pub sub client)
+ *
+ * ```ts
+ * import { PubSubClient } from "@effect-ontology/Service/PubSubClient"
+ *
+ * console.log(PubSubClient)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
  */
 export class PubSubClient extends Context.Service<PubSubClient, PubSubClientMethods>()($I`PubSubClient`) {}
@@ -128,6 +186,15 @@ export class PubSubClient extends Context.Service<PubSubClient, PubSubClientMeth
 /**
  * PubSub configuration from environment
  *
+ * **Example** (Inspect pub sub client config)
+ *
+ * ```ts
+ * import { PubSubClientConfig } from "@effect-ontology/Service/PubSubClient"
+ *
+ * console.log(PubSubClientConfig)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
  */
 export const PubSubClientConfig = Config.all({
@@ -145,10 +212,21 @@ export const PubSubClientConfig = Config.all({
 /**
  * PubSubClient layer with Google Cloud Pub/Sub integration
  *
+ * **Details**
+ *
  * Provides durable event distribution via Cloud Pub/Sub.
  * Used for production deployments where events need to be distributed
  * across multiple Cloud Run instances.
  *
+ * **Example** (Inspect pub sub client live)
+ *
+ * ```ts
+ * import { PubSubClientLive } from "@effect-ontology/Service/PubSubClient"
+ *
+ * console.log(PubSubClientLive)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
  */
 export const PubSubClientLive = Layer.effect(
@@ -200,7 +278,7 @@ export const PubSubClientLive = Layer.effect(
             method: "publish",
             topic: topicId,
             message: `Failed to publish message: ${error}`,
-            cause: O.some(error as Error),
+            cause: O.some(error),
           }),
       });
       yield* Effect.logDebug("Message published", {
@@ -293,9 +371,20 @@ export const PubSubClientLive = Layer.effect(
 /**
  * Bridge EventJournal changes to Cloud Pub/Sub
  *
+ * **Details**
+ *
  * This layer subscribes to EventJournal changes and publishes them
  * to Cloud Pub/Sub for distribution across instances.
  *
+ * **Example** (Inspect event bus pub sub bridge)
+ *
+ * ```ts
+ * import { EventBusPubSubBridge } from "@effect-ontology/Service/PubSubClient"
+ *
+ * console.log(EventBusPubSubBridge)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
  */
 export const EventBusPubSubBridge = Layer.effectDiscard(
@@ -333,6 +422,15 @@ export const EventBusPubSubBridge = Layer.effectDiscard(
 /**
  * Default PubSubClient layer
  *
+ * **Example** (Inspect pub sub client default)
+ *
+ * ```ts
+ * import { PubSubClientDefault } from "@effect-ontology/Service/PubSubClient"
+ *
+ * console.log(PubSubClientDefault)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
  */
 export const PubSubClientDefault = PubSubClientLive;

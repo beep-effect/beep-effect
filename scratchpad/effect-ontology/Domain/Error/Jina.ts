@@ -11,16 +11,9 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils, URLStr } from "@beep/schema";
-import * as Duration from "effect/Duration";
+import { Duration } from "effect";
 import * as S from "effect/Schema";
-import {
-  ErrorMessage,
-  Milliseconds,
-  makeOntologyErrorClass,
-  OptionalErrorCause,
-  OptionalErrorUrl,
-  OptionalHttpStatusCode,
-} from "./Base.ts";
+import { ErrorMessage, Milliseconds, OptionalErrorCause, OptionalErrorUrl, OptionalHttpStatusCode } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Jina");
 
@@ -29,17 +22,19 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Jina");
  *
  * **Example** (Use JinaApiError)
  * ```ts
- * import { JinaApiError } from "@effect-ontology/Error/Jina.ts"
+ * import { JinaApiError } from "@effect-ontology/Error/Jina"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = JinaApiError.make({ message: "Jina request failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(JinaApiError)({
+ *   _tag: "JinaApiError", message: "Jina request failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const JinaApiError = makeOntologyErrorClass.make(
-  $I`JinaApiError`,
+export class JinaApiError extends S.TaggedError<JinaApiError>($I`JinaApiError`)(
   "JinaApiError",
   {
     message: ErrorMessage.annotateKey({
@@ -58,18 +53,7 @@ export const JinaApiError = makeOntologyErrorClass.make(
   $I.annote("JinaApiError", {
     description: "General Jina Reader transport or API response failure.",
   })
-);
-
-/** Runtime value decoded by {@link JinaApiError}.
- * **Example** (Use JinaApiError)
- * ```ts
- * import { JinaApiError, type JinaApiError as Failure } from "@effect-ontology/Error/Jina.ts"
- * const error: Failure = JinaApiError.make({ message: "Failed." })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type JinaApiError = typeof JinaApiError.Type;
+) {}
 
 const JinaRateLimitErrorFields = {
   retryAfterMs: Milliseconds.annotateKey({
@@ -82,7 +66,7 @@ const JinaRateLimitErrorFields = {
 
 const makeJinaRateLimitError = (
   input: S.Schema.Type<S.TaggedStruct<"JinaRateLimitError", typeof JinaRateLimitErrorFields>>
-): JinaRateLimitError => JinaRateLimitError.make(input as never);
+): JinaRateLimitError => JinaRateLimitError.make(input);
 
 const JinaRateLimitErrorBase = S.TaggedError<JinaRateLimitError>($I`JinaRateLimitError`)(
   "JinaRateLimitError",
@@ -105,11 +89,14 @@ const JinaRateLimitErrorBase = S.TaggedError<JinaRateLimitError>($I`JinaRateLimi
  *
  * **Example** (Use JinaRateLimitError)
  * ```ts
+ * import { Milliseconds } from "@effect-ontology/Error/Base"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { JinaRateLimitError } from "@effect-ontology/Error/Jina.ts"
+ * import { JinaRateLimitError } from "@effect-ontology/Error/Jina"
  *
- * const error = S.decodeUnknownSync(JinaRateLimitError)({ retryAfterMs: 1_000 })
- * console.log(error.retryAfter)
+ * const error = S.decodeUnknownOption(JinaRateLimitError)({
+ *   _tag: "JinaRateLimitError", retryAfterMs: Milliseconds.make(1_000) })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
@@ -121,9 +108,10 @@ export class JinaRateLimitError extends JinaRateLimitErrorBase {
    *
    * **Example** (Use JinaParseError)
    * ```ts
-   * import { JinaRateLimitError } from "@effect-ontology/Error/Jina.ts"
+   * import { Milliseconds } from "@effect-ontology/Error/Base"
+   * import { JinaRateLimitError } from "@effect-ontology/Error/Jina"
    *
-   * console.log(JinaRateLimitError.make({ retryAfterMs: 250 }).retryAfter)
+   * console.log(JinaRateLimitError.make({ retryAfterMs: Milliseconds.make(250) }).retryAfter)
    * ```
    *
    * @returns The schema-owned retry delay as an Effect `Duration`.
@@ -140,17 +128,19 @@ export class JinaRateLimitError extends JinaRateLimitErrorBase {
  *
  * **Example** (Use JinaParseError)
  * ```ts
- * import { JinaParseError } from "@effect-ontology/Error/Jina.ts"
+ * import { JinaParseError } from "@effect-ontology/Error/Jina"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = JinaParseError.make({ message: "Reader response is malformed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(JinaParseError)({
+ *   _tag: "JinaParseError", message: "Reader response is malformed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const JinaParseError = makeOntologyErrorClass.make(
-  $I`JinaParseError`,
+export class JinaParseError extends S.TaggedError<JinaParseError>($I`JinaParseError`)(
   "JinaParseError",
   {
     message: ErrorMessage.annotateKey({
@@ -166,38 +156,29 @@ export const JinaParseError = makeOntologyErrorClass.make(
   $I.annote("JinaParseError", {
     description: "Jina Reader response that could not be parsed.",
   })
-);
-
-/** Runtime value decoded by {@link JinaParseError}.
- * **Example** (Use JinaParseError)
- * ```ts
- * import { JinaParseError, type JinaParseError as Failure } from "@effect-ontology/Error/Jina.ts"
- * const error: Failure = JinaParseError.make({ message: "Malformed." })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type JinaParseError = typeof JinaParseError.Type;
+) {}
 
 /**
  * Jina Reader request that exceeded its configured deadline.
  *
  * **Example** (Use JinaTimeoutError)
  * ```ts
- * import { JinaTimeoutError } from "@effect-ontology/Error/Jina.ts"
+ * import { JinaTimeoutError } from "@effect-ontology/Error/Jina"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = JinaTimeoutError.fromUnknown({
+ * const error = S.decodeUnknownOption(JinaTimeoutError)({
+ *   _tag: "JinaTimeoutError",
  *   url: "https://example.com/article",
  *   timeoutMs: 5_000
  * })
- * console.log(error.message)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const JinaTimeoutError = makeOntologyErrorClass.make(
-  $I`JinaTimeoutError`,
+export class JinaTimeoutError extends S.TaggedError<JinaTimeoutError>($I`JinaTimeoutError`)(
   "JinaTimeoutError",
   {
     url: URLStr.annotateKey({
@@ -213,18 +194,7 @@ export const JinaTimeoutError = makeOntologyErrorClass.make(
   $I.annote("JinaTimeoutError", {
     description: "Jina Reader request that exceeded its configured deadline.",
   })
-);
-
-/** Runtime value decoded by {@link JinaTimeoutError}.
- * **Example** (Use JinaTimeoutError)
- * ```ts
- * import { JinaTimeoutError, type JinaTimeoutError as Failure } from "@effect-ontology/Error/Jina.ts"
- * const error: Failure = JinaTimeoutError.fromUnknown({ url: "https://example.com/a", timeoutMs: 10 })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type JinaTimeoutError = typeof JinaTimeoutError.Type;
+) {}
 
 const JinaErrorDefinition = S.Union([JinaApiError, JinaRateLimitError, JinaParseError, JinaTimeoutError]).pipe(
   S.toTaggedUnion("_tag")
@@ -235,9 +205,12 @@ const JinaErrorDefinition = S.Union([JinaApiError, JinaRateLimitError, JinaParse
  *
  * **Example** (Use JinaError)
  * ```ts
- * import { JinaError, JinaApiError } from "@effect-ontology/Error/Jina.ts"
+ * import { JinaError, JinaApiError } from "@effect-ontology/Error/Jina"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = JinaApiError.make({ message: "Failed." })
+ * const error = S.decodeUnknownOption(JinaApiError)({
+ *   _tag: "JinaApiError", message: "Failed." })
  * console.log(JinaError.guards.JinaApiError(error)) // true
  * ```
  *
@@ -256,7 +229,7 @@ export const JinaError = JinaErrorDefinition.pipe(
  *
  * **Example** (Use JinaError)
  * ```ts
- * import { JinaApiError, type JinaError } from "@effect-ontology/Error/Jina.ts"
+ * import { JinaApiError, type JinaError } from "@effect-ontology/Error/Jina"
  *
  * const error: JinaError = JinaApiError.make({ message: "Failed." })
  * console.log(error._tag)

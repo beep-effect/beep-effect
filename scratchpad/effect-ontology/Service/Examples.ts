@@ -1,6 +1,8 @@
 /**
  * Examples Service
  *
+ * **Details**
+ *
  * Service for managing and retrieving few-shot examples for LLM prompting.
  * Implements hybrid retrieval (vector + lexical) with RRF fusion for
  * high-quality example selection.
@@ -9,21 +11,23 @@
  * @since 0.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity";
 import type { DrizzleError } from "@beep/drizzle";
-import { Context, Effect, Layer } from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import { PosInt } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { Context, Effect, Layer, Match } from "effect";
 import type * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type * as S from "effect/Schema";
 import type { SqlError } from "effect/unstable/sql";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type {
-  CreateExampleInput,
-  ExampleRetrievalOptions,
+  CreateExampleInputInput,
+  ExampleRetrievalOptionsInput,
   ExampleType,
   ScoredExample,
 } from "../Repository/Examples.ts";
-import { ExamplesRepository } from "../Repository/Examples.ts";
+import { ExampleRetrievalOptions, ExamplesRepository } from "../Repository/Examples.ts";
 import type { LlmExampleRow } from "../Repository/schema.ts";
 import { EmbeddingService } from "./Embedding.ts";
 
@@ -35,11 +39,39 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Examples");
 
 /**
  * Combined error type for examples service operations
+ *
+ *
+ * **Example** (Use the ExamplesServiceError contract)
+ *
+ * ```ts
+ * import type { ExamplesServiceError } from "@effect-ontology/Service/Examples"
+ *
+ * const acceptsExamplesServiceError = (_value: ExamplesServiceError): void => undefined
+ *
+ * console.log(acceptsExamplesServiceError)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type ExamplesServiceError = SqlError.SqlError | DrizzleError | S.SchemaError | AnyEmbeddingError;
 
 /**
  * Extraction stage for context-aware example retrieval
+ *
+ *
+ * **Example** (Use the ExtractionStage contract)
+ *
+ * ```ts
+ * import type { ExtractionStage } from "@effect-ontology/Service/Examples"
+ *
+ * const acceptsExtractionStage = (_value: ExtractionStage): void => undefined
+ *
+ * console.log(acceptsExtractionStage)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type ExtractionStage =
   | "entity_extraction"
@@ -50,6 +82,20 @@ export type ExtractionStage =
 
 /**
  * Options for stage-based retrieval
+ *
+ *
+ * **Example** (Use the StageRetrievalOptions contract)
+ *
+ * ```ts
+ * import type { StageRetrievalOptions } from "@effect-ontology/Service/Examples"
+ *
+ * const acceptsStageRetrievalOptions = (_value: StageRetrievalOptions): void => undefined
+ *
+ * console.log(acceptsStageRetrievalOptions)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface StageRetrievalOptions {
   /** Maximum number of positive examples */
@@ -66,6 +112,20 @@ export interface StageRetrievalOptions {
 
 /**
  * Retrieved examples for a stage
+ *
+ *
+ * **Example** (Use the StageExamples contract)
+ *
+ * ```ts
+ * import type { StageExamples } from "@effect-ontology/Service/Examples"
+ *
+ * const acceptsStageExamples = (_value: StageExamples): void => undefined
+ *
+ * console.log(acceptsStageExamples)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface StageExamples {
   readonly positives: ReadonlyArray<ScoredExample>;
@@ -74,6 +134,20 @@ export interface StageExamples {
 
 /**
  * Example statistics
+ *
+ *
+ * **Example** (Use the ExampleStats contract)
+ *
+ * ```ts
+ * import type { ExampleStats } from "@effect-ontology/Service/Examples"
+ *
+ * const acceptsExampleStats = (_value: ExampleStats): void => undefined
+ *
+ * console.log(acceptsExampleStats)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ExampleStats {
   readonly total: number;
@@ -86,6 +160,20 @@ export interface ExampleStats {
 // Service
 // =============================================================================
 
+/**
+ * Provides the examples service service capability.
+ *
+ * **Example** (Inspect examples service)
+ *
+ * ```ts
+ * import { ExamplesService } from "@effect-ontology/Service/Examples"
+ *
+ * console.log(ExamplesService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class ExamplesService extends Context.Service<ExamplesService>()($I`ExamplesService`, {
   make: Effect.gen(function* () {
     const repository = yield* ExamplesRepository;
@@ -103,10 +191,11 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
       ontologyId: string,
       exampleType: ExampleType,
       queryText: string,
-      options: ExampleRetrievalOptions = {}
+      options: ExampleRetrievalOptionsInput = {}
     ): Effect.Effect<ReadonlyArray<ScoredExample>, ExamplesServiceError> =>
       Effect.gen(function* () {
-        const { includeNegatives = false, k = 5 } = options;
+        const resolvedOptions = ExampleRetrievalOptions.make(options);
+        const { includeNegatives, k } = resolvedOptions;
 
         // Embed query with ontology prefix for schema bias
         const prefixedQuery = `${ontologyId}: ${queryText}`;
@@ -114,8 +203,8 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
 
         // Run vector search
         const vectorResults = yield* repository.findSimilar(ontologyId, embedding, {
-          ...options,
-          k: k * 2, // Over-retrieve for RRF fusion
+          ...resolvedOptions,
+          k: PosInt.make(k * 2), // Over-retrieve for RRF fusion
           includeNegatives: false,
         });
 
@@ -161,8 +250,8 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
 
         // Get positive examples
         const positives = yield* repository.findSimilar(ontologyId, embedding, {
-          k,
-          minSimilarity,
+          k: PosInt.make(k),
+          minSimilarity: UnitInterval.make(minSimilarity),
           ...(P.isUndefined(targetClass) ? {} : { targetClass }),
           ...(P.isUndefined(targetPredicate) ? {} : { targetPredicate }),
           includeNegatives: false,
@@ -200,7 +289,9 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
      *
      * @param input - Example creation input (without embedding)
      */
-    const create = (input: Omit<CreateExampleInput, "embedding">): Effect.Effect<LlmExampleRow, ExamplesServiceError> =>
+    const create = (
+      input: Omit<CreateExampleInputInput, "embedding">
+    ): Effect.Effect<LlmExampleRow, ExamplesServiceError> =>
       Effect.gen(function* () {
         // Embed input text with ontology prefix
         const prefixedText = `${input.ontologyId}: ${input.inputText}`;
@@ -262,14 +353,9 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
  * Map extraction stage to example type
  */
 function stageToExampleType(stage: ExtractionStage): ExampleType {
-  switch (stage) {
-    case "entity_extraction":
-    case "validation":
-    case "correction":
-      return "entity_extraction";
-    case "relation_extraction":
-      return "relation_extraction";
-    case "entity_linking":
-      return "entity_linking";
-  }
+  return Match.value(stage).pipe(
+    Match.when("relation_extraction", (): ExampleType => "relation_extraction"),
+    Match.when("entity_linking", (): ExampleType => "entity_linking"),
+    Match.orElse((): ExampleType => "entity_extraction")
+  );
 }

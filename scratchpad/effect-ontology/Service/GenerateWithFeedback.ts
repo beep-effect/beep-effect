@@ -1,260 +1,207 @@
 /**
- * Service: Generate Object with Feedback
- *
- * Provides retry with feedback for LLM structured output generation.
- * When schema validation fails (MalformedOutput), includes the error
- * in the retry prompt so the LLM can self-correct.
+ * Structured language-model generation with schema feedback and bounded retry.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import type { Cause, Schedule } from "effect";
-import { Duration, Effect, Result } from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import { PosInt, SchemaUtils } from "@beep/schema";
+import { Duration, Effect, Ref } from "effect";
+import type * as Cause from "effect/Cause";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import type * as S from "effect/Schema";
-import type { AiError, LanguageModel } from "effect/unstable/ai";
-import { Prompt } from "effect/unstable/ai";
+import type * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import * as AiError from "effect/unstable/ai/AiError";
+import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
+import * as Prompt from "effect/unstable/ai/Prompt";
 import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
 import { makeCachedPromptFromStructured } from "./PromptCache.ts";
 
-/**
- * Options for generateObjectWithFeedback
- *
- * @since 0.0.0
- */
-export interface GenerateWithFeedbackOptions<
-  StructuredOutputSchema extends S.Codec<Record<string, unknown>, Record<string, unknown>, never, never>,
-> {
-  /**
-   * The initial prompt - can be a string or structured prompt for caching
-   */
-  readonly prompt: string | StructuredPrompt;
-  /**
-   * The schema for structured output
-   */
-  readonly schema: StructuredOutputSchema;
-  /**
-   * Name for the structured output object
-   */
-  readonly objectName: string;
-  /**
-   * Maximum number of retry attempts
-   */
-  readonly maxAttempts: number;
-  /**
-   * Service name for logging
-   */
-  readonly serviceName: string;
-  /**
-   * Timeout per attempt in milliseconds
-   */
-  readonly timeoutMs?: number;
-  /**
-   * Optional retry schedule for non-schema errors.
-   * When provided, uses Effect.retry with this schedule instead of simple loop.
-   * Schema validation errors (MalformedOutput) still get feedback-based retry.
-   */
-  readonly retrySchedule?: Schedule.Schedule<unknown, unknown, never>;
-  /**
-   * Whether to enable prompt caching (only applies when prompt is StructuredPrompt)
-   */
-  readonly enablePromptCaching?: boolean;
-}
+const $I = $ScratchpadId.create("effect-ontology/Service/GenerateWithFeedback");
 
 /**
- * Generate object with schema validation feedback on retry.
+ * Normalized retry policy for schema-backed language-model generation.
  *
- * When MalformedOutput occurs (schema validation failure), includes the error
- * description in the retry prompt so the LLM can understand what went wrong
- * and self-correct.
+ * **Example** (Create a generation policy)
  *
- * For other errors (network, rate limiting), retries without feedback.
- *
- * **Example** (Use generateObjectWithFeedback)
  * ```ts
- * const response = yield* generateObjectWithFeedback(llm, {
- *   prompt: entityExtractionPrompt,
- *   schema: EntityGraphSchema,
- *   objectName: "EntityGraph",
- *   maxAttempts: 5,
- *   serviceName: "EntityExtractor"
+ * import { Duration } from "effect"
+ * import { GenerateWithFeedbackPolicy } from "@effect-ontology/Service/GenerateWithFeedback"
+ *
+ * const policy = GenerateWithFeedbackPolicy.make({
+ *   objectName: "GroundedAnswer",
+ *   serviceName: "GraphRAG",
+ *   timeout: Duration.seconds(30)
  * })
+ * console.log(policy.maxAttempts) // 3
  * ```
  *
+ * @category models
+ * @since 0.0.0
+ */
+export class GenerateWithFeedbackPolicy extends S.Class<GenerateWithFeedbackPolicy>($I`GenerateWithFeedbackPolicy`)(
+  {
+    objectName: S.NonEmptyString.annotateKey({
+      description: "Name supplied to the provider for the requested structured object.",
+    }),
+    maxAttempts: PosInt.pipe(
+      SchemaUtils.withKeyDefaults(PosInt.make(3)),
+      S.annotateKey({ description: "Maximum number of generation attempts, including the initial attempt." })
+    ),
+    serviceName: S.NonEmptyString.annotateKey({
+      description: "Stable service name attached to retry diagnostics.",
+    }),
+    timeout: S.Duration.pipe(
+      SchemaUtils.withKeyDefaults(Duration.seconds(30)),
+      S.annotateKey({ description: "Maximum duration allowed for each provider attempt." })
+    ),
+    enablePromptCaching: S.Boolean.pipe(
+      SchemaUtils.withKeyDefaults(false),
+      S.annotateKey({ description: "Whether structured system prompts opt into provider prompt caching." })
+    ),
+  },
+  $I.annote("GenerateWithFeedbackPolicy", {
+    description: "Validated timeout, attempt bound, naming, and prompt-caching policy for structured generation.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link GenerateWithFeedbackPolicy}.
+ *
+ *
+ * **Example** (Use the GenerateWithFeedbackPolicyInput contract)
+ *
+ * ```ts
+ * import type { GenerateWithFeedbackPolicyInput } from "@effect-ontology/Service/GenerateWithFeedback"
+ *
+ * const acceptsGenerateWithFeedbackPolicyInput = (_value: GenerateWithFeedbackPolicyInput): void => undefined
+ *
+ * console.log(acceptsGenerateWithFeedbackPolicyInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GenerateWithFeedbackPolicyInput = (typeof GenerateWithFeedbackPolicy)["~type.make.in"];
+
+type StructuredOutputCodec = S.Codec<Record<string, unknown>, Record<string, unknown>, never, never>;
+
+type GenerateWithFeedbackOptions<StructuredOutputSchema extends StructuredOutputCodec> =
+  GenerateWithFeedbackPolicyInput & {
+    readonly prompt: string | StructuredPrompt;
+    readonly schema: StructuredOutputSchema;
+    readonly retrySchedule?: Schedule.Schedule<unknown, unknown, never>;
+  };
+
+const makePrompt = (prompt: string | StructuredPrompt, enablePromptCaching: boolean): Prompt.Prompt =>
+  P.isString(prompt) ? Prompt.make(prompt) : makeCachedPromptFromStructured(prompt, enablePromptCaching);
+
+const buildFeedbackPrompt = (error: AiError.InvalidOutputError): Prompt.Prompt =>
+  Prompt.make(`Your previous response failed schema validation:
+
+${error.description}
+
+Generate a corrected response that follows the requested schema exactly.`);
+
+/**
+ * Generates a structured object, feeding schema failures back to the model
+ * before retrying under the supplied schedule.
+ *
+ * **Details**
+ *
+ * Each attempt has its own timeout. `Effect.retry` owns retry timing and the
+ * attempt bound; invalid output additionally updates the prompt stored in a
+ * `Ref`, while transport and timeout failures retry the unchanged prompt.
+ *
+ * **Example** (Inspect the feedback generator)
+ *
+ * ```ts
+ * import { generateObjectWithFeedback } from "@effect-ontology/Service/GenerateWithFeedback"
+ *
+ * console.log(generateObjectWithFeedback)
+ * ```
+ *
+ * @category utilities
  * @since 0.0.0
  */
 export const generateObjectWithFeedback = Effect.fn("generateObjectWithFeedback")(function* <
-  StructuredOutputSchema extends S.Codec<Record<string, unknown>, Record<string, unknown>, never, never>,
+  StructuredOutputSchema extends StructuredOutputCodec,
 >(
   llm: LanguageModel.Service,
-  opts: GenerateWithFeedbackOptions<StructuredOutputSchema>
+  options: GenerateWithFeedbackOptions<StructuredOutputSchema>
 ): Effect.fn.Return<
-  LanguageModel.GenerateObjectResponse<{}, StructuredOutputSchema["Type"]>,
+  LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"]>,
   AiError.AiError | Cause.TimeoutError,
   StructuredOutputSchema["DecodingServices"]
 > {
-  // Build initial prompt - support both string and structured prompts
-  const enableCaching = opts.enablePromptCaching ?? false;
-  const isStructured = typeof opts.prompt !== "string";
-  const structuredPrompt: StructuredPrompt | null = typeof opts.prompt !== "string" ? opts.prompt : null;
+  const policy = GenerateWithFeedbackPolicy.make(options);
+  const promptRef = yield* Ref.make(makePrompt(options.prompt, policy.enablePromptCaching));
+  const attemptRef = yield* Ref.make(0);
 
-  let currentPrompt: Prompt.Prompt =
-    typeof opts.prompt === "string"
-      ? Prompt.make(opts.prompt)
-      : makeCachedPromptFromStructured(opts.prompt, enableCaching);
-
-  let lastError: AiError.AiError | Cause.TimeoutError | null = null;
-  let attempts = 0;
-
-  // Calculate delay for each attempt (exponential with jitter if no custom schedule)
-  const getDelay = (attempt: number): Duration.Duration => {
-    if (P.isNotUndefined(opts.retrySchedule)) {
-      // Use custom schedule timing strategy (approximate for loop)
-      // Note: Full schedule integration is complex with feedback loop, so we use
-      // a simple delay strategy based on successful retry patterns or default to standard backoff
-      // For simplicity in this feedback loop, we'll default to standard backoff if schedule provided
-      // but ideally we'd extract the delay from the schedule.
-      const baseMs = 3000; // Match default retry policy
-      return Duration.millis(Math.min(baseMs * 2 ** (attempt - 1), 30000));
-    }
-    return Duration.zero; // Original behavior: no delay between attempts
-  };
-
-  while (attempts < opts.maxAttempts) {
-    attempts++;
-
-    // Add delay between retries (not on first attempt)
-    if (attempts > 1 && P.isNotUndefined(opts.retrySchedule)) {
-      const delay = getDelay(attempts - 1);
-      yield* Effect.sleep(delay);
-      yield* Effect.logDebug("Retry delay applied", {
-        service: opts.serviceName,
-        attempt: attempts,
-        delayMs: Duration.toMillis(delay),
-      });
-    }
-
-    // Attempt to generate object
-    const generateEffect = llm.generateObject({
-      prompt: currentPrompt,
-      schema: opts.schema,
-      objectName: opts.objectName,
-    });
-
-    // Apply timeout if specified
-    const timedEffect = P.isNotUndefined(opts.timeoutMs)
-      ? generateEffect.pipe(Effect.timeout(Duration.millis(opts.timeoutMs)))
-      : generateEffect;
-
-    const result = yield* timedEffect.pipe(Effect.result);
-
-    // Success - return the response
-    if (Result.isSuccess(result)) {
-      // Log if we succeeded after retries with feedback
-      if (attempts > 1) {
-        yield* Effect.logInfo("Schema validation succeeded after feedback retry", {
-          service: opts.serviceName,
-          attempt: attempts,
-          maxAttempts: opts.maxAttempts,
-        });
-      }
-      return result.success;
-    }
-
-    // Failure - check error type
-    const error = result.failure;
-    lastError = error;
-
-    // Only add feedback for MalformedOutput (schema validation errors)
-    if (error._tag === "AiError" && error.reason._tag === "InvalidOutputError") {
-      yield* Effect.logWarning("Schema validation failed, retrying with feedback", {
-        service: opts.serviceName,
-        attempt: attempts,
-        maxAttempts: opts.maxAttempts,
-        errorDescription: error.reason.description?.slice(0, 500),
-      });
-
-      // Build feedback prompt with error details
-      // This creates a multi-turn conversation where the LLM sees its mistake
-      const feedbackMessage = buildFeedbackMessage(error.reason);
-
-      // When using structured prompts, we need to append feedback to user message
-      // and preserve the cached system message
-      if (isStructured && P.isNotNull(structuredPrompt)) {
-        // Append feedback to user message while keeping system message cached
-        const updatedUserMessage = `${structuredPrompt.userMessage}\n\n${feedbackMessage[1]?.content || ""}`;
-        currentPrompt = makeCachedPromptFromStructured(
-          {
-            systemMessage: structuredPrompt.systemMessage,
-            userMessage: updatedUserMessage,
-          },
-          enableCaching
-        );
-      } else {
-        // For string prompts, use merge as before
-        currentPrompt = Prompt.concat(currentPrompt, feedbackMessage);
-      }
-    } else {
-      // For other errors (network, timeout, etc), retry without feedback
-      yield* Effect.logWarning("LLM call failed, retrying without feedback", {
-        service: opts.serviceName,
-        attempt: attempts,
-        maxAttempts: opts.maxAttempts,
-        errorTag: error._tag,
-      });
-      // Keep the same prompt for non-schema errors
-    }
-  }
-
-  // All attempts exhausted - fail with last error
-  yield* Effect.logError("All retry attempts exhausted", {
-    service: opts.serviceName,
-    attempts: opts.maxAttempts,
-    lastErrorTag: lastError?._tag,
+  const attempt = Effect.gen(function* () {
+    const attemptNumber = yield* Ref.updateAndGet(attemptRef, (current) => current + 1);
+    const prompt = yield* Ref.get(promptRef);
+    return yield* llm
+      .generateObject({
+        prompt,
+        schema: options.schema,
+        objectName: policy.objectName,
+      })
+      .pipe(
+        Effect.timeout(policy.timeout),
+        Effect.tapError((error) =>
+          AiError.isAiError(error) && error.reason._tag === "InvalidOutputError"
+            ? Effect.all([
+                Ref.update(promptRef, Prompt.concat(buildFeedbackPrompt(error.reason))),
+                Effect.logWarning("Structured output failed validation; retrying with feedback", {
+                  service: policy.serviceName,
+                  attempt: attemptNumber,
+                  maxAttempts: policy.maxAttempts,
+                  errorDescription: Str.slice(0, 500)(error.reason.description),
+                }),
+              ]).pipe(Effect.asVoid)
+            : Effect.logWarning("Language-model attempt failed; retrying", {
+                service: policy.serviceName,
+                attempt: attemptNumber,
+                maxAttempts: policy.maxAttempts,
+                errorTag: error._tag,
+              })
+        )
+      );
   });
 
-  if (lastError === null) {
-    return yield* Effect.die(new Error("generateObjectWithFeedback requires maxAttempts to be greater than zero"));
-  }
-  return yield* lastError;
+  const retries = policy.maxAttempts - 1;
+  const generated = O.match(O.fromUndefinedOr(options.retrySchedule), {
+    onNone: () => attempt.pipe(Effect.retry({ times: retries })),
+    onSome: (schedule) => attempt.pipe(Effect.retry({ schedule, times: retries })),
+  });
+
+  return yield* generated.pipe(
+    Effect.tap(() =>
+      Ref.get(attemptRef).pipe(
+        Effect.filterOrElse(
+          (attempts) => attempts > 1,
+          () => Effect.void
+        ),
+        Effect.flatMap((attempts) =>
+          Effect.logInfo("Structured output succeeded after retry", {
+            service: policy.serviceName,
+            attempts,
+            maxAttempts: policy.maxAttempts,
+          })
+        ),
+        Effect.ignore
+      )
+    ),
+    Effect.tapError((error) =>
+      Effect.logError("Structured output attempts exhausted", {
+        service: policy.serviceName,
+        attempts: policy.maxAttempts,
+        errorTag: error._tag,
+      })
+    )
+  );
 });
-
-/**
- * Build a feedback message to help the LLM understand the schema validation error.
- *
- * @internal
- */
-const buildFeedbackMessage = (error: AiError.InvalidOutputError): ReadonlyArray<Prompt.MessageEncoded> => {
-  // Extract useful information from the error description
-  const errorDescription = error.description || "Schema validation failed";
-
-  return [
-    {
-      role: "assistant",
-      content: "I attempted to generate the output but it failed schema validation.",
-    },
-    {
-      role: "user",
-      content: `Your response failed schema validation with this error:
-
-${errorDescription}
-
-Please try again. Common issues:
-1. Entity types must be from the ALLOWED CLASSES list (use Local Names, NOT full IRIs)
-2. Attribute keys should be from ALLOWED DATATYPE PROPERTIES when possible
-3. Entity IDs must be snake_case (lowercase with underscores)
-4. Each entity must have at least one type
-
-Generate a corrected response following the schema exactly.`,
-    },
-  ];
-};
-
-/**
- * Type helper for the generateObjectWithFeedback result
- *
- * @since 0.0.0
- */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export type GenerateWithFeedbackResult<A> = LanguageModel.GenerateObjectResponse<{}, A>;

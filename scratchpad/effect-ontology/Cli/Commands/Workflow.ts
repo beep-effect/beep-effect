@@ -1,16 +1,16 @@
 /**
  * CLI: Workflow Commands
  *
+ * **Details**
+ *
  * Manage durable workflows, cleanup stale links, and re-enrich pending content.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { Console, Effect } from "effect";
+import { Clock, Console, DateTime, Effect } from "effect";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
-import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import { Command, Flag as Options } from "effect/unstable/cli";
@@ -150,8 +150,8 @@ const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (linkId: string) 
   yield* Console.log("");
   yield* Console.log(`  Status: ${link.status}`);
   yield* Console.log(`  Headline: ${link.headline}`);
-  yield* Console.log(`  Topics: ${(link.topics as Array<string>)?.join(", ") || "(none)"}`);
-  yield* Console.log(`  Key Entities: ${(link.keyEntities as Array<string>)?.join(", ") || "(none)"}`);
+  yield* Console.log(`  Topics: ${link.topics?.join(", ") || "(none)"}`);
+  yield* Console.log(`  Key Entities: ${link.keyEntities?.join(", ") || "(none)"}`);
 });
 
 const reEnrichCommand = Command.make("re-enrich", { linkId: linkIdOption }, ({ linkId }) =>
@@ -208,6 +208,20 @@ const reEnrichAllCommand = Command.make(
 // Parent Command
 // =============================================================================
 
+/**
+ * Exposes workflow command for composition by callers of this module.
+ *
+ * **Example** (Inspect workflow command)
+ *
+ * ```ts
+ * import { workflowCommand } from "@effect-ontology/Cli/Commands/Workflow"
+ *
+ * console.log(workflowCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const workflowCommand = Command.make("workflow").pipe(
   Command.withSubcommands([listPendingCommand, cleanupStaleCommand, reEnrichCommand, reEnrichAllCommand]),
   Command.withDescription("Workflow management: cleanup stale links, re-enrich failed content")

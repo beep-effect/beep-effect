@@ -1,6 +1,8 @@
 /**
  * Router: Inference API
  *
+ * **Details**
+ *
  * HTTP endpoints for standalone RDFS reasoning on RDF graphs.
  * Provides synchronous inference with delta computation.
  *
@@ -8,9 +10,11 @@
  * @since 0.0.0
  */
 
-import { Effect, Random } from "effect";
-import * as Clock from "effect/Clock";
-import * as MutableHashMap from "effect/MutableHashMap";
+import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
+import { Clock, Context, Effect, Layer, Random, Ref } from "effect";
+import * as A from "effect/Array";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -25,11 +29,89 @@ import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize } from "../Service/Rdf.ts";
 import { Reasoner, ReasoningConfig } from "../Service/Reasoner.ts";
 import { computeQuadDelta, summarizeDelta } from "../Utils/QuadDelta.ts";
 
+const $I = $ScratchpadId.create("effect-ontology/Runtime/InferenceRouter");
+
 // =============================================================================
 // Job Storage (in-memory for now, production would use Redis/Postgres)
 // =============================================================================
 
-const jobStore = MutableHashMap.empty<string, InferenceRunResponse>();
+const INFERENCE_JOB_CAPACITY = 256;
+
+interface InferenceJobState {
+  readonly order: ReadonlyArray<string>;
+  readonly entries: HashMap.HashMap<string, InferenceRunResponse>;
+}
+
+/**
+ * Scoped storage used by one inference-router runtime.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class InferenceJobStore extends Context.Service<
+  InferenceJobStore,
+  {
+    readonly get: (jobId: string) => Effect.Effect<O.Option<InferenceRunResponse>>;
+    readonly put: (response: InferenceRunResponse) => Effect.Effect<void>;
+  }
+>()($I`InferenceJobStore`) {}
+
+/**
+ * Ref-backed bounded inference-job storage isolated per layer instance.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const InferenceJobStoreLive = Layer.effect(
+  InferenceJobStore,
+  Effect.gen(function* () {
+    const state = yield* Ref.make<InferenceJobState>({
+      order: [],
+      entries: HashMap.empty(),
+    });
+    const get = Effect.fn("InferenceJobStore.get")(function* (jobId: string) {
+      return HashMap.get((yield* Ref.get(state)).entries, jobId);
+    });
+    const put = Effect.fn("InferenceJobStore.put")(function* (response: InferenceRunResponse) {
+      yield* Ref.update(state, (current) => {
+        const withoutCurrent = A.filter(current.order, (jobId) => jobId !== response.jobId);
+        const nextOrder = A.append(withoutCurrent, response.jobId);
+        const evicted = A.length(nextOrder) > INFERENCE_JOB_CAPACITY ? A.head(nextOrder) : O.none<string>();
+        const order = O.match(evicted, {
+          onNone: () => nextOrder,
+          onSome: () => A.drop(nextOrder, 1),
+        });
+        const retainedEntries = O.match(evicted, {
+          onNone: () => current.entries,
+          onSome: (jobId) => HashMap.remove(current.entries, jobId),
+        });
+        const entries = HashMap.set(retainedEntries, response.jobId, response);
+        return { order, entries };
+      });
+    });
+    return InferenceJobStore.of({ get, put });
+  })
+);
+
+const InferenceFailureStage = LiteralKit(["parse", "reason", "serialize", "statistics"]);
+
+/**
+ * Typed failure raised while executing an inference request.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class InferenceExecutionError extends S.TaggedError<InferenceExecutionError>($I`InferenceExecutionError`)(
+  "InferenceExecutionError",
+  {
+    stage: InferenceFailureStage,
+    message: S.NonEmptyString,
+    cause: S.Defect({ includeStack: true }),
+  },
+  $I.annote("InferenceExecutionError", {
+    description: "Typed inference failure preserving its execution stage and underlying defect.",
+  })
+) {}
 
 const generateJobId = Random.nextInt.pipe(Effect.map((value) => `infer-${Math.abs(value).toString(16)}`));
 
@@ -40,14 +122,24 @@ const generateJobId = Random.nextInt.pipe(Effect.map((value) => `infer-${Math.ab
 /**
  * Inference API Router
  *
+ * **Details**
+ *
  * Endpoints:
  * - POST /v1/inference/run - Run RDFS reasoning on a graph
  * - GET /v1/inference/:id - Get inference job result
  *
+ * **Example** (Inspect inference router)
+ *
+ * ```ts
+ * import { InferenceRouter } from "@effect-ontology/Runtime/InferenceRouter"
+ *
+ * console.log(InferenceRouter)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category endpoints
  */
-export const InferenceRouter = HttpRouter.addAll([
+const InferenceRouterDefinition = HttpRouter.addAll([
   HttpRouter.route(
     "POST",
     "/v1/inference/run",
@@ -65,6 +157,7 @@ export const InferenceRouter = HttpRouter.addAll([
           function* (request) {
             const rdfBuilder = yield* RdfBuilder;
             const reasoner = yield* Reasoner;
+            const jobStore = yield* InferenceJobStore;
 
             yield* Effect.logInfo("Inference API request received", {
               format: request.format,
@@ -77,10 +170,13 @@ export const InferenceRouter = HttpRouter.addAll([
 
             // Parse input graph
             const originalStore = yield* rdfBuilder.parseTurtle(request.inputGraph).pipe(
-              Effect.mapError((e) => ({
-                _tag: "ParseError",
-                message: `Failed to parse input graph: ${e.message}`,
-              }))
+              Effect.mapError((cause) =>
+                InferenceExecutionError.make({
+                  stage: "parse",
+                  message: "Failed to parse the input graph.",
+                  cause,
+                })
+              )
             );
 
             const originalCount = rdfStoreSize(originalStore);
@@ -90,17 +186,20 @@ export const InferenceRouter = HttpRouter.addAll([
               request.profile === "custom"
                 ? ReasoningConfig.custom(O.getOrElse(request.customRules, () => []))
                 : ReasoningConfig.make({
-                    profile: request.profile as "rdfs" | "rdfs-subclass" | "owl-sameas",
+                    profile: request.profile,
                   });
 
             // Apply reasoning (creates a copy)
             const { result: reasoningResult, store: enrichedStore } = yield* reasoner
               .reasonCopy(originalStore, config)
               .pipe(
-                Effect.mapError((e) => ({
-                  _tag: "ReasoningError",
-                  message: e.message,
-                }))
+                Effect.mapError((cause) =>
+                  InferenceExecutionError.make({
+                    stage: "reason",
+                    message: "Failed to apply the configured reasoning profile.",
+                    cause,
+                  })
+                )
               );
 
             // Compute delta if requested
@@ -113,9 +212,25 @@ export const InferenceRouter = HttpRouter.addAll([
               for (const quad of delta.newQuads) {
                 rdfStoreAddQuad(deltaStore, quad);
               }
-              outputGraph = yield* rdfBuilder.toTurtle(deltaStore);
+              outputGraph = yield* rdfBuilder.toTurtle(deltaStore).pipe(
+                Effect.mapError((cause) =>
+                  InferenceExecutionError.make({
+                    stage: "serialize",
+                    message: "Failed to serialize the inferred graph delta.",
+                    cause,
+                  })
+                )
+              );
             } else {
-              outputGraph = yield* rdfBuilder.toTurtle(enrichedStore);
+              outputGraph = yield* rdfBuilder.toTurtle(enrichedStore).pipe(
+                Effect.mapError((cause) =>
+                  InferenceExecutionError.make({
+                    stage: "serialize",
+                    message: "Failed to serialize the inferred graph.",
+                    cause,
+                  })
+                )
+              );
             }
 
             const durationMs = (yield* Clock.currentTimeMillis) - startTime;
@@ -132,7 +247,15 @@ export const InferenceRouter = HttpRouter.addAll([
                     predicateBreakdown: {},
                     durationMs,
                   }
-            ).pipe(Effect.orDie);
+            ).pipe(
+              Effect.mapError((cause) =>
+                InferenceExecutionError.make({
+                  stage: "statistics",
+                  message: "Failed to validate inference statistics.",
+                  cause,
+                })
+              )
+            );
 
             const jobId = yield* generateJobId;
             const response = InferenceRunResponse.make({
@@ -143,7 +266,7 @@ export const InferenceRouter = HttpRouter.addAll([
             });
 
             // Store for later retrieval
-            MutableHashMap.set(jobStore, jobId, response);
+            yield* jobStore.put(response);
 
             yield* Effect.logInfo("Inference complete", {
               jobId,
@@ -157,14 +280,15 @@ export const InferenceRouter = HttpRouter.addAll([
             Effect.fn(function* (error) {
               yield* Effect.logError("Inference failed", { error });
 
+              const jobStore = yield* InferenceJobStore;
               const jobId = yield* generateJobId;
               const response = InferenceRunResponse.make({
                 jobId,
                 status: "failed",
-                error: O.some("message" in error ? error.message : String(error)),
+                error: O.some(error.message),
               });
 
-              MutableHashMap.set(jobStore, jobId, response);
+              yield* jobStore.put(response);
 
               return yield* HttpServerResponse.schemaJson(InferenceRunResponse)(response);
             })
@@ -177,6 +301,7 @@ export const InferenceRouter = HttpRouter.addAll([
     "GET",
     "/v1/inference/:id",
     Effect.gen(function* () {
+      const jobStore = yield* InferenceJobStore;
       const { id } = yield* HttpRouter.params;
 
       if (P.isUndefined(id)) {
@@ -186,7 +311,7 @@ export const InferenceRouter = HttpRouter.addAll([
         );
       }
 
-      const result = MutableHashMap.get(jobStore, id);
+      const result = yield* jobStore.get(id);
 
       if (O.isNone(result)) {
         return yield* HttpServerResponse.json(
@@ -208,3 +333,11 @@ export const InferenceRouter = HttpRouter.addAll([
     })
   ),
 ]);
+
+/**
+ * Inference router with runtime-local bounded job storage.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const InferenceRouter = InferenceRouterDefinition;

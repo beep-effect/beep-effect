@@ -1,6 +1,8 @@
 /**
  * CLI: Reconcile Command
  *
+ * **Details**
+ *
  * Analyze entities in a batch for potential duplicates and display statistics.
  * For full cross-batch resolution with persistent registry, use the API endpoint.
  *
@@ -11,10 +13,11 @@
 import { makeNamedNode } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
-import { Chunk, Console, Effect, FileSystem, Option, Schema } from "effect";
+import { Chunk, Console, Effect, FileSystem, MutableHashMap, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { Command, Flag as Options } from "effect/unstable/cli";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
@@ -98,7 +101,7 @@ interface ExtractedEntity {
 
 const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   batchId: string,
-  manifest: Option.Option<string>,
+  manifest: O.Option<string>,
   threshold: number,
   verbose: boolean
 ) {
@@ -107,10 +110,10 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   yield* Console.log(`Analyzing entities for batch: ${batchId}`);
   yield* Console.log(`Similarity threshold: ${threshold}`);
   let manifestData: BatchManifest;
-  if (Option.isSome(manifest)) {
+  if (O.isSome(manifest)) {
     const fs = yield* FileSystem.FileSystem;
     const content = yield* fs.readFileString(manifest.value);
-    manifestData = yield* Schema.decodeEffect(Schema.fromJsonString(BatchManifest))(content);
+    manifestData = yield* S.decodeEffect(S.fromJsonString(BatchManifest))(content);
   } else {
     const manifestKey = `batches/${batchId}/manifest.json`;
     const contentOpt = yield* storage.get(manifestKey);
@@ -119,7 +122,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
       yield* Console.log("Use --manifest to specify a local manifest file");
       return;
     }
-    manifestData = yield* Schema.decodeEffect(Schema.fromJsonString(BatchManifest))(contentOpt);
+    manifestData = yield* S.decodeEffect(S.fromJsonString(BatchManifest))(contentOpt);
   }
   yield* Console.log(`Found ${manifestData.documents.length} documents in batch`);
   const allEntities: Array<ExtractedEntity> = [];
@@ -140,7 +143,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     for (const quad of typeQuads) {
       if (quad.subject.termType === "NamedNode") {
         const iri = quad.subject.value;
-        const types = Option.getOrElse(MutableHashMap.get(entityTypes, iri), () => {
+        const types = O.getOrElse(MutableHashMap.get(entityTypes, iri), () => {
           const created = MutableHashSet.empty<string>();
           MutableHashMap.set(entityTypes, iri, created);
           return created;
@@ -164,7 +167,9 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
       }
     }
     for (const [iri, types] of entityTypes) {
-      const label = Option.getOrElse(MutableHashMap.get(entityLabels, iri), () => iri.split(/[#/]/).pop() ?? iri);
+      const label = O.getOrElse(MutableHashMap.get(entityLabels, iri), () =>
+        O.getOrElse(A.last(Str.split(/[#/]/)(iri)), () => iri)
+      );
       allEntities.push({
         iri,
         types: A.fromIterable(types),
@@ -201,9 +206,12 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
       }
     }
   }
-  duplicatePairs.sort((a, b) => b.similarity - a.similarity);
+  const sortedDuplicatePairs = A.sort(
+    duplicatePairs,
+    Order.mapInput(Order.flip(Order.Number), (pair: (typeof duplicatePairs)[number]) => pair.similarity)
+  );
   const uniqueInDuplicates = MutableHashSet.empty<string>();
-  for (const pair of duplicatePairs) {
+  for (const pair of sortedDuplicatePairs) {
     MutableHashSet.add(uniqueInDuplicates, pair.entity1.iri);
     MutableHashSet.add(uniqueInDuplicates, pair.entity2.iri);
   }
@@ -216,7 +224,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   );
   if (duplicatePairs.length > 0) {
     yield* Console.log("\n--- Top Potential Duplicates ---");
-    const topPairs = duplicatePairs.slice(0, 10);
+    const topPairs = A.take(sortedDuplicatePairs, 10);
     for (const pair of topPairs) {
       yield* Console.log(
         `[${(pair.similarity * 100).toFixed(1)}%] "${pair.entity1.label}" <-> "${pair.entity2.label}"`
@@ -237,11 +245,11 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   const typeDistribution = MutableHashMap.empty<string, number>();
   for (const entity of allEntities) {
     for (const type of entity.types) {
-      const shortType = type.split(/[#/]/).pop() ?? type;
+      const shortType = O.getOrElse(A.last(Str.split(/[#/]/)(type)), () => type);
       MutableHashMap.set(
         typeDistribution,
         shortType,
-        Option.getOrElse(MutableHashMap.get(typeDistribution, shortType), () => 0) + 1
+        O.getOrElse(MutableHashMap.get(typeDistribution, shortType), () => 0) + 1
       );
     }
   }
@@ -257,7 +265,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     MutableHashMap.set(
       docDistribution,
       entity.sourceDoc,
-      Option.getOrElse(MutableHashMap.get(docDistribution, entity.sourceDoc), () => 0) + 1
+      O.getOrElse(MutableHashMap.get(docDistribution, entity.sourceDoc), () => 0) + 1
     );
   }
   yield* Console.log("\n--- Entities per Document ---");
@@ -270,6 +278,20 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
 // Command Definition
 // =============================================================================
 
+/**
+ * Exposes reconcile command for composition by callers of this module.
+ *
+ * **Example** (Inspect reconcile command)
+ *
+ * ```ts
+ * import { reconcileCommand } from "@effect-ontology/Cli/Commands/Reconcile"
+ *
+ * console.log(reconcileCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const reconcileCommand = Command.make(
   "reconcile",
   {

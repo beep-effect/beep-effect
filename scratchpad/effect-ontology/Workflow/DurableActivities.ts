@@ -1,6 +1,8 @@
 /**
  * Durable Workflow Activities
  *
+ * **Details**
+ *
  * Effect-native durable activities using @effect/workflow's Activity.make.
  * These activities are journaled by the WorkflowEngine for crash recovery.
  *
@@ -12,6 +14,7 @@
  * Note: These activities require WorkflowEngine and WorkflowInstance context.
  * For standalone execution (e.g., ActivityRunner), use Activities.ts instead.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
@@ -25,19 +28,17 @@ import { NonNegativeInt } from "@beep/schema/Int";
 import { NonNegNum } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { Chunk, DateTime, Duration, Effect, Schedule } from "effect";
+import { Chunk, DateTime, Duration, Effect, HashMap, MutableHashMap, MutableHashSet, Order, Schedule } from "effect";
 import * as A from "effect/Array";
-import * as HashMap from "effect/HashMap";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
 import { Activity } from "effect/unstable/workflow";
 import { ActivityError, ActivityGenericError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts";
-import type { BatchId } from "../Domain/Identity.ts";
-import { ContentHash, GcsUri } from "../Domain/Identity.ts";
+import { BatchId, ContentHash, GcsUri } from "../Domain/Identity.ts";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts";
 import { ElementEmbedding, OntologyEmbeddings, OntologyEmbeddingsJson } from "../Domain/Model/OntologyEmbeddings.ts";
@@ -85,6 +86,21 @@ const PROV_GENERATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}generatedAtTime`)
 // Output Schemas (must be serializable for journaling)
 // -----------------------------------------------------------------------------
 
+/**
+ * Validates and represents resolution output values at runtime.
+ *
+ * **Example** (Validate resolution output)
+ *
+ * ```ts
+ * import { ResolutionOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ResolutionOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ResolutionOutput = S.Struct({
   resolvedUri: GcsUri,
   /** Total entities before resolution */
@@ -100,14 +116,58 @@ export const ResolutionOutput = S.Struct({
   durationMs: NonNegNum,
 });
 
+/**
+ * Exposes validation output for composition by callers of this module.
+ *
+ * **Example** (Inspect validation output)
+ *
+ * ```ts
+ * import { ValidationOutput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(ValidationOutput)
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
 export const ValidationOutput = ValidationActivityOutput;
 
+/**
+ * Validates and represents ingestion output values at runtime.
+ *
+ * **Example** (Validate ingestion output)
+ *
+ * ```ts
+ * import { IngestionOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(IngestionOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const IngestionOutput = S.Struct({
   canonicalUri: GcsUri,
   triplesIngested: NonNegativeInt,
   durationMs: NonNegNum,
 });
 
+/**
+ * Validates and represents claim persistence output values at runtime.
+ *
+ * **Example** (Validate claim persistence output)
+ *
+ * ```ts
+ * import { ClaimPersistenceOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimPersistenceOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ClaimPersistenceOutput = S.Struct({
   /** Total claims persisted across all documents */
   claimsPersisted: NonNegativeInt,
@@ -118,6 +178,21 @@ export const ClaimPersistenceOutput = S.Struct({
   durationMs: NonNegNum,
 });
 
+/**
+ * Validates and represents cross batch resolution output values at runtime.
+ *
+ * **Example** (Validate cross batch resolution output)
+ *
+ * ```ts
+ * import { CrossBatchResolutionOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CrossBatchResolutionOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const CrossBatchResolutionOutput = S.Struct({
   /** Total entities processed */
   entitiesTotal: NonNegativeInt,
@@ -130,6 +205,23 @@ export const CrossBatchResolutionOutput = S.Struct({
   durationMs: NonNegNum,
 });
 
+/**
+ * Describes the cross batch resolution input data exposed by this module.
+ *
+ *
+ * **Example** (Use the CrossBatchResolutionInput contract)
+ *
+ * ```ts
+ * import type { CrossBatchResolutionInput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsCrossBatchResolutionInput = (_value: CrossBatchResolutionInput): void => undefined
+ *
+ * console.log(acceptsCrossBatchResolutionInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CrossBatchResolutionInput {
   readonly batchId: string;
   /** Path to the resolved graph from within-batch resolution */
@@ -144,7 +236,10 @@ export interface CrossBatchResolutionInput {
 // Shared helpers
 // -----------------------------------------------------------------------------
 
-const stripGsPrefix = (uri: string): string => (uri.startsWith("gs://") ? uri.replace(/^gs:\/\/[^/]+\//, "") : uri);
+const stripGsPrefix = (uri: string): string =>
+  Str.startsWith("gs://")(uri) ? Str.replace(/^gs:\/\/[^/]+\//, "")(uri) : uri;
+
+const DocumentPriorityOrder = Order.mapInput(Order.Number, (document: DocumentMetadata) => document.priority);
 
 const requireContent = (opt: O.Option<string>, key: string) =>
   O.match(opt, {
@@ -220,9 +315,9 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
     if (quad.subject.termType !== "NamedNode" || quad.object.termType !== "NamedNode") continue;
     const subjectIri = quad.subject.value;
     const typeIri = quad.object.value;
-    if (typeIri.includes("owl#") || typeIri.includes("rdf-schema#")) continue;
-    if (subjectIri.startsWith(CLAIMS.namespace)) continue;
-    if (typeIri.startsWith(CLAIMS.namespace)) continue;
+    if (Str.includes("owl#")(typeIri) || Str.includes("rdf-schema#")(typeIri)) continue;
+    if (Str.startsWith(CLAIMS.namespace)(subjectIri)) continue;
+    if (Str.startsWith(CLAIMS.namespace)(typeIri)) continue;
     MutableHashSet.add(entityIris, subjectIri);
     const types = O.getOrElse(MutableHashMap.get(entityTypes, subjectIri), (): Array<string> => []);
     types.push(typeIri);
@@ -304,6 +399,8 @@ const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Sche
 /**
  * Durable Resolution Activity
  *
+ * **Details**
+ *
  * Merges multiple document graphs and performs entity resolution.
  * Uses EntityResolutionService for proper clustering across documents.
  * Journaled by WorkflowEngine for crash recovery.
@@ -314,6 +411,17 @@ const activityRetryPolicy = Schedule.max([Schedule.exponential("1 second"), Sche
  * 3. Call EntityResolutionService.resolve() to cluster similar entities
  * 4. Rewrite entity IRIs to use canonical IDs
  * 5. Serialize resolved graph back to Turtle
+ *
+ * **Example** (Inspect make resolution activity)
+ *
+ * ```ts
+ * import { makeResolutionActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeResolutionActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeResolutionActivity = (input: ResolutionActivityInput) =>
   Activity.make({
@@ -459,7 +567,7 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
 
       // Build provenance map: canonical ID -> source document URIs
       const provenanceMap: Record<string, Array<string>> = {};
-      for (const [entityId, docUri] of Object.entries(entityToDocumentUri)) {
+      for (const [entityId, docUri] of R.toEntries(entityToDocumentUri)) {
         const canonicalId = resolutionGraph.canonicalMap[EntityId.make(entityId)] ?? entityId;
         if (P.not(P.isTruthy)(provenanceMap[canonicalId])) {
           provenanceMap[canonicalId] = [];
@@ -476,7 +584,7 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
         clustersFormed: NonNegativeInt.make(resolutionGraph.stats.clusterCount),
         relationsTotal: NonNegativeInt.make(totalRelations),
         compressionRatio: UnitInterval.make(compressionRatio),
-        provenanceMapEntries: Object.keys(provenanceMap).length,
+        provenanceMapEntries: R.size(provenanceMap),
         durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       });
 
@@ -496,8 +604,21 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
 /**
  * Durable Validation Activity
  *
+ * **Details**
+ *
  * Validates the resolved graph against SHACL shapes (if provided).
  * Journaled by WorkflowEngine for crash recovery.
+ *
+ * **Example** (Inspect make validation activity)
+ *
+ * ```ts
+ * import { makeValidationActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeValidationActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeValidationActivity = (input: ValidationActivityInput) =>
   Activity.make({
@@ -636,8 +757,21 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
 /**
  * Durable Ingestion Activity
  *
+ * **Details**
+ *
  * Ingests the validated graph into the canonical store.
  * Journaled by WorkflowEngine for crash recovery.
+ *
+ * **Example** (Inspect make ingestion activity)
+ *
+ * ```ts
+ * import { makeIngestionActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeIngestionActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeIngestionActivity = (input: IngestionActivityInput) =>
   Activity.make({
@@ -809,10 +943,10 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
         } else {
           const raced = yield* storage.getWithGeneration(namespaceCanonicalPath);
           if (O.isSome(raced)) {
-            return yield* new GenerationMismatchError({
+            return yield* GenerationMismatchError.make({
               key: namespaceCanonicalPath,
               expectedGeneration: "missing",
-              actualGeneration: raced.value.generation,
+              actualGeneration: O.some(raced.value.generation),
             });
           }
           yield* storage.set(namespaceCanonicalPath, mergedGraph);
@@ -825,12 +959,12 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
       const maxRetries = 3;
       yield* mergeWithOptimisticLocking.pipe(
         Effect.retry({
-          while: (error) => error instanceof GenerationMismatchError,
+          while: GenerationMismatchError.is,
           times: maxRetries,
           schedule: Schedule.exponential("100 millis").pipe(Schedule.jittered),
         }),
         Effect.tapError((error) => {
-          if (error instanceof GenerationMismatchError) {
+          if (GenerationMismatchError.is(error)) {
             return Effect.logError("Ingestion: Failed after max retries due to concurrent writes", {
               batchId: input.batchId,
               namespace: input.targetNamespace,
@@ -859,10 +993,22 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
 
 /**
  * Input for ClaimPersistence activity
+ *
+ * **Example** (Validate claim persistence input)
+ *
+ * ```ts
+ * import { ClaimPersistenceInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ClaimPersistenceInput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const ClaimPersistenceInput = S.Struct({
   /** Batch ID for logging */
-  batchId: S.String,
+  batchId: BatchId,
   /** Ontology ID for namespace scoping (e.g., "seattle") */
   ontologyId: S.String,
   /** URIs of document graphs to process */
@@ -879,10 +1025,29 @@ export const ClaimPersistenceInput = S.Struct({
     })
   ).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
+/**
+ * Describes the claim persistence input data exposed by this module.
+ *
+ *
+ * **Example** (Use the ClaimPersistenceInput contract)
+ *
+ * ```ts
+ * import type { ClaimPersistenceInput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsClaimPersistenceInput = (_value: ClaimPersistenceInput): void => undefined
+ *
+ * console.log(acceptsClaimPersistenceInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ClaimPersistenceInput = typeof ClaimPersistenceInput.Type;
 
 /**
  * Durable Claim Persistence Activity
+ *
+ * **Details**
  *
  * Persists claims to PostgreSQL AFTER validation passes.
  * This ensures only validated claims are persisted to the database.
@@ -893,6 +1058,15 @@ export type ClaimPersistenceInput = typeof ClaimPersistenceInput.Type;
  * 3. Convert to claims using knowledgeGraphToClaims
  * 4. Persist to PostgreSQL via ClaimPersistenceService
  *
+ * **Example** (Inspect make claim persistence activity)
+ *
+ * ```ts
+ * import { makeClaimPersistenceActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeClaimPersistenceActivity)
+ * ```
+ *
+ * @category constructors
  * @since 0.0.0
  */
 export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
@@ -1071,6 +1245,8 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
 /**
  * Durable Cross-Batch Entity Resolution Activity
  *
+ * **Details**
+ *
  * Links entities from the current batch to the persistent entity registry.
  * Enables building up a knowledge base over time where entities across
  * different batches are linked to canonical IRIs.
@@ -1082,6 +1258,15 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
  * 4. Update registry with new/merged entities
  * 5. Return resolution statistics
  *
+ * **Example** (Inspect make cross batch resolution activity)
+ *
+ * ```ts
+ * import { makeCrossBatchResolutionActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeCrossBatchResolutionActivity)
+ * ```
+ *
+ * @category constructors
  * @since 0.0.0
  */
 export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInput) =>
@@ -1181,10 +1366,22 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
 
 /**
  * Input for Inference activity
+ *
+ * **Example** (Validate inference input)
+ *
+ * ```ts
+ * import { InferenceInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(InferenceInput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const InferenceInput = S.Struct({
   /** Batch ID for logging and provenance */
-  batchId: S.String,
+  batchId: BatchId,
   /** URI of the resolved graph to reason over */
   resolvedGraphUri: S.String,
   /** Reasoning profile to use (default: rdfs) */
@@ -1195,10 +1392,39 @@ export const InferenceInput = S.Struct({
   /** Whether inference is enabled (default: true) */
   enabled: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
+/**
+ * Describes the inference input data exposed by this module.
+ *
+ *
+ * **Example** (Use the InferenceInput contract)
+ *
+ * ```ts
+ * import type { InferenceInput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsInferenceInput = (_value: InferenceInput): void => undefined
+ *
+ * console.log(acceptsInferenceInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type InferenceInput = typeof InferenceInput.Type;
 
 /**
  * Output for Inference activity
+ *
+ * **Example** (Validate inference output)
+ *
+ * ```ts
+ * import { InferenceOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(InferenceOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const InferenceOutput = S.Struct({
   /** URI of the enriched graph with inferences */
@@ -1214,10 +1440,29 @@ export const InferenceOutput = S.Struct({
   /** Duration in milliseconds */
   durationMs: NonNegNum,
 });
+/**
+ * Describes the inference output data exposed by this module.
+ *
+ *
+ * **Example** (Use the InferenceOutput contract)
+ *
+ * ```ts
+ * import type { InferenceOutput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsInferenceOutput = (_value: InferenceOutput): void => undefined
+ *
+ * console.log(acceptsInferenceOutput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type InferenceOutput = typeof InferenceOutput.Type;
 
 /**
  * Durable RDFS Inference Activity
+ *
+ * **Details**
  *
  * Applies RDFS reasoning to the resolved graph to generate new facts
  * through forward-chaining inference. Computes the delta (new triples only)
@@ -1231,6 +1476,15 @@ export type InferenceOutput = typeof InferenceOutput.Type;
  * 5. Save enriched graph
  * 6. Return statistics
  *
+ * **Example** (Inspect make inference activity)
+ *
+ * ```ts
+ * import { makeInferenceActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeInferenceActivity)
+ * ```
+ *
+ * @category constructors
  * @since 0.0.0
  */
 export const makeInferenceActivity = (input: InferenceInput) =>
@@ -1276,7 +1530,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
       const originalStore = yield* rdf.parseTurtle(graphContent);
 
       // 2. Apply reasoning (creates a copy, doesn't mutate original)
-      const profile = O.getOrElse(input.profile, () => "rdfs" as const);
+      const profile: ReasoningConfig["profile"] = O.getOrElse(input.profile, () => "rdfs");
       const reasoningConfig = ReasoningConfig.make({ profile });
       const { result: reasoningResult, store: enrichedStore } = yield* reasoner.reasonCopy(
         originalStore,
@@ -1304,7 +1558,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
             makeQuad(
               makeNamedNode(s),
               makeNamedNode(p),
-              o.startsWith("http") || o.startsWith("urn:")
+              Str.startsWith("http")(o) || Str.startsWith("urn:")(o)
                 ? makeNamedNode(o)
                 : makeLiteral(o, "http://www.w3.org/2001/XMLSchema#string")
             )
@@ -1348,7 +1602,7 @@ export const makeInferenceActivity = (input: InferenceInput) =>
 
       // 5. Save enriched graph
       const enrichedTurtle = yield* rdf.toTurtle(enrichedStore);
-      const enrichedPath = PathLayout.batch.inference(input.batchId as BatchId);
+      const enrichedPath = PathLayout.batch.inference(input.batchId);
       yield* storage.set(enrichedPath, enrichedTurtle);
 
       const end = yield* DateTime.now;
@@ -1379,6 +1633,18 @@ export const makeInferenceActivity = (input: InferenceInput) =>
 
 /**
  * Input for ComputeOntologyEmbeddings activity
+ *
+ * **Example** (Validate compute embeddings input)
+ *
+ * ```ts
+ * import { ComputeEmbeddingsInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ComputeEmbeddingsInput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const ComputeEmbeddingsInput = S.Struct({
   /** URI of the ontology (e.g., "gs://bucket/ontologies/football/ontology.ttl") */
@@ -1386,10 +1652,39 @@ export const ComputeEmbeddingsInput = S.Struct({
   /** Embedding model to use */
   model: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
+/**
+ * Describes the compute embeddings input data exposed by this module.
+ *
+ *
+ * **Example** (Use the ComputeEmbeddingsInput contract)
+ *
+ * ```ts
+ * import type { ComputeEmbeddingsInput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsComputeEmbeddingsInput = (_value: ComputeEmbeddingsInput): void => undefined
+ *
+ * console.log(acceptsComputeEmbeddingsInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ComputeEmbeddingsInput = typeof ComputeEmbeddingsInput.Type;
 
 /**
  * Output for ComputeOntologyEmbeddings activity
+ *
+ * **Example** (Validate compute embeddings output)
+ *
+ * ```ts
+ * import { ComputeEmbeddingsOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ComputeEmbeddingsOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const ComputeEmbeddingsOutput = S.Struct({
   /** URI of the stored embeddings blob */
@@ -1405,10 +1700,29 @@ export const ComputeEmbeddingsOutput = S.Struct({
   /** Duration in milliseconds */
   durationMs: NonNegNum,
 });
+/**
+ * Describes the compute embeddings output data exposed by this module.
+ *
+ *
+ * **Example** (Use the ComputeEmbeddingsOutput contract)
+ *
+ * ```ts
+ * import type { ComputeEmbeddingsOutput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsComputeEmbeddingsOutput = (_value: ComputeEmbeddingsOutput): void => undefined
+ *
+ * console.log(acceptsComputeEmbeddingsOutput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ComputeEmbeddingsOutput = typeof ComputeEmbeddingsOutput.Type;
 
 /**
  * Durable Compute Ontology Embeddings Activity
+ *
+ * **Details**
  *
  * Pre-computes embeddings for all classes and properties in an ontology
  * and stores them as a blob alongside the ontology file.
@@ -1422,6 +1736,17 @@ export type ComputeEmbeddingsOutput = typeof ComputeEmbeddingsOutput.Type;
  * 6. Store blob to GCS
  *
  * Idempotent: Same ontology content produces same embeddings blob.
+ *
+ * **Example** (Inspect make compute embeddings activity)
+ *
+ * ```ts
+ * import { makeComputeEmbeddingsActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeComputeEmbeddingsActivity)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
   Activity.make({
@@ -1546,6 +1871,18 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
 
 /**
  * Entity pair for LLM verification
+ *
+ * **Example** (Validate entity pair)
+ *
+ * ```ts
+ * import { EntityPair } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(EntityPair)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const EntityPair = S.Struct({
   /** First entity ID */
@@ -1563,23 +1900,81 @@ export const EntityPair = S.Struct({
   /** Initial similarity score from embedding/string matching */
   similarity: UnitInterval,
 });
+/**
+ * Describes the entity pair data exposed by this module.
+ *
+ *
+ * **Example** (Use the EntityPair contract)
+ *
+ * ```ts
+ * import type { EntityPair } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsEntityPair = (_value: EntityPair): void => undefined
+ *
+ * console.log(acceptsEntityPair)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EntityPair = typeof EntityPair.Type;
 
 /**
  * Input for LLM verification activity
+ *
+ * **Example** (Validate llm verification input)
+ *
+ * ```ts
+ * import { LlmVerificationInput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(LlmVerificationInput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const LlmVerificationInput = S.Struct({
   /** Batch ID for context */
-  batchId: S.String,
+  batchId: BatchId,
   /** Entity pairs with low confidence to verify */
   entityPairs: S.Array(EntityPair),
   /** Similarity threshold below which to verify (default: 0.7) */
   verificationThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
+/**
+ * Describes the llm verification input data exposed by this module.
+ *
+ *
+ * **Example** (Use the LlmVerificationInput contract)
+ *
+ * ```ts
+ * import type { LlmVerificationInput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsLlmVerificationInput = (_value: LlmVerificationInput): void => undefined
+ *
+ * console.log(acceptsLlmVerificationInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LlmVerificationInput = typeof LlmVerificationInput.Type;
 
 /**
  * Verified entity pair result
+ *
+ * **Example** (Validate verified pair)
+ *
+ * ```ts
+ * import { VerifiedPair } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(VerifiedPair)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const VerifiedPair = S.Struct({
   /** First entity ID */
@@ -1593,10 +1988,39 @@ export const VerifiedPair = S.Struct({
   /** Original similarity score */
   originalSimilarity: UnitInterval,
 });
+/**
+ * Describes the verified pair data exposed by this module.
+ *
+ *
+ * **Example** (Use the VerifiedPair contract)
+ *
+ * ```ts
+ * import type { VerifiedPair } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsVerifiedPair = (_value: VerifiedPair): void => undefined
+ *
+ * console.log(acceptsVerifiedPair)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type VerifiedPair = typeof VerifiedPair.Type;
 
 /**
  * Output for LLM verification activity
+ *
+ * **Example** (Validate llm verification output)
+ *
+ * ```ts
+ * import { LlmVerificationOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(LlmVerificationOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const LlmVerificationOutput = S.Struct({
   /** Pairs verified as same entity */
@@ -1610,6 +2034,23 @@ export const LlmVerificationOutput = S.Struct({
   /** Duration in milliseconds */
   durationMs: NonNegNum,
 });
+/**
+ * Describes the llm verification output data exposed by this module.
+ *
+ *
+ * **Example** (Use the LlmVerificationOutput contract)
+ *
+ * ```ts
+ * import type { LlmVerificationOutput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsLlmVerificationOutput = (_value: LlmVerificationOutput): void => undefined
+ *
+ * console.log(acceptsLlmVerificationOutput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LlmVerificationOutput = typeof LlmVerificationOutput.Type;
 
 /**
@@ -1721,6 +2162,8 @@ const VERIFICATION_BATCH_SIZE = 5;
 /**
  * Durable LLM Verification Activity
  *
+ * **Details**
+ *
  * Verifies low-confidence entity pairs using LLM to improve resolution accuracy.
  * This is an optional post-clustering step for entity resolution.
  *
@@ -1729,6 +2172,15 @@ const VERIFICATION_BATCH_SIZE = 5;
  * - Catch false negatives from pure string/embedding matching
  * - Improve recall for entities with very different surface forms
  *
+ * **Example** (Inspect make llm verification activity)
+ *
+ * ```ts
+ * import { makeLlmVerificationActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makeLlmVerificationActivity)
+ * ```
+ *
+ * @category constructors
  * @since 0.0.0
  */
 export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
@@ -1855,13 +2307,10 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
           );
 
           // Map results back to pairs
-          type ComparisonResult = { index: number; sameEntity: boolean; confidence: Confidence };
-          const resultsMap = HashMap.fromIterable(
-            (result.value.results as ReadonlyArray<ComparisonResult>).map((r) => [r.index, r])
-          );
+          const resultsMap = HashMap.fromIterable(result.value.results.map((r) => [r.index, r]));
 
           batch.forEach((pair, idx) => {
-            const llmResult = HashMap.get(resultsMap, idx);
+            const llmResult = HashMap.get(resultsMap, NonNegativeInt.make(idx));
             const verifiedPair: VerifiedPair = {
               entityA: pair.entityA,
               entityB: pair.entityB,
@@ -1966,6 +2415,18 @@ const BatchClassificationResponse = S.Struct({
 
 /**
  * Output schema for preprocessing activity
+ *
+ * **Example** (Validate preprocessing output)
+ *
+ * ```ts
+ * import { PreprocessingOutput } from "@effect-ontology/Workflow/DurableActivities"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(PreprocessingOutput)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const PreprocessingOutput = S.Struct({
   enrichedManifestUri: GcsUri,
@@ -1976,6 +2437,23 @@ export const PreprocessingOutput = S.Struct({
   averageComplexity: UnitInterval,
   durationMs: NonNegNum,
 });
+/**
+ * Describes the preprocessing output data exposed by this module.
+ *
+ *
+ * **Example** (Use the PreprocessingOutput contract)
+ *
+ * ```ts
+ * import type { PreprocessingOutput } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * const acceptsPreprocessingOutput = (_value: PreprocessingOutput): void => undefined
+ *
+ * console.log(acceptsPreprocessingOutput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type PreprocessingOutput = typeof PreprocessingOutput.Type;
 
 /** Preview size in bytes for classification */
@@ -2013,12 +2491,23 @@ Respond with classifications for each document by index.`;
 /**
  * Durable Preprocessing Activity
  *
+ * **Details**
+ *
  * Preprocesses documents in a batch to extract metadata for intelligent batching:
  * - Loads document previews (first ${PREVIEW_SIZE} bytes)
  * - Classifies documents using LLM in batches
  * - Computes chunking strategies and priorities
  * - Creates EnrichedManifest for downstream processing
  *
+ * **Example** (Inspect make preprocessing activity)
+ *
+ * ```ts
+ * import { makePreprocessingActivity } from "@effect-ontology/Workflow/DurableActivities"
+ *
+ * console.log(makePreprocessingActivity)
+ * ```
+ *
+ * @category constructors
  * @since 0.0.0
  */
 export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
@@ -2251,7 +2740,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
 
       // 5. Sort by priority if enabled (lower = process first)
       if (options.priorityOrdering) {
-        documentMetadata.sort((a, b) => a.priority - b.priority);
+        documentMetadata = A.sort(documentMetadata, DocumentPriorityOrder);
       }
 
       // 6. Compute stats

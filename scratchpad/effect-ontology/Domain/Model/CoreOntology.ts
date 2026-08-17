@@ -10,10 +10,9 @@ import { $ScratchpadId } from "@beep/identity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { IRI } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
-import { DateTime, Effect, SchemaGetter } from "effect";
+import { DateTime, Effect, Order, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { FastCheck } from "effect/testing";
@@ -28,7 +27,7 @@ const utf8Encoder = new TextEncoder();
  *
  * **Example** (Use CORE_NAMESPACE)
  * ```ts
- * import { CORE_NAMESPACE } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { CORE_NAMESPACE } from "@effect-ontology/Model/CoreOntology"
  *
  * console.log(CORE_NAMESPACE) // "http://effect-ontology.dev/core#"
  * ```
@@ -48,7 +47,7 @@ export const CORE_NAMESPACE: IRI = IRI.fromUnknown("http://effect-ontology.dev/c
  *
  * **Example** (Use CoreClass)
  * ```ts
- * import { CoreClass } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { CoreClass } from "@effect-ontology/Model/CoreOntology"
  *
  * console.log(
  *   CoreClass.is["http://effect-ontology.dev/core#Person"](
@@ -92,7 +91,7 @@ export const CoreClass = LiteralKit([
  *
  * **Example** (Use CoreClass)
  * ```ts
- * import type { CoreClass } from "@effect-ontology/Model/CoreOntology.ts"
+ * import type { CoreClass } from "@effect-ontology/Model/CoreOntology"
  *
  * const iri: CoreClass = "http://effect-ontology.dev/core#TrackedEntity"
  * console.log(iri.endsWith("TrackedEntity")) // true
@@ -108,7 +107,7 @@ export type CoreClass = typeof CoreClass.Type;
  *
  * **Example** (Use CoreProperty)
  * ```ts
- * import { CoreProperty } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { CoreProperty } from "@effect-ontology/Model/CoreOntology"
  *
  * console.log(
  *   CoreProperty.is["http://effect-ontology.dev/core#hasParticipant"](
@@ -172,7 +171,7 @@ export const CoreProperty = LiteralKit([
  *
  * **Example** (Use CoreProperty)
  * ```ts
- * import type { CoreProperty } from "@effect-ontology/Model/CoreOntology.ts"
+ * import type { CoreProperty } from "@effect-ontology/Model/CoreOntology"
  *
  * const iri: CoreProperty = "http://effect-ontology.dev/core#name"
  * console.log(iri.endsWith("name")) // true
@@ -197,7 +196,7 @@ const digestText = Effect.fn("CoreOntology.digestText")(function* (text: string)
  * **Example** (Use MentionId)
  * ```ts
  * import { Effect } from "effect"
- * import { MentionId } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { MentionId } from "@effect-ontology/Model/CoreOntology"
  *
  * console.log(Effect.isEffect(MentionId.fromCoordinates("doc-1", 0, 5))) // true
  * ```
@@ -240,7 +239,7 @@ export const MentionId = S.String.check(
  *
  * **Example** (Use MentionId)
  * ```ts
- * import { MentionId, type MentionId as MentionIdentifier } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { MentionId, type MentionId as MentionIdentifier } from "@effect-ontology/Model/CoreOntology"
  *
  * const id: MentionIdentifier = MentionId.make("mention-a1b2c3d4e5f6")
  * console.log(id) // "mention-a1b2c3d4e5f6"
@@ -263,14 +262,16 @@ type LegacyMentionEvidenceValue = typeof LegacyMentionEvidence.Type;
  *
  * **Example** (Use MentionEvidence)
  * ```ts
- * import { MentionEvidence } from "@effect-ontology/Model/CoreOntology.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { MentionEvidence } from "@effect-ontology/Model/CoreOntology"
  *
- * const evidence = MentionEvidence.fromUnknown({
+ * const evidence = S.decodeUnknownOption(MentionEvidence)({
  *   text: "Mayor Bruce Harrell",
  *   startOffset: 42,
  *   endOffset: 61
  * })
- * console.log(evidence.startChar) // 42
+ * console.log(O.map(evidence, (value) => value.startChar)) // Some(42)
  * ```
  *
  * @invariant The range is non-empty and `endChar - startChar` equals the UTF-16 width of `quote`.
@@ -303,7 +304,7 @@ export const MentionEvidence = LegacyMentionEvidence.pipe(
  *
  * **Example** (Use MentionEvidence)
  * ```ts
- * import type { MentionEvidence } from "@effect-ontology/Model/CoreOntology.ts"
+ * import type { MentionEvidence } from "@effect-ontology/Model/CoreOntology"
  *
  * const width = (evidence: MentionEvidence): number =>
  *   evidence.endChar - evidence.startChar
@@ -322,17 +323,18 @@ const MentionFields = {
   mentionsEntity: IRI,
   sourceDocument: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
   extractedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-} as const;
+};
 
 /**
  * Text evidence linking a source span to a tracked entity or event.
  *
  * **Example** (Use Mention)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { Mention } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { Mention } from "@effect-ontology/Model/CoreOntology"
  *
- * const mention = S.decodeUnknownSync(Mention)({
+ * const mention = S.decodeUnknownOption(Mention)({
  *   id: "mention-a1b2c3d4e5f6",
  *   evidence: {
  *     text: "Mayor Bruce Harrell",
@@ -342,7 +344,7 @@ const MentionFields = {
  *   confidence: 0.95,
  *   mentionsEntity: "https://example.org/entity/bruce-harrell"
  * })
- * console.log(mention.evidence.quote) // "Mayor Bruce Harrell"
+ * console.log(O.map(mention, (value) => value.evidence.quote)) // "Mayor Bruce Harrell"
  * ```
  *
  * @category entities
@@ -361,7 +363,7 @@ export class Mention extends S.Class<Mention>($I`Mention`)(
  * **Example** (Use CanonicalEntityId)
  * ```ts
  * import { Effect } from "effect"
- * import { CanonicalEntityId } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { CanonicalEntityId } from "@effect-ontology/Model/CoreOntology"
  *
  * console.log(Effect.isEffect(CanonicalEntityId.fromSeed("Bruce Harrell"))) // true
  * ```
@@ -402,7 +404,7 @@ export const CanonicalEntityId = S.String.check(
  * import {
  *   CanonicalEntityId,
  *   type CanonicalEntityId as CanonicalIdentifier
- * } from "@effect-ontology/Model/CoreOntology.ts"
+ * } from "@effect-ontology/Model/CoreOntology"
  *
  * const id: CanonicalIdentifier = CanonicalEntityId.make("bruce_harrell")
  * console.log(id) // "bruce_harrell"
@@ -425,23 +427,24 @@ const TrackedEntityFields = {
   mergedFrom: S.Array(IRI).pipe(SchemaUtils.withEmptyArrayDefaults<IRI>()),
   location: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
   externalIds: S.Record(S.String, S.NonEmptyString).pipe(SchemaUtils.withKeyDefaults({})),
-} as const;
+};
 
 /**
  * Persistent canonical entity tracked across source documents.
  *
  * **Example** (Use TrackedEntity)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { TrackedEntity } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { TrackedEntity } from "@effect-ontology/Model/CoreOntology"
  *
- * const entity = S.decodeUnknownSync(TrackedEntity)({
+ * const entity = S.decodeUnknownOption(TrackedEntity)({
  *   id: "bruce_harrell",
  *   iri: "https://example.org/entity/bruce-harrell",
  *   name: "Bruce Harrell",
  *   types: ["https://schema.org/Person"]
  * })
- * console.log(entity.isResolved) // false
+ * console.log(O.map(entity, (value) => value.isResolved)) // false
  * ```
  *
  * @category entities
@@ -458,16 +461,17 @@ export class TrackedEntity extends S.Class<TrackedEntity>($I`TrackedEntity`)(
    *
    * **Example** (Use EventId)
    * ```ts
+   * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
-   * import { TrackedEntity } from "@effect-ontology/Model/CoreOntology.ts"
+   * import { TrackedEntity } from "@effect-ontology/Model/CoreOntology"
    *
-   * const entity = S.decodeUnknownSync(TrackedEntity)({
+   * const entity = S.decodeUnknownOption(TrackedEntity)({
    *   id: "alice",
    *   iri: "https://example.org/entity/alice",
    *   name: "Alice",
    *   types: ["https://schema.org/Person"]
    * })
-   * console.log(entity.isResolved) // false
+   * console.log(O.map(entity, (value) => value.isResolved)) // false
    * ```
    *
    * @returns `true` when the merged-source collection is non-empty.
@@ -483,7 +487,7 @@ export class TrackedEntity extends S.Class<TrackedEntity>($I`TrackedEntity`)(
  * **Example** (Use EventId)
  * ```ts
  * import { Effect } from "effect"
- * import { EventId } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { EventId } from "@effect-ontology/Model/CoreOntology"
  *
  * console.log(Effect.isEffect(EventId.fromSeed("announcement-2026-07-25"))) // true
  * ```
@@ -522,7 +526,7 @@ export const EventId = S.String.check(
  *
  * **Example** (Use EventId)
  * ```ts
- * import { EventId, type EventId as EventIdentifier } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { EventId, type EventId as EventIdentifier } from "@effect-ontology/Model/CoreOntology"
  *
  * const id: EventIdentifier = EventId.make("event-a1b2c3d4e5f6")
  * console.log(id) // "event-a1b2c3d4e5f6"
@@ -536,20 +540,21 @@ export type EventId = typeof EventId.Type;
 const ParticipantFields = {
   entityIri: IRI,
   role: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
-} as const;
+};
 
 /**
  * Tracked entity participating in an event, with an optional ontology role.
  *
  * **Example** (Use Participant)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { Participant } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { Participant } from "@effect-ontology/Model/CoreOntology"
  *
- * const participant = S.decodeUnknownSync(Participant)({
+ * const participant = S.decodeUnknownOption(Participant)({
  *   entityIri: "https://example.org/entity/bruce-harrell"
  * })
- * console.log(participant.entityIri) // "https://example.org/entity/bruce-harrell"
+ * console.log(O.map(participant, (value) => value.entityIri)) // "https://example.org/entity/bruce-harrell"
  * ```
  *
  * @category models
@@ -565,7 +570,7 @@ export class Participant extends S.Class<Participant>($I`Participant`)(
 const EventIntervalFields = {
   start: S.DateTimeUtcFromString,
   end: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
-} as const;
+};
 
 class EventIntervalFieldsModel extends S.Class<EventIntervalFieldsModel>($I`EventIntervalFieldsModel`)(
   EventIntervalFields,
@@ -619,12 +624,14 @@ const EventIntervalDefinition = EventIntervalFieldsModel.check(
  * **Example** (Use EventInterval)
  * ```ts
  * import { DateTime } from "effect"
- * import { EventInterval } from "@effect-ontology/Model/CoreOntology.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EventInterval } from "@effect-ontology/Model/CoreOntology"
  *
  * const now = DateTime.nowUnsafe()
  * const encodedNow = DateTime.formatIso(now)
- * const interval = EventInterval.fromUnknown({ start: encodedNow, end: encodedNow })
- * console.log(DateTime.toEpochMillis(interval.start) <= DateTime.toEpochMillis(now)) // true
+ * const interval = S.decodeUnknownOption(EventInterval)({ start: encodedNow, end: encodedNow })
+ * console.log(O.map(interval, (value) => DateTime.toEpochMillis(value.start) <= DateTime.toEpochMillis(now)))
  * ```
  *
  * @invariant The optional end instant never precedes the start instant.
@@ -645,7 +652,7 @@ export const EventInterval = EventIntervalDefinition.annotate({
  *
  * **Example** (Use EventInterval)
  * ```ts
- * import type { EventInterval } from "@effect-ontology/Model/CoreOntology.ts"
+ * import type { EventInterval } from "@effect-ontology/Model/CoreOntology"
  *
  * const hasEnd = (interval: EventInterval): boolean => interval.end._tag === "Some"
  * console.log(typeof hasEnd) // "function"
@@ -667,7 +674,7 @@ const EventTimeDefinition = S.TaggedUnion({
  *
  * **Example** (Use EventTime)
  * ```ts
- * import { EventTime } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { EventTime } from "@effect-ontology/Model/CoreOntology"
  *
  * const time = EventTime.cases.Unspecified.make({})
  * console.log(time._tag) // "Unspecified"
@@ -688,7 +695,7 @@ export const EventTime = EventTimeDefinition.pipe(
  *
  * **Example** (Use EventTime)
  * ```ts
- * import type { EventTime } from "@effect-ontology/Model/CoreOntology.ts"
+ * import type { EventTime } from "@effect-ontology/Model/CoreOntology"
  *
  * const time: EventTime = { _tag: "Unspecified" }
  * console.log(time._tag) // "Unspecified"
@@ -708,22 +715,23 @@ const TrackedEventFields = {
   location: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
   attributes: Attributes.pipe(SchemaUtils.withKeyDefaults({})),
   groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(SchemaUtils.withNoneDefault),
-} as const;
+};
 
 /**
  * Persistent ontology-typed occurrence involving tracked entities.
  *
  * **Example** (Use TrackedEvent)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { TrackedEvent } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { TrackedEvent } from "@effect-ontology/Model/CoreOntology"
  *
- * const event = S.decodeUnknownSync(TrackedEvent)({
+ * const event = S.decodeUnknownOption(TrackedEvent)({
  *   id: "event-a1b2c3d4e5f6",
  *   iri: "https://example.org/event/announcement",
  *   types: ["https://schema.org/Event"]
  * })
- * console.log(event.hasTemporalGrounding) // false
+ * console.log(O.map(event, (value) => value.hasTemporalGrounding)) // false
  * ```
  *
  * @category entities
@@ -740,15 +748,16 @@ export class TrackedEvent extends S.Class<TrackedEvent>($I`TrackedEvent`)(
    *
    * **Example** (Use CoreOperationErrorFields)
    * ```ts
+   * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
-   * import { TrackedEvent } from "@effect-ontology/Model/CoreOntology.ts"
+   * import { TrackedEvent } from "@effect-ontology/Model/CoreOntology"
    *
-   * const event = S.decodeUnknownSync(TrackedEvent)({
+   * const event = S.decodeUnknownOption(TrackedEvent)({
    *   id: "event-a1b2c3d4e5f6",
    *   iri: "https://example.org/event/announcement",
    *   types: ["https://schema.org/Event"]
    * })
-   * console.log(event.hasTemporalGrounding) // false
+   * console.log(O.map(event, (value) => value.hasTemporalGrounding)) // false
    * ```
    *
    * @returns `false` only for the explicit `Unspecified` time variant.
@@ -761,14 +770,14 @@ export class TrackedEvent extends S.Class<TrackedEvent>($I`TrackedEvent`)(
 const CoreOperationErrorFields = {
   message: S.NonEmptyString,
   cause: S.OptionFromOptionalKey(S.Json).pipe(SchemaUtils.withNoneDefault),
-} as const;
+};
 
 /**
  * Failure while constructing or persisting mention evidence.
  *
  * **Example** (Use MentionError)
  * ```ts
- * import { MentionError } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { MentionError } from "@effect-ontology/Model/CoreOntology"
  *
  * const error = MentionError.make({ message: "Mention offsets are invalid." })
  * console.log(error._tag) // "MentionError"
@@ -790,7 +799,7 @@ export class MentionError extends S.TaggedError<MentionError>($I`MentionError`)(
  *
  * **Example** (Use TrackedEntityError)
  * ```ts
- * import { TrackedEntityError } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { TrackedEntityError } from "@effect-ontology/Model/CoreOntology"
  *
  * const error = TrackedEntityError.make({ message: "Canonical entity was not found." })
  * console.log(error._tag) // "TrackedEntityError"
@@ -812,7 +821,7 @@ export class TrackedEntityError extends S.TaggedError<TrackedEntityError>($I`Tra
  *
  * **Example** (Use TrackedEventError)
  * ```ts
- * import { TrackedEventError } from "@effect-ontology/Model/CoreOntology.ts"
+ * import { TrackedEventError } from "@effect-ontology/Model/CoreOntology"
  *
  * const error = TrackedEventError.make({ message: "Event interval is invalid." })
  * console.log(error._tag) // "TrackedEventError"

@@ -1,6 +1,8 @@
 /**
  * Service: Ticket Service
  *
+ * **Details**
+ *
  * Single-use ticket management for WebSocket authentication.
  * Tickets are stored in shared StorageService so any replica can consume them.
  *
@@ -10,11 +12,12 @@
 
 import { randomBytes } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Duration, Effect, HashSet, Layer, Option, Schedule } from "effect";
-import * as DateTime from "effect/DateTime";
+import { Clock, Context, DateTime, Duration, Effect, HashSet, Layer, Schedule } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { AuthenticationError, TicketExpiredError, TicketNotFoundError } from "../Domain/Error/Auth.ts";
+import { Milliseconds } from "../Domain/Error/Base.ts";
 import { TicketRecord } from "../Domain/Schema/Auth.ts";
 import { StorageService } from "./Storage.ts";
 
@@ -45,10 +48,10 @@ const makeTicketService = Effect.gen(function* () {
     storage.get(ticketStorageKey(ticket)).pipe(
       Effect.flatMap((content) =>
         P.isUndefined(content)
-          ? Effect.succeed(Option.none<TicketRecord>())
-          : S.decodeEffect(TicketRecordJson)(content).pipe(Effect.map(Option.some))
+          ? Effect.succeed(O.none<TicketRecord>())
+          : S.decodeEffect(TicketRecordJson)(content).pipe(Effect.map(O.some))
       ),
-      Effect.orElseSucceed(() => Option.none<TicketRecord>())
+      Effect.orElseSucceed(() => O.none<TicketRecord>())
     );
 
   const removeStoredTicket = (ticket: string) => storage.remove(ticketStorageKey(ticket)).pipe(Effect.ignore);
@@ -99,15 +102,15 @@ const makeTicketService = Effect.gen(function* () {
   const validateTicket = Effect.fn("TicketService.validateTicket")(function* (ticket: string) {
     const record = yield* loadStoredTicket(ticket);
     yield* removeStoredTicket(ticket);
-    if (Option.isNone(record)) {
-      return yield* TicketNotFoundError.fromUnknown({ message: "Ticket not found or already used", ticket });
+    if (O.isNone(record)) {
+      return yield* TicketNotFoundError.make({ message: "Ticket not found or already used", ticket });
     }
     const now = yield* Clock.currentTimeMillis;
     if (record.value.expiresAt.epochMilliseconds < now) {
-      return yield* TicketExpiredError.fromUnknown({
+      return yield* TicketExpiredError.make({
         message: "Ticket has expired",
         ticket,
-        expiredAt: record.value.expiresAt.epochMilliseconds,
+        expiredAt: Milliseconds.make(record.value.expiresAt.epochMilliseconds),
       });
     }
     yield* Effect.logDebug(`Validated ticket for ontology=${record.value.ontologyId}`);
@@ -116,7 +119,7 @@ const makeTicketService = Effect.gen(function* () {
 
   const hasTicket = Effect.fn("TicketService.hasTicket")(function* (ticket: string) {
     const record = yield* loadStoredTicket(ticket);
-    if (Option.isNone(record)) return false;
+    if (O.isNone(record)) return false;
     return record.value.expiresAt.epochMilliseconds > (yield* Clock.currentTimeMillis);
   });
 
@@ -144,10 +147,10 @@ const makeTicketService = Effect.gen(function* () {
     validKeys: HashSet.HashSet<string>
   ) {
     if (P.isUndefined(apiKey)) {
-      return yield* AuthenticationError.fromUnknown({ message: "Missing API key", reason: "missing" });
+      return yield* AuthenticationError.make({ message: "Missing API key", reason: "missing" });
     }
     if (!HashSet.has(validKeys, apiKey)) {
-      return yield* AuthenticationError.fromUnknown({ message: "Invalid API key", reason: "invalid" });
+      return yield* AuthenticationError.make({ message: "Invalid API key", reason: "invalid" });
     }
     return apiKey;
   });
@@ -161,10 +164,38 @@ const makeTicketService = Effect.gen(function* () {
   };
 });
 
+/**
+ * Provides the ticket service service capability.
+ *
+ * **Example** (Inspect ticket service)
+ *
+ * ```ts
+ * import { TicketService } from "@effect-ontology/Service/Ticket"
+ *
+ * console.log(TicketService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class TicketService extends Context.Service<TicketService>()($I`TicketService`, {
   make: makeTicketService,
 }) {
   static readonly Default = Layer.effect(this, this.make);
 }
 
+/**
+ * Provides the Effect layer for ticket service live dependencies.
+ *
+ * **Example** (Inspect ticket service live)
+ *
+ * ```ts
+ * import { TicketServiceLive } from "@effect-ontology/Service/Ticket"
+ *
+ * console.log(TicketServiceLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const TicketServiceLive = TicketService.Default;

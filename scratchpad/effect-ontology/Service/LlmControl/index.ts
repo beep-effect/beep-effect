@@ -1,6 +1,8 @@
 /**
  * LLM Control Services
  *
+ * **Details**
+ *
  * Provides fine-grained control over LLM API usage:
  * - TokenBudgetService: Per-stage token budgets
  * - StageTimeoutService: Soft/hard timeouts per stage

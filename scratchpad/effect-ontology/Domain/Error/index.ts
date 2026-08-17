@@ -14,7 +14,7 @@
  *
  * **Example** (Use index)
  * ```ts
- * import { ActivityTimeoutError } from "@effect-ontology/Error/index.ts"
+ * import { ActivityTimeoutError } from "@effect-ontology/Error/index"
  * console.log(ActivityTimeoutError)
  * ```
  *
@@ -27,7 +27,7 @@ export * from "./Activity.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { AuthenticationReason } from "@effect-ontology/Error/index.ts"
+ * import { AuthenticationReason } from "@effect-ontology/Error/index"
  * console.log(AuthenticationReason.Options)
  * ```
  *
@@ -40,7 +40,7 @@ export * from "./Auth.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { ErrorMessage } from "@effect-ontology/Error/index.ts"
+ * import { ErrorMessage } from "@effect-ontology/Error/index"
  * console.log(ErrorMessage.is("Request failed.")) // true
  * ```
  *
@@ -53,7 +53,7 @@ export * from "./Base.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { CircuitOpenError } from "@effect-ontology/Error/index.ts"
+ * import { CircuitOpenError } from "@effect-ontology/Error/index"
  * console.log(CircuitOpenError)
  * ```
  *
@@ -66,7 +66,7 @@ export * from "./Circuit.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { EmbeddingError } from "@effect-ontology/Error/index.ts"
+ * import { EmbeddingError } from "@effect-ontology/Error/index"
  * console.log(EmbeddingError)
  * ```
  *
@@ -79,7 +79,7 @@ export * from "./Embedding.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { EventBusError } from "@effect-ontology/Error/index.ts"
+ * import { EventBusError } from "@effect-ontology/Error/index"
  * console.log(EventBusError)
  * ```
  *
@@ -92,7 +92,7 @@ export * from "./EventBus.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { ExtractionError } from "@effect-ontology/Error/index.ts"
+ * import { ExtractionError } from "@effect-ontology/Error/index"
  * console.log(ExtractionError)
  * ```
  *
@@ -105,7 +105,7 @@ export * from "./Extraction.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { ImageFetchError } from "@effect-ontology/Error/index.ts"
+ * import { ImageFetchError } from "@effect-ontology/Error/index"
  * console.log(ImageFetchError)
  * ```
  *
@@ -118,7 +118,7 @@ export * from "./Image.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { JinaApiError } from "@effect-ontology/Error/index.ts"
+ * import { JinaApiError } from "@effect-ontology/Error/index"
  * console.log(JinaApiError)
  * ```
  *
@@ -131,7 +131,7 @@ export * from "./Jina.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { LlmError } from "@effect-ontology/Error/index.ts"
+ * import { LlmError } from "@effect-ontology/Error/index"
  * console.log(LlmError)
  * ```
  *
@@ -144,7 +144,7 @@ export * from "./Llm.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { OntologyError } from "@effect-ontology/Error/index.ts"
+ * import { OntologyError } from "@effect-ontology/Error/index"
  * console.log(OntologyError)
  * ```
  *
@@ -157,7 +157,7 @@ export * from "./Ontology.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { RdfError } from "@effect-ontology/Error/index.ts"
+ * import { RdfError } from "@effect-ontology/Error/index"
  * console.log(RdfError)
  * ```
  *
@@ -170,7 +170,7 @@ export * from "./Rdf.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { ValidationPolicySeverity } from "@effect-ontology/Error/index.ts"
+ * import { ValidationPolicySeverity } from "@effect-ontology/Error/index"
  * console.log(ValidationPolicySeverity.Options)
  * ```
  *
@@ -183,7 +183,7 @@ export * from "./Shacl.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { WorkflowError } from "@effect-ontology/Error/index.ts"
+ * import { WorkflowError } from "@effect-ontology/Error/index"
  * console.log(WorkflowError)
  * ```
  *

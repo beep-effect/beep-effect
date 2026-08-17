@@ -12,7 +12,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
-import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause } from "./Base.ts";
+import { ErrorMessage, OptionalErrorCause } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/EventBus");
 
@@ -21,17 +21,19 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/EventBus");
  *
  * **Example** (Use EventBusError)
  * ```ts
- * import { EventBusError } from "@effect-ontology/Error/EventBus.ts"
+ * import { EventBusError } from "@effect-ontology/Error/EventBus"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = EventBusError.make({ method: "publish", message: "Publish failed." })
- * console.log(error.method)
+ * const error = S.decodeUnknownOption(EventBusError)({
+ *   _tag: "EventBusError", method: "publish", message: "Publish failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const EventBusError = makeOntologyErrorClass.make(
-  $I`EventBusError`,
+export class EventBusError extends S.TaggedError<EventBusError>($I`EventBusError`)(
   "EventBusError",
   {
     method: S.NonEmptyString.annotateKey({
@@ -47,44 +49,30 @@ export const EventBusError = makeOntologyErrorClass.make(
   $I.annote("EventBusError", {
     description: "Failure raised by a generic event-bus operation.",
   })
-);
-
-/**
- * Runtime value decoded by {@link EventBusError}.
- *
- * **Example** (Use EventBusError)
- * ```ts
- * import { EventBusError, type EventBusError as Failure } from "@effect-ontology/Error/EventBus.ts"
- *
- * const error: Failure = EventBusError.make({ method: "publish", message: "Failed." })
- * console.log(error._tag)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type EventBusError = typeof EventBusError.Type;
+) {}
 
 /**
  * Failure raised by a Cloud Pub/Sub topic operation.
  *
  * **Example** (Use PubSubError)
  * ```ts
- * import { PubSubError } from "@effect-ontology/Error/EventBus.ts"
+ * import { PubSubError } from "@effect-ontology/Error/EventBus"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = PubSubError.make({
+ * const error = S.decodeUnknownOption(PubSubError)({
+ *   _tag: "PubSubError",
  *   method: "publish",
  *   topic: "ontology-events",
  *   message: "Broker rejected the message."
  * })
- * console.log(error.topic)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const PubSubError = makeOntologyErrorClass.make(
-  $I`PubSubError`,
+export class PubSubError extends S.TaggedError<PubSubError>($I`PubSubError`)(
   "PubSubError",
   {
     method: S.NonEmptyString.annotateKey({
@@ -103,50 +91,34 @@ export const PubSubError = makeOntologyErrorClass.make(
   $I.annote("PubSubError", {
     description: "Failure raised by a Cloud Pub/Sub topic operation.",
   })
-);
-
-/**
- * Runtime value decoded by {@link PubSubError}.
- *
- * **Example** (Use PubSubError)
- * ```ts
- * import { PubSubError, type PubSubError as Failure } from "@effect-ontology/Error/EventBus.ts"
- *
- * const error: Failure = PubSubError.make({
- *   method: "publish",
- *   topic: "events",
- *   message: "Failed."
- * })
- * console.log(error.topic)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type PubSubError = typeof PubSubError.Type;
+) {}
 
 /**
  * Indicates that a queued job exhausted its retry budget.
  *
  * **Example** (Use DeadLetterError)
  * ```ts
- * import { DeadLetterError } from "@effect-ontology/Error/EventBus.ts"
+ * import { DeadLetterError } from "@effect-ontology/Error/EventBus"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = DeadLetterError.fromUnknown({
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const error = S.decodeUnknownOption(DeadLetterError)({
+ *   _tag: "DeadLetterError",
  *   jobId: "job-42",
  *   jobType: "EmbedDocument",
- *   attempts: 3,
+ *   attempts: NonNegativeInt.make(3),
  *   lastError: "Provider unavailable."
  * })
- * console.log(error.attempts)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @invariant `attempts` is a finite non-negative integer.
  * @category errors
  * @since 0.0.0
  */
-export const DeadLetterError = makeOntologyErrorClass.make(
-  $I`DeadLetterError`,
+export class DeadLetterError extends S.TaggedError<DeadLetterError>($I`DeadLetterError`)(
   "DeadLetterError",
   {
     jobId: S.NonEmptyString.annotateKey({
@@ -165,28 +137,7 @@ export const DeadLetterError = makeOntologyErrorClass.make(
   $I.annote("DeadLetterError", {
     description: "Queued job failure after exhausting its retry budget.",
   })
-);
-
-/**
- * Runtime value decoded by {@link DeadLetterError}.
- *
- * **Example** (Use DeadLetterError)
- * ```ts
- * import { DeadLetterError, type DeadLetterError as DeadLetter } from "@effect-ontology/Error/EventBus.ts"
- *
- * const error: DeadLetter = DeadLetterError.fromUnknown({
- *   jobId: "job-1",
- *   jobType: "Load",
- *   attempts: 1,
- *   lastError: "Failed."
- * })
- * console.log(error.jobId)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type DeadLetterError = typeof DeadLetterError.Type;
+) {}
 
 const AnyEventBusErrorDefinition = S.Union([EventBusError, PubSubError, DeadLetterError]).pipe(S.toTaggedUnion("_tag"));
 
@@ -195,9 +146,12 @@ const AnyEventBusErrorDefinition = S.Union([EventBusError, PubSubError, DeadLett
  *
  * **Example** (Use AnyEventBusError)
  * ```ts
- * import { AnyEventBusError, EventBusError } from "@effect-ontology/Error/EventBus.ts"
+ * import { AnyEventBusError, EventBusError } from "@effect-ontology/Error/EventBus"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = EventBusError.make({ method: "publish", message: "Failed." })
+ * const error = S.decodeUnknownOption(EventBusError)({
+ *   _tag: "EventBusError", method: "publish", message: "Failed." })
  * console.log(AnyEventBusError.guards.EventBusError(error)) // true
  * ```
  *
@@ -207,7 +161,7 @@ const AnyEventBusErrorDefinition = S.Union([EventBusError, PubSubError, DeadLett
 export const AnyEventBusError = AnyEventBusErrorDefinition.pipe(
   $I.annoteSchema("AnyEventBusError", {
     description: "Exhaustive tagged union of event-bus, Pub/Sub, and dead-letter failures.",
-  toArbitrary: () => S.toArbitrary(AnyEventBusErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyEventBusErrorDefinition),
   })
 );
 
@@ -216,7 +170,7 @@ export const AnyEventBusError = AnyEventBusErrorDefinition.pipe(
  *
  * **Example** (Use AnyEventBusError)
  * ```ts
- * import { EventBusError, type AnyEventBusError } from "@effect-ontology/Error/EventBus.ts"
+ * import { EventBusError, type AnyEventBusError } from "@effect-ontology/Error/EventBus"
  *
  * const error: AnyEventBusError = EventBusError.make({ method: "publish", message: "Failed." })
  * console.log(error._tag)

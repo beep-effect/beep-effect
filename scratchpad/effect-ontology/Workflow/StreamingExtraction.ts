@@ -1,6 +1,8 @@
 /**
  * Workflow: Streaming Extraction
  *
+ * **Details**
+ *
  * Stream-based extraction workflow for large documents.
  * Implements the 6-phase pipeline: chunking, retrieval, entity extraction,
  * property scoping, relation extraction, and merge.
@@ -9,80 +11,74 @@
  * @since 0.0.0
  */
 
-import {NonNegativeInt} from "@beep/schema/Int";
-import {UnitInterval} from "@beep/schema/UnitInterval";
-import { pipe } from "effect/Function";
+import { NonNegativeInt } from "@beep/schema/Int";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import {
   Cause,
   Chunk,
   Duration,
   Effect,
   Exit,
+  HashSet,
+  Inspectable,
   Layer,
+  Number as N,
+  pipe,
   Result,
-  Stream
+  Stream,
 } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as A from "effect/Array";
-import * as HashSet from "effect/HashSet";
-import * as MutableHashSet from "effect/MutableHashSet";
-import {ExtractionError} from "../Domain/Error/Extraction.ts";
-import {LlmRateLimit, LlmTimeout} from "../Domain/Error/Llm.ts";
-import {ChunkId} from "../Domain/Identity.ts";
-import {Entity, KnowledgeGraph} from "../Domain/Model/Entity.ts";
-import type {RunConfig} from "../Domain/Model/ExtractionRun.ts";
-import {ConfigService, ConfigServiceDefault} from "../Service/Config.ts";
-import type {Mention} from "../Service/Extraction.ts";
-import {
-  EntityExtractor,
-  MentionExtractor,
-  RelationExtractor
-} from "../Service/Extraction.ts";
-import {
-  ExtractionRunService,
-  ExtractionRunServiceDefault
-} from "../Service/ExtractionRun.ts";
-import {ExtractionWorkflow} from "../Service/ExtractionWorkflow.ts";
-import type {RelationVerificationInput} from "../Service/Grounder.ts";
-import {Grounder} from "../Service/Grounder.ts";
-import {NlpService} from "../Service/Nlp.ts";
-import {OntologyService} from "../Service/Ontology.ts";
-import {StorageServiceLive} from "../Service/Storage.ts";
-import {annotateExtraction, LlmAttributes} from "../Telemetry/LlmAttributes.ts";
-import {mergeGraphs} from "./Merge.ts";
+import * as Str from "effect/String";
+import { ExtractionError } from "../Domain/Error/Extraction.ts";
+import { LlmRateLimit, LlmTimeout } from "../Domain/Error/Llm.ts";
+import { ChunkId } from "../Domain/Identity.ts";
+import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts";
+import type { RunConfig } from "../Domain/Model/ExtractionRun.ts";
+import { ClassDefinition } from "../Domain/Model/Ontology.ts";
+import { ConfigService, ConfigServiceDefault } from "../Service/Config.ts";
+import type { Mention } from "../Service/Extraction.ts";
+import { EntityExtractor, MentionExtractor, RelationExtractor } from "../Service/Extraction.ts";
+import { ExtractionRunService, ExtractionRunServiceDefault } from "../Service/ExtractionRun.ts";
+import { ExtractionWorkflow } from "../Service/ExtractionWorkflow.ts";
+import type { RelationVerificationInput } from "../Service/Grounder.ts";
+import { Grounder } from "../Service/Grounder.ts";
+import { NlpService } from "../Service/Nlp.ts";
+import { OntologyService } from "../Service/Ontology.ts";
+import { StorageServiceLive } from "../Service/Storage.ts";
+import { annotateExtraction, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
+import { mergeGraphs } from "./Merge.ts";
 
 const GROUNDER_CONFIDENCE_THRESHOLD = 0.8;
+const SYSTEMIC_ERROR_CODES = ["ECONNREFUSED", "ETIMEDOUT", "ENOTFOUND"];
+const SYSTEMIC_ERROR_MESSAGES = ["connection refused", "database connection", "too many requests"];
+
+const renderUnknownError = (error: unknown): string =>
+  P.isError(error) ? error.message : Inspectable.toStringUnknown(error, 0);
+
+const unknownErrorType = (error: unknown): string =>
+  P.hasProperty(error, "_tag") && P.isString(error._tag) ? error._tag : P.isError(error) ? error.name : "Unknown";
 
 /**
  * Determine if an error is systemic and should halt the workflow
  */
 const isSystemicError = (error: unknown): boolean => {
   // Unwrap ExtractionError if present
-  const cause = S.is(ExtractionError)(error) ? error.cause : error;
+  const cause = ExtractionError.is(error) ? O.getOrElse(error.cause, () => error) : error;
 
   if (S.is(LlmRateLimit)(cause) || S.is(LlmTimeout)(cause)) {
     return true;
   }
 
-  if (cause instanceof Error) {
-    // Check for standard Node.js/Bun system error codes
-    // Use type guard to safely access .code property on Error subclasses
-    const code =
-      "code" in cause && typeof (cause as { code?: unknown }).code === "string"
-        ? (cause as { code: string }).code
-        : undefined;
-    if (code === "ECONNREFUSED" || code === "ETIMEDOUT" || code === "ENOTFOUND") {
+  if (P.isError(cause)) {
+    if (P.hasProperty(cause, "code") && P.isString(cause.code) && A.contains(SYSTEMIC_ERROR_CODES, cause.code)) {
       return true;
     }
 
-    const message = cause.message.toLowerCase();
-    return (
-      message.includes("connection refused") ||
-      message.includes("database connection") ||
-      message.includes("too many requests")
-    );
+    const message = Str.toLowerCase(cause.message);
+    return A.some(SYSTEMIC_ERROR_MESSAGES, (fragment) => Str.includes(fragment)(message));
   }
 
   return false;
@@ -90,6 +86,20 @@ const isSystemicError = (error: unknown): boolean => {
 
 const getChunkId = (runId: string, index: number) => `${runId}_chunk_${index}`;
 
+/**
+ * Validates and represents make extraction workflow values at runtime.
+ *
+ * **Example** (Inspect make extraction workflow)
+ *
+ * ```ts
+ * import { makeExtractionWorkflow } from "@effect-ontology/Workflow/StreamingExtraction"
+ *
+ * console.log(makeExtractionWorkflow)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makeExtractionWorkflow = Effect.gen(function* () {
   const configService = yield* ConfigService;
   const [nlp, ontology, mentionExtractor, entityExtractor, relationExtractor, grounder, runService] = yield* Effect.all(
@@ -105,15 +115,11 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
      * @param concurrency - Max parallel extraction tasks (default: from config)
      * @returns Effect yielding merged KnowledgeGraph
      */
-    extract: (
-      text: string,
-      config: RunConfig,
-      concurrency?: number
-    ) =>
+    extract: (text: string, config: RunConfig, concurrency?: number) =>
       Effect.gen(function* () {
         // Create extraction run from text hash
         const run = yield* runService.createRun(text, config).pipe(
-          Effect.mapError((error: Error) =>
+          Effect.mapError((error) =>
             ExtractionError.make({
               message: `Failed to create extraction run: ${error.message}`,
               cause: O.some(error),
@@ -146,27 +152,30 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
               Effect.logInfo("Text chunking complete", {
                 stage: "chunking",
                 chunkCount: chunks.length,
-                avgChunkSize:
-                  chunks.length > 0 ? Math.round(chunks.reduce((sum, c) => sum + c.text.length, 0) / chunks.length) : 0,
+                avgChunkSize: A.match(chunks, {
+                  onEmpty: () => 0,
+                  onNonEmpty: (values) =>
+                    N.round(A.reduce(values, 0, (sum, chunk) => sum + chunk.text.length) / values.length),
+                }),
               })
             )
           );
 
         // Save chunks to run folder
         yield* Effect.all(
-          chunks.map((chunk) =>
+          A.map(chunks, (chunk) =>
             runService.saveChunk(run.id, NonNegativeInt.make(chunk.index), chunk.text).pipe(
               Effect.tapError((error) =>
                 Effect.logWarning("Failed to save chunk", {
                   stage: "chunking",
                   chunkIndex: chunk.index,
-                  error: String(error),
+                  error: renderUnknownError(error),
                 })
               ),
               Effect.orElseSucceed(() => undefined)
             )
           ),
-          {concurrency: 4}
+          { concurrency: 4 }
         );
 
         // Short-circuit if no chunks
@@ -190,7 +199,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                   stage: "chunk-processing",
                   chunkIndex: chunk.index,
                   chunkLength: chunk.text.length,
-                  chunkPreview: chunk.text.slice(0, 100),
+                  chunkPreview: Str.slice(0, 100)(chunk.text),
                 });
                 const mentions = yield* mentionExtractor.extract(chunk.text).pipe(
                   Effect.withLogSpan(`chunk-${chunk.index}-mention-extraction`),
@@ -220,9 +229,12 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                     relations: [],
                   });
                 }
-                const aggregatedQuery =
-                  pipe(A.map(mentionArray, (m: Mention) => (P.isNotUndefined(m.context) ? `${m.mention}: ${m.context}` : m.mention)),
-                    A.join(" "));
+                const aggregatedQuery = pipe(
+                  A.map(mentionArray, (m: Mention) =>
+                    P.isNotUndefined(m.context) ? `${m.mention}: ${m.context}` : m.mention
+                  ),
+                  A.join(" ")
+                );
                 const candidateClasses = yield* ontology.searchClassesHybrid(aggregatedQuery, 100).pipe(
                   Effect.timeout(Duration.seconds(30)),
                   Effect.withLogSpan(`chunk-${chunk.index}-hybrid-class-retrieval`),
@@ -239,15 +251,18 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       yield* Effect.logWarning("Hybrid search failed, using ontology fallback", {
                         stage: "hybrid-class-retrieval",
                         chunkIndex: chunk.index,
-                        error: String(error),
+                        error: renderUnknownError(error),
                       });
                       const ctx = yield* ontology.ontology;
-                      return Chunk.fromIterable(ctx.classes.slice(0, 100));
+                      const classes = yield* Effect.forEach(A.take(ctx.classes, 100), (value) =>
+                        S.decodeUnknownEffect(ClassDefinition)(value)
+                      );
+                      return Chunk.fromIterable(classes);
                     })
                   )
                 );
                 const classArray = Chunk.toReadonlyArray(candidateClasses);
-                if (classArray.length === 0) {
+                if (A.isReadonlyArrayEmpty(classArray)) {
                   yield* Effect.logWarning("No classes found for any mention", {
                     stage: "entity-level-retrieval",
                     chunkIndex: chunk.index,
@@ -257,30 +272,32 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                     relations: [],
                   });
                 }
-                const candidateDatatypeProperties = yield* ontology.getPropertiesFor(classArray.map((c) => c.id)).pipe(
-                  Effect.withLogSpan(`chunk-${chunk.index}-datatype-properties`),
-                  Effect.tap((properties) =>
-                    Effect.logDebug("Datatype properties scoped", {
-                      stage: "datatype-properties",
-                      chunkIndex: chunk.index,
-                      propertyCount: Chunk.toReadonlyArray(properties).length,
-                    })
-                  ),
-                  Effect.map((properties) =>
-                    Chunk.toReadonlyArray(properties).filter((p) => p.rangeType === "datatype")
-                  ),
-                  Effect.mapError((error) =>
-                    ExtractionError.make({
-                      message: `Datatype property scoping failed for chunk ${chunk.index}`,
-                      cause: O.some(error),
-                      text: O.some(chunk.text),
-                    })
-                  )
-                );
+                const candidateDatatypeProperties = yield* ontology
+                  .getPropertiesFor(A.map(classArray, (c) => c.id))
+                  .pipe(
+                    Effect.withLogSpan(`chunk-${chunk.index}-datatype-properties`),
+                    Effect.tap((properties) =>
+                      Effect.logDebug("Datatype properties scoped", {
+                        stage: "datatype-properties",
+                        chunkIndex: chunk.index,
+                        propertyCount: Chunk.toReadonlyArray(properties).length,
+                      })
+                    ),
+                    Effect.map((properties) =>
+                      A.filter(Chunk.toReadonlyArray(properties), (p) => p.rangeType === "datatype")
+                    ),
+                    Effect.mapError((error) =>
+                      ExtractionError.make({
+                        message: `Datatype property scoping failed for chunk ${chunk.index}`,
+                        cause: O.some(error),
+                        text: O.some(chunk.text),
+                      })
+                    )
+                  );
                 const rawEntities = yield* entityExtractor
                   .extract(chunk.text, classArray, candidateDatatypeProperties)
                   .pipe(
-                    Effect.annotateLogs({chunkIndex: chunk.index}),
+                    Effect.annotateLogs({ chunkIndex: chunk.index }),
                     Effect.withLogSpan(`chunk-${chunk.index}-entity-extraction`),
                     Effect.mapError((error) =>
                       ExtractionError.make({
@@ -292,10 +309,9 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                   );
                 const chunkId = getChunkId(run.id, chunk.index);
                 const rawEntityArray = Chunk.toReadonlyArray(rawEntities);
-                const entityVerificationResults =
-                  rawEntityArray.length > 0
-                    ? yield* grounder.verifyEntityBatch(chunk.text, rawEntityArray).pipe(
-                      Effect.annotateLogs({chunkIndex: chunk.index}),
+                const entityVerificationResults = A.isReadonlyArrayNonEmpty(rawEntityArray)
+                  ? yield* grounder.verifyEntityBatch(chunk.text, rawEntityArray).pipe(
+                      Effect.annotateLogs({ chunkIndex: chunk.index }),
                       Effect.withLogSpan(`chunk-${chunk.index}-entity-grounding`),
                       Effect.mapError((error) =>
                         ExtractionError.make({
@@ -305,7 +321,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                         })
                       )
                     )
-                    : [];
+                  : [];
                 const entities = A.map(entityVerificationResults, (result) => {
                   const entity = result.entity;
                   const groundingConfidence = result.grounded ? result.confidence : 0;
@@ -313,7 +329,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                     id: entity.id,
                     mention: entity.mention,
                     types: [...entity.types],
-                    attributes: {...entity.attributes},
+                    attributes: { ...entity.attributes },
                     chunkIndex: O.some(NonNegativeInt.make(chunk.index)),
                     chunkId: O.some(ChunkId.make(chunkId)),
                     groundingConfidence: O.some(UnitInterval.make(groundingConfidence)),
@@ -323,11 +339,11 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                   stage: "entity-grounding",
                   chunkIndex: chunk.index,
                   inputEntities: rawEntityArray.length,
-                  groundedEntities: entityVerificationResults.filter((r) => r.grounded).length,
+                  groundedEntities: A.length(A.filter(entityVerificationResults, (result) => result.grounded)),
                 });
                 const entitiesChunk = Chunk.fromIterable(entities);
                 const entityArray = entities;
-                if (entityArray.length === 0) {
+                if (A.isReadonlyArrayEmpty(entityArray)) {
                   yield* Effect.logWarning("No entities extracted from chunk", {
                     stage: "entity-extraction",
                     chunkIndex: chunk.index,
@@ -337,13 +353,9 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                     relations: [],
                   });
                 }
-                const typeSet = MutableHashSet.empty<string>();
-                for (const entity of entityArray) {
-                  for (const type of entity.types) {
-                    MutableHashSet.add(typeSet, type);
-                  }
-                }
-                const typeArray = A.fromIterable(typeSet);
+                const typeArray = A.fromIterable(
+                  HashSet.fromIterable(A.flatMap(entityArray, (entity) => entity.types))
+                );
                 const properties = yield* ontology.getPropertiesFor(typeArray).pipe(
                   Effect.withLogSpan(`chunk-${chunk.index}-property-scoping`),
                   Effect.tap((properties) =>
@@ -379,7 +391,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                 const relations = yield* relationExtractor
                   .extract(chunk.text, entitiesChunk, propertyArray, isSubClassOf)
                   .pipe(
-                    Effect.annotateLogs({chunkIndex: chunk.index}),
+                    Effect.annotateLogs({ chunkIndex: chunk.index }),
                     Effect.withLogSpan(`chunk-${chunk.index}-relation-extraction`),
                     Effect.mapError((error) =>
                       ExtractionError.make({
@@ -390,46 +402,51 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                     )
                   );
                 const relationArray = Chunk.toReadonlyArray(relations);
-                const verificationInputs: ReadonlyArray<RelationVerificationInput> = relationArray.map((relation) => {
-                  const subject = entityArray.find((entity) => entity.id === relation.subjectId);
-                  const objectEntity =
-                    P.isTagged(relation.object, "EntityReference")
-                      ? entityArray.find((entity) => entity.id === relation.object.value)
+                const verificationInputs: ReadonlyArray<RelationVerificationInput> = A.map(
+                  relationArray,
+                  (relation) => {
+                    const subject = O.getOrUndefined(
+                      A.findFirst(entityArray, (entity) => entity.id === relation.subjectId)
+                    );
+                    const objectEntity = P.isTagged(relation.object, "EntityReference")
+                      ? O.getOrUndefined(A.findFirst(entityArray, (entity) => entity.id === relation.object.value))
                       : undefined;
-                  const predicate = propertyArray.find((property) => property.id === relation.predicate);
-                  return {
-                    context: chunk.text,
-                    relation,
-                    ...(P.isNotUndefined(subject)
-                      ? {
-                        subject: {
-                          entityId: subject.id,
-                          mention: subject.mention,
-                          types: subject.types,
-                        },
-                      }
-                      : {}),
-                    ...(P.isNotUndefined(predicate) ? {predicate} : {}),
-                    object:
-                      relation.object._tag === "EntityReference"
+                    const predicate = O.getOrUndefined(
+                      A.findFirst(propertyArray, (property) => property.id === relation.predicate)
+                    );
+                    return {
+                      context: chunk.text,
+                      relation,
+                      ...(P.isNotUndefined(subject)
                         ? {
-                          entityId: relation.object.value,
-                          ...(P.isNotUndefined(objectEntity)
-                            ? {
-                              mention: objectEntity.mention,
-                              types: objectEntity.types,
+                            subject: {
+                              entityId: subject.id,
+                              mention: subject.mention,
+                              types: subject.types,
+                            },
+                          }
+                        : {}),
+                      ...(P.isNotUndefined(predicate) ? { predicate } : {}),
+                      object:
+                        relation.object._tag === "EntityReference"
+                          ? {
+                              entityId: relation.object.value,
+                              ...(P.isNotUndefined(objectEntity)
+                                ? {
+                                    mention: objectEntity.mention,
+                                    types: objectEntity.types,
+                                  }
+                                : {}),
                             }
-                            : {}),
-                        }
-                        : {
-                          literal: relation.object.value,
-                        },
-                  };
-                });
-                const verificationResults =
-                  verificationInputs.length > 0
-                    ? yield* grounder.verifyRelationBatch(chunk.text, verificationInputs).pipe(
-                      Effect.annotateLogs({chunkIndex: chunk.index}),
+                          : {
+                              literal: relation.object.value,
+                            },
+                    };
+                  }
+                );
+                const verificationResults = A.isReadonlyArrayNonEmpty(verificationInputs)
+                  ? yield* grounder.verifyRelationBatch(chunk.text, verificationInputs).pipe(
+                      Effect.annotateLogs({ chunkIndex: chunk.index }),
                       Effect.withLogSpan(`chunk-${chunk.index}-grounding`),
                       Effect.mapError((error) =>
                         ExtractionError.make({
@@ -439,10 +456,12 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                         })
                       )
                     )
-                    : [];
-                const verifiedRelationArray = verificationResults
-                  .filter((result) => result.grounded && result.confidence >= GROUNDER_CONFIDENCE_THRESHOLD)
-                  .map((result) => result.relation);
+                  : [];
+                const verifiedRelationArray = pipe(
+                  verificationResults,
+                  A.filter((result) => result.grounded && result.confidence >= GROUNDER_CONFIDENCE_THRESHOLD),
+                  A.map((result) => result.relation)
+                );
                 yield* Effect.logInfo("Grounder verification complete", {
                   stage: "grounder",
                   chunkIndex: chunk.index,
@@ -485,21 +504,18 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                     yield* Effect.logError("Chunk processing failed (content error - skipping)", {
                       stage: "chunk-processing",
                       chunkIndex: chunk.index,
-                      error: error instanceof Error ? error.message : String(error),
-                      errorType: error instanceof Error ? error.constructor.name : "Unknown",
+                      error: renderUnknownError(error),
+                      errorType: unknownErrorType(error),
                       isSystemic: false,
                     });
                     yield* Effect.annotateCurrentSpan("chunk.failed", true);
-                    yield* Effect.annotateCurrentSpan(
-                      "chunk.error_type",
-                      error instanceof Error ? error.constructor.name : "Unknown"
-                    );
-                    return KnowledgeGraph.make({entities: [], relations: []});
+                    yield* Effect.annotateCurrentSpan("chunk.error_type", unknownErrorType(error));
+                    return KnowledgeGraph.make({ entities: [], relations: [] });
                   });
                 }),
                 Effect.exit
               ),
-            {concurrency: effectiveConcurrency, unordered: true}
+            { concurrency: effectiveConcurrency, unordered: true }
           ),
           Stream.mapEffect(
             (exit): Effect.Effect<Chunk.Chunk<KnowledgeGraph>, ExtractionError> =>
@@ -517,26 +533,32 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                     S.is(ExtractionError)(error)
                       ? error
                       : ExtractionError.make({
-                        message: "Unexpected chunk processing failure",
-                        cause: O.some(error),
-                      })
+                          message: "Unexpected chunk processing failure",
+                          cause: O.some(error),
+                        })
                   )
                 );
               })
           ),
           Stream.flatMap((graphs) => Stream.fromIterable(graphs)),
-          Stream.buffer({capacity: effectiveConcurrency * 2}),
-          Stream.runFold(() => KnowledgeGraph.make({
-            entities: [],
-            relations: []
-          }), mergeGraphs),
+          Stream.buffer({ capacity: effectiveConcurrency * 2 }),
+          Stream.runFold(
+            () =>
+              KnowledgeGraph.make({
+                entities: [],
+                relations: [],
+              }),
+            mergeGraphs
+          ),
           Effect.tap((graph) =>
             Effect.all([
               Effect.logInfo("Streaming extraction complete", {
                 stage: "streaming-extraction",
                 totalEntities: graph.entities.length,
                 totalRelations: graph.relations.length,
-                uniqueEntityTypes: HashSet.size(HashSet.fromIterable(graph.entities.flatMap((e) => e.types))),
+                uniqueEntityTypes: HashSet.size(
+                  HashSet.fromIterable(A.flatMap(graph.entities, (entity) => entity.types))
+                ),
               }),
               Effect.annotateCurrentSpan(LlmAttributes.ENTITY_COUNT, graph.entities.length),
               Effect.annotateCurrentSpan(LlmAttributes.RELATION_COUNT, graph.relations.length),
@@ -552,10 +574,10 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
             ExtractionError.is(error)
               ? error
               : ExtractionError.make({
-                message: `Streaming extraction failed: ${error instanceof Error ? error.message : String(error)}`,
-                cause: O.some(error instanceof Error ? error : new Error(String(error))),
-                text: O.some(text),
-              })
+                  message: `Streaming extraction failed: ${renderUnknownError(error)}`,
+                  cause: O.some(error),
+                  text: O.some(text),
+                })
         ),
         Effect.withSpan("extraction-pipeline", {
           attributes: {
@@ -580,8 +602,16 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
 /**
  * ExtractionWorkflow Implementation Layer
  *
- * @since 0.0.0
+ * **Example** (Inspect extraction workflow live)
+ *
+ * ```ts
+ * import { ExtractionWorkflowLive } from "@effect-ontology/Workflow/StreamingExtraction"
+ *
+ * console.log(ExtractionWorkflowLive)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const ExtractionWorkflowLive = Layer.effect(ExtractionWorkflow, makeExtractionWorkflow).pipe(
   Layer.provideMerge(ConfigServiceDefault),
@@ -600,9 +630,19 @@ export const ExtractionWorkflowLive = Layer.effect(ExtractionWorkflow, makeExtra
 /**
  * ExtractionWorkflow Default layer
  *
+ * **Details**
+ *
  * Alias for ExtractionWorkflowLive, following the Effect.Service convention.
  *
- * @since 0.0.0
+ * **Example** (Inspect extraction workflow default)
+ *
+ * ```ts
+ * import { ExtractionWorkflowDefault } from "@effect-ontology/Workflow/StreamingExtraction"
+ *
+ * console.log(ExtractionWorkflowDefault)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const ExtractionWorkflowDefault = ExtractionWorkflowLive;

@@ -15,8 +15,8 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NamedNode } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Tuple } from "effect";
 import * as S from "effect/Schema";
-import * as Tuple from "effect/Tuple";
 import * as EventGroup from "effect/unstable/eventlog/EventGroup";
 import { BatchId, GcsUri, OntologyName } from "../Identity.ts";
 import { BatchState } from "../Model/index.ts";
@@ -112,7 +112,7 @@ const EntityLinkedPayload = EntityLinkedPayloadDefinition.annotate({
  *
  * **Example** (Use CurationEventGroup)
  * ```ts
- * import { CurationEventGroup } from "@effect-ontology/Schema/EventSchema.ts"
+ * import { CurationEventGroup } from "@effect-ontology/Schema/EventSchema"
  *
  * console.log(Object.keys(CurationEventGroup.events).length) // 5
  * ```
@@ -152,7 +152,7 @@ export const CurationEventGroup = EventGroup.empty
  *
  * **Example** (Use CurationEvent)
  * ```ts
- * import type { CurationEvent } from "@effect-ontology/Schema/EventSchema.ts"
+ * import type { CurationEvent } from "@effect-ontology/Schema/EventSchema"
  *
  * const acceptEvent = (_event: CurationEvent) => undefined
  * console.log(acceptEvent)
@@ -227,7 +227,7 @@ const BatchStateChangedPayload = BatchStateChangedPayloadDefinition.annotate({
  *
  * **Example** (Use ExtractionEventGroup)
  * ```ts
- * import { ExtractionEventGroup } from "@effect-ontology/Schema/EventSchema.ts"
+ * import { ExtractionEventGroup } from "@effect-ontology/Schema/EventSchema"
  *
  * console.log(Object.keys(ExtractionEventGroup.events).length) // 3
  * ```
@@ -257,7 +257,7 @@ export const ExtractionEventGroup = EventGroup.empty
  *
  * **Example** (Use ExtractionEvent)
  * ```ts
- * import type { ExtractionEvent } from "@effect-ontology/Schema/EventSchema.ts"
+ * import type { ExtractionEvent } from "@effect-ontology/Schema/EventSchema"
  *
  * const acceptEvent = (_event: ExtractionEvent) => undefined
  * console.log(acceptEvent)
@@ -273,7 +273,7 @@ export type ExtractionEvent = EventGroup.Events<typeof ExtractionEventGroup>;
  *
  * **Example** (Use OntologyEventGroups)
  * ```ts
- * import { OntologyEventGroups } from "@effect-ontology/Schema/EventSchema.ts"
+ * import { OntologyEventGroups } from "@effect-ontology/Schema/EventSchema"
  *
  * console.log(OntologyEventGroups.length) // 2
  * ```
@@ -288,7 +288,7 @@ export const OntologyEventGroups = Tuple.make(CurationEventGroup, ExtractionEven
  *
  * **Example** (Use OntologyEvent)
  * ```ts
- * import type { OntologyEvent } from "@effect-ontology/Schema/EventSchema.ts"
+ * import type { OntologyEvent } from "@effect-ontology/Schema/EventSchema"
  *
  * const acceptEvent = (_event: OntologyEvent) => undefined
  * console.log(acceptEvent)

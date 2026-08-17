@@ -1,6 +1,8 @@
 /**
  * Service: Embedding
  *
+ * **Details**
+ *
  * Provider-agnostic embedding service with caching and Effect Request API batching.
  * Supports Nomic (local) and Voyage (API) providers via EmbeddingProvider interface.
  *
@@ -9,7 +11,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Effect, Layer, Option } from "effect";
+import { Clock, Context, Effect, Layer } from "effect";
+import * as O from "effect/Option";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { MetricsService } from "../Telemetry/Metrics.ts";
 import { hashVersionedEmbeddingKey } from "../Utils/Hash.ts";
@@ -27,10 +30,23 @@ export type { NomicTaskType } from "./NomicNlp.ts";
 /**
  * EmbeddingService interface
  *
+ * **Details**
+ *
  * Provider-agnostic embedding operations with caching.
  *
+ *
+ * **Example** (Use the EmbeddingServiceMethods contract)
+ *
+ * ```ts
+ * import type { EmbeddingServiceMethods } from "@effect-ontology/Service/Embedding"
+ *
+ * const acceptsEmbeddingServiceMethods = (_value: EmbeddingServiceMethods): void => undefined
+ *
+ * console.log(acceptsEmbeddingServiceMethods)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category services
  */
 export interface EmbeddingServiceMethods {
   /**
@@ -78,8 +94,16 @@ export interface EmbeddingServiceMethods {
 /**
  * EmbeddingService service tag
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding service)
+ *
+ * ```ts
+ * import { EmbeddingService } from "@effect-ontology/Service/Embedding"
+ *
+ * console.log(EmbeddingService)
+ * ```
+ *
  * @category services
+ * @since 0.0.0
  */
 export class EmbeddingService extends Context.Service<EmbeddingService, EmbeddingServiceMethods>()(
   $I`EmbeddingService`
@@ -88,13 +112,23 @@ export class EmbeddingService extends Context.Service<EmbeddingService, Embeddin
 /**
  * EmbeddingService implementation with provider abstraction and Request API
  *
+ * **Details**
+ *
  * Uses:
  * - EmbeddingProvider for provider-agnostic embeddings
  * - EmbeddingCache with versioned keys (includes model/dimension)
  * - Effect Request API for automatic batching via RequestResolver
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding service live)
+ *
+ * ```ts
+ * import { EmbeddingServiceLive } from "@effect-ontology/Service/Embedding"
+ *
+ * console.log(EmbeddingServiceLive)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingServiceLive: Layer.Layer<
   EmbeddingService,
@@ -122,7 +156,7 @@ export const EmbeddingServiceLive: Layer.Layer<
 
         // Check cache first
         const cached = yield* cache.get(hash);
-        if (Option.isSome(cached)) {
+        if (O.isSome(cached)) {
           const latencyMs = (yield* Clock.currentTimeMillis) - startTime;
           yield* metrics.recordCacheHit(latencyMs);
           return cached.value;
@@ -147,7 +181,7 @@ export const EmbeddingServiceLive: Layer.Layer<
       ),
       embedBatch: Effect.fn("EmbeddingService.embedBatch")(function* (texts, taskType = "search_document") {
         if (texts.length === 0) {
-          return [] as Array<Embedding>;
+          return [];
         }
         return yield* Effect.forEach(texts, (text) => embedWithCache(text, taskType), {
           concurrency: "unbounded",
@@ -162,11 +196,21 @@ export const EmbeddingServiceLive: Layer.Layer<
 /**
  * EmbeddingService with all dependencies
  *
+ * **Details**
+ *
  * Provides complete embedding infrastructure including provider,
  * cache, and metrics.
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding service default)
+ *
+ * ```ts
+ * import { EmbeddingServiceDefault } from "@effect-ontology/Service/Embedding"
+ *
+ * console.log(EmbeddingServiceDefault)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingServiceDefault: Layer.Layer<
   EmbeddingService,

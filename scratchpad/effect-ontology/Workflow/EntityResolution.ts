@@ -1,6 +1,8 @@
 /**
  * Workflow: Entity Resolution
  *
+ * **Details**
+ *
  * Post-extraction entity resolution to merge duplicate/coreference entities.
  * Handles cases like "Eze" and "Eberechi Eze" being the same person.
  *
@@ -9,11 +11,10 @@
  */
 
 import type { IRI } from "@beep/rdf";
-import { Effect } from "effect";
+import { Effect, MutableHashMap, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { dual2 } from "../Utils/Dual.ts";
@@ -21,6 +22,20 @@ import { combinedSimilarity, overlapRatio } from "../Utils/String.ts";
 
 /**
  * Configuration for entity resolution
+ *
+ *
+ * **Example** (Use the EntityResolutionConfig contract)
+ *
+ * ```ts
+ * import type { EntityResolutionConfig } from "@effect-ontology/Workflow/EntityResolution"
+ *
+ * const acceptsEntityResolutionConfig = (_value: EntityResolutionConfig): void => undefined
+ *
+ * console.log(acceptsEntityResolutionConfig)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface EntityResolutionConfig {
   /**
@@ -47,6 +62,20 @@ export interface EntityResolutionConfig {
   readonly typeOverlapRatio: number;
 }
 
+/**
+ * Exposes default config for composition by callers of this module.
+ *
+ * **Example** (Inspect default config)
+ *
+ * ```ts
+ * import { DEFAULT_CONFIG } from "@effect-ontology/Workflow/EntityResolution"
+ *
+ * console.log(DEFAULT_CONFIG)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export const DEFAULT_CONFIG: EntityResolutionConfig = {
   mentionSimilarityThreshold: 0.7,
   requireTypeOverlap: true,
@@ -147,7 +176,10 @@ const mergeEntityCluster = (
   if (entities.length === 1) return O.some(entities[0]);
 
   // Select canonical entity (prefer longest mention - usually most complete)
-  const sorted = [...entities].sort((a, b) => b.mention.length - a.mention.length);
+  const sorted = A.sort(
+    entities,
+    Order.mapInput(Order.flip(Order.Number), (entity: Entity) => entity.mention.length)
+  );
   const canonical = sorted[0];
 
   // Merge types using frequency voting
@@ -169,7 +201,7 @@ const mergeEntityCluster = (
   // Merge attributes (prefer values from longer mentions)
   const mergedAttrs: Record<string, string | number | boolean> = {};
   for (const entity of sorted) {
-    for (const [key, value] of Object.entries(entity.attributes)) {
+    for (const [key, value] of R.toEntries(entity.attributes)) {
       if (!(key in mergedAttrs)) mergedAttrs[key] = value;
     }
   }
@@ -187,23 +219,30 @@ const mergeEntityCluster = (
 /**
  * Resolve entity coreferences in a knowledge graph
  *
+ * **Details**
+ *
  * Identifies and merges duplicate entities based on mention similarity
  * and type compatibility. Updates relations to point to canonical entities.
+ *
+ * **Example** (Use resolveEntities)
+ *
+ * ```ts
+ * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { resolveEntities } from "@effect-ontology/Workflow/EntityResolution"
+ * import * as Effect from "effect/Effect"
+ *
+ * const resolved = resolveEntities(KnowledgeGraph.make({}), {
+ *   mentionSimilarityThreshold: 0.7,
+ *   requireTypeOverlap: true
+ * })
+ * console.log(Effect.isEffect(resolved)) // true
+ * ```
  *
  * @param graph - Input knowledge graph
  * @param config - Resolution configuration (optional)
  * @returns Effect yielding resolved knowledge graph
- *
- * **Example** (Use resolveEntities)
- * ```ts
- * const resolved = yield* resolveEntities(graph, {
- *   mentionSimilarityThreshold: 0.7,
- *   requireTypeOverlap: true
- * })
- * ```
- *
- * @since 0.0.0
  * @category workflows
+ * @since 0.0.0
  */
 export const resolveEntities = dual2(
   (graph: KnowledgeGraph, config: Partial<EntityResolutionConfig>): Effect.Effect<KnowledgeGraph, never, never> =>

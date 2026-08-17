@@ -17,14 +17,16 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/OntologyBrowser")
  *
  * **Example** (Use VocabularyRef)
  * ```ts
- * import { VocabularyRef } from "@effect-ontology/Schema/OntologyBrowser.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { VocabularyRef } from "@effect-ontology/Schema/OntologyBrowser"
  *
- * const vocabulary = VocabularyRef.fromUnknown({
+ * const vocabulary = S.decodeUnknownOption(VocabularyRef)({
  *   iri: "http://www.w3.org/ns/prov#",
  *   prefix: "prov",
  *   name: "PROV-O"
  * })
- * console.log(vocabulary.prefix) // "prov"
+ * console.log(O.map(vocabulary, (value) => value.prefix))
  * ```
  *
  * @category models
@@ -68,9 +70,11 @@ export class VocabularyRef extends S.Class<VocabularyRef>($I`VocabularyRef`)(
  *
  * **Example** (Use OntologySummary)
  * ```ts
- * import { OntologySummary } from "@effect-ontology/Schema/OntologyBrowser.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { OntologySummary } from "@effect-ontology/Schema/OntologyBrowser"
  *
- * const summary = OntologySummary.fromUnknown({
+ * const summary = S.decodeUnknownOption(OntologySummary)({
  *   id: "claims",
  *   iri: "https://example.com/ontology/claims",
  *   title: "Claims",
@@ -79,7 +83,7 @@ export class VocabularyRef extends S.Class<VocabularyRef>($I`VocabularyRef`)(
  *   propertyCount: 30,
  *   importCount: 2
  * })
- * console.log(summary.classCount) // 12
+ * console.log(O.map(summary, (value) => value.classCount))
  * ```
  *
  * @invariant All resource counts are non-negative integers.
@@ -129,7 +133,7 @@ export class OntologySummary extends S.Class<OntologySummary>($I`OntologySummary
  *
  * **Example** (Use OntologyListResponse)
  * ```ts
- * import { OntologyListResponse } from "@effect-ontology/Schema/OntologyBrowser.ts"
+ * import { OntologyListResponse } from "@effect-ontology/Schema/OntologyBrowser"
  *
  * console.log(OntologyListResponse.make({}).ontologies.length) // 0
  * ```
@@ -156,13 +160,15 @@ export class OntologyListResponse extends S.Class<OntologyListResponse>($I`Ontol
  *
  * **Example** (Use ClassSummary)
  * ```ts
- * import { ClassSummary } from "@effect-ontology/Schema/OntologyBrowser.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ClassSummary } from "@effect-ontology/Schema/OntologyBrowser"
  *
- * const summary = ClassSummary.fromUnknown({
+ * const summary = S.decodeUnknownOption(ClassSummary)({
  *   iri: "https://example.com/ontology/claims#Claim",
  *   localName: "Claim"
  * })
- * console.log(summary.localName) // "Claim"
+ * console.log(O.map(summary, (value) => value.localName))
  * ```
  *
  * @category models
@@ -214,14 +220,16 @@ export class ClassSummary extends S.Class<ClassSummary>($I`ClassSummary`)(
  *
  * **Example** (Use PropertySummary)
  * ```ts
- * import { PropertySummary } from "@effect-ontology/Schema/OntologyBrowser.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { PropertySummary } from "@effect-ontology/Schema/OntologyBrowser"
  *
- * const property = PropertySummary.fromUnknown({
+ * const property = S.decodeUnknownOption(PropertySummary)({
  *   iri: "https://example.com/ontology/claims#assertedBy",
  *   localName: "assertedBy",
  *   isObjectProperty: true
  * })
- * console.log(property.isObjectProperty) // true
+ * console.log(O.map(property, (value) => value.isObjectProperty))
  * ```
  *
  * @category models
@@ -276,14 +284,15 @@ export class PropertySummary extends S.Class<PropertySummary>($I`PropertySummary
  *
  * **Example** (Use OntologyClassesResponse)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { OntologyClassesResponse } from "@effect-ontology/Schema/OntologyBrowser.ts"
+ * import { OntologyClassesResponse } from "@effect-ontology/Schema/OntologyBrowser"
  *
- * const response = S.decodeUnknownSync(OntologyClassesResponse)({
+ * const response = S.decodeUnknownOption(OntologyClassesResponse)({
  *   ontologyId: "claims",
  *   total: 0
  * })
- * console.log(response.classes.length) // 0
+ * console.log(O.map(response, (value) => value.classes.length)) // 0
  * ```
  *
  * @invariant `total` is non-negative; callers should keep it equal to the
@@ -316,14 +325,15 @@ export class OntologyClassesResponse extends S.Class<OntologyClassesResponse>($I
  *
  * **Example** (Use OntologyPropertiesResponse)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { OntologyPropertiesResponse } from "@effect-ontology/Schema/OntologyBrowser.ts"
+ * import { OntologyPropertiesResponse } from "@effect-ontology/Schema/OntologyBrowser"
  *
- * const response = S.decodeUnknownSync(OntologyPropertiesResponse)({
+ * const response = S.decodeUnknownOption(OntologyPropertiesResponse)({
  *   ontologyId: "claims",
  *   total: 0
  * })
- * console.log(response.properties.length) // 0
+ * console.log(O.map(response, (value) => value.properties.length)) // 0
  * ```
  *
  * @invariant `total` is non-negative; callers should keep it equal to the
@@ -362,16 +372,18 @@ export class OntologyPropertiesResponse extends S.Class<OntologyPropertiesRespon
  *
  * **Example** (Use OntologyDetailResponse)
  * ```ts
- * import { OntologyDetailResponse } from "@effect-ontology/Schema/OntologyBrowser.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { OntologyDetailResponse } from "@effect-ontology/Schema/OntologyBrowser"
  *
- * const detail = OntologyDetailResponse.fromUnknown({
+ * const detail = S.decodeUnknownOption(OntologyDetailResponse)({
  *   id: "claims",
  *   iri: "https://example.com/ontology/claims",
  *   title: "Claims",
  *   version: "1.0.0",
  *   targetNamespace: "https://example.com/claims/"
  * })
- * console.log(detail.imports.length) // 0
+ * console.log(O.map(detail, (value) => value.imports.length))
  * ```
  *
  * @category dtos

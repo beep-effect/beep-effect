@@ -1,18 +1,26 @@
+/**
+ * Public effect-ontology APIs for service/storage.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import type { PathSafetyError } from "@beep/file-processing/PathSafety";
 import {
   resolvePathWithinCanonicalRoot,
   writeFileWithinCanonicalRootAtomically,
 } from "@beep/file-processing/PathSafety";
 import { $ScratchpadId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { Storage } from "@google-cloud/storage";
-import { Context, Data, Effect, FileSystem, Layer, Path } from "effect";
-import * as Clock from "effect/Clock";
-import * as MutableHashMap from "effect/MutableHashMap";
+import { Clock, Context, Effect, FileSystem, Inspectable, Layer, Match, MutableHashMap, Path } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import { SystemError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { KeyValueStore } from "effect/unstable/persistence";
 import { ConfigService } from "./Config.ts";
 
@@ -53,6 +61,20 @@ const isLocalStorageKey = S.is(LocalStorageKey);
 
 /**
  * Result of getWithGeneration - includes content and version for optimistic locking
+ *
+ *
+ * **Example** (Use the ObjectWithGeneration contract)
+ *
+ * ```ts
+ * import type { ObjectWithGeneration } from "@effect-ontology/Service/Storage"
+ *
+ * const acceptsObjectWithGeneration = (_value: ObjectWithGeneration): void => undefined
+ *
+ * console.log(acceptsObjectWithGeneration)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ObjectWithGeneration {
   readonly content: string;
@@ -61,16 +83,58 @@ export interface ObjectWithGeneration {
 
 /**
  * Error thrown when setIfGenerationMatch fails due to concurrent modification
+ *
+ * **Example** (Inspect generation mismatch error)
+ *
+ * ```ts
+ * import { GenerationMismatchError } from "@effect-ontology/Service/Storage"
+ *
+ * console.log(GenerationMismatchError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
-export class GenerationMismatchError extends Data.TaggedError("GenerationMismatchError")<{
-  readonly key: string;
-  readonly expectedGeneration: string;
-  readonly actualGeneration?: string;
-}> {}
+export class GenerationMismatchError extends S.TaggedError<GenerationMismatchError>($I`GenerationMismatchError`)(
+  "GenerationMismatchError",
+  {
+    key: S.NonEmptyString.annotateKey({
+      description: "Storage key whose optimistic generation check failed.",
+    }),
+    expectedGeneration: S.NonEmptyString.annotateKey({
+      description: "Generation expected by the conditional write.",
+    }),
+    actualGeneration: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Observed storage generation when it was available.",
+      })
+    ),
+  },
+  $I.annote("GenerationMismatchError", {
+    description: "Optimistic-lock failure caused by a changed storage generation.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 /**
  * StorageService interface extending KeyValueStore
  * Adds `list` capability and optimistic locking for concurrent writes
+ *
+ *
+ * **Example** (Use the StorageServiceMethods contract)
+ *
+ * ```ts
+ * import type { StorageServiceMethods } from "@effect-ontology/Service/Storage"
+ *
+ * const acceptsStorageServiceMethods = (_value: StorageServiceMethods): void => undefined
+ *
+ * console.log(acceptsStorageServiceMethods)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface StorageServiceMethods extends KeyValueStore.KeyValueStore {
   readonly list: (prefix: string) => Effect.Effect<Array<string>, SystemError | PlatformError>;
@@ -111,8 +175,39 @@ export interface StorageServiceMethods extends KeyValueStore.KeyValueStore {
   readonly supportsSignedUrls: boolean;
 }
 
+/**
+ * Provides the storage service service capability.
+ *
+ * **Example** (Inspect storage service)
+ *
+ * ```ts
+ * import { StorageService } from "@effect-ontology/Service/Storage"
+ *
+ * console.log(StorageService)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export class StorageService extends Context.Service<StorageService, StorageServiceMethods>()($I`StorageService`) {}
 
+/**
+ * Describes the storage config value data exposed by this module.
+ *
+ *
+ * **Example** (Use the StorageConfigValue contract)
+ *
+ * ```ts
+ * import type { StorageConfigValue } from "@effect-ontology/Service/Storage"
+ *
+ * const acceptsStorageConfigValue = (_value: StorageConfigValue): void => undefined
+ *
+ * console.log(acceptsStorageConfigValue)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface StorageConfigValue {
   readonly type: "local" | "gcs" | "memory";
   readonly bucketName?: string; // Required for GCS
@@ -120,6 +215,20 @@ export interface StorageConfigValue {
   readonly pathPrefix?: string;
 }
 
+/**
+ * Provides the storage config service capability.
+ *
+ * **Example** (Inspect storage config)
+ *
+ * ```ts
+ * import { StorageConfig } from "@effect-ontology/Service/Storage"
+ *
+ * console.log(StorageConfig)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export class StorageConfig extends Context.Service<StorageConfig, StorageConfigValue>()($I`StorageConfig`) {}
 
 // --- GCS Implementation ---
@@ -140,70 +249,29 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
   const prefix = config.pathPrefix ?? "";
   const toPath = (key: string) => `${prefix}/${key}`.replace(/\/+/g, "/").replace(/^\//, "");
   const handleError = (method: string, key: string, cause: unknown) => {
-    let reason: SystemError["_tag"] = "Unknown";
-    let message: string;
-    if (cause instanceof Error) {
-      message = cause.message;
-    } else if (typeof cause === "object" && cause !== null) {
-      const obj = cause as Record<string, unknown>;
-      if (typeof obj.message === "string") {
-        message = obj.message;
-      } else if (Array.isArray(obj.errors)) {
-        message = obj.errors
-          .map((e: unknown) =>
-            typeof e === "object" && e !== null && "message" in e
-              ? String(
-                  (
-                    e as {
-                      message: unknown;
-                    }
-                  ).message
-                )
-              : String(e)
+    const messageOf = (value: unknown): O.Option<string> =>
+      P.isObject(value) && P.hasProperty(value, "message") && P.isString(value.message)
+        ? O.some(value.message)
+        : O.none();
+    const message = O.getOrElse(messageOf(cause), () =>
+      P.isObject(cause) && P.hasProperty(cause, "errors") && A.isArray(cause.errors)
+        ? A.join(
+            A.map(cause.errors, (error) => O.getOrElse(messageOf(error), () => Inspectable.toStringUnknown(error))),
+            "; "
           )
-          .join("; ");
-      } else {
-        message = String(cause);
-      }
-    } else {
-      message = String(cause);
-    }
-    if (cause instanceof Error) {
-      const code =
-        "code" in cause &&
-        typeof (
-          cause as {
-            code?: unknown;
-          }
-        ).code === "number"
-          ? (
-              cause as {
-                code: number;
-              }
-            ).code
-          : undefined;
-      if (code !== undefined) {
-        switch (code) {
-          case 404:
-            reason = "NotFound";
-            break;
-          case 403:
-            reason = "PermissionDenied";
-            break;
-          case 409:
-            reason = "AlreadyExists";
-            break;
-          case 400:
-            reason = "InvalidData";
-            break;
-          case 408:
-          case 503:
-          case 504:
-            reason = "Busy";
-            break;
-        }
-      }
-    }
+        : Inspectable.toStringUnknown(cause)
+    );
+    const code = P.isObject(cause) && P.hasProperty(cause, "code") && P.isNumber(cause.code) ? cause.code : undefined;
+    const reason: SystemError["_tag"] = Match.value(code).pipe(
+      Match.when(404, (): SystemError["_tag"] => "NotFound"),
+      Match.when(403, (): SystemError["_tag"] => "PermissionDenied"),
+      Match.when(409, (): SystemError["_tag"] => "AlreadyExists"),
+      Match.when(400, (): SystemError["_tag"] => "InvalidData"),
+      Match.when(408, (): SystemError["_tag"] => "Busy"),
+      Match.when(503, (): SystemError["_tag"] => "Busy"),
+      Match.when(504, (): SystemError["_tag"] => "Busy"),
+      Match.orElse((): SystemError["_tag"] => "Unknown")
+    );
     return new SystemError({
       _tag: reason,
       module: "KeyValueStore",
@@ -262,7 +330,7 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
       Effect.map(([files]) => files.length)
     ),
   });
-  return {
+  const service: StorageServiceMethods = {
     ...impl,
     list: (listPrefix) =>
       tryStoragePromise("list", listPrefix, () => bucket.getFiles({ prefix: toPath(listPrefix) })).pipe(
@@ -277,7 +345,7 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
       );
       return O.some({
         content: content.toString("utf-8"),
-        generation: String(metadata.generation),
+        generation: Inspectable.toStringUnknown(metadata.generation),
       });
     }),
     setIfGenerationMatch: (key, value, expectedGeneration) =>
@@ -289,16 +357,8 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
             },
           }),
         catch: (e) => {
-          if (
-            e instanceof Error &&
-            "code" in e &&
-            (
-              e as {
-                code?: number;
-              }
-            ).code === 412
-          ) {
-            return new GenerationMismatchError({ key, expectedGeneration });
+          if (P.isObject(e) && P.hasProperty(e, "code") && e.code === 412) {
+            return GenerationMismatchError.make({ key, expectedGeneration });
           }
           return handleError("setIfGenerationMatch", key, e);
         },
@@ -318,7 +378,8 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
       return O.some(signedUrl);
     }),
     supportsSignedUrls: true,
-  } as StorageServiceMethods;
+  };
+  return service;
 });
 
 // --- Local Filesystem Implementation ---
@@ -358,7 +419,12 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
       candidate,
     }).pipe(Effect.provideService(FileSystem.FileSystem, fs), Effect.provideService(Path.Path, path));
   const localKvError = (method: string, key: string) => (cause: unknown) =>
-    new KeyValueStore.KeyValueStoreError({ method, key, message: String(cause), cause });
+    new KeyValueStore.KeyValueStoreError({
+      method,
+      key,
+      message: Inspectable.toStringUnknown(cause),
+      cause,
+    });
   const localPathError = (method: string, key: string) => (cause: PathSafetyError | SystemError) =>
     new SystemError({
       _tag: "InvalidData",
@@ -500,7 +566,11 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
           onSome: (mtime) => String(mtime.getTime()),
         });
         if (currentGeneration !== expectedGeneration) {
-          return yield* new GenerationMismatchError({ key, expectedGeneration, actualGeneration: currentGeneration });
+          return yield* GenerationMismatchError.make({
+            key,
+            expectedGeneration,
+            actualGeneration: O.some(currentGeneration),
+          });
         }
       }
       yield* writePath("setIfGenerationMatch", key, new TextEncoder().encode(value));
@@ -516,7 +586,7 @@ const makeMemoryStore = Effect.sync(() => {
   const store = MutableHashMap.empty<string, string | Uint8Array>();
   const generations = MutableHashMap.empty<string, number>();
 
-  const getGeneration = (key: string): string => String(O.getOrElse(MutableHashMap.get(generations, key), () => 0));
+  const getGeneration = (key: string): string => `${O.getOrElse(MutableHashMap.get(generations, key), () => 0)}`;
   const incrementGeneration = (key: string): void => {
     const current = O.getOrElse(MutableHashMap.get(generations, key), () => 0);
     MutableHashMap.set(generations, key, current + 1);
@@ -527,13 +597,13 @@ const makeMemoryStore = Effect.sync(() => {
       Effect.sync(() => {
         const val = O.getOrUndefined(MutableHashMap.get(store, key));
         if (P.isUndefined(val)) return undefined;
-        return typeof val === "string" ? val : new TextDecoder().decode(val);
+        return P.isString(val) ? val : new TextDecoder().decode(val);
       }),
     getUint8Array: (key) =>
       Effect.sync(() => {
         const val = O.getOrUndefined(MutableHashMap.get(store, key));
         if (P.isUndefined(val)) return undefined;
-        return typeof val === "string" ? new TextEncoder().encode(val) : val;
+        return P.isString(val) ? new TextEncoder().encode(val) : val;
       }),
     set: (key, value) =>
       Effect.sync(() => {
@@ -552,14 +622,15 @@ const makeMemoryStore = Effect.sync(() => {
     size: Effect.sync(() => MutableHashMap.size(store)),
   });
 
-  return {
+  const service: StorageServiceMethods = {
     ...kv,
-    list: (prefix) => Effect.sync(() => Array.from(MutableHashMap.keys(store)).filter((k) => k.startsWith(prefix))),
+    list: (prefix) =>
+      Effect.sync(() => store.pipe(MutableHashMap.keys, A.fromIterable, A.filter(Str.startsWith(prefix)))),
     getWithGeneration: (key) =>
       Effect.sync(() => {
         const val = O.getOrUndefined(MutableHashMap.get(store, key));
         if (P.isUndefined(val)) return O.none();
-        const content = typeof val === "string" ? val : new TextDecoder().decode(val);
+        const content = P.isString(val) ? val : new TextDecoder().decode(val);
         return O.some({ content, generation: getGeneration(key) });
       }),
     setIfGenerationMatch: (key, value, expectedGeneration) =>
@@ -567,7 +638,11 @@ const makeMemoryStore = Effect.sync(() => {
         const currentGeneration = getGeneration(key);
         if (MutableHashMap.has(store, key) && currentGeneration !== expectedGeneration) {
           return Effect.fail(
-            new GenerationMismatchError({ key, expectedGeneration, actualGeneration: currentGeneration })
+            GenerationMismatchError.make({
+              key,
+              expectedGeneration,
+              actualGeneration: O.some(currentGeneration),
+            })
           );
         }
         MutableHashMap.set(store, key, value);
@@ -577,11 +652,26 @@ const makeMemoryStore = Effect.sync(() => {
     // Memory store doesn't support signed URLs
     getSignedUrl: () => Effect.succeed(O.none()),
     supportsSignedUrls: false,
-  } as StorageServiceMethods;
+  };
+  return service;
 });
 
 // --- Layer Definition ---
 
+/**
+ * Provides the Effect layer for storage service live dependencies.
+ *
+ * **Example** (Inspect storage service live)
+ *
+ * ```ts
+ * import { StorageServiceLive } from "@effect-ontology/Service/Storage"
+ *
+ * console.log(StorageServiceLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const StorageServiceLive = Layer.effect(
   StorageService,
   Effect.gen(function* () {
@@ -609,5 +699,16 @@ export const StorageServiceLive = Layer.effect(
 /**
  * In-memory storage layer for testing
  * Does not require ConfigService
+ *
+ * **Example** (Inspect storage service test)
+ *
+ * ```ts
+ * import { StorageServiceTest } from "@effect-ontology/Service/Storage"
+ *
+ * console.log(StorageServiceTest)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const StorageServiceTest = Layer.effect(StorageService, makeMemoryStore);

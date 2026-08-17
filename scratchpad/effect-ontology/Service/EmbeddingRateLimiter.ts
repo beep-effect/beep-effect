@@ -1,6 +1,8 @@
 /**
  * Rate Limiter for Embedding APIs
  *
+ * **Details**
+ *
  * Provides RPM (requests per minute) and concurrency limiting for embedding providers.
  * Uses Effect patterns: Semaphore for concurrency, Ref + Clock for sliding window.
  *
@@ -9,9 +11,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Effect, Layer, Ref } from "effect";
+import { Clock, Context, Effect, Layer, Ref, Semaphore } from "effect";
 import * as O from "effect/Option";
-import * as Semaphore from "effect/Semaphore";
 import { Milliseconds } from "../Domain/Error/Base.ts";
 import { EmbeddingRateLimitError } from "../Domain/Error/Embedding.ts";
 
@@ -33,8 +34,19 @@ interface RateLimiterState {
 /**
  * Rate limiter configuration
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the EmbeddingRateLimiterConfig contract)
+ *
+ * ```ts
+ * import type { EmbeddingRateLimiterConfig } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ *
+ * const acceptsEmbeddingRateLimiterConfig = (_value: EmbeddingRateLimiterConfig): void => undefined
+ *
+ * console.log(acceptsEmbeddingRateLimiterConfig)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface EmbeddingRateLimiterConfig {
   /** Provider identifier for error messages */
@@ -48,8 +60,16 @@ export interface EmbeddingRateLimiterConfig {
 /**
  * Default configuration for Voyage AI (100 RPM, 10 concurrent)
  *
- * @since 0.0.0
+ * **Example** (Inspect voyage rate limits)
+ *
+ * ```ts
+ * import { VOYAGE_RATE_LIMITS } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ *
+ * console.log(VOYAGE_RATE_LIMITS)
+ * ```
+ *
  * @category constants
+ * @since 0.0.0
  */
 export const VOYAGE_RATE_LIMITS: EmbeddingRateLimiterConfig = {
   provider: "voyage",
@@ -60,8 +80,16 @@ export const VOYAGE_RATE_LIMITS: EmbeddingRateLimiterConfig = {
 /**
  * Default configuration for local models (effectively unlimited)
  *
- * @since 0.0.0
+ * **Example** (Inspect local rate limits)
+ *
+ * ```ts
+ * import { LOCAL_RATE_LIMITS } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ *
+ * console.log(LOCAL_RATE_LIMITS)
+ * ```
+ *
  * @category constants
+ * @since 0.0.0
  */
 export const LOCAL_RATE_LIMITS: EmbeddingRateLimiterConfig = {
   provider: "nomic",
@@ -72,8 +100,19 @@ export const LOCAL_RATE_LIMITS: EmbeddingRateLimiterConfig = {
 /**
  * EmbeddingRateLimiter service interface
  *
+ *
+ * **Example** (Use the EmbeddingRateLimiterMethods contract)
+ *
+ * ```ts
+ * import type { EmbeddingRateLimiterMethods } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ *
+ * const acceptsEmbeddingRateLimiterMethods = (_value: EmbeddingRateLimiterMethods): void => undefined
+ *
+ * console.log(acceptsEmbeddingRateLimiterMethods)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category services
  */
 export interface EmbeddingRateLimiterMethods {
   /**
@@ -100,8 +139,16 @@ export interface EmbeddingRateLimiterMethods {
 /**
  * EmbeddingRateLimiter service tag
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding rate limiter)
+ *
+ * ```ts
+ * import { EmbeddingRateLimiter } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ *
+ * console.log(EmbeddingRateLimiter)
+ * ```
+ *
  * @category services
+ * @since 0.0.0
  */
 export class EmbeddingRateLimiter extends Context.Service<EmbeddingRateLimiter, EmbeddingRateLimiterMethods>()(
   $I`EmbeddingRateLimiter`
@@ -110,11 +157,18 @@ export class EmbeddingRateLimiter extends Context.Service<EmbeddingRateLimiter, 
 /**
  * Create a rate limiter layer with the given configuration
  *
+ * **Example** (Inspect make embedding rate limiter)
+ *
+ * ```ts
+ * import { makeEmbeddingRateLimiter } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ *
+ * console.log(makeEmbeddingRateLimiter)
+ * ```
+ *
  * @param config - Rate limiter configuration
  * @returns Layer providing EmbeddingRateLimiter
- *
- * @since 0.0.0
  * @category layers
+ * @since 0.0.0
  */
 export const makeEmbeddingRateLimiter = (config: EmbeddingRateLimiterConfig): Layer.Layer<EmbeddingRateLimiter> =>
   Layer.effect(
@@ -165,24 +219,48 @@ export const makeEmbeddingRateLimiter = (config: EmbeddingRateLimiterConfig): La
 /**
  * Default rate limiter for Voyage AI
  *
+ * **Example** (Inspect embedding rate limiter voyage)
+ *
+ * ```ts
+ * import { EmbeddingRateLimiterVoyage } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ *
+ * console.log(EmbeddingRateLimiterVoyage)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
- * @category layers
  */
 export const EmbeddingRateLimiterVoyage = makeEmbeddingRateLimiter(VOYAGE_RATE_LIMITS);
 
 /**
  * Rate limiter for local models (effectively unlimited)
  *
+ * **Example** (Inspect embedding rate limiter local)
+ *
+ * ```ts
+ * import { EmbeddingRateLimiterLocal } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ *
+ * console.log(EmbeddingRateLimiterLocal)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
- * @category layers
  */
 export const EmbeddingRateLimiterLocal = makeEmbeddingRateLimiter(LOCAL_RATE_LIMITS);
 
 /**
  * No-op rate limiter for testing
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding rate limiter noop)
+ *
+ * ```ts
+ * import { EmbeddingRateLimiterNoop } from "@effect-ontology/Service/EmbeddingRateLimiter"
+ *
+ * console.log(EmbeddingRateLimiterNoop)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingRateLimiterNoop: Layer.Layer<EmbeddingRateLimiter> = Layer.succeed(EmbeddingRateLimiter, {
   acquire: Effect.void,

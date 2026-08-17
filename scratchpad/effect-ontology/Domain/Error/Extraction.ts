@@ -14,13 +14,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import {
-  ErrorMessage,
-  makeOntologyErrorClass,
-  OptionalErrorCause,
-  OptionalErrorMessage,
-  OptionalNonNegativeInt,
-} from "./Base.ts";
+import { ErrorMessage, OptionalErrorCause, OptionalErrorMessage, OptionalNonNegativeInt } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Extraction");
 
@@ -85,121 +79,96 @@ const extractionFields = {
  *
  * **Example** (Use ExtractionError)
  * ```ts
- * import { ExtractionError } from "@effect-ontology/Error/Extraction.ts"
+ * import { ExtractionError } from "@effect-ontology/Error/Extraction"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ExtractionError.make({ message: "Extraction failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(ExtractionError)({
+ *   _tag: "ExtractionError", message: "Extraction failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const ExtractionError = makeOntologyErrorClass
-  .make(
-    $I`ExtractionError`,
-    "ExtractionError",
-    extractionFields,
-    $I.annote("ExtractionError", {
-      description: "General extraction-process failure.",
-    })
-  )
-  .pipe(SchemaUtils.withStatics((schema) => ({ is: S.is(schema) })));
-
-/** Runtime value decoded by {@link ExtractionError}.
- * **Example** (Use ExtractionError)
- * ```ts
- * import { ExtractionError, type ExtractionError as Failure } from "@effect-ontology/Error/Extraction.ts"
- * const error: Failure = ExtractionError.make({ message: "Failed." })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type ExtractionError = typeof ExtractionError.Type;
+export class ExtractionError extends S.TaggedError<ExtractionError>($I`ExtractionError`)(
+  "ExtractionError",
+  extractionFields,
+  $I.annote("ExtractionError", {
+    description: "General extraction-process failure.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 /**
  * Failure to extract mention spans from source text.
  *
  * **Example** (Use MentionExtractionFailed)
  * ```ts
- * import { MentionExtractionFailed } from "@effect-ontology/Error/Extraction.ts"
+ * import { MentionExtractionFailed } from "@effect-ontology/Error/Extraction"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = MentionExtractionFailed.make({ message: "Mention extraction failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(MentionExtractionFailed)({
+ *   _tag: "MentionExtractionFailed", message: "Mention extraction failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const MentionExtractionFailed = makeOntologyErrorClass.make(
-  $I`MentionExtractionFailed`,
+export class MentionExtractionFailed extends S.TaggedError<MentionExtractionFailed>($I`MentionExtractionFailed`)(
   "MentionExtractionFailed",
   extractionFields,
   $I.annote("MentionExtractionFailed", {
     description: "Failure to extract mention spans from source text.",
   })
-);
-
-/** Runtime value decoded by {@link MentionExtractionFailed}.
- * **Example** (Use MentionExtractionFailed)
- * ```ts
- * import { MentionExtractionFailed, type MentionExtractionFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
- * const error: Failure = MentionExtractionFailed.make({ message: "Failed." })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type MentionExtractionFailed = typeof MentionExtractionFailed.Type;
+) {}
 
 /**
  * Failure to extract entities from source text.
  *
  * **Example** (Use EntityExtractionFailed)
  * ```ts
- * import { EntityExtractionFailed } from "@effect-ontology/Error/Extraction.ts"
+ * import { EntityExtractionFailed } from "@effect-ontology/Error/Extraction"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = EntityExtractionFailed.make({ message: "Entity extraction failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(EntityExtractionFailed)({
+ *   _tag: "EntityExtractionFailed", message: "Entity extraction failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const EntityExtractionFailed = makeOntologyErrorClass.make(
-  $I`EntityExtractionFailed`,
+export class EntityExtractionFailed extends S.TaggedError<EntityExtractionFailed>($I`EntityExtractionFailed`)(
   "EntityExtractionFailed",
   extractionFields,
   $I.annote("EntityExtractionFailed", {
     description: "Failure to extract entities from source text.",
   })
-);
-
-/** Runtime value decoded by {@link EntityExtractionFailed}.
- * **Example** (Use EntityExtractionFailed)
- * ```ts
- * import { EntityExtractionFailed, type EntityExtractionFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
- * const error: Failure = EntityExtractionFailed.make({ message: "Failed." })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type EntityExtractionFailed = typeof EntityExtractionFailed.Type;
+) {}
 
 /**
  * Failure to extract relations, optionally retaining partial entities.
  *
  * **Example** (Use RelationExtractionFailed)
  * ```ts
- * import { RelationExtractionFailed } from "@effect-ontology/Error/Extraction.ts"
+ * import { RelationExtractionFailed } from "@effect-ontology/Error/Extraction"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = RelationExtractionFailed.make({ message: "Relation extraction failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(RelationExtractionFailed)({
+ *   _tag: "RelationExtractionFailed", message: "Relation extraction failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const RelationExtractionFailed = makeOntologyErrorClass.make(
-  $I`RelationExtractionFailed`,
+export class RelationExtractionFailed extends S.TaggedError<RelationExtractionFailed>($I`RelationExtractionFailed`)(
   "RelationExtractionFailed",
   {
     ...extractionFields,
@@ -210,35 +179,26 @@ export const RelationExtractionFailed = makeOntologyErrorClass.make(
   $I.annote("RelationExtractionFailed", {
     description: "Failure to extract relations, optionally retaining partial entities.",
   })
-);
-
-/** Runtime value decoded by {@link RelationExtractionFailed}.
- * **Example** (Use RelationExtractionFailed)
- * ```ts
- * import { RelationExtractionFailed, type RelationExtractionFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
- * const error: Failure = RelationExtractionFailed.make({ message: "Failed." })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type RelationExtractionFailed = typeof RelationExtractionFailed.Type;
+) {}
 
 /**
  * Failure to derive the structured-output schema used by extraction.
  *
  * **Example** (Use SchemaGenerationFailed)
  * ```ts
- * import { SchemaGenerationFailed } from "@effect-ontology/Error/Extraction.ts"
+ * import { SchemaGenerationFailed } from "@effect-ontology/Error/Extraction"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = SchemaGenerationFailed.make({ message: "Schema generation failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(SchemaGenerationFailed)({
+ *   _tag: "SchemaGenerationFailed", message: "Schema generation failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const SchemaGenerationFailed = makeOntologyErrorClass.make(
-  $I`SchemaGenerationFailed`,
+export class SchemaGenerationFailed extends S.TaggedError<SchemaGenerationFailed>($I`SchemaGenerationFailed`)(
   "SchemaGenerationFailed",
   {
     message: ErrorMessage.annotateKey({
@@ -251,35 +211,26 @@ export const SchemaGenerationFailed = makeOntologyErrorClass.make(
   $I.annote("SchemaGenerationFailed", {
     description: "Failure to derive the structured-output schema used by extraction.",
   })
-);
-
-/** Runtime value decoded by {@link SchemaGenerationFailed}.
- * **Example** (Use SchemaGenerationFailed)
- * ```ts
- * import { SchemaGenerationFailed, type SchemaGenerationFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
- * const error: Failure = SchemaGenerationFailed.make({ message: "Failed." })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type SchemaGenerationFailed = typeof SchemaGenerationFailed.Type;
+) {}
 
 /**
  * Failure to validate a structured extraction payload.
  *
  * **Example** (Use ValidationFailed)
  * ```ts
- * import { ValidationFailed } from "@effect-ontology/Error/Extraction.ts"
+ * import { ValidationFailed } from "@effect-ontology/Error/Extraction"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ValidationFailed.make({ message: "Payload validation failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(ValidationFailed)({
+ *   _tag: "ValidationFailed", message: "Payload validation failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const ValidationFailed = makeOntologyErrorClass.make(
-  $I`ValidationFailed`,
+export class ValidationFailed extends S.TaggedError<ValidationFailed>($I`ValidationFailed`)(
   "ValidationFailed",
   {
     message: ErrorMessage.annotateKey({
@@ -295,18 +246,7 @@ export const ValidationFailed = makeOntologyErrorClass.make(
   $I.annote("ValidationFailed", {
     description: "Failure to validate a structured extraction payload.",
   })
-);
-
-/** Runtime value decoded by {@link ValidationFailed}.
- * **Example** (Use ValidationFailed)
- * ```ts
- * import { ValidationFailed, type ValidationFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
- * const error: Failure = ValidationFailed.make({ message: "Invalid." })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type ValidationFailed = typeof ValidationFailed.Type;
+) {}
 
 /**
  * Non-fatal per-row entity validation failure.
@@ -317,20 +257,22 @@ export type ValidationFailed = typeof ValidationFailed.Type;
  *
  * **Example** (Use EntityValidationFailed)
  * ```ts
- * import { EntityValidationFailed } from "@effect-ontology/Error/Extraction.ts"
+ * import { EntityValidationFailed } from "@effect-ontology/Error/Extraction"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = EntityValidationFailed.make({
+ * const error = S.decodeUnknownOption(EntityValidationFailed)({
+ *   _tag: "EntityValidationFailed",
  *   reason: "Entity type is missing.",
  *   entityData: { label: "Alice" }
  * })
- * console.log(error.reason)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const EntityValidationFailed = makeOntologyErrorClass.make(
-  $I`EntityValidationFailed`,
+export class EntityValidationFailed extends S.TaggedError<EntityValidationFailed>($I`EntityValidationFailed`)(
   "EntityValidationFailed",
   {
     reason: ErrorMessage.annotateKey({
@@ -346,18 +288,7 @@ export const EntityValidationFailed = makeOntologyErrorClass.make(
   $I.annote("EntityValidationFailed", {
     description: "Non-fatal per-row entity validation failure.",
   })
-);
-
-/** Runtime value decoded by {@link EntityValidationFailed}.
- * **Example** (Use EntityValidationFailed)
- * ```ts
- * import { EntityValidationFailed, type EntityValidationFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
- * const error: Failure = EntityValidationFailed.make({ reason: "Invalid.", entityData: null })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type EntityValidationFailed = typeof EntityValidationFailed.Type;
+) {}
 
 /**
  * Non-fatal per-row relation validation failure.
@@ -368,20 +299,22 @@ export type EntityValidationFailed = typeof EntityValidationFailed.Type;
  *
  * **Example** (Use RelationValidationFailed)
  * ```ts
- * import { RelationValidationFailed } from "@effect-ontology/Error/Extraction.ts"
+ * import { RelationValidationFailed } from "@effect-ontology/Error/Extraction"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = RelationValidationFailed.make({
+ * const error = S.decodeUnknownOption(RelationValidationFailed)({
+ *   _tag: "RelationValidationFailed",
  *   reason: "Relation target is missing.",
  *   relationData: { predicate: "knows" }
  * })
- * console.log(error.reason)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const RelationValidationFailed = makeOntologyErrorClass.make(
-  $I`RelationValidationFailed`,
+export class RelationValidationFailed extends S.TaggedError<RelationValidationFailed>($I`RelationValidationFailed`)(
   "RelationValidationFailed",
   {
     reason: ErrorMessage.annotateKey({
@@ -397,18 +330,7 @@ export const RelationValidationFailed = makeOntologyErrorClass.make(
   $I.annote("RelationValidationFailed", {
     description: "Non-fatal per-row relation validation failure.",
   })
-);
-
-/** Runtime value decoded by {@link RelationValidationFailed}.
- * **Example** (Use RelationValidationFailed)
- * ```ts
- * import { RelationValidationFailed, type RelationValidationFailed as Failure } from "@effect-ontology/Error/Extraction.ts"
- * const error: Failure = RelationValidationFailed.make({ reason: "Invalid.", relationData: null })
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type RelationValidationFailed = typeof RelationValidationFailed.Type;
+) {}
 
 const AnyExtractionErrorDefinition = S.Union([
   ExtractionError,
@@ -426,9 +348,12 @@ const AnyExtractionErrorDefinition = S.Union([
  *
  * **Example** (Use AnyExtractionError)
  * ```ts
- * import { AnyExtractionError, ExtractionError } from "@effect-ontology/Error/Extraction.ts"
+ * import { AnyExtractionError, ExtractionError } from "@effect-ontology/Error/Extraction"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ExtractionError.make({ message: "Failed." })
+ * const error = S.decodeUnknownOption(ExtractionError)({
+ *   _tag: "ExtractionError", message: "Failed." })
  * console.log(AnyExtractionError.guards.ExtractionError(error)) // true
  * ```
  *
@@ -438,7 +363,7 @@ const AnyExtractionErrorDefinition = S.Union([
 export const AnyExtractionError = AnyExtractionErrorDefinition.pipe(
   $I.annoteSchema("AnyExtractionError", {
     description: "Exhaustive tagged union of extraction and row-validation failures.",
-  toArbitrary: () => S.toArbitrary(AnyExtractionErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyExtractionErrorDefinition),
   })
 );
 
@@ -447,7 +372,7 @@ export const AnyExtractionError = AnyExtractionErrorDefinition.pipe(
  *
  * **Example** (Use AnyExtractionError)
  * ```ts
- * import { ExtractionError, type AnyExtractionError } from "@effect-ontology/Error/Extraction.ts"
+ * import { ExtractionError, type AnyExtractionError } from "@effect-ontology/Error/Extraction"
  * const error: AnyExtractionError = ExtractionError.make({ message: "Failed." })
  * console.log(error._tag)
  * ```

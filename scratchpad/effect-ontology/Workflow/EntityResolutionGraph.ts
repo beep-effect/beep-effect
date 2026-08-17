@@ -1,6 +1,8 @@
 /**
  * Entity Resolution using Effect Graph
  *
+ * **Details**
+ *
  * Graph-based entity clustering using Effect's Graph module.
  * Uses connected components algorithm for transitive clustering.
  *
@@ -12,14 +14,11 @@ import type { IRI } from "@beep/rdf";
 import { NodeIndex } from "@beep/schema/Graph";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { DateTime, Effect, Graph } from "effect";
+import { DateTime, Effect, Graph, HashMap, HashSet, MutableHashMap, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
-import * as HashMap from "effect/HashMap";
-import * as HashSet from "effect/HashSet";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import type { Entity, KnowledgeGraph, Relation } from "../Domain/Model/Entity.ts";
 import { RelationObject } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionConfig, EREdge, ERNode } from "../Domain/Model/EntityResolution.ts";
@@ -50,6 +49,8 @@ import { simpleTokenize } from "../Utils/String.ts";
 /**
  * Cluster entities using Effect Graph's connectedComponents
  *
+ * **Details**
+ *
  * Algorithm:
  * 1. Generate embeddings for all entities (batch with concurrency limit)
  * 2. Build undirected similarity graph (entities as nodes)
@@ -57,23 +58,23 @@ import { simpleTokenize } from "../Utils/String.ts";
  * 4. Call Graph.connectedComponents() to find clusters
  * 5. Each component = one resolved entity cluster
  *
+ * **Example** (Use clusterEntities)
+ *
+ * ```ts
+ * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution"
+ * import { clusterEntities } from "@effect-ontology/Workflow/EntityResolutionGraph"
+ * import * as Effect from "effect/Effect"
+ *
+ * const clusters = clusterEntities([], [], EntityResolutionConfig.default())
+ * console.log(Effect.isEffect(clusters)) // true
+ * ```
+ *
  * @param entities - Entities to cluster
  * @param relations - Relations for neighbor similarity
  * @param config - Resolution configuration
  * @returns Effect yielding array of entity clusters
- *
- * **Example** (Use clusterEntities)
- * ```ts
- * const clusters = yield* clusterEntities(
- *   extractedEntities,
- *   extractedRelations,
- *   defaultEntityResolutionConfig
- * )
- * // => [{ entities: [arsenal, arsenal_fc], minSimilarity: 0.85, ... }]
- * ```
- *
+ * @category workflows
  * @since 0.0.0
- * @category processes
  */
 export const clusterEntities = dual3(
   (
@@ -331,7 +332,10 @@ const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
   const entities = cluster.entities;
 
   // Select canonical entity (prefer longest mention - usually most complete)
-  const sorted = [...entities].sort((a, b) => b.mention.length - a.mention.length);
+  const sorted = A.sort(
+    entities,
+    Order.mapInput(Order.flip(Order.Number), (entity: Entity) => entity.mention.length)
+  );
   const canonical = sorted[0];
 
   // Merge types using frequency voting
@@ -354,7 +358,7 @@ const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
   // Merge attributes (prefer values from longer mentions)
   const mergedAttrs: Record<string, string | number | boolean> = {};
   for (const entity of sorted) {
-    for (const [key, value] of Object.entries(entity.attributes)) {
+    for (const [key, value] of R.toEntries(entity.attributes)) {
       if (!(key in mergedAttrs)) {
         mergedAttrs[key] = value;
       }
@@ -372,20 +376,27 @@ const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
 /**
  * Build Entity Resolution Graph from KnowledgeGraph
  *
+ * **Details**
+ *
  * Pipeline: KnowledgeGraph → MentionRecords → Clustering → ResolvedEntities → ERG
+ *
+ * **Example** (Use buildEntityResolutionGraph)
+ *
+ * ```ts
+ * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution"
+ * import { buildEntityResolutionGraph } from "@effect-ontology/Workflow/EntityResolutionGraph"
+ * import * as Effect from "effect/Effect"
+ *
+ * const resolution = buildEntityResolutionGraph(KnowledgeGraph.make({}), EntityResolutionConfig.default())
+ * console.log(Effect.isEffect(resolution)) // true
+ * ```
  *
  * @param kg - Input knowledge graph
  * @param config - Resolution configuration
  * @returns Effect yielding EntityResolutionGraph
- *
- * **Example** (Use buildEntityResolutionGraph)
- * ```ts
- * const erg = yield* buildEntityResolutionGraph(knowledgeGraph, config)
- * const canonicalId = erg.canonicalMap["arsenal"] // => "arsenal_fc"
- * ```
- *
+ * @category factories
  * @since 0.0.0
- * @category workflows
  */
 export const buildEntityResolutionGraph = dual2(
   (kg: KnowledgeGraph, config: EntityResolutionConfig): Effect.Effect<EntityResolutionGraph, never, EmbeddingService> =>

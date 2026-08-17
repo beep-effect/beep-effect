@@ -1,6 +1,8 @@
 /**
  * Backpressure Handler for Progress Streaming
  *
+ * **Details**
+ *
  * Applies intelligent backpressure to progress event streams:
  * - Critical events (start, complete, fail, stage transitions) always pass
  * - Non-critical events sampled when queue load exceeds threshold
@@ -14,20 +16,29 @@ import { $ScratchpadId } from "@beep/identity";
 import { PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import * as Effect from "effect/Effect";
-import * as Fiber from "effect/Fiber";
+import { Effect, Fiber, HashSet, Queue, Stream } from "effect";
 import { dual } from "effect/Function";
-import * as HashSet from "effect/HashSet";
 import * as P from "effect/Predicate";
-import * as Queue from "effect/Queue";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import type { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cluster/BackpressureHandler");
 
 /**
  * Alias for backward compatibility - maps to ProgressEvent from Contract
+ *
+ * **Example** (Reference ExtractionProgressEvent fields)
+ *
+ * ```ts
+ * import type { ExtractionProgressEvent } from "@effect-ontology/Cluster/BackpressureHandler"
+ *
+ * const extractionProgressEventFields: ReadonlyArray<keyof ExtractionProgressEvent> = ["_tag"]
+ *
+ * console.log(extractionProgressEventFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type ExtractionProgressEvent = ProgressEvent;
 
@@ -37,6 +48,17 @@ export type ExtractionProgressEvent = ProgressEvent;
 
 /**
  * Backpressure configuration
+ *
+ * **Example** (Inspect backpressure config)
+ *
+ * ```ts
+ * import { BackpressureConfig } from "@effect-ontology/Cluster/BackpressureHandler"
+ *
+ * console.log(BackpressureConfig)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export class BackpressureConfig extends S.Class<BackpressureConfig>($I`BackpressureConfig`)(
   {
@@ -110,23 +132,28 @@ const isCriticalEvent = (event: ExtractionProgressEvent): boolean => HashSet.has
 /**
  * Apply backpressure to an extraction progress event stream
  *
+ * **Details**
+ *
  * When the downstream consumer is slow:
  * 1. Critical events are always delivered immediately
  * 2. Non-critical events are sampled based on queue load
  * 3. Oldest non-critical events are dropped if queue is full
  *
+ * **Example** (Use withBackpressure)
+ *
+ * ```ts
+ * import { Stream } from "effect"
+ * import { BackpressureConfig, withBackpressure } from "@effect-ontology/Cluster/BackpressureHandler"
+ *
+ * const controlled = withBackpressure(Stream.empty, BackpressureConfig.make({}))
+ * console.log(Stream.isStream(controlled)) // true
+ * ```
+ *
  * @param source - Source stream of progress events
  * @param config - Backpressure configuration
  * @returns Stream with backpressure applied
- *
- * **Example** (Use withBackpressure)
- * ```ts
- * const controlled = withBackpressure(progressStream, {
- *   maxQueuedEvents: 500,
- *   samplingThreshold: 0.7,
- *   samplingRate: 0.2
- * })
- * ```
+ * @category services
+ * @since 0.0.0
  */
 export const withBackpressure: {
   <E>(
@@ -204,6 +231,19 @@ export const withBackpressure: {
 
 /**
  * Backpressure metrics for monitoring
+ *
+ * **Example** (Reference BackpressureMetrics fields)
+ *
+ * ```ts
+ * import type { BackpressureMetrics } from "@effect-ontology/Cluster/BackpressureHandler"
+ *
+ * const backpressureMetricsFields: ReadonlyArray<keyof BackpressureMetrics> = ["eventsReceived", "eventsDelivered", "eventsDropped"]
+ *
+ * console.log(backpressureMetricsFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface BackpressureMetrics {
   /** Total events received */
@@ -222,6 +262,17 @@ export interface BackpressureMetrics {
 
 /**
  * Create a metered backpressure handler that tracks metrics
+ *
+ * **Example** (Inspect with backpressure metered)
+ *
+ * ```ts
+ * import { withBackpressureMetered } from "@effect-ontology/Cluster/BackpressureHandler"
+ *
+ * console.log(withBackpressureMetered)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const withBackpressureMetered: {
   <E>(

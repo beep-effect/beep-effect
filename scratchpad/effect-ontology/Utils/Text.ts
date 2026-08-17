@@ -1,3 +1,10 @@
+/**
+ * Public effect-ontology APIs for utils/text.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { dual2 } from "./Dual.ts";
 
 /**
@@ -17,22 +24,26 @@ import { dual2 } from "./Dual.ts";
 /**
  * Split camelCase text into space-separated words
  *
+ * **Details**
+ *
  * Handles standard camelCase, PascalCase, and consecutive capitals (acronyms).
  * Useful for improving search by making camelCase identifiers searchable.
  *
- * @param text - Text possibly containing camelCase
- * @returns Space-separated words
- *
  * **Example** (Use splitCamelCase)
+ *
  * ```ts
+ * import { splitCamelCase } from "@effect-ontology/Utils/Text"
+ *
  * splitCamelCase("birthPlace")     // => "birth Place"
  * splitCamelCase("FirstName")       // => "First Name"
  * splitCamelCase("XMLHttpRequest") // => "XML Http Request"
  * splitCamelCase("already spaced") // => "already spaced"
  * ```
  *
+ * @param text - Text possibly containing camelCase
+ * @returns Space-separated words
+ * @category utilities
  * @since 0.0.0
- * @category normalization
  */
 export const splitCamelCase = (text: string): string =>
   text
@@ -47,15 +58,16 @@ export const splitCamelCase = (text: string): string =>
 /**
  * Generate n-grams from text
  *
+ * **Details**
+ *
  * Creates sliding window n-grams from tokenized text for improved search matching.
  * Useful for matching multi-word phrases and improving recall.
  *
- * @param tokens - Array of tokens
- * @param n - N-gram size (default: 2 for bigrams)
- * @returns Array of n-gram strings
- *
  * **Example** (Use generateNGrams)
+ *
  * ```ts
+ * import { generateNGrams } from "@effect-ontology/Utils/Text"
+ *
  * generateNGrams(["birth", "place", "location"], 2)
  * // => ["birth place", "place location"]
  *
@@ -63,8 +75,11 @@ export const splitCamelCase = (text: string): string =>
  * // => ["person name"] (only one trigram possible)
  * ```
  *
+ * @param tokens - Array of tokens
+ * @param n - N-gram size (default: 2 for bigrams)
+ * @returns Array of n-gram strings
+ * @category utilities
  * @since 0.0.0
- * @category normalization
  */
 export const generateNGrams = dual2((tokens: ReadonlyArray<string>, n: number): ReadonlyArray<string> => {
   if (tokens.length < n) {
@@ -85,21 +100,25 @@ export const generateNGrams = dual2((tokens: ReadonlyArray<string>, n: number): 
 /**
  * Enhance text for search by splitting camelCase and adding n-grams
  *
+ * **Details**
+ *
  * Takes a text string, splits camelCase words, tokenizes, and generates n-grams.
  * This creates a richer representation for BM25 indexing.
  *
- * @param text - Input text
- * @param ngramSize - Size of n-grams to generate (default: 2)
- * @returns Enhanced text with camelCase split and n-grams
- *
  * **Example** (Use enhanceTextForSearch)
+ *
  * ```ts
+ * import { enhanceTextForSearch } from "@effect-ontology/Utils/Text"
+ *
  * enhanceTextForSearch("birthPlace location", 2)
  * // => "birthPlace location birth place location birth place place location"
  * ```
  *
+ * @param text - Input text
+ * @param ngramSize - Size of n-grams to generate (default: 2)
+ * @returns Enhanced text with camelCase split and n-grams
+ * @category utilities
  * @since 0.0.0
- * @category normalization
  */
 export const enhanceTextForSearch = dual2((text: string, ngramSize: number): string => {
   // Split camelCase in the original text

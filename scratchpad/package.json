@@ -7,13 +7,14 @@
   "scripts": {
     "audit:effect-ontology-arbitraries": "bun effect-ontology/scripts/audit-arbitraries.ts",
     "audit:effect-ontology-docs": "bun effect-ontology/scripts/audit-documentation.ts",
-    "check:effect-ontology": "tsgo -p effect-ontology/tsconfig.json --noEmit --pretty false",
+    "check:effect-ontology": "tsgo -p effect-ontology/tsconfig.json --noEmit --pretty false && bun run --cwd .. beep laws native-runtime --check --include 'scratchpad/effect-ontology/**/*.ts'",
     "claudecode:check": "bun run claudecode:typecheck && bun run claudecode:test && bun run claudecode:lint",
     "claudecode:lint": "biome check --config-path claudecode/biome.jsonc claudecode test/claudecode",
     "claudecode:lint:fix": "biome check --write --config-path claudecode/biome.jsonc claudecode test/claudecode",
     "claudecode:test": "bunx --bun vitest run --config claudecode/vitest.config.ts",
     "claudecode:typecheck": "tsgo -p claudecode/tsconfig.json --noEmit",
     "docgen": "bun run ../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen:effect-ontology": "bun run ../packages/tooling/tool/docgen/src/bin.ts --config-file docgen.effect-ontology.json",
     "lint:effect-ontology": "biome check --config-path effect-ontology/biome.jsonc effect-ontology",
     "test:effect-ontology": "bunx --bun vitest run --config effect-ontology/vitest.config.ts"
   },
@@ -34,6 +35,7 @@
     "@beep/pretext": "workspace:^",
     "@beep/provenance": "workspace:^",
     "@beep/rdf": "workspace:^",
+    "@beep/repo-utils": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/semantic-web": "workspace:^",
     "@beep/shacl": "workspace:^",

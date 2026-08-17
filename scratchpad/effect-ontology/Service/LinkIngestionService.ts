@@ -1,24 +1,19 @@
 /**
  * Service: Link Ingestion Service
  *
+ * **Details**
+ *
  * Orchestrates URL → Storage → Metadata pipeline for link ingestion.
  * Handles fetching via Jina, content-addressed storage, and optional
  * AI enrichment for metadata extraction.
  *
- * **Example** (Use LinkIngestionService)
+ * **Example** (Inspect the ingestion layer)
+ *
  * ```ts
- * Effect.gen(function*() {
- *   const ingestion = yield* LinkIngestionService
+ * import { Layer } from "effect"
+ * import { LinkIngestionService } from "@effect-ontology/Service/LinkIngestionService"
  *
- *   // Ingest single URL with enrichment
- *   const result = yield* ingestion.ingestUrl("https://example.com/article", {
- *     enrich: true
- *   })
- *   console.log(result.contentHash, result.headline)
- *
- *   // Bulk ingest with parallelism
- *   const results = yield* ingestion.ingestUrls(urls, { concurrency: 5 })
- * })
+ * console.log(Layer.isLayer(LinkIngestionService.Default)) // true
  * ```
  *
  * @packageDocumentation
@@ -29,12 +24,12 @@ import { createHash } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { Cache, Context, Duration, Effect, Layer, Option } from "effect";
-import * as Clock from "effect/Clock";
-import * as DateTime from "effect/DateTime";
+import { Cache, Clock, Context, DateTime, Duration, Effect, Layer } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { EnrichedContent } from "../Domain/Model/EnrichedContent.ts";
 import type { IngestedLinkInsertRow, IngestedLinkRow } from "../Repository/schema.ts";
 import { ingestedLinks } from "../Repository/schema.ts";
@@ -53,6 +48,17 @@ const $I = $ScratchpadId.create("effect-ontology/Service/LinkIngestionService");
 
 /**
  * Error: Failed to ingest URL
+ *
+ * **Example** (Inspect link ingestion error)
+ *
+ * ```ts
+ * import { LinkIngestionError } from "@effect-ontology/Service/LinkIngestionService"
+ *
+ * console.log(LinkIngestionError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export class LinkIngestionError extends S.TaggedError<LinkIngestionError>($I`LinkIngestionError`)(
   "LinkIngestionError",
@@ -72,6 +78,20 @@ export class LinkIngestionError extends S.TaggedError<LinkIngestionError>($I`Lin
 
 /**
  * Options for ingesting a URL
+ *
+ *
+ * **Example** (Use the IngestOptions contract)
+ *
+ * ```ts
+ * import type { IngestOptions } from "@effect-ontology/Service/LinkIngestionService"
+ *
+ * const acceptsIngestOptions = (_value: IngestOptions): void => undefined
+ *
+ * console.log(acceptsIngestOptions)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface IngestOptions {
   /** Ontology ID for namespace scoping (required) */
@@ -90,6 +110,20 @@ export interface IngestOptions {
 
 /**
  * Result of ingesting a URL
+ *
+ *
+ * **Example** (Use the IngestResult contract)
+ *
+ * ```ts
+ * import type { IngestResult } from "@effect-ontology/Service/LinkIngestionService"
+ *
+ * const acceptsIngestResult = (_value: IngestResult): void => undefined
+ *
+ * console.log(acceptsIngestResult)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface IngestResult {
   /** Database ID of ingested link */
@@ -110,6 +144,20 @@ export interface IngestResult {
 
 /**
  * Options for bulk ingestion
+ *
+ *
+ * **Example** (Use the BulkIngestOptions contract)
+ *
+ * ```ts
+ * import type { BulkIngestOptions } from "@effect-ontology/Service/LinkIngestionService"
+ *
+ * const acceptsBulkIngestOptions = (_value: BulkIngestOptions): void => undefined
+ *
+ * console.log(acceptsBulkIngestOptions)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface BulkIngestOptions extends IngestOptions {
   /** Concurrency limit (default: 5) */
@@ -120,6 +168,20 @@ export interface BulkIngestOptions extends IngestOptions {
 
 /**
  * Filter for listing ingested links
+ *
+ *
+ * **Example** (Use the IngestedLinkFilter contract)
+ *
+ * ```ts
+ * import type { IngestedLinkFilter } from "@effect-ontology/Service/LinkIngestionService"
+ *
+ * const acceptsIngestedLinkFilter = (_value: IngestedLinkFilter): void => undefined
+ *
+ * console.log(acceptsIngestedLinkFilter)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface IngestedLinkFilter {
   readonly ontologyId?: string;
@@ -155,6 +217,20 @@ const buildStoragePath = (contentHash: string): string => `documents/${contentHa
 const CONTENT_HASH_CACHE_CAPACITY = 50_000;
 const CONTENT_HASH_CACHE_TTL = Duration.days(7); // Content hashes are immutable
 
+/**
+ * Provides the link ingestion service service capability.
+ *
+ * **Example** (Inspect link ingestion service)
+ *
+ * ```ts
+ * import { LinkIngestionService } from "@effect-ontology/Service/LinkIngestionService"
+ *
+ * console.log(LinkIngestionService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class LinkIngestionService extends Context.Service<LinkIngestionService>()($I`LinkIngestionService`, {
   make: Effect.gen(function* () {
     const jina = yield* JinaReaderClient;
@@ -168,16 +244,16 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
     // Raw DB lookup for content hash within an ontology (used by cache)
     // Uses composite key: "ontologyId:hash" for cache lookup
     const lookupByContentHash = Effect.fn("lookupByContentHash")(function* (compositeKey: string) {
-      const [ontologyId, hash] = compositeKey.split(":", 2);
+      const [ontologyId, hash] = A.take(Str.split(":")(compositeKey), 2);
       if (P.not(P.isTruthy)(ontologyId) || P.not(P.isTruthy)(hash)) {
-        return Option.none();
+        return O.none();
       }
       const [result] = yield* drizzle
         .select()
         .from(ingestedLinks)
         .where(and(eq(ingestedLinks.ontologyId, ontologyId), eq(ingestedLinks.contentHash, hash)))
         .limit(1);
-      return Option.fromNullishOr(result);
+      return O.fromNullishOr(result);
     });
 
     // Content hash cache with long TTL (immutable content)
@@ -228,7 +304,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       // 3. Check for duplicate (scoped by ontology)
       if (skipDuplicates) {
         const existing = yield* getByContentHash(ontologyId, contentHash);
-        if (Option.isSome(existing)) {
+        if (O.isSome(existing)) {
           return {
             id: existing.value.id,
             contentHash,
@@ -425,14 +501,14 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
      */
     const getById = Effect.fn("getById")(function* (id: string) {
       const [result] = yield* drizzle.select().from(ingestedLinks).where(eq(ingestedLinks.id, id)).limit(1);
-      return Option.fromNullishOr(result);
+      return O.fromNullishOr(result);
     });
 
     /**
      * List ingested links with filters
      */
     const list = Effect.fn("list")(function* (filter: IngestedLinkFilter = {}) {
-      let query = drizzle.select().from(ingestedLinks);
+      let query = drizzle.select().from(ingestedLinks).$dynamic();
       const conditions = [
         ...(P.isNotUndefined(filter.ontologyId) ? [eq(ingestedLinks.ontologyId, filter.ontologyId)] : []),
         ...(P.isNotUndefined(filter.status) ? [eq(ingestedLinks.status, filter.status)] : []),
@@ -440,13 +516,13 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         ...(P.isNotUndefined(filter.organization) ? [eq(ingestedLinks.organization, filter.organization)] : []),
       ];
       if (conditions.length > 0) {
-        query = query.where(and(...conditions)) as typeof query;
+        query = query.where(and(...conditions));
       }
       if (P.isNotUndefined(filter.limit)) {
-        query = query.limit(filter.limit) as typeof query;
+        query = query.limit(filter.limit);
       }
       if (P.isNotUndefined(filter.offset)) {
-        query = query.offset(filter.offset) as typeof query;
+        query = query.offset(filter.offset);
       }
       return yield* query;
     });
@@ -475,7 +551,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         .set({ status: "processed", processedAt: now, updatedAt: now })
         .where(eq(ingestedLinks.id, id))
         .returning();
-      return Option.fromNullishOr(result);
+      return O.fromNullishOr(result);
     });
 
     /**
@@ -488,7 +564,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         .set({ status: "failed", errorMessage, updatedAt: now })
         .where(eq(ingestedLinks.id, id))
         .returning();
-      return Option.fromNullishOr(result);
+      return O.fromNullishOr(result);
     });
 
     /**
@@ -507,7 +583,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         })
         .where(eq(ingestedLinks.id, id))
         .returning();
-      return Option.fromNullishOr(result);
+      return O.fromNullishOr(result);
     });
 
     /**
@@ -515,10 +591,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
      */
     const getByIds = Effect.fn("getByIds")(function* (ids: ReadonlyArray<string>) {
       if (ids.length === 0) return [];
-      const results = yield* drizzle
-        .select()
-        .from(ingestedLinks)
-        .where(inArray(ingestedLinks.id, ids as string[]));
+      const results = yield* drizzle.select().from(ingestedLinks).where(inArray(ingestedLinks.id, ids));
       return results;
     });
 
@@ -533,7 +606,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
      * Retrieves content from storage and runs enrichment again,
      * updating the database with new metadata.
      */
-    const reEnrich = (id: string): Effect.Effect<Option.Option<IngestedLinkRow>, LinkIngestionError> =>
+    const reEnrich = (id: string): Effect.Effect<O.Option<IngestedLinkRow>, LinkIngestionError> =>
       Effect.gen(function* () {
         // 1. Get link by ID
         const linkOpt = yield* getById(id).pipe(
@@ -545,8 +618,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
             })
           )
         );
-        if (Option.isNone(linkOpt)) {
-          return Option.none();
+        if (O.isNone(linkOpt)) {
+          return O.none();
         }
         const link = linkOpt.value;
 
@@ -563,7 +636,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
           )
         );
 
-        if (Option.isNone(contentOpt)) {
+        if (O.isNone(contentOpt)) {
           return yield* LinkIngestionError.make({
             message: `Content not found in storage at ${link.storageUri}`,
             ...(P.isNotUndefined(sourceUrl) ? { url: sourceUrl } : {}),
@@ -621,7 +694,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
             )
           );
 
-        return Option.fromNullishOr(updated);
+        return O.fromNullishOr(updated);
       });
 
     /**
@@ -723,16 +796,16 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         })
       )
     ),
-    getByContentHash: Effect.fn("LinkIngestionService.getByContentHash")(() => Effect.succeed(Option.none())),
-    getById: Effect.fn("LinkIngestionService.getById")(() => Effect.succeed(Option.none())),
+    getByContentHash: Effect.fn("LinkIngestionService.getByContentHash")(() => Effect.succeed(O.none())),
+    getById: Effect.fn("LinkIngestionService.getById")(() => Effect.succeed(O.none())),
     getByIds: Effect.fn("LinkIngestionService.getByIds")(() => Effect.succeed([])),
     list: Effect.fn("LinkIngestionService.list")(() => Effect.succeed([])),
     getPending: Effect.fn("LinkIngestionService.getPending")(() => Effect.succeed([])),
     getEnriched: Effect.fn("LinkIngestionService.getEnriched")(() => Effect.succeed([])),
-    markProcessed: Effect.fn("LinkIngestionService.markProcessed")(() => Effect.succeed(Option.none())),
-    markProcessing: Effect.fn("LinkIngestionService.markProcessing")(() => Effect.succeed(Option.none())),
-    markFailed: Effect.fn("LinkIngestionService.markFailed")(() => Effect.succeed(Option.none())),
-    getContent: Effect.fn("LinkIngestionService.getContent")(() => Effect.succeed(Option.none())),
+    markProcessed: Effect.fn("LinkIngestionService.markProcessed")(() => Effect.succeed(O.none())),
+    markProcessing: Effect.fn("LinkIngestionService.markProcessing")(() => Effect.succeed(O.none())),
+    markFailed: Effect.fn("LinkIngestionService.markFailed")(() => Effect.succeed(O.none())),
+    getContent: Effect.fn("LinkIngestionService.getContent")(() => Effect.succeed(O.none())),
     reEnrich: Effect.fn("LinkIngestionService.reEnrich")(() =>
       Effect.fail(
         LinkIngestionError.make({

@@ -1,6 +1,8 @@
 /**
  * Article Repository
  *
+ * **Details**
+ *
  * Effect-native repository for article metadata using Drizzle ORM.
  * Tracks source documents from which claims are extracted.
  *
@@ -9,15 +11,15 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Layer } from "effect";
-import * as DateTime from "effect/DateTime";
+import { Context, DateTime, Layer } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Article");
 
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, desc, eq, gte, like, lte, sql } from "drizzle-orm";
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import type { ArticleInsertRow } from "./schema.ts";
 import { articles } from "./schema.ts";
 
@@ -25,8 +27,40 @@ import { articles } from "./schema.ts";
 // Types
 // =============================================================================
 
+/**
+ * Describes the article id data exposed by this module.
+ *
+ * **Example** (Create ArticleId)
+ *
+ * ```ts
+ * import type { ArticleId } from "@effect-ontology/Repository/Article"
+ *
+ * const articleId: ArticleId = "article-id-1"
+ *
+ * console.log(articleId)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ArticleId = string;
 
+/**
+ * Describes the article filter data exposed by this module.
+ *
+ * **Example** (Reference ArticleFilter fields)
+ *
+ * ```ts
+ * import type { ArticleFilter } from "@effect-ontology/Repository/Article"
+ *
+ * const articleFilterFields: ReadonlyArray<keyof ArticleFilter> = ["ontologyId", "sourceName", "publishedAfter"]
+ *
+ * console.log(articleFilterFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ArticleFilter {
   readonly ontologyId?: string;
   readonly sourceName?: string;
@@ -42,6 +76,20 @@ export interface ArticleFilter {
 // Service
 // =============================================================================
 
+/**
+ * Provides repository access for article repository.
+ *
+ * **Example** (Inspect article repository)
+ *
+ * ```ts
+ * import { ArticleRepository } from "@effect-ontology/Repository/Article"
+ *
+ * console.log(ArticleRepository)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class ArticleRepository extends Context.Service<ArticleRepository>()($I`ArticleRepository`, {
   make: Effect.gen(function* () {
     const drizzle = yield* PostgresDrizzle;
@@ -63,7 +111,7 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
      */
     const getArticle = Effect.fn("getArticle")(function* (id: ArticleId) {
       const [result] = yield* drizzle.select().from(articles).where(eq(articles.id, id)).limit(1);
-      return Option.fromNullishOr(result);
+      return O.fromNullishOr(result);
     });
 
     /**
@@ -79,7 +127,7 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
         .from(articles)
         .where(and(...conditions))
         .limit(1);
-      return Option.fromNullishOr(result);
+      return O.fromNullishOr(result);
     });
 
     /**
@@ -87,7 +135,7 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
      */
     const getOrCreateArticle = Effect.fn("getOrCreateArticle")(function* (article: ArticleInsertRow) {
       const existing = yield* getArticleByUri(article.uri, article.ontologyId);
-      if (Option.isSome(existing)) {
+      if (O.isSome(existing)) {
         return existing.value;
       }
       return yield* insertArticle(article);
@@ -102,7 +150,7 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
         .set({ ...updates, updatedAt: DateTime.toDateUtc(yield* DateTime.now) })
         .where(eq(articles.id, id))
         .returning();
-      return Option.fromNullishOr(result);
+      return O.fromNullishOr(result);
     });
 
     /**
@@ -144,15 +192,15 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
      */
     const getArticles = Effect.fn("getArticles")(function* (filter: ArticleFilter) {
       const conditions = buildWhereConditions(filter);
-      let query = drizzle.select().from(articles).orderBy(desc(articles.publishedAt));
+      let query = drizzle.select().from(articles).orderBy(desc(articles.publishedAt)).$dynamic();
       if (conditions.length > 0) {
-        query = query.where(and(...conditions)) as typeof query;
+        query = query.where(and(...conditions));
       }
       if (P.isNotUndefined(filter.limit)) {
-        query = query.limit(filter.limit) as typeof query;
+        query = query.limit(filter.limit);
       }
       if (P.isNotUndefined(filter.offset)) {
-        query = query.offset(filter.offset) as typeof query;
+        query = query.offset(filter.offset);
       }
       return yield* query;
     });
@@ -179,9 +227,9 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
      */
     const countArticles = Effect.fn("countArticles")(function* (filter: ArticleFilter = {}) {
       const conditions = buildWhereConditions(filter);
-      let query = drizzle.select({ count: sql<number>`count(*)::int` }).from(articles);
+      let query = drizzle.select({ count: sql<number>`count(*)::int` }).from(articles).$dynamic();
       if (conditions.length > 0) {
-        query = query.where(and(...conditions)) as typeof query;
+        query = query.where(and(...conditions));
       }
       const result = yield* query;
       return result[0]?.count ?? 0;
@@ -204,7 +252,7 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
      */
     const articleExists = Effect.fn("articleExists")(function* (uri: string) {
       const result = yield* getArticleByUri(uri);
-      return Option.isSome(result);
+      return O.isSome(result);
     });
 
     return {

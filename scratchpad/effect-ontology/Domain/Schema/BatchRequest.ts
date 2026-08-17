@@ -27,14 +27,15 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/BatchRequest");
  *
  * **Example** (Use BatchRequestDocument)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { BatchRequestDocument } from "@effect-ontology/Schema/BatchRequest.ts"
+ * import { BatchRequestDocument } from "@effect-ontology/Schema/BatchRequest"
  *
- * const document = S.decodeUnknownSync(BatchRequestDocument)({
+ * const document = S.decodeUnknownOption(BatchRequestDocument)({
  *   sourceUri: "gs://beep-input/documents/report.pdf",
  *   contentType: "application/pdf"
  * })
- * console.log(document.sourceUri)
+ * console.log(O.map(document, (value) => value.sourceUri))
  * ```
  *
  * @invariant Size, when present, is a non-negative integer and content type is
@@ -94,10 +95,11 @@ export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`Batch
  *
  * **Example** (Use BatchRequest)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { BatchRequest } from "@effect-ontology/Schema/BatchRequest.ts"
+ * import { BatchRequest } from "@effect-ontology/Schema/BatchRequest"
  *
- * const request = S.decodeUnknownSync(BatchRequest)({
+ * const request = S.decodeUnknownOption(BatchRequest)({
  *   ontologyId: "premier-league",
  *   ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
  *   ontologyVersion:
@@ -110,7 +112,7 @@ export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`Batch
  *     }
  *   ]
  * })
- * console.log(request.preprocessing.enabled) // true
+ * console.log(O.map(request, (value) => value.preprocessing.enabled)) // true
  * ```
  *
  * @invariant Contains at least one validated document and a complete
@@ -173,7 +175,7 @@ export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
    *
    * **Example** (Use decode)
    * ```ts
-   * import { BatchRequest } from "@effect-ontology/Schema/BatchRequest.ts"
+   * import { BatchRequest } from "@effect-ontology/Schema/BatchRequest"
    *
    * const decode = BatchRequest.decode({
    *   ontologyId: "premier-league",
@@ -196,7 +198,7 @@ export class BatchRequest extends S.Class<BatchRequest>($I`BatchRequest`)(
   /** Derived runtime guard for validated batch requests. */
   static readonly is = S.is(BatchRequest);
 
-  static readonly decodeUnknownOption = S.decodeUnknownOption(BatchRequest)
+  static readonly decodeUnknownOption = S.decodeUnknownOption(BatchRequest);
 }
 
 export {
@@ -205,7 +207,7 @@ export {
    *
    * **Example** (Use BatchRequest)
    * ```ts
-   * import { defaultPreprocessingOptions } from "@effect-ontology/Schema/BatchRequest.ts"
+   * import { defaultPreprocessingOptions } from "@effect-ontology/Schema/BatchRequest"
    *
    * console.log(defaultPreprocessingOptions.enabled) // true
    * ```
@@ -219,10 +221,11 @@ export {
    *
    * **Example** (Use BatchRequest)
    * ```ts
+   * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
-   * import { PreprocessingOptions } from "@effect-ontology/Schema/BatchRequest.ts"
+   * import { PreprocessingOptions } from "@effect-ontology/Schema/BatchRequest"
    *
-   * console.log(S.decodeUnknownSync(PreprocessingOptions)({}).enabled) // true
+   * console.log(O.map(S.decodeUnknownOption(PreprocessingOptions)({}), (value) => value.enabled)) // true
    * ```
    *
    * @category configuration

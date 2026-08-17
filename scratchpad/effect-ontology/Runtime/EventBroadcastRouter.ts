@@ -1,6 +1,8 @@
 /**
  * WebSocket Event Broadcast Router
  *
+ * **Details**
+ *
  * Provides real-time event streaming from server to clients.
  * Broadcasts domain events (extractions, curation) to connected WebSocket clients.
  *
@@ -22,10 +24,10 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { PubSub as GCloudPubSub } from "@google-cloud/pubsub";
-import { Config, Context, Effect, FiberMap, Layer, MutableHashMap, Option, PubSub, Schema, Stream } from "effect";
-import * as Clock from "effect/Clock";
+import { Clock, Config, Context, Effect, FiberMap, Layer, MutableHashMap, PubSub, Random, Stream } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Random from "effect/Random";
+import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import type * as Socket from "effect/unstable/socket/Socket";
@@ -38,50 +40,132 @@ import { TicketService } from "../Service/Ticket.ts";
 
 /**
  * Event message sent to WebSocket clients
+ *
+ * **Example** (Validate broadcast event)
+ *
+ * ```ts
+ * import { BroadcastEvent } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(BroadcastEvent)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export const BroadcastEvent = Schema.Struct({
-  type: Schema.tag("event"),
-  id: Schema.String,
-  event: Schema.String,
-  primaryKey: Schema.String,
-  payload: Schema.Unknown,
-  ontologyId: Schema.String,
+export const BroadcastEvent = S.Struct({
+  type: S.tag("event"),
+  id: S.String,
+  event: S.String,
+  primaryKey: S.String,
+  payload: S.Unknown,
+  ontologyId: S.String,
   timestamp: NonNegativeInt,
 });
+/**
+ * Describes the broadcast event data exposed by this module.
+ *
+ *
+ * **Example** (Use the BroadcastEvent contract)
+ *
+ * ```ts
+ * import type { BroadcastEvent } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * const acceptsBroadcastEvent = (_value: BroadcastEvent): void => undefined
+ *
+ * console.log(acceptsBroadcastEvent)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type BroadcastEvent = typeof BroadcastEvent.Type;
 
 /**
  * Ping message to keep connection alive
+ *
+ * **Example** (Validate ping message)
+ *
+ * ```ts
+ * import { PingMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(PingMessage)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export const PingMessage = Schema.Struct({
-  type: Schema.tag("ping"),
+export const PingMessage = S.Struct({
+  type: S.tag("ping"),
   timestamp: NonNegativeInt,
 });
 
 /**
  * Connected message sent on connection
+ *
+ * **Example** (Validate connected message)
+ *
+ * ```ts
+ * import { ConnectedMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ConnectedMessage)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export const ConnectedMessage = Schema.Struct({
-  type: Schema.tag("connected"),
-  ontologyId: Schema.String,
-  serverId: Schema.String,
+export const ConnectedMessage = S.Struct({
+  type: S.tag("connected"),
+  ontologyId: S.String,
+  serverId: S.String,
   timestamp: NonNegativeInt,
 });
 
 /**
  * Union of all server-to-client messages
+ *
+ * **Example** (Validate server message)
+ *
+ * ```ts
+ * import { ServerMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ServerMessage)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export const ServerMessage = Schema.Union([BroadcastEvent, PingMessage, ConnectedMessage]);
+export const ServerMessage = S.Union([BroadcastEvent, PingMessage, ConnectedMessage]);
+/**
+ * Describes the server message data exposed by this module.
+ *
+ *
+ * **Example** (Use the ServerMessage contract)
+ *
+ * ```ts
+ * import type { ServerMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * const acceptsServerMessage = (_value: ServerMessage): void => undefined
+ *
+ * console.log(acceptsServerMessage)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ServerMessage = typeof ServerMessage.Type;
 
-const PubSubEventPayload = Schema.Struct({
-  ontologyId: Schema.optionalKey(Schema.String),
-  event: Schema.optionalKey(Schema.String),
-  primaryKey: Schema.optionalKey(Schema.String),
+const PubSubEventPayload = S.Struct({
+  ontologyId: S.optionalKey(S.String),
+  event: S.optionalKey(S.String),
+  primaryKey: S.optionalKey(S.String),
 });
 
-const decodePubSubEventPayload = Schema.decodeUnknownOption(Schema.fromJsonString(PubSubEventPayload));
-const encodeServerMessage = Schema.encodeEffect(Schema.fromJsonString(ServerMessage));
+const decodePubSubEventPayload = S.decodeUnknownOption(S.fromJsonString(PubSubEventPayload));
+const encodeServerMessage = S.encodeEffect(S.fromJsonString(ServerMessage));
 
 // =============================================================================
 // Broadcast Hub Service
@@ -89,6 +173,20 @@ const encodeServerMessage = Schema.encodeEffect(Schema.fromJsonString(ServerMess
 
 /**
  * Service for broadcasting events to connected WebSocket clients
+ *
+ *
+ * **Example** (Use the EventBroadcastHubMethods contract)
+ *
+ * ```ts
+ * import type { EventBroadcastHubMethods } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * const acceptsEventBroadcastHubMethods = (_value: EventBroadcastHubMethods): void => undefined
+ *
+ * console.log(acceptsEventBroadcastHubMethods)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface EventBroadcastHubMethods {
   /**
@@ -110,6 +208,20 @@ export interface EventBroadcastHubMethods {
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/EventBroadcastRouter");
 
+/**
+ * Exposes event broadcast hub for composition by callers of this module.
+ *
+ * **Example** (Inspect event broadcast hub)
+ *
+ * ```ts
+ * import { EventBroadcastHub } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * console.log(EventBroadcastHub)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export class EventBroadcastHub extends Context.Service<EventBroadcastHub, EventBroadcastHubMethods>()(
   $I`EventBroadcastHub`
 ) {}
@@ -117,10 +229,24 @@ export class EventBroadcastHub extends Context.Service<EventBroadcastHub, EventB
 /**
  * Configuration for Cloud Pub/Sub event subscription
  */
-class PubSubSubscriptionError extends Schema.TaggedError<PubSubSubscriptionError>()("PubSubSubscriptionError", {
-  message: Schema.String,
+class PubSubSubscriptionError extends S.TaggedError<PubSubSubscriptionError>()("PubSubSubscriptionError", {
+  message: S.String,
 }) {}
 
+/**
+ * Exposes event broadcast config for composition by callers of this module.
+ *
+ * **Example** (Inspect event broadcast config)
+ *
+ * ```ts
+ * import { EventBroadcastConfig } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * console.log(EventBroadcastConfig)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export const EventBroadcastConfig = Config.all({
   projectId: Config.string("PUBSUB_PROJECT_ID").pipe(Config.withDefault("")),
   eventsTopicId: Config.string("PUBSUB_EVENTS_TOPIC").pipe(Config.withDefault("ontology-events")),
@@ -138,7 +264,7 @@ const makeEventBroadcastHubMemory = Effect.gen(function* () {
   const clientCounts = MutableHashMap.empty<string, number>();
 
   const getOrCreatePubSub = Effect.fn(function* (ontologyId: string) {
-    return yield* Option.match(MutableHashMap.get(pubsubs, ontologyId), {
+    return yield* O.match(MutableHashMap.get(pubsubs, ontologyId), {
       onNone: () =>
         PubSub.unbounded<BroadcastEvent>().pipe(
           Effect.tap((pubsub) => Effect.sync(() => MutableHashMap.set(pubsubs, ontologyId, pubsub)))
@@ -157,11 +283,11 @@ const makeEventBroadcastHubMemory = Effect.gen(function* () {
     const ps = yield* getOrCreatePubSub(ontologyId);
     const queue = yield* PubSub.subscribe(ps);
     // Track client count
-    const current = Option.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0);
+    const current = O.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0);
     MutableHashMap.set(clientCounts, ontologyId, current + 1);
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        const count = Option.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 1);
+        const count = O.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 1);
         MutableHashMap.set(clientCounts, ontologyId, count - 1);
       })
     );
@@ -169,7 +295,7 @@ const makeEventBroadcastHubMemory = Effect.gen(function* () {
   });
 
   const getClientCount = (ontologyId: string) =>
-    Effect.succeed(Option.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0));
+    Effect.succeed(O.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0));
 
   yield* Effect.logInfo("EventBroadcastHub started (memory mode)");
 
@@ -195,7 +321,7 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
   const clientCounts = MutableHashMap.empty<string, number>();
 
   const getOrCreatePubSub = Effect.fn("getOrCreatePubSub")(function* (ontologyId: string) {
-    return yield* Option.match(MutableHashMap.get(localPubsubs, ontologyId), {
+    return yield* O.match(MutableHashMap.get(localPubsubs, ontologyId), {
       onNone: () =>
         PubSub.unbounded<BroadcastEvent>().pipe(
           Effect.tap((pubsub) => Effect.sync(() => MutableHashMap.set(localPubsubs, ontologyId, pubsub)))
@@ -220,7 +346,7 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
 
   subscription.on("message", (message) => {
     const data = decodePubSubEventPayload(message.data.toString());
-    if (Option.isSome(data)) {
+    if (O.isSome(data)) {
       const ontologyId = message.attributes?.ontologyId ?? data.value.ontologyId;
 
       if (P.isNotUndefined(ontologyId)) {
@@ -235,7 +361,7 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
         };
 
         // Broadcast to local WebSocket clients
-        Option.map(MutableHashMap.get(localPubsubs, ontologyId), (pubsub) => PubSub.publishUnsafe(pubsub, event));
+        O.map(MutableHashMap.get(localPubsubs, ontologyId), (pubsub) => PubSub.publishUnsafe(pubsub, event));
       }
 
       message.ack();
@@ -271,11 +397,11 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
     const ps = yield* getOrCreatePubSub(ontologyId);
     const queue = yield* PubSub.subscribe(ps);
     // Track client count
-    const current = Option.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0);
+    const current = O.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0);
     MutableHashMap.set(clientCounts, ontologyId, current + 1);
     yield* Effect.addFinalizer(() =>
       Effect.sync(() => {
-        const count = Option.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 1);
+        const count = O.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 1);
         MutableHashMap.set(clientCounts, ontologyId, count - 1);
       })
     );
@@ -283,7 +409,7 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
   });
 
   const getClientCount = (ontologyId: string) =>
-    Effect.succeed(Option.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0));
+    Effect.succeed(O.getOrElse(MutableHashMap.get(clientCounts, ontologyId), () => 0));
 
   return EventBroadcastHub.of({
     broadcast,
@@ -294,16 +420,49 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
 
 /**
  * Layer for EventBroadcastHub (memory mode - for local development)
+ *
+ * **Example** (Inspect event broadcast hub memory)
+ *
+ * ```ts
+ * import { EventBroadcastHubMemory } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * console.log(EventBroadcastHubMemory)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const EventBroadcastHubMemory = Layer.effect(EventBroadcastHub, makeEventBroadcastHubMemory);
 
 /**
  * Layer for EventBroadcastHub (Cloud Pub/Sub mode - for production)
+ *
+ * **Example** (Inspect event broadcast hub pub sub)
+ *
+ * ```ts
+ * import { EventBroadcastHubPubSub } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * console.log(EventBroadcastHubPubSub)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const EventBroadcastHubPubSub = Layer.effect(EventBroadcastHub, makeEventBroadcastHubPubSub);
 
 /**
  * Default layer - auto-selects based on PUBSUB_PROJECT_ID being set
+ *
+ * **Example** (Inspect event broadcast hub live)
+ *
+ * ```ts
+ * import { EventBroadcastHubLive } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * console.log(EventBroadcastHubLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const EventBroadcastHubLive = Layer.unwrap(
   Effect.gen(function* () {
@@ -325,9 +484,20 @@ export const EventBroadcastHubLive = Layer.unwrap(
 /**
  * Event Broadcast WebSocket Router
  *
+ * **Details**
+ *
  * Provides WebSocket endpoint for real-time event streaming:
  * - GET /v1/ontologies/:ontologyId/events/stream - WebSocket upgrade
  *
+ * **Example** (Inspect event broadcast router)
+ *
+ * ```ts
+ * import { EventBroadcastRouter } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * console.log(EventBroadcastRouter)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
  */
 export const EventBroadcastRouter = HttpRouter.addAll([
@@ -350,7 +520,7 @@ export const EventBroadcastRouter = HttpRouter.addAll([
 
       // Validate ontology exists
       const entryOpt = yield* (yield* OntologyService).getRegistryEntry(ontologyId);
-      if (Option.isNone(entryOpt)) {
+      if (O.isNone(entryOpt)) {
         return yield* HttpServerResponse.json(
           {
             error: "NOT_FOUND",
@@ -452,16 +622,26 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
 /**
  * Publish a domain event to the broadcast hub
  *
+ * **Details**
+ *
  * Call this from EventBusService or WorkflowOrchestrator to broadcast events.
  *
  * **Example** (Use broadcastDomainEvent)
+ *
  * ```ts
- * yield* broadcastDomainEvent("seattle", {
+ * import { Effect } from "effect"
+ * import { broadcastDomainEvent } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * const broadcast = broadcastDomainEvent("seattle", {
  *   event: "ExtractionCompleted",
- *   primaryKey: `extraction:${batchId}`,
- *   payload: { batchId, entityCount: 42 }
+ *   primaryKey: "extraction:batch-42",
+ *   payload: { batchId: "batch-42", entityCount: 42 }
  * })
+ * console.log(Effect.isEffect(broadcast)) // true
  * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const broadcastDomainEvent = Effect.fn("broadcastDomainEvent")(function* (
   ontologyId: string,

@@ -1,6 +1,8 @@
 /**
  * Runtime: Health Check Service
  *
+ * **Details**
+ *
  * Provides liveness and readiness probes for Kubernetes/cloud deployment.
  *
  * @packageDocumentation
@@ -8,16 +10,34 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Duration, Effect, Layer, Option, Redacted } from "effect";
-import * as DateTime from "effect/DateTime";
+import { Context, DateTime, Duration, Effect, Layer, Redacted } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import { ConfigService } from "../Service/Config.ts";
 import { StorageService } from "../Service/Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/HealthCheck");
+const healthOk: "ok" = "ok";
+const healthError: "error" = "error";
 
 /**
  * Health check result
+ *
+ *
+ * **Example** (Use the HealthResult contract)
+ *
+ * ```ts
+ * import type { HealthResult } from "@effect-ontology/Runtime/HealthCheck"
+ *
+ * const acceptsHealthResult = (_value: HealthResult): void => undefined
+ *
+ * console.log(acceptsHealthResult)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface HealthResult {
   readonly status: "ok" | "degraded" | "error";
@@ -29,8 +49,16 @@ export interface HealthResult {
 /**
  * HealthCheckService - Liveness and readiness probes
  *
+ * **Example** (Inspect health check service)
+ *
+ * ```ts
+ * import { HealthCheckService } from "@effect-ontology/Runtime/HealthCheck"
+ *
+ * console.log(HealthCheckService)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class HealthCheckService extends Context.Service<HealthCheckService>()($I`HealthCheckService`, {
   make: Effect.gen(function* () {
@@ -70,10 +98,10 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
           checks.ontologyConfig = "error";
         }
 
-        const hasError = Object.values(checks).some((c) => c === "error");
+        const hasError = A.some(R.values(checks), (check) => check === "error");
 
         return {
-          status: hasError ? ("degraded") : ("ok"),
+          status: hasError ? "degraded" : "ok",
           timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
           checks,
         };
@@ -97,12 +125,12 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
         if (P.isTruthy(config.ontology.path)) {
           checks.ontologyFile = yield* storage.get(config.ontology.path).pipe(
             Effect.timeout(Duration.seconds(5)),
-            Effect.map((opt) => (opt !== undefined ? ("ok") : ("error"))),
+            Effect.map((opt): "ok" | "error" => (opt !== undefined ? healthOk : healthError)),
             Effect.catch((error) =>
               Effect.logWarning("Ontology file health check failed", {
                 path: config.ontology.path,
                 error: String(error),
-              }).pipe(Effect.as("error"))
+              }).pipe(Effect.as(healthError))
             )
           );
         } else {
@@ -114,22 +142,22 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
         checks.llmApiKey = P.isTruthy(apiKeyValue) && apiKeyValue.length > 0 ? "ok" : "error";
 
         // 5. Storage bucket accessibility (if using GCS)
-        if (Option.isSome(config.storage.bucket) && config.storage.type === "gcs") {
+        if (O.isSome(config.storage.bucket) && config.storage.type === "gcs") {
           // Try to list or access the bucket root to verify connectivity
           checks.storageConnectivity = yield* storage.list("").pipe(
             Effect.timeout(Duration.seconds(5)),
-            Effect.map(() => "ok"),
+            Effect.as(healthOk),
             Effect.catch((error) =>
               Effect.logWarning("Storage connectivity check failed", {
                 bucket: config.storage.bucket,
                 error: String(error),
-              }).pipe(Effect.as("error"))
+              }).pipe(Effect.as(healthError))
             )
           );
         }
 
         // Determine overall status
-        const errorCount = Object.values(checks).filter((c) => c === "error").length;
+        const errorCount = A.length(A.filter(R.values(checks), (check) => check === "error"));
         if (errorCount === 0) {
           overallStatus = "ok";
         } else if (errorCount <= 1) {

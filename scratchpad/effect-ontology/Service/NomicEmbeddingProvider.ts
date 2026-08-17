@@ -1,6 +1,8 @@
 /**
  * Nomic Embedding Provider
  *
+ * **Details**
+ *
  * Wraps existing NomicNlpService as EmbeddingProvider interface.
  * Enables local inference via Transformers.js.
  *
@@ -8,7 +10,7 @@
  * @since 0.0.0
  */
 
-import { Effect, Layer } from "effect";
+import { Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
@@ -25,26 +27,27 @@ import { NomicNlpService, NomicNlpServiceLive } from "./NomicNlp.ts";
  *
  * @internal
  */
-const mapTaskType = (taskType: string): NomicTaskType => {
-  switch (taskType) {
-    case "search_query":
-      return "search_query";
-    case "search_document":
-      return "search_document";
-    case "clustering":
-      return "clustering";
-    case "classification":
-      return "classification";
-    default:
-      return "search_document";
-  }
-};
+const mapTaskType = (taskType: string): NomicTaskType =>
+  Match.value(taskType).pipe(
+    Match.when("search_query", (): NomicTaskType => "search_query"),
+    Match.when("clustering", (): NomicTaskType => "clustering"),
+    Match.when("classification", (): NomicTaskType => "classification"),
+    Match.orElse((): NomicTaskType => "search_document")
+  );
 
 /**
  * Create NomicEmbeddingProvider from NomicNlpService
  *
- * @since 0.0.0
+ * **Example** (Inspect nomic embedding provider live)
+ *
+ * ```ts
+ * import { NomicEmbeddingProviderLive } from "@effect-ontology/Service/NomicEmbeddingProvider"
+ *
+ * console.log(NomicEmbeddingProviderLive)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const NomicEmbeddingProviderLive: Layer.Layer<EmbeddingProvider, never, NomicNlpService | ConfigService> =
   Layer.effect(
@@ -90,10 +93,20 @@ export const NomicEmbeddingProviderLive: Layer.Layer<EmbeddingProvider, never, N
 /**
  * Complete Nomic provider with all dependencies
  *
+ * **Details**
+ *
  * Includes NomicNlpService layer.
  *
- * @since 0.0.0
+ * **Example** (Inspect nomic embedding provider default)
+ *
+ * ```ts
+ * import { NomicEmbeddingProviderDefault } from "@effect-ontology/Service/NomicEmbeddingProvider"
+ *
+ * console.log(NomicEmbeddingProviderDefault)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const NomicEmbeddingProviderDefault: Layer.Layer<EmbeddingProvider, never, ConfigService> =
   NomicEmbeddingProviderLive.pipe(Layer.provide(NomicNlpServiceLive));

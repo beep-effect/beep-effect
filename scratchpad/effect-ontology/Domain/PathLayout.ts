@@ -13,10 +13,8 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { pipe } from "effect";
-import * as Result from "effect/Result";
+import { pipe, Result, Tuple } from "effect";
 import * as S from "effect/Schema";
-import * as Tuple from "effect/Tuple";
 import type { FastCheck } from "effect/testing";
 import { BatchId, ContentHash, DocumentId, Namespace, OntologyName } from "./Identity.ts";
 import { OutputFilename, OutputType } from "./Model/OutputType.ts";
@@ -108,7 +106,7 @@ const makeImageHashPathSchema = <const Name extends string, const Suffix extends
  *
  * **Example** (Use StoragePathSegment)
  * ```ts
- * import { StoragePathSegment } from "@effect-ontology/PathLayout.ts"
+ * import { StoragePathSegment } from "@effect-ontology/PathLayout"
  *
  * console.log(StoragePathSegment.is("link-2026_07")) // true
  * console.log(StoragePathSegment.is("../escape")) // false
@@ -144,7 +142,7 @@ export const StoragePathSegment = S.String.check(
  *
  * **Example** (Use StoragePathSegment)
  * ```ts
- * import { StoragePathSegment, type StoragePathSegment as Segment } from "@effect-ontology/PathLayout.ts"
+ * import { StoragePathSegment, type StoragePathSegment as Segment } from "@effect-ontology/PathLayout"
  *
  * const segment: Segment = StoragePathSegment.make("document-42")
  * console.log(segment)
@@ -175,8 +173,8 @@ const OntologyFilePathParts = S.TemplateLiteralParser([
  *
  * **Example** (Use OntologyFilePath)
  * ```ts
- * import { ContentHash, Namespace, OntologyName } from "@effect-ontology/Identity.ts"
- * import { OntologyFilePath } from "@effect-ontology/PathLayout.ts"
+ * import { ContentHash, Namespace, OntologyName } from "@effect-ontology/Identity"
+ * import { OntologyFilePath } from "@effect-ontology/PathLayout"
  *
  * const path = OntologyFilePath.fromParts(
  *   Namespace.make("legal"),
@@ -222,7 +220,7 @@ export const OntologyFilePath = S.TemplateLiteral([
  *
  * **Example** (Use OntologyFilePath)
  * ```ts
- * import { type OntologyFilePath } from "@effect-ontology/PathLayout.ts"
+ * import { type OntologyFilePath } from "@effect-ontology/PathLayout"
  *
  * const accept = (path: OntologyFilePath) => path
  * console.log(accept)
@@ -238,7 +236,7 @@ export type OntologyFilePath = typeof OntologyFilePath.Type;
  *
  * **Example** (Use OntologyFilePathTuple)
  * ```ts
- * import { type OntologyFilePathTuple } from "@effect-ontology/PathLayout.ts"
+ * import { type OntologyFilePathTuple } from "@effect-ontology/PathLayout"
  *
  * const accept = (parts: OntologyFilePathTuple) => parts
  * console.log(accept)
@@ -254,7 +252,7 @@ export type OntologyFilePathTuple = typeof OntologyFilePathParts.Type;
  *
  * **Example** (Use OntologyFilePathEncoded)
  * ```ts
- * import { type OntologyFilePathEncoded } from "@effect-ontology/PathLayout.ts"
+ * import { type OntologyFilePathEncoded } from "@effect-ontology/PathLayout"
  *
  * const accept = (path: OntologyFilePathEncoded) => path
  * console.log(accept)
@@ -270,8 +268,8 @@ export type OntologyFilePathEncoded = typeof OntologyFilePath.Encoded;
  *
  * **Example** (Use OntologyManifestPath)
  * ```ts
- * import { Namespace, OntologyName } from "@effect-ontology/Identity.ts"
- * import { OntologyManifestPath } from "@effect-ontology/PathLayout.ts"
+ * import { Namespace, OntologyName } from "@effect-ontology/Identity"
+ * import { OntologyManifestPath } from "@effect-ontology/PathLayout"
  *
  * const path = OntologyManifestPath.fromParts(
  *   Namespace.make("legal"),
@@ -305,7 +303,7 @@ export const OntologyManifestPath = S.TemplateLiteral([
  *
  * **Example** (Use OntologyManifestPath)
  * ```ts
- * import { type OntologyManifestPath } from "@effect-ontology/PathLayout.ts"
+ * import { type OntologyManifestPath } from "@effect-ontology/PathLayout"
  *
  * const accept = (path: OntologyManifestPath) => path
  * console.log(accept)
@@ -321,8 +319,8 @@ export type OntologyManifestPath = typeof OntologyManifestPath.Type;
  *
  * **Example** (Use BatchStatusPath)
  * ```ts
- * import { BatchId } from "@effect-ontology/Identity.ts"
- * import { BatchStatusPath } from "@effect-ontology/PathLayout.ts"
+ * import { BatchId } from "@effect-ontology/Identity"
+ * import { BatchStatusPath } from "@effect-ontology/PathLayout"
  *
  * console.log(BatchStatusPath.fromBatch(BatchId.make("batch-deadbeefcafe")))
  * // "batches/batch-deadbeefcafe/status.json"
@@ -341,7 +339,7 @@ export const BatchStatusPath = makeBatchPathSchema(
  *
  * **Example** (Use BatchStatusPath)
  * ```ts
- * import { type BatchStatusPath } from "@effect-ontology/PathLayout.ts"
+ * import { type BatchStatusPath } from "@effect-ontology/PathLayout"
  * const accept = (path: BatchStatusPath) => path
  * console.log(accept)
  * ```
@@ -355,8 +353,8 @@ export type BatchStatusPath = typeof BatchStatusPath.Type;
  *
  * **Example** (Use BatchManifestPath)
  * ```ts
- * import { BatchId } from "@effect-ontology/Identity.ts"
- * import { BatchManifestPath } from "@effect-ontology/PathLayout.ts"
+ * import { BatchId } from "@effect-ontology/Identity"
+ * import { BatchManifestPath } from "@effect-ontology/PathLayout"
  *
  * console.log(BatchManifestPath.fromBatch(BatchId.make("batch-deadbeefcafe")))
  * // "batches/batch-deadbeefcafe/manifest.json"
@@ -375,7 +373,7 @@ export const BatchManifestPath = makeBatchPathSchema(
  *
  * **Example** (Use BatchManifestPath)
  * ```ts
- * import { type BatchManifestPath } from "@effect-ontology/PathLayout.ts"
+ * import { type BatchManifestPath } from "@effect-ontology/PathLayout"
  * const accept = (path: BatchManifestPath) => path
  * console.log(accept)
  * ```
@@ -389,8 +387,8 @@ export type BatchManifestPath = typeof BatchManifestPath.Type;
  *
  * **Example** (Use BatchResolutionPath)
  * ```ts
- * import { BatchId } from "@effect-ontology/Identity.ts"
- * import { BatchResolutionPath } from "@effect-ontology/PathLayout.ts"
+ * import { BatchId } from "@effect-ontology/Identity"
+ * import { BatchResolutionPath } from "@effect-ontology/PathLayout"
  *
  * console.log(BatchResolutionPath.fromBatch(BatchId.make("batch-deadbeefcafe")))
  * // "batches/batch-deadbeefcafe/resolution/merged.ttl"
@@ -409,7 +407,7 @@ export const BatchResolutionPath = makeBatchPathSchema(
  *
  * **Example** (Use BatchResolutionPath)
  * ```ts
- * import { type BatchResolutionPath } from "@effect-ontology/PathLayout.ts"
+ * import { type BatchResolutionPath } from "@effect-ontology/PathLayout"
  * const accept = (path: BatchResolutionPath) => path
  * console.log(accept)
  * ```
@@ -423,8 +421,8 @@ export type BatchResolutionPath = typeof BatchResolutionPath.Type;
  *
  * **Example** (Use BatchValidationGraphPath)
  * ```ts
- * import { BatchId } from "@effect-ontology/Identity.ts"
- * import { BatchValidationGraphPath } from "@effect-ontology/PathLayout.ts"
+ * import { BatchId } from "@effect-ontology/Identity"
+ * import { BatchValidationGraphPath } from "@effect-ontology/PathLayout"
  *
  * console.log(BatchValidationGraphPath.fromBatch(BatchId.make("batch-deadbeefcafe")))
  * // "batches/batch-deadbeefcafe/validation/validated.ttl"
@@ -443,7 +441,7 @@ export const BatchValidationGraphPath = makeBatchPathSchema(
  *
  * **Example** (Use BatchValidationGraphPath)
  * ```ts
- * import { type BatchValidationGraphPath } from "@effect-ontology/PathLayout.ts"
+ * import { type BatchValidationGraphPath } from "@effect-ontology/PathLayout"
  * const accept = (path: BatchValidationGraphPath) => path
  * console.log(accept)
  * ```
@@ -457,8 +455,8 @@ export type BatchValidationGraphPath = typeof BatchValidationGraphPath.Type;
  *
  * **Example** (Use BatchValidationReportPath)
  * ```ts
- * import { BatchId } from "@effect-ontology/Identity.ts"
- * import { BatchValidationReportPath } from "@effect-ontology/PathLayout.ts"
+ * import { BatchId } from "@effect-ontology/Identity"
+ * import { BatchValidationReportPath } from "@effect-ontology/PathLayout"
  *
  * console.log(BatchValidationReportPath.fromBatch(BatchId.make("batch-deadbeefcafe")))
  * // "batches/batch-deadbeefcafe/validation/report.json"
@@ -477,7 +475,7 @@ export const BatchValidationReportPath = makeBatchPathSchema(
  *
  * **Example** (Use BatchValidationReportPath)
  * ```ts
- * import { type BatchValidationReportPath } from "@effect-ontology/PathLayout.ts"
+ * import { type BatchValidationReportPath } from "@effect-ontology/PathLayout"
  * const accept = (path: BatchValidationReportPath) => path
  * console.log(accept)
  * ```
@@ -491,8 +489,8 @@ export type BatchValidationReportPath = typeof BatchValidationReportPath.Type;
  *
  * **Example** (Use BatchCanonicalPath)
  * ```ts
- * import { BatchId } from "@effect-ontology/Identity.ts"
- * import { BatchCanonicalPath } from "@effect-ontology/PathLayout.ts"
+ * import { BatchId } from "@effect-ontology/Identity"
+ * import { BatchCanonicalPath } from "@effect-ontology/PathLayout"
  *
  * console.log(BatchCanonicalPath.fromBatch(BatchId.make("batch-deadbeefcafe")))
  * // "batches/batch-deadbeefcafe/canonical/final.ttl"
@@ -511,7 +509,7 @@ export const BatchCanonicalPath = makeBatchPathSchema(
  *
  * **Example** (Use BatchCanonicalPath)
  * ```ts
- * import { type BatchCanonicalPath } from "@effect-ontology/PathLayout.ts"
+ * import { type BatchCanonicalPath } from "@effect-ontology/PathLayout"
  * const accept = (path: BatchCanonicalPath) => path
  * console.log(accept)
  * ```
@@ -525,8 +523,8 @@ export type BatchCanonicalPath = typeof BatchCanonicalPath.Type;
  *
  * **Example** (Use BatchEnrichedManifestPath)
  * ```ts
- * import { BatchId } from "@effect-ontology/Identity.ts"
- * import { BatchEnrichedManifestPath } from "@effect-ontology/PathLayout.ts"
+ * import { BatchId } from "@effect-ontology/Identity"
+ * import { BatchEnrichedManifestPath } from "@effect-ontology/PathLayout"
  *
  * console.log(BatchEnrichedManifestPath.fromBatch(BatchId.make("batch-deadbeefcafe")))
  * // "batches/batch-deadbeefcafe/preprocessing/enriched-manifest.json"
@@ -545,7 +543,7 @@ export const BatchEnrichedManifestPath = makeBatchPathSchema(
  *
  * **Example** (Use BatchEnrichedManifestPath)
  * ```ts
- * import { type BatchEnrichedManifestPath } from "@effect-ontology/PathLayout.ts"
+ * import { type BatchEnrichedManifestPath } from "@effect-ontology/PathLayout"
  * const accept = (path: BatchEnrichedManifestPath) => path
  * console.log(accept)
  * ```
@@ -559,8 +557,8 @@ export type BatchEnrichedManifestPath = typeof BatchEnrichedManifestPath.Type;
  *
  * **Example** (Use BatchIngestManifestPath)
  * ```ts
- * import { BatchId } from "@effect-ontology/Identity.ts"
- * import { BatchIngestManifestPath } from "@effect-ontology/PathLayout.ts"
+ * import { BatchId } from "@effect-ontology/Identity"
+ * import { BatchIngestManifestPath } from "@effect-ontology/PathLayout"
  *
  * console.log(BatchIngestManifestPath.fromBatch(BatchId.make("batch-deadbeefcafe")))
  * // "batches/batch-deadbeefcafe/ingest/manifest.json"
@@ -579,7 +577,7 @@ export const BatchIngestManifestPath = makeBatchPathSchema(
  *
  * **Example** (Use BatchIngestManifestPath)
  * ```ts
- * import { type BatchIngestManifestPath } from "@effect-ontology/PathLayout.ts"
+ * import { type BatchIngestManifestPath } from "@effect-ontology/PathLayout"
  * const accept = (path: BatchIngestManifestPath) => path
  * console.log(accept)
  * ```
@@ -593,8 +591,8 @@ export type BatchIngestManifestPath = typeof BatchIngestManifestPath.Type;
  *
  * **Example** (Use BatchFinalOutputPath)
  * ```ts
- * import { BatchId } from "@effect-ontology/Identity.ts"
- * import { BatchFinalOutputPath } from "@effect-ontology/PathLayout.ts"
+ * import { BatchId } from "@effect-ontology/Identity"
+ * import { BatchFinalOutputPath } from "@effect-ontology/PathLayout"
  *
  * console.log(BatchFinalOutputPath.fromBatch(BatchId.make("batch-deadbeefcafe")))
  * // "batches/batch-deadbeefcafe/ingest/output.ttl"
@@ -613,7 +611,7 @@ export const BatchFinalOutputPath = makeBatchPathSchema(
  *
  * **Example** (Use BatchFinalOutputPath)
  * ```ts
- * import { type BatchFinalOutputPath } from "@effect-ontology/PathLayout.ts"
+ * import { type BatchFinalOutputPath } from "@effect-ontology/PathLayout"
  * const accept = (path: BatchFinalOutputPath) => path
  * console.log(accept)
  * ```
@@ -627,8 +625,8 @@ export type BatchFinalOutputPath = typeof BatchFinalOutputPath.Type;
  *
  * **Example** (Use BatchInferencePath)
  * ```ts
- * import { BatchId } from "@effect-ontology/Identity.ts"
- * import { BatchInferencePath } from "@effect-ontology/PathLayout.ts"
+ * import { BatchId } from "@effect-ontology/Identity"
+ * import { BatchInferencePath } from "@effect-ontology/PathLayout"
  *
  * console.log(BatchInferencePath.fromBatch(BatchId.make("batch-deadbeefcafe")))
  * // "batches/batch-deadbeefcafe/inference/enriched.ttl"
@@ -647,7 +645,7 @@ export const BatchInferencePath = makeBatchPathSchema(
  *
  * **Example** (Use BatchInferencePath)
  * ```ts
- * import { type BatchInferencePath } from "@effect-ontology/PathLayout.ts"
+ * import { type BatchInferencePath } from "@effect-ontology/PathLayout"
  * const accept = (path: BatchInferencePath) => path
  * console.log(accept)
  * ```
@@ -661,8 +659,8 @@ export type BatchInferencePath = typeof BatchInferencePath.Type;
  *
  * **Example** (Use DocumentMetadataPath)
  * ```ts
- * import { DocumentId } from "@effect-ontology/Identity.ts"
- * import { DocumentMetadataPath } from "@effect-ontology/PathLayout.ts"
+ * import { DocumentId } from "@effect-ontology/Identity"
+ * import { DocumentMetadataPath } from "@effect-ontology/PathLayout"
  *
  * console.log(DocumentMetadataPath.fromDocument(DocumentId.make("doc-deadbeefcafe")))
  * // "documents/doc-deadbeefcafe/metadata.json"
@@ -681,7 +679,7 @@ export const DocumentMetadataPath = makeDocumentPathSchema(
  *
  * **Example** (Use DocumentMetadataPath)
  * ```ts
- * import { type DocumentMetadataPath } from "@effect-ontology/PathLayout.ts"
+ * import { type DocumentMetadataPath } from "@effect-ontology/PathLayout"
  * const accept = (path: DocumentMetadataPath) => path
  * console.log(accept)
  * ```
@@ -695,8 +693,8 @@ export type DocumentMetadataPath = typeof DocumentMetadataPath.Type;
  *
  * **Example** (Use DocumentInputPath)
  * ```ts
- * import { DocumentId } from "@effect-ontology/Identity.ts"
- * import { DocumentInputPath } from "@effect-ontology/PathLayout.ts"
+ * import { DocumentId } from "@effect-ontology/Identity"
+ * import { DocumentInputPath } from "@effect-ontology/PathLayout"
  *
  * console.log(DocumentInputPath.fromDocument(DocumentId.make("doc-deadbeefcafe")))
  * // "documents/doc-deadbeefcafe/input/content.txt"
@@ -715,7 +713,7 @@ export const DocumentInputPath = makeDocumentPathSchema(
  *
  * **Example** (Use DocumentInputPath)
  * ```ts
- * import { type DocumentInputPath } from "@effect-ontology/PathLayout.ts"
+ * import { type DocumentInputPath } from "@effect-ontology/PathLayout"
  * const accept = (path: DocumentInputPath) => path
  * console.log(accept)
  * ```
@@ -729,8 +727,8 @@ export type DocumentInputPath = typeof DocumentInputPath.Type;
  *
  * **Example** (Use DocumentGraphPath)
  * ```ts
- * import { DocumentId } from "@effect-ontology/Identity.ts"
- * import { DocumentGraphPath } from "@effect-ontology/PathLayout.ts"
+ * import { DocumentId } from "@effect-ontology/Identity"
+ * import { DocumentGraphPath } from "@effect-ontology/PathLayout"
  *
  * console.log(DocumentGraphPath.fromDocument(DocumentId.make("doc-deadbeefcafe")))
  * // "documents/doc-deadbeefcafe/extraction/graph.ttl"
@@ -749,7 +747,7 @@ export const DocumentGraphPath = makeDocumentPathSchema(
  *
  * **Example** (Use DocumentGraphPath)
  * ```ts
- * import { type DocumentGraphPath } from "@effect-ontology/PathLayout.ts"
+ * import { type DocumentGraphPath } from "@effect-ontology/PathLayout"
  * const accept = (path: DocumentGraphPath) => path
  * console.log(accept)
  * ```
@@ -767,8 +765,8 @@ const RunMetadataPathParts = S.TemplateLiteralParser(["runs/", DocumentId, "/met
  *
  * **Example** (Use RunMetadataPath)
  * ```ts
- * import { DocumentId } from "@effect-ontology/Identity.ts"
- * import { RunMetadataPath } from "@effect-ontology/PathLayout.ts"
+ * import { DocumentId } from "@effect-ontology/Identity"
+ * import { RunMetadataPath } from "@effect-ontology/PathLayout"
  *
  * console.log(RunMetadataPath.fromDocument(DocumentId.make("doc-deadbeefcafe")))
  * // "runs/doc-deadbeefcafe/metadata.json"
@@ -796,7 +794,7 @@ export const RunMetadataPath = S.TemplateLiteral(["runs/", DocumentId, "/metadat
  *
  * **Example** (Use RunMetadataPath)
  * ```ts
- * import { type RunMetadataPath } from "@effect-ontology/PathLayout.ts"
+ * import { type RunMetadataPath } from "@effect-ontology/PathLayout"
  * const accept = (path: RunMetadataPath) => path
  * console.log(accept)
  * ```
@@ -810,8 +808,8 @@ export type RunMetadataPath = typeof RunMetadataPath.Type;
  *
  * **Example** (Use RunInputPath)
  * ```ts
- * import { DocumentId } from "@effect-ontology/Identity.ts"
- * import { RunInputPath } from "@effect-ontology/PathLayout.ts"
+ * import { DocumentId } from "@effect-ontology/Identity"
+ * import { RunInputPath } from "@effect-ontology/PathLayout"
  *
  * console.log(RunInputPath.fromDocument(DocumentId.make("doc-deadbeefcafe")))
  * // "runs/doc-deadbeefcafe/input/document.txt"
@@ -833,7 +831,7 @@ export const RunInputPath = S.TemplateLiteral(["runs/", DocumentId, "/input/docu
  *
  * **Example** (Use RunInputPath)
  * ```ts
- * import { type RunInputPath } from "@effect-ontology/PathLayout.ts"
+ * import { type RunInputPath } from "@effect-ontology/PathLayout"
  * const accept = (path: RunInputPath) => path
  * console.log(accept)
  * ```
@@ -876,8 +874,8 @@ const RunChunkPathParts = S.TemplateLiteralParser([
  * **Example** (Use RunChunkPath)
  * ```ts
  * import { NonNegativeInt } from "@beep/schema"
- * import { DocumentId } from "@effect-ontology/Identity.ts"
- * import { RunChunkPath } from "@effect-ontology/PathLayout.ts"
+ * import { DocumentId } from "@effect-ontology/Identity"
+ * import { RunChunkPath } from "@effect-ontology/PathLayout"
  *
  * console.log(RunChunkPath.fromParts(
  *   DocumentId.make("doc-deadbeefcafe"),
@@ -912,7 +910,7 @@ export const RunChunkPath = S.TemplateLiteral(["runs/", DocumentId, "/input/chun
  *
  * **Example** (Use RunChunkPath)
  * ```ts
- * import { type RunChunkPath } from "@effect-ontology/PathLayout.ts"
+ * import { type RunChunkPath } from "@effect-ontology/PathLayout"
  * const accept = (path: RunChunkPath) => path
  * console.log(accept)
  * ```
@@ -938,8 +936,8 @@ const RunOutputPathParts = S.TemplateLiteralParser(["runs/", DocumentId, "/outpu
  *
  * **Example** (Use RunOutputPath)
  * ```ts
- * import { DocumentId } from "@effect-ontology/Identity.ts"
- * import { RunOutputPath } from "@effect-ontology/PathLayout.ts"
+ * import { DocumentId } from "@effect-ontology/Identity"
+ * import { RunOutputPath } from "@effect-ontology/PathLayout"
  *
  * console.log(RunOutputPath.fromParts(
  *   DocumentId.make("doc-deadbeefcafe"),
@@ -972,7 +970,7 @@ export const RunOutputPath = S.TemplateLiteral(["runs/", DocumentId, "/outputs/"
  *
  * **Example** (Use RunOutputPath)
  * ```ts
- * import { type RunOutputPath } from "@effect-ontology/PathLayout.ts"
+ * import { type RunOutputPath } from "@effect-ontology/PathLayout"
  * const accept = (path: RunOutputPath) => path
  * console.log(accept)
  * ```
@@ -986,7 +984,7 @@ export type RunOutputPath = typeof RunOutputPath.Type;
  *
  * **Example** (Use ImageVariantSize)
  * ```ts
- * import { ImageVariantSize } from "@effect-ontology/PathLayout.ts"
+ * import { ImageVariantSize } from "@effect-ontology/PathLayout"
  *
  * console.log(ImageVariantSize.is.thumb("thumb")) // true
  * ```
@@ -1009,7 +1007,7 @@ export const ImageVariantSize = LiteralKit(["thumb", "medium"])
  *
  * **Example** (Use ImageVariantSize)
  * ```ts
- * import { ImageVariantSize, type ImageVariantSize as VariantSize } from "@effect-ontology/PathLayout.ts"
+ * import { ImageVariantSize, type ImageVariantSize as VariantSize } from "@effect-ontology/PathLayout"
  *
  * const size: VariantSize = ImageVariantSize.Enum.thumb
  * console.log(size)
@@ -1025,7 +1023,7 @@ export type ImageVariantSize = typeof ImageVariantSize.Type;
  *
  * **Example** (Use ImageOwnerType)
  * ```ts
- * import { ImageOwnerType } from "@effect-ontology/PathLayout.ts"
+ * import { ImageOwnerType } from "@effect-ontology/PathLayout"
  *
  * console.log(ImageOwnerType.is.document("document")) // true
  * ```
@@ -1048,7 +1046,7 @@ export const ImageOwnerType = LiteralKit(["link", "document"])
  *
  * **Example** (Use ImageOwnerType)
  * ```ts
- * import { ImageOwnerType, type ImageOwnerType as OwnerType } from "@effect-ontology/PathLayout.ts"
+ * import { ImageOwnerType, type ImageOwnerType as OwnerType } from "@effect-ontology/PathLayout"
  *
  * const ownerType: OwnerType = ImageOwnerType.Enum.document
  * console.log(ownerType)
@@ -1064,8 +1062,8 @@ export type ImageOwnerType = typeof ImageOwnerType.Type;
  *
  * **Example** (Use ImageOriginalPath)
  * ```ts
- * import { ContentHash } from "@effect-ontology/Identity.ts"
- * import { ImageOriginalPath } from "@effect-ontology/PathLayout.ts"
+ * import { ContentHash } from "@effect-ontology/Identity"
+ * import { ImageOriginalPath } from "@effect-ontology/PathLayout"
  *
  * const hash = ContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
  * console.log(ImageOriginalPath.fromHash(hash).endsWith("/original")) // true
@@ -1084,7 +1082,7 @@ export const ImageOriginalPath = makeImageHashPathSchema(
  *
  * **Example** (Use ImageOriginalPath)
  * ```ts
- * import { type ImageOriginalPath } from "@effect-ontology/PathLayout.ts"
+ * import { type ImageOriginalPath } from "@effect-ontology/PathLayout"
  * const accept = (path: ImageOriginalPath) => path
  * console.log(accept)
  * ```
@@ -1098,8 +1096,8 @@ export type ImageOriginalPath = typeof ImageOriginalPath.Type;
  *
  * **Example** (Use ImageMetadataPath)
  * ```ts
- * import { ContentHash } from "@effect-ontology/Identity.ts"
- * import { ImageMetadataPath } from "@effect-ontology/PathLayout.ts"
+ * import { ContentHash } from "@effect-ontology/Identity"
+ * import { ImageMetadataPath } from "@effect-ontology/PathLayout"
  *
  * const hash = ContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
  * console.log(ImageMetadataPath.fromHash(hash).endsWith("/metadata.json")) // true
@@ -1118,7 +1116,7 @@ export const ImageMetadataPath = makeImageHashPathSchema(
  *
  * **Example** (Use ImageMetadataPath)
  * ```ts
- * import { type ImageMetadataPath } from "@effect-ontology/PathLayout.ts"
+ * import { type ImageMetadataPath } from "@effect-ontology/PathLayout"
  * const accept = (path: ImageMetadataPath) => path
  * console.log(accept)
  * ```
@@ -1132,8 +1130,8 @@ export type ImageMetadataPath = typeof ImageMetadataPath.Type;
  *
  * **Example** (Use ImageLabelsPath)
  * ```ts
- * import { ContentHash } from "@effect-ontology/Identity.ts"
- * import { ImageLabelsPath } from "@effect-ontology/PathLayout.ts"
+ * import { ContentHash } from "@effect-ontology/Identity"
+ * import { ImageLabelsPath } from "@effect-ontology/PathLayout"
  *
  * const hash = ContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
  * console.log(ImageLabelsPath.fromHash(hash).endsWith("/labels.json")) // true
@@ -1152,7 +1150,7 @@ export const ImageLabelsPath = makeImageHashPathSchema(
  *
  * **Example** (Use ImageLabelsPath)
  * ```ts
- * import { type ImageLabelsPath } from "@effect-ontology/PathLayout.ts"
+ * import { type ImageLabelsPath } from "@effect-ontology/PathLayout"
  * const accept = (path: ImageLabelsPath) => path
  * console.log(accept)
  * ```
@@ -1166,8 +1164,8 @@ export type ImageLabelsPath = typeof ImageLabelsPath.Type;
  *
  * **Example** (Use ImageVariantPath)
  * ```ts
- * import { ContentHash } from "@effect-ontology/Identity.ts"
- * import { ImageVariantPath } from "@effect-ontology/PathLayout.ts"
+ * import { ContentHash } from "@effect-ontology/Identity"
+ * import { ImageVariantPath } from "@effect-ontology/PathLayout"
  *
  * const hash = ContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
  * console.log(ImageVariantPath.fromParts(hash, "thumb").endsWith("/thumb.jpg")) // true
@@ -1196,7 +1194,7 @@ export const ImageVariantPath = S.TemplateLiteral([
  *
  * **Example** (Use ImageVariantPath)
  * ```ts
- * import { type ImageVariantPath } from "@effect-ontology/PathLayout.ts"
+ * import { type ImageVariantPath } from "@effect-ontology/PathLayout"
  * const accept = (path: ImageVariantPath) => path
  * console.log(accept)
  * ```
@@ -1210,7 +1208,7 @@ export type ImageVariantPath = typeof ImageVariantPath.Type;
  *
  * **Example** (Use ImageOwnerBasePath)
  * ```ts
- * import { ImageOwnerBasePath, StoragePathSegment } from "@effect-ontology/PathLayout.ts"
+ * import { ImageOwnerBasePath, StoragePathSegment } from "@effect-ontology/PathLayout"
  *
  * console.log(ImageOwnerBasePath.fromParts(
  *   "document",
@@ -1242,7 +1240,7 @@ export const ImageOwnerBasePath = S.TemplateLiteral([
  *
  * **Example** (Use ImageOwnerBasePath)
  * ```ts
- * import { type ImageOwnerBasePath } from "@effect-ontology/PathLayout.ts"
+ * import { type ImageOwnerBasePath } from "@effect-ontology/PathLayout"
  * const accept = (path: ImageOwnerBasePath) => path
  * console.log(accept)
  * ```
@@ -1256,7 +1254,7 @@ export type ImageOwnerBasePath = typeof ImageOwnerBasePath.Type;
  *
  * **Example** (Use ImageManifestPath)
  * ```ts
- * import { ImageManifestPath, StoragePathSegment } from "@effect-ontology/PathLayout.ts"
+ * import { ImageManifestPath, StoragePathSegment } from "@effect-ontology/PathLayout"
  *
  * console.log(ImageManifestPath.fromParts(
  *   "link",
@@ -1288,7 +1286,7 @@ export const ImageManifestPath = S.TemplateLiteral([
  *
  * **Example** (Use ImageManifestPath)
  * ```ts
- * import { type ImageManifestPath } from "@effect-ontology/PathLayout.ts"
+ * import { type ImageManifestPath } from "@effect-ontology/PathLayout"
  * const accept = (path: ImageManifestPath) => path
  * console.log(accept)
  * ```
@@ -1302,8 +1300,8 @@ export type ImageManifestPath = typeof ImageManifestPath.Type;
  *
  * **Example** (Use CanonicalNamespacePath)
  * ```ts
- * import { Namespace } from "@effect-ontology/Identity.ts"
- * import { CanonicalNamespacePath } from "@effect-ontology/PathLayout.ts"
+ * import { Namespace } from "@effect-ontology/Identity"
+ * import { CanonicalNamespacePath } from "@effect-ontology/PathLayout"
  *
  * console.log(CanonicalNamespacePath.fromNamespace(Namespace.make("legal")))
  * // "canonical/legal/entities.ttl"
@@ -1325,7 +1323,7 @@ export const CanonicalNamespacePath = S.TemplateLiteral(["canonical/", Namespace
  *
  * **Example** (Use CanonicalNamespacePath)
  * ```ts
- * import { type CanonicalNamespacePath } from "@effect-ontology/PathLayout.ts"
+ * import { type CanonicalNamespacePath } from "@effect-ontology/PathLayout"
  * const accept = (path: CanonicalNamespacePath) => path
  * console.log(accept)
  * ```
@@ -1346,8 +1344,8 @@ export type CanonicalNamespacePath = typeof CanonicalNamespacePath.Type;
  *
  * **Example** (Use PathLayout)
  * ```ts
- * import { BatchId, DocumentId } from "@effect-ontology/Identity.ts"
- * import { PathLayout } from "@effect-ontology/PathLayout.ts"
+ * import { BatchId, DocumentId } from "@effect-ontology/Identity"
+ * import { PathLayout } from "@effect-ontology/PathLayout"
  *
  * console.log(PathLayout.batch.status(BatchId.make("batch-deadbeefcafe")))
  * console.log(PathLayout.run.output(DocumentId.make("doc-deadbeefcafe"), "rdf-jsonld"))
@@ -1409,7 +1407,7 @@ export {
    *
    * **Example** (Use PathLayout)
    * ```ts
-   * import { OutputFilename } from "@effect-ontology/PathLayout.ts"
+   * import { OutputFilename } from "@effect-ontology/PathLayout"
    *
    * console.log(OutputFilename.Enum.graphJsonld) // "graph.jsonld"
    * ```
@@ -1423,7 +1421,7 @@ export {
    *
    * **Example** (Use PathLayout)
    * ```ts
-   * import { OutputType } from "@effect-ontology/PathLayout.ts"
+   * import { OutputType } from "@effect-ontology/PathLayout"
    *
    * console.log(OutputType.filename("rdf-jsonld")) // "graph.jsonld"
    * ```

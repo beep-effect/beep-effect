@@ -1,6 +1,8 @@
 /**
  * EmbeddingProvider - Provider-agnostic embedding interface
  *
+ * **Details**
+ *
  * Abstracts over Nomic (local), Voyage (API), and future providers.
  * Enables dynamic provider selection based on configuration.
  *
@@ -19,30 +21,65 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingProvider");
 /**
  * Task types for embeddings
  *
+ * **Details**
+ *
  * Voyage-compatible superset:
  * - search_query: For query text (optimized for search)
  * - search_document: For document text (optimized for indexing)
  * - clustering: For clustering tasks
  * - classification: For classification tasks
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the EmbeddingTaskType contract)
+ *
+ * ```ts
+ * import type { EmbeddingTaskType } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * const acceptsEmbeddingTaskType = (_value: EmbeddingTaskType): void => undefined
+ *
+ * console.log(acceptsEmbeddingTaskType)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export type EmbeddingTaskType = "search_query" | "search_document" | "clustering" | "classification";
 
 /**
  * Embedding vector type
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the Embedding contract)
+ *
+ * ```ts
+ * import type { Embedding } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * const acceptsEmbedding = (_value: Embedding): void => undefined
+ *
+ * console.log(acceptsEmbedding)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export type Embedding = ReadonlyArray<number>;
 
 /**
  * Embedding request for batching
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the EmbeddingRequest contract)
+ *
+ * ```ts
+ * import type { EmbeddingRequest } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * const acceptsEmbeddingRequest = (_value: EmbeddingRequest): void => undefined
+ *
+ * console.log(acceptsEmbeddingRequest)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface EmbeddingRequest {
   readonly text: string;
@@ -52,8 +89,19 @@ export interface EmbeddingRequest {
 /**
  * Provider metadata for cache key generation and configuration
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the ProviderMetadata contract)
+ *
+ * ```ts
+ * import type { ProviderMetadata } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * const acceptsProviderMetadata = (_value: ProviderMetadata): void => undefined
+ *
+ * console.log(acceptsProviderMetadata)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface ProviderMetadata {
   /**
@@ -75,11 +123,24 @@ export interface ProviderMetadata {
 /**
  * EmbeddingProvider service interface
  *
+ * **Details**
+ *
  * Providers implement this interface to expose their embedding capabilities.
  * The service layer handles caching, deduplication, and batching.
  *
+ *
+ * **Example** (Use the EmbeddingProviderMethods contract)
+ *
+ * ```ts
+ * import type { EmbeddingProviderMethods } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * const acceptsEmbeddingProviderMethods = (_value: EmbeddingProviderMethods): void => undefined
+ *
+ * console.log(acceptsEmbeddingProviderMethods)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category services
  */
 export interface EmbeddingProviderMethods {
   /**
@@ -115,8 +176,16 @@ export interface EmbeddingProviderMethods {
 /**
  * EmbeddingProvider service tag
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding provider)
+ *
+ * ```ts
+ * import { EmbeddingProvider } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * console.log(EmbeddingProvider)
+ * ```
+ *
  * @category services
+ * @since 0.0.0
  */
 export class EmbeddingProvider extends Context.Service<EmbeddingProvider, EmbeddingProviderMethods>()(
   $I`EmbeddingProvider`
@@ -125,11 +194,21 @@ export class EmbeddingProvider extends Context.Service<EmbeddingProvider, Embedd
 /**
  * Compute cosine similarity between two vectors
  *
+ * **Details**
+ *
  * Extracted as a utility function since it's pure math and doesn't
  * depend on the provider. Can be shared across implementations.
  *
+ * **Example** (Inspect cosine similarity)
+ *
+ * ```ts
+ * import { cosineSimilarity } from "@effect-ontology/Service/EmbeddingProvider"
+ *
+ * console.log(cosineSimilarity)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
- * @category utilities
  */
 export const cosineSimilarity: {
   (b: Embedding): (a: Embedding) => number;

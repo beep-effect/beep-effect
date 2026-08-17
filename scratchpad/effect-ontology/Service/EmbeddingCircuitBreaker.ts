@@ -1,6 +1,8 @@
 /**
  * Embedding Circuit Breaker Service
  *
+ * **Details**
+ *
  * Provides circuit breaker protection for embedding provider API calls.
  * Each provider (Voyage, Nomic) gets its own circuit breaker instance
  * to prevent cascading failures and enable graceful fallback.
@@ -10,7 +12,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Duration, Effect, HashMap, Layer, Option, Ref } from "effect";
+import { Context, Duration, Effect, HashMap, Layer, Ref } from "effect";
+import * as O from "effect/Option";
 import type { CircuitBreaker, CircuitBreakerConfig, CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
 import { makeCircuitBreaker } from "../Runtime/CircuitBreaker.ts";
 
@@ -23,16 +26,38 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCircuitBreaker
 /**
  * Supported embedding provider identifiers
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the EmbeddingProviderId contract)
+ *
+ * ```ts
+ * import type { EmbeddingProviderId } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * const acceptsEmbeddingProviderId = (_value: EmbeddingProviderId): void => undefined
+ *
+ * console.log(acceptsEmbeddingProviderId)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export type EmbeddingProviderId = "voyage" | "nomic" | "openai";
 
 /**
  * Provider-specific circuit breaker configuration
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the ProviderCircuitConfig contract)
+ *
+ * ```ts
+ * import type { ProviderCircuitConfig } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * const acceptsProviderCircuitConfig = (_value: ProviderCircuitConfig): void => undefined
+ *
+ * console.log(acceptsProviderCircuitConfig)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface ProviderCircuitConfig {
   /** Number of consecutive failures before opening circuit */
@@ -46,8 +71,19 @@ export interface ProviderCircuitConfig {
 /**
  * Circuit breaker status for observability
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the CircuitStatus contract)
+ *
+ * ```ts
+ * import type { CircuitStatus } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * const acceptsCircuitStatus = (_value: CircuitStatus): void => undefined
+ *
+ * console.log(acceptsCircuitStatus)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface CircuitStatus {
   readonly providerId: EmbeddingProviderId;
@@ -62,8 +98,16 @@ export interface CircuitStatus {
 /**
  * Default circuit breaker configuration for embedding providers
  *
- * @since 0.0.0
+ * **Example** (Inspect default embedding circuit config)
+ *
+ * ```ts
+ * import { DEFAULT_EMBEDDING_CIRCUIT_CONFIG } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * console.log(DEFAULT_EMBEDDING_CIRCUIT_CONFIG)
+ * ```
+ *
  * @category constants
+ * @since 0.0.0
  */
 export const DEFAULT_EMBEDDING_CIRCUIT_CONFIG: Record<EmbeddingProviderId, ProviderCircuitConfig> = {
   voyage: {
@@ -90,10 +134,23 @@ export const DEFAULT_EMBEDDING_CIRCUIT_CONFIG: Record<EmbeddingProviderId, Provi
 /**
  * Embedding Circuit Breaker Service
  *
+ * **Details**
+ *
  * Manages per-provider circuit breakers for embedding API calls.
  *
+ *
+ * **Example** (Use the EmbeddingCircuitBreakerService contract)
+ *
+ * ```ts
+ * import type { EmbeddingCircuitBreakerService } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * const acceptsEmbeddingCircuitBreakerService = (_value: EmbeddingCircuitBreakerService): void => undefined
+ *
+ * console.log(acceptsEmbeddingCircuitBreakerService)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category services
  */
 export interface EmbeddingCircuitBreakerService {
   readonly protect: <A, E, R>(
@@ -110,6 +167,20 @@ export interface EmbeddingCircuitBreakerService {
   readonly resetAll: Effect.Effect<void>;
 }
 
+/**
+ * Provides the embedding circuit breaker service capability.
+ *
+ * **Example** (Inspect embedding circuit breaker)
+ *
+ * ```ts
+ * import { EmbeddingCircuitBreaker } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * console.log(EmbeddingCircuitBreaker)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBreaker, EmbeddingCircuitBreakerService>()(
   $I`EmbeddingCircuitBreaker`,
   {
@@ -124,7 +195,7 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
         providerId: EmbeddingProviderId
       ) {
         const circuits = yield* Ref.get(circuitsRef);
-        return yield* Option.match(HashMap.get(circuits, providerId), {
+        return yield* O.match(HashMap.get(circuits, providerId), {
           onNone: Effect.fn("EmbeddingCircuitBreaker.getOrCreateCircuit.onNone")(function* () {
             const config = DEFAULT_EMBEDDING_CIRCUIT_CONFIG[providerId];
             const circuitConfig: CircuitBreakerConfig = {
@@ -217,7 +288,7 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
         Ref.get(circuitsRef).pipe(
           Effect.flatMap((circuits) =>
             HashMap.get(circuits, providerId).pipe(
-              Option.match({
+              O.match({
                 onNone: () => Effect.void,
                 onSome: (circuit) =>
                   circuit.reset().pipe(Effect.tap(() => Effect.logInfo(`Reset circuit breaker for ${providerId}`))),
@@ -256,7 +327,15 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
 /**
  * Live layer for EmbeddingCircuitBreaker
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding circuit breaker live)
+ *
+ * ```ts
+ * import { EmbeddingCircuitBreakerLive } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * console.log(EmbeddingCircuitBreakerLive)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingCircuitBreakerLive: Layer.Layer<EmbeddingCircuitBreaker> = EmbeddingCircuitBreaker.Default;

@@ -1,6 +1,8 @@
 /**
  * Stage Timeout Service
  *
+ * **Details**
+ *
  * Provides soft and hard timeouts for extraction stages:
  * - Soft timeout: Emit warning, continue execution
  * - Hard timeout: Fail with TimeoutError
@@ -18,7 +20,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Data, Duration, Effect, Fiber, Layer } from "effect";
+import { LiteralKit } from "@beep/schema";
+import { Context, Duration, Effect, Fiber, Layer } from "effect";
+import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/StageTimeout");
 
@@ -28,17 +32,64 @@ const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/StageTimeout
 
 /**
  * Stage names with timeout configuration
+ *
+ * **Example** (Inspect timed stage)
+ *
+ * ```ts
+ * import { TimedStage } from "@effect-ontology/Service/LlmControl/StageTimeout"
+ *
+ * console.log(TimedStage)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
-export type TimedStage =
-  | "chunking"
-  | "entity_extraction"
-  | "relation_extraction"
-  | "grounding"
-  | "entity_verification"
-  | "serialization";
+export const TimedStage = LiteralKit([
+  "chunking",
+  "entity_extraction",
+  "relation_extraction",
+  "grounding",
+  "entity_verification",
+  "serialization",
+]);
+
+/**
+ * Describes the timed stage data exposed by this module.
+ *
+ *
+ * **Example** (Use the TimedStage contract)
+ *
+ * ```ts
+ * import type { TimedStage } from "@effect-ontology/Service/LlmControl/StageTimeout"
+ *
+ * const acceptsTimedStage = (_value: TimedStage): void => undefined
+ *
+ * console.log(acceptsTimedStage)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TimedStage = typeof TimedStage.Type;
+
+const isTimedStage = S.is(TimedStage);
 
 /**
  * Timeout configuration for a stage
+ *
+ *
+ * **Example** (Use the StageTimeoutConfig contract)
+ *
+ * ```ts
+ * import type { StageTimeoutConfig } from "@effect-ontology/Service/LlmControl/StageTimeout"
+ *
+ * const acceptsStageTimeoutConfig = (_value: StageTimeoutConfig): void => undefined
+ *
+ * console.log(acceptsStageTimeoutConfig)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface StageTimeoutConfig {
   /** Soft timeout in milliseconds - warning emitted but continues */
@@ -63,6 +114,8 @@ const STAGE_TIMEOUTS: Record<TimedStage, StageTimeoutConfig> = {
  * Default timeout for unknown stages
  */
 const DEFAULT_TIMEOUT: StageTimeoutConfig = { softMs: 10000, hardMs: 15000 };
+const getTimeoutConfig = (stage: string): StageTimeoutConfig =>
+  isTimedStage(stage) ? STAGE_TIMEOUTS[stage] : DEFAULT_TIMEOUT;
 
 // =============================================================================
 // Errors
@@ -70,13 +123,49 @@ const DEFAULT_TIMEOUT: StageTimeoutConfig = { softMs: 10000, hardMs: 15000 };
 
 /**
  * Error thrown when a stage exceeds its hard timeout
+ *
+ * **Example** (Inspect timeout error)
+ *
+ * ```ts
+ * import { TimeoutError } from "@effect-ontology/Service/LlmControl/StageTimeout"
+ *
+ * console.log(TimeoutError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
-export class TimeoutError extends Data.TaggedError("TimeoutError")<{
-  readonly stage: string;
-  readonly timeoutMs: number;
-}> {
+export class TimeoutError extends S.TaggedError<TimeoutError>($I`TimeoutError`)(
+  "TimeoutError",
+  {
+    stage: S.NonEmptyString.annotateKey({
+      description: "Extraction stage that exceeded its hard timeout.",
+    }),
+    timeout: S.Duration.annotateKey({
+      description: "Hard timeout duration exceeded by the extraction stage.",
+    }),
+  },
+  $I.annote("TimeoutError", {
+    description: "Failure raised when an extraction stage exceeds its hard timeout.",
+  })
+) {
+  static readonly is = S.is(this);
+
+  /**
+   * Provides message behavior for timeout error values.
+   *
+   * **Example** (Inspect timeout error.message)
+   *
+   * ```ts
+   * import { TimeoutError } from "@effect-ontology/Service/LlmControl/StageTimeout"
+   *
+   * console.log(TimeoutError)
+   * ```
+   *
+   * @returns Result produced by this operation.
+   */
   override get message() {
-    return `Stage "${this.stage}" timed out after ${this.timeoutMs}ms`;
+    return `Stage "${this.stage}" timed out after ${Duration.format(this.timeout)}`;
   }
 }
 
@@ -87,22 +176,23 @@ export class TimeoutError extends Data.TaggedError("TimeoutError")<{
 /**
  * Stage timeout management for extraction stages
  *
+ * **Details**
+ *
  * Provides dual-timeout strategy:
  * 1. Soft timeout emits a warning callback (for logging, metrics)
  * 2. Hard timeout fails the effect with TimeoutError
  *
- * **Example** (Use StageTimeoutService)
- * ```ts
- * Effect.gen(function*() {
- *   const timeout = yield* StageTimeoutService
+ * **Example** (Inspect the stage-timeout layer)
  *
- *   const result = yield* timeout.withTimeout(
- *     "entity_extraction",
- *     extractEntities(text),
- *     () => Effect.logWarning("Entity extraction is taking longer than expected")
- *   )
- * })
+ * ```ts
+ * import { Layer } from "effect"
+ * import { StageTimeoutServiceLive } from "@effect-ontology/Service/LlmControl/StageTimeout"
+ *
+ * console.log(Layer.isLayer(StageTimeoutServiceLive)) // true
  * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export class StageTimeoutService extends Context.Service<
   StageTimeoutService,
@@ -153,7 +243,7 @@ const make = Effect.succeed({
     effect: Effect.Effect<A, E, R>,
     onSoftTimeout?: () => Effect.Effect<void>
   ): Effect.Effect<A, E | TimeoutError, R> => {
-    const config = STAGE_TIMEOUTS[stage as TimedStage] ?? DEFAULT_TIMEOUT;
+    const config = getTimeoutConfig(stage);
 
     return Effect.gen(function* () {
       // Start soft timeout watcher in background
@@ -166,7 +256,7 @@ const make = Effect.succeed({
       const result = yield* effect.pipe(
         Effect.timeoutOrElse({
           duration: Duration.millis(config.hardMs),
-          orElse: () => Effect.fail(new TimeoutError({ stage, timeoutMs: config.hardMs })),
+          orElse: () => Effect.fail(TimeoutError.make({ stage, timeout: Duration.millis(config.hardMs) })),
         })
       );
 
@@ -177,26 +267,50 @@ const make = Effect.succeed({
     });
   },
 
-  getConfig: (stage: string) => Effect.succeed(STAGE_TIMEOUTS[stage as TimedStage] ?? DEFAULT_TIMEOUT),
+  getConfig: (stage: string) => Effect.succeed(getTimeoutConfig(stage)),
 
   wouldTimeout: (stage: string, durationMs: number) => {
-    const config = STAGE_TIMEOUTS[stage as TimedStage] ?? DEFAULT_TIMEOUT;
+    const config = getTimeoutConfig(stage);
     return Effect.succeed(durationMs > config.hardMs);
   },
 });
 
 /**
  * Default layer providing StageTimeoutService
+ *
+ * **Example** (Inspect stage timeout service live)
+ *
+ * ```ts
+ * import { StageTimeoutServiceLive } from "@effect-ontology/Service/LlmControl/StageTimeout"
+ *
+ * console.log(StageTimeoutServiceLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const StageTimeoutServiceLive = Layer.effect(StageTimeoutService, make);
 
 /**
  * Test layer with configurable timeouts (useful for faster tests)
+ *
+ * **Example** (Inspect stage timeout service test)
+ *
+ * ```ts
+ * import { StageTimeoutServiceTest } from "@effect-ontology/Service/LlmControl/StageTimeout"
+ *
+ * console.log(StageTimeoutServiceTest)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const StageTimeoutServiceTest = (
   overrides: Partial<Record<TimedStage, StageTimeoutConfig>> = {}
 ): Layer.Layer<StageTimeoutService> => {
   const testTimeouts = { ...STAGE_TIMEOUTS, ...overrides };
+  const getTestTimeoutConfig = (stage: string): StageTimeoutConfig =>
+    isTimedStage(stage) ? testTimeouts[stage] : DEFAULT_TIMEOUT;
 
   return Layer.succeed(StageTimeoutService, {
     withTimeout: <A, E, R>(
@@ -204,7 +318,7 @@ export const StageTimeoutServiceTest = (
       effect: Effect.Effect<A, E, R>,
       onSoftTimeout?: () => Effect.Effect<void>
     ): Effect.Effect<A, E | TimeoutError, R> => {
-      const config = testTimeouts[stage as TimedStage] ?? DEFAULT_TIMEOUT;
+      const config = getTestTimeoutConfig(stage);
 
       return Effect.gen(function* () {
         const softTimeoutFiber = yield* Effect.sleep(Duration.millis(config.softMs)).pipe(
@@ -215,7 +329,7 @@ export const StageTimeoutServiceTest = (
         const result = yield* effect.pipe(
           Effect.timeoutOrElse({
             duration: Duration.millis(config.hardMs),
-            orElse: () => Effect.fail(new TimeoutError({ stage, timeoutMs: config.hardMs })),
+            orElse: () => Effect.fail(TimeoutError.make({ stage, timeout: Duration.millis(config.hardMs) })),
           })
         );
 
@@ -225,11 +339,11 @@ export const StageTimeoutServiceTest = (
     },
 
     getConfig: Effect.fn("StageTimeoutService.getConfig")((stage: string) =>
-      Effect.succeed(testTimeouts[stage as TimedStage] ?? DEFAULT_TIMEOUT)
+      Effect.succeed(getTestTimeoutConfig(stage))
     ),
 
     wouldTimeout: Effect.fn("StageTimeoutService.wouldTimeout")((stage: string, durationMs: number) => {
-      const config = testTimeouts[stage as TimedStage] ?? DEFAULT_TIMEOUT;
+      const config = getTestTimeoutConfig(stage);
       return Effect.succeed(durationMs > config.hardMs);
     }),
   });

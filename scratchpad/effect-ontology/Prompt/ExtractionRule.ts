@@ -8,8 +8,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { pipe } from "effect";
-import * as Inspectable from "effect/Inspectable";
+import { Inspectable, pipe } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -22,7 +21,7 @@ const $I = $ScratchpadId.create("effect-ontology/Prompt/ExtractionRule");
  * **Example** (Recognize an identifier rule)
  *
  * ```ts
- * import { RuleCategory } from "@effect-ontology/Prompt/ExtractionRule.ts"
+ * import { RuleCategory } from "@effect-ontology/Prompt/ExtractionRule"
  *
  * console.log(RuleCategory.is.id_format("id_format")) // true
  * console.log(RuleCategory.is.id_format("cardinality")) // false
@@ -54,7 +53,7 @@ export const RuleCategory = LiteralKit([
  * **Example** (Declare a rule category)
  *
  * ```ts
- * import type { RuleCategory } from "@effect-ontology/Prompt/ExtractionRule.ts"
+ * import type { RuleCategory } from "@effect-ontology/Prompt/ExtractionRule"
  *
  * const category: RuleCategory = "id_format"
  * console.log(category) // "id_format"
@@ -73,7 +72,7 @@ export type RuleCategory = typeof RuleCategory.Type;
  * **Example** (Recognize a hard constraint)
  *
  * ```ts
- * import { RuleSeverity } from "@effect-ontology/Prompt/ExtractionRule.ts"
+ * import { RuleSeverity } from "@effect-ontology/Prompt/ExtractionRule"
  *
  * console.log(RuleSeverity.is.error("error")) // true
  * ```
@@ -93,7 +92,7 @@ export const RuleSeverity = LiteralKit(["error", "warning"]).pipe(
  * **Example** (Declare an enforcement level)
  *
  * ```ts
- * import type { RuleSeverity } from "@effect-ontology/Prompt/ExtractionRule.ts"
+ * import type { RuleSeverity } from "@effect-ontology/Prompt/ExtractionRule"
  *
  * const severity: RuleSeverity = "error"
  * console.log(severity) // "error"
@@ -112,7 +111,7 @@ export type RuleSeverity = typeof RuleSeverity.Type;
  * **Example** (Describe an identifier example)
  *
  * ```ts
- * import { RuleExample } from "@effect-ontology/Prompt/ExtractionRule.ts"
+ * import { RuleExample } from "@effect-ontology/Prompt/ExtractionRule"
  *
  * const example = RuleExample.make({
  *   input: "Cristiano Ronaldo",
@@ -158,7 +157,7 @@ export class RuleExample extends S.Class<RuleExample>($I`RuleExample`)(
  * **Example** (Create an identifier rule)
  *
  * ```ts
- * import { ExtractionRule, RuleExample } from "@effect-ontology/Prompt/ExtractionRule.ts"
+ * import { ExtractionRule, RuleExample } from "@effect-ontology/Prompt/ExtractionRule"
  *
  * const rule = ExtractionRule.make({
  *   id: "entity-id-format",
@@ -242,7 +241,7 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
    * **Example** (Inspect hard enforcement)
    *
    * ```ts
-   * import { ExtractionRule, RuleExample } from "@effect-ontology/Prompt/ExtractionRule.ts"
+   * import { ExtractionRule, RuleExample } from "@effect-ontology/Prompt/ExtractionRule"
    *
    * const rule = ExtractionRule.make({
    *   id: "id", category: "id_format", severity: "error", instruction: "Use an ID.",
@@ -251,6 +250,8 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
    * })
    * console.log(rule.isHardConstraint) // true
    * ```
+   *
+   * @returns Result produced by this operation.
    */
   get isHardConstraint(): boolean {
     return RuleSeverity.is.error(this.severity);
@@ -262,7 +263,7 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
    * **Example** (Inspect soft guidance)
    *
    * ```ts
-   * import { ExtractionRule, RuleExample } from "@effect-ontology/Prompt/ExtractionRule.ts"
+   * import { ExtractionRule, RuleExample } from "@effect-ontology/Prompt/ExtractionRule"
    *
    * const rule = ExtractionRule.make({
    *   id: "mention", category: "mention_format", severity: "warning", instruction: "Use full names.",
@@ -271,6 +272,8 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
    * })
    * console.log(rule.isSoftPreference) // true
    * ```
+   *
+   * @returns Result produced by this operation.
    */
   get isSoftPreference(): boolean {
     return RuleSeverity.is.warning(this.severity);
@@ -283,7 +286,7 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
    * **Example** (Format rejected input)
    *
    * ```ts
-   * import { ExtractionRule, RuleExample } from "@effect-ontology/Prompt/ExtractionRule.ts"
+   * import { ExtractionRule, RuleExample } from "@effect-ontology/Prompt/ExtractionRule"
    *
    * const rule = ExtractionRule.make({
    *   id: "id", category: "id_format", severity: "error", instruction: "Use an ID.",
@@ -307,7 +310,7 @@ export class ExtractionRule extends S.Class<ExtractionRule>($I`ExtractionRule`)(
  * **Example** (Recognize the relation stage)
  *
  * ```ts
- * import { ExtractionStage } from "@effect-ontology/Prompt/ExtractionRule.ts"
+ * import { ExtractionStage } from "@effect-ontology/Prompt/ExtractionRule"
  *
  * console.log(ExtractionStage.is.relation("relation")) // true
  * ```
@@ -327,7 +330,7 @@ export const ExtractionStage = LiteralKit(["mention", "entity", "relation"]).pip
  * **Example** (Declare an extraction stage)
  *
  * ```ts
- * import type { ExtractionStage } from "@effect-ontology/Prompt/ExtractionRule.ts"
+ * import type { ExtractionStage } from "@effect-ontology/Prompt/ExtractionRule"
  *
  * const stage: ExtractionStage = "relation"
  * console.log(stage) // "relation"

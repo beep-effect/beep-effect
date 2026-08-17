@@ -1,6 +1,8 @@
 /**
  * Event Bus Service
  *
+ * **Details**
+ *
  * Unified interface for event publishing and job queuing.
  * Supports multiple backends: Memory (dev/test), Postgres (durable), PubSub (production).
  *
@@ -9,10 +11,10 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, DateTime, Effect, Layer, Option, Queue, Schema, Stream } from "effect";
-import * as Clock from "effect/Clock";
+import { Clock, Context, DateTime, Effect, Layer, Queue, Ref, Stream } from "effect";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import type * as Event from "effect/unstable/eventlog/Event";
 import type * as EventGroup from "effect/unstable/eventlog/EventGroup";
 import * as EventJournal from "effect/unstable/eventlog/EventJournal";
@@ -32,6 +34,18 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EventBus");
 /**
  * Job with metadata for processing
  *
+ *
+ * **Example** (Use the JobWithMetadata contract)
+ *
+ * ```ts
+ * import type { JobWithMetadata } from "@effect-ontology/Service/EventBus"
+ *
+ * const acceptsJobWithMetadata = (_value: JobWithMetadata): void => undefined
+ *
+ * console.log(acceptsJobWithMetadata)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export interface JobWithMetadata {
@@ -43,6 +57,18 @@ export interface JobWithMetadata {
 /**
  * Event entry from journal
  *
+ *
+ * **Example** (Use the EventEntry contract)
+ *
+ * ```ts
+ * import type { EventEntry } from "@effect-ontology/Service/EventBus"
+ *
+ * const acceptsEventEntry = (_value: EventEntry): void => undefined
+ *
+ * console.log(acceptsEventEntry)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export interface EventEntry {
@@ -60,6 +86,18 @@ export interface EventEntry {
 /**
  * EventBusService interface for event publishing and job queuing
  *
+ *
+ * **Example** (Use the EventBusServiceMethods contract)
+ *
+ * ```ts
+ * import type { EventBusServiceMethods } from "@effect-ontology/Service/EventBus"
+ *
+ * const acceptsEventBusServiceMethods = (_value: EventBusServiceMethods): void => undefined
+ *
+ * console.log(acceptsEventBusServiceMethods)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
  */
 export interface EventBusServiceMethods {
@@ -88,7 +126,7 @@ export interface EventBusServiceMethods {
    * Take the next job for processing
    * Returns None if no jobs are available (non-blocking)
    */
-  readonly takeJob: Effect.Effect<Option.Option<JobWithMetadata>, EventBusError>;
+  readonly takeJob: Effect.Effect<O.Option<JobWithMetadata>, EventBusError>;
 
   /**
    * Take and process a job with automatic retry handling
@@ -96,7 +134,7 @@ export interface EventBusServiceMethods {
   readonly processJob: <A, E, R>(
     handler: (job: BackgroundJob, meta: { id: string; attempts: number }) => Effect.Effect<A, E, R>,
     options?: { readonly maxAttempts?: number }
-  ) => Effect.Effect<Option.Option<A>, E | EventBusError, R>;
+  ) => Effect.Effect<O.Option<A>, E | EventBusError, R>;
 
   /**
    * Subscribe to events as a stream
@@ -117,9 +155,98 @@ export interface EventBusServiceMethods {
 /**
  * EventBusService context tag
  *
+ * **Example** (Inspect event bus service)
+ *
+ * ```ts
+ * import { EventBusService } from "@effect-ontology/Service/EventBus"
+ *
+ * console.log(EventBusService)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
  */
 export class EventBusService extends Context.Service<EventBusService, EventBusServiceMethods>()($I`EventBusService`) {}
+
+interface PreparedEvent {
+  readonly event: string;
+  readonly primaryKey: string;
+  readonly payload: unknown;
+  readonly encodedPayload: Uint8Array<ArrayBuffer>;
+}
+
+const prepareEvent = Effect.fn("EventBus.prepareEvent")(function* <
+  PayloadSchema extends S.ConstraintCodec<unknown, Uint8Array<ArrayBuffer>, never, never>,
+>(event: string, primaryKey: Event.AnyWithProps["primaryKey"], payloadSchema: PayloadSchema, payload: unknown) {
+  const encodedPayload = yield* S.encodeUnknownEffect(payloadSchema)(payload).pipe(
+    Effect.mapError((cause) =>
+      EventBusError.make({
+        method: "prepareEvent",
+        message: `Failed to encode ${event} through its event schema`,
+        cause: O.some(cause),
+      })
+    )
+  );
+  const canonicalPayload = yield* S.decodeEffect(payloadSchema)(encodedPayload).pipe(
+    Effect.mapError((cause) =>
+      EventBusError.make({
+        method: "prepareEvent",
+        message: `Failed to decode ${event} through its event schema`,
+        cause: O.some(cause),
+      })
+    )
+  );
+  return {
+    event,
+    primaryKey: primaryKey(canonicalPayload),
+    payload: canonicalPayload,
+    encodedPayload,
+  } satisfies PreparedEvent;
+});
+
+const eventDefinition = Effect.fn("EventBus.eventDefinition")(function* <Definition extends Event.AnyWithProps>(
+  events: R.ReadonlyRecord<string, Definition>,
+  tag: string,
+  category: "curation" | "extraction"
+) {
+  return yield* R.get(events, tag).pipe(
+    O.match({
+      onNone: () =>
+        Effect.fail(
+          EventBusError.make({
+            method: "eventDefinition",
+            message: `Unknown ${category} event: ${tag}`,
+          })
+        ),
+      onSome: Effect.succeed,
+    })
+  );
+});
+
+const decodeEventPayload = Effect.fn("EventBus.decodeEventPayload")(function* (event: string, payload: Uint8Array) {
+  const definition = yield* R.get(CurationEventGroup.events, event).pipe(
+    O.orElse(() => R.get(ExtractionEventGroup.events, event)),
+    O.match({
+      onNone: () =>
+        Effect.fail(
+          EventBusError.make({
+            method: "decodeEventPayload",
+            message: `Unknown journal event: ${event}`,
+          })
+        ),
+      onSome: Effect.succeed,
+    })
+  );
+  return yield* S.decodeEffect(definition.payloadMsgPack)(new Uint8Array(payload)).pipe(
+    Effect.mapError((cause) =>
+      EventBusError.make({
+        method: "decodeEventPayload",
+        message: `Failed to decode journal event: ${event}`,
+        cause: O.some(cause),
+      })
+    )
+  );
+});
 
 // =============================================================================
 // Memory Implementation
@@ -128,48 +255,54 @@ export class EventBusService extends Context.Service<EventBusService, EventBusSe
 /**
  * In-memory EventBusService implementation for development and testing
  *
+ * **Details**
+ *
  * Uses Effect Queue for jobs and in-memory event storage.
  * Not durable - events and jobs are lost on restart.
  *
+ * **Example** (Inspect event bus service memory)
+ *
+ * ```ts
+ * import { EventBusServiceMemory } from "@effect-ontology/Service/EventBus"
+ *
+ * console.log(EventBusServiceMemory)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
  */
 export const EventBusServiceMemory = Layer.effect(
   EventBusService,
   Effect.gen(function* () {
-    // In-memory event storage
-    const events: Array<EventEntry> = [];
     const eventSubscribers = yield* Queue.unbounded<EventEntry>();
+    const eventIdCounter = yield* Ref.make(0);
 
     // In-memory job queue with metadata
     const jobQueue = yield* Queue.bounded<JobWithMetadata>(1000);
-    let jobIdCounter = 0;
+    const jobIdCounter = yield* Ref.make(0);
 
-    const publishEvent = (event: string, primaryKey: string, payload: unknown): Effect.Effect<void, EventBusError> =>
+    const publishEvent = (prepared: PreparedEvent): Effect.Effect<void, EventBusError> =>
       Effect.gen(function* () {
         const now = yield* DateTime.now;
+        const sequence = yield* Ref.getAndUpdate(eventIdCounter, (value) => value + 1);
         const entry: EventEntry = {
-          id: `evt_${yield* Clock.currentTimeMillis}_${events.length}`,
-          event,
-          primaryKey,
-          payload,
+          id: `evt_${yield* Clock.currentTimeMillis}_${sequence}`,
+          event: prepared.event,
+          primaryKey: prepared.primaryKey,
+          payload: prepared.payload,
           createdAt: now,
         };
 
-        // Check for duplicate by primaryKey
-        const existing = events.find((e) => e.event === event && e.primaryKey === primaryKey);
-        if (P.isNotUndefined(existing)) {
-          yield* Effect.logDebug("Duplicate event ignored", { event, primaryKey });
-          return;
-        }
-
-        events.push(entry);
         yield* Queue.offer(eventSubscribers, entry);
-        yield* Effect.logDebug("Event published", { event, primaryKey });
+        yield* Effect.logDebug("Event published", {
+          event: prepared.event,
+          primaryKey: prepared.primaryKey,
+        });
       }).pipe(
         Effect.mapError((cause) =>
           EventBusError.make({
             method: "publishEvent",
-            message: `Failed to publish event: ${event}`,
+            message: `Failed to publish event: ${prepared.event}`,
             cause,
           })
         )
@@ -177,35 +310,24 @@ export const EventBusServiceMemory = Layer.effect(
 
     const publishCurationEvent: EventBusServiceMethods["publishCurationEvent"] = Effect.fn("publishCurationEvent")(
       function* (tag, payload) {
-        const eventDef = CurationEventGroup.events[tag];
-        if (P.not(P.isTruthy)(eventDef)) {
-          return yield* EventBusError.make({
-            method: "publishCurationEvent",
-            message: `Unknown curation event: ${tag}`,
-          });
-        }
-        const primaryKey = (eventDef as any).primaryKey(payload);
-        yield* publishEvent(tag, primaryKey, payload);
+        const definition = yield* eventDefinition(CurationEventGroup.events, tag, "curation");
+        const prepared = yield* prepareEvent(definition.tag, definition.primaryKey, definition.payloadMsgPack, payload);
+        yield* publishEvent(prepared);
       }
     );
 
     const publishExtractionEvent: EventBusServiceMethods["publishExtractionEvent"] = Effect.fn(
       "publishExtractionEvent"
     )(function* (tag, payload) {
-      const eventDef = ExtractionEventGroup.events[tag];
-      if (P.not(P.isTruthy)(eventDef)) {
-        return yield* EventBusError.make({
-          method: "publishExtractionEvent",
-          message: `Unknown extraction event: ${tag}`,
-        });
-      }
-      const primaryKey = (eventDef as any).primaryKey(payload);
-      yield* publishEvent(tag, primaryKey, payload);
+      const definition = yield* eventDefinition(ExtractionEventGroup.events, tag, "extraction");
+      const prepared = yield* prepareEvent(definition.tag, definition.primaryKey, definition.payloadMsgPack, payload);
+      yield* publishEvent(prepared);
     });
 
     const enqueueJob: EventBusServiceMethods["enqueueJob"] = Effect.fn("enqueueJob")(
       function* (job) {
-        const id = `job_${++jobIdCounter}_${yield* Clock.currentTimeMillis}`;
+        const sequence = yield* Ref.updateAndGet(jobIdCounter, (value) => value + 1);
+        const id = `job_${sequence}_${yield* Clock.currentTimeMillis}`;
         const jobWithMeta: JobWithMetadata = {
           job,
           id,
@@ -226,7 +348,7 @@ export const EventBusServiceMemory = Layer.effect(
 
     const takeJob: EventBusServiceMethods["takeJob"] = Queue.poll(jobQueue).pipe(
       Effect.map((opt) =>
-        Option.map(opt, (jwm) => ({
+        O.map(opt, (jwm) => ({
           ...jwm,
           attempts: jwm.attempts + 1,
         }))
@@ -242,8 +364,8 @@ export const EventBusServiceMemory = Layer.effect(
 
     const processJob: EventBusServiceMethods["processJob"] = Effect.fn("processJob")(function* (handler, options) {
       const jobOpt = yield* takeJob;
-      if (Option.isNone(jobOpt)) {
-        return Option.none();
+      if (O.isNone(jobOpt)) {
+        return O.none();
       }
       const { attempts, id, job } = jobOpt.value;
       const maxAttempts = options?.maxAttempts ?? 5;
@@ -269,7 +391,7 @@ export const EventBusServiceMemory = Layer.effect(
           })
         )
       );
-      return Option.some(result);
+      return O.some(result);
     });
 
     const subscribeEvents: EventBusServiceMethods["subscribeEvents"] = Effect.succeed(
@@ -336,12 +458,23 @@ const JOBS_QUEUE_NAME = "ontology_jobs";
 /**
  * EventBusService using @effect/sql SqlEventJournal and SqlPersistedQueue
  *
+ * **Details**
+ *
  * Provides durable persistence via PostgreSQL.
  * Tables are auto-created on startup:
  * - effect_event_journal: Event storage with idempotency
  * - effect_event_remotes: Remote sync tracking
  * - effect_queue: Durable job queue with retry semantics
  *
+ * **Example** (Inspect event bus service sql)
+ *
+ * ```ts
+ * import { EventBusServiceSql } from "@effect-ontology/Service/EventBus"
+ *
+ * console.log(EventBusServiceSql)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
  */
 export const EventBusServiceSql = Layer.effect(
@@ -362,19 +495,19 @@ export const EventBusServiceSql = Layer.effect(
     /**
      * Publish an event to the journal
      */
-    const publishEvent = (event: string, primaryKey: string, payload: unknown): Effect.Effect<void, EventBusError> =>
+    const publishEvent = (prepared: PreparedEvent): Effect.Effect<void, EventBusError> =>
       journal
         .write({
-          event,
-          primaryKey,
-          payload: Schema.encodeSync(Schema.Unknown)(payload) as Uint8Array,
+          event: prepared.event,
+          primaryKey: prepared.primaryKey,
+          payload: prepared.encodedPayload,
           effect: () => Effect.void,
         })
         .pipe(
           Effect.mapError((cause) =>
             EventBusError.make({
               method: "publishEvent",
-              message: `Failed to publish event: ${event}`,
+              message: `Failed to publish event: ${prepared.event}`,
               cause: O.some(cause),
             })
           )
@@ -382,32 +515,26 @@ export const EventBusServiceSql = Layer.effect(
 
     const publishCurationEvent: EventBusServiceMethods["publishCurationEvent"] = Effect.fn("publishCurationEvent")(
       function* (tag, payload) {
-        const eventDef = CurationEventGroup.events[tag];
-        if (P.not(P.isTruthy)(eventDef)) {
-          return yield* EventBusError.make({
-            method: "publishCurationEvent",
-            message: `Unknown curation event: ${tag}`,
-          });
-        }
-        const primaryKey = (eventDef as any).primaryKey(payload);
-        yield* publishEvent(tag, primaryKey, payload);
-        yield* Effect.logDebug("Curation event published", { event: tag, primaryKey });
+        const definition = yield* eventDefinition(CurationEventGroup.events, tag, "curation");
+        const prepared = yield* prepareEvent(definition.tag, definition.primaryKey, definition.payloadMsgPack, payload);
+        yield* publishEvent(prepared);
+        yield* Effect.logDebug("Curation event published", {
+          event: prepared.event,
+          primaryKey: prepared.primaryKey,
+        });
       }
     );
 
     const publishExtractionEvent: EventBusServiceMethods["publishExtractionEvent"] = Effect.fn(
       "publishExtractionEvent"
     )(function* (tag, payload) {
-      const eventDef = ExtractionEventGroup.events[tag];
-      if (P.not(P.isTruthy)(eventDef)) {
-        return yield* EventBusError.make({
-          method: "publishExtractionEvent",
-          message: `Unknown extraction event: ${tag}`,
-        });
-      }
-      const primaryKey = (eventDef as any).primaryKey(payload);
-      yield* publishEvent(tag, primaryKey, payload);
-      yield* Effect.logDebug("Extraction event published", { event: tag, primaryKey });
+      const definition = yield* eventDefinition(ExtractionEventGroup.events, tag, "extraction");
+      const prepared = yield* prepareEvent(definition.tag, definition.primaryKey, definition.payloadMsgPack, payload);
+      yield* publishEvent(prepared);
+      yield* Effect.logDebug("Extraction event published", {
+        event: prepared.event,
+        primaryKey: prepared.primaryKey,
+      });
     });
 
     const enqueueJob: EventBusServiceMethods["enqueueJob"] = Effect.fn("enqueueJob")(
@@ -427,13 +554,13 @@ export const EventBusServiceSql = Layer.effect(
 
     // Note: takeJob for SQL implementation works differently - jobs are taken via processJob
     // which handles the full lifecycle (take + complete/retry)
-    const takeJob: EventBusServiceMethods["takeJob"] = Effect.succeed(Option.none());
+    const takeJob: EventBusServiceMethods["takeJob"] = Effect.succeed(O.none());
 
     const processJob: EventBusServiceMethods["processJob"] = Effect.fn("processJob")(
       function* (handler, options) {
         const maxAttempts = options?.maxAttempts ?? 5;
         const result = yield* jobQueue.take(
-          (job, { attempts, id }) => handler(job, { id, attempts }).pipe(Effect.map(Option.some)),
+          (job, { attempts, id }) => handler(job, { id, attempts }).pipe(Effect.map(O.some)),
           { maxAttempts }
         );
         return result;
@@ -449,13 +576,17 @@ export const EventBusServiceSql = Layer.effect(
 
     const subscribeEvents: EventBusServiceMethods["subscribeEvents"] = Effect.sync(() =>
       Stream.fromSubscription(eventChanges).pipe(
-        Stream.map((entry) => ({
-          id: entry.idString,
-          event: entry.event,
-          primaryKey: entry.primaryKey,
-          payload: entry.payload,
-          createdAt: entry.createdAt,
-        })),
+        Stream.mapEffect((entry) =>
+          decodeEventPayload(entry.event, entry.payload).pipe(
+            Effect.map((payload) => ({
+              id: entry.idString,
+              event: entry.event,
+              primaryKey: entry.primaryKey,
+              payload,
+              createdAt: entry.createdAt,
+            }))
+          )
+        ),
         Stream.mapError((cause) =>
           EventBusError.make({
             method: "subscribeEvents",
@@ -491,9 +622,20 @@ export const EventBusServiceSql = Layer.effect(
 /**
  * SQL persistence layers for EventBusService
  *
+ * **Details**
+ *
  * Requires SqlClient.SqlClient in context.
  * Auto-creates tables: effect_event_journal, effect_event_remotes, effect_queue
  *
+ * **Example** (Inspect event bus service sql layers)
+ *
+ * ```ts
+ * import { EventBusServiceSqlLayers } from "@effect-ontology/Service/EventBus"
+ *
+ * console.log(EventBusServiceSqlLayers)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
  */
 export const EventBusServiceSqlLayers = Layer.mergeAll(
@@ -509,8 +651,19 @@ export const EventBusServiceSqlLayers = Layer.mergeAll(
 /**
  * Complete SQL-backed EventBusService layer
  *
+ * **Details**
+ *
  * Requires SqlClient.SqlClient in context.
  *
+ * **Example** (Inspect event bus service sql live)
+ *
+ * ```ts
+ * import { EventBusServiceSqlLive } from "@effect-ontology/Service/EventBus"
+ *
+ * console.log(EventBusServiceSqlLive)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
  */
 export const EventBusServiceSqlLive = EventBusServiceSql.pipe(Layer.provide(EventBusServiceSqlLayers));
@@ -522,6 +675,15 @@ export const EventBusServiceSqlLive = EventBusServiceSql.pipe(Layer.provide(Even
 /**
  * Default EventBusService layer (Memory implementation)
  *
+ * **Example** (Inspect event bus service default)
+ *
+ * ```ts
+ * import { EventBusServiceDefault } from "@effect-ontology/Service/EventBus"
+ *
+ * console.log(EventBusServiceDefault)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
  */
 export const EventBusServiceDefault = EventBusServiceMemory;

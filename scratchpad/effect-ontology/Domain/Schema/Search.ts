@@ -7,8 +7,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import { SchemaGetter } from "effect";
-import * as DateTime from "effect/DateTime";
+import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { RdfObject } from "./KnowledgeModel.ts";
 import { ArticleSummary, ClaimRank, ClaimWithRank } from "./Timeline.ts";
@@ -46,8 +45,8 @@ const SearchDateRangeFromSelf = S.declare((input: unknown): input is typeof Sear
       .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
       .map(([from, duration]) =>
         SearchDateRangeFields.make({
-          from: S.decodeSync(S.DateTimeUtcFromMillis)(from),
-          to: S.decodeSync(S.DateTimeUtcFromMillis)(from + duration),
+          from: DateTime.makeUnsafe(from),
+          to: DateTime.makeUnsafe(from + duration),
         })
       ),
 });
@@ -74,10 +73,12 @@ const PositiveLimitFromString = S.FiniteFromString.pipe(
  *
  * **Example** (Use ClaimSearchRequest)
  * ```ts
- * import { ClaimSearchRequest } from "@effect-ontology/Schema/Search.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ClaimSearchRequest } from "@effect-ontology/Schema/Search"
  *
- * const request = ClaimSearchRequest.fromUnknown({ query: "appointed director" })
- * console.log(request.limit) // 20
+ * const request = S.decodeUnknownOption(ClaimSearchRequest)({ query: "appointed director" })
+ * console.log(O.map(request, (value) => value.limit)) // Some(20)
  * ```
  *
  * @invariant Query text is non-empty, limit is positive, and offset is
@@ -123,7 +124,7 @@ const ClaimSearchFacets = S.Struct({
  *
  * **Example** (Use ClaimSearchResponse)
  * ```ts
- * import type { ClaimSearchResponse } from "@effect-ontology/Schema/Search.ts"
+ * import type { ClaimSearchResponse } from "@effect-ontology/Schema/Search"
  *
  * const count = (response: ClaimSearchResponse) => response.claims.length
  * console.log(count)
@@ -152,10 +153,12 @@ export class ClaimSearchResponse extends S.Class<ClaimSearchResponse>($I`ClaimSe
  *
  * **Example** (Use EntitySearchRequest)
  * ```ts
- * import { EntitySearchRequest } from "@effect-ontology/Schema/Search.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EntitySearchRequest } from "@effect-ontology/Schema/Search"
  *
- * const request = EntitySearchRequest.fromUnknown({ query: "Alice" })
- * console.log(request.limit) // 20
+ * const request = S.decodeUnknownOption(EntitySearchRequest)({ query: "Alice" })
+ * console.log(O.map(request, (value) => value.limit)) // Some(20)
  * ```
  *
  * @category dtos
@@ -185,7 +188,7 @@ const EntityTopClaim = S.Struct({
  *
  * **Example** (Use EntitySearchResult)
  * ```ts
- * import type { EntitySearchResult } from "@effect-ontology/Schema/Search.ts"
+ * import type { EntitySearchResult } from "@effect-ontology/Schema/Search"
  *
  * const claimCount = (result: EntitySearchResult) => result.claimCount
  * console.log(claimCount)
@@ -212,14 +215,15 @@ export class EntitySearchResult extends S.Class<EntitySearchResult>($I`EntitySea
  *
  * **Example** (Use EntitySearchResponse)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { EntitySearchResponse } from "@effect-ontology/Schema/Search.ts"
+ * import { EntitySearchResponse } from "@effect-ontology/Schema/Search"
  *
- * const response = S.decodeUnknownSync(EntitySearchResponse)({
+ * const response = S.decodeUnknownOption(EntitySearchResponse)({
  *   query: "Alice",
  *   total: 0
  * })
- * console.log(response.entities.length) // 0
+ * console.log(O.map(response, (value) => value.entities.length)) // 0
  * ```
  *
  * @category dtos
@@ -241,10 +245,12 @@ export class EntitySearchResponse extends S.Class<EntitySearchResponse>($I`Entit
  *
  * **Example** (Use SuggestionQuery)
  * ```ts
- * import { SuggestionQuery } from "@effect-ontology/Schema/Search.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { SuggestionQuery } from "@effect-ontology/Schema/Search"
  *
- * const query = SuggestionQuery.fromUnknown({ prefix: "Ali" })
- * console.log(query.limit) // 10
+ * const query = S.decodeUnknownOption(SuggestionQuery)({ prefix: "Ali" })
+ * console.log(O.map(query, (value) => value.limit)) // Some(10)
  * ```
  *
  * @category dtos
@@ -267,7 +273,7 @@ export class SuggestionQuery extends S.Class<SuggestionQuery>($I`SuggestionQuery
  *
  * **Example** (Use Suggestion)
  * ```ts
- * import type { Suggestion } from "@effect-ontology/Schema/Search.ts"
+ * import type { Suggestion } from "@effect-ontology/Schema/Search"
  *
  * const label = (suggestion: Suggestion) => suggestion.label
  * console.log(label)
@@ -293,7 +299,7 @@ export class Suggestion extends S.Class<Suggestion>($I`Suggestion`)(
  *
  * **Example** (Use SuggestionsResponse)
  * ```ts
- * import { SuggestionsResponse } from "@effect-ontology/Schema/Search.ts"
+ * import { SuggestionsResponse } from "@effect-ontology/Schema/Search"
  *
  * const response = SuggestionsResponse.make({ prefix: "Ali" })
  * console.log(response.suggestions.length) // 0
@@ -317,10 +323,12 @@ export class SuggestionsResponse extends S.Class<SuggestionsResponse>($I`Suggest
  *
  * **Example** (Use ArticleSearchRequest)
  * ```ts
- * import { ArticleSearchRequest } from "@effect-ontology/Schema/Search.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ArticleSearchRequest } from "@effect-ontology/Schema/Search"
  *
- * const request = ArticleSearchRequest.fromUnknown({})
- * console.log(request.limit) // 20
+ * const request = S.decodeUnknownOption(ArticleSearchRequest)({})
+ * console.log(O.map(request, (value) => value.limit)) // Some(20)
  * ```
  *
  * @category dtos
@@ -346,7 +354,7 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
  *
  * **Example** (Use ArticleSearchResult)
  * ```ts
- * import type { ArticleSearchResult } from "@effect-ontology/Schema/Search.ts"
+ * import type { ArticleSearchResult } from "@effect-ontology/Schema/Search"
  *
  * const conflicts = (result: ArticleSearchResult) => result.conflictCount
  * console.log(conflicts)
@@ -371,16 +379,17 @@ export class ArticleSearchResult extends S.Class<ArticleSearchResult>($I`Article
  *
  * **Example** (Use ArticleSearchResponse)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ArticleSearchResponse } from "@effect-ontology/Schema/Search.ts"
+ * import { ArticleSearchResponse } from "@effect-ontology/Schema/Search"
  *
- * const response = S.decodeUnknownSync(ArticleSearchResponse)({
+ * const response = S.decodeUnknownOption(ArticleSearchResponse)({
  *   total: 0,
  *   limit: 20,
  *   offset: 0,
  *   hasMore: false
  * })
- * console.log(response.articles.length) // 0
+ * console.log(O.map(response, (value) => value.articles.length)) // 0
  * ```
  *
  * @category dtos

@@ -1,6 +1,8 @@
 /**
  * Service: Embedding Cache
  *
+ * **Details**
+ *
  * Content-addressable cache for embedding vectors with TTL and LRU eviction.
  *
  * @packageDocumentation
@@ -9,24 +11,52 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { EpochMillis } from "@beep/schema/Timestamp";
-import { Context, Duration, Effect, HashMap, Layer, Option, Ref, Schema } from "effect";
+import { Clock, Context, Duration, Effect, HashMap, Layer, Ref } from "effect";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { ConfigService } from "./Config.ts";
-import { StorageService, type StorageServiceMethods } from "./Storage.ts";
+import type { StorageServiceMethods } from "./Storage.ts";
+import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCache");
 
 /**
  * Embedding vector type
  *
+ * **Example** (Validate embedding)
+ *
+ * ```ts
+ * import { Embedding } from "@effect-ontology/Service/EmbeddingCache"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Embedding)({}))
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export const Embedding = Schema.Array(Schema.Finite);
+export const Embedding = S.Array(S.Finite);
+/**
+ * Describes the embedding data exposed by this module.
+ *
+ *
+ * **Example** (Use the Embedding contract)
+ *
+ * ```ts
+ * import type { Embedding } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * const acceptsEmbedding = (_value: Embedding): void => undefined
+ *
+ * console.log(acceptsEmbedding)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type Embedding = typeof Embedding.Type;
 
 /**
@@ -44,8 +74,19 @@ interface CacheEntry {
 /**
  * Cache configuration
  *
+ *
+ * **Example** (Use the EmbeddingCacheConfig contract)
+ *
+ * ```ts
+ * import type { EmbeddingCacheConfig } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * const acceptsEmbeddingCacheConfig = (_value: EmbeddingCacheConfig): void => undefined
+ *
+ * console.log(acceptsEmbeddingCacheConfig)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category configuration
  */
 export interface EmbeddingCacheConfig {
   readonly ttlMs: number;
@@ -55,8 +96,16 @@ export interface EmbeddingCacheConfig {
 /**
  * Default cache configuration
  *
+ * **Example** (Inspect default cache config)
+ *
+ * ```ts
+ * import { defaultCacheConfig } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * console.log(defaultCacheConfig)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
- * @category configuration
  */
 export const defaultCacheConfig: EmbeddingCacheConfig = {
   ttlMs: Duration.toMillis(Duration.hours(1)),
@@ -66,11 +115,22 @@ export const defaultCacheConfig: EmbeddingCacheConfig = {
 /**
  * EmbeddingCache service interface
  *
+ *
+ * **Example** (Use the EmbeddingCacheService contract)
+ *
+ * ```ts
+ * import type { EmbeddingCacheService } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * const acceptsEmbeddingCacheService = (_value: EmbeddingCacheService): void => undefined
+ *
+ * console.log(acceptsEmbeddingCacheService)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category services
  */
 export interface EmbeddingCacheService {
-  readonly get: (hash: string) => Effect.Effect<Option.Option<Embedding>>;
+  readonly get: (hash: string) => Effect.Effect<O.Option<Embedding>>;
   readonly set: (hash: string, embedding: Embedding) => Effect.Effect<void>;
   readonly has: (hash: string) => Effect.Effect<boolean>;
   readonly size: Effect.Effect<number>;
@@ -80,8 +140,16 @@ export interface EmbeddingCacheService {
 /**
  * EmbeddingCache service tag
  *
+ * **Example** (Inspect embedding cache)
+ *
+ * ```ts
+ * import { EmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * console.log(EmbeddingCache)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCacheService>()($I`EmbeddingCache`) {
   /**
@@ -120,12 +188,12 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
             const now = yield* Clock.currentTimeMillis;
             const map = yield* Ref.get(cache);
             const entry = HashMap.get(map, hash);
-            if (Option.isNone(entry)) {
-              return Option.none();
+            if (O.isNone(entry)) {
+              return O.none();
             }
             if (isExpired(entry.value, now)) {
               yield* Ref.update(cache, HashMap.remove(hash));
-              return Option.none();
+              return O.none();
             }
             yield* Ref.update(cache, (m) =>
               HashMap.set(m, hash, {
@@ -133,7 +201,7 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
                 lastAccessedAt: now,
               })
             );
-            return Option.some(entry.value.embedding);
+            return O.some(entry.value.embedding);
           }),
           set: Effect.fn(function* (hash: string, embedding: Embedding) {
             const now = yield* Clock.currentTimeMillis;
@@ -150,7 +218,7 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
             const now = yield* Clock.currentTimeMillis;
             const map = yield* Ref.get(cache);
             const entry = HashMap.get(map, hash);
-            if (Option.isNone(entry)) return false;
+            if (O.isNone(entry)) return false;
             if (isExpired(entry.value, now)) {
               yield* Ref.update(cache, HashMap.remove(hash));
               return false;
@@ -175,11 +243,19 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
 /**
  * Test layer that always misses cache
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding cache test)
+ *
+ * ```ts
+ * import { EmbeddingCacheTest } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * console.log(EmbeddingCacheTest)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingCacheTest: Layer.Layer<EmbeddingCache> = Layer.succeed(EmbeddingCache, {
-  get: Effect.fn("EmbeddingCache.get")((_hash: string) => Effect.succeed(Option.none())),
+  get: Effect.fn("EmbeddingCache.get")((_hash: string) => Effect.succeed(O.none())),
   set: Effect.fn("EmbeddingCache.set")((_hash: string, _embedding: Embedding) => Effect.void),
   has: Effect.fn("EmbeddingCache.has")((_hash: string) => Effect.succeed(false)),
   size: Effect.succeed(0),
@@ -193,8 +269,19 @@ export const EmbeddingCacheTest: Layer.Layer<EmbeddingCache> = Layer.succeed(Emb
 /**
  * Extended cache interface with persistence and warm-up capabilities
  *
+ *
+ * **Example** (Use the PersistentEmbeddingCacheService contract)
+ *
+ * ```ts
+ * import type { PersistentEmbeddingCacheService } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * const acceptsPersistentEmbeddingCacheService = (_value: PersistentEmbeddingCacheService): void => undefined
+ *
+ * console.log(acceptsPersistentEmbeddingCacheService)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category services
  */
 export interface PersistentEmbeddingCacheService extends EmbeddingCacheService {
   /**
@@ -224,8 +311,16 @@ export interface PersistentEmbeddingCacheService extends EmbeddingCacheService {
 /**
  * PersistentEmbeddingCache service tag
  *
- * @since 0.0.0
+ * **Example** (Inspect persistent embedding cache)
+ *
+ * ```ts
+ * import { PersistentEmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * console.log(PersistentEmbeddingCache)
+ * ```
+ *
  * @category services
+ * @since 0.0.0
  */
 export class PersistentEmbeddingCache extends Context.Service<
   PersistentEmbeddingCache,
@@ -238,22 +333,24 @@ export class PersistentEmbeddingCache extends Context.Service<
  * @since 0.0.0
  * @category models
  */
-const PersistentEmbeddingEntry = Schema.Struct({
+const PersistentEmbeddingEntry = S.Struct({
   vector: Embedding,
   createdAt: EpochMillis,
 });
 
-const EmbeddingBlob = Schema.Struct({
-  version: Schema.Literal(1),
-  embeddings: Schema.Record(Schema.String, PersistentEmbeddingEntry),
+const EmbeddingBlob = S.Struct({
+  version: S.Literal(1),
+  embeddings: S.Record(S.String, PersistentEmbeddingEntry),
 });
 type EmbeddingBlob = typeof EmbeddingBlob.Type;
 
-const decodeEmbeddingBlob = Schema.decodeUnknownOption(Schema.fromJsonString(EmbeddingBlob));
-const encodeEmbeddingBlob = Schema.encodeEffect(Schema.fromJsonString(EmbeddingBlob));
+const decodeEmbeddingBlob = S.decodeUnknownOption(S.fromJsonString(EmbeddingBlob));
+const encodeEmbeddingBlob = S.encodeEffect(S.fromJsonString(EmbeddingBlob));
 
 /**
  * Create persistent embedding cache with GCS backing
+ *
+ * **Details**
  *
  * Architecture:
  * - Uses in-memory HashMap for fast lookups
@@ -261,8 +358,16 @@ const encodeEmbeddingBlob = Schema.encodeEffect(Schema.fromJsonString(EmbeddingB
  * - Writes to both memory and GCS on set
  * - Batch writes use a single blob per batch to minimize GCS operations
  *
+ * **Example** (Inspect make persistent embedding cache)
+ *
+ * ```ts
+ * import { makePersistentEmbeddingCache } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * console.log(makePersistentEmbeddingCache)
+ * ```
+ *
+ * @category constructors
  * @since 0.0.0
- * @category layers
  */
 export const makePersistentEmbeddingCache = Effect.fn(function* (
   storage: StorageServiceMethods,
@@ -299,27 +404,27 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
   };
 
   // Load embedding from GCS
-  const loadFromStorage = Effect.fn(function* (hash: string): Effect.fn.Return<Option.Option<Embedding>> {
+  const loadFromStorage = Effect.fn(function* (hash: string): Effect.fn.Return<O.Option<Embedding>> {
     const blobPath = `${cachePath}/${Str.takeLeft(2)(hash)}/${hash}.json`;
     const content = yield* storage.get(blobPath).pipe(Effect.catch(() => Effect.void));
 
     if (content === undefined) {
-      return Option.none();
+      return O.none();
     }
 
     const blob = decodeEmbeddingBlob(content);
-    if (Option.isNone(blob)) return Option.none();
+    if (O.isNone(blob)) return O.none();
 
     const entry = blob.value.embeddings[hash];
-    if (P.isUndefined(entry)) return Option.none();
+    if (P.isUndefined(entry)) return O.none();
 
     const now = yield* Clock.currentTimeMillis;
     if (now - entry.createdAt > config.ttlMs) {
       // Expired in storage too
-      return Option.none();
+      return O.none();
     }
 
-    return Option.some(entry.vector);
+    return O.some(entry.vector);
   });
 
   // Save embedding to GCS
@@ -355,7 +460,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
       const entry = HashMap.get(map, hash);
 
       // Check in-memory cache first
-      if (Option.isSome(entry)) {
+      if (O.isSome(entry)) {
         if (isExpired(entry.value, now)) {
           yield* Ref.update(memoryCache, HashMap.remove(hash));
         } else {
@@ -370,7 +475,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
             ...s,
             memoryHits: s.memoryHits + 1,
           }));
-          return Option.some(entry.value.embedding);
+          return O.some(entry.value.embedding);
         }
       }
 
@@ -381,7 +486,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
       }));
 
       const persisted = yield* loadFromStorage(hash);
-      if (Option.isSome(persisted)) {
+      if (O.isSome(persisted)) {
         // Persistent hit - add to memory cache
         yield* Ref.update(stats, (s) => ({
           ...s,
@@ -403,7 +508,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
         ...s,
         persistentMisses: s.persistentMisses + 1,
       }));
-      return Option.none();
+      return O.none();
     }),
 
     set: Effect.fn(function* (hash: string, embedding: Embedding) {
@@ -428,7 +533,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
       const map = yield* Ref.get(memoryCache);
       const entry = HashMap.get(map, hash);
 
-      if (Option.isSome(entry)) {
+      if (O.isSome(entry)) {
         if (isExpired(entry.value, now)) {
           yield* Ref.update(memoryCache, HashMap.remove(hash));
           return false;
@@ -438,7 +543,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
 
       // Check persistent storage
       const persisted = yield* loadFromStorage(hash);
-      return Option.isSome(persisted);
+      return O.isSome(persisted);
     }),
 
     size: Ref.get(memoryCache).pipe(Effect.map(HashMap.size)),
@@ -448,7 +553,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
 
     warmUp: Effect.gen(function* () {
       // List all embedding blobs in the cache path
-      const files = yield* storage.list(cachePath).pipe(Effect.orElseSucceed(() => [] as Array<string>));
+      const files = yield* storage.list(cachePath).pipe(Effect.orElseSucceed(() => []));
 
       let loaded = 0;
       const now = yield* Clock.currentTimeMillis;
@@ -463,7 +568,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
             if (content === undefined) return;
 
             const blob = decodeEmbeddingBlob(content);
-            if (Option.isNone(blob)) return;
+            if (O.isNone(blob)) return;
 
             for (const [hash, entry] of R.toEntries(blob.value.embeddings)) {
               // Skip expired entries
@@ -535,7 +640,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
     const config = yield* ConfigSvc;
     const storage = yield* StorageService;
 
-    const cachePath = Option.getOrUndefined(config.embedding.cachePath);
+    const cachePath = O.getOrUndefined(config.embedding.cachePath);
 
     if (P.isUndefined(cachePath)) {
       // No persistence path configured - return in-memory only
@@ -566,10 +671,10 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
           const now = yield* Clock.currentTimeMillis;
           const map = yield* Ref.get(cache);
           const entry = HashMap.get(map, hash);
-          if (Option.isNone(entry)) return Option.none();
+          if (O.isNone(entry)) return O.none();
           if (isExpired(entry.value, now)) {
             yield* Ref.update(cache, HashMap.remove(hash));
-            return Option.none();
+            return O.none();
           }
           yield* Ref.update(cache, (m) =>
             HashMap.set(m, hash, {
@@ -577,7 +682,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
               lastAccessedAt: now,
             })
           );
-          return Option.some(entry.value.embedding);
+          return O.some(entry.value.embedding);
         }),
         set: Effect.fn(function* (hash: string, embedding: Embedding) {
           const now = yield* Clock.currentTimeMillis;
@@ -594,7 +699,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
           const now = yield* Clock.currentTimeMillis;
           const map = yield* Ref.get(cache);
           const entry = HashMap.get(map, hash);
-          if (Option.isNone(entry)) return false;
+          if (O.isNone(entry)) return false;
           if (isExpired(entry.value, now)) {
             yield* Ref.update(cache, HashMap.remove(hash));
             return false;
@@ -615,7 +720,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
             persistentMisses: 0,
           };
         }),
-      } as PersistentEmbeddingCacheService;
+      };
     }
 
     // Persistence enabled - create persistent cache
@@ -633,6 +738,20 @@ const EmbeddingCacheAliasLayer = Layer.effect(EmbeddingCache, PersistentEmbeddin
   Layer.provide(PersistentEmbeddingCacheLayer)
 );
 
+/**
+ * Provides the embedding cache with persistence service capability.
+ *
+ * **Example** (Inspect embedding cache with persistence)
+ *
+ * ```ts
+ * import { EmbeddingCacheWithPersistence } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * console.log(EmbeddingCacheWithPersistence)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const EmbeddingCacheWithPersistence: Layer.Layer<
   EmbeddingCache | PersistentEmbeddingCache,
   never,

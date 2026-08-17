@@ -40,7 +40,7 @@ bun run --cwd scratchpad audit:effect-ontology-arbitraries
 bun run --cwd scratchpad audit:effect-ontology-docs
 bun run --cwd scratchpad test:effect-ontology
 bun run --cwd scratchpad lint:effect-ontology
-bun run --cwd scratchpad docgen
+bun run --cwd scratchpad docgen:effect-ontology
 ```
 
 The arbitrary audit loads all 54 retained source modules, derives every uppercase

@@ -1,6 +1,8 @@
 /**
  * EntityLinker Service
  *
+ * **Details**
+ *
  * Query helpers for EntityResolutionGraph:
  * - getCanonicalId: Look up canonical entity ID for any mention
  * - getMentionsForEntity: Get all MentionRecords for a canonical entity
@@ -10,10 +12,12 @@
  * @since 0.0.0
  */
 
-import { Graph, Option } from "effect";
+import { Graph } from "effect";
 import { flow } from "effect/Function";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Str from "effect/String";
-import type { ERNode, MentionRecord } from "../Domain/Model/EntityResolution.ts";
+import { EREdge, ERNode, type MentionRecord } from "../Domain/Model/EntityResolution.ts";
 import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { dual2 } from "../Utils/Dual.ts";
@@ -21,56 +25,84 @@ import { dual2 } from "../Utils/Dual.ts";
 /**
  * Get canonical ID for an entity
  *
+ * **Details**
+ *
  * Looks up the canonical (resolved) entity ID for any original entity ID.
  * This enables entity linking: multiple mentions can resolve to one canonical.
+ *
+ * **Example** (Use getCanonicalId)
+ *
+ * ```ts
+ * import { Graph } from "effect"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EntityResolutionGraph } from "@effect-ontology/Model/EntityResolutionGraph"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { getCanonicalId } from "@effect-ontology/Service/EntityLinker"
+ *
+ * const graph = S.decodeUnknownOption(EntityResolutionGraph)({
+ *   graph: Graph.directed(),
+ *   entityIndex: {},
+ *   canonicalMap: {},
+ *   createdAt: "2026-01-01T00:00:00.000Z",
+ *   stats: { mentionCount: 0, resolvedCount: 0, relationCount: 0, clusterCount: 0 }
+ * })
+ * const canonical = O.flatMap(graph, (value) =>
+ *   getCanonicalId(value, EntityId.make("not_found")))
+ * console.log(O.isNone(canonical)) // true
+ * ```
  *
  * @param erg - Entity Resolution Graph
  * @param entityId - Original entity ID from extraction
  * @returns Option containing canonical ID, or None if not found
- *
- * **Example** (Use getCanonicalId)
- * ```ts
- * const canonical = getCanonicalId(erg, "arsenal")
- * // => Option.some("arsenal_fc")
- *
- * const unknown = getCanonicalId(erg, "not_found")
- * // => Option.none()
- * ```
- *
+ * @category services
  * @since 0.0.0
- * @category queries
  */
-export const getCanonicalId = dual2((erg: EntityResolutionGraph, entityId: EntityId): Option.Option<EntityId> => {
+export const getCanonicalId = dual2((erg: EntityResolutionGraph, entityId: EntityId): O.Option<EntityId> => {
   const canonical = erg.canonicalMap[entityId];
-  return canonical !== undefined ? Option.some(canonical) : Option.none();
+  return canonical !== undefined ? O.some(canonical) : O.none();
 });
 
 /**
  * Get all MentionRecords for a canonical entity
  *
+ * **Details**
+ *
  * Returns all original extraction records that resolved to this canonical ID.
  * Useful for provenance tracking and understanding entity clustering.
+ *
+ * **Example** (Use getMentionsForEntity)
+ *
+ * ```ts
+ * import { Graph } from "effect"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EntityResolutionGraph } from "@effect-ontology/Model/EntityResolutionGraph"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { getMentionsForEntity } from "@effect-ontology/Service/EntityLinker"
+ *
+ * const graph = S.decodeUnknownOption(EntityResolutionGraph)({
+ *   graph: Graph.directed(),
+ *   entityIndex: {},
+ *   canonicalMap: {},
+ *   createdAt: "2026-01-01T00:00:00.000Z",
+ *   stats: { mentionCount: 0, resolvedCount: 0, relationCount: 0, clusterCount: 0 }
+ * })
+ * const mentions = O.map(graph, (value) =>
+ *   getMentionsForEntity(value, EntityId.make("arsenal_fc")))
+ * console.log(mentions)
+ * ```
  *
  * @param erg - Entity Resolution Graph
  * @param canonicalId - Canonical entity ID (from ResolvedEntity)
  * @returns Array of MentionRecords that resolved to this entity
- *
- * **Example** (Use getMentionsForEntity)
- * ```ts
- * const mentions = getMentionsForEntity(erg, "arsenal_fc")
- * // => [
- * //   MentionRecord { id: "arsenal", mention: "Arsenal", chunkIndex: 0 },
- * //   MentionRecord { id: "arsenal_fc", mention: "Arsenal FC", chunkIndex: 2 }
- * // ]
- * ```
- *
+ * @category services
  * @since 0.0.0
- * @category queries
  */
 export const getMentionsForEntity = dual2(
   (erg: EntityResolutionGraph, canonicalId: EntityId): ReadonlyArray<MentionRecord> => {
     // Find all entity IDs that map to this canonical ID
-    const matchingIds = Object.entries(erg.canonicalMap)
+    const matchingIds = R.toEntries(erg.canonicalMap)
       .filter(([_, canonical]) => canonical === canonicalId)
       .map(([entityId]) => EntityId.fromUnknown(entityId));
 
@@ -81,9 +113,9 @@ export const getMentionsForEntity = dual2(
       const nodeIdx = erg.entityIndex[entityId];
       if (nodeIdx !== undefined) {
         const nodeOpt = Graph.getNode(erg.graph, nodeIdx);
-        if (Option.isSome(nodeOpt)) {
+        if (O.isSome(nodeOpt)) {
           const node = nodeOpt.value;
-          if (isMentionRecord(node)) {
+          if (ERNode.guards.MentionRecord(node)) {
             mentions.push(node);
           }
         }
@@ -95,14 +127,9 @@ export const getMentionsForEntity = dual2(
 );
 
 /**
- * Type guard for MentionRecord
- *
- * @internal
- */
-const isMentionRecord = (node: ERNode): node is MentionRecord => node._tag === "MentionRecord";
-
-/**
  * Generate Mermaid diagram from EntityResolutionGraph
+ *
+ * **Details**
  *
  * Creates a visual representation of the two-tier graph:
  * - MentionRecord nodes (evidence)
@@ -110,22 +137,30 @@ const isMentionRecord = (node: ERNode): node is MentionRecord => node._tag === "
  * - Resolution edges (mention → canonical)
  * - Relation edges (canonical → canonical)
  *
- * @param erg - Entity Resolution Graph
- * @returns Mermaid diagram string
- *
  * **Example** (Use toMermaid)
+ *
  * ```ts
- * const mermaid = toMermaid(erg)
- * // graph TD
- * //   m0["Arsenal (chunk 0)"]
- * //   m1["Arsenal FC (chunk 2)"]
- * //   r0[["arsenal_fc"]]
- * //   m0 --> r0
- * //   m1 --> r0
+ * import { Graph } from "effect"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EntityResolutionGraph } from "@effect-ontology/Model/EntityResolutionGraph"
+ * import { toMermaid } from "@effect-ontology/Service/EntityLinker"
+ *
+ * const graph = S.decodeUnknownOption(EntityResolutionGraph)({
+ *   graph: Graph.directed(),
+ *   entityIndex: {},
+ *   canonicalMap: {},
+ *   createdAt: "2026-01-01T00:00:00.000Z",
+ *   stats: { mentionCount: 0, resolvedCount: 0, relationCount: 0, clusterCount: 0 }
+ * })
+ * const mermaid = O.map(graph, toMermaid)
+ * console.log(mermaid)
  * ```
  *
+ * @param erg - Entity Resolution Graph
+ * @returns Mermaid diagram string
+ * @category services
  * @since 0.0.0
- * @category formatting
  */
 export const toMermaid = (erg: EntityResolutionGraph): string => {
   const lines: Array<string> = ["graph TD"];
@@ -139,15 +174,15 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
   }> = [];
 
   for (const [idx, node] of Graph.entries(Graph.nodes(erg.graph))) {
-    if (node._tag === "MentionRecord") {
-      mentionNodes.push({ idx, node });
-    } else if (node._tag === "ResolvedEntity") {
-      resolvedNodes.push({
-        idx,
-        canonicalId: node.canonicalId,
-        mention: node.mention,
-      });
-    }
+    ERNode.match(node, {
+      MentionRecord: (mention) => mentionNodes.push({ idx, node: mention }),
+      ResolvedEntity: (resolved) =>
+        resolvedNodes.push({
+          idx,
+          canonicalId: resolved.canonicalId,
+          mention: resolved.mention,
+        }),
+    });
   }
 
   // Add MentionRecord nodes (rectangles)
@@ -166,14 +201,13 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
   for (const [_edgeIdx, edgeInfo] of Graph.entries(Graph.edges(erg.graph))) {
     const { data, source, target } = edgeInfo;
 
-    if (data._tag === "ResolutionEdge") {
-      // MentionRecord → ResolvedEntity (dashed)
-      lines.push(`  m${source} -.-> r${target}`);
-    } else if (data._tag === "RelationEdge") {
-      // ResolvedEntity → ResolvedEntity (solid with label)
-      const predLabel = extractLocalName(data.predicate);
-      lines.push(`  r${source} -->|${predLabel}| r${target}`);
-    }
+    EREdge.match(data, {
+      ResolutionEdge: () => lines.push(`  m${source} -.-> r${target}`),
+      RelationEdge: (relation) => {
+        const predLabel = extractLocalName(relation.predicate);
+        lines.push(`  r${source} -->|${predLabel}| r${target}`);
+      },
+    });
   }
 
   return lines.join("\n");

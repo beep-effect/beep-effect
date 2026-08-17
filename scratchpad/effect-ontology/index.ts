@@ -1,5 +1,9 @@
 /**
- * @effect-ontology/core-v2
+ * Public effect-ontology APIs for index.
+ *
+ * **Details**
+ *
+ * Package marker: `@effect-ontology/core-v2`.
  *
  * Effect-native knowledge extraction framework
  *

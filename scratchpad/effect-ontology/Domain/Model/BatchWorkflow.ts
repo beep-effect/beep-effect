@@ -6,10 +6,9 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { pipe } from "effect";
+import { Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
-import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, OntologyVersion } from "../Identity.ts";
@@ -19,7 +18,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/BatchWorkflow");
 const DocumentFailureFields = {
   code: S.NonEmptyString,
   message: S.NonEmptyString,
-} as const;
+};
 
 class DocumentFailure extends S.Class<DocumentFailure>($I`DocumentFailure`)(
   DocumentFailureFields,
@@ -68,14 +67,15 @@ const DocumentStatusDefinition = S.Union([
  *
  * **Example** (Use DocumentStatus)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { DocumentStatus } from "@effect-ontology/Model/BatchWorkflow.ts"
+ * import { DocumentStatus } from "@effect-ontology/Model/BatchWorkflow"
  *
- * const status = S.decodeUnknownSync(DocumentStatus)({
+ * const status = S.decodeUnknownOption(DocumentStatus)({
  *   status: "pending",
  *   documentId: "doc-0123456789ab"
  * })
- * console.log(status.status) // "pending"
+ * console.log(O.map(status, (value) => value.status)) // "pending"
  * ```
  *
  * @category schemas
@@ -93,7 +93,7 @@ export const DocumentStatus = DocumentStatusDefinition.pipe(
  *
  * **Example** (Use DocumentStatus)
  * ```ts
- * import type { DocumentStatus } from "@effect-ontology/Model/BatchWorkflow.ts"
+ * import type { DocumentStatus } from "@effect-ontology/Model/BatchWorkflow"
  *
  * const tag = (status: DocumentStatus): DocumentStatus["status"] => status.status
  * console.log(typeof tag) // "function"
@@ -123,7 +123,7 @@ const BatchIdentityFields = {
   updatedAt: S.DateTimeUtcFromString.annotateKey({
     description: "UTC instant of the latest state update.",
   }),
-} as const;
+};
 
 /**
  * Identity and immutable routing context shared by every batch state.
@@ -131,11 +131,12 @@ const BatchIdentityFields = {
  * **Example** (Use BatchIdentity)
  * ```ts
  * import { DateTime } from "effect"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { BatchIdentity } from "@effect-ontology/Model/BatchWorkflow.ts"
+ * import { BatchIdentity } from "@effect-ontology/Model/BatchWorkflow"
  *
  * const now = DateTime.formatIso(DateTime.nowUnsafe())
- * const identity = S.decodeUnknownSync(BatchIdentity)({
+ * const identity = S.decodeUnknownOption(BatchIdentity)({
  *   batchId: "batch-0123456789ab",
  *   ontologyId: "football",
  *   manifestUri: "gs://beep-ontology/manifests/batch.json",
@@ -143,7 +144,7 @@ const BatchIdentityFields = {
  *   createdAt: now,
  *   updatedAt: now
  * })
- * console.log(identity.ontologyId) // "football"
+ * console.log(O.map(identity, (value) => value.ontologyId)) // "football"
  * ```
  *
  * @category value-objects
@@ -160,7 +161,7 @@ const BatchFailureFields = {
   code: S.NonEmptyString,
   message: S.NonEmptyString,
   cause: S.OptionFromOptionalKey(S.Defect({ includeStack: false })).pipe(SchemaUtils.withNoneDefault),
-} as const;
+};
 
 class BatchFailure extends S.Class<BatchFailure>($I`BatchFailure`)(
   BatchFailureFields,
@@ -179,7 +180,7 @@ const BatchCompletionStatsFields = {
   clustersResolved: NonNegativeInt,
   triplesIngested: NonNegativeInt,
   totalDurationMs: S.DurationFromMillis,
-} as const;
+};
 
 class BatchCompletionStats extends S.Class<BatchCompletionStats>($I`BatchCompletionStats`)(
   BatchCompletionStatsFields,
@@ -193,7 +194,7 @@ class BatchCompletionStats extends S.Class<BatchCompletionStats>($I`BatchComplet
  *
  * **Example** (Use BatchStage)
  * ```ts
- * import { BatchStage } from "@effect-ontology/Model/BatchWorkflow.ts"
+ * import { BatchStage } from "@effect-ontology/Model/BatchWorkflow"
  *
  * console.log(BatchStage.is.Extracting("Extracting")) // true
  * ```
@@ -235,7 +236,7 @@ export const BatchStage = LiteralKit([
  *
  * **Example** (Use BatchStage)
  * ```ts
- * import type { BatchStage } from "@effect-ontology/Model/BatchWorkflow.ts"
+ * import type { BatchStage } from "@effect-ontology/Model/BatchWorkflow"
  *
  * const stage: BatchStage = "Validating"
  * console.log(stage) // "Validating"
@@ -386,7 +387,7 @@ const validateTransition = (from: BatchStage, to: BatchStage): O.Option<string> 
  *
  * **Example** (Use BatchState)
  * ```ts
- * import { BatchState } from "@effect-ontology/Model/BatchWorkflow.ts"
+ * import { BatchState } from "@effect-ontology/Model/BatchWorkflow"
  *
  * console.log(BatchState.isValidTransition("Pending", "Preprocessing")) // true
  * console.log(BatchState.isValidTransition("Pending", "Validating")) // false
@@ -424,7 +425,7 @@ export const BatchState = BatchStateDefinition.pipe(
  *
  * **Example** (Use BatchState)
  * ```ts
- * import type { BatchState } from "@effect-ontology/Model/BatchWorkflow.ts"
+ * import type { BatchState } from "@effect-ontology/Model/BatchWorkflow"
  *
  * const stage = (state: BatchState): BatchState["_tag"] => state._tag
  * console.log(typeof stage) // "function"

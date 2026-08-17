@@ -16,7 +16,7 @@
  *
  * **Example** (Use index)
  * ```ts
- * import { SubmitJobRequest } from "@effect-ontology/Schema/index.ts"
+ * import { SubmitJobRequest } from "@effect-ontology/Schema/index"
  * console.log(SubmitJobRequest)
  * ```
  *
@@ -29,7 +29,7 @@ export * from "./Api.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { TicketRequest } from "@effect-ontology/Schema/index.ts"
+ * import { TicketRequest } from "@effect-ontology/Schema/index"
  * console.log(TicketRequest)
  * ```
  *
@@ -42,7 +42,7 @@ export * from "./Auth.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { BatchManifest } from "@effect-ontology/Schema/index.ts"
+ * import { BatchManifest } from "@effect-ontology/Schema/index"
  * console.log(BatchManifest)
  * ```
  *
@@ -55,7 +55,7 @@ export * from "./Batch.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { BatchRequest } from "@effect-ontology/Schema/index.ts"
+ * import { BatchRequest } from "@effect-ontology/Schema/index"
  * console.log(BatchRequest)
  * ```
  *
@@ -68,7 +68,7 @@ export * from "./BatchRequest.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { BatchStatusResponse } from "@effect-ontology/Schema/index.ts"
+ * import { BatchStatusResponse } from "@effect-ontology/Schema/index"
  * console.log(BatchStatusResponse)
  * ```
  *
@@ -81,7 +81,7 @@ export * from "./BatchStatusResponse.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { DocumentType } from "@effect-ontology/Schema/index.ts"
+ * import { DocumentType } from "@effect-ontology/Schema/index"
  * console.log(DocumentType.is.contract("contract")) // true
  * ```
  *
@@ -94,7 +94,7 @@ export * from "./DocumentMetadata.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { ClaimId } from "@effect-ontology/Schema/index.ts"
+ * import { ClaimId } from "@effect-ontology/Schema/index"
  * console.log(ClaimId.is("claim-abc123def456")) // true
  * ```
  *
@@ -107,7 +107,7 @@ export * from "./KnowledgeModel.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { IngestLinkRequest } from "@effect-ontology/Schema/index.ts"
+ * import { IngestLinkRequest } from "@effect-ontology/Schema/index"
  * console.log(IngestLinkRequest)
  * ```
  *
@@ -120,7 +120,7 @@ export * from "./LinkIngestion.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { OntologySummary } from "@effect-ontology/Schema/index.ts"
+ * import { OntologySummary } from "@effect-ontology/Schema/index"
  * console.log(OntologySummary)
  * ```
  *
@@ -133,7 +133,7 @@ export * from "./OntologyBrowser.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { OntologyRegistry } from "@effect-ontology/Schema/index.ts"
+ * import { OntologyRegistry } from "@effect-ontology/Schema/index"
  * console.log(OntologyRegistry)
  * ```
  *
@@ -146,7 +146,7 @@ export * from "./OntologyRegistry.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { ClaimSearchRequest } from "@effect-ontology/Schema/index.ts"
+ * import { ClaimSearchRequest } from "@effect-ontology/Schema/index"
  * console.log(ClaimSearchRequest)
  * ```
  *
@@ -160,7 +160,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { ShaclValidationReport } from "@effect-ontology/Schema/index.ts"
+   * import { ShaclValidationReport } from "@effect-ontology/Schema/index"
    * console.log(ShaclValidationReport)
    * ```
    *
@@ -175,7 +175,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { ArticleDetailResponse } from "@effect-ontology/Schema/index.ts"
+   * import { ArticleDetailResponse } from "@effect-ontology/Schema/index"
    * console.log(ArticleDetailResponse)
    * ```
    *
@@ -188,7 +188,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { ArticleSummary } from "@effect-ontology/Schema/index.ts"
+   * import { ArticleSummary } from "@effect-ontology/Schema/index"
    * console.log(ArticleSummary)
    * ```
    *
@@ -201,7 +201,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { ClaimConflict } from "@effect-ontology/Schema/index.ts"
+   * import { ClaimConflict } from "@effect-ontology/Schema/index"
    * console.log(ClaimConflict)
    * ```
    *
@@ -214,7 +214,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { ClaimWithRank } from "@effect-ontology/Schema/index.ts"
+   * import { ClaimWithRank } from "@effect-ontology/Schema/index"
    * console.log(ClaimWithRank)
    * ```
    *
@@ -227,7 +227,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { ConflictsQuery } from "@effect-ontology/Schema/index.ts"
+   * import { ConflictsQuery } from "@effect-ontology/Schema/index"
    * console.log(ConflictsQuery)
    * ```
    *
@@ -240,7 +240,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { ConflictsResponse } from "@effect-ontology/Schema/index.ts"
+   * import { ConflictsResponse } from "@effect-ontology/Schema/index"
    * console.log(ConflictsResponse)
    * ```
    *
@@ -253,7 +253,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { CorrectionHistoryQuery } from "@effect-ontology/Schema/index.ts"
+   * import { CorrectionHistoryQuery } from "@effect-ontology/Schema/index"
    * console.log(CorrectionHistoryQuery)
    * ```
    *
@@ -266,7 +266,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { CorrectionHistoryResponse } from "@effect-ontology/Schema/index.ts"
+   * import { CorrectionHistoryResponse } from "@effect-ontology/Schema/index"
    * console.log(CorrectionHistoryResponse)
    * ```
    *
@@ -279,7 +279,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { CorrectionSummary } from "@effect-ontology/Schema/index.ts"
+   * import { CorrectionSummary } from "@effect-ontology/Schema/index"
    * console.log(CorrectionSummary)
    * ```
    *
@@ -292,7 +292,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { CorrectionWithClaims } from "@effect-ontology/Schema/index.ts"
+   * import { CorrectionWithClaims } from "@effect-ontology/Schema/index"
    * console.log(CorrectionWithClaims)
    * ```
    *
@@ -305,7 +305,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { TimelineClaimsQuery } from "@effect-ontology/Schema/index.ts"
+   * import { TimelineClaimsQuery } from "@effect-ontology/Schema/index"
    * console.log(TimelineClaimsQuery)
    * ```
    *
@@ -318,7 +318,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { TimelineClaimsResponse } from "@effect-ontology/Schema/index.ts"
+   * import { TimelineClaimsResponse } from "@effect-ontology/Schema/index"
    * console.log(TimelineClaimsResponse)
    * ```
    *
@@ -331,7 +331,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { TimelineEntityQuery } from "@effect-ontology/Schema/index.ts"
+   * import { TimelineEntityQuery } from "@effect-ontology/Schema/index"
    * console.log(TimelineEntityQuery)
    * ```
    *
@@ -344,7 +344,7 @@ export {
    *
    * **Example** (Use index)
    * ```ts
-   * import { TimelineEntityResponse } from "@effect-ontology/Schema/index.ts"
+   * import { TimelineEntityResponse } from "@effect-ontology/Schema/index"
    * console.log(TimelineEntityResponse)
    * ```
    *

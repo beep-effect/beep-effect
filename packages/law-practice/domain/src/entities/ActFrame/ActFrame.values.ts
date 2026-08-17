@@ -23,10 +23,12 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { HashSet as StoredHashSet } from "@beep/schema/HashSet";
-import { HashSet } from "effect";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { ActFrameElementLabel } from "../../values/ActFrameElementRef/index.ts";
 import { HohfeldPosition } from "../../values/HohfeldPosition/index.ts";
 import { NormSourceReference } from "../../values/NormSourceReference/index.ts";
@@ -63,6 +65,21 @@ export const ActFrameSlotKind = ActFrameSlotKindBase.pipe(
   $I.annoteSchema("ActFrameSlotKind", {
     description: "Which structural place in an act frame a slot occupies.",
   }),
+  SchemaUtils.withStatics((schema) => ({
+    makeActFrameSlotMember: <T extends typeof schema.Type>(literal: S.Literal<T>) =>
+      S.Struct({
+        // "Structural place this slot occupies in the frame.",
+        kind: S.tag(literal.literal).annotateKey({
+          description: `Structural place this slot occupies in the frame. ${literal.literal} slot kind.`,
+        }),
+        label: ActFrameElementLabel.annotateKey({
+          description: "The frame's name for this slot, and the address a pointer uses to reach it.",
+        }),
+        source: NormSourceReference.annotateKey({
+          description: "Norm text this slot was read from.",
+        }),
+      }),
+  })),
   SchemaUtils.withLiteralKitStatics(ActFrameSlotKindBase)
 );
 
@@ -291,22 +308,20 @@ export type OperativeFactStatement = typeof OperativeFactStatement.Type;
  * @category models
  * @since 0.0.0
  */
-export class ActFrameSlot extends S.Class<ActFrameSlot>($I`ActFrameSlot`)(
-  {
-    kind: ActFrameSlotKind.annotateKey({
-      description: "Structural place this slot occupies in the frame.",
-    }),
-    label: ActFrameElementLabel.annotateKey({
-      description: "The frame's name for this slot, and the address a pointer uses to reach it.",
-    }),
-    source: NormSourceReference.annotateKey({
-      description: "Norm text this slot was read from.",
-    }),
-  },
-  $I.annote("ActFrameSlot", {
+export const ActFrameSlot = ActFrameSlotKind.mapMembers(
+  Tuple.evolve([
+    ActFrameSlotKind.makeActFrameSlotMember,
+    ActFrameSlotKind.makeActFrameSlotMember,
+    ActFrameSlotKind.makeActFrameSlotMember,
+  ])
+).pipe(
+  S.toTaggedUnion("kind"),
+  $I.annoteSchema("ActFrameSlot", {
     description: "One named place in an act frame that a party fills, carrying its own source reference.",
   })
-) {}
+);
+
+export type ActFrameSlot = typeof ActFrameSlot.Type;
 
 /**
  * One condition a recorded act frame states for its act.

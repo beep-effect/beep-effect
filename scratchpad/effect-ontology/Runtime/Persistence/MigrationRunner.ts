@@ -1,6 +1,8 @@
 /**
  * Database Migration Runner
  *
+ * **Details**
+ *
  * Applies SQL migrations in order, tracking which have been applied.
  * Uses the schema_migrations table to track applied versions.
  *
@@ -9,61 +11,162 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Layer } from "effect";
+import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { Cause, Context, Layer, Order } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/Persistence/MigrationRunner");
 
-import { Effect, Option } from "effect";
+import { Effect } from "effect";
 import * as A from "effect/Array";
-import * as Order from "effect/Order";
-import { SqlClient } from "effect/unstable/sql";
+import { SqlClient, SqlSchema } from "effect/unstable/sql";
 
 // -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
 
-export interface Migration {
-  readonly version: number;
-  readonly name: string;
-  readonly sql: string;
-}
+/**
+ * Describes the migration data exposed by this module.
+ *
+ *
+ * **Example** (Use the Migration contract)
+ *
+ * ```ts
+ * import type { Migration } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
+ *
+ * const acceptsMigration = (_value: Migration): void => undefined
+ *
+ * console.log(acceptsMigration)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export class Migration extends S.Class<Migration>($I`Migration`)(
+  {
+    version: PosInt.annotateKey({ description: "Positive, monotonically increasing migration version." }),
+    name: S.NonEmptyString.annotateKey({ description: "Stable migration name persisted in schema_migrations." }),
+    sql: S.NonEmptyString.annotateKey({ description: "SQL program applied for this migration." }),
+  },
+  $I.annote("Migration", { description: "Validated database migration definition." })
+) {}
 
-export interface MigrationResult {
-  readonly applied: ReadonlyArray<Migration>;
-  readonly skipped: ReadonlyArray<number>;
-  readonly errors: ReadonlyArray<{ version: number; error: string }>;
-}
+/**
+ * Typed failure produced while applying one migration.
+ *
+ * **Example** (Inspect a migration failure)
+ *
+ * ```ts
+ * import { MigrationFailure } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
+ *
+ * console.log(MigrationFailure)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class MigrationFailure extends S.TaggedError<MigrationFailure>($I`MigrationFailure`)(
+  "MigrationFailure",
+  {
+    version: PosInt,
+    message: S.NonEmptyString,
+    cause: S.Defect({ includeStack: true }),
+  },
+  $I.annote("MigrationFailure", { description: "Failure to apply one versioned database migration." })
+) {}
+
+/**
+ * Describes the migration result data exposed by this module.
+ *
+ *
+ * **Example** (Use the MigrationResult contract)
+ *
+ * ```ts
+ * import type { MigrationResult } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
+ *
+ * const acceptsMigrationResult = (_value: MigrationResult): void => undefined
+ *
+ * console.log(acceptsMigrationResult)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export class MigrationResult extends S.Class<MigrationResult>($I`MigrationResult`)(
+  {
+    applied: S.Array(Migration),
+    skipped: S.Array(PosInt),
+    errors: S.Array(MigrationFailure),
+  },
+  $I.annote("MigrationResult", { description: "Validated summary of applied, skipped, and failed migrations." })
+) {}
+
+const CurrentMigrationVersion = S.Struct({
+  version: NonNegativeInt,
+});
 
 // -----------------------------------------------------------------------------
 // Service
 // -----------------------------------------------------------------------------
 
+/**
+ * Describes the migration runner service data exposed by this module.
+ *
+ *
+ * **Example** (Use the MigrationRunnerService contract)
+ *
+ * ```ts
+ * import type { MigrationRunnerService } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
+ *
+ * const acceptsMigrationRunnerService = (_value: MigrationRunnerService): void => undefined
+ *
+ * console.log(acceptsMigrationRunnerService)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface MigrationRunnerService {
-  readonly getCurrentVersion: Effect.Effect<number>;
-  readonly applyMigration: (
-    migration: Migration
-  ) => Effect.Effect<void, { readonly version: number; readonly error: string }>;
+  readonly getCurrentVersion: Effect.Effect<NonNegativeInt>;
+  readonly applyMigration: (migration: Migration) => Effect.Effect<void, MigrationFailure>;
   readonly runMigrations: (migrations: ReadonlyArray<Migration>) => Effect.Effect<MigrationResult>;
 }
 
+/**
+ * Validates and represents migration runner values at runtime.
+ *
+ * **Example** (Inspect migration runner)
+ *
+ * ```ts
+ * import { MigrationRunner } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
+ *
+ * console.log(MigrationRunner)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class MigrationRunner extends Context.Service<MigrationRunner, MigrationRunnerService>()($I`MigrationRunner`, {
   make: Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
+    const readCurrentVersion = SqlSchema.findOne({
+      Request: S.Void,
+      Result: CurrentMigrationVersion,
+      execute: () => sql`
+        SELECT COALESCE(MAX(version), 0) as version
+        FROM schema_migrations
+      `,
+    });
 
     /**
      * Get the current schema version
      */
     const getCurrentVersion = Effect.gen(function* () {
-      const result = yield* sql`
-        SELECT COALESCE(MAX(version), 0) as version
-        FROM schema_migrations
-      `.pipe(
-        Effect.orElseSucceed(() =>
-          // Table doesn't exist yet
-          [{ version: 0 }]
-        )
+      const result = yield* readCurrentVersion(undefined).pipe(
+        Effect.orElseSucceed(() => CurrentMigrationVersion.make({ version: NonNegativeInt.make(0) }))
       );
-      return (result[0]?.version as number) ?? 0;
+      return result.version;
     });
 
     /**
@@ -71,7 +174,7 @@ export class MigrationRunner extends Context.Service<MigrationRunner, MigrationR
      */
     const applyMigration = Effect.fn("MigrationRunner.applyMigration")(function* (
       migration: Migration
-    ): Effect.fn.Return<void, { readonly version: number; readonly error: string }> {
+    ): Effect.fn.Return<void, MigrationFailure> {
       return yield* Effect.gen(function* () {
         yield* Effect.logInfo(`Applying migration ${migration.version}: ${migration.name}`);
         yield* sql.unsafe(migration.sql);
@@ -82,10 +185,13 @@ export class MigrationRunner extends Context.Service<MigrationRunner, MigrationR
         `;
         yield* Effect.logInfo(`Migration ${migration.version} applied successfully`);
       }).pipe(
-        Effect.mapError((error) => ({
-          version: migration.version,
-          error: error instanceof Error ? error.message : String(error),
-        }))
+        Effect.catchCause((cause) =>
+          MigrationFailure.make({
+            version: migration.version,
+            message: Cause.pretty(cause),
+            cause,
+          })
+        )
       );
     });
 
@@ -106,31 +212,31 @@ export class MigrationRunner extends Context.Service<MigrationRunner, MigrationR
 
       if (pending.length === 0) {
         yield* Effect.logInfo("No pending migrations");
-        return {
-          applied: [] as Array<Migration>,
+        return MigrationResult.make({
+          applied: [],
           skipped: A.map(
             A.filter(sorted, (migration) => migration.version <= currentVersion),
             (migration) => migration.version
           ),
           errors: [],
-        } satisfies MigrationResult;
+        });
       }
 
       yield* Effect.logInfo(`Found ${pending.length} pending migrations`);
 
       const applied: Array<Migration> = [];
-      const errors: Array<{ version: number; error: string }> = [];
+      const errors: Array<MigrationFailure> = [];
 
       for (const migration of pending) {
         const result = yield* applyMigration(migration).pipe(
-          Effect.map(() => Option.some(migration)),
+          Effect.map(() => O.some(migration)),
           Effect.catch((err) => {
             errors.push(err);
-            return Effect.succeed(Option.none<Migration>());
+            return Effect.succeed(O.none<Migration>());
           })
         );
 
-        if (Option.isSome(result)) {
+        if (O.isSome(result)) {
           applied.push(result.value);
         } else {
           // Stop on first error
@@ -138,14 +244,14 @@ export class MigrationRunner extends Context.Service<MigrationRunner, MigrationR
         }
       }
 
-      return {
+      return MigrationResult.make({
         applied,
         skipped: A.map(
           A.filter(sorted, (migration) => migration.version <= currentVersion),
           (migration) => migration.version
         ),
         errors,
-      } satisfies MigrationResult;
+      });
     });
 
     return {
@@ -164,6 +270,17 @@ export class MigrationRunner extends Context.Service<MigrationRunner, MigrationR
 
 /**
  * Layer that provides MigrationRunner with SqlClient dependency
+ *
+ * **Example** (Inspect migration runner live)
+ *
+ * ```ts
+ * import { MigrationRunnerLive } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
+ *
+ * console.log(MigrationRunnerLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const MigrationRunnerLive = MigrationRunner.Default;
 
@@ -174,10 +291,21 @@ export const MigrationRunnerLive = MigrationRunner.Default;
 /**
  * All migrations to apply at startup.
  * SQL is embedded to avoid runtime file system dependencies.
+ *
+ * **Example** (Inspect all migrations)
+ *
+ * ```ts
+ * import { AllMigrations } from "@effect-ontology/Runtime/Persistence/MigrationRunner"
+ *
+ * console.log(AllMigrations)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
-export const AllMigrations: ReadonlyArray<Migration> = [
+export const AllMigrations = S.Array(Migration).make([
   {
-    version: 1,
+    version: PosInt.make(1),
     name: "001_claims_schema",
     sql: `-- Initial schema for claims, articles, and corrections
 CREATE TABLE IF NOT EXISTS articles (
@@ -293,7 +421,7 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 );`,
   },
   {
-    version: 2,
+    version: PosInt.make(2),
     name: "002_bitemporal_timestamps",
     sql: `-- Add bitemporal transaction time columns
 DO $$ BEGIN
@@ -307,13 +435,13 @@ ALTER TABLE claims ADD COLUMN IF NOT EXISTS derived_at TIMESTAMPTZ;
 CREATE INDEX IF NOT EXISTS idx_claims_derived_at ON claims(derived_at) WHERE derived_at IS NOT NULL;`,
   },
   {
-    version: 3,
+    version: PosInt.make(3),
     name: "003_claim_idempotency",
     sql: `-- Add unique constraint for claim idempotency
 CREATE UNIQUE INDEX IF NOT EXISTS idx_claims_natural_key ON claims (article_id, subject_iri, predicate_iri, object_value);`,
   },
   {
-    version: 4,
+    version: PosInt.make(4),
     name: "004_entity_registry_pgvector",
     sql: `-- Entity Registry with pgvector for cross-batch entity linking
 -- Enables building up a persistent entity store across extraction batches
@@ -425,7 +553,7 @@ CREATE INDEX IF NOT EXISTS idx_blocking_tokens_composite
 ON entity_blocking_tokens(token, canonical_entity_id);`,
   },
   {
-    version: 5,
+    version: PosInt.make(5),
     name: "005_ontology_scoping",
     sql: `-- Add ontology_id to articles, claims for namespace scoping
 ALTER TABLE articles ADD COLUMN IF NOT EXISTS ontology_id TEXT;
@@ -444,7 +572,7 @@ CREATE INDEX IF NOT EXISTS idx_claims_ontology_predicate ON claims(ontology_id, 
 CREATE INDEX IF NOT EXISTS idx_claims_ontology_subject_predicate ON claims(ontology_id, subject_iri, predicate_iri);`,
   },
   {
-    version: 6,
+    version: PosInt.make(6),
     name: "006_entity_registry_scoping",
     sql: `-- Add ontology_id scoping to entity registry tables
 DO $$ BEGIN
@@ -484,7 +612,7 @@ END $$;
 CREATE INDEX IF NOT EXISTS idx_blocking_tokens_ontology_token ON entity_blocking_tokens(ontology_id, token);`,
   },
   {
-    version: 7,
+    version: PosInt.make(7),
     name: "007_llm_examples",
     sql: `-- LLM examples table for few-shot learning
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -532,7 +660,7 @@ DO $$ BEGIN
 END $$;`,
   },
   {
-    version: 8,
+    version: PosInt.make(8),
     name: "008_content_hash_scoping",
     sql: `-- Ensure ingested_links exists before the ontology-scoped unique constraint.
 -- The checked-in 004_ingested_links.sql was never part of AllMigrations, so a
@@ -580,7 +708,7 @@ CREATE INDEX IF NOT EXISTS idx_ingested_links_ontology_content_hash
     ON ingested_links(ontology_id, content_hash);`,
   },
   {
-    version: 9,
+    version: PosInt.make(9),
     name: "009_processing_status",
     sql: `-- Add 'processing' status to ingested_links check constraint
 -- The ingested_links table was missing 'processing' status which is needed
@@ -594,7 +722,7 @@ ALTER TABLE ingested_links ADD CONSTRAINT ingested_links_status_check
   CHECK (status IN ('pending', 'enriched', 'processing', 'processed', 'failed', 'skipped'));`,
   },
   {
-    version: 10,
+    version: PosInt.make(10),
     name: "010_ontology_scoped_uniques",
     sql: `-- Scope article URI and canonical-entity IRI uniqueness by ontology.
 ALTER TABLE articles DROP CONSTRAINT IF EXISTS articles_uri_key;
@@ -603,4 +731,4 @@ ALTER TABLE articles ADD CONSTRAINT articles_ontology_uri_unique UNIQUE (ontolog
 ALTER TABLE canonical_entities DROP CONSTRAINT IF EXISTS canonical_entities_iri_key;
 ALTER TABLE canonical_entities ADD CONSTRAINT canonical_entities_ontology_iri_unique UNIQUE (ontology_id, iri);`,
   },
-];
+]);

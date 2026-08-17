@@ -40,7 +40,7 @@ const ApiKey = ApiKeyDefinition.annotate({
  *
  * **Example** (Use TicketRequest)
  * ```ts
- * import { TicketRequest } from "@effect-ontology/Schema/Auth.ts"
+ * import { TicketRequest } from "@effect-ontology/Schema/Auth"
  *
  * const request = TicketRequest.make({ ontologyId: "seattle" })
  * console.log(request.ontologyId) // "seattle"
@@ -72,14 +72,16 @@ export class TicketRequest extends S.Class<TicketRequest>($I`TicketRequest`)(
  *
  * **Example** (Use TicketResponse)
  * ```ts
- * import { TicketResponse } from "@effect-ontology/Schema/Auth.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { TicketResponse } from "@effect-ontology/Schema/Auth"
  *
- * const response = TicketResponse.fromUnknown({
+ * const response = S.decodeUnknownOption(TicketResponse)({
  *   ticket: "single-use-ticket",
  *   expiresAt: 1_900_000_000_000,
  *   ttlSeconds: 60
  * })
- * console.log(response.ttlSeconds) // 60
+ * console.log(O.map(response, (value) => value.ttlSeconds)) // Some(60)
  * ```
  *
  * @invariant Expiration is expressed as finite epoch milliseconds and TTL is a
@@ -118,16 +120,18 @@ export class TicketResponse extends S.Class<TicketResponse>($I`TicketResponse`)(
  *
  * **Example** (Use TicketRecord)
  * ```ts
- * import { TicketRecord } from "@effect-ontology/Schema/Auth.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { TicketRecord } from "@effect-ontology/Schema/Auth"
  *
- * const record = TicketRecord.fromUnknown({
+ * const record = S.decodeUnknownOption(TicketRecord)({
  *   ticket: "single-use-ticket",
  *   ontologyId: "seattle",
  *   apiKey: "api-key",
  *   createdAt: 1_800_000_000_000,
  *   expiresAt: 1_800_000_060_000
  * })
- * console.log(record.ontologyId) // "seattle"
+ * console.log(O.map(record, (value) => value.ontologyId)) // Some("seattle")
  * ```
  *
  * @invariant Credentials are non-empty and redacted; ontology scope is

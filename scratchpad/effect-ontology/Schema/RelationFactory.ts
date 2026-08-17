@@ -1,6 +1,8 @@
 /**
  * Relation Schema Factory (Stage 2)
  *
+ * **Details**
+ *
  * Creates Effect Schemas for relation extraction in the two-stage ODKE pipeline.
  * Stage 2: Extract relationships between entities identified in Stage 1.
  *
@@ -11,7 +13,7 @@
  * @since 0.0.0
  */
 
-import type { IRI } from "@beep/rdf";
+import { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
 import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
@@ -37,7 +39,7 @@ export { EmptyVocabularyError };
  *
  * @internal
  */
-const asIriArray = (ids: ReadonlyArray<string>): ReadonlyArray<IRI> => ids as ReadonlyArray<IRI>;
+const asIriArray = A.map((value: string) => IRI.make(value));
 
 /**
  * Helper: Creates a Union schema from a non-empty array of string literals
@@ -115,34 +117,45 @@ const localNameSchema = (
 /**
  * Creates Effect Schema for relation extraction (Stage 2)
  *
+ * **Details**
+ *
  * This is the second stage of the two-stage ODKE pipeline:
  * 1. Use entities identified in Stage 1
  * 2. Extract relationships between them
  * 3. Constrain subject/object to Stage 1 entity IDs
  *
+ * **Example** (Use makeRelationSchema)
+ *
+ * ```ts
+ * import { PropertyDefinition } from "@effect-ontology/Model/Ontology"
+ * import { makeRelationSchema } from "@effect-ontology/Schema/RelationFactory"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const properties = S.decodeUnknownOption(S.Array(PropertyDefinition))([
+ *   {
+ *     id: "https://schema.org/memberOf",
+ *     label: "member of",
+ *     rangeType: "object"
+ *   }
+ * ])
+ * const decoded = O.flatMap(properties, (values) =>
+ *   S.decodeUnknownOption(makeRelationSchema(["cristiano_ronaldo", "al_nassr"], values))({
+ *     relations: [
+ *       {
+ *         subjectId: "cristiano_ronaldo",
+ *         predicate: "memberOf",
+ *         object: "al_nassr"
+ *       }
+ *     ]
+ *   })
+ * )
+ * console.log(O.isSome(decoded)) // true
+ * ```
+ *
  * @param validEntityIds - Entity IDs from Stage 1 (constrains subjectId/object)
  * @param properties - Array of PropertyDefinition objects from ontology
  * @returns Relation schema for LLM structured output
- *
- * **Example** (Use makeRelationSchema)
- * ```ts
- * const schema = makeRelationSchema(
- *   ["cristiano_ronaldo", "al_nassr"], // From Stage 1
- *   [new PropertyDefinition({ id: "http://schema.org/memberOf", ... })]
- * )
- *
- * // Valid output:
- * {
- *   relations: [
- *     {
- *       subjectId: "cristiano_ronaldo",
- *       predicate: "http://schema.org/memberOf",
- *       object: "al_nassr"
- *     }
- *   ]
- * }
- * ```
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -239,9 +252,9 @@ export const makeRelationSchema = dual2(
     // If only one type exists, use that schema directly
     const RelationSchema =
       relationSchemas.length === 1
-        ? relationSchemas[0]!
+        ? relationSchemas[0]
         : relationSchemas.length === 2
-          ? S.Union([relationSchemas[0]!, relationSchemas[1]!])
+          ? S.Union([relationSchemas[0], relationSchemas[1]])
           : (() => {
               throw EmptyVocabularyError.make({
                 message: "Cannot create relation schema with zero properties",
@@ -283,9 +296,36 @@ CRITICAL RULES:
 /**
  * Type helpers
  *
+ * **Example** (Reference the relation graph schema factory result)
+ *
+ * ```ts
+ * import { makeRelationSchema, type RelationGraphSchema } from "@effect-ontology/Schema/RelationFactory"
+ *
+ * const relationGraphSchemaFactory: typeof makeRelationSchema = makeRelationSchema
+ * const describeRelationGraphSchema = (_schema: RelationGraphSchema): string => "relation graph schema"
+ *
+ * console.log(relationGraphSchemaFactory.length, describeRelationGraphSchema.length)
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
 export type RelationGraphSchema = ReturnType<typeof makeRelationSchema>;
 
+/**
+ * Describes the relation graph type data exposed by this module.
+ *
+ * **Example** (Reference RelationGraphType fields)
+ *
+ * ```ts
+ * import type { RelationGraphType } from "@effect-ontology/Schema/RelationFactory"
+ *
+ * const relationGraphTypeFields: ReadonlyArray<keyof RelationGraphType> = ["relations"]
+ *
+ * console.log(relationGraphTypeFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type RelationGraphType = S.Schema.Type<RelationGraphSchema>;

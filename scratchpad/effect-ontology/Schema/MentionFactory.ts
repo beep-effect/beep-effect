@@ -1,6 +1,8 @@
 /**
  * Mention Schema Factory (Pre-Stage 1)
  *
+ * **Details**
+ *
  * Creates Effect Schemas for mention extraction before entity typing.
  * This enables entity-level semantic search for better class assignment.
  *
@@ -9,7 +11,7 @@
  */
 
 import { SchemaUtils } from "@beep/schema";
-import { Schema as S } from "effect";
+import * as S from "effect/Schema";
 
 /**
  * Schema for a single entity mention (without types)
@@ -18,7 +20,11 @@ import { Schema as S } from "effect";
  */
 const MentionSchema = S.Struct({
   id: S.String.pipe(
-    S.check(S.isPattern(/^[a-z][a-z0-9_]*$/)),
+    S.check(
+      S.isPattern(/^[a-z][a-z0-9_]*$/, {
+        message: "Expected a snake_case mention identifier beginning with a lowercase letter",
+      })
+    ),
     S.annotate({
       description: "Snake_case unique identifier for this entity (e.g., 'cristiano_ronaldo')",
     })
@@ -37,6 +43,16 @@ const MentionSchema = S.Struct({
 /**
  * Schema for mention extraction (entity detection without typing)
  *
+ * **Example** (Validate mention graph schema)
+ *
+ * ```ts
+ * import { MentionGraphSchema } from "@effect-ontology/Schema/MentionFactory"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(MentionGraphSchema)({}))
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
 export const MentionGraphSchema = S.Struct({
@@ -59,11 +75,39 @@ CRITICAL RULES:
 /**
  * Type helpers
  *
+ * **Example** (Decode MentionGraphType)
+ *
+ * ```ts
+ * import { MentionGraphSchema, type MentionGraphType } from "@effect-ontology/Schema/MentionFactory"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const summarizeMentionGraphType = (_value: MentionGraphType): string => "valid mention graph type"
+ *
+ * console.log(O.map(S.decodeUnknownOption(MentionGraphSchema)({}), summarizeMentionGraphType))
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
 export type MentionGraphType = typeof MentionGraphSchema.Type;
 
+/**
+ * Describes the mention data exposed by this module.
+ *
+ * **Example** (Reference Mention fields)
+ *
+ * ```ts
+ * import type { Mention } from "@effect-ontology/Schema/MentionFactory"
+ *
+ * const mentionFields: ReadonlyArray<keyof Mention> = ["id", "mention", "context"]
+ *
+ * console.log(mentionFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface Mention {
   readonly id: string;
   readonly mention: string;

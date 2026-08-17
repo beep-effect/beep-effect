@@ -1,6 +1,8 @@
 /**
  * Activity Runner Entry Point
  *
+ * **Details**
+ *
  * Single Cloud Run Job that dispatches activities based on ACTIVITY_NAME env var.
  * Receives ACTIVITY_PAYLOAD as JSON and routes to the appropriate activity.
  *

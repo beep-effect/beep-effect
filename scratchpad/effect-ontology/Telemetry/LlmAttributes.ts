@@ -1,6 +1,8 @@
 /**
  * LLM Span Attributes
  *
+ * **Details**
+ *
  * Semantic conventions for LLM tracing following OpenTelemetry GenAI specs.
  *
  * @packageDocumentation
@@ -13,8 +15,16 @@ import { calculateCost } from "./CostCalculator.ts";
 /**
  * Semantic conventions for LLM spans (OpenTelemetry GenAI)
  *
+ * **Example** (Inspect llm attributes)
+ *
+ * ```ts
+ * import { LlmAttributes } from "@effect-ontology/Telemetry/LlmAttributes"
+ *
+ * console.log(LlmAttributes)
+ * ```
+ *
+ * @category observability
  * @since 0.0.0
- * @category constants
  */
 export const LlmAttributes = {
   // Provider info (OpenTelemetry GenAI conventions)
@@ -59,16 +69,23 @@ export const LlmAttributes = {
   // Error tracking (OpenTelemetry semantic conventions)
   ERROR_TYPE: "error.type",
   ERROR_MESSAGE: "error.message",
-} as const;
+};
 
 /**
  * Annotate current span with LLM call metadata
  *
+ * **Example** (Inspect annotate llm call)
+ *
+ * ```ts
+ * import { annotateLlmCall } from "@effect-ontology/Telemetry/LlmAttributes"
+ *
+ * console.log(annotateLlmCall)
+ * ```
+ *
  * @param attrs - LLM call attributes
  * @returns Effect that annotates the current span
- *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const annotateLlmCall = (attrs: {
   model: string;
@@ -108,11 +125,18 @@ export const annotateLlmCall = (attrs: {
 /**
  * Annotate current span with retry metadata
  *
+ * **Example** (Inspect annotate retry)
+ *
+ * ```ts
+ * import { annotateRetry } from "@effect-ontology/Telemetry/LlmAttributes"
+ *
+ * console.log(annotateRetry)
+ * ```
+ *
  * @param attrs - Retry attributes
  * @returns Effect that annotates the current span
- *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const annotateRetry = (attrs: { retryCount: number; maxAttempts: number }): Effect.Effect<void> =>
   Effect.all([
@@ -123,11 +147,18 @@ export const annotateRetry = (attrs: { retryCount: number; maxAttempts: number }
 /**
  * Annotate current span with error metadata
  *
+ * **Example** (Inspect annotate error)
+ *
+ * ```ts
+ * import { annotateError } from "@effect-ontology/Telemetry/LlmAttributes"
+ *
+ * console.log(annotateError)
+ * ```
+ *
  * @param attrs - Error attributes
  * @returns Effect that annotates the current span
- *
+ * @category errors
  * @since 0.0.0
- * @category observability
  */
 export const annotateError = (attrs: { errorType: string; errorMessage?: string }): Effect.Effect<void> =>
   Effect.gen(function* () {
@@ -141,11 +172,18 @@ export const annotateError = (attrs: { errorType: string; errorMessage?: string 
 /**
  * Annotate current span with extraction metadata
  *
+ * **Example** (Inspect annotate extraction)
+ *
+ * ```ts
+ * import { annotateExtraction } from "@effect-ontology/Telemetry/LlmAttributes"
+ *
+ * console.log(annotateExtraction)
+ * ```
+ *
  * @param attrs - Extraction attributes
  * @returns Effect that annotates the current span
- *
- * @since 0.0.0
  * @category observability
+ * @since 0.0.0
  */
 export const annotateExtraction = (attrs: {
   chunkIndex?: number;

@@ -1,6 +1,8 @@
 /**
  * Service: OntologyAgent
  *
+ * **Details**
+ *
  * Unified abstraction layer for ontology-guided LLM operations.
  * Wraps extraction, validation, querying, and reasoning services
  * into a single composable interface.
@@ -16,14 +18,15 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import type { ShaclValidationError, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import type { SparqlQueryProfile } from "@beep/semantic-web/services/sparql-query";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
-import { Chunk, Context, Data, DateTime, Duration, Effect, Layer, Match, MutableHashMap } from "effect";
+import { Chunk, Context, DateTime, Duration, Effect, Layer, Match, MutableHashMap, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
+import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { ValidationPolicyError } from "../Domain/Error/Shacl.ts";
 import { ContentHash, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { ChunkingConfig, LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
@@ -60,17 +63,41 @@ const $I = $ScratchpadId.create("effect-ontology/Service/OntologyAgent");
 /**
  * Failure while orchestrating an ontology-agent operation.
  *
- * @since 0.0.0
+ * **Example** (Inspect ontology agent error)
+ *
+ * ```ts
+ * import { OntologyAgentError } from "@effect-ontology/Service/OntologyAgent"
+ *
+ * console.log(OntologyAgentError)
+ * ```
+ *
  * @category errors
+ * @since 0.0.0
  */
-export class OntologyAgentError extends Data.TaggedError("OntologyAgentError")<{
-  readonly operation: "loadOntology" | "parseOntology" | "formatAnswer";
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
+export class OntologyAgentError extends S.TaggedError<OntologyAgentError>($I`OntologyAgentError`)(
+  "OntologyAgentError",
+  {
+    operation: S.Literals(["loadOntology", "parseOntology", "formatAnswer"]).annotateKey({
+      description: "Ontology-agent operation that failed.",
+    }),
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable ontology-agent failure diagnostic.",
+    }),
+    cause: OptionalErrorCause.annotateKey({
+      description: "Optional underlying ontology, RDF, or language-model defect.",
+    }),
+  },
+  $I.annote("OntologyAgentError", {
+    description: "Failure while orchestrating an ontology-agent operation.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 /**
  * OntologyAgent - Unified interface for ontology-guided operations
+ *
+ * **Details**
  *
  * Provides a higher-level abstraction that combines extraction, validation,
  * querying, and reasoning into a single composable service.
@@ -81,26 +108,17 @@ export class OntologyAgentError extends Data.TaggedError("OntologyAgentError")<{
  * - `validateWithPolicy` - Policy-based validation for workflow control
  * - `explainViolations` - Convert SHACL violations to LLM-friendly explanations
  *
- * **Example** (Use OntologyAgent)
+ * **Example** (Inspect the ontology-agent layer)
+ *
  * ```ts
- * Effect.gen(function*() {
- *   const agent = yield* OntologyAgent
+ * import { Layer } from "effect"
+ * import { OntologyAgent } from "@effect-ontology/Service/OntologyAgent"
  *
- *   // Extract from text
- *   const result = yield* agent.extract(text, config)
- *   console.log(`Extracted ${result.metrics.entityCount} entities`)
- *
- *   // Validate the graph
- *   const report = yield* agent.validate(rdfStore, shapesStore)
- *   if (!report.conforms) {
- *     const explanations = agent.explainViolations(report.violations)
- *     // Use explanations for LLM correction feedback
- *   }
- * })
+ * console.log(Layer.isLayer(OntologyAgent.Default)) // true
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyAgent`, {
   make: Effect.gen(function* () {
@@ -126,18 +144,17 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
 
         // Load from storage (GCS or local filesystem via StorageService)
         const contentOpt = yield* storage.get(ontologyPath).pipe(
-          Effect.mapError(
-            (cause) =>
-              new OntologyAgentError({
-                operation: "loadOntology",
-                message: `Failed to load ontology from storage: ${cause.message}`,
-                cause,
-              })
+          Effect.mapError((cause) =>
+            OntologyAgentError.make({
+              operation: "loadOntology",
+              message: `Failed to load ontology from storage: ${cause.message}`,
+              cause: O.some(cause),
+            })
           )
         );
 
         if (contentOpt === undefined) {
-          return yield* new OntologyAgentError({
+          return yield* OntologyAgentError.make({
             operation: "loadOntology",
             message: `Ontology file not found at ${ontologyPath}`,
           });
@@ -145,13 +162,12 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
 
         // Parse Turtle to RDF store
         const ontologyStore = yield* rdfBuilder.parseTurtle(contentOpt).pipe(
-          Effect.mapError(
-            (cause) =>
-              new OntologyAgentError({
-                operation: "parseOntology",
-                message: `Failed to parse ontology: ${cause.message}`,
-                cause,
-              })
+          Effect.mapError((cause) =>
+            OntologyAgentError.make({
+              operation: "parseOntology",
+              message: `Failed to parse ontology: ${cause.message}`,
+              cause: O.some(cause),
+            })
           )
         );
 
@@ -330,14 +346,14 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
             );
 
             // Determine if object is entity reference or literal
-            const isEntityRef = typeof relation.object === "string" && relation.isEntityReference;
+            const isEntityRef = P.isString(relation.object) && relation.isEntityReference;
             const objectValue = isEntityRef
               ? O.getOrElse(
-                  MutableHashMap.get(entityIriMap, relation.object as string),
+                  MutableHashMap.get(entityIriMap, relation.object),
                   () => `${baseNamespace}${relation.object}`
                 )
               : String(relation.object);
-            const objectType = isEntityRef ? ("iri") : ("literal");
+            const objectType = isEntityRef ? "iri" : "literal";
 
             // Get confidence from evidence span if available
             const confidence = O.match(relation.evidence, {
@@ -465,7 +481,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
               }).pipe(
                 Effect.map(() => ({
                   inferredTripleCount: NonNegativeInt.make(0),
-                  rulesApplied: [] as ReadonlyArray<string>,
+                  rulesApplied: [],
                   durationMs: 0,
                 }))
               )
@@ -551,7 +567,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
               }).pipe(
                 Effect.map(() => ({
                   inferredTripleCount: 0,
-                  rulesApplied: [] as ReadonlyArray<string>,
+                  rulesApplied: [],
                   durationMs: 0,
                 }))
               )
@@ -722,7 +738,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const report = yield* shaclService.validateWithPolicy(dataStore, shapesStore, effectivePolicy);
 
           // Group violations by severity
-          const byLevel = groupViolationsBySeverity(report.validation.violations);
+          const byLevel = yield* groupViolationsBySeverity(report.validation.violations);
 
           // Generate explanations
           const explanations = report.validation.violations.map((v) =>
@@ -1141,30 +1157,29 @@ const generateCorrectionSuggestion = (violation: ShaclValidationViolation): stri
  *
  * Categorizes SHACL violations into violations (critical), warnings, and info.
  */
-const groupViolationsBySeverity = (violations: ReadonlyArray<ShaclValidationViolation>): ViolationsByLevel => {
-  const grouped = {
-    violations: [] as Array<string>,
-    warnings: [] as Array<string>,
-    info: [] as Array<string>,
-  };
-
-  for (const v of violations) {
-    const message = formatViolationExplanation(v);
-    switch (v.severity) {
-      case "violation":
-        grouped.violations.push(message);
-        break;
-      case "warning":
-        grouped.warnings.push(message);
-        break;
-      case "info":
-        grouped.info.push(message);
-        break;
+const groupViolationsBySeverity = Effect.fn("OntologyAgent.groupViolationsBySeverity")(function* (
+  violations: ReadonlyArray<ShaclValidationViolation>
+) {
+  const grouped = A.reduce<
+    ShaclValidationViolation,
+    {
+      readonly violations: ReadonlyArray<string>;
+      readonly warnings: ReadonlyArray<string>;
+      readonly info: ReadonlyArray<string>;
     }
-  }
+  >(violations, { violations: A.empty(), warnings: A.empty(), info: A.empty() }, (byLevel, violation) => {
+    const message = formatViolationExplanation(violation);
 
-  return ViolationsByLevel.fromUnknown(grouped);
-};
+    return Match.value(violation.severity).pipe(
+      Match.when("violation", () => ({ ...byLevel, violations: A.append(byLevel.violations, message) })),
+      Match.when("warning", () => ({ ...byLevel, warnings: A.append(byLevel.warnings, message) })),
+      Match.when("info", () => ({ ...byLevel, info: A.append(byLevel.info, message) })),
+      Match.exhaustive
+    );
+  });
+
+  return yield* S.decodeEffect(ViolationsByLevel)(grouped);
+});
 
 /**
  * Extract local name from IRI
@@ -1234,13 +1249,12 @@ Keep the answer brief and factual.`;
       })
       .pipe(
         Effect.timeout(Duration.millis(timeoutMs)),
-        Effect.mapError(
-          (cause) =>
-            new OntologyAgentError({
-              operation: "formatAnswer",
-              message: `Failed to format answer: ${cause}`,
-              cause,
-            })
+        Effect.mapError((cause) =>
+          OntologyAgentError.make({
+            operation: "formatAnswer",
+            message: `Failed to format answer: ${cause}`,
+            cause: O.some(cause),
+          })
         )
       );
 

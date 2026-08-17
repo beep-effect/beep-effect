@@ -12,7 +12,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause, OptionalErrorMessage } from "./Base.ts";
+import { ErrorMessage, OptionalErrorCause, OptionalErrorMessage } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Workflow");
 
@@ -21,17 +21,19 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Workflow");
  *
  * **Example** (Use WorkflowError)
  * ```ts
- * import { WorkflowError } from "@effect-ontology/Error/Workflow.ts"
+ * import { WorkflowError } from "@effect-ontology/Error/Workflow"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = WorkflowError.make({ message: "Workflow runtime failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(WorkflowError)({
+ *   _tag: "WorkflowError", message: "Workflow runtime failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const WorkflowError = makeOntologyErrorClass.make(
-  $I`WorkflowError`,
+export class WorkflowError extends S.TaggedError<WorkflowError>($I`WorkflowError`)(
   "WorkflowError",
   {
     message: ErrorMessage.annotateKey({
@@ -44,44 +46,30 @@ export const WorkflowError = makeOntologyErrorClass.make(
   $I.annote("WorkflowError", {
     description: "General workflow runtime failure.",
   })
-);
-
-/**
- * Runtime value decoded by {@link WorkflowError}.
- *
- * **Example** (Use WorkflowError)
- * ```ts
- * import { WorkflowError, type WorkflowError as Failure } from "@effect-ontology/Error/Workflow.ts"
- *
- * const error: Failure = WorkflowError.make({ message: "Failed." })
- * console.log(error.message)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type WorkflowError = typeof WorkflowError.Type;
+) {}
 
 /**
  * Indicates that a workflow execution identifier could not be resolved.
  *
  * **Example** (Use WorkflowNotFoundError)
  * ```ts
- * import { WorkflowNotFoundError } from "@effect-ontology/Error/Workflow.ts"
+ * import { WorkflowNotFoundError } from "@effect-ontology/Error/Workflow"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = WorkflowNotFoundError.make({
+ * const error = S.decodeUnknownOption(WorkflowNotFoundError)({
+ *   _tag: "WorkflowNotFoundError",
  *   message: "Workflow execution was not found.",
  *   executionId: "execution-42"
  * })
- * console.log(error.executionId)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @invariant `executionId` and `message` are non-empty.
  * @category errors
  * @since 0.0.0
  */
-export const WorkflowNotFoundError = makeOntologyErrorClass.make(
-  $I`WorkflowNotFoundError`,
+export class WorkflowNotFoundError extends S.TaggedError<WorkflowNotFoundError>($I`WorkflowNotFoundError`)(
   "WorkflowNotFoundError",
   {
     message: ErrorMessage.annotateKey({
@@ -97,26 +85,7 @@ export const WorkflowNotFoundError = makeOntologyErrorClass.make(
   $I.annote("WorkflowNotFoundError", {
     description: "Failure to resolve a workflow execution identifier.",
   })
-);
-
-/**
- * Runtime value decoded by {@link WorkflowNotFoundError}.
- *
- * **Example** (Use WorkflowNotFoundError)
- * ```ts
- * import { WorkflowNotFoundError, type WorkflowNotFoundError as Missing } from "@effect-ontology/Error/Workflow.ts"
- *
- * const error: Missing = WorkflowNotFoundError.make({
- *   message: "Missing.",
- *   executionId: "execution-42"
- * })
- * console.log(error.executionId)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type WorkflowNotFoundError = typeof WorkflowNotFoundError.Type;
+) {}
 
 /**
  * Indicates that workflow execution is suspended.
@@ -128,17 +97,19 @@ export type WorkflowNotFoundError = typeof WorkflowNotFoundError.Type;
  *
  * **Example** (Use WorkflowSuspendedError)
  * ```ts
- * import { WorkflowSuspendedError } from "@effect-ontology/Error/Workflow.ts"
+ * import { WorkflowSuspendedError } from "@effect-ontology/Error/Workflow"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = WorkflowSuspendedError.make({ message: "Approval is required." })
- * console.log(error.isResumable) // false
+ * const error = S.decodeUnknownOption(WorkflowSuspendedError)({
+ *   _tag: "WorkflowSuspendedError", message: "Approval is required." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const WorkflowSuspendedError = makeOntologyErrorClass.make(
-  $I`WorkflowSuspendedError`,
+export class WorkflowSuspendedError extends S.TaggedError<WorkflowSuspendedError>($I`WorkflowSuspendedError`)(
   "WorkflowSuspendedError",
   {
     message: ErrorMessage.annotateKey({
@@ -154,23 +125,7 @@ export const WorkflowSuspendedError = makeOntologyErrorClass.make(
   $I.annote("WorkflowSuspendedError", {
     description: "Workflow suspension with explicit resume capability.",
   })
-);
-
-/**
- * Runtime value decoded by {@link WorkflowSuspendedError}.
- *
- * **Example** (Use WorkflowSuspendedError)
- * ```ts
- * import { WorkflowSuspendedError, type WorkflowSuspendedError as Suspended } from "@effect-ontology/Error/Workflow.ts"
- *
- * const error: Suspended = WorkflowSuspendedError.make({ message: "Paused." })
- * console.log(error.isResumable)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type WorkflowSuspendedError = typeof WorkflowSuspendedError.Type;
+) {}
 
 const AnyWorkflowErrorDefinition = S.Union([WorkflowError, WorkflowNotFoundError, WorkflowSuspendedError]).pipe(
   S.toTaggedUnion("_tag")
@@ -181,9 +136,12 @@ const AnyWorkflowErrorDefinition = S.Union([WorkflowError, WorkflowNotFoundError
  *
  * **Example** (Use AnyWorkflowError)
  * ```ts
- * import { AnyWorkflowError, WorkflowSuspendedError } from "@effect-ontology/Error/Workflow.ts"
+ * import { AnyWorkflowError, WorkflowSuspendedError } from "@effect-ontology/Error/Workflow"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = WorkflowSuspendedError.make({ message: "Paused." })
+ * const error = S.decodeUnknownOption(WorkflowSuspendedError)({
+ *   _tag: "WorkflowSuspendedError", message: "Paused." })
  * console.log(AnyWorkflowError.guards.WorkflowSuspendedError(error)) // true
  * ```
  *
@@ -193,7 +151,7 @@ const AnyWorkflowErrorDefinition = S.Union([WorkflowError, WorkflowNotFoundError
 export const AnyWorkflowError = AnyWorkflowErrorDefinition.pipe(
   $I.annoteSchema("AnyWorkflowError", {
     description: "Exhaustive tagged union of workflow execution failures.",
-  toArbitrary: () => S.toArbitrary(AnyWorkflowErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyWorkflowErrorDefinition),
   })
 );
 
@@ -202,7 +160,7 @@ export const AnyWorkflowError = AnyWorkflowErrorDefinition.pipe(
  *
  * **Example** (Use AnyWorkflowError)
  * ```ts
- * import { WorkflowError, type AnyWorkflowError } from "@effect-ontology/Error/Workflow.ts"
+ * import { WorkflowError, type AnyWorkflowError } from "@effect-ontology/Error/Workflow"
  *
  * const error: AnyWorkflowError = WorkflowError.make({ message: "Failed." })
  * console.log(error._tag)

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -22,51 +23,55 @@ const legacyEvidence = {
   startChar: 0,
   endChar: 13,
   confidence: 0.8,
-} as const;
+};
 
 describe("extraction factory evidence", () => {
-  it("decodes entity-factory evidence to the canonical quote representation", () => {
-    const schema = makeEntitySchema([person], []);
-    const output = S.decodeSync(schema)({
-      entities: [
-        {
-          id: "ada",
-          mention: "Ada",
-          types: ["Person"],
-          mentions: [legacyEvidence],
-        },
-      ],
-    });
+  it.effect("decodes entity-factory evidence to the canonical quote representation", () =>
+    Effect.gen(function* () {
+      const schema = makeEntitySchema([person], []);
+      const output = yield* S.decodeEffect(schema)({
+        entities: [
+          {
+            id: "ada",
+            mention: "Ada",
+            types: ["Person"],
+            mentions: [legacyEvidence],
+          },
+        ],
+      });
 
-    const mention = O.getOrThrow(output.entities[0].mentions)[0];
-    expect(mention.quote).toBe(legacyEvidence.text);
-    expect(O.getOrThrow(mention.confidence)).toBe(0.8);
-  });
+      const mention = O.map(output.entities[0].mentions, (mentions) => mentions[0]);
+      expect(O.map(mention, (value) => value.quote)).toEqual(O.some(legacyEvidence.text));
+      expect(O.flatMap(mention, (value) => value.confidence)).toEqual(O.some(0.8));
+    })
+  );
 
-  it("shares canonical width validation across relation-factory evidence", () => {
-    const schema = makeRelationSchema(["ada", "bob"], [knows]);
-    const valid = S.decodeSync(schema)({
-      relations: [
-        {
-          subjectId: "ada",
-          predicate: "knows",
-          object: "bob",
-          evidence: legacyEvidence,
-        },
-      ],
-    });
-    const invalid = S.decodeResult(schema)({
-      relations: [
-        {
-          subjectId: "ada",
-          predicate: "knows",
-          object: "bob",
-          evidence: { ...legacyEvidence, endChar: 12 },
-        },
-      ],
-    });
+  it.effect("shares canonical width validation across relation-factory evidence", () =>
+    Effect.gen(function* () {
+      const schema = makeRelationSchema(["ada", "bob"], [knows]);
+      const valid = yield* S.decodeEffect(schema)({
+        relations: [
+          {
+            subjectId: "ada",
+            predicate: "knows",
+            object: "bob",
+            evidence: legacyEvidence,
+          },
+        ],
+      });
+      const invalid = S.decodeResult(schema)({
+        relations: [
+          {
+            subjectId: "ada",
+            predicate: "knows",
+            object: "bob",
+            evidence: { ...legacyEvidence, endChar: 12 },
+          },
+        ],
+      });
 
-    expect(O.getOrThrow(valid.relations[0].evidence).quote).toBe(legacyEvidence.text);
-    expect(Result.isFailure(invalid)).toBe(true);
-  });
+      expect(O.map(valid.relations[0].evidence, (evidence) => evidence.quote)).toEqual(O.some(legacyEvidence.text));
+      expect(Result.isFailure(invalid)).toBe(true);
+    })
+  );
 });

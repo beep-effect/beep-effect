@@ -1,6 +1,8 @@
 /**
  * Idempotency Key Utilities
  *
+ * **Details**
+ *
  * Provides a unified idempotency key that propagates through all layers:
  * RPC → Cluster Entity → Cache → Persistence
  *
@@ -15,7 +17,7 @@ import { PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Struct from "@beep/utils/Struct";
-import * as Effect from "effect/Effect";
+import { Effect, Inspectable } from "effect";
 import { flow } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -34,7 +36,21 @@ export { IdempotencyKey };
 /**
  * Extraction parameters that affect output
  *
+ * **Details**
+ *
  * Only parameters that change the extraction result should be included.
+ *
+ * **Example** (Validate extraction params)
+ *
+ * ```ts
+ * import { ExtractionParams } from "@effect-ontology/Utils/IdempotencyKey"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ExtractionParams)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const ExtractionParams = S.Struct({
   maxTokens: PosInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -47,9 +63,25 @@ export const ExtractionParams = S.Struct({
   })
 );
 
+/**
+ * Describes the extraction params data exposed by this module.
+ *
+ * **Example** (Decode ExtractionParams)
+ *
+ * ```ts
+ * import { ExtractionParams } from "@effect-ontology/Utils/IdempotencyKey"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const summarizeExtractionParams = (_value: ExtractionParams): string => "valid extraction params"
+ *
+ * console.log(O.map(S.decodeUnknownOption(ExtractionParams)({}), summarizeExtractionParams))
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ExtractionParams = typeof ExtractionParams.Type;
-
-const encodeUnknownJson = S.encodeSync(S.fromJsonString(S.Unknown));
 
 // =============================================================================
 // Core Functions
@@ -58,11 +90,23 @@ const encodeUnknownJson = S.encodeSync(S.fromJsonString(S.Unknown));
 /**
  * Normalize text for consistent hashing
  *
+ * **Details**
+ *
  * Applies deterministic transformations to ensure same logical content
  * produces same hash regardless of whitespace or formatting differences.
  *
+ * **Example** (Inspect normalize text)
+ *
+ * ```ts
+ * import { normalizeText } from "@effect-ontology/Utils/IdempotencyKey"
+ *
+ * console.log(normalizeText)
+ * ```
+ *
  * @param text - Raw input text
  * @returns Normalized text suitable for hashing
+ * @category normalization
+ * @since 0.0.0
  */
 export const normalizeText = flow(
   Str.trim,
@@ -74,11 +118,23 @@ export const normalizeText = flow(
 /**
  * Create stable hash of extraction parameters
  *
+ * **Details**
+ *
  * Sorts keys and stringifies deterministically to ensure
  * same parameters produce same hash regardless of object key order.
  *
+ * **Example** (Inspect hash params)
+ *
+ * ```ts
+ * import { hashParams } from "@effect-ontology/Utils/IdempotencyKey"
+ *
+ * console.log(hashParams)
+ * ```
+ *
  * @param params - Extraction parameters
  * @returns 16-character hex hash of parameters
+ * @category utilities
+ * @since 0.0.0
  */
 export const hashParams = (params: ExtractionParams): string => {
   // Only include defined values
@@ -90,7 +146,7 @@ export const hashParams = (params: ExtractionParams): string => {
     return "0".repeat(16);
   }
 
-  const sorted = defined.map(([k, v]) => `${k}:${encodeUnknownJson(v)}`).join("|");
+  const sorted = defined.map(([k, v]) => `${k}:${Inspectable.toStringUnknown(v)}`).join("|");
 
   return sha256Sync(sorted);
 };
@@ -98,16 +154,30 @@ export const hashParams = (params: ExtractionParams): string => {
 /**
  * Compute ontology version from content
  *
+ * **Details**
+ *
  * Uses content-based hashing so ontology changes invalidate cached results.
  * This is more reliable than URL-based versioning.
  *
+ * **Example** (Inspect compute ontology version)
+ *
+ * ```ts
+ * import { computeOntologyVersion } from "@effect-ontology/Utils/IdempotencyKey"
+ *
+ * console.log(computeOntologyVersion)
+ * ```
+ *
  * @param ontologyContent - Serialized ontology content (Turtle, JSON-LD, etc.)
  * @returns 16-character hex hash of ontology content
+ * @category utilities
+ * @since 0.0.0
  */
 export const computeOntologyVersion = (ontologyContent: string): string => sha256Sync(ontologyContent);
 
 /**
  * Compute unified idempotency key
+ *
+ * **Details**
  *
  * This is THE key formula used everywhere:
  * - RPC primaryKey
@@ -115,22 +185,27 @@ export const computeOntologyVersion = (ontologyContent: string): string => sha25
  * - Cache lookup key
  * - Persistence directory name
  *
+ * **Example** (Use computeIdempotencyKey)
+ *
+ * ```ts
+ * import { computeIdempotencyKey, ExtractionParams } from "@effect-ontology/Utils/IdempotencyKey"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const key = O.map(
+ *   S.decodeUnknownOption(ExtractionParams)({ temperature: 0.1 }),
+ *   (params) => computeIdempotencyKey("John works at Apple.", "foaf", "abc123", params)
+ * )
+ * console.log(O.isSome(key)) // true
+ * ```
+ *
  * @param text - Source text for extraction
  * @param ontologyId - Ontology identifier
  * @param ontologyVersion - Content-based version hash
  * @param params - Extraction parameters (optional)
  * @returns SHA-256 idempotency key
- *
- * **Example** (Use computeIdempotencyKey)
- * ```ts
- * const key = computeIdempotencyKey(
- *   "John works at Apple.",
- *   "foaf",
- *   "abc123...",
- *   { temperature: 0.1 }
- * )
- * // Returns: "7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
- * ```
+ * @category utilities
+ * @since 0.0.0
  */
 export const computeIdempotencyKey = dual4(
   (text: string, ontologyId: string, ontologyVersion: string, params: ExtractionParams): IdempotencyKey => {
@@ -147,13 +222,25 @@ export const computeIdempotencyKey = dual4(
 /**
  * Compute idempotency key as Effect
  *
+ * **Details**
+ *
  * Useful when you need to compose with other Effects.
+ *
+ * **Example** (Inspect compute idempotency key effect)
+ *
+ * ```ts
+ * import { computeIdempotencyKeyEffect } from "@effect-ontology/Utils/IdempotencyKey"
+ *
+ * console.log(computeIdempotencyKeyEffect)
+ * ```
  *
  * @param text - Source text
  * @param ontologyId - Ontology identifier
  * @param ontologyVersion - Content-based version hash
  * @param params - Extraction parameters
  * @returns Effect yielding IdempotencyKey
+ * @category utilities
+ * @since 0.0.0
  */
 export const computeIdempotencyKeyEffect = dual4(
   (
@@ -172,16 +259,36 @@ export const computeIdempotencyKeyEffect = dual4(
 /**
  * Validate that a string is a valid idempotency key
  *
+ * **Example** (Inspect is valid idempotency key)
+ *
+ * ```ts
+ * import { isValidIdempotencyKey } from "@effect-ontology/Utils/IdempotencyKey"
+ *
+ * console.log(isValidIdempotencyKey)
+ * ```
+ *
  * @param value - String to validate
  * @returns true if valid idempotency key format
+ * @category predicates
+ * @since 0.0.0
  */
 export const isValidIdempotencyKey = IdempotencyKey.is;
 
 /**
  * Parse string to IdempotencyKey with validation
  *
+ * **Example** (Inspect parse idempotency key)
+ *
+ * ```ts
+ * import { parseIdempotencyKey } from "@effect-ontology/Utils/IdempotencyKey"
+ *
+ * console.log(parseIdempotencyKey)
+ * ```
+ *
  * @param value - String to parse
  * @returns Effect yielding IdempotencyKey or failing with ParseError
+ * @category parsing
+ * @since 0.0.0
  */
 export const parseIdempotencyKey = (input: unknown) => S.decodeUnknownEffect(IdempotencyKey)(input);
 
@@ -192,15 +299,35 @@ export const parseIdempotencyKey = (input: unknown) => S.decodeUnknownEffect(Ide
 /**
  * Get short version of key for display purposes
  *
+ * **Example** (Inspect short key)
+ *
+ * ```ts
+ * import { shortKey } from "@effect-ontology/Utils/IdempotencyKey"
+ *
+ * console.log(shortKey)
+ * ```
+ *
  * @param key - Full idempotency key
  * @returns First 12 characters of key
+ * @category utilities
+ * @since 0.0.0
  */
 export const shortKey: (key: IdempotencyKey) => string = Str.slice(0, 12);
 
 /**
  * Format key for logging with prefix
  *
+ * **Example** (Inspect format key for log)
+ *
+ * ```ts
+ * import { formatKeyForLog } from "@effect-ontology/Utils/IdempotencyKey"
+ *
+ * console.log(formatKeyForLog)
+ * ```
+ *
  * @param key - Full idempotency key
  * @returns Formatted string like "run-abc123def456"
+ * @category formatting
+ * @since 0.0.0
  */
 export const formatKeyForLog = (key: IdempotencyKey): string => `run-${shortKey(key)}`;

@@ -1,6 +1,8 @@
 /**
  * Cached Article Repository
  *
+ * **Details**
+ *
  * Effect.Cache wrapper around ArticleRepository for frequently accessed queries.
  * Caches single article lookups with TTL.
  *
@@ -37,11 +39,21 @@ const URI_CACHE_TTL = Duration.hours(1);
 /**
  * CachedArticleRepository service
  *
+ * **Details**
+ *
  * Wraps ArticleRepository with Effect.Cache for hot-path queries.
  * Maintains same interface as ArticleRepository.
  *
+ * **Example** (Inspect cached article repository)
+ *
+ * ```ts
+ * import { CachedArticleRepository } from "@effect-ontology/Repository/CachedArticle"
+ *
+ * console.log(CachedArticleRepository)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class CachedArticleRepository extends Context.Service<CachedArticleRepository>()($I`CachedArticleRepository`, {
   make: Effect.gen(function* () {
@@ -160,7 +172,15 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
 /**
  * Layer that provides CachedArticleRepository
  *
- * @since 0.0.0
+ * **Example** (Inspect cached article repository layer)
+ *
+ * ```ts
+ * import { CachedArticleRepositoryLayer } from "@effect-ontology/Repository/CachedArticle"
+ *
+ * console.log(CachedArticleRepositoryLayer)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const CachedArticleRepositoryLayer = CachedArticleRepository.Default;

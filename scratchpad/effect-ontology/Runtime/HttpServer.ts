@@ -1,16 +1,18 @@
+/**
+ * Public effect-ontology APIs for runtime/http server.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Cause, Effect, Layer } from "effect";
+import { Cause, DateTime, Effect, HashSet, Layer, MutableHashMap, MutableHashSet, Random } from "effect";
 import * as A from "effect/Array";
-import * as DateTime from "effect/DateTime";
-import * as HashSet from "effect/HashSet";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
@@ -247,6 +249,20 @@ const claimRowToClaimWithRank = Effect.fn(function* (claim: ClaimRow, article: A
 // Timeline Router
 // =============================================================================
 
+/**
+ * Validates and represents timeline router values at runtime.
+ *
+ * **Example** (Inspect timeline router)
+ *
+ * ```ts
+ * import { TimelineRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(TimelineRouter)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const TimelineRouter = HttpRouter.addAll([
   HttpRouter.route(
     "GET",
@@ -451,6 +467,20 @@ export const TimelineRouter = HttpRouter.addAll([
 // Search Router
 // =============================================================================
 
+/**
+ * Validates and represents search router values at runtime.
+ *
+ * **Example** (Inspect search router)
+ *
+ * ```ts
+ * import { SearchRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(SearchRouter)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const SearchRouter = HttpRouter.addAll([
   HttpRouter.route(
     "POST",
@@ -804,6 +834,20 @@ const extractionRouteHandler = Effect.gen(function* () {
   return yield* startExtraction(decoded.value);
 });
 
+/**
+ * Exposes extraction router for composition by callers of this module.
+ *
+ * **Example** (Inspect extraction router)
+ *
+ * ```ts
+ * import { ExtractionRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(ExtractionRouter)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export const ExtractionRouter = HttpRouter.addAll([
   HttpRouter.route("POST", "/v1/extract/batch", extractionRouteHandler),
   HttpRouter.route("POST", "/v1/extract", extractionRouteHandler),
@@ -828,6 +872,20 @@ export const ExtractionRouter = HttpRouter.addAll([
   ),
 ]);
 
+/**
+ * Exposes health router for composition by callers of this module.
+ *
+ * **Example** (Inspect health router)
+ *
+ * ```ts
+ * import { HealthRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(HealthRouter)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export const HealthRouter = HttpRouter.addAll([
   HttpRouter.route(
     "GET",
@@ -861,6 +919,20 @@ export const HealthRouter = HttpRouter.addAll([
 // Ontology Router
 // =============================================================================
 
+/**
+ * Exposes ontology router for composition by callers of this module.
+ *
+ * **Example** (Inspect ontology router)
+ *
+ * ```ts
+ * import { OntologyRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(OntologyRouter)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export const OntologyRouter = HttpRouter.addAll([
   HttpRouter.route(
     "GET",
@@ -891,6 +963,20 @@ export const OntologyRouter = HttpRouter.addAll([
 // Combined Router
 // =============================================================================
 
+/**
+ * Exposes api router for composition by callers of this module.
+ *
+ * **Example** (Inspect api router)
+ *
+ * ```ts
+ * import { ApiRouter } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(ApiRouter)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const ApiRouter = Layer.mergeAll(
   HealthRouter,
   ExtractionRouter,
@@ -905,6 +991,20 @@ export const ApiRouter = Layer.mergeAll(
   AuthRouter
 );
 
+/**
+ * Exposes api router without repositories for composition by callers of this module.
+ *
+ * **Example** (Inspect api router without repositories)
+ *
+ * ```ts
+ * import { ApiRouterWithoutRepositories } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(ApiRouterWithoutRepositories)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const ApiRouterWithoutRepositories = Layer.mergeAll(
   HealthRouter,
   ExtractionRouter,
@@ -978,6 +1078,34 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
     })
   );
 
+/**
+ * Provides the Effect layer for http server live dependencies.
+ *
+ * **Example** (Inspect http server live)
+ *
+ * ```ts
+ * import { HttpServerLive } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(HttpServerLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const HttpServerLive = makeHttpServerLive(ApiRouter);
 
+/**
+ * Provides the Effect layer for http server without repositories live dependencies.
+ *
+ * **Example** (Inspect http server without repositories live)
+ *
+ * ```ts
+ * import { HttpServerWithoutRepositoriesLive } from "@effect-ontology/Runtime/HttpServer"
+ *
+ * console.log(HttpServerWithoutRepositoriesLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const HttpServerWithoutRepositoriesLive = makeHttpServerLive(ApiRouterWithoutRepositories);

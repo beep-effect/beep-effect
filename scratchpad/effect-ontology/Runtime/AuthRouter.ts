@@ -1,15 +1,18 @@
 /**
  * Router: Authentication API
  *
+ * **Details**
+ *
  * HTTP endpoints for WebSocket ticket-based authentication.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { Effect, HashSet, Option, Redacted, Schema } from "effect";
+import { DateTime, Effect, HashSet, Redacted } from "effect";
 import * as A from "effect/Array";
-import * as DateTime from "effect/DateTime";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { AuthenticationError } from "../Domain/Error/Auth.ts";
@@ -29,8 +32,8 @@ const parseApiKeys = (redacted: Redacted.Redacted<string>): HashSet.HashSet<stri
   return HashSet.fromIterable(A.filter(A.map(Str.split(",")(raw), Str.trim), Str.isNonEmpty));
 };
 
-const decodeTicketRequest = Schema.decodeUnknownEffect(TicketRequest);
-const decodeTicketResponse = Schema.decodeUnknownEffect(TicketResponse);
+const decodeTicketRequest = S.decodeUnknownEffect(TicketRequest);
+const decodeTicketResponse = S.decodeUnknownEffect(TicketResponse);
 
 // =============================================================================
 // Auth Router
@@ -51,7 +54,7 @@ const createTicketHandler = Effect.gen(function* () {
   const ticketService = yield* TicketService;
 
   // Parse API keys from config
-  const apiKeys = Option.match(config.api.keys, {
+  const apiKeys = O.match(config.api.keys, {
     onNone: () => HashSet.empty<string>(),
     onSome: parseApiKeys,
   });
@@ -68,7 +71,7 @@ const createTicketHandler = Effect.gen(function* () {
           reason: error.reason,
           remoteAddress: request.headers["x-forwarded-for"] ?? "unknown",
         });
-        return yield* error
+        return yield* error;
       })
     )
   );
@@ -142,6 +145,20 @@ const handleAuthError = Effect.fn("handleAuthError")(function* (error: Authentic
 // Router Export
 // =============================================================================
 
+/**
+ * Exposes auth router for composition by callers of this module.
+ *
+ * **Example** (Inspect auth router)
+ *
+ * ```ts
+ * import { AuthRouter } from "@effect-ontology/Runtime/AuthRouter"
+ *
+ * console.log(AuthRouter)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export const AuthRouter = HttpRouter.addAll([
   HttpRouter.route(
     "POST",
@@ -149,10 +166,9 @@ export const AuthRouter = HttpRouter.addAll([
     createTicketHandler.pipe(
       Effect.catchTag("AuthenticationError", handleAuthError),
       Effect.catch((cause: unknown) =>
-        HttpServerResponse.jsonUnsafe(
-          { error: "INTERNAL_SERVER_ERROR", message: String(cause) },
-          { status: 500 }
-        ).pipe(Effect.succeed)
+        HttpServerResponse.jsonUnsafe({ error: "INTERNAL_SERVER_ERROR", message: String(cause) }, { status: 500 }).pipe(
+          Effect.succeed
+        )
       )
     )
   ),

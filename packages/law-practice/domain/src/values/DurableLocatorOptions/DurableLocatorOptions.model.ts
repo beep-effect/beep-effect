@@ -7,10 +7,29 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 
 const $I = $LawPracticeDomainId.create("values/DurableLocatorOptions/DurableLocatorOptions.model");
+
+const DurableLocatorSpace = LiteralKit(["original", "clean"]);
+
+const DurableLocatorOptionFields = {
+  fullSpan: SchemaUtils.BoolKeyDefaultFalse.pipe(
+    S.annotateKey({
+      description:
+        "Use fullSpan (case name through final parenthetical) when present, else the core span. Default false.",
+    })
+  ),
+  contextLength: NonNegativeInt.pipe(
+    SchemaUtils.withKeyDefaults(NonNegativeInt.make(32)),
+    S.annotateKey({
+      description: "Max characters per context side after sentence-bounding. Default 32.",
+    })
+  ),
+};
 
 /**
  * Options for `toDurableLocator` / `toDurableLocators`.
@@ -39,32 +58,41 @@ const $I = $LawPracticeDomainId.create("values/DurableLocatorOptions/DurableLoca
  * @category models
  * @since 0.0.0
  */
-export class DurableLocatorOptions extends S.Class<DurableLocatorOptions>($I`DurableLocatorOptions`)(
-  {
-    space: S.Literals(["original", "clean"]).pipe(
-      SchemaUtils.withKeyDefaults("original"),
-      S.annotateKey({
-        description:
-          'Coordinate space. Default "original": source must be the text passed to extractCitations. "clean": source must be eyecite\'s cleaned text.',
-      })
-    ),
-    fullSpan: SchemaUtils.BoolKeyDefaultFalse.pipe(
-      S.annotateKey({
-        description:
-          "Use fullSpan (case name through final parenthetical) when present, else the core span. Default false.",
-      })
-    ),
-    contextLength: NonNegativeInt.pipe(
-      SchemaUtils.withKeyDefaults(NonNegativeInt.make(32)),
-      S.annotateKey({
-        description: "Max characters per context side after sentence-bounding. Default 32.",
-      })
-    ),
-  },
-  $I.annote("DurableLocatorOptions", {
+export const DurableLocatorOptions = DurableLocatorSpace.mapMembers(
+  Tuple.evolve([
+    (literal: S.Literal<"original">) =>
+      S.Struct({
+        space: S.tag(literal.literal).pipe(
+          S.withDecodingDefaultKey(Effect.succeed("original")),
+          S.annotateKey({
+            description: "Original source-text coordinate space (the default).",
+          })
+        ),
+        ...DurableLocatorOptionFields,
+      }),
+    (literal: S.Literal<"clean">) =>
+      S.Struct({
+        space: S.tag(literal.literal).annotateKey({
+          description: "Cleaned-text coordinate space.",
+        }),
+        ...DurableLocatorOptionFields,
+      }),
+  ])
+).pipe(
+  S.toTaggedUnion("space"),
+  $I.annoteSchema("DurableLocatorOptions", {
     description: "Options for toDurableLocator / toDurableLocators.",
   })
-) {}
+);
+
+/**
+ * Runtime type for {@link DurableLocatorOptions}.
+ *
+ * @see {@link DurableLocatorOptions} for the tagged-union schema and locator defaults.
+ * @category models
+ * @since 0.0.0
+ */
+export type DurableLocatorOptions = typeof DurableLocatorOptions.Type;
 
 /**
  * Companion namespace for `DurableLocatorOptions`.

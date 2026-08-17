@@ -8,14 +8,11 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
-import { Match, pipe } from "effect";
+import { HashMap, Match, pipe, Result, Tuple } from "effect";
 import * as A from "effect/Array";
-import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Tuple from "effect/Tuple";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import type { RuleCategory } from "./ExtractionRule.ts";
@@ -46,7 +43,7 @@ type AllowedIriKind = typeof AllowedIriKind.Type;
  * **Example** (Build allowed identifiers)
  *
  * ```ts
- * import { AllowedIriSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { AllowedIriSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * const allowed = AllowedIriSet.fromOntology([], [], [])
  * console.log(allowed.previewIris("classes")) // ""
@@ -108,7 +105,7 @@ export class AllowedIriSet extends S.Class<AllowedIriSet>($I`AllowedIriSet`)(
    * **Example** (Build an empty allowed set)
    *
    * ```ts
-   * import { AllowedIriSet } from "@effect-ontology/Prompt/RuleSet.ts"
+   * import { AllowedIriSet } from "@effect-ontology/Prompt/RuleSet"
    *
    * console.log(AllowedIriSet.fromOntology([], [], []).classIris) // []
    * ```
@@ -146,7 +143,7 @@ export class AllowedIriSet extends S.Class<AllowedIriSet>($I`AllowedIriSet`)(
    * **Example** (Render an empty preview)
    *
    * ```ts
-   * import { AllowedIriSet } from "@effect-ontology/Prompt/RuleSet.ts"
+   * import { AllowedIriSet } from "@effect-ontology/Prompt/RuleSet"
    *
    * console.log(AllowedIriSet.fromOntology([], [], []).previewIris("entityIds")) // ""
    * ```
@@ -175,7 +172,7 @@ export class AllowedIriSet extends S.Class<AllowedIriSet>($I`AllowedIriSet`)(
  * **Example** (Inspect an empty mention rule set)
  *
  * ```ts
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(makeMentionRuleSet().stage) // "mention"
  * ```
@@ -214,22 +211,71 @@ export class RuleSet extends S.Class<RuleSet>($I`RuleSet`)(
     description: "Static and ontology-derived extraction constraints for one pipeline stage.",
   })
 ) {
-  /** Returns static rules followed by ontology-derived rules. */
+  /**
+   *  Returns static rules followed by ontology-derived rules.
+   *
+   * **Example** (Inspect rule set.all rules)
+   *
+   * ```ts
+   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   *
+   * console.log(RuleSet)
+   * ```
+   *
+   * @returns Result produced by this operation.
+   */
   get allRules(): ReadonlyArray<ExtractionRule> {
     return A.appendAll(this.staticRules, this.dynamicRules);
   }
 
-  /** Returns only schema-enforced rules. */
+  /**
+   *  Returns only schema-enforced rules.
+   *
+   * **Example** (Inspect rule set.error rules)
+   *
+   * ```ts
+   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   *
+   * console.log(RuleSet)
+   * ```
+   *
+   * @returns Result produced by this operation.
+   */
   get errorRules(): ReadonlyArray<ExtractionRule> {
     return A.filter(this.allRules, (rule) => RuleSeverity.is.error(rule.severity));
   }
 
-  /** Returns only prompt-level preferences. */
+  /**
+   *  Returns only prompt-level preferences.
+   *
+   * **Example** (Inspect rule set.warning rules)
+   *
+   * ```ts
+   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   *
+   * console.log(RuleSet)
+   * ```
+   *
+   * @returns Result produced by this operation.
+   */
   get warningRules(): ReadonlyArray<ExtractionRule> {
     return A.filter(this.allRules, (rule) => RuleSeverity.is.warning(rule.severity));
   }
 
-  /** Returns rules belonging to the requested behavioral category. */
+  /**
+   *  Returns rules belonging to the requested behavioral category.
+   *
+   * **Example** (Inspect rule set.get rules by category)
+   *
+   * ```ts
+   * import { RuleSet } from "@effect-ontology/Prompt/RuleSet"
+   *
+   * console.log(RuleSet)
+   * ```
+   *
+   * @param category - Input consumed by this operation.
+   * @returns Result produced by this operation.
+   */
   getRulesByCategory(category: RuleCategory): ReadonlyArray<ExtractionRule> {
     return A.filter(this.allRules, (rule) => rule.category === category);
   }
@@ -250,12 +296,14 @@ const previewSuffix = (values: ReadonlyArray<unknown>): string => (A.length(valu
 /**
  * Static rules for entity extraction (Stage 1)
  *
+ * **Details**
+ *
  * These rules are constant across all entity extractions.
  *
  * **Example** (Inspect the entity identifier rule)
  *
  * ```ts
- * import { ENTITY_STATIC_RULES } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { ENTITY_STATIC_RULES } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(ENTITY_STATIC_RULES[0]?.id) // "entity-id-format"
  * ```
@@ -522,12 +570,14 @@ export const ENTITY_STATIC_RULES: ReadonlyArray<ExtractionRule> = [
 /**
  * Static rules for relation extraction (Stage 2)
  *
+ * **Details**
+ *
  * These rules are constant across all relation extractions.
  *
  * **Example** (Inspect the relation subject rule)
  *
  * ```ts
- * import { RELATION_STATIC_RULES } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { RELATION_STATIC_RULES } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(RELATION_STATIC_RULES[0]?.id) // "relation-subject-valid"
  * ```
@@ -710,13 +760,15 @@ export const RELATION_STATIC_RULES: ReadonlyArray<ExtractionRule> = [
 /**
  * Create entity extraction rule set from ontology context
  *
+ * **Details**
+ *
  * Combines static entity rules with dynamic rules derived from
  * the specific classes and properties available.
  *
  * **Example** (Build an empty entity-stage rule set)
  *
  * ```ts
- * import { makeEntityRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { makeEntityRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(makeEntityRuleSet([], []).stage) // "entity"
  * ```
@@ -724,7 +776,6 @@ export const RELATION_STATIC_RULES: ReadonlyArray<ExtractionRule> = [
  * @param classes - Available ontology classes
  * @param datatypeProperties - Available datatype properties for attributes
  * @returns RuleSet for entity extraction
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -797,13 +848,15 @@ export const makeEntityRuleSet = dual2(
 /**
  * Create relation extraction rule set from ontology context
  *
+ * **Details**
+ *
  * Combines static relation rules with dynamic rules derived from
  * the specific entity IDs and properties available.
  *
  * **Example** (Build an empty relation-stage rule set)
  *
  * ```ts
- * import { makeRelationRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { makeRelationRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(makeRelationRuleSet([], []).stage) // "relation"
  * ```
@@ -811,7 +864,6 @@ export const makeEntityRuleSet = dual2(
  * @param entityIds - Valid entity IDs from Stage 1
  * @param properties - Available properties (both object and datatype)
  * @returns RuleSet for relation extraction
- *
  * @category constructors
  * @since 0.0.0
  */
@@ -910,18 +962,19 @@ export const makeRelationRuleSet = dual2(
 /**
  * Create mention extraction rule set
  *
+ * **Details**
+ *
  * Mention extraction has simpler rules since it doesn't involve type assignment.
  *
  * **Example** (Build a mention-stage rule set)
  *
  * ```ts
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * console.log(makeMentionRuleSet().stage) // "mention"
  * ```
  *
  * @returns RuleSet for mention extraction
- *
  * @category constructors
  * @since 0.0.0
  */

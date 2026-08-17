@@ -1,6 +1,8 @@
 /**
  * CLI: Extract Command
  *
+ * **Details**
+ *
  * Quick ad-hoc extraction testing without server setup.
  * Supports inline text, file input, or stdin.
  *
@@ -8,22 +10,18 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as BunServices from "@effect/platform-bun/BunServices";
-import * as ConfigProvider from "effect/ConfigProvider";
-import * as Console from "effect/Console";
-import * as Data from "effect/Data";
-import * as Duration from "effect/Duration";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
+import { ConfigProvider, Console, Duration, Effect, FileSystem, Layer, Path } from "effect";
 import * as O from "effect/Option";
-import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as Args from "effect/unstable/cli/Argument";
 import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";
+import { ErrorMessage, OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import { ContentHash, Namespace, OntologyName } from "../../Domain/Identity.ts";
 import { ChunkingConfig, LlmConfig, RunConfig } from "../../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../../Domain/Model/Ontology.ts";
@@ -31,6 +29,8 @@ import { makeCliExtractionLayer } from "../../Runtime/WorkflowLayers.ts";
 import { ExtractionWorkflow } from "../../Service/ExtractionWorkflow.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Extract");
 
 // =============================================================================
 // Command Options
@@ -57,7 +57,7 @@ const noExternalVocabsOption = Flag.boolean("no-external-vocabs").pipe(
 
 const formatOption = Flag.choice("format", ["json", "turtle"]).pipe(
   Flag.withAlias("o"),
-  Flag.withDefault("json" as const),
+  Flag.withDefault("json"),
   Flag.withDescription("Output format: json (default) or turtle")
 );
 
@@ -71,10 +71,20 @@ const concurrencyOption = Flag.integer("concurrency").pipe(
 // Helpers
 // =============================================================================
 
-class ExtractInputError extends Data.TaggedError("ExtractInputError")<{
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
+class ExtractInputError extends S.TaggedError<ExtractInputError>($I`ExtractInputError`)(
+  "ExtractInputError",
+  {
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable diagnostic for invalid or unavailable extraction input.",
+    }),
+    cause: OptionalErrorCause.annotateKey({
+      description: "Optional defect raised while acquiring extraction input.",
+    }),
+  },
+  $I.annote("ExtractInputError", {
+    description: "Failure raised when the extract command cannot obtain usable text input.",
+  })
+) {}
 
 /**
  * Read input text from various sources (inline, file, or stdin)
@@ -97,10 +107,10 @@ const readInputText = Effect.fn("Extract.readInputText")(function* (
   // Read from stdin
   const { stdin } = yield* Effect.tryPromise({
     try: () => import("node:process"),
-    catch: (cause) => new ExtractInputError({ message: "Failed to access stdin", cause }),
+    catch: (cause) => ExtractInputError.make({ message: "Failed to access stdin", cause: O.some(cause) }),
   });
   if (stdin.isTTY) {
-    return yield* new ExtractInputError({
+    return yield* ExtractInputError.make({
       message: "No input provided. Use --text, --file, or pipe input via stdin.",
     });
   }
@@ -110,7 +120,7 @@ const readInputText = Effect.fn("Extract.readInputText")(function* (
     const onData = (chunk: Buffer | string) => chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
     const onEnd = () => resume(Effect.succeed(Buffer.concat(chunks).toString("utf-8")));
     const onError = (cause: unknown) =>
-      resume(Effect.fail(new ExtractInputError({ message: "Failed to read stdin", cause })));
+      resume(Effect.fail(ExtractInputError.make({ message: "Failed to read stdin", cause: O.some(cause) })));
     stdin.on("data", onData);
     stdin.once("end", onEnd);
     stdin.once("error", onError);
@@ -121,8 +131,8 @@ const readInputText = Effect.fn("Extract.readInputText")(function* (
     });
   });
 
-  if (P.not(P.isTruthy)(input.trim())) {
-    return yield* new ExtractInputError({
+  if (P.not(P.isTruthy)(Str.trim(input))) {
+    return yield* ExtractInputError.make({
       message: "No input provided. Use --text, --file, or pipe input via stdin.",
     });
   }
@@ -238,6 +248,20 @@ const makeExtractLayer = (ontologyPath: string, noExternalVocabs: boolean) => {
 // Command Definition
 // =============================================================================
 
+/**
+ * Exposes extract command for composition by callers of this module.
+ *
+ * **Example** (Inspect extract command)
+ *
+ * ```ts
+ * import { extractCommand } from "@effect-ontology/Cli/Commands/Extract"
+ *
+ * console.log(extractCommand)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const extractCommand = Command.make(
   "extract",
   {

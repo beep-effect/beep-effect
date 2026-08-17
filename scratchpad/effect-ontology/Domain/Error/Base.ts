@@ -14,7 +14,6 @@ import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
 import { HttpStatusCode } from "@beep/schema/HttpStatus";
-import type { Cause } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -25,7 +24,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Base");
  *
  * **Example** (Use ErrorMessage)
  * ```ts
- * import { ErrorMessage } from "@effect-ontology/Error/Base.ts"
+ * import { ErrorMessage } from "@effect-ontology/Error/Base"
  *
  * const message = ErrorMessage.make("The ontology file could not be read.")
  * console.log(message)
@@ -49,7 +48,7 @@ export const ErrorMessage = S.NonEmptyString.annotate({
  *
  * **Example** (Use ErrorMessage)
  * ```ts
- * import { ErrorMessage, type ErrorMessage as ErrorMessageValue } from "@effect-ontology/Error/Base.ts"
+ * import { ErrorMessage, type ErrorMessage as ErrorMessageValue } from "@effect-ontology/Error/Base"
  *
  * const message: ErrorMessageValue = ErrorMessage.make("Validation failed.")
  * console.log(message.length > 0) // true
@@ -66,7 +65,7 @@ export type ErrorMessage = typeof ErrorMessage.Type;
  * **Example** (Use OptionalErrorUrl)
  * ```ts
  * import * as O from "effect/Option"
- * import { OptionalErrorUrl } from "@effect-ontology/Error/Base.ts"
+ * import { OptionalErrorUrl } from "@effect-ontology/Error/Base"
  *
  * const url = OptionalErrorUrl.make(O.none())
  * console.log(O.isNone(url)) // true
@@ -98,7 +97,7 @@ export const OptionalErrorUrl = S.OptionFromNullishOr(URLStr)
  * **Example** (Use OptionalErrorUrl)
  * ```ts
  * import * as O from "effect/Option"
- * import type { OptionalErrorUrl } from "@effect-ontology/Error/Base.ts"
+ * import type { OptionalErrorUrl } from "@effect-ontology/Error/Base"
  *
  * const url: OptionalErrorUrl = O.none()
  * console.log(O.isNone(url)) // true
@@ -115,7 +114,7 @@ export type OptionalErrorUrl = typeof OptionalErrorUrl.Type;
  * **Example** (Use OptionalErrorIri)
  * ```ts
  * import * as O from "effect/Option"
- * import { OptionalErrorIri } from "@effect-ontology/Error/Base.ts"
+ * import { OptionalErrorIri } from "@effect-ontology/Error/Base"
  *
  * const iri = OptionalErrorIri.make(O.none())
  * console.log(O.isNone(iri)) // true
@@ -147,7 +146,7 @@ export const OptionalErrorIri = S.OptionFromNullishOr(IRI)
  * **Example** (Use OptionalErrorIri)
  * ```ts
  * import * as O from "effect/Option"
- * import type { OptionalErrorIri } from "@effect-ontology/Error/Base.ts"
+ * import type { OptionalErrorIri } from "@effect-ontology/Error/Base"
  *
  * const iri: OptionalErrorIri = O.none()
  * console.log(O.isNone(iri)) // true
@@ -171,7 +170,7 @@ const ErrorDefect = S.Defect({ includeStack: true });
  * **Example** (Use OptionalErrorCause)
  * ```ts
  * import * as O from "effect/Option"
- * import { OptionalErrorCause } from "@effect-ontology/Error/Base.ts"
+ * import { OptionalErrorCause } from "@effect-ontology/Error/Base"
  *
  * const cause = OptionalErrorCause.make(O.none())
  * console.log(O.isNone(cause)) // true
@@ -203,7 +202,7 @@ export const OptionalErrorCause = S.OptionFromNullishOr(ErrorDefect)
  * **Example** (Use OptionalErrorCause)
  * ```ts
  * import * as O from "effect/Option"
- * import type { OptionalErrorCause } from "@effect-ontology/Error/Base.ts"
+ * import type { OptionalErrorCause } from "@effect-ontology/Error/Base"
  *
  * const cause: OptionalErrorCause = O.none()
  * console.log(O.isNone(cause)) // true
@@ -220,7 +219,7 @@ export type OptionalErrorCause = typeof OptionalErrorCause.Type;
  * **Example** (Use OptionalErrorMessage)
  * ```ts
  * import * as O from "effect/Option"
- * import { OptionalErrorMessage } from "@effect-ontology/Error/Base.ts"
+ * import { OptionalErrorMessage } from "@effect-ontology/Error/Base"
  *
  * const text = OptionalErrorMessage.make(O.some("partial response"))
  * console.log(O.isSome(text)) // true
@@ -252,7 +251,7 @@ export const OptionalErrorMessage = S.OptionFromNullishOr(ErrorMessage)
  * **Example** (Use OptionalErrorMessage)
  * ```ts
  * import * as O from "effect/Option"
- * import type { OptionalErrorMessage } from "@effect-ontology/Error/Base.ts"
+ * import type { OptionalErrorMessage } from "@effect-ontology/Error/Base"
  *
  * const text: OptionalErrorMessage = O.none()
  * console.log(O.isNone(text)) // true
@@ -269,10 +268,10 @@ export type OptionalErrorMessage = typeof OptionalErrorMessage.Type;
  * **Example** (Use OptionalNonNegativeInt)
  * ```ts
  * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- * import { OptionalNonNegativeInt } from "@effect-ontology/Error/Base.ts"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { OptionalNonNegativeInt } from "@effect-ontology/Error/Base"
  *
- * const count = S.decodeUnknownSync(OptionalNonNegativeInt)(3)
+ * const count = OptionalNonNegativeInt.make(O.some(NonNegativeInt.make(3)))
  * console.log(O.isSome(count)) // true
  * ```
  *
@@ -302,7 +301,7 @@ export const OptionalNonNegativeInt = S.OptionFromNullishOr(NonNegativeInt)
  * **Example** (Use OptionalNonNegativeInt)
  * ```ts
  * import * as O from "effect/Option"
- * import type { OptionalNonNegativeInt } from "@effect-ontology/Error/Base.ts"
+ * import type { OptionalNonNegativeInt } from "@effect-ontology/Error/Base"
  *
  * const count: OptionalNonNegativeInt = O.none()
  * console.log(O.isNone(count)) // true
@@ -319,7 +318,7 @@ export type OptionalNonNegativeInt = typeof OptionalNonNegativeInt.Type;
  * **Example** (Use OptionalHttpStatusCode)
  * ```ts
  * import * as O from "effect/Option"
- * import { OptionalHttpStatusCode } from "@effect-ontology/Error/Base.ts"
+ * import { OptionalHttpStatusCode } from "@effect-ontology/Error/Base"
  *
  * const status = OptionalHttpStatusCode.make(O.none())
  * console.log(O.isNone(status)) // true
@@ -351,7 +350,7 @@ export const OptionalHttpStatusCode = S.OptionFromNullishOr(HttpStatusCode)
  * **Example** (Use OptionalHttpStatusCode)
  * ```ts
  * import * as O from "effect/Option"
- * import type { OptionalHttpStatusCode } from "@effect-ontology/Error/Base.ts"
+ * import type { OptionalHttpStatusCode } from "@effect-ontology/Error/Base"
  *
  * const status: OptionalHttpStatusCode = O.none()
  * console.log(O.isNone(status)) // true
@@ -367,7 +366,7 @@ export type OptionalHttpStatusCode = typeof OptionalHttpStatusCode.Type;
  *
  * **Example** (Use Milliseconds)
  * ```ts
- * import { Milliseconds } from "@effect-ontology/Error/Base.ts"
+ * import { Milliseconds } from "@effect-ontology/Error/Base"
  *
  * const timeout = Milliseconds.make(1_500)
  * console.log(timeout) // 1500
@@ -392,7 +391,7 @@ export const Milliseconds = NonNegativeInt.annotate({
  *
  * **Example** (Use Milliseconds)
  * ```ts
- * import { Milliseconds, type Milliseconds as MillisecondValue } from "@effect-ontology/Error/Base.ts"
+ * import { Milliseconds, type Milliseconds as MillisecondValue } from "@effect-ontology/Error/Base"
  *
  * const timeout: MillisecondValue = Milliseconds.make(500)
  * console.log(timeout) // 500
@@ -409,10 +408,9 @@ export type Milliseconds = typeof Milliseconds.Type;
  * **Example** (Use OptionalMilliseconds)
  * ```ts
  * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- * import { OptionalMilliseconds } from "@effect-ontology/Error/Base.ts"
+ * import { Milliseconds, OptionalMilliseconds } from "@effect-ontology/Error/Base"
  *
- * const retryAfter = S.decodeUnknownSync(OptionalMilliseconds)(250)
+ * const retryAfter = OptionalMilliseconds.make(O.some(Milliseconds.make(250)))
  * console.log(O.isSome(retryAfter)) // true
  * ```
  *
@@ -442,7 +440,7 @@ export const OptionalMilliseconds = S.OptionFromNullishOr(Milliseconds)
  * **Example** (Use OptionalMilliseconds)
  * ```ts
  * import * as O from "effect/Option"
- * import type { OptionalMilliseconds } from "@effect-ontology/Error/Base.ts"
+ * import type { OptionalMilliseconds } from "@effect-ontology/Error/Base"
  *
  * const retryAfter: OptionalMilliseconds = O.none()
  * console.log(O.isNone(retryAfter)) // true
@@ -452,83 +450,6 @@ export const OptionalMilliseconds = S.OptionFromNullishOr(Milliseconds)
  * @since 0.0.0
  */
 export type OptionalMilliseconds = typeof OptionalMilliseconds.Type;
-
-type OntologyTaggedError<Tag extends string, Fields extends S.Struct.Fields> = Cause.YieldableError &
-  S.Schema.Type<S.TaggedStruct<Tag, Fields>>;
-
-type OntologyTaggedErrorClass<Tag extends string, Fields extends S.Struct.Fields> = S.Class<
-  OntologyTaggedError<Tag, Fields>,
-  S.TaggedStruct<Tag, Fields>,
-  Cause.YieldableError
->;
-
-type OntologyErrorCodecStatics<Self> = {
-  readonly is: (input: unknown) => input is Self;
-  readonly fromUnknown: (input: unknown) => Self;
-  readonly decodeOption: (input: unknown) => O.Option<Self>;
-};
-
-/**
- * Builds a schema-backed ontology error class with schema-derived capabilities.
- *
- * **Details**
- *
- * * `S.TaggedError` supplies the upstream tagged-error class semantics; this
- * helper keeps identity scoping and the structural self type consistent
- * across the experimental error families.
- *
- * **Example** (Use makeOntologyErrorClass)
- * ```ts
- * import { $ScratchpadId } from "@beep/identity"
- * import * as S from "effect/Schema"
- * import { makeOntologyErrorClass } from "@effect-ontology/Error/Base.ts"
- *
- * const $I = $ScratchpadId.create("effect-ontology/example")
- * const ExampleError = makeOntologyErrorClass.make(
- *   $I`ExampleError`,
- *   "ExampleError",
- *   { message: S.NonEmptyString },
- *   $I.annote("ExampleError", { description: "Example typed failure." })
- * )
- *
- * console.log(ExampleError.make({ message: "failed" })._tag)
- * ```
- *
- * @param identifier - Stable identity-composer identifier used by schema tooling.
- * @param tag - Unique `_tag` discriminator used by Effect error handling.
- * @param fields - Schema-owned payload fields, excluding the generated `_tag`.
- * @param annotations - Identity and documentation annotations for the error class.
- * @returns A yieldable tagged-error constructor with schema-derived codecs,
- * guards, equivalence, and arbitrary generation.
- * @category constructors
- * @since 0.0.0
- */
-export const makeOntologyErrorClass = {
-  make: <const Tag extends string, const Fields extends S.Struct.Fields>(
-    identifier: string,
-    tag: Tag,
-    fields: Fields,
-    annotations: S.Annotations.Declaration<OntologyTaggedError<Tag, Fields>, readonly [S.TaggedStruct<Tag, Fields>]>
-  ): OntologyTaggedErrorClass<Tag, Fields> & OntologyErrorCodecStatics<OntologyTaggedError<Tag, Fields>> => {
-    type Self = OntologyTaggedError<Tag, Fields>;
-    const makeInstance = (input: S.Schema.Type<S.TaggedStruct<Tag, Fields>>): Self => ErrorClass.make(input as never);
-    const ErrorClass = S.TaggedError<Self>(identifier)<Tag, Fields>(tag, fields, {
-      ...annotations,
-      toArbitrary:
-        ([from]) =>
-        () => ({
-          arbitrary: from.arbitrary.map(makeInstance),
-          terminal: from.terminal?.map(makeInstance),
-        }),
-    }) as OntologyTaggedErrorClass<Tag, Fields>;
-    const ServiceFreeErrorClass = ErrorClass as typeof ErrorClass & S.ConstraintDecoder<Self>;
-    return SchemaUtils.withStatics(ErrorClass, () => ({
-      is: S.is(ErrorClass),
-      fromUnknown: S.decodeUnknownSync(ServiceFreeErrorClass),
-      decodeOption: S.decodeUnknownOption(ServiceFreeErrorClass),
-    }));
-  },
-};
 
 /**
  * Root fallback error for failures without a more specific ontology tag.
@@ -541,21 +462,22 @@ export const makeOntologyErrorClass = {
  *
  * **Example** (Use BaseError)
  * ```ts
+ * import { BaseError } from "@effect-ontology/Error/Base"
  * import * as O from "effect/Option"
- * import { BaseError } from "@effect-ontology/Error/Base.ts"
+ * import * as S from "effect/Schema"
  *
- * const error = BaseError.make({
+ * const error = S.decodeUnknownOption(BaseError)({
+ *   _tag: "BaseError",
  *   message: "Unexpected ontology failure.",
  *   cause: O.none()
  * })
- * console.log(error._tag) // "BaseError"
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const BaseError = makeOntologyErrorClass.make(
-  $I`BaseError`,
+export class BaseError extends S.TaggedError<BaseError>($I`BaseError`)(
   "BaseError",
   {
     message: ErrorMessage.annotateKey({
@@ -568,23 +490,7 @@ export const BaseError = makeOntologyErrorClass.make(
   $I.annote("BaseError", {
     description: "Fallback ontology-domain failure used when no more precise error tag applies.",
   })
-);
-
-/**
- * Runtime value decoded by {@link BaseError}.
- *
- * **Example** (Use BaseError)
- * ```ts
- * import { BaseError, type BaseError as BaseErrorValue } from "@effect-ontology/Error/Base.ts"
- *
- * const error: BaseErrorValue = BaseError.make({ message: "Unknown failure." })
- * console.log(error._tag) // "BaseError"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type BaseError = typeof BaseError.Type;
+) {}
 
 /**
  * Typed marker for a deliberately unfinished service method.
@@ -596,22 +502,24 @@ export type BaseError = typeof BaseError.Type;
  *
  * **Example** (Use NotImplemented)
  * ```ts
- * import { NotImplemented } from "@effect-ontology/Error/Base.ts"
+ * import { NotImplemented } from "@effect-ontology/Error/Base"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = NotImplemented.make({
+ * const error = S.decodeUnknownOption(NotImplemented)({
+ *   _tag: "NotImplemented",
  *   message: "RDF-star export is not implemented.",
  *   service: "RdfWriter",
  *   method: "writeQuotedTriple"
  * })
- * console.log(error.service) // "RdfWriter"
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @invariant `service`, `method`, and `message` are non-empty.
  * @category errors
  * @since 0.0.0
  */
-export const NotImplemented = makeOntologyErrorClass.make(
-  $I`NotImplemented`,
+export class NotImplemented extends S.TaggedError<NotImplemented>($I`NotImplemented`)(
   "NotImplemented",
   {
     message: ErrorMessage.annotateKey({
@@ -627,27 +535,7 @@ export const NotImplemented = makeOntologyErrorClass.make(
   $I.annote("NotImplemented", {
     description: "Typed marker for an intentionally unfinished service method.",
   })
-);
-
-/**
- * Runtime value decoded by {@link NotImplemented}.
- *
- * **Example** (Use NotImplemented)
- * ```ts
- * import { NotImplemented, type NotImplemented as MissingCapability } from "@effect-ontology/Error/Base.ts"
- *
- * const error: MissingCapability = NotImplemented.make({
- *   message: "Export is unavailable.",
- *   service: "RdfWriter",
- *   method: "export"
- * })
- * console.log(error.method) // "export"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type NotImplemented = typeof NotImplemented.Type;
+) {}
 
 const BaseErrorDefinition = S.Union([BaseError, NotImplemented]).pipe(S.toTaggedUnion("_tag"));
 
@@ -656,14 +544,17 @@ const BaseErrorDefinition = S.Union([BaseError, NotImplemented]).pipe(S.toTagged
  *
  * **Example** (Use BaseDomainError)
  * ```ts
- * import { BaseDomainError, BaseError } from "@effect-ontology/Error/Base.ts"
+ * import { BaseDomainError } from "@effect-ontology/Error/Base"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = BaseError.make({ message: "Unknown failure." })
- * const tag = BaseDomainError.match(error, {
+ * const error = S.decodeUnknownOption(BaseDomainError)({
+ *   _tag: "BaseError", message: "Unknown failure." })
+ * const tag = O.map(error, (value) => BaseDomainError.match(value, {
  *   BaseError: () => "fallback",
  *   NotImplemented: () => "unfinished"
- * })
- * console.log(tag) // "fallback"
+ * }))
+ * console.log(O.getOrElse(tag, () => "invalid")) // "fallback"
  * ```
  *
  * @category errors
@@ -681,7 +572,7 @@ export const BaseDomainError = BaseErrorDefinition.pipe(
  *
  * **Example** (Use BaseDomainError)
  * ```ts
- * import { BaseError, type BaseDomainError } from "@effect-ontology/Error/Base.ts"
+ * import { BaseError, type BaseDomainError } from "@effect-ontology/Error/Base"
  *
  * const error: BaseDomainError = BaseError.make({ message: "Unknown failure." })
  * console.log(error._tag) // "BaseError"

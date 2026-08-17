@@ -7,9 +7,8 @@
 
 import { HashSet } from "effect";
 import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
+import { ActFrameSlot } from "./ActFrame.values.ts";
 import type { ActFrameElementLabel } from "../../values/ActFrameElementRef/index.ts";
-import type { ActFrameSlot } from "./ActFrame.values.ts";
 
 /**
  * Tests whether every frame element carries a distinct label.
@@ -42,5 +41,4 @@ export const hasDistinctLabels = (elements: ReadonlyArray<{ readonly label: ActF
  * @category validation
  * @since 0.0.0
  */
-export const hasActorSlot = (slots: ReadonlyArray<ActFrameSlot>): boolean =>
-  A.some(slots, (slot) => Eq.equals(slot.kind, "actor"));
+export const hasActorSlot = (slots: ReadonlyArray<ActFrameSlot>): boolean => A.some(slots, ActFrameSlot.guards.actor);

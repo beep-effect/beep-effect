@@ -30,6 +30,32 @@ const makeLocalStorageLayer = (root: string, prefix = "") =>
     )
   );
 
+class LocalStorageFixture extends Context.Service<
+  LocalStorageFixture,
+  {
+    readonly root: string;
+    readonly sandbox: string;
+  }
+>()("@beep/scratchpad/effect-ontology/test/Service/Storage.test/LocalStorageFixture") {}
+
+const LocalStorageFixtureLayer = Layer.effect(
+  LocalStorageFixture,
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const sandbox = yield* fs.makeTempDirectoryScoped({ prefix: "beep-local-storage-" });
+    const root = path.join(sandbox, "storage");
+    yield* fs.makeDirectory(root);
+    return { root, sandbox };
+  })
+);
+
+const makeStorageTestLayer = (prefix = "") =>
+  Layer.unwrap(Effect.map(LocalStorageFixture, ({ root }) => makeLocalStorageLayer(root, prefix))).pipe(
+    Layer.provideMerge(LocalStorageFixtureLayer),
+    Layer.provideMerge(PlatformLayer)
+  );
+
 const assertLocalPathRejected = (error: unknown): void => {
   const cause = isPathSafetyError(error) ? error : P.hasProperty(error, "cause") ? error.cause : error;
   if (isPathSafetyError(cause)) {
@@ -46,14 +72,14 @@ const assertLocalPathRejected = (error: unknown): void => {
 };
 
 describe("effect-ontology local StorageService", () => {
-  it.layer(PlatformLayer)("with the Bun filesystem", (it) => {
+  it.layer(makeStorageTestLayer("tenant-a"))("with tenant-prefixed local storage", (it) => {
     it.effect(
       "round-trips nested keys beneath the configured local root",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-local-storage-" });
-        const storage = Context.get(yield* Layer.build(makeLocalStorageLayer(root, "tenant-a")), StorageService);
+        const { root } = yield* LocalStorageFixture;
+        const storage = yield* StorageService;
 
         yield* storage.set("documents/report.txt", "inside");
 
@@ -76,26 +102,26 @@ describe("effect-ontology local StorageService", () => {
         assert.deepStrictEqual(yield* fs.readDirectory(path.join(root, "tenant-a")), []);
       })
     );
+  });
 
+  it.layer(makeStorageTestLayer())("with isolated local storage for key safety", (it) => {
     it.effect(
       "rejects unsafe keys across every key-bearing operation and pre-positioned symlink escapes",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const sandbox = yield* fs.makeTempDirectoryScoped({ prefix: "beep-local-storage-" });
-        const root = path.join(sandbox, "storage");
+        const { root, sandbox } = yield* LocalStorageFixture;
         const outside = path.join(sandbox, "outside");
         const outsideSecret = path.join(outside, "secret.txt");
         const outsideNew = path.join(outside, "new.txt");
         const absoluteInside = path.join(root, "inside.txt");
         const linkedOutside = path.join(root, "linked-outside");
-        yield* fs.makeDirectory(root);
         yield* fs.makeDirectory(outside);
         yield* fs.writeFileString(absoluteInside, "inside");
         yield* fs.writeFileString(outsideSecret, "outside-secret");
         yield* fs.symlink(outsideSecret, path.join(root, "linked-secret.txt"));
         yield* fs.symlink(outside, linkedOutside);
-        const storage = Context.get(yield* Layer.build(makeLocalStorageLayer(root)), StorageService);
+        const storage = yield* StorageService;
 
         const errors = yield* Effect.all([
           storage.get("../outside/secret.txt").pipe(Effect.flip),
@@ -124,7 +150,9 @@ describe("effect-ontology local StorageService", () => {
         assert.isFalse(yield* fs.exists(outsideNew));
       })
     );
+  });
 
+  it.layer(PlatformLayer)("while inspecting storage layer construction failures", (it) => {
     it.effect(
       "rejects a prefix replaced before its post-creation containment recheck",
       Effect.fnUntraced(function* () {
@@ -163,21 +191,21 @@ describe("effect-ontology local StorageService", () => {
         assert.strictEqual(yield* fs.readLink(prefixRoot), outside);
       })
     );
+  });
 
+  it.layer(makeStorageTestLayer())("with storage whose configured root is replaced", (it) => {
     it.effect(
       "rejects configured-root replacement completed between operations",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const sandbox = yield* fs.makeTempDirectoryScoped({ prefix: "beep-local-storage-" });
-        const root = path.join(sandbox, "storage");
+        const { root, sandbox } = yield* LocalStorageFixture;
         const movedRoot = path.join(sandbox, "storage-moved");
         const outside = path.join(sandbox, "outside");
         const outsideSecret = path.join(outside, "secret.txt");
-        yield* fs.makeDirectory(root);
         yield* fs.makeDirectory(outside);
         yield* fs.writeFileString(outsideSecret, "outside-secret");
-        const storage = Context.get(yield* Layer.build(makeLocalStorageLayer(root)), StorageService);
+        const storage = yield* StorageService;
         yield* storage.set("inside.txt", "inside");
 
         yield* fs.rename(root, movedRoot);
@@ -189,21 +217,21 @@ describe("effect-ontology local StorageService", () => {
         assert.strictEqual(yield* fs.readFileString(path.join(movedRoot, "inside.txt")), "inside");
       })
     );
+  });
 
+  it.layer(makeStorageTestLayer())("with storage containing a child symlink", (it) => {
     it.effect(
       "rejects a pre-positioned child symlink before clear",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const sandbox = yield* fs.makeTempDirectoryScoped({ prefix: "beep-local-storage-" });
-        const root = path.join(sandbox, "storage");
+        const { root, sandbox } = yield* LocalStorageFixture;
         const outside = path.join(sandbox, "outside");
         const outsideSecret = path.join(outside, "secret.txt");
         const linkedOutside = path.join(root, "linked-outside");
-        yield* fs.makeDirectory(root);
         yield* fs.makeDirectory(outside);
         yield* fs.writeFileString(outsideSecret, "outside-secret");
-        const storage = Context.get(yield* Layer.build(makeLocalStorageLayer(root)), StorageService);
+        const storage = yield* StorageService;
         yield* fs.symlink(outside, linkedOutside);
 
         const error = yield* storage.clear.pipe(Effect.flip);
@@ -214,7 +242,9 @@ describe("effect-ontology local StorageService", () => {
         assert.strictEqual(yield* fs.readFileString(outsideSecret), "outside-secret");
       })
     );
+  });
 
+  it.layer(PlatformLayer)("while validating configured prefix construction", (it) => {
     it.effect(
       "rejects a configured prefix that escapes the local storage root",
       Effect.fnUntraced(function* () {

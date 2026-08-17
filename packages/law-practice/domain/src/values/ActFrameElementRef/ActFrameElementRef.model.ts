@@ -7,6 +7,7 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 
 const $I = $LawPracticeDomainId.create("values/ActFrameElementRef/ActFrameElementRef.model");
 
@@ -91,6 +92,16 @@ export const ActFramePart = ActFramePartBase.pipe(
  */
 export type ActFramePart = typeof ActFramePart.Type;
 
+const makeActFrameElementRefMember = <T extends ActFramePart>(literal: S.Literal<T>) =>
+  S.Struct({
+    label: ActFrameElementLabel.annotateKey({
+      description: "Label the frame gives the element being pointed at.",
+    }),
+    part: S.tag(literal.literal).annotateKey({
+      description: "Part of the frame the labelled element belongs to.",
+    }),
+  });
+
 /**
  * A pointer at one element of a recorded act frame.
  *
@@ -125,16 +136,25 @@ export type ActFramePart = typeof ActFramePart.Type;
  * @category models
  * @since 0.0.0
  */
-export class ActFrameElementRef extends S.Class<ActFrameElementRef>($I`ActFrameElementRef`)(
-  {
-    label: ActFrameElementLabel.annotateKey({
-      description: "Label the frame gives the element being pointed at.",
-    }),
-    part: ActFramePart.annotateKey({
-      description: "Part of the frame the labelled element belongs to.",
-    }),
-  },
-  $I.annote("ActFrameElementRef", {
+export const ActFrameElementRef = ActFramePart.mapMembers(
+  Tuple.evolve([
+    makeActFrameElementRefMember,
+    makeActFrameElementRefMember,
+    makeActFrameElementRefMember,
+    makeActFrameElementRefMember,
+  ])
+).pipe(
+  S.toTaggedUnion("part"),
+  $I.annoteSchema("ActFrameElementRef", {
     description: "A pointer at one element of a recorded act frame, by part and label.",
   })
-) {}
+);
+
+/**
+ * Runtime type for {@link ActFrameElementRef}.
+ *
+ * @see {@link ActFrameElementRef} for the tagged-union schema and pointer semantics.
+ * @category models
+ * @since 0.0.0
+ */
+export type ActFrameElementRef = typeof ActFrameElementRef.Type;

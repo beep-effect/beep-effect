@@ -1,6 +1,8 @@
 /**
  * Curation Service
  *
+ * **Details**
+ *
  * Service for applying curation actions to claims and entities.
  * Handles corrections, deprecations, alias additions, and rank promotions.
  * Publishes events via EventBusService and queues background jobs for async processing.
@@ -13,7 +15,7 @@ import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import type { Stream } from "effect";
-import { Context, DateTime, Effect, Layer } from "effect";
+import { Context, DateTime, Effect, Layer, Match } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type * as S from "effect/Schema";
@@ -49,6 +51,20 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Curation");
 
 /**
  * Combined error type for curation service operations
+ *
+ *
+ * **Example** (Use the CurationServiceError contract)
+ *
+ * ```ts
+ * import type { CurationServiceError } from "@effect-ontology/Service/Curation"
+ *
+ * const acceptsCurationServiceError = (_value: CurationServiceError): void => undefined
+ *
+ * console.log(acceptsCurationServiceError)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type CurationServiceError =
   | DrizzleError
@@ -60,6 +76,20 @@ export type CurationServiceError =
 
 /**
  * Result of applying a curation action
+ *
+ *
+ * **Example** (Use the CurationResult contract)
+ *
+ * ```ts
+ * import type { CurationResult } from "@effect-ontology/Service/Curation"
+ *
+ * const acceptsCurationResult = (_value: CurationResult): void => undefined
+ *
+ * console.log(acceptsCurationResult)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CurationResult {
   readonly action: CurationAction["_tag"];
@@ -71,6 +101,20 @@ export interface CurationResult {
 // Service
 // =============================================================================
 
+/**
+ * Provides the curation service service capability.
+ *
+ * **Example** (Inspect curation service)
+ *
+ * ```ts
+ * import { CurationService } from "@effect-ontology/Service/Curation"
+ *
+ * console.log(CurationService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class CurationService extends Context.Service<CurationService>()($I`CurationService`, {
   make: Effect.gen(function* () {
     const claimRepo = yield* ClaimRepository;
@@ -91,20 +135,15 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
       const now = yield* DateTime.now;
 
-      const result: CurationResult = yield* (() => {
-        switch (action._tag) {
-          case "CorrectTripleAction":
-            return handleCorrectTriple(action, now);
-          case "MarkAsWrongAction":
-            return handleMarkAsWrong(action, now);
-          case "AddAliasAction":
-            return handleAddAlias(action, now);
-          case "PromoteToPreferredAction":
-            return handlePromoteToPreferred(action, now);
-          case "LinkToWikidataAction":
-            return handleLinkToWikidata(action, now);
-        }
-      })();
+      const result: CurationResult = yield* Match.value(action).pipe(
+        Match.tagsExhaustive({
+          CorrectTripleAction: (value) => handleCorrectTriple(value, now),
+          MarkAsWrongAction: (value) => handleMarkAsWrong(value, now),
+          AddAliasAction: (value) => handleAddAlias(value, now),
+          PromoteToPreferredAction: (value) => handlePromoteToPreferred(value, now),
+          LinkToWikidataAction: (value) => handleLinkToWikidata(value, now),
+        })
+      );
 
       return result;
     });
@@ -308,7 +347,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         canonicalEntityId: canonical.id,
         mention: action.aliasMention,
         mentionNormalized: Str.trim(Str.toLowerCase(action.aliasMention)),
-        embedding: embedding as Array<number>,
+        embedding: embedding,
         resolutionMethod: action.resolutionMethod,
         resolutionConfidence: String(action.confidence),
       });

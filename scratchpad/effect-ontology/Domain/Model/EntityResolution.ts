@@ -20,7 +20,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolution")
  *
  * **Example** (Use ResolutionMethod)
  * ```ts
- * import { ResolutionMethod } from "@effect-ontology/Model/EntityResolution.ts"
+ * import { ResolutionMethod } from "@effect-ontology/Model/EntityResolution"
  *
  * console.log(ResolutionMethod.is.containment("containment")) // true
  * ```
@@ -43,7 +43,7 @@ export const ResolutionMethod = LiteralKit(["exact", "similarity", "containment"
  *
  * **Example** (Use ResolutionMethod)
  * ```ts
- * import type { ResolutionMethod } from "@effect-ontology/Model/EntityResolution.ts"
+ * import type { ResolutionMethod } from "@effect-ontology/Model/EntityResolution"
  *
  * const method: ResolutionMethod = "neighbor"
  * console.log(method) // "neighbor"
@@ -75,24 +75,25 @@ const MentionRecordFields = {
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "Extraction confidence when measured." })
   ),
-} as const;
+};
 
 /**
  * Immutable evidence node preserving one original extraction event.
  *
  * **Example** (Use MentionRecord)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { MentionRecord } from "@effect-ontology/Model/EntityResolution.ts"
+ * import { MentionRecord } from "@effect-ontology/Model/EntityResolution"
  *
- * const mention = S.decodeUnknownSync(MentionRecord)({
+ * const mention = S.decodeUnknownOption(MentionRecord)({
  *   id: "arsenal_chunk0",
  *   mention: "Arsenal",
  *   types: ["https://schema.org/SportsTeam"],
  *   chunkIndex: 0
  * })
  *
- * console.log(mention._tag) // "MentionRecord"
+ * console.log(O.map(mention, (value) => value._tag)) // "MentionRecord"
  * ```
  *
  * @invariant Mention records are immutable evidence and are never rewritten
@@ -129,23 +130,24 @@ const ResolvedEntityFields = {
     SchemaUtils.withKeyDefaults({}),
     S.annotateKey({ description: "External knowledge-base identifiers by namespace." })
   ),
-} as const;
+};
 
 /**
  * Canonical entity produced by clustering immutable mention records.
  *
  * **Example** (Use ResolvedEntity)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ResolvedEntity } from "@effect-ontology/Model/EntityResolution.ts"
+ * import { ResolvedEntity } from "@effect-ontology/Model/EntityResolution"
  *
- * const entity = S.decodeUnknownSync(ResolvedEntity)({
+ * const entity = S.decodeUnknownOption(ResolvedEntity)({
  *   canonicalId: "arsenal_fc",
  *   mention: "Arsenal Football Club",
  *   types: ["https://schema.org/SportsTeam"]
  * })
  *
- * console.log(entity._tag) // "ResolvedEntity"
+ * console.log(O.map(entity, (value) => value._tag)) // "ResolvedEntity"
  * ```
  *
  * @category entities
@@ -170,9 +172,9 @@ const ERNodeDefinition = S.Union([MentionRecord, ResolvedEntity]).pipe(S.toTagge
  * **Example** (Use ERNode)
  * ```ts
  * import * as S from "effect/Schema"
- * import { ERNode } from "@effect-ontology/Model/EntityResolution.ts"
+ * import { ERNode } from "@effect-ontology/Model/EntityResolution"
  *
- * const node = S.decodeUnknownSync(ERNode)({
+ * const node = S.decodeUnknownOption(ERNode)({
  *   _tag: "MentionRecord",
  *   id: "alice_chunk0",
  *   mention: "Alice",
@@ -197,7 +199,7 @@ export const ERNode = ERNodeDefinition.pipe(
  *
  * **Example** (Use ERNode)
  * ```ts
- * import type { ERNode } from "@effect-ontology/Model/EntityResolution.ts"
+ * import type { ERNode } from "@effect-ontology/Model/EntityResolution"
  *
  * const tag = (node: ERNode): ERNode["_tag"] => node._tag
  * console.log(typeof tag) // "function"
@@ -215,21 +217,22 @@ const ResolutionEdgeFields = {
   method: ResolutionMethod.annotateKey({
     description: "Evidence strategy that justified the edge.",
   }),
-} as const;
+};
 
 /**
  * Directed edge from an immutable mention record to its canonical entity.
  *
  * **Example** (Use ResolutionEdge)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ResolutionEdge } from "@effect-ontology/Model/EntityResolution.ts"
+ * import { ResolutionEdge } from "@effect-ontology/Model/EntityResolution"
  *
- * const edge = S.decodeUnknownSync(ResolutionEdge)({
+ * const edge = S.decodeUnknownOption(ResolutionEdge)({
  *   confidence: 0.95,
  *   method: "similarity"
  * })
- * console.log(edge._tag) // "ResolutionEdge"
+ * console.log(O.map(edge, (value) => value._tag)) // "ResolutionEdge"
  * ```
  *
  * @category models
@@ -255,20 +258,21 @@ const RelationEdgeFields = {
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "Grounding confidence when verification was performed." })
   ),
-} as const;
+};
 
 /**
  * Ontology relation edge between two canonical entities.
  *
  * **Example** (Use RelationEdge)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { RelationEdge } from "@effect-ontology/Model/EntityResolution.ts"
+ * import { RelationEdge } from "@effect-ontology/Model/EntityResolution"
  *
- * const edge = S.decodeUnknownSync(RelationEdge)({
+ * const edge = S.decodeUnknownOption(RelationEdge)({
  *   predicate: "https://schema.org/memberOf"
  * })
- * console.log(edge.grounded) // false
+ * console.log(O.map(edge, (value) => value.grounded)) // false
  * ```
  *
  * @category models
@@ -290,9 +294,9 @@ const EREdgeDefinition = S.Union([ResolutionEdge, RelationEdge]).pipe(S.toTagged
  * **Example** (Use EREdge)
  * ```ts
  * import * as S from "effect/Schema"
- * import { EREdge } from "@effect-ontology/Model/EntityResolution.ts"
+ * import { EREdge } from "@effect-ontology/Model/EntityResolution"
  *
- * const edge = S.decodeUnknownSync(EREdge)({
+ * const edge = S.decodeUnknownOption(EREdge)({
  *   _tag: "RelationEdge",
  *   predicate: "https://schema.org/memberOf"
  * })
@@ -314,7 +318,7 @@ export const EREdge = EREdgeDefinition.pipe(
  *
  * **Example** (Use EREdge)
  * ```ts
- * import type { EREdge } from "@effect-ontology/Model/EntityResolution.ts"
+ * import type { EREdge } from "@effect-ontology/Model/EntityResolution"
  *
  * const tag = (edge: EREdge): EREdge["_tag"] => edge._tag
  * console.log(typeof tag) // "function"
@@ -354,7 +358,7 @@ const EntityResolutionConfigFields = {
     SchemaUtils.withKeyDefaults(UnitInterval.make(0.5)),
     S.annotateKey({ description: "Minimum type-overlap ratio when overlap is required." })
   ),
-} as const;
+};
 
 /**
  * Tunable policy for deterministic entity clustering.
@@ -366,7 +370,7 @@ const EntityResolutionConfigFields = {
  *
  * **Example** (Use EntityResolutionConfig)
  * ```ts
- * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution.ts"
+ * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution"
  *
  * const config = EntityResolutionConfig.default()
  * console.log(config.similarityThreshold) // 0.7
@@ -388,7 +392,7 @@ export class EntityResolutionConfig extends S.Class<EntityResolutionConfig>($I`E
    *
    * **Example** (Use default)
    * ```ts
-   * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution.ts"
+   * import { EntityResolutionConfig } from "@effect-ontology/Model/EntityResolution"
    *
    * const config = EntityResolutionConfig.default()
    * console.log(config.requireTypeOverlap) // true

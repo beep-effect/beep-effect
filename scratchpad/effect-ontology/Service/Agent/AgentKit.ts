@@ -1,6 +1,8 @@
 /**
  * Service: AgentKit
  *
+ * **Details**
+ *
  * Provides built-in Agent adapters that operate on AgentTask as a shared
  * pipeline envelope. This reduces API surface area by standardizing the
  * inputs/outputs across ingestion, extraction, validation, and correction.
@@ -10,8 +12,11 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Data, Effect, Layer, Option } from "effect";
+import { SchemaUtils } from "@beep/schema";
+import { Context, Effect, Layer } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import type { Agent } from "../../Domain/Model/Agent.ts";
 import { AgentId, AgentMetadata, ValidationResult } from "../../Domain/Model/Agent.ts";
 import type { KnowledgeGraph } from "../../Domain/Model/Entity.ts";
@@ -33,11 +38,31 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Agent/AgentKit");
 // Errors
 // =============================================================================
 
-export class AgentInputError extends Data.TaggedError("AgentInputError")<{
-  readonly taskId: string;
-  readonly message: string;
-  readonly missing?: ReadonlyArray<string>;
-}> {}
+/**
+ * Provides the agent input error service capability.
+ *
+ * **Example** (Inspect agent input error)
+ *
+ * ```ts
+ * import { AgentInputError } from "@effect-ontology/Service/Agent/AgentKit"
+ *
+ * console.log(AgentInputError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class AgentInputError extends S.TaggedError<AgentInputError>($I`AgentInputError`)(
+  "AgentInputError",
+  {
+    taskId: S.NonEmptyString,
+    message: S.NonEmptyString,
+    missing: S.Array(S.NonEmptyString).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
+  },
+  $I.annote("AgentInputError", {
+    description: "Invalid or incomplete input supplied to an orchestration agent.",
+  })
+) {}
 
 // =============================================================================
 // Helpers
@@ -45,13 +70,24 @@ export class AgentInputError extends Data.TaggedError("AgentInputError")<{
 
 const mergeTask = (task: AgentTask, updates: Partial<AgentTask>): AgentTask => AgentTask.make({ ...task, ...updates });
 
-const isKnowledgeGraph = (value: unknown): value is KnowledgeGraph =>
-  typeof value === "object" && value !== null && "entities" in value && "relations" in value;
-
 // =============================================================================
 // Service Definition
 // =============================================================================
 
+/**
+ * Validates and represents agent kit values at runtime.
+ *
+ * **Example** (Inspect agent kit)
+ *
+ * ```ts
+ * import { AgentKit } from "@effect-ontology/Service/Agent/AgentKit"
+ *
+ * console.log(AgentKit)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
   make: Effect.gen(function* () {
     const config = yield* ConfigService;
@@ -67,7 +103,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
         const ontologyPath = config.ontology.path;
         const contentOpt = yield* storage.get(ontologyPath);
         if (contentOpt === undefined) {
-          return yield* new AgentInputError({
+          return yield* AgentInputError.make({
             taskId: "agent-kit",
             message: `Ontology not found at ${ontologyPath}`,
             missing: [ontologyPath],
@@ -89,7 +125,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       return store;
     });
     const resolveStore = Effect.fn("resolveStore")(function* (task: AgentTask) {
-      if (O.isSome(task.rdfStore) && isRdfStore(task.rdfStore.value)) {
+      if (O.isSome(task.rdfStore)) {
         return task.rdfStore.value;
       }
       if (O.isSome(task.turtle)) {
@@ -98,13 +134,13 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       if (O.isSome(task.knowledgeGraph)) {
         return yield* buildStoreFromGraph(task.knowledgeGraph.value);
       }
-      if (O.isSome(task.graph) && isRdfStore(task.graph.value)) {
-        return task.graph.value;
-      }
-      if (O.isSome(task.graph) && isKnowledgeGraph(task.graph.value)) {
+      if (O.isSome(task.graph)) {
+        if (isRdfStore(task.graph.value)) {
+          return task.graph.value;
+        }
         return yield* buildStoreFromGraph(task.graph.value);
       }
-      return yield* new AgentInputError({
+      return yield* AgentInputError.make({
         taskId: task.taskId,
         message: "Validation requires rdfStore, turtle, or knowledgeGraph",
         missing: ["rdfStore", "turtle", "knowledgeGraph"],
@@ -112,21 +148,21 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
     });
     const executeIngestion = Effect.fn("AgentKit.ingestor.execute")(function* (task: AgentTask) {
       if (O.isNone(ingestionOpt)) {
-        return yield* new AgentInputError({
+        return yield* AgentInputError.make({
           taskId: task.taskId,
           message: "Link ingestion service is unavailable",
           missing: ["LinkIngestionService"],
         });
       }
       if (O.isNone(task.sourceUrl)) {
-        return yield* new AgentInputError({
+        return yield* AgentInputError.make({
           taskId: task.taskId,
           message: "Ingestion requires sourceUrl",
           missing: ["sourceUrl"],
         });
       }
       if (O.isNone(task.ontologyId)) {
-        return yield* new AgentInputError({
+        return yield* AgentInputError.make({
           taskId: task.taskId,
           message: "Ingestion requires ontologyId",
           missing: ["ontologyId"],
@@ -135,7 +171,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       const extraOptions = O.match(task.ingestionOptions, {
         onNone: () => ({}),
         onSome: (value): Record<string, unknown> =>
-          typeof value === "object" && value !== null ? (value as Record<string, unknown>) : {},
+          O.getOrElse(S.decodeUnknownOption(S.Record(S.String, S.Unknown))(value), () => ({})),
       });
       const ingestResult = yield* ingestionOpt.value.ingestUrl(task.sourceUrl.value, {
         ontologyId: task.ontologyId.value,
@@ -143,7 +179,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       });
       const contentOpt = yield* storage.get(ingestResult.storageUri);
       if (contentOpt === undefined) {
-        return yield* new AgentInputError({
+        return yield* AgentInputError.make({
           taskId: task.taskId,
           message: `Ingested content missing at ${ingestResult.storageUri}`,
         });
@@ -184,7 +220,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       ),
       execute: Effect.fn(function* (task): Effect.fn.Return<AgentTask, AgentInputError | unknown, never> {
         if (O.isNone(task.text)) {
-          return yield* new AgentInputError({
+          return yield* AgentInputError.make({
             taskId: task.taskId,
             message: "Extraction requires text",
             missing: ["text"],
@@ -249,7 +285,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       ),
       execute: Effect.fn(function* (task): Effect.fn.Return<AgentTask, AgentInputError | unknown, never> {
         if (O.isNone(task.validationReport)) {
-          return yield* new AgentInputError({
+          return yield* AgentInputError.make({
             taskId: task.taskId,
             message: "Correction requires validationReport",
             missing: ["validationReport"],
@@ -270,7 +306,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
     };
     const registerDefaults = Effect.fn("registerDefaults")(function* () {
       const coordinator = yield* AgentCoordinator;
-      if (Option.isSome(ingestionOpt)) {
+      if (O.isSome(ingestionOpt)) {
         yield* coordinator.register(ingestor);
       }
       yield* coordinator.register(extractor);

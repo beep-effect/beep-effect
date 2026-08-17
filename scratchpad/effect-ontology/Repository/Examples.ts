@@ -1,6 +1,8 @@
 /**
  * Examples Repository
  *
+ * **Details**
+ *
  * Effect-native repository for LLM few-shot examples using Drizzle ORM.
  * Provides hybrid retrieval (vector similarity + lexical search) for
  * ontology-scoped examples.
@@ -11,18 +13,19 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Layer } from "effect";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { Context, Effect, Layer, SchemaTransformation } from "effect";
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Examples");
 
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, desc, eq } from "drizzle-orm";
-import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import type { SqlError } from "effect/unstable/sql";
 import { SqlClient } from "effect/unstable/sql";
+import * as SqlError from "effect/unstable/sql/SqlError";
 import type { LlmExampleRow } from "./schema.ts";
 import { llmExamples } from "./schema.ts";
 
@@ -30,76 +33,336 @@ import { llmExamples } from "./schema.ts";
 // Types
 // =============================================================================
 
-export type ExampleId = string;
+/**
+ * Describes the example id data exposed by this module.
+ *
+ * **Example** (Create ExampleId)
+ *
+ * ```ts
+ * import type { ExampleId } from "@effect-ontology/Repository/Examples"
+ *
+ * const exampleId: ExampleId = "example-id-1"
+ *
+ * console.log(exampleId)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export const ExampleId = S.NonEmptyString.pipe(
+  $I.annoteSchema("ExampleId", {
+    description: "Non-empty identifier of a stored few-shot example.",
+  })
+);
+
+export type ExampleId = typeof ExampleId.Type;
 
 /**
  * Example types for few-shot learning
+ *
+ * **Example** (Inspect example type)
+ *
+ * ```ts
+ * import { ExampleType } from "@effect-ontology/Repository/Examples"
+ *
+ * console.log(ExampleType)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
-export type ExampleType = "entity_extraction" | "relation_extraction" | "entity_linking" | "negative";
+export const ExampleType = LiteralKit(["entity_extraction", "relation_extraction", "entity_linking", "negative"]).pipe(
+  $I.annoteSchema("ExampleType", {
+    description: "Closed set of few-shot example tasks stored by the repository.",
+  })
+);
+
+/**
+ * Describes the example type data exposed by this module.
+ *
+ * **Example** (Decode ExampleType)
+ *
+ * ```ts
+ * import { ExampleType } from "@effect-ontology/Repository/Examples"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const summarizeExampleType = (_value: ExampleType): string => "valid example type"
+ *
+ * console.log(O.map(S.decodeUnknownOption(ExampleType)({}), summarizeExampleType))
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ExampleType = typeof ExampleType.Type;
 
 /**
  * Example source (how the example was created)
+ *
+ * **Example** (Inspect example source)
+ *
+ * ```ts
+ * import { ExampleSource } from "@effect-ontology/Repository/Examples"
+ *
+ * console.log(ExampleSource)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
-export type ExampleSource = "manual" | "validated" | "auto_generated";
+export const ExampleSource = LiteralKit(["manual", "validated", "auto_generated"]).pipe(
+  $I.annoteSchema("ExampleSource", {
+    description: "Closed set of provenance sources for few-shot examples.",
+  })
+);
+
+/**
+ * Describes the example source data exposed by this module.
+ *
+ * **Example** (Decode ExampleSource)
+ *
+ * ```ts
+ * import { ExampleSource } from "@effect-ontology/Repository/Examples"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const summarizeExampleSource = (_value: ExampleSource): string => "valid example source"
+ *
+ * console.log(O.map(S.decodeUnknownOption(ExampleSource)({}), summarizeExampleSource))
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ExampleSource = typeof ExampleSource.Type;
 
 /**
  * A scored example from retrieval
  */
-export interface ScoredExample {
-  readonly id: string;
-  readonly ontologyId: string;
-  readonly exampleType: ExampleType;
-  readonly inputText: string;
-  readonly expectedOutput: Record<string, unknown>;
-  readonly promptMessages?: ReadonlyArray<{ role: string; content: string }>;
-  readonly explanation?: string;
-  readonly isNegative: boolean;
-  readonly similarity: number;
-  readonly usageCount: number;
-}
+const PromptMessage = S.Struct({
+  role: S.String,
+  content: S.String,
+}).pipe(
+  $I.annoteSchema("PromptMessage", {
+    description: "One preformatted prompt message stored with an LLM example.",
+  })
+);
+
+const PromptMessages = PromptMessage.pipe(S.Array);
+
+/**
+ * Validates and represents scored example values at runtime.
+ *
+ * **Example** (Validate scored example)
+ *
+ * ```ts
+ * import { ScoredExample } from "@effect-ontology/Repository/Examples"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ScoredExample)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ScoredExample = S.Struct({
+  id: S.String,
+  ontologyId: S.String,
+  exampleType: ExampleType,
+  inputText: S.String,
+  expectedOutput: S.Record(S.String, S.Unknown),
+  promptMessages: PromptMessages.pipe(S.OptionFromNullOr),
+  explanation: S.String.pipe(S.OptionFromNullOr),
+  isNegative: S.Boolean,
+  similarity: S.Finite,
+  usageCount: S.Int,
+}).pipe(
+  $I.annoteSchema("ScoredExample", {
+    description: "Decoded retrieval result with database nulls represented as Options.",
+  })
+);
+
+/**
+ * Describes the scored example data exposed by this module.
+ *
+ * **Example** (Decode ScoredExample)
+ *
+ * ```ts
+ * import { ScoredExample } from "@effect-ontology/Repository/Examples"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const summarizeScoredExample = (_value: ScoredExample): string => "valid scored example"
+ *
+ * console.log(O.map(S.decodeUnknownOption(ScoredExample)({}), summarizeScoredExample))
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ScoredExample = typeof ScoredExample.Type;
 
 /**
  * Options for example retrieval
+ *
+ * **Example** (Reference ExampleRetrievalOptions fields)
+ *
+ * ```ts
+ * import type { ExampleRetrievalOptions } from "@effect-ontology/Repository/Examples"
+ *
+ * const exampleRetrievalOptionsFields: ReadonlyArray<keyof ExampleRetrievalOptions> = ["k", "minSimilarity", "targetClass"]
+ *
+ * console.log(exampleRetrievalOptionsFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface ExampleRetrievalOptions {
-  /** Maximum number of examples to return */
-  readonly k?: number;
-  /** Minimum similarity threshold (default: 0.6) */
-  readonly minSimilarity?: number;
-  /** Filter by target class */
-  readonly targetClass?: string;
-  /** Filter by target predicate */
-  readonly targetPredicate?: string;
-  /** Whether to include negative examples */
-  readonly includeNegatives?: boolean;
-}
+export class ExampleRetrievalOptions extends S.Class<ExampleRetrievalOptions>($I`ExampleRetrievalOptions`)(
+  {
+    k: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(5))),
+    minSimilarity: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.6))),
+    targetClass: S.optionalKey(S.NonEmptyString),
+    targetPredicate: S.optionalKey(S.NonEmptyString),
+    includeNegatives: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+  },
+  $I.annote("ExampleRetrievalOptions", {
+    description: "Validated retrieval count, threshold, optional ontology filters, and negative-example policy.",
+  })
+) {}
+
+export type ExampleRetrievalOptionsInput = (typeof ExampleRetrievalOptions)["~type.make.in"];
 
 /**
  * Input for creating a new example
+ *
+ * **Example** (Reference CreateExampleInput fields)
+ *
+ * ```ts
+ * import type { CreateExampleInput } from "@effect-ontology/Repository/Examples"
+ *
+ * const createExampleInputFields: ReadonlyArray<keyof CreateExampleInput> = ["ontologyId", "exampleType", "source"]
+ *
+ * console.log(createExampleInputFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
-export interface CreateExampleInput {
-  readonly ontologyId: string;
-  readonly exampleType: ExampleType;
-  readonly source?: ExampleSource;
-  readonly inputText: string;
-  readonly targetClass?: string;
-  readonly targetPredicate?: string;
-  readonly evidenceText?: string;
-  readonly evidenceStartOffset?: number;
-  readonly evidenceEndOffset?: number;
-  readonly expectedOutput: Record<string, unknown>;
-  readonly promptMessages?: ReadonlyArray<{ role: string; content: string }>;
-  readonly explanation?: string;
-  readonly embedding: ReadonlyArray<number>;
-  readonly isNegative?: boolean;
-  readonly negativePattern?: string;
-  readonly createdBy?: string;
-}
+export class CreateExampleInput extends S.Class<CreateExampleInput>($I`CreateExampleInput`)(
+  {
+    ontologyId: S.NonEmptyString,
+    exampleType: ExampleType,
+    source: ExampleSource.pipe(SchemaUtils.withKeyDefaults(ExampleSource.Enum.manual)),
+    inputText: S.NonEmptyString,
+    targetClass: S.optionalKey(S.NonEmptyString),
+    targetPredicate: S.optionalKey(S.NonEmptyString),
+    evidenceText: S.optionalKey(S.NonEmptyString),
+    evidenceStartOffset: S.optionalKey(NonNegativeInt),
+    evidenceEndOffset: S.optionalKey(NonNegativeInt),
+    expectedOutput: S.Record(S.String, S.Unknown),
+    promptMessages: S.optionalKey(PromptMessages),
+    explanation: S.optionalKey(S.NonEmptyString),
+    embedding: S.Array(S.Finite),
+    isNegative: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    negativePattern: S.optionalKey(S.NonEmptyString),
+    createdBy: S.optionalKey(S.NonEmptyString),
+  },
+  $I.annote("CreateExampleInput", {
+    description: "Validated repository input for creating a few-shot example.",
+  })
+) {}
+
+export type CreateExampleInputInput = (typeof CreateExampleInput)["~type.make.in"];
+
+const PgVector = S.Finite.pipe(
+  S.Array,
+  S.fromJsonString,
+  $I.annoteSchema("PgVector", {
+    description: "PostgreSQL pgvector text decoded to a finite numeric vector.",
+  })
+);
+
+const MutablePromptMessages = PromptMessage.pipe(S.Array, S.mutable);
+
+const LlmExampleSqlRow = S.Struct({
+  id: S.String,
+  ontologyId: S.String,
+  exampleType: ExampleType,
+  source: ExampleSource,
+  inputText: S.String,
+  targetClass: S.String.pipe(S.NullOr),
+  targetPredicate: S.String.pipe(S.NullOr),
+  evidenceText: S.String.pipe(S.NullOr),
+  evidenceStartOffset: S.Int.pipe(S.NullOr),
+  evidenceEndOffset: S.Int.pipe(S.NullOr),
+  expectedOutput: S.Record(S.String, S.Unknown),
+  promptMessages: MutablePromptMessages.pipe(S.NullOr),
+  explanation: S.String.pipe(S.NullOr),
+  embedding: PgVector,
+  isNegative: S.Boolean,
+  negativePattern: S.String.pipe(S.NullOr),
+  usageCount: S.Int.pipe(S.NullOr),
+  successRate: S.String.pipe(S.NullOr),
+  createdAt: S.Date.pipe(S.NullOr),
+  createdBy: S.String.pipe(S.NullOr),
+  isActive: S.Boolean,
+}).pipe(
+  $I.annoteSchema("LlmExampleSqlRow", {
+    description: "Decoded LLM-example row returned by raw PostgreSQL queries.",
+  })
+);
+
+const ExampleCounts = S.Record(S.String, S.Int);
+
+const ExampleCountsFromNullable = ExampleCounts.pipe(
+  S.NullOr,
+  S.decodeTo(
+    ExampleCounts,
+    SchemaTransformation.transform({
+      decode: (counts) => (P.isNull(counts) ? {} : counts),
+      encode: (counts) => counts,
+    })
+  ),
+  $I.annoteSchema("ExampleCountsFromNullable", {
+    description: "Example counts with a null SQL aggregate decoded to an empty record.",
+  })
+);
+
+const ExampleStatsSqlRow = S.Struct({
+  total: S.Int,
+  byType: ExampleCountsFromNullable,
+  negativeCount: S.Int,
+  avgSuccessRate: S.Finite.pipe(S.NullOr),
+}).pipe(
+  $I.annoteSchema("ExampleStatsSqlRow", {
+    description: "Decoded aggregate statistics for stored LLM examples.",
+  })
+);
+
+const decodeOneLlmExampleSqlRow = S.decodeUnknownEffect(S.Tuple([LlmExampleSqlRow]));
+const decodeScoredExampleSqlRows = S.decodeUnknownEffect(ScoredExample.pipe(S.Array, S.mutable));
+const decodeOneExampleStatsSqlRow = S.decodeUnknownEffect(S.Tuple([ExampleStatsSqlRow]));
 
 // =============================================================================
 // Service
 // =============================================================================
 
+/**
+ * Validates and represents examples repository values at runtime.
+ *
+ * **Example** (Inspect examples repository)
+ *
+ * ```ts
+ * import { ExamplesRepository } from "@effect-ontology/Repository/Examples"
+ *
+ * console.log(ExamplesRepository)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I`ExamplesRepository`, {
   make: Effect.gen(function* () {
     const drizzle = yield* PostgresDrizzle;
@@ -113,12 +376,13 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
      * Create a new example
      */
     const create = Effect.fn(function* (
-      input: CreateExampleInput
+      input: CreateExampleInputInput
     ): Effect.fn.Return<LlmExampleRow, SqlError.SqlError | S.SchemaError> {
-      const vectorStr = formatVector(input.embedding);
+      const resolvedInput = CreateExampleInput.make(input);
+      const vectorStr = formatVector(resolvedInput.embedding);
       const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-      const expectedOutputJson = yield* encodeJson(input.expectedOutput);
-      const promptMessagesJson = yield* O.match(O.fromUndefinedOr(input.promptMessages), {
+      const expectedOutputJson = yield* encodeJson(resolvedInput.expectedOutput);
+      const promptMessagesJson = yield* O.match(O.fromUndefinedOr(resolvedInput.promptMessages), {
         onNone: () => Effect.succeed(null),
         onSome: encodeJson,
       });
@@ -132,26 +396,47 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
             embedding, is_negative, negative_pattern, created_by
           )
           VALUES (
-            ${input.ontologyId},
-            ${input.exampleType},
-            ${input.source ?? "manual"},
-            ${input.inputText},
-            ${input.targetClass ?? null},
-            ${input.targetPredicate ?? null},
-            ${input.evidenceText ?? null},
-            ${input.evidenceStartOffset ?? null},
-            ${input.evidenceEndOffset ?? null},
+            ${resolvedInput.ontologyId},
+            ${resolvedInput.exampleType},
+            ${resolvedInput.source},
+            ${resolvedInput.inputText},
+            ${resolvedInput.targetClass ?? null},
+            ${resolvedInput.targetPredicate ?? null},
+            ${resolvedInput.evidenceText ?? null},
+            ${resolvedInput.evidenceStartOffset ?? null},
+            ${resolvedInput.evidenceEndOffset ?? null},
             ${expectedOutputJson}::jsonb,
             ${promptMessagesJson}::jsonb,
-            ${input.explanation ?? null},
+            ${resolvedInput.explanation ?? null},
             ${vectorStr}::vector,
-            ${input.isNegative ?? false},
-            ${input.negativePattern ?? null},
-            ${input.createdBy ?? null}
+            ${resolvedInput.isNegative},
+            ${resolvedInput.negativePattern ?? null},
+            ${resolvedInput.createdBy ?? null}
           )
-          RETURNING *
+          RETURNING id,
+                    ontology_id as "ontologyId",
+                    example_type as "exampleType",
+                    source,
+                    input_text as "inputText",
+                    target_class as "targetClass",
+                    target_predicate as "targetPredicate",
+                    evidence_text as "evidenceText",
+                    evidence_start_offset as "evidenceStartOffset",
+                    evidence_end_offset as "evidenceEndOffset",
+                    expected_output as "expectedOutput",
+                    prompt_messages as "promptMessages",
+                    explanation,
+                    embedding::text as embedding,
+                    is_negative as "isNegative",
+                    negative_pattern as "negativePattern",
+                    usage_count as "usageCount",
+                    success_rate as "successRate",
+                    created_at as "createdAt",
+                    created_by as "createdBy",
+                    is_active as "isActive"
         `;
-      return result[0] as LlmExampleRow;
+      const [row] = yield* decodeOneLlmExampleSqlRow(result);
+      return row;
     });
 
     // -------------------------------------------------------------------------
@@ -178,10 +463,11 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
     const findSimilar = (
       ontologyId: string,
       embedding: ReadonlyArray<number>,
-      options: ExampleRetrievalOptions = {}
+      options: ExampleRetrievalOptionsInput = {}
     ): Effect.Effect<Array<ScoredExample>, SqlError.SqlError> =>
       Effect.gen(function* () {
-        const { includeNegatives = false, k = 5, minSimilarity = 0.6, targetClass, targetPredicate } = options;
+        const { includeNegatives, k, minSimilarity, targetClass, targetPredicate } =
+          ExampleRetrievalOptions.make(options);
         const vectorStr = formatVector(embedding);
 
         // Build dynamic query based on filters
@@ -190,7 +476,7 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
             id, ontology_id as "ontologyId", example_type as "exampleType",
             input_text as "inputText", expected_output as "expectedOutput",
             prompt_messages as "promptMessages", explanation,
-            is_negative as "isNegative", usage_count as "usageCount",
+            is_negative as "isNegative", COALESCE(usage_count, 0)::int as "usageCount",
             1 - (embedding <=> $1::vector) as similarity
           FROM llm_examples
           WHERE ontology_id = $2
@@ -220,8 +506,8 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
         params.push(k);
 
         const results = yield* sql.unsafe(query, params);
-        return results as unknown as Array<ScoredExample>;
-      });
+        return yield* decodeScoredExampleSqlRows(results);
+      }).pipe(Effect.mapError((cause) => toSqlError("ExamplesRepository.findSimilar", cause)));
 
     /**
      * Find negative examples using lexical search (for pattern matching)
@@ -238,7 +524,7 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
             id, ontology_id as "ontologyId", example_type as "exampleType",
             input_text as "inputText", expected_output as "expectedOutput",
             prompt_messages as "promptMessages", explanation,
-            is_negative as "isNegative", usage_count as "usageCount",
+            is_negative as "isNegative", COALESCE(usage_count, 0)::int as "usageCount",
             similarity(input_text, ${queryText}) as similarity
           FROM llm_examples
           WHERE ontology_id = ${ontologyId}
@@ -248,8 +534,8 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
           ORDER BY similarity(input_text, ${queryText}) DESC
           LIMIT ${k}
         `;
-        return results as unknown as Array<ScoredExample>;
-      });
+        return yield* decodeScoredExampleSqlRows(results);
+      }).pipe(Effect.mapError((cause) => toSqlError("ExamplesRepository.findNegatives", cause)));
 
     /**
      * Get examples by type for an ontology
@@ -327,8 +613,8 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
         const result = yield* sql`
           SELECT
             COUNT(*)::int as total,
-            COUNT(*) FILTER (WHERE is_negative)::int as negative_count,
-            AVG(success_rate) as avg_success_rate,
+            COUNT(*) FILTER (WHERE is_negative)::int as "negativeCount",
+            AVG(success_rate)::double precision as "avgSuccessRate",
             (
               SELECT jsonb_object_agg(example_type, type_count)
               FROM (
@@ -337,24 +623,13 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
                 WHERE ontology_id = ${ontologyId} AND is_active = true
                 GROUP BY example_type
               ) by_type_rows
-            ) as by_type
+            ) as "byType"
           FROM llm_examples
           WHERE ontology_id = ${ontologyId} AND is_active = true
         `;
-        const row = result[0] as {
-          total: number;
-          negative_count: number;
-          avg_success_rate: number | null;
-          by_type: Record<string, number> | null;
-        };
-
-        return {
-          total: row.total ?? 0,
-          byType: row.by_type ?? {},
-          negativeCount: row.negative_count ?? 0,
-          avgSuccessRate: row.avg_success_rate,
-        };
-      });
+        const [row] = yield* decodeOneExampleStatsSqlRow(result);
+        return row;
+      }).pipe(Effect.mapError((cause) => toSqlError("ExamplesRepository.getStats", cause)));
 
     return {
       create,
@@ -380,4 +655,12 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
  */
 function formatVector(vector: ReadonlyArray<number>): string {
   return `[${vector.join(",")}]`;
+}
+
+function toSqlError(operation: string, cause: unknown): SqlError.SqlError {
+  return SqlError.isSqlError(cause)
+    ? cause
+    : SqlError.SqlError.make({
+        reason: SqlError.UnknownError.make({ cause, operation }),
+      });
 }

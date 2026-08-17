@@ -1,6 +1,8 @@
 /**
  * HTTP Server Entry Point (MVP)
  *
+ * **Details**
+ *
  * Starts the extraction API server with all production layers.
  * Use for cloud deployment (Cloud Run, etc.)
  *
@@ -9,17 +11,22 @@
  * - POSTGRES_HOST: PostgreSQL host (enables durable workflows)
  * - All EnvConfigService variables (see DEPLOY.md)
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { BunHttpServer, BunRuntime, BunServices } from "@effect/platform-bun";
 import { PgClient } from "@effect/sql-pg";
-import { Cause, Config, Data, Effect, Layer, Schedule } from "effect";
+import { Cause, Config, Effect, Layer, Schedule } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ClusterWorkflowEngine, SingleRunner } from "effect/unstable/cluster";
 import { SqlClient } from "effect/unstable/sql/SqlClient";
 import { WorkflowEngine } from "effect/unstable/workflow";
+import { ErrorMessage, OptionalErrorCause } from "./Domain/Error/Base.ts";
 import { ArticleRepository } from "./Repository/Article.ts";
 import { CachedArticleRepository } from "./Repository/CachedArticle.ts";
 import { CachedClaimRepository } from "./Repository/CachedClaim.ts";
@@ -28,6 +35,7 @@ import { EventBridgeAutoStart } from "./Runtime/EventBridge.ts";
 import { EventBroadcastHubLive } from "./Runtime/EventBroadcastRouter.ts";
 import { HealthCheckService } from "./Runtime/HealthCheck.ts";
 import { HttpServerLive, HttpServerWithoutRepositoriesLive } from "./Runtime/HttpServer.ts";
+import { InferenceJobStoreLive } from "./Runtime/InferenceRouter.ts";
 import { AllMigrations, MigrationRunner } from "./Runtime/Persistence/MigrationRunner.ts";
 import { ShutdownService } from "./Runtime/Shutdown.ts";
 import { ActivityDependenciesLayer, WorkflowOrchestratorFullLayer } from "./Runtime/WorkflowLayers.ts";
@@ -44,6 +52,8 @@ import { ImageStore } from "./Service/ImageStore.ts";
 import { JinaReaderClient } from "./Service/JinaReaderClient.ts";
 import { LinkIngestionService } from "./Service/LinkIngestionService.ts";
 import { TicketService } from "./Service/Ticket.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/server");
 
 // Load port from environment
 const port = Effect.runSync(Config.number("PORT").pipe(Config.withDefault(8080)));
@@ -83,10 +93,20 @@ const ClusterWorkflowEngineLive = ClusterWorkflowEngine.layer.pipe(
 // - Without: Use in-memory engine (development only, no crash recovery)
 const WorkflowEngineLive = usePostgres ? ClusterWorkflowEngineLive : WorkflowEngine.layerMemory;
 
-class ServerStartupError extends Data.TaggedError("ServerStartupError")<{
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
+class ServerStartupError extends S.TaggedError<ServerStartupError>($I`ServerStartupError`)(
+  "ServerStartupError",
+  {
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable server startup failure diagnostic.",
+    }),
+    cause: OptionalErrorCause.annotateKey({
+      description: "Optional defect that prevented the server from starting.",
+    }),
+  },
+  $I.annote("ServerStartupError", {
+    description: "Failure raised when database readiness or migration blocks server startup.",
+  })
+) {}
 
 // Database readiness check - verifies PostgreSQL is accessible before starting
 // Retries with exponential backoff to handle slow database startup
@@ -98,8 +118,11 @@ const checkDatabaseReady = Effect.gen(function* () {
   Effect.retry(Schedule.max([Schedule.exponential("500 millis"), Schedule.recurs(5)]).pipe(Schedule.jittered)),
   Effect.timeout("30 seconds"),
   Effect.tapError((error) => Effect.logError("PostgreSQL connection failed", { error: String(error) })),
-  Effect.mapError(
-    (cause) => new ServerStartupError({ message: `Database not ready after retries: ${String(cause)}`, cause })
+  Effect.mapError((cause) =>
+    ServerStartupError.make({
+      message: `Database not ready after retries: ${String(cause)}`,
+      cause: O.some(cause),
+    })
   )
 );
 
@@ -108,11 +131,12 @@ const runMigrations = Effect.gen(function* () {
   const runner = yield* MigrationRunner;
   const result = yield* runner.runMigrations(AllMigrations);
 
-  if (result.errors.length > 0) {
+  const migrationError = A.head(result.errors);
+  if (O.isSome(migrationError)) {
     yield* Effect.logError("Migration errors", { errors: result.errors });
-    return yield* new ServerStartupError({
-      message: `Migration failed: ${result.errors[0]?.error}`,
-      cause: result.errors[0],
+    return yield* ServerStartupError.make({
+      message: `Migration failed: ${migrationError.value.message}`,
+      cause: O.some(migrationError.value),
     });
   }
 
@@ -202,6 +226,7 @@ const SelectedHttpServerLive = usePostgres ? RepositoryBackedHttpServerLive : Ht
 // Uses Layer.provideMerge throughout for order-independent composition.
 // Later provideMerge layers PROVIDE to earlier layers in the chain.
 const ServerLive = SelectedHttpServerLive.pipe(
+  Layer.provideMerge(InferenceJobStoreLive),
   Layer.provideMerge(BunHttpServer.layer({ port, idleTimeout: 255 })), // Bun max is 255s (Cloud Run uses longer timeouts via nginx)
   Layer.provideMerge(WorkflowEngineLive),
   Layer.provideMerge(WorkflowOrchestratorWithDependencies),

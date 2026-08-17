@@ -36,7 +36,7 @@ const $I = $ScratchpadId.create("effect-ontology/Contract/ProgressStreaming");
  * **Example** (Recognize an entity event tag)
  *
  * ```ts
- * import { ProgressEventTag } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ProgressEventTag } from "@effect-ontology/Contract/ProgressStreaming"
  *
  * console.log(ProgressEventTag.is.entity_found("entity_found")) // true
  * console.log(ProgressEventTag.is.entity_found("relation_found")) // false
@@ -81,7 +81,7 @@ export const ProgressEventTag = LiteralKit([
  * **Example** (Declare an event discriminator)
  *
  * ```ts
- * import type { ProgressEventTag } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import type { ProgressEventTag } from "@effect-ontology/Contract/ProgressStreaming"
  *
  * const tag: ProgressEventTag = "extraction_started"
  * console.log(tag) // "extraction_started"
@@ -151,7 +151,7 @@ export type ProgressEventTag = typeof ProgressEventTag.Type;
  * @since 0.0.0
  */
 const ProgressPercentage = Percentage.pipe(
-  S.check(S.isInt()),
+  S.check(S.isInt({ message: "Expected progress to be a whole-number percentage" })),
   $I.annoteSchema("ProgressPercentage", {
     description: "Whole-number completion percentage between zero and one hundred, inclusive.",
   })
@@ -218,17 +218,20 @@ const BaseProgressEvent = S.Struct({
  * **Example** (Create an extraction-start event)
  *
  * ```ts
- * import { ExtractionStartedEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ExtractionStartedEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = ExtractionStartedEvent.make({
- *   eventId: "evt-1",
+ * const event = S.decodeUnknownOption(ExtractionStartedEvent)({
+ *   _tag: "extraction_started",
+ *   eventId: "00000000-0000-4000-8000-000000000001",
  *   runId: "doc-0123456789ab",
  *   timestamp: "2026-08-11T12:00:00Z",
  *   overallProgress: 0,
  *   totalChunks: 4,
  *   textMetadata: { characterCount: 1200, estimatedAvgChunkSize: 300 }
  * })
- * console.log(event._tag) // "extraction_started"
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -290,16 +293,19 @@ export class ExtractionStartedEvent extends S.TaggedClass<ExtractionStartedEvent
  * **Example** (Create a chunking-start event)
  *
  * ```ts
- * import { ChunkingStartedEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ChunkingStartedEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = ChunkingStartedEvent.make({
- *   eventId: "evt-2",
+ * const event = S.decodeUnknownOption(ChunkingStartedEvent)({
+ *   _tag: "chunking_started",
+ *   eventId: "00000000-0000-4000-8000-000000000001",
  *   runId: "doc-0123456789ab",
  *   timestamp: "2026-08-11T12:00:01Z",
  *   overallProgress: 1,
  *   config: { maxChunkSize: 1000, preserveSentences: true }
  * })
- * console.log(event.config.preserveSentences) // true
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -343,13 +349,16 @@ export class ChunkingStartedEvent extends S.TaggedClass<ChunkingStartedEvent>($I
  * **Example** (Create a chunking-progress event)
  *
  * ```ts
- * import { ChunkingProgressEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ChunkingProgressEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = ChunkingProgressEvent.make({
- *   eventId: "evt-3", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:02Z",
+ * const event = S.decodeUnknownOption(ChunkingProgressEvent)({
+ *   _tag: "chunking_progress",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:02Z",
  *   overallProgress: 5, chunksCompleted: 3, chunksProcessing: 1, avgChunkSize: 480
  * })
- * console.log(event.chunksCompleted) // 3
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -393,13 +402,16 @@ export class ChunkingProgressEvent extends S.TaggedClass<ChunkingProgressEvent>(
  * **Example** (Create a chunking-complete event)
  *
  * ```ts
- * import { ChunkingCompleteEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ChunkingCompleteEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = ChunkingCompleteEvent.make({
- *   eventId: "evt-4", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:03Z",
+ * const event = S.decodeUnknownOption(ChunkingCompleteEvent)({
+ *   _tag: "chunking_complete",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:03Z",
  *   overallProgress: 10, finalChunkCount: 8, actualAvgChunkSize: 450, durationMs: 120
  * })
- * console.log(event.finalChunkCount) // 8
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -443,13 +455,16 @@ export class ChunkingCompleteEvent extends S.TaggedClass<ChunkingCompleteEvent>(
  * **Example** (Create a chunk-processing event)
  *
  * ```ts
- * import { ChunkProcessingStartedEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ChunkProcessingStartedEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = ChunkProcessingStartedEvent.make({
- *   eventId: "evt-5", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:04Z",
+ * const event = S.decodeUnknownOption(ChunkProcessingStartedEvent)({
+ *   _tag: "chunk_processing_started",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:04Z",
  *   overallProgress: 12, chunkIndex: 0, chunkTextLength: 480, textPreview: "Ada founded Acme."
  * })
- * console.log(event.chunkIndex) // 0
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -496,13 +511,16 @@ export class ChunkProcessingStartedEvent extends S.TaggedClass<ChunkProcessingSt
  * **Example** (Create a mention-progress event)
  *
  * ```ts
- * import { MentionExtractionProgressEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { MentionExtractionProgressEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = MentionExtractionProgressEvent.make({
- *   eventId: "evt-6", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:05Z",
+ * const event = S.decodeUnknownOption(MentionExtractionProgressEvent)({
+ *   _tag: "mention_extraction_progress",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:05Z",
  *   overallProgress: 20, chunkIndex: 0, phaseProgress: 50, mentionCount: 7
  * })
- * console.log(event.mentionCount) // 7
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -548,13 +566,16 @@ export class MentionExtractionProgressEvent extends S.TaggedClass<MentionExtract
  * **Example** (Create an entity-progress event)
  *
  * ```ts
- * import { EntityExtractionProgressEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { EntityExtractionProgressEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = EntityExtractionProgressEvent.make({
- *   eventId: "evt-7", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:06Z",
+ * const event = S.decodeUnknownOption(EntityExtractionProgressEvent)({
+ *   _tag: "entity_extraction_progress",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:06Z",
  *   overallProgress: 30, chunkIndex: 0, phaseProgress: 60, entityCount: 4, candidateClassCount: 12
  * })
- * console.log(event.entityCount) // 4
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -607,13 +628,16 @@ export class EntityExtractionProgressEvent extends S.TaggedClass<EntityExtractio
  * **Example** (Create a sampled entity event)
  *
  * ```ts
- * import { EntityFoundEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { EntityFoundEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = EntityFoundEvent.make({
- *   eventId: "evt-8", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:07Z",
+ * const event = S.decodeUnknownOption(EntityFoundEvent)({
+ *   _tag: "entity_found",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:07Z",
  *   overallProgress: 35, chunkIndex: 0, entityId: "entity:ada", mention: "Ada", types: ["Person"]
  * })
- * console.log(event.mention) // "Ada"
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -676,13 +700,16 @@ export class EntityFoundEvent extends S.TaggedClass<EntityFoundEvent>($I`EntityF
  * **Example** (Create a relation-progress event)
  *
  * ```ts
- * import { RelationExtractionProgressEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { RelationExtractionProgressEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = RelationExtractionProgressEvent.make({
- *   eventId: "evt-9", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:08Z",
+ * const event = S.decodeUnknownOption(RelationExtractionProgressEvent)({
+ *   _tag: "relation_extraction_progress",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:08Z",
  *   overallProgress: 45, chunkIndex: 0, phaseProgress: 40, relationCount: 2, entityCount: 4
  * })
- * console.log(event.relationCount) // 2
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -735,14 +762,17 @@ export class RelationExtractionProgressEvent extends S.TaggedClass<RelationExtra
  * **Example** (Create a sampled relation event)
  *
  * ```ts
- * import { RelationFoundEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { RelationFoundEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = RelationFoundEvent.make({
- *   eventId: "evt-10", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:09Z",
+ * const event = S.decodeUnknownOption(RelationFoundEvent)({
+ *   _tag: "relation_found",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:09Z",
  *   overallProgress: 50, chunkIndex: 0, subjectId: "entity:ada", predicate: "schema:worksFor",
  *   object: "entity:acme", isEntityReference: true
  * })
- * console.log(event.isEntityReference) // true
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -812,14 +842,17 @@ export class RelationFoundEvent extends S.TaggedClass<RelationFoundEvent>($I`Rel
  * **Example** (Create a grounding-progress event)
  *
  * ```ts
- * import { GroundingProgressEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { GroundingProgressEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = GroundingProgressEvent.make({
- *   eventId: "evt-11", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:10Z",
+ * const event = S.decodeUnknownOption(GroundingProgressEvent)({
+ *   _tag: "grounding_progress",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:10Z",
  *   overallProgress: 60, chunkIndex: 0, verifiedRelations: 5, groundedRelations: 4,
  *   confidenceThreshold: 0.8
  * })
- * console.log(event.groundedRelations) // 4
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -870,13 +903,16 @@ export class GroundingProgressEvent extends S.TaggedClass<GroundingProgressEvent
  * **Example** (Create a chunk-complete event)
  *
  * ```ts
- * import { ChunkProcessingCompleteEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ChunkProcessingCompleteEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = ChunkProcessingCompleteEvent.make({
- *   eventId: "evt-12", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:11Z",
+ * const event = S.decodeUnknownOption(ChunkProcessingCompleteEvent)({
+ *   _tag: "chunk_processing_complete",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:11Z",
  *   overallProgress: 70, chunkIndex: 0, entityCount: 4, relationCount: 3, durationMs: 850
  * })
- * console.log(event.relationCount) // 3
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -960,14 +996,17 @@ export class ChunkProcessingCompleteEvent extends S.TaggedClass<ChunkProcessingC
  * **Example** (Create an extraction-complete event)
  *
  * ```ts
- * import { ExtractionCompleteEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ExtractionCompleteEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = ExtractionCompleteEvent.make({
- *   eventId: "evt-13", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:12Z",
+ * const event = S.decodeUnknownOption(ExtractionCompleteEvent)({
+ *   _tag: "extraction_complete",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:12Z",
  *   overallProgress: 100, totalEntities: 40, totalRelations: 28, uniqueEntityTypes: 6,
  *   totalDurationMs: 5000, successfulChunks: 8, failedChunks: 0
  * })
- * console.log(event.overallProgress) // 100
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -1025,6 +1064,20 @@ export class ExtractionCompleteEvent extends S.TaggedClass<ExtractionCompleteEve
   })
 ) {}
 
+/**
+ * Validates and represents extraction failed retry strategy values at runtime.
+ *
+ * **Example** (Inspect extraction failed retry strategy)
+ *
+ * ```ts
+ * import { ExtractionFailedRetryStrategy } from "@effect-ontology/Contract/ProgressStreaming"
+ *
+ * console.log(ExtractionFailedRetryStrategy)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const ExtractionFailedRetryStrategy = pipe(
   {
     /** Optional initial or fixed retry delay in milliseconds. */
@@ -1043,7 +1096,7 @@ export const ExtractionFailedRetryStrategy = pipe(
         description: "Optional upper bound on client retry attempts.",
       })
     ),
-  } as const,
+  },
   (fields) =>
     S.Union([
       S.Struct({
@@ -1093,6 +1146,24 @@ export const ExtractionFailedRetryStrategy = pipe(
     )
 );
 
+/**
+ * Describes the extraction failed retry strategy data exposed by this module.
+ *
+ * **Example** (Decode ExtractionFailedRetryStrategy)
+ *
+ * ```ts
+ * import { ExtractionFailedRetryStrategy } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const summarizeExtractionFailedRetryStrategy = (_value: ExtractionFailedRetryStrategy): string => "valid extraction failed retry strategy"
+ *
+ * console.log(O.map(S.decodeUnknownOption(ExtractionFailedRetryStrategy)({}), summarizeExtractionFailedRetryStrategy))
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ExtractionFailedRetryStrategy = typeof ExtractionFailedRetryStrategy.Type;
 
 /**
@@ -1102,14 +1173,17 @@ export type ExtractionFailedRetryStrategy = typeof ExtractionFailedRetryStrategy
  * **Example** (Create a failed-extraction event)
  *
  * ```ts
- * import { ExtractionFailedEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ExtractionFailedEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = ExtractionFailedEvent.make({
- *   eventId: "evt-14", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:13Z",
+ * const event = S.decodeUnknownOption(ExtractionFailedEvent)({
+ *   _tag: "extraction_failed",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:13Z",
  *   overallProgress: 70, errorType: "LlmTimeout", errorMessage: "The model timed out.",
  *   isRecoverable: true
  * })
- * console.log(event.isRecoverable) // true
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -1193,13 +1267,16 @@ export class ExtractionFailedEvent extends S.TaggedClass<ExtractionFailedEvent>(
  * **Example** (Create a cancellation event)
  *
  * ```ts
- * import { ExtractionCancelledEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ExtractionCancelledEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = ExtractionCancelledEvent.make({
- *   eventId: "evt-15", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:14Z",
+ * const event = S.decodeUnknownOption(ExtractionCancelledEvent)({
+ *   _tag: "extraction_cancelled",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:14Z",
  *   overallProgress: 45, reason: "Requested by operator"
  * })
- * console.log(event._tag) // "extraction_cancelled"
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -1269,14 +1346,17 @@ export class ExtractionCancelledEvent extends S.TaggedClass<ExtractionCancelledE
  * **Example** (Create a critical backpressure warning)
  *
  * ```ts
- * import { BackpressureWarningEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { BackpressureWarningEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = BackpressureWarningEvent.make({
- *   eventId: "evt-16", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:15Z",
+ * const event = S.decodeUnknownOption(BackpressureWarningEvent)({
+ *   _tag: "backpressure_warning",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:15Z",
  *   overallProgress: 50, queuedEvents: 900, maxQueueSize: 1000, severity: "critical",
  *   recommendedAction: "Acknowledge events more quickly."
  * })
- * console.log(event.severity) // "critical"
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -1330,14 +1410,17 @@ export class BackpressureWarningEvent extends S.TaggedClass<BackpressureWarningE
  * **Example** (Create a recoverable error event)
  *
  * ```ts
- * import { RecoverableErrorEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { RecoverableErrorEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = RecoverableErrorEvent.make({
- *   eventId: "evt-17", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:16Z",
+ * const event = S.decodeUnknownOption(RecoverableErrorEvent)({
+ *   _tag: "error_recoverable",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:16Z",
  *   overallProgress: 55, chunkIndex: 2, errorType: "ParseFailure",
  *   errorMessage: "Model output was invalid.", phase: "entity-extraction", recoveryAction: "skip chunk"
  * })
- * console.log(event.chunkIndex) // 2
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -1395,14 +1478,17 @@ export class RecoverableErrorEvent extends S.TaggedClass<RecoverableErrorEvent>(
  * **Example** (Create a rate-limit fatal error)
  *
  * ```ts
- * import { FatalErrorEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { FatalErrorEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = FatalErrorEvent.make({
- *   eventId: "evt-18", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:17Z",
+ * const event = S.decodeUnknownOption(FatalErrorEvent)({
+ *   _tag: "error_fatal",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:17Z",
  *   overallProgress: 60, errorType: "LlmRateLimit", errorMessage: "Quota exhausted.", isTemporary: true,
  *   retryAfterMs: 30000
  * })
- * console.log(event.isTemporary) // true
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -1517,13 +1603,16 @@ const StageType = LiteralKit([
  * **Example** (Create a stage-start event)
  *
  * ```ts
- * import { StageStartedEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { StageStartedEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = StageStartedEvent.make({
- *   eventId: "evt-19", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:18Z",
+ * const event = S.decodeUnknownOption(StageStartedEvent)({
+ *   _tag: "stage_started",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:18Z",
  *   overallProgress: 0, stage: "serialization"
  * })
- * console.log(event.stage) // "serialization"
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -1552,13 +1641,16 @@ export class StageStartedEvent extends S.TaggedClass<StageStartedEvent>($I`Stage
  * **Example** (Create a generic stage-progress event)
  *
  * ```ts
- * import { StageProgressEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { StageProgressEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = StageProgressEvent.make({
- *   eventId: "evt-20", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:19Z",
+ * const event = S.decodeUnknownOption(StageProgressEvent)({
+ *   _tag: "stage_progress",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:19Z",
  *   overallProgress: 80, stage: "serialization", percent: 50, itemsProcessed: 5, itemsTotal: 10
  * })
- * console.log(event.percent) // 50
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -1609,13 +1701,16 @@ export class StageProgressEvent extends S.TaggedClass<StageProgressEvent>($I`Sta
  * **Example** (Create a stage-complete event)
  *
  * ```ts
- * import { StageCompletedEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { StageCompletedEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = StageCompletedEvent.make({
- *   eventId: "evt-21", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:20Z",
+ * const event = S.decodeUnknownOption(StageCompletedEvent)({
+ *   _tag: "stage_completed",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:20Z",
  *   overallProgress: 90, stage: "serialization", durationMs: 30, itemCount: 10
  * })
- * console.log(event.itemCount) // 10
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -1658,13 +1753,16 @@ export class StageCompletedEvent extends S.TaggedClass<StageCompletedEvent>($I`S
  * **Example** (Create a rate-limit event)
  *
  * ```ts
- * import { RateLimitedEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { RateLimitedEvent } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const event = RateLimitedEvent.make({
- *   eventId: "evt-22", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:21Z",
+ * const event = S.decodeUnknownOption(RateLimitedEvent)({
+ *   _tag: "rate_limited",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:21Z",
  *   overallProgress: 65, waitMs: 1000, reason: "requests"
  * })
- * console.log(event.waitMs) // 1000
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @category domain-events
@@ -1706,14 +1804,14 @@ export class RateLimitedEvent extends S.TaggedClass<RateLimitedEvent>($I`RateLim
  *
  * **When to use**
  *
- * Use at RPC and WebSocket boundaries that must decode any progress event before
+ * Use when use at rpc and websocket boundaries that must decode any progress event before.
  * dispatching on `_tag`.
  *
  * **Example** (Identify a progress event)
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { ProgressEventSchema } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ProgressEventSchema } from "@effect-ontology/Contract/ProgressStreaming"
  *
  * const isProgressEvent = S.is(ProgressEventSchema)
  * console.log(isProgressEvent({
@@ -1726,7 +1824,7 @@ export class RateLimitedEvent extends S.TaggedClass<RateLimitedEvent>($I`RateLim
  * })) // true
  * ```
  *
- * @category domain-events
+ * @category schemas
  * @since 0.0.0
  */
 export const ProgressEventSchema = S.Union([
@@ -1766,7 +1864,7 @@ export const ProgressEventSchema = S.Union([
  * **Example** (Narrow a progress event)
  *
  * ```ts
- * import type { ProgressEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import type { ProgressEvent } from "@effect-ontology/Contract/ProgressStreaming"
  *
  * const tagOf = (event: ProgressEvent): string => event._tag
  * console.log(typeof tagOf) // "function"
@@ -1794,7 +1892,7 @@ export type ProgressEvent = typeof ProgressEventSchema.Type;
  * **Example** (Configure bounded event delivery)
  *
  * ```ts
- * import type { BackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import type { BackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming"
  *
  * const config: BackpressureConfig = {
  *   maxQueueSize: 500,
@@ -1833,7 +1931,7 @@ export interface BackpressureConfig {
  * **Example** (Inspect the default queue limit)
  *
  * ```ts
- * import { DefaultBackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { DefaultBackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming"
  *
  * console.log(DefaultBackpressureConfig.maxQueueSize) // 1000
  * console.log(DefaultBackpressureConfig.strategy) // "drop_oldest"
@@ -1859,10 +1957,12 @@ export const DefaultBackpressureConfig: BackpressureConfig = {
  * **Example** (Request cancellation)
  *
  * ```ts
- * import { CancellationRequest } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { CancellationRequest } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const request = CancellationRequest.make({ runId: "doc-0123456789ab", savePartialResults: true })
- * console.log(request.runId) // "doc-0123456789ab"
+ * const request = S.decodeUnknownOption(CancellationRequest)({ runId: "doc-0123456789ab", savePartialResults: true })
+ * console.log(O.isSome(request)) // true
  * ```
  *
  * @category commands
@@ -1910,12 +2010,14 @@ export class CancellationRequest extends S.Class<CancellationRequest>($I`Cancell
  * **Example** (Acknowledge cancellation)
  *
  * ```ts
- * import { CancellationResponse } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { CancellationResponse } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const response = CancellationResponse.make({
+ * const response = S.decodeUnknownOption(CancellationResponse)({
  *   runId: "doc-0123456789ab", accepted: true, timestamp: "2026-08-11T12:00:23Z"
  * })
- * console.log(response.accepted) // true
+ * console.log(O.isSome(response)) // true
  * ```
  *
  * @category protocols
@@ -1973,7 +2075,7 @@ export class CancellationResponse extends S.Class<CancellationResponse>($I`Cance
  * **Example** (Describe recovery semantics)
  *
  * ```ts
- * import type { ErrorRecoverySemantics } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import type { ErrorRecoverySemantics } from "@effect-ontology/Contract/ProgressStreaming"
  *
  * const streamEnds = (semantics: ErrorRecoverySemantics): true => semantics.clientCancellation.streamEnds
  * console.log(typeof streamEnds) // "function"
@@ -2085,7 +2187,7 @@ export interface ErrorRecoverySemantics {
  * **Example** (Inspect content-error behavior)
  *
  * ```ts
- * import { ErrorRecoverySemanticsSpec } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ErrorRecoverySemanticsSpec } from "@effect-ontology/Contract/ProgressStreaming"
  *
  * console.log(ErrorRecoverySemanticsSpec.contentErrors.continuesWithNextChunk) // true
  * console.log(ErrorRecoverySemanticsSpec.systemicErrors.streamEnds) // true
@@ -2133,14 +2235,18 @@ export const ErrorRecoverySemanticsSpec: ErrorRecoverySemantics = {
  * **Example** (Wrap a stage event)
  *
  * ```ts
- * import { ProgressMessage, StageStartedEvent } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { ProgressMessage } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const data = StageStartedEvent.make({
- *   eventId: "evt-24", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:24Z",
+ * const data = {
+ *   _tag: "stage_started",
+ *   eventId: "00000000-0000-4000-8000-000000000001", runId: "doc-0123456789ab", timestamp: "2026-08-11T12:00:24Z",
  *   overallProgress: 0, stage: "chunking"
- * })
- * const message = ProgressMessage.make({ data, createdAt: "2026-08-11T12:00:24Z" })
- * console.log(message._tag) // "progress"
+ * }
+ * const message = S.decodeUnknownOption(ProgressMessage)({
+ *   _tag: "progress", data, createdAt: "2026-08-11T12:00:24Z" })
+ * console.log(O.isSome(message)) // true
  * ```
  *
  * @category protocols
@@ -2236,9 +2342,12 @@ export class ProgressMessage extends S.TaggedClass<ProgressMessage>($I`ProgressM
  * **Example** (Start an extraction)
  *
  * ```ts
- * import { StartExtractionRequest } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { StartExtractionRequest } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const request = StartExtractionRequest.make({
+ * const request = S.decodeUnknownOption(StartExtractionRequest)({
+ *   _tag: "start_extraction",
  *   text: "Ada founded Acme.",
  *   config: {
  *     chunking: { maxChunkSize: 1000, preserveSentences: true },
@@ -2246,7 +2355,7 @@ export class ProgressMessage extends S.TaggedClass<ProgressMessage>($I`ProgressM
  *     ontologyPath: "/ontologies/example.ttl"
  *   }
  * })
- * console.log(request._tag) // "start_extraction"
+ * console.log(O.isSome(request)) // true
  * ```
  *
  * @category commands
@@ -2329,12 +2438,15 @@ export class StartExtractionRequest extends S.TaggedClass<StartExtractionRequest
  * **Example** (Accept an extraction request)
  *
  * ```ts
- * import { StartExtractionResponse } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { StartExtractionResponse } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const response = StartExtractionResponse.make({
+ * const response = S.decodeUnknownOption(StartExtractionResponse)({
+ *   _tag: "start_extraction_response",
  *   runId: "doc-0123456789ab", accepted: true, timestamp: "2026-08-11T12:00:25Z"
  * })
- * console.log(response.accepted) // true
+ * console.log(O.isSome(response)) // true
  * ```
  *
  * @category protocols
@@ -2401,12 +2513,15 @@ export class StartExtractionResponse extends S.TaggedClass<StartExtractionRespon
  * **Example** (Acknowledge an event)
  *
  * ```ts
- * import { AckMessage } from "@effect-ontology/Contract/ProgressStreaming.ts"
+ * import { AckMessage } from "@effect-ontology/Contract/ProgressStreaming"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const message = AckMessage.make({
- *   runId: "doc-0123456789ab", eventId: "evt-24", timestamp: "2026-08-11T12:00:26Z"
+ * const message = S.decodeUnknownOption(AckMessage)({
+ *   _tag: "ack",
+ *   runId: "doc-0123456789ab", eventId: "00000000-0000-4000-8000-000000000001", timestamp: "2026-08-11T12:00:26Z"
  * })
- * console.log(message._tag) // "ack"
+ * console.log(O.isSome(message)) // true
  * ```
  *
  * @category protocols

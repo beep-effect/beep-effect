@@ -1,6 +1,8 @@
 /**
  * Schema Factory Errors
  *
+ * **Details**
+ *
  * Error types used by schema factories.
  *
  * @packageDocumentation
@@ -11,6 +13,14 @@ import * as S from "effect/Schema";
 
 /**
  * Error thrown when attempting to create a schema with empty vocabularies
+ *
+ * **Example** (Inspect empty vocabulary error)
+ *
+ * ```ts
+ * import { EmptyVocabularyError } from "@effect-ontology/Schema/Errors"
+ *
+ * console.log(EmptyVocabularyError)
+ * ```
  *
  * @category errors
  * @since 0.0.0

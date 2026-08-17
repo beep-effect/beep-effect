@@ -46,10 +46,10 @@
             "style": "separatedType"
           }
         },
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "error"
       },
       "suspicious": {
-        "noExplicitAny": "warn",
+        "noExplicitAny": "error",
         "noConsole": "off",
         "noRedeclare": "off",
         "noShadowRestrictedNames": "off"

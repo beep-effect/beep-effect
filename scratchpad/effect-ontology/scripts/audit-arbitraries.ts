@@ -9,22 +9,29 @@
  *
  * **Example** (Audit public schemas)
  *
- * ```sh
- * bun run --cwd scratchpad audit:effect-ontology-arbitraries
+ * ```ts
+ * const command = "bun run --cwd scratchpad audit:effect-ontology-arbitraries"
+ * console.log(command)
  * ```
  *
- * @category tools
+ * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect } from "effect";
+import { Effect, SchemaAST } from "effect";
+import * as A from "effect/Array";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as SchemaAST from "effect/SchemaAST";
 import { FastCheck as fc } from "effect/testing";
 
 const sampleCount = 8;
 const baseSeed = 0x5eed;
 const domainRoot = new URL("../Domain/", import.meta.url);
 const domainModules = new Bun.Glob("**/*.ts");
+
+class ArbitraryAuditError extends S.TaggedError<ArbitraryAuditError>("effect-ontology/scripts/ArbitraryAuditError")(
+  "ArbitraryAuditError",
+  { message: S.String }
+) {}
 
 let auditedModules = 0;
 let auditedSchemas = 0;
@@ -36,21 +43,26 @@ for await (const relativePath of domainModules.scan({
   auditedModules += 1;
   const moduleExports: Readonly<Record<string, unknown>> = await import(new URL(relativePath, domainRoot).href);
 
-  for (const [exportName, value] of Object.entries(moduleExports)) {
+  for (const [exportName, value] of R.toEntries(moduleExports)) {
     if (!/^[A-Z]/.test(exportName) || !S.isSchema(value)) {
       continue;
     }
 
     auditedSchemas += 1;
-    const annotationGaps = [
-      ["identifier", SchemaAST.resolveIdentifier(value.ast)],
-      ["title", SchemaAST.resolveTitle(value.ast)],
-      ["description", SchemaAST.resolveDescription(value.ast)],
-      ["toArbitrary", SchemaAST.resolve(value.ast)?.toArbitrary],
-    ].flatMap(([name, annotation]) => (annotation === undefined ? [name] : []));
+    const annotationGaps = A.flatMap(
+      [
+        ["identifier", SchemaAST.resolveIdentifier(value.ast)],
+        ["title", SchemaAST.resolveTitle(value.ast)],
+        ["description", SchemaAST.resolveDescription(value.ast)],
+        ["toArbitrary", SchemaAST.resolve(value.ast)?.toArbitrary],
+      ] satisfies ReadonlyArray<readonly [string, unknown]>,
+      ([name, annotation]) => (annotation === undefined ? [name] : [])
+    );
 
     if (annotationGaps.length > 0) {
-      throw new Error(`${relativePath}:${exportName} is missing schema annotations: ${annotationGaps.join(", ")}`);
+      throw ArbitraryAuditError.make({
+        message: `${relativePath}:${exportName} is missing schema annotations: ${A.join(annotationGaps, ", ")}`,
+      });
     }
 
     const arbitrary = S.toArbitrary(value)(fc);
@@ -61,8 +73,10 @@ for await (const relativePath of domainModules.scan({
     });
     auditedSamples += samples.length;
 
-    if (!samples.every((sample) => S.is(value)(sample))) {
-      throw new Error(`${relativePath}:${exportName} generated a value outside its decoded schema`);
+    if (!A.every(samples, (sample) => S.is(value)(sample))) {
+      throw ArbitraryAuditError.make({
+        message: `${relativePath}:${exportName} generated a value outside its decoded schema`,
+      });
     }
   }
 }

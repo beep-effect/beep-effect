@@ -1,6 +1,8 @@
 /**
  * CLI: Link Command
  *
+ * **Details**
+ *
  * Create owl:sameAs links between local entities and Wikidata entities.
  *
  * @packageDocumentation
@@ -13,6 +15,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { Command, Flag as Options } from "effect/unstable/cli";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { WikidataClient } from "../../Service/WikidataClient.ts";
@@ -152,7 +155,7 @@ To create a link, run:`);
   } else {
     if (O.isSome(output)) {
       const fs = yield* FileSystem.FileSystem;
-      yield* fs.writeFileString(output.value, sameAsTriple.trim());
+      yield* fs.writeFileString(output.value, Str.trim(sameAsTriple));
       yield* Console.log(`Link written to: ${output.value}`);
     } else {
       yield* Console.log("Created owl:sameAs link:");
@@ -166,6 +169,20 @@ To create a link, run:`);
 // Command Definition
 // =============================================================================
 
+/**
+ * Exposes link command for composition by callers of this module.
+ *
+ * **Example** (Inspect link command)
+ *
+ * ```ts
+ * import { linkCommand } from "@effect-ontology/Cli/Commands/Link"
+ *
+ * console.log(linkCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const linkCommand = Command.make(
   "link",
   {

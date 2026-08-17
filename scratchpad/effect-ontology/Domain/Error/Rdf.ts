@@ -11,7 +11,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
-import { ErrorMessage, makeOntologyErrorClass, OptionalErrorCause, OptionalErrorMessage } from "./Base.ts";
+import { ErrorMessage, OptionalErrorCause, OptionalErrorMessage } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Rdf");
 
@@ -20,17 +20,19 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Rdf");
  *
  * **Example** (Use RdfError)
  * ```ts
- * import { RdfError } from "@effect-ontology/Error/Rdf.ts"
+ * import { RdfError } from "@effect-ontology/Error/Rdf"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = RdfError.make({ message: "RDF operation failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(RdfError)({
+ *   _tag: "RdfError", message: "RDF operation failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const RdfError = makeOntologyErrorClass.make(
-  $I`RdfError`,
+export class RdfError extends S.TaggedError<RdfError>($I`RdfError`)(
   "RdfError",
   {
     message: ErrorMessage.annotateKey({
@@ -41,40 +43,26 @@ export const RdfError = makeOntologyErrorClass.make(
     }),
   },
   $I.annote("RdfError", { description: "General RDF-processing failure." })
-);
-
-/**
- * Runtime value decoded by {@link RdfError}.
- *
- * **Example** (Use RdfError)
- * ```ts
- * import { RdfError, type RdfError as RdfFailure } from "@effect-ontology/Error/Rdf.ts"
- *
- * const error: RdfFailure = RdfError.make({ message: "Failed." })
- * console.log(error.message)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type RdfError = typeof RdfError.Type;
+) {}
 
 /**
  * Indicates that RDF data could not be serialized to a target format.
  *
  * **Example** (Use SerializationFailed)
  * ```ts
- * import { SerializationFailed } from "@effect-ontology/Error/Rdf.ts"
+ * import { SerializationFailed } from "@effect-ontology/Error/Rdf"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = SerializationFailed.make({ message: "Turtle serialization failed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(SerializationFailed)({
+ *   _tag: "SerializationFailed", message: "Turtle serialization failed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const SerializationFailed = makeOntologyErrorClass.make(
-  $I`SerializationFailed`,
+export class SerializationFailed extends S.TaggedError<SerializationFailed>($I`SerializationFailed`)(
   "SerializationFailed",
   {
     message: ErrorMessage.annotateKey({
@@ -90,40 +78,26 @@ export const SerializationFailed = makeOntologyErrorClass.make(
   $I.annote("SerializationFailed", {
     description: "Failure to serialize RDF data to a requested format.",
   })
-);
-
-/**
- * Runtime value decoded by {@link SerializationFailed}.
- *
- * **Example** (Use SerializationFailed)
- * ```ts
- * import { SerializationFailed, type SerializationFailed as Failure } from "@effect-ontology/Error/Rdf.ts"
- *
- * const error: Failure = SerializationFailed.make({ message: "Could not serialize." })
- * console.log(error._tag)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type SerializationFailed = typeof SerializationFailed.Type;
+) {}
 
 /**
  * Indicates that RDF input could not be parsed.
  *
  * **Example** (Use ParsingFailed)
  * ```ts
- * import { ParsingFailed } from "@effect-ontology/Error/Rdf.ts"
+ * import { ParsingFailed } from "@effect-ontology/Error/Rdf"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ParsingFailed.make({ message: "N-Triples input is malformed." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(ParsingFailed)({
+ *   _tag: "ParsingFailed", message: "N-Triples input is malformed." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const ParsingFailed = makeOntologyErrorClass.make(
-  $I`ParsingFailed`,
+export class ParsingFailed extends S.TaggedError<ParsingFailed>($I`ParsingFailed`)(
   "ParsingFailed",
   {
     message: ErrorMessage.annotateKey({
@@ -139,23 +113,7 @@ export const ParsingFailed = makeOntologyErrorClass.make(
   $I.annote("ParsingFailed", {
     description: "Failure to parse RDF input in the supplied source format.",
   })
-);
-
-/**
- * Runtime value decoded by {@link ParsingFailed}.
- *
- * **Example** (Use ParsingFailed)
- * ```ts
- * import { ParsingFailed, type ParsingFailed as Failure } from "@effect-ontology/Error/Rdf.ts"
- *
- * const error: Failure = ParsingFailed.make({ message: "Could not parse." })
- * console.log(error.message)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ParsingFailed = typeof ParsingFailed.Type;
+) {}
 
 const AnyRdfErrorDefinition = S.Union([RdfError, SerializationFailed, ParsingFailed]).pipe(S.toTaggedUnion("_tag"));
 
@@ -164,9 +122,12 @@ const AnyRdfErrorDefinition = S.Union([RdfError, SerializationFailed, ParsingFai
  *
  * **Example** (Use AnyRdfError)
  * ```ts
- * import { AnyRdfError, ParsingFailed } from "@effect-ontology/Error/Rdf.ts"
+ * import { AnyRdfError, ParsingFailed } from "@effect-ontology/Error/Rdf"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = ParsingFailed.make({ message: "Malformed." })
+ * const error = S.decodeUnknownOption(ParsingFailed)({
+ *   _tag: "ParsingFailed", message: "Malformed." })
  * console.log(AnyRdfError.guards.ParsingFailed(error)) // true
  * ```
  *
@@ -176,7 +137,7 @@ const AnyRdfErrorDefinition = S.Union([RdfError, SerializationFailed, ParsingFai
 export const AnyRdfError = AnyRdfErrorDefinition.pipe(
   $I.annoteSchema("AnyRdfError", {
     description: "Exhaustive tagged union of RDF-processing failures.",
-  toArbitrary: () => S.toArbitrary(AnyRdfErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AnyRdfErrorDefinition),
   })
 );
 
@@ -185,7 +146,7 @@ export const AnyRdfError = AnyRdfErrorDefinition.pipe(
  *
  * **Example** (Use AnyRdfError)
  * ```ts
- * import { RdfError, type AnyRdfError } from "@effect-ontology/Error/Rdf.ts"
+ * import { RdfError, type AnyRdfError } from "@effect-ontology/Error/Rdf"
  *
  * const error: AnyRdfError = RdfError.make({ message: "Failed." })
  * console.log(error._tag)

@@ -68,14 +68,15 @@ const BatchStatusResponseDefinition = S.TaggedUnion({
  *
  * **Example** (Use BatchStatusResponse)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { BatchStatusResponse } from "@effect-ontology/Schema/BatchStatusResponse.ts"
+ * import { BatchStatusResponse } from "@effect-ontology/Schema/BatchStatusResponse"
  *
- * const response = S.decodeUnknownSync(BatchStatusResponse)({
+ * const response = S.decodeUnknownOption(BatchStatusResponse)({
  *   _tag: "NotFound",
  *   value: { batchId: "batch-abc123def456" }
  * })
- * console.log(response._tag) // "NotFound"
+ * console.log(O.map(response, (value) => value._tag)) // "NotFound"
  * ```
  *
  * @invariant Every response is exactly one of Active, Suspended, or NotFound,
@@ -95,7 +96,7 @@ export const BatchStatusResponse = BatchStatusResponseDefinition.pipe(
  *
  * **Example** (Use BatchStatusResponse)
  * ```ts
- * import type { BatchStatusResponse } from "@effect-ontology/Schema/BatchStatusResponse.ts"
+ * import type { BatchStatusResponse } from "@effect-ontology/Schema/BatchStatusResponse"
  *
  * const tag = (response: BatchStatusResponse) => response._tag
  * console.log(typeof tag) // "function"

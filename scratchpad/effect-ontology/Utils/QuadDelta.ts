@@ -1,6 +1,8 @@
 /**
  * Quad Delta Computation Utility
  *
+ * **Details**
+ *
  * Computes the delta (new triples) between an original RDF store
  * and an enriched store after reasoning/inference operations.
  *
@@ -10,11 +12,10 @@
 
 import type { Quad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
-import { Effect } from "effect";
+import { Effect, HashMap, MutableHashSet } from "effect";
 import * as A from "effect/Array";
-import * as HashMap from "effect/HashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 import type { RdfStore } from "../Service/Rdf.ts";
 import { rdfStoreAllQuads } from "../Service/Rdf.ts";
 import { dual2 } from "./Dual.ts";
@@ -45,8 +46,18 @@ const serializeQuad = (quad: Quad): string => {
 /**
  * Delta result containing new quads and statistics
  *
- * @since 0.0.0
+ * **Example** (Reference QuadDelta fields)
+ *
+ * ```ts
+ * import type { QuadDelta } from "@effect-ontology/Utils/QuadDelta"
+ *
+ * const quadDeltaFields: ReadonlyArray<keyof QuadDelta> = ["newQuads", "originalCount", "enrichedCount"]
+ *
+ * console.log(quadDeltaFields)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface QuadDelta {
   /** Quads present in enriched but not in original */
@@ -62,17 +73,26 @@ export interface QuadDelta {
 /**
  * Computes the delta between two RDF stores.
  *
+ * **Details**
+ *
  * Returns quads that exist in the enriched store but not in the original.
  * Uses set difference on serialized quad strings for efficiency.
  *
  * **Example** (Use computeQuadDelta)
+ *
  * ```ts
- * const delta = yield* computeQuadDelta(originalStore, enrichedStore)
- * console.log(`Inferred ${delta.deltaCount} new triples`)
+ * import { makeDataset } from "@beep/rdf/Rdf"
+ * import { Effect } from "effect"
+ * import { rdfStoreFromDataset } from "@effect-ontology/Service/Rdf"
+ * import { computeQuadDelta } from "@effect-ontology/Utils/QuadDelta"
+ *
+ * const store = rdfStoreFromDataset(makeDataset([]))
+ * const delta = computeQuadDelta(store, store)
+ * console.log(Effect.isEffect(delta)) // true
  * ```
  *
+ * @category utilities
  * @since 0.0.0
- * @category mapping
  */
 export const computeQuadDelta = dual2(
   (original: RdfStore, enriched: RdfStore): Effect.Effect<QuadDelta> =>
@@ -107,11 +127,21 @@ export const computeQuadDelta = dual2(
 /**
  * Groups delta quads by the predicate that produced them.
  *
+ * **Details**
+ *
  * Useful for understanding which reasoning rules contributed
  * to the inferred triples.
  *
+ * **Example** (Inspect group delta by predicate)
+ *
+ * ```ts
+ * import { groupDeltaByPredicate } from "@effect-ontology/Utils/QuadDelta"
+ *
+ * console.log(groupDeltaByPredicate)
+ * ```
+ *
+ * @category utilities
  * @since 0.0.0
- * @category mapping
  */
 export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string, ReadonlyArray<Quad>> => {
   let grouped = HashMap.empty<string, ReadonlyArray<Quad>>();
@@ -128,8 +158,16 @@ export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string,
 /**
  * Filters delta to only include type inferences (rdf:type triples).
  *
+ * **Example** (Inspect filter type inferences)
+ *
+ * ```ts
+ * import { filterTypeInferences } from "@effect-ontology/Utils/QuadDelta"
+ *
+ * console.log(filterTypeInferences)
+ * ```
+ *
+ * @category utilities
  * @since 0.0.0
- * @category filtering
  */
 export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<Quad> =>
   A.filter(delta.newQuads, (quad) => quad.predicate.value === RDF_TYPE.value);
@@ -137,8 +175,16 @@ export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<Quad> =>
 /**
  * Creates a summary of the delta for logging/telemetry.
  *
+ * **Example** (Inspect summarize delta)
+ *
+ * ```ts
+ * import { summarizeDelta } from "@effect-ontology/Utils/QuadDelta"
+ *
+ * console.log(summarizeDelta)
+ * ```
+ *
+ * @category utilities
  * @since 0.0.0
- * @category mapping
  */
 export const summarizeDelta = (
   delta: QuadDelta
@@ -154,7 +200,10 @@ export const summarizeDelta = (
 
   for (const [predicate, quads] of grouped) {
     // Extract local name from IRI for readable keys
-    const localName = predicate.split("#").pop() ?? predicate.split("/").pop() ?? predicate;
+    const localName = O.getOrElse(
+      O.orElse(A.last(Str.split("#")(predicate)), () => A.last(Str.split("/")(predicate))),
+      () => predicate
+    );
     predicateBreakdown[localName] = quads.length;
   }
 

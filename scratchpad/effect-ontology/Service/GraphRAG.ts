@@ -1,14 +1,5 @@
 /**
- * Service: GraphRAG
- *
- * Graph-based Retrieval-Augmented Generation for knowledge graph querying.
- * Combines entity embedding search with subgraph extraction to provide
- * structured, coherent context for LLM prompts.
- *
- * Implements patterns from SOTA research:
- * - GraphRAG multi-hop retrieval (Peng et al., 2024)
- * - Ontology-guided reasoning (Zhang et al., 2025)
- * - RRF fusion for hybrid scoring
+ * Schema-backed graph retrieval, grounded generation, and path explanation.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -16,871 +7,1100 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt, SchemaUtils } from "@beep/schema";
-import { thunk0 } from "@beep/utils/thunk";
+import { IRI } from "@beep/rdf";
+import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import {
+  Context,
+  Duration,
+  Effect,
+  HashMap,
+  HashSet,
+  Inspectable,
+  Layer,
+  Match,
+  Number as Num,
+  Order as Ord,
+} from "effect";
 import * as A from "effect/Array";
-import * as Context from "effect/Context";
-import * as Data from "effect/Data";
-import * as Duration from "effect/Duration";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as S from "effect/Schema";
 import type { TimeoutError } from "effect/Cause";
-import * as HashMap from "effect/HashMap";
 import { dual, pipe } from "effect/Function";
-import * as HashSet from "effect/HashSet";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type * as AiError from "effect/unstable/ai/AiError";
-import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
+import * as LanguageModel from "effect/unstable/ai/LanguageModel";
+import { OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
-import type { KnowledgeGraph, Relation } from "../Domain/Model/Entity.ts";
-import { Entity } from "../Domain/Model/Entity.ts";
+import type { KnowledgeGraph } from "../Domain/Model/Entity.ts";
+import { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
+import { EntityId } from "../Domain/Model/shared.ts";
 import { EntityIndex } from "./EntityIndex.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
-import type { Subgraph } from "./SubgraphExtractor.ts";
-import { SubgraphExtractor } from "./SubgraphExtractor.ts";
+import { Subgraph, SubgraphExtractor } from "./SubgraphExtractor.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/GraphRAG");
 
+const RetrievalOptionsFields = {
+  topK: PosInt.pipe(
+    SchemaUtils.withKeyDefaults(PosInt.make(5)),
+    S.annotateKey({ description: "Maximum embedding matches used as graph seeds." })
+  ),
+  hops: NonNegativeInt.pipe(
+    SchemaUtils.withKeyDefaults(NonNegativeInt.make(1)),
+    S.annotateKey({ description: "Maximum breadth-first distance from a seed." })
+  ),
+  maxNodes: PosInt.pipe(
+    SchemaUtils.withKeyDefaults(PosInt.make(50)),
+    S.annotateKey({ description: "Maximum entities admitted to the retrieved subgraph, including seeds." })
+  ),
+  minScore: Confidence.pipe(
+    SchemaUtils.withKeyDefaults(Confidence.make(0.3)),
+    S.annotateKey({ description: "Minimum embedding similarity admitted as a seed." })
+  ),
+  includeTypes: S.Array(IRI).pipe(
+    SchemaUtils.withEmptyArrayDefaults<IRI>(),
+    S.annotateKey({ description: "Optional ontology classes restricting seed candidates." })
+  ),
+  includeAttributes: S.Boolean.pipe(
+    SchemaUtils.withKeyDefaults(true),
+    S.annotateKey({ description: "Whether entity attributes are rendered into generation context." })
+  ),
+  includeRelations: S.Boolean.pipe(
+    SchemaUtils.withKeyDefaults(true),
+    S.annotateKey({ description: "Whether relations are rendered into generation context." })
+  ),
+};
+
+const GenerationOptionsFields = {
+  timeout: S.Duration.pipe(
+    SchemaUtils.withKeyDefaults(Duration.seconds(30)),
+    S.annotateKey({ description: "Maximum duration allowed for each language-model attempt." })
+  ),
+  maxAttempts: PosInt.pipe(
+    SchemaUtils.withKeyDefaults(PosInt.make(3)),
+    S.annotateKey({ description: "Maximum generation attempts, including the initial attempt." })
+  ),
+};
+
 /**
- * Scored node in retrieval result
+ * Retrieved entity with its fused relevance and exact graph distance.
  *
+ * **Example** (Inspect the scored-node schema)
+ *
+ * ```ts
+ * import { ScoredNode } from "@effect-ontology/Service/GraphRAG"
+ *
+ * console.log(ScoredNode)
+ * ```
+ *
+ * @category models
  * @since 0.0.0
- * @category type-level
  */
-class ScoredNode extends S.Class<ScoredNode>($I`ScoredNode`)(
+export class ScoredNode extends S.Class<ScoredNode>($I`ScoredNode`)(
   {
-    entity: Entity,
-    /** Combined relevance score (0-1) */
-    score: S.Finite.pipe(
-      S.check(
-        S.isBetween({
-          minimum: 0,
-          maximum: 1,
-        })
-      ),
-      $I.annoteKey("ScoredNode.score", {
-        description: "Combined relevance score (0-1)"
-      })
-    ),
-    /** Distance from seed entities (0 = seed) */
-    hopDistance: S.Finite,
-    /** Whether this was a seed entity from initial retrieval */
-    isSeed: S.Boolean,
+    entity: Entity.annotateKey({ description: "Retrieved entity." }),
+    score: Confidence.annotateKey({ description: "Fused embedding-rank and hop-distance relevance." }),
+    hopDistance: NonNegativeInt.annotateKey({ description: "Shortest measured distance from any accepted seed." }),
+    isSeed: S.Boolean.annotateKey({ description: "Whether the entity came directly from embedding search." }),
   },
   $I.annote("ScoredNode", {
-    description: "Scored node in retrieval result"
+    description: "Retrieved entity with a unit-interval relevance score and measured seed distance.",
   })
-) {
-}
-
-// export interface ScoredNode {
-//   readonly entity: Entity;
-//   /** Combined relevance score (0-1) */
-//   readonly score: number;
-//   /** Distance from seed entities (0 = seed) */
-//   readonly hopDistance: number;
-//   /** Whether this was a seed entity from initial retrieval */
-//   readonly isSeed: boolean;
-// }
+) {}
 
 /**
- * Retrieval result containing subgraph and formatted context
+ * Statistics for one graph-retrieval operation.
  *
- * @since 0.0.0
- * @category type-level
- */
-export interface RetrievalResult {
-  /** Extracted subgraph around relevant entities */
-  readonly subgraph: Subgraph;
-  /** All nodes with relevance scores, sorted by score descending */
-  readonly scoredNodes: ReadonlyArray<ScoredNode>;
-  /** Formatted context string for LLM prompts */
-  readonly context: string;
-  /** Original query */
-  readonly query: string;
-  /** Retrieval statistics */
-  readonly stats: RetrievalStats;
-}
-
-/**
- * Statistics about the retrieval operation
+ * **Example** (Inspect retrieval statistics)
  *
- * @since 0.0.0
- * @category type-level
- */
-export interface RetrievalStats {
-  /** Number of seed entities found */
-  readonly seedCount: number;
-  /** Total entities in subgraph */
-  readonly nodeCount: number;
-  /** Total relations in subgraph */
-  readonly edgeCount: number;
-  /** Traversal depth used */
-  readonly hops: number;
-  /** Average relevance score */
-  readonly avgScore: number;
-}
-
-/**
- * Options for retrieval operation
+ * ```ts
+ * import { RetrievalStats } from "@effect-ontology/Service/GraphRAG"
  *
- * @since 0.0.0
- * @category type-level
- */
-export interface RetrievalOptions {
-  /** Number of seed entities to find via embedding search (default: 5) */
-  readonly topK?: number;
-  /** Number of hops to traverse from seeds (default: 1) */
-  readonly hops?: number;
-  /** Maximum nodes in final subgraph (default: 50) */
-  readonly maxNodes?: number;
-  /** Minimum similarity score for seed selection (default: 0.3) */
-  readonly minScore?: number;
-  /** Filter to only entities with these types */
-  readonly includeTypes?: ReadonlyArray<string>;
-  /** Whether to include entity attributes in context (default: true) */
-  readonly includeAttributes?: boolean;
-  /** Whether to include relation predicates in context (default: true) */
-  readonly includeRelations?: boolean;
-}
-
-/**
- * Grounded answer generated from knowledge graph context
+ * console.log(RetrievalStats)
+ * ```
  *
- * @since 0.0.0
- * @category type-level
- */
-export interface GroundedAnswer {
-  /** The generated answer text */
-  readonly answer: string;
-  /** Entity IDs cited in the answer */
-  readonly citations: ReadonlyArray<string>;
-  /** Confidence score (0-1) */
-  readonly confidence: number;
-  /** Brief reasoning explanation */
-  readonly reasoning: string;
-  /** The retrieval result used for generation */
-  readonly retrieval: RetrievalResult;
-}
-
-/**
- * Schema-backed options for answer generation.
- *
- * Defaults and field documentation live on the schema so every constructor
- * and decoder resolves the same generation policy.
- *
- * @since 0.0.0
  * @category models
+ * @since 0.0.0
+ */
+export class RetrievalStats extends S.Class<RetrievalStats>($I`RetrievalStats`)(
+  {
+    seedCount: NonNegativeInt.annotateKey({ description: "Accepted embedding seeds present in the subgraph." }),
+    nodeCount: NonNegativeInt.annotateKey({ description: "Total retrieved entities." }),
+    edgeCount: NonNegativeInt.annotateKey({ description: "Total retrieved relations." }),
+    hops: NonNegativeInt.annotateKey({ description: "Deepest breadth-first distance actually reached." }),
+    avgScore: Confidence.annotateKey({ description: "Mean fused relevance across retrieved entities." }),
+  },
+  $I.annote("RetrievalStats", {
+    description: "Schema-backed counts, actual depth, and average relevance for graph retrieval.",
+  })
+) {}
+
+/**
+ * Validated graph-retrieval policy.
+ *
+ * **Example** (Use the default retrieval policy)
+ *
+ * ```ts
+ * import { RetrievalOptions } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const options = RetrievalOptions.make({})
+ * console.log(options.maxNodes) // 50
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetrievalOptions extends S.Class<RetrievalOptions>($I`RetrievalOptions`)(
+  RetrievalOptionsFields,
+  $I.annote("RetrievalOptions", {
+    description: "Validated semantic seed, traversal-bound, and context-rendering policy.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link RetrievalOptions}.
+ *
+ *
+ * **Example** (Use the RetrievalOptionsInput contract)
+ *
+ * ```ts
+ * import type { RetrievalOptionsInput } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const acceptsRetrievalOptionsInput = (_value: RetrievalOptionsInput): void => undefined
+ *
+ * console.log(acceptsRetrievalOptionsInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RetrievalOptionsInput = (typeof RetrievalOptions)["~type.make.in"];
+
+/**
+ * Complete retrieval output used to ground a generated answer.
+ *
+ * **Example** (Inspect the retrieval-result schema)
+ *
+ * ```ts
+ * import { RetrievalResult } from "@effect-ontology/Service/GraphRAG"
+ *
+ * console.log(RetrievalResult)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetrievalResult extends S.Class<RetrievalResult>($I`RetrievalResult`)(
+  {
+    subgraph: Subgraph.annotateKey({ description: "Bounded graph context selected for the query." }),
+    scoredNodes: S.Array(ScoredNode).annotateKey({ description: "Retrieved entities in descending relevance order." }),
+    context: S.String.annotateKey({ description: "Human-readable context supplied to the language model." }),
+    query: S.String.annotateKey({ description: "Natural-language query used for retrieval." }),
+    stats: RetrievalStats.annotateKey({ description: "Measured retrieval statistics." }),
+  },
+  $I.annote("RetrievalResult", {
+    description: "Bounded subgraph, fused scores, rendered context, query, and measured retrieval statistics.",
+  })
+) {}
+
+/**
+ * Validated language-model retry and timeout policy.
+ *
+ * **Example** (Use the default generation policy)
+ *
+ * ```ts
+ * import { GenerationOptions } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const options = GenerationOptions.make({})
+ * console.log(options.maxAttempts) // 3
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
  */
 export class GenerationOptions extends S.Class<GenerationOptions>($I`GenerationOptions`)(
-  {
-    temperature: S.Finite.pipe(
-      SchemaUtils.withKeyDefaults(0.3),
-      $I.annoteKey("GenerationOptions.temperature", {
-        description: "Sampling temperature used for language-model generation.",
-      })
-    ),
-    timeout: S.Duration.pipe(
-      SchemaUtils.withKeyDefaults(Duration.seconds(30)),
-      $I.annoteKey("GenerationOptions.timeout", {
-        description: "Maximum duration allowed for one language-model generation call.",
-      })
-    ),
-    maxAttempts: PosInt.pipe(
-      SchemaUtils.withKeyDefaults(PosInt.make(3)),
-      $I.annoteKey("GenerationOptions.maxAttempts", {
-        description: "Maximum number of language-model generation attempts.",
-      })
-    ),
-  },
+  GenerationOptionsFields,
   $I.annote("GenerationOptions", {
-    description: "Normalized language-model sampling, timeout, and retry policy.",
+    description: "Validated per-attempt timeout and total language-model attempt bound.",
   })
 ) {}
 
 /**
  * Constructor input accepted by {@link GenerationOptions}.
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the GenerationOptionsInput contract)
+ *
+ * ```ts
+ * import type { GenerationOptionsInput } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const acceptsGenerationOptionsInput = (_value: GenerationOptionsInput): void => undefined
+ *
+ * console.log(acceptsGenerationOptionsInput)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export type GenerationOptionsInput = (typeof GenerationOptions)["~type.make.in"];
 
 /**
- * Combined options for answer() convenience method
+ * Combined retrieval and generation policy for {@link GraphRAGService.answer}.
  *
+ * **Example** (Use default answer options)
+ *
+ * ```ts
+ * import { AnswerOptions } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const options = AnswerOptions.make({})
+ * console.log(options.topK, options.maxAttempts)
+ * ```
+ *
+ * @category models
  * @since 0.0.0
- * @category type-level
  */
-export type AnswerOptions = RetrievalOptions & GenerationOptionsInput;
-
-// =============================================================================
-// Reasoning Trace Types
-// =============================================================================
+export class AnswerOptions extends S.Class<AnswerOptions>($I`AnswerOptions`)(
+  { ...RetrievalOptionsFields, ...GenerationOptionsFields },
+  $I.annote("AnswerOptions", {
+    description: "Validated retrieval, context-rendering, timeout, and retry policy for answering a query.",
+  })
+) {}
 
 /**
- * A single step in a reasoning path through the knowledge graph
+ * Constructor input accepted by {@link AnswerOptions}.
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the AnswerOptionsInput contract)
+ *
+ * ```ts
+ * import type { AnswerOptionsInput } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const acceptsAnswerOptionsInput = (_value: AnswerOptionsInput): void => undefined
+ *
+ * console.log(acceptsAnswerOptionsInput)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
-export interface ReasoningStep {
-  /** Source entity in this step */
-  readonly from: Entity;
-  /** Relation connecting from → to */
-  readonly relation: Relation;
-  /** Target entity in this step */
-  readonly to: Entity;
-  /** Human-readable explanation of this step */
-  readonly explanation: string;
-}
+export type AnswerOptionsInput = (typeof AnswerOptions)["~type.make.in"];
 
 /**
- * Complete reasoning trace showing how an answer was derived
+ * Formatting policy for a graph context block.
  *
+ * **Example** (Use default context formatting)
+ *
+ * ```ts
+ * import { FormatContextOptions } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const options = FormatContextOptions.make({})
+ * console.log(options.includeRelations) // true
+ * ```
+ *
+ * @category models
  * @since 0.0.0
- * @category type-level
  */
-export interface ReasoningTrace {
-  /** Ordered steps through the knowledge graph */
-  readonly steps: ReadonlyArray<ReasoningStep>;
-  /** Natural language explanation of the full reasoning */
-  readonly explanation: string;
-  /** Confidence inherited from the grounded answer */
-  readonly confidence: number;
-  /** The original query */
-  readonly query: string;
-  /** Entity IDs involved in the reasoning path */
-  readonly involvedEntities: ReadonlyArray<string>;
-}
+export class FormatContextOptions extends S.Class<FormatContextOptions>($I`FormatContextOptions`)(
+  {
+    includeAttributes: RetrievalOptionsFields.includeAttributes,
+    includeRelations: RetrievalOptionsFields.includeRelations,
+  },
+  $I.annote("FormatContextOptions", {
+    description: "Validated switches controlling attribute and relation rendering in graph context.",
+  })
+) {}
 
 /**
- * Options for reasoning trace generation
+ * Constructor input accepted by {@link FormatContextOptions}.
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the FormatContextOptionsInput contract)
+ *
+ * ```ts
+ * import type { FormatContextOptionsInput } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const acceptsFormatContextOptionsInput = (_value: FormatContextOptionsInput): void => undefined
+ *
+ * console.log(acceptsFormatContextOptionsInput)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
-export type ExplainOptions = GenerationOptionsInput & {
-  /** Whether to generate NL explanations for each step (default: true) */
-  readonly generateStepExplanations?: boolean;
-};
+export type FormatContextOptionsInput = (typeof FormatContextOptions)["~type.make.in"];
 
 /**
- * Error during grounded answer generation
+ * Grounded language-model answer whose citations are canonical entity IDs.
  *
+ * **Example** (Inspect the grounded-answer schema)
+ *
+ * ```ts
+ * import { GroundedAnswer } from "@effect-ontology/Service/GraphRAG"
+ *
+ * console.log(GroundedAnswer)
+ * ```
+ *
+ * @category models
  * @since 0.0.0
+ */
+export class GroundedAnswer extends S.Class<GroundedAnswer>($I`GroundedAnswer`)(
+  {
+    answer: S.NonEmptyString.annotateKey({ description: "Answer derived only from retrieved graph context." }),
+    citations: S.Array(EntityId).annotateKey({ description: "Exact entity IDs supporting the answer." }),
+    confidence: Confidence.annotateKey({ description: "Model confidence that retrieved context supports the answer." }),
+    reasoning: S.NonEmptyString.annotateKey({ description: "Brief derivation of the answer from graph context." }),
+    retrieval: RetrievalResult.annotateKey({ description: "Retrieval result used to ground generation." }),
+  },
+  $I.annote("GroundedAnswer", {
+    description: "Generated answer with validated confidence, exact entity citations, and its retrieval provenance.",
+  })
+) {}
+
+/**
+ * One directed knowledge-graph relation in an answer explanation path.
+ *
+ * **Example** (Inspect the reasoning-step schema)
+ *
+ * ```ts
+ * import { ReasoningStep } from "@effect-ontology/Service/GraphRAG"
+ *
+ * console.log(ReasoningStep)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReasoningStep extends S.Class<ReasoningStep>($I`ReasoningStep`)(
+  {
+    from: Entity.annotateKey({ description: "Canonical relation subject." }),
+    relation: Relation.annotateKey({ description: "Relation traversed by the explanation path." }),
+    to: Entity.annotateKey({ description: "Canonical entity-reference object." }),
+    explanation: S.String.annotateKey({ description: "Human-readable explanation of this relation's role." }),
+  },
+  $I.annote("ReasoningStep", {
+    description: "Directed entity-relation-entity step selected from a shortest connecting path.",
+  })
+) {}
+
+/**
+ * Complete path-based derivation for a grounded answer.
+ *
+ * **Example** (Inspect the reasoning-trace schema)
+ *
+ * ```ts
+ * import { ReasoningTrace } from "@effect-ontology/Service/GraphRAG"
+ *
+ * console.log(ReasoningTrace)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReasoningTrace extends S.Class<ReasoningTrace>($I`ReasoningTrace`)(
+  {
+    steps: S.Array(ReasoningStep).annotateKey({ description: "Ordered relations connecting cited entities." }),
+    explanation: S.String.annotateKey({ description: "Natural-language explanation of the complete path." }),
+    confidence: Confidence.annotateKey({ description: "Confidence inherited from the grounded answer." }),
+    query: S.String.annotateKey({ description: "Original query answered by the trace." }),
+    involvedEntities: S.Array(EntityId).annotateKey({ description: "Cited and intermediate entity IDs in the path." }),
+  },
+  $I.annote("ReasoningTrace", {
+    description: "Shortest-path reasoning steps, explanation, confidence, query, and involved entity IDs.",
+  })
+) {}
+
+/**
+ * Generation policy for a path explanation.
+ *
+ * **Example** (Disable generated step explanations)
+ *
+ * ```ts
+ * import { ExplainOptions } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const options = ExplainOptions.make({ generateStepExplanations: false })
+ * console.log(options.generateStepExplanations)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ExplainOptions extends S.Class<ExplainOptions>($I`ExplainOptions`)(
+  {
+    ...GenerationOptionsFields,
+    generateStepExplanations: S.Boolean.pipe(
+      SchemaUtils.withKeyDefaults(true),
+      S.annotateKey({ description: "Whether a language model explains the selected path and each step." })
+    ),
+  },
+  $I.annote("ExplainOptions", {
+    description: "Validated timeout, retry, and natural-language explanation policy.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link ExplainOptions}.
+ *
+ *
+ * **Example** (Use the ExplainOptionsInput contract)
+ *
+ * ```ts
+ * import type { ExplainOptionsInput } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const acceptsExplainOptionsInput = (_value: ExplainOptionsInput): void => undefined
+ *
+ * console.log(acceptsExplainOptionsInput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ExplainOptionsInput = (typeof ExplainOptions)["~type.make.in"];
+
+/**
+ * Typed failure while generating or validating a grounded answer or trace.
+ *
+ * **Example** (Create a grounding failure)
+ *
+ * ```ts
+ * import { GraphRAGGenerationError } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const error = GraphRAGGenerationError.make({ message: "Citation is outside context.", query: "Who?" })
+ * console.log(error._tag)
+ * ```
+ *
  * @category errors
+ * @since 0.0.0
  */
-export class GraphRAGGenerationError extends Data.TaggedError("GraphRAGGenerationError")<{
-  readonly message: string;
-  readonly query: string;
-  readonly cause?: unknown;
-}> {
+export class GraphRAGGenerationError extends S.TaggedError<GraphRAGGenerationError>($I`GraphRAGGenerationError`)(
+  "GraphRAGGenerationError",
+  {
+    message: S.NonEmptyString.annotateKey({ description: "Human-readable generation or grounding diagnostic." }),
+    query: S.String.annotateKey({ description: "Query whose answer or explanation failed." }),
+    cause: OptionalErrorCause.annotateKey({ description: "Optional underlying provider defect." }),
+  },
+  $I.annote("GraphRAGGenerationError", {
+    description: "Grounded generation failure retaining its query and optional provider cause.",
+  })
+) {
+  static readonly is = S.is(this);
 }
 
-// =============================================================================
-// Schema for LLM structured output
-// =============================================================================
+const GroundedAnswerOutput = S.Struct({
+  answer: S.NonEmptyString.annotateKey({ description: "Answer supported by the supplied graph context." }),
+  citations: S.Array(EntityId).annotateKey({ description: "Exact supporting entity IDs copied from context." }),
+  confidence: Confidence.annotateKey({ description: "Unit-interval support confidence." }),
+  reasoning: S.NonEmptyString.annotateKey({ description: "Brief grounding explanation." }),
+}).pipe(
+  $I.annoteSchema("GroundedAnswerOutput", {
+    description: "Language-model response contract before retrieval provenance is attached.",
+  })
+);
+
+const ReasoningTraceOutput = S.Struct({
+  explanation: S.NonEmptyString.annotateKey({ description: "Explanation of the complete connecting path." }),
+  stepExplanations: S.Array(S.String).annotateKey({ description: "Explanation for each path step in order." }),
+}).pipe(
+  $I.annoteSchema("ReasoningTraceOutput", {
+    description: "Language-model explanation for a precomputed graph path.",
+  })
+);
 
 /**
- * Schema for grounded answer LLM response
+ * Effectful GraphRAG service with natural data-first and data-last methods.
  *
- * @internal
- */
-const GroundedAnswerSchema = S.Struct({
-  answer: S.String.annotate({
-    title: "Answer",
-    description: "The answer to the question based on the knowledge graph context",
-  }),
-  citations: S.Array(S.String).annotate({
-    title: "Citations",
-    description: "Entity IDs from the context that support this answer (use exact IDs like 'alice', 'acme_corp')",
-  }),
-  confidence: Confidence.annotate({
-    title: "Confidence",
-    description: "Confidence score between 0 and 1 based on how well the context supports the answer",
-  }),
-  reasoning: S.String.annotate({
-    title: "Reasoning",
-    description: "Brief explanation of how the answer was derived from the knowledge graph",
-  }),
-});
-
-/**
- * Schema for reasoning trace LLM response
  *
- * @internal
- */
-const ReasoningTraceSchema = S.Struct({
-  explanation: S.String.annotate({
-    title: "Explanation",
-    description: "Natural language explanation of the complete reasoning process",
-  }),
-  stepExplanations: S.Array(S.String).annotate({
-    title: "Step Explanations",
-    description: "Explanation for each reasoning step in order (one per relationship traversed)",
-  }),
-});
-
-/**
- * GraphRAG service interface
+ * **Example** (Use the GraphRAGService contract)
  *
- * @since 0.0.0
+ * ```ts
+ * import type { GraphRAGService } from "@effect-ontology/Service/GraphRAG"
+ *
+ * const acceptsGraphRAGService = (_value: GraphRAGService): void => undefined
+ *
+ * console.log(acceptsGraphRAGService)
+ * ```
+ *
  * @category services
+ * @since 0.0.0
  */
 export interface GraphRAGService {
-  /**
-   * Index a knowledge graph for retrieval
-   *
-   * @param graph - Knowledge graph to index
-   * @returns Number of entities indexed
-   */
   readonly index: (graph: KnowledgeGraph) => Effect.Effect<number, AnyEmbeddingError>;
-
-  /**
-   * Retrieve relevant context for a query
-   *
-   * Pipeline:
-   * 1. Find semantically similar entities via embedding search
-   * 2. Extract N-hop subgraph around seed entities
-   * 3. Score all nodes using RRF fusion
-   * 4. Format as coherent LLM context
-   *
-   * @param graph - Source knowledge graph
-   * @param query - Natural language query
-   * @param options - Retrieval configuration
-   */
-  readonly retrieve: (
-    graph: KnowledgeGraph,
-    query: string,
-    options?: RetrievalOptions
-  ) => Effect.Effect<RetrievalResult, AnyEmbeddingError>;
-
-  /**
-   * Generate a grounded answer using LLM
-   *
-   * Takes retrieved context and generates an answer with citations.
-   *
-   * @param llm - Language model service
-   * @param query - Natural language query
-   * @param retrieval - Retrieved context from retrieve()
-   * @param options - Generation options
-   */
-  readonly generate: (
-    llm: LanguageModel.Service,
-    query: string,
-    retrieval: RetrievalResult,
-    options?: GenerationOptionsInput
-  ) => Effect.Effect<GroundedAnswer, GraphRAGGenerationError | AiError.AiError | TimeoutError>;
-
-  /**
-   * Answer a question using knowledge graph (retrieve + generate)
-   *
-   * Convenience method that combines retrieval and generation in one call.
-   *
-   * @param llm - Language model service
-   * @param graph - Source knowledge graph
-   * @param query - Natural language query
-   * @param options - Combined retrieval and generation options
-   */
-  readonly answer: (
-    llm: LanguageModel.Service,
-    graph: KnowledgeGraph,
-    query: string,
-    options?: AnswerOptions
-  ) => Effect.Effect<GroundedAnswer, AnyEmbeddingError | GraphRAGGenerationError | AiError.AiError | TimeoutError>;
-
-  /**
-   * Format a subgraph as LLM context
-   *
-   * Creates a structured, human-readable representation of the graph
-   * suitable for inclusion in prompts.
-   *
-   * @param subgraph - Subgraph to format
-   * @param query - Original query for context
-   * @param options - Formatting options
-   */
-  readonly formatContext: (
-    subgraph: Subgraph,
-    query: string,
-    options?: Pick<RetrievalOptions, "includeAttributes" | "includeRelations">
-  ) => Effect.Effect<string>;
-
-  /**
-   * Generate a reasoning trace explaining how an answer was derived
-   *
-   * Extracts paths through the knowledge graph connecting cited entities
-   * and generates natural language explanations for each step.
-   *
-   * @param llm - Language model service
-   * @param answer - Grounded answer to explain
-   * @param options - Explain options
-   */
-  readonly explain: (
-    llm: LanguageModel.Service,
-    answer: GroundedAnswer,
-    options?: ExplainOptions
-  ) => Effect.Effect<ReasoningTrace, GraphRAGGenerationError | AiError.AiError | TimeoutError>;
-
-  /**
-   * Clear the entity index
-   */
+  readonly retrieve: {
+    (
+      graph: KnowledgeGraph,
+      query: string,
+      options: RetrievalOptionsInput
+    ): Effect.Effect<RetrievalResult, AnyEmbeddingError>;
+    (
+      query: string,
+      options: RetrievalOptionsInput
+    ): (graph: KnowledgeGraph) => Effect.Effect<RetrievalResult, AnyEmbeddingError>;
+  };
+  readonly generate: {
+    (
+      retrieval: RetrievalResult,
+      query: string,
+      options: GenerationOptionsInput
+    ): Effect.Effect<GroundedAnswer, GraphRAGGenerationError | TimeoutError, LanguageModel.LanguageModel>;
+    (
+      query: string,
+      options: GenerationOptionsInput
+    ): (
+      retrieval: RetrievalResult
+    ) => Effect.Effect<GroundedAnswer, GraphRAGGenerationError | TimeoutError, LanguageModel.LanguageModel>;
+  };
+  readonly answer: {
+    (
+      graph: KnowledgeGraph,
+      query: string,
+      options: AnswerOptionsInput
+    ): Effect.Effect<
+      GroundedAnswer,
+      AnyEmbeddingError | GraphRAGGenerationError | TimeoutError,
+      LanguageModel.LanguageModel
+    >;
+    (
+      query: string,
+      options: AnswerOptionsInput
+    ): (
+      graph: KnowledgeGraph
+    ) => Effect.Effect<
+      GroundedAnswer,
+      AnyEmbeddingError | GraphRAGGenerationError | TimeoutError,
+      LanguageModel.LanguageModel
+    >;
+  };
+  readonly formatContext: {
+    (subgraph: Subgraph, query: string, options: FormatContextOptionsInput): Effect.Effect<string>;
+    (query: string, options: FormatContextOptionsInput): (subgraph: Subgraph) => Effect.Effect<string>;
+  };
+  readonly explain: {
+    (
+      answer: GroundedAnswer,
+      options: ExplainOptionsInput
+    ): Effect.Effect<ReasoningTrace, GraphRAGGenerationError | TimeoutError, LanguageModel.LanguageModel>;
+    (
+      options: ExplainOptionsInput
+    ): (
+      answer: GroundedAnswer
+    ) => Effect.Effect<ReasoningTrace, GraphRAGGenerationError | TimeoutError, LanguageModel.LanguageModel>;
+  };
   readonly clear: Effect.Effect<void>;
-
-  /**
-   * Get index size
-   */
   readonly size: Effect.Effect<number>;
 }
 
-/**
- * RRF k constant (experimentally optimal per research)
- */
 const RRF_K = 60;
 
-/**
- * Compute Reciprocal Rank Fusion score
- *
- * RRF score = Σ (1 / (rank_i + k))
- *
- * This avoids score normalization issues by using rank-based aggregation.
- *
- * @param ranks - Array of ranks from different scoring methods (1-indexed)
- */
 const computeRRFScore = (ranks: ReadonlyArray<number>): number =>
   A.reduce(ranks, 0, (sum, rank) => sum + 1 / (rank + RRF_K));
 
-/**
- * Extract type label from IRI
- */
-const typeLabel = (typeIri: string): string => {
-  const parts = Str.split(/[#/]/)(typeIri);
-  return A.get(parts.length - 1)(parts).pipe(
-    O.getOrElse(() => typeIri)
+const finalIriSegment = (iri: string): string =>
+  pipe(
+    Str.split(/[#/]/)(iri),
+    A.last,
+    O.getOrElse(() => iri)
+  );
+
+const entityEntry = (entity: Entity): readonly [EntityId, Entity] => [entity.id, entity];
+const scoreEntry = (entityId: EntityId, score: number): readonly [EntityId, number] => [entityId, score];
+const rankEntry = (entityId: EntityId, rank: number): readonly [EntityId, number] => [entityId, rank];
+
+const buildScoredNodes: {
+  (
+    subgraph: Subgraph,
+    seedScores: HashMap.HashMap<EntityId, number>,
+    seedRanks: HashMap.HashMap<EntityId, number>
+  ): ReadonlyArray<ScoredNode>;
+  (
+    seedScores: HashMap.HashMap<EntityId, number>,
+    seedRanks: HashMap.HashMap<EntityId, number>
+  ): (subgraph: Subgraph) => ReadonlyArray<ScoredNode>;
+} = dual(
+  3,
+  (
+    subgraph: Subgraph,
+    seedScores: HashMap.HashMap<EntityId, number>,
+    seedRanks: HashMap.HashMap<EntityId, number>
+  ): ReadonlyArray<ScoredNode> => {
+    const distances = HashMap.fromIterable(
+      A.map(subgraph.distances, (distance): readonly [EntityId, NonNegativeInt] => [distance.entityId, distance.hops])
+    );
+    const scored = A.map(subgraph.nodes, (entity) => {
+      const isSeed = A.contains(subgraph.centerNodes, entity.id);
+      const embeddingScore = O.getOrElse(HashMap.get(seedScores, entity.id), () => 0);
+      const hopDistance = O.getOrElse(HashMap.get(distances, entity.id), () => NonNegativeInt.make(0));
+      const embeddingRank = O.getOrElse(HashMap.get(seedRanks, entity.id), () => A.length(subgraph.nodes) + 1);
+      const normalized = Num.min(1, computeRRFScore([embeddingRank, hopDistance + 1]) * 30);
+      return ScoredNode.make({
+        entity,
+        score: Confidence.make(isSeed ? Num.max(normalized, embeddingScore) : normalized),
+        hopDistance,
+        isSeed,
+      });
+    });
+    return A.sortWith(scored, (node) => node.score, Ord.flip(Ord.Number));
+  }
+);
+
+const formatEntities = (nodes: ReadonlyArray<ScoredNode>, includeAttributes: boolean): string =>
+  pipe(
+    nodes,
+    A.flatMap(({ entity, isSeed, score }) => {
+      const types = pipe(entity.types, A.map(finalIriSegment), A.join(", "));
+      const seedMarker = isSeed ? " [SEED]" : "";
+      const base = `- [id: ${entity.id}] ${entity.mention} (${types})${seedMarker} [relevance: ${Num.round(score * 100)}%]`;
+      const attributes = includeAttributes
+        ? A.map(
+            R.toEntries(entity.attributes),
+            ([property, value]) => `    ${finalIriSegment(property)}: ${Inspectable.toStringUnknown(value, 0)}`
+          )
+        : A.empty<string>();
+      return A.prepend(attributes, base);
+    }),
+    A.join("\n")
+  );
+
+const formatRelations = (edges: ReadonlyArray<Relation>, entityMap: HashMap.HashMap<EntityId, Entity>): string =>
+  pipe(
+    edges,
+    A.map((relation) => {
+      const subjectName = pipe(
+        HashMap.get(entityMap, relation.subjectId),
+        O.map((entity) => entity.mention),
+        O.getOrElse(() => relation.subjectId)
+      );
+      const object = RelationObject.match(relation.object, {
+        EntityReference: ({ value }) => {
+          const mention = pipe(
+            HashMap.get(entityMap, value),
+            O.map((entity) => entity.mention),
+            O.getOrElse(() => value)
+          );
+          return `[id: ${value}] ${mention}`;
+        },
+        Text: ({ value }) => Inspectable.toStringUnknown(value, 0),
+        Number: ({ value }) => Inspectable.toStringUnknown(value, 0),
+        Boolean: ({ value }) => Inspectable.toStringUnknown(value, 0),
+      });
+      return `- [id: ${relation.subjectId}] ${subjectName} → ${finalIriSegment(relation.predicate)} → ${object}`;
+    }),
+    A.join("\n")
+  );
+
+const formatContextImpl = (
+  subgraph: Subgraph,
+  query: string,
+  scoredNodes: ReadonlyArray<ScoredNode>,
+  options: FormatContextOptions
+): string => {
+  const entityMap = HashMap.fromIterable(A.map(subgraph.nodes, entityEntry));
+  const seedCount = A.length(A.filter(scoredNodes, (node) => node.isSeed));
+  const header = [
+    "## Retrieved Knowledge Graph Context",
+    "",
+    `Query: "${query}"`,
+    "",
+    `Found ${A.length(subgraph.nodes)} relevant entities (${seedCount} primary matches)`,
+    `with ${A.length(subgraph.edges)} relationships.`,
+    "",
+    "### Relevant Entities",
+    "",
+    formatEntities(scoredNodes, options.includeAttributes),
+    "",
+  ];
+  const relations =
+    options.includeRelations && A.length(subgraph.edges) > 0
+      ? ["### Relationships", "", formatRelations(subgraph.edges, entityMap), ""]
+      : A.empty<string>();
+  return pipe(
+    header,
+    A.appendAll(relations),
+    A.appendAll([
+      "---",
+      "Use only the graph context above to answer the query.",
+      "Citations must copy exact entity IDs from the [id: ...] markers.",
+    ]),
+    A.join("\n")
   );
 };
 
-/**
- * Extract predicate label from IRI
- */
-const predicateLabel = (predicateIri: string): string => {
-  const parts = Str.split(/[#/]/)(predicateIri);
-  return A.get(parts.length - 1)(parts).pipe(
-    O.getOrElse(() => predicateIri)
+interface PathPredecessor {
+  readonly previous: EntityId;
+  readonly step: ReasoningStep;
+}
+
+const appendAdjacency = (
+  adjacency: HashMap.HashMap<EntityId, ReadonlyArray<ReasoningStep>>,
+  entityId: EntityId,
+  step: ReasoningStep
+): HashMap.HashMap<EntityId, ReadonlyArray<ReasoningStep>> =>
+  HashMap.set(
+    adjacency,
+    entityId,
+    A.append(O.getOrElse(HashMap.get(adjacency, entityId), A.empty<ReasoningStep>), step)
   );
+
+const buildAdjacency = (
+  subgraph: Subgraph,
+  entityMap: HashMap.HashMap<EntityId, Entity>
+): HashMap.HashMap<EntityId, ReadonlyArray<ReasoningStep>> => {
+  let adjacency = HashMap.empty<EntityId, ReadonlyArray<ReasoningStep>>();
+  for (const relation of subgraph.edges) {
+    if (RelationObject.guards.EntityReference(relation.object)) {
+      const from = HashMap.get(entityMap, relation.subjectId);
+      const to = HashMap.get(entityMap, relation.object.value);
+      if (O.isSome(from) && O.isSome(to)) {
+        const step = ReasoningStep.make({ from: from.value, relation, to: to.value, explanation: "" });
+        adjacency = appendAdjacency(adjacency, from.value.id, step);
+        adjacency = appendAdjacency(adjacency, to.value.id, step);
+      }
+    }
+  }
+  return adjacency;
 };
 
+const reconstructPath = (
+  predecessors: HashMap.HashMap<EntityId, PathPredecessor>,
+  start: EntityId,
+  target: EntityId
+): O.Option<ReadonlyArray<ReasoningStep>> => {
+  let current = target;
+  let path = A.empty<ReasoningStep>();
+  while (!EntityId.equivalence(current, start)) {
+    const predecessor = HashMap.get(predecessors, current);
+    if (O.isNone(predecessor)) {
+      return O.none();
+    }
+    path = A.prepend(path, predecessor.value.step);
+    current = predecessor.value.previous;
+  }
+  return O.some(path);
+};
+
+const shortestPath = (
+  adjacency: HashMap.HashMap<EntityId, ReadonlyArray<ReasoningStep>>,
+  start: EntityId,
+  target: EntityId
+): O.Option<ReadonlyArray<ReasoningStep>> => {
+  if (EntityId.equivalence(start, target)) {
+    return O.some([]);
+  }
+  let visited = HashSet.make(start);
+  let frontier: ReadonlyArray<EntityId> = [start];
+  let predecessors = HashMap.empty<EntityId, PathPredecessor>();
+
+  while (A.length(frontier) > 0) {
+    let nextFrontier = A.empty<EntityId>();
+    for (const current of frontier) {
+      const adjacent = O.getOrElse(HashMap.get(adjacency, current), A.empty<ReasoningStep>);
+      for (const step of adjacent) {
+        const next = EntityId.equivalence(current, step.from.id) ? step.to.id : step.from.id;
+        if (!HashSet.has(visited, next)) {
+          visited = HashSet.add(visited, next);
+          predecessors = HashMap.set(predecessors, next, { previous: current, step });
+          if (EntityId.equivalence(next, target)) {
+            return reconstructPath(predecessors, start, target);
+          }
+          nextFrontier = A.append(nextFrontier, next);
+        }
+      }
+    }
+    frontier = nextFrontier;
+  }
+  return O.none();
+};
+
+const connectingSteps = (subgraph: Subgraph, citations: ReadonlyArray<EntityId>): ReadonlyArray<ReasoningStep> => {
+  const entityMap = HashMap.fromIterable(A.map(subgraph.nodes, entityEntry));
+  const validCitations = A.filter(citations, (citation) => HashMap.has(entityMap, citation));
+  const anchor = A.head(validCitations);
+  if (O.isNone(anchor)) {
+    return [];
+  }
+  const adjacency = buildAdjacency(subgraph, entityMap);
+  let selectedRelations = HashSet.empty<Relation>();
+  let result = A.empty<ReasoningStep>();
+  for (const target of A.drop(validCitations, 1)) {
+    const path = shortestPath(adjacency, anchor.value, target);
+    if (O.isSome(path)) {
+      for (const step of path.value) {
+        if (!HashSet.has(selectedRelations, step.relation)) {
+          selectedRelations = HashSet.add(selectedRelations, step.relation);
+          result = A.append(result, step);
+        }
+      }
+    }
+  }
+  return result;
+};
+
+const defaultStepExplanation = (step: ReasoningStep): string =>
+  `${step.from.mention} is connected to ${step.to.mention} via ${finalIriSegment(step.relation.predicate)}`;
+
+const mapGenerationError =
+  (query: string, operation: string) =>
+  (error: AiError.AiError | TimeoutError): GraphRAGGenerationError | TimeoutError =>
+    Match.value(error).pipe(
+      Match.tag("TimeoutError", (timeout) => timeout),
+      Match.orElse((cause) =>
+        GraphRAGGenerationError.make({
+          message: `${operation} failed: ${cause.reason._tag}`,
+          query,
+          cause: O.some(cause),
+        })
+      )
+    );
+
 /**
- * GraphRAG - Retrieval-Augmented Generation with Knowledge Graphs
+ * GraphRAG service backed by semantic entity search and bounded graph traversal.
  *
- * @since 0.0.0
+ * **Example** (Access the GraphRAG service tag)
+ *
+ * ```ts
+ * import { GraphRAG } from "@effect-ontology/Service/GraphRAG"
+ *
+ * console.log(GraphRAG.key)
+ * ```
+ *
  * @category services
+ * @since 0.0.0
  */
 export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
   make: Effect.gen(function* () {
     const entityIndex = yield* EntityIndex;
     const subgraphExtractor = yield* SubgraphExtractor;
 
-    /**
-     * Build scored nodes with RRF fusion
-     */
-    const buildScoredNodes: {
-      (
-        subgraph: Subgraph,
-        seedScores: HashMap.HashMap<string, number>,
-        seedRanks: HashMap.HashMap<string, number>
-      ): ReadonlyArray<ScoredNode>,
-      (
-        seedScores: HashMap.HashMap<string, number>,
-        seedRanks: HashMap.HashMap<string, number>
-      ): (subgraph: Subgraph) => ReadonlyArray<ScoredNode>
-    } = dual(3, (
-      subgraph: Subgraph,
-      seedScores: HashMap.HashMap<string, number>,
-      seedRanks: HashMap.HashMap<string, number>
-    ): ReadonlyArray<ScoredNode> => {
-      const scored = A.empty<ScoredNode>();
-
-      for (const entity of subgraph.nodes) {
-        const isSeed = A.contains(subgraph.centerNodes, entity.id);
-        const embeddingScore = O.getOrElse(HashMap.get(seedScores, entity.id), thunk0);
-
-        // Compute hop distance (0 for seeds, estimate for others)
-        let hopDistance = 0;
-        if (!isSeed) {
-          // Estimate: non-seeds are at least 1 hop away
-          // Could be more sophisticated with actual BFS tracking
-          hopDistance = 1;
-        }
-
-        // Compute RRF score combining:
-        // 1. Embedding similarity rank
-        // 2. Hop distance (closer = better rank)
-        // 3. Type relevance (could be added)
-        const embeddingRank = O.getOrElse(HashMap.get(seedRanks, entity.id), () => subgraph.nodes.length);
-        const hopRank = hopDistance + 1; // 1-indexed
-
-        const rrfScore = computeRRFScore([embeddingRank, hopRank]);
-
-        // Normalize to 0-1 range (max possible is 2 / (1 + 60) ≈ 0.033)
-        // We scale up for readability
-        const normalizedScore = Math.min(1, rrfScore * 30);
-
-        scored.push({
-          entity,
-          score: isSeed ? Math.max(normalizedScore, embeddingScore) : normalizedScore,
-          hopDistance,
-          isSeed,
-        });
-      }
-
-      // Sort by score descending
-      return scored.sort((a, b) => b.score - a.score);
-    });
-
-    /**
-     * Format entities section of context
-     */
-    const formatEntities = (nodes: ReadonlyArray<ScoredNode>, includeAttributes: boolean): string => {
-      const lines = A.empty<string>();
-
-      for (const {entity, isSeed, score} of nodes) {
-        const types = pipe(A.map(entity.types, typeLabel), A.join(", "));
-        const seedMarker = isSeed ? " [SEED]" : "";
-        const scoreStr = (score * 100).toFixed(0);
-
-        lines.push(`- ${entity.mention} (${types})${seedMarker} [relevance: ${scoreStr}%]`);
-
-        if (includeAttributes && Object.keys(entity.attributes).length > 0) {
-          for (const [prop, value] of Object.entries(entity.attributes)) {
-            const propLabel = predicateLabel(prop);
-            lines.push(`    ${propLabel}: ${String(value)}`);
-          }
-        }
-      }
-
-      return lines.join("\n");
-    };
-
-    /**
-     * Format relations section of context
-     */
-    const formatRelations = (edges: ReadonlyArray<Relation>, entityMap: HashMap.HashMap<string, Entity>): string => {
-      const lines: Array<string> = [];
-
-      for (const rel of edges) {
-        const subject = HashMap.get(entityMap, rel.subjectId);
-        const subjectName = O.match(subject, {
-          onNone: () => rel.subjectId,
-          onSome: (value) => value.mention
-        });
-        const predLabel = predicateLabel(rel.predicate);
-
-        if (rel.isEntityReference && typeof rel.object === "string") {
-          const object = HashMap.get(entityMap, rel.object);
-          const objectName = O.match(object, {
-            onNone: () => rel.object,
-            onSome: (value) => value.mention
-          });
-          lines.push(`- ${subjectName} → ${predLabel} → ${objectName}`);
-        } else {
-          lines.push(`- ${subjectName} → ${predLabel} → "${String(rel.object)}"`);
-        }
-      }
-
-      return lines.join("\n");
-    };
-
-    /**
-     * Format complete context for LLM
-     */
-    const formatContextImpl = (
-      subgraph: Subgraph,
-      query: string,
-      scoredNodes: ReadonlyArray<ScoredNode>,
-      options: Pick<RetrievalOptions, "includeAttributes" | "includeRelations">
-    ): string => {
-      const includeAttributes = options.includeAttributes ?? true;
-      const includeRelations = options.includeRelations ?? true;
-
-      const entityMap = HashMap.fromIterable<string, Entity>(subgraph.nodes.map((e) => [e.id, e]));
-
-      // Build context sections
-      const sections: Array<string> = [];
-
-      // Header with query context
-      sections.push("## Retrieved Knowledge Graph Context");
-      sections.push("");
-      sections.push(`Query: "${query}"`);
-      sections.push("");
-
-      // Summary statistics
-      const seedCount = scoredNodes.filter((n) => n.isSeed).length;
-      sections.push(`Found ${subgraph.nodes.length} relevant entities (${seedCount} primary matches)`);
-      sections.push(`with ${subgraph.edges.length} relationships.`);
-      sections.push("");
-
-      // Entities section
-      sections.push("### Relevant Entities");
-      sections.push("");
-      sections.push(formatEntities(scoredNodes, includeAttributes));
-      sections.push("");
-
-      // Relations section
-      if (includeRelations && subgraph.edges.length > 0) {
-        sections.push("### Relationships");
-        sections.push("");
-        sections.push(formatRelations(subgraph.edges, entityMap));
-        sections.push("");
-      }
-
-      // Footer guidance for LLM
-      sections.push("---");
-      sections.push("Use the above knowledge graph context to answer the query.");
-      sections.push("Cite specific entities and relationships when relevant.");
-
-      return sections.join("\n");
-    };
-
-    const retrieve = Effect.fn("GraphRAG.retrieve")(function* (
+    const retrieveImpl = Effect.fn("GraphRAG.retrieve")(function* (
       graph: KnowledgeGraph,
       query: string,
-      options: RetrievalOptions = {}
+      optionsInput: RetrievalOptionsInput
     ) {
-      const topK = options.topK ?? 5;
-      const hops = options.hops ?? 1;
-      const maxNodes = options.maxNodes ?? 50;
-      const minScore = options.minScore ?? 0.3;
-      const similar = yield* entityIndex.findSimilar(query, topK, {
-        minScore,
-        ...(P.isUndefined(options.includeTypes) ? {} : {filterTypes: options.includeTypes}),
-      });
-      if (similar.length === 0) {
-        const emptySubgraph: Subgraph = {
+      const options = RetrievalOptions.make(optionsInput);
+      yield* entityIndex.index(graph);
+      const similar = yield* entityIndex.findSimilar(
+        query,
+        options.topK,
+        A.length(options.includeTypes) === 0
+          ? { minScore: options.minScore }
+          : { minScore: options.minScore, filterTypes: options.includeTypes }
+      );
+      if (A.length(similar) === 0) {
+        const subgraph = Subgraph.make({
           nodes: [],
           edges: [],
           centerNodes: [],
-          depth: 0,
-        };
-        return {
-          subgraph: emptySubgraph,
+          depth: NonNegativeInt.make(0),
+          distances: [],
+        });
+        return RetrievalResult.make({
+          subgraph,
           scoredNodes: [],
           context: `## Retrieved Knowledge Graph Context\n\nQuery: "${query}"\n\nNo relevant entities found in the knowledge graph.`,
           query,
-          stats: {
-            seedCount: 0,
-            nodeCount: 0,
-            edgeCount: 0,
-            hops: 0,
-            avgScore: 0,
-          },
-        };
+          stats: RetrievalStats.make({
+            seedCount: NonNegativeInt.make(0),
+            nodeCount: NonNegativeInt.make(0),
+            edgeCount: NonNegativeInt.make(0),
+            hops: NonNegativeInt.make(0),
+            avgScore: Confidence.make(0),
+          }),
+        });
       }
-      const seedScores = HashMap.fromIterable(similar.map((s) => [s.entity.id, s.score]));
-      const seedRanks = HashMap.fromIterable(similar.map((s, idx) => [s.entity.id, idx + 1]));
-      const seedIds = similar.map((s) => s.entity.id);
-      const subgraph = yield* subgraphExtractor.extract(graph, seedIds, hops, {
-        maxNodes,
+
+      const seedScores = HashMap.fromIterable(A.map(similar, (match) => scoreEntry(match.entity.id, match.score)));
+      const seedRanks = HashMap.fromIterable(A.map(similar, (match, index) => rankEntry(match.entity.id, index + 1)));
+      const seedIds = A.map(similar, (match) => match.entity.id);
+      const subgraph = yield* subgraphExtractor.extract(graph, seedIds, options.hops, {
+        maxNodes: options.maxNodes,
+        followIncoming: true,
+        followOutgoing: true,
       });
       const scoredNodes = buildScoredNodes(subgraph, seedScores, seedRanks);
-      const context = formatContextImpl(subgraph, query, scoredNodes, options);
+      const context = formatContextImpl(
+        subgraph,
+        query,
+        scoredNodes,
+        FormatContextOptions.make({
+          includeAttributes: options.includeAttributes,
+          includeRelations: options.includeRelations,
+        })
+      );
       const avgScore =
-        scoredNodes.length > 0 ? scoredNodes.reduce((sum, n) => sum + n.score, 0) / scoredNodes.length : 0;
-      return {
+        A.length(scoredNodes) === 0
+          ? 0
+          : A.reduce(scoredNodes, 0, (sum, node) => sum + node.score) / A.length(scoredNodes);
+      return RetrievalResult.make({
         subgraph,
         scoredNodes,
         context,
         query,
-        stats: {
-          seedCount: similar.length,
-          nodeCount: subgraph.nodes.length,
-          edgeCount: subgraph.edges.length,
-          hops,
-          avgScore,
-        },
-      };
+        stats: RetrievalStats.make({
+          seedCount: NonNegativeInt.make(A.length(subgraph.centerNodes)),
+          nodeCount: NonNegativeInt.make(A.length(subgraph.nodes)),
+          edgeCount: NonNegativeInt.make(A.length(subgraph.edges)),
+          hops: subgraph.depth,
+          avgScore: Confidence.make(avgScore),
+        }),
+      });
     });
 
-    const formatContext = Effect.fn("GraphRAG.formatContext")(
-      (
-        subgraph: Subgraph,
-        query: string,
-        options: Pick<RetrievalOptions, "includeAttributes" | "includeRelations"> = {}
-      ) =>
-        Effect.sync(() => {
-          const scoredNodes: Array<ScoredNode> = subgraph.nodes.map((entity) => {
-            const isSeed = subgraph.centerNodes.includes(entity.id);
-            return {
-              entity,
-              score: isSeed ? 1 : 0.5,
-              hopDistance: isSeed ? 0 : 1,
-              isSeed,
-            };
-          });
-          return formatContextImpl(subgraph, query, scoredNodes, options);
-        })
-    );
+    const retrieve: GraphRAGService["retrieve"] = dual(3, retrieveImpl);
 
-    const generate = Effect.fn("GraphRAG.generate")(function* (
-      llm: LanguageModel.Service,
+    const formatContextImplEffect = Effect.fn("GraphRAG.formatContext")(function* (
+      subgraph: Subgraph,
       query: string,
-      retrieval: RetrievalResult,
-      options: GenerationOptionsInput = {}
+      optionsInput: FormatContextOptionsInput
     ) {
-      const generationOptions = GenerationOptions.make(options);
+      const options = FormatContextOptions.make(optionsInput);
+      const distances = HashMap.fromIterable(
+        A.map(subgraph.distances, (distance): readonly [EntityId, NonNegativeInt] => [distance.entityId, distance.hops])
+      );
+      const scoredNodes = A.map(subgraph.nodes, (entity) => {
+        const isSeed = A.contains(subgraph.centerNodes, entity.id);
+        return ScoredNode.make({
+          entity,
+          score: Confidence.make(isSeed ? 1 : 0.5),
+          hopDistance: O.getOrElse(HashMap.get(distances, entity.id), () => NonNegativeInt.make(0)),
+          isSeed,
+        });
+      });
+      return formatContextImpl(subgraph, query, scoredNodes, options);
+    });
+
+    const formatContext: GraphRAGService["formatContext"] = dual(3, formatContextImplEffect);
+
+    const generateImpl = Effect.fn("GraphRAG.generate")(function* (
+      retrieval: RetrievalResult,
+      query: string,
+      optionsInput: GenerationOptionsInput
+    ) {
+      const llm = yield* LanguageModel.LanguageModel;
+      const options = GenerationOptions.make(optionsInput);
       const response = yield* generateObjectWithFeedback(llm, {
-        prompt: `You are a knowledge graph assistant. Answer the user's question based ONLY on the provided knowledge graph context.
+        prompt: `You are a knowledge graph assistant. Answer the question using only the supplied context.
 
 ${retrieval.context}
 
 ## Question
 ${query}
 
-## Instructions
-1. Answer using only the knowledge graph context above
-2. Cite exact entity IDs that support the answer
-3. Explain when the context is insufficient
-4. Provide a confidence score between 0 and 1
-5. Briefly explain the reasoning`,
-        schema: GroundedAnswerSchema,
+Return exact entity IDs from [id: ...] markers as citations. Explain when the graph is insufficient.`,
+        schema: GroundedAnswerOutput,
         objectName: "grounded_answer",
-        maxAttempts: generationOptions.maxAttempts,
-        serviceName: "GraphRAG",
-        timeoutMs: Duration.toMillis(generationOptions.timeout),
-      }).pipe(
-        Effect.mapError((error) =>
-          error._tag === "TimeoutError"
-            ? error
-            : new GraphRAGGenerationError({
-              message: `Failed to generate answer: ${error._tag}`,
-              query,
-              cause: error,
-            })
-        )
-      );
-      return {
+        maxAttempts: options.maxAttempts,
+        serviceName: "GraphRAG.generate",
+        timeout: options.timeout,
+      }).pipe(Effect.mapError(mapGenerationError(query, "Grounded answer generation")));
+
+      const availableIds = HashSet.fromIterable(A.map(retrieval.subgraph.nodes, (entity) => entity.id));
+      const invalidCitations = A.filter(response.value.citations, (citation) => !HashSet.has(availableIds, citation));
+      if (A.length(invalidCitations) > 0) {
+        return yield* GraphRAGGenerationError.make({
+          message: `Generated citations are outside the retrieved subgraph: ${A.join(invalidCitations, ", ")}`,
+          query,
+        });
+      }
+
+      return GroundedAnswer.make({
         answer: response.value.answer,
         citations: response.value.citations,
         confidence: response.value.confidence,
         reasoning: response.value.reasoning,
         retrieval,
-      };
+      });
     });
 
-    const answer = Effect.fn("GraphRAG.answer")(function* (
-      llm: LanguageModel.Service,
+    const generate: GraphRAGService["generate"] = dual(3, generateImpl);
+
+    const answerImpl = Effect.fn("GraphRAG.answer")(function* (
       graph: KnowledgeGraph,
       query: string,
-      options: AnswerOptions = {}
+      optionsInput: AnswerOptionsInput
     ) {
-      yield* entityIndex.index(graph);
-      const retrieval = yield* retrieve(graph, query, options);
-      return yield* generate(llm, query, retrieval, options);
+      const options = AnswerOptions.make(optionsInput);
+      const retrieval = yield* retrieve(graph, query, {
+        topK: options.topK,
+        hops: options.hops,
+        maxNodes: options.maxNodes,
+        minScore: options.minScore,
+        includeTypes: options.includeTypes,
+        includeAttributes: options.includeAttributes,
+        includeRelations: options.includeRelations,
+      });
+      return yield* generate(retrieval, query, {
+        timeout: options.timeout,
+        maxAttempts: options.maxAttempts,
+      });
     });
 
-    const explain = Effect.fn("GraphRAG.explain")(function* (
-      llm: LanguageModel.Service,
-      answer: GroundedAnswer,
-      options: ExplainOptions = {}
+    const answer: GraphRAGService["answer"] = dual(3, answerImpl);
+
+    const explainImpl = Effect.fn("GraphRAG.explain")(function* (
+      answerValue: GroundedAnswer,
+      optionsInput: ExplainOptionsInput
     ) {
-      const {subgraph} = answer.retrieval;
-      const entityMap = HashMap.fromIterable<string, Entity>(
-        subgraph.nodes.map((entity) => [entity.id, entity])
+      const options = ExplainOptions.make(optionsInput);
+      const steps = connectingSteps(answerValue.retrieval.subgraph, answerValue.citations);
+      const involvedEntities = A.fromIterable(
+        A.reduce(steps, HashSet.fromIterable(answerValue.citations), (ids, step) =>
+          HashSet.add(HashSet.add(ids, step.from.id), step.to.id)
+        )
       );
-      const cited = HashSet.fromIterable(answer.citations);
-      const relevantEdges: Array<{
-        from: Entity;
-        relation: Relation;
-        to: Entity
-      }> = [];
 
-      for (const relation of subgraph.edges) {
-        const from = HashMap.get(entityMap, relation.subjectId);
-        const toId = relation.isEntityReference ? String(relation.object) : undefined;
-        const to = P.isNotUndefined(toId) ? HashMap.get(entityMap, toId) : O.none<Entity>();
-        if (O.isSome(from) && P.isNotUndefined(toId) && O.isSome(to)) {
-          if (HashSet.has(cited, relation.subjectId) || HashSet.has(cited, toId)) {
-            relevantEdges.push({from: from.value, relation, to: to.value});
-          }
-        }
+      if (!options.generateStepExplanations || A.length(steps) === 0) {
+        return ReasoningTrace.make({
+          steps: A.map(steps, (step) => ReasoningStep.make({ ...step, explanation: defaultStepExplanation(step) })),
+          explanation: answerValue.reasoning,
+          confidence: answerValue.confidence,
+          query: answerValue.retrieval.query,
+          involvedEntities,
+        });
       }
 
-      const involvedEntities = MutableHashSet.fromIterable(answer.citations);
-      for (const edge of relevantEdges) {
-        MutableHashSet.add(involvedEntities, edge.from.id);
-        MutableHashSet.add(involvedEntities, edge.to.id);
-      }
-      const steps: Array<ReasoningStep> = relevantEdges.map((edge) => ({
-        ...edge,
-        explanation: "",
-      }));
-
-      if ((options.generateStepExplanations ?? true) && steps.length > 0) {
-        const generationOptions = GenerationOptions.make(options);
-        const stepsDescription = steps
-          .map(
-            (step, index) =>
-              `${index + 1}. ${step.from.mention} → ${predicateLabel(step.relation.predicate)} → ${step.to.mention}`
-          )
-          .join("\n");
-        const response = yield* generateObjectWithFeedback(llm, {
-          prompt: `Explain how this answer was derived from a knowledge graph.
+      const llm = yield* LanguageModel.LanguageModel;
+      const stepsDescription = pipe(
+        steps,
+        A.map(
+          (step, index) =>
+            `${index + 1}. [id: ${step.from.id}] ${step.from.mention} → ${finalIriSegment(step.relation.predicate)} → [id: ${step.to.id}] ${step.to.mention}`
+        ),
+        A.join("\n")
+      );
+      const response = yield* generateObjectWithFeedback(llm, {
+        prompt: `Explain how the precomputed knowledge-graph path supports this answer.
 
 ## Question
-${answer.retrieval.query}
+${answerValue.retrieval.query}
 
 ## Answer
-${answer.answer}
+${answerValue.answer}
 
-## Reasoning Steps
+## Connecting Path
 ${stepsDescription}`,
-          schema: ReasoningTraceSchema,
-          objectName: "reasoning_trace",
-          maxAttempts: generationOptions.maxAttempts,
-          serviceName: "GraphRAG.explain",
-          timeoutMs: Duration.toMillis(generationOptions.timeout),
-        }).pipe(
-          Effect.mapError((error) =>
-            error._tag === "TimeoutError"
-              ? error
-              : new GraphRAGGenerationError({
-                message: `Failed to generate reasoning trace: ${error._tag}`,
-                query: answer.retrieval.query,
-                cause: error,
-              })
-          )
-        );
-        return {
-          steps: steps.map((step, index) => ({
-            ...step,
-            explanation:
-              response.value.stepExplanations[index] ??
-              `${step.from.mention} is connected to ${step.to.mention} via ${predicateLabel(step.relation.predicate)}`,
-          })),
-          explanation: response.value.explanation,
-          confidence: answer.confidence,
-          query: answer.retrieval.query,
-          involvedEntities: A.fromIterable(involvedEntities),
-        };
-      }
+        schema: ReasoningTraceOutput,
+        objectName: "reasoning_trace",
+        maxAttempts: options.maxAttempts,
+        serviceName: "GraphRAG.explain",
+        timeout: options.timeout,
+      }).pipe(Effect.mapError(mapGenerationError(answerValue.retrieval.query, "Reasoning trace generation")));
 
-      return {
-        steps: steps.map((step) => ({
-          ...step,
-          explanation: `${step.from.mention} is connected to ${step.to.mention} via ${predicateLabel(step.relation.predicate)}`,
-        })),
-        explanation: answer.reasoning,
-        confidence: answer.confidence,
-        query: answer.retrieval.query,
-        involvedEntities: A.fromIterable(involvedEntities),
-      };
+      return ReasoningTrace.make({
+        steps: A.map(steps, (step, index) =>
+          ReasoningStep.make({
+            ...step,
+            explanation: O.getOrElse(A.get(response.value.stepExplanations, index), () => defaultStepExplanation(step)),
+          })
+        ),
+        explanation: response.value.explanation,
+        confidence: answerValue.confidence,
+        query: answerValue.retrieval.query,
+        involvedEntities,
+      });
     });
 
-    const service: GraphRAGService = {
+    const explain: GraphRAGService["explain"] = dual(2, explainImpl);
+
+    return {
       index: entityIndex.index,
       retrieve,
       generate,
@@ -889,9 +1109,7 @@ ${stepsDescription}`,
       explain,
       clear: entityIndex.clear,
       size: entityIndex.size,
-    };
-
-    return service;
+    } satisfies GraphRAGService;
   }),
 }) {
   static readonly Default = Layer.effect(this, this.make).pipe(
@@ -900,11 +1118,17 @@ ${stepsDescription}`,
 }
 
 /**
- * Default GraphRAG layer
+ * Live GraphRAG layer backed by the default entity index and subgraph extractor.
  *
- * Requires EmbeddingService dependencies to be provided.
+ * **Example** (Compose the live GraphRAG layer)
  *
- * @since 0.0.0
+ * ```ts
+ * import { GraphRAGDefault } from "@effect-ontology/Service/GraphRAG"
+ *
+ * console.log(GraphRAGDefault)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const GraphRAGDefault = GraphRAG.Default;

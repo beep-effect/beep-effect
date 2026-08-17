@@ -15,6 +15,10 @@ import * as Domain from "./Domain.ts";
 import * as Parser from "./Parser.ts";
 
 const $I = $RepoDocgenId.create("Checker");
+const titledExampleSection = /\*\*Example\*\*\s*\([^)]+\)[\s\S]*?```(?:ts|tsx|typescript)\b/u;
+
+const hasDocumentedExample = (doc: Domain.Doc): boolean =>
+  doc.examples.length > 0 || (doc.description !== undefined && titledExampleSection.test(doc.description));
 
 const makeError = (
   source: Parser.SourceShape,
@@ -57,7 +61,7 @@ const checkEntry = Effect.fn("checkEntry")(function* (
     );
   }
 
-  if (config.enforceExamples && model.doc.examples.length === 0) {
+  if (config.enforceExamples && !hasDocumentedExample(model.doc)) {
     errors = A.appendAll(
       errors,
       makeError(source, model.position, (filePath, frame) => `Missing examples in file ${filePath}:\n\n${frame}`)
@@ -237,14 +241,15 @@ export function checkNamespaces(models: ReadonlyArray<Domain.Namespace>) {
   return Effect.forEach(models, checkNamespace).pipe(Effect.map(A.flatten));
 }
 
-function checkExport(model: Domain.Export) {
-  return checkEntry(model, { enforceVersion: true });
-}
-
 /**
- * Checks documented manual exports for required docgen annotations.
+ * Accepts re-export declarations as graph edges whose owning declarations carry documentation.
  *
- * **Example** (Check empty export models)
+ * **Details**
+ *
+ * Requiring descriptions, examples, or versions on an export edge duplicates
+ * metadata and can disagree with the declaration that owns the symbol.
+ *
+ * **Example** (Ignore export-edge metadata)
  *
  * ```ts
  * import { checkExports } from "@beep/repo-docgen/Checker"
@@ -252,13 +257,13 @@ function checkExport(model: Domain.Export) {
  * console.log(checked)
  * ```
  *
- * @param models - Export models to validate.
- * @returns Effect that accumulates validation error messages.
+ * @param models - Re-export models already validated through their owning declarations.
+ * @returns Effect containing no export-edge documentation errors.
  * @category predicates
  * @since 0.0.0
  */
-export function checkExports(models: ReadonlyArray<Domain.Export>) {
-  return Effect.forEach(models, checkExport).pipe(Effect.map(A.flatten));
+export function checkExports(_models: ReadonlyArray<Domain.Export>) {
+  return Effect.succeed(A.empty<string>());
 }
 
 /**

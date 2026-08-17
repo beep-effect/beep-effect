@@ -1,6 +1,8 @@
 /**
  * Graph Merge Utilities
  *
+ * **Details**
+ *
  * Pure functions for merging KnowledgeGraph fragments from multiple chunks.
  * Implements monoid operations for streaming reduction.
  *
@@ -8,23 +10,36 @@
  * @since 0.0.0
  */
 
-import { IRI } from "@beep/rdf";
+import type { IRI } from "@beep/rdf";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Chunk, HashMap, HashSet, Option, Order, Schema } from "effect";
-import * as MutableHashMap from "effect/MutableHashMap";
+import { HashMap, HashSet, MutableHashMap, Order } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
 import type { Relation } from "../Domain/Model/Entity.ts";
-import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts";
+import { Entity, KnowledgeGraph, RelationObject } from "../Domain/Model/Entity.ts";
 import { dual2 } from "../Utils/Dual.ts";
-
-const decodeEntityTypes = Schema.decodeUnknownSync(Schema.NonEmptyArray(IRI));
 
 /**
  * Merge conflict information
  *
+ * **Details**
+ *
  * Records conflicts detected during entity attribute merging.
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the MergeConflict contract)
+ *
+ * ```ts
+ * import type { MergeConflict } from "@effect-ontology/Workflow/Merge"
+ *
+ * const acceptsMergeConflict = (_value: MergeConflict): void => undefined
+ *
+ * console.log(acceptsMergeConflict)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface MergeConflict {
   /**
@@ -64,9 +79,18 @@ const RelationOrder: Order.Order<Relation> = Order.combine(
   Order.mapInput(Order.String, (r: Relation) => r.subjectId),
   Order.combine(
     Order.mapInput(Order.String, (r: Relation) => r.predicate),
-    Order.mapInput(Order.String, (r: Relation) => (typeof r.object === "string" ? r.object : String(r.object)))
+    Order.mapInput(Order.String, (relation: Relation) =>
+      RelationObject.match(relation.object, {
+        EntityReference: ({ value }) => `entity:${value}`,
+        Text: ({ value }) => `text:${value}`,
+        Number: ({ value }) => `number:${value}`,
+        Boolean: ({ value }) => `boolean:${value}`,
+      })
+    )
   )
 );
+
+const TypeFrequencyOrder = Order.mapInput(Order.flip(Order.Number), (entry: readonly [IRI, number]) => entry[1]);
 
 /**
  * Select best types using frequency voting
@@ -81,35 +105,40 @@ const RelationOrder: Order.Order<Relation> = Order.combine(
  * @internal
  */
 const selectBestTypes = (
-  existingTypes: ReadonlyArray<string>,
-  newTypes: ReadonlyArray<string>
-): Schema.Schema.Type<Schema.NonEmptyArray<typeof IRI>> => {
+  existingTypes: A.NonEmptyReadonlyArray<IRI>,
+  newTypes: A.NonEmptyReadonlyArray<IRI>
+): A.NonEmptyReadonlyArray<IRI> => {
+  const ensureNonEmpty = (types: ReadonlyArray<IRI>): A.NonEmptyReadonlyArray<IRI> =>
+    O.match(A.head(types), {
+      onNone: () => [existingTypes[0]],
+      onSome: (first) => [first, ...A.drop(types, 1)],
+    });
   // Count type frequencies
-  const typeFrequency = MutableHashMap.empty<string, number>();
+  const typeFrequency = MutableHashMap.empty<IRI, number>();
 
   // Count existing types (weighted as 1 occurrence)
   for (const type of existingTypes) {
-    MutableHashMap.set(typeFrequency, type, Option.getOrElse(MutableHashMap.get(typeFrequency, type), () => 0) + 1);
+    MutableHashMap.set(typeFrequency, type, O.getOrElse(MutableHashMap.get(typeFrequency, type), () => 0) + 1);
   }
 
   // Count new types (weighted as 1 occurrence)
   for (const type of newTypes) {
-    MutableHashMap.set(typeFrequency, type, Option.getOrElse(MutableHashMap.get(typeFrequency, type), () => 0) + 1);
+    MutableHashMap.set(typeFrequency, type, O.getOrElse(MutableHashMap.get(typeFrequency, type), () => 0) + 1);
   }
 
   // If only one type, return it
   if (MutableHashMap.size(typeFrequency) === 1) {
-    return decodeEntityTypes(Array.from(MutableHashMap.keys(typeFrequency)));
+    return typeFrequency.pipe(MutableHashMap.keys, A.fromIterable, ensureNonEmpty);
   }
 
   // Sort by frequency (descending)
-  const sortedTypes = Array.from(typeFrequency).sort((a, b) => b[1] - a[1]);
+  const sortedTypes = A.sort(A.fromIterable(typeFrequency), TypeFrequencyOrder);
 
   // Select top types:
   // - If highest frequency is >= 2, take all types with that frequency
   // - Otherwise, take top 2-3 types (but at least the most frequent)
-  const maxFrequency = sortedTypes[0]![1];
-  const selectedTypes: Array<string> = [];
+  const maxFrequency = sortedTypes[0][1];
+  const selectedTypes: Array<IRI> = [];
 
   if (maxFrequency >= 2) {
     // Majority voting: take all types that appear in majority
@@ -121,16 +150,18 @@ const selectBestTypes = (
       }
     }
     // Limit to top 3 even if multiple have same frequency
-    return decodeEntityTypes(selectedTypes.slice(0, 3));
+    return ensureNonEmpty(selectedTypes.slice(0, 3));
   } else {
     // No clear majority: take top 2-3 most frequent
     // Prefer keeping 1-2 types for clarity
-    return decodeEntityTypes(sortedTypes.slice(0, 2).map(([type]) => type));
+    return ensureNonEmpty(sortedTypes.slice(0, 2).map(([type]) => type));
   }
 };
 
 /**
  * Merge two knowledge graphs
+ *
+ * **Details**
  *
  * Merges entities by `id` and relations by `(subjectId, predicate, object)` signature.
  * Enforces functional properties (at most one value per subject-predicate).
@@ -139,26 +170,20 @@ const selectBestTypes = (
  * This is a pure function suitable for `Stream.runFold` reduction.
  * The merge is associative and has an identity element (empty graph).
  *
+ * **Example** (Use mergeGraphs)
+ *
+ * ```ts
+ * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { mergeGraphs } from "@effect-ontology/Workflow/Merge"
+ *
+ * const merged = mergeGraphs(KnowledgeGraph.make({}), KnowledgeGraph.make({}))
+ * console.log(merged.entities.length) // 0
+ * ```
+ *
  * @param a - First graph
  * @param b - Second graph
  * @returns Merged graph
- *
- * **Example** (Use mergeGraphs)
- * ```ts
- * const graph1 = new KnowledgeGraph({
- *   entities: [entity1],
- *   relations: [relation1]
- * })
- *
- * const graph2 = new KnowledgeGraph({
- *   entities: [entity2],
- *   relations: [relation2]
- * })
- *
- * const merged = mergeGraphs(graph1, graph2)
- * ```
- *
- * @category constructors
+ * @category workflows
  * @since 0.0.0
  */
 export const mergeGraphs = dual2((a: KnowledgeGraph, b: KnowledgeGraph): KnowledgeGraph => {
@@ -181,7 +206,7 @@ export const mergeGraphs = dual2((a: KnowledgeGraph, b: KnowledgeGraph): Knowled
   // Merge b's entities into the map
   for (const entity of b.entities) {
     const existing = HashMap.get(entityMap, entity.id);
-    if (Option.isSome(existing)) {
+    if (O.isSome(existing)) {
       // Merge attributes: union with preference for non-empty values
       const mergedAttributes = { ...existing.value.attributes, ...entity.attributes };
       // Select best types using frequency voting (instead of union)
@@ -195,8 +220,8 @@ export const mergeGraphs = dual2((a: KnowledgeGraph, b: KnowledgeGraph): Knowled
 
       // Select higher groundingConfidence (system verification score)
       const mergedGroundingConfidence = Math.max(
-        Option.getOrElse(existing.value.groundingConfidence, () => 0),
-        Option.getOrElse(entity.groundingConfidence, () => 0)
+        O.getOrElse(existing.value.groundingConfidence, () => 0),
+        O.getOrElse(entity.groundingConfidence, () => 0)
       );
 
       entityMap = HashMap.set(
@@ -218,7 +243,7 @@ export const mergeGraphs = dual2((a: KnowledgeGraph, b: KnowledgeGraph): Knowled
           mentions: mergedMentions,
           // Use highest confidence
           groundingConfidence:
-            mergedGroundingConfidence > 0 ? Option.some(UnitInterval.make(mergedGroundingConfidence)) : Option.none(),
+            mergedGroundingConfidence > 0 ? O.some(UnitInterval.make(mergedGroundingConfidence)) : O.none(),
         })
       );
     } else {
@@ -232,27 +257,36 @@ export const mergeGraphs = dual2((a: KnowledgeGraph, b: KnowledgeGraph): Knowled
   const relationSet = HashSet.union(relationsA, relationsB);
 
   // Convert to Chunk and sort for deterministic output
-  const mergedEntities = Chunk.fromIterable(HashMap.toValues(entityMap)).pipe(Chunk.sort(EntityOrder));
+  const mergedEntities = A.sort(A.fromIterable(HashMap.toValues(entityMap)), EntityOrder);
 
-  const mergedRelations = Chunk.fromIterable(relationSet).pipe(Chunk.sort(RelationOrder));
+  const mergedRelations = A.sort(A.fromIterable(relationSet), RelationOrder);
 
   return KnowledgeGraph.make({
-    entities: Array.from(mergedEntities),
-    relations: Array.from(mergedRelations),
+    entities: mergedEntities,
+    relations: mergedRelations,
   });
 });
 
 /**
  * Merge graphs with conflict detection
  *
+ * **Details**
+ *
  * Returns both the merged graph and a list of conflicts detected during merging.
  * Useful for UI review tools and quality assurance.
+ *
+ * **Example** (Inspect merge graphs with conflicts)
+ *
+ * ```ts
+ * import { mergeGraphsWithConflicts } from "@effect-ontology/Workflow/Merge"
+ *
+ * console.log(mergeGraphsWithConflicts)
+ * ```
  *
  * @param a - First graph
  * @param b - Second graph
  * @returns Tuple of [merged graph, conflicts]
- *
- * @category constructors
+ * @category workflows
  * @since 0.0.0
  */
 export const mergeGraphsWithConflicts = dual2(
@@ -278,15 +312,15 @@ export const mergeGraphsWithConflicts = dual2(
     // Merge b's entities into the map, detecting conflicts
     for (const entity of b.entities) {
       const existing = HashMap.get(entityMap, entity.id);
-      if (Option.isSome(existing)) {
+      if (O.isSome(existing)) {
         // Check for attribute conflicts
-        for (const [key, value] of Object.entries(entity.attributes)) {
-          const existingValue = existing.value.attributes[key];
-          if (existingValue !== undefined && existingValue !== value) {
+        for (const [key, value] of R.toEntries(entity.attributes)) {
+          const existingValue = R.get(existing.value.attributes, key);
+          if (O.isSome(existingValue) && existingValue.value !== value) {
             conflicts.push({
               entityId: entity.id,
               property: key,
-              values: [existingValue, value],
+              values: [existingValue.value, value],
               chunkIndexes: [], // TODO: track chunk indexes if provenance is added
             });
           }
@@ -305,8 +339,8 @@ export const mergeGraphsWithConflicts = dual2(
 
         // Select higher groundingConfidence (system verification score)
         const mergedGroundingConfidence = Math.max(
-          Option.getOrElse(existing.value.groundingConfidence, () => 0),
-          Option.getOrElse(entity.groundingConfidence, () => 0)
+          O.getOrElse(existing.value.groundingConfidence, () => 0),
+          O.getOrElse(entity.groundingConfidence, () => 0)
         );
 
         entityMap = HashMap.set(
@@ -328,7 +362,7 @@ export const mergeGraphsWithConflicts = dual2(
             mentions: mergedMentions,
             // Use highest confidence
             groundingConfidence:
-              mergedGroundingConfidence > 0 ? Option.some(UnitInterval.make(mergedGroundingConfidence)) : Option.none(),
+              mergedGroundingConfidence > 0 ? O.some(UnitInterval.make(mergedGroundingConfidence)) : O.none(),
           })
         );
       } else {
@@ -342,13 +376,13 @@ export const mergeGraphsWithConflicts = dual2(
     const relationSet = HashSet.union(relationsA, relationsB);
 
     // Convert to Chunk and sort for deterministic output
-    const mergedEntities = Chunk.fromIterable(HashMap.toValues(entityMap)).pipe(Chunk.sort(EntityOrder));
+    const mergedEntities = A.sort(A.fromIterable(HashMap.toValues(entityMap)), EntityOrder);
 
-    const mergedRelations = Chunk.fromIterable(relationSet).pipe(Chunk.sort(RelationOrder));
+    const mergedRelations = A.sort(A.fromIterable(relationSet), RelationOrder);
 
     const mergedGraph = KnowledgeGraph.make({
-      entities: Array.from(mergedEntities),
-      relations: Array.from(mergedRelations),
+      entities: mergedEntities,
+      relations: mergedRelations,
     });
 
     return [mergedGraph, conflicts];

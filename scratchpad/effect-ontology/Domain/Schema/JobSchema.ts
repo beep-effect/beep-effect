@@ -25,7 +25,7 @@ const backgroundJobIdPattern = /^job-[0-9a-f]{12}$/;
  *
  * **Example** (Use BackgroundJobId)
  * ```ts
- * import { BackgroundJobId } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { BackgroundJobId } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(BackgroundJobId.is("job-abc123def456")) // true
  * ```
@@ -65,7 +65,7 @@ export const BackgroundJobId = S.String.check(
  * import {
  *   BackgroundJobId,
  *   type BackgroundJobId as BackgroundJobIdValue
- * } from "@effect-ontology/Schema/JobSchema.ts"
+ * } from "@effect-ontology/Schema/JobSchema"
  *
  * const id: BackgroundJobIdValue = BackgroundJobId.make("job-abc123def456")
  * console.log(id)
@@ -127,7 +127,7 @@ const BackgroundJobDefinition = S.TaggedUnion({
  *
  * **Example** (Use EmbeddingJob)
  * ```ts
- * import { EmbeddingJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { EmbeddingJob } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(EmbeddingJob.make)
  * ```
@@ -147,7 +147,7 @@ export const EmbeddingJob = BackgroundJobDefinition.cases.EmbeddingJob.pipe(
  *
  * **Example** (Use PromptCacheJob)
  * ```ts
- * import { PromptCacheJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { PromptCacheJob } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(PromptCacheJob.make)
  * ```
@@ -167,7 +167,7 @@ export const PromptCacheJob = BackgroundJobDefinition.cases.PromptCacheJob.pipe(
  *
  * **Example** (Use SimilarityRecomputeJob)
  * ```ts
- * import { SimilarityRecomputeJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { SimilarityRecomputeJob } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(SimilarityRecomputeJob.make)
  * ```
@@ -187,7 +187,7 @@ export const SimilarityRecomputeJob = BackgroundJobDefinition.cases.SimilarityRe
  *
  * **Example** (Use BlockingTokenJob)
  * ```ts
- * import { BlockingTokenJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { BlockingTokenJob } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(BlockingTokenJob.make)
  * ```
@@ -207,7 +207,7 @@ export const BlockingTokenJob = BackgroundJobDefinition.cases.BlockingTokenJob.p
  *
  * **Example** (Use WebhookJob)
  * ```ts
- * import { WebhookJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { WebhookJob } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(WebhookJob.make)
  * ```
@@ -228,7 +228,7 @@ export const WebhookJob = BackgroundJobDefinition.cases.WebhookJob.pipe(
  *
  * **Example** (Use BackgroundJobSchema)
  * ```ts
- * import { BackgroundJobSchema } from "@effect-ontology/Schema/JobSchema.ts"
+ * import { BackgroundJobSchema } from "@effect-ontology/Schema/JobSchema"
  *
  * console.log(Object.keys(BackgroundJobSchema.cases).length) // 5
  * ```
@@ -248,7 +248,7 @@ export const BackgroundJobSchema = BackgroundJobDefinition.pipe(
  *
  * **Example** (Use BackgroundJob)
  * ```ts
- * import type { BackgroundJob } from "@effect-ontology/Schema/JobSchema.ts"
+ * import type { BackgroundJob } from "@effect-ontology/Schema/JobSchema"
  *
  * const jobName = (job: BackgroundJob) => job._tag
  * console.log(jobName)
@@ -288,10 +288,12 @@ const JobMetadataDefinition = S.Struct({
  *
  * **Example** (Use JobMetadataSchema)
  * ```ts
- * import { JobMetadataSchema } from "@effect-ontology/Schema/JobSchema.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { JobMetadataSchema } from "@effect-ontology/Schema/JobSchema"
  *
- * const metadata = JobMetadataSchema.fromUnknown({ id: "job-abc123def456" })
- * console.log(metadata.attempts) // 0
+ * const metadata = S.decodeUnknownOption(JobMetadataSchema)({ id: "job-abc123def456" })
+ * console.log(O.map(metadata, (value) => value.attempts)) // Some(0)
  * ```
  *
  * @invariant Attempt count is a non-negative integer and optional failure state
@@ -313,7 +315,7 @@ export const JobMetadataSchema = JobMetadataDefinition.annotate({
  *
  * **Example** (Use JobMetadata)
  * ```ts
- * import type { JobMetadata } from "@effect-ontology/Schema/JobSchema.ts"
+ * import type { JobMetadata } from "@effect-ontology/Schema/JobSchema"
  *
  * const attempts = (metadata: JobMetadata) => metadata.attempts
  * console.log(attempts)

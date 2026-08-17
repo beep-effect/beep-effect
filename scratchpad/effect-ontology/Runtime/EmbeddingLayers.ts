@@ -1,6 +1,8 @@
 /**
  * Embedding Layer Composition
  *
+ * **Details**
+ *
  * Provides configured embedding service based on EMBEDDING_PROVIDER config.
  * Handles dynamic provider selection between Nomic (local) and Voyage (API).
  *
@@ -33,20 +35,36 @@ import { MetricsService } from "../Telemetry/Metrics.ts";
 /**
  * Dynamic provider selection based on config
  *
+ * **Details**
+ *
  * Selects between NomicEmbeddingProvider and VoyageEmbeddingProvider
  * based on EMBEDDING_PROVIDER config value.
  *
  * Note: Uses Layer.unwrap with proper type annotation for the union
  * of all possible layer requirements.
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding provider from config)
+ *
+ * ```ts
+ * import { EmbeddingProviderFromConfig } from "@effect-ontology/Runtime/EmbeddingLayers"
+ *
+ * console.log(EmbeddingProviderFromConfig)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingProviderFromConfig: Layer.Layer<
   EmbeddingProvider,
   never,
   ConfigService | NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
-> = Layer.unwrap(
+> = Layer.unwrap<
+  EmbeddingProvider,
+  never,
+  NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient,
+  never,
+  ConfigService
+>(
   Effect.gen(function* () {
     const config = yield* ConfigService;
     const configLayer = Layer.succeed(ConfigService, config);
@@ -59,17 +77,9 @@ export const EmbeddingProviderFromConfig: Layer.Layer<
     // - Voyage: EmbeddingRateLimiter | HttpClient.HttpClient
     // Union: NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
     if (config.embedding.provider === "voyage") {
-      return VoyageEmbeddingProviderLive.pipe(Layer.provide(configLayer)) as Layer.Layer<
-        EmbeddingProvider,
-        never,
-        NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
-      >;
+      return VoyageEmbeddingProviderLive.pipe(Layer.provide(configLayer));
     } else {
-      return NomicEmbeddingProviderLive.pipe(Layer.provide(configLayer)) as Layer.Layer<
-        EmbeddingProvider,
-        never,
-        NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
-      >;
+      return NomicEmbeddingProviderLive.pipe(Layer.provide(configLayer));
     }
   })
 );
@@ -77,11 +87,21 @@ export const EmbeddingProviderFromConfig: Layer.Layer<
 /**
  * Dynamic rate limiter based on config values
  *
+ * **Details**
+ *
  * Uses EMBEDDING_RATE_LIMIT_RPM and EMBEDDING_MAX_CONCURRENT from config.
  * Falls back to provider defaults if not specified.
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding rate limiter from config)
+ *
+ * ```ts
+ * import { EmbeddingRateLimiterFromConfig } from "@effect-ontology/Runtime/EmbeddingLayers"
+ *
+ * console.log(EmbeddingRateLimiterFromConfig)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingRateLimiterFromConfig: Layer.Layer<EmbeddingRateLimiter, never, ConfigService> = Layer.unwrap(
   Effect.gen(function* () {
@@ -104,10 +124,20 @@ export const EmbeddingRateLimiterFromConfig: Layer.Layer<EmbeddingRateLimiter, n
 /**
  * Nomic embedding infrastructure
  *
+ * **Details**
+ *
  * Complete local embedding stack with in-memory cache.
  *
- * @since 0.0.0
+ * **Example** (Inspect nomic embedding infrastructure)
+ *
+ * ```ts
+ * import { NomicEmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
+ *
+ * console.log(NomicEmbeddingInfrastructure)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const NomicEmbeddingInfrastructure: Layer.Layer<
   EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache,
@@ -118,10 +148,20 @@ export const NomicEmbeddingInfrastructure: Layer.Layer<
 /**
  * Voyage embedding infrastructure
  *
+ * **Details**
+ *
  * Complete Voyage API embedding stack with rate limiting and cache.
  *
- * @since 0.0.0
+ * **Example** (Inspect voyage embedding infrastructure)
+ *
+ * ```ts
+ * import { VoyageEmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
+ *
+ * console.log(VoyageEmbeddingInfrastructure)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const VoyageEmbeddingInfrastructure: Layer.Layer<
   EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache,
@@ -136,6 +176,8 @@ export const VoyageEmbeddingInfrastructure: Layer.Layer<
 /**
  * Config-driven embedding infrastructure
  *
+ * **Details**
+ *
  * Automatically selects provider based on EMBEDDING_PROVIDER config.
  * Use this for production deployments.
  *
@@ -145,8 +187,16 @@ export const VoyageEmbeddingInfrastructure: Layer.Layer<
  * - EmbeddingRateLimiterFromConfig needs: ConfigService
  * - FetchHttpClient.layer needs: nothing
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding infrastructure)
+ *
+ * ```ts
+ * import { EmbeddingInfrastructure } from "@effect-ontology/Runtime/EmbeddingLayers"
+ *
+ * console.log(EmbeddingInfrastructure)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingInfrastructure: Layer.Layer<
   EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache,
@@ -157,16 +207,26 @@ export const EmbeddingInfrastructure: Layer.Layer<
   Layer.provideMerge(EmbeddingCache.Default),
   Layer.provideMerge(FetchHttpClient.layer),
   Layer.provideMerge(NomicNlpServiceLive)
-) as Layer.Layer<EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache, never, ConfigService>;
+);
 
 /**
  * Complete embedding infrastructure with all dependencies
  *
+ * **Details**
+ *
  * Self-contained layer that includes ConfigService.
  * May fail with ConfigError if environment is not properly configured.
  *
- * @since 0.0.0
+ * **Example** (Inspect embedding infrastructure default)
+ *
+ * ```ts
+ * import { EmbeddingInfrastructureDefault } from "@effect-ontology/Runtime/EmbeddingLayers"
+ *
+ * console.log(EmbeddingInfrastructureDefault)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingInfrastructureDefault = EmbeddingInfrastructure.pipe(
   Layer.provideMerge(MetricsService.Default),

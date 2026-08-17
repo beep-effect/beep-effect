@@ -11,8 +11,8 @@ import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
+import { Number as Num } from "effect";
 import * as A from "effect/Array";
-import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ExtractionRunId } from "../Identity.ts";
@@ -62,7 +62,7 @@ const OntologyAgentConfigFields = {
     SchemaUtils.withKeyDefaults(ChunkingConfig.default()),
     S.annotateKey({ description: "Schema-defaulted text chunking policy." })
   ),
-} as const;
+};
 
 class OntologyAgentConfigModel extends S.Class<OntologyAgentConfigModel>($I`OntologyAgentConfig`)(
   OntologyAgentConfigFields,
@@ -82,7 +82,7 @@ class OntologyAgentConfigModel extends S.Class<OntologyAgentConfigModel>($I`Onto
  *
  * **Example** (Use OntologyAgentConfig)
  * ```ts
- * import { OntologyAgentConfig } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import { OntologyAgentConfig } from "@effect-ontology/Model/OntologyAgent"
  *
  * const config = OntologyAgentConfig.default()
  * console.log(config.concurrency) // 4
@@ -112,7 +112,7 @@ export const OntologyAgentConfig = OntologyAgentConfigModel.annotate({
  *
  * **Example** (Use OntologyAgentConfig)
  * ```ts
- * import type { OntologyAgentConfig } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { OntologyAgentConfig } from "@effect-ontology/Model/OntologyAgent"
  *
  * const concurrency = (config: OntologyAgentConfig): number => config.concurrency
  * console.log(typeof concurrency) // "function"
@@ -131,7 +131,7 @@ const ExtractionMetricsFields = {
   outputTokens: NonNegativeInt,
   duration: S.DurationFromMillis,
   runId: S.OptionFromOptionalKey(ExtractionRunId).pipe(SchemaUtils.withNoneDefault),
-} as const;
+};
 
 class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`ExtractionMetrics`)(
   ExtractionMetricsFields,
@@ -144,9 +144,11 @@ class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`Extracti
    *
    * **Example** (Use ExtractionMetrics)
    * ```ts
-   * import { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const metrics = ExtractionMetrics.fromUnknown({
+   * const metrics = S.decodeUnknownOption(ExtractionMetrics)({
    *   entityCount: 0,
    *   relationCount: 0,
    *   chunkCount: 1,
@@ -154,7 +156,7 @@ class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`Extracti
    *   outputTokens: 20,
    *   duration: 5
    * })
-   * console.log(metrics.totalTokens) // 100
+   * console.log(O.map(metrics, (value) => value.totalTokens))
    * ```
    *
    * @returns Sum of the non-negative input and output token counters.
@@ -169,9 +171,11 @@ class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`Extracti
  *
  * **Example** (Use ExtractionMetrics)
  * ```ts
- * import { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent"
  *
- * const metrics = ExtractionMetrics.fromUnknown({
+ * const metrics = S.decodeUnknownOption(ExtractionMetrics)({
  *   entityCount: 2,
  *   relationCount: 1,
  *   chunkCount: 1,
@@ -179,7 +183,7 @@ class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`Extracti
  *   outputTokens: 20,
  *   duration: 40
  * })
- * console.log(metrics.totalTokens) // 120
+ * console.log(O.map(metrics, (value) => value.totalTokens))
  * ```
  *
  * @invariant All counters are non-negative and duration is represented by `Duration`.
@@ -201,7 +205,7 @@ export const ExtractionMetrics = ExtractionMetricsModel.annotate({
  *
  * **Example** (Use ExtractionMetrics)
  * ```ts
- * import type { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent"
  *
  * const tokens = (metrics: ExtractionMetrics): number => metrics.totalTokens
  * console.log(typeof tokens) // "function"
@@ -223,7 +227,7 @@ const ExtractionResultFields = {
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "Optional SHACL report produced for the extracted graph." })
   ),
-} as const;
+};
 
 class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`ExtractionResult`)(
   ExtractionResultFields,
@@ -236,7 +240,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
    *
    * **Example** (Use OntologyAgent)
    * ```ts
-   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
    *
    * const entityCount = (result: ExtractionResult): number => result.entities.length
    * ```
@@ -252,7 +256,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
    *
    * **Example** (Use OntologyAgent)
    * ```ts
-   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
    *
    * const relationCount = (result: ExtractionResult): number => result.relations.length
    * ```
@@ -268,7 +272,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
    *
    * **Example** (Use onNone)
    * ```ts
-   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
    *
    * const hasNoEntities = (result: ExtractionResult): boolean => result.isEmpty
    * ```
@@ -284,7 +288,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
    *
    * **Example** (Use onNone)
    * ```ts
-   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
    *
    * const accepted = (result: ExtractionResult): boolean => result.isValid
    * ```
@@ -303,7 +307,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
    *
    * **Example** (Use ExtractionResult)
    * ```ts
-   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
    *
    * const serialized = (result: ExtractionResult): boolean => result.hasTurtle
    * ```
@@ -325,7 +329,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
  *
  * **Example** (Use ExtractionResult)
  * ```ts
- * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
  *
  * const count = (result: ExtractionResult): number => result.entities.length
  * console.log(typeof count) // "function"
@@ -349,7 +353,7 @@ export const ExtractionResult = ExtractionResultModel.annotate({
  *
  * **Example** (Use ExtractionResult)
  * ```ts
- * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
  *
  * const valid = (result: ExtractionResult): boolean => result.isValid
  * console.log(typeof valid) // "function"
@@ -383,7 +387,7 @@ const ExtractWithClaimsOptionsFields = {
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "Optional per-operation agent-policy override." })
   ),
-} as const;
+};
 
 class ExtractWithClaimsOptionsModel extends S.Class<ExtractWithClaimsOptionsModel>($I`ExtractWithClaimsOptions`)(
   ExtractWithClaimsOptionsFields,
@@ -403,14 +407,16 @@ class ExtractWithClaimsOptionsModel extends S.Class<ExtractWithClaimsOptionsMode
  *
  * **Example** (Use ExtractWithClaimsOptions)
  * ```ts
- * import { ExtractWithClaimsOptions } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ExtractWithClaimsOptions } from "@effect-ontology/Model/OntologyAgent"
  *
- * const options = ExtractWithClaimsOptions.fromUnknown({
+ * const options = S.decodeUnknownOption(ExtractWithClaimsOptions)({
  *   ontologyId: "seattle",
  *   articleId: "article-001"
  * })
- * console.log(options.autoCreateAssertions) // false
- * console.log(options.defaultConfidence) // 0.8
+ * console.log(O.map(options, (value) => value.autoCreateAssertions))
+ * console.log(O.map(options, (value) => value.defaultConfidence))
  * ```
  *
  * @invariant Default confidence lies on the closed unit interval.
@@ -434,7 +440,7 @@ export const ExtractWithClaimsOptions = ExtractWithClaimsOptionsModel.annotate({
  *
  * **Example** (Use ExtractWithClaimsOptions)
  * ```ts
- * import type { ExtractWithClaimsOptions } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { ExtractWithClaimsOptions } from "@effect-ontology/Model/OntologyAgent"
  *
  * const article = (options: ExtractWithClaimsOptions): string => options.articleId
  * console.log(typeof article) // "function"
@@ -453,7 +459,7 @@ const ExtractWithClaimsResultFields = {
   articleId: S.NonEmptyString.annotateKey({
     description: "Source article identifier assigned to claim provenance.",
   }),
-} as const;
+};
 
 class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>($I`ExtractWithClaimsResult`)(
   ExtractWithClaimsResultFields,
@@ -466,7 +472,7 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
    *
    * **Example** (Use OntologyAgent)
    * ```ts
-   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
    *
    * const entityCount = (result: ExtractWithClaimsResult): number => result.entities.length
    * ```
@@ -482,7 +488,7 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
    *
    * **Example** (Use OntologyAgent)
    * ```ts
-   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
    *
    * const relationCount = (result: ExtractWithClaimsResult): number => result.relations.length
    * ```
@@ -498,7 +504,7 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
    *
    * **Example** (Use OntologyAgent)
    * ```ts
-   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
    *
    * const hasNoEntities = (result: ExtractWithClaimsResult): boolean => result.isEmpty
    * ```
@@ -514,7 +520,7 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
    *
    * **Example** (Use ExtractWithClaimsResult)
    * ```ts
-   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
    *
    * const producedClaims = (result: ExtractWithClaimsResult): boolean => result.hasClaims
    * ```
@@ -531,7 +537,7 @@ class ExtractWithClaimsResultModel extends S.Class<ExtractWithClaimsResultModel>
  *
  * **Example** (Use ExtractWithClaimsResult)
  * ```ts
- * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
  *
  * const hasClaims = (result: ExtractWithClaimsResult): boolean => result.hasClaims
  * console.log(typeof hasClaims) // "function"
@@ -558,7 +564,7 @@ export const ExtractWithClaimsResult = ExtractWithClaimsResultModel.annotate({
  *
  * **Example** (Use ExtractWithClaimsResult)
  * ```ts
- * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
  *
  * const count = (result: ExtractWithClaimsResult): number => result.claimCount
  * console.log(typeof count) // "function"
@@ -574,7 +580,7 @@ const QueryBindingFields = {
     SchemaUtils.withKeyDefaults({}),
     S.annotateKey({ description: "SPARQL variable names mapped to serialized RDF terms." })
   ),
-} as const;
+};
 
 class QueryBindingModel extends S.Class<QueryBindingModel>($I`QueryBinding`)(
   QueryBindingFields,
@@ -588,10 +594,12 @@ class QueryBindingModel extends S.Class<QueryBindingModel>($I`QueryBinding`)(
  *
  * **Example** (Use QueryBinding)
  * ```ts
- * import { QueryBinding } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { QueryBinding } from "@effect-ontology/Model/OntologyAgent"
  *
- * const row = QueryBinding.fromUnknown({ bindings: { player: "Cristiano Ronaldo" } })
- * console.log(row.bindings.player) // "Cristiano Ronaldo"
+ * const row = S.decodeUnknownOption(QueryBinding)({ bindings: { player: "Cristiano Ronaldo" } })
+ * console.log(O.map(row, (value) => value.bindings.player))
  * ```
  *
  * @category models
@@ -612,7 +620,7 @@ export const QueryBinding = QueryBindingModel.annotate({
  *
  * **Example** (Use QueryBinding)
  * ```ts
- * import type { QueryBinding } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { QueryBinding } from "@effect-ontology/Model/OntologyAgent"
  *
  * const width = (row: QueryBinding): number => Object.keys(row.bindings).length
  * console.log(typeof width) // "function"
@@ -637,7 +645,7 @@ const QueryResultFields = {
   confidence: Confidence.annotateKey({
     description: "Confidence in the grounded natural-language answer.",
   }),
-} as const;
+};
 
 class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
   QueryResultFields,
@@ -650,14 +658,16 @@ class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
    *
    * **Example** (Use QueryResult)
    * ```ts
-   * import { QueryResult } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { QueryResult } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const result = QueryResult.fromUnknown({
+   * const result = S.decodeUnknownOption(QueryResult)({
    *   answer: "No matching entities.",
    *   sparql: "SELECT ?entity WHERE { ?entity a <https://schema.org/Person> }",
    *   confidence: 1
    * })
-   * console.log(result.hasResults) // false
+   * console.log(O.map(result, (value) => value.hasResults))
    * ```
    *
    * @returns `true` when at least one SPARQL binding row is present.
@@ -672,14 +682,16 @@ class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
  *
  * **Example** (Use QueryResult)
  * ```ts
- * import { QueryResult } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { QueryResult } from "@effect-ontology/Model/OntologyAgent"
  *
- * const result = QueryResult.fromUnknown({
+ * const result = S.decodeUnknownOption(QueryResult)({
  *   answer: "Cristiano Ronaldo scored the most goals.",
  *   sparql: "SELECT ?player WHERE { ?player a <https://schema.org/Person> }",
  *   confidence: 0.9
  * })
- * console.log(result.hasResults) // false
+ * console.log(O.map(result, (value) => value.hasResults))
  * ```
  *
  * @invariant Confidence lies on the closed unit interval.
@@ -701,7 +713,7 @@ export const QueryResult = QueryResultModel.annotate({
  *
  * **Example** (Use QueryResult)
  * ```ts
- * import type { QueryResult } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { QueryResult } from "@effect-ontology/Model/OntologyAgent"
  *
  * const answer = (result: QueryResult): string => result.answer
  * console.log(typeof answer) // "function"
@@ -716,7 +728,7 @@ const ReasoningResultFields = {
   inferredTripleCount: NonNegativeInt,
   rulesApplied: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
   duration: S.DurationFromMillis,
-} as const;
+};
 
 class ReasoningResultModel extends S.Class<ReasoningResultModel>($I`ReasoningResult`)(
   ReasoningResultFields,
@@ -730,14 +742,16 @@ class ReasoningResultModel extends S.Class<ReasoningResultModel>($I`ReasoningRes
  *
  * **Example** (Use ReasoningResult)
  * ```ts
- * import { ReasoningResult } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ReasoningResult } from "@effect-ontology/Model/OntologyAgent"
  *
- * const result = ReasoningResult.fromUnknown({
+ * const result = S.decodeUnknownOption(ReasoningResult)({
  *   inferredTripleCount: 4,
  *   rulesApplied: ["rdfs9"],
  *   duration: 3
  * })
- * console.log(result.inferredTripleCount) // 4
+ * console.log(O.map(result, (value) => value.inferredTripleCount))
  * ```
  *
  * @invariant Inferred triple count is non-negative.
@@ -759,7 +773,7 @@ export const ReasoningResult = ReasoningResultModel.annotate({
  *
  * **Example** (Use ReasoningResult)
  * ```ts
- * import type { ReasoningResult } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { ReasoningResult } from "@effect-ontology/Model/OntologyAgent"
  *
  * const count = (result: ReasoningResult): number => result.inferredTripleCount
  * console.log(typeof count) // "function"
@@ -783,7 +797,7 @@ const ViolationsByLevelFields = {
     SchemaUtils.withEmptyArrayDefaults<string>(),
     S.annotateKey({ description: "Informational SHACL diagnostics." })
   ),
-} as const;
+};
 
 class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`ViolationsByLevel`)(
   ViolationsByLevelFields,
@@ -796,13 +810,15 @@ class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`Violatio
    *
    * **Example** (Use OntologyAgent)
    * ```ts
-   * import { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const grouped = ViolationsByLevel.fromUnknown({
+   * const grouped = S.decodeUnknownOption(ViolationsByLevel)({
    *   violations: ["Missing required name."],
    *   warnings: ["Label uses a deprecated language tag."]
    * })
-   * console.log(grouped.totalCount) // 2
+   * console.log(O.map(grouped, (value) => value.totalCount))
    * ```
    *
    * @returns Sum of violation, warning, and informational diagnostic counts.
@@ -816,12 +832,14 @@ class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`Violatio
    *
    * **Example** (Use ViolationsByLevel)
    * ```ts
-   * import { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const grouped = ViolationsByLevel.fromUnknown({
+   * const grouped = S.decodeUnknownOption(ViolationsByLevel)({
    *   violations: ["Missing required name."]
    * })
-   * console.log(grouped.hasCritical) // true
+   * console.log(O.map(grouped, (value) => value.hasCritical))
    * ```
    *
    * @returns `true` when the blocking-violation collection is non-empty.
@@ -836,11 +854,13 @@ class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`Violatio
  *
  * **Example** (Use ViolationsByLevel)
  * ```ts
- * import { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent"
  *
- * const grouped = ViolationsByLevel.fromUnknown({ warnings: ["A label is missing."] })
- * console.log(grouped.totalCount) // 1
- * console.log(grouped.hasCritical) // false
+ * const grouped = S.decodeUnknownOption(ViolationsByLevel)({ warnings: ["A label is missing."] })
+ * console.log(O.map(grouped, (value) => value.totalCount))
+ * console.log(O.map(grouped, (value) => value.hasCritical))
  * ```
  *
  * @category validation
@@ -861,7 +881,7 @@ export const ViolationsByLevel = ViolationsByLevelModel.annotate({
  *
  * **Example** (Use ViolationsByLevel)
  * ```ts
- * import type { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent"
  *
  * const count = (grouped: ViolationsByLevel): number => grouped.totalCount
  * console.log(typeof count) // "function"
@@ -890,7 +910,7 @@ const ViolationExplanationFields = {
   severity: ShaclSeverity.annotateKey({
     description: "Standard SHACL severity assigned to the diagnostic.",
   }),
-} as const;
+};
 
 class ViolationExplanationModel extends S.Class<ViolationExplanationModel>($I`ViolationExplanation`)(
   ViolationExplanationFields,
@@ -904,14 +924,16 @@ class ViolationExplanationModel extends S.Class<ViolationExplanationModel>($I`Vi
  *
  * **Example** (Use ViolationExplanation)
  * ```ts
- * import { ViolationExplanation } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ViolationExplanation } from "@effect-ontology/Model/OntologyAgent"
  *
- * const explanation = ViolationExplanation.fromUnknown({
+ * const explanation = S.decodeUnknownOption(ViolationExplanation)({
  *   focusNode: "https://example.org/alice",
  *   explanation: "Expected at least one name.",
  *   severity: "violation"
  * })
- * console.log(explanation.severity) // "violation"
+ * console.log(O.map(explanation, (value) => value.severity))
  * ```
  *
  * @invariant Focus node and explanation are non-empty; severity is standard SHACL.
@@ -933,7 +955,7 @@ export const ViolationExplanation = ViolationExplanationModel.annotate({
  *
  * **Example** (Use ViolationExplanation)
  * ```ts
- * import type { ViolationExplanation } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { ViolationExplanation } from "@effect-ontology/Model/OntologyAgent"
  *
  * const text = (value: ViolationExplanation): string => value.explanation
  * console.log(typeof text) // "function"
@@ -959,7 +981,7 @@ const EnhancedValidationReportFields = {
   duration: S.DurationFromMillis,
   dataGraphTripleCount: NonNegativeInt,
   shapesCount: NonNegativeInt,
-} as const;
+};
 
 class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportModel>($I`EnhancedValidationReport`)(
   EnhancedValidationReportFields,
@@ -972,16 +994,18 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
    *
    * **Example** (Use OntologyAgent)
    * ```ts
-   * import { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const report = EnhancedValidationReport.fromUnknown({
+   * const report = S.decodeUnknownOption(EnhancedValidationReport)({
    *   conforms: false,
    *   byLevel: { violations: ["Missing required name."] },
    *   duration: 5,
    *   dataGraphTripleCount: 10,
    *   shapesCount: 2
    * })
-   * console.log(report.violationCount) // 1
+   * console.log(O.map(report, (value) => value.violationCount))
    * ```
    *
    * @returns Derived count across every grouped severity level.
@@ -995,7 +1019,7 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
    *
    * **Example** (Use OntologyAgent)
    * ```ts
-   * import type { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import type { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent"
    *
    * const accepted = (report: EnhancedValidationReport): boolean => report.isValid
    * ```
@@ -1011,16 +1035,18 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
    *
    * **Example** (Use OntologyAgent)
    * ```ts
-   * import { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent.ts"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent"
    *
-   * const report = EnhancedValidationReport.fromUnknown({
+   * const report = S.decodeUnknownOption(EnhancedValidationReport)({
    *   conforms: true,
    *   byLevel: { warnings: ["A recommended label is missing."] },
    *   duration: 5,
    *   dataGraphTripleCount: 10,
    *   shapesCount: 2
    * })
-   * console.log(report.hasWarningsOnly) // true
+   * console.log(O.map(report, (value) => value.hasWarningsOnly))
    * ```
    *
    * @returns `true` when the report conforms and has at least one warning.
@@ -1041,15 +1067,17 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
  *
  * **Example** (Use EnhancedValidationReport)
  * ```ts
- * import { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent"
  *
- * const report = EnhancedValidationReport.fromUnknown({
+ * const report = S.decodeUnknownOption(EnhancedValidationReport)({
  *   conforms: true,
  *   duration: 5,
  *   dataGraphTripleCount: 42,
  *   shapesCount: 3
  * })
- * console.log(report.violationCount) // 0
+ * console.log(O.map(report, (value) => value.violationCount))
  * ```
  *
  * @invariant Stored counts are non-negative and violation count is derived.
@@ -1073,7 +1101,7 @@ export const EnhancedValidationReport = EnhancedValidationReportModel.annotate({
  *
  * **Example** (Use EnhancedValidationReport)
  * ```ts
- * import type { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent.ts"
+ * import type { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent"
  *
  * const conforms = (report: EnhancedValidationReport): boolean => report.isValid
  * console.log(typeof conforms) // "function"

@@ -1,6 +1,8 @@
 /**
  * Cross-Batch Entity Resolver Service
  *
+ * **Details**
+ *
  * Resolves entities across extraction batches by matching against a persistent
  * entity registry. Enables building up a knowledge base over time where entities
  * from different batches are linked to canonical IRIs.
@@ -14,9 +16,11 @@ import { PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
-import { Context, Effect, HashMap, HashSet, Layer, MutableHashMap, Option, Schema } from "effect";
+import { Context, Effect, HashMap, HashSet, Layer, MutableHashMap } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { SqlError } from "effect/unstable/sql";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
@@ -33,6 +37,20 @@ const $I = $ScratchpadId.create("effect-ontology/Service/CrossBatchEntityResolve
 
 /**
  * Combined error type for cross-batch resolution operations
+ *
+ *
+ * **Example** (Use the CrossBatchResolutionError contract)
+ *
+ * ```ts
+ * import type { CrossBatchResolutionError } from "@effect-ontology/Service/CrossBatchEntityResolver"
+ *
+ * const acceptsCrossBatchResolutionError = (_value: CrossBatchResolutionError): void => undefined
+ *
+ * console.log(acceptsCrossBatchResolutionError)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type CrossBatchResolutionError = AnyEmbeddingError | EffectDrizzleQueryError | SqlError.SqlError;
 
@@ -42,6 +60,20 @@ export type CrossBatchResolutionError = AnyEmbeddingError | EffectDrizzleQueryEr
 
 /**
  * Result of cross-batch entity resolution
+ *
+ *
+ * **Example** (Use the CrossBatchResolutionResult contract)
+ *
+ * ```ts
+ * import type { CrossBatchResolutionResult } from "@effect-ontology/Service/CrossBatchEntityResolver"
+ *
+ * const acceptsCrossBatchResolutionResult = (_value: CrossBatchResolutionResult): void => undefined
+ *
+ * console.log(acceptsCrossBatchResolutionResult)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface CrossBatchResolutionResult {
   /** Map from extracted entity ID to canonical IRI */
@@ -54,6 +86,23 @@ export interface CrossBatchResolutionResult {
   readonly stats: ResolutionStats;
 }
 
+/**
+ * Describes the merged entity data exposed by this module.
+ *
+ *
+ * **Example** (Use the MergedEntity contract)
+ *
+ * ```ts
+ * import type { MergedEntity } from "@effect-ontology/Service/CrossBatchEntityResolver"
+ *
+ * const acceptsMergedEntity = (_value: MergedEntity): void => undefined
+ *
+ * console.log(acceptsMergedEntity)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface MergedEntity {
   readonly entityId: string;
   readonly canonicalIri: string;
@@ -61,6 +110,23 @@ export interface MergedEntity {
   readonly method: string;
 }
 
+/**
+ * Describes the resolution stats data exposed by this module.
+ *
+ *
+ * **Example** (Use the ResolutionStats contract)
+ *
+ * ```ts
+ * import type { ResolutionStats } from "@effect-ontology/Service/CrossBatchEntityResolver"
+ *
+ * const acceptsResolutionStats = (_value: ResolutionStats): void => undefined
+ *
+ * console.log(acceptsResolutionStats)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface ResolutionStats {
   readonly totalEntities: number;
   readonly matchedToExisting: number;
@@ -70,8 +136,19 @@ export interface ResolutionStats {
 
 /**
  * Configuration for cross-batch entity resolution
+ *
+ * **Example** (Inspect cross batch resolver config)
+ *
+ * ```ts
+ * import { CrossBatchResolverConfig } from "@effect-ontology/Service/CrossBatchEntityResolver"
+ *
+ * console.log(CrossBatchResolverConfig)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
-export class CrossBatchResolverConfig extends Schema.Class<CrossBatchResolverConfig>("CrossBatchResolverConfig")({
+export class CrossBatchResolverConfig extends S.Class<CrossBatchResolverConfig>("CrossBatchResolverConfig")({
   /** Minimum similarity for candidate retrieval (ANN search) */
   candidateThreshold: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.6))),
 
@@ -85,7 +162,7 @@ export class CrossBatchResolverConfig extends Schema.Class<CrossBatchResolverCon
   maxBlockingCandidates: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(100))),
 
   /** Namespace prefix for generated canonical IRIs */
-  canonicalNamespace: Schema.String.pipe(SchemaUtils.withKeyDefaults("http://example.org/entities/")),
+  canonicalNamespace: S.String.pipe(SchemaUtils.withKeyDefaults("http://example.org/entities/")),
 }) {}
 
 const DEFAULT_CONFIG = CrossBatchResolverConfig.make({});
@@ -94,6 +171,20 @@ const DEFAULT_CONFIG = CrossBatchResolverConfig.make({});
 // Service
 // =============================================================================
 
+/**
+ * Provides the cross batch entity resolver service capability.
+ *
+ * **Example** (Inspect cross batch entity resolver)
+ *
+ * ```ts
+ * import { CrossBatchEntityResolver } from "@effect-ontology/Service/CrossBatchEntityResolver"
+ *
+ * console.log(CrossBatchEntityResolver)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityResolver>()(
   $I`CrossBatchEntityResolver`,
   {
@@ -156,7 +247,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
               const merged = MutableHashMap.empty<string, BlockingCandidate>();
               for (const candidate of A.appendAll(tokenCandidates, embeddingCandidates)) {
                 const existing = MutableHashMap.get(merged, candidate.canonicalEntityId);
-                if (Option.isNone(existing) || candidate.similarity > existing.value.similarity) {
+                if (O.isNone(existing) || candidate.similarity > existing.value.similarity) {
                   MutableHashMap.set(merged, candidate.canonicalEntityId, candidate);
                 }
               }
@@ -195,9 +286,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         for (let i = 0; i < entities.length; i++) {
           const entity = entities[i];
           const embedding = embeddings[i];
-          const candidates = HashMap.get(candidateMap, entity.id).pipe(
-            Option.getOrElse(() => [] as Array<BlockingCandidate>)
-          );
+          const candidates = HashMap.get(candidateMap, entity.id).pipe(O.getOrElse(() => []));
 
           candidatesEvaluated += candidates.length;
 
@@ -264,7 +353,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
           // Insert alias for this mention
           // Note: We need to look up the canonical entity ID from IRI
           const canonicalOpt = yield* registry.getCanonicalEntityByIri(merged.canonicalIri, ontologyId);
-          if (Option.isSome(canonicalOpt)) {
+          if (O.isSome(canonicalOpt)) {
             const canonical = canonicalOpt.value;
             // We don't have the original entity mention here - this needs refactoring
             // For now, skip alias insertion for merged entities
@@ -294,7 +383,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
           const tokens = tokenize(entity.mention);
           // Need to get the ID of the just-inserted entity
           const insertedOpt = yield* registry.getCanonicalEntityByIri(iri, ontologyId);
-          if (Option.isSome(insertedOpt)) {
+          if (O.isSome(insertedOpt)) {
             yield* registry.insertBlockingTokens(ontologyId, insertedOpt.value.id, tokens);
           }
 
@@ -414,6 +503,17 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
 
 /**
  * Live layer for CrossBatchEntityResolver
+ *
+ * **Example** (Inspect cross batch entity resolver live)
+ *
+ * ```ts
+ * import { CrossBatchEntityResolverLive } from "@effect-ontology/Service/CrossBatchEntityResolver"
+ *
+ * console.log(CrossBatchEntityResolverLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const CrossBatchEntityResolverLive = CrossBatchEntityResolver.Default;
 

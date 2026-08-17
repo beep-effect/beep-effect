@@ -172,6 +172,7 @@
         "@beep/postgres": "workspace:^",
         "@beep/provenance": "workspace:^",
         "@beep/rdf": "workspace:^",
+        "@beep/repo-utils": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "@beep/ui": "workspace:^",

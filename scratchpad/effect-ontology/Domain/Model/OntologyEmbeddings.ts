@@ -7,10 +7,9 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
-import { Effect, flow, pipe } from "effect";
+import { Effect, flow, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
-import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -48,7 +47,7 @@ const ElementEmbeddingFields = {
   embedding: EmbeddingVector.annotateKey({
     description: "Finite vector returned by the embedding model.",
   }),
-} as const;
+};
 
 /**
  * Embedding and source text for one ontology class or property.
@@ -56,7 +55,7 @@ const ElementEmbeddingFields = {
  * **Example** (Use ElementEmbedding)
  * ```ts
  * import * as O from "effect/Option"
- * import { ElementEmbedding } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+ * import { ElementEmbedding } from "@effect-ontology/Model/OntologyEmbeddings"
  *
  * const text = ElementEmbedding.buildText(
  *   "SportsTeam",
@@ -83,15 +82,11 @@ export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedd
   /**
    * Builds stable semantic text from a label, optional description, and aliases.
    *
-   * @param label Primary human-readable ontology label.
-   * @param description Already-normalized optional definition or comment.
-   * @param altLabels Alternative labels in preferred display order.
-   * @returns Period-delimited semantic text suitable for embedding.
-   *
    * **Example** (Use OntologyEmbeddingsFields)
+   *
    * ```ts
    * import * as O from "effect/Option"
-   * import { ElementEmbedding } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+   * import { ElementEmbedding } from "@effect-ontology/Model/OntologyEmbeddings"
    *
    * const text = ElementEmbedding.buildText(
    *   "Person",
@@ -100,6 +95,11 @@ export class ElementEmbedding extends S.Class<ElementEmbedding>($I`ElementEmbedd
    * )
    * console.log(text) // "Person. A human being.. Also known as: Human"
    * ```
+   *
+   * @param label - Primary human-readable ontology label.
+   * @param description - Already-normalized optional definition or comment.
+   * @param altLabels - Alternative labels in preferred display order.
+   * @returns Period-delimited semantic text suitable for embedding.
    */
   static buildText(label: string, description: O.Option<string>, altLabels: ReadonlyArray<string>): string {
     const aliasSentence = pipe(
@@ -145,7 +145,7 @@ const OntologyEmbeddingsFields = {
     SchemaUtils.withEmptyArrayDefaults<ElementEmbedding>(),
     S.annotateKey({ description: "Embeddings for ontology property definitions." })
   ),
-} as const;
+};
 
 class OntologyEmbeddingsFieldsModel extends S.Class<OntologyEmbeddingsFieldsModel>($I`OntologyEmbeddingsFieldsModel`)(
   OntologyEmbeddingsFields,
@@ -228,14 +228,13 @@ const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
  * **Example** (Use OntologyEmbeddings)
  * ```ts
  * import { Effect } from "effect"
- * import { GcsUri } from "@effect-ontology/Identity.ts"
- * import { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GcsUri } from "@effect-ontology/Identity"
+ * import { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings"
  *
- * console.log(
- *   OntologyEmbeddings.storagePathFor(
- *     GcsUri.fromUnknown("gs://beep-ontology/ontologies/football/ontology.ttl")
- *   )
- * ) // "gs://beep-ontology/ontologies/football/ontology-embeddings.json"
+ * const uri = S.decodeUnknownOption(GcsUri)("gs://beep-ontology/ontologies/football/ontology.ttl")
+ * console.log(O.map(uri, OntologyEmbeddings.storagePathFor))
  * console.log(Effect.isEffect(OntologyEmbeddings.computeVersion("@prefix ex: <https://example.com/> .")))
  * ```
  *
@@ -262,7 +261,7 @@ export const OntologyEmbeddings = OntologyEmbeddingsDefinition.annotate({
  *
  * **Example** (Use OntologyEmbeddings)
  * ```ts
- * import type { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+ * import type { OntologyEmbeddings } from "@effect-ontology/Model/OntologyEmbeddings"
  *
  * const dimension = (artifact: OntologyEmbeddings): number => artifact.dimension
  * console.log(typeof dimension) // "function"
@@ -281,7 +280,7 @@ const OntologyEmbeddingsJsonDefinition = OntologyEmbeddings.pipe(S.fromJsonStrin
  * **Example** (Use OntologyEmbeddingsJson)
  * ```ts
  * import * as S from "effect/Schema"
- * import { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+ * import { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings"
  *
  * console.log(S.isSchema(OntologyEmbeddingsJson)) // true
  * ```
@@ -301,7 +300,7 @@ export const OntologyEmbeddingsJson = OntologyEmbeddingsJsonDefinition.pipe(
  *
  * **Example** (Use OntologyEmbeddingsJson)
  * ```ts
- * import type { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings.ts"
+ * import type { OntologyEmbeddingsJson } from "@effect-ontology/Model/OntologyEmbeddings"
  *
  * const inspect = (value: OntologyEmbeddingsJson): number => value.dimension
  * console.log(typeof inspect) // "function"

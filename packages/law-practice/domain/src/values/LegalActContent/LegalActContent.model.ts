@@ -7,6 +7,7 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 
 const $I = $LawPracticeDomainId.create("values/LegalActContent/LegalActContent.model");
 
@@ -89,6 +90,16 @@ export const LegalActDescription = S.NonEmptyString.pipe(
  */
 export type LegalActDescription = typeof LegalActDescription.Type;
 
+const makeLegalActContentMember = <T extends LegalActPolarity>(literal: S.Literal<T>) =>
+  S.Struct({
+    description: LegalActDescription.annotateKey({
+      description: "Plain-text description of the act, compared exactly and never normalized.",
+    }),
+    polarity: S.tag(literal.literal).annotateKey({
+      description: "Whether the content performs the described act or refrains from it.",
+    }),
+  });
+
 /**
  * The act a legal position is about, together with its required polarity.
  *
@@ -126,19 +137,23 @@ export type LegalActDescription = typeof LegalActDescription.Type;
  * @category models
  * @since 0.0.0
  */
-export class LegalActContent extends S.Class<LegalActContent>($I`LegalActContent`)(
-  {
-    description: LegalActDescription.annotateKey({
-      description: "Plain-text description of the act, compared exactly and never normalized.",
-    }),
-    polarity: LegalActPolarity.annotateKey({
-      description: "Whether the content performs the described act or refrains from it.",
-    }),
-  },
-  $I.annote("LegalActContent", {
+export const LegalActContent = LegalActPolarity.mapMembers(
+  Tuple.evolve([makeLegalActContentMember, makeLegalActContentMember])
+).pipe(
+  S.toTaggedUnion("polarity"),
+  $I.annoteSchema("LegalActContent", {
     description: "The act a legal position is about, carrying its required act-or-omission polarity.",
   })
-) {}
+);
+
+/**
+ * Runtime type for {@link LegalActContent}.
+ *
+ * @see {@link LegalActContent} for the polarity-tagged content schema.
+ * @category models
+ * @since 0.0.0
+ */
+export type LegalActContent = typeof LegalActContent.Type;
 
 /**
  * Exact structural comparison of two {@link LegalActContent} values, derived

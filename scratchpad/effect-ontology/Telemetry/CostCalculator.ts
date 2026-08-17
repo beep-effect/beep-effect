@@ -1,6 +1,8 @@
 /**
  * LLM Cost Calculator
  *
+ * **Details**
+ *
  * Calculates estimated costs based on token usage and model pricing.
  *
  * @packageDocumentation
@@ -36,24 +38,38 @@ const PRICING: Record<string, { input: number; output: number }> = {
 /**
  * Get pricing for a model
  *
+ * **Example** (Inspect get pricing)
+ *
+ * ```ts
+ * import { getPricing } from "@effect-ontology/Telemetry/CostCalculator"
+ *
+ * console.log(getPricing)
+ * ```
+ *
  * @param model - Model identifier
  * @returns Pricing info or undefined if unknown
- *
+ * @category observability
  * @since 0.0.0
- * @category utilities
  */
 export const getPricing = (model: string): { input: number; output: number } | undefined => PRICING[model];
 
 /**
  * Calculate estimated cost for an LLM call
  *
+ * **Example** (Inspect calculate cost)
+ *
+ * ```ts
+ * import { calculateCost } from "@effect-ontology/Telemetry/CostCalculator"
+ *
+ * console.log(calculateCost)
+ * ```
+ *
  * @param model - Model identifier
  * @param inputTokens - Number of input tokens
  * @param outputTokens - Number of output tokens
  * @returns Estimated cost in USD (0 if model unknown)
- *
+ * @category observability
  * @since 0.0.0
- * @category utilities
  */
 export const calculateCost = dual3((model: string, inputTokens: number, outputTokens: number): number => {
   const pricing = PRICING[model];

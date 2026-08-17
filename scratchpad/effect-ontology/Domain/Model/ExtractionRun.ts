@@ -20,7 +20,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionRun");
  *
  * **Example** (Use ErrorCode)
  * ```ts
- * import { ErrorCode } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import { ErrorCode } from "@effect-ontology/Model/ExtractionRun"
  *
  * console.log(ErrorCode.is.rate_limited("rate_limited")) // true
  * ```
@@ -52,7 +52,7 @@ export const ErrorCode = LiteralKit([
  *
  * **Example** (Use ErrorCode)
  * ```ts
- * import type { ErrorCode } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import type { ErrorCode } from "@effect-ontology/Model/ExtractionRun"
  *
  * const code: ErrorCode = "timeout"
  * console.log(code) // "timeout"
@@ -68,7 +68,7 @@ export type ErrorCode = typeof ErrorCode.Type;
  *
  * **Example** (Use AuditEventType)
  * ```ts
- * import { AuditEventType } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import { AuditEventType } from "@effect-ontology/Model/ExtractionRun"
  *
  * console.log(AuditEventType.is.warning("warning")) // true
  * ```
@@ -91,7 +91,7 @@ export const AuditEventType = LiteralKit(["started", "completed", "failed", "inf
  *
  * **Example** (Use AuditEventType)
  * ```ts
- * import type { AuditEventType } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import type { AuditEventType } from "@effect-ontology/Model/ExtractionRun"
  *
  * const type: AuditEventType = "info"
  * console.log(type) // "info"
@@ -118,7 +118,7 @@ const OutputMetadataFields = {
   savedAt: S.DateTimeUtcFromString.annotateKey({
     description: "UTC instant at which persistence completed.",
   }),
-} as const;
+};
 
 /**
  * Integrity and location metadata for one persisted run output.
@@ -126,17 +126,18 @@ const OutputMetadataFields = {
  * **Example** (Use OutputMetadata)
  * ```ts
  * import { DateTime } from "effect"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { OutputMetadata } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import { OutputMetadata } from "@effect-ontology/Model/ExtractionRun"
  *
- * const output = S.decodeUnknownSync(OutputMetadata)({
+ * const output = S.decodeUnknownOption(OutputMetadata)({
  *   type: "entities",
  *   path: "runs/doc-0123456789ab/outputs/entities.json",
  *   hash: "a".repeat(64),
  *   size: 128,
  *   savedAt: DateTime.formatIso(DateTime.nowUnsafe())
  * })
- * console.log(output.type) // "entities"
+ * console.log(O.map(output, (value) => value.type)) // "entities"
  * ```
  *
  * @category models
@@ -153,7 +154,7 @@ const AuditEventFields = {
   timestamp: S.DateTimeUtcFromString,
   type: AuditEventType,
   data: S.Record(S.String, S.Json).pipe(SchemaUtils.withKeyDefaults({})),
-} as const;
+};
 
 /**
  * Structured, JSON-compatible extraction-run audit event.
@@ -161,7 +162,7 @@ const AuditEventFields = {
  * **Example** (Use AuditEvent)
  * ```ts
  * import { DateTime } from "effect"
- * import { AuditEvent } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import { AuditEvent } from "@effect-ontology/Model/ExtractionRun"
  *
  * const event = AuditEvent.make({
  *   timestamp: DateTime.nowUnsafe(),
@@ -185,7 +186,7 @@ const AuditErrorFields = {
   type: ErrorCode,
   message: S.NonEmptyString,
   context: S.Record(S.String, S.Json).pipe(SchemaUtils.withKeyDefaults({})),
-} as const;
+};
 
 /**
  * Structured error retained in an extraction run's audit trail.
@@ -193,7 +194,7 @@ const AuditErrorFields = {
  * **Example** (Use AuditError)
  * ```ts
  * import { DateTime } from "effect"
- * import { AuditError } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import { AuditError } from "@effect-ontology/Model/ExtractionRun"
  *
  * const error = AuditError.make({
  *   timestamp: DateTime.nowUnsafe(),
@@ -223,7 +224,7 @@ export class AuditError extends S.Class<AuditError>($I`AuditError`)(
  *
  * **Example** (Use RunStatus)
  * ```ts
- * import { RunStatus } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import { RunStatus } from "@effect-ontology/Model/ExtractionRun"
  *
  * const status = RunStatus.cases.Pending.make({})
  * console.log(status._tag) // "Pending"
@@ -260,7 +261,7 @@ export const RunStatus = S.TaggedUnion({
  *
  * **Example** (Use RunStatus)
  * ```ts
- * import type { RunStatus } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import type { RunStatus } from "@effect-ontology/Model/ExtractionRun"
  *
  * const status: RunStatus = { _tag: "Pending" }
  * console.log(status._tag) // "Pending"
@@ -315,14 +316,14 @@ const ChunkingConfigFields = {
   maxChunkSize: ChunkSize.pipe(SchemaUtils.withKeyDefaults(ChunkSize.make(4_000))),
   preserveSentences: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
   overlapTokens: OverlapTokens.pipe(SchemaUtils.withKeyDefaults(OverlapTokens.make(50))),
-} as const;
+};
 
 /**
  * Schema-defaulted text chunking policy.
  *
  * **Example** (Use ChunkingConfig)
  * ```ts
- * import { ChunkingConfig } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import { ChunkingConfig } from "@effect-ontology/Model/ExtractionRun"
  *
  * const config = ChunkingConfig.default()
  * console.log(config.maxChunkSize) // 4000
@@ -343,7 +344,7 @@ export class ChunkingConfig extends S.Class<ChunkingConfig>($I`ChunkingConfig`)(
    *
    * **Example** (Use Temperature)
    * ```ts
-   * import { ChunkingConfig } from "@effect-ontology/Model/ExtractionRun.ts"
+   * import { ChunkingConfig } from "@effect-ontology/Model/ExtractionRun"
    *
    * const config = ChunkingConfig.default()
    * console.log(config.maxChunkSize) // 4000
@@ -402,23 +403,24 @@ const LlmConfigFields = {
   temperature: Temperature,
   maxTokens: PosInt,
   timeout: LlmTimeout,
-} as const;
+};
 
 /**
  * Model-execution policy captured by an extraction run.
  *
  * **Example** (Use LlmConfig)
  * ```ts
- * import { Duration } from "effect"
- * import { LlmConfig } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { LlmConfig } from "@effect-ontology/Model/ExtractionRun"
  *
- * const config = LlmConfig.make({
+ * const config = S.decodeUnknownOption(LlmConfig)({
  *   model: "gpt-5",
  *   temperature: 0,
  *   maxTokens: 4096,
- *   timeout: Duration.seconds(30)
+ *   timeout: 30_000
  * })
- * console.log(config.model) // "gpt-5"
+ * console.log(O.isSome(config)) // true
  * ```
  *
  * @category configuration
@@ -457,33 +459,32 @@ const RunConfigFields = {
   llm: LlmConfig,
   concurrency: Concurrency.pipe(SchemaUtils.withKeyDefaults(Concurrency.make(4))),
   enableGrounding: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-} as const;
+};
 
 /**
  * Complete immutable configuration snapshot for an extraction run.
  *
  * **Example** (Use RunConfig)
  * ```ts
- * import { Duration } from "effect"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ChunkingConfig, LlmConfig, RunConfig } from "@effect-ontology/Model/ExtractionRun.ts"
- * import { OntologyRef } from "@effect-ontology/Model/Ontology.ts"
+ * import { RunConfig } from "@effect-ontology/Model/ExtractionRun"
  *
- * const config = RunConfig.make({
- *   ontology: S.decodeUnknownSync(OntologyRef)({
+ * const config = S.decodeUnknownOption(RunConfig)({
+ *   ontology: {
  *     namespace: "football",
  *     name: "premier-league",
  *     contentHash: "a".repeat(64)
- *   }),
- *   chunking: ChunkingConfig.default(),
- *   llm: LlmConfig.make({
+ *   },
+ *   chunking: {},
+ *   llm: {
  *     model: "gpt-5",
  *     temperature: 0,
  *     maxTokens: 4096,
- *     timeout: Duration.seconds(30)
- *   })
+ *     timeout: 30_000
+ *   }
  * })
- * console.log(config.concurrency) // 4
+ * console.log(O.isSome(config)) // true
  * ```
  *
  * @category configuration
@@ -504,17 +505,18 @@ const RunStatsFields = {
   clusterCount: NonNegativeInt,
   tokensUsed: NonNegativeInt,
   duration: S.DurationFromMillis,
-} as const;
+};
 
 /**
  * Non-negative measurements collected during extraction.
  *
  * **Example** (Use RunStats)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { RunStats } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import { RunStats } from "@effect-ontology/Model/ExtractionRun"
  *
- * const stats = S.decodeUnknownSync(RunStats)({
+ * const stats = S.decodeUnknownOption(RunStats)({
  *   chunkCount: 1,
  *   entityCount: 2,
  *   relationCount: 1,
@@ -523,7 +525,7 @@ const RunStatsFields = {
  *   tokensUsed: 128,
  *   duration: 20
  * })
- * console.log(stats.entityCount) // 2
+ * console.log(O.map(stats, (value) => value.entityCount)) // 2
  * ```
  *
  * @category models
@@ -549,7 +551,7 @@ const ExtractionRunFields = {
   outputs: S.Array(OutputMetadata).pipe(SchemaUtils.withEmptyArrayDefaults<OutputMetadata>()),
   events: S.Array(AuditEvent).pipe(SchemaUtils.withEmptyArrayDefaults<AuditEvent>()),
   errors: S.Array(AuditError).pipe(SchemaUtils.withEmptyArrayDefaults<AuditError>()),
-} as const;
+};
 
 /**
  * Root aggregate for one execution of the knowledge-extraction pipeline.
@@ -562,7 +564,7 @@ const ExtractionRunFields = {
  *
  * **Example** (Use ExtractionRun)
  * ```ts
- * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
  *
  * const metadataPath = (run: ExtractionRun): string => run.metadataPath
  * console.log(typeof metadataPath) // "function"
@@ -580,15 +582,12 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   /**
    * Builds the stable identifier for one indexed input chunk.
    *
-   * @param runId - Document identifier of the owning extraction run.
-   * @param index - Zero-based chunk index.
-   * @returns A run-scoped chunk identifier in `{runId}-chunk-{index}` form.
-   *
    * **Example** (Use chunkId)
+   *
    * ```ts
    * import { NonNegativeInt } from "@beep/schema"
-   * import { DocumentId } from "@effect-ontology/Identity.ts"
-   * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun.ts"
+   * import { DocumentId } from "@effect-ontology/Identity"
+   * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
    *
    * const id = ExtractionRun.chunkId(
    *   DocumentId.make("doc-abc123def456"),
@@ -596,6 +595,10 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
    * )
    * console.log(id) // "doc-abc123def456-chunk-2"
    * ```
+   *
+   * @param runId - Document identifier of the owning extraction run.
+   * @param index - Zero-based chunk index.
+   * @returns A run-scoped chunk identifier in `{runId}-chunk-{index}` form.
    */
   static chunkId(runId: DocumentId, index: NonNegativeInt): string {
     return `${runId}-chunk-${index}`;
@@ -604,16 +607,17 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   /**
    * Effect primary key used for aggregate identity and deduplication.
    *
-   * @returns This run's validated document identifier.
-   *
    * **Example** (Use ExtractionRun)
+   *
    * ```ts
    * import { PrimaryKey } from "effect"
-   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun.ts"
+   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
    *
    * const primaryKey = (run: ExtractionRun) => run[PrimaryKey.symbol]()
    * console.log(typeof primaryKey) // "function"
    * ```
+   *
+   * @returns This run's validated document identifier.
    */
   [PrimaryKey.symbol](): DocumentId {
     return this.id;
@@ -622,15 +626,16 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   /**
    * Canonical storage path for serialized run metadata.
    *
-   * @returns Storage-relative metadata path derived from the run identifier.
-   *
    * **Example** (Use ExtractionRun)
+   *
    * ```ts
-   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun.ts"
+   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
    *
    * const metadataPath = (run: ExtractionRun) => run.metadataPath
    * console.log(typeof metadataPath) // "function"
    * ```
+   *
+   * @returns Storage-relative metadata path derived from the run identifier.
    */
   get metadataPath(): string {
     return PathLayout.run.metadata(this.id);
@@ -639,15 +644,16 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   /**
    * Canonical storage path for the immutable run input.
    *
-   * @returns Storage-relative input path derived from the run identifier.
-   *
    * **Example** (Use outputPath)
+   *
    * ```ts
-   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun.ts"
+   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
    *
    * const inputPath = (run: ExtractionRun) => run.inputPath
    * console.log(typeof inputPath) // "function"
    * ```
+   *
+   * @returns Storage-relative input path derived from the run identifier.
    */
   get inputPath(): string {
     return PathLayout.run.input(this.id);
@@ -656,16 +662,17 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
   /**
    * Canonical storage path for a typed run output.
    *
-   * @param type - Logical output kind whose canonical filename is requested.
-   * @returns Storage-relative path under this run's output directory.
-   *
    * **Example** (Use AuditErrorType)
+   *
    * ```ts
-   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun.ts"
+   * import type { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
    *
    * const outputPath = (run: ExtractionRun) => run.outputPath("metadata")
    * console.log(typeof outputPath) // "function"
    * ```
+   *
+   * @param type - Logical output kind whose canonical filename is requested.
+   * @returns Storage-relative path under this run's output directory.
    */
   outputPath(type: OutputType): string {
     return PathLayout.run.output(this.id, type);
@@ -679,7 +686,7 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
  *
  * **Example** (Use AuditErrorType)
  * ```ts
- * import type { AuditErrorType } from "@effect-ontology/Model/ExtractionRun.ts"
+ * import type { AuditErrorType } from "@effect-ontology/Model/ExtractionRun"
  *
  * const type: AuditErrorType = "storage"
  * console.log(type) // "storage"

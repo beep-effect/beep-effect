@@ -1,6 +1,8 @@
 /**
  * Progress Streaming Service
  *
+ * **Details**
+ *
  * Implements the progress streaming contract with Effect patterns.
  * Provides functional builders for creating progress events.
  *
@@ -9,19 +11,17 @@
  */
 
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import { UUID } from "@beep/schema/String";
 import { ISOStr } from "@beep/schema/Timestamp";
-import { Chunk, Clock, Data, Effect, Ref, Stream } from "effect";
+import { Chunk, Clock, DateTime, Effect, HashSet, Match, Random, Ref, Stream } from "effect";
 import * as A from "effect/Array";
-import * as DateTime from "effect/DateTime";
 import { dual } from "effect/Function";
-import * as HashSet from "effect/HashSet";
-import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Random from "effect/Random";
+import * as S from "effect/Schema";
 import { v4 as uuidv4 } from "uuid";
 import type { BackpressureConfig, ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import {
@@ -41,6 +41,8 @@ import {
 import type { ExtractionRunId } from "../Domain/Identity.ts";
 import { dual2 } from "../Utils/Dual.ts";
 
+const $I = $ScratchpadId.create("effect-ontology/Service/ProgressStreaming");
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -51,16 +53,50 @@ import { dual2 } from "../Utils/Dual.ts";
 /**
  * Failure caused by progress-stream backpressure policy enforcement.
  *
- * @since 0.0.0
+ * **Example** (Inspect progress streaming error)
+ *
+ * ```ts
+ * import { ProgressStreamingError } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(ProgressStreamingError)
+ * ```
+ *
  * @category errors
+ * @since 0.0.0
  */
-export class ProgressStreamingError extends Data.TaggedError("ProgressStreamingError")<{
-  readonly reason: "BackpressureTimeout" | "QueueOverflow";
-  readonly message: string;
-}> {}
+export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError>($I`ProgressStreamingError`)(
+  "ProgressStreamingError",
+  {
+    reason: S.Literals(["BackpressureTimeout", "QueueOverflow"]).annotateKey({
+      description: "Backpressure policy outcome that stopped progress delivery.",
+    }),
+    message: S.NonEmptyString.annotateKey({
+      description: "Human-readable progress-streaming failure diagnostic.",
+    }),
+  },
+  $I.annote("ProgressStreamingError", {
+    description: "Failure caused by progress-stream backpressure policy enforcement.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 /**
  * Progress builder state
+ *
+ *
+ * **Example** (Use the ProgressBuilderState contract)
+ *
+ * ```ts
+ * import type { ProgressBuilderState } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const acceptsProgressBuilderState = (_value: ProgressBuilderState): void => undefined
+ *
+ * console.log(acceptsProgressBuilderState)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ProgressBuilderState {
   readonly runId: ExtractionRunId;
@@ -75,6 +111,17 @@ export interface ProgressBuilderState {
 
 /**
  * Create a new progress builder state
+ *
+ * **Example** (Inspect make progress builder)
+ *
+ * ```ts
+ * import { makeProgressBuilder } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(makeProgressBuilder)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeProgressBuilder = dual2(
   (runId: ExtractionRunId, totalChunks: PosInt): Effect.Effect<Ref.Ref<ProgressBuilderState>> =>
@@ -96,6 +143,17 @@ const calculateOverallProgress = (state: ProgressBuilderState, phaseProgress: nu
 
 /**
  * Create ExtractionStartedEvent
+ *
+ * **Example** (Inspect create extraction started)
+ *
+ * ```ts
+ * import { createExtractionStarted } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(createExtractionStarted)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const createExtractionStarted: {
   (
@@ -140,6 +198,17 @@ export const createExtractionStarted: {
 
 /**
  * Create ChunkingProgressEvent
+ *
+ * **Example** (Inspect create chunking progress)
+ *
+ * ```ts
+ * import { createChunkingProgress } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(createChunkingProgress)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const createChunkingProgress: {
   (
@@ -177,6 +246,17 @@ export const createChunkingProgress: {
 
 /**
  * Create ChunkProcessingStartedEvent
+ *
+ * **Example** (Inspect create chunk processing started)
+ *
+ * ```ts
+ * import { createChunkProcessingStarted } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(createChunkProcessingStarted)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const createChunkProcessingStarted: {
   (
@@ -214,6 +294,17 @@ export const createChunkProcessingStarted: {
 
 /**
  * Create EntityFoundEvent
+ *
+ * **Example** (Inspect create entity found)
+ *
+ * ```ts
+ * import { createEntityFound } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(createEntityFound)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const createEntityFound: {
   (
@@ -259,6 +350,17 @@ export const createEntityFound: {
 
 /**
  * Create RelationFoundEvent
+ *
+ * **Example** (Inspect create relation found)
+ *
+ * ```ts
+ * import { createRelationFound } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(createRelationFound)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const createRelationFound: {
   (
@@ -308,6 +410,17 @@ export const createRelationFound: {
 
 /**
  * Create ChunkProcessingCompleteEvent
+ *
+ * **Example** (Inspect create chunk processing complete)
+ *
+ * ```ts
+ * import { createChunkProcessingComplete } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(createChunkProcessingComplete)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const createChunkProcessingComplete: {
   (
@@ -353,6 +466,17 @@ export const createChunkProcessingComplete: {
 
 /**
  * Create ExtractionCompleteEvent
+ *
+ * **Example** (Inspect create extraction complete)
+ *
+ * ```ts
+ * import { createExtractionComplete } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(createExtractionComplete)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const createExtractionComplete: {
   (
@@ -413,6 +537,17 @@ type CreateExtractionFailedOptions = {
 
 /**
  * Create ExtractionFailedEvent
+ *
+ * **Example** (Inspect create extraction failed)
+ *
+ * ```ts
+ * import { createExtractionFailed } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(createExtractionFailed)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const createExtractionFailed: {
   (
@@ -461,6 +596,17 @@ export const createExtractionFailed: {
 
 /**
  * Create RecoverableErrorEvent
+ *
+ * **Example** (Inspect create recoverable error)
+ *
+ * ```ts
+ * import { createRecoverableError } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(createRecoverableError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
  */
 export const createRecoverableError: {
   (
@@ -505,6 +651,17 @@ export const createRecoverableError: {
 
 /**
  * Increment processed chunks
+ *
+ * **Example** (Inspect mark chunk processed)
+ *
+ * ```ts
+ * import { markChunkProcessed } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(markChunkProcessed)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const markChunkProcessed = (ref: Ref.Ref<ProgressBuilderState>): Effect.Effect<void> =>
   Ref.update(ref, (state) => ({
@@ -514,6 +671,17 @@ export const markChunkProcessed = (ref: Ref.Ref<ProgressBuilderState>): Effect.E
 
 /**
  * Set phase progress
+ *
+ * **Example** (Inspect set phase progress)
+ *
+ * ```ts
+ * import { setPhaseProgress } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(setPhaseProgress)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const setPhaseProgress = dual2(
   (ref: Ref.Ref<ProgressBuilderState>, progress: Percentage): Effect.Effect<void> =>
@@ -529,6 +697,20 @@ export const setPhaseProgress = dual2(
 
 /**
  * Backpressure handler state
+ *
+ *
+ * **Example** (Use the BackpressureState contract)
+ *
+ * ```ts
+ * import type { BackpressureState } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const acceptsBackpressureState = (_value: BackpressureState): void => undefined
+ *
+ * console.log(acceptsBackpressureState)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface BackpressureState {
   readonly config: BackpressureConfig;
@@ -538,6 +720,17 @@ export interface BackpressureState {
 
 /**
  * Create backpressure handler state
+ *
+ * **Example** (Inspect make backpressure handler)
+ *
+ * ```ts
+ * import { makeBackpressureHandler } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(makeBackpressureHandler)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
  */
 export const makeBackpressureHandler = (
   config: BackpressureConfig = DefaultBackpressureConfig
@@ -568,8 +761,21 @@ const shouldIncludeEvent = Effect.fn("ProgressStreaming.shouldIncludeEvent")(fun
 /**
  * Enqueue event with backpressure handling
  *
+ * **Details**
+ *
  * Returns O.some with warning event if backpressure warning needed,
  * O.none otherwise
+ *
+ * **Example** (Inspect enqueue event)
+ *
+ * ```ts
+ * import { enqueueEvent } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(enqueueEvent)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const enqueueEvent: {
   (
@@ -611,7 +817,7 @@ export const enqueueEvent: {
             yield* Effect.sleep(state.config.blockTimeoutMs ?? 5000);
             const afterWait = yield* Ref.get(ref);
             if (afterWait.eventQueue.length >= state.config.maxQueueSize) {
-              return yield* new ProgressStreamingError({
+              return yield* ProgressStreamingError.make({
                 reason: "BackpressureTimeout",
                 message: "Backpressure timeout: client not consuming events fast enough",
               });
@@ -625,7 +831,7 @@ export const enqueueEvent: {
         ),
         Match.when("close_stream", () =>
           Effect.fail(
-            new ProgressStreamingError({
+            ProgressStreamingError.make({
               reason: "QueueOverflow",
               message: "Backpressure critical: stream closed due to queue overflow",
             })
@@ -671,6 +877,17 @@ export const enqueueEvent: {
 
 /**
  * Dequeue next event
+ *
+ * **Example** (Inspect dequeue event)
+ *
+ * ```ts
+ * import { dequeueEvent } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(dequeueEvent)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const dequeueEvent = (ref: Ref.Ref<BackpressureState>): Effect.Effect<O.Option<ProgressEvent>> =>
   Ref.modify(ref, (state) => {
@@ -683,6 +900,17 @@ export const dequeueEvent = (ref: Ref.Ref<BackpressureState>): Effect.Effect<O.O
 
 /**
  * Get current queue size
+ *
+ * **Example** (Inspect get queue size)
+ *
+ * ```ts
+ * import { getQueueSize } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(getQueueSize)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const getQueueSize = (ref: Ref.Ref<BackpressureState>): Effect.Effect<number> =>
   Effect.map(Ref.get(ref), (state) => state.eventQueue.length);
@@ -697,6 +925,17 @@ export const getQueueSize = (ref: Ref.Ref<BackpressureState>): Effect.Effect<num
  */
 /**
  * Combine multiple progress streams with backpressure handling
+ *
+ * **Example** (Inspect combine progress streams)
+ *
+ * ```ts
+ * import { combineProgressStreams } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(combineProgressStreams)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const combineProgressStreams = dual2(
   (
@@ -718,6 +957,17 @@ export const combineProgressStreams = dual2(
 
 /**
  * Apply backpressure to a stream
+ *
+ * **Example** (Inspect with backpressure)
+ *
+ * ```ts
+ * import { withBackpressure } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(withBackpressure)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const withBackpressure = dual2(
   (stream: Stream.Stream<ProgressEvent, Error>, config: BackpressureConfig): Stream.Stream<ProgressEvent, Error> =>
@@ -731,7 +981,7 @@ export const withBackpressure = dual2(
               const warning = yield* enqueueEvent(handlerRef, event);
               if (O.isSome(warning)) {
                 // Emit warning followed by original event
-                return Chunk.make(warning.value as ProgressEvent, event);
+                return Chunk.make(warning.value, event);
               }
               return Chunk.make(event);
             })
@@ -748,6 +998,20 @@ export const withBackpressure = dual2(
 
 /**
  * State for resumable extractions
+ *
+ *
+ * **Example** (Use the ResumableExtractionState contract)
+ *
+ * ```ts
+ * import type { ResumableExtractionState } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * const acceptsResumableExtractionState = (_value: ResumableExtractionState): void => undefined
+ *
+ * console.log(acceptsResumableExtractionState)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface ResumableExtractionState {
   readonly runId: ExtractionRunId;
@@ -767,6 +1031,17 @@ export interface ResumableExtractionState {
 
 /**
  * Extract resumable state from ExtractionFailedEvent
+ *
+ * **Example** (Inspect extract resumable state)
+ *
+ * ```ts
+ * import { extractResumableState } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(extractResumableState)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const extractResumableState: {
   (runId: ExtractionRunId, event: ExtractionFailedEvent): O.Option<ResumableExtractionState>;

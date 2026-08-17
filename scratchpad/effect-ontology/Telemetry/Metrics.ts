@@ -1,6 +1,8 @@
 /**
  * Telemetry: Prometheus Metrics Service
  *
+ * **Details**
+ *
  * Collects and exports metrics in Prometheus text format.
  * Provides counters, gauges, and histograms for extraction observability.
  *
@@ -9,19 +11,29 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Layer } from "effect";
+import { Context, HashMap, Layer } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Telemetry/Metrics");
 
 import { Effect, Ref } from "effect";
-import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 
 /**
  * Extraction metrics input
  *
- * @since 0.0.0
+ * **Example** (Reference ExtractionMetrics fields)
+ *
+ * ```ts
+ * import type { ExtractionMetrics } from "@effect-ontology/Telemetry/Metrics"
+ *
+ * const extractionMetricsFields: ReadonlyArray<keyof ExtractionMetrics> = ["durationMs", "entityCount", "relationCount"]
+ *
+ * console.log(extractionMetricsFields)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface ExtractionMetrics {
   readonly durationMs: number;
@@ -34,8 +46,18 @@ export interface ExtractionMetrics {
 /**
  * LLM call metrics input
  *
- * @since 0.0.0
+ * **Example** (Reference LlmCallMetrics fields)
+ *
+ * ```ts
+ * import type { LlmCallMetrics } from "@effect-ontology/Telemetry/Metrics"
+ *
+ * const llmCallMetricsFields: ReadonlyArray<keyof LlmCallMetrics> = ["provider", "model", "durationMs"]
+ *
+ * console.log(llmCallMetricsFields)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface LlmCallMetrics {
   readonly provider: string;
@@ -49,8 +71,18 @@ export interface LlmCallMetrics {
 /**
  * Embedding cache metrics input
  *
- * @since 0.0.0
+ * **Example** (Reference EmbeddingCacheMetrics fields)
+ *
+ * ```ts
+ * import type { EmbeddingCacheMetrics } from "@effect-ontology/Telemetry/Metrics"
+ *
+ * const embeddingCacheMetricsFields: ReadonlyArray<keyof EmbeddingCacheMetrics> = ["hits", "misses", "latencyMs"]
+ *
+ * console.log(embeddingCacheMetricsFields)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface EmbeddingCacheMetrics {
   readonly hits: number;
@@ -110,8 +142,16 @@ const initialState: MetricsState = {
 /**
  * MetricsService - Prometheus metrics collection
  *
+ * **Example** (Inspect metrics service)
+ *
+ * ```ts
+ * import { MetricsService } from "@effect-ontology/Telemetry/Metrics"
+ *
+ * console.log(MetricsService)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class MetricsService extends Context.Service<MetricsService>()($I`MetricsService`, {
   make: Effect.gen(function* () {
@@ -254,7 +294,7 @@ export class MetricsService extends Context.Service<MetricsService>()($I`Metrics
         lines.push("# TYPE llm_tokens_out_sum counter");
 
         for (const [key, metrics] of state.llmCalls) {
-          const [provider, model] = key.split(":");
+          const [provider, model] = Str.split(":")(key);
           const labels = `provider="${provider}",model="${model}"`;
 
           lines.push(`llm_call_total{${labels}} ${metrics.total}`);

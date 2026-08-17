@@ -1,6 +1,8 @@
 /**
  * Service Layer Types: Agent Orchestration
  *
+ * **Details**
+ *
  * Service-level type definitions for multi-agent orchestration.
  * Extends the domain model with service-specific concerns like
  * task definitions, execution contexts, and feedback handling.
@@ -10,18 +12,30 @@
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { NonNegNum } from "@beep/schema/Number";
-import { Data, Duration, Schema } from "effect";
+import { Duration } from "effect";
 import * as A from "effect/Array";
 import type * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import type { Agent, AgentId as AgentIdType, AgentType } from "../../Domain/Model/Agent.ts";
-import { CheckpointConfig, PipelineState, TerminationCondition } from "../../Domain/Model/Agent.ts";
+import { AgentId, CheckpointConfig, PipelineState, TerminationCondition } from "../../Domain/Model/Agent.ts";
 import { KnowledgeGraph } from "../../Domain/Model/Entity.ts";
 import { OntologyContext, OntologyRef } from "../../Domain/Model/Ontology.ts";
 import { OntologyAgentConfig, ViolationExplanation } from "../../Domain/Model/OntologyAgent.ts";
+import type { RdfStore } from "../Rdf.ts";
+import { isRdfStore } from "../Rdf.ts";
 import { ShaclValidationReport } from "../Shacl.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Service/Agent/types");
+const RdfStoreFromSelf = S.declare(isRdfStore).annotate({
+  title: "RdfStore",
+  description: "Opaque mutable RDF workflow store created by RdfBuilder.",
+});
+const AgentGraph = S.Union([KnowledgeGraph, RdfStoreFromSelf]);
 
 // =============================================================================
 // Agent Task Definition
@@ -30,16 +44,26 @@ import { ShaclValidationReport } from "../Shacl.ts";
 /**
  * AgentTask - A unit of work to be processed by the pipeline
  *
+ * **Details**
+ *
  * Wraps raw input with metadata for tracking and routing.
  *
+ * **Example** (Inspect agent task)
+ *
+ * ```ts
+ * import { AgentTask } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(AgentTask)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
+export class AgentTask extends S.Class<AgentTask>("AgentTask")({
   /**
    * Unique task identifier
    */
-  taskId: Schema.String.annotate({
+  taskId: S.String.annotate({
     title: "Task ID",
     description: "Unique identifier for this task",
   }),
@@ -47,98 +71,109 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
   /**
    * Ontology ID for scoping (e.g., "seattle")
    */
-  ontologyId: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  ontologyId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Source text to process (for extraction tasks)
    */
-  text: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  text: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Source URL to ingest (for ingestion tasks)
    */
-  sourceUrl: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  sourceUrl: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Optional ontology agent config override (for extraction tasks)
    */
-  agentConfig: OntologyAgentConfig.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  agentConfig: OntologyAgentConfig.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Ingestion options (implementation-specific)
    */
-  ingestionOptions: Schema.Unknown.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  ingestionOptions: S.Unknown.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Ingestion result metadata (implementation-specific)
    */
-  ingestionResult: Schema.Unknown.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  ingestionResult: S.Unknown.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Input knowledge graph (legacy; prefer knowledgeGraph/rdfStore/turtle)
    */
-  graph: Schema.Unknown.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault), // KnowledgeGraph or RdfStore
+  graph: AgentGraph.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Extracted knowledge graph
    */
-  knowledgeGraph: KnowledgeGraph.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  knowledgeGraph: KnowledgeGraph.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * RDF store for validation/correction
    */
-  rdfStore: Schema.Unknown.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  rdfStore: RdfStoreFromSelf.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Serialized RDF graph (Turtle)
    */
-  turtle: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  turtle: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Ontology context used for extraction/correction
    */
-  ontologyContext: OntologyContext.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  ontologyContext: OntologyContext.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Ontology reference used for extraction
    */
-  ontologyRef: OntologyRef.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  ontologyRef: OntologyRef.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Validation report (for correction tasks)
    */
-  validationReport: ShaclValidationReport.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  validationReport: ShaclValidationReport.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Human-readable validation explanations
    */
-  validationExplanations: Schema.Array(ViolationExplanation).pipe(
-    Schema.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
-  ),
+  validationExplanations: S.Array(ViolationExplanation).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Correction result metadata (implementation-specific)
    */
-  correctionResult: Schema.Unknown.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  correctionResult: S.Unknown.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Source document ID for provenance
    */
-  documentId: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  documentId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Additional context for agents
    */
-  context: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  context: S.Record(S.String, S.Json).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Priority (lower = higher priority)
    */
-  priority: NonNegativeInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  priority: NonNegativeInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {
   /**
    * Create a text extraction task
+   *
+   * **Example** (Inspect agent task.for extraction)
+   *
+   * ```ts
+   * import { AgentTask } from "@effect-ontology/Service/Agent/types"
+   *
+   * console.log(AgentTask)
+   * ```
+   *
+   * @param taskId - Input consumed by this operation.
+   * @param text - Input consumed by this operation.
+   * @param documentId - Input consumed by this operation.
+   * @param agentConfig - Input consumed by this operation.
+   * @returns Result produced by this operation.
    */
   static forExtraction(
     taskId: string,
@@ -157,27 +192,69 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
 
   /**
    * Create a validation task
+   *
+   * **Example** (Inspect agent task.for validation)
+   *
+   * ```ts
+   * import { AgentTask } from "@effect-ontology/Service/Agent/types"
+   *
+   * console.log(AgentTask)
+   * ```
+   *
+   * @param taskId - Input consumed by this operation.
+   * @param graph - Input consumed by this operation.
+   * @returns Result produced by this operation.
    */
-  static forValidation(taskId: string, graph: unknown): AgentTask {
+  static forValidation(taskId: string, graph: KnowledgeGraph | RdfStore): AgentTask {
     return AgentTask.make({ taskId, graph: O.some(graph), priority: O.some(NonNegativeInt.make(2)) });
   }
 
   /**
    * Create an ingestion task
+   *
+   * **Example** (Inspect agent task.for ingestion)
+   *
+   * ```ts
+   * import { AgentTask } from "@effect-ontology/Service/Agent/types"
+   *
+   * console.log(AgentTask)
+   * ```
+   *
+   * @param taskId - Input consumed by this operation.
+   * @param sourceUrl - Input consumed by this operation.
+   * @param ingestionOptions - Input consumed by this operation.
+   * @returns Result produced by this operation.
    */
   static forIngestion(taskId: string, sourceUrl: string, ingestionOptions?: unknown): AgentTask {
     return AgentTask.make({
       taskId,
       sourceUrl: O.some(sourceUrl),
-      ingestionOptions: O.some(ingestionOptions),
+      ingestionOptions: O.fromUndefinedOr(ingestionOptions),
       priority: O.some(NonNegativeInt.make(0)),
     });
   }
 
   /**
    * Create a correction task
+   *
+   * **Example** (Inspect agent task.for correction)
+   *
+   * ```ts
+   * import { AgentTask } from "@effect-ontology/Service/Agent/types"
+   *
+   * console.log(AgentTask)
+   * ```
+   *
+   * @param taskId - Input consumed by this operation.
+   * @param graph - Input consumed by this operation.
+   * @param validationReport - Input consumed by this operation.
+   * @returns Result produced by this operation.
    */
-  static forCorrection(taskId: string, graph: unknown, validationReport: ShaclValidationReport): AgentTask {
+  static forCorrection(
+    taskId: string,
+    graph: KnowledgeGraph | RdfStore,
+    validationReport: ShaclValidationReport
+  ): AgentTask {
     return AgentTask.make({
       taskId,
       graph: O.some(graph),
@@ -194,47 +271,67 @@ export class AgentTask extends Schema.Class<AgentTask>("AgentTask")({
 /**
  * PipelineConfig - Configuration for a multi-agent pipeline
  *
+ * **Example** (Inspect pipeline config)
+ *
+ * ```ts
+ * import { PipelineConfig } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(PipelineConfig)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export class PipelineConfig extends Schema.Class<PipelineConfig>("PipelineConfig")({
+export class PipelineConfig extends S.Class<PipelineConfig>("PipelineConfig")({
   /**
    * Unique pipeline identifier
    */
-  pipelineId: Schema.String,
+  pipelineId: S.String,
 
   /**
    * Execution mode (sequential, loop, parallel, graph)
    */
-  mode: Schema.Literals(["sequential", "loop", "parallel", "graph"]),
+  mode: S.Literals(["sequential", "loop", "parallel", "graph"]),
 
   /**
    * Ordered list of agents to execute (for sequential/loop modes)
    */
-  agentSequence: Schema.Array(Schema.String).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  agentSequence: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Termination condition (for loop mode)
    */
-  termination: TerminationCondition.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  termination: TerminationCondition.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Checkpoint configuration
    */
-  checkpoint: CheckpointConfig.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  checkpoint: CheckpointConfig.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Maximum concurrency (for parallel mode)
    */
-  concurrency: PosInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  concurrency: PosInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Enable detailed tracing
    */
-  tracing: Schema.Boolean.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  tracing: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {
   /**
    * Create a simple sequential pipeline
+   *
+   * **Example** (Inspect pipeline config.sequential)
+   *
+   * ```ts
+   * import { PipelineConfig } from "@effect-ontology/Service/Agent/types"
+   *
+   * console.log(PipelineConfig)
+   * ```
+   *
+   * @param pipelineId - Input consumed by this operation.
+   * @param agents - Input consumed by this operation.
+   * @returns Result produced by this operation.
    */
   static sequential(pipelineId: string, agents: ReadonlyArray<string>): PipelineConfig {
     return PipelineConfig.make({
@@ -246,6 +343,18 @@ export class PipelineConfig extends Schema.Class<PipelineConfig>("PipelineConfig
 
   /**
    * Create an extraction-validation-correction loop
+   *
+   * **Example** (Inspect pipeline config.refinement loop)
+   *
+   * ```ts
+   * import { PipelineConfig } from "@effect-ontology/Service/Agent/types"
+   *
+   * console.log(PipelineConfig)
+   * ```
+   *
+   * @param pipelineId - Input consumed by this operation.
+   * @param maxIterations - Input consumed by this operation.
+   * @returns Result produced by this operation.
    */
   static refinementLoop(pipelineId: string, maxIterations: number = 5): PipelineConfig {
     return PipelineConfig.make({
@@ -267,61 +376,138 @@ export class PipelineConfig extends Schema.Class<PipelineConfig>("PipelineConfig
 // =============================================================================
 
 /**
- * HumanFeedback - Feedback from human review at checkpoints
- *
- * @since 0.0.0
- * @category domain-events
- */
-export type HumanFeedback = HumanApprove | HumanReject | HumanModify | HumanSkip;
-
-/**
  * HumanApprove - Human approves the current state
  *
+ * **Example** (Inspect human approve)
+ *
+ * ```ts
+ * import { HumanApprove } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(HumanApprove)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
- * @category domain-events
  */
-export class HumanApprove extends Data.TaggedClass("HumanApprove")<{
-  readonly reviewerId?: string;
-  readonly comment?: string;
-}> {}
+export class HumanApprove extends S.TaggedClass<HumanApprove>($I`HumanApprove`)(
+  "HumanApprove",
+  {
+    reviewerId: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    comment: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("HumanApprove", { description: "Human approval of the current pipeline state." })
+) {}
 
 /**
  * HumanReject - Human rejects the current state
  *
+ * **Example** (Inspect human reject)
+ *
+ * ```ts
+ * import { HumanReject } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(HumanReject)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
- * @category domain-events
  */
-export class HumanReject extends Data.TaggedClass("HumanReject")<{
-  readonly reason: string;
-  readonly reviewerId?: string;
-}> {}
+export class HumanReject extends S.TaggedClass<HumanReject>($I`HumanReject`)(
+  "HumanReject",
+  {
+    reason: S.NonEmptyString,
+    reviewerId: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("HumanReject", { description: "Human rejection of the current pipeline state." })
+) {}
 
 /**
  * HumanModify - Human provides modifications to the state
  *
+ * **Example** (Inspect human modify)
+ *
+ * ```ts
+ * import { HumanModify } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(HumanModify)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
- * @category domain-events
  */
-export class HumanModify extends Data.TaggedClass("HumanModify")<{
-  /**
-   * Changes to apply (agent-specific)
-   */
-  readonly changes: unknown;
-  readonly reviewerId?: string;
-  readonly comment?: string;
-}> {}
+export class HumanModify extends S.TaggedClass<HumanModify>($I`HumanModify`)(
+  "HumanModify",
+  {
+    changes: S.Json,
+    reviewerId: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    comment: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("HumanModify", { description: "Human-provided modifications to the current pipeline state." })
+) {}
 
 /**
  * HumanSkip - Human skips a specific agent
  *
+ * **Example** (Inspect human skip)
+ *
+ * ```ts
+ * import { HumanSkip } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(HumanSkip)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
- * @category domain-events
  */
-export class HumanSkip extends Data.TaggedClass("HumanSkip")<{
-  readonly agentId: AgentIdType;
-  readonly reason?: string;
-  readonly reviewerId?: string;
-}> {}
+export class HumanSkip extends S.TaggedClass<HumanSkip>($I`HumanSkip`)(
+  "HumanSkip",
+  {
+    agentId: AgentId,
+    reason: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    reviewerId: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("HumanSkip", { description: "Human request to skip one pipeline agent." })
+) {}
+
+/**
+ * Feedback supplied by a human reviewer at an orchestration checkpoint.
+ *
+ * **Example** (Inspect human feedback schema)
+ *
+ * ```ts
+ * import { HumanApprove, HumanFeedback } from "@effect-ontology/Service/Agent/types"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HumanFeedback)(HumanApprove.make({})))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HumanFeedback = S.Union([HumanApprove, HumanReject, HumanModify, HumanSkip]).pipe(
+  $I.annoteSchema("HumanFeedback", {
+    description: "Tagged union of supported human checkpoint decisions.",
+  })
+);
+
+/**
+ * Runtime feedback decoded by {@link HumanFeedback}.
+ *
+ *
+ * **Example** (Use the HumanFeedback contract)
+ *
+ * ```ts
+ * import type { HumanFeedback } from "@effect-ontology/Service/Agent/types"
+ *
+ * const acceptsHumanFeedback = (_value: HumanFeedback): void => undefined
+ *
+ * console.log(acceptsHumanFeedback)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HumanFeedback = typeof HumanFeedback.Type;
 
 // =============================================================================
 // Refinement Configuration
@@ -330,12 +516,22 @@ export class HumanSkip extends Data.TaggedClass("HumanSkip")<{
 /**
  * RefinementConfig - Configuration for the validation-correction loop
  *
+ * **Details**
+ *
  * Controls how the refinement loop executes and when it terminates.
  *
+ * **Example** (Inspect refinement config)
+ *
+ * ```ts
+ * import { RefinementConfig } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(RefinementConfig)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export class RefinementConfig extends Schema.Class<RefinementConfig>("RefinementConfig")({
+export class RefinementConfig extends S.Class<RefinementConfig>("RefinementConfig")({
   /**
    * Maximum number of correction iterations
    */
@@ -346,42 +542,53 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
   /**
    * Stop when validation report conforms
    */
-  stopOnConformance: Schema.Boolean.annotate({
+  stopOnConformance: S.Boolean.annotate({
     default: true,
   }),
 
   /**
    * Minimum confidence threshold - stop if correction confidence drops below this
    */
-  minConfidence: Confidence.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  minConfidence: Confidence.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Emit checkpoint every N iterations
    */
-  checkpointInterval: PosInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  checkpointInterval: PosInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Timeout for the entire refinement loop in milliseconds
    */
-  timeoutMs: PosInt.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  timeoutMs: PosInt.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Whether to save intermediate states for resume
    */
-  enableResume: Schema.Boolean.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  enableResume: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Agent ID for the validator
    */
-  validatorId: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  validatorId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Agent ID for the corrector
    */
-  correctorId: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  correctorId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {
   /**
    * Create a default refinement config
+   *
+   * **Example** (Inspect refinement config.default)
+   *
+   * ```ts
+   * import { RefinementConfig } from "@effect-ontology/Service/Agent/types"
+   *
+   * console.log(RefinementConfig)
+   * ```
+   *
+   * @param maxIterations - Input consumed by this operation.
+   * @returns Result produced by this operation.
    */
   static default(maxIterations: number = 5): RefinementConfig {
     return RefinementConfig.make({
@@ -392,6 +599,18 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
 
   /**
    * Create a strict refinement config with low confidence threshold
+   *
+   * **Example** (Inspect refinement config.strict)
+   *
+   * ```ts
+   * import { RefinementConfig } from "@effect-ontology/Service/Agent/types"
+   *
+   * console.log(RefinementConfig)
+   * ```
+   *
+   * @param maxIterations - Input consumed by this operation.
+   * @param minConfidence - Input consumed by this operation.
+   * @returns Result produced by this operation.
    */
   static strict(maxIterations: number = 10, minConfidence: number = 0.8): RefinementConfig {
     return RefinementConfig.make({
@@ -404,6 +623,16 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
 
   /**
    * Convert to TerminationCondition
+   *
+   * **Example** (Inspect refinement config.to termination condition)
+   *
+   * ```ts
+   * import { RefinementConfig } from "@effect-ontology/Service/Agent/types"
+   *
+   * console.log(RefinementConfig)
+   * ```
+   *
+   * @returns Result produced by this operation.
    */
   toTerminationCondition(): TerminationCondition {
     return TerminationCondition.make({
@@ -421,8 +650,19 @@ export class RefinementConfig extends Schema.Class<RefinementConfig>("Refinement
 /**
  * RefinementStatus - Outcome of a refinement loop
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the RefinementStatus contract)
+ *
+ * ```ts
+ * import type { RefinementStatus } from "@effect-ontology/Service/Agent/types"
+ *
+ * const acceptsRefinementStatus = (_value: RefinementStatus): void => undefined
+ *
+ * console.log(acceptsRefinementStatus)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export type RefinementStatus =
   | "conformant" // All validations pass
@@ -435,14 +675,22 @@ export type RefinementStatus =
 /**
  * RefinementResult - Result of a validation-correction loop
  *
+ * **Example** (Inspect refinement result)
+ *
+ * ```ts
+ * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(RefinementResult)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export class RefinementResult extends Schema.Class<RefinementResult>("RefinementResult")({
+export class RefinementResult extends S.Class<RefinementResult>("RefinementResult")({
   /**
    * Final knowledge graph
    */
-  graph: Schema.Unknown, // KnowledgeGraph
+  graph: AgentGraph,
 
   /**
    * Number of refinement iterations
@@ -452,19 +700,12 @@ export class RefinementResult extends Schema.Class<RefinementResult>("Refinement
   /**
    * How the loop terminated
    */
-  status: Schema.Literals([
-    "conformant",
-    "max-iterations",
-    "timeout",
-    "confidence-threshold",
-    "human-rejected",
-    "error",
-  ]),
+  status: S.Literals(["conformant", "max-iterations", "timeout", "confidence-threshold", "human-rejected", "error"]),
 
   /**
    * Final validation report
    */
-  validationReport: Schema.Unknown.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault), // ShaclValidationReport
+  validationReport: ShaclValidationReport.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Total duration in milliseconds
@@ -474,15 +715,25 @@ export class RefinementResult extends Schema.Class<RefinementResult>("Refinement
   /**
    * Error message if status is "error"
    */
-  error: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  error: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Violations fixed per iteration
    */
-  violationsFixed: Schema.Array(NonNegativeInt).pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  violationsFixed: S.Array(NonNegativeInt).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {
   /**
    * Whether refinement produced a conformant graph
+   *
+   * **Example** (Inspect refinement result.is conformant)
+   *
+   * ```ts
+   * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
+   *
+   * console.log(RefinementResult)
+   * ```
+   *
+   * @returns Result produced by this operation.
    */
   get isConformant(): boolean {
     return this.status === "conformant";
@@ -490,6 +741,16 @@ export class RefinementResult extends Schema.Class<RefinementResult>("Refinement
 
   /**
    * Average violations fixed per iteration
+   *
+   * **Example** (Inspect refinement result.avg violations fixed)
+   *
+   * ```ts
+   * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
+   *
+   * console.log(RefinementResult)
+   * ```
+   *
+   * @returns Result produced by this operation.
    */
   get avgViolationsFixed(): number {
     if (O.isNone(this.violationsFixed) || this.violationsFixed.value.length === 0) return 0;
@@ -505,10 +766,23 @@ export class RefinementResult extends Schema.Class<RefinementResult>("Refinement
 /**
  * RegisteredAgent - An agent registered with the coordinator
  *
+ * **Details**
+ *
  * Wraps the Agent interface with registration metadata.
  *
+ *
+ * **Example** (Use the RegisteredAgent contract)
+ *
+ * ```ts
+ * import type { RegisteredAgent } from "@effect-ontology/Service/Agent/types"
+ *
+ * const acceptsRegisteredAgent = (_value: RegisteredAgent<never, never, never, never>): void => undefined
+ *
+ * console.log(acceptsRegisteredAgent)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category models
  */
 export interface RegisteredAgent<I = unknown, O = unknown, E = unknown, R = never> {
   /**
@@ -535,8 +809,19 @@ export interface RegisteredAgent<I = unknown, O = unknown, E = unknown, R = neve
 /**
  * AgentRegistry - Type for the agent registry map
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the AgentRegistry contract)
+ *
+ * ```ts
+ * import type { AgentRegistry } from "@effect-ontology/Service/Agent/types"
+ *
+ * const acceptsAgentRegistry = (_value: AgentRegistry): void => undefined
+ *
+ * console.log(acceptsAgentRegistry)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export type AgentRegistry = HashMap.HashMap<AgentIdType, RegisteredAgent>;
 
@@ -547,12 +832,22 @@ export type AgentRegistry = HashMap.HashMap<AgentIdType, RegisteredAgent>;
 /**
  * ExecutionContext - Runtime context for agent execution
  *
+ * **Details**
+ *
  * Provides access to shared state and utilities during execution.
  *
+ * **Example** (Inspect execution context)
+ *
+ * ```ts
+ * import { ExecutionContext } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(ExecutionContext)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export class ExecutionContext extends Schema.Class<ExecutionContext>("ExecutionContext")({
+export class ExecutionContext extends S.Class<ExecutionContext>("ExecutionContext")({
   /**
    * Current pipeline state
    */
@@ -566,17 +861,17 @@ export class ExecutionContext extends Schema.Class<ExecutionContext>("ExecutionC
   /**
    * Whether tracing is enabled
    */
-  tracingEnabled: Schema.Boolean,
+  tracingEnabled: S.Boolean,
 
   /**
    * Parent span ID for distributed tracing
    */
-  parentSpanId: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  parentSpanId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 
   /**
    * Correlation ID for request tracking
    */
-  correlationId: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  correlationId: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 }) {}
 
 // =============================================================================
@@ -586,49 +881,97 @@ export class ExecutionContext extends Schema.Class<ExecutionContext>("ExecutionC
 /**
  * AgentExecutionError - Error during agent execution
  *
- * @since 0.0.0
+ * **Example** (Inspect agent execution error)
+ *
+ * ```ts
+ * import { AgentExecutionError } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(AgentExecutionError)
+ * ```
+ *
  * @category errors
+ * @since 0.0.0
  */
-export class AgentExecutionError extends Data.TaggedError("AgentExecutionError")<{
-  readonly agentId: AgentIdType;
-  readonly message: string;
-  readonly cause?: unknown;
-  readonly retryable: boolean;
-}> {}
+export class AgentExecutionError extends S.TaggedError<AgentExecutionError>($I`AgentExecutionError`)(
+  "AgentExecutionError",
+  {
+    agentId: AgentId,
+    message: S.NonEmptyString,
+    cause: OptionalErrorCause,
+    retryable: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+  },
+  $I.annote("AgentExecutionError", { description: "Failure while executing a single orchestration agent." })
+) {}
 
 /**
  * PipelineExecutionError - Error during pipeline execution
  *
- * @since 0.0.0
+ * **Example** (Inspect pipeline execution error)
+ *
+ * ```ts
+ * import { PipelineExecutionError } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(PipelineExecutionError)
+ * ```
+ *
  * @category errors
+ * @since 0.0.0
  */
-export class PipelineExecutionError extends Data.TaggedError("PipelineExecutionError")<{
-  readonly pipelineId: string;
-  readonly message: string;
-  readonly failedAgentId?: AgentIdType;
-  readonly state: PipelineState;
-  readonly cause?: unknown;
-}> {}
+export class PipelineExecutionError extends S.TaggedError<PipelineExecutionError>($I`PipelineExecutionError`)(
+  "PipelineExecutionError",
+  {
+    pipelineId: S.NonEmptyString,
+    message: S.NonEmptyString,
+    failedAgentId: AgentId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    state: PipelineState,
+    cause: OptionalErrorCause,
+  },
+  $I.annote("PipelineExecutionError", { description: "Failure while executing an orchestration pipeline." })
+) {}
 
 /**
  * AgentNotFoundError - Requested agent not registered
  *
- * @since 0.0.0
+ * **Example** (Inspect agent not found error)
+ *
+ * ```ts
+ * import { AgentNotFoundError } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(AgentNotFoundError)
+ * ```
+ *
  * @category errors
+ * @since 0.0.0
  */
-export class AgentNotFoundError extends Data.TaggedError("AgentNotFoundError")<{
-  readonly agentId: AgentIdType;
-  readonly registeredAgents: ReadonlyArray<AgentIdType>;
-}> {}
+export class AgentNotFoundError extends S.TaggedError<AgentNotFoundError>($I`AgentNotFoundError`)(
+  "AgentNotFoundError",
+  {
+    agentId: AgentId,
+    registeredAgents: S.Array(AgentId),
+  },
+  $I.annote("AgentNotFoundError", { description: "Requested orchestration agent is not registered." })
+) {}
 
 /**
  * CheckpointTimeoutError - Human approval not received in time
  *
- * @since 0.0.0
+ * **Example** (Inspect checkpoint timeout error)
+ *
+ * ```ts
+ * import { CheckpointTimeoutError } from "@effect-ontology/Service/Agent/types"
+ *
+ * console.log(CheckpointTimeoutError)
+ * ```
+ *
  * @category errors
+ * @since 0.0.0
  */
-export class CheckpointTimeoutError extends Data.TaggedError("CheckpointTimeoutError")<{
-  readonly pipelineId: string;
-  readonly checkpointId: string;
-  readonly timeoutMs: number;
-}> {}
+export class CheckpointTimeoutError extends S.TaggedError<CheckpointTimeoutError>($I`CheckpointTimeoutError`)(
+  "CheckpointTimeoutError",
+  {
+    pipelineId: S.NonEmptyString,
+    checkpointId: S.NonEmptyString,
+    timeout: S.Duration,
+  },
+  $I.annote("CheckpointTimeoutError", { description: "Human checkpoint approval exceeded its configured timeout." })
+) {}

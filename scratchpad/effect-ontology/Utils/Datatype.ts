@@ -1,6 +1,8 @@
 /**
  * Utils: Datatype Normalization
  *
+ * **Details**
+ *
  * Automatic XSD datatype detection and normalization for RDF literals.
  * Converts raw string values to typed literals with appropriate XSD datatypes.
  *
@@ -12,6 +14,7 @@ import type { IRI } from "@beep/rdf";
 import { makeNamedNode } from "@beep/rdf";
 import { XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import { dual2 } from "./Dual.ts";
 
 const XSD_DATE = makeNamedNode(`${XSD_NAMESPACE}date`);
@@ -21,8 +24,18 @@ const XSD_DECIMAL = makeNamedNode(`${XSD_NAMESPACE}decimal`);
 /**
  * Result of datatype normalization
  *
- * @since 0.0.0
+ * **Example** (Reference NormalizedValue fields)
+ *
+ * ```ts
+ * import type { NormalizedValue } from "@effect-ontology/Utils/Datatype"
+ *
+ * const normalizedValueFields: ReadonlyArray<keyof NormalizedValue> = ["value", "datatype"]
+ *
+ * console.log(normalizedValueFields)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface NormalizedValue {
   /** Normalized string representation of the value */
@@ -76,6 +89,8 @@ const SCIENTIFIC_PATTERN = /^-?\d+(?:\.\d+)?[eE][+-]?\d+$/;
 /**
  * Detect and normalize datatype for a value
  *
+ * **Details**
+ *
  * Analyzes the string value and returns the appropriate XSD datatype:
  * - Dates (YYYY-MM-DD) → xsd:date
  * - DateTimes (ISO 8601 with T) → xsd:dateTime
@@ -85,12 +100,11 @@ const SCIENTIFIC_PATTERN = /^-?\d+(?:\.\d+)?[eE][+-]?\d+$/;
  * - Booleans (true/false) → xsd:boolean
  * - Everything else → xsd:string
  *
- * @param value - Raw string value to normalize
- * @param expectedType - Optional expected datatype IRI (hint for ambiguous values)
- * @returns Normalized value with detected datatype
- *
  * **Example** (Use normalizeDatatype)
+ *
  * ```ts
+ * import { normalizeDatatype } from "@effect-ontology/Utils/Datatype"
+ *
  * normalizeDatatype("2024-12-16", undefined) // { value: "2024-12-16", datatype: XSD.date }
  * normalizeDatatype("42", undefined)         // { value: "42", datatype: XSD.integer }
  * normalizeDatatype("3.14159", undefined)    // { value: "3.14159", datatype: XSD.decimal }
@@ -99,8 +113,11 @@ const SCIENTIFIC_PATTERN = /^-?\d+(?:\.\d+)?[eE][+-]?\d+$/;
  * normalizeDatatype("1.5e10", undefined)     // { value: "1.5e10", datatype: XSD.double }
  * ```
  *
- * @since 0.0.0
+ * @param value - Raw string value to normalize
+ * @param expectedType - Optional expected datatype IRI (hint for ambiguous values)
+ * @returns Normalized value with detected datatype
  * @category normalization
+ * @since 0.0.0
  */
 export const normalizeDatatype = dual2((value: string, expectedType: IRI | undefined): NormalizedValue => {
   // If expected type provided, use it with minimal validation
@@ -108,7 +125,7 @@ export const normalizeDatatype = dual2((value: string, expectedType: IRI | undef
     return { value, datatype: expectedType };
   }
 
-  const trimmed = value.trim();
+  const trimmed = Str.trim(value);
 
   // Empty string → xsd:string
   if (trimmed === "") {
@@ -127,7 +144,7 @@ export const normalizeDatatype = dual2((value: string, expectedType: IRI | undef
 
   // Boolean check (case-insensitive, normalize to lowercase)
   if (BOOLEAN_PATTERN.test(trimmed)) {
-    return { value: trimmed.toLowerCase(), datatype: XSD_BOOLEAN.value };
+    return { value: Str.toLowerCase(trimmed), datatype: XSD_BOOLEAN.value };
   }
 
   // Scientific notation → xsd:double
@@ -152,46 +169,74 @@ export const normalizeDatatype = dual2((value: string, expectedType: IRI | undef
 /**
  * Check if a value is likely a date
  *
+ * **Example** (Inspect is date)
+ *
+ * ```ts
+ * import { isDate } from "@effect-ontology/Utils/Datatype"
+ *
+ * console.log(isDate)
+ * ```
+ *
  * @param value - Value to check
  * @returns true if value matches ISO 8601 date pattern
- *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
-export const isDate = (value: string): boolean => ISO_DATE_PATTERN.test(value.trim());
+export const isDate = (value: string): boolean => ISO_DATE_PATTERN.test(Str.trim(value));
 
 /**
  * Check if a value is likely a dateTime
  *
+ * **Example** (Inspect is date time)
+ *
+ * ```ts
+ * import { isDateTime } from "@effect-ontology/Utils/Datatype"
+ *
+ * console.log(isDateTime)
+ * ```
+ *
  * @param value - Value to check
  * @returns true if value matches ISO 8601 dateTime pattern
- *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
-export const isDateTime = (value: string): boolean => ISO_DATETIME_PATTERN.test(value.trim());
+export const isDateTime = (value: string): boolean => ISO_DATETIME_PATTERN.test(Str.trim(value));
 
 /**
  * Check if a value is likely a numeric type
  *
+ * **Example** (Inspect is numeric)
+ *
+ * ```ts
+ * import { isNumeric } from "@effect-ontology/Utils/Datatype"
+ *
+ * console.log(isNumeric)
+ * ```
+ *
  * @param value - Value to check
  * @returns true if value is integer, decimal, or scientific notation
- *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
 export const isNumeric = (value: string): boolean => {
-  const trimmed = value.trim();
+  const trimmed = Str.trim(value);
   return INTEGER_PATTERN.test(trimmed) || DECIMAL_PATTERN.test(trimmed) || SCIENTIFIC_PATTERN.test(trimmed);
 };
 
 /**
  * Check if a value is likely a boolean
  *
+ * **Example** (Inspect is boolean)
+ *
+ * ```ts
+ * import { isBoolean } from "@effect-ontology/Utils/Datatype"
+ *
+ * console.log(isBoolean)
+ * ```
+ *
  * @param value - Value to check
  * @returns true if value is "true" or "false" (case-insensitive)
- *
- * @since 0.0.0
  * @category predicates
+ * @since 0.0.0
  */
-export const isBoolean = (value: string): boolean => BOOLEAN_PATTERN.test(value.trim());
+export const isBoolean = (value: string): boolean => BOOLEAN_PATTERN.test(Str.trim(value));

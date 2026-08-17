@@ -1,6 +1,8 @@
 /**
  * Workflow: Streaming Extraction Activity
  *
+ * **Details**
+ *
  * Durable activity wrapper for the 6-phase unified streaming extraction pipeline.
  * This is the single source of truth for all document extraction in batch workflows.
  *
@@ -19,16 +21,13 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
-import { DateTime, Duration, Effect, Schedule } from "effect";
-import * as Crypto from "effect/Crypto";
-import * as Encoding from "effect/Encoding";
+import { Crypto, DateTime, Duration, Effect, Encoding, pipe, Schedule } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Activity } from "effect/unstable/workflow";
 import { ActivityError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts";
-import type { BatchId } from "../Domain/Identity.ts";
 import { ContentHash, DocumentId, GcsUri, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts";
 import { ChunkingConfig, LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
@@ -55,12 +54,21 @@ const textEncoder = new TextEncoder();
 /**
  * Output schema for StreamingExtractionActivity
  *
- * Describes the persisted graph and extraction counts produced for one document.
- *
  * **Details**
+ *
+ * Describes the persisted graph and extraction counts produced for one document.
  *
  * The schema is local to the canonical streaming activity so its output contract
  * cannot drift from a retired activity implementation.
+ *
+ * **Example** (Validate streaming extraction output)
+ *
+ * ```ts
+ * import { StreamingExtractionOutput } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(StreamingExtractionOutput)({}))
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -108,7 +116,23 @@ export const StreamingExtractionOutput = S.Struct({
   })
 );
 
-/** Runtime output produced by the streaming extraction activity. */
+/**
+ *  Runtime output produced by the streaming extraction activity.
+ *
+ *
+ * **Example** (Use the StreamingExtractionOutput contract)
+ *
+ * ```ts
+ * import type { StreamingExtractionOutput } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ *
+ * const acceptsStreamingExtractionOutput = (_value: StreamingExtractionOutput): void => undefined
+ *
+ * console.log(acceptsStreamingExtractionOutput)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type StreamingExtractionOutput = typeof StreamingExtractionOutput.Type;
 
 // -----------------------------------------------------------------------------
@@ -116,7 +140,7 @@ export type StreamingExtractionOutput = typeof StreamingExtractionOutput.Type;
 // -----------------------------------------------------------------------------
 
 const stripGsPrefix = (uri: string): string =>
-  Str.startsWith("gs://")(uri) ? uri.replace(/^gs:\/\/[^/]+\//, "") : uri;
+  Str.startsWith("gs://")(uri) ? Str.replace(/^gs:\/\/[^/]+\//, "")(uri) : uri;
 
 const requireContent = (opt: O.Option<string>, key: string) =>
   O.match(opt, {
@@ -153,23 +177,39 @@ const computeContentHash = Effect.fn("StreamingExtractionActivity.computeContent
 /** Extracts the ontology name component from a storage URI path. */
 const extractOntologyName = (uri: string): OntologyName => {
   const path = stripGsPrefix(uri);
-  const filename = path.split("/").pop() ?? "ontology";
-  const name = filename.replace(/\.(ttl|rdf|owl|n3)$/, "");
+  const filename = pipe(
+    Str.split("/")(path),
+    A.last,
+    O.getOrElse(() => "ontology")
+  );
+  const name = Str.replace(/\.(ttl|rdf|owl|n3)$/, "")(filename);
   // Ensure valid OntologyName pattern (alphanumeric + hyphens + underscores)
-  const sanitized = name.replace(/[^a-zA-Z0-9_-]/g, "-").toLowerCase();
-  return OntologyName.make(sanitized || "ontology");
+  const sanitized = pipe(name, Str.replace(/[^a-zA-Z0-9_-]/g, "-"), Str.toLowerCase);
+  return OntologyName.make(Str.isNonEmpty(sanitized) ? sanitized : "ontology");
 };
 
 /**
  * Build RunConfig from ExtractionActivityInput
  *
+ * **Details**
+ *
  * Translates the batch activity input (with preprocessing hints) to the
  * RunConfig format expected by StreamingExtraction.
+ *
+ * **Example** (Inspect build run config)
+ *
+ * ```ts
+ * import { buildRunConfig } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ *
+ * console.log(buildRunConfig)
+ * ```
  *
  * @param input - Extraction activity input with optional preprocessing hints
  * @param llmConfig - LLM configuration from ConfigService
  * @param ontologyContentHash - Pre-computed hash of ontology CONTENT (not URI)
  * @returns RunConfig for StreamingExtraction
+ * @category factories
+ * @since 0.0.0
  */
 export const buildRunConfig = dual3(
   (
@@ -218,16 +258,28 @@ export const buildRunConfig = dual3(
 /**
  * Enrich extracted entities with document-level metadata
  *
+ * **Details**
+ *
  * Adds provenance information to each entity for traceability.
+ *
+ * **Example** (Inspect enrich entity metadata)
+ *
+ * ```ts
+ * import { enrichEntityMetadata } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ *
+ * console.log(enrichEntityMetadata)
+ * ```
  *
  * @param entities - Extracted entities from StreamingExtraction
  * @param input - Original extraction input with document metadata
  * @param extractedAt - Timestamp of extraction
  * @returns Enriched entities with document metadata
+ * @category workflows
+ * @since 0.0.0
  */
 export const enrichEntityMetadata = dual3(
   (entities: ReadonlyArray<Entity>, input: ExtractionActivityInput, extractedAt: DateTime.Utc): ReadonlyArray<Entity> =>
-    entities.map((entity) =>
+    A.map(entities, (entity) =>
       Entity.make({
         ...entity,
         documentId: O.some(input.documentId),
@@ -245,6 +297,8 @@ export const enrichEntityMetadata = dual3(
 
 /**
  * Durable Streaming Extraction Activity
+ *
+ * **Details**
  *
  * Unified extraction activity that uses the 6-phase streaming extraction pipeline.
  * This replaces makeExtractionActivity in DurableActivities.ts as the canonical
@@ -264,9 +318,17 @@ export const enrichEntityMetadata = dual3(
  * 6. Serialize to RDF using claimsDataToQuads()
  * 7. Write graph to storage and return output
  *
+ * **Example** (Inspect make streaming extraction activity)
+ *
+ * ```ts
+ * import { makeStreamingExtractionActivity } from "@effect-ontology/Workflow/StreamingExtractionActivity"
+ *
+ * console.log(makeStreamingExtractionActivity)
+ * ```
+ *
  * @param input - Extraction activity input (from batch workflow)
  * @returns Durable activity with journaled execution
- *
+ * @category constructors
  * @since 0.0.0
  */
 export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) =>
@@ -305,7 +367,9 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       const ontologyKey = stripGsPrefix(input.ontologyUri);
       const ontologyContent = yield* storage.get(ontologyKey).pipe(
         Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), ontologyKey)),
-        Effect.mapError((error) => toActivityError(new Error(`Failed to load ontology: ${ontologyKey} - ${error}`)))
+        Effect.mapError((error) =>
+          ActivityError.serviceFailure("StorageService", `get ontology ${ontologyKey}`, error, true)
+        )
       );
       const ontologyContentHash = yield* computeContentHash(ontologyContent);
 
@@ -345,9 +409,6 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
             entityCount: graph.entities.length,
             relationCount: graph.relations.length,
           })
-        ),
-        Effect.mapError((error) =>
-          toActivityError(error instanceof Error ? error : new Error(`Streaming extraction failed: ${String(error)}`))
         )
       );
 
@@ -356,7 +417,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       const enrichedEntities = enrichEntityMetadata(rawGraph.entities, input, extractedAt);
 
       const graph = KnowledgeGraph.make({
-        entities: Array.from(enrichedEntities),
+        entities: enrichedEntities,
         relations: rawGraph.relations,
         sourceText: O.some(sourceContent),
       });
@@ -368,7 +429,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       });
 
       // 6. Generate provenance URI and create claims
-      const provenanceUri = makeProvenanceUri(input.batchId as BatchId, input.documentId, undefined);
+      const provenanceUri = makeProvenanceUri(input.batchId, input.documentId, undefined);
 
       // Serialize with named graph for provenance tracking
       const store = yield* rdf.createStore;
@@ -383,8 +444,11 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
 
       // 7. Create claims from extracted entities and relations
       // Convert Namespace identifier to full IRI
-      const match = config.rdf.baseNamespace.match(/^https?:\/\/[^/]+\//);
-      const baseDomain = P.isNotNull(match) ? match[0] : "http://example.org/";
+      const baseDomain = pipe(
+        Str.match(/^https?:\/\/[^/]+\//)(config.rdf.baseNamespace),
+        O.flatMap(A.head),
+        O.getOrElse(() => "http://example.org/")
+      );
       const baseNamespace = `${baseDomain}${input.targetNamespace}/`;
       const claims = knowledgeGraphToClaims(graph.entities, graph.relations, {
         baseNamespace,
@@ -394,12 +458,10 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       });
 
       // Convert claims to RDF quads and add to store
-      const claimQuads = claimsDataToQuads(claims, provenanceUri, extractedAt.toString());
+      const claimQuads = claimsDataToQuads(claims, provenanceUri, DateTime.formatIso(extractedAt));
 
       // Add claim quads to the store
-      for (const quad of claimQuads) {
-        rdfStoreAddQuad(store, quad);
-      }
+      A.forEach(claimQuads, (quad) => rdfStoreAddQuad(store, quad));
 
       yield* Effect.logInfo("Claims created from extraction", {
         documentId: input.documentId,
@@ -421,7 +483,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       const graphPath = PathLayout.document.graph(input.documentId);
       yield* storage.set(graphPath, trigContent);
 
-      const graphUri = GcsUri.fromUnknown(`gs://${bucket}/${graphPath}`);
+      const graphUri = yield* S.decodeEffect(GcsUri)(`gs://${bucket}/${graphPath}`);
 
       // Note: Claims are persisted only after SHACL validation passes,
       // via makeClaimPersistenceActivity in WorkflowOrchestrator.

@@ -13,7 +13,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
-import { ErrorMessage, Milliseconds, makeOntologyErrorClass, OptionalErrorCause } from "./Base.ts";
+import { ErrorMessage, Milliseconds, OptionalErrorCause } from "./Base.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Auth");
 
@@ -22,7 +22,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Auth");
  *
  * **Example** (Use AuthenticationReason)
  * ```ts
- * import { AuthenticationReason } from "@effect-ontology/Error/Auth.ts"
+ * import { AuthenticationReason } from "@effect-ontology/Error/Auth"
  *
  * console.log(AuthenticationReason.is.invalid("invalid")) // true
  * ```
@@ -46,7 +46,7 @@ export const AuthenticationReason = LiteralKit(["missing", "invalid", "disabled"
  *
  * **Example** (Use AuthenticationReason)
  * ```ts
- * import type { AuthenticationReason } from "@effect-ontology/Error/Auth.ts"
+ * import type { AuthenticationReason } from "@effect-ontology/Error/Auth"
  *
  * const reason: AuthenticationReason = "disabled"
  * console.log(reason)
@@ -67,22 +67,24 @@ export type AuthenticationReason = typeof AuthenticationReason.Type;
  *
  * **Example** (Use TicketExpiredError)
  * ```ts
- * import { TicketExpiredError } from "@effect-ontology/Error/Auth.ts"
+ * import { TicketExpiredError } from "@effect-ontology/Error/Auth"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = TicketExpiredError.fromUnknown({
+ * const error = S.decodeUnknownOption(TicketExpiredError)({
+ *   _tag: "TicketExpiredError",
  *   message: "Authentication ticket expired.",
  *   ticket: "ticket-id",
  *   expiredAt: 1_720_000_000_000
  * })
- * console.log(error._tag)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @invariant `ticket` and `message` are non-empty and `expiredAt` is non-negative.
  * @category errors
  * @since 0.0.0
  */
-export const TicketExpiredError = makeOntologyErrorClass.make(
-  $I`TicketExpiredError`,
+export class TicketExpiredError extends S.TaggedError<TicketExpiredError>($I`TicketExpiredError`)(
   "TicketExpiredError",
   {
     message: ErrorMessage.annotateKey({
@@ -98,48 +100,30 @@ export const TicketExpiredError = makeOntologyErrorClass.make(
   $I.annote("TicketExpiredError", {
     description: "Authentication failure caused by an expired one-time ticket.",
   })
-);
-
-/**
- * Runtime value decoded by {@link TicketExpiredError}.
- *
- * **Example** (Use TicketExpiredError)
- * ```ts
- * import { TicketExpiredError, type TicketExpiredError as Expired } from "@effect-ontology/Error/Auth.ts"
- *
- * const error: Expired = TicketExpiredError.fromUnknown({
- *   message: "Expired.",
- *   ticket: "ticket-id",
- *   expiredAt: 10
- * })
- * console.log(error.ticket)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type TicketExpiredError = typeof TicketExpiredError.Type;
+) {}
 
 /**
  * Indicates that a one-time ticket is unknown or has already been consumed.
  *
  * **Example** (Use TicketNotFoundError)
  * ```ts
- * import { TicketNotFoundError } from "@effect-ontology/Error/Auth.ts"
+ * import { TicketNotFoundError } from "@effect-ontology/Error/Auth"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = TicketNotFoundError.make({
+ * const error = S.decodeUnknownOption(TicketNotFoundError)({
+ *   _tag: "TicketNotFoundError",
  *   message: "Authentication ticket was not found.",
  *   ticket: "ticket-id"
  * })
- * console.log(error._tag)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @invariant `ticket` and `message` are non-empty.
  * @category errors
  * @since 0.0.0
  */
-export const TicketNotFoundError = makeOntologyErrorClass.make(
-  $I`TicketNotFoundError`,
+export class TicketNotFoundError extends S.TaggedError<TicketNotFoundError>($I`TicketNotFoundError`)(
   "TicketNotFoundError",
   {
     message: ErrorMessage.annotateKey({
@@ -152,46 +136,29 @@ export const TicketNotFoundError = makeOntologyErrorClass.make(
   $I.annote("TicketNotFoundError", {
     description: "Authentication failure for an unknown or previously consumed ticket.",
   })
-);
-
-/**
- * Runtime value decoded by {@link TicketNotFoundError}.
- *
- * **Example** (Use TicketNotFoundError)
- * ```ts
- * import { TicketNotFoundError, type TicketNotFoundError as Missing } from "@effect-ontology/Error/Auth.ts"
- *
- * const error: Missing = TicketNotFoundError.make({
- *   message: "Missing.",
- *   ticket: "ticket-id"
- * })
- * console.log(error.ticket)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type TicketNotFoundError = typeof TicketNotFoundError.Type;
+) {}
 
 /**
  * General authentication rejection with a machine-readable reason.
  *
  * **Example** (Use AuthenticationError)
  * ```ts
- * import { AuthenticationError } from "@effect-ontology/Error/Auth.ts"
+ * import { AuthenticationError } from "@effect-ontology/Error/Auth"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = AuthenticationError.make({
+ * const error = S.decodeUnknownOption(AuthenticationError)({
+ *   _tag: "AuthenticationError",
  *   message: "Authentication is disabled.",
  *   reason: "disabled"
  * })
- * console.log(error.reason)
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const AuthenticationError = makeOntologyErrorClass.make(
-  $I`AuthenticationError`,
+export class AuthenticationError extends S.TaggedError<AuthenticationError>($I`AuthenticationError`)(
   "AuthenticationError",
   {
     message: ErrorMessage.annotateKey({
@@ -204,26 +171,7 @@ export const AuthenticationError = makeOntologyErrorClass.make(
   $I.annote("AuthenticationError", {
     description: "General authentication rejection with a closed reason code.",
   })
-);
-
-/**
- * Runtime value decoded by {@link AuthenticationError}.
- *
- * **Example** (Use AuthenticationError)
- * ```ts
- * import { AuthenticationError, type AuthenticationError as AuthFailure } from "@effect-ontology/Error/Auth.ts"
- *
- * const error: AuthFailure = AuthenticationError.make({
- *   message: "Credentials are invalid.",
- *   reason: "invalid"
- * })
- * console.log(error.reason)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type AuthenticationError = typeof AuthenticationError.Type;
+) {}
 
 /**
  * Indicates that API-key verification failed.
@@ -235,17 +183,19 @@ export type AuthenticationError = typeof AuthenticationError.Type;
  *
  * **Example** (Use InvalidApiKeyError)
  * ```ts
- * import { InvalidApiKeyError } from "@effect-ontology/Error/Auth.ts"
+ * import { InvalidApiKeyError } from "@effect-ontology/Error/Auth"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = InvalidApiKeyError.make({ message: "API key is invalid." })
- * console.log(error._tag)
+ * const error = S.decodeUnknownOption(InvalidApiKeyError)({
+ *   _tag: "InvalidApiKeyError", message: "API key is invalid." })
+ * console.log(O.isSome(error)) // true
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const InvalidApiKeyError = makeOntologyErrorClass.make(
-  $I`InvalidApiKeyError`,
+export class InvalidApiKeyError extends S.TaggedError<InvalidApiKeyError>($I`InvalidApiKeyError`)(
   "InvalidApiKeyError",
   {
     message: ErrorMessage.annotateKey({
@@ -258,23 +208,7 @@ export const InvalidApiKeyError = makeOntologyErrorClass.make(
   $I.annote("InvalidApiKeyError", {
     description: "API-key verification failure that never carries the secret key.",
   })
-);
-
-/**
- * Runtime value decoded by {@link InvalidApiKeyError}.
- *
- * **Example** (Use InvalidApiKeyError)
- * ```ts
- * import { InvalidApiKeyError, type InvalidApiKeyError as InvalidKey } from "@effect-ontology/Error/Auth.ts"
- *
- * const error: InvalidKey = InvalidApiKeyError.make({ message: "Rejected." })
- * console.log(error.message)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type InvalidApiKeyError = typeof InvalidApiKeyError.Type;
+) {}
 
 const AuthErrorDefinition = S.Union([
   TicketExpiredError,
@@ -288,9 +222,12 @@ const AuthErrorDefinition = S.Union([
  *
  * **Example** (Use AuthError)
  * ```ts
- * import { AuthError, AuthenticationError } from "@effect-ontology/Error/Auth.ts"
+ * import { AuthError, AuthenticationError } from "@effect-ontology/Error/Auth"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const error = AuthenticationError.make({ message: "Missing.", reason: "missing" })
+ * const error = S.decodeUnknownOption(AuthenticationError)({
+ *   _tag: "AuthenticationError", message: "Missing.", reason: "missing" })
  * console.log(AuthError.guards.AuthenticationError(error)) // true
  * ```
  *
@@ -300,7 +237,7 @@ const AuthErrorDefinition = S.Union([
 export const AuthError = AuthErrorDefinition.pipe(
   $I.annoteSchema("AuthError", {
     description: "Exhaustive tagged union of ontology transport authentication failures.",
-  toArbitrary: () => S.toArbitrary(AuthErrorDefinition),
+    toArbitrary: () => S.toArbitrary(AuthErrorDefinition),
   })
 );
 
@@ -309,7 +246,7 @@ export const AuthError = AuthErrorDefinition.pipe(
  *
  * **Example** (Use AuthError)
  * ```ts
- * import { TicketNotFoundError, type AuthError } from "@effect-ontology/Error/Auth.ts"
+ * import { TicketNotFoundError, type AuthError } from "@effect-ontology/Error/Auth"
  *
  * const error: AuthError = TicketNotFoundError.make({
  *   message: "Missing.",

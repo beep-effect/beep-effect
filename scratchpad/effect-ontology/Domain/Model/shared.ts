@@ -29,7 +29,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
  *
  * **Example** (Use AttributeValue)
  * ```ts
- * import { AttributeValue } from "@effect-ontology/Model/shared.ts"
+ * import { AttributeValue } from "@effect-ontology/Model/shared"
  *
  * console.log(AttributeValue.is("Seattle")) // true
  * console.log(AttributeValue.is(Number.POSITIVE_INFINITY)) // false
@@ -56,7 +56,7 @@ export const AttributeValue = S.Union([S.String, S.Finite, S.Boolean])
  *
  * **Example** (Use AttributeValue)
  * ```ts
- * import { type AttributeValue } from "@effect-ontology/Model/shared.ts"
+ * import { type AttributeValue } from "@effect-ontology/Model/shared"
  *
  * const value: AttributeValue = 0.95
  * console.log(value)
@@ -78,7 +78,7 @@ export type AttributeValue = typeof AttributeValue.Type;
  *
  * **Example** (Use Attributes)
  * ```ts
- * import { Attributes } from "@effect-ontology/Model/shared.ts"
+ * import { Attributes } from "@effect-ontology/Model/shared"
  *
  * const attributes = Attributes.make({
  *   "http://schema.org/age": 39,
@@ -110,7 +110,7 @@ export const Attributes = S.Record(S.String, AttributeValue)
  *
  * **Example** (Use Attributes)
  * ```ts
- * import { type Attributes } from "@effect-ontology/Model/shared.ts"
+ * import { type Attributes } from "@effect-ontology/Model/shared"
  *
  * const attributes: Attributes = { active: true }
  * console.log(attributes.active) // true
@@ -133,11 +133,12 @@ export type Attributes = typeof Attributes.Type;
  * **Example** (Use OptionalConfidence)
  * ```ts
  * import * as O from "effect/Option"
- * import { OptionalConfidence } from "@effect-ontology/Model/shared.ts"
+ * import * as S from "effect/Schema"
+ * import { OptionalConfidence } from "@effect-ontology/Model/shared"
  *
- * const missing = OptionalConfidence.fromUnknown(undefined)
- * const present = OptionalConfidence.fromUnknown(0.8)
- * console.log(O.isNone(missing), O.isSome(present)) // true true
+ * const missing = S.decodeUnknownOption(OptionalConfidence)(undefined)
+ * const present = S.decodeUnknownOption(OptionalConfidence)(0.8)
+ * console.log(O.exists(missing, O.isNone), O.exists(present, O.isSome)) // true true
  * ```
  *
  * @invariant Contains either no value or one valid {@link Confidence}.
@@ -162,10 +163,11 @@ export const OptionalConfidence = S.OptionFromNullishOr(Confidence)
  * **Example** (Use OptionalConfidence)
  * ```ts
  * import * as O from "effect/Option"
- * import { OptionalConfidence, type OptionalConfidence as OptionalConfidenceValue } from "@effect-ontology/Model/shared.ts"
+ * import * as S from "effect/Schema"
+ * import { OptionalConfidence, type OptionalConfidence as OptionalConfidenceValue } from "@effect-ontology/Model/shared"
  *
- * const confidence: OptionalConfidenceValue = OptionalConfidence.fromUnknown(null)
- * console.log(O.isNone(confidence)) // true
+ * const confidence = S.decodeUnknownOption(OptionalConfidence)(null)
+ * console.log(O.exists(confidence, (value: OptionalConfidenceValue) => O.isNone(value))) // true
  * ```
  *
  * @category type-level
@@ -178,7 +180,7 @@ export type OptionalConfidence = typeof OptionalConfidence.Type;
  *
  * **Example** (Use ENTITY_ID_PATTERN)
  * ```ts
- * import { ENTITY_ID_PATTERN } from "@effect-ontology/Model/shared.ts"
+ * import { ENTITY_ID_PATTERN } from "@effect-ontology/Model/shared"
  *
  * console.log(ENTITY_ID_PATTERN.test("cristiano_ronaldo")) // true
  * console.log(ENTITY_ID_PATTERN.test("_private")) // false
@@ -202,7 +204,7 @@ export const ENTITY_ID_PATTERN = /^[a-z][a-z0-9_]*$/;
  *
  * **Example** (Use EntityId)
  * ```ts
- * import { EntityId } from "@effect-ontology/Model/shared.ts"
+ * import { EntityId } from "@effect-ontology/Model/shared"
  *
  * const id = EntityId.make("cristiano_ronaldo")
  * console.log(EntityId.is(id)) // true
@@ -240,7 +242,7 @@ export const EntityId = S.String.check(
  *
  * **Example** (Use EntityId)
  * ```ts
- * import { EntityId, type EntityId as EntityIdValue } from "@effect-ontology/Model/shared.ts"
+ * import { EntityId, type EntityId as EntityIdValue } from "@effect-ontology/Model/shared"
  *
  * const id: EntityIdValue = EntityId.make("al_nassr_fc")
  * console.log(id)

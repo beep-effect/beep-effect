@@ -1,6 +1,8 @@
 /**
  * Router: Asset Download API
  *
+ * **Details**
+ *
  * HTTP endpoints for downloading raw assets: documents, RDF graphs,
  * validation reports, and link content.
  *
@@ -8,8 +10,10 @@
  * @since 0.0.0
  */
 
-import { Effect, Option, Schema } from "effect";
+import { Effect } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { HttpRouter, HttpServerResponse } from "effect/unstable/http";
 import { BatchId, DocumentId } from "../Domain/Identity.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
@@ -20,6 +24,21 @@ import { StorageService } from "../Service/Storage.ts";
 // Asset Router
 // =============================================================================
 
+/**
+ * Validates and represents asset router values at runtime.
+ *
+ * **Example** (Validate asset router)
+ *
+ * ```ts
+ * import { Layer } from "effect"
+ * import { AssetRouter } from "@effect-ontology/Runtime/AssetRouter"
+ *
+ * console.log(Layer.isLayer(AssetRouter)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const AssetRouter = HttpRouter.addAll([
   HttpRouter.route(
     "GET",
@@ -160,7 +179,7 @@ export const AssetRouter = HttpRouter.addAll([
       const storage = yield* StorageService;
 
       // Get the link to find the storage URI
-      const link = yield* linkService.getById(linkId).pipe(Effect.map((optLink) => Option.getOrNull(optLink)));
+      const link = yield* linkService.getById(linkId).pipe(Effect.map((optLink) => O.getOrNull(optLink)));
 
       if (link === null) {
         return yield* HttpServerResponse.json(
@@ -234,8 +253,8 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = Schema.decodeOption(BatchId)(rawBatchId);
-      if (Option.isNone(decodedBatchId)) {
+      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
+      if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {
             error: "VALIDATION_ERROR",
@@ -274,9 +293,7 @@ export const AssetRouter = HttpRouter.addAll([
       }
 
       // Parse and return as JSON using Effect
-      const report = yield* Schema.decodeEffect(Schema.fromJsonString(Schema.Unknown))(content).pipe(
-        Effect.orElseSucceed(() => null)
-      );
+      const report = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(content).pipe(Effect.orElseSucceed(() => null));
 
       if (report === null) {
         return yield* HttpServerResponse.json(
@@ -312,8 +329,8 @@ export const AssetRouter = HttpRouter.addAll([
         );
       }
 
-      const decodedBatchId = Schema.decodeOption(BatchId)(rawBatchId);
-      if (Option.isNone(decodedBatchId)) {
+      const decodedBatchId = S.decodeOption(BatchId)(rawBatchId);
+      if (O.isNone(decodedBatchId)) {
         return yield* HttpServerResponse.json(
           {
             error: "VALIDATION_ERROR",

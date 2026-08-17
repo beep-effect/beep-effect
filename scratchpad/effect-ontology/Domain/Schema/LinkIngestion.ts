@@ -46,13 +46,15 @@ const LinkStatus = LiteralKit(["pending", "enriched", "processed", "failed"])
  *
  * **Example** (Use IngestLinkRequest)
  * ```ts
- * import { IngestLinkRequest } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { IngestLinkRequest } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const request = IngestLinkRequest.fromUnknown({
+ * const request = S.decodeUnknownOption(IngestLinkRequest)({
  *   url: "https://example.com/article",
  *   ontologyId: "claims"
  * })
- * console.log(request.skipEnrich) // false
+ * console.log(O.map(request, (value) => value.skipEnrich))
  * ```
  *
  * @category dtos
@@ -98,15 +100,17 @@ export class IngestLinkRequest extends S.Class<IngestLinkRequest>($I`IngestLinkR
  *
  * **Example** (Use IngestLinkResponse)
  * ```ts
- * import { IngestLinkResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { IngestLinkResponse } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const response = IngestLinkResponse.fromUnknown({
+ * const response = S.decodeUnknownOption(IngestLinkResponse)({
  *   id: "link-42",
  *   contentHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   storageUri: "gs://beep-ontology-state/links/link-42.json",
  *   duplicate: false
  * })
- * console.log(response.duplicate) // false
+ * console.log(O.map(response, (value) => value.duplicate))
  * ```
  *
  * @category dtos
@@ -152,13 +156,15 @@ export class IngestLinkResponse extends S.Class<IngestLinkResponse>($I`IngestLin
  *
  * **Example** (Use BatchIngestRequest)
  * ```ts
- * import { BatchIngestRequest } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { BatchIngestRequest } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const request = BatchIngestRequest.fromUnknown({
+ * const request = S.decodeUnknownOption(BatchIngestRequest)({
  *   urls: ["https://example.com/a"],
  *   ontologyId: "claims"
  * })
- * console.log(request.concurrency) // 5
+ * console.log(O.map(request, (value) => value.concurrency))
  * ```
  *
  * @invariant At least one valid HTTP(S) URL is present and concurrency is a
@@ -253,15 +259,16 @@ const BatchIngestResultDefinition = S.TaggedUnion({
  *
  * **Example** (Use BatchIngestResult)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const result = S.decodeUnknownSync(BatchIngestResult)({
+ * const result = S.decodeUnknownOption(BatchIngestResult)({
  *   _tag: "error",
  *   url: "https://example.com/missing",
  *   error: "Resource was not found."
  * })
- * console.log(result._tag) // "error"
+ * console.log(O.map(result, (value) => value._tag)) // "error"
  * ```
  *
  * @invariant The `_tag` discriminator determines the complete payload shape.
@@ -280,7 +287,7 @@ export const BatchIngestResult = BatchIngestResultDefinition.pipe(
  *
  * **Example** (Use BatchIngestResult)
  * ```ts
- * import type { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import type { BatchIngestResult } from "@effect-ontology/Schema/LinkIngestion"
  *
  * const readStatus = (result: BatchIngestResult) => result._tag
  * console.log(readStatus)
@@ -376,7 +383,7 @@ const BatchIngestResponseDefinition = BatchIngestResponseFields.check(
  *
  * **Example** (Use BatchIngestResponse)
  * ```ts
- * import { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion"
  *
  * const response = BatchIngestResponse.fromResults([])
  * console.log(response.summary.total) // 0
@@ -411,7 +418,7 @@ export const BatchIngestResponse = BatchIngestResponseDefinition.annotate({
  *
  * **Example** (Use BatchIngestResponse)
  * ```ts
- * import type { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import type { BatchIngestResponse } from "@effect-ontology/Schema/LinkIngestion"
  *
  * const total = (response: BatchIngestResponse) => response.summary.total
  * console.log(total)
@@ -427,11 +434,13 @@ export type BatchIngestResponse = typeof BatchIngestResponse.Type;
  *
  * **Example** (Use ListLinksQuery)
  * ```ts
- * import { ListLinksQuery } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ListLinksQuery } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const query = ListLinksQuery.fromUnknown({})
- * console.log(query.limit) // 20
- * console.log(query.offset) // 0
+ * const query = S.decodeUnknownOption(ListLinksQuery)({})
+ * console.log(O.map(query, (value) => value.limit))
+ * console.log(O.map(query, (value) => value.offset))
  * ```
  *
  * @category dtos
@@ -482,14 +491,16 @@ export class ListLinksQuery extends S.Class<ListLinksQuery>($I`ListLinksQuery`)(
  *
  * **Example** (Use LinkSummary)
  * ```ts
- * import { LinkSummary } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { LinkSummary } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const summary = LinkSummary.fromUnknown({
+ * const summary = S.decodeUnknownOption(LinkSummary)({
  *   id: "link-42",
  *   contentHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   status: "pending"
  * })
- * console.log(summary.status) // "pending"
+ * console.log(O.map(summary, (value) => value.status))
  * ```
  *
  * @category models
@@ -547,16 +558,17 @@ export class LinkSummary extends S.Class<LinkSummary>($I`LinkSummary`)(
  *
  * **Example** (Use ListLinksResponse)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ListLinksResponse } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import { ListLinksResponse } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const response = S.decodeUnknownSync(ListLinksResponse)({
+ * const response = S.decodeUnknownOption(ListLinksResponse)({
  *   total: 0,
  *   limit: 20,
  *   offset: 0,
  *   hasMore: false
  * })
- * console.log(response.links.length) // 0
+ * console.log(O.map(response, (value) => value.links.length)) // 0
  * ```
  *
  * @category dtos
@@ -588,15 +600,17 @@ export class ListLinksResponse extends S.Class<ListLinksResponse>($I`ListLinksRe
  *
  * **Example** (Use LinkDetail)
  * ```ts
- * import { LinkDetail } from "@effect-ontology/Schema/LinkIngestion.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { LinkDetail } from "@effect-ontology/Schema/LinkIngestion"
  *
- * const detail = LinkDetail.fromUnknown({
+ * const detail = S.decodeUnknownOption(LinkDetail)({
  *   id: "link-42",
  *   contentHash: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   storageUri: "gs://beep-ontology-state/links/link-42.json",
  *   status: "pending"
  * })
- * console.log(detail.topics.length) // 0
+ * console.log(O.map(detail, (value) => value.topics.length))
  * ```
  *
  * @category dtos

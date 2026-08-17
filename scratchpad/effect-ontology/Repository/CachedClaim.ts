@@ -1,6 +1,8 @@
 /**
  * Cached Claim Repository
  *
+ * **Details**
+ *
  * Effect.Cache wrapper around ClaimRepository for frequently accessed queries.
  * Caches single claim lookups and subject-based queries with TTL.
  *
@@ -9,13 +11,12 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Layer, pipe } from "effect";
+import { Context, HashSet, Layer, pipe } from "effect";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/CachedClaim");
 
 import { Cache, Duration, Effect } from "effect";
 import * as A from "effect/Array";
-import * as HashSet from "effect/HashSet";
 import type { ClaimId, CorrectionId } from "./Claim.ts";
 import { ClaimRepository } from "./Claim.ts";
 import type { ClaimInsertRow } from "./schema.ts";
@@ -37,11 +38,21 @@ const SUBJECT_CACHE_TTL = Duration.hours(1);
 /**
  * CachedClaimRepository service
  *
+ * **Details**
+ *
  * Wraps ClaimRepository with Effect.Cache for hot-path queries.
  * Maintains same interface as ClaimRepository.
  *
+ * **Example** (Inspect cached claim repository)
+ *
+ * ```ts
+ * import { CachedClaimRepository } from "@effect-ontology/Repository/CachedClaim"
+ *
+ * console.log(CachedClaimRepository)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class CachedClaimRepository extends Context.Service<CachedClaimRepository>()($I`CachedClaimRepository`, {
   make: Effect.gen(function* () {
@@ -165,7 +176,15 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
 /**
  * Layer that provides CachedClaimRepository
  *
- * @since 0.0.0
+ * **Example** (Inspect cached claim repository layer)
+ *
+ * ```ts
+ * import { CachedClaimRepositoryLayer } from "@effect-ontology/Repository/CachedClaim"
+ *
+ * console.log(CachedClaimRepositoryLayer)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const CachedClaimRepositoryLayer = CachedClaimRepository.Default;

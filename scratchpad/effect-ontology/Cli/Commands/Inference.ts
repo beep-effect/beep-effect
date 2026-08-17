@@ -1,21 +1,30 @@
 /**
  * CLI Command: Inference
  *
+ * **Details**
+ *
  * Run RDFS inference on a local Turtle file.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import * as Struct from "@beep/utils/Struct";
-import { Console, Data, Effect, FileSystem } from "effect";
+import { Console, Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag as Options } from "effect/unstable/cli";
+import { ErrorMessage, OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize } from "../../Service/Rdf.ts";
 import { Reasoner, ReasoningConfig } from "../../Service/Reasoner.ts";
 import { computeQuadDelta, summarizeDelta } from "../../Utils/QuadDelta.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Inference");
 
 // =============================================================================
 // Options
@@ -32,9 +41,9 @@ const outputOption = Options.string("output").pipe(
   Options.withDescription("Output file path for enriched graph")
 );
 
-const profileOption = Options.choice("profile", ["rdfs", "rdfs-subclass", "owl-sameas"] as const).pipe(
+const profileOption = Options.choice("profile", ["rdfs", "rdfs-subclass", "owl-sameas"]).pipe(
   Options.withAlias("p"),
-  Options.withDefault("rdfs" as const),
+  Options.withDefault("rdfs"),
   Options.withDescription("Reasoning profile to apply")
 );
 
@@ -48,20 +57,43 @@ const deltaOnlyOption = Options.boolean("delta-only").pipe(
 // Command
 // =============================================================================
 
-class InferenceCliError extends Data.TaggedError("InferenceCliError")<{
-  readonly operation: "readInput" | "writeOutput";
-  readonly message: string;
-  readonly cause: unknown;
-}> {}
+const InferenceCliOperation = LiteralKit(["readInput", "writeOutput"]).pipe(
+  $I.annoteSchema("InferenceCliOperation", {
+    description: "Filesystem operation performed by the inference CLI.",
+  })
+);
+
+class InferenceCliError extends S.TaggedError<InferenceCliError>($I`InferenceCliError`)(
+  "InferenceCliError",
+  {
+    operation: InferenceCliOperation.annotateKey({
+      description: "Inference CLI filesystem operation that failed.",
+    }),
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable inference CLI failure diagnostic.",
+    }),
+    cause: OptionalErrorCause.annotateKey({
+      description: "Optional filesystem defect raised by the inference CLI.",
+    }),
+  },
+  $I.annote("InferenceCliError", {
+    description: "Failure raised when the inference CLI cannot read input or write output.",
+  })
+) {}
 
 /**
  * inference - Run RDFS inference on a Turtle file
  *
  * **Example** (Use inferenceCommand)
- * ```bash
- * effect-onto inference --input graph.ttl --output enriched.ttl --profile rdfs
- * effect-onto inference -i graph.ttl -d  # Output only delta
+ *
+ * ```ts
+ * import { inferenceCommand } from "@effect-ontology/Cli/Commands/Inference"
+ *
+ * console.log(inferenceCommand)
  * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
  */
 export const inferenceCommand = Command.make(
   "inference",
@@ -76,13 +108,12 @@ export const inferenceCommand = Command.make(
 
       // Read input file
       const turtle = yield* fs.readFileString(input).pipe(
-        Effect.mapError(
-          (cause) =>
-            new InferenceCliError({
-              operation: "readInput",
-              message: `Failed to read input file: ${cause.message}`,
-              cause,
-            })
+        Effect.mapError((cause) =>
+          InferenceCliError.make({
+            operation: "readInput",
+            message: `Failed to read input file: ${cause.message}`,
+            cause: O.some(cause),
+          })
         )
       );
 
@@ -130,13 +161,12 @@ export const inferenceCommand = Command.make(
       // Serialize and write output
       const outputTurtle = yield* rdfBuilder.toTurtle(outputStore);
       yield* fs.writeFileString(output, outputTurtle).pipe(
-        Effect.mapError(
-          (cause) =>
-            new InferenceCliError({
-              operation: "writeOutput",
-              message: `Failed to write output file: ${cause.message}`,
-              cause,
-            })
+        Effect.mapError((cause) =>
+          InferenceCliError.make({
+            operation: "writeOutput",
+            message: `Failed to write output file: ${cause.message}`,
+            cause: O.some(cause),
+          })
         )
       );
 

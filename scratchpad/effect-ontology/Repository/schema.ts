@@ -1,6 +1,8 @@
 /**
  * Drizzle Schema Definition
  *
+ * **Details**
+ *
  * PostgreSQL schema for claims, articles, corrections, conflicts, and batch runs.
  * Matches the SQL migration at `src/Runtime/Persistence/migrations/001_claims_schema.sql`.
  *
@@ -23,6 +25,9 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
+import { Number as Num } from "effect";
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 
 // =============================================================================
 // Custom Types
@@ -31,11 +36,18 @@ import {
 /**
  * Create a pgvector custom type for a specific dimension.
  *
+ * **Example** (Inspect vector n)
+ *
+ * ```ts
+ * import { vectorN } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(vectorN)
+ * ```
+ *
  * @param dimension - Vector dimension (e.g., 512, 768, 1024)
  * @returns Drizzle custom type for pgvector
- *
+ * @category repositories
  * @since 0.0.0
- * @category tables
  */
 export const vectorN = (dimension: number) =>
   customType<{ data: ReadonlyArray<number>; driverData: string }>({
@@ -43,12 +55,15 @@ export const vectorN = (dimension: number) =>
       return `vector(${dimension})`;
     },
     toDriver(value: ReadonlyArray<number>): string {
-      return `[${value.join(",")}]`;
+      return `[${A.join(
+        A.map(value, (entry) => `${entry}`),
+        ","
+      )}]`;
     },
     fromDriver(value: string): ReadonlyArray<number> {
       // Parse "[0.1,0.2,...]" format from PostgreSQL
-      const cleaned = value.replace(/^\[|\]$/g, "");
-      return cleaned.split(",").map(Number);
+      const cleaned = Str.replace(/^\[|\]$/g, "")(value);
+      return A.map(Str.split(",")(cleaned), Num.Number);
     },
   });
 
@@ -81,8 +96,16 @@ const vector768 = vectorN(768);
  * Custom type for pgvector embedding columns (256-dimensional).
  * Used for Matryoshka representation learning (truncated embeddings).
  *
+ * **Example** (Inspect claim rank enum)
+ *
+ * ```ts
+ * import { claimRankEnum } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(claimRankEnum)
+ * ```
+ *
+ * @category repositories
  * @since 0.0.0
- * @category tables
  */
 
 // =============================================================================
@@ -90,21 +113,119 @@ const vector768 = vectorN(768);
 // =============================================================================
 
 export const claimRankEnum = pgEnum("claim_rank", ["preferred", "normal", "deprecated"]);
+/**
+ * Provides repository access for object type enum.
+ *
+ * **Example** (Inspect object type enum)
+ *
+ * ```ts
+ * import { objectTypeEnum } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(objectTypeEnum)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const objectTypeEnum = pgEnum("object_type", ["iri", "literal", "typed_literal"]);
+/**
+ * Provides repository access for correction type enum.
+ *
+ * **Example** (Inspect correction type enum)
+ *
+ * ```ts
+ * import { correctionTypeEnum } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(correctionTypeEnum)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const correctionTypeEnum = pgEnum("correction_type", ["retraction", "clarification", "update", "amendment"]);
+/**
+ * Provides repository access for conflict type enum.
+ *
+ * **Example** (Inspect conflict type enum)
+ *
+ * ```ts
+ * import { conflictTypeEnum } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(conflictTypeEnum)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const conflictTypeEnum = pgEnum("conflict_type", ["position", "temporal", "contradictory", "duplicate"]);
+/**
+ * Provides repository access for conflict status enum.
+ *
+ * **Example** (Inspect conflict status enum)
+ *
+ * ```ts
+ * import { conflictStatusEnum } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(conflictStatusEnum)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const conflictStatusEnum = pgEnum("conflict_status", ["pending", "resolved", "ignored"]);
+/**
+ * Provides repository access for resolution strategy enum.
+ *
+ * **Example** (Inspect resolution strategy enum)
+ *
+ * ```ts
+ * import { resolutionStrategyEnum } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(resolutionStrategyEnum)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const resolutionStrategyEnum = pgEnum("resolution_strategy", [
   "temporal_precedence",
   "source_authority",
   "manual",
 ]);
+/**
+ * Provides repository access for batch status enum.
+ *
+ * **Example** (Inspect batch status enum)
+ *
+ * ```ts
+ * import { batchStatusEnum } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(batchStatusEnum)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const batchStatusEnum = pgEnum("batch_status", ["pending", "running", "completed", "failed"]);
 
 // =============================================================================
 // Articles Table
 // =============================================================================
 
+/**
+ * Provides repository access for articles.
+ *
+ * **Example** (Inspect articles)
+ *
+ * ```ts
+ * import { articles } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(articles)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const articles = pgTable(
   "articles",
   {
@@ -135,6 +256,20 @@ export const articles = pgTable(
 // Corrections Table (defined before claims due to FK reference)
 // =============================================================================
 
+/**
+ * Provides repository access for corrections.
+ *
+ * **Example** (Inspect corrections)
+ *
+ * ```ts
+ * import { corrections } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(corrections)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const corrections = pgTable(
   "corrections",
   {
@@ -157,6 +292,20 @@ export const corrections = pgTable(
 // Claims Table
 // =============================================================================
 
+/**
+ * Provides repository access for claims.
+ *
+ * **Example** (Inspect claims)
+ *
+ * ```ts
+ * import { claims } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(claims)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const claims = pgTable(
   "claims",
   {
@@ -203,6 +352,20 @@ export const claims = pgTable(
 // Correction Claims Junction Table
 // =============================================================================
 
+/**
+ * Provides repository access for correction claims.
+ *
+ * **Example** (Inspect correction claims)
+ *
+ * ```ts
+ * import { correctionClaims } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(correctionClaims)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const correctionClaims = pgTable(
   "correction_claims",
   {
@@ -225,6 +388,20 @@ export const correctionClaims = pgTable(
 // Conflicts Table
 // =============================================================================
 
+/**
+ * Provides repository access for conflicts.
+ *
+ * **Example** (Inspect conflicts)
+ *
+ * ```ts
+ * import { conflicts } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(conflicts)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const conflicts = pgTable(
   "conflicts",
   {
@@ -254,6 +431,20 @@ export const conflicts = pgTable(
 // Batch Runs Table
 // =============================================================================
 
+/**
+ * Provides repository access for batch runs.
+ *
+ * **Example** (Inspect batch runs)
+ *
+ * ```ts
+ * import { batchRuns } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(batchRuns)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const batchRuns = pgTable(
   "batch_runs",
   {
@@ -277,6 +468,20 @@ export const batchRuns = pgTable(
 // Schema Migrations Table
 // =============================================================================
 
+/**
+ * Provides repository access for schema migrations.
+ *
+ * **Example** (Inspect schema migrations)
+ *
+ * ```ts
+ * import { schemaMigrations } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(schemaMigrations)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
 export const schemaMigrations = pgTable("schema_migrations", {
   version: integer("version").primaryKey(),
   name: text("name").notNull(),
@@ -290,8 +495,21 @@ export const schemaMigrations = pgTable("schema_migrations", {
 /**
  * Canonical Entity Registry
  *
+ * **Details**
+ *
  * The "golden" entity records. Each unique real-world entity has one canonical entry.
  * Enables cross-batch entity linking by persisting resolved entities with embeddings.
+ *
+ * **Example** (Inspect canonical entities)
+ *
+ * ```ts
+ * import { canonicalEntities } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(canonicalEntities)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
 export const canonicalEntities = pgTable(
   "canonical_entities",
@@ -333,8 +551,21 @@ export const canonicalEntities = pgTable(
 /**
  * Entity Aliases
  *
+ * **Details**
+ *
  * Alternative mentions mapped to canonical entities.
  * Preserves provenance of how each mention was resolved.
+ *
+ * **Example** (Inspect entity aliases)
+ *
+ * ```ts
+ * import { entityAliases } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(entityAliases)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
 export const entityAliases = pgTable(
   "entity_aliases",
@@ -376,8 +607,21 @@ export const entityAliases = pgTable(
 /**
  * Entity Blocking Tokens
  *
+ * **Details**
+ *
  * Inverted index for fast candidate retrieval during entity resolution.
  * Avoids O(n) scan by pre-indexing tokens from entity mentions.
+ *
+ * **Example** (Inspect entity blocking tokens)
+ *
+ * ```ts
+ * import { entityBlockingTokens } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(entityBlockingTokens)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
 export const entityBlockingTokens = pgTable(
   "entity_blocking_tokens",
@@ -407,31 +651,319 @@ export const entityBlockingTokens = pgTable(
 // Type Exports for Drizzle
 // =============================================================================
 
+/**
+ * Describes the article row data exposed by this module.
+ *
+ * **Example** (Reference ArticleRow columns)
+ *
+ * ```ts
+ * import type { ArticleRow } from "@effect-ontology/Repository/schema"
+ *
+ * const articleRowFields: ReadonlyArray<keyof ArticleRow> = ["id", "uri", "ontologyId"]
+ *
+ * console.log(articleRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ArticleRow = typeof articles.$inferSelect;
+/**
+ * Describes the article insert row data exposed by this module.
+ *
+ * **Example** (Reference ArticleInsertRow columns)
+ *
+ * ```ts
+ * import type { ArticleInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const articleInsertRowFields: ReadonlyArray<keyof ArticleInsertRow> = ["id", "uri", "ontologyId"]
+ *
+ * console.log(articleInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ArticleInsertRow = typeof articles.$inferInsert;
 
+/**
+ * Describes the claim row data exposed by this module.
+ *
+ * **Example** (Reference ClaimRow columns)
+ *
+ * ```ts
+ * import type { ClaimRow } from "@effect-ontology/Repository/schema"
+ *
+ * const claimRowFields: ReadonlyArray<keyof ClaimRow> = ["id", "articleId", "ontologyId"]
+ *
+ * console.log(claimRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ClaimRow = typeof claims.$inferSelect;
+/**
+ * Describes the claim insert row data exposed by this module.
+ *
+ * **Example** (Reference ClaimInsertRow columns)
+ *
+ * ```ts
+ * import type { ClaimInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const claimInsertRowFields: ReadonlyArray<keyof ClaimInsertRow> = ["id", "articleId", "ontologyId"]
+ *
+ * console.log(claimInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ClaimInsertRow = typeof claims.$inferInsert;
 
+/**
+ * Describes the correction row data exposed by this module.
+ *
+ * **Example** (Reference CorrectionRow columns)
+ *
+ * ```ts
+ * import type { CorrectionRow } from "@effect-ontology/Repository/schema"
+ *
+ * const correctionRowFields: ReadonlyArray<keyof CorrectionRow> = ["id", "correctionType", "sourceArticleId"]
+ *
+ * console.log(correctionRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CorrectionRow = typeof corrections.$inferSelect;
+/**
+ * Describes the correction insert row data exposed by this module.
+ *
+ * **Example** (Reference CorrectionInsertRow columns)
+ *
+ * ```ts
+ * import type { CorrectionInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const correctionInsertRowFields: ReadonlyArray<keyof CorrectionInsertRow> = ["id", "correctionType", "sourceArticleId"]
+ *
+ * console.log(correctionInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CorrectionInsertRow = typeof corrections.$inferInsert;
 
+/**
+ * Describes the correction claim row data exposed by this module.
+ *
+ * **Example** (Reference CorrectionClaimRow columns)
+ *
+ * ```ts
+ * import type { CorrectionClaimRow } from "@effect-ontology/Repository/schema"
+ *
+ * const correctionClaimRowFields: ReadonlyArray<keyof CorrectionClaimRow> = ["correctionId", "originalClaimId", "newClaimId"]
+ *
+ * console.log(correctionClaimRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CorrectionClaimRow = typeof correctionClaims.$inferSelect;
+/**
+ * Describes the correction claim insert row data exposed by this module.
+ *
+ * **Example** (Reference CorrectionClaimInsertRow columns)
+ *
+ * ```ts
+ * import type { CorrectionClaimInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const correctionClaimInsertRowFields: ReadonlyArray<keyof CorrectionClaimInsertRow> = ["correctionId", "originalClaimId", "newClaimId"]
+ *
+ * console.log(correctionClaimInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CorrectionClaimInsertRow = typeof correctionClaims.$inferInsert;
 
+/**
+ * Describes the conflict row data exposed by this module.
+ *
+ * **Example** (Reference ConflictRow columns)
+ *
+ * ```ts
+ * import type { ConflictRow } from "@effect-ontology/Repository/schema"
+ *
+ * const conflictRowFields: ReadonlyArray<keyof ConflictRow> = ["id", "conflictType", "claimAId"]
+ *
+ * console.log(conflictRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ConflictRow = typeof conflicts.$inferSelect;
+/**
+ * Describes the conflict insert row data exposed by this module.
+ *
+ * **Example** (Reference ConflictInsertRow columns)
+ *
+ * ```ts
+ * import type { ConflictInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const conflictInsertRowFields: ReadonlyArray<keyof ConflictInsertRow> = ["id", "conflictType", "claimAId"]
+ *
+ * console.log(conflictInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ConflictInsertRow = typeof conflicts.$inferInsert;
 
+/**
+ * Describes the batch run row data exposed by this module.
+ *
+ * **Example** (Reference BatchRunRow columns)
+ *
+ * ```ts
+ * import type { BatchRunRow } from "@effect-ontology/Repository/schema"
+ *
+ * const batchRunRowFields: ReadonlyArray<keyof BatchRunRow> = ["id", "batchId", "status"]
+ *
+ * console.log(batchRunRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type BatchRunRow = typeof batchRuns.$inferSelect;
+/**
+ * Describes the batch run insert row data exposed by this module.
+ *
+ * **Example** (Reference BatchRunInsertRow columns)
+ *
+ * ```ts
+ * import type { BatchRunInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const batchRunInsertRowFields: ReadonlyArray<keyof BatchRunInsertRow> = ["id", "batchId", "status"]
+ *
+ * console.log(batchRunInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type BatchRunInsertRow = typeof batchRuns.$inferInsert;
 
+/**
+ * Describes the canonical entity row data exposed by this module.
+ *
+ * **Example** (Reference CanonicalEntityRow columns)
+ *
+ * ```ts
+ * import type { CanonicalEntityRow } from "@effect-ontology/Repository/schema"
+ *
+ * const canonicalEntityRowFields: ReadonlyArray<keyof CanonicalEntityRow> = ["id", "ontologyId", "iri"]
+ *
+ * console.log(canonicalEntityRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CanonicalEntityRow = typeof canonicalEntities.$inferSelect;
+/**
+ * Describes the canonical entity insert row data exposed by this module.
+ *
+ * **Example** (Reference CanonicalEntityInsertRow columns)
+ *
+ * ```ts
+ * import type { CanonicalEntityInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const canonicalEntityInsertRowFields: ReadonlyArray<keyof CanonicalEntityInsertRow> = ["id", "ontologyId", "iri"]
+ *
+ * console.log(canonicalEntityInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CanonicalEntityInsertRow = typeof canonicalEntities.$inferInsert;
 
+/**
+ * Describes the entity alias row data exposed by this module.
+ *
+ * **Example** (Reference EntityAliasRow columns)
+ *
+ * ```ts
+ * import type { EntityAliasRow } from "@effect-ontology/Repository/schema"
+ *
+ * const entityAliasRowFields: ReadonlyArray<keyof EntityAliasRow> = ["id", "ontologyId", "canonicalEntityId"]
+ *
+ * console.log(entityAliasRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EntityAliasRow = typeof entityAliases.$inferSelect;
+/**
+ * Describes the entity alias insert row data exposed by this module.
+ *
+ * **Example** (Reference EntityAliasInsertRow columns)
+ *
+ * ```ts
+ * import type { EntityAliasInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const entityAliasInsertRowFields: ReadonlyArray<keyof EntityAliasInsertRow> = ["id", "ontologyId", "canonicalEntityId"]
+ *
+ * console.log(entityAliasInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EntityAliasInsertRow = typeof entityAliases.$inferInsert;
 
+/**
+ * Describes the entity blocking token row data exposed by this module.
+ *
+ * **Example** (Reference EntityBlockingTokenRow columns)
+ *
+ * ```ts
+ * import type { EntityBlockingTokenRow } from "@effect-ontology/Repository/schema"
+ *
+ * const entityBlockingTokenRowFields: ReadonlyArray<keyof EntityBlockingTokenRow> = ["id", "ontologyId", "canonicalEntityId"]
+ *
+ * console.log(entityBlockingTokenRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EntityBlockingTokenRow = typeof entityBlockingTokens.$inferSelect;
+/**
+ * Describes the entity blocking token insert row data exposed by this module.
+ *
+ * **Example** (Reference EntityBlockingTokenInsertRow columns)
+ *
+ * ```ts
+ * import type { EntityBlockingTokenInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const entityBlockingTokenInsertRowFields: ReadonlyArray<keyof EntityBlockingTokenInsertRow> = ["id", "ontologyId", "canonicalEntityId"]
+ *
+ * console.log(entityBlockingTokenInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EntityBlockingTokenInsertRow = typeof entityBlockingTokens.$inferInsert;
 
 // =============================================================================
@@ -441,8 +973,21 @@ export type EntityBlockingTokenInsertRow = typeof entityBlockingTokens.$inferIns
 /**
  * Ingested Links
  *
+ * **Details**
+ *
  * Tracks URLs fetched via Jina Reader API for extraction.
  * Content is stored in GCS/local; this table holds metadata.
+ *
+ * **Example** (Inspect ingested links)
+ *
+ * ```ts
+ * import { ingestedLinks } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(ingestedLinks)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
 export const ingestedLinks = pgTable(
   "ingested_links",
@@ -511,7 +1056,20 @@ export const ingestedLinks = pgTable(
 /**
  * Link Batches
  *
+ * **Details**
+ *
  * Groups ingested links for batch extraction.
+ *
+ * **Example** (Inspect link batches)
+ *
+ * ```ts
+ * import { linkBatches } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(linkBatches)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
 export const linkBatches = pgTable(
   "link_batches",
@@ -544,7 +1102,20 @@ export const linkBatches = pgTable(
 /**
  * Link Batch Items Junction
  *
+ * **Details**
+ *
  * Links ingested_links to batches.
+ *
+ * **Example** (Inspect link batch items)
+ *
+ * ```ts
+ * import { linkBatchItems } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(linkBatchItems)
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
  */
 export const linkBatchItems = pgTable(
   "link_batch_items",
@@ -577,13 +1148,109 @@ export const linkBatchItems = pgTable(
   ]
 );
 
+/**
+ * Describes the ingested link row data exposed by this module.
+ *
+ * **Example** (Reference IngestedLinkRow columns)
+ *
+ * ```ts
+ * import type { IngestedLinkRow } from "@effect-ontology/Repository/schema"
+ *
+ * const ingestedLinkRowFields: ReadonlyArray<keyof IngestedLinkRow> = ["id", "contentHash", "ontologyId"]
+ *
+ * console.log(ingestedLinkRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type IngestedLinkRow = typeof ingestedLinks.$inferSelect;
+/**
+ * Describes the ingested link insert row data exposed by this module.
+ *
+ * **Example** (Reference IngestedLinkInsertRow columns)
+ *
+ * ```ts
+ * import type { IngestedLinkInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const ingestedLinkInsertRowFields: ReadonlyArray<keyof IngestedLinkInsertRow> = ["id", "contentHash", "ontologyId"]
+ *
+ * console.log(ingestedLinkInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type IngestedLinkInsertRow = typeof ingestedLinks.$inferInsert;
 
+/**
+ * Describes the link batch row data exposed by this module.
+ *
+ * **Example** (Reference LinkBatchRow columns)
+ *
+ * ```ts
+ * import type { LinkBatchRow } from "@effect-ontology/Repository/schema"
+ *
+ * const linkBatchRowFields: ReadonlyArray<keyof LinkBatchRow> = ["id", "batchId", "status"]
+ *
+ * console.log(linkBatchRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LinkBatchRow = typeof linkBatches.$inferSelect;
+/**
+ * Describes the link batch insert row data exposed by this module.
+ *
+ * **Example** (Reference LinkBatchInsertRow columns)
+ *
+ * ```ts
+ * import type { LinkBatchInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const linkBatchInsertRowFields: ReadonlyArray<keyof LinkBatchInsertRow> = ["id", "batchId", "status"]
+ *
+ * console.log(linkBatchInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LinkBatchInsertRow = typeof linkBatches.$inferInsert;
 
+/**
+ * Describes the link batch item row data exposed by this module.
+ *
+ * **Example** (Reference LinkBatchItemRow columns)
+ *
+ * ```ts
+ * import type { LinkBatchItemRow } from "@effect-ontology/Repository/schema"
+ *
+ * const linkBatchItemRowFields: ReadonlyArray<keyof LinkBatchItemRow> = ["batchId", "linkId", "status"]
+ *
+ * console.log(linkBatchItemRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LinkBatchItemRow = typeof linkBatchItems.$inferSelect;
+/**
+ * Describes the link batch item insert row data exposed by this module.
+ *
+ * **Example** (Reference LinkBatchItemInsertRow columns)
+ *
+ * ```ts
+ * import type { LinkBatchItemInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const linkBatchItemInsertRowFields: ReadonlyArray<keyof LinkBatchItemInsertRow> = ["batchId", "linkId", "status"]
+ *
+ * console.log(linkBatchItemInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LinkBatchItemInsertRow = typeof linkBatchItems.$inferInsert;
 
 // =============================================================================
@@ -593,9 +1260,20 @@ export type LinkBatchItemInsertRow = typeof linkBatchItems.$inferInsert;
 /**
  * LLM Examples
  *
+ * **Details**
+ *
  * Stores curated examples for few-shot prompting. Examples are scoped per-ontology
  * and support hybrid retrieval (vector similarity + lexical search).
  *
+ * **Example** (Inspect llm examples)
+ *
+ * ```ts
+ * import { llmExamples } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(llmExamples)
+ * ```
+ *
+ * @category repositories
  * @since 0.0.0
  */
 export const llmExamples = pgTable(
@@ -645,7 +1323,39 @@ export const llmExamples = pgTable(
   ]
 );
 
+/**
+ * Describes the llm example row data exposed by this module.
+ *
+ * **Example** (Reference LlmExampleRow columns)
+ *
+ * ```ts
+ * import type { LlmExampleRow } from "@effect-ontology/Repository/schema"
+ *
+ * const llmExampleRowFields: ReadonlyArray<keyof LlmExampleRow> = ["id", "ontologyId", "exampleType"]
+ *
+ * console.log(llmExampleRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LlmExampleRow = typeof llmExamples.$inferSelect;
+/**
+ * Describes the llm example insert row data exposed by this module.
+ *
+ * **Example** (Reference LlmExampleInsertRow columns)
+ *
+ * ```ts
+ * import type { LlmExampleInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const llmExampleInsertRowFields: ReadonlyArray<keyof LlmExampleInsertRow> = ["id", "ontologyId", "exampleType"]
+ *
+ * console.log(llmExampleInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type LlmExampleInsertRow = typeof llmExamples.$inferInsert;
 
 // =============================================================================
@@ -655,12 +1365,23 @@ export type LlmExampleInsertRow = typeof llmExamples.$inferInsert;
 /**
  * Entity type enum for embeddings
  *
+ * **Example** (Inspect embedding entity type enum)
+ *
+ * ```ts
+ * import { embeddingEntityTypeEnum } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(embeddingEntityTypeEnum)
+ * ```
+ *
+ * @category repositories
  * @since 0.0.0
  */
 export const embeddingEntityTypeEnum = pgEnum("embedding_entity_type", ["class", "entity", "claim", "example"]);
 
 /**
  * Embeddings Table
+ *
+ * **Details**
  *
  * Persistent storage for embedding vectors supporting hybrid search.
  * Stores embeddings for ontology classes, extracted entities, claims,
@@ -671,6 +1392,15 @@ export const embeddingEntityTypeEnum = pgEnum("embedding_entity_type", ["class",
  * - tsvector for BM25-like full-text search
  * - RRF fusion via hybrid_search() function
  *
+ * **Example** (Inspect embeddings)
+ *
+ * ```ts
+ * import { embeddings } from "@effect-ontology/Repository/schema"
+ *
+ * console.log(embeddings)
+ * ```
+ *
+ * @category repositories
  * @since 0.0.0
  */
 export const embeddings = pgTable(
@@ -708,5 +1438,37 @@ export const embeddings = pgTable(
   ]
 );
 
+/**
+ * Describes the embedding row data exposed by this module.
+ *
+ * **Example** (Reference EmbeddingRow columns)
+ *
+ * ```ts
+ * import type { EmbeddingRow } from "@effect-ontology/Repository/schema"
+ *
+ * const embeddingRowFields: ReadonlyArray<keyof EmbeddingRow> = ["id", "entityType", "entityId"]
+ *
+ * console.log(embeddingRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EmbeddingRow = typeof embeddings.$inferSelect;
+/**
+ * Describes the embedding insert row data exposed by this module.
+ *
+ * **Example** (Reference EmbeddingInsertRow columns)
+ *
+ * ```ts
+ * import type { EmbeddingInsertRow } from "@effect-ontology/Repository/schema"
+ *
+ * const embeddingInsertRowFields: ReadonlyArray<keyof EmbeddingInsertRow> = ["id", "entityType", "entityId"]
+ *
+ * console.log(embeddingInsertRowFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EmbeddingInsertRow = typeof embeddings.$inferInsert;

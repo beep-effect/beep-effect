@@ -64,7 +64,7 @@ type OutputTypeValue = typeof OutputTypeDefinition.Type;
  *
  * **Example** (Use OutputFilename)
  * ```ts
- * import { OutputFilename } from "@effect-ontology/Model/OutputType.ts"
+ * import { OutputFilename } from "@effect-ontology/Model/OutputType"
  *
  * console.log(OutputFilename.is.graphJsonld("graph.jsonld")) // true
  * console.log(OutputFilename.is.graphJsonld("arbitrary.txt")) // false
@@ -120,7 +120,7 @@ export const OutputFilename = LiteralKit({
  *
  * **Example** (Use OutputFilename)
  * ```ts
- * import { OutputFilename, type OutputFilename as OutputFilenameValue } from "@effect-ontology/Model/OutputType.ts"
+ * import { OutputFilename, type OutputFilename as OutputFilenameValue } from "@effect-ontology/Model/OutputType"
  *
  * const filename: OutputFilenameValue = OutputFilename.Enum.graphJsonld
  * console.log(filename) // "graph.jsonld"
@@ -184,7 +184,7 @@ const outputTypeRegistry = {
  *
  * **Example** (Use OutputType)
  * ```ts
- * import { OutputType } from "@effect-ontology/Model/OutputType.ts"
+ * import { OutputType } from "@effect-ontology/Model/OutputType"
  *
  * console.log(OutputType.filename("knowledge-graph")) // "knowledge-graph.json"
  * console.log(OutputType.is.rdfTurtle("rdf-turtle")) // true
@@ -208,7 +208,7 @@ export const OutputType = OutputTypeDefinition.pipe(
  *
  * **Example** (Use OutputType)
  * ```ts
- * import { OutputType, type OutputType as OutputTypeValue } from "@effect-ontology/Model/OutputType.ts"
+ * import { OutputType, type OutputType as OutputTypeValue } from "@effect-ontology/Model/OutputType"
  *
  * const output: OutputTypeValue = OutputType.Enum.knowledgeGraph
  * console.log(output) // "knowledge-graph"
@@ -229,7 +229,7 @@ export type OutputType = typeof OutputType.Type;
  *
  * **Example** (Use OutputTypeRegistry)
  * ```ts
- * import { OutputTypeRegistry } from "@effect-ontology/Model/OutputType.ts"
+ * import { OutputTypeRegistry } from "@effect-ontology/Model/OutputType"
  *
  * console.log(OutputTypeRegistry["rdf-turtle"].filename) // "graph.ttl"
  * ```
@@ -245,7 +245,7 @@ export const OutputTypeRegistry = outputTypeRegistry;
  *
  * **Example** (Use getOutputFilename)
  * ```ts
- * import { OutputTypeSchema } from "@effect-ontology/Model/OutputType.ts"
+ * import { OutputTypeSchema } from "@effect-ontology/Model/OutputType"
  *
  * console.log(OutputTypeSchema.is.metadata("metadata")) // true
  * ```
@@ -266,7 +266,7 @@ export { OutputType as OutputTypeSchema };
  *
  * **Example** (Use getOutputFilename)
  * ```ts
- * import { getOutputFilename } from "@effect-ontology/Model/OutputType.ts"
+ * import { getOutputFilename } from "@effect-ontology/Model/OutputType"
  *
  * console.log(getOutputFilename("knowledge-graph")) // "knowledge-graph.json"
  * ```
@@ -289,7 +289,7 @@ export const getOutputFilename = OutputType.filename;
  *
  * **Example** (Use getOutputDescription)
  * ```ts
- * import { getOutputDescription } from "@effect-ontology/Model/OutputType.ts"
+ * import { getOutputDescription } from "@effect-ontology/Model/OutputType"
  *
  * console.log(getOutputDescription("entities")) // "Extracted entities in JSON format."
  * ```

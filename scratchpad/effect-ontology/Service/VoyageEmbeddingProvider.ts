@@ -1,6 +1,8 @@
 /**
  * Voyage AI Embedding Provider
  *
+ * **Details**
+ *
  * HTTP-based provider for Voyage AI embeddings API.
  * Supports voyage-3, voyage-3.5-lite, voyage-code-3, voyage-law-2.
  *
@@ -10,18 +12,20 @@
  * - `HttpClient.retryTransient` for automatic retry of 429/5xx errors
  * - Respects `Retry-After` header from rate limit responses
  *
- * @see https://docs.voyageai.com/docs/embeddings
+ * @see {@link https://docs.voyageai.com/docs/embeddings} for the embeddings API reference.
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Duration, Effect, Layer, Order, Redacted, Schedule, Schema } from "effect";
+import { Duration, Effect, Inspectable, Layer, Match, Order, Redacted, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http";
+import { Milliseconds } from "../Domain/Error/Base.ts";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import {
   EmbeddingError,
@@ -46,8 +50,16 @@ const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
 /**
  * Voyage model dimensions
  *
- * @since 0.0.0
+ * **Example** (Inspect voyage models)
+ *
+ * ```ts
+ * import { VOYAGE_MODELS } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * console.log(VOYAGE_MODELS)
+ * ```
+ *
  * @category constants
+ * @since 0.0.0
  */
 export const VOYAGE_MODELS: Record<string, number> = {
   "voyage-3": 1024,
@@ -60,26 +72,81 @@ export const VOYAGE_MODELS: Record<string, number> = {
 
 /**
  * Default Voyage model
+ *
+ * **Example** (Inspect default voyage model)
+ *
+ * ```ts
+ * import { DEFAULT_VOYAGE_MODEL } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * console.log(DEFAULT_VOYAGE_MODEL)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
  */
 export const DEFAULT_VOYAGE_MODEL = "voyage-3.5-lite";
 
 /**
  * Default timeout in milliseconds
+ *
+ * **Example** (Inspect default timeout ms)
+ *
+ * ```ts
+ * import { DEFAULT_TIMEOUT_MS } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * console.log(DEFAULT_TIMEOUT_MS)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
  */
 export const DEFAULT_TIMEOUT_MS = 30_000;
 
 /**
  * Default retry configuration for transient errors
+ *
+ * **Example** (Inspect default max retries)
+ *
+ * ```ts
+ * import { DEFAULT_MAX_RETRIES } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * console.log(DEFAULT_MAX_RETRIES)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
  */
 export const DEFAULT_MAX_RETRIES = 3;
 
 /**
  * Default initial retry delay in milliseconds
+ *
+ * **Example** (Inspect default initial retry delay ms)
+ *
+ * ```ts
+ * import { DEFAULT_INITIAL_RETRY_DELAY_MS } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * console.log(DEFAULT_INITIAL_RETRY_DELAY_MS)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
  */
 export const DEFAULT_INITIAL_RETRY_DELAY_MS = 1_000;
 
 /**
  * Default retry-after value when header is missing (in seconds)
+ *
+ * **Example** (Inspect default retry after seconds)
+ *
+ * ```ts
+ * import { DEFAULT_RETRY_AFTER_SECONDS } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * console.log(DEFAULT_RETRY_AFTER_SECONDS)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
  */
 export const DEFAULT_RETRY_AFTER_SECONDS = 60;
 
@@ -87,21 +154,21 @@ export const DEFAULT_RETRY_AFTER_SECONDS = 60;
 // Response Schema
 // =============================================================================
 
-const VoyageEmbeddingData = Schema.Struct({
-  object: Schema.Literal("embedding"),
-  embedding: Schema.Array(Schema.Finite),
+const VoyageEmbeddingData = S.Struct({
+  object: S.Literal("embedding"),
+  embedding: S.Array(S.Finite),
   index: NonNegativeInt,
 });
 
-const VoyageUsage = Schema.Struct({
+const VoyageUsage = S.Struct({
   total_tokens: NonNegativeInt,
 });
 
-const VoyageResponseSchema = Schema.Struct({
+const VoyageResponseSchema = S.Struct({
   // Note: `object` field is optional - Voyage API may omit it
-  object: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-  data: Schema.Array(VoyageEmbeddingData),
-  model: Schema.String,
+  object: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  data: S.Array(VoyageEmbeddingData),
+  model: S.String,
   usage: VoyageUsage,
 });
 
@@ -109,8 +176,8 @@ const VoyageResponseSchema = Schema.Struct({
  * Voyage error response schema
  * API returns { "detail": "error message" } for non-2xx responses
  */
-const VoyageErrorSchema = Schema.Struct({
-  detail: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+const VoyageErrorSchema = S.Struct({
+  detail: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
 
 // =============================================================================
@@ -145,23 +212,23 @@ const parseRetryAfterMs = (response: HttpClientResponse.HttpClientResponse): num
  */
 const mapVoyageError = (error: unknown, timeoutMs: number): AnyEmbeddingError => {
   // Check for specific error types by their _tag property
-  if (error !== null && typeof error === "object" && "_tag" in error) {
-    const tagged = error as { _tag: string; status?: number; message?: string };
+  if (P.isObject(error) && "_tag" in error) {
+    const tagged = error;
 
     if (tagged._tag === "TimeoutError") {
-      return EmbeddingTimeoutError.fromUnknown({
+      return EmbeddingTimeoutError.make({
         message: "Voyage API timeout",
         provider: "voyage",
-        timeoutMs,
+        timeoutMs: Milliseconds.make(timeoutMs),
       });
     }
 
-    if (tagged._tag === "ResponseError" && typeof tagged.status === "number") {
+    if (tagged._tag === "ResponseError" && P.hasProperty(tagged, "status") && P.isNumber(tagged.status)) {
       if (tagged.status === 429) {
-        return EmbeddingRateLimitError.fromUnknown({
+        return EmbeddingRateLimitError.make({
           message: "Voyage API rate limit exceeded",
           provider: "voyage",
-          retryAfterMs: DEFAULT_RETRY_AFTER_SECONDS * 1000,
+          retryAfterMs: O.some(Milliseconds.make(DEFAULT_RETRY_AFTER_SECONDS * 1000)),
         });
       }
       return EmbeddingError.make({
@@ -171,16 +238,17 @@ const mapVoyageError = (error: unknown, timeoutMs: number): AnyEmbeddingError =>
       });
     }
 
-    if (tagged._tag === "ParseError") {
+    if (P.hasProperty(tagged, "_tag") && tagged._tag === "ParseError") {
+      const message = P.hasProperty(tagged, "message") && P.isString(tagged.message) ? tagged.message : "parse error";
       return EmbeddingInvalidResponseError.make({
-        message: `Invalid Voyage response: ${tagged.message ?? "parse error"}`,
+        message: `Invalid Voyage response: ${message}`,
         provider: "voyage",
       });
     }
   }
 
   return EmbeddingError.make({
-    message: error instanceof Error ? error.message : String(error),
+    message: Inspectable.toStringUnknown(error),
     provider: "voyage",
     cause: O.some(error),
   });
@@ -193,8 +261,19 @@ const mapVoyageError = (error: unknown, timeoutMs: number): AnyEmbeddingError =>
 /**
  * Voyage embedding provider configuration
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the VoyageProviderConfig contract)
+ *
+ * ```ts
+ * import type { VoyageProviderConfig } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * const acceptsVoyageProviderConfig = (_value: VoyageProviderConfig): void => undefined
+ *
+ * console.log(acceptsVoyageProviderConfig)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface VoyageProviderConfig {
   /** Voyage API key */
@@ -208,8 +287,16 @@ export interface VoyageProviderConfig {
 /**
  * Create VoyageEmbeddingProvider with explicit config
  *
- * @since 0.0.0
+ * **Example** (Inspect make voyage provider)
+ *
+ * ```ts
+ * import { makeVoyageProvider } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * console.log(makeVoyageProvider)
+ * ```
+ *
  * @category constructors
+ * @since 0.0.0
  */
 export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
   config: VoyageProviderConfig
@@ -230,14 +317,11 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
   /**
    * Map task type to Voyage input_type
    */
-  const mapInputType = (taskType: string): "query" | "document" => {
-    switch (taskType) {
-      case "search_query":
-        return "query";
-      default:
-        return "document";
-    }
-  };
+  const mapInputType = (taskType: string): "query" | "document" =>
+    Match.value(taskType).pipe(
+      Match.when("search_query", (): "query" => "query"),
+      Match.orElse((): "document" => "document")
+    );
 
   /**
    * Retry schedule for transient errors (429, 5xx)
@@ -277,10 +361,10 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
           Effect.orElseSucceed(() => ({ detail: O.none<string>() })),
           Effect.flatMap((errorBody) =>
             Effect.fail(
-              EmbeddingRateLimitError.fromUnknown({
+              EmbeddingRateLimitError.make({
                 message: `Voyage API rate limit: ${O.getOrElse(errorBody.detail, () => "rate limit exceeded")}`,
                 provider: "voyage",
-                retryAfterMs: parseRetryAfterMs(res),
+                retryAfterMs: O.some(Milliseconds.make(parseRetryAfterMs(res))),
               })
             )
           )
@@ -360,10 +444,10 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
             Effect.timeout(Duration.millis(timeoutMs)),
             Effect.catchTag("TimeoutError", () =>
               Effect.fail(
-                EmbeddingTimeoutError.fromUnknown({
+                EmbeddingTimeoutError.make({
                   message: "Voyage API timeout",
                   provider: "voyage",
-                  timeoutMs,
+                  timeoutMs: Milliseconds.make(timeoutMs),
                 })
               )
             ),
@@ -391,10 +475,20 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
 /**
  * VoyageEmbeddingProvider layer using ConfigService
  *
+ * **Details**
+ *
  * Requires EMBEDDING_VOYAGE_API_KEY to be set.
  *
- * @since 0.0.0
+ * **Example** (Inspect voyage embedding provider live)
+ *
+ * ```ts
+ * import { VoyageEmbeddingProviderLive } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * console.log(VoyageEmbeddingProviderLive)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const VoyageEmbeddingProviderLive: Layer.Layer<
   EmbeddingProvider,
@@ -423,8 +517,16 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
 /**
  * Complete Voyage provider with HTTP client
  *
- * @since 0.0.0
+ * **Example** (Inspect voyage embedding provider default)
+ *
+ * ```ts
+ * import { VoyageEmbeddingProviderDefault } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * console.log(VoyageEmbeddingProviderDefault)
+ * ```
+ *
  * @category layers
+ * @since 0.0.0
  */
 export const VoyageEmbeddingProviderDefault: Layer.Layer<
   EmbeddingProvider,

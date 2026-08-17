@@ -1,6 +1,8 @@
 /**
  * Service: Inheritance Service
  *
+ * **Details**
+ *
  * Resolves inherited properties and class ancestry.
  * Handles the "Inheritance Gap" by computing effective properties (own + inherited).
  *
@@ -9,9 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Chunk, Context, Effect, Layer } from "effect";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
+import { Chunk, Context, Effect, Layer, MutableHashMap, MutableHashSet } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
@@ -21,6 +21,17 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Inheritance");
 
 /**
  * Service for computing inherited attributes
+ *
+ * **Example** (Inspect inheritance service)
+ *
+ * ```ts
+ * import { InheritanceService } from "@effect-ontology/Service/Inheritance"
+ *
+ * console.log(InheritanceService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export class InheritanceService extends Context.Service<InheritanceService>()($I`InheritanceService`, {
   make: Effect.gen(function* () {

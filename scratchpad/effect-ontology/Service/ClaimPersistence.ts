@@ -1,6 +1,8 @@
 /**
  * Claim Persistence Service
  *
+ * **Details**
+ *
  * Encapsulates the persistence logic for claims extracted from documents.
  * Handles article creation, claim-to-row mapping, and idempotent upserts.
  *
@@ -25,8 +27,19 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ClaimPersistence");
 /**
  * Metadata for the source article
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the ArticleMetadata contract)
+ *
+ * ```ts
+ * import type { ArticleMetadata } from "@effect-ontology/Service/ClaimPersistence"
+ *
+ * const acceptsArticleMetadata = (_value: ArticleMetadata): void => undefined
+ *
+ * console.log(acceptsArticleMetadata)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface ArticleMetadata {
   /** Article URI (unique identifier) */
@@ -46,8 +59,19 @@ export interface ArticleMetadata {
 /**
  * Result of claim persistence operation
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the PersistenceResult contract)
+ *
+ * ```ts
+ * import type { PersistenceResult } from "@effect-ontology/Service/ClaimPersistence"
+ *
+ * const acceptsPersistenceResult = (_value: PersistenceResult): void => undefined
+ *
+ * console.log(acceptsPersistenceResult)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface PersistenceResult {
   /** Database ID of the article */
@@ -65,11 +89,21 @@ export interface PersistenceResult {
 /**
  * Claim Persistence Service
  *
+ * **Details**
+ *
  * Persists extracted claims to PostgreSQL with proper article linking
  * and idempotent upsert handling.
  *
+ * **Example** (Inspect claim persistence service)
+ *
+ * ```ts
+ * import { ClaimPersistenceService } from "@effect-ontology/Service/ClaimPersistence"
+ *
+ * console.log(ClaimPersistenceService)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class ClaimPersistenceService extends Context.Service<ClaimPersistenceService>()($I`ClaimPersistenceService`, {
   make: Effect.gen(function* () {

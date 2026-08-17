@@ -1,6 +1,8 @@
 /**
  * Workflow Layer Composition
  *
+ * **Details**
+ *
  * Provides properly-composed layers for the batch extraction workflow.
  * Uses Layer.provideMerge for order-independent composition.
  *
@@ -11,6 +13,7 @@
  * - StorageBundle: StorageService for document/graph persistence
  * - ActivityDependenciesLayer: All services needed by workflow activities
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
@@ -238,6 +241,8 @@ const GraphRAGBundle = GraphRAG.Default.pipe(Layer.provideMerge(EmbeddingBundle)
 /**
  * Cross-Batch Entity Resolution bundle (OPTIONAL)
  *
+ * **Details**
+ *
  * Provides cross-batch entity linking when Postgres with pgvector is available.
  * This bundle is NOT included in ActivityDependenciesLayer by default because
  * the activity uses Effect.serviceOption to gracefully handle the missing service.
@@ -252,12 +257,16 @@ const GraphRAGBundle = GraphRAG.Default.pipe(Layer.provideMerge(EmbeddingBundle)
  * 3. Merge CrossBatchEntityResolverBundle into your layer composition
  *
  * **Example** (Use CrossBatchEntityResolverBundle)
+ *
  * ```ts
- * const layerWithCrossBatch = ActivityDependenciesLayer.pipe(
- *   Layer.provideMerge(CrossBatchEntityResolverBundle),
- *   Layer.provide(RepositoriesLive) // Provides EntityRegistryRepository
- * )
+ * import { Layer } from "effect"
+ * import { CrossBatchEntityResolverBundle } from "@effect-ontology/Runtime/WorkflowLayers"
+ *
+ * console.log(Layer.isLayer(CrossBatchEntityResolverBundle)) // true
  * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const CrossBatchEntityResolverBundle = CrossBatchEntityResolver.Default.pipe(
   Layer.provideMerge(EntityRegistryRepository.Default),
@@ -338,6 +347,20 @@ const ActivityEmbeddingRequirements = Layer.mergeAll(EmbeddingInfrastructure, Me
   Layer.provideMerge(CoreDependenciesLayer)
 );
 
+/**
+ * Provides the Effect layer for activity dependencies layer dependencies.
+ *
+ * **Example** (Inspect activity dependencies layer)
+ *
+ * ```ts
+ * import { ActivityDependenciesLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ *
+ * console.log(ActivityDependenciesLayer)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const ActivityDependenciesLayer = ExtractionWorkflowBundle.pipe(
   Layer.provideMerge(ActivityGraphRagLayer),
   Layer.provideMerge(ActivityEmbeddingRequirements)
@@ -350,8 +373,21 @@ export const ActivityDependenciesLayer = ExtractionWorkflowBundle.pipe(
 /**
  * BatchExtractionWorkflowLayer with all activity dependencies provided.
  *
+ * **Details**
+ *
  * CRITICAL: The workflow's execute effect yields services like EntityExtractor.
  * These must be available when the workflow layer is constructed, not after.
+ *
+ * **Example** (Inspect batch extraction workflow with deps layer)
+ *
+ * ```ts
+ * import { BatchExtractionWorkflowWithDepsLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ *
+ * console.log(BatchExtractionWorkflowWithDepsLayer)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const BatchExtractionWorkflowWithDepsLayer = BatchExtractionWorkflowLayer.pipe(
   Layer.provideMerge(ActivityDependenciesLayer)
@@ -359,6 +395,8 @@ export const BatchExtractionWorkflowWithDepsLayer = BatchExtractionWorkflowLayer
 
 /**
  * Complete WorkflowOrchestrator layer with workflow and all dependencies.
+ *
+ * **Details**
  *
  * Provides:
  * - WorkflowOrchestrator service
@@ -368,6 +406,17 @@ export const BatchExtractionWorkflowWithDepsLayer = BatchExtractionWorkflowLayer
  * Requires:
  * - WorkflowEngine (from WorkflowEngine.layerMemory or ClusterWorkflowEngine)
  * - FileSystem, Path (from BunServices)
+ *
+ * **Example** (Inspect workflow orchestrator full layer)
+ *
+ * ```ts
+ * import { WorkflowOrchestratorFullLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ *
+ * console.log(WorkflowOrchestratorFullLayer)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const WorkflowOrchestratorFullLayer = BatchExtractionWorkflowWithDepsLayer.pipe(
   Layer.provideMerge(WorkflowOrchestratorLive)
@@ -380,6 +429,8 @@ export const WorkflowOrchestratorFullLayer = BatchExtractionWorkflowWithDepsLaye
 /**
  * Complete extraction layer for CLI usage
  *
+ * **Details**
+ *
  * Provides all services needed for ad-hoc extraction:
  * - ExtractionWorkflow (main extraction interface)
  * - RdfBuilder (for Turtle serialization)
@@ -390,6 +441,15 @@ export const WorkflowOrchestratorFullLayer = BatchExtractionWorkflowWithDepsLaye
  *
  * Use with BunServices.layer for platform services (FileSystem, Path).
  *
+ * **Example** (Inspect cli extraction layer)
+ *
+ * ```ts
+ * import { CliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ *
+ * console.log(CliExtractionLayer)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
  */
 export const CliExtractionLayer = Layer.mergeAll(ExtractionWorkflowBundle, RdfBuilderBundle).pipe(
@@ -401,22 +461,29 @@ export const CliExtractionLayer = Layer.mergeAll(ExtractionWorkflowBundle, RdfBu
 /**
  * Create a CLI extraction layer with a custom ConfigProvider.
  *
+ * **Details**
+ *
  * Use this when you need to override config values via CLI flags.
  * The custom provider is set BEFORE any layers are built, ensuring
  * all services read from the custom provider.
  *
  * **Example** (Use makeCliExtractionLayer)
+ *
  * ```ts
- * const configMap = HashMap.make(
- *   ["ONTOLOGY_PATH", "/path/to/ontology.ttl"],
- *   ["ONTOLOGY_EXTERNAL_VOCABS_PATH", ""]  // Empty = skip loading
- * )
- * const customProvider = ConfigProvider.fromMap(configMap).pipe(
- *   ConfigProvider.orElse(() => ConfigProvider.fromEnv())
+ * import { ConfigProvider, Layer } from "effect"
+ * import { makeCliExtractionLayer } from "@effect-ontology/Runtime/WorkflowLayers"
+ *
+ * const customProvider = ConfigProvider.fromUnknown({
+ *   ONTOLOGY_PATH: "/path/to/ontology.ttl",
+ *   ONTOLOGY_EXTERNAL_VOCABS_PATH: ""
+ * }).pipe(
+ *   ConfigProvider.orElse(ConfigProvider.fromEnv())
  * )
  * const layer = makeCliExtractionLayer(customProvider)
+ * console.log(Layer.isLayer(layer)) // true
  * ```
  *
+ * @category layers
  * @since 0.0.0
  */
 export const makeCliExtractionLayer = (configProvider: ConfigProvider.ConfigProvider) => {
@@ -504,7 +571,20 @@ export const makeCliExtractionLayer = (configProvider: ConfigProvider.ConfigProv
 /**
  * NLP services without config baked in
  *
+ * **Details**
+ *
  * Requires: ConfigService | EmbeddingProvider | EmbeddingCache
+ *
+ * **Example** (Inspect nlp bundle open)
+ *
+ * ```ts
+ * import { NlpBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
+ *
+ * console.log(NlpBundleOpen)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const NlpBundleOpen = NlpService.Default.pipe(
   Layer.provide(EmbeddingInfrastructure),
@@ -514,7 +594,20 @@ export const NlpBundleOpen = NlpService.Default.pipe(
 /**
  * Embedding services without config baked in
  *
+ * **Details**
+ *
  * Requires: ConfigService
+ *
+ * **Example** (Inspect embedding bundle open)
+ *
+ * ```ts
+ * import { EmbeddingBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
+ *
+ * console.log(EmbeddingBundleOpen)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const EmbeddingBundleOpen = EmbeddingServiceLive.pipe(
   Layer.provideMerge(EmbeddingInfrastructure),
@@ -527,14 +620,40 @@ export const EmbeddingBundleOpen = EmbeddingServiceLive.pipe(
 /**
  * RDF builder without config baked in
  *
+ * **Details**
+ *
  * Requires: ConfigService
+ *
+ * **Example** (Inspect rdf builder bundle open)
+ *
+ * ```ts
+ * import { RdfBuilderBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
+ *
+ * console.log(RdfBuilderBundleOpen)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export const RdfBuilderBundleOpen = RdfBuilder.Default;
 
 /**
  * Storage service without config baked in
  *
+ * **Details**
+ *
  * Requires: ConfigService
+ *
+ * **Example** (Inspect storage bundle open)
+ *
+ * ```ts
+ * import { StorageBundleOpen } from "@effect-ontology/Runtime/WorkflowLayers"
+ *
+ * console.log(StorageBundleOpen)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const StorageBundleOpen = StorageServiceLive.pipe(Layer.provideMerge(BunServices.layer));
 

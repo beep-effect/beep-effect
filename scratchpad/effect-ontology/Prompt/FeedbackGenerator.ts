@@ -7,15 +7,11 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import { pipe } from "effect";
+import { Formatter, HashSet, Inspectable, pipe, SchemaIssue } from "effect";
 import * as A from "effect/Array";
-import * as Formatter from "effect/Formatter";
-import * as HashSet from "effect/HashSet";
-import * as Inspectable from "effect/Inspectable";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
 import { dual2 } from "../Utils/Dual.ts";
 import type { ExtractionRule, RuleCategory } from "./ExtractionRule.ts";
@@ -42,7 +38,7 @@ const formatIssue = SchemaIssue.makeFormatterDefault();
  * **Example** (Create a root violation)
  *
  * ```ts
- * import { Violation } from "@effect-ontology/Prompt/FeedbackGenerator.ts"
+ * import { Violation } from "@effect-ontology/Prompt/FeedbackGenerator"
  *
  * const violation = Violation.make({ path: "root", message: "Expected string" })
  * console.log(violation.path) // "root"
@@ -92,7 +88,7 @@ export class Violation extends S.Class<Violation>($I`Violation`)(
  * ```ts
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
- * import { extractViolations } from "@effect-ontology/Prompt/FeedbackGenerator.ts"
+ * import { extractViolations } from "@effect-ontology/Prompt/FeedbackGenerator"
  *
  * const result = S.decodeUnknownResult(S.Struct({ name: S.String }))({ name: 1 })
  * if (Result.isFailure(result)) console.log(extractViolations(result.failure).length) // 1
@@ -140,8 +136,8 @@ const firstRuleInCategory = (ruleSet: RuleSet, category: RuleCategory): O.Option
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { findMatchingRule, Violation } from "@effect-ontology/Prompt/FeedbackGenerator.ts"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { findMatchingRule, Violation } from "@effect-ontology/Prompt/FeedbackGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * const violation = Violation.make({ path: "mentions[0].id", message: "Invalid value" })
  * console.log(O.isSome(findMatchingRule(violation, makeMentionRuleSet()))) // true
@@ -160,11 +156,12 @@ export const findMatchingRule = dual2((violation: Violation, ruleSet: RuleSet): 
     A.findFirst(pathMatchers, (matcher) => Str.includes(matcher.pattern)(path)),
     O.flatMap((matcher) => firstRuleInCategory(ruleSet, matcher.category))
   );
+  const messageMatchers: ReadonlyArray<{ readonly matches: boolean; readonly category: RuleCategory }> = [
+    { matches: Str.includes("casing")(message) || Str.includes("case")(message), category: "iri_casing" },
+    { matches: Str.includes("snake")(message) || Str.includes("lowercase")(message), category: "id_format" },
+  ];
   const messageRule = pipe(
-    [
-      { matches: Str.includes("casing")(message) || Str.includes("case")(message), category: "iri_casing" },
-      { matches: Str.includes("snake")(message) || Str.includes("lowercase")(message), category: "id_format" },
-    ] as const,
+    messageMatchers,
     A.findFirst((matcher) => matcher.matches),
     O.flatMap((matcher) => firstRuleInCategory(ruleSet, matcher.category))
   );
@@ -178,7 +175,7 @@ export const findMatchingRule = dual2((violation: Violation, ruleSet: RuleSet): 
  * **Example** (Interpolate a rejected value)
  *
  * ```ts
- * import { interpolate } from "@effect-ontology/Prompt/FeedbackGenerator.ts"
+ * import { interpolate } from "@effect-ontology/Prompt/FeedbackGenerator"
  *
  * console.log(interpolate("Invalid {value}", { value: "Ada" })) // 'Invalid "Ada"'
  * ```
@@ -206,8 +203,8 @@ export const interpolate = dual2((template: string, values: Readonly<Record<stri
  * ```ts
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
- * import { generateFeedback } from "@effect-ontology/Prompt/FeedbackGenerator.ts"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { generateFeedback } from "@effect-ontology/Prompt/FeedbackGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * const result = S.decodeUnknownResult(S.Struct({ id: S.String }))({ id: 1 })
  * if (Result.isFailure(result)) console.log(generateFeedback(result.failure, makeMentionRuleSet()))
@@ -277,8 +274,8 @@ const buildRuleReminders = (error: S.SchemaError, ruleSet: RuleSet): PromptDoc =
  * ```ts
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
- * import { generateTreeFeedback } from "@effect-ontology/Prompt/FeedbackGenerator.ts"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { generateTreeFeedback } from "@effect-ontology/Prompt/FeedbackGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
  * const result = S.decodeUnknownResult(S.Struct({ id: S.String }))({ id: 1 })
  * if (Result.isFailure(result)) console.log(generateTreeFeedback(result.failure, makeMentionRuleSet()))
@@ -310,10 +307,10 @@ export const generateTreeFeedback = dual2((error: S.SchemaError, ruleSet: RuleSe
  * ```ts
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
- * import { generateImprovementPrompt } from "@effect-ontology/Prompt/FeedbackGenerator.ts"
- * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet.ts"
+ * import { generateImprovementPrompt } from "@effect-ontology/Prompt/FeedbackGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
  *
- * const result = S.decodeUnknownResult(S.String)(1)
+ * const result = S.decodeUnknownResult(S.Struct({ id: S.String }))({ id: 1 })
  * if (Result.isFailure(result)) console.log(generateImprovementPrompt(result.failure, makeMentionRuleSet()))
  * ```
  *
@@ -353,9 +350,9 @@ const matchesAny = (message: string, patterns: ReadonlyArray<RegExp>): boolean =
  * ```ts
  * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
- * import { isRetryable } from "@effect-ontology/Prompt/FeedbackGenerator.ts"
+ * import { isRetryable } from "@effect-ontology/Prompt/FeedbackGenerator"
  *
- * const result = S.decodeUnknownResult(S.Literal("valid"))("invalid")
+ * const result = S.decodeUnknownResult(S.Struct({ status: S.Literal("valid") }))({ status: "invalid" })
  * if (Result.isFailure(result)) console.log(isRetryable(result.failure))
  * ```
  *

@@ -35,7 +35,7 @@ const LanguageCode = S.String.check(
  *
  * **Example** (Use SourceType)
  * ```ts
- * import { SourceType } from "@effect-ontology/Model/EnrichedContent.ts"
+ * import { SourceType } from "@effect-ontology/Model/EnrichedContent"
  *
  * console.log(SourceType.is.academic("academic")) // true
  * console.log(SourceType.is.news("blog")) // false
@@ -59,7 +59,7 @@ export const SourceType = LiteralKit(["news", "blog", "press_release", "official
  *
  * **Example** (Use SourceType)
  * ```ts
- * import type { SourceType } from "@effect-ontology/Model/EnrichedContent.ts"
+ * import type { SourceType } from "@effect-ontology/Model/EnrichedContent"
  *
  * const source: SourceType = "official"
  * console.log(source) // "official"
@@ -119,7 +119,7 @@ const EnrichedContentFields = {
   wordCount: NonNegativeInt.annotateKey({
     description: "Approximate number of words in the source.",
   }),
-} as const;
+};
 
 /**
  * AI-derived metadata for one ingested content source.
@@ -132,18 +132,19 @@ const EnrichedContentFields = {
  *
  * **Example** (Use EnrichedContent)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent.ts"
+ * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent"
  *
- * const content = S.decodeUnknownSync(EnrichedContent)({
+ * const content = S.decodeUnknownOption(EnrichedContent)({
  *   headline: "Council approves transit plan",
  *   description: "The measure funds a light-rail expansion.",
  *   sourceType: "news",
  *   wordCount: 847
  * })
  *
- * console.log(content.language) // "en"
- * console.log(content.hasAuthor) // false
+ * console.log(O.map(content, (value) => value.language)) // "en"
+ * console.log(O.map(content, (value) => value.hasAuthor)) // false
  * ```
  *
  * @invariant `wordCount` is a non-negative integer and `language` is a
@@ -168,16 +169,17 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
    *
    * **Example** (Use JinaContentFields)
    * ```ts
+   * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
-   * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent.ts"
+   * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent"
    *
-   * const content = S.decodeUnknownSync(EnrichedContent)({
+   * const content = S.decodeUnknownOption(EnrichedContent)({
    *   headline: "Example",
    *   description: "Example description",
    *   sourceType: "news",
    *   wordCount: 2
    * })
-   * console.log(content.hasAuthor) // false
+   * console.log(O.map(content, (value) => value.hasAuthor)) // false
    * ```
    *
    * @returns `true` when normalized author attribution is present and non-empty.
@@ -191,7 +193,7 @@ export class EnrichedContent extends S.Class<EnrichedContent>($I`EnrichedContent
    *
    * **Example** (Use JinaContentFields)
    * ```ts
-   * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent.ts"
+   * import { EnrichedContent } from "@effect-ontology/Model/EnrichedContent"
    *
    * const content = EnrichedContent.make({
    *   headline: "Example",
@@ -249,7 +251,7 @@ const JinaContentFields = {
       description: "Featured-image URL when provided by the page.",
     })
   ),
-} as const;
+};
 
 /**
  * Cleaned page content returned by a Jina-compatible reader.
@@ -261,16 +263,17 @@ const JinaContentFields = {
  *
  * **Example** (Use JinaContent)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { JinaContent } from "@effect-ontology/Model/EnrichedContent.ts"
+ * import { JinaContent } from "@effect-ontology/Model/EnrichedContent"
  *
- * const page = S.decodeUnknownSync(JinaContent)({
+ * const page = S.decodeUnknownOption(JinaContent)({
  *   url: "https://example.com/article",
  *   title: "Example",
  *   content: "one  two\nthree"
  * })
  *
- * console.log(page.wordCount) // 3
+ * console.log(O.map(page, (value) => value.wordCount)) // 3
  * ```
  *
  * @category models
@@ -293,15 +296,16 @@ export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
    *
    * **Example** (Use EnrichedContent)
    * ```ts
+   * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
-   * import { JinaContent } from "@effect-ontology/Model/EnrichedContent.ts"
+   * import { JinaContent } from "@effect-ontology/Model/EnrichedContent"
    *
-   * const page = S.decodeUnknownSync(JinaContent)({
+   * const page = S.decodeUnknownOption(JinaContent)({
    *   url: "https://example.com",
    *   title: "Example",
    *   content: "one  two\nthree"
    * })
-   * console.log(page.wordCount) // 3
+   * console.log(O.map(page, (value) => value.wordCount)) // 3
    * ```
    *
    * @returns The number of non-empty whitespace-delimited segments.
@@ -315,7 +319,7 @@ export class JinaContent extends S.Class<JinaContent>($I`JinaContent`)(
    *
    * **Example** (Use EnrichedContent)
    * ```ts
-   * import { JinaContent } from "@effect-ontology/Model/EnrichedContent.ts"
+   * import { JinaContent } from "@effect-ontology/Model/EnrichedContent"
    *
    * const page = JinaContent.make({
    *   url: "https://example.com",

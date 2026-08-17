@@ -14,7 +14,7 @@
  *
  * **Example** (Use index)
  * ```ts
- * import { CLAIMS } from "@effect-ontology/Rdf/index.ts"
+ * import { CLAIMS } from "@effect-ontology/Rdf/index"
  * console.log(CLAIMS.Claim.value)
  * ```
  *
@@ -27,7 +27,7 @@ export * from "./Constants.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { Triple } from "@effect-ontology/Rdf/index.ts"
+ * import { Triple } from "@effect-ontology/Rdf/index"
  * console.log(Triple)
  * ```
  *

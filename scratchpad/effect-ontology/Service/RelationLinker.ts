@@ -1,6 +1,8 @@
 /**
  * Service: Relation Linker
  *
+ * **Details**
+ *
  * Canonicalizes relations using Entity Resolution Graph.
  * Maps subject/object IDs to their canonical representatives.
  *
@@ -10,7 +12,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import type { IRI } from "@beep/rdf";
-import { Chunk, Context, Effect, HashSet, Layer, Option } from "effect";
+import { Chunk, Context, Effect, HashSet, Layer } from "effect";
+import * as O from "effect/Option";
 import { Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
@@ -21,8 +24,19 @@ const $I = $ScratchpadId.create("effect-ontology/Service/RelationLinker");
 /**
  * Linked relation with canonical IDs
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the LinkedRelation contract)
+ *
+ * ```ts
+ * import type { LinkedRelation } from "@effect-ontology/Service/RelationLinker"
+ *
+ * const acceptsLinkedRelation = (_value: LinkedRelation): void => undefined
+ *
+ * console.log(acceptsLinkedRelation)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface LinkedRelation {
   /** Original relation */
@@ -44,8 +58,19 @@ export interface LinkedRelation {
 /**
  * Result of linking a batch of relations
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the LinkingResult contract)
+ *
+ * ```ts
+ * import type { LinkingResult } from "@effect-ontology/Service/RelationLinker"
+ *
+ * const acceptsLinkingResult = (_value: LinkingResult): void => undefined
+ *
+ * console.log(acceptsLinkingResult)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface LinkingResult {
   readonly linkedRelations: Chunk.Chunk<LinkedRelation>;
@@ -56,10 +81,20 @@ export interface LinkingResult {
 /**
  * RelationLinker - Service for canonicalizing relations
  *
+ * **Details**
+ *
  * Takes relations and an ERG, returns relations with canonical IDs.
  *
+ * **Example** (Inspect relation linker)
+ *
+ * ```ts
+ * import { RelationLinker } from "@effect-ontology/Service/RelationLinker"
+ *
+ * console.log(RelationLinker)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class RelationLinker extends Context.Service<RelationLinker>()($I`RelationLinker`, {
   make: Effect.succeed({
@@ -83,7 +118,7 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
         for (const relation of relations) {
           // Canonicalize subject - unwrap Option with fallback to original
           const canonicalSubjectId = EntityId.fromUnknown(
-            Option.getOrElse(getCanonicalId(erg, relation.subjectId), () => relation.subjectId)
+            O.getOrElse(getCanonicalId(erg, relation.subjectId), () => relation.subjectId)
           );
           const subjectRemapped = canonicalSubjectId !== relation.subjectId;
 
@@ -97,7 +132,7 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
 
           if (RelationObject.guards.EntityReference(relation.object)) {
             // Entity reference - canonicalize
-            const resolved = Option.getOrElse(getCanonicalId(erg, relation.object.value), () => relation.object.value);
+            const resolved = O.getOrElse(getCanonicalId(erg, relation.object.value), () => relation.object.value);
             canonicalObject = RelationObject.cases.EntityReference.make({ value: EntityId.fromUnknown(resolved) });
             objectRemapped = resolved !== relation.object.value;
             if (objectRemapped) {

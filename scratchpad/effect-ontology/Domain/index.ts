@@ -16,8 +16,8 @@
  *
  * **Example** (Use index)
  * ```ts
- * import { Error } from "@effect-ontology/index.ts"
- * console.log(Error.ActivityError)
+ * import { Domain } from "@effect-ontology/index"
+ * console.log(Domain.Error.ActivityError)
  * ```
  *
  * @category interop
@@ -29,7 +29,7 @@ export * as Error from "./Error/index.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { Identity } from "@effect-ontology/index.ts"
+ * import { Identity } from "@effect-ontology/index"
  * console.log(Identity.ContentHash.is("a".repeat(64))) // true
  * ```
  *
@@ -42,7 +42,7 @@ export * as Identity from "./Identity.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { Model } from "@effect-ontology/index.ts"
+ * import { Model } from "@effect-ontology/index"
  * console.log(Model.AgentType.is.extractor("extractor")) // true
  * ```
  *
@@ -55,7 +55,7 @@ export * as Model from "./Model/index.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { PathLayout } from "@effect-ontology/index.ts"
+ * import { PathLayout } from "@effect-ontology/index"
  * console.log(PathLayout.StoragePathSegment.is("article-42")) // true
  * ```
  *
@@ -68,7 +68,7 @@ export * as PathLayout from "./PathLayout.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { Rdf } from "@effect-ontology/index.ts"
+ * import { Rdf } from "@effect-ontology/index"
  * console.log(Rdf.CLAIMS.Claim.termType) // "NamedNode"
  * ```
  *
@@ -81,7 +81,7 @@ export * as Rdf from "./Rdf/index.ts";
  *
  * **Example** (Use index)
  * ```ts
- * import { Schema } from "@effect-ontology/index.ts"
+ * import { Schema } from "@effect-ontology/index"
  * console.log(Schema.DocumentType.is.contract("contract")) // true
  * ```
  *

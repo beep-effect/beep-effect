@@ -1,6 +1,8 @@
 /**
  * Curation Job Processor
  *
+ * **Details**
+ *
  * Background worker for processing async curation jobs.
  * Handles embedding updates, prompt cache maintenance, and other background tasks.
  * Uses EventBusService for job queue integration.
@@ -12,8 +14,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import type { Fiber } from "effect";
-import { Context, Duration, Effect, Layer, Match, Schedule } from "effect";
-import * as Clock from "effect/Clock";
+import { Clock, Context, Duration, Effect, Layer, Match, Schedule } from "effect";
 import * as O from "effect/Option";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { EventBusError } from "../Domain/Error/EventBus.ts";
@@ -30,11 +31,39 @@ const $I = $ScratchpadId.create("effect-ontology/Service/CurationJobProcessor");
 
 /**
  * Combined error type for job processing
+ *
+ *
+ * **Example** (Use the JobProcessorError contract)
+ *
+ * ```ts
+ * import type { JobProcessorError } from "@effect-ontology/Service/CurationJobProcessor"
+ *
+ * const acceptsJobProcessorError = (_value: JobProcessorError): void => undefined
+ *
+ * console.log(acceptsJobProcessorError)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type JobProcessorError = EffectDrizzleQueryError | AnyEmbeddingError | EventBusError;
 
 /**
  * Job processing statistics
+ *
+ *
+ * **Example** (Use the JobProcessingStats contract)
+ *
+ * ```ts
+ * import type { JobProcessingStats } from "@effect-ontology/Service/CurationJobProcessor"
+ *
+ * const acceptsJobProcessingStats = (_value: JobProcessingStats): void => undefined
+ *
+ * console.log(acceptsJobProcessingStats)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface JobProcessingStats {
   readonly jobsProcessed: number;
@@ -46,6 +75,20 @@ export interface JobProcessingStats {
 // Service
 // =============================================================================
 
+/**
+ * Provides the curation job processor service capability.
+ *
+ * **Example** (Inspect curation job processor)
+ *
+ * ```ts
+ * import { CurationJobProcessor } from "@effect-ontology/Service/CurationJobProcessor"
+ *
+ * console.log(CurationJobProcessor)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class CurationJobProcessor extends Context.Service<CurationJobProcessor>()($I`CurationJobProcessor`, {
   make: Effect.gen(function* () {
     const eventBus = yield* EventBusService;

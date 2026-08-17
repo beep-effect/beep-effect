@@ -1,6 +1,8 @@
 /**
  * Service: Violation Explainer
  *
+ * **Details**
+ *
  * LLM-powered explanations for SHACL violations following the xpSHACL pattern.
  * Generates human-readable explanations and actionable fix suggestions.
  *
@@ -10,17 +12,18 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { Dataset } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { NonNegNum } from "@beep/schema/Number";
-import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
-import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from "effect";
+import { ShaclSeverity, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import { Clock, Context, Duration, Effect, Layer, Schedule } from "effect";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
+import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
 
@@ -33,14 +36,36 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
 /**
  * Error: Failed to generate explanation
  *
- * @since 0.0.0
+ * **Example** (Inspect explanation error)
+ *
+ * ```ts
+ * import { ExplanationError } from "@effect-ontology/Service/ViolationExplainer"
+ *
+ * console.log(ExplanationError)
+ * ```
+ *
  * @category errors
+ * @since 0.0.0
  */
-export class ExplanationError extends Data.TaggedError("ExplanationError")<{
-  readonly message: string;
-  readonly violation: ShaclValidationViolation;
-  readonly cause?: unknown;
-}> {}
+export class ExplanationError extends S.TaggedError<ExplanationError>($I`ExplanationError`)(
+  "ExplanationError",
+  {
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable SHACL explanation failure diagnostic.",
+    }),
+    violation: ShaclValidationViolation.annotateKey({
+      description: "SHACL violation that could not be explained.",
+    }),
+    cause: OptionalErrorCause.annotateKey({
+      description: "Optional underlying language-model defect.",
+    }),
+  },
+  $I.annote("ExplanationError", {
+    description: "Failure to generate a human-readable explanation for a SHACL violation.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 // =============================================================================
 // Domain Models
@@ -49,21 +74,44 @@ export class ExplanationError extends Data.TaggedError("ExplanationError")<{
 /**
  * Context for generating explanations
  *
+ * **Example** (Inspect explanation context)
+ *
+ * ```ts
+ * import { ExplanationContext } from "@effect-ontology/Service/ViolationExplainer"
+ *
+ * console.log(ExplanationContext)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export class ExplanationContext extends Schema.Class<ExplanationContext>("ExplanationContext")({
-  /** The RDF store containing the data graph */
-  dataStore: Schema.Any.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+export class ExplanationContext extends S.Class<ExplanationContext>("ExplanationContext")({
+  /** The canonical RDF dataset containing the data graph */
+  dataStore: S.OptionFromOptionalKey(Dataset).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "Optional canonical RDF dataset containing the data graph used for explanation context.",
+    })
+  ),
   /** Turtle representation of relevant triples around the focus node */
-  neighborhoodTurtle: Schema.String.pipe(SchemaUtils.withKeyDefaults("")),
+  neighborhoodTurtle: S.String.pipe(SchemaUtils.withKeyDefaults("")),
   /** Domain description for additional context */
-  domainDescription: Schema.String.pipe(SchemaUtils.withKeyDefaults("")),
+  domainDescription: S.String.pipe(SchemaUtils.withKeyDefaults("")),
   /** Maximum tokens for the explanation */
   maxTokens: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(500))),
 }) {
   /**
    * Create empty context
+   *
+   * **Example** (Inspect explanation context.empty)
+   *
+   * ```ts
+   * import { ExplanationContext } from "@effect-ontology/Service/ViolationExplainer"
+   *
+   * console.log(ExplanationContext)
+   * ```
+   *
+   * @returns Result produced by this operation.
    */
   static empty(): ExplanationContext {
     return ExplanationContext.make({});
@@ -71,6 +119,17 @@ export class ExplanationContext extends Schema.Class<ExplanationContext>("Explan
 
   /**
    * Create context with neighborhood triples
+   *
+   * **Example** (Inspect explanation context.with neighborhood)
+   *
+   * ```ts
+   * import { ExplanationContext } from "@effect-ontology/Service/ViolationExplainer"
+   *
+   * console.log(ExplanationContext)
+   * ```
+   *
+   * @param turtle - Input consumed by this operation.
+   * @returns Result produced by this operation.
    */
   static withNeighborhood(turtle: string): ExplanationContext {
     return ExplanationContext.make({ neighborhoodTurtle: turtle });
@@ -80,27 +139,45 @@ export class ExplanationContext extends Schema.Class<ExplanationContext>("Explan
 /**
  * LLM-generated explanation for a SHACL violation
  *
+ * **Example** (Inspect llm violation explanation)
+ *
+ * ```ts
+ * import { LlmViolationExplanation } from "@effect-ontology/Service/ViolationExplainer"
+ *
+ * console.log(LlmViolationExplanation)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export class LlmViolationExplanation extends Schema.Class<LlmViolationExplanation>("LlmViolationExplanation")({
+export class LlmViolationExplanation extends S.Class<LlmViolationExplanation>("LlmViolationExplanation")({
   /** Original violation */
-  focusNode: Schema.String,
+  focusNode: S.String,
   /** Path that was violated (if any) */
-  path: Schema.String.pipe(Schema.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  path: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   /** Human-readable explanation of what went wrong */
-  explanation: Schema.String,
+  explanation: S.String,
   /** Suggested fix action */
-  suggestion: Schema.String,
+  suggestion: S.String,
   /** Severity level */
   severity: ShaclSeverity,
   /** Affected entity IRIs */
-  affectedEntities: Schema.Array(Schema.String),
+  affectedEntities: S.Array(S.String),
   /** Confidence in the explanation (0-1) */
   confidence: Confidence.pipe(SchemaUtils.withKeyDefaults(Confidence.make(0.8))),
 }) {
   /**
    * True if this is a critical violation
+   *
+   * **Example** (Inspect llm violation explanation.is critical)
+   *
+   * ```ts
+   * import { LlmViolationExplanation } from "@effect-ontology/Service/ViolationExplainer"
+   *
+   * console.log(LlmViolationExplanation)
+   * ```
+   *
+   * @returns Result produced by this operation.
    */
   get isCritical(): boolean {
     return this.severity === "violation";
@@ -110,17 +187,35 @@ export class LlmViolationExplanation extends Schema.Class<LlmViolationExplanatio
 /**
  * Batch explanation result
  *
+ * **Example** (Inspect batch explanation result)
+ *
+ * ```ts
+ * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
+ *
+ * console.log(BatchExplanationResult)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export class BatchExplanationResult extends Schema.Class<BatchExplanationResult>("BatchExplanationResult")({
-  explanations: Schema.Array(LlmViolationExplanation),
+export class BatchExplanationResult extends S.Class<BatchExplanationResult>("BatchExplanationResult")({
+  explanations: S.Array(LlmViolationExplanation),
   totalViolations: NonNegativeInt,
   explainedCount: NonNegativeInt,
   durationMs: NonNegNum,
 }) {
   /**
    * True if all violations were explained
+   *
+   * **Example** (Inspect batch explanation result.is complete)
+   *
+   * ```ts
+   * import { BatchExplanationResult } from "@effect-ontology/Service/ViolationExplainer"
+   *
+   * console.log(BatchExplanationResult)
+   * ```
+   *
+   * @returns Result produced by this operation.
    */
   get isComplete(): boolean {
     return this.explainedCount === this.totalViolations;
@@ -136,16 +231,16 @@ export class BatchExplanationResult extends Schema.Class<BatchExplanationResult>
  *
  * @internal
  */
-const ExplanationResponseSchema = Schema.Struct({
-  explanation: Schema.String.annotate({
+const ExplanationResponseSchema = S.Struct({
+  explanation: S.String.annotate({
     title: "Explanation",
     description: "Clear, human-readable explanation of what went wrong",
   }),
-  suggestion: Schema.String.annotate({
+  suggestion: S.String.annotate({
     title: "Suggestion",
     description: "Specific, actionable fix suggestion",
   }),
-  affectedEntities: Schema.Array(Schema.String).annotate({
+  affectedEntities: S.Array(S.String).annotate({
     title: "Affected Entities",
     description: "IRIs of entities affected by this violation",
   }),
@@ -162,27 +257,23 @@ const ExplanationResponseSchema = Schema.Struct({
 /**
  * ViolationExplainer - LLM-powered SHACL violation explanations
  *
+ * **Details**
+ *
  * Generates human-readable explanations for SHACL violations using LLM
  * with context from the data graph. Follows the xpSHACL pattern for
  * explainable SHACL validation.
  *
- * **Example** (Use ViolationExplainer)
+ * **Example** (Inspect the violation-explainer layer)
+ *
  * ```ts
- * Effect.gen(function*() {
- *   const explainer = yield* ViolationExplainer
+ * import { Layer } from "effect"
+ * import { ViolationExplainer } from "@effect-ontology/Service/ViolationExplainer"
  *
- *   const explanation = yield* explainer.explain(
- *     violation,
- *     ExplanationContext.withNeighborhood(neighborTurtle)
- *   )
- *
- *   console.log(explanation.explanation)
- *   console.log("Fix:", explanation.suggestion)
- * })
+ * console.log(Layer.isLayer(ViolationExplainer.Default)) // true
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I`ViolationExplainer`, {
   make: Effect.gen(function* () {
@@ -216,18 +307,17 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
         prompt,
         schema: ExplanationResponseSchema,
         objectName: "ExplanationResponse",
-        maxAttempts: config.runtime.retryMaxAttempts,
+        maxAttempts: PosInt.make(config.runtime.retryMaxAttempts),
         serviceName: "ViolationExplainer",
-        timeoutMs: config.llm.timeoutMs,
+        timeout: Duration.millis(config.llm.timeoutMs),
         retrySchedule,
       }).pipe(
-        Effect.mapError(
-          (error) =>
-            new ExplanationError({
-              message: `Failed to generate explanation: ${error._tag}`,
-              violation,
-              cause: error,
-            })
+        Effect.mapError((error) =>
+          ExplanationError.make({
+            message: `Failed to generate explanation: ${error._tag}`,
+            violation,
+            cause: O.some(error),
+          })
         )
       );
 

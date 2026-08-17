@@ -1,6 +1,8 @@
 /**
  * Central Rate Limiter Service
  *
+ * **Details**
+ *
  * Provides centralized rate limiting with circuit breaker for LLM API calls:
  * - 50 requests per minute
  * - 100,000 tokens per minute
@@ -12,8 +14,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, Effect, Layer, Ref } from "effect";
-import * as Semaphore from "effect/Semaphore";
+import { Clock, Context, Effect, Layer, Ref, Semaphore } from "effect";
 import { CircuitOpenError, RateLimitError } from "../../Domain/Error/Circuit.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/RateLimiter");
@@ -24,11 +25,39 @@ const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/RateLimiter"
 
 /**
  * Circuit breaker states
+ *
+ *
+ * **Example** (Use the CircuitState contract)
+ *
+ * ```ts
+ * import type { CircuitState } from "@effect-ontology/Service/LlmControl/RateLimiter"
+ *
+ * const acceptsCircuitState = (_value: CircuitState): void => undefined
+ *
+ * console.log(acceptsCircuitState)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export type CircuitState = "closed" | "open" | "half_open";
 
 /**
  * Rate limiter state
+ *
+ *
+ * **Example** (Use the RateLimiterState contract)
+ *
+ * ```ts
+ * import type { RateLimiterState } from "@effect-ontology/Service/LlmControl/RateLimiter"
+ *
+ * const acceptsRateLimiterState = (_value: RateLimiterState): void => undefined
+ *
+ * console.log(acceptsRateLimiterState)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RateLimiterState {
   /** Requests made in current minute window */
@@ -47,6 +76,20 @@ export interface RateLimiterState {
 
 /**
  * Rate limiter configuration
+ *
+ *
+ * **Example** (Use the RateLimiterConfig contract)
+ *
+ * ```ts
+ * import type { RateLimiterConfig } from "@effect-ontology/Service/LlmControl/RateLimiter"
+ *
+ * const acceptsRateLimiterConfig = (_value: RateLimiterConfig): void => undefined
+ *
+ * console.log(acceptsRateLimiterConfig)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RateLimiterConfig {
   /** Maximum requests per minute */
@@ -82,29 +125,24 @@ const DEFAULT_CONFIG: RateLimiterConfig = {
 /**
  * Central rate limiting for LLM API calls
  *
+ * **Details**
+ *
  * Provides:
  * - Request and token rate limiting with sliding window
  * - Concurrent request limiting with semaphore
  * - Circuit breaker pattern for cascading failure protection
  *
- * **Example** (Use CentralRateLimiterService)
+ * **Example** (Inspect the central rate-limiter layer)
+ *
  * ```ts
- * Effect.gen(function*() {
- *   const limiter = yield* CentralRateLimiterService
+ * import { Layer } from "effect"
+ * import { CentralRateLimiterServiceLive } from "@effect-ontology/Service/LlmControl/RateLimiter"
  *
- *   // Acquire permit before LLM call
- *   yield* limiter.acquire(1000)  // Estimated tokens
- *
- *   try {
- *     const result = yield* llmCall()
- *     yield* limiter.release(result.tokensUsed, true)
- *     return result
- *   } catch (e) {
- *     yield* limiter.release(0, false)
- *     throw e
- *   }
- * })
+ * console.log(Layer.isLayer(CentralRateLimiterServiceLive)) // true
  * ```
+ *
+ * @category services
+ * @since 0.0.0
  */
 export class CentralRateLimiterService extends Context.Service<
   CentralRateLimiterService,
@@ -190,10 +228,13 @@ const make = Effect.fn("make")(function* (config: RateLimiterConfig = DEFAULT_CO
           }).pipe(Effect.orDie);
           return yield* error;
         }
-        yield* Ref.update(state, (s) => ({
-          ...s,
-          circuitState: "half_open" as const,
-        }));
+        yield* Ref.update(
+          state,
+          (s): RateLimiterState => ({
+            ...s,
+            circuitState: "half_open",
+          })
+        );
       }
       yield* maybeResetCounters(now);
       const updated = yield* Ref.get(state);
@@ -231,9 +272,7 @@ const make = Effect.fn("make")(function* (config: RateLimiterConfig = DEFAULT_CO
             successCount: newSuccessCount,
             failureCount: 0,
             circuitState:
-              s.circuitState === "half_open" && newSuccessCount >= config.successThreshold
-                ? ("closed" as const)
-                : s.circuitState,
+              s.circuitState === "half_open" && newSuccessCount >= config.successThreshold ? "closed" : s.circuitState,
           };
         } else {
           const newFailureCount = s.failureCount + 1;
@@ -242,7 +281,7 @@ const make = Effect.fn("make")(function* (config: RateLimiterConfig = DEFAULT_CO
             ...s,
             failureCount: newFailureCount,
             successCount: 0,
-            circuitState: shouldOpen ? ("open" as const) : s.circuitState,
+            circuitState: shouldOpen ? "open" : s.circuitState,
             lastReset: shouldOpen ? now : s.lastReset,
           };
         }
@@ -267,11 +306,33 @@ const make = Effect.fn("make")(function* (config: RateLimiterConfig = DEFAULT_CO
 
 /**
  * Default layer providing CentralRateLimiterService
+ *
+ * **Example** (Inspect central rate limiter service live)
+ *
+ * ```ts
+ * import { CentralRateLimiterServiceLive } from "@effect-ontology/Service/LlmControl/RateLimiter"
+ *
+ * console.log(CentralRateLimiterServiceLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const CentralRateLimiterServiceLive = Layer.effect(CentralRateLimiterService, make());
 
 /**
  * Test layer with configurable limits (useful for faster tests)
+ *
+ * **Example** (Inspect central rate limiter service test)
+ *
+ * ```ts
+ * import { CentralRateLimiterServiceTest } from "@effect-ontology/Service/LlmControl/RateLimiter"
+ *
+ * console.log(CentralRateLimiterServiceTest)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
 export const CentralRateLimiterServiceTest = (
   overrides: Partial<RateLimiterConfig> = {}

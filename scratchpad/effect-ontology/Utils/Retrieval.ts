@@ -1,6 +1,8 @@
 /**
  * Retrieval Utilities
  *
+ * **Details**
+ *
  * Pure utility functions for retrieval and ranking operations:
  * - Reciprocal Rank Fusion (RRF) for combining multiple ranked lists
  * - Score computation and result fusion
@@ -8,14 +10,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { pipe } from "effect";
+import { HashMap, MutableHashMap, MutableHashSet, Order, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
-import * as HashMap from "effect/HashMap";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
-import * as Order from "effect/Order";
 import * as Str from "effect/String";
 import { dual2, dual3 } from "./Dual.ts";
 
@@ -26,15 +24,24 @@ const byRrfScoreDescending = Order.mapInput(
 /**
  * Compute Reciprocal Rank Fusion score
  *
+ * **Details**
+ *
  * RRF formula: score = sum(1 / (k + rank)) for each list containing the item
  * where rank is 1-indexed and k is a constant (typically 60).
+ *
+ * **Example** (Inspect rrf score)
+ *
+ * ```ts
+ * import { rrfScore } from "@effect-ontology/Utils/Retrieval"
+ *
+ * console.log(rrfScore)
+ * ```
  *
  * @param ranks - Array of 1-indexed ranks
  * @param k - Constant to smooth rank differences (default: 60)
  * @returns RRF score (higher is better)
- *
+ * @category utilities
  * @since 0.0.0
- * @category queries
  */
 export const rrfScore = dual2((ranks: ReadonlyArray<number>, k: number): number =>
   A.reduce(ranks, 0, (sum, rank) => sum + 1 / (k + rank))
@@ -43,15 +50,24 @@ export const rrfScore = dual2((ranks: ReadonlyArray<number>, k: number): number 
 /**
  * Combine multiple ranked lists using Reciprocal Rank Fusion
  *
+ * **Details**
+ *
  * Takes multiple ranked lists of items and produces a single fused list
  * sorted by RRF score. Items are identified by their `id` field.
+ *
+ * **Example** (Inspect rrf fusion)
+ *
+ * ```ts
+ * import { rrfFusion } from "@effect-ontology/Utils/Retrieval"
+ *
+ * console.log(rrfFusion)
+ * ```
  *
  * @param rankedLists - Array of ranked lists, each sorted by relevance
  * @param k - RRF smoothing constant (default: 60)
  * @returns Combined list sorted by descending RRF score
- *
+ * @category utilities
  * @since 0.0.0
- * @category queries
  */
 export const rrfFusion: {
   <T extends { id: string }>(
@@ -90,8 +106,18 @@ export const rrfFusion: {
 /**
  * Expanded term with weight
  *
+ * **Example** (Reference ExpandedTerm fields)
+ *
+ * ```ts
+ * import type { ExpandedTerm } from "@effect-ontology/Utils/Retrieval"
+ *
+ * const expandedTermFields: ReadonlyArray<keyof ExpandedTerm> = ["term", "weight", "source"]
+ *
+ * console.log(expandedTermFields)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category queries
  */
 export interface ExpandedTerm {
   readonly term: string;
@@ -102,8 +128,18 @@ export interface ExpandedTerm {
 /**
  * Query expansion options
  *
+ * **Example** (Reference QueryExpansionOptions fields)
+ *
+ * ```ts
+ * import type { QueryExpansionOptions } from "@effect-ontology/Utils/Retrieval"
+ *
+ * const queryExpansionOptionsFields: ReadonlyArray<keyof QueryExpansionOptions> = ["includeAltLabels", "includeBroader", "includeNarrower"]
+ *
+ * console.log(queryExpansionOptionsFields)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category queries
  */
 export interface QueryExpansionOptions {
   /** Include SKOS altLabels (synonyms) - default: true */
@@ -151,30 +187,40 @@ interface OntologyContext {
 /**
  * Expand a query using ontology synonyms and relationships
  *
+ * **Details**
+ *
  * Finds matching classes/properties in the ontology and adds their
  * altLabels as expanded terms with reduced weight.
+ *
+ * **Example** (Inspect expand query with ontology)
+ *
+ * ```ts
+ * import { HashMap } from "effect"
+ * import { expandQueryWithOntology } from "@effect-ontology/Utils/Retrieval"
+ *
+ * const ontology = {
+ *   classes: HashMap.empty<string, {
+ *     readonly label?: string
+ *     readonly altLabels?: ReadonlyArray<string>
+ *   }>(),
+ *   properties: HashMap.empty<string, {
+ *     readonly label?: string
+ *     readonly altLabels?: ReadonlyArray<string>
+ *   }>()
+ * }
+ * const expanded = expandQueryWithOntology("player", ontology, {
+ *   includeAltLabels: true,
+ *   synonymWeight: 0.7
+ * })
+ * console.log(expanded)
+ * ```
  *
  * @param query - Original query string
  * @param ontology - OntologyContext with classes and properties
  * @param options - Expansion options
  * @returns Array of expanded terms with weights
- *
- * **Example**
- *
- * ```ts
- * const expanded = expandQueryWithOntology("player", ontology, {
- *   includeAltLabels: true,
- *   synonymWeight: 0.7
- * })
- * // => [
- * //   { term: "player", weight: 1.0, source: "original" },
- * //   { term: "athlete", weight: 0.7, source: "altLabel" },
- * //   { term: "footballer", weight: 0.7, source: "altLabel" }
- * // ]
- * ```
- *
+ * @category utilities
  * @since 0.0.0
- * @category queries
  */
 export const expandQueryWithOntology = dual3(
   (query: string, ontology: OntologyContext, options: QueryExpansionOptions): ReadonlyArray<ExpandedTerm> => {
@@ -274,28 +320,30 @@ export const expandQueryWithOntology = dual3(
 /**
  * Build an expanded query string from expanded terms
  *
+ * **Details**
+ *
  * Combines expanded terms into a single query string, optionally
  * applying Lucene-style boosting syntax.
+ *
+ * **Example** (Inspect build expanded query)
+ *
+ * ```ts
+ * import { buildExpandedQuery, type ExpandedTerm } from "@effect-ontology/Utils/Retrieval"
+ *
+ * const terms: ReadonlyArray<ExpandedTerm> = [
+ *   { term: "player", weight: 1.0, source: "original" },
+ *   { term: "athlete", weight: 0.8, source: "altLabel" }
+ * ]
+ *
+ * console.log(buildExpandedQuery(terms, false)) // "player athlete"
+ * console.log(buildExpandedQuery(terms, true)) // "player^1 athlete^0.8"
+ * ```
  *
  * @param terms - Array of expanded terms with weights
  * @param useBoosting - Include weight as Lucene boost (^0.8) - default: false
  * @returns Combined query string
- *
- * **Example**
- *
- * ```ts
- * buildExpandedQuery([
- *   { term: "player", weight: 1.0, source: "original" },
- *   { term: "athlete", weight: 0.8, source: "altLabel" }
- * ])
- * // => "player athlete"
- *
- * buildExpandedQuery(terms, true)
- * // => "player^1 athlete^0.8"
- * ```
- *
+ * @category factories
  * @since 0.0.0
- * @category queries
  */
 export const buildExpandedQuery = dual2((terms: ReadonlyArray<ExpandedTerm>, useBoosting: boolean): string => {
   if (useBoosting) {

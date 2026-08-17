@@ -1,6 +1,8 @@
 /**
  * Canonical RDF value types used by the effect-ontology experiment.
  *
+ * **Details**
+ *
  * Standard RDF terms remain owned by `@beep/rdf`. The only local model is
  * {@link Triple}, a graph-free adapter that converts explicitly to and from a
  * canonical RDF/JS {@link Quad}.
@@ -22,7 +24,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Rdf/Types");
  *
  * ```ts
  * import { makeLiteral, makeNamedNode } from "@beep/rdf"
- * import { Triple } from "@effect-ontology/Rdf/Types.ts"
+ * import { Triple } from "@effect-ontology/Rdf/Types"
  *
  * const triple = Triple.make({
  *   subject: makeNamedNode("https://example.org/ada"),
@@ -52,7 +54,7 @@ export class Triple extends S.Class<Triple>($I`Triple`)(
    *
    * ```ts
    * import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf"
-   * import { Triple } from "@effect-ontology/Rdf/Types.ts"
+   * import { Triple } from "@effect-ontology/Rdf/Types"
    *
    * const quad = makeQuad(
    *   makeNamedNode("https://example.org/ada"),
@@ -80,7 +82,7 @@ export class Triple extends S.Class<Triple>($I`Triple`)(
    *
    * ```ts
    * import { makeLiteral, makeNamedNode } from "@beep/rdf"
-   * import { Triple } from "@effect-ontology/Rdf/Types.ts"
+   * import { Triple } from "@effect-ontology/Rdf/Types"
    *
    * const triple = Triple.make({
    *   subject: makeNamedNode("https://example.org/ada"),

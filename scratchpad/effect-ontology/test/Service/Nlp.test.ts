@@ -26,18 +26,19 @@ const NlpServiceTest = Layer.effect(NlpService, NlpService.make).pipe(
 );
 
 describe("NlpService canonical Wink adapter", () => {
-  it("models index failures with the canonical schema and defect cause", () => {
-    const cause = new Error("query unavailable");
-    const error = NlpIndexError.make({
-      indexKind: "bm25",
-      message: "Canonical Wink corpus query failed",
-      cause: O.some(cause),
-    });
+  it.effect("models index failures with the canonical schema and defect cause", () =>
+    Effect.gen(function* () {
+      const cause = yield* S.decodeUnknownEffect(S.Finite)("query unavailable").pipe(Effect.flip);
+      const error = NlpIndexError.make({
+        indexKind: "bm25",
+        message: "Canonical Wink corpus query failed",
+        cause: O.some(cause),
+      });
 
-    assert.isTrue(S.is(NlpIndexError)(error));
-    assert.isTrue(O.isSome(error.cause));
-    assert.strictEqual(O.getOrThrow(error.cause), cause);
-  });
+      assert.isTrue(S.is(NlpIndexError)(error));
+      assert.deepEqual(error.cause, O.some(cause));
+    })
+  );
 
   it.layer(NlpServiceTest)("with canonical Wink services", (it) => {
     it.effect("decodes canonical Wink token, sentence, and entity output", () =>

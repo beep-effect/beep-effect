@@ -1,6 +1,8 @@
 /**
  * Refine Knowledge Graph using Entity Resolution results
  *
+ * **Details**
+ *
  * Merges entities and rewrites relations based on canonical mappings.
  *
  * @packageDocumentation
@@ -8,9 +10,8 @@
  */
 
 import { IRI } from "@beep/rdf";
+import { MutableHashMap, MutableHashSet } from "effect";
 import * as A from "effect/Array";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
@@ -21,9 +22,40 @@ import { dual2 } from "./Dual.ts";
 /**
  * Refine a KnowledgeGraph using the canonical mappings from an EntityResolutionGraph.
  *
+ * **Details**
+ *
  * - Merges entities that map to the same canonical ID.
  * - Rewrites relations to use canonical IDs.
  * - Deduplicates relations after rewriting.
+ *
+ * **Example** (Refine an empty graph)
+ *
+ * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { DateTime, Graph } from "effect"
+ * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { EntityResolutionGraph, EntityResolutionStats } from "@effect-ontology/Model/EntityResolutionGraph"
+ * import { refineKnowledgeGraph } from "@effect-ontology/Utils/RefineKG"
+ *
+ * const stats = EntityResolutionStats.make({
+ *   mentionCount: NonNegativeInt.make(0),
+ *   resolvedCount: NonNegativeInt.make(0),
+ *   relationCount: NonNegativeInt.make(0),
+ *   clusterCount: NonNegativeInt.make(0)
+ * })
+ * const resolution = EntityResolutionGraph.make({
+ *   graph: Graph.directed(),
+ *   entityIndex: {},
+ *   canonicalMap: {},
+ *   createdAt: DateTime.nowUnsafe(),
+ *   stats
+ * })
+ * const refined = refineKnowledgeGraph(KnowledgeGraph.make({}), resolution)
+ * console.log(refined.entities.length) // 0
+ * ```
+ *
+ * @category mapping
+ * @since 0.0.0
  */
 export const refineKnowledgeGraph = dual2((kg: KnowledgeGraph, erg: EntityResolutionGraph): KnowledgeGraph => {
   const { canonicalMap } = erg;

@@ -1,6 +1,8 @@
 /**
  * Extraction Entity Handler
  *
+ * **Details**
+ *
  * Implements the KnowledgeGraphExtractor entity behavior with Effect-native
  * time, randomness, cancellation, rate limiting, and extraction services.
  *
@@ -9,19 +11,19 @@
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import type { UnitInterval } from "@beep/schema/UnitInterval";
-import * as Str from "@beep/utils/Str";
 import { thunk0 } from "@beep/utils/thunk";
-import { Chunk, DateTime, Deferred, Duration, Effect, HashMap, Option, Random, Ref, Stream } from "effect";
+import { Chunk, DateTime, Deferred, Duration, Effect, HashMap, HashSet, Random, Ref, Stream } from "effect";
 import * as A from "effect/Array";
-import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { Entity as ClusterEntity } from "effect/unstable/cluster";
-import type { ProgressEvent } from "../Contract/ProgressStreaming.ts";
+import { ProgressEventSchema } from "../Contract/ProgressStreaming.ts";
 import { ContentHash, IdempotencyKey, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { RunStatus } from "../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
@@ -40,27 +42,46 @@ import type {
   GetExtractionStatusRpc,
   KnowledgeGraphResult,
 } from "./ExtractionEntity.ts";
-import { KnowledgeGraphExtractor } from "./ExtractionEntity.ts";
+import { ExtractionStatus, KnowledgeGraphExtractor } from "./ExtractionEntity.ts";
 
-interface ExtractionStats {
-  readonly totalEntities: number;
-  readonly totalRelations: number;
-  readonly verifiedRelations: number;
-  readonly successfulChunks: number;
-  readonly failedChunks: number;
-  readonly entityTypes: HashSet.HashSet<string>;
-  readonly tokensUsed: number;
-}
+const $I = $ScratchpadId.create("effect-ontology/Cluster/ExtractionEntityHandler");
 
-const emptyStats: ExtractionStats = {
-  totalEntities: 0,
-  totalRelations: 0,
-  verifiedRelations: 0,
-  successfulChunks: 0,
-  failedChunks: 0,
-  entityTypes: HashSet.empty(),
-  tokensUsed: 0,
-};
+class ExtractionStats extends S.Class<ExtractionStats>($I`ExtractionStats`)(
+  {
+    totalEntities: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))).annotateKey({
+      description: "Total entities extracted across completed chunks.",
+    }),
+    totalRelations: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))).annotateKey({
+      description: "Total relations extracted across completed chunks.",
+    }),
+    verifiedRelations: NonNegativeInt.pipe(
+      S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))
+    ).annotateKey({
+      description: "Extracted relations accepted by grounding.",
+    }),
+    successfulChunks: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))).annotateKey(
+      {
+        description: "Chunks that completed extraction successfully.",
+      }
+    ),
+    failedChunks: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))).annotateKey({
+      description: "Chunks whose extraction failed.",
+    }),
+    entityTypes: S.HashSet(S.String)
+      .pipe(S.withConstructorDefault(Effect.succeed(HashSet.empty())))
+      .annotateKey({
+        description: "Distinct entity types observed during extraction.",
+      }),
+    tokensUsed: NonNegativeInt.pipe(S.withConstructorDefault(Effect.succeed(NonNegativeInt.make(0)))).annotateKey({
+      description: "Estimated language-model tokens consumed.",
+    }),
+  },
+  $I.annote("ExtractionStats", {
+    description: "Running extraction counters with schema-owned empty defaults.",
+  })
+) {}
+
+const emptyStats = ExtractionStats.make({});
 
 type CancellationSignal = Deferred.Deferred<void>;
 
@@ -72,14 +93,14 @@ const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
 ) {
   const eventNumber = yield* Random.nextInt;
   const timestamp = DateTime.formatIso(yield* DateTime.now);
-  return {
+  return yield* S.decodeUnknownEffect(ProgressEventSchema)({
     _tag: tag,
     eventId: `evt-${eventNumber}`,
     runId,
     timestamp,
     overallProgress,
     ...extra,
-  } as ProgressEvent;
+  }).pipe(Effect.mapError(String));
 });
 
 const toExtractionParams = (
@@ -101,8 +122,20 @@ const toExtractionParams = (
       }),
   });
 
-const statusName = (status: RunStatus): "pending" | "running" | "complete" | "failed" => Str.uncapitalize(status._tag);
-
+/**
+ * Validates and represents make extraction entity handler values at runtime.
+ *
+ * **Example** (Inspect make extraction entity handler)
+ *
+ * ```ts
+ * import { makeExtractionEntityHandler } from "@effect-ontology/Cluster/ExtractionEntityHandler"
+ *
+ * console.log(makeExtractionEntityHandler)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const makeExtractionEntityHandler = Effect.gen(function* () {
   const runService = yield* ExtractionRunService;
   const nlpService = yield* NlpService;
@@ -114,7 +147,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
   const tokenBudget = yield* TokenBudgetService;
   const stageTimeout = yield* StageTimeoutService;
   const rateLimiter = yield* CentralRateLimiterService;
-  const cancellationRegistry = yield* Ref.make(HashMap.empty<string, CancellationSignal>());
+  const cancellationRegistry = yield* Ref.make(HashMap.empty<IdempotencyKey, CancellationSignal>());
 
   const ontology = yield* ontologyService.ontology;
   const datatypeProperties = ontology.properties.filter((property) => property.rangeType === "datatype");
@@ -141,7 +174,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params))
       );
       const runId = getRunIdFromText(text);
-      const keyString = idempotencyKey as string;
+      const keyString = idempotencyKey;
       const startTime = yield* DateTime.now;
       const cancelSignal = yield* Deferred.make<void>();
       yield* Ref.update(cancellationRegistry, HashMap.set(keyString, cancelSignal));
@@ -185,7 +218,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           )
         );
 
-      const ontologyParts = ontologyId.includes("/") ? ontologyId.split("/") : ["default", ontologyId];
+      const ontologyParts = Str.includes("/")(ontologyId) ? Str.split("/")(ontologyId) : ["default", ontologyId];
       const namespace = yield* S.decodeEffect(Namespace)(ontologyParts[0]);
       const name = yield* S.decodeEffect(OntologyName)(ontologyParts[1] ?? ontologyParts[0]);
       const ontologyRef = OntologyRef.make({
@@ -268,15 +301,17 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           const entityArray = Chunk.toReadonlyArray(entities);
           const entityTypes = HashSet.fromIterable(entityArray.flatMap((entity) => entity.types));
           yield* tokenBudget.recordUsage("entity_extraction", estimatedTokens);
-          yield* Ref.update(statsRef, (stats) => ({
-            totalEntities: stats.totalEntities + entityArray.length,
-            totalRelations: stats.totalRelations + relationArray.length,
-            verifiedRelations: stats.verifiedRelations + verifiedRelations.length,
-            successfulChunks: stats.successfulChunks + 1,
-            failedChunks: stats.failedChunks,
-            entityTypes: HashSet.union(stats.entityTypes, entityTypes),
-            tokensUsed: stats.tokensUsed + estimatedTokens,
-          }));
+          yield* Ref.update(statsRef, (stats) =>
+            ExtractionStats.make({
+              totalEntities: NonNegativeInt.make(stats.totalEntities + entityArray.length),
+              totalRelations: NonNegativeInt.make(stats.totalRelations + relationArray.length),
+              verifiedRelations: NonNegativeInt.make(stats.verifiedRelations + verifiedRelations.length),
+              successfulChunks: NonNegativeInt.make(stats.successfulChunks + 1),
+              failedChunks: stats.failedChunks,
+              entityTypes: HashSet.union(stats.entityTypes, entityTypes),
+              tokensUsed: NonNegativeInt.make(stats.tokensUsed + estimatedTokens),
+            })
+          );
           yield* rateLimiter.release(estimatedTokens, true);
 
           events.push(
@@ -330,7 +365,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           const errorMessage = String(error);
           return Effect.gen(function* () {
             yield* runService.failRun(runId, "llm_error", errorMessage).pipe(Effect.ignore);
-            yield* Ref.update(cancellationRegistry, HashMap.remove(idempotencyKey as string));
+            yield* Ref.update(cancellationRegistry, HashMap.remove(idempotencyKey));
             return Stream.make(
               yield* makeEvent(runId, "extraction_failed", 0, {
                 errorType: "extraction_error",
@@ -347,12 +382,12 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
     function* (envelope: ClusterEntity.Request<typeof GetCachedResultRpc>) {
       const key = IdempotencyKey.make(envelope.payload.idempotencyKey);
       const run = yield* runService.getByKey(key);
-      if (P.isNull(run) || !P.isTagged(run.status, "Complete")) return Option.none<KnowledgeGraphResult>();
+      if (P.isNull(run) || !P.isTagged(run.status, "Complete")) return O.none<KnowledgeGraphResult>();
       const durationMs = O.match(run.stats, {
         onNone: thunk0,
         onSome: (stats) => Duration.toMillis(stats.duration),
       });
-      return Option.some({
+      return O.some({
         entities: [],
         relations: [],
         metadata: {
@@ -374,10 +409,10 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       if (P.isNull(run)) return yield* Effect.fail("Extraction not found");
       if (P.isTagged(run.status, "Complete") || P.isTagged(run.status, "Failed")) return false;
 
-      const signal = HashMap.get(yield* Ref.get(cancellationRegistry), key as string);
+      const signal = HashMap.get(yield* Ref.get(cancellationRegistry), key);
       if (O.isSome(signal)) {
         yield* Deferred.succeed(signal.value, void 0);
-        yield* Ref.update(cancellationRegistry, HashMap.remove(key as string));
+        yield* Ref.update(cancellationRegistry, HashMap.remove(key));
       }
       yield* runService.failRun(
         run.id,
@@ -386,27 +421,25 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       );
       return true;
     },
-    (effect) => effect.pipe(Effect.mapError((error) => (typeof error === "string" ? error : error.message)))
+    (effect) => effect.pipe(Effect.mapError((error) => (P.isString(error) ? error : error.message)))
   );
 
   const getExtractionStatus = Effect.fn("ExtractionEntityHandler.getExtractionStatus")(
     function* (envelope: ClusterEntity.Request<typeof GetExtractionStatusRpc>) {
       const run = yield* runService.getByKey(IdempotencyKey.make(envelope.payload.idempotencyKey));
       if (P.isNull(run)) {
-        return {
-          status: "pending",
+        return ExtractionStatus.cases.pending.make({
           progress: O.some(Percentage.make(0)),
           startedAt: O.none<string>(),
           completedAt: O.none<string>(),
           error: O.none<string>(),
-        };
+        });
       }
       const completedAt = P.isTagged(run.status, "Complete")
         ? O.some(DateTime.formatIso(run.status.completedAt))
         : O.none();
       const error = P.isTagged(run.status, "Failed") ? O.some(run.status.error.message) : O.none();
-      return {
-        status: statusName(run.status),
+      const fields = {
         progress: O.some(
           Percentage.make(P.isTagged(run.status, "Complete") ? 100 : P.isTagged(run.status, "Running") ? 50 : 0)
         ),
@@ -414,6 +447,12 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         completedAt,
         error,
       };
+      return RunStatus.match(run.status, {
+        Pending: (): ExtractionStatus => ExtractionStatus.cases.pending.make(fields),
+        Running: (): ExtractionStatus => ExtractionStatus.cases.running.make(fields),
+        Complete: (): ExtractionStatus => ExtractionStatus.cases.complete.make(fields),
+        Failed: (): ExtractionStatus => ExtractionStatus.cases.failed.make(fields),
+      });
     },
     (effect) => effect.pipe(Effect.mapError((error) => error.message))
   );
@@ -427,6 +466,20 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
   };
 });
 
+/**
+ * Provides the Effect layer for extraction entity handler layer dependencies.
+ *
+ * **Example** (Inspect extraction entity handler layer)
+ *
+ * ```ts
+ * import { ExtractionEntityHandlerLayer } from "@effect-ontology/Cluster/ExtractionEntityHandler"
+ *
+ * console.log(ExtractionEntityHandlerLayer)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export const ExtractionEntityHandlerLayer = KnowledgeGraphExtractor.toLayer(
   makeExtractionEntityHandler.pipe(Effect.orDie)
 );

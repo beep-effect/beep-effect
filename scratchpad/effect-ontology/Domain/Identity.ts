@@ -1,6 +1,8 @@
 /**
  * Branded storage identifiers used by the effect-ontology experiment.
  *
+ * **Details**
+ *
  * The schemas in this module distinguish truncated content fingerprints,
  * ontology versions, document and run identifiers, Google Cloud Storage
  * locations, and their construction helpers at both runtime and compile time.
@@ -117,7 +119,7 @@ const GcsObjectName = S.String.check(
  *
  * **Example** (Use LegacyContentHashPrefix)
  * ```ts
- * import { LegacyContentHashPrefix } from "@effect-ontology/Identity.ts"
+ * import { LegacyContentHashPrefix } from "@effect-ontology/Identity"
  *
  * const prefix = LegacyContentHashPrefix.make("e3b0c44298fc1c14")
  * console.log(prefix.length) // 16
@@ -156,7 +158,7 @@ export const LegacyContentHashPrefix = S.String.check(
  * import {
  *   LegacyContentHashPrefix,
  *   type LegacyContentHashPrefix as LegacyPrefix
- * } from "@effect-ontology/Identity.ts"
+ * } from "@effect-ontology/Identity"
  *
  * const prefix: LegacyPrefix = LegacyContentHashPrefix.make("e3b0c44298fc1c14")
  * console.log(LegacyContentHashPrefix.is(prefix)) // true
@@ -178,7 +180,7 @@ export type LegacyContentHashPrefix = typeof LegacyContentHashPrefix.Type;
  *
  * **Example** (Use ContentHash)
  * ```ts
- * import { ContentHash } from "@effect-ontology/Identity.ts"
+ * import { ContentHash } from "@effect-ontology/Identity"
  *
  * const hash = ContentHash.make(
  *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -211,7 +213,7 @@ export const ContentHash = Sha256Hex.annotate({
  *
  * **Example** (Use ContentHash)
  * ```ts
- * import { ContentHash, type ContentHash as ContentHashValue } from "@effect-ontology/Identity.ts"
+ * import { ContentHash, type ContentHash as ContentHashValue } from "@effect-ontology/Identity"
  *
  * const hash: ContentHashValue = ContentHash.make(
  *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -238,7 +240,7 @@ export type ContentHash = typeof ContentHash.Type;
  * **Example** (Use IdempotencyKey)
  * ```ts
  * import * as S from "effect/Schema"
- * import { IdempotencyKey } from "@effect-ontology/Identity.ts"
+ * import { IdempotencyKey } from "@effect-ontology/Identity"
  *
  * const result = S.decodeUnknownResult(IdempotencyKey)(
  *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -268,7 +270,7 @@ export const IdempotencyKey = Sha256Hex.annotate({
  *
  * **Example** (Use IdempotencyKey)
  * ```ts
- * import { IdempotencyKey, type IdempotencyKey as IdempotencyKeyValue } from "@effect-ontology/Identity.ts"
+ * import { IdempotencyKey, type IdempotencyKey as IdempotencyKeyValue } from "@effect-ontology/Identity"
  *
  * const key: IdempotencyKeyValue = IdempotencyKey.make(
  *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -297,7 +299,7 @@ export type IdempotencyKey = typeof IdempotencyKey.Type;
  *
  * **Example** (Use GcsBucketEncoded)
  * ```ts
- * import { GcsBucket } from "@effect-ontology/Identity.ts"
+ * import { GcsBucket } from "@effect-ontology/Identity"
  *
  * console.log(GcsBucket.is("beep-ontology-state")) // true
  * console.log(GcsBucket.is("192.168.5.4")) // false
@@ -314,10 +316,7 @@ const GcsBucketEncoded = S.String.check(GcsBucketChecks).pipe(S.brand("GcsBucket
 
 const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => GcsBucketEncoded.is(input)).annotate({
   toArbitrary: () => (fc) =>
-    fc
-      .stringMatching(gcsBucketNamePattern)
-      .filter(isGcsBucketArbitraryCandidate)
-      .map((value): BrandedGcsBucket => value as BrandedGcsBucket),
+    fc.stringMatching(gcsBucketNamePattern).filter(isGcsBucketArbitraryCandidate).map(GcsBucketEncoded.make),
 });
 
 /**
@@ -330,10 +329,12 @@ const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => GcsBuc
  *
  * **Example** (Use GcsBucket)
  * ```ts
- * import { GcsBucket } from "@effect-ontology/Identity.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GcsBucket } from "@effect-ontology/Identity"
  *
- * const bucket = GcsBucket.fromUnknown("beep-ontology-state")
- * console.log(GcsBucket.is(bucket)) // true
+ * const bucket = S.decodeUnknownOption(GcsBucket)("beep-ontology-state")
+ * console.log(O.exists(bucket, GcsBucket.is)) // true
  * ```
  *
  * @invariant Uses 3-63 permitted lowercase characters, has alphanumeric
@@ -357,10 +358,12 @@ export const GcsBucket = GcsBucketEncoded.pipe(
  *
  * **Example** (Use GcsBucket)
  * ```ts
- * import { GcsBucket, type GcsBucket as GcsBucketValue } from "@effect-ontology/Identity.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GcsBucket, type GcsBucket as GcsBucketValue } from "@effect-ontology/Identity"
  *
- * const bucket: GcsBucketValue = GcsBucket.fromUnknown("beep-ontology-state")
- * console.log(bucket) // "beep-ontology-state"
+ * const bucket = S.decodeUnknownOption(GcsBucket)("beep-ontology-state")
+ * console.log(O.map(bucket, (value: GcsBucketValue) => value)) // Some("beep-ontology-state")
  * ```
  *
  * @category value-objects
@@ -381,7 +384,7 @@ export type GcsBucket = typeof GcsBucket.Type;
  * **Example** (Use GcsUriEncoded)
  * ```ts
  * import * as S from "effect/Schema"
- * import { GcsUri } from "@effect-ontology/Identity.ts"
+ * import { GcsUri } from "@effect-ontology/Identity"
  *
  * const result = S.decodeUnknownResult(GcsUri)(
  *   "gs://beep-ontology-state/snapshots/ontology-v1.ttl"
@@ -401,7 +404,7 @@ const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => S.is(GcsUriE
   toArbitrary: () => (fc) =>
     fc
       .tuple(S.toArbitrary(GcsBucket)(fc), S.toArbitrary(GcsObjectName)(fc))
-      .map(([bucket, objectName]): BrandedGcsUri => `gs://${bucket}/${objectName}` as BrandedGcsUri),
+      .map(([bucket, objectName]) => GcsUriEncoded.make(`gs://${bucket}/${objectName}`)),
 });
 
 /**
@@ -414,12 +417,14 @@ const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => S.is(GcsUriE
  *
  * **Example** (Use GcsUri)
  * ```ts
- * import { GcsUri } from "@effect-ontology/Identity.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GcsUri } from "@effect-ontology/Identity"
  *
- * const uri = GcsUri.fromUnknown(
+ * const uri = S.decodeUnknownOption(GcsUri)(
  *   "gs://beep-ontology-state/snapshots/ontology-v1.ttl"
  * )
- * console.log(GcsUri.is(uri)) // true
+ * console.log(O.exists(uri, GcsUri.is)) // true
  * ```
  *
  * @invariant Uses `gs://<bucket>/<object>` with validated, non-empty
@@ -456,12 +461,14 @@ export const GcsUri = GcsUriEncoded.pipe(
  *
  * **Example** (Use GcsUri)
  * ```ts
- * import { GcsUri, type GcsUri as GcsUriValue } from "@effect-ontology/Identity.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GcsUri, type GcsUri as GcsUriValue } from "@effect-ontology/Identity"
  *
- * const uri: GcsUriValue = GcsUri.fromUnknown(
+ * const uri = S.decodeUnknownOption(GcsUri)(
  *   "gs://beep-ontology-state/snapshots/ontology-v1.ttl"
  * )
- * console.log(uri)
+ * console.log(O.map(uri, (value: GcsUriValue) => value))
  * ```
  *
  * @category value-objects
@@ -511,7 +518,7 @@ const GcsObjectChecks = S.makeFilterGroup(
  *
  * **Example** (Use GcsObjectEncoded)
  * ```ts
- * import { GcsObject } from "@effect-ontology/Identity.ts"
+ * import { GcsObject } from "@effect-ontology/Identity"
  *
  * console.log(GcsObject.is("snapshots/ontology-v1.ttl")) // true
  * console.log(GcsObject.is("/snapshots/ontology-v1.ttl")) // false
@@ -526,8 +533,7 @@ const GcsObjectChecks = S.makeFilterGroup(
 const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(S.brand("GcsObject"), SchemaUtils.withCodecStatics);
 
 const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => S.is(GcsObjectEncoded)(input)).annotate({
-  toArbitrary: () => (fc) =>
-    fc.stringMatching(gcsObjectArbitraryPattern).map((value): BrandedGcsObject => value as BrandedGcsObject),
+  toArbitrary: () => (fc) => fc.stringMatching(gcsObjectArbitraryPattern).map(GcsObjectEncoded.make),
 });
 
 /**
@@ -540,10 +546,12 @@ const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => S.is(G
  *
  * **Example** (Use GcsObject)
  * ```ts
- * import { GcsObject } from "@effect-ontology/Identity.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GcsObject } from "@effect-ontology/Identity"
  *
- * const object = GcsObject.fromUnknown("snapshots/ontology-v1.ttl")
- * console.log(GcsObject.is(object)) // true
+ * const object = S.decodeUnknownOption(GcsObject)("snapshots/ontology-v1.ttl")
+ * console.log(O.exists(object, GcsObject.is)) // true
  * ```
  *
  * @invariant Is provider-valid and contains no empty slash-delimited segment.
@@ -565,12 +573,14 @@ export const GcsObject = GcsObjectEncoded.pipe(
  *
  * **Example** (Use GcsObject)
  * ```ts
- * import { GcsObject, type GcsObject as GcsObjectValue } from "@effect-ontology/Identity.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { GcsObject, type GcsObject as GcsObjectValue } from "@effect-ontology/Identity"
  *
- * const objectPath: GcsObjectValue = GcsObject.fromUnknown(
+ * const objectPath = S.decodeUnknownOption(GcsObject)(
  *   "snapshots/ontology-v1.ttl"
  * )
- * console.log(objectPath)
+ * console.log(O.map(objectPath, (value: GcsObjectValue) => value))
  * ```
  *
  * @category value-objects
@@ -583,7 +593,7 @@ export type GcsObject = typeof GcsObject.Type;
  *
  * **Example** (Use Namespace)
  * ```ts
- * import { Namespace } from "@effect-ontology/Identity.ts"
+ * import { Namespace } from "@effect-ontology/Identity"
  *
  * console.log(Namespace.is("legal-ontology")) // true
  * console.log(Namespace.is("LegalOntology")) // false
@@ -621,7 +631,7 @@ export const Namespace = S.String.check(
  *
  * **Example** (Use Namespace)
  * ```ts
- * import { Namespace, type Namespace as NamespaceValue } from "@effect-ontology/Identity.ts"
+ * import { Namespace, type Namespace as NamespaceValue } from "@effect-ontology/Identity"
  *
  * const namespace: NamespaceValue = Namespace.make("legal-ontology")
  * console.log(namespace)
@@ -637,7 +647,7 @@ export type Namespace = typeof Namespace.Type;
  *
  * **Example** (Use OntologyName)
  * ```ts
- * import { OntologyName } from "@effect-ontology/Identity.ts"
+ * import { OntologyName } from "@effect-ontology/Identity"
  *
  * console.log(OntologyName.is("patent_claims-v2")) // true
  * console.log(OntologyName.is("PatentClaims")) // false
@@ -675,7 +685,7 @@ export const OntologyName = S.String.check(
  *
  * **Example** (Use OntologyName)
  * ```ts
- * import { OntologyName, type OntologyName as OntologyNameValue } from "@effect-ontology/Identity.ts"
+ * import { OntologyName, type OntologyName as OntologyNameValue } from "@effect-ontology/Identity"
  *
  * const name: OntologyNameValue = OntologyName.make("patent_claims-v2")
  * console.log(name)
@@ -698,7 +708,7 @@ export type OntologyName = typeof OntologyName.Type;
  * **Example** (Use OntologyVersion)
  * ```ts
  * import * as S from "effect/Schema"
- * import { OntologyVersion } from "@effect-ontology/Identity.ts"
+ * import { OntologyVersion } from "@effect-ontology/Identity"
  *
  * const result = S.decodeUnknownResult(OntologyVersion)(
  *   "legal/patent_claims@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -735,7 +745,7 @@ export const OntologyVersion = S.TemplateLiteral([Namespace, "/", OntologyName, 
  *
  * **Example** (Use OntologyVersion)
  * ```ts
- * import { OntologyVersion, type OntologyVersion as OntologyVersionValue } from "@effect-ontology/Identity.ts"
+ * import { OntologyVersion, type OntologyVersion as OntologyVersionValue } from "@effect-ontology/Identity"
  *
  * const version: OntologyVersionValue = OntologyVersion.make(
  *   "legal/patent_claims@e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -759,7 +769,7 @@ export type OntologyVersion = typeof OntologyVersion.Type;
  *
  * **Example** (Use DocumentId)
  * ```ts
- * import { DocumentId } from "@effect-ontology/Identity.ts"
+ * import { DocumentId } from "@effect-ontology/Identity"
  *
  * console.log(DocumentId.is("doc-deadbeefcafe")) // true
  * console.log(DocumentId.is("doc-DEADBEEFCAFE")) // false
@@ -799,7 +809,7 @@ export const DocumentId = S.String.check(
  *
  * **Example** (Use DocumentId)
  * ```ts
- * import { DocumentId, type DocumentId as DocumentIdValue } from "@effect-ontology/Identity.ts"
+ * import { DocumentId, type DocumentId as DocumentIdValue } from "@effect-ontology/Identity"
  *
  * const id: DocumentIdValue = DocumentId.make("doc-deadbeefcafe")
  * console.log(id)
@@ -815,7 +825,7 @@ export type DocumentId = typeof DocumentId.Type;
  *
  * **Example** (Use ChunkId)
  * ```ts
- * import { ChunkId } from "@effect-ontology/Identity.ts"
+ * import { ChunkId } from "@effect-ontology/Identity"
  *
  * console.log(ChunkId.is("doc-deadbeefcafe-chunk-0")) // true
  * console.log(ChunkId.is("doc-deadbeefcafe-chunk-01")) // false
@@ -856,7 +866,7 @@ export const ChunkId = S.String.check(
  *
  * **Example** (Use ChunkId)
  * ```ts
- * import { ChunkId, type ChunkId as ChunkIdValue } from "@effect-ontology/Identity.ts"
+ * import { ChunkId, type ChunkId as ChunkIdValue } from "@effect-ontology/Identity"
  *
  * const id: ChunkIdValue = ChunkId.make("doc-deadbeefcafe-chunk-0")
  * console.log(id)
@@ -877,7 +887,7 @@ export type ChunkId = typeof ChunkId.Type;
  *
  * **Example** (Use ExtractionRunId)
  * ```ts
- * import { ExtractionRunId } from "@effect-ontology/Identity.ts"
+ * import { ExtractionRunId } from "@effect-ontology/Identity"
  *
  * const runId = ExtractionRunId.make("doc-deadbeefcafe")
  * console.log(runId)
@@ -900,7 +910,7 @@ export const ExtractionRunId = DocumentId.annotate({
  *
  * **Example** (Use ExtractionRunId)
  * ```ts
- * import { ExtractionRunId, type ExtractionRunId as ExtractionRunIdValue } from "@effect-ontology/Identity.ts"
+ * import { ExtractionRunId, type ExtractionRunId as ExtractionRunIdValue } from "@effect-ontology/Identity"
  *
  * const runId: ExtractionRunIdValue = ExtractionRunId.make("doc-deadbeefcafe")
  * console.log(runId)
@@ -916,7 +926,7 @@ export type ExtractionRunId = typeof ExtractionRunId.Type;
  *
  * **Example** (Use BatchId)
  * ```ts
- * import { BatchId } from "@effect-ontology/Identity.ts"
+ * import { BatchId } from "@effect-ontology/Identity"
  *
  * console.log(BatchId.is("batch-deadbeefcafe")) // true
  * console.log(BatchId.is("batch-short")) // false
@@ -956,7 +966,7 @@ export const BatchId = S.String.check(
  *
  * **Example** (Use BatchId)
  * ```ts
- * import { BatchId, type BatchId as BatchIdValue } from "@effect-ontology/Identity.ts"
+ * import { BatchId, type BatchId as BatchIdValue } from "@effect-ontology/Identity"
  *
  * const id: BatchIdValue = BatchId.make("batch-deadbeefcafe")
  * console.log(id)

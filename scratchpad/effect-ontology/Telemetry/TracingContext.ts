@@ -1,6 +1,8 @@
 /**
  * Tracing Context Service
  *
+ * **Details**
+ *
  * Provides model and provider information for span annotations.
  * Thread this through your layer composition to enable LLM tracing.
  *
@@ -14,8 +16,18 @@ import { Context, Layer } from "effect";
 /**
  * Tracing context interface
  *
+ * **Example** (Reference TracingContextShape fields)
+ *
+ * ```ts
+ * import type { TracingContextShape } from "@effect-ontology/Telemetry/TracingContext"
+ *
+ * const tracingContextShapeFields: ReadonlyArray<keyof TracingContextShape> = ["model", "provider"]
+ *
+ * console.log(tracingContextShapeFields)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category models
  */
 export interface TracingContextShape {
   readonly model: string;
@@ -26,10 +38,20 @@ const $I = $ScratchpadId.create("effect-ontology/Telemetry/TracingContext");
 /**
  * TracingContext tag and utilities
  *
+ * **Details**
+ *
  * Provides model/provider info for LLM span annotations.
  *
+ * **Example** (Inspect tracing context)
+ *
+ * ```ts
+ * import { TracingContext } from "@effect-ontology/Telemetry/TracingContext"
+ *
+ * console.log(TracingContext)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class TracingContext extends Context.Service<TracingContext, TracingContextShape>()($I`TracingContext`) {
   /**

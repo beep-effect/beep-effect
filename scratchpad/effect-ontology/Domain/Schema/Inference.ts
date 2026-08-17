@@ -20,7 +20,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Inference");
  *
  * **Example** (Use ReasoningProfile)
  * ```ts
- * import { ReasoningProfile } from "@effect-ontology/Schema/Inference.ts"
+ * import { ReasoningProfile } from "@effect-ontology/Schema/Inference"
  *
  * console.log(ReasoningProfile.is.rdfs("rdfs")) // true
  * console.log(ReasoningProfile.is.custom("owl-sameas")) // false
@@ -44,7 +44,7 @@ export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas
  *
  * **Example** (Use ReasoningProfile)
  * ```ts
- * import type { ReasoningProfile } from "@effect-ontology/Schema/Inference.ts"
+ * import type { ReasoningProfile } from "@effect-ontology/Schema/Inference"
  *
  * const profile: ReasoningProfile = "rdfs"
  * console.log(profile)
@@ -76,10 +76,11 @@ const InferenceGraphFormat = LiteralKit(["turtle", "trig"])
  *
  * **Example** (Use InferenceStats)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { InferenceStats } from "@effect-ontology/Schema/Inference.ts"
+ * import { InferenceStats } from "@effect-ontology/Schema/Inference"
  *
- * const stats = S.decodeUnknownSync(InferenceStats)({
+ * const stats = S.decodeUnknownOption(InferenceStats)({
  *   originalTriples: 10,
  *   enrichedTriples: 13,
  *   inferredTriples: 3,
@@ -87,7 +88,7 @@ const InferenceGraphFormat = LiteralKit(["turtle", "trig"])
  *   predicateBreakdown: { "http://www.w3.org/2000/01/rdf-schema#type": 3 },
  *   durationMs: 8
  * })
- * console.log(stats.inferredTriples) // 3
+ * console.log(O.map(stats, (value) => value.inferredTriples)) // 3
  * ```
  *
  * @invariant Every count, ratio, and duration is finite and non-negative.
@@ -133,13 +134,15 @@ export class InferenceStats extends S.Class<InferenceStats>($I`InferenceStats`)(
  *
  * **Example** (Use InferenceRunRequest)
  * ```ts
- * import { InferenceRunRequest } from "@effect-ontology/Schema/Inference.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { InferenceRunRequest } from "@effect-ontology/Schema/Inference"
  *
- * const request = InferenceRunRequest.fromUnknown({
+ * const request = S.decodeUnknownOption(InferenceRunRequest)({
  *   inputGraph: "@prefix ex: <https://example.com/> . ex:a ex:p ex:b ."
  * })
- * console.log(request.profile) // "rdfs"
- * console.log(request.returnDeltaOnly) // true
+ * console.log(O.map(request, (value) => value.profile)) // Some("rdfs")
+ * console.log(O.map(request, (value) => value.returnDeltaOnly)) // Some(true)
  * ```
  *
  * @invariant The input graph is non-empty and all optional behavior has an
@@ -193,7 +196,7 @@ export class InferenceRunRequest extends S.Class<InferenceRunRequest>($I`Inferen
  *
  * **Example** (Use InferenceStatus)
  * ```ts
- * import { InferenceStatus } from "@effect-ontology/Schema/Inference.ts"
+ * import { InferenceStatus } from "@effect-ontology/Schema/Inference"
  *
  * console.log(InferenceStatus.is.processing("processing")) // true
  * ```
@@ -216,7 +219,7 @@ export const InferenceStatus = LiteralKit(["complete", "processing", "failed"])
  *
  * **Example** (Use InferenceStatus)
  * ```ts
- * import type { InferenceStatus } from "@effect-ontology/Schema/Inference.ts"
+ * import type { InferenceStatus } from "@effect-ontology/Schema/Inference"
  *
  * const status: InferenceStatus = "complete"
  * console.log(status)
@@ -238,13 +241,15 @@ export type InferenceStatus = typeof InferenceStatus.Type;
  *
  * **Example** (Use InferenceRunResponse)
  * ```ts
- * import { InferenceRunResponse } from "@effect-ontology/Schema/Inference.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { InferenceRunResponse } from "@effect-ontology/Schema/Inference"
  *
- * const response = InferenceRunResponse.fromUnknown({
+ * const response = S.decodeUnknownOption(InferenceRunResponse)({
  *   jobId: "inference-42",
  *   status: "processing"
  * })
- * console.log(response.status) // "processing"
+ * console.log(O.map(response, (value) => value.status)) // Some("processing")
  * ```
  *
  * @category dtos
@@ -290,13 +295,15 @@ export class InferenceRunResponse extends S.Class<InferenceRunResponse>($I`Infer
  *
  * **Example** (Use InferenceStatusResponse)
  * ```ts
- * import { InferenceStatusResponse } from "@effect-ontology/Schema/Inference.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { InferenceStatusResponse } from "@effect-ontology/Schema/Inference"
  *
- * const status = InferenceStatusResponse.fromUnknown({
+ * const status = S.decodeUnknownOption(InferenceStatusResponse)({
  *   jobId: "inference-42",
  *   status: "processing"
  * })
- * console.log(status.status) // "processing"
+ * console.log(O.map(status, (value) => value.status)) // Some("processing")
  * ```
  *
  * @category dtos

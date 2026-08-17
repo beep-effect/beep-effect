@@ -1,6 +1,8 @@
 /**
  * Schema Module
  *
+ * **Details**
+ *
  * Dynamic Effect Schema generation from ontology vocabularies with JSON Schema export
  * for LLM tool calling APIs.
  *

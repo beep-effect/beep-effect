@@ -1,6 +1,8 @@
 /**
  * ImageBlobStore Service
  *
+ * **Details**
+ *
  * Low-level storage operations for image bytes and metadata.
  * Wraps StorageService with image-specific path management.
  *
@@ -10,10 +12,10 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { Context, DateTime, Effect, Layer, MutableHashSet } from "effect";
-import * as S from "effect/Schema";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError, SystemError } from "effect/PlatformError";
+import type * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { KeyValueStoreError } from "effect/unstable/persistence/KeyValueStore";
 import { ContentHash } from "../Domain/Identity.ts";
@@ -30,10 +32,23 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageBlobStore");
 /**
  * ImageBlobStore service interface
  *
+ * **Details**
+ *
  * Low-level image storage operations for bytes and metadata.
  *
+ *
+ * **Example** (Use the ImageBlobStoreService contract)
+ *
+ * ```ts
+ * import type { ImageBlobStoreService } from "@effect-ontology/Service/ImageBlobStore"
+ *
+ * const acceptsImageBlobStoreService = (_value: ImageBlobStoreService): void => undefined
+ *
+ * console.log(acceptsImageBlobStoreService)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category services
  */
 export interface ImageBlobStoreService {
   /**
@@ -59,9 +74,7 @@ export interface ImageBlobStoreService {
   /**
    * Retrieve image metadata by hash
    */
-  readonly getMetadata: (
-    hash: string
-  ) => Effect.Effect<O.Option<ImageAsset>, KeyValueStoreError | S.SchemaError>;
+  readonly getMetadata: (hash: string) => Effect.Effect<O.Option<ImageAsset>, KeyValueStoreError | S.SchemaError>;
 
   /**
    * Store both bytes and metadata atomically
@@ -105,8 +118,16 @@ export interface ImageBlobStoreService {
 /**
  * ImageBlobStore service tag
  *
+ * **Example** (Inspect image blob store)
+ *
+ * ```ts
+ * import { ImageBlobStore } from "@effect-ontology/Service/ImageBlobStore"
+ *
+ * console.log(ImageBlobStore)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobStoreService>()($I`ImageBlobStore`) {
   /**

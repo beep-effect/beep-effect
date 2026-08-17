@@ -33,7 +33,7 @@ const Base64ImageData = S.NonEmptyString.check(
  *
  * **Example** (Use ImageRole)
  * ```ts
- * import { ImageRole } from "@effect-ontology/Model/Image.ts"
+ * import { ImageRole } from "@effect-ontology/Model/Image"
  *
  * console.log(ImageRole.is.hero("hero")) // true
  * console.log(ImageRole.is.thumbnail("inline")) // false
@@ -57,7 +57,7 @@ export const ImageRole = LiteralKit(["hero", "inline", "thumbnail"])
  *
  * **Example** (Use ImageRole)
  * ```ts
- * import type { ImageRole } from "@effect-ontology/Model/Image.ts"
+ * import type { ImageRole } from "@effect-ontology/Model/Image"
  *
  * const role: ImageRole = "inline"
  * console.log(role) // "inline"
@@ -73,7 +73,7 @@ export type ImageRole = typeof ImageRole.Type;
  *
  * **Example** (Use ImageOwnerType)
  * ```ts
- * import { ImageOwnerType } from "@effect-ontology/Model/Image.ts"
+ * import { ImageOwnerType } from "@effect-ontology/Model/Image"
  *
  * console.log(ImageOwnerType.is.document("document")) // true
  * ```
@@ -96,7 +96,7 @@ export const ImageOwnerType = LiteralKit(["link", "document"])
  *
  * **Example** (Use ImageOwnerType)
  * ```ts
- * import type { ImageOwnerType } from "@effect-ontology/Model/Image.ts"
+ * import type { ImageOwnerType } from "@effect-ontology/Model/Image"
  *
  * const owner: ImageOwnerType = "document"
  * console.log(owner) // "document"
@@ -128,24 +128,25 @@ const ImageCandidateFields = {
   referrerUrl: URLStr.annotateKey({
     description: "Page URL on which the image was discovered.",
   }),
-} as const;
+};
 
 /**
  * Image discovered before fetching, hashing, or persistence.
  *
  * **Example** (Use ImageCandidate)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ImageCandidate } from "@effect-ontology/Model/Image.ts"
+ * import { ImageCandidate } from "@effect-ontology/Model/Image"
  *
- * const candidate = S.decodeUnknownSync(ImageCandidate)({
+ * const candidate = S.decodeUnknownOption(ImageCandidate)({
  *   sourceUrl: "https://example.com/skyline.jpg",
  *   role: "hero",
  *   order: 0,
  *   referrerUrl: "https://example.com/article"
  * })
  *
- * console.log(candidate.role) // "hero"
+ * console.log(O.map(candidate, (value) => value.role)) // "hero"
  * ```
  *
  * @category models
@@ -193,24 +194,25 @@ const ImageAssetFields = {
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "UTC instant at which the asset was first stored." })
   ),
-} as const;
+};
 
 /**
  * Deduplicated, content-addressed metadata for stored image bytes.
  *
  * **Example** (Use ImageAsset)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ImageAsset } from "@effect-ontology/Model/Image.ts"
+ * import { ImageAsset } from "@effect-ontology/Model/Image"
  *
- * const asset = S.decodeUnknownSync(ImageAsset)({
+ * const asset = S.decodeUnknownOption(ImageAsset)({
  *   hash: "a".repeat(64),
  *   contentType: "image/jpeg",
  *   sizeBytes: 1024,
  *   storagePath: "assets/images/a/original"
  * })
  *
- * console.log(asset.contentType) // "image/jpeg"
+ * console.log(O.map(asset, (value) => value.contentType)) // "image/jpeg"
  * ```
  *
  * @invariant `hash` is a complete SHA-256 digest and byte/pixel counts are
@@ -268,24 +270,25 @@ const ImageRefFields = {
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "Context-specific image role when known." })
   ),
-} as const;
+};
 
 /**
  * Owner-scoped reference from a document or link to an image asset.
  *
  * **Example** (Use ImageRef)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ImageRef } from "@effect-ontology/Model/Image.ts"
+ * import { ImageRef } from "@effect-ontology/Model/Image"
  *
- * const ref = S.decodeUnknownSync(ImageRef)({
+ * const ref = S.decodeUnknownOption(ImageRef)({
  *   ownerType: "document",
  *   ownerId: "doc-1",
  *   assetHash: "b".repeat(64),
  *   position: 0
  * })
  *
- * console.log(ref.ownerId) // "doc-1"
+ * console.log(O.map(ref, (value) => value.ownerId)) // "doc-1"
  * ```
  *
  * @category models
@@ -315,7 +318,7 @@ const ImageManifestFields = {
   updatedAt: S.DateTimeUtcFromString.annotateKey({
     description: "UTC instant at which the manifest was last updated.",
   }),
-} as const;
+};
 
 /**
  * Ordered image-reference manifest for one owner.
@@ -328,7 +331,7 @@ const ImageManifestFields = {
  * **Example** (Use ImageManifest)
  * ```ts
  * import { DateTime } from "effect"
- * import { ImageManifest } from "@effect-ontology/Model/Image.ts"
+ * import { ImageManifest } from "@effect-ontology/Model/Image"
  *
  * const manifest = ImageManifest.make({
  *   ownerType: "document",
@@ -355,7 +358,7 @@ export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
    * **Example** (Use ImageForPromptFields)
    * ```ts
    * import { DateTime } from "effect"
-   * import { ImageManifest } from "@effect-ontology/Model/Image.ts"
+   * import { ImageManifest } from "@effect-ontology/Model/Image"
    *
    * const manifest = ImageManifest.make({
    *   ownerType: "document",
@@ -408,14 +411,14 @@ const ImageForPromptFields = {
     SchemaUtils.withNoneDefault,
     S.annotateKey({ description: "Source asset digest retained for traceability." })
   ),
-} as const;
+};
 
 /**
  * Image payload prepared for multimodal model input.
  *
  * **Example** (Use ImageForPrompt)
  * ```ts
- * import { ImageForPrompt } from "@effect-ontology/Model/Image.ts"
+ * import { ImageForPrompt } from "@effect-ontology/Model/Image"
  *
  * const image = ImageForPrompt.make({
  *   base64: "AA==",
@@ -448,17 +451,18 @@ const ImageFetchResultFields = {
   candidate: ImageCandidate.annotateKey({
     description: "Discovery record that led to the fetch.",
   }),
-} as const;
+};
 
 /**
  * Successful result of fetching and identifying an image candidate.
  *
  * **Example** (Use ImageFetchResult)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ImageFetchResult } from "@effect-ontology/Model/Image.ts"
+ * import { ImageFetchResult } from "@effect-ontology/Model/Image"
  *
- * const result = S.decodeUnknownSync(ImageFetchResult)({
+ * const result = S.decodeUnknownOption(ImageFetchResult)({
  *   bytes: new Uint8Array([1]),
  *   hash: "c".repeat(64),
  *   contentType: "image/png",
@@ -470,7 +474,7 @@ const ImageFetchResultFields = {
  *   }
  * })
  *
- * console.log(result.bytes.length) // 1
+ * console.log(O.map(result, (value) => value.bytes.length)) // 1
  * ```
  *
  * @category models

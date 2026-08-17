@@ -1,5 +1,6 @@
 import { MimeType, NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -40,20 +41,22 @@ describe("effect-ontology schema-owned domain behavior", () => {
     expect(Result.isFailure(invalidBatchSize)).toBe(true);
   });
 
-  it("applies complete preprocessing defaults and Option-normalizes overrides", () => {
-    const defaults = S.decodeSync(PreprocessingOptions)({});
-    const override = S.decodeSync(PreprocessingOptions)({
-      chunkingStrategyOverride: "section_aware",
-    });
+  it.effect("applies complete preprocessing defaults and Option-normalizes overrides", () =>
+    Effect.gen(function* () {
+      const defaults = yield* S.decodeEffect(PreprocessingOptions)({});
+      const override = yield* S.decodeEffect(PreprocessingOptions)({
+        chunkingStrategyOverride: "section_aware",
+      });
 
-    expect(defaults.enabled).toBe(true);
-    expect(defaults.classifyDocuments).toBe(true);
-    expect(defaults.adaptiveChunking).toBe(true);
-    expect(defaults.priorityOrdering).toBe(true);
-    expect(defaults.classificationBatchSize).toBe(10);
-    expect(O.isNone(defaults.chunkingStrategyOverride)).toBe(true);
-    expect(override.chunkingStrategyOverride).toEqual(O.some("section_aware"));
-  });
+      expect(defaults.enabled).toBe(true);
+      expect(defaults.classifyDocuments).toBe(true);
+      expect(defaults.adaptiveChunking).toBe(true);
+      expect(defaults.priorityOrdering).toBe(true);
+      expect(defaults.classificationBatchSize).toBe(10);
+      expect(O.isNone(defaults.chunkingStrategyOverride)).toBe(true);
+      expect(override.chunkingStrategyOverride).toEqual(O.some("section_aware"));
+    })
+  );
 
   it("keeps token estimation and priority pure, deterministic, and schema-owned", () => {
     expect(DocumentMetadata.estimateTokens(NonNegativeInt.make(0))).toBe(0);
@@ -74,23 +77,26 @@ describe("effect-ontology schema-owned domain behavior", () => {
     expect(sparse).toBeLessThan(dense);
   });
 
-  it("constructs a complete conservative metadata fallback without nullish fields", () => {
-    const metadata = DocumentMetadata.fallback({
-      documentId: DocumentId.make("doc-abc123def456"),
-      sourceUri: GcsUri.fromUnknown("gs://beep-input/documents/report.txt"),
-      contentType: MimeType.make("text/plain"),
-      sizeBytes: NonNegativeInt.make(4_000),
-      preprocessedAt: S.decodeSync(S.DateTimeUtcFromString)("2026-07-25T12:00:00.000Z"),
-    });
+  it.effect("constructs a complete conservative metadata fallback without nullish fields", () =>
+    Effect.gen(function* () {
+      const preprocessedAt = yield* S.decodeEffect(S.DateTimeUtcFromString)("2026-07-25T12:00:00.000Z");
+      const metadata = DocumentMetadata.fallback({
+        documentId: DocumentId.make("doc-abc123def456"),
+        sourceUri: GcsUri.fromUnknown("gs://beep-input/documents/report.txt"),
+        contentType: MimeType.make("text/plain"),
+        sizeBytes: NonNegativeInt.make(4_000),
+        preprocessedAt,
+      });
 
-    expect(metadata.documentType).toBe("unknown");
-    expect(metadata.chunkingStrategy).toBe("standard");
-    expect(metadata.estimatedTokens).toBe(1_000);
-    expect(metadata.estimatedExtractionCost).toBe(2_000);
-    expect(O.isNone(metadata.title)).toBe(true);
-    expect(O.isNone(metadata.eventTime)).toBe(true);
-    expect(O.isNone(metadata.publishedAt)).toBe(true);
-  });
+      expect(metadata.documentType).toBe("unknown");
+      expect(metadata.chunkingStrategy).toBe("standard");
+      expect(metadata.estimatedTokens).toBe(1_000);
+      expect(metadata.estimatedExtractionCost).toBe(2_000);
+      expect(O.isNone(metadata.title)).toBe(true);
+      expect(O.isNone(metadata.eventTime)).toBe(true);
+      expect(O.isNone(metadata.publishedAt)).toBe(true);
+    })
+  );
 
   it("derives stable knowledge and job identifiers from the full content hash", () => {
     expect(ClaimId.fromContentHash(contentHash)).toBe("claim-aaaaaaaaaaaa");
@@ -100,28 +106,31 @@ describe("effect-ontology schema-owned domain behavior", () => {
     expect(BackgroundJobId.fromContentHash(contentHash)).toBe("job-aaaaaaaaaaaa");
   });
 
-  it("applies retry defaults and normalizes width-checked evidence spans", () => {
-    const metadata = JobMetadataSchema.fromUnknown({
-      id: BackgroundJobId.fromContentHash(contentHash),
-    });
-    const span = S.decodeSync(TextSpan)({
-      start: 4,
-      end: 9,
-      text: "Alice",
-    });
-    const mismatched = S.decodeResult(TextSpan)({
-      start: 4,
-      end: 8,
-      text: "Alice",
-    });
+  it.effect("applies retry defaults and normalizes width-checked evidence spans", () =>
+    Effect.gen(function* () {
+      const metadata = yield* S.decodeEffect(JobMetadataSchema)({
+        id: BackgroundJobId.fromContentHash(contentHash),
+      });
+      const span = yield* S.decodeEffect(TextSpan)({
+        start: 4,
+        end: 9,
+        text: "Alice",
+      });
+      const mismatched = S.decodeResult(TextSpan)({
+        start: 4,
+        end: 8,
+        text: "Alice",
+      });
+      const encoded = yield* S.encodeEffect(TextSpan)(span);
 
-    expect(metadata.attempts).toBe(0);
-    expect(O.isNone(metadata.lastError)).toBe(true);
-    expect(O.isNone(metadata.lastAttemptAt)).toBe(true);
-    expect(span.quote).toBe("Alice");
-    expect(span.startChar).toBe(4);
-    expect(span.endChar).toBe(9);
-    expect(S.encodeSync(TextSpan)(span)).toEqual({ start: 4, end: 9, text: "Alice" });
-    expect(Result.isFailure(mismatched)).toBe(true);
-  });
+      expect(metadata.attempts).toBe(0);
+      expect(O.isNone(metadata.lastError)).toBe(true);
+      expect(O.isNone(metadata.lastAttemptAt)).toBe(true);
+      expect(span.quote).toBe("Alice");
+      expect(span.startChar).toBe(4);
+      expect(span.endChar).toBe(9);
+      expect(encoded).toEqual({ start: 4, end: 9, text: "Alice" });
+      expect(Result.isFailure(mismatched)).toBe(true);
+    })
+  );
 });

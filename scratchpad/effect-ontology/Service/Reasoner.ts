@@ -1,6 +1,8 @@
 /**
  * Service: RDFS Reasoner
  *
+ * **Details**
+ *
  * Implements forward-chaining RDFS reasoning using N3.js Reasoner.
  * Supports type inference via rdfs:subClassOf, domain/range inference,
  * and custom N3 rules.
@@ -18,8 +20,10 @@ import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { LiteralKit, NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Context, Data, Effect, Layer, Schema } from "effect";
-import * as Clock from "effect/Clock";
+import { Clock, Context, Effect, Layer, Match } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { RdfStore } from "./Rdf.ts";
 import { cloneRdfStore, rdfStoreApplyRules, rdfStoreSize } from "./Rdf.ts";
 
@@ -32,25 +36,67 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Reasoner");
 /**
  * Error: Reasoning operation failed
  *
- * @since 0.0.0
+ * **Example** (Inspect reasoning error)
+ *
+ * ```ts
+ * import { ReasoningError } from "@effect-ontology/Service/Reasoner"
+ *
+ * console.log(ReasoningError)
+ * ```
+ *
  * @category errors
+ * @since 0.0.0
  */
-export class ReasoningError extends Data.TaggedError("ReasoningError")<{
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
+export class ReasoningError extends S.TaggedError<ReasoningError>($I`ReasoningError`)(
+  "ReasoningError",
+  {
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable reasoning failure diagnostic.",
+    }),
+    cause: OptionalErrorCause.annotateKey({
+      description: "Optional underlying reasoner defect.",
+    }),
+  },
+  $I.annote("ReasoningError", {
+    description: "Failure while applying inference rules to an RDF graph.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 /**
  * Error: Invalid N3 rule syntax
  *
- * @since 0.0.0
+ * **Example** (Inspect rule parse error)
+ *
+ * ```ts
+ * import { RuleParseError } from "@effect-ontology/Service/Reasoner"
+ *
+ * console.log(RuleParseError)
+ * ```
+ *
  * @category errors
+ * @since 0.0.0
  */
-export class RuleParseError extends Data.TaggedError("RuleParseError")<{
-  readonly message: string;
-  readonly rule: string;
-  readonly cause?: unknown;
-}> {}
+export class RuleParseError extends S.TaggedError<RuleParseError>($I`RuleParseError`)(
+  "RuleParseError",
+  {
+    message: ErrorMessage.annotateKey({
+      description: "Human-readable rule parsing diagnostic.",
+    }),
+    rule: S.NonEmptyString.annotateKey({
+      description: "N3 rule text that could not be parsed.",
+    }),
+    cause: OptionalErrorCause.annotateKey({
+      description: "Optional underlying parser defect.",
+    }),
+  },
+  $I.annote("RuleParseError", {
+    description: "Failure to parse an N3 inference rule.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 // =============================================================================
 // Domain Models
@@ -59,25 +105,68 @@ export class RuleParseError extends Data.TaggedError("RuleParseError")<{
 /**
  * Reasoning profile - predefined sets of RDFS/OWL rules
  *
+ * **Example** (Inspect reasoning profile)
+ *
+ * ```ts
+ * import { ReasoningProfile } from "@effect-ontology/Service/Reasoner"
+ *
+ * console.log(ReasoningProfile)
+ * ```
+ *
+ * @category services
  * @since 0.0.0
- * @category models
  */
 export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas", "custom"]);
+/**
+ * Describes the reasoning profile data exposed by this module.
+ *
+ *
+ * **Example** (Use the ReasoningProfile contract)
+ *
+ * ```ts
+ * import type { ReasoningProfile } from "@effect-ontology/Service/Reasoner"
+ *
+ * const acceptsReasoningProfile = (_value: ReasoningProfile): void => undefined
+ *
+ * console.log(acceptsReasoningProfile)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ReasoningProfile = typeof ReasoningProfile.Type;
 
 /**
  * Configuration for reasoning operations
  *
+ * **Example** (Inspect reasoning config)
+ *
+ * ```ts
+ * import { ReasoningConfig } from "@effect-ontology/Service/Reasoner"
+ *
+ * console.log(ReasoningConfig)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export class ReasoningConfig extends Schema.Class<ReasoningConfig>("ReasoningConfig")({
+export class ReasoningConfig extends S.Class<ReasoningConfig>("ReasoningConfig")({
   profile: ReasoningProfile.pipe(SchemaUtils.withKeyDefaults("rdfs")),
-  customRules: Schema.Array(Schema.String).pipe(SchemaUtils.withKeyDefaults([])),
+  customRules: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults([])),
   maxIterations: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(100))),
 }) {
   /**
    * Create default RDFS reasoning config
+   *
+   * **Example** (Inspect reasoning config.rdfs)
+   *
+   * ```ts
+   * import { ReasoningConfig } from "@effect-ontology/Service/Reasoner"
+   *
+   * console.log(ReasoningConfig)
+   * ```
+   *
+   * @returns Result produced by this operation.
    */
   static rdfs(): ReasoningConfig {
     return ReasoningConfig.make({ profile: "rdfs" });
@@ -85,6 +174,16 @@ export class ReasoningConfig extends Schema.Class<ReasoningConfig>("ReasoningCon
 
   /**
    * Create subclass-only reasoning config
+   *
+   * **Example** (Inspect reasoning config.subclass only)
+   *
+   * ```ts
+   * import { ReasoningConfig } from "@effect-ontology/Service/Reasoner"
+   *
+   * console.log(ReasoningConfig)
+   * ```
+   *
+   * @returns Result produced by this operation.
    */
   static subclassOnly(): ReasoningConfig {
     return ReasoningConfig.make({ profile: "rdfs-subclass" });
@@ -92,6 +191,17 @@ export class ReasoningConfig extends Schema.Class<ReasoningConfig>("ReasoningCon
 
   /**
    * Create custom rules config
+   *
+   * **Example** (Inspect reasoning config.custom)
+   *
+   * ```ts
+   * import { ReasoningConfig } from "@effect-ontology/Service/Reasoner"
+   *
+   * console.log(ReasoningConfig)
+   * ```
+   *
+   * @param rules - Input consumed by this operation.
+   * @returns Result produced by this operation.
    */
   static custom(rules: ReadonlyArray<string>): ReasoningConfig {
     return ReasoningConfig.make({ profile: "custom", customRules: [...rules] });
@@ -101,10 +211,18 @@ export class ReasoningConfig extends Schema.Class<ReasoningConfig>("ReasoningCon
 /**
  * Result of a reasoning operation
  *
+ * **Example** (Inspect reasoning result)
+ *
+ * ```ts
+ * import { ReasoningResult } from "@effect-ontology/Service/Reasoner"
+ *
+ * console.log(ReasoningResult)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export class ReasoningResult extends Schema.Class<ReasoningResult>("ReasoningResult")({
+export class ReasoningResult extends S.Class<ReasoningResult>("ReasoningResult")({
   inferredTripleCount: NonNegativeInt,
   totalTripleCount: NonNegativeInt,
   rulesApplied: NonNegativeInt,
@@ -112,6 +230,16 @@ export class ReasoningResult extends Schema.Class<ReasoningResult>("ReasoningRes
 }) {
   /**
    * True if any new triples were inferred
+   *
+   * **Example** (Inspect reasoning result.has inferences)
+   *
+   * ```ts
+   * import { ReasoningResult } from "@effect-ontology/Service/Reasoner"
+   *
+   * console.log(ReasoningResult)
+   * ```
+   *
+   * @returns Result produced by this operation.
    */
   get hasInferences(): boolean {
     return this.inferredTripleCount > 0;
@@ -234,18 +362,20 @@ const OWL_SAMEAS_SYMMETRY_RULE = `
 /**
  * Get rules for a reasoning profile
  */
-const getRulesForProfile = (profile: ReasoningProfile): ReadonlyArray<string> => {
-  switch (profile) {
-    case "rdfs":
-      return [RDFS_SUBCLASS_RULE, RDFS_SUBCLASS_CHAIN_RULE, RDFS_SUBPROPERTY_RULE, RDFS_DOMAIN_RULE, RDFS_RANGE_RULE];
-    case "rdfs-subclass":
-      return [RDFS_SUBCLASS_RULE, RDFS_SUBCLASS_CHAIN_RULE];
-    case "owl-sameas":
-      return [OWL_SAMEAS_RULE, OWL_SAMEAS_SYMMETRY_RULE];
-    case "custom":
-      return [];
-  }
-};
+const getRulesForProfile = (profile: ReasoningProfile): ReadonlyArray<string> =>
+  Match.value(profile).pipe(
+    Match.when("rdfs", () => [
+      RDFS_SUBCLASS_RULE,
+      RDFS_SUBCLASS_CHAIN_RULE,
+      RDFS_SUBPROPERTY_RULE,
+      RDFS_DOMAIN_RULE,
+      RDFS_RANGE_RULE,
+    ]),
+    Match.when("rdfs-subclass", () => [RDFS_SUBCLASS_RULE, RDFS_SUBCLASS_CHAIN_RULE]),
+    Match.when("owl-sameas", () => [OWL_SAMEAS_RULE, OWL_SAMEAS_SYMMETRY_RULE]),
+    Match.when("custom", () => []),
+    Match.exhaustive
+  );
 
 // =============================================================================
 // Service Definition
@@ -254,27 +384,22 @@ const getRulesForProfile = (profile: ReasoningProfile): ReadonlyArray<string> =>
 /**
  * Reasoner - RDFS/OWL reasoning service using N3.js
  *
+ * **Details**
+ *
  * Provides forward-chaining reasoning for knowledge graphs with support
  * for RDFS entailment rules and custom N3 rules.
  *
- * **Example** (Use Reasoner)
+ * **Example** (Inspect the reasoner layer)
+ *
  * ```ts
- * Effect.gen(function*() {
- *   const reasoner = yield* Reasoner
- *   const rdfBuilder = yield* RdfBuilder
+ * import { Layer } from "effect"
+ * import { Reasoner } from "@effect-ontology/Service/Reasoner"
  *
- *   const store = yield* rdfBuilder.createStore
- *   // ... add triples ...
- *
- *   // Apply RDFS reasoning
- *   const result = yield* reasoner.reason(store, ReasoningConfig.rdfs())
- *
- *   console.log(`Inferred ${result.inferredTripleCount} new triples`)
- * })
+ * console.log(Layer.isLayer(Reasoner.Default)) // true
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
   make: Effect.sync(() => {
@@ -309,12 +434,11 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
       }
 
       yield* rdfStoreApplyRules(store, allRules).pipe(
-        Effect.mapError(
-          (error) =>
-            new ReasoningError({
-              message: error.message,
-              cause: error,
-            })
+        Effect.mapError((error) =>
+          ReasoningError.make({
+            message: error.message,
+            cause: O.some(error),
+          })
         )
       );
 

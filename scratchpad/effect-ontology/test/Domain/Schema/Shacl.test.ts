@@ -5,6 +5,7 @@ import {
   ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
 import { describe, expect, it } from "@effect/vitest";
+import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -50,28 +51,31 @@ describe("effect-ontology SHACL schemas", () => {
     }
   });
 
-  it("wraps the canonical SHACL result with experiment execution metadata", () => {
-    const emptyReport = S.decodeResult(ShaclValidationReport)({
-      validation: { conforms: true, violations: [], truncated: false },
-      validatedAt: "2026-07-25T12:00:00.000Z",
-      dataGraphTripleCount: 42,
-      shapesGraphTripleCount: 8,
-      durationMs: 12.5,
-    });
-    const reportWithResult = ShaclValidationReport.fromUnknown({
-      validation: S.encodeSync(ShaclValidationResult)(
+  it.effect("wraps the canonical SHACL result with experiment execution metadata", () =>
+    Effect.gen(function* () {
+      const emptyReport = S.decodeResult(ShaclValidationReport)({
+        validation: { conforms: true, violations: [], truncated: false },
+        validatedAt: "2026-07-25T12:00:00.000Z",
+        dataGraphTripleCount: 42,
+        shapesGraphTripleCount: 8,
+        durationMs: 12.5,
+      });
+      const validation = yield* S.encodeEffect(ShaclValidationResult)(
         ShaclValidationResult.make({ conforms: false, violations: [violation], truncated: false })
-      ),
-      validatedAt: "2026-07-25T12:00:00.000Z",
-      dataGraphTripleCount: 42,
-      shapesGraphTripleCount: 8,
-      durationMs: 12.5,
-    });
+      );
+      const reportWithResult = yield* S.decodeEffect(ShaclValidationReport)({
+        validation,
+        validatedAt: "2026-07-25T12:00:00.000Z",
+        dataGraphTripleCount: 42,
+        shapesGraphTripleCount: 8,
+        durationMs: 12.5,
+      });
 
-    expect(Result.isSuccess(emptyReport)).toBe(true);
-    expect(reportWithResult.validation.conforms).toBe(false);
-    expect(reportWithResult.validation.violations).toEqual([violation]);
-  });
+      expect(Result.isSuccess(emptyReport)).toBe(true);
+      expect(reportWithResult.validation.conforms).toBe(false);
+      expect(reportWithResult.validation.violations).toEqual([violation]);
+    })
+  );
 
   it("applies schema defaults and keeps workflow policy separate from report conformance", () => {
     const defaults = ValidationPolicy.fromUnknown({});

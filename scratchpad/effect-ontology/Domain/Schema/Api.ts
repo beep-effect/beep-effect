@@ -45,7 +45,7 @@ const SubmitJobSourceDefinition = S.TaggedUnion({
  *
  * **Example** (Use SubmitJobSource)
  * ```ts
- * import { SubmitJobSource } from "@effect-ontology/Schema/Api.ts"
+ * import { SubmitJobSource } from "@effect-ontology/Schema/Api"
  *
  * const source = SubmitJobSource.cases.Inline.make({
  *   value: { text: "Ada Lovelace wrote the first published algorithm." }
@@ -70,7 +70,7 @@ export const SubmitJobSource = SubmitJobSourceDefinition.pipe(
  *
  * **Example** (Use SubmitJobSource)
  * ```ts
- * import type { SubmitJobSource } from "@effect-ontology/Schema/Api.ts"
+ * import type { SubmitJobSource } from "@effect-ontology/Schema/Api"
  *
  * const tag = (source: SubmitJobSource) => source._tag
  * console.log(typeof tag) // "function"
@@ -91,7 +91,7 @@ const SubmitJobRequestFields = {
       description: "Optional run-configuration override; absence delegates policy to the server.",
     })
   ),
-} as const;
+};
 
 /**
  * Request to submit one extraction job.
@@ -104,7 +104,7 @@ const SubmitJobRequestFields = {
  *
  * **Example** (Use SubmitJobRequest)
  * ```ts
- * import { SubmitJobRequest, SubmitJobSource } from "@effect-ontology/Schema/Api.ts"
+ * import { SubmitJobRequest, SubmitJobSource } from "@effect-ontology/Schema/Api"
  *
  * const request = SubmitJobRequest.make({
  *   source: SubmitJobSource.cases.Inline.make({
@@ -133,13 +133,14 @@ export class SubmitJobRequest extends S.Class<SubmitJobRequest>($I`SubmitJobRequ
    *
    * **Example** (Use JobStatus)
    * ```ts
-   * import { Effect } from "effect"
-   * import { SubmitJobRequest } from "@effect-ontology/Schema/Api.ts"
+   * import * as Effect from "effect/Effect"
+   * import { SubmitJobRequest } from "@effect-ontology/Schema/Api"
    *
-   * const program = SubmitJobRequest.validate({
-   *   source: { _tag: "Inline", value: { text: "Hello" } }
+   * const program = Effect.gen(function* () {
+   *   return yield* SubmitJobRequest.validate({
+   *     source: { _tag: "Inline", value: { text: "Hello" } }
+   *   })
    * })
-   * Effect.runPromise(program)
    * ```
    *
    * @category decoding
@@ -156,7 +157,7 @@ export class SubmitJobRequest extends S.Class<SubmitJobRequest>($I`SubmitJobRequ
  *
  * **Example** (Use JobStatus)
  * ```ts
- * import { JobStatus } from "@effect-ontology/Schema/Api.ts"
+ * import { JobStatus } from "@effect-ontology/Schema/Api"
  *
  * console.log(JobStatus.is.running("running")) // true
  * ```
@@ -179,7 +180,7 @@ export const JobStatus = LiteralKit(["pending", "running", "completed", "failed"
  *
  * **Example** (Use JobStatus)
  * ```ts
- * import type { JobStatus } from "@effect-ontology/Schema/Api.ts"
+ * import type { JobStatus } from "@effect-ontology/Schema/Api"
  *
  * const status: JobStatus = "completed"
  * console.log(status)
@@ -195,7 +196,7 @@ export type JobStatus = typeof JobStatus.Type;
  *
  * **Example** (Use JobErrorType)
  * ```ts
- * import { JobErrorType } from "@effect-ontology/Schema/Api.ts"
+ * import { JobErrorType } from "@effect-ontology/Schema/Api"
  *
  * console.log(JobErrorType.is.timeout("timeout")) // true
  * ```
@@ -218,7 +219,7 @@ export const JobErrorType = LiteralKit(["expected", "defect", "interrupted", "ti
  *
  * **Example** (Use JobErrorType)
  * ```ts
- * import type { JobErrorType } from "@effect-ontology/Schema/Api.ts"
+ * import type { JobErrorType } from "@effect-ontology/Schema/Api"
  *
  * const type: JobErrorType = "expected"
  * console.log(type)
@@ -242,23 +243,24 @@ const JobProgressFields = {
   relationsExtracted: NonNegativeInt.annotateKey({
     description: "Relations extracted so far.",
   }),
-} as const;
+};
 
 /**
  * Non-negative progress counters for an extraction job.
  *
  * **Example** (Use JobProgress)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { JobProgress } from "@effect-ontology/Schema/Api.ts"
+ * import { JobProgress } from "@effect-ontology/Schema/Api"
  *
- * const progress = S.decodeUnknownSync(JobProgress)({
+ * const progress = S.decodeUnknownOption(JobProgress)({
  *   chunksTotal: 2,
  *   chunksProcessed: 1,
  *   entitiesExtracted: 3,
  *   relationsExtracted: 2
  * })
- * console.log(progress.chunksProcessed) // 1
+ * console.log(O.map(progress, (value) => value.chunksProcessed)) // 1
  * ```
  *
  * @invariant Every counter is a non-negative integer.
@@ -279,7 +281,7 @@ const JobFailureFields = {
   type: JobErrorType.annotateKey({
     description: "Coarse origin category for the terminal failure.",
   }),
-} as const;
+};
 
 class JobFailure extends S.Class<JobFailure>($I`JobFailure`)(
   JobFailureFields,
@@ -298,7 +300,7 @@ const JobResponseCommonFields = {
   progress: JobProgress.annotateKey({
     description: "Current non-negative extraction progress counters.",
   }),
-} as const;
+};
 
 const JobStatusResponseDefinition = S.Union([
   S.Struct({
@@ -337,7 +339,7 @@ const JobStatusResponseDefinition = S.Union([
  *
  * **Example** (Use JobStatusResponse)
  * ```ts
- * import { JobStatusResponse } from "@effect-ontology/Schema/Api.ts"
+ * import { JobStatusResponse } from "@effect-ontology/Schema/Api"
  *
  * console.log(Object.keys(JobStatusResponse.cases)) // lifecycle variants
  * ```
@@ -359,7 +361,7 @@ export const JobStatusResponse = JobStatusResponseDefinition.pipe(
  *
  * **Example** (Use JobStatusResponse)
  * ```ts
- * import type { JobStatusResponse } from "@effect-ontology/Schema/Api.ts"
+ * import type { JobStatusResponse } from "@effect-ontology/Schema/Api"
  *
  * const status = (response: JobStatusResponse) => response.status
  * console.log(typeof status) // "function"

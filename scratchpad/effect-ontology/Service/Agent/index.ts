@@ -1,6 +1,8 @@
 /**
  * Agent Service Exports
  *
+ * **Details**
+ *
  * Multi-agent orchestration framework for ontology extraction pipelines.
  *
  * @packageDocumentation

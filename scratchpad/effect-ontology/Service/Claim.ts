@@ -1,6 +1,8 @@
 /**
  * Service: Claim
  *
+ * **Details**
+ *
  * High-level service for claim management with RDF serialization.
  * Wraps ClaimRepository with additional business logic and RDF reification.
  *
@@ -14,10 +16,9 @@ import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@
 import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { Context, DateTime, Effect, Layer } from "effect";
+import { Context, DateTime, Effect, Layer, Random } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Random from "effect/Random";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import type { ClaimFilter } from "../Repository/Claim.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
@@ -74,8 +75,19 @@ const randomUuid = Effect.all([
 /**
  * Input for creating a new claim
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the CreateClaimInput contract)
+ *
+ * ```ts
+ * import type { CreateClaimInput } from "@effect-ontology/Service/Claim"
+ *
+ * const acceptsCreateClaimInput = (_value: CreateClaimInput): void => undefined
+ *
+ * console.log(acceptsCreateClaimInput)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface CreateClaimInput {
   readonly subjectIri: string;
@@ -97,8 +109,19 @@ export interface CreateClaimInput {
 /**
  * Result of deprecating a claim
  *
- * @since 0.0.0
+ *
+ * **Example** (Use the DeprecationResult contract)
+ *
+ * ```ts
+ * import type { DeprecationResult } from "@effect-ontology/Service/Claim"
+ *
+ * const acceptsDeprecationResult = (_value: DeprecationResult): void => undefined
+ *
+ * console.log(acceptsDeprecationResult)
+ * ```
+ *
  * @category type-level
+ * @since 0.0.0
  */
 export interface DeprecationResult {
   readonly claimId: string;
@@ -114,6 +137,8 @@ export interface DeprecationResult {
 /**
  * ClaimService - High-level claim management
  *
+ * **Details**
+ *
  * Provides claim lifecycle operations with RDF serialization support.
  * Uses ClaimRepository for persistence and generates reified RDF triples.
  *
@@ -125,25 +150,17 @@ export interface DeprecationResult {
  * - `getClaimHistory`: Get all claims for a subject+predicate over time
  * - `toReifiedTriples`: Convert claim to reified RDF quads
  *
- * **Example** (Use ClaimService)
- * ```ts
- * Effect.gen(function*() {
- *   const claim = yield* ClaimService.createClaim({
- *     subjectIri: "http://example.org/person/123",
- *     predicateIri: "http://schema.org/name",
- *     objectValue: "John Doe",
- *     objectType: "literal",
- *     articleId: "article-001",
- *     confidence: 0.95
- *   })
+ * **Example** (Inspect the claim-service layer)
  *
- *   const quads = yield* ClaimService.toReifiedTriples(claim)
- *   // Generates reified RDF quads with CLAIMS vocabulary
- * }).pipe(Effect.provide(ClaimService.Default))
+ * ```ts
+ * import { Layer } from "effect"
+ * import { ClaimService } from "@effect-ontology/Service/Claim"
+ *
+ * console.log(Layer.isLayer(ClaimService.Default)) // true
  * ```
  *
- * @since 0.0.0
  * @category services
+ * @since 0.0.0
  */
 export class ClaimService extends Context.Service<ClaimService>()($I`ClaimService`, {
   make: Effect.gen(function* () {

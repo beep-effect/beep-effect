@@ -1,6 +1,8 @@
 /**
  * Persistence Module
  *
+ * **Details**
+ *
  * Provides layers for workflow persistence backends and database migrations.
  *
  * @packageDocumentation

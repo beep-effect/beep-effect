@@ -1,6 +1,8 @@
 /**
  * Cluster Module
  *
+ * **Details**
+ *
  * Effect Cluster integration for distributed knowledge graph extraction:
  * - Entity-based sharding by idempotency key
  * - Streaming progress events with backpressure

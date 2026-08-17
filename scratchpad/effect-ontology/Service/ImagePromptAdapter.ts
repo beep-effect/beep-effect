@@ -1,6 +1,8 @@
 /**
  * ImagePromptAdapter Service
  *
+ * **Details**
+ *
  * Adapts stored images for LLM multimodal prompts.
  * Converts ImageRef[] to ImageForPrompt[] with base64 encoding,
  * and provides helpers for building @effect/ai Prompt.Part[].
@@ -10,11 +12,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { Context, Effect, Encoding, Layer } from "effect";
 import * as A from "effect/Array";
-import * as Context from "effect/Context";
-import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
-import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
@@ -35,18 +35,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImagePromptAdapter");
 /**
  * Convert Uint8Array to base64 string
  */
-const toBase64 = (bytes: Uint8Array): string => {
-  // Use Buffer in Node.js/Bun environment
-  if (typeof Buffer !== "undefined") {
-    return Buffer.from(bytes).toString("base64");
-  }
-  // Fallback for browser (though we're primarily server-side)
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-};
+const toBase64 = (bytes: Uint8Array): string => Encoding.encodeBase64(bytes);
 
 /**
  * Get file extension from media type
@@ -70,10 +59,23 @@ const getExtension = (mediaType: string): string => {
 /**
  * ImagePromptAdapter service interface
  *
+ * **Details**
+ *
  * Prepares images for LLM multimodal prompts.
  *
+ *
+ * **Example** (Use the ImagePromptAdapterService contract)
+ *
+ * ```ts
+ * import type { ImagePromptAdapterService } from "@effect-ontology/Service/ImagePromptAdapter"
+ *
+ * const acceptsImagePromptAdapterService = (_value: ImagePromptAdapterService): void => undefined
+ *
+ * console.log(acceptsImagePromptAdapterService)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category services
  */
 export interface ImagePromptAdapterService {
   /**
@@ -123,8 +125,16 @@ export interface ImagePromptAdapterService {
 /**
  * ImagePromptAdapter service tag
  *
+ * **Example** (Inspect image prompt adapter)
+ *
+ * ```ts
+ * import { ImagePromptAdapter } from "@effect-ontology/Service/ImagePromptAdapter"
+ *
+ * console.log(ImagePromptAdapter)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, ImagePromptAdapterService>()(
   $I`ImagePromptAdapter`
@@ -249,13 +259,22 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
 /**
  * Convert ImageForPrompt[] to Prompt.FilePart[] without service dependency
  *
+ * **Details**
+ *
  * Useful for testing or when images are already loaded.
+ *
+ * **Example** (Inspect images to prompt parts)
+ *
+ * ```ts
+ * import { imagesToPromptParts } from "@effect-ontology/Service/ImagePromptAdapter"
+ *
+ * console.log(imagesToPromptParts)
+ * ```
  *
  * @param images - Images to convert
  * @returns Array of Prompt.FilePart objects
- *
+ * @category services
  * @since 0.0.0
- * @category utilities
  */
 export const imagesToPromptParts = (images: ReadonlyArray<ImageForPrompt>): ReadonlyArray<Prompt.FilePart> =>
   A.map(images, (img, index) =>
@@ -269,14 +288,23 @@ export const imagesToPromptParts = (images: ReadonlyArray<ImageForPrompt>): Read
 /**
  * Build multimodal user message content with text and images
  *
+ * **Details**
+ *
  * Standalone function for building user message parts.
+ *
+ * **Example** (Inspect build multimodal content)
+ *
+ * ```ts
+ * import { buildMultimodalContent } from "@effect-ontology/Service/ImagePromptAdapter"
+ *
+ * console.log(buildMultimodalContent)
+ * ```
  *
  * @param text - Text content
  * @param images - Images to include (optional)
  * @returns Array of UserMessagePart objects
- *
+ * @category factories
  * @since 0.0.0
- * @category utilities
  */
 export const buildMultimodalContent = dual2(
   (text: string, images: ReadonlyArray<ImageForPrompt> | undefined): ReadonlyArray<Prompt.UserMessagePart> => {

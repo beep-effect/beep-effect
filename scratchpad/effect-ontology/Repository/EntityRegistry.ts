@@ -1,6 +1,8 @@
 /**
  * Entity Registry Repository
  *
+ * **Details**
+ *
  * Effect-native repository for the entity registry using Drizzle ORM.
  * Provides typed access to canonical entities, aliases, and blocking tokens
  * with support for pgvector similarity search.
@@ -10,16 +12,16 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Layer } from "effect";
+import { Context, Effect, HashSet, Layer } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as SqlError from "effect/unstable/sql/SqlError";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/EntityRegistry");
 
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, eq, inArray } from "drizzle-orm";
-import { Effect, Option } from "effect";
-import * as HashSet from "effect/HashSet";
-import type { SqlError } from "effect/unstable/sql";
 import { SqlClient } from "effect/unstable/sql";
 import type {
   CanonicalEntityInsertRow,
@@ -34,11 +36,56 @@ import { canonicalEntities, entityAliases, entityBlockingTokens } from "./schema
 // Types
 // =============================================================================
 
+/**
+ * Describes the canonical entity id data exposed by this module.
+ *
+ * **Example** (Create CanonicalEntityId)
+ *
+ * ```ts
+ * import type { CanonicalEntityId } from "@effect-ontology/Repository/EntityRegistry"
+ *
+ * const canonicalEntityId: CanonicalEntityId = "canonical-entity-id-1"
+ *
+ * console.log(canonicalEntityId)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CanonicalEntityId = string;
+/**
+ * Describes the entity alias id data exposed by this module.
+ *
+ * **Example** (Create EntityAliasId)
+ *
+ * ```ts
+ * import type { EntityAliasId } from "@effect-ontology/Repository/EntityRegistry"
+ *
+ * const entityAliasId: EntityAliasId = "entity-alias-id-1"
+ *
+ * console.log(entityAliasId)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type EntityAliasId = string;
 
 /**
  * A candidate entity returned from blocking/similarity search
+ *
+ * **Example** (Reference BlockingCandidate fields)
+ *
+ * ```ts
+ * import type { BlockingCandidate } from "@effect-ontology/Repository/EntityRegistry"
+ *
+ * const blockingCandidateFields: ReadonlyArray<keyof BlockingCandidate> = ["canonicalEntityId", "iri", "mention"]
+ *
+ * console.log(blockingCandidateFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface BlockingCandidate {
   readonly canonicalEntityId: string;
@@ -48,6 +95,22 @@ export interface BlockingCandidate {
   readonly similarity: number;
 }
 
+/**
+ * Describes the canonical entity filter data exposed by this module.
+ *
+ * **Example** (Reference CanonicalEntityFilter fields)
+ *
+ * ```ts
+ * import type { CanonicalEntityFilter } from "@effect-ontology/Repository/EntityRegistry"
+ *
+ * const canonicalEntityFilterFields: ReadonlyArray<keyof CanonicalEntityFilter> = ["ontologyId", "types", "limit"]
+ *
+ * console.log(canonicalEntityFilterFields)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export interface CanonicalEntityFilter {
   readonly ontologyId?: string;
   readonly types?: ReadonlyArray<string>;
@@ -55,10 +118,104 @@ export interface CanonicalEntityFilter {
   readonly offset?: number;
 }
 
+const PgVector = S.Finite.pipe(
+  S.Array,
+  S.fromJsonString,
+  $I.annoteSchema("PgVector", {
+    description: "PostgreSQL pgvector text decoded to a finite numeric vector.",
+  })
+);
+
+const CanonicalEntitySqlRow = S.Struct({
+  id: S.String,
+  ontologyId: S.String,
+  iri: S.String,
+  canonicalMention: S.String,
+  types: S.String.pipe(S.Array, S.mutable),
+  embedding: PgVector,
+  mergeCount: S.NullOr(S.Int),
+  confidenceAvg: S.NullOr(S.String),
+  firstSeenAt: S.NullOr(S.Date),
+  lastSeenAt: S.NullOr(S.Date),
+  createdAt: S.NullOr(S.Date),
+  updatedAt: S.NullOr(S.Date),
+}).pipe(
+  $I.annoteSchema("CanonicalEntitySqlRow", {
+    description: "Decoded canonical-entity row returned by raw PostgreSQL queries.",
+  })
+);
+
+const EntityAliasSqlRow = S.Struct({
+  id: S.String,
+  ontologyId: S.String,
+  canonicalEntityId: S.String,
+  mention: S.String,
+  mentionNormalized: S.String,
+  embedding: S.NullOr(PgVector),
+  resolutionMethod: S.String,
+  resolutionConfidence: S.String,
+  firstBatchId: S.NullOr(S.String),
+  sourceArticleId: S.NullOr(S.String),
+  createdAt: S.NullOr(S.Date),
+}).pipe(
+  $I.annoteSchema("EntityAliasSqlRow", {
+    description: "Decoded entity-alias row returned by raw PostgreSQL queries.",
+  })
+);
+
+const BlockingCandidateSqlRow = S.Struct({
+  canonicalEntityId: S.String,
+  iri: S.String,
+  mention: S.String,
+  types: S.Array(S.String),
+  similarity: S.Finite,
+}).pipe(
+  $I.annoteSchema("BlockingCandidateSqlRow", {
+    description: "Decoded blocking or vector-search candidate returned by PostgreSQL.",
+  })
+);
+
+const CountSqlRow = S.Struct({ count: S.Int }).pipe(
+  $I.annoteSchema("CountSqlRow", {
+    description: "Decoded integer count projection returned by PostgreSQL.",
+  })
+);
+
+const RegistryStatsSqlRow = S.Struct({
+  entityCount: S.Int,
+  aliasCount: S.Int,
+  tokenCount: S.Int,
+  totalMerges: S.Int,
+}).pipe(
+  $I.annoteSchema("RegistryStatsSqlRow", {
+    description: "Decoded aggregate statistics for the entity registry.",
+  })
+);
+
+const decodeOneCanonicalEntitySqlRow = S.decodeUnknownEffect(S.Tuple([CanonicalEntitySqlRow]));
+const decodeOneEntityAliasSqlRow = S.decodeUnknownEffect(S.Tuple([EntityAliasSqlRow]));
+const decodeBlockingCandidateSqlRows = S.decodeUnknownEffect(S.mutable(S.Array(BlockingCandidateSqlRow)));
+const decodeOneCountSqlRow = S.decodeUnknownEffect(S.Tuple([CountSqlRow]));
+const decodeOneRegistryStatsSqlRow = S.decodeUnknownEffect(S.Tuple([RegistryStatsSqlRow]));
+
 // =============================================================================
 // Service
 // =============================================================================
 
+/**
+ * Provides repository access for entity registry repository.
+ *
+ * **Example** (Inspect entity registry repository)
+ *
+ * ```ts
+ * import { EntityRegistryRepository } from "@effect-ontology/Repository/EntityRegistry"
+ *
+ * console.log(EntityRegistryRepository)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class EntityRegistryRepository extends Context.Service<EntityRegistryRepository>()(
   $I`EntityRegistryRepository`,
   {
@@ -73,7 +230,9 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
       /**
        * Insert a new canonical entity
        */
-      const insertCanonicalEntity = Effect.fn("insertCanonicalEntity")(function* (entity: CanonicalEntityInsertRow) {
+      const insertCanonicalEntity = Effect.fn("insertCanonicalEntity")(function* (
+        entity: CanonicalEntityInsertRow
+      ): Effect.fn.Return<CanonicalEntityRow, SqlError.SqlError> {
         const result = yield* sql`
           INSERT INTO canonical_entities (ontology_id, iri, canonical_mention, types, embedding, merge_count, confidence_avg)
           VALUES (
@@ -85,10 +244,23 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
             ${entity.mergeCount ?? 1},
             ${entity.confidenceAvg ?? null}
           )
-          RETURNING id, ontology_id, iri, canonical_mention, types, merge_count, confidence_avg,
-                    first_seen_at, last_seen_at, created_at, updated_at
+          RETURNING id,
+                    ontology_id as "ontologyId",
+                    iri,
+                    canonical_mention as "canonicalMention",
+                    types,
+                    embedding::text as embedding,
+                    merge_count as "mergeCount",
+                    confidence_avg as "confidenceAvg",
+                    first_seen_at as "firstSeenAt",
+                    last_seen_at as "lastSeenAt",
+                    created_at as "createdAt",
+                    updated_at as "updatedAt"
         `;
-        return result[0] as CanonicalEntityRow;
+        const [row] = yield* decodeOneCanonicalEntitySqlRow(result).pipe(
+          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.insertCanonicalEntity", cause))
+        );
+        return row;
       });
 
       /**
@@ -96,7 +268,7 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
        */
       const getCanonicalEntity = Effect.fn("getCanonicalEntity")(function* (id: CanonicalEntityId) {
         const [result] = yield* drizzle.select().from(canonicalEntities).where(eq(canonicalEntities.id, id)).limit(1);
-        return Option.fromNullishOr(result);
+        return O.fromNullishOr(result);
       });
 
       /**
@@ -115,7 +287,7 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
           .from(canonicalEntities)
           .where(and(...conditions))
           .limit(1);
-        return Option.fromNullishOr(result);
+        return O.fromNullishOr(result);
       });
 
       /**
@@ -171,8 +343,8 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
               LIMIT ${k}
             `;
 
-          return results as unknown as Array<BlockingCandidate>;
-        });
+          return yield* decodeBlockingCandidateSqlRows(results);
+        }).pipe(Effect.mapError((cause) => toSqlError("EntityRegistryRepository.findSimilarEntities", cause)));
 
       /**
        * Find candidates via token blocking
@@ -195,16 +367,16 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
             ce.iri,
             ce.canonical_mention as mention,
             ce.types,
-            0.0 as similarity
+            0.0::double precision as similarity
           FROM entity_blocking_tokens bt
           JOIN canonical_entities ce ON bt.canonical_entity_id = ce.id
           WHERE bt.ontology_id = ${ontologyId}
-            AND bt.token = ANY(${tokens as Array<string>}::text[])
+            AND bt.token = ANY(${tokens}::text[])
           LIMIT ${k}
         `;
 
-          return results as unknown as Array<BlockingCandidate>;
-        });
+          return yield* decodeBlockingCandidateSqlRows(results);
+        }).pipe(Effect.mapError((cause) => toSqlError("EntityRegistryRepository.findCandidatesByTokens", cause)));
 
       /**
        * Update canonical entity after merge
@@ -242,11 +414,10 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
        */
       const countCanonicalEntities = Effect.fn("countCanonicalEntities")(function* () {
         const result = yield* sql`SELECT COUNT(*)::int as count FROM canonical_entities`;
-        return (
-          result[0] as {
-            count: number;
-          }
-        ).count;
+        const [row] = yield* decodeOneCountSqlRow(result).pipe(
+          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.countCanonicalEntities", cause))
+        );
+        return row.count;
       });
 
       // -------------------------------------------------------------------------
@@ -256,7 +427,9 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
       /**
        * Insert an entity alias (upsert on ontology_id + mention_normalized)
        */
-      const insertAlias = Effect.fn("insertAlias")(function* (alias: EntityAliasInsertRow) {
+      const insertAlias = Effect.fn("insertAlias")(function* (
+        alias: EntityAliasInsertRow
+      ): Effect.fn.Return<EntityAliasRow, SqlError.SqlError> {
         const embeddingValue = P.isNotNullish(alias.embedding) ? formatVector(alias.embedding) : null;
         const result = yield* sql`
           INSERT INTO entity_aliases (
@@ -277,11 +450,22 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
           ON CONFLICT (ontology_id, mention_normalized) DO UPDATE SET
             canonical_entity_id = EXCLUDED.canonical_entity_id,
             resolution_confidence = GREATEST(entity_aliases.resolution_confidence, EXCLUDED.resolution_confidence)
-          RETURNING id, ontology_id, canonical_entity_id, mention, mention_normalized,
-                    resolution_method, resolution_confidence, first_batch_id,
-                    source_article_id, created_at
+          RETURNING id,
+                    ontology_id as "ontologyId",
+                    canonical_entity_id as "canonicalEntityId",
+                    mention,
+                    mention_normalized as "mentionNormalized",
+                    embedding::text as embedding,
+                    resolution_method as "resolutionMethod",
+                    resolution_confidence as "resolutionConfidence",
+                    first_batch_id as "firstBatchId",
+                    source_article_id as "sourceArticleId",
+                    created_at as "createdAt"
         `;
-        return result[0] as EntityAliasRow;
+        const [row] = yield* decodeOneEntityAliasSqlRow(result).pipe(
+          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.insertAlias", cause))
+        );
+        return row;
       });
 
       /**
@@ -297,7 +481,7 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
           .from(entityAliases)
           .where(and(eq(entityAliases.ontologyId, ontologyId), eq(entityAliases.mentionNormalized, normalized)))
           .limit(1);
-        return Option.fromNullishOr(result);
+        return O.fromNullishOr(result);
       });
 
       /**
@@ -314,11 +498,10 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
           SELECT COUNT(*)::int as count FROM entity_aliases
           WHERE canonical_entity_id = ${canonicalId}
         `;
-        return (
-          result[0] as {
-            count: number;
-          }
-        ).count;
+        const [row] = yield* decodeOneCountSqlRow(result).pipe(
+          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.countAliases", cause))
+        );
+        return row.count;
       });
 
       // -------------------------------------------------------------------------
@@ -403,24 +586,22 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
         const result = P.isNotUndefined(ontologyId)
           ? yield* sql`
               SELECT
-                (SELECT COUNT(*)::int FROM canonical_entities WHERE ontology_id = ${ontologyId}) as entity_count,
-                (SELECT COUNT(*)::int FROM entity_aliases WHERE ontology_id = ${ontologyId}) as alias_count,
-                (SELECT COUNT(*)::int FROM entity_blocking_tokens WHERE ontology_id = ${ontologyId}) as token_count,
-                (SELECT COALESCE(SUM(merge_count), 0)::int FROM canonical_entities WHERE ontology_id = ${ontologyId}) as total_merges
+                (SELECT COUNT(*)::int FROM canonical_entities WHERE ontology_id = ${ontologyId}) as "entityCount",
+                (SELECT COUNT(*)::int FROM entity_aliases WHERE ontology_id = ${ontologyId}) as "aliasCount",
+                (SELECT COUNT(*)::int FROM entity_blocking_tokens WHERE ontology_id = ${ontologyId}) as "tokenCount",
+                (SELECT COALESCE(SUM(merge_count), 0)::int FROM canonical_entities WHERE ontology_id = ${ontologyId}) as "totalMerges"
             `
           : yield* sql`
               SELECT
-                (SELECT COUNT(*)::int FROM canonical_entities) as entity_count,
-                (SELECT COUNT(*)::int FROM entity_aliases) as alias_count,
-                (SELECT COUNT(*)::int FROM entity_blocking_tokens) as token_count,
-                (SELECT COALESCE(SUM(merge_count), 0)::int FROM canonical_entities) as total_merges
+                (SELECT COUNT(*)::int FROM canonical_entities) as "entityCount",
+                (SELECT COUNT(*)::int FROM entity_aliases) as "aliasCount",
+                (SELECT COUNT(*)::int FROM entity_blocking_tokens) as "tokenCount",
+                (SELECT COALESCE(SUM(merge_count), 0)::int FROM canonical_entities) as "totalMerges"
             `;
-        return result[0] as {
-          entity_count: number;
-          alias_count: number;
-          token_count: number;
-          total_merges: number;
-        };
+        const [row] = yield* decodeOneRegistryStatsSqlRow(result).pipe(
+          Effect.mapError((cause) => toSqlError("EntityRegistryRepository.getStats", cause))
+        );
+        return row;
       });
 
       return {
@@ -465,6 +646,14 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
  */
 function formatVector(vector: ReadonlyArray<number>): string {
   return `[${vector.join(",")}]`;
+}
+
+function toSqlError(operation: string, cause: unknown): SqlError.SqlError {
+  return SqlError.isSqlError(cause)
+    ? cause
+    : SqlError.SqlError.make({
+        reason: SqlError.UnknownError.make({ cause, operation }),
+      });
 }
 
 /**

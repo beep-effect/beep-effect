@@ -1,7 +1,7 @@
 import { IRI } from "@beep/rdf/Iri";
 import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
-import { DateTime } from "effect";
+import { DateTime, Effect } from "effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -52,47 +52,52 @@ describe("effect-ontology model behavior", () => {
     expect(Result.isFailure(interval)).toBe(true);
   });
 
-  it("decodes legacy evidence into canonical quote fields and rejects width mismatches", () => {
-    const span = S.decodeSync(EvidenceSpan)({
-      text: "Seattle",
-      startChar: 10,
-      endChar: 17,
-      confidence: 0.9,
-    });
-    const mismatched = S.decodeResult(EvidenceSpan)({
-      text: "Seattle",
-      startChar: 10,
-      endChar: 18,
-    });
-    const legacy = S.encodeSync(EvidenceSpan)(span);
+  it.effect("decodes legacy evidence into canonical quote fields and rejects width mismatches", () =>
+    Effect.gen(function* () {
+      const span = yield* S.decodeEffect(EvidenceSpan)({
+        text: "Seattle",
+        startChar: 10,
+        endChar: 17,
+        confidence: 0.9,
+      });
+      const mismatched = S.decodeResult(EvidenceSpan)({
+        text: "Seattle",
+        startChar: 10,
+        endChar: 18,
+      });
+      const legacy = yield* S.encodeEffect(EvidenceSpan)(span);
 
-    expect(span.quote).toBe("Seattle");
-    expect(O.getOrThrow(span.confidence)).toBe(0.9);
-    expect(legacy).toEqual({
-      text: "Seattle",
-      startChar: 10,
-      endChar: 17,
-      confidence: 0.9,
-    });
-    expect(Result.isFailure(mismatched)).toBe(true);
-  });
+      expect(span.quote).toBe("Seattle");
+      expect(span.confidence).toEqual(O.some(0.9));
+      expect(legacy).toEqual({
+        text: "Seattle",
+        startChar: 10,
+        endChar: 17,
+        confidence: 0.9,
+      });
+      expect(Result.isFailure(mismatched)).toBe(true);
+    })
+  );
 
-  it("decodes legacy mention evidence to the canonical text-anchor shape", () => {
-    const evidence = MentionEvidence.fromUnknown({
-      text: "Seattle",
-      startOffset: 10,
-      endOffset: 17,
-    });
+  it.effect("decodes legacy mention evidence to the canonical text-anchor shape", () =>
+    Effect.gen(function* () {
+      const evidence = yield* S.decodeEffect(MentionEvidence)({
+        text: "Seattle",
+        startOffset: 10,
+        endOffset: 17,
+      });
+      const encoded = yield* S.encodeEffect(MentionEvidence)(evidence);
 
-    expect(evidence.quote).toBe("Seattle");
-    expect(evidence.startChar).toBe(10);
-    expect(evidence.endChar).toBe(17);
-    expect(S.encodeSync(MentionEvidence)(evidence)).toEqual({
-      text: "Seattle",
-      startOffset: 10,
-      endOffset: 17,
-    });
-  });
+      expect(evidence.quote).toBe("Seattle");
+      expect(evidence.startChar).toBe(10);
+      expect(evidence.endChar).toBe(17);
+      expect(encoded).toEqual({
+        text: "Seattle",
+        startOffset: 10,
+        endOffset: 17,
+      });
+    })
+  );
 
   it("keeps relation references distinct from literal strings", () => {
     const subject = Entity.make({
@@ -152,7 +157,7 @@ describe("effect-ontology model behavior", () => {
       label: "name",
       domain: [parent],
       range: [IRI.make("http://www.w3.org/2001/XMLSchema#string")],
-      rangeType: "datatype" as const,
+      rangeType: "datatype",
     };
     const property = PropertyDefinition.fromUnknown(propertyInput);
     const context = OntologyContext.fromUnknown({

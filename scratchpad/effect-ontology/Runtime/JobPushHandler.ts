@@ -1,6 +1,8 @@
 /**
  * Job Push Handler
  *
+ * **Details**
+ *
  * HTTP endpoint for Cloud Pub/Sub push subscriptions to process background jobs.
  * This handler receives Pub/Sub push messages and dispatches them to the appropriate job processor.
  *
@@ -8,12 +10,16 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Data, Effect, Match, Schema } from "effect";
-import * as DateTime from "effect/DateTime";
+import { DateTime, Effect, Match } from "effect";
+import * as S from "effect/Schema";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { ErrorMessage } from "../Domain/Error/Base.ts";
 import type { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 import { BackgroundJobSchema } from "../Domain/Schema/JobSchema.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Runtime/JobPushHandler");
 
 // =============================================================================
 // Pub/Sub Push Message Schema
@@ -24,21 +30,69 @@ import { BackgroundJobSchema } from "../Domain/Schema/JobSchema.ts";
  *
  * @since 0.0.0
  */
-const PubSubPushMessage = Schema.Struct({
-  message: Schema.Struct({
-    data: Schema.String, // Base64 encoded
-    messageId: Schema.String,
-    publishTime: Schema.String,
-    attributes: Schema.Record(Schema.String, Schema.String).pipe(SchemaUtils.withKeyDefaults({})),
+const PubSubPushMessage = S.Struct({
+  message: S.Struct({
+    data: S.String, // Base64 encoded
+    messageId: S.String,
+    publishTime: S.String,
+    attributes: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults({})),
   }),
-  subscription: Schema.String,
+  subscription: S.String,
 });
 
 type PubSubPushMessage = typeof PubSubPushMessage.Type;
 
-class JobProcessorNotImplementedError extends Data.TaggedError("JobProcessorNotImplementedError")<{
-  readonly jobType: BackgroundJob["_tag"];
-}> {}
+const BackgroundJobType = S.Union([
+  BackgroundJobSchema.cases.EmbeddingJob.fields._tag,
+  BackgroundJobSchema.cases.PromptCacheJob.fields._tag,
+  BackgroundJobSchema.cases.SimilarityRecomputeJob.fields._tag,
+  BackgroundJobSchema.cases.BlockingTokenJob.fields._tag,
+  BackgroundJobSchema.cases.WebhookJob.fields._tag,
+]);
+
+class JobProcessorNotImplementedError extends S.TaggedError<JobProcessorNotImplementedError>(
+  $I`JobProcessorNotImplementedError`
+)(
+  "JobProcessorNotImplementedError",
+  {
+    jobType: BackgroundJobType.annotateKey({
+      description: "Background-job variant whose processor has not been implemented.",
+    }),
+  },
+  $I.annote("JobProcessorNotImplementedError", {
+    description: "Typed failure raised when a recognized background job has no processor implementation.",
+  })
+) {}
+
+class JobParseError extends S.TaggedError<JobParseError>($I`JobParseError`)(
+  "JobParseError",
+  {
+    message: ErrorMessage.annotateKey({
+      description: "Stable diagnostic for the background-job decoding failure.",
+    }),
+    cause: S.Defect({ includeStack: true }).annotateKey({
+      description: "Schema defect raised while decoding the pushed background job.",
+    }),
+  },
+  $I.annote("JobParseError", {
+    description: "Failure raised when a pushed background-job payload does not satisfy its schema.",
+  })
+) {}
+
+class ProcessingError extends S.TaggedError<ProcessingError>($I`ProcessingError`)(
+  "ProcessingError",
+  {
+    message: ErrorMessage.annotateKey({
+      description: "Stable diagnostic for the background-job processing failure.",
+    }),
+    cause: JobProcessorNotImplementedError.annotateKey({
+      description: "Typed processor failure raised for the decoded background job.",
+    }),
+  },
+  $I.annote("ProcessingError", {
+    description: "Failure raised after a background job decodes but its processor cannot complete it.",
+  })
+) {}
 
 // =============================================================================
 // Job Processing
@@ -63,7 +117,7 @@ const processBackgroundJob = (
           reason: j.reason,
           attempts: meta.attempts,
         });
-        return yield* new JobProcessorNotImplementedError({ jobType: j._tag });
+        return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
       })
     ),
     Match.tag("PromptCacheJob", (j) =>
@@ -74,7 +128,7 @@ const processBackgroundJob = (
           isNegative: j.isNegative,
           attempts: meta.attempts,
         });
-        return yield* new JobProcessorNotImplementedError({ jobType: j._tag });
+        return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
       })
     ),
     Match.tag(
@@ -86,7 +140,7 @@ const processBackgroundJob = (
           reason: j.reason,
           attempts: meta.attempts,
         });
-        return yield* new JobProcessorNotImplementedError({ jobType: j._tag });
+        return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
       })
     ),
     Match.tag(
@@ -97,7 +151,7 @@ const processBackgroundJob = (
           entityId: j.entityId,
           attempts: meta.attempts,
         });
-        return yield* new JobProcessorNotImplementedError({ jobType: j._tag });
+        return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
       })
     ),
     Match.tag(
@@ -109,7 +163,7 @@ const processBackgroundJob = (
           eventType: j.eventType,
           attempts: meta.attempts,
         });
-        return yield* new JobProcessorNotImplementedError({ jobType: j._tag });
+        return yield* JobProcessorNotImplementedError.make({ jobType: j._tag });
       })
     ),
     Match.exhaustive
@@ -122,9 +176,20 @@ const processBackgroundJob = (
 /**
  * Job Push Handler Router
  *
+ * **Details**
+ *
  * Provides endpoints for Pub/Sub push subscriptions:
  * - POST /v1/jobs/process - Receive and process pushed jobs
  *
+ * **Example** (Inspect job push router)
+ *
+ * ```ts
+ * import { JobPushRouter } from "@effect-ontology/Runtime/JobPushHandler"
+ *
+ * console.log(JobPushRouter)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
 export const JobPushRouter = HttpRouter.addAll([
@@ -157,13 +222,13 @@ export const JobPushRouter = HttpRouter.addAll([
             const jobDataString = jobDataBuffer.toString("utf-8");
 
             // Parse the job schema
-            const jobParseResult = yield* Schema.decodeEffect(Schema.fromJsonString(BackgroundJobSchema))(
-              jobDataString
-            ).pipe(
-              Effect.mapError((e) => ({
-                _tag: "JobParseError",
-                error: e,
-              }))
+            const jobParseResult = yield* S.decodeEffect(S.fromJsonString(BackgroundJobSchema))(jobDataString).pipe(
+              Effect.mapError((cause) =>
+                JobParseError.make({
+                  message: "Failed to decode the pushed background-job payload.",
+                  cause,
+                })
+              )
             );
 
             const jobType = jobParseResult._tag;
@@ -182,10 +247,12 @@ export const JobPushRouter = HttpRouter.addAll([
               id: jobId,
               attempts,
             }).pipe(
-              Effect.mapError((e) => ({
-                _tag: "ProcessingError",
-                error: e,
-              }))
+              Effect.mapError((cause) =>
+                ProcessingError.make({
+                  message: `No processor is implemented for ${cause.jobType}.`,
+                  cause,
+                })
+              )
             );
 
             yield* Effect.logInfo("Job processed successfully", {
@@ -205,49 +272,33 @@ export const JobPushRouter = HttpRouter.addAll([
           Effect.catchTags({
             JobParseError: Effect.fn(function* (e) {
               yield* Effect.logError("Failed to parse job payload", {
-                error: String(e.error),
+                error: String(e.cause),
               });
               // Return 400 to not retry on job schema errors
               return yield* HttpServerResponse.json(
                 {
                   processed: false,
                   messageId: "unknown",
-                  error: `Job parse error: ${String(e.error)}`,
+                  error: `Job parse error: ${e.message}`,
                 },
                 { status: 400 }
               );
             }),
             ProcessingError: Effect.fn(function* (e) {
               yield* Effect.logError("Job processing failed", {
-                error: String(e.error),
+                error: String(e.cause),
               });
               // Return 500 to trigger retry
               return yield* HttpServerResponse.json(
                 {
                   processed: false,
                   messageId: "unknown",
-                  error: `Processing error: ${String(e.error)}`,
+                  error: `Processing error: ${e.message}`,
                 },
                 { status: 500 }
               );
             }),
-          }),
-          Effect.catch(
-            Effect.fn(function* (e) {
-              yield* Effect.logError("Unexpected error in job push handler", {
-                error: String(e),
-              });
-              // Return 500 to trigger retry
-              return yield* HttpServerResponse.json(
-                {
-                  processed: false,
-                  messageId: "unknown",
-                  error: `Unexpected error: ${String(e)}`,
-                },
-                { status: 500 }
-              );
-            })
-          )
+          })
         ),
       })
     )

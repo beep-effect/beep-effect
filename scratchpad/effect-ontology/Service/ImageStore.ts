@@ -1,6 +1,8 @@
 /**
  * ImageStore Service
  *
+ * **Details**
+ *
  * High-level image storage orchestration with deduplication and manifest management.
  * Uses ImageBlobStore for low-level storage and manages owner-image relationships.
  *
@@ -30,11 +32,24 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageStore");
 /**
  * ImageStore service interface
  *
+ * **Details**
+ *
  * High-level operations for storing, retrieving, and managing images
  * with deduplication and owner manifests.
  *
+ *
+ * **Example** (Use the ImageStoreService contract)
+ *
+ * ```ts
+ * import type { ImageStoreService } from "@effect-ontology/Service/ImageStore"
+ *
+ * const acceptsImageStoreService = (_value: ImageStoreService): void => undefined
+ *
+ * console.log(acceptsImageStoreService)
+ * ```
+ *
+ * @category type-level
  * @since 0.0.0
- * @category services
  */
 export interface ImageStoreService {
   /**
@@ -144,8 +159,16 @@ export interface ImageStoreService {
 /**
  * ImageStore service tag
  *
+ * **Example** (Inspect image store)
+ *
+ * ```ts
+ * import { ImageStore } from "@effect-ontology/Service/ImageStore"
+ *
+ * console.log(ImageStore)
+ * ```
+ *
+ * @category layers
  * @since 0.0.0
- * @category services
  */
 export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()($I`ImageStore`) {
   /**

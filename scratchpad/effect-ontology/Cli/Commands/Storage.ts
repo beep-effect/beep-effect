@@ -1,17 +1,19 @@
 /**
  * CLI: Storage Command
  *
+ * **Details**
+ *
  * Browse and manage data in cloud storage (GCS) or local storage.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { Console, Effect } from "effect";
-import * as O from "effect/Option";
+import { Console, Effect, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
-import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import { Argument as Args, Command, Flag as Options } from "effect/unstable/cli";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { StorageService } from "../../Service/Storage.ts";
@@ -41,19 +43,21 @@ const listHandler = Effect.fn("listHandler")(function* (prefix: O.Option<string>
   const dirs = MutableHashSet.empty<string>();
   const files: Array<string> = [];
   for (const item of items) {
-    const relativePath = P.isTruthy(effectivePrefix) ? item.replace(effectivePrefix, "").replace(/^\//, "") : item;
-    const parts = relativePath.split("/");
+    const relativePath = P.isTruthy(effectivePrefix)
+      ? Str.replace(/^\//, "")(Str.replace(effectivePrefix, "")(item))
+      : item;
+    const parts = Str.split("/")(relativePath);
     if (parts.length > 1) {
       MutableHashSet.add(dirs, `${parts[0]}/`);
     } else {
       files.push(item);
     }
   }
-  for (const dir of A.fromIterable(dirs).sort()) {
+  for (const dir of A.sort(A.fromIterable(dirs), Order.String)) {
     yield* Console.log(`  📁 ${dir}`);
   }
-  for (const file of files.sort()) {
-    const name = file.split("/").pop() ?? file;
+  for (const file of A.sort(files, Order.String)) {
+    const name = O.getOrElse(A.last(Str.split("/")(file)), () => file);
     yield* Console.log(`  📄 ${name}`);
   }
   yield* Console.log("");
@@ -83,7 +87,7 @@ const catHandler = Effect.fn("catHandler")(function* (path: string, lines: numbe
   }
   let content = contentOpt;
   if (lines > 0) {
-    content = content.split("\n").slice(0, lines).join("\n");
+    content = A.join(A.take(Str.split("\n")(content), lines), "\n");
   }
   yield* Console.log(content);
 });
@@ -99,7 +103,7 @@ const batchesHandler = Effect.fn("batchesHandler")(function* () {
   yield* Console.log("Batch Manifests:");
   yield* Console.log("");
   const items = yield* storage.list("batches/");
-  const manifestPaths = items.filter((item) => item.endsWith("manifest.json"));
+  const manifestPaths = A.filter(items, Str.endsWith("manifest.json"));
   if (manifestPaths.length === 0) {
     yield* Console.log("No batches found.");
     yield* Console.log("");
@@ -147,12 +151,12 @@ const infoHandler = Effect.fn("infoHandler")(function* () {
   const items = yield* storage.list("");
   const dirs = MutableHashSet.empty<string>();
   for (const item of items) {
-    const parts = item.split("/");
+    const parts = Str.split("/")(item);
     if (parts.length > 1) {
       MutableHashSet.add(dirs, parts[0]);
     }
   }
-  for (const dir of A.fromIterable(dirs).sort()) {
+  for (const dir of A.sort(A.fromIterable(dirs), Order.String)) {
     yield* Console.log(`  📁 ${dir}/`);
   }
 });
@@ -173,6 +177,20 @@ const infoCommand = Command.make("info", {}, () => withErrorHandler(infoHandler(
 // Main Storage Command
 // =============================================================================
 
+/**
+ * Exposes storage command for composition by callers of this module.
+ *
+ * **Example** (Inspect storage command)
+ *
+ * ```ts
+ * import { storageCommand } from "@effect-ontology/Cli/Commands/Storage"
+ *
+ * console.log(storageCommand)
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
 export const storageCommand = Command.make("storage").pipe(
   Command.withSubcommands([listCommand, catCommand, batchesCommand, infoCommand]),
   Command.withDescription("Browse and manage cloud storage")

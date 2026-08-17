@@ -17,8 +17,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { AbsoluteIRI, NamedNode, ObjectTerm } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { SchemaGetter } from "effect";
-import * as DateTime from "effect/DateTime";
+import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { ContentHash, GcsUri } from "../Identity.ts";
 import { EventId as CanonicalEventId } from "../Model/CoreOntology.ts";
@@ -29,14 +28,13 @@ const claimIdPattern = /^claim-[0-9a-f]{12}$/;
 const assertionIdPattern = /^assertion-[0-9a-f]{12}$/;
 const derivedAssertionIdPattern = /^derived-[0-9a-f]{12}$/;
 const ruleIdPattern = /^rule-[a-z0-9]+(?:-[a-z0-9]+)*$/;
-const decodeDateTimeUtcFromMillis = S.decodeUnknownSync(S.DateTimeUtcFromMillis);
 
 /**
  * Deterministic identifier of an extracted claim.
  *
  * **Example** (Use ClaimId)
  * ```ts
- * import { ClaimId } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { ClaimId } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * console.log(ClaimId.is("claim-abc123def456")) // true
  * ```
@@ -73,7 +71,7 @@ export const ClaimId = S.String.check(
  *
  * **Example** (Use ClaimId)
  * ```ts
- * import { ClaimId, type ClaimId as ClaimIdValue } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { ClaimId, type ClaimId as ClaimIdValue } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const id: ClaimIdValue = ClaimId.make("claim-abc123def456")
  * console.log(id)
@@ -89,7 +87,7 @@ export type ClaimId = typeof ClaimId.Type;
  *
  * **Example** (Use AssertionId)
  * ```ts
- * import { AssertionId } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { AssertionId } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * console.log(AssertionId.is("assertion-abc123def456")) // true
  * ```
@@ -127,7 +125,7 @@ export const AssertionId = S.String.check(
  *
  * **Example** (Use AssertionId)
  * ```ts
- * import { AssertionId, type AssertionId as AssertionIdValue } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { AssertionId, type AssertionId as AssertionIdValue } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const id: AssertionIdValue = AssertionId.make("assertion-abc123def456")
  * console.log(id)
@@ -143,7 +141,7 @@ export type AssertionId = typeof AssertionId.Type;
  *
  * **Example** (Use DerivedAssertionId)
  * ```ts
- * import { DerivedAssertionId } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { DerivedAssertionId } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * console.log(DerivedAssertionId.is("derived-abc123def456")) // true
  * ```
@@ -184,7 +182,7 @@ export const DerivedAssertionId = S.String.check(
  * import {
  *   DerivedAssertionId,
  *   type DerivedAssertionId as DerivedAssertionIdValue
- * } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const id: DerivedAssertionIdValue = DerivedAssertionId.make("derived-abc123def456")
  * console.log(id)
@@ -200,7 +198,7 @@ export type DerivedAssertionId = typeof DerivedAssertionId.Type;
  *
  * **Example** (Use RuleId)
  * ```ts
- * import { RuleId } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { RuleId } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * console.log(RuleId.is("rule-subclass-transitivity")) // true
  * ```
@@ -234,7 +232,7 @@ export const RuleId = S.String.check(
  *
  * **Example** (Use RuleId)
  * ```ts
- * import { RuleId, type RuleId as RuleIdValue } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { RuleId, type RuleId as RuleIdValue } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const id: RuleIdValue = RuleId.make("rule-subclass-transitivity")
  * console.log(id)
@@ -263,10 +261,12 @@ type LegacyTextSpanValue = typeof LegacyTextSpan.Type;
  *
  * **Example** (Use TextSpan)
  * ```ts
- * import { TextSpan } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { TextSpan } from "@effect-ontology/Schema/KnowledgeModel"
  *
- * const span = TextSpan.fromUnknown({ start: 0, end: 5, text: "Alice" })
- * console.log(span.endChar) // 5
+ * const span = S.decodeUnknownOption(TextSpan)({ start: 0, end: 5, text: "Alice" })
+ * console.log(O.map(span, (value) => value.endChar)) // Some(5)
  * ```
  *
  * @invariant The range is non-empty and `endChar - startChar` equals the UTF-16 width of `quote`.
@@ -299,7 +299,7 @@ export const TextSpan = LegacyTextSpan.pipe(
  *
  * **Example** (Use TextSpan)
  * ```ts
- * import type { TextSpan } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import type { TextSpan } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const width = (span: TextSpan) => span.endChar - span.startChar
  * console.log(width)
@@ -344,16 +344,17 @@ const EvidenceSource = EvidenceSourceDefinition.pipe(
  *
  * **Example** (Use Evidence)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { Evidence } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { Evidence } from "@effect-ontology/Schema/KnowledgeModel"
  *
- * const evidence = S.decodeUnknownSync(Evidence)({
+ * const evidence = S.decodeUnknownOption(Evidence)({
  *   source: { _tag: "gcs", value: {
  *     uri: "gs://beep-ontology-state/documents/article.txt"
  *   }},
  *   spans: [{ start: 0, end: 5, text: "Alice" }]
  * })
- * console.log(evidence.spans.length) // 1
+ * console.log(O.map(evidence, (value) => value.spans.length)) // 1
  * ```
  *
  * @invariant Contains at least one ordered text span and exactly one tagged
@@ -388,8 +389,8 @@ export class Evidence extends S.Class<Evidence>($I`Evidence`)(
  *
  * **Example** (Use RdfObject)
  * ```ts
- * import { makeLiteral } from "@effect-ontology/Rdf/Types.ts"
- * import { RdfObject } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { makeLiteral } from "@beep/rdf"
+ * import { RdfObject } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const literal = makeLiteral(
  *   "Alice",
@@ -415,7 +416,7 @@ export const RdfObject = ObjectTerm.annotate({
  *
  * **Example** (Use RdfObject)
  * ```ts
- * import type { RdfObject } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import type { RdfObject } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const termType = (object: RdfObject) => object.termType
  * console.log(termType)
@@ -431,7 +432,7 @@ export type RdfObject = typeof RdfObject.Type;
  *
  * **Example** (Use ClaimRank)
  * ```ts
- * import { ClaimRank } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { ClaimRank } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * console.log(ClaimRank.is.preferred("preferred")) // true
  * ```
@@ -454,7 +455,7 @@ export const ClaimRank = LiteralKit(["preferred", "normal", "deprecated"])
  *
  * **Example** (Use ClaimRank)
  * ```ts
- * import type { ClaimRank } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import type { ClaimRank } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const rank: ClaimRank = "normal"
  * console.log(rank)
@@ -500,8 +501,8 @@ const TemporalIntervalFromSelf = S.declare((input: unknown): input is typeof Tem
       .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
       .map(([from, duration]) =>
         TemporalIntervalFields.make({
-          from: decodeDateTimeUtcFromMillis(from),
-          to: decodeDateTimeUtcFromMillis(from + duration),
+          from: DateTime.makeUnsafe(from),
+          to: DateTime.makeUnsafe(from + duration),
         })
       ),
 });
@@ -525,9 +526,11 @@ const TemporalInterval = TemporalIntervalDefinition.pipe(
  *
  * **Example** (Use Claim)
  * ```ts
- * import { Claim } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { Claim } from "@effect-ontology/Schema/KnowledgeModel"
  *
- * const claim = Claim.fromUnknown({
+ * const claim = S.decodeUnknownOption(Claim)({
  *   id: "claim-abc123def456",
  *   subject: { termType: "NamedNode", value: "https://example.com/alice" },
  *   predicate: { termType: "NamedNode", value: "https://schema.org/name" },
@@ -549,7 +552,7 @@ const TemporalInterval = TemporalIntervalDefinition.pipe(
  *   extractedAt: "1970-01-01T00:00:00.000Z",
  *   confidence: 0.95
  * })
- * console.log(claim.rank) // "normal"
+ * console.log(O.isSome(claim)) // true
  * ```
  *
  * @invariant RDF terms are canonical, confidence lies in `[0, 1]`, evidence is
@@ -582,7 +585,7 @@ export class Claim extends S.Class<Claim>($I`Claim`)(
  *
  * **Example** (Use AssertionStatus)
  * ```ts
- * import { AssertionStatus } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { AssertionStatus } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * console.log(AssertionStatus.is.accepted("accepted")) // true
  * ```
@@ -605,7 +608,7 @@ export const AssertionStatus = LiteralKit(["accepted", "rejected", "pending"])
  *
  * **Example** (Use AssertionStatus)
  * ```ts
- * import type { AssertionStatus } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import type { AssertionStatus } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const status: AssertionStatus = "pending"
  * console.log(status)
@@ -621,9 +624,11 @@ export type AssertionStatus = typeof AssertionStatus.Type;
  *
  * **Example** (Use Assertion)
  * ```ts
- * import { Assertion } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { Assertion } from "@effect-ontology/Schema/KnowledgeModel"
  *
- * const assertion = Assertion.fromUnknown({
+ * const assertion = S.decodeUnknownOption(Assertion)({
  *   id: "assertion-abc123def456",
  *   subject: { termType: "NamedNode", value: "https://example.com/alice" },
  *   predicate: { termType: "NamedNode", value: "https://schema.org/name" },
@@ -639,7 +644,7 @@ export type AssertionStatus = typeof AssertionStatus.Type;
  *   derivedFrom: ["claim-abc123def456"],
  *   status: "accepted"
  * })
- * console.log(assertion.status) // "accepted"
+ * console.log(O.isSome(assertion)) // true
  * ```
  *
  * @invariant At least one source claim supports the assertion and optional
@@ -670,7 +675,7 @@ export class Assertion extends S.Class<Assertion>($I`Assertion`)(
  *
  * **Example** (Use DerivedAssertion)
  * ```ts
- * import { DerivedAssertion } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { DerivedAssertion } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const readRule = (value: DerivedAssertion) => value.ruleId
  * console.log(readRule)
@@ -700,7 +705,7 @@ export class DerivedAssertion extends S.Class<DerivedAssertion>($I`DerivedAssert
  *
  * **Example** (Use EventId)
  * ```ts
- * import { EventId } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { EventId } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * console.log(EventId.is("event-abc123def456")) // true
  * ```
@@ -717,7 +722,7 @@ export const EventId = CanonicalEventId;
  *
  * **Example** (Use EventId)
  * ```ts
- * import { EventId, type EventId as EventIdValue } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { EventId, type EventId as EventIdValue } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const id: EventIdValue = EventId.make("event-abc123def456")
  * console.log(id)
@@ -733,7 +738,7 @@ export type EventId = typeof EventId.Type;
  *
  * **Example** (Use EventType)
  * ```ts
- * import { EventType } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { EventType } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * console.log(EventType.is.Appointment("Appointment")) // true
  * ```
@@ -773,7 +778,7 @@ export const EventType = LiteralKit([
  *
  * **Example** (Use EventType)
  * ```ts
- * import type { EventType } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import type { EventType } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const type: EventType = "Generic"
  * console.log(type)
@@ -789,8 +794,8 @@ export type EventType = typeof EventType.Type;
  *
  * **Example** (Use EntityRef)
  * ```ts
- * import { makeNamedNode } from "@effect-ontology/Rdf/Types.ts"
- * import { EntityRef } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import { makeNamedNode } from "@beep/rdf"
+ * import { EntityRef } from "@effect-ontology/Schema/KnowledgeModel"
  *
  * const participant = EntityRef.make({
  *   entity: makeNamedNode("https://example.com/alice")
@@ -837,15 +842,17 @@ export class EntityRef extends S.Class<EntityRef>($I`EntityRef`)(
  *
  * **Example** (Use Event)
  * ```ts
- * import { Event } from "@effect-ontology/Schema/KnowledgeModel.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { Event } from "@effect-ontology/Schema/KnowledgeModel"
  *
- * const event = Event.fromUnknown({
+ * const event = S.decodeUnknownOption(Event)({
  *   id: "event-abc123def456",
  *   type: "Generic",
  *   publishedAt: "2026-07-25T12:00:00.000Z",
  *   sourceDocuments: ["gs://beep-ontology-state/documents/article.txt"]
  * })
- * console.log(event.participants.length) // 0
+ * console.log(O.isSome(event)) // true
  * ```
  *
  * @invariant At least one valid GCS source document is present.

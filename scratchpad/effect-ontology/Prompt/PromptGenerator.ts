@@ -7,13 +7,12 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { pipe } from "effect";
+import { pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Prompt from "effect/unstable/ai/Prompt";
@@ -34,7 +33,7 @@ const Doc = {
   text: (value: string): PromptDoc => value,
   vsep: (documents: ReadonlyArray<PromptDoc>): PromptDoc => A.join(documents, "\n"),
   render: (document: PromptDoc, _options?: unknown): string => document,
-} as const;
+};
 
 const extractLocalNameFromIri = (iri: string): string =>
   pipe(
@@ -78,6 +77,8 @@ const PromptRole = LiteralKit(["user", "assistant"]).pipe(
  * **Example** (Create entity-extraction context)
  *
  * ```ts
+ * import { OntologyPromptContext } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * const context = OntologyPromptContext.make({
  *   classes: [],
  *   objectProperties: [],
@@ -152,7 +153,7 @@ const StructuredPromptFields = {
       description: "Request-specific source content supplied by the caller.",
     })
   ),
-} as const;
+};
 
 /**
  * Extraction prompt separated into cacheable system and variable user messages.
@@ -160,6 +161,8 @@ const StructuredPromptFields = {
  * **Example** (Create a structured prompt)
  *
  * ```ts
+ * import { StructuredPrompt } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * const prompt = StructuredPrompt.make({ systemMessage: "Extract entities.", userMessage: "Ada wrote notes." })
  * ```
  *
@@ -179,6 +182,8 @@ export class StructuredPrompt extends S.Class<StructuredPrompt>($I`StructuredPro
  * **Example** (Create a user example turn)
  *
  * ```ts
+ * import { ExampleMessage } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * const message = ExampleMessage.make({ role: "user", content: "Extract from: Ada founded Acme." })
  * ```
  *
@@ -255,6 +260,8 @@ const NegativeExampleOutput = S.Struct({
  * **Example** (Create a positive example)
  *
  * ```ts
+ * import { ScoredExample } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * const example = ScoredExample.make({
  *   inputText: "Ada founded Acme.",
  *   expectedOutput: { entities: [] }
@@ -313,6 +320,8 @@ export class ScoredExample extends S.Class<ScoredExample>($I`ScoredExample`)(
  * **Example** (Create an example-aware prompt)
  *
  * ```ts
+ * import { StructuredPromptWithExamples } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * const prompt = StructuredPromptWithExamples.make({
  *   systemMessage: "Extract entities.",
  *   userMessage: "Ada wrote notes.",
@@ -837,24 +846,28 @@ const buildNegativeExamplesSection = (examples: ReadonlyArray<ScoredExample>): P
 /**
  * Generate structured prompt with separate system and user messages
  *
+ * **Details**
+ *
  * Separates cacheable content (system message) from variable content (user message)
  * to enable prompt caching. System message contains ontology schema, rules, and
  * instructions. User message contains the input text to extract from.
  *
- * @param text - Source text to extract from
- * @param ruleSet - Rule set for the extraction stage
- * @param ctx - Ontology context (classes, properties, entities)
- * @returns Structured prompt with system and user messages
- *
  * **Example** (Usage)
  *
  * ```ts
+ * import { generateStructuredPrompt, OntologyPromptContext } from "@effect-ontology/Prompt/PromptGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
+ *
  * const ruleSet = makeMentionRuleSet()
  * const context = OntologyPromptContext.make({ classes: [], objectProperties: [], datatypeProperties: [] })
  * console.log(generateStructuredPrompt("Ada wrote notes.", ruleSet, context).userMessage)
  * ```
  *
- * @category constructors
+ * @param text - Source text to extract from
+ * @param ruleSet - Rule set for the extraction stage
+ * @param ctx - Ontology context (classes, properties, entities)
+ * @returns Structured prompt with system and user messages
+ * @category formatting
  * @since 0.0.0
  */
 export const generateStructuredPrompt = dual3(
@@ -900,6 +913,8 @@ export const generateStructuredPrompt = dual3(
 /**
  * Generate structured prompt with few-shot examples
  *
+ * **Details**
+ *
  * Extends the base structured prompt with examples retrieved from the
  * ontology-scoped example store. Positive examples become user/assistant
  * conversation turns. Negative examples are included in the system message
@@ -913,21 +928,29 @@ export const generateStructuredPrompt = dual3(
  * - Example 2 Assistant: output
  * - User: actual input text
  *
- * @param text - Source text to extract from
- * @param ruleSet - Rule set for the extraction stage
- * @param ctx - Ontology context (classes, properties, entities)
- * @param examples - Retrieved few-shot examples (positives and negatives)
- * @returns Structured prompt with system message, example turns, and user message
- *
  * **Example** (Usage)
  *
  * ```ts
+ * import {
+ *   generateStructuredPromptWithExamples,
+ *   OntologyPromptContext,
+ *   ScoredExample
+ * } from "@effect-ontology/Prompt/PromptGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
+ *
+ * const ruleSet = makeMentionRuleSet()
+ * const context = OntologyPromptContext.make({})
  * const example = ScoredExample.make({ inputText: "Ada", expectedOutput: { mentions: [] } })
  * const prompt = generateStructuredPromptWithExamples("Ada", ruleSet, context, [example])
  * console.log(prompt.exampleMessages.length) // 2
  * ```
  *
- * @category constructors
+ * @param text - Source text to extract from
+ * @param ruleSet - Rule set for the extraction stage
+ * @param ctx - Ontology context (classes, properties, entities)
+ * @param examples - Retrieved few-shot examples (positives and negatives)
+ * @returns Structured prompt with system message, example turns, and user message
+ * @category formatting
  * @since 0.0.0
  */
 export const generateStructuredPromptWithExamples = dual4(
@@ -998,25 +1021,28 @@ export const generateStructuredPromptWithExamples = dual4(
 /**
  * Generate complete extraction prompt
  *
+ * **Details**
+ *
  * Combines all prompt sections using rules from the RuleSet
  * to ensure schema and prompt are aligned.
- *
- * @deprecated Use {@link generateStructuredPrompt} to preserve cacheable message boundaries.
- *
- * @param text - Source text to extract from
- * @param ruleSet - Rule set for the extraction stage
- * @param ctx - Ontology context (classes, properties, entities)
- * @returns Complete prompt string
  *
  * **Example** (Usage)
  *
  * ```ts
+ * import { generatePrompt, OntologyPromptContext } from "@effect-ontology/Prompt/PromptGenerator"
+ * import { makeMentionRuleSet } from "@effect-ontology/Prompt/RuleSet"
+ *
  * const ruleSet = makeMentionRuleSet()
  * const context = OntologyPromptContext.make({ classes: [], objectProperties: [], datatypeProperties: [] })
  * console.log(generatePrompt("Ada wrote notes.", ruleSet, context).includes("INPUT TEXT")) // true
  * ```
  *
- * @category constructors
+ * @param text - Source text to extract from
+ * @param ruleSet - Rule set for the extraction stage
+ * @param ctx - Ontology context (classes, properties, entities)
+ * @returns Complete prompt string
+ * @deprecated Use {@link generateStructuredPrompt} to preserve cacheable message boundaries.
+ * @category formatting
  * @since 0.0.0
  */
 export const generatePrompt = dual3((text: string, ruleSet: RuleSet, ctx: OntologyPromptContext): string => {
@@ -1027,11 +1053,15 @@ export const generatePrompt = dual3((text: string, ruleSet: RuleSet, ctx: Ontolo
 /**
  * Generate structured entity extraction prompt
  *
+ * **Details**
+ *
  * Convenience wrapper that creates RuleSet internally and returns structured prompt.
  *
  * **Example** (Build an entity prompt without ontology definitions)
  *
  * ```ts
+ * import { generateStructuredEntityPrompt } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * console.log(generateStructuredEntityPrompt("Ada wrote notes.", [], []).userMessage.includes("Ada")) // true
  * ```
  *
@@ -1039,8 +1069,7 @@ export const generatePrompt = dual3((text: string, ruleSet: RuleSet, ctx: Ontolo
  * @param classes - Available ontology classes
  * @param datatypeProperties - Available datatype properties
  * @returns Structured prompt with system and user messages
- *
- * @category constructors
+ * @category formatting
  * @since 0.0.0
  */
 export const generateStructuredEntityPrompt = dual3(
@@ -1066,13 +1095,15 @@ export const generateStructuredEntityPrompt = dual3(
 /**
  * Generate entity extraction prompt
  *
- * Convenience wrapper that creates RuleSet internally.
+ * **Details**
  *
- * @deprecated Use {@link generateStructuredEntityPrompt} to preserve cacheable message boundaries.
+ * Convenience wrapper that creates RuleSet internally.
  *
  * **Example** (Build a legacy entity prompt)
  *
  * ```ts
+ * import { generateEntityPrompt } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * console.log(generateEntityPrompt("Ada wrote notes.", [], []).includes("INPUT TEXT")) // true
  * ```
  *
@@ -1080,8 +1111,8 @@ export const generateStructuredEntityPrompt = dual3(
  * @param classes - Available ontology classes
  * @param datatypeProperties - Available datatype properties
  * @returns Complete entity extraction prompt
- *
- * @category constructors
+ * @deprecated Use {@link generateStructuredEntityPrompt} to preserve cacheable message boundaries.
+ * @category formatting
  * @since 0.0.0
  */
 export const generateEntityPrompt = dual3(
@@ -1098,11 +1129,15 @@ export const generateEntityPrompt = dual3(
 /**
  * Generate structured relation extraction prompt
  *
+ * **Details**
+ *
  * Convenience wrapper that creates RuleSet internally and returns structured prompt.
  *
  * **Example** (Build a relation prompt without prior entities)
  *
  * ```ts
+ * import { generateStructuredRelationPrompt } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * console.log(generateStructuredRelationPrompt("Ada joined Acme.", [], []).systemMessage.length > 0) // true
  * ```
  *
@@ -1110,8 +1145,7 @@ export const generateEntityPrompt = dual3(
  * @param entities - Entities from Stage 1
  * @param properties - Available properties
  * @returns Structured prompt with system and user messages
- *
- * @category constructors
+ * @category formatting
  * @since 0.0.0
  */
 export const generateStructuredRelationPrompt = dual3(
@@ -1139,13 +1173,15 @@ export const generateStructuredRelationPrompt = dual3(
 /**
  * Generate relation extraction prompt
  *
- * Convenience wrapper that creates RuleSet internally.
+ * **Details**
  *
- * @deprecated Use {@link generateStructuredRelationPrompt} to preserve cacheable message boundaries.
+ * Convenience wrapper that creates RuleSet internally.
  *
  * **Example** (Build a legacy relation prompt)
  *
  * ```ts
+ * import { generateRelationPrompt } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * console.log(generateRelationPrompt("Ada joined Acme.", [], []).includes("INPUT TEXT")) // true
  * ```
  *
@@ -1153,8 +1189,8 @@ export const generateStructuredRelationPrompt = dual3(
  * @param entities - Entities from Stage 1
  * @param properties - Available properties
  * @returns Complete relation extraction prompt
- *
- * @category constructors
+ * @deprecated Use {@link generateStructuredRelationPrompt} to preserve cacheable message boundaries.
+ * @category formatting
  * @since 0.0.0
  */
 export const generateRelationPrompt = dual3(
@@ -1167,18 +1203,21 @@ export const generateRelationPrompt = dual3(
 /**
  * Generate structured mention extraction prompt
  *
+ * **Details**
+ *
  * Convenience wrapper for pre-Stage 1 mention detection.
  *
  * **Example** (Build a structured mention prompt)
  *
  * ```ts
+ * import { generateStructuredMentionPrompt } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * console.log(generateStructuredMentionPrompt("Ada wrote notes.").userMessage.includes("Ada")) // true
  * ```
  *
  * @param text - Source text to extract from
  * @returns Structured prompt with system and user messages
- *
- * @category constructors
+ * @category formatting
  * @since 0.0.0
  */
 export const generateStructuredMentionPrompt = (text: string): StructuredPrompt => {
@@ -1198,20 +1237,22 @@ export const generateStructuredMentionPrompt = (text: string): StructuredPrompt 
 /**
  * Generate mention extraction prompt
  *
- * Convenience wrapper for pre-Stage 1 mention detection.
+ * **Details**
  *
- * @deprecated Use {@link generateStructuredMentionPrompt} to preserve cacheable message boundaries.
+ * Convenience wrapper for pre-Stage 1 mention detection.
  *
  * **Example** (Build a legacy mention prompt)
  *
  * ```ts
+ * import { generateMentionPrompt } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * console.log(generateMentionPrompt("Ada wrote notes.").includes("INPUT TEXT")) // true
  * ```
  *
  * @param text - Source text to extract from
  * @returns Complete mention extraction prompt
- *
- * @category constructors
+ * @deprecated Use {@link generateStructuredMentionPrompt} to preserve cacheable message boundaries.
+ * @category formatting
  * @since 0.0.0
  */
 export const generateMentionPrompt = (text: string): string => {
@@ -1245,18 +1286,21 @@ const getImageExtension = (mediaType: string): string => {
 /**
  * Convert ImageForPrompt[] to Prompt.FilePart[]
  *
+ * **Details**
+ *
  * Creates FilePart objects suitable for multimodal LLM calls.
  *
  * **Example** (Convert no images)
  *
  * ```ts
+ * import { imagesToPromptParts } from "@effect-ontology/Prompt/PromptGenerator"
+ *
  * console.log(imagesToPromptParts([]).length) // 0
  * ```
  *
  * @param images - Images to convert
  * @returns Array of Prompt.FilePart objects
- *
- * @category constructors
+ * @category formatting
  * @since 0.0.0
  */
 export const imagesToPromptParts = (images: ReadonlyArray<ImageForPrompt>): ReadonlyArray<Prompt.FilePart> =>
@@ -1271,26 +1315,30 @@ export const imagesToPromptParts = (images: ReadonlyArray<ImageForPrompt>): Read
 /**
  * Build multimodal user message content with text and optional images
  *
+ * **Details**
+ *
  * Creates an array of UserMessagePart objects combining text and image content.
  * Images are appended after the text with optional context.
+ *
+ * **Example** (Usage)
+ *
+ * ```ts
+ * import { buildMultimodalUserContent } from "@effect-ontology/Prompt/PromptGenerator"
+ *
+ * const parts = buildMultimodalUserContent(
+ *   "Extract entities from this article...",
+ *   undefined,
+ *   undefined
+ * )
+ * console.log(parts.length) // 1
+ * ```
  *
  * @param text - Text content
  * @param images - Images to include (optional)
  * @param imageIntro - Optional intro text before images
  * @returns Array of UserMessagePart objects for user message content
- *
- * **Example** (Usage)
- *
- * ```ts
- * const parts = buildMultimodalUserContent(
- *   "Extract entities from this article...",
- *   imageContexts,
- *   "The following images are from the article:"
- * )
- * ```
- *
+ * @category factories
  * @since 0.0.0
- * @category constructors
  */
 export const buildMultimodalUserContent = dual3(
   (
@@ -1336,27 +1384,32 @@ export const buildMultimodalUserContent = dual3(
 /**
  * Build a complete multimodal Prompt object
  *
+ * **Details**
+ *
  * Creates a Prompt with system message and user message containing
  * both text and image content for multimodal extraction.
+ *
+ * **Example** (Usage)
+ *
+ * ```ts
+ * import { buildMultimodalPrompt } from "@effect-ontology/Prompt/PromptGenerator"
+ *
+ * const prompt = buildMultimodalPrompt(
+ *   "Extract named entities.",
+ *   "Ada wrote notes.",
+ *   undefined,
+ *   undefined
+ * )
+ * console.log(prompt)
+ * ```
  *
  * @param systemMessage - System instructions (cacheable)
  * @param userText - User text content
  * @param images - Images to include (optional)
  * @param imageIntro - Optional intro text before images
  * @returns Complete Prompt object for LLM call
- *
- * **Example** (Usage)
- *
- * ```ts
- * const prompt = buildMultimodalPrompt(
- *   structured.systemMessage,
- *   structured.userMessage,
- *   ctx.imageContexts
- * )
- * ```
- *
+ * @category factories
  * @since 0.0.0
- * @category constructors
  */
 export const buildMultimodalPrompt = dual4(
   (
@@ -1381,25 +1434,29 @@ export const buildMultimodalPrompt = dual4(
 /**
  * Build multimodal prompt from StructuredPrompt and context
  *
+ * **Details**
+ *
  * Convenience wrapper that extracts images from OntologyPromptContext
  * and builds a multimodal Prompt.
- *
- * @param structured - Structured prompt with system and user messages
- * @param ctx - Ontology context with optional imageContexts
- * @returns Complete Prompt object for LLM call
  *
  * **Example** (Usage)
  *
  * ```ts
- * const structured = generateStructuredEntityPrompt(text, classes, properties)
- * const prompt = buildPromptFromStructured(structured, {
- *   ...ctx,
- *   imageContexts: loadedImages
+ * import { buildPromptFromStructured, StructuredPrompt } from "@effect-ontology/Prompt/PromptGenerator"
+ *
+ * const structured = StructuredPrompt.make({
+ *   systemMessage: "Extract named entities.",
+ *   userMessage: "Ada wrote notes."
  * })
+ * const prompt = buildPromptFromStructured(structured, undefined)
+ * console.log(prompt)
  * ```
  *
+ * @param structured - Structured prompt with system and user messages
+ * @param ctx - Ontology context with optional imageContexts
+ * @returns Complete Prompt object for LLM call
+ * @category factories
  * @since 0.0.0
- * @category constructors
  */
 export const buildPromptFromStructured = dual2(
   (structured: StructuredPrompt, ctx: OntologyPromptContext | undefined): Prompt.Prompt => {

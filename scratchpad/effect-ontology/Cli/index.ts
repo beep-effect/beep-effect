@@ -1,6 +1,8 @@
 /**
  * CLI: Effect Ontology
  *
+ * **Details**
+ *
  * Command-line interface for knowledge extraction and reasoning tools.
  * Built with @effect/cli for type-safe command parsing.
  *
@@ -11,7 +13,8 @@
 import { makeDrizzleLayer } from "@beep/postgres";
 import { BunRuntime, BunServices } from "@effect/platform-bun";
 import { PgClient } from "@effect/sql-pg";
-import { Config, Effect, Layer, Option } from "effect";
+import { Config, Effect, Layer } from "effect";
+import * as O from "effect/Option";
 import { Command } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
 import { makeLanguageModelLayer } from "../Runtime/ProductionRuntime.ts";
@@ -100,7 +103,7 @@ const LinkIngestionLayer = Layer.unwrap(
   Effect.gen(function* () {
     const postgresHost = yield* Config.string("POSTGRES_HOST").pipe(Config.option);
 
-    if (Option.isSome(postgresHost)) {
+    if (O.isSome(postgresHost)) {
       return LinkIngestionLive;
     } else {
       // Use the service's built-in Disabled layer
@@ -129,7 +132,7 @@ const CliLive = Layer.mergeAll(
   WikidataClient.Default,
   JinaReaderClient.Default,
   LinkIngestionLayer
-).pipe(Layer.provide(ConfigServiceDefault), Layer.provideMerge(BunServices.layer));
+).pipe(Layer.provideMerge(ConfigServiceDefault), Layer.provideMerge(BunServices.layer));
 
 // =============================================================================
 // Entry Point
@@ -138,7 +141,17 @@ const CliLive = Layer.mergeAll(
 /**
  * Run the CLI with provided arguments
  *
+ * **Example** (Inspect run cli)
+ *
+ * ```ts
+ * import { runCli } from "@effect-ontology/Cli/index"
+ *
+ * console.log(runCli)
+ * ```
+ *
  * @param args - Command line arguments (typically Bun.argv)
+ * @category layers
+ * @since 0.0.0
  */
 export const runCli = (args: ReadonlyArray<string>) => {
   const effect = Command.runWith(rootCommand, {

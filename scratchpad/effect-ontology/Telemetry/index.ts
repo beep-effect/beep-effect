@@ -1,6 +1,8 @@
 /**
  * Telemetry Module Exports
  *
+ * **Details**
+ *
  * OpenTelemetry tracing, LLM attributes, and cost calculation.
  *
  * @packageDocumentation

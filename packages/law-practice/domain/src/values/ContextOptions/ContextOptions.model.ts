@@ -6,10 +6,22 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 
 const $I = $LawPracticeDomainId.create("values/ContextOptions/ContextOptions.model");
+
+const ContextType = LiteralKit(["sentence", "paragraph"]);
+
+const ContextMaxLength = NonNegativeInt.pipe(
+  S.OptionFromOptionalKey,
+  SchemaUtils.withNoneDefault,
+  S.annotateKey({
+    description: "Maximum characters to return. Omit for no explicit length limit.",
+  })
+);
 
 /**
  * Options for surrounding context extraction.
@@ -38,26 +50,41 @@ const $I = $LawPracticeDomainId.create("values/ContextOptions/ContextOptions.mod
  * @category models
  * @since 0.0.0
  */
-export class ContextOptions extends S.Class<ContextOptions>($I`ContextOptions`)(
-  {
-    type: S.Literals(["sentence", "paragraph"]).pipe(
-      SchemaUtils.withKeyDefaults("sentence"),
-      S.annotateKey({
-        description: "Boundary type (default: 'sentence').",
-      })
-    ),
-    maxLength: NonNegativeInt.pipe(
-      S.OptionFromOptionalKey,
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Maximum characters to return. Omit for no explicit length limit.",
-      })
-    ),
-  },
-  $I.annote("ContextOptions", {
+export const ContextOptions = ContextType.mapMembers(
+  Tuple.evolve([
+    (literal: S.Literal<"sentence">) =>
+      S.Struct({
+        type: S.tag(literal.literal).pipe(
+          S.withDecodingDefaultKey(Effect.succeed("sentence")),
+          S.annotateKey({
+            description: "Sentence context boundary (the default).",
+          })
+        ),
+        maxLength: ContextMaxLength,
+      }),
+    (literal: S.Literal<"paragraph">) =>
+      S.Struct({
+        type: S.tag(literal.literal).annotateKey({
+          description: "Paragraph context boundary.",
+        }),
+        maxLength: ContextMaxLength,
+      }),
+  ])
+).pipe(
+  S.toTaggedUnion("type"),
+  $I.annoteSchema("ContextOptions", {
     description: "Options for surrounding context extraction.",
   })
-) {}
+);
+
+/**
+ * Runtime type for {@link ContextOptions}.
+ *
+ * @see {@link ContextOptions} for the tagged-union schema and context-boundary options.
+ * @category models
+ * @since 0.0.0
+ */
+export type ContextOptions = typeof ContextOptions.Type;
 
 /**
  * Companion namespace for `ContextOptions`.

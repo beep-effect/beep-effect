@@ -1,6 +1,8 @@
 /**
  * Service: LLM with Retry
  *
+ * **Details**
+ *
  * Provides a standardized wrapper for LLM calls with:
  * - Configurable retry policy (exponential backoff, jitter)
  * - Timeout management
@@ -27,6 +29,20 @@ import { makeRetryPolicy } from "./Retry.ts";
 
 /**
  * Configuration for retry behavior
+ *
+ *
+ * **Example** (Use the RetryConfig contract)
+ *
+ * ```ts
+ * import type { RetryConfig } from "@effect-ontology/Service/LlmWithRetry"
+ *
+ * const acceptsRetryConfig = (_value: RetryConfig): void => undefined
+ *
+ * console.log(acceptsRetryConfig)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface RetryConfig {
   readonly initialDelayMs: number;
@@ -37,6 +53,20 @@ export interface RetryConfig {
 
 /**
  * Options for generateObjectWithRetry
+ *
+ *
+ * **Example** (Use the GenerateObjectWithRetryOptions contract)
+ *
+ * ```ts
+ * import type { GenerateObjectWithRetryOptions } from "@effect-ontology/Service/LlmWithRetry"
+ *
+ * const acceptsGenerateObjectWithRetryOptions = (_value: GenerateObjectWithRetryOptions<never>): void => undefined
+ *
+ * console.log(acceptsGenerateObjectWithRetryOptions)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
  */
 export interface GenerateObjectWithRetryOptions<
   StructuredOutputSchema extends S.Codec<Record<string, unknown>, Record<string, unknown>, never, never>,
@@ -57,7 +87,7 @@ export interface GenerateObjectWithRetryOptions<
    * Optional callback to annotate success logs with domain-specific info
    */
   readonly annotateSuccess?: (
-    response: LanguageModel.GenerateObjectResponse<{}, StructuredOutputSchema["Type"]>
+    response: LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"]>
   ) => Record<string, unknown>;
   /**
    * Whether to enable prompt caching (only applies when prompt is StructuredPrompt)
@@ -68,6 +98,15 @@ export interface GenerateObjectWithRetryOptions<
 /**
  * Generate structured object with standardized retry, timeout, and telemetry.
  *
+ * **Example** (Inspect generate object with retry)
+ *
+ * ```ts
+ * import { generateObjectWithRetry } from "@effect-ontology/Service/LlmWithRetry"
+ *
+ * console.log(generateObjectWithRetry)
+ * ```
+ *
+ * @category schemas
  * @since 0.0.0
  */
 export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(function* <
@@ -75,7 +114,7 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
 >(
   options: GenerateObjectWithRetryOptions<StructuredOutputSchema>
 ): Effect.fn.Return<
-  LanguageModel.GenerateObjectResponse<{}, StructuredOutputSchema["Type"]>,
+  LanguageModel.GenerateObjectResponse<Record<never, never>, StructuredOutputSchema["Type"]>,
   AiError.AiError | Cause.TimeoutError | S.SchemaError,
   StructuredOutputSchema["DecodingServices"]
 > {
@@ -94,12 +133,12 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
   } = options;
 
   // Convert prompt to Prompt.Prompt if needed
-  const promptObj: Prompt.Prompt =
-    typeof prompt === "string" ? Prompt.make(prompt) : makeCachedPromptFromStructured(prompt, enablePromptCaching);
+  const promptObj: Prompt.Prompt = P.isString(prompt)
+    ? Prompt.make(prompt)
+    : makeCachedPromptFromStructured(prompt, enablePromptCaching);
 
   // Calculate prompt length for telemetry
-  const promptLength =
-    typeof prompt === "string" ? prompt.length : prompt.systemMessage.length + prompt.userMessage.length;
+  const promptLength = P.isString(prompt) ? prompt.length : prompt.systemMessage.length + prompt.userMessage.length;
 
   const retryPolicy = makeRetryPolicy({
     initialDelayMs: retryConfig.initialDelayMs,

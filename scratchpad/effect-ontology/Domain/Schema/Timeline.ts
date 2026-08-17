@@ -7,8 +7,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import { SchemaGetter } from "effect";
-import * as DateTime from "effect/DateTime";
+import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { OptionalConfidence } from "../Model/shared.ts";
 import { ClaimId, ClaimRank, RdfObject, TextSpan } from "./KnowledgeModel.ts";
@@ -20,7 +19,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Timeline");
  *
  * **Example** (Use BooleanQueryValueDefinition)
  * ```ts
- * import { ClaimRank } from "@effect-ontology/Schema/Timeline.ts"
+ * import { ClaimRank } from "@effect-ontology/Schema/Timeline"
  *
  * console.log(ClaimRank.is.preferred("preferred")) // true
  * ```
@@ -100,8 +99,8 @@ const TimelineRangeFromSelf = S.declare((input: unknown): input is typeof Timeli
       .tuple(fc.integer({ min: 0, max: 4_000_000_000_000 }), fc.integer({ min: 0, max: 86_400_000 }))
       .map(([from, duration]) =>
         TimelineRangeFields.make({
-          from: S.decodeSync(S.DateTimeUtcFromMillis)(from),
-          to: S.decodeSync(S.DateTimeUtcFromMillis)(from + duration),
+          from: DateTime.makeUnsafe(from),
+          to: DateTime.makeUnsafe(from + duration),
         })
       ),
 });
@@ -124,15 +123,17 @@ const TimelineRangeQuery = S.fromJsonString(TimelineRangeDefinition).pipe(
  *
  * **Example** (Use ArticleSummary)
  * ```ts
- * import { ArticleSummary } from "@effect-ontology/Schema/Timeline.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ArticleSummary } from "@effect-ontology/Schema/Timeline"
  *
- * const article = ArticleSummary.fromUnknown({
+ * const article = S.decodeUnknownOption(ArticleSummary)({
  *   id: "article-42",
  *   uri: "https://example.com/news/42",
  *   publishedAt: "2026-07-25T10:00:00.000Z",
  *   ingestedAt: "2026-07-25T10:05:00.000Z"
  * })
- * console.log(article.id) // "article-42"
+ * console.log(O.map(article, (value) => value.id)) // Some("article-42")
  * ```
  *
  * @category models
@@ -176,7 +177,7 @@ export class ArticleSummary extends S.Class<ArticleSummary>($I`ArticleSummary`)(
  *
  * **Example** (Use ClaimWithRank)
  * ```ts
- * import type { ClaimWithRank } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { ClaimWithRank } from "@effect-ontology/Schema/Timeline"
  *
  * const readRank = (claim: ClaimWithRank) => claim.rank
  * console.log(readRank)
@@ -215,15 +216,17 @@ export class ClaimWithRank extends S.Class<ClaimWithRank>($I`ClaimWithRank`)(
  *
  * **Example** (Use CorrectionSummary)
  * ```ts
- * import { CorrectionSummary } from "@effect-ontology/Schema/Timeline.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { CorrectionSummary } from "@effect-ontology/Schema/Timeline"
  *
- * const correction = CorrectionSummary.fromUnknown({
+ * const correction = S.decodeUnknownOption(CorrectionSummary)({
  *   id: "correction-42",
  *   correctionType: "superseded",
  *   correctionDate: "2026-07-25T12:00:00.000Z",
  *   originalClaimId: "claim-abc123def456"
  * })
- * console.log(correction.correctionType) // "superseded"
+ * console.log(O.map(correction, (value) => value.correctionType)) // Some("superseded")
  * ```
  *
  * @category models
@@ -250,7 +253,7 @@ export class CorrectionSummary extends S.Class<CorrectionSummary>($I`CorrectionS
  *
  * **Example** (Use ArticleDetailResponse)
  * ```ts
- * import { ArticleDetailResponse } from "@effect-ontology/Schema/Timeline.ts"
+ * import { ArticleDetailResponse } from "@effect-ontology/Schema/Timeline"
  *
  * const countClaims = (response: ArticleDetailResponse) => response.claims.length
  * console.log(countClaims)
@@ -276,10 +279,12 @@ export class ArticleDetailResponse extends S.Class<ArticleDetailResponse>($I`Art
  *
  * **Example** (Use TimelineEntityQuery)
  * ```ts
- * import { TimelineEntityQuery } from "@effect-ontology/Schema/Timeline.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { TimelineEntityQuery } from "@effect-ontology/Schema/Timeline"
  *
- * const query = TimelineEntityQuery.fromUnknown({})
- * console.log(query.includeDeprecated) // false
+ * const query = S.decodeUnknownOption(TimelineEntityQuery)({})
+ * console.log(O.map(query, (value) => value.includeDeprecated)) // Some(false)
  * ```
  *
  * @category dtos
@@ -303,7 +308,7 @@ export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`Timelin
  *
  * **Example** (Use TimelineEntityResponse)
  * ```ts
- * import type { TimelineEntityResponse } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { TimelineEntityResponse } from "@effect-ontology/Schema/Timeline"
  *
  * const countCorrections = (response: TimelineEntityResponse) => response.corrections.length
  * console.log(countCorrections)
@@ -329,10 +334,12 @@ export class TimelineEntityResponse extends S.Class<TimelineEntityResponse>($I`T
  *
  * **Example** (Use TimelineClaimsQuery)
  * ```ts
- * import { TimelineClaimsQuery } from "@effect-ontology/Schema/Timeline.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { TimelineClaimsQuery } from "@effect-ontology/Schema/Timeline"
  *
- * const query = TimelineClaimsQuery.fromUnknown({})
- * console.log(query.limit) // 20
+ * const query = S.decodeUnknownOption(TimelineClaimsQuery)({})
+ * console.log(O.map(query, (value) => value.limit)) // Some(20)
  * ```
  *
  * @category dtos
@@ -360,7 +367,7 @@ export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`Timelin
  *
  * **Example** (Use TimelineClaimsResponse)
  * ```ts
- * import type { TimelineClaimsResponse } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { TimelineClaimsResponse } from "@effect-ontology/Schema/Timeline"
  *
  * const hasNext = (response: TimelineClaimsResponse) => response.hasMore
  * console.log(hasNext)
@@ -387,7 +394,7 @@ export class TimelineClaimsResponse extends S.Class<TimelineClaimsResponse>($I`T
  *
  * **Example** (Use CorrectionHistoryQuery)
  * ```ts
- * import { CorrectionHistoryQuery } from "@effect-ontology/Schema/Timeline.ts"
+ * import { CorrectionHistoryQuery } from "@effect-ontology/Schema/Timeline"
  *
  * console.log(CorrectionHistoryQuery.make({}).includeOriginalClaims) // false
  * ```
@@ -414,7 +421,7 @@ const AffectedClaim = S.Struct({
  *
  * **Example** (Use CorrectionWithClaims)
  * ```ts
- * import type { CorrectionWithClaims } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { CorrectionWithClaims } from "@effect-ontology/Schema/Timeline"
  *
  * const affectedCount = (correction: CorrectionWithClaims) => correction.affectedClaims.length
  * console.log(affectedCount)
@@ -442,7 +449,7 @@ export class CorrectionWithClaims extends S.Class<CorrectionWithClaims>($I`Corre
  *
  * **Example** (Use CorrectionHistoryResponse)
  * ```ts
- * import { CorrectionHistoryResponse } from "@effect-ontology/Schema/Timeline.ts"
+ * import { CorrectionHistoryResponse } from "@effect-ontology/Schema/Timeline"
  *
  * const response = CorrectionHistoryResponse.make({ articleId: "article-42" })
  * console.log(response.corrections.length) // 0
@@ -486,10 +493,12 @@ const ConflictType = LiteralKit(["position", "temporal", "contradictory", "dupli
  *
  * **Example** (Use ConflictsQuery)
  * ```ts
- * import { ConflictsQuery } from "@effect-ontology/Schema/Timeline.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ConflictsQuery } from "@effect-ontology/Schema/Timeline"
  *
- * const query = ConflictsQuery.fromUnknown({})
- * console.log(query.limit) // 20
+ * const query = S.decodeUnknownOption(ConflictsQuery)({})
+ * console.log(O.map(query, (value) => value.limit)) // Some(20)
  * ```
  *
  * @category dtos
@@ -545,7 +554,7 @@ const ClaimConflictDefinition = S.TaggedUnion({
  *
  * **Example** (Use ClaimConflict)
  * ```ts
- * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline"
  *
  * const status = (conflict: ClaimConflict) => conflict._tag
  * console.log(status)
@@ -567,7 +576,7 @@ export const ClaimConflict = ClaimConflictDefinition.pipe(
  *
  * **Example** (Use ClaimConflict)
  * ```ts
- * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline.ts"
+ * import type { ClaimConflict } from "@effect-ontology/Schema/Timeline"
  *
  * const conflictType = (conflict: ClaimConflict) => conflict.conflictType
  * console.log(conflictType)
@@ -583,14 +592,15 @@ export type ClaimConflict = typeof ClaimConflict.Type;
  *
  * **Example** (Use ConflictsResponse)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ConflictsResponse } from "@effect-ontology/Schema/Timeline.ts"
+ * import { ConflictsResponse } from "@effect-ontology/Schema/Timeline"
  *
- * const response = S.decodeUnknownSync(ConflictsResponse)({
+ * const response = S.decodeUnknownOption(ConflictsResponse)({
  *   total: 0,
  *   pendingCount: 0
  * })
- * console.log(response.conflicts.length) // 0
+ * console.log(O.map(response, (value) => value.conflicts.length)) // 0
  * ```
  *
  * @invariant Counts are non-negative.

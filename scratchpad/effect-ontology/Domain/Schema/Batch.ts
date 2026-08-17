@@ -26,16 +26,17 @@ const defaultValidationPolicy = ValidationPolicy.fromUnknown({});
  *
  * **Example** (Use ManifestDocument)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ManifestDocument } from "@effect-ontology/Schema/Batch.ts"
+ * import { ManifestDocument } from "@effect-ontology/Schema/Batch"
  *
- * const document = S.decodeUnknownSync(ManifestDocument)({
+ * const document = S.decodeUnknownOption(ManifestDocument)({
  *   documentId: "doc-abc123def456",
  *   sourceUri: "gs://beep-input/documents/report.pdf",
  *   contentType: "application/pdf",
  *   sizeBytes: 128
  * })
- * console.log(document.sizeBytes) // 128
+ * console.log(O.map(document, (value) => value.sizeBytes)) // 128
  * ```
  *
  * @invariant Size is a non-negative integer and content type is a recognized
@@ -75,9 +76,9 @@ export class ManifestDocument extends S.Class<ManifestDocument>($I`ManifestDocum
  * **Example** (Use BatchManifest)
  * ```ts
  * import * as S from "effect/Schema"
- * import { BatchManifest, ManifestDocument } from "@effect-ontology/Schema/Batch.ts"
+ * import { BatchManifest, ManifestDocument } from "@effect-ontology/Schema/Batch"
  *
- * const documents = [S.decodeUnknownSync(ManifestDocument)({
+ * const documents = [S.decodeUnknownOption(ManifestDocument)({
  *   documentId: "doc-abc123def456",
  *   sourceUri: "gs://beep-input/documents/report.pdf",
  *   contentType: "application/pdf",
@@ -144,7 +145,7 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
  *
  * **Example** (Use ExtractionActivityInput)
  * ```ts
- * import type { ExtractionActivityInput } from "@effect-ontology/Schema/Batch.ts"
+ * import type { ExtractionActivityInput } from "@effect-ontology/Schema/Batch"
  *
  * const ontology = (input: ExtractionActivityInput) => input.ontologyId
  * console.log(typeof ontology) // "function"
@@ -177,7 +178,7 @@ export class ExtractionActivityInput extends S.Class<ExtractionActivityInput>($I
  *
  * **Example** (Use ResolutionActivityInput)
  * ```ts
- * import type { ResolutionActivityInput } from "@effect-ontology/Schema/Batch.ts"
+ * import type { ResolutionActivityInput } from "@effect-ontology/Schema/Batch"
  *
  * const count = (input: ResolutionActivityInput) => input.documentGraphUris.length
  * console.log(typeof count) // "function"
@@ -209,7 +210,7 @@ export class ResolutionActivityInput extends S.Class<ResolutionActivityInput>($I
  *
  * **Example** (Use ValidationActivityInput)
  * ```ts
- * import type { ValidationActivityInput } from "@effect-ontology/Schema/Batch.ts"
+ * import type { ValidationActivityInput } from "@effect-ontology/Schema/Batch"
  *
  * const graph = (input: ValidationActivityInput) => input.resolvedGraphUri
  * console.log(typeof graph) // "function"
@@ -236,14 +237,15 @@ export class ValidationActivityInput extends S.Class<ValidationActivityInput>($I
  *
  * **Example** (Use ValidationActivityViolationSummary)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { ValidationActivityViolationSummary } from "@effect-ontology/Schema/Batch.ts"
+ * import { ValidationActivityViolationSummary } from "@effect-ontology/Schema/Batch"
  *
- * const summary = S.decodeUnknownSync(ValidationActivityViolationSummary)({
+ * const summary = S.decodeUnknownOption(ValidationActivityViolationSummary)({
  *   severity: "warning",
  *   count: 0
  * })
- * console.log(summary.sampleMessages) // []
+ * console.log(O.map(summary, (value) => value.sampleMessages)) // []
  * ```
  *
  * @invariant Count is non-negative and messages are always represented by an
@@ -284,7 +286,7 @@ export class ValidationActivityViolationSummary extends S.Class<ValidationActivi
  *
  * **Example** (Use ValidationActivityOutput)
  * ```ts
- * import type { ValidationActivityOutput } from "@effect-ontology/Schema/Batch.ts"
+ * import type { ValidationActivityOutput } from "@effect-ontology/Schema/Batch"
  *
  * const conforms = (output: ValidationActivityOutput) => output.conforms
  * console.log(typeof conforms) // "function"
@@ -317,7 +319,7 @@ export class ValidationActivityOutput extends S.Class<ValidationActivityOutput>(
  *
  * **Example** (Use IngestionActivityInput)
  * ```ts
- * import type { IngestionActivityInput } from "@effect-ontology/Schema/Batch.ts"
+ * import type { IngestionActivityInput } from "@effect-ontology/Schema/Batch"
  *
  * const namespace = (input: IngestionActivityInput) => input.targetNamespace
  * console.log(typeof namespace) // "function"
@@ -347,7 +349,7 @@ export class IngestionActivityInput extends S.Class<IngestionActivityInput>($I`I
  *
  * **Example** (Use BatchWorkflowPayload)
  * ```ts
- * import type { BatchWorkflowPayload } from "@effect-ontology/Schema/Batch.ts"
+ * import type { BatchWorkflowPayload } from "@effect-ontology/Schema/Batch"
  *
  * const documents = (payload: BatchWorkflowPayload) => payload.documentIds
  * console.log(typeof documents) // "function"
@@ -382,9 +384,12 @@ export class BatchWorkflowPayload extends S.Class<BatchWorkflowPayload>($I`Batch
  *
  * **Example** (Use Batch)
  * ```ts
- * import { ValidationPolicy } from "@effect-ontology/Schema/Batch.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ValidationPolicy } from "@effect-ontology/Schema/Batch"
  *
- * console.log(ValidationPolicy.fromUnknown({}).failOnViolation) // true
+ * const policy = S.decodeUnknownOption(ValidationPolicy)({})
+ * console.log(O.map(policy, (value) => value.failOnViolation)) // Some(true)
  * ```
  *
  * @category policies

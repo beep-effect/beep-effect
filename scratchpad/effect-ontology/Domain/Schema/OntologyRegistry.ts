@@ -23,9 +23,11 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/OntologyRegistry"
  *
  * **Example** (Use OntologyEntry)
  * ```ts
- * import { OntologyEntry } from "@effect-ontology/Schema/OntologyRegistry.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { OntologyEntry } from "@effect-ontology/Schema/OntologyRegistry"
  *
- * const entry = OntologyEntry.fromUnknown({
+ * const entry = S.decodeUnknownOption(OntologyEntry)({
  *   id: "claims",
  *   iri: "https://example.com/ontology/claims",
  *   version: "1.0.0",
@@ -34,7 +36,7 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/OntologyRegistry"
  *   imports: [],
  *   targetNamespace: "https://example.com/claims/"
  * })
- * console.log(entry.id) // "claims"
+ * console.log(O.map(entry, (value) => value.id)) // Some("claims")
  * ```
  *
  * @invariant Identity, IRI, version, and storage fields satisfy their
@@ -107,10 +109,12 @@ export class OntologyEntry extends S.Class<OntologyEntry>($I`OntologyEntry`)(
  *
  * **Example** (Use SharedResources)
  * ```ts
- * import { SharedResources } from "@effect-ontology/Schema/OntologyRegistry.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { SharedResources } from "@effect-ontology/Schema/OntologyRegistry"
  *
- * const resources = SharedResources.fromUnknown({})
- * console.log(resources.externalVocabs._tag) // "None"
+ * const resources = S.decodeUnknownOption(SharedResources)({})
+ * console.log(O.map(resources, (value) => value.externalVocabs._tag)) // Some("None")
  * ```
  *
  * @category models
@@ -143,13 +147,15 @@ export class SharedResources extends S.Class<SharedResources>($I`SharedResources
  *
  * **Example** (Use OntologyRegistry)
  * ```ts
- * import { OntologyRegistry } from "@effect-ontology/Schema/OntologyRegistry.ts"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { OntologyRegistry } from "@effect-ontology/Schema/OntologyRegistry"
  *
- * const registry = OntologyRegistry.fromUnknown({
+ * const registry = S.decodeUnknownOption(OntologyRegistry)({
  *   version: "1.0.0",
  *   generatedAt: "2026-07-25T12:00:00.000Z"
  * })
- * console.log(registry.ontologies.length) // 0
+ * console.log(O.map(registry, (value) => value.ontologies.length)) // Some(0)
  * ```
  *
  * @invariant The manifest is semantically versioned, UTC timestamped, and
@@ -194,13 +200,14 @@ const OntologyRegistryJsonDefinition = S.fromJsonString(OntologyRegistry);
  *
  * **Example** (Use OntologyRegistryJson)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
- * import { OntologyRegistryJson } from "@effect-ontology/Schema/OntologyRegistry.ts"
+ * import { OntologyRegistryJson } from "@effect-ontology/Schema/OntologyRegistry"
  *
- * const registry = S.decodeUnknownSync(OntologyRegistryJson)(
+ * const registry = S.decodeUnknownOption(OntologyRegistryJson)(
  *   '{"version":"1.0.0","generatedAt":"2026-07-25T12:00:00.000Z"}'
  * )
- * console.log(registry.ontologies.length) // 0
+ * console.log(O.map(registry, (value) => value.ontologies.length)) // 0
  * ```
  *
  * @category codecs
@@ -223,7 +230,7 @@ const OntologyEntryJsonDefinition = S.fromJsonString(OntologyEntry);
  * **Example** (Use OntologyEntryJson)
  * ```ts
  * import * as S from "effect/Schema"
- * import { OntologyEntryJson } from "@effect-ontology/Schema/OntologyRegistry.ts"
+ * import { OntologyEntryJson } from "@effect-ontology/Schema/OntologyRegistry"
  *
  * const decode = S.decodeUnknownResult(OntologyEntryJson)
  * console.log(decode("{}")._tag) // "Failure"

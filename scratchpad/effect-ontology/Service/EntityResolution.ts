@@ -1,6 +1,8 @@
 /**
  * Service: Entity Resolution
  *
+ * **Details**
+ *
  * Service wrapper for entity resolution operations.
  *
  * @packageDocumentation
@@ -45,6 +47,20 @@ const makeEntityResolutionService = Effect.gen(function* () {
   return { resolve };
 });
 
+/**
+ * Provides the entity resolution service service capability.
+ *
+ * **Example** (Inspect entity resolution service)
+ *
+ * ```ts
+ * import { EntityResolutionService } from "@effect-ontology/Service/EntityResolution"
+ *
+ * console.log(EntityResolutionService)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
 export class EntityResolutionService extends Context.Service<EntityResolutionService>()($I`EntityResolutionService`, {
   make: makeEntityResolutionService,
 }) {
