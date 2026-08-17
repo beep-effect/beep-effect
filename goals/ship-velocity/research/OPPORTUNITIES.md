@@ -398,6 +398,13 @@ session/machine ids.
 
 ## 2026-08-17 — P1 closeout
 
+Attribution note (added after the #747 review flagged the batching): the three receipts below
+were surfaced in chat during earlier P1 work — the first by the A7 worktree agent while #738's
+proof held its tree, the second across the E1/#736 and C1/#743 review waves, the third by the
+C1 agent refusing a bad instruction during #743 — and could not land contemporaneously because
+each originating worktree was frozen under a live proof fingerprint at the time. That constraint
+is itself the fourth receipt below; the batching is the symptom, not the practice.
+
 - The ledger itself is the packet's hottest contention surface, and it is contention in *prose*,
   not code (A7's framing, carried here at closeout): every packet PR that appends to this file
   invalidates the next packet PR's base, so a queue of N packet items serializes into N base
@@ -416,6 +423,13 @@ session/machine ids.
   says to use it, so nothing prevents a check. Prevention: a codemod for the existing drift plus a
   lint rule that rejects a non-canonical `@category` on a touched export, which turns three review
   round trips into a local failure in seconds.
+- The ledger's record-it-when-it-happens law collides with the proof fingerprint: a receipt
+  discovered *after* a tree is staged and proven has nowhere to go, because editing this tracked
+  file mid-proof mutates `git status` and both diffs — invalidating the very proof in flight (the
+  B5 defect, deliberately re-run). Every batched receipt above existed in chat within minutes of
+  its incident and still had to wait for a safe tree. Prevention is the same E5 fix shape: give
+  receipts an untracked or per-item landing zone that a live fingerprint does not cover, then fold
+  into the ledger at the next natural commit.
 - A base-freshness claim sourced from a clone's `HEAD` rather than from `origin/main` sent an agent
   toward merging an unrelated branch. The orchestrator read `git log -1` in a checkout that another
   session had switched to a feature branch, reported "main moved" with that branch's tip, and
@@ -423,6 +437,6 @@ session/machine ids.
   and did not act on it. No damage, purely because the instruction was checked rather than obeyed.
   Prevention, and it generalizes to every agent-to-agent hand-off in this repo: a base claim must
   cite `origin/main` explicitly (`git rev-parse origin/main`), never a working checkout's `HEAD`,
-  and overlap must be computed from the merge base (`git diff --name-only <merge-base>..origin/main`)
+  and overlap must be computed from the merge base (`git diff --name-only <mb>..origin/main`)
   because the bidirectional `HEAD..origin/main` form lists your own commits as incoming and makes
   every branch with a commit look like a total collision.

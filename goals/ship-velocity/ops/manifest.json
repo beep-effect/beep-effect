@@ -94,7 +94,7 @@
   "stopConditions": [
     "Any backpressure enforcement (hook deny, Stop veto, poison-pill) deadlocks a session or checkout - severity gates and waives must ship with the enforcement, never after.",
     "Admission/auto-heal/takeover would mutate state it cannot attribute (foreign lease, malformed lock, baseline regeneration) - fail loud and stop.",
-    "PR remote-cache reads or path-filtered required checks proceed without their recorded operator decision note.",
+    "PR remote-cache reads (C2), the INDEX end-state change (E2), or path-filtered required checks (E6) proceed without their recorded operator decision note.",
     "A parity change weakens a security lane (gitleaks pinning, OSV, fork isolation) to make local green easier."
   ]
 }

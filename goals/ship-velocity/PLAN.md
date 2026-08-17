@@ -9,7 +9,8 @@ phase flips ride the final PR of each phase.
 - ~~Land this packet; record operator decisions: C2 (PR remote reads / CSF-014), E2 (INDEX
   end-state), E6 (path-filtered required checks)~~ — packet landed 2026-08-13 as #709. The three
   decision notes are deliberately deferred to their implementation PRs (C2 in P4, E2/E6 in P5),
-  which the stop condition already enforces: those changes may not proceed without their recorded
+  and the manifest stop condition now names all three explicitly (E2 was missing from it until
+  the #747 review wave caught the gap), so none of those changes can proceed without its recorded
   note. Nothing further is owed by P0.
 - ~~Baseline metrics snapshot (SPEC §Metrics) from existing artifacts: c1-raw-failures.txt,
   merge-commit counts, current monitor latency budget~~ — done 2026-08-14:
