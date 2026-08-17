@@ -4,7 +4,8 @@
 
 Status: `active` — P0 complete 2026-08-14 (PR #722); P1 complete 2026-08-16
 (PR #723, delete-package + registration geometry merged as `e97f73be44`);
-P2 next.
+P2 complete 2026-08-17 (substrate PR #732 merged as `afe4cdfaa7`, plus the
+lab-minting PR that scaffolded `apps/labs/trustgraph-workbench`); P3 next.
 
 ## Phases
 
@@ -12,7 +13,7 @@ P2 next.
 | --- | --- | --- | --- |
 | P0 Census ratification and geometry schema design | complete | Re-verify the registration-surface census (`research/02` §19, `research/05` §7) against the live tree; design the `RegistrationSurface` geometry schema and the labs identity-segment mechanism (SPEC D6/D8); ratify the exact gate-scoping entry list from `research/04`. | Geometry schema reviewed (schema-first skill loaded); census deltas recorded in `research/`; gate entry list ratified in this plan. |
 | P1 Implement delete-package with doctor mode | complete | `beep delete-package` per `research/05` §9 (phases 0–10): dependents scan + refuse table, plan/dry-run/check, identity remove + orphan lint, workspace-literal remove, tsconfig-sync, lockfile, baseline regen, changeset policy. Doctor proves against a synthetic residue fixture built from the #680 classes (SPEC Track A); any matching live residue found at P1 time is swept in the same PR as a bonus. | Track A acceptance boxes in SPEC pass; PR mergeable via yeet. |
-| P2 Implement apps/labs substrate and v1 variants | pending | One-time `apps/labs/*` glob + gate scoping PR; lab manifest schema + `beep labs list`; vite + service AppKinds (nextjs reused); GLOSSARY "lab app"; promotion runbook; scaffold the trustgraph-ts workbench lab shell. | Track B acceptance boxes (except tauri + round-trip) pass; PRs mergeable via yeet. |
+| P2 Implement apps/labs substrate and v1 variants | complete | One-time `apps/labs/*` glob + gate scoping PR; lab manifest schema + `beep labs list`; vite + service AppKinds (nextjs reused); GLOSSARY "lab app"; promotion runbook; scaffold the trustgraph-ts workbench lab shell. | Track B acceptance boxes (except tauri + round-trip) pass; PRs mergeable via yeet. |
 | P3 Tauri lab variant (spike then land) | pending | Toolchain/CI spike (rust on runners, portless semantics for the webview, professional-desktop overlap), then land tauri as a lab AppKind on the existing templates. | Spike outcome recorded; tauri lab scaffolds and typechecks; PR mergeable. |
 | P4 Verify create/delete round-trip | pending | Run the First Vertical Slice: vite lab scaffold → serve → delete → doctor green, clean tree. | Round-trip evidence recorded in `history/`; doctor green. |
 | P5 Yeet: final PR to mergeable | pending | Publish remaining work through yeet and drive to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
@@ -63,6 +64,42 @@ zero-consumer create→delete round-trip executed 2026-08-16
 bug (the pending-changeset probe flagged its own `{}` deletion note as
 residue). P4's First Vertical Slice remains the separate Track B lab
 round-trip gate.
+
+## P2 Outcome (2026-08-17)
+
+Shipped as two PRs, per the substrate-then-lab split.
+
+**PR #732 (`afe4cdfaa7`) — substrate.** All fourteen ratified gate-scoping
+edits from `research/12`, plus the thirteen explicit no-edit ratifications
+held (`.changeset/config.json`, `knip.jsonc`, `biome.jsonc`, `lefthook.yml`,
+`Lint.schemas.ts`, `PackageTestTypecheck.ts`, storybook config untouched).
+The frozen 16 required contexts are unchanged and `Labs` lands permanently
+non-required. Landed with 22/22 checks green.
+
+**Lab-minting PR — the D13 acceptance proof.**
+`apps/labs/trustgraph-workbench` scaffolded through the shipped tooling with
+no hand edits, which discharges two SPEC Track B boxes at once:
+
+- *"mints labs that pass `beep:check`, `beep:lint`, `beep:test` out of the
+  box"* — measured on the generated lab: check exit 0, lint
+  "Checked 12 files … No fixes applied", test 1/1 passed.
+- *D5 zero-root-churn, proven live rather than argued.* The mint's entire
+  footprint outside the lab tree is the generated identity segment
+  (`generatedLabComposers = {}` → `$I.compose("trustgraph-workbench")`, strictly
+  inside the fenced markers) and `bun.lock`. Root `package.json`,
+  `tsconfig.json`, `syncpack.config.ts`, `vitest.config.ts` and
+  `.changeset/config.json` are untouched — create-package reported
+  `workspaces: SKIP (already covered by an existing workspace entry)`.
+
+Five defects found by a 30-agent conformance audit of #732 were fixed in the
+minting PR, because each one only bites once a lab exists: ratified row 7's
+second half (lab templates still emitted a `coverage` script — fixed in #732
+itself); `--reuse-retired-name` never removing the registry entry, which would
+wedge the later delete; row 13's missing `apps/labs/*/src/main.ts` Fallow entry
+glob for the `service` AppKind; `--parent-dir apps/labs` without `--lab`
+bypassing every lab construction rule; and lab dependency tables declaring
+workspace packages no emitted file imports, which would fail the required Knip
+context on the first lab.
 
 ## P6 Closeout Checklist
 
