@@ -184,3 +184,77 @@ export class GoalStatusInputError extends S.TaggedError<GoalStatusInputError>($I
 ) {
   static readonly new = (message: string): GoalStatusInputError => GoalStatusInputError.make({ message });
 }
+
+/**
+ * Failure raised when `beep goals bootstrap` or `beep goals adopt` receives
+ * input outside the plan-input domain.
+ *
+ * **Details**
+ *
+ * Covers a missing `--plan` flag (phase 0 ships plan-only commands), a slug
+ * outside the `GoalSlug` grammar, a malformed `--today` date, and a capability
+ * list entry outside the capability-slug grammar. Environment facts about the packet tree (an existing slug, a
+ * missing packet) are `PlanConflict` rows inside the compiled plan, never this
+ * error.
+ *
+ * **Example** (Create plan-input error)
+ *
+ * ```ts
+ * import { GoalPlanInputError } from "@beep/repo-cli/commands/Goals/Goals.errors"
+ *
+ * const error = GoalPlanInputError.new('Unknown archetype "waterfall".')
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class GoalPlanInputError extends S.TaggedError<GoalPlanInputError>($I`GoalPlanInputError`)(
+  "GoalPlanInputError",
+  {
+    message: S.String,
+  },
+  $I.annote("GoalPlanInputError", {
+    description: "Invalid input for beep goals bootstrap/adopt plan compilation.",
+  })
+) {
+  static readonly new = (message: string): GoalPlanInputError => GoalPlanInputError.make({ message });
+}
+
+/**
+ * Failure raised when a packet snapshot read cannot be completed.
+ *
+ * **Details**
+ *
+ * `readPacketSnapshot` only ever reads, but a directory entry that vanishes or
+ * a file that cannot be read leaves the snapshot unverifiable; adoption plans
+ * over unverifiable state could misclassify authored files as absent, so the
+ * read fails closed with this error instead of degrading.
+ *
+ * **Example** (Create plan-operational error)
+ *
+ * ```ts
+ * import { GoalPlanOperationalError } from "@beep/repo-cli/commands/Goals/Goals.errors"
+ *
+ * const error = GoalPlanOperationalError.new('Failed to read "goals/x/SPEC.md".')(new Error("EACCES"))
+ * console.log(error.message)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class GoalPlanOperationalError extends S.TaggedError<GoalPlanOperationalError>($I`GoalPlanOperationalError`)(
+  "GoalPlanOperationalError",
+  {
+    message: S.String,
+    cause: S.optionalKey(S.Defect({ includeStack: true })),
+  },
+  $I.annote("GoalPlanOperationalError", {
+    description: "A packet-snapshot read failure that must fail plan compilation closed.",
+  })
+) {
+  static readonly new =
+    (message: string): ((cause: unknown) => GoalPlanOperationalError) =>
+    (cause: unknown) =>
+      GoalPlanOperationalError.make({ message, cause });
+}

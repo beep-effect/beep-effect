@@ -5,6 +5,9 @@
  * @since 0.0.0
  */
 
+export * from "@beep/repo-cli/commands/Goals/Adopt";
+export * from "@beep/repo-cli/commands/Goals/Bootstrap";
+export * from "@beep/repo-cli/commands/Goals/Bootstrap.schemas";
 export * from "@beep/repo-cli/commands/Goals/Doctor";
 export * from "@beep/repo-cli/commands/Goals/Goals.command";
 export * from "@beep/repo-cli/commands/Goals/Goals.errors";
