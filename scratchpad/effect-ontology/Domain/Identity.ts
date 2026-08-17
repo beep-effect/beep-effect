@@ -400,9 +400,12 @@ export type GcsBucket = typeof GcsBucket.Type;
  * @category validation
  * @since 0.0.0
  */
-const GcsUriEncoded = S.TemplateLiteral(["gs://", GcsBucket, "/", GcsObjectName]).pipe(S.brand("GcsUri"));
+const GcsUriEncoded = S.TemplateLiteral(["gs://", GcsBucket, "/", GcsObjectName]).pipe(
+  S.brand("GcsUri"),
+  SchemaUtils.withCodecStatics
+);
 
-const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => S.is(GcsUriEncoded)(input)).annotate({
+const GcsUriFromSelf = S.declare((input): input is BrandedGcsUri => GcsUriEncoded.is(input)).annotate({
   toArbitrary: () => (fc) =>
     fc
       .tuple(S.toArbitrary(GcsBucket)(fc), S.toArbitrary(GcsObjectName)(fc))
@@ -536,7 +539,7 @@ const GcsObjectChecks = S.makeFilterGroup(
  */
 const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(S.brand("GcsObject"), SchemaUtils.withCodecStatics);
 
-const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => S.is(GcsObjectEncoded)(input)).annotate({
+const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => GcsObjectEncoded.is(input)).annotate({
   toArbitrary: () => (fc) => fc.stringMatching(gcsObjectArbitraryPattern).map(GcsObjectEncoded.make),
 });
 

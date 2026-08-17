@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
-import {$ScratchpadId} from "@beep/identity";
-import {LiteralKit, SchemaUtils} from "@beep/schema";
+import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
-import {pipe, Result} from "effect";
+import { pipe, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
@@ -17,16 +17,12 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Prompt from "effect/unstable/ai/Prompt";
-import {Entity} from "../Domain/Model/Entity.ts";
-import {ImageForPrompt} from "../Domain/Model/Image.ts";
-import {ClassDefinition, PropertyDefinition} from "../Domain/Model/Ontology.ts";
-import {dual2, dual3, dual4} from "../Utils/Dual.ts";
-import type {RuleSet} from "./RuleSet.ts";
-import {
-  makeEntityRuleSet,
-  makeMentionRuleSet,
-  makeRelationRuleSet
-} from "./RuleSet.ts";
+import { Entity } from "../Domain/Model/Entity.ts";
+import { ImageForPrompt } from "../Domain/Model/Image.ts";
+import { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
+import { dual2, dual3, dual4 } from "../Utils/Dual.ts";
+import type { RuleSet } from "./RuleSet.ts";
+import { makeEntityRuleSet, makeMentionRuleSet, makeRelationRuleSet } from "./RuleSet.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Prompt/PromptGenerator");
 
@@ -373,7 +369,7 @@ export class StructuredPromptWithExamples extends S.Class<StructuredPromptWithEx
  * Explains that we use local names for token efficiency and will expand to full IRIs
  */
 const buildNamespacePrefixSection = (ctx: OntologyPromptContext): PromptDoc => {
-  if (ctx.classes.length === 0) {
+  if (A.isReadonlyArrayEmpty(ctx.classes)) {
     return Doc.empty;
   }
 
@@ -653,23 +649,23 @@ const buildDulHierarchySection = (ctx: OntologyPromptContext): PromptDoc => {
  * Uses local names instead of full IRIs for token efficiency
  */
 const buildQuickReferenceSection = (ruleSet: RuleSet): PromptDoc => {
-  const parts: Array<PromptDoc> = [];
+  const parts = A.empty<PromptDoc>();
   const iris = ruleSet.allowedIris;
 
-  if (iris.classIris.length > 0) {
+  if (A.isReadonlyArrayNonEmpty(iris.classIris)) {
     // Convert to local names for compact display
     const localNames = A.map(iris.classIris, extractLocalNameFromIri);
     parts.push(Doc.text("=== ALLOWED CLASSES ==="), Doc.text(A.join(localNames, ", ")), Doc.empty);
   }
 
   const allPropertyIris = [...iris.objectPropertyIris, ...iris.datatypePropertyIris];
-  if (allPropertyIris.length > 0) {
+  if (A.isReadonlyArrayNonEmpty(allPropertyIris)) {
     // Convert to local names for compact display
     const localNames = A.map(allPropertyIris, extractLocalNameFromIri);
     parts.push(Doc.text("=== ALLOWED PROPERTIES ==="), Doc.text(A.join(localNames, ", ")), Doc.empty);
   }
 
-  if (iris.entityIds.length > 0) {
+  if (A.isReadonlyArrayNonEmpty(iris.entityIds)) {
     parts.push(Doc.text("=== VALID ENTITY IDs ==="), Doc.text(A.join(iris.entityIds, ", ")), Doc.empty);
   }
 
@@ -685,10 +681,10 @@ const buildRulesSection = (ruleSet: RuleSet): PromptDoc => {
   const errorRules = ruleSet.errorRules;
   const warningRules = ruleSet.warningRules;
 
-  const parts: Array<PromptDoc> = [];
+  const parts = A.empty<PromptDoc>();
 
   // Critical rules
-  if (errorRules.length > 0) {
+  if (A.isReadonlyArrayNonEmpty(errorRules)) {
     parts.push(Doc.text("=== EXTRACTION RULES ==="));
     A.forEach(errorRules, (rule, idx) => {
       parts.push(Doc.text(`${idx + 1}. ${rule.instruction}`));
@@ -708,7 +704,7 @@ const buildRulesSection = (ruleSet: RuleSet): PromptDoc => {
   }
 
   // Preferences (warnings)
-  if (warningRules.length > 0) {
+  if (A.isReadonlyArrayNonEmpty(warningRules)) {
     parts.push(Doc.text("=== PREFERENCES ==="));
     A.forEach(warningRules, (rule) => {
       parts.push(Doc.text(`- ${rule.instruction}`));
@@ -767,7 +763,7 @@ const buildOutputFormatSection = (stage: "mention" | "entity" | "relation"): Pro
  * @returns Array of example messages as user/assistant turns
  */
 const buildExampleMessages = (examples: ReadonlyArray<ScoredExample>): ReadonlyArray<ExampleMessage> => {
-  const messages = A.empty<ExampleMessage>()
+  const messages = A.empty<ExampleMessage>();
 
   for (const example of examples) {
     // Skip negative examples - they go in system message
@@ -817,7 +813,7 @@ const buildExampleMessages = (examples: ReadonlyArray<ScoredExample>): ReadonlyA
 const buildNegativeExamplesSection = (examples: ReadonlyArray<ScoredExample>): PromptDoc => {
   const negatives = A.filter(examples, (example) => example.isNegative);
 
-  if (negatives.length === 0) {
+  if (A.isReadonlyArrayEmpty(negatives)) {
     return Doc.empty;
   }
 
@@ -1352,10 +1348,7 @@ export const buildMultimodalUserContent = dual3(
   ): ReadonlyArray<Prompt.UserMessagePart> => {
     const parts: Array<Prompt.UserMessagePart> = [Prompt.makePart("text", { text })];
 
-    const availableImages = O.flatMap(
-      O.fromUndefinedOr(images),
-      A.match({ onEmpty: O.none, onNonEmpty: O.some })
-    );
+    const availableImages = O.flatMap(O.fromUndefinedOr(images), A.match({ onEmpty: O.none, onNonEmpty: O.some }));
     if (O.isSome(availableImages)) {
       // Add intro text for images if provided
       if (P.isNotUndefined(imageIntro)) {

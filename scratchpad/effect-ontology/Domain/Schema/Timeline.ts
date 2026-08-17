@@ -89,10 +89,10 @@ const TimelineRangeDefinition = TimelineRangeFields.check(
       message: "Timeline range end must be greater than or equal to its start.",
     }
   )
-);
+).pipe(SchemaUtils.withCodecStatics);
 
 const TimelineRangeFromSelf = S.declare((input: unknown): input is typeof TimelineRangeDefinition.Type =>
-  S.is(TimelineRangeDefinition)(input)
+  TimelineRangeDefinition.is(input)
 ).annotate({
   toArbitrary: () => (fc) =>
     fc

@@ -292,7 +292,7 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (inp
                   const now = yield* Clock.currentTimeMillis;
                   const resetTimeoutMs = Duration.toMillis(config.resetTimeout);
                   const retryAfterMs = resetTimeoutMs - (Number(now) - current.lastFailureTime);
-                  const error = yield* S.decodeUnknownEffect(CircuitOpenError)({
+                  const error = yield* CircuitOpenError.decodeUnknownEffect({
                     resetTimeoutMs,
                     lastFailureTime: O.some(current.lastFailureTime),
                     retryAfterMs: O.some(N.max(0)(retryAfterMs)),
