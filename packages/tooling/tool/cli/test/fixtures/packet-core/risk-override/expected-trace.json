@@ -20,10 +20,58 @@
       "seq": 4
     }
   },
-  "projectorVersion": 1,
+  "projectorVersion": 2,
   "schemaVersion": "packet-trace/v1",
   "sourceTip": {
     "id": "63470dd7c36713896c713874bda75f9e8a76017d170feeea4117b8b2e715aeae",
     "seq": 4
-  }
+  },
+  "timeline": [
+    {
+      "actor": "fixture",
+      "at": "2026-08-17T12:00:00.000Z",
+      "body": {
+        "ordinal": 0,
+        "stage": "capture",
+        "status": "active",
+        "type": "packet-created"
+      },
+      "id": "c73b13cafa3c37e91881ef2e140493820ead38fb67fe87df25651df687f873a3",
+      "seq": 1
+    },
+    {
+      "actor": "fixture",
+      "at": "2026-08-17T12:05:00.000Z",
+      "body": {
+        "ordinal": 2,
+        "stage": "align",
+        "type": "stage-entered"
+      },
+      "id": "7aaaecfd176bd9bc19789ba324adbdeabec91f3517cec1eba8189cba3986ac0f",
+      "seq": 2
+    },
+    {
+      "actor": "fixture",
+      "at": "2026-08-17T12:10:00.000Z",
+      "body": {
+        "reason": "fixture: initial operator override",
+        "tier": "standard",
+        "type": "risk-tier-overridden"
+      },
+      "id": "2c60eae90066873535cb1dbd2e4a4c2ce823be380b9bf8a69d32ca9a9c1089a7",
+      "seq": 3
+    },
+    {
+      "actor": "fixture",
+      "at": "2026-08-17T12:15:00.000Z",
+      "body": {
+        "previous": "standard",
+        "reason": "fixture: raised after scope review",
+        "tier": "full",
+        "type": "risk-tier-overridden"
+      },
+      "id": "63470dd7c36713896c713874bda75f9e8a76017d170feeea4117b8b2e715aeae",
+      "seq": 4
+    }
+  ]
 }

@@ -1165,22 +1165,73 @@ export class PacketDerivedState extends S.Class<PacketDerivedState>($I`PacketDer
  *
  * The version bumps only when the projector renders different bytes for a
  * previously valid stream. Additive derivations that stay absent on old
- * streams (for example the risk-tier override) keep the version: streams
- * containing the new event types do not decode under older projectors at
- * all, so no two projector versions ever disagree about the same stream.
+ * streams (for example the risk-tier override) keep the version; version 2
+ * added the required event timeline to every projection, changing the bytes
+ * of every previously valid trace, so committed v1 traces retire by failing
+ * the v2 decode (reported as stale) and regenerate on the next write.
+ * Projections are disposable derived copies — stale traces are regenerated
+ * from the stream, never upcast.
  *
  * **Example** (Read the projector version)
  *
  * ```ts
  * import { PACKET_PROJECTOR_VERSION } from "@beep/repo-cli/test/Goals"
  *
- * console.log(PACKET_PROJECTOR_VERSION) // 1
+ * console.log(PACKET_PROJECTOR_VERSION) // 2
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const PACKET_PROJECTOR_VERSION = 1;
+export const PACKET_PROJECTOR_VERSION = 2;
+
+/**
+ * One event on the projected timeline of a packet trace.
+ *
+ * **Details**
+ *
+ * Timeline entries cover the unambiguous linear prefix only — events past a
+ * fork are ambiguous history and ride in the fork verdicts instead. The full
+ * event body is embedded verbatim: projections are disposable derived
+ * copies, so duplicating recorded content is free fidelity.
+ *
+ * **Example** (Construct a timeline entry)
+ *
+ * ```ts
+ * import { PacketTraceEntry } from "@beep/repo-cli/test/Goals"
+ *
+ * const entry = PacketTraceEntry.make({
+ *   seq: 1,
+ *   id: "0".repeat(64),
+ *   at: "2026-08-17T00:00:00.000Z",
+ *   actor: "operator",
+ *   body: { type: "packet-created", status: "active" },
+ * })
+ * console.log(entry.seq) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PacketTraceEntry extends S.Class<PacketTraceEntry>($I`PacketTraceEntry`)(
+  {
+    seq: S.Int.check(
+      S.isGreaterThanOrEqualTo(1, {
+        identifier: $I`PacketTraceEntrySeqRangeCheck`,
+        title: "Packet Trace Entry Seq Range",
+        description: "Timeline entries carry their event's positive sequence number.",
+        message: "Expected a positive integer sequence number",
+      })
+    ),
+    id: PacketEventId,
+    at: PacketEventTimestamp,
+    actor: PacketEventActor,
+    body: PacketEventBody,
+  },
+  $I.annote("PacketTraceEntry", {
+    description: "One linear-prefix event on the projected packet timeline, body embedded verbatim.",
+  })
+) {}
 
 /**
  * Read-only trace projection of one packet stream.
@@ -1190,8 +1241,9 @@ export const PACKET_PROJECTOR_VERSION = 1;
  * The projection binds its `sourceTip` and `projectorVersion` so staleness is
  * always derivable: a committed trace whose source tip no longer matches the
  * folded stream (or whose projector version is outdated) is stale, never
- * silently trusted. The rendered file embeds no timestamps, so identical
- * streams project byte-identical traces.
+ * silently trusted. The rendered file reads no clock — timeline timestamps
+ * are recorded event data — so identical streams project byte-identical
+ * traces.
  *
  * **Example** (Construct a projection for an empty stream)
  *
@@ -1200,10 +1252,11 @@ export const PACKET_PROJECTOR_VERSION = 1;
  *
  * const trace = PacketTraceProjection.make({
  *   schemaVersion: "packet-trace/v1",
- *   projectorVersion: 1,
+ *   projectorVersion: 2,
+ *   timeline: [],
  *   derived: PacketDerivedState.make({ packet: "demo", root: "goals", revision: 0, forks: [], issues: [] }),
  * })
- * console.log(trace.projectorVersion) // 1
+ * console.log(trace.projectorVersion) // 2
  * ```
  *
  * @category models
@@ -1221,6 +1274,7 @@ export class PacketTraceProjection extends S.Class<PacketTraceProjection>($I`Pac
       })
     ),
     sourceTip: S.optionalKey(PacketTip),
+    timeline: S.Array(PacketTraceEntry),
     derived: PacketDerivedState,
   },
   $I.annote("PacketTraceProjection", {
