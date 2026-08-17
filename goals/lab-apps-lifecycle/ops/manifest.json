@@ -5,7 +5,7 @@
     "title": "Lab Apps Lifecycle",
     "status": "active",
     "created": "2026-08-13",
-    "updated": "2026-08-16",
+    "updated": "2026-08-17",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lab-apps-lifecycle",
@@ -82,7 +82,7 @@
     {
       "id": "P3",
       "name": "Tauri lab variant (spike then land)",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",

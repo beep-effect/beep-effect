@@ -735,6 +735,21 @@ describe("create-package", { concurrent: false }, () => {
             expect(yield* fs.exists(path.join(packageDir, "src", "App.tsx"))).toBe(true);
             expect(yield* fs.exists(path.join(packageDir, "src-tauri", "tauri.conf.json"))).toBe(true);
 
+            // `tauri::generate_context!()` opens this icon while the macro expands, so
+            // a Tauri crate without it does not compile. Assert the PNG signature
+            // rather than mere existence: the asset path exists precisely because a
+            // Handlebars string round-trip would corrupt these high bytes.
+            const iconBytes = yield* fs.readFile(path.join(packageDir, "src-tauri", "icons", "icon.png"));
+            expect(A.take(A.fromIterable(iconBytes), 8)).toStrictEqual([
+              0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+            ]);
+            expect(iconBytes.length).toBeGreaterThan(1024);
+
+            const tauriConf = yield* fs.readFileString(path.join(packageDir, "src-tauri", "tauri.conf.json"));
+            expect(tauriConf).toContain(`"icon": ["icons/icon.png"]`);
+            // The webview must load the same portless route the `dev` script serves.
+            expect(tauriConf).toContain(`"devUrl": "http://desktop-shell.beep.localhost:1355"`);
+
             const appTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(packageDir, "tsconfig.json")));
             expect(appTsconfig.compilerOptions.paths).toMatchObject({
               "@/*": ["./src/*"],
