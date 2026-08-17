@@ -1,4 +1,4 @@
-# Academia Corpus Mining
+"# Academia Corpus Mining
 
 ## Status
 
@@ -49,6 +49,41 @@ citable content of all 443 papers is intact.
 2. **No DOIs or URLs were recorded** in any of the 443 meta records
    (`srcPath` points at the dead Downloads path). Re-acquisition would be
    title-based search per paper, not a link fetch.
+
+### Identifier backfill (2026-08-17)
+
+The original meta records carried no DOI or URL. A resolver pass over the 443
+first-page extracts recovered identifiers where the source PDFs had them
+embedded — ResearchGate and arXiv headers usually do; Academia.edu-native
+uploads usually do not.
+
+| Outcome | Papers |
+| --- | ---: |
+| DOI verified via OpenAlex (title, year, OA link) | 100 |
+| arXiv ID verified via OpenAlex | 50 |
+| Matched by title search (>= 0.72 similarity) | 30 |
+| Identifier extracted offline, unverified | 6 |
+| **No identifier anywhere on the first page** | **257** |
+| **Total carrying a DOI or arXiv id** | **186 / 443 (42%)** |
+
+Index: `~/YeeBois/research/academia-2026-07/resolved-index.jsonl`, one record
+per paper keyed by the same 12-char `id` used across `text/`, `meta/`, and
+`firstpages/`.
+
+**Open-access PDFs recovered:** 42 and counting, into
+`~/YeeBois/research/academia-2026-07/pdf/<id>.pdf`, fetched from the
+`best_oa_location` OpenAlex reports. 101 papers had an OA PDF URL.
+
+**Why 257 resolve to nothing, honestly:** they are Academia.edu-native
+uploads, book chapters, and non-indexed preprints with no DOI printed on the
+page and no usable PDF metadata (only 6 of 443 records had a non-empty
+`pdfTitle`). Title-search against a truncated Academia filename is not
+reliable enough to assert a match, so those are left unresolved rather than
+guessed. Their extracted text is unaffected and remains complete.
+
+**Reproduce:** `resolve-identifiers.py` and `fetch-oa-pdfs.py` are stored in
+the library. Both are resumable and safe to re-run; OpenAlex throttles at
+roughly 10 req/s, so the resolver backs off on 429.
 
 ## Next Open Question
 
