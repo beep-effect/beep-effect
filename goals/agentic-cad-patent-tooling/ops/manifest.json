@@ -3,19 +3,101 @@
   "initiative": {
     "id": "agentic-cad-patent-tooling",
     "title": "Agentic CAD — Patent Tooling",
-    "status": "reference",
-    "packetAnchorDocument": "README.md"
+    "status": "active",
+    "created": "2026-05-29",
+    "updated": "2026-08-17",
+    "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agentic-cad-patent-tooling",
-  "lifecycle": "reference",
-  "executionCapable": false,
-  "reflectionRequired": false,
-  "statusNote": "backfilled from README evidence: research complete 2026-05-29 (repo-agnostic buyer's guide)",
+  "lifecycle": "active",
+  "mission": "CAD viewing plus a first-class reference-numeral / figure graph for a solo patent practice in professional-desktop.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "statusNote": "Promoted from reference to active 2026-08-17. The 2026-05-29 buyer's guide was repo-agnostic and 3D-solid-biased; a corpus census (837 DWG vs 201 STEP; 86 of 175 .ai sheets carry extractable 'FIG. n' text) reframed the packet around the 2D figure and its numeral graph. Local-only was relaxed to a per-matter policy and consent record on operator direction: quality first, cloud permitted where better.",
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
-  }
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agentic-cad-patent-tooling/README.md",
+    "goals/agentic-cad-patent-tooling/SPEC.md",
+    "goals/agentic-cad-patent-tooling/PLAN.md",
+    "goals/agentic-cad-patent-tooling/GOAL.md",
+    "goals/agentic-cad-patent-tooling/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/agentic-cad-landscape.md",
+    "research/2026-08-17-fanout/reports"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agentic-cad-patent-tooling/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Numeral graph + provenance spine",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Byte read-back and document grid",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Viewers (STEP, vector, DWG preview)",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Agent surface (cad_* MCP tools)",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Figure compositor (37 CFR 1.84 sheet)",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Photo on-ramp (photo -> Fusion sketch)",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Ship to attorney's Windows box, then close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/agentic-cad-patent-tooling/GOAL.md)\" -le 4000",
+    "jq . goals/agentic-cad-patent-tooling/ops/manifest.json",
+    "rg -n \"agentic-cad-patent-tooling|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/agentic-cad-patent-tooling",
+    "git diff --check -- goals/agentic-cad-patent-tooling",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The 37 CFR 1.84(p)(4)-(5) bijection cannot be computed from real corpus files.",
+    "DWG support would require linking GPL code or redistributing a converter whose terms forbid it.",
+    "Any requirement would move client technical content off the machine.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
 }
