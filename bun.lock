@@ -71,7 +71,6 @@
         "react-dom": "catalog:",
       },
       "devDependencies": {
-        "@effect/vitest": "catalog:",
         "@testing-library/dom": "catalog:",
         "@testing-library/react": "catalog:",
         "@types/node": "catalog:",

@@ -1747,8 +1747,11 @@ const labDependenciesFor = (
 ): Readonly<Record<string, string>> => (lab ? dependencies : {});
 
 // Dev-dependency table shared by React-flavored app manifests.
+// No `@effect/vitest`: the React app test templates use plain `vitest` plus
+// @testing-library. Only the `service` kind's test imports it, and that kind
+// declares it in its own devDependencies. Declaring it here fails Knip on the
+// generated app.
 const REACT_APP_DEV_DEPENDENCIES = {
-  "@effect/vitest": "catalog:",
   "@testing-library/dom": "catalog:",
   "@testing-library/react": "catalog:",
   "@types/node": "catalog:",
