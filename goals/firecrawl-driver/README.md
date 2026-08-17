@@ -64,12 +64,12 @@ models, UI, app runtime policy, or app-specific configuration.
 
 ## Current Research Snapshot
 
-- Local Firecrawl clone: `/home/elpresidank/YeeBois/dev/firecrawl`
+- Firecrawl upstream: `https://github.com/firecrawl/firecrawl` (read from a machine-local clone)
 - Local clone commit: `42b46be4f75afbd88cd4161495345e94a04c3148`
 - Local clone status observed during packet authoring: `main...origin/main`
   with untracked `.idea/`
-- Local JS SDK path:
-  `/home/elpresidank/YeeBois/dev/firecrawl/apps/js-sdk/firecrawl`
+- JS SDK subtree:
+  `https://github.com/firecrawl/firecrawl/tree/main/apps/js-sdk/firecrawl`
 - Local SDK package manifest observed as `@mendable/firecrawl-js@4.25.2`
   depending on `firecrawl@4.16.0`
 - Current npm `firecrawl` version observed on 2026-06-04: `4.25.2`

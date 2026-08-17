@@ -15,7 +15,7 @@ Effect stack in this repo — then use what the greenfield build proves to
 migrate dankserver's openclaw deployment layer off Ansible. 1Password stays
 the secrets backbone (`op://` references only, never plaintext).
 
-### dankserver today (verified by direct read, ~/YeeBois/projects/dankserver)
+### dankserver today (verified by direct read of the machine-local `dankserver` checkout)
 
 - Ansible is the control plane: 14 roles. The openclaw role is
   `ansible/roles/openclaw/tasks/main.yml` — 4790 lines, 252 named tasks.
@@ -79,7 +79,7 @@ the secrets backbone (`op://` references only, never plaintext).
 
 ### OpenClaw source access
 
-- Upstream clone already on disk: `~/YeeBois/dev/openclaw` — version
+- Upstream clone already on disk (machine-local `openclaw` clone) — version
   `2026.7.2`, commit `663c4fba10536a7148749f2b35fb5af6d54d3cb7`
   (origin `github.com/openclaw/openclaw`). Has `src/config/` and rich
   provider/model config modules (`src/agents/models-config.*`) — the
@@ -92,7 +92,7 @@ the secrets backbone (`op://` references only, never plaintext).
 - CachyOS, dual R9700, ROCm; local GGUF lineup served via llama-server (real
   local-model capacity, already running — its lifecycle is out of scope for
   this packet). Specs doc (local):
-  `/home/elpresidank/ai/docs/workstation/AI_WORKSTATION_SPECS.md`.
+  `AI_WORKSTATION_SPECS.md`, in the machine-local workstation docs outside this repo.
 
 ### Framing
 
@@ -102,5 +102,5 @@ the secrets backbone (`op://` references only, never plaintext).
   client specifics, and sensitive lab details stay out (or in gitignored
   `docs/_internal/`).
 - Research convention: valuable repos (especially Effect-involved ones) get
-  cloned to `~/YeeBois/dev/` and cited with pinned SHA + upstream URL in
+  cloned into the machine-local dev-clones directory and cited with pinned SHA + upstream URL in
   `research/SOURCES.md`.

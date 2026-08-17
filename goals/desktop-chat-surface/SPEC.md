@@ -18,7 +18,7 @@ Provenance: graduated from `explorations/agent-chat-interface` (back-links:
 [`BRIEF.md`](../../explorations/agent-chat-interface/BRIEF.md),
 [`DECISIONS.md`](../../explorations/agent-chat-interface/DECISIONS.md),
 [`MAP.md`](../../explorations/agent-chat-interface/MAP.md)). Proof-repo
-reference (read-only): `/home/elpresidank/YeeBois/projects/effect-lexical-chat/`
+reference (read-only): the machine-local `effect-lexical-chat` checkout
 (same effect catalog `4.0.0-beta.79`).
 
 ## Non-Goals

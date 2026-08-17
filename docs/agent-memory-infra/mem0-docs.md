@@ -100,7 +100,7 @@ and SQL database for ADD history plus rolling message window
 tension reinforces that Mem0 should not define this repo's authority model.
 
 For OSS library defaults, Mem0 uses OpenAI `gpt-5-mini`, OpenAI
-`text-embedding-3-small`, local Qdrant at `/tmp/qdrant`, and SQLite history at
+`text-embedding-3-small`, local Qdrant under the OS temp dir (`<tmpdir>/qdrant`), and SQLite history at
 `~/.mem0/history.db`; the self-hosted server defaults to OpenAI models and
 Postgres + pgvector (https://docs.mem0.ai/open-source/overview). The self-hosted
 server now uses the official `pgvector/pgvector:pg17` image with pgvector 0.8.0,

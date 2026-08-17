@@ -37,7 +37,7 @@
     "scanId": "f4128216e9c08191b0431ea2a05322bb",
     "capturedAt": "2026-06-17",
     "captureMethodPolicy": "api-network-capture-first-dom-fallback",
-    "rawCaptureRoot": "/tmp/codex-security-findings-2026-06-17",
+    "rawCaptureRoot": "machine-local scratch capture root (untracked, outside the repo)",
     "rawCaptureTracked": false
   },
   "catalog": {
@@ -83,9 +83,9 @@
   },
   "sanitation": {
     "trackedRawFindingContent": false,
-    "rawCaptureLocation": "/tmp/codex-security-findings-2026-06-17",
+    "rawCaptureLocation": "machine-local scratch capture root (untracked, outside the repo)",
     "commitsOnlySanitizedMarkdownAndPatches": true,
-    "cookieFile": "/tmp/codex-security-findings-2026-06-17/openai.com_cookies.txt (chmod 600, never tracked; *cookies*.txt gitignored)",
+    "cookieFile": "openai.com_cookies.txt in the machine-local scratch capture root (chmod 600, never tracked; *cookies*.txt gitignored)",
     "publicFindingPolicy": "Unremediated findings keep exploit detail, specific evidence paths, source commits, and proposed patches outside the public branch until fixes land atomically. Tracked ledgers carry title + severity + disposition + justification.",
     "redactedPatterns": [
       "private keys",

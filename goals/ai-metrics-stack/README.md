@@ -124,7 +124,7 @@ through May 16, 2026 02:26 America/Chicago window:
 - Production collection is owned by the active
   `beep-ai-metrics-forwarder.timer` on a six-hour cadence. The unit executes
   from the clean `beep-effect` checkout and writes every durable artifact to
-  `/home/elpresidank/.local/state/beep/ai-metrics`. No checkout contains a
+  `~/.local/state/beep/ai-metrics`. No checkout contains a
   `.beep/ai-metrics` tree.
 - P7a/b adds the hybrid derived mirror and local-first retention workflows.
   Raw encrypted transcripts remain workstation-local; mirror bundles contain

@@ -4,7 +4,7 @@
 
 - Status: COMPLETED (manual paste path)
 - Date: 2026-07-08
-- Path taken: the codex lane could not run the oracle CLI in its sandbox (no network for npm); after the CLI was installed the retry was superseded — the user submitted the rendered bundle to ChatGPT manually and provided the final answer at ~/Downloads/deep-research-report.md, transcribed below verbatim.
+- Path taken: the codex lane could not run the oracle CLI in its sandbox (no network for npm); after the CLI was installed the retry was superseded — the user submitted the rendered bundle to ChatGPT manually and provided the final answer as the downloaded deep-research-report.md, transcribed below verbatim.
 - Model: GPT-5.5 Pro, extended thinking (per oracle skill instruction; user-driven ChatGPT session)
 - Citation caveat: the transcript uses ChatGPT-internal citation markers (citeturnNviewN / fileciteturnNfileN) that are not resolvable URLs outside the ChatGPT session. The "Prioritized sources" table at the end of the report is the human-readable source list.
 

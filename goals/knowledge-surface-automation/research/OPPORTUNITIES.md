@@ -171,3 +171,67 @@ measurement first). Reviewed at each grill.
     **What would have prevented it:** the error enumerating the registered
     category values (they are known to the checker), or the JSDoc skill carrying
     the list.
+
+13. **Codex fan-out died on a spent usage window mid-campaign.** `unowned`
+
+    The P3 rewrite pass launched four `codex exec` draft jobs per the packet's
+    delegation doctrine; all four exited immediately with "You've hit your
+    usage limit ... try again at Aug 19th". The session fell back to Claude
+    subagents (the precedented 2026-08-04 fallback), which produced all 269
+    draft entries — but the doctrine's primary path failed silently at launch
+    time with no pre-flight signal.
+
+    **What would have prevented it:** a cheap quota pre-flight (a one-token
+    `codex exec` ping, or the wrapper surfacing the reset timestamp) before
+    fanning out, so the orchestrator picks the fallback in one step instead of
+    discovering the outage from four identical error logs.
+
+14. **Markdown emphasis markers defeat the convention-prefix classifier.** `unowned`
+
+    A bold-wrapped `**fail instead of mutating ~/.openclaw**` span left the
+    token starting with `**`, so the portable-home-convention prefix test
+    failed and the row classified as external-mirror-reference — the one
+    straggler after a 226-rule mechanical pass. The token trimmer strips
+    backticks, quotes, and brackets but not emphasis markers.
+
+    **What would have prevented it:** `*`/`_` in the host-token leading-trim
+    set (a falsifiable one-character rule-table widening for the next census
+    version), or the authoring rule "never wrap a path span inside emphasis".
+
+15. **Archival-segment matching is depth-blind, so a live guidance directory can
+    name its way out of the standing gate.** `unowned`
+
+    `isKnowledgeArchivalPath` tests every path segment against
+    `ARCHIVAL_SEGMENTS`, so the label applies at any depth, not only under a
+    packet's capture directory. Probed against the shipped classifier: both
+    `docs/data/GUIDE.md` and `.claude/skills/data/SKILL.md` carrying a
+    beep-checkout absolute path classify `archival` /`archival-provenance` and
+    contribute **zero** live debt — the `--check` gate passes. The property is
+    inherited (the nine pre-existing segments — `research`, `logs`, `outputs`,
+    `findings`, … — behave identically on `main`); the P3 pass only widened the
+    set with `data`, so this is a rule-table shape question, not a regression.
+
+    **What would have prevented it:** anchoring archival segments to their
+    owning surface (`goals/<slug>/data/**`, `explorations/<slug>/research/**`)
+    instead of matching a bare segment name anywhere in the path. That is a
+    ratified-semantics change, so it is proposed here rather than applied —
+    it needs the same phase-0 false-positive eyeball the original class got.
+
+16. **The standing gate's own PR went red on a lane the authoritative local
+    proof does not run.** `unowned`
+
+    `yeet verify` (full tier) is documented as the authoritative gate — "if
+    `yeet verify` is green, CI should be green on the first push". It runs
+    `bun run test`; it never runs `bun run coverage`, and the Yeet sources
+    reference coverage only for baseline *staleness*, never to execute the
+    ratchet. Adding the `--check` applicator to an already-baselined file
+    (`Knowledge.command.ts`) therefore passed a full green local proof and then
+    failed hosted `Coverage Regression` on a per-file monotonic floor
+    (`branches: 37.5 < 40`) — twice, because the first failure was misread as a
+    flake and rerun. The two lanes also use different runtimes: the package
+    `test` script runs `vitest` under Bun, `coverage` runs it under Node.
+
+    **What would have prevented it:** the full proof running the affected
+    packages' coverage ratchet (it already knows the affected owners), or the
+    verdict naming `Coverage Regression` as a known hosted-only gate so the
+    "green local means green CI" contract carries its own exception list.

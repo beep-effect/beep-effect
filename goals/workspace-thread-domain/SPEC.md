@@ -16,7 +16,7 @@ Provenance: graduated from `explorations/agent-chat-interface` (back-links:
 [`MAP.md`](../../explorations/agent-chat-interface/MAP.md)). Entity
 semantics: `goals/agentic-professional-runtime/docs/data-model-shared-core.md`
 (Thread, Message/Turn, Activity, UsageRecord, read models). Proof-repo
-reference (read-only): `/home/elpresidank/YeeBois/projects/effect-lexical-chat/`.
+reference (read-only): the effect-lexical-chat project (machine-local checkout).
 
 ## Non-Goals
 

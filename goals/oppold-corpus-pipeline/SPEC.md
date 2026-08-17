@@ -4,7 +4,7 @@
 
 Produce a single salvage-safe, deduplicated, name-restored, extracted,
 organized, and USPTO-enriched corpus of the Oppold IP practice records at
-`/home/elpresidank/data-home/oppold-corpus/`, with a DuckDB catalog and
+the out-of-repo Oppold corpus home (machine-local), with a DuckDB catalog and
 `@beep/file-processing` manifests as the machine-readable surface that
 downstream packets (`agentic-professional-runtime` ingestion,
 `ip-law-knowledge-graph`) consume.
@@ -19,8 +19,8 @@ downstream packets (`agentic-professional-runtime` ingestion,
 - LLM-based analysis, summarization, or entity extraction over corpus content.
 - Replacing systems of record (USPTO, Box, email); enrichment fetches public
   data only.
-- Deleting or modifying any original source file (USB, `~/Documents`,
-  `~/data-home` sources). Source retirement is a manual user decision after
+- Deleting or modifying any original source file (USB, machine-local `Documents`,
+  `data-home` sources). Source retirement is a manual user decision after
   verified salvage.
 
 ## Source Hierarchy
@@ -40,7 +40,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- `/home/elpresidank/data-home/oppold-corpus/` (new, outside the repo):
+- The out-of-repo Oppold corpus home (new, machine-local, outside the repo):
   `raw/`, `staging/`, `organized/`, `catalog/` tiers.
 - `packages/drivers/libpff` — harden from scaffold to real PST extraction
   (pffexport subprocess engine emitting per-message artifacts + attachments).

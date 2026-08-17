@@ -44,7 +44,7 @@ Six visual behaviors to reverse-engineer:
 5. curved edges
 6. selection highlight + neighborhood dimming; 2D/3D toggle button
 
-Cloned repos inventory (~/YeeBois/infranodus/): `infranodus-obsidian-plugin`,
+Cloned repos inventory (machine-local clones, outside this repo): `infranodus-obsidian-plugin`,
 `mcp-server-infranodus`, `skills`. Verified 2026-07-14: ZERO rendering code in
 any of them. Obsidian plugin embeds `https://graph.infranodus.com` in an iframe
 (`src/graph_view/GraphView.tsx:1164`, base URL `src/settings/index.ts:68`) and

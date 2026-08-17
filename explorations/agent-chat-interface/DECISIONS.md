@@ -28,7 +28,7 @@ Align-stage grilling has not started; open questions live in
 
 Decided with the author in a grill-with-docs session grounded in the runtime
 SPEC, the architecture standard, and repo precedents; carried in via
-`/home/elpresidank/YeeBois/projects/effect-lexical-chat/handoff-agent-chat-exploration.md`.
+`handoff-agent-chat-exploration.md` from the effect-lexical-chat proof repo (machine-local checkout).
 Re-open only on contradicting code/doctrine evidence (surface as drift).
 
 1. **Thread/Turn/Message ownership: the `workspace` slice.** Matches the
@@ -59,7 +59,7 @@ Re-open only on contradicting code/doctrine evidence (surface as drift).
    `packages/foundation/modeling/md`) was **already executed** in PR #240
    (merged 2026-06-11) — cite, don't redo.
 7. **Session setup**: exploration work runs from the beep-effect root; the
-   proof repo (`~/YeeBois/projects/effect-lexical-chat`) is read-only
+   effect-lexical-chat proof repo (machine-local checkout) is read-only
    reference. Proof-repo conventions do not override beep's.
 8. **Convergence target**: the goals packets implement the E2E chat in
    `apps/professional-desktop` (currently a minimal shell — no runtime

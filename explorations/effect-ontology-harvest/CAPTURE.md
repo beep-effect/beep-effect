@@ -10,7 +10,7 @@ dated heading at the bottom.
 ## 2026-07-11
 
 The [effect-ontology](https://github.com/mepuka/effect-ontology) repo
-(local checkout: `~/YeeBois/dev/effect-ontology`), in particular
+(machine-local checkout), in particular
 `packages/@core-v2`, has an enormous amount of patterns, valuable data types,
 infrastructure & capabilities.
 

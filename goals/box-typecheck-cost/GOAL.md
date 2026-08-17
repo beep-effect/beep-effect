@@ -1,6 +1,6 @@
 # /goal: Box Typecheck Cost
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect3`.
+Repo: the machine-local `beep-effect3` checkout.
 
 Mission: bring `@beep/box` (`packages/drivers/box`) under an explicit type
 instantiation budget by scoping its generated SDK surface to declared demand.

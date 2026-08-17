@@ -81,10 +81,10 @@ Recorded 2026-06-12 (web sweep; every claim cited).
 ## Adjacent Proof: `effect-lexical-chat`
 
 Recorded 2026-06-12. A standalone proof repo at
-`/home/elpresidank/YeeBois/projects/effect-lexical-chat/` built the full
+the machine-local `effect-lexical-chat` checkout built the full
 chat stack E2E on the **same effect catalog `4.0.0-beta.79`** as this repo,
 so findings transfer directly. Handoff:
-`/home/elpresidank/YeeBois/projects/effect-lexical-chat/handoff-agent-chat-exploration.md`.
+`handoff-agent-chat-exploration.md` in that checkout.
 
 - **Streaming structured-output kernel** (`server/AssistantTurn.ts`): native
   structured outputs (`output_config.format`) reject the block-union schema

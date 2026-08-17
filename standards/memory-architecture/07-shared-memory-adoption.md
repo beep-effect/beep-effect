@@ -16,7 +16,7 @@ role assignments in
 Two tools, two roles, no metered API key in either hot path.
 
 **Durable dev-memory: basic-memory** (AGPL-3.0 — internal tooling only). One
-shared store at `~/YeeBois/memory/beep-shared`, registered as the
+shared store outside the repo (machine-local), registered as the
 basic-memory project `beep-shared`, read *and* written by all four coding
 agents — Claude Code, Codex CLI, Grok CLI, Cursor — through the MCP server
 `uvx basic-memory@0.22.1 mcp --project beep-shared`. The store lives outside
@@ -40,9 +40,9 @@ The decision rests on an external bake-off dated 2026-08-06: twelve
 adversarial code-level dossiers with `path:line` evidence, an X/web
 practitioner sentiment sweep, and live trials run against this repository at
 `a1550127dc` (180 packages, 5,336 TypeScript files). The verdict memo is
-`~/YeeBois/research/codebase_graph_and_memory/BAKEOFF.md`; the rubric,
+the machine-local codebase-graph/memory bake-off dossier `BAKEOFF.md`; the rubric,
 dossiers, sentiment sweep, trial protocol, and raw trial output are under
-`~/YeeBois/research/codebase_graph_and_memory/_research/bakeoff/`. Both
+its `_research/bakeoff/` directory beside it. Both
 paths are external to this repository and read-only from it.
 
 The live trials that decided the two roles:
@@ -66,7 +66,7 @@ and on operational reality respectively.
 ## Store conventions
 
 Binding. They are mirrored in the store's own
-`~/YeeBois/memory/beep-shared/README.md`, which is authoritative for the
+`README.md`, which is authoritative for the
 store itself; keep the two in sync when either changes.
 
 1. **One fact per note.** Small, titled, retrievable units — never session

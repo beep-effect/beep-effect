@@ -90,7 +90,7 @@ cd packages/tooling/tool/cli && npx vitest run test/schema-first.test.ts
 ## vitest output tail
 
 ```
- RUN  v4.1.10 /home/elpresidank/YeeBois/projects/beep-effect7/packages/tooling/tool/cli
+ RUN  v4.1.10 <checkout-root>/packages/tooling/tool/cli
 
 8:58:09 PM [vite] (ssr) warning: [PARSE_ERROR] Top-level await is not available in the configured target environment.
   (pre-existing warning at test/schema-first.test.ts:30 — the committedPolicyText

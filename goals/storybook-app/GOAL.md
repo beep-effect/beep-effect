@@ -1,6 +1,6 @@
 # GOAL: Move Storybook Host To An App
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: this `beep-effect` checkout.
 
 Outcome: create `apps/storybook` as private executable `@beep/storybook`, make
 it the only Storybook runtime/check/deploy owner, and keep foundation UI-system

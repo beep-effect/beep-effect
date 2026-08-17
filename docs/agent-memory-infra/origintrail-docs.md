@@ -181,7 +181,7 @@ docs lane did not find or rely on an existing OriginTrail assessment artifact.
 # References
 
 [R1] Local fallback copy of OriginTrail docs index:
-`/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect5/ea57f70e-159a-4fc2-9828-26514d3e7422/scratchpad/llms/origintrail-llms.txt`
+a machine-local session scratch copy (not preserved)
 for original URL `https://docs.origintrail.io/llms.txt`. I read this local file
 because outbound DNS resolution for `docs.origintrail.io` failed.
 

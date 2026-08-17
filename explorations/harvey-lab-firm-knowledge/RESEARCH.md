@@ -9,7 +9,7 @@ rebuilding them). Date sections; research goes stale.
 ## 2026-08-08 — Mining run synthesis
 
 Method: 12-agent opus-5 workflow (map → mine → verify; ~2.5M subagent tokens,
-655 tool calls, 43 min) over the local clone at `~/YeeBois/research/harvey-labs`
+655 tool calls, 43 min) over the machine-local `harvey-labs` clone
 (commit `55510f0e6`). Detailed reports live in [`research/`](./research/):
 five maps (`map-*.md`), four opportunity lenses (`mine-*.md`), and three
 verification passes (`verify-facts.md` — 286 checks: 251 CONFIRMED /

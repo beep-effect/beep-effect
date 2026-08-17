@@ -1,6 +1,6 @@
 # GOAL: build the schema-first rich-text foundation
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: this `beep-effect` checkout.
 
 Outcome: `@beep/lexical-schema` (`packages/foundation/modeling/lexical`) and
 `@beep/editor` (`packages/foundation/ui-system/editor`) exist, quality gates
@@ -18,7 +18,7 @@ contract:
 Read those first, then read `AGENTS.md`, `CLAUDE.md`, and any governing
 standards named by `SPEC.md`. Higher-priority repo standards outrank packet
 prose when they conflict. Proof-repo reference (read-only, same effect
-catalog): `/home/elpresidank/YeeBois/projects/effect-lexical-chat/` —
+catalog): the effect-lexical-chat project (machine-local checkout) —
 `shared/lexical-schema.ts` (effect-only serialized-state schemas) and
 `shared/assistant-schema.ts` (block AST + `assistantContentToLexical`).
 

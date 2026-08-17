@@ -77,6 +77,6 @@ Full multi-phase prompt + rubric preserved in the approved plan file
   no shared cross-field refinement idiom; near-empty aggregates; partial
   `ConstraintDecoder` migration; law-practice rich in nouns, thin in lifecycle.
 - External corpora (verified present, public-repo: cite by reference only):
-  `~/YeeBois/research/{law_stuff, ontology_research,
+  the machine-local research library `{law_stuff, ontology_research,
   digital_signature_stuff/repos, dms_stuff/repos, meeting_notes_ai}`,
-  `~/data-home/oppold-corpus`.
+  the machine-local Oppold corpus home.

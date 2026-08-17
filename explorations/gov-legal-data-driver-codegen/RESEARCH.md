@@ -4,7 +4,7 @@
 Stage 1 synthesis (2026-06-29). Distilled, cited view over the five raw deep-
 research reports in research/*.md. Cite source URLs inline; link back to
 research/<subtopic>.md for raw detail. In-repo claims verified via rg/ls
-against /home/elpresidank/YeeBois/projects/beep-effect on 2026-06-29.
+against this repository on 2026-06-29.
 -->
 
 ## External Landscape

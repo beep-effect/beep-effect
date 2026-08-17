@@ -32,8 +32,10 @@ design exists to avoid.
 ## 2. Ingest
 
 ```sh
-bun run beep codex findings ingest --from ~/Downloads/codex-security-findings-<timestamp>.csv
+bun run beep codex findings ingest --from <download-dir>/codex-security-findings-<timestamp>.csv
 ```
+
+`<download-dir>` is the browser download directory (conventionally `~/Downloads`).
 
 Useful flags:
 
@@ -108,7 +110,7 @@ evidence-backed `False positive`). Accepted risk is not available. Direct
 Export the complete filtered findings view again, then run:
 
 ```sh
-bun run beep codex findings ingest --refresh --from ~/Downloads/codex-security-findings-<timestamp>.csv
+bun run beep codex findings ingest --refresh --from <download-dir>/codex-security-findings-<timestamp>.csv
 ```
 
 Do not pre-filter the refresh to only new rows: removals are indistinguishable

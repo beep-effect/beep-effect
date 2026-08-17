@@ -1,6 +1,6 @@
 # GOAL: ship the schema-first agent reflection loop
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: this `beep-effect` checkout.
 
 Outcome: goal packets carry schema-validated closeout reflections, enforced by
 `bun run beep lint reflection-artifacts`, authored via the `/reflect` skill.

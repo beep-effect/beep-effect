@@ -1,6 +1,6 @@
 # GOAL: Schema-first Effect v4 capabilities retained outcome
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect3`.
+Repo: this `beep-effect` checkout.
 
 Outcome: retain the shipped P0–P2 doctrine, steering, and enforcement plumbing.
 P3 helper statics and remaining P4 waves are recorded deferrals; the

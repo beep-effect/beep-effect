@@ -182,7 +182,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   argumentation after semantic-foundation M1. Medium/low routes stay
   recorded in the master table; the June-29 prior synthesis stays adopted
   (snippets errata-flagged); the normalized corpus lives externally
-  (`~/YeeBois/research/academia-2026-07/`). Wave 2 executed 2026-08-13 after
+  (the machine-local `academia-2026-07` research corpus). Wave 2 executed 2026-08-13 after
   operator-ratified re-triage: 199 no-note papers classified core 2 / extended
   44 / excluded 153, all 46 core+extended deep-read with zero failures. The
   external synthesis found zero contradictions and made 14 routing proposals;

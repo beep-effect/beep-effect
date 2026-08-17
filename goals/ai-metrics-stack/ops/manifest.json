@@ -207,15 +207,15 @@
     },
     {
       "id": "ai-metrics-forwarder-timer-smoke",
-      "command": "bun run beep ai-metrics forwarder timer --target dankserver --data-root /home/elpresidank/.local/state/beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --otlp-base-url 'https://dankserver.tailc7c348.ts.net:8447' --interval-minutes 360 --max-file-bytes 33554432 --max-files 50 --parquet-mode none --json"
+      "command": "bun run beep ai-metrics forwarder timer --target dankserver --data-root ~/.local/state/beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --otlp-base-url 'https://dankserver.tailc7c348.ts.net:8447' --interval-minutes 360 --max-file-bytes 33554432 --max-files 50 --parquet-mode none --json"
     },
     {
       "id": "ai-metrics-archive-drill",
-      "command": "BEEP_AI_METRICS_RAW_ARCHIVE_KEY=\"$(op read 'op://TBK/ai-metrics/raw-archive-key')\" bun run beep ai-metrics archive drill --target dankserver --data-root /home/elpresidank/.local/state/beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --json"
+      "command": "BEEP_AI_METRICS_RAW_ARCHIVE_KEY=\"$(op read 'op://TBK/ai-metrics/raw-archive-key')\" bun run beep ai-metrics archive drill --target dankserver --data-root ~/.local/state/beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --json"
     },
     {
       "id": "ai-metrics-p7-disposable-proof-copy",
-      "command": "umask 077; proof_root=\"$(mktemp -d -t ai-metrics-p7-proof-data.XXXXXXXXXX)\"; rsync -a --delete /home/elpresidank/.local/state/beep/ai-metrics/ \"$proof_root/\"; printf 'AI_METRICS_P7_PROOF_DATA_ROOT=%s\\n' \"$proof_root\""
+      "command": "umask 077; proof_root=\"$(mktemp -d -t ai-metrics-p7-proof-data.XXXXXXXXXX)\"; rsync -a --delete ~/.local/state/beep/ai-metrics/ \"$proof_root/\"; printf 'AI_METRICS_P7_PROOF_DATA_ROOT=%s\\n' \"$proof_root\""
     },
     {
       "id": "ai-metrics-p7-mirror-build",
@@ -231,11 +231,11 @@
     },
     {
       "id": "ai-metrics-p7-final-mirror-build",
-      "command": "bun run beep ai-metrics mirror build --target dankserver --data-root /home/elpresidank/.local/state/beep/ai-metrics --remote-root /srv/data/ai-metrics/p7-derived-mirror --json"
+      "command": "bun run beep ai-metrics mirror build --target dankserver --data-root ~/.local/state/beep/ai-metrics --remote-root /srv/data/ai-metrics/p7-derived-mirror --json"
     },
     {
       "id": "ai-metrics-p7-final-mirror-sync",
-      "command": "bun run beep ai-metrics mirror sync --target dankserver --data-root /home/elpresidank/.local/state/beep/ai-metrics --bundle latest --host dankserver --remote-root /srv/data/ai-metrics/p7-derived-mirror --confirm p7-derived-mirror --json"
+      "command": "bun run beep ai-metrics mirror sync --target dankserver --data-root ~/.local/state/beep/ai-metrics --bundle latest --host dankserver --remote-root /srv/data/ai-metrics/p7-derived-mirror --confirm p7-derived-mirror --json"
     },
     {
       "id": "ai-metrics-p7-final-mirror-status",
@@ -243,11 +243,11 @@
     },
     {
       "id": "ai-metrics-p7-retention-list",
-      "command": "bun run beep ai-metrics retention list --data-root /home/elpresidank/.local/state/beep/ai-metrics --json"
+      "command": "bun run beep ai-metrics retention list --data-root ~/.local/state/beep/ai-metrics --json"
     },
     {
       "id": "ai-metrics-p7-retention-restore-drill",
-      "command": "umask 077; restore_root=\"$(mktemp -d -t ai-metrics-p7-restore.XXXXXXXXXX)\"; BEEP_AI_METRICS_RAW_ARCHIVE_KEY=\"$(op read 'op://TBK/ai-metrics/raw-archive-key')\" bun run beep ai-metrics retention restore-drill --data-root /home/elpresidank/.local/state/beep/ai-metrics --restore-root \"$restore_root\" --before <REPLACE_WITH_ISO_8601_TIMESTAMP> --json"
+      "command": "umask 077; restore_root=\"$(mktemp -d -t ai-metrics-p7-restore.XXXXXXXXXX)\"; BEEP_AI_METRICS_RAW_ARCHIVE_KEY=\"$(op read 'op://TBK/ai-metrics/raw-archive-key')\" bun run beep ai-metrics retention restore-drill --data-root ~/.local/state/beep/ai-metrics --restore-root \"$restore_root\" --before <REPLACE_WITH_ISO_8601_TIMESTAMP> --json"
     },
     {
       "id": "infra-package",
@@ -263,11 +263,11 @@
     },
     {
       "id": "ai-metrics-proof-scorecard",
-      "command": "bun run beep ai-metrics report weekly --target dankserver --data-root /home/elpresidank/.local/state/beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --since '2026-05-09T02:26:00-05:00' --until '2026-05-16T02:26:00-05:00' --json"
+      "command": "bun run beep ai-metrics report weekly --target dankserver --data-root ~/.local/state/beep/ai-metrics --hash-salt-secret-ref 'op://TBK/ai-metrics/hash-salt' --raw-archive-key-secret-ref 'op://TBK/ai-metrics/raw-archive-key' --since '2026-05-09T02:26:00-05:00' --until '2026-05-16T02:26:00-05:00' --json"
     }
   ],
   "knownGaps": [
-    "The workstation timer executes code from the clean beep-effect checkout; durable state is independent under /home/elpresidank/.local/state/beep/ai-metrics, but code deployment still requires deliberately updating that checkout after merges",
+    "The workstation timer executes code from the clean beep-effect checkout; durable state is independent under ~/.local/state/beep/ai-metrics, but code deployment still requires deliberately updating that checkout after merges",
     "Phoenix shares its bounded ingest queue with the monitoring OTLP collector; capacity telemetry and per-ingress rejection visibility remain follow-up operations work",
     "CLI OTLP failures still need clearer sanitized status and retryability details without exposing headers or payloads",
     "Optional LiteLLM deployment remains deferred beyond the Phoenix-only P5b slice",

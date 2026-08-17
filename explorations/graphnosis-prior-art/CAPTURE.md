@@ -12,7 +12,7 @@ dated heading at the bottom.
 ### The ask (verbatim)
 
 > Just discovered an opensource project called [Graphnosis](https://graphnosis.com/getting-started/overview/).
-> I cloned the repo [here](~/YeeBois/dev/Graphnosis) I would like you to do some exploration of it
+> I cloned the repo here (machine-local clone) I would like you to do some exploration of it
 > and this repo to see if there is any valuable:
 >
 > - information
@@ -27,7 +27,7 @@ dated heading at the bottom.
 
 ### First-pass reconnaissance (before any deep read)
 
-Clone on disk at `~/YeeBois/dev/Graphnosis`, remote `git@github.com:nehloo/Graphnosis.git`,
+Machine-local clone outside this repo, remote `git@github.com:nehloo/Graphnosis.git`,
 HEAD `7a19c4b`. Published as `@nehloo/graphnosis` v0.11.0.
 
 - **License: Apache-2.0** (`LICENSE`, `NOTICE` — Copyright 2026 Nehloo Interactive LLC).
@@ -103,7 +103,7 @@ two that look least like anything we already have.
 
 ### Added by Benjamin, same day — two Graphnosis PDFs
 
-Dropped in from `~/Downloads/RESEARCH_08_06_26/`, copied into this packet's `assets/`:
+Dropped in from the machine-local `RESEARCH_08_06_26` download batch, copied into this packet's `assets/`:
 
 - [`assets/graphnosis-whitepaper.pdf`](./assets/graphnosis-whitepaper.pdf) — 35 pages, PDF
   CreationDate 2026-06-26. Presumed to be (or sibling to) the "Un-Brain" paper the README cites

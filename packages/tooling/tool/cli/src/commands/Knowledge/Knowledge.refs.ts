@@ -1179,7 +1179,11 @@ const ARCHIVAL_SEGMENTS = HashSet.make(
   "outputs",
   "reflections",
   "logs",
-  ".proofs"
+  ".proofs",
+  // Admitted by the Workstream A rewrite pass: `data/` holds machine-captured pipeline
+  // artifacts (hash-pinned extraction records quoting verbatim source text), the same
+  // captured-proof class as `outputs` — rewriting them would corrupt the capture.
+  "data"
 );
 
 /**
@@ -1221,8 +1225,10 @@ export const isKnowledgeScopedPath = (repoPath: string): boolean => {
  * **Details**
  *
  * The archival segments are `history`, `research`, `reviews`, `synthesis`, `findings`, `outputs`,
- * `reflections`, `logs`, and `.proofs`. The test is by exact path segment, so a file merely named
- * `research-notes.md` is live.
+ * `reflections`, `logs`, `.proofs`, and `data`. The test is by exact path segment, so a file merely
+ * named `research-notes.md` is live. `data` earned its place in the Workstream A rewrite pass:
+ * packet `data/` directories hold machine-captured pipeline artifacts whose recorded text is
+ * hash-pinned, so they are captured proof rather than editable guidance.
  *
  * **Example** (Separate archival evidence from live guidance)
  *
@@ -1726,11 +1732,40 @@ export const extractKnowledgeHostAnchors = (lineText: string): ReadonlyArray<Kno
   ]);
 };
 
-const PORTABLE_HOME_CONVENTIONS = HashSet.make("~/.claude", "~/.codex", "~/.config", "~/.bun", "~/.openclaw");
+// Every member is a config/state/toolchain directory convention of a named product or of the XDG
+// basedir spec — portable across machines by definition, which is the class semantic. Widening
+// this set is a deliberate CLI PR per ratified decision A3; the batch after `~/.openclaw` was
+// admitted by the Workstream A rewrite pass with per-prefix rationale in
+// goals/knowledge-surface-automation/research/p3-report-refs-rewrite.md.
+const PORTABLE_HOME_CONVENTIONS = HashSet.make(
+  "~/.claude",
+  "~/.codex",
+  "~/.config",
+  "~/.bun",
+  "~/.openclaw",
+  "~/.cache",
+  "~/.cargo",
+  "~/.cursor",
+  "~/.local/state/beep",
+  "~/.mem0",
+  "~/.oracle",
+  "~/.portless",
+  "~/.portless-lan",
+  "~/.supermemory-claude"
+);
+
+// Exact-mention conventions: naming the XDG user directory itself is portable, but any concrete
+// descendant (`~/Downloads/report.csv`) is machine session residue and stays gated — a prefix
+// admission here would let live guidance park arbitrary machine-local files behind the folder name.
+const PORTABLE_HOME_EXACT_CONVENTIONS = HashSet.make("~/Downloads");
 const TEMP_CONVENTIONS = HashSet.make("/tmp/portless");
+const stripTrailingSlashes = Str.replace(/\/+$/u, "");
 
 const hasConventionPrefix = (conventions: HashSet.HashSet<string>, token: string): boolean =>
   HashSet.some(conventions, (prefix) => token === prefix || Str.startsWith(`${prefix}/`)(token));
+
+const isExactHomeConvention = (token: string): boolean =>
+  HashSet.has(PORTABLE_HOME_EXACT_CONVENTIONS, stripTrailingSlashes(token));
 
 /**
  * Whether a line reads as rule, pattern, or inventory text rather than as guidance.
@@ -1801,7 +1836,10 @@ export type KnowledgeRefClassificationInput = {
  * @returns The convention, mirror, or actionable class for a live host anchor.
  */
 const classifyLiveHostAnchor = (anchor: KnowledgeHostAnchor, token: string): KnowledgeRefClassification => {
-  if (KnowledgeHostAnchor.is["home-relative"](anchor) && hasConventionPrefix(PORTABLE_HOME_CONVENTIONS, token)) {
+  if (
+    KnowledgeHostAnchor.is["home-relative"](anchor) &&
+    (hasConventionPrefix(PORTABLE_HOME_CONVENTIONS, token) || isExactHomeConvention(token))
+  ) {
     return KnowledgeRefClassification.Enum["portable-home-convention"];
   }
   if (KnowledgeHostAnchor.is.temp(anchor) && hasConventionPrefix(TEMP_CONVENTIONS, token)) {
@@ -1912,6 +1950,74 @@ export const classifyKnowledgeRef = (input: KnowledgeRefClassificationInput): Kn
     Match.exhaustive
   );
 };
+
+/**
+ * The observation classes `beep knowledge refs --check` gates on.
+ *
+ * **Details**
+ *
+ * Both members are live-surface host-anchor classes with no convention or pattern excuse — exactly
+ * the observation space that maps to the reserved `host-path-in-live-guidance` finding kind. The
+ * archival counterpart (`archival-provenance`) never gates: rewriting captured proof rewrites
+ * history. Widening this set is a deliberate policy change, not a maintenance detail.
+ *
+ * **Example** (Read the gated classes)
+ *
+ * ```ts
+ * import { KNOWLEDGE_REFS_GATED_CLASSIFICATIONS } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * console.log(HashSet.has(KNOWLEDGE_REFS_GATED_CLASSIFICATIONS, "actionable-host-path")) // true
+ * console.log(HashSet.has(KNOWLEDGE_REFS_GATED_CLASSIFICATIONS, "archival-provenance")) // false
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const KNOWLEDGE_REFS_GATED_CLASSIFICATIONS: HashSet.HashSet<KnowledgeRefClassification> = HashSet.make(
+  KnowledgeRefClassification.Enum["actionable-host-path"],
+  KnowledgeRefClassification.Enum["external-mirror-reference"]
+);
+
+/**
+ * The observations a checked census gates on: live-surface members of the gated classes.
+ *
+ * **Details**
+ *
+ * This is the whole `--check` rule. Archival observations never gate regardless of class, and live
+ * observations gate only when their classification sits in
+ * {@link KNOWLEDGE_REFS_GATED_CLASSIFICATIONS}. The census itself stays a measurement; this selector
+ * is the evaluator that turns it into a standing zero-tolerance gate now that the rewrite pass has
+ * burned the live debt to zero.
+ *
+ * **Example** (An empty census carries no debt)
+ *
+ * ```ts
+ * import { knowledgeRefsLiveDebt, KnowledgeRefsReport } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ * import * as A from "effect/Array"
+ *
+ * const report = KnowledgeRefsReport.make({
+ *   treeish: "HEAD",
+ *   commit: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4",
+ *   observations: [],
+ *   skipped: [],
+ * })
+ *
+ * console.log(A.length(knowledgeRefsLiveDebt(report))) // 0
+ * ```
+ *
+ * @param report - Census to evaluate.
+ * @returns Every live observation in a gated classification, in report order.
+ * @category policies
+ * @since 0.0.0
+ */
+export const knowledgeRefsLiveDebt = (report: KnowledgeRefsReport): ReadonlyArray<KnowledgeRefObservation> =>
+  A.filter(
+    report.observations,
+    (observation) =>
+      KnowledgeRefSurface.is.live(observation.surface) &&
+      HashSet.has(KNOWLEDGE_REFS_GATED_CLASSIFICATIONS, observation.classification)
+  );
 
 /**
  * The one-sentence remediation the report prints for a classified observation.

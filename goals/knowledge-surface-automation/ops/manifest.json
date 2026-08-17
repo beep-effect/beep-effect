@@ -5,7 +5,7 @@
     "title": "Knowledge-Surface Audit & Automation",
     "status": "active",
     "created": "2026-07-31",
-    "updated": "2026-08-01",
+    "updated": "2026-08-16",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/knowledge-surface-automation",
@@ -54,7 +54,8 @@
     "research/p1-bootstrap-adopt-plan-design.md",
     "research/p1-fp-eyeball-verdicts.md",
     "research/p1-t2-mini-grill-decisions.md",
-    "research/p1-report-refs-tree.md"
+    "research/p1-report-refs-tree.md",
+    "research/p3-report-refs-rewrite.md"
   ],
   "agentLaunchers": [
     {
@@ -84,7 +85,7 @@
     {
       "id": "P3",
       "name": "Workstream A rewrite + hermetic lane; C Stage-1 gate",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",

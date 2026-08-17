@@ -49,7 +49,7 @@ Workflow:
    deep-research, Chrome map, palette, `seed/`).
 2. Make the smallest change satisfying `SPEC.md`; foundation owns the mechanism,
    the app injects product meaning.
-3. Port patterns from `~/YeeBois/projects/effect-lexical-chat` (`Atom.family`
+3. Port patterns from the machine-local `effect-lexical-chat` checkout (`Atom.family`
    keyed by `LexicalEditor`; draft `Atom.kvs`).
 4. Preserve unrelated worktree changes; tie decisions to file/test/command
    evidence.

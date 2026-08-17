@@ -36,7 +36,7 @@
     "scanId": "5138685acf488191ad6a5ee51a84452d",
     "capturedAt": "2026-06-08",
     "captureMethodPolicy": "report-and-patch-per-finding-copy-first-dom-fallback",
-    "rawCaptureRoot": "/tmp/codex-security-findings-2026-06",
+    "rawCaptureRoot": "machine-local scratch capture root (untracked, outside the repo)",
     "rawCaptureTracked": false
   },
   "catalog": {
@@ -76,7 +76,7 @@
   },
   "sanitation": {
     "trackedRawFindingContent": false,
-    "rawCaptureLocation": "/tmp/codex-security-findings-2026-06",
+    "rawCaptureLocation": "machine-local scratch capture root (untracked, outside the repo)",
     "commitsOnlySanitizedMarkdownAndPatches": true,
     "publicFindingPolicy": "Unremediated findings of any severity keep detailed report text, affected paths, exploit analysis, validation notes, and proposed patches outside the public branch until fixes land atomically.",
     "redactedPatterns": [

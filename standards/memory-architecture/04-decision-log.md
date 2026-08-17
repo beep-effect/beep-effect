@@ -12,7 +12,7 @@ sweep, and live trials against this repository at `a1550127dc` (180
 packages, 5,336 TypeScript files) — tested the durable dev-memory and
 codebase-KG candidates against the standing keyless constraint and the
 "shared across all four coding agents" requirement. Verdict memo:
-`~/YeeBois/research/codebase_graph_and_memory/BAKEOFF.md`, evidence under
+the machine-local codebase-graph/memory bake-off dossier `BAKEOFF.md`, evidence under
 `.../_research/bakeoff/`. Cognee failed the shared-store requirement
 structurally: its MCP memory fragments are agent-scoped, its locks are
 process-local and unsafe across concurrent agent processes, and it phones
@@ -22,7 +22,7 @@ home with a persistent id.
 always-on operator dev-memory role — assigned by the 2026-07-08 entry and
 restated on 2026-07-25 and 2026-08-01 — passes to two tools. **basic-memory**
 (AGPL-3.0, internal tooling only) is the durable cross-agent dev-memory:
-one shared store at `~/YeeBois/memory/beep-shared`, project `beep-shared`,
+one shared store outside the repo (machine-local), project `beep-shared`,
 read and written by Claude Code, Codex CLI, Grok CLI, and Cursor.
 **codegraph** (MIT) is the deterministic code knowledge graph, run as
 `codegraph serve --mcp` with `DO_NOT_TRACK=1` and

@@ -1,6 +1,6 @@
 # GOAL: ship the reusable epistemic claim-lifecycle gate
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: `beep-effect` (this checkout).
 
 Outcome: the epistemic slice graduates from domain-only to minimum-viable
 (domain + use-cases + server) with a four-state `ClaimLifecycle`, the SHACL

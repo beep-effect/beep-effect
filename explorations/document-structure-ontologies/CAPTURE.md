@@ -9,7 +9,7 @@ dated heading at the bottom.
 
 ## 2026-08-11
 
-Found links to two SPAR ontologies in ~/Downloads/ontologies:
+Found links to two SPAR ontologies in the machine-local ontology downloads:
 
 - DOCO (Document Components Ontology): https://sparontologies.github.io/doco/current/doco.html
 - PO (Pattern Ontology): https://sparontologies.github.io/po/current/po.html
@@ -18,7 +18,7 @@ Found links to two SPAR ontologies in ~/Downloads/ontologies:
 @beep/lexical? I'm not sure in what way such a thing is useful but the
 taxonomy is so similar I'm curious what your take is."
 
-Cloned the DOCO repo locally: `~/Downloads/ontologies/doco`
+Cloned the DOCO repo locally into the machine-local ontology downloads (`ontologies/doco`)
 (https://github.com/SPAROntologies/doco) — has doco.ttl / doco.jsonld /
 doco.nt / doco.owl / doco.graphml under "docs/current/". PO and DEO are NOT
 vendored (owl:imports of purl.org IRIs only).

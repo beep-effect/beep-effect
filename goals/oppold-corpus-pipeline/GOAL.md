@@ -3,7 +3,7 @@
 Repo: this `beep-effect` checkout (`kriegcloud/beep-effect`).
 
 Outcome: the scattered Oppold IP practice corpus is salvaged into an
-immutable `raw/` tier at `/home/elpresidank/data-home/oppold-corpus/`, then
+immutable `raw/` tier in the out-of-repo Oppold corpus home (machine-local), then
 cataloged, deduplicated, name-restored, extracted, organized, and
 USPTO-enriched, with DuckDB catalog + `@beep/file-processing` manifests as
 the consumable surface.
@@ -22,7 +22,7 @@ conflict.
 
 Scope:
 
-- In: `/home/elpresidank/data-home/oppold-corpus/` (data tiers, outside the
+- In: the out-of-repo Oppold corpus home (data tiers, machine-local, outside the
   repo); `packages/drivers/libpff` and `packages/drivers/tika` hardening;
   new `packages/drivers/uspto`; `beep corpus` command family in
   `packages/tooling/tool/cli`; this packet's evidence files.

@@ -10,7 +10,7 @@ and `standards/memory-architecture/` updated to match reality.
 
 Verdict provenance: the 2026-08-06 bake-off (12 adversarial dossiers, sentiment
 sweep, live trials against this repo) in
-`~/YeeBois/research/codebase_graph_and_memory/BAKEOFF.md`. See
+the machine-local codebase-graph/memory bake-off dossier `BAKEOFF.md`. See
 [`research/SOURCES.md`](./research/SOURCES.md).
 
 ## Non-Goals
@@ -23,7 +23,7 @@ sweep, live trials against this repo) in
 
 ## Target Surfaces
 
-- `~/YeeBois/memory/beep-shared/` (new, outside the repo): the shared
+- The `beep-shared` store (new, machine-local, outside the repo): the shared
   basic-memory project, git-initialized. Shared by ALL beep-effect clones.
 - `.mcp.json`: add `basic-memory` and `codegraph` server entries (alongside
   existing `serena` etc.).
@@ -61,7 +61,7 @@ sweep, live trials against this repo) in
 ## Acceptance Criteria
 
 - [x] `basic-memory` project `beep-shared` exists at
-      `~/YeeBois/memory/beep-shared`, git-initialized, with a conventions
+      a machine-local path outside the repo, git-initialized, with a conventions
       README and the four folders.
 - [x] `.mcp.json` registers `basic-memory` (scoped to `beep-shared`) and
       `codegraph`; both start clean in a fresh Claude Code session.

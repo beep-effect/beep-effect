@@ -213,7 +213,7 @@ Command (from `packages/tooling/tool/cli`):
 `npx vitest run test/jsdoc-inventory-detector-fixes.test.ts test/quality-artifact-generators.test.ts test/jsdoc-categories.test.ts`
 
 ```
- RUN  v4.1.10 /home/elpresidank/YeeBois/projects/beep-effect7/packages/tooling/tool/cli
+ RUN  v4.1.10 <checkout-root>/packages/tooling/tool/cli
 
  Test Files  3 passed (3)
       Tests  13 passed (13)

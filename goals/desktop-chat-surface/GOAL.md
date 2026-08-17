@@ -1,6 +1,6 @@
 # GOAL: ship the E2E desktop chat surface
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: `beep-effect` (this checkout).
 
 Outcome: `apps/professional-desktop` runs the chat command surface E2E —
 rich-block composer, streamed block-by-block assistant turns, edit-as-branch,
@@ -20,7 +20,7 @@ contract:
 
 Read those first, then `AGENTS.md`, `CLAUDE.md`, and standards named by
 `SPEC.md`. Proof-repo reference (read-only, same effect catalog):
-`/home/elpresidank/YeeBois/projects/effect-lexical-chat/` — esp.
+the machine-local `effect-lexical-chat` checkout — esp.
 `server/AssistantTurn.ts` (kernel), `src/atoms.ts` (Atom patterns),
 `scripts/build-sidecar.ts` + `src-tauri/src/lib.rs` (packaging).
 

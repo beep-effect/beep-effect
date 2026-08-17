@@ -111,7 +111,7 @@ manifests**. The librarian/ingestion lane (build) reads that surface, runs span-
 extraction, and emits candidate claims into the authority spine.
 
 > **Boundary that must hold:** the real corpus and any privileged data stay **outside the
-> repository** (`/home/elpresidank/data-home/oppold-corpus/`). The repo carries only synthetic
+> repository** (the machine-local Oppold corpus home, outside any checkout). The repo carries only synthetic
 > fixtures. Dogfooding runs on the local machine, not in git.
 
 ## 7. Have vs. build — the honest ledger

@@ -18,8 +18,8 @@ Exit Criteria:
   `research/firecrawl-sdk-inventory.md`, and `ops/manifest.json` exist.
 - [x] The packet targets `@beep/firecrawl` at
   `packages/drivers/firecrawl`.
-- [x] The packet records the exact local clone path:
-  `/home/elpresidank/YeeBois/dev/firecrawl`.
+- [x] The packet records the Firecrawl upstream source:
+  `https://github.com/firecrawl/firecrawl`.
 - [x] The packet records the exact scaffold command:
   `bun run create-package firecrawl --family drivers --description "Firecrawl driver package"`.
 - [x] The packet includes watcher-as-stream, extract deferment,
@@ -29,7 +29,7 @@ Required Checks:
 
 ```sh
 jq . goals/firecrawl-driver/ops/manifest.json
-rg -n "@beep/firecrawl|packages/drivers/firecrawl|watcher|extract|quality-review-fix-loop|greptile|5/5|/home/elpresidank/YeeBois/dev/firecrawl|bun run create-package firecrawl --family drivers" goals/firecrawl-driver
+rg -n "@beep/firecrawl|packages/drivers/firecrawl|watcher|extract|quality-review-fix-loop|greptile|5/5|github.com/firecrawl/firecrawl|bun run create-package firecrawl --family drivers" goals/firecrawl-driver
 git diff --check
 ```
 
@@ -48,7 +48,7 @@ Implementation Steps:
    `$quality-review-fix-loop`, `github:yeet`, `github:gh-fix-ci`, and
    `github:gh-address-comments`.
 2. Record Graphiti status and any relevant narrow memory facts if available.
-3. In `/home/elpresidank/YeeBois/dev/firecrawl`, record:
+3. In the local Firecrawl clone (upstream `https://github.com/firecrawl/firecrawl`), record:
    - `git rev-parse HEAD`
    - `git status -sb`
    - JS SDK package manifest version/dependencies

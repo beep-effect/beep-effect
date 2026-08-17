@@ -1696,6 +1696,9 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
   // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
   // introduced by this branch and lets the corpus keep its inherited ones.
   repoCliStep(repoRoot, "knowledge:semantic-delta", ["knowledge", "semantic-delta"]),
+  // Whole-tree census with a zero-tolerance gate on live host-path classes; never file-scoped
+  // because any tracked document can introduce a machine-local reference.
+  repoCliStep(repoRoot, "knowledge:refs-check", ["knowledge", "refs", "--check"]),
   repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
   ...scopedLawStep(repoRoot, "lint:terse-effect", "terse-effect", ["--check", "--advisory"], files),
   bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"]),
