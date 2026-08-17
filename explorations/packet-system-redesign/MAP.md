@@ -1,6 +1,28 @@
 # Map — Exploration & Goal Packet System Redesign
 
-Status: DRAFT FOR OPERATOR MAP REVIEW 2026-08-13.
+Status: RATIFIED BY OPERATOR 2026-08-17 (drafted 2026-08-13), with the two
+amendments and the promised-now/gated split recorded below.
+
+## Ratification amendments (2026-08-17)
+
+- **Amendment A — live capability update.** Yeet's publish-time portfolio
+  index guard (PR #736: `PortfolioIndexGuard.ts`, `PublishScope.ts` under the
+  Yeet command tree) is a merged, live instance of the guarded-writer +
+  derived-projection-at-the-commit-boundary pattern candidates 1 and 3
+  propose. Cite and reuse it; it is no longer net-new territory.
+- **Amendment B — React candidate home.** The `apps/labs` substrate landed
+  (PR #732) after this MAP was drafted. If `packets-app-react-v2`'s gate ever
+  fires, its presumptive home is a lab app under `apps/labs`, resolving
+  D12's deferred-home question with the repo's own experimental-app
+  lifecycle; the package-creation command remains mandatory.
+- **Promised-now vs gated.** Only `packet-control-plane-core` is promised-now
+  and scaffolds at graduation. `packet-design-approval-gate` and
+  `packet-projection-migration` gate on the packet-core fold contract
+  stabilizing (first slice proven, advisory self-hosting running);
+  `packet-evidence-closure` gates on the self-hosting slice exposing real
+  friction; `packets-app-react-v2` keeps its existing KSA-v1 daily-use gate.
+  Fired gates reopen this exploration at `decompose` per the ratified
+  convention.
 
 No candidate goal below has been created. Per the prospective-path rule, each
 is named by slug only until the operator ratifies this MAP and graduation

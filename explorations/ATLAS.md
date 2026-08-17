@@ -40,12 +40,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ### Active
 
 - [`packet-system-redesign`](./packet-system-redesign/README.md) —
-  decompose-stage: operator signed off [`BRIEF.md`](./packet-system-redesign/BRIEF.md)
-  on 2026-08-13; [`MAP.md`](./packet-system-redesign/MAP.md) now proposes the
-  single colocated packet-core, design/approval gate, projection migration,
-  evidence closure, and gated React v2 packets app. D8 keeps one core behind
-  existing CLI groups; D9 self-hosts the first advisory slice; D12 leaves KSA
-  owning static HTML v1. Next: operator MAP review; no goals exist yet.
+  graduated 2026-08-17: MAP ratified with amendments (live index-guard
+  capability cited; apps/labs as the React candidate's presumptive home).
+  [`goals/packet-control-plane-core`](../goals/packet-control-plane-core/README.md)
+  scaffolded as the sole promised-now candidate; design gate + projection
+  migration gate on the core fold contract stabilizing, evidence closure on
+  observed self-hosting friction, React v2 on KSA static-v1 daily-use
+  evidence. Fired gates reopen the packet at decompose.
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
   graduate-stage, still active: spine graduated 2026-08-13 to
   [`goals/skill-contract-kernel/`](../goals/skill-contract-kernel/README.md)

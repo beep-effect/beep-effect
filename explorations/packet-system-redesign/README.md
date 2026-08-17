@@ -2,8 +2,15 @@
 
 ## Status
 
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
+
+Graduated 2026-08-17: MAP ratified with amendments;
+[`goals/packet-control-plane-core`](../../goals/packet-control-plane-core/README.md)
+scaffolded as the only promised-now candidate. Candidates 2–4 are gated
+re-entry candidates (gates in the MAP ratification amendments); the React
+viewer stays gated on KSA static-v1 daily-use evidence. A fired gate reopens
+this packet at `decompose`.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
