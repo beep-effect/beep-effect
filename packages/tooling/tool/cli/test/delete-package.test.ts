@@ -505,8 +505,9 @@ describe("delete-package baseline writer stage", () => {
 }
 `;
 
-  it("subtracts the coverage baseline then runs every shell step in table order", () =>
-    Effect.runPromise(
+  it("subtracts the coverage baseline then runs every shell step in table order", () => {
+    const spawned: Array<string> = [];
+    return Effect.runPromise(
       withTempDirectory((repoRoot) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
@@ -517,10 +518,7 @@ describe("delete-package baseline writer stage", () => {
             coverageBaselineFixture
           );
 
-          const spawned: Array<string> = [];
-          yield* DeletePackageBaselineWriters.run(repoRoot, "@beep/courtlistener").pipe(
-            Effect.provide(fakeSpawnerLayer(0, spawned))
-          );
+          yield* DeletePackageBaselineWriters.run(repoRoot, "@beep/courtlistener");
 
           const baseline = yield* fs.readFileString(
             path.join(repoRoot, "standards", "coverage.regression-baseline.jsonc")
@@ -530,27 +528,25 @@ describe("delete-package baseline writer stage", () => {
             A.map(DeletePackageBaselineWriters.steps, (step) => A.join(["bun", ...step.args], " "))
           );
         })
-      ).pipe(provideScopedLayer(commandLayer))
-    ));
+      ).pipe(provideScopedLayer(Layer.mergeAll(commandLayer, fakeSpawnerLayer(0, spawned))))
+    );
+  });
 
-  it("fails the stage on the first zero-only step that exits nonzero", () =>
-    Effect.runPromise(
+  it("fails the stage on the first zero-only step that exits nonzero", () => {
+    const spawned: Array<string> = [];
+    return Effect.runPromise(
       withTempDirectory((repoRoot) =>
         Effect.gen(function* () {
-          const spawned: Array<string> = [];
-          const exit = yield* Effect.exit(
-            DeletePackageBaselineWriters.run(repoRoot, "@beep/courtlistener").pipe(
-              Effect.provide(fakeSpawnerLayer(1, spawned))
-            )
-          );
+          const exit = yield* Effect.exit(DeletePackageBaselineWriters.run(repoRoot, "@beep/courtlistener"));
           expect(Exit.isFailure(exit)).toBe(true);
           if (Exit.isFailure(exit)) {
             expect(Str.includes("fallow boundaries failed with exit code 1")(Cause.pretty(exit.cause))).toBe(true);
           }
           expect(A.length(spawned)).toBe(1);
         })
-      ).pipe(provideScopedLayer(commandLayer))
-    ));
+      ).pipe(provideScopedLayer(Layer.mergeAll(commandLayer, fakeSpawnerLayer(1, spawned))))
+    );
+  });
 });
 
 describe("delete-package packet-claim refusal", () => {
