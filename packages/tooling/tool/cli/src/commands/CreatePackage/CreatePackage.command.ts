@@ -546,6 +546,7 @@ const STORIES_TSCONFIG_FILES = [STORIES_TSCONFIG_FILE, STORIES_DIRECTORY_TSCONFI
 const NEXTJS_APP_FILES = [
   "package.json",
   "tsconfig.json",
+  "tsconfig.check.json",
   "next-env.d.ts",
   "next.config.ts",
   "src/app/globals.css",
@@ -562,6 +563,7 @@ const NEXTJS_APP_FILES = [
 const TAURI_APP_FILES = [
   "package.json",
   "tsconfig.json",
+  "tsconfig.check.json",
   "index.html",
   "src/App.tsx",
   "src/main.tsx",
