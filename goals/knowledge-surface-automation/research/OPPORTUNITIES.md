@@ -171,3 +171,29 @@ measurement first). Reviewed at each grill.
     **What would have prevented it:** the error enumerating the registered
     category values (they are known to the checker), or the JSDoc skill carrying
     the list.
+
+13. **Codex fan-out died on a spent usage window mid-campaign.** `unowned`
+
+    The P3 rewrite pass launched four `codex exec` draft jobs per the packet's
+    delegation doctrine; all four exited immediately with "You've hit your
+    usage limit ... try again at Aug 19th". The session fell back to Claude
+    subagents (the precedented 2026-08-04 fallback), which produced all 269
+    draft entries — but the doctrine's primary path failed silently at launch
+    time with no pre-flight signal.
+
+    **What would have prevented it:** a cheap quota pre-flight (a one-token
+    `codex exec` ping, or the wrapper surfacing the reset timestamp) before
+    fanning out, so the orchestrator picks the fallback in one step instead of
+    discovering the outage from four identical error logs.
+
+14. **Markdown emphasis markers defeat the convention-prefix classifier.** `unowned`
+
+    A bold-wrapped `**fail instead of mutating ~/.openclaw**` span left the
+    token starting with `**`, so the portable-home-convention prefix test
+    failed and the row classified as external-mirror-reference — the one
+    straggler after a 226-rule mechanical pass. The token trimmer strips
+    backticks, quotes, and brackets but not emphasis markers.
+
+    **What would have prevented it:** `*`/`_` in the host-token leading-trim
+    set (a falsifiable one-character rule-table widening for the next census
+    version), or the authoring rule "never wrap a path span inside emphasis".
