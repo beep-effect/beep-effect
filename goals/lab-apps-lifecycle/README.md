@@ -2,7 +2,19 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
+
+All seven phases complete, closed out 2026-08-17. Final work shipped in
+[#756](https://github.com/beep-effect/beep-effect/pull/756) (`5ec933e8e2`);
+earlier phases in #722 (P0), #723 (P1), #732 + #742 (P2), #752 (P3).
+
+Latest evidence: [`history/p4-first-vertical-slice.md`](./history/p4-first-vertical-slice.md)
+is the round-trip record, [`history/reflections/2026-08-17-claude.md`](./history/reflections/2026-08-17-claude.md)
+the closeout reflection, and [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md)
+carries eleven friction receipts — of which **receipt 9 is a live defect in
+shipped tooling**: `beep delete-package`'s default path cannot complete on a
+tree with any failing test, because its baseline rebuild runs the repo-wide
+coverage suite, and it removes the package before discovering that.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

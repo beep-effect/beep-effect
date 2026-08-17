@@ -3,13 +3,13 @@
   "initiative": {
     "id": "lab-apps-lifecycle",
     "title": "Lab Apps Lifecycle",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
     "updated": "2026-08-17",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/lab-apps-lifecycle",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Law-abiding apps/labs/* lab apps via create-package variants (nextjs, vite, service; tauri phase 2) and a beep delete-package that fully prunes every registration surface.",
   "statusNote": "Two tracks, one packet (operator-ratified 2026-08-13): registration geometry + delete-package first, labs scaffolding second, tauri last. Split (phase superseded + sibling packet) if either track grows a second primary. All 14 track decisions are locked in SPEC Decision Log; do not re-litigate them.",
   "executionCapable": true,
@@ -92,12 +92,12 @@
     {
       "id": "P5",
       "name": "Yeet: final PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -116,5 +116,6 @@
     "Either track would absorb unrelated create-package, architecture-command, or CI-topology redesign work.",
     "Verification requires unnamed credentials, cost, destructive side effects outside the target lab, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mergedPullRequest": 756
 }
