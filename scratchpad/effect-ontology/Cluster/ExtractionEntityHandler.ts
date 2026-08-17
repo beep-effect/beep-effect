@@ -10,12 +10,12 @@
  * @since 0.0.0
  */
 
-import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
-import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt, PosInt } from "@beep/schema/Int";
-import { Percentage } from "@beep/schema/Percentage";
-import type { UnitInterval } from "@beep/schema/UnitInterval";
-import { thunk0 } from "@beep/utils/thunk";
+import {Confidence} from "@beep/epistemic-domain/values/EvidenceSpan";
+import {$ScratchpadId} from "@beep/identity";
+import {NonNegativeInt, PosInt} from "@beep/schema/Int";
+import {Percentage} from "@beep/schema/Percentage";
+import type {UnitInterval} from "@beep/schema/UnitInterval";
+import {thunk0} from "@beep/utils/thunk";
 import {
   Chunk,
   DateTime,
@@ -34,20 +34,35 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { Entity as ClusterEntity } from "effect/unstable/cluster";
-import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
-import { ExtractionError } from "../Domain/Error/Extraction.ts";
-import { ContentHash, IdempotencyKey, Namespace, OntologyName } from "../Domain/Identity.ts";
-import { RunStatus } from "../Domain/Model/ExtractionRun.ts";
-import { OntologyRef } from "../Domain/Model/Ontology.ts";
-import { ConfigService } from "../Service/Config.ts";
-import { EntityExtractor, RelationExtractor } from "../Service/Extraction.ts";
-import { ExtractionRunService, getRunIdFromText } from "../Service/ExtractionRun.ts";
-import { Grounder } from "../Service/Grounder.ts";
-import { CentralRateLimiterService, StageTimeoutService, TokenBudgetService } from "../Service/LlmControl/index.ts";
-import { NlpService } from "../Service/Nlp.ts";
-import { OntologyService } from "../Service/Ontology.ts";
-import { computeIdempotencyKey, ExtractionParams } from "../Utils/IdempotencyKey.ts";
+import type {Entity as ClusterEntity} from "effect/unstable/cluster";
+import {ProgressEvent} from "../Contract/ProgressStreaming.ts";
+import {ExtractionError} from "../Domain/Error/Extraction.ts";
+import {
+  ContentHash,
+  IdempotencyKey,
+  Namespace,
+  OntologyName
+} from "../Domain/Identity.ts";
+import {RunStatus} from "../Domain/Model/ExtractionRun.ts";
+import {OntologyRef} from "../Domain/Model/Ontology.ts";
+import {ConfigService} from "../Service/Config.ts";
+import {EntityExtractor, RelationExtractor} from "../Service/Extraction.ts";
+import {
+  ExtractionRunService,
+  getRunIdFromText
+} from "../Service/ExtractionRun.ts";
+import {Grounder} from "../Service/Grounder.ts";
+import {
+  CentralRateLimiterService,
+  StageTimeoutService,
+  TokenBudgetService
+} from "../Service/LlmControl/index.ts";
+import {NlpService} from "../Service/Nlp.ts";
+import {OntologyService} from "../Service/Ontology.ts";
+import {
+  computeIdempotencyKey,
+  ExtractionParams
+} from "../Utils/IdempotencyKey.ts";
 import type {
   CancelExtractionRpc,
   ExtractFromTextRpc,
@@ -55,7 +70,7 @@ import type {
   GetExtractionStatusRpc,
   KnowledgeGraphResult,
 } from "./ExtractionEntity.ts";
-import { ExtractionStatus, KnowledgeGraphExtractor } from "./ExtractionEntity.ts";
+import {ExtractionStatus, KnowledgeGraphExtractor} from "./ExtractionEntity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cluster/ExtractionEntityHandler");
 
@@ -92,7 +107,8 @@ class ExtractionStats extends S.Class<ExtractionStats>($I`ExtractionStats`)(
   $I.annote("ExtractionStats", {
     description: "Running extraction counters with schema-owned empty defaults.",
   })
-) {}
+) {
+}
 
 const emptyStats = ExtractionStats.make({});
 
@@ -102,9 +118,9 @@ const toExtractionError = (error: unknown): ExtractionError =>
   ExtractionError.is(error)
     ? error
     : ExtractionError.make({
-        message: Inspectable.toStringUnknown(error),
-        cause: O.some(error),
-      });
+      message: Inspectable.toStringUnknown(error),
+      cause: O.some(error),
+    });
 
 const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
   runId: string,
@@ -139,7 +155,7 @@ const toExtractionParams = (
         maxTokens: value.maxTokens,
         temperature: value.temperature,
         groundingThreshold: value.groundingThreshold,
-        ...(O.isSome(value.includeConfidence) ? { includeConfidence: value.includeConfidence.value } : {}),
+        ...(O.isSome(value.includeConfidence) ? {includeConfidence: value.includeConfidence.value} : {}),
       }),
   });
 
@@ -190,7 +206,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
 
   const extractFromText = Effect.fn("ExtractionEntityHandler.extractFromText")(
     function* (envelope: ClusterEntity.Request<typeof ExtractFromTextRpc>) {
-      const { ontologyId, ontologyVersion, params, text } = envelope.payload;
+      const {ontologyId, ontologyVersion, params, text} = envelope.payload;
       const idempotencyKey = IdempotencyKey.make(
         computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params))
       );
@@ -266,9 +282,9 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           ontology: ontologyRef,
           enableGrounding: config.grounder.enabled,
         },
-        { idempotencyKey, ontologyVersion }
+        {idempotencyKey, ontologyVersion}
       );
-      yield* runService.setStatus(runId, RunStatus.cases.Running.make({ startedAt: yield* DateTime.now }));
+      yield* runService.setStatus(runId, RunStatus.cases.Running.make({startedAt: yield* DateTime.now}));
 
       const statsRef = yield* Ref.make(emptyStats);
       const initialEvents = [
@@ -280,7 +296,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
             contentType: "text/plain",
           },
         }),
-        yield* makeEvent(runId, "stage_started", 5, { stage: "chunking" }),
+        yield* makeEvent(runId, "stage_started", 5, {stage: "chunking"}),
         yield* makeEvent(runId, "stage_completed", 10, {
           stage: "chunking",
           durationMs: DateTime.distance(chunkingStart, yield* DateTime.now).pipe(Duration.toMillis),
@@ -307,17 +323,17 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           const relationArray = Chunk.toReadonlyArray(relations);
           const verifiedRelations = config.grounder.enabled
             ? (yield* grounder.verifyRelationBatch(
-                chunk.text,
-                A.map(relationArray, (relation) => ({
-                  context: chunk.text,
-                  relation,
-                }))
-              )).filter((result) => result.grounded)
-            : A.map(relationArray, (relation) => ({
+              chunk.text,
+              A.map(relationArray, (relation) => ({
+                context: chunk.text,
                 relation,
-                grounded: true,
-                confidence: Confidence.make(1),
-              }));
+              }))
+            ).pipe(Effect.map(A.filter((result) => result.grounded))))
+            : A.map(relationArray, (relation) => ({
+              relation,
+              grounded: true,
+              confidence: Confidence.make(1),
+            }));
 
           const entityArray = Chunk.toReadonlyArray(entities);
           const entityTypes = HashSet.fromIterable(entityArray.flatMap((entity) => entity.types));
@@ -344,7 +360,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           );
           return events;
         }),
-        { concurrency: config.runtime.concurrency }
+        {concurrency: config.runtime.concurrency}
       );
 
       const stats = yield* Ref.get(statsRef);
@@ -379,7 +395,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         Effect.catch((error) => {
           const text = envelope.payload.text;
           const runId = getRunIdFromText(text);
-          const { ontologyId, ontologyVersion, params } = envelope.payload;
+          const {ontologyId, ontologyVersion, params} = envelope.payload;
           const idempotencyKey = IdempotencyKey.make(
             computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params))
           );
@@ -427,7 +443,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
     function* (envelope: ClusterEntity.Request<typeof CancelExtractionRpc>) {
       const key = IdempotencyKey.make(envelope.payload.idempotencyKey);
       const run = yield* runService.getByKey(key);
-      if (O.isNone(run)) return yield* ExtractionError.make({ message: "Extraction not found" });
+      if (O.isNone(run)) return yield* ExtractionError.make({message: "Extraction not found"});
       if (P.isTagged(run.value.status, "Complete") || P.isTagged(run.value.status, "Failed")) return false;
 
       const signal = HashMap.get(yield* Ref.get(cancellationRegistry), key);

@@ -89,16 +89,6 @@ export const CorrectionStrategy = LiteralKit([
  * Correction strategy based on violation type
  *
  *
- * **Example** (Use the CorrectionStrategy contract)
- *
- * ```ts
- * import type { CorrectionStrategy } from "@effect-ontology/Service/Agent/CorrectorAgent"
- *
- * const acceptsCorrectionStrategy = (_value: CorrectionStrategy): void => undefined
- *
- * console.log(acceptsCorrectionStrategy)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

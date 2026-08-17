@@ -19,7 +19,7 @@ import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { Command, Flag as Options } from "effect/unstable/cli";
+import { Command, Flag } from "effect/unstable/cli";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
 import { StorageService } from "../../Service/Storage.ts";
@@ -29,28 +29,28 @@ import { withErrorHandler } from "../ErrorHandler.ts";
 // Command Options
 // =============================================================================
 
-const batchIdOption = Options.string("batch-id").pipe(
-  Options.withAlias("b"),
-  Options.withDescription("Batch ID to analyze")
+const batchIdOption = Flag.string("batch-id").pipe(
+  Flag.withAlias("b"),
+  Flag.withDescription("Batch ID to analyze")
 );
 const TypeCountOrder = Order.mapInput(Order.flip(Order.Number), (entry: readonly [string, number]) => entry[1]);
 
-const manifestOption = Options.file("manifest").pipe(
-  Options.withAlias("m"),
-  Options.optional,
-  Options.withDescription("Path to batch manifest JSON (alternative to batch-id)")
+const manifestOption = Flag.file("manifest").pipe(
+  Flag.withAlias("m"),
+  Flag.optional,
+  Flag.withDescription("Path to batch manifest JSON (alternative to batch-id)")
 );
 
-const thresholdOption = Options.float("threshold").pipe(
-  Options.withAlias("t"),
-  Options.withDefault(0.8),
-  Options.withDescription("Similarity threshold for duplicate detection (0-1)")
+const thresholdOption = Flag.float("threshold").pipe(
+  Flag.withAlias("t"),
+  Flag.withDefault(0.8),
+  Flag.withDescription("Similarity threshold for duplicate detection (0-1)")
 );
 
-const verboseOption = Options.boolean("verbose").pipe(
-  Options.withAlias("v"),
-  Options.withDefault(false),
-  Options.withDescription("Show detailed entity information")
+const verboseOption = Flag.boolean("verbose").pipe(
+  Flag.withAlias("v"),
+  Flag.withDefault(false),
+  Flag.withDescription("Show detailed entity information")
 );
 
 // =============================================================================

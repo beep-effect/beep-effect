@@ -27,16 +27,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/LlmControl/RateLimiter"
  * Circuit breaker states
  *
  *
- * **Example** (Use the CircuitState contract)
- *
- * ```ts
- * import type { CircuitState } from "@effect-ontology/Service/LlmControl/RateLimiter"
- *
- * const acceptsCircuitState = (_value: CircuitState): void => undefined
- *
- * console.log(acceptsCircuitState)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

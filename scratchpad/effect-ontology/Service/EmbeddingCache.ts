@@ -46,16 +46,6 @@ export const Embedding = S.Array(S.Finite);
  * Describes the embedding data exposed by this module.
  *
  *
- * **Example** (Use the Embedding contract)
- *
- * ```ts
- * import type { Embedding } from "@effect-ontology/Service/EmbeddingCache"
- *
- * const acceptsEmbedding = (_value: Embedding): void => undefined
- *
- * console.log(acceptsEmbedding)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -137,16 +127,6 @@ export const defaultCacheConfig = EmbeddingCacheConfig.make({});
 /**
  * EmbeddingCache service interface
  *
- *
- * **Example** (Use the EmbeddingCacheService contract)
- *
- * ```ts
- * import type { EmbeddingCacheService } from "@effect-ontology/Service/EmbeddingCache"
- *
- * const acceptsEmbeddingCacheService = (_value: EmbeddingCacheService): void => undefined
- *
- * console.log(acceptsEmbeddingCacheService)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -293,16 +273,6 @@ export const EmbeddingCacheTest: Layer.Layer<EmbeddingCache> = Layer.succeed(Emb
 /**
  * Extended cache interface with persistence and warm-up capabilities
  *
- *
- * **Example** (Use the PersistentEmbeddingCacheService contract)
- *
- * ```ts
- * import type { PersistentEmbeddingCacheService } from "@effect-ontology/Service/EmbeddingCache"
- *
- * const acceptsPersistentEmbeddingCacheService = (_value: PersistentEmbeddingCacheService): void => undefined
- *
- * console.log(acceptsPersistentEmbeddingCacheService)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -557,8 +527,7 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
         });
       });
 
-      // Persist to storage (fire-and-forget with error logging)
-      yield* Effect.forkDetach(saveToStorage(hash, embedding));
+      yield* saveToStorage(hash, embedding);
     }),
 
     has: Effect.fn("EmbeddingCache.persistent.has")(function* (hash: string) {

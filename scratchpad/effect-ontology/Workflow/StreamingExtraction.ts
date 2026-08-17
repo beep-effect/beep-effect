@@ -525,10 +525,10 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
               if (Exit.isSuccess(exit)) return Chunk.of(exit.value);
               const cause = exit.cause;
               if (Result.isSuccess(Cause.findDefect(cause))) {
-                yield* Effect.logWarning("Defect in chunk processing", {
+                yield* Effect.logError("Defect in chunk processing", {
                   defect: Cause.pretty(cause),
                 });
-                return Chunk.empty<KnowledgeGraph>();
+                return yield* Effect.failCause(cause);
               }
               return yield* Effect.failCause(
                 Cause.map(cause, (error) =>

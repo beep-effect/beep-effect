@@ -618,16 +618,6 @@ export const HumanFeedback = S.Union([HumanApprove, HumanReject, HumanModify, Hu
  * Runtime feedback decoded by {@link HumanFeedback}.
  *
  *
- * **Example** (Use the HumanFeedback contract)
- *
- * ```ts
- * import type { HumanFeedback } from "@effect-ontology/Service/Agent/types"
- *
- * const acceptsHumanFeedback = (_value: HumanFeedback): void => undefined
- *
- * console.log(acceptsHumanFeedback)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -775,16 +765,6 @@ export class RefinementConfig extends S.Class<RefinementConfig>("RefinementConfi
  * RefinementStatus - Outcome of a refinement loop
  *
  *
- * **Example** (Use the RefinementStatus contract)
- *
- * ```ts
- * import type { RefinementStatus } from "@effect-ontology/Service/Agent/types"
- *
- * const acceptsRefinementStatus = (_value: RefinementStatus): void => undefined
- *
- * console.log(acceptsRefinementStatus)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -895,16 +875,6 @@ export class RefinementResult extends S.Class<RefinementResult>("RefinementResul
  * Wraps the Agent interface with registration metadata.
  *
  *
- * **Example** (Use the RegisteredAgent contract)
- *
- * ```ts
- * import type { RegisteredAgent } from "@effect-ontology/Service/Agent/types"
- *
- * const acceptsRegisteredAgent = (_value: RegisteredAgent<never, never, never, never>): void => undefined
- *
- * console.log(acceptsRegisteredAgent)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -933,16 +903,6 @@ export interface RegisteredAgent<I = unknown, O = unknown, E = never, R = never>
 /**
  * AgentRegistry - Type for the agent registry map
  *
- *
- * **Example** (Use the AgentRegistry contract)
- *
- * ```ts
- * import type { AgentRegistry } from "@effect-ontology/Service/Agent/types"
- *
- * const acceptsAgentRegistry = (_value: AgentRegistry): void => undefined
- *
- * console.log(acceptsAgentRegistry)
- * ```
  *
  * @category type-level
  * @since 0.0.0

@@ -11,8 +11,10 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { ArticleRepository } from "../Repository/Article.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ClaimInsertRow } from "../Repository/schema.ts";
@@ -31,30 +33,28 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ClaimPersistence");
  * **Example** (Use the ArticleMetadata contract)
  *
  * ```ts
- * import type { ArticleMetadata } from "@effect-ontology/Service/ClaimPersistence"
+ * import * as S from "effect/Schema"
+ * import { ArticleMetadata } from "@effect-ontology/Service/ClaimPersistence"
  *
- * const acceptsArticleMetadata = (_value: ArticleMetadata): void => undefined
- *
- * console.log(acceptsArticleMetadata)
+ * console.log(S.is(ArticleMetadata)({})) // false
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface ArticleMetadata {
-  /** Article URI (unique identifier) */
-  readonly uri: string;
-  /** Ontology ID for namespace scoping */
-  readonly ontologyId: string;
-  /** Article headline */
-  readonly headline?: string;
-  /** When the article was published */
-  readonly publishedAt: Date;
-  /** Source/publisher name */
-  readonly sourceName?: string;
-  /** Content hash for deduplication */
-  readonly contentHash?: string;
-}
+export class ArticleMetadata extends S.Class<ArticleMetadata>($I`ArticleMetadata`)(
+  {
+    uri: S.NonEmptyString,
+    ontologyId: S.NonEmptyString,
+    headline: S.optionalKey(S.String),
+    publishedAt: S.Date,
+    sourceName: S.optionalKey(S.NonEmptyString),
+    contentHash: S.optionalKey(S.NonEmptyString),
+  },
+  $I.annote("ArticleMetadata", {
+    description: "Validated article identity, publication time, and optional source metadata.",
+  })
+) {}
 
 /**
  * Result of claim persistence operation
@@ -63,24 +63,25 @@ export interface ArticleMetadata {
  * **Example** (Use the PersistenceResult contract)
  *
  * ```ts
- * import type { PersistenceResult } from "@effect-ontology/Service/ClaimPersistence"
+ * import * as S from "effect/Schema"
+ * import { PersistenceResult } from "@effect-ontology/Service/ClaimPersistence"
  *
- * const acceptsPersistenceResult = (_value: PersistenceResult): void => undefined
- *
- * console.log(acceptsPersistenceResult)
+ * console.log(S.is(PersistenceResult)({})) // false
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface PersistenceResult {
-  /** Database ID of the article */
-  readonly articleId: string;
-  /** Number of claims actually inserted (excludes duplicates) */
-  readonly claimsInserted: number;
-  /** Total claims processed */
-  readonly claimsTotal: number;
-}
+export class PersistenceResult extends S.Class<PersistenceResult>($I`PersistenceResult`)(
+  {
+    articleId: S.NonEmptyString,
+    claimsInserted: NonNegativeInt,
+    claimsTotal: NonNegativeInt,
+  },
+  $I.annote("PersistenceResult", {
+    description: "Article identifier and non-negative claim persistence counts.",
+  })
+) {}
 
 // =============================================================================
 // Service

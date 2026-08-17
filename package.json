@@ -192,7 +192,7 @@
     "react-dom": "19.2.8",
     "react-dropzone": "20.1.0",
     "react-grab": "0.2.0",
-    "react-resizable-panels": "^4.12.2",
+    "react-resizable-panels": "^4.12.3",
     "recharts": "^3.10.1",
     "serwist": "^9.5.12",
     "shacl-engine": "^1.1.2",

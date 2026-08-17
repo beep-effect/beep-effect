@@ -101,16 +101,6 @@ export const LOCAL_RATE_LIMITS: EmbeddingRateLimiterConfig = {
  * EmbeddingRateLimiter service interface
  *
  *
- * **Example** (Use the EmbeddingRateLimiterMethods contract)
- *
- * ```ts
- * import type { EmbeddingRateLimiterMethods } from "@effect-ontology/Service/EmbeddingRateLimiter"
- *
- * const acceptsEmbeddingRateLimiterMethods = (_value: EmbeddingRateLimiterMethods): void => undefined
- *
- * console.log(acceptsEmbeddingRateLimiterMethods)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

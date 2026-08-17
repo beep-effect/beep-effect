@@ -151,16 +151,6 @@ export type ImageFetchOptionsInput = (typeof ImageFetchOptions)["~type.make.in"]
  * Downloads images from URLs and prepares them for storage.
  *
  *
- * **Example** (Use the ImageFetcherService contract)
- *
- * ```ts
- * import type { ImageFetcherService } from "@effect-ontology/Service/ImageFetcher"
- *
- * const acceptsImageFetcherService = (_value: ImageFetcherService): void => undefined
- *
- * console.log(acceptsImageFetcherService)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

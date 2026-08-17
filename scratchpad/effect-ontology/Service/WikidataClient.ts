@@ -172,16 +172,6 @@ export const WikidataCandidate = S.Struct({
  * Describes the wikidata candidate data exposed by this module.
  *
  *
- * **Example** (Use the WikidataCandidate contract)
- *
- * ```ts
- * import type { WikidataCandidate } from "@effect-ontology/Service/WikidataClient"
- *
- * const acceptsWikidataCandidate = (_value: WikidataCandidate): void => undefined
- *
- * console.log(acceptsWikidataCandidate)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

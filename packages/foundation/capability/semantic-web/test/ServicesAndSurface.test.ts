@@ -29,12 +29,10 @@ import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Order, pipe } from "effect";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 import { FastCheck as fc } from "effect/testing";
-
-const decodeUnknownSync = <Schema extends S.ConstraintDecoder<unknown, never>>(schema: Schema) =>
-  S.decodeUnknownSync(schema);
 
 const dataset = makeDataset([
   makeQuad(
@@ -140,28 +138,25 @@ describe("Services and Surface", () => {
           CanonicalizeDatasetRequestArbitrary,
           FingerprintDatasetRequestArbitrary,
           (generatedDataset, canonicalizeRequest, fingerprintRequest) => {
-            const encodedDataset = Effect.runSync(S.encodeEffect(Dataset)(generatedDataset));
-            const decodedDataset = Effect.runSync(S.decodeEffect(Dataset)(encodedDataset));
-            const reencodedDataset = Effect.runSync(S.encodeEffect(Dataset)(decodedDataset));
-
-            const encodedCanonicalizeRequest = Effect.runSync(
-              S.encodeEffect(CanonicalizeDatasetRequest)(canonicalizeRequest)
-            );
-            const decodedCanonicalizeRequest = Effect.runSync(
-              S.decodeEffect(CanonicalizeDatasetRequest)(encodedCanonicalizeRequest)
-            );
-            const reencodedCanonicalizeRequest = Effect.runSync(
-              S.encodeEffect(CanonicalizeDatasetRequest)(decodedCanonicalizeRequest)
+            const encodedDataset = S.encodeResult(Dataset)(generatedDataset);
+            const reencodedDataset = pipe(
+              encodedDataset,
+              Result.flatMap(S.decodeResult(Dataset)),
+              Result.flatMap(S.encodeResult(Dataset))
             );
 
-            const encodedFingerprintRequest = Effect.runSync(
-              S.encodeEffect(FingerprintDatasetRequest)(fingerprintRequest)
+            const encodedCanonicalizeRequest = S.encodeResult(CanonicalizeDatasetRequest)(canonicalizeRequest);
+            const reencodedCanonicalizeRequest = pipe(
+              encodedCanonicalizeRequest,
+              Result.flatMap(S.decodeResult(CanonicalizeDatasetRequest)),
+              Result.flatMap(S.encodeResult(CanonicalizeDatasetRequest))
             );
-            const decodedFingerprintRequest = Effect.runSync(
-              S.decodeEffect(FingerprintDatasetRequest)(encodedFingerprintRequest)
-            );
-            const reencodedFingerprintRequest = Effect.runSync(
-              S.encodeEffect(FingerprintDatasetRequest)(decodedFingerprintRequest)
+
+            const encodedFingerprintRequest = S.encodeResult(FingerprintDatasetRequest)(fingerprintRequest);
+            const reencodedFingerprintRequest = pipe(
+              encodedFingerprintRequest,
+              Result.flatMap(S.decodeResult(FingerprintDatasetRequest)),
+              Result.flatMap(S.encodeResult(FingerprintDatasetRequest))
             );
 
             expect(reencodedDataset).toEqual(encodedDataset);
@@ -173,60 +168,63 @@ describe("Services and Surface", () => {
       )
   );
 
-  it("keeps optional service control fields absent in encoded wire shapes when omitted", () => {
-    const emptyDataset = decodeUnknownSync(Dataset)({ quads: [] });
-    const namedNode = makeNamedNode("https://schema.org/name");
+  it.effect(
+    "keeps optional service control fields absent in encoded wire shapes when omitted",
+    Effect.fnUntraced(function* () {
+      const emptyDataset = yield* S.decodeUnknownEffect(Dataset)({ quads: [] });
+      const namedNode = makeNamedNode("https://schema.org/name");
 
-    const encodedCanonicalizeRequest = S.encodeSync(CanonicalizeDatasetRequest)(
-      CanonicalizeDatasetRequest.make({
-        algorithm: "rdfc-1.0",
-        dataset: emptyDataset,
-      })
-    );
-    const encodedFingerprintRequest = S.encodeSync(FingerprintDatasetRequest)(
-      FingerprintDatasetRequest.make({
-        algorithm: "rdfc-1.0",
-        dataset: emptyDataset,
-      })
-    );
-    const encodedPropertyShape = S.encodeSync(ShaclPropertyShape)(
-      ShaclPropertyShape.make({
-        path: namedNode,
-      })
-    );
-    const encodedNodeShape = S.encodeSync(ShaclNodeShape)(
-      ShaclNodeShape.make({
-        properties: [],
-      })
-    );
-    const encodedValidationRequest = S.encodeSync(ShaclValidationRequest)(
-      ShaclValidationRequest.make({
-        dataset: emptyDataset,
-        shapes: [],
-      })
-    );
-    const encodedSparqlRequest = S.encodeSync(SparqlQueryRequest)(
-      SparqlQueryRequest.make({
-        dataset: emptyDataset,
-        profile: "ask",
-        query: "ASK { ?s ?p ?o }",
-      })
-    );
+      const encodedCanonicalizeRequest = yield* S.encodeEffect(CanonicalizeDatasetRequest)(
+        CanonicalizeDatasetRequest.make({
+          algorithm: "rdfc-1.0",
+          dataset: emptyDataset,
+        })
+      );
+      const encodedFingerprintRequest = yield* S.encodeEffect(FingerprintDatasetRequest)(
+        FingerprintDatasetRequest.make({
+          algorithm: "rdfc-1.0",
+          dataset: emptyDataset,
+        })
+      );
+      const encodedPropertyShape = yield* S.encodeEffect(ShaclPropertyShape)(
+        ShaclPropertyShape.make({
+          path: namedNode,
+        })
+      );
+      const encodedNodeShape = yield* S.encodeEffect(ShaclNodeShape)(
+        ShaclNodeShape.make({
+          properties: [],
+        })
+      );
+      const encodedValidationRequest = yield* S.encodeEffect(ShaclValidationRequest)(
+        ShaclValidationRequest.make({
+          dataset: emptyDataset,
+          shapes: [],
+        })
+      );
+      const encodedSparqlRequest = yield* S.encodeEffect(SparqlQueryRequest)(
+        SparqlQueryRequest.make({
+          dataset: emptyDataset,
+          profile: "ask",
+          query: "ASK { ?s ?p ?o }",
+        })
+      );
 
-    expect(encodedCanonicalizeRequest).not.toHaveProperty("workLimit");
-    expect(encodedFingerprintRequest).not.toHaveProperty("workLimit");
-    expect(encodedPropertyShape).not.toHaveProperty("minCount");
-    expect(encodedPropertyShape).not.toHaveProperty("maxCount");
-    expect(encodedPropertyShape).not.toHaveProperty("datatype");
-    expect(encodedPropertyShape).not.toHaveProperty("class");
-    expect(encodedPropertyShape).not.toHaveProperty("hasValue");
-    expect(encodedNodeShape).not.toHaveProperty("id");
-    expect(encodedNodeShape).not.toHaveProperty("targetNode");
-    expect(encodedNodeShape).not.toHaveProperty("targetClass");
-    expect(encodedValidationRequest).not.toHaveProperty("maxResults");
-    expect(encodedValidationRequest).not.toHaveProperty("shapesDataset");
-    expect(encodedSparqlRequest).not.toHaveProperty("timeoutMs");
-  });
+      expect(encodedCanonicalizeRequest).not.toHaveProperty("workLimit");
+      expect(encodedFingerprintRequest).not.toHaveProperty("workLimit");
+      expect(encodedPropertyShape).not.toHaveProperty("minCount");
+      expect(encodedPropertyShape).not.toHaveProperty("maxCount");
+      expect(encodedPropertyShape).not.toHaveProperty("datatype");
+      expect(encodedPropertyShape).not.toHaveProperty("class");
+      expect(encodedPropertyShape).not.toHaveProperty("hasValue");
+      expect(encodedNodeShape).not.toHaveProperty("id");
+      expect(encodedNodeShape).not.toHaveProperty("targetNode");
+      expect(encodedNodeShape).not.toHaveProperty("targetClass");
+      expect(encodedValidationRequest).not.toHaveProperty("maxResults");
+      expect(encodedValidationRequest).not.toHaveProperty("shapesDataset");
+      expect(encodedSparqlRequest).not.toHaveProperty("timeoutMs");
+    })
+  );
 
   it.layer(ServiceTestLayer)("with canonical service layers", (it) => {
     it.effect(

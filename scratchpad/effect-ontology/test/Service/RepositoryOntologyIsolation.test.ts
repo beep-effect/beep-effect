@@ -353,15 +353,13 @@ describe.sequential("repository ontology isolation", () => {
       })
     );
 
-    it.effect("enforces persisted link lifecycle domains", () =>
-      Effect.sync(() => {
-        assert.isTrue(S.is(IngestedLinks.select.fields.status)("processed"));
-        assert.isFalse(S.is(IngestedLinks.select.fields.status)("unknown"));
-        assert.isTrue(S.is(LinkBatches.select.fields.status)("running"));
-        assert.isFalse(S.is(LinkBatches.select.fields.status)("processing"));
-        assert.isTrue(S.is(LinkBatchItems.select.fields.status)("processing"));
-        assert.isFalse(S.is(LinkBatchItems.select.fields.status)("running"));
-      })
-    );
+    it("enforces persisted link lifecycle domains", () => {
+      assert.isTrue(S.is(IngestedLinks.select.fields.status)("processed"));
+      assert.isFalse(S.is(IngestedLinks.select.fields.status)("unknown"));
+      assert.isTrue(S.is(LinkBatches.select.fields.status)("running"));
+      assert.isFalse(S.is(LinkBatches.select.fields.status)("processing"));
+      assert.isTrue(S.is(LinkBatchItems.select.fields.status)("processing"));
+      assert.isFalse(S.is(LinkBatchItems.select.fields.status)("running"));
+    });
   });
 });

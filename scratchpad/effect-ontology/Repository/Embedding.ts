@@ -29,7 +29,7 @@ import * as S from "effect/Schema";
 const $I = $ScratchpadId.create("effect-ontology/Repository/Embedding");
 
 import { PostgresDrizzle } from "@beep/postgres";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql as drizzleSql } from "drizzle-orm";
 import { SqlClient } from "effect/unstable/sql";
 import type { EmbeddingRow } from "./schema.ts";
 import { Embeddings, embeddings } from "./schema.ts";
@@ -370,34 +370,36 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
     ): Effect.Effect<EmbeddingRow, DrizzleError> =>
       Effect.gen(function* () {
         const vectorStr = formatVector(embedding);
-        const result = yield* sql`
-          INSERT INTO embeddings (ontology_id, entity_type, entity_id,
-                                  embedding, content_text, model)
-          VALUES (${ontologyId},
-                  ${entityType},
-                  ${entityId},
-                  ${vectorStr}::vector,
-                  ${contentText ?? null},
-                  ${model ?? "nomic-embed-text-v1.5"}) ON CONFLICT (ontology_id, entity_type, entity_id) DO
-          UPDATE SET
-            embedding = ${vectorStr}::vector,
-            content_text = COALESCE (${contentText ?? null}, embeddings.content_text),
-            model = ${model ?? "nomic-embed-text-v1.5"},
-            updated_at = NOW()
-            RETURNING
-            id,
-            ontology_id as "ontologyId",
-            entity_type as "entityType",
-            entity_id as "entityId",
-            embedding::text as embedding,
-            content_text as "contentText",
-            model,
-            created_at as "createdAt",
-            updated_at as "updatedAt"
-        `;
+        const modelName = O.getOrElse(O.fromUndefinedOr(model), () => "nomic-embed-text-v1.5");
+        const contentTextOption = O.fromUndefinedOr(contentText);
+        const result = yield* normalizeExecution(
+          drizzle
+            .insert(embeddings)
+            .values({
+              ontologyId,
+              entityType,
+              entityId,
+              embedding: vectorStr,
+              contentText: O.getOrNull(contentTextOption),
+              model: modelName,
+            })
+            .onConflictDoUpdate({
+              target: [embeddings.ontologyId, embeddings.entityType, embeddings.entityId],
+              set: {
+                embedding: vectorStr,
+                model: modelName,
+                updatedAt: drizzleSql`NOW()`,
+                ...O.getOrElse(
+                  O.map(contentTextOption, (value) => ({ contentText: value })),
+                  () => ({})
+                ),
+              },
+            })
+            .returning()
+        );
         const [row] = yield* decodeOneEmbeddingSqlRow(result);
         return row;
-      }).pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
+      });
 
     /**
      * Get embedding by entity identifiers

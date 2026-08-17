@@ -1045,16 +1045,6 @@ export const ClaimPersistenceInput = S.Struct({
  * Describes the claim persistence input data exposed by this module.
  *
  *
- * **Example** (Use the ClaimPersistenceInput contract)
- *
- * ```ts
- * import type { ClaimPersistenceInput } from "@effect-ontology/Workflow/DurableActivities"
- *
- * const acceptsClaimPersistenceInput = (_value: ClaimPersistenceInput): void => undefined
- *
- * console.log(acceptsClaimPersistenceInput)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1415,16 +1405,6 @@ export const InferenceInput = S.Struct({
  * Describes the inference input data exposed by this module.
  *
  *
- * **Example** (Use the InferenceInput contract)
- *
- * ```ts
- * import type { InferenceInput } from "@effect-ontology/Workflow/DurableActivities"
- *
- * const acceptsInferenceInput = (_value: InferenceInput): void => undefined
- *
- * console.log(acceptsInferenceInput)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1462,16 +1442,6 @@ export const InferenceOutput = S.Struct({
 /**
  * Describes the inference output data exposed by this module.
  *
- *
- * **Example** (Use the InferenceOutput contract)
- *
- * ```ts
- * import type { InferenceOutput } from "@effect-ontology/Workflow/DurableActivities"
- *
- * const acceptsInferenceOutput = (_value: InferenceOutput): void => undefined
- *
- * console.log(acceptsInferenceOutput)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -1675,16 +1645,6 @@ export const ComputeEmbeddingsInput = S.Struct({
  * Describes the compute embeddings input data exposed by this module.
  *
  *
- * **Example** (Use the ComputeEmbeddingsInput contract)
- *
- * ```ts
- * import type { ComputeEmbeddingsInput } from "@effect-ontology/Workflow/DurableActivities"
- *
- * const acceptsComputeEmbeddingsInput = (_value: ComputeEmbeddingsInput): void => undefined
- *
- * console.log(acceptsComputeEmbeddingsInput)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1722,16 +1682,6 @@ export const ComputeEmbeddingsOutput = S.Struct({
 /**
  * Describes the compute embeddings output data exposed by this module.
  *
- *
- * **Example** (Use the ComputeEmbeddingsOutput contract)
- *
- * ```ts
- * import type { ComputeEmbeddingsOutput } from "@effect-ontology/Workflow/DurableActivities"
- *
- * const acceptsComputeEmbeddingsOutput = (_value: ComputeEmbeddingsOutput): void => undefined
- *
- * console.log(acceptsComputeEmbeddingsOutput)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -1923,16 +1873,6 @@ export const EntityPair = S.Struct({
  * Describes the entity pair data exposed by this module.
  *
  *
- * **Example** (Use the EntityPair contract)
- *
- * ```ts
- * import type { EntityPair } from "@effect-ontology/Workflow/DurableActivities"
- *
- * const acceptsEntityPair = (_value: EntityPair): void => undefined
- *
- * console.log(acceptsEntityPair)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -1964,16 +1904,6 @@ export const LlmVerificationInput = S.Struct({
 /**
  * Describes the llm verification input data exposed by this module.
  *
- *
- * **Example** (Use the LlmVerificationInput contract)
- *
- * ```ts
- * import type { LlmVerificationInput } from "@effect-ontology/Workflow/DurableActivities"
- *
- * const acceptsLlmVerificationInput = (_value: LlmVerificationInput): void => undefined
- *
- * console.log(acceptsLlmVerificationInput)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -2011,16 +1941,6 @@ export const VerifiedPair = S.Struct({
  * Describes the verified pair data exposed by this module.
  *
  *
- * **Example** (Use the VerifiedPair contract)
- *
- * ```ts
- * import type { VerifiedPair } from "@effect-ontology/Workflow/DurableActivities"
- *
- * const acceptsVerifiedPair = (_value: VerifiedPair): void => undefined
- *
- * console.log(acceptsVerifiedPair)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -2056,16 +1976,6 @@ export const LlmVerificationOutput = S.Struct({
 /**
  * Describes the llm verification output data exposed by this module.
  *
- *
- * **Example** (Use the LlmVerificationOutput contract)
- *
- * ```ts
- * import type { LlmVerificationOutput } from "@effect-ontology/Workflow/DurableActivities"
- *
- * const acceptsLlmVerificationOutput = (_value: LlmVerificationOutput): void => undefined
- *
- * console.log(acceptsLlmVerificationOutput)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -2432,16 +2342,6 @@ export const PreprocessingOutput = S.Struct({
 /**
  * Describes the preprocessing output data exposed by this module.
  *
- *
- * **Example** (Use the PreprocessingOutput contract)
- *
- * ```ts
- * import type { PreprocessingOutput } from "@effect-ontology/Workflow/DurableActivities"
- *
- * const acceptsPreprocessingOutput = (_value: PreprocessingOutput): void => undefined
- *
- * console.log(acceptsPreprocessingOutput)
- * ```
  *
  * @category type-level
  * @since 0.0.0

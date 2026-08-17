@@ -40,16 +40,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Examples");
  * Combined error type for examples service operations
  *
  *
- * **Example** (Use the ExamplesServiceError contract)
- *
- * ```ts
- * import type { ExamplesServiceError } from "@effect-ontology/Service/Examples"
- *
- * const acceptsExamplesServiceError = (_value: ExamplesServiceError): void => undefined
- *
- * console.log(acceptsExamplesServiceError)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -58,16 +48,6 @@ export type ExamplesServiceError = DrizzleError | S.SchemaError | AnyEmbeddingEr
 /**
  * Extraction stage for context-aware example retrieval
  *
- *
- * **Example** (Use the ExtractionStage contract)
- *
- * ```ts
- * import type { ExtractionStage } from "@effect-ontology/Service/Examples"
- *
- * const acceptsExtractionStage = (_value: ExtractionStage): void => undefined
- *
- * console.log(acceptsExtractionStage)
- * ```
  *
  * @category type-level
  * @since 0.0.0

@@ -28,7 +28,7 @@ import type { Entity, Relation } from "../Domain/Model/Entity.ts";
 import { RelationObject } from "../Domain/Model/Entity.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
-import type { CreateClaimInput } from "../Service/Claim.ts";
+import { CreateClaimInput } from "../Service/Claim.ts";
 import { dual2, dual3, dual4 } from "./Dual.ts";
 import { buildIri } from "./Rdf.ts";
 
@@ -219,20 +219,25 @@ export class IriCollisionReport extends S.Class<IriCollisionReport>($I`IriCollis
  *
  * Extended version of CreateClaimInput with generated claimId
  *
- * **Example** (Select the generated identifier)
+ * **Example** (Reject incomplete persisted claim data)
  * ```ts
- * import type { ClaimData } from "@effect-ontology/Utils/ClaimFactory"
- * const field: keyof ClaimData = "claimId"
- * console.log(field) // "claimId"
+ * import * as S from "effect/Schema"
+ * import { ClaimData } from "@effect-ontology/Utils/ClaimFactory"
+ * console.log(S.is(ClaimData)({})) // false
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface ClaimData extends CreateClaimInput {
-  /** Generated claim ID */
-  readonly claimId: ClaimId;
-}
+export class ClaimData extends S.Class<ClaimData>($I`ClaimData`)(
+  {
+    ...CreateClaimInput.fields,
+    claimId: ClaimId.annotateKey({ description: "Generated claim identifier." }),
+  },
+  $I.annote("ClaimData", {
+    description: "Validated claim creation payload paired with its generated identifier.",
+  })
+) {}
 
 // =============================================================================
 // IRI Collision Detection

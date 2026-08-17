@@ -145,16 +145,6 @@ class RdfStoreHandle {
  * Describes the rdf store data exposed by this module.
  *
  *
- * **Example** (Use the RdfStore contract)
- *
- * ```ts
- * import type { RdfStore } from "@effect-ontology/Service/Rdf"
- *
- * const acceptsRdfStore = (_value: RdfStore): void => undefined
- *
- * console.log(acceptsRdfStore)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -595,16 +585,6 @@ export interface ExtractionMetadata {
 /**
  * Describes the rdf builder shape data exposed by this module.
  *
- *
- * **Example** (Use the RdfBuilderShape contract)
- *
- * ```ts
- * import type { RdfBuilderShape } from "@effect-ontology/Service/Rdf"
- *
- * const acceptsRdfBuilderShape = (_value: RdfBuilderShape): void => undefined
- *
- * console.log(acceptsRdfBuilderShape)
- * ```
  *
  * @category type-level
  * @since 0.0.0

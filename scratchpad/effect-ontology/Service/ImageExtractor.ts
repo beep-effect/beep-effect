@@ -64,16 +64,6 @@ export interface ImageExtractionInput {
  * Extracts image candidates from content for downstream fetching and storage.
  *
  *
- * **Example** (Use the ImageExtractorService contract)
- *
- * ```ts
- * import type { ImageExtractorService } from "@effect-ontology/Service/ImageExtractor"
- *
- * const acceptsImageExtractorService = (_value: ImageExtractorService): void => undefined
- *
- * console.log(acceptsImageExtractorService)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -45,16 +45,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/BatchStateBridge");
  * the scope is closed.
  *
  *
- * **Example** (Use the BatchStateBridgeShape contract)
- *
- * ```ts
- * import type { BatchStateBridgeShape } from "@effect-ontology/Service/BatchStateBridge"
- *
- * const acceptsBatchStateBridgeShape = (_value: BatchStateBridgeShape): void => undefined
- *
- * console.log(acceptsBatchStateBridgeShape)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

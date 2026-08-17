@@ -103,16 +103,6 @@ const emptyState: IndexState = {
  * EntityIndex service interface
  *
  *
- * **Example** (Use the EntityIndexService contract)
- *
- * ```ts
- * import type { EntityIndexService } from "@effect-ontology/Service/EntityIndex"
- *
- * const acceptsEntityIndexService = (_value: EntityIndexService): void => undefined
- *
- * console.log(acceptsEntityIndexService)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -404,16 +394,6 @@ export const SerializedEntityIndex = S.Struct({
  * Describes the serialized entity index data exposed by this module.
  *
  *
- * **Example** (Use the SerializedEntityIndex contract)
- *
- * ```ts
- * import type { SerializedEntityIndex } from "@effect-ontology/Service/EntityIndex"
- *
- * const acceptsSerializedEntityIndex = (_value: SerializedEntityIndex): void => undefined
- *
- * console.log(acceptsSerializedEntityIndex)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -426,16 +406,6 @@ const decodeSerializedEntityIndex = S.decodeOption(SerializedEntityIndexJson);
 /**
  * Extended EntityIndex interface with persistence capabilities
  *
- *
- * **Example** (Use the PersistentEntityIndexService contract)
- *
- * ```ts
- * import type { PersistentEntityIndexService } from "@effect-ontology/Service/EntityIndex"
- *
- * const acceptsPersistentEntityIndexService = (_value: PersistentEntityIndexService): void => undefined
- *
- * console.log(acceptsPersistentEntityIndexService)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -600,7 +570,7 @@ export const makePersistentEntityIndex = dual3(
         ...base,
         index: Effect.fn("PersistentEntityIndex.index")(function* (graph: KnowledgeGraph) {
           const count = yield* base.index(graph);
-          yield* Effect.forkDetach(persist);
+          yield* persist;
           return count;
         }),
         serialize,

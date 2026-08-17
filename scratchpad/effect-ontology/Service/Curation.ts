@@ -51,16 +51,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Curation");
  * Combined error type for curation service operations
  *
  *
- * **Example** (Use the CurationServiceError contract)
- *
- * ```ts
- * import type { CurationServiceError } from "@effect-ontology/Service/Curation"
- *
- * const acceptsCurationServiceError = (_value: CurationServiceError): void => undefined
- *
- * console.log(acceptsCurationServiceError)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

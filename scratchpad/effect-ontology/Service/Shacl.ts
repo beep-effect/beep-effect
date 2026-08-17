@@ -73,16 +73,6 @@ const serializeN3Store = (store: N3.Store): string => {
  * Describes the shacl workflow service methods data exposed by this module.
  *
  *
- * **Example** (Use the ShaclWorkflowServiceMethods contract)
- *
- * ```ts
- * import type { ShaclWorkflowServiceMethods } from "@effect-ontology/Service/Shacl"
- *
- * const acceptsShaclWorkflowServiceMethods = (_value: ShaclWorkflowServiceMethods): void => undefined
- *
- * console.log(acceptsShaclWorkflowServiceMethods)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

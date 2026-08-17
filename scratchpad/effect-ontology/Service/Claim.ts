@@ -10,17 +10,19 @@
  * @since 0.0.0
  */
 
-import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import type { PostgresDrizzle } from "@beep/postgres";
 import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
 import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { NonNegativeInt } from "@beep/schema";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import type { Config } from "effect";
 import { Context, DateTime, Effect, Layer, Random } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import type { ClaimFilter } from "../Repository/Claim.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
@@ -81,32 +83,38 @@ const randomUuid = Effect.all([
  * **Example** (Use the CreateClaimInput contract)
  *
  * ```ts
- * import type { CreateClaimInput } from "@effect-ontology/Service/Claim"
+ * import * as S from "effect/Schema"
+ * import { CreateClaimInput } from "@effect-ontology/Service/Claim"
  *
- * const acceptsCreateClaimInput = (_value: CreateClaimInput): void => undefined
- *
- * console.log(acceptsCreateClaimInput)
+ * console.log(S.is(CreateClaimInput)({})) // false
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface CreateClaimInput {
-  readonly subjectIri: string;
-  readonly predicateIri: string;
-  readonly objectValue: string;
-  readonly objectType: "iri" | "literal";
-  readonly articleId: string;
-  readonly ontologyId: string;
-  readonly confidence: Confidence;
-  readonly evidence?: {
-    readonly text: string;
-    readonly startOffset: number;
-    readonly endOffset: number;
-  };
-  readonly validFrom?: Date;
-  readonly validTo?: Date;
-}
+export class CreateClaimInput extends S.Class<CreateClaimInput>($I`CreateClaimInput`)(
+  {
+    subjectIri: S.NonEmptyString,
+    predicateIri: S.NonEmptyString,
+    objectValue: S.String,
+    objectType: S.Literals(["iri", "literal"]),
+    articleId: S.NonEmptyString,
+    ontologyId: S.NonEmptyString,
+    confidence: Confidence,
+    evidence: S.optionalKey(
+      S.Struct({
+        text: S.String,
+        startOffset: NonNegativeInt,
+        endOffset: NonNegativeInt,
+      })
+    ),
+    validFrom: S.optionalKey(S.Date),
+    validTo: S.optionalKey(S.Date),
+  },
+  $I.annote("CreateClaimInput", {
+    description: "Validated claim creation payload with optional evidence and temporal bounds.",
+  })
+) {}
 
 /**
  * Result of deprecating a claim
@@ -115,22 +123,26 @@ export interface CreateClaimInput {
  * **Example** (Use the DeprecationResult contract)
  *
  * ```ts
- * import type { DeprecationResult } from "@effect-ontology/Service/Claim"
+ * import * as S from "effect/Schema"
+ * import { DeprecationResult } from "@effect-ontology/Service/Claim"
  *
- * const acceptsDeprecationResult = (_value: DeprecationResult): void => undefined
- *
- * console.log(acceptsDeprecationResult)
+ * console.log(S.is(DeprecationResult)({})) // false
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface DeprecationResult {
-  readonly claimId: string;
-  readonly deprecatedAt: Date;
-  readonly reason: string;
-  readonly correctionId?: string;
-}
+export class DeprecationResult extends S.Class<DeprecationResult>($I`DeprecationResult`)(
+  {
+    claimId: S.NonEmptyString,
+    deprecatedAt: S.Date,
+    reason: S.NonEmptyString,
+    correctionId: S.optionalKey(S.NonEmptyString),
+  },
+  $I.annote("DeprecationResult", {
+    description: "Claim deprecation outcome with an optional correcting claim identifier.",
+  })
+) {}
 
 interface ClaimServiceShape {
   readonly createClaim: (input: CreateClaimInput) => ReturnType<ClaimRepository["Service"]["insertClaim"]>;

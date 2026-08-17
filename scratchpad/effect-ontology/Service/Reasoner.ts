@@ -122,16 +122,6 @@ export const ReasoningProfile = LiteralKit(["rdfs", "rdfs-subclass", "owl-sameas
  * Describes the reasoning profile data exposed by this module.
  *
  *
- * **Example** (Use the ReasoningProfile contract)
- *
- * ```ts
- * import type { ReasoningProfile } from "@effect-ontology/Service/Reasoner"
- *
- * const acceptsReasoningProfile = (_value: ReasoningProfile): void => undefined
- *
- * console.log(acceptsReasoningProfile)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

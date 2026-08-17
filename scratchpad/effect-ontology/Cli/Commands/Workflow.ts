@@ -9,42 +9,42 @@
  * @since 0.0.0
  */
 
-import { Clock, Console, DateTime, Effect } from "effect";
+import {Clock, Console, DateTime, Effect} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { Command, Flag as Options } from "effect/unstable/cli";
-import { LinkIngestionService } from "../../Service/LinkIngestionService.ts";
-import { withErrorHandler } from "../ErrorHandler.ts";
+import {Command, Flag} from "effect/unstable/cli";
+import {LinkIngestionService} from "../../Service/LinkIngestionService.ts";
+import {withErrorHandler} from "../ErrorHandler.ts";
 
 // =============================================================================
 // Command Options
 // =============================================================================
 
-const ontologyOption = Options.string("ontology").pipe(
-  Options.withAlias("o"),
-  Options.optional,
-  Options.withDescription("Ontology ID to scope operations to")
+const ontologyOption = Flag.string("ontology").pipe(
+  Flag.withAlias("o"),
+  Flag.optional,
+  Flag.withDescription("Ontology ID to scope operations to")
 );
 
-const minutesOption = Options.integer("minutes").pipe(
-  Options.withAlias("m"),
-  Options.withDefault(30),
-  Options.withDescription("Consider links stale after this many minutes (default: 30)")
+const minutesOption = Flag.integer("minutes").pipe(
+  Flag.withAlias("m"),
+  Flag.withDefault(30),
+  Flag.withDescription("Consider links stale after this many minutes (default: 30)")
 );
 
-const limitOption = Options.integer("limit").pipe(
-  Options.withAlias("l"),
-  Options.withDefault(100),
-  Options.withDescription("Maximum links to list (default: 100)")
+const limitOption = Flag.integer("limit").pipe(
+  Flag.withAlias("l"),
+  Flag.withDefault(100),
+  Flag.withDescription("Maximum links to list (default: 100)")
 );
 
-const linkIdOption = Options.string("link-id").pipe(Options.withDescription("Specific link ID to re-enrich"));
+const linkIdOption = Flag.string("link-id").pipe(Flag.withDescription("Specific link ID to re-enrich"));
 
-const dryRunOption = Options.boolean("dry-run").pipe(
-  Options.withAlias("n"),
-  Options.withDefault(false),
-  Options.withDescription("Show what would be done without making changes")
+const dryRunOption = Flag.boolean("dry-run").pipe(
+  Flag.withAlias("n"),
+  Flag.withDefault(false),
+  Flag.withDescription("Show what would be done without making changes")
 );
 
 // =============================================================================
@@ -56,7 +56,7 @@ const listPendingHandler = Effect.fn("listPendingHandler")(function* (ontology: 
   yield* Console.log("Listing pending/failed links...");
   yield* Console.log("");
   const links = yield* ingestion.list({
-    ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
+    ...(O.isSome(ontology) ? {ontologyId: ontology.value} : {}),
     status: "pending",
     limit,
   });
@@ -79,8 +79,8 @@ const listPendingHandler = Effect.fn("listPendingHandler")(function* (ontology: 
 
 const listPendingCommand = Command.make(
   "list-pending",
-  { ontology: ontologyOption, limit: limitOption },
-  ({ limit, ontology }) => withErrorHandler(listPendingHandler(ontology, limit))
+  {ontology: ontologyOption, limit: limitOption},
+  ({limit, ontology}) => withErrorHandler(listPendingHandler(ontology, limit))
 ).pipe(Command.withDescription("List pending and failed links"));
 
 // =============================================================================
@@ -99,7 +99,7 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
     yield* Console.log("(dry-run mode - no changes will be made)");
     yield* Console.log("");
     const staleLinks = yield* ingestion.list({
-      ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
+      ...(O.isSome(ontology) ? {ontologyId: ontology.value} : {}),
       status: "pending",
       limit: 1000,
     });
@@ -129,8 +129,12 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
 
 const cleanupStaleCommand = Command.make(
   "cleanup-stale",
-  { ontology: ontologyOption, minutes: minutesOption, dryRun: dryRunOption },
-  ({ dryRun, minutes, ontology }) => withErrorHandler(cleanupStaleHandler(ontology, minutes, dryRun))
+  {ontology: ontologyOption, minutes: minutesOption, dryRun: dryRunOption},
+  ({
+     dryRun,
+     minutes,
+     ontology
+   }) => withErrorHandler(cleanupStaleHandler(ontology, minutes, dryRun))
 ).pipe(Command.withDescription("Mark stale pending links as failed"));
 
 // =============================================================================
@@ -154,7 +158,7 @@ const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (linkId: string) 
   yield* Console.log(`  Key Entities: ${link.keyEntities?.join(", ") || "(none)"}`);
 });
 
-const reEnrichCommand = Command.make("re-enrich", { linkId: linkIdOption }, ({ linkId }) =>
+const reEnrichCommand = Command.make("re-enrich", {linkId: linkIdOption}, ({linkId}) =>
   withErrorHandler(reEnrichHandler(linkId))
 ).pipe(Command.withDescription("Re-run enrichment on a specific link"));
 
@@ -166,7 +170,7 @@ const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: 
   const ingestion = yield* LinkIngestionService;
   yield* Console.log("Finding failed links to re-enrich...");
   const links = yield* ingestion.list({
-    ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
+    ...(O.isSome(ontology) ? {ontologyId: ontology.value} : {}),
     status: "failed",
     limit,
   });
@@ -200,8 +204,8 @@ const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: 
 
 const reEnrichAllCommand = Command.make(
   "re-enrich-all",
-  { ontology: ontologyOption, limit: limitOption },
-  ({ limit, ontology }) => withErrorHandler(reEnrichAllHandler(ontology, limit))
+  {ontology: ontologyOption, limit: limitOption},
+  ({limit, ontology}) => withErrorHandler(reEnrichAllHandler(ontology, limit))
 ).pipe(Command.withDescription("Re-enrich all failed links"));
 
 // =============================================================================

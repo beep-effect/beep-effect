@@ -26,18 +26,16 @@ describe("progress and workflow schema boundaries", () => {
     })
   );
 
-  it.effect("rejects invalid backpressure and entity-resolution thresholds", () =>
-    Effect.sync(() => {
-      const decodeBackpressure = S.decodeUnknownResult(BackpressureConfig);
-      const decodeResolution = S.decodeUnknownResult(EntityResolutionConfig);
+  it("rejects invalid backpressure and entity-resolution thresholds", () => {
+    const decodeBackpressure = S.decodeUnknownResult(BackpressureConfig);
+    const decodeResolution = S.decodeUnknownResult(EntityResolutionConfig);
 
-      assert.isTrue(Result.isFailure(decodeBackpressure({ maxQueueSize: 0 })));
-      assert.isTrue(Result.isFailure(decodeBackpressure({ warningThreshold: 1.1 })));
-      assert.isTrue(Result.isFailure(decodeBackpressure({ detailedEventSampleRate: -0.1 })));
-      assert.isTrue(Result.isFailure(decodeResolution({ mentionSimilarityThreshold: 1.1 })));
-      assert.isTrue(Result.isFailure(decodeResolution({ typeOverlapRatio: -0.1 })));
-    })
-  );
+    assert.isTrue(Result.isFailure(decodeBackpressure({ maxQueueSize: 0 })));
+    assert.isTrue(Result.isFailure(decodeBackpressure({ warningThreshold: 1.1 })));
+    assert.isTrue(Result.isFailure(decodeBackpressure({ detailedEventSampleRate: -0.1 })));
+    assert.isTrue(Result.isFailure(decodeResolution({ mentionSimilarityThreshold: 1.1 })));
+    assert.isTrue(Result.isFailure(decodeResolution({ typeOverlapRatio: -0.1 })));
+  });
 
   it.effect(
     "constructs schema defaults for entity resolution and progress builder state",

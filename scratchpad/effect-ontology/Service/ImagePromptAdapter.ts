@@ -64,16 +64,6 @@ const getExtension = (mediaType: string): string => {
  * Prepares images for LLM multimodal prompts.
  *
  *
- * **Example** (Use the ImagePromptAdapterService contract)
- *
- * ```ts
- * import type { ImagePromptAdapterService } from "@effect-ontology/Service/ImagePromptAdapter"
- *
- * const acceptsImagePromptAdapterService = (_value: ImagePromptAdapterService): void => undefined
- *
- * console.log(acceptsImagePromptAdapterService)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

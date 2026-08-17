@@ -496,6 +496,10 @@ const auditDeclaration = (
   sourceFile: ts.SourceFile
 ): void => {
   auditedDeclarations += 1;
+  const isTypeOnlyDeclaration =
+    ts.isInterfaceDeclaration(statement) ||
+    ts.isTypeAliasDeclaration(statement) ||
+    ts.isModuleDeclaration(statement);
   addFinding(
     relativePath,
     symbol,
@@ -503,7 +507,7 @@ const auditDeclaration = (
       allowPackageDocumentation: false,
       requireCategory: true,
       requireDescription: true,
-      requireExample: true,
+      requireExample: !isTypeOnlyDeclaration,
       requireSince: true,
     })
   );

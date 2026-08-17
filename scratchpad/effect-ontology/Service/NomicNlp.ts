@@ -60,16 +60,6 @@ export class NomicNlpError extends S.TaggedError<NomicNlpError>($I`NomicNlpError
  * - classification: Use for classification tasks
  *
  *
- * **Example** (Use the NomicTaskType contract)
- *
- * ```ts
- * import type { NomicTaskType } from "@effect-ontology/Service/NomicNlp"
- *
- * const acceptsNomicTaskType = (_value: NomicTaskType): void => undefined
- *
- * console.log(acceptsNomicTaskType)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -78,16 +68,6 @@ export type NomicTaskType = "search_query" | "search_document" | "clustering" | 
 /**
  * Nomic NLP Service Interface
  *
- *
- * **Example** (Use the NomicNlpServiceMethods contract)
- *
- * ```ts
- * import type { NomicNlpServiceMethods } from "@effect-ontology/Service/NomicNlp"
- *
- * const acceptsNomicNlpServiceMethods = (_value: NomicNlpServiceMethods): void => undefined
- *
- * console.log(acceptsNomicNlpServiceMethods)
- * ```
  *
  * @category type-level
  * @since 0.0.0

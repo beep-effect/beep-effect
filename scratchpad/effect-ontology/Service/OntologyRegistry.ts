@@ -122,16 +122,6 @@ export class OntologyNotFoundError extends S.TaggedError<OntologyNotFoundError>(
  * Describes the registry error data exposed by this module.
  *
  *
- * **Example** (Use the RegistryError contract)
- *
- * ```ts
- * import type { RegistryError } from "@effect-ontology/Service/OntologyRegistry"
- *
- * const acceptsRegistryError = (_value: RegistryError): void => undefined
- *
- * console.log(acceptsRegistryError)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

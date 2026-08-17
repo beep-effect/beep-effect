@@ -128,16 +128,6 @@ export class GenerationMismatchError extends S.TaggedError<GenerationMismatchErr
  * Adds `list` capability and optimistic locking for concurrent writes
  *
  *
- * **Example** (Use the StorageServiceMethods contract)
- *
- * ```ts
- * import type { StorageServiceMethods } from "@effect-ontology/Service/Storage"
- *
- * const acceptsStorageServiceMethods = (_value: StorageServiceMethods): void => undefined
- *
- * console.log(acceptsStorageServiceMethods)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

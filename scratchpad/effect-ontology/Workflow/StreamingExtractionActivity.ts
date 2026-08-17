@@ -120,16 +120,6 @@ export const StreamingExtractionOutput = S.Struct({
  *  Runtime output produced by the streaming extraction activity.
  *
  *
- * **Example** (Use the StreamingExtractionOutput contract)
- *
- * ```ts
- * import type { StreamingExtractionOutput } from "@effect-ontology/Workflow/StreamingExtractionActivity"
- *
- * const acceptsStreamingExtractionOutput = (_value: StreamingExtractionOutput): void => undefined
- *
- * console.log(acceptsStreamingExtractionOutput)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

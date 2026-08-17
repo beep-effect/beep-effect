@@ -85,16 +85,6 @@ export class Subgraph extends S.Class<Subgraph>($I`Subgraph`)(
  * Constructor input accepted by {@link Subgraph}.
  *
  *
- * **Example** (Use the SubgraphInput contract)
- *
- * ```ts
- * import type { SubgraphInput } from "@effect-ontology/Service/SubgraphExtractor"
- *
- * const acceptsSubgraphInput = (_value: SubgraphInput): void => undefined
- *
- * console.log(acceptsSubgraphInput)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -138,16 +128,6 @@ export class ExtractOptions extends S.Class<ExtractOptions>($I`ExtractOptions`)(
 /**
  * Constructor input accepted by {@link ExtractOptions}.
  *
- *
- * **Example** (Use the ExtractOptionsInput contract)
- *
- * ```ts
- * import type { ExtractOptionsInput } from "@effect-ontology/Service/SubgraphExtractor"
- *
- * const acceptsExtractOptionsInput = (_value: ExtractOptionsInput): void => undefined
- *
- * console.log(acceptsExtractOptionsInput)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -197,16 +177,6 @@ export class ExtractRelevantOptions extends S.Class<ExtractRelevantOptions>($I`E
  * Constructor input accepted by {@link ExtractRelevantOptions}.
  *
  *
- * **Example** (Use the ExtractRelevantOptionsInput contract)
- *
- * ```ts
- * import type { ExtractRelevantOptionsInput } from "@effect-ontology/Service/SubgraphExtractor"
- *
- * const acceptsExtractRelevantOptionsInput = (_value: ExtractRelevantOptionsInput): void => undefined
- *
- * console.log(acceptsExtractRelevantOptionsInput)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -215,16 +185,6 @@ export type ExtractRelevantOptionsInput = (typeof ExtractRelevantOptions)["~type
 /**
  * Subgraph extraction service contract.
  *
- *
- * **Example** (Use the SubgraphExtractorService contract)
- *
- * ```ts
- * import type { SubgraphExtractorService } from "@effect-ontology/Service/SubgraphExtractor"
- *
- * const acceptsSubgraphExtractorService = (_value: SubgraphExtractorService): void => undefined
- *
- * console.log(acceptsSubgraphExtractorService)
- * ```
  *
  * @category services
  * @since 0.0.0

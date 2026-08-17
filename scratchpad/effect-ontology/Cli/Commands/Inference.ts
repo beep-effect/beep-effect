@@ -12,12 +12,15 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import * as Struct from "@beep/utils/Struct";
-import { Console, Effect, FileSystem } from "effect";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Command, Flag as Options } from "effect/unstable/cli";
+import * as Command from "effect/unstable/cli/Command";
+import * as Flag from "effect/unstable/cli/Flag"
 import { ErrorMessage, OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize } from "../../Service/Rdf.ts";
 import { Reasoner, ReasoningConfig } from "../../Service/Reasoner.ts";
@@ -30,27 +33,27 @@ const $I = $ScratchpadId.create("effect-ontology/Cli/Commands/Inference");
 // Options
 // =============================================================================
 
-const inputOption = Options.file("input").pipe(
-  Options.withAlias("i"),
-  Options.withDescription("Input Turtle file path")
+const inputOption = Flag.file("input").pipe(
+  Flag.withAlias("i"),
+  Flag.withDescription("Input Turtle file path")
 );
 
-const outputOption = Options.string("output").pipe(
-  Options.withAlias("o"),
-  Options.withDefault("./output-enriched.ttl"),
-  Options.withDescription("Output file path for enriched graph")
+const outputOption = Flag.string("output").pipe(
+  Flag.withAlias("o"),
+  Flag.withDefault("./output-enriched.ttl"),
+  Flag.withDescription("Output file path for enriched graph")
 );
 
-const profileOption = Options.choice("profile", ["rdfs", "rdfs-subclass", "owl-sameas"]).pipe(
-  Options.withAlias("p"),
-  Options.withDefault("rdfs"),
-  Options.withDescription("Reasoning profile to apply")
+const profileOption = Flag.choice("profile", ["rdfs", "rdfs-subclass", "owl-sameas"]).pipe(
+  Flag.withAlias("p"),
+  Flag.withDefault("rdfs"),
+  Flag.withDescription("Reasoning profile to apply")
 );
 
-const deltaOnlyOption = Options.boolean("delta-only").pipe(
-  Options.withAlias("d"),
-  Options.withDefault(false),
-  Options.withDescription("Output only inferred triples (delta)")
+const deltaOnlyOption = Flag.boolean("delta-only").pipe(
+  Flag.withAlias("d"),
+  Flag.withDefault(false),
+  Flag.withDescription("Output only inferred triples (delta)")
 );
 
 // =============================================================================

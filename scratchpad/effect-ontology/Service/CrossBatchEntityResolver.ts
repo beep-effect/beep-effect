@@ -38,16 +38,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/CrossBatchEntityResolve
  * Combined error type for cross-batch resolution operations
  *
  *
- * **Example** (Use the CrossBatchResolutionError contract)
- *
- * ```ts
- * import type { CrossBatchResolutionError } from "@effect-ontology/Service/CrossBatchEntityResolver"
- *
- * const acceptsCrossBatchResolutionError = (_value: CrossBatchResolutionError): void => undefined
- *
- * console.log(acceptsCrossBatchResolutionError)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

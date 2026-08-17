@@ -164,16 +164,6 @@ export class ExtractionRunError extends S.TaggedError<ExtractionRunError>($I`Ext
  * Describes the extraction run service methods data exposed by this module.
  *
  *
- * **Example** (Use the ExtractionRunServiceMethods contract)
- *
- * ```ts
- * import type { ExtractionRunServiceMethods } from "@effect-ontology/Service/ExtractionRun"
- *
- * const acceptsExtractionRunServiceMethods = (_value: ExtractionRunServiceMethods): void => undefined
- *
- * console.log(acceptsExtractionRunServiceMethods)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

@@ -34,16 +34,6 @@ import { RetryPolicy, retryEffect } from "./Retry.ts";
  * Options for generateObjectWithRetry
  *
  *
- * **Example** (Use the GenerateObjectWithRetryOptions contract)
- *
- * ```ts
- * import type { GenerateObjectWithRetryOptions } from "@effect-ontology/Service/LlmWithRetry"
- *
- * const acceptsGenerateObjectWithRetryOptions = (_value: GenerateObjectWithRetryOptions<never>): void => undefined
- *
- * console.log(acceptsGenerateObjectWithRetryOptions)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

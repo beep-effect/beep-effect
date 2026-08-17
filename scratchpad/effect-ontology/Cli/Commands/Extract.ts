@@ -200,13 +200,13 @@ const extractHandler = Effect.fn("extractHandler")(function* (
   yield* Console.error(`\nExtracted: ${graph.entities.length} entities, ${graph.relations.length} relations`);
   if (format === "json") {
     const output = {
-      entities: graph.entities.map((e) => ({
+      entities: A.map(graph.entities, (e) => ({
         id: e.id,
         mention: e.mention,
         types: e.types,
         attributes: e.attributes,
       })),
-      relations: graph.relations.map((r) => ({
+      relations: A.map(graph.relations, (r) => ({
         subjectId: r.subjectId,
         predicate: r.predicate,
         object: r.object,

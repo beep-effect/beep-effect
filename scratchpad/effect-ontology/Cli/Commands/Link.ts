@@ -9,59 +9,63 @@
  * @since 0.0.0
  */
 
-import { IRI } from "@beep/rdf";
-import { PosInt } from "@beep/schema/Int";
-import { Console, Effect, FileSystem, Result } from "effect";
+import {IRI} from "@beep/rdf/Iri";
+import {PosInt} from "@beep/schema/Int";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Result from "effect/Result";
+import * as Console from "effect/Console";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { Command, Flag as Options } from "effect/unstable/cli";
-import { RdfBuilder } from "../../Service/Rdf.ts";
-import { WikidataClient } from "../../Service/WikidataClient.ts";
-import { withErrorHandler } from "../ErrorHandler.ts";
+import * as Command from "effect/unstable/cli/Command";
+import * as Flag from "effect/unstable/cli/Flag";
+import {RdfBuilder} from "../../Service/Rdf.ts";
+import {WikidataClient} from "../../Service/WikidataClient.ts";
+import {withErrorHandler} from "../ErrorHandler.ts";
 
 // =============================================================================
 // Command Options
 // =============================================================================
 
-const entityIriOption = Options.string("entity-id").pipe(
-  Options.withAlias("e"),
-  Options.withDescription("Entity IRI to link")
+const entityIriOption = Flag.string("entity-id").pipe(
+  Flag.withAlias("e"),
+  Flag.withDescription("Entity IRI to link")
 );
 
-const wikidataIdOption = Options.string("wikidata-id").pipe(
-  Options.withAlias("w"),
-  Options.withDescription("Wikidata Q-ID (e.g., Q42)")
+const wikidataIdOption = Flag.string("wikidata-id").pipe(
+  Flag.withAlias("w"),
+  Flag.withDescription("Wikidata Q-ID (e.g., Q42)")
 );
 
-const graphOption = Options.file("graph").pipe(
-  Options.withAlias("g"),
-  Options.optional,
-  Options.withDescription("RDF graph file to add the link to (Turtle)")
+const graphOption = Flag.file("graph").pipe(
+  Flag.withAlias("g"),
+  Flag.optional,
+  Flag.withDescription("RDF graph file to add the link to (Turtle)")
 );
 
-const outputOption = Options.file("output").pipe(
-  Options.withAlias("o"),
-  Options.optional,
-  Options.withDescription("Output file for updated graph (default: stdout)")
+const outputOption = Flag.file("output").pipe(
+  Flag.withAlias("o"),
+  Flag.optional,
+  Flag.withDescription("Output file for updated graph (default: stdout)")
 );
 
-const searchOption = Options.string("search").pipe(
-  Options.withAlias("s"),
-  Options.optional,
-  Options.withDescription("Search Wikidata for candidates instead of linking")
+const searchOption = Flag.string("search").pipe(
+  Flag.withAlias("s"),
+  Flag.optional,
+  Flag.withDescription("Search Wikidata for candidates instead of linking")
 );
 
-const limitOption = Options.integer("limit").pipe(
-  Options.withAlias("l"),
-  Options.withDefault(10),
-  Options.withDescription("Maximum search results (default: 10)")
+const limitOption = Flag.integer("limit").pipe(
+  Flag.withAlias("l"),
+  Flag.withDefault(10),
+  Flag.withDescription("Maximum search results (default: 10)")
 );
 
-const dryRunOption = Options.boolean("dry-run").pipe(
-  Options.withAlias("n"),
-  Options.withDefault(false),
-  Options.withDescription("Validate without creating the link")
+const dryRunOption = Flag.boolean("dry-run").pipe(
+  Flag.withAlias("n"),
+  Flag.withDefault(false),
+  Flag.withDescription("Validate without creating the link")
 );
 
 // =============================================================================
@@ -82,7 +86,7 @@ const linkHandler = Effect.fn("linkHandler")(function* (
   if (O.isSome(search)) {
     yield* Console.log(`Searching Wikidata for: "${search.value}"`);
     yield* Console.log("");
-    const candidates = yield* wikidata.searchEntities(search.value, { limit: PosInt.make(limit) });
+    const candidates = yield* wikidata.searchEntities(search.value, {limit: PosInt.make(limit)});
     if (A.isReadonlyArrayEmpty(candidates)) {
       yield* Console.log("No candidates found.");
       return;
@@ -193,6 +197,6 @@ export const linkCommand = Command.make(
     search: searchOption,
     wikidataId: wikidataIdOption,
   },
-  ({ dryRun, entityIri, graph, limit, output, search, wikidataId }) =>
+  ({dryRun, entityIri, graph, limit, output, search, wikidataId}) =>
     withErrorHandler(linkHandler(entityIri, wikidataId, graph, output, search, limit, dryRun))
 ).pipe(Command.withDescription("Create owl:sameAs links between local entities and Wikidata"));

@@ -67,16 +67,6 @@ export class PublishResult extends S.Class<PublishResult>($I`PublishResult`)(
  * Received message from subscription
  *
  *
- * **Example** (Use the ReceivedMessage contract)
- *
- * ```ts
- * import type { ReceivedMessage } from "@effect-ontology/Service/PubSubClient"
- *
- * const acceptsReceivedMessage = (_value: ReceivedMessage): void => undefined
- *
- * console.log(acceptsReceivedMessage)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -121,16 +111,6 @@ export interface PubSubClientConfig {
 /**
  * PubSubClient service interface
  *
- *
- * **Example** (Use the PubSubClientMethods contract)
- *
- * ```ts
- * import type { PubSubClientMethods } from "@effect-ontology/Service/PubSubClient"
- *
- * const acceptsPubSubClientMethods = (_value: PubSubClientMethods): void => undefined
- *
- * console.log(acceptsPubSubClientMethods)
- * ```
  *
  * @category type-level
  * @since 0.0.0

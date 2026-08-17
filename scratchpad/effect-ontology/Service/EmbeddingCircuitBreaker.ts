@@ -164,16 +164,6 @@ export const DEFAULT_EMBEDDING_CIRCUIT_CONFIG: Record<EmbeddingProviderId, Provi
  * Manages per-provider circuit breakers for embedding API calls.
  *
  *
- * **Example** (Use the EmbeddingCircuitBreakerService contract)
- *
- * ```ts
- * import type { EmbeddingCircuitBreakerService } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
- *
- * const acceptsEmbeddingCircuitBreakerService = (_value: EmbeddingCircuitBreakerService): void => undefined
- *
- * console.log(acceptsEmbeddingCircuitBreakerService)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

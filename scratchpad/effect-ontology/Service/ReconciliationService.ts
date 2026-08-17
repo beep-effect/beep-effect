@@ -133,16 +133,6 @@ export interface ReconciliationResult {
  * Describes the reconciliation decision data exposed by this module.
  *
  *
- * **Example** (Use the ReconciliationDecision contract)
- *
- * ```ts
- * import type { ReconciliationDecision } from "@effect-ontology/Service/ReconciliationService"
- *
- * const acceptsReconciliationDecision = (_value: ReconciliationDecision): void => undefined
- *
- * console.log(acceptsReconciliationDecision)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -179,16 +169,6 @@ export const VerificationTask = S.Struct({
 /**
  * Describes the verification task data exposed by this module.
  *
- *
- * **Example** (Use the VerificationTask contract)
- *
- * ```ts
- * import type { VerificationTask } from "@effect-ontology/Service/ReconciliationService"
- *
- * const acceptsVerificationTask = (_value: VerificationTask): void => undefined
- *
- * console.log(acceptsVerificationTask)
- * ```
  *
  * @category type-level
  * @since 0.0.0

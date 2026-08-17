@@ -53,16 +53,6 @@ export class ExecutionFailure extends S.TaggedError<ExecutionFailure>($I`Executi
  * Describes the execution handle data exposed by this module.
  *
  *
- * **Example** (Use the ExecutionHandle contract)
- *
- * ```ts
- * import type { ExecutionHandle } from "@effect-ontology/Service/ExecutionDeduplicator"
- *
- * const acceptsExecutionHandle = (_value: ExecutionHandle): void => undefined
- *
- * console.log(acceptsExecutionHandle)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

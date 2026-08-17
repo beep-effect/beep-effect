@@ -82,7 +82,7 @@ const makeTicketService = Effect.gen(function* () {
     );
   });
 
-  yield* cleanup.pipe(Effect.schedule(Schedule.fixed(CLEANUP_INTERVAL)), Effect.forkDetach);
+  yield* cleanup.pipe(Effect.schedule(Schedule.fixed(CLEANUP_INTERVAL)), Effect.forkScoped);
 
   const createTicket = Effect.fn("TicketService.createTicket")(function* (
     ontologyId: string,

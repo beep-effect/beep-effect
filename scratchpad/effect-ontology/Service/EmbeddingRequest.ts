@@ -25,16 +25,6 @@ import type { Embedding, EmbeddingTaskType, ProviderMetadata } from "./Embedding
  * Requests with the same properties are deduplicated automatically.
  *
  *
- * **Example** (Use the EmbedTextRequest contract)
- *
- * ```ts
- * import type { EmbedTextRequest } from "@effect-ontology/Service/EmbeddingRequest"
- *
- * const acceptsEmbedTextRequest = (_value: EmbedTextRequest): void => undefined
- *
- * console.log(acceptsEmbedTextRequest)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

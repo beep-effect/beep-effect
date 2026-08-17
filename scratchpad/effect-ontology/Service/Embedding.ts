@@ -36,16 +36,6 @@ export type { NomicTaskType } from "./NomicNlp.ts";
  * Provider-agnostic embedding operations with caching.
  *
  *
- * **Example** (Use the EmbeddingServiceMethods contract)
- *
- * ```ts
- * import type { EmbeddingServiceMethods } from "@effect-ontology/Service/Embedding"
- *
- * const acceptsEmbeddingServiceMethods = (_value: EmbeddingServiceMethods): void => undefined
- *
- * console.log(acceptsEmbeddingServiceMethods)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

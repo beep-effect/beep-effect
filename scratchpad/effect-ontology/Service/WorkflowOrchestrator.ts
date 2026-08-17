@@ -945,9 +945,9 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       return complete;
     });
 
-    return yield* Effect.catchCause(
-      runWorkflow,
-      Effect.fnUntraced(function* (cause) {
+    return yield* runWorkflow.pipe(
+      Effect.onError(
+        Effect.fnUntraced(function* (cause) {
         const failedAt = yield* DateTime.now;
         const failedState = BatchState.cases.Failed.make({
           batchId,
@@ -967,12 +967,8 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
         });
 
         yield* emitState(failedState);
-
-        return yield* WorkflowError.make({
-          message: Cause.pretty(cause),
-          cause: O.some(Cause.squash(cause)),
-        });
-      })
+        })
+      )
     );
   }).pipe(Effect.mapError(toWorkflowError))
 );
@@ -988,16 +984,6 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
  *
  * High-level API for batch workflow operations.
  *
- *
- * **Example** (Use the WorkflowOrchestratorMethods contract)
- *
- * ```ts
- * import type { WorkflowOrchestratorMethods } from "@effect-ontology/Service/WorkflowOrchestrator"
- *
- * const acceptsWorkflowOrchestratorMethods = (_value: WorkflowOrchestratorMethods): void => undefined
- *
- * console.log(acceptsWorkflowOrchestratorMethods)
- * ```
  *
  * @category type-level
  * @since 0.0.0

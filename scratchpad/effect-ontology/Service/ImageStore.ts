@@ -40,16 +40,6 @@ const ImageRefOrder = Order.mapInput(Order.Number, (ref: ImageRef) => ref.positi
  * with deduplication and owner manifests.
  *
  *
- * **Example** (Use the ImageStoreService contract)
- *
- * ```ts
- * import type { ImageStoreService } from "@effect-ontology/Service/ImageStore"
- *
- * const acceptsImageStoreService = (_value: ImageStoreService): void => undefined
- *
- * console.log(acceptsImageStoreService)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

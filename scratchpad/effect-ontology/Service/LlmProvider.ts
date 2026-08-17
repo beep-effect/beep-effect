@@ -16,16 +16,6 @@ import type { Duration, Schedule } from "effect";
  * Supported LLM Providers
  *
  *
- * **Example** (Use the LlmProvider contract)
- *
- * ```ts
- * import type { LlmProvider } from "@effect-ontology/Service/LlmProvider"
- *
- * const acceptsLlmProvider = (_value: LlmProvider): void => undefined
- *
- * console.log(acceptsLlmProvider)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -34,16 +24,6 @@ export type LlmProvider = "anthropic" | "openai" | "google";
 /**
  * Configuration parameters for an LLM provider
  *
- *
- * **Example** (Use the LlmProviderParams contract)
- *
- * ```ts
- * import type { LlmProviderParams } from "@effect-ontology/Service/LlmProvider"
- *
- * const acceptsLlmProviderParams = (_value: LlmProviderParams): void => undefined
- *
- * console.log(acceptsLlmProviderParams)
- * ```
  *
  * @category type-level
  * @since 0.0.0

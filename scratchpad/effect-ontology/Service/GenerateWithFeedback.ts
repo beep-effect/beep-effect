@@ -67,16 +67,6 @@ export class GenerateWithFeedbackPolicy extends S.Class<GenerateWithFeedbackPoli
  * Constructor input accepted by {@link GenerateWithFeedbackPolicy}.
  *
  *
- * **Example** (Use the GenerateWithFeedbackPolicyInput contract)
- *
- * ```ts
- * import type { GenerateWithFeedbackPolicyInput } from "@effect-ontology/Service/GenerateWithFeedback"
- *
- * const acceptsGenerateWithFeedbackPolicyInput = (_value: GenerateWithFeedbackPolicyInput): void => undefined
- *
- * console.log(acceptsGenerateWithFeedbackPolicyInput)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

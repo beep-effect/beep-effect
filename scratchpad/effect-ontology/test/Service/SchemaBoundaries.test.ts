@@ -55,24 +55,22 @@ describe("canonical service schema boundaries", () => {
     })
   );
 
-  it.effect("accepts only canonical RDF datasets and normalizes typed error causes", () =>
-    Effect.sync(() => {
-      const context = ExplanationContext.make({ dataStore: O.some(makeDataset([])) });
-      const error = ClassificationError.make({
-        message: "Classification failed.",
-        cause: O.some(context),
-      });
+  it("accepts only canonical RDF datasets and normalizes typed error causes", () => {
+    const context = ExplanationContext.make({ dataStore: O.some(makeDataset([])) });
+    const error = ClassificationError.make({
+      message: "Classification failed.",
+      cause: O.some(context),
+    });
 
-      assert.isTrue(O.isSome(context.dataStore));
-      assert.isTrue(ClassificationError.is(error));
-      assert.isTrue(O.isSome(error.cause));
-      assert.isTrue(
-        O.isNone(
-          S.decodeUnknownOption(ExplanationContext)({
-            dataStore: { arbitrary: "payload" },
-          })
-        )
-      );
-    })
-  );
+    assert.isTrue(O.isSome(context.dataStore));
+    assert.isTrue(ClassificationError.is(error));
+    assert.isTrue(O.isSome(error.cause));
+    assert.isTrue(
+      O.isNone(
+        S.decodeUnknownOption(ExplanationContext)({
+          dataStore: { arbitrary: "payload" },
+        })
+      )
+    );
+  });
 });

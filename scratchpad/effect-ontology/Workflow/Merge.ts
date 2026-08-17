@@ -10,19 +10,25 @@
  * @since 0.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity";
-import type { IRI } from "@beep/rdf";
-import { NonNegativeInt } from "@beep/schema";
-import { UnitInterval } from "@beep/schema/UnitInterval";
-import { HashMap, HashSet, MutableHashMap, Order } from "effect";
-import * as A from "effect/Array";
+import {$ScratchpadId} from "@beep/identity";
+import type {IRI} from "@beep/rdf";
+import {NonNegativeInt} from "@beep/schema";
+import {UnitInterval} from "@beep/schema/UnitInterval";
+import * as Tuple from "effect/Tuple";
+import {HashMap, HashSet, MutableHashMap, Order, pipe} from "effect";
+import * as A from "@beep/utils/Array";
 import * as O from "effect/Option";
+import { thunk0 } from "@beep/utils/thunk";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import type { Relation } from "../Domain/Model/Entity.ts";
-import { Entity, KnowledgeGraph, RelationObject } from "../Domain/Model/Entity.ts";
-import { EntityId } from "../Domain/Model/shared.ts";
-import { dual2 } from "../Utils/Dual.ts";
+import type {Relation} from "../Domain/Model/Entity.ts";
+import {
+  Entity,
+  KnowledgeGraph,
+  RelationObject
+} from "../Domain/Model/Entity.ts";
+import {EntityId} from "../Domain/Model/shared.ts";
+import {dual2} from "../Utils/Dual.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/Merge");
 
@@ -54,9 +60,9 @@ const $I = $ScratchpadId.create("effect-ontology/Workflow/Merge");
  */
 export class MergeConflict extends S.Class<MergeConflict>($I`MergeConflict`)(
   {
-    entityId: EntityId.annotateKey({ description: "Entity whose attributes conflict." }),
-    property: S.NonEmptyString.annotateKey({ description: "Entity property with conflicting values." }),
-    values: S.Array(S.Unknown).annotateKey({ description: "Conflicting values observed for the property." }),
+    entityId: EntityId.annotateKey({description: "Entity whose attributes conflict."}),
+    property: S.NonEmptyString.annotateKey({description: "Entity property with conflicting values."}),
+    values: S.Array(S.Unknown).annotateKey({description: "Conflicting values observed for the property."}),
     chunkIndexes: S.Array(NonNegativeInt).annotateKey({
       description: "Source chunk indexes that contributed conflicting values.",
     }),
@@ -64,7 +70,8 @@ export class MergeConflict extends S.Class<MergeConflict>($I`MergeConflict`)(
   $I.annote("MergeConflict", {
     description: "Conflicting entity-property values and the source chunks that produced them.",
   })
-) {}
+) {
+}
 
 /**
  * Order instance for Entity (by id)
@@ -84,10 +91,10 @@ const RelationOrder: Order.Order<Relation> = Order.combine(
     Order.mapInput(Order.String, (r: Relation) => r.predicate),
     Order.mapInput(Order.String, (relation: Relation) =>
       RelationObject.match(relation.object, {
-        EntityReference: ({ value }) => `entity:${value}`,
-        Text: ({ value }) => `text:${value}`,
-        Number: ({ value }) => `number:${value}`,
-        Boolean: ({ value }) => `boolean:${value}`,
+        EntityReference: ({value}) => `entity:${value}`,
+        Text: ({value}) => `text:${value}`,
+        Number: ({value}) => `number:${value}`,
+        Boolean: ({value}) => `boolean:${value}`,
       })
     )
   )
@@ -141,7 +148,7 @@ const selectBestTypes = (
   // - If highest frequency is >= 2, take all types with that frequency
   // - Otherwise, take top 2-3 types (but at least the most frequent)
   const maxFrequency = sortedTypes[0][1];
-  const selectedTypes: Array<IRI> = [];
+  const selectedTypes = A.empty<IRI>();
 
   if (maxFrequency >= 2) {
     // Majority voting: take all types that appear in majority
@@ -153,11 +160,14 @@ const selectBestTypes = (
       }
     }
     // Limit to top 3 even if multiple have same frequency
-    return ensureNonEmpty(selectedTypes.slice(0, 3));
+    return ensureNonEmpty(A.slice(selectedTypes, {start: 0, end: 3}));
   } else {
     // No clear majority: take top 2-3 most frequent
     // Prefer keeping 1-2 types for clarity
-    return ensureNonEmpty(sortedTypes.slice(0, 2).map(([type]) => type));
+    return ensureNonEmpty(pipe(A.slice(sortedTypes, {
+      start: 0,
+      end: 2
+    }), A.map(Tuple.get(0))));
   }
 };
 
@@ -211,7 +221,7 @@ export const mergeGraphs = dual2((a: KnowledgeGraph, b: KnowledgeGraph): Knowled
     const existing = HashMap.get(entityMap, entity.id);
     if (O.isSome(existing)) {
       // Merge attributes: union with preference for non-empty values
-      const mergedAttributes = { ...existing.value.attributes, ...entity.attributes };
+      const mergedAttributes = {...existing.value.attributes, ...entity.attributes};
       // Select best types using frequency voting (instead of union)
       const mergedTypes = selectBestTypes(existing.value.types, entity.types);
       // Keep longest mention
@@ -296,13 +306,13 @@ export const mergeGraphs = dual2((a: KnowledgeGraph, b: KnowledgeGraph): Knowled
  */
 export const mergeGraphsWithConflicts = dual2(
   (a: KnowledgeGraph, b: KnowledgeGraph): [KnowledgeGraph, ReadonlyArray<MergeConflict>] => {
-    const conflicts: Array<MergeConflict> = [];
+    const conflicts = A.empty<MergeConflict>();
 
     // Identity element: empty graph
-    if (a.entities.length === 0 && a.relations.length === 0) {
+    if (A.isReadonlyArrayEmpty(a.entities) && A.isReadonlyArrayEmpty(a.relations)) {
       return [b, []];
     }
-    if (b.entities.length === 0 && b.relations.length === 0) {
+    if (A.isReadonlyArrayEmpty(b.entities) && A.isReadonlyArrayEmpty(b.relations)) {
       return [a, []];
     }
 
@@ -322,17 +332,24 @@ export const mergeGraphsWithConflicts = dual2(
         for (const [key, value] of R.toEntries(entity.attributes)) {
           const existingValue = R.get(existing.value.attributes, key);
           if (O.isSome(existingValue) && existingValue.value !== value) {
-            conflicts.push({
-              entityId: entity.id,
-              property: key,
-              values: [existingValue.value, value],
-              chunkIndexes: [], // TODO: track chunk indexes if provenance is added
-            });
+            conflicts.push(
+              MergeConflict.make({
+                entityId: entity.id,
+                property: key,
+                values: [existingValue.value, value],
+                chunkIndexes: A.sort(
+                  A.fromIterable(
+                    HashSet.fromIterable(A.getSomes([existing.value.chunkIndex, entity.chunkIndex]))
+                  ),
+                  Order.Number
+                ),
+              })
+            );
           }
         }
 
         // Merge attributes: union with preference for non-empty values
-        const mergedAttributes = { ...existing.value.attributes, ...entity.attributes };
+        const mergedAttributes = {...existing.value.attributes, ...entity.attributes};
         // Select best types using frequency voting (instead of union)
         const mergedTypes = selectBestTypes(existing.value.types, entity.types);
         // Keep longest mention
@@ -344,8 +361,8 @@ export const mergeGraphsWithConflicts = dual2(
 
         // Select higher groundingConfidence (system verification score)
         const mergedGroundingConfidence = Math.max(
-          O.getOrElse(existing.value.groundingConfidence, () => 0),
-          O.getOrElse(entity.groundingConfidence, () => 0)
+          O.getOrElse(existing.value.groundingConfidence, thunk0),
+          O.getOrElse(entity.groundingConfidence, thunk0)
         );
 
         entityMap = HashMap.set(

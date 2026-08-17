@@ -10,48 +10,57 @@
  * @since 0.0.0
  */
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Unknown } from "@beep/schema/Unknown";
-import { getSomesStruct } from "@beep/utils/Option";
-import { Console, DateTime, Effect, FileSystem } from "effect";
+import {Unknown} from "@beep/schema/Unknown";
+import {getSomesStruct} from "@beep/utils/Option";
+import {thunkEmptyStr} from "@beep/utils/thunk";
+import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import {pipe, flow} from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Argument as Args, Command, Flag as Options } from "effect/unstable/cli";
-import { LinkStatus } from "../../Domain/Schema/LinkIngestion.ts";
-import { ContentEnrichmentAgent } from "../../Service/ContentEnrichmentAgent.ts";
-import { JinaReaderClient } from "../../Service/JinaReaderClient.ts";
-import type { IngestResult } from "../../Service/LinkIngestionService.ts";
-import { LinkIngestionError, LinkIngestionService } from "../../Service/LinkIngestionService.ts";
-import { withErrorHandler } from "../ErrorHandler.ts";
+import * as Argument from "effect/unstable/cli/Argument";
+import * as Flag from "effect/unstable/cli/Flag";
+import * as Command from "effect/unstable/cli/Command";
+import {LinkStatus} from "../../Domain/Schema/LinkIngestion.ts";
+import {ContentEnrichmentAgent} from "../../Service/ContentEnrichmentAgent.ts";
+import {JinaReaderClient} from "../../Service/JinaReaderClient.ts";
+import type {IngestResult} from "../../Service/LinkIngestionService.ts";
+import {
+  LinkIngestionError,
+  LinkIngestionService
+} from "../../Service/LinkIngestionService.ts";
+import {withErrorHandler} from "../ErrorHandler.ts";
 
 // =============================================================================
 // Fetch Command - Preview URL content without storage
 // =============================================================================
 
-const fetchUrl = Args.string("url").pipe(Args.withDescription("URL to fetch content from"));
+const fetchUrl = Argument.string("url").pipe(Argument.withDescription("URL to fetch content from"));
 
-const showMetadataOption = Options.boolean("metadata").pipe(
-  Options.withAlias("m"),
-  Options.withDefault(false),
-  Options.withDescription("Show Jina metadata (title, siteName, etc.)")
+const showMetadataOption = Flag.boolean("metadata").pipe(
+  Flag.withAlias("m"),
+  Flag.withDefault(false),
+  Flag.withDescription("Show Jina metadata (title, siteName, etc.)")
 );
 
-const enrichOption = Options.boolean("enrich").pipe(
-  Options.withAlias("e"),
-  Options.withDefault(false),
-  Options.withDescription("Run AI enrichment to extract structured metadata")
+const enrichOption = Flag.boolean("enrich").pipe(
+  Flag.withAlias("e"),
+  Flag.withDefault(false),
+  Flag.withDescription("Run AI enrichment to extract structured metadata")
 );
 
-const truncateOption = Options.integer("truncate").pipe(
-  Options.withAlias("t"),
-  Options.optional,
-  Options.withDescription("Truncate content to N characters (default: show all)")
+const truncateOption = Flag.integer("truncate").pipe(
+  Flag.withAlias("t"),
+  Flag.optional,
+  Flag.withDescription("Truncate content to N characters (default: show all)")
 );
 
-const OutputJSON = S.fromJsonString(Unknown, { space: 2 }).pipe(
+const OutputJSON = S.fromJsonString(Unknown, {space: 2}).pipe(
   SchemaUtils.withStatics((schema) => ({
     decodeUnknownEffect: S.decodeUnknownEffect(schema),
   }))
@@ -66,7 +75,7 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
   const jina = yield* JinaReaderClient;
   yield* Console.log(`Fetching: ${url}\n---`);
   const response = yield* jina.fetchUrl(url);
-  const { content } = response;
+  const {content} = response;
   if (showMetadata) {
     const metadataLines = [
       "Metadata:",
@@ -147,37 +156,42 @@ export const fetchCommand = Command.make(
     enrich: enrichOption,
     truncate: truncateOption,
   },
-  ({ enrich, metadata, truncate, url }) => withErrorHandler(fetchHandler(url, metadata, enrich, truncate))
+  ({
+     enrich,
+     metadata,
+     truncate,
+     url
+   }) => withErrorHandler(fetchHandler(url, metadata, enrich, truncate))
 ).pipe(Command.withDescription("Fetch URL content via Jina Reader (preview, no storage)"));
 
 // =============================================================================
 // Ingest Link Command - Fetch and store URL content
 // =============================================================================
 
-const ingestUrlArg = Args.string("url").pipe(Args.withDescription("URL to ingest"));
+const ingestUrlArg = Argument.string("url").pipe(Argument.withDescription("URL to ingest"));
 
-const skipEnrichOption = Options.boolean("skip-enrich").pipe(
-  Options.withDefault(false),
-  Options.withDescription("Skip AI enrichment (just fetch and store)")
+const skipEnrichOption = Flag.boolean("skip-enrich").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Skip AI enrichment (just fetch and store)")
 );
 
-const sourceTypeOption = Options.choice("source-type", [
+const sourceTypeOption = Flag.choice("source-type", [
   "news",
   "blog",
   "press_release",
   "official",
   "academic",
   "unknown",
-]).pipe(Options.optional, Options.withDescription("Override source type classification"));
+]).pipe(Flag.optional, Flag.withDescription("Override source type classification"));
 
-const noDuplicateOption = Options.boolean("allow-duplicates").pipe(
-  Options.withDefault(false),
-  Options.withDescription("Allow re-ingesting duplicate content")
+const noDuplicateOption = Flag.boolean("allow-duplicates").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Allow re-ingesting duplicate content")
 );
 
-const ontologyIdOption = Options.string("ontology").pipe(
-  Options.withAlias("o"),
-  Options.withDescription("Ontology ID for scoping (e.g., 'seattle')")
+const ontologyIdOption = Flag.string("ontology").pipe(
+  Flag.withAlias("o"),
+  Flag.withDescription("Ontology ID for scoping (e.g., 'seattle')")
 );
 
 const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
@@ -194,20 +208,20 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
   const result = yield* ingestion.ingestUrl(url, {
     ontologyId,
     enrich: !skipEnrich,
-    ...getSomesStruct({ sourceType }),
+    ...getSomesStruct({sourceType}),
     skipDuplicates: !allowDuplicates,
   });
 
   const outputLines = result.duplicate
     ? ["Content already exists (duplicate)", `  ID: ${result.id}`, `  Hash: ${result.contentHash}`]
     : [
-        "Ingestion complete:",
-        `  ID: ${result.id}`,
-        `  Hash: ${result.contentHash}`,
-        `  Storage: ${result.storageUri}`,
-        ...(P.isNotUndefined(result.headline) ? [`  Headline: ${result.headline}`] : []),
-        ...(P.isNotUndefined(result.wordCount) ? [`  Word count: ${result.wordCount}`] : []),
-      ];
+      "Ingestion complete:",
+      `  ID: ${result.id}`,
+      `  Hash: ${result.contentHash}`,
+      `  Storage: ${result.storageUri}`,
+      ...(P.isNotUndefined(result.headline) ? [`  Headline: ${result.headline}`] : []),
+      ...(P.isNotUndefined(result.wordCount) ? [`  Word count: ${result.wordCount}`] : []),
+    ];
 
   yield* Console.log(outputLines.join("\n"));
 });
@@ -235,7 +249,7 @@ export const ingestLinkCommand = Command.make(
     sourceType: sourceTypeOption,
     allowDuplicates: noDuplicateOption,
   },
-  ({ allowDuplicates, ontologyId, skipEnrich, sourceType, url }) =>
+  ({allowDuplicates, ontologyId, skipEnrich, sourceType, url}) =>
     withErrorHandler(ingestLinkHandler(url, ontologyId, skipEnrich, sourceType, allowDuplicates))
 ).pipe(Command.withDescription("Fetch URL via Jina Reader and ingest to storage"));
 
@@ -243,31 +257,31 @@ export const ingestLinkCommand = Command.make(
 // Documents Command - List ingested documents
 // =============================================================================
 
-const statusFilterOption = Options.choice("status", ["pending", "enriched", "processed", "failed"]).pipe(
-  Options.optional,
-  Options.withDescription("Filter by status")
+const statusFilterOption = Flag.choice("status", ["pending", "enriched", "processed", "failed"]).pipe(
+  Flag.optional,
+  Flag.withDescription("Filter by status")
 );
 
-const sourceTypeFilterOption = Options.choice("type", [
+const sourceTypeFilterOption = Flag.choice("type", [
   "news",
   "blog",
   "press_release",
   "official",
   "academic",
   "unknown",
-]).pipe(Options.optional, Options.withDescription("Filter by source type"));
+]).pipe(Flag.optional, Flag.withDescription("Filter by source type"));
 
-const limitOption = Options.integer("limit").pipe(
-  Options.withAlias("l"),
-  Options.withDefault(20),
-  Options.withDescription("Maximum results to show")
+const limitOption = Flag.integer("limit").pipe(
+  Flag.withAlias("l"),
+  Flag.withDefault(20),
+  Flag.withDescription("Maximum results to show")
 );
 
-const offsetOption = Options.integer("offset").pipe(Options.withDefault(0), Options.withDescription("Skip N results"));
+const offsetOption = Flag.integer("offset").pipe(Flag.withDefault(0), Flag.withDescription("Skip N results"));
 
-const jsonOutputOption = Options.boolean("json").pipe(
-  Options.withDefault(false),
-  Options.withDescription("Output as JSON")
+const jsonOutputOption = Flag.boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Output as JSON")
 );
 
 const documentsHandler = Effect.fn("documentsHandler")(function* (
@@ -280,10 +294,10 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
   const ingestion = yield* LinkIngestionService;
   const canonicalStatus = yield* O.match(status, {
     onNone: () => Effect.succeed(O.none()),
-    onSome: (value) => S.decodeUnknownEffect(LinkStatus)(value).pipe(Effect.map(O.some)),
+    onSome: flow(LinkStatus.decodeUnknownEffect, Effect.map(O.some)),
   });
   const documents = yield* ingestion.list({
-    ...getSomesStruct({ status: canonicalStatus, sourceType }),
+    ...getSomesStruct({status: canonicalStatus, sourceType}),
     limit,
     offset,
   });
@@ -346,7 +360,7 @@ export const documentsCommand = Command.make(
     offset: offsetOption,
     json: jsonOutputOption,
   },
-  ({ json, limit, offset, sourceType, status }) =>
+  ({json, limit, offset, sourceType, status}) =>
     withErrorHandler(documentsHandler(status, sourceType, limit, offset, json))
 ).pipe(Command.withDescription("List ingested documents"));
 
@@ -354,12 +368,12 @@ export const documentsCommand = Command.make(
 // Ingest Batch Command - Bulk ingest from file
 // =============================================================================
 
-const urlsFileArg = Args.file("file").pipe(Args.withDescription("File containing URLs (one per line)"));
+const urlsFileArg = Argument.file("file").pipe(Argument.withDescription("File containing URLs (one per line)"));
 
-const concurrencyOption = Options.integer("concurrency").pipe(
-  Options.withAlias("c"),
-  Options.withDefault(5),
-  Options.withDescription("Number of concurrent fetches")
+const concurrencyOption = Flag.integer("concurrency").pipe(
+  Flag.withAlias("c"),
+  Flag.withDefault(5),
+  Flag.withDescription("Number of concurrent fetches")
 );
 
 const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
@@ -395,7 +409,7 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
         return Effect.succeed(
           `[OK] ${Str.slice(0, 12)(ingestResult.contentHash)}... ${O.fromNullishOr(ingestResult.headline).pipe(
             O.match({
-              onNone: () => "",
+              onNone: thunkEmptyStr,
               onSome: Str.slice(0, 40),
             })
           )}`
@@ -443,6 +457,6 @@ export const ingestBatchCommand = Command.make(
     concurrency: concurrencyOption,
     skipEnrich: skipEnrichOption,
   },
-  ({ concurrency, file, ontologyId, skipEnrich }) =>
+  ({concurrency, file, ontologyId, skipEnrich}) =>
     withErrorHandler(ingestBatchHandler(file, ontologyId, concurrency, skipEnrich))
 ).pipe(Command.withDescription("Bulk ingest URLs from a file"));

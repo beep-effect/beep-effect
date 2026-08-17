@@ -412,7 +412,7 @@ export const buildEntityResolutionGraph = dual2(
   ): Effect.fn.Return<EntityResolutionGraph, never, EmbeddingService> {
     const embeddingService = yield* EmbeddingService;
     // Phase 1: Create MentionRecord nodes from entities (preserve provenance)
-    const mentionRecords = kg.entities.map((e, idx) =>
+    const mentionRecords = A.map(kg.entities, (e, idx) =>
       MentionRecord.make({
         id: e.id,
         mention: e.mention,

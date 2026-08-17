@@ -96,16 +96,6 @@ export type EventEntry = OntologyEventEntryValue;
  * EventBusService interface for event publishing and job queuing
  *
  *
- * **Example** (Use the EventBusServiceMethods contract)
- *
- * ```ts
- * import type { EventBusServiceMethods } from "@effect-ontology/Service/EventBus"
- *
- * const acceptsEventBusServiceMethods = (_value: EventBusServiceMethods): void => undefined
- *
- * console.log(acceptsEventBusServiceMethods)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

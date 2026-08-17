@@ -14,7 +14,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import { Argument as Args, Command, Flag as Options } from "effect/unstable/cli";
+import { Argument, Command, Flag } from "effect/unstable/cli";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
@@ -25,9 +25,9 @@ import { withErrorHandler } from "../ErrorHandler.ts";
 
 // --- List Command ---
 
-const listPrefix = Args.string("prefix").pipe(
-  Args.optional,
-  Args.withDescription("Path prefix to list (default: root)")
+const listPrefix = Argument.string("prefix").pipe(
+  Argument.optional,
+  Argument.withDescription("Path prefix to list (default: root)")
 );
 
 const listHandler = Effect.fn("listHandler")(function* (prefix: O.Option<string>) {
@@ -70,12 +70,12 @@ const listCommand = Command.make("ls", { prefix: listPrefix }, ({ prefix }) =>
 
 // --- Cat Command ---
 
-const catPath = Args.string("path").pipe(Args.withDescription("Path to the object to read"));
+const catPath = Argument.string("path").pipe(Argument.withDescription("Path to the object to read"));
 
-const catLinesOption = Options.integer("lines").pipe(
-  Options.withAlias("n"),
-  Options.withDefault(0),
-  Options.withDescription("Limit output to N lines (0 = all)")
+const catLinesOption = Flag.integer("lines").pipe(
+  Flag.withAlias("n"),
+  Flag.withDefault(0),
+  Flag.withDescription("Limit output to N lines (0 = all)")
 );
 
 const catHandler = Effect.fn("catHandler")(function* (path: string, lines: number) {

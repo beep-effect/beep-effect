@@ -30,16 +30,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingProvider");
  * - classification: For classification tasks
  *
  *
- * **Example** (Use the EmbeddingTaskType contract)
- *
- * ```ts
- * import type { EmbeddingTaskType } from "@effect-ontology/Service/EmbeddingProvider"
- *
- * const acceptsEmbeddingTaskType = (_value: EmbeddingTaskType): void => undefined
- *
- * console.log(acceptsEmbeddingTaskType)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -48,16 +38,6 @@ export type EmbeddingTaskType = "search_query" | "search_document" | "clustering
 /**
  * Embedding vector type
  *
- *
- * **Example** (Use the Embedding contract)
- *
- * ```ts
- * import type { Embedding } from "@effect-ontology/Service/EmbeddingProvider"
- *
- * const acceptsEmbedding = (_value: Embedding): void => undefined
- *
- * console.log(acceptsEmbedding)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -128,16 +108,6 @@ export interface ProviderMetadata {
  * Providers implement this interface to expose their embedding capabilities.
  * The service layer handles caching, deduplication, and batching.
  *
- *
- * **Example** (Use the EmbeddingProviderMethods contract)
- *
- * ```ts
- * import type { EmbeddingProviderMethods } from "@effect-ontology/Service/EmbeddingProvider"
- *
- * const acceptsEmbeddingProviderMethods = (_value: EmbeddingProviderMethods): void => undefined
- *
- * console.log(acceptsEmbeddingProviderMethods)
- * ```
  *
  * @category type-level
  * @since 0.0.0

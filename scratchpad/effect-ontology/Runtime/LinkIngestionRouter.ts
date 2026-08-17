@@ -12,7 +12,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Cause, DateTime, Effect, HashSet, Inspectable, Random, Schedule } from "effect";
+import { Context, DateTime, Effect, FiberSet, HashSet, Inspectable, Layer, Random, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -53,6 +53,27 @@ class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError>($I`Batc
 ) {}
 
 /**
+ * Owns background link-status finalizers for the lifetime of the HTTP server layer.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class LinkIngestionBackgroundTasks extends Context.Service<LinkIngestionBackgroundTasks>()(
+  $I`LinkIngestionBackgroundTasks`,
+  {
+    make: Effect.gen(function* () {
+      const fibers = yield* FiberSet.make<void, never>();
+      return {
+        fork: <R>(effect: Effect.Effect<void, never, R>): Effect.Effect<void, never, R> =>
+          FiberSet.run(fibers, effect).pipe(Effect.asVoid),
+      };
+    }),
+  }
+) {
+  static readonly Default = Layer.effect(this, this.make);
+}
+
+/**
  * Exposes link ingestion router for composition by callers of this module.
  *
  * **Example** (Inspect link ingestion router)
@@ -66,7 +87,7 @@ class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError>($I`Batc
  * @category services
  * @since 0.0.0
  */
-export const LinkIngestionRouter = HttpRouter.addAll([
+const LinkIngestionRoutes = HttpRouter.addAll([
   HttpRouter.route(
     "POST",
     "/v1/ontologies/:ontologyId/batches/from-links",
@@ -101,6 +122,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       const storage = yield* StorageService;
       const ingestion = yield* LinkIngestionService;
       const orchestrator = yield* WorkflowOrchestrator;
+      const backgroundTasks = yield* LinkIngestionBackgroundTasks;
       const requestedIds = request.value.linkIds;
       const links = yield* ingestion.getByIds(requestedIds);
       const foundIds = HashSet.fromIterable(links.map((link) => link.id));
@@ -172,7 +194,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
 
       yield* orchestrator.start(payload);
       yield* Effect.forEach(links, (link) => ingestion.markProcessing(link.id), { concurrency: 10 });
-      yield* Effect.forkDetach(
+      yield* backgroundTasks.fork(
         Effect.gen(function* () {
           const state = yield* pollToBatchState(String(batchId)).pipe(
             Effect.flatMap((current) =>
@@ -193,8 +215,10 @@ export const LinkIngestionRouter = HttpRouter.addAll([
             { concurrency: 10 }
           );
         }).pipe(
-          Effect.catchCause((cause) =>
-            Effect.logWarning("Failed to finalize ingested-link statuses", { cause: Cause.pretty(cause) })
+          Effect.catch((error) =>
+            Effect.logWarning("Failed to finalize ingested-link statuses", {
+              error: Inspectable.toStringUnknown(error),
+            })
           )
         )
       );
@@ -224,3 +248,5 @@ export const LinkIngestionRouter = HttpRouter.addAll([
     )
   ),
 ]);
+
+export const LinkIngestionRouter = LinkIngestionRoutes;

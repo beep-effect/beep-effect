@@ -33,16 +33,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/CurationJobProcessor");
  * Combined error type for job processing
  *
  *
- * **Example** (Use the JobProcessorError contract)
- *
- * ```ts
- * import type { JobProcessorError } from "@effect-ontology/Service/CurationJobProcessor"
- *
- * const acceptsJobProcessorError = (_value: JobProcessorError): void => undefined
- *
- * console.log(acceptsJobProcessorError)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

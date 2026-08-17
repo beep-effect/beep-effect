@@ -24,16 +24,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ExtractionWorkflow");
  * Describes the extraction workflow methods data exposed by this module.
  *
  *
- * **Example** (Use the ExtractionWorkflowMethods contract)
- *
- * ```ts
- * import type { ExtractionWorkflowMethods } from "@effect-ontology/Service/ExtractionWorkflow"
- *
- * const acceptsExtractionWorkflowMethods = (_value: ExtractionWorkflowMethods): void => undefined
- *
- * console.log(acceptsExtractionWorkflowMethods)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

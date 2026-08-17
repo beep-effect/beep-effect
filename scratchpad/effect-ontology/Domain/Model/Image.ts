@@ -4,8 +4,16 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, MimeType, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex, URLStr } from "@beep/schema";
+import {$ScratchpadId} from "@beep/identity";
+import {
+  LiteralKit,
+  MimeType,
+  NonNegativeInt,
+  PosInt,
+  SchemaUtils,
+  Sha256Hex,
+  URLStr
+} from "@beep/schema";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
@@ -81,15 +89,12 @@ export type ImageRole = typeof ImageRole.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const ImageOwnerType = LiteralKit(["link", "document"])
-  .annotate({
+export const ImageOwnerType = LiteralKit(["link", "document"]).pipe(
+  $I.annoteSchema("ImageOwnerType", {
+    description: "Closed set of owner kinds supported by image manifests.",
     toArbitrary: () => (fc) => fc.constantFrom("link", "document"),
   })
-  .annotate(
-    $I.annote("ImageOwnerType", {
-      description: "Closed set of owner kinds supported by image manifests.",
-    })
-  );
+);
 
 /**
  * Runtime value accepted by {@link ImageOwnerType}.
@@ -136,11 +141,11 @@ export class ImageCandidate extends S.Class<ImageCandidate>($I`ImageCandidate`)(
     }),
     alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Alternative text recovered from the source." })
+      S.annotateKey({description: "Alternative text recovered from the source."})
     ),
     caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Figure caption or nearby descriptive text." })
+      S.annotateKey({description: "Figure caption or nearby descriptive text."})
     ),
     role: ImageRole.annotateKey({
       description: "Semantic role the image plays in its source.",
@@ -200,22 +205,22 @@ export class ImageAsset extends S.Class<ImageAsset>($I`ImageAsset`)(
     }),
     width: S.OptionFromOptionalKey(PosInt).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Pixel width when image metadata is available." })
+      S.annotateKey({description: "Pixel width when image metadata is available."})
     ),
     height: S.OptionFromOptionalKey(PosInt).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Pixel height when image metadata is available." })
+      S.annotateKey({description: "Pixel height when image metadata is available."})
     ),
     storagePath: S.NonEmptyString.annotateKey({
       description: "Repository or object-storage path containing the original bytes.",
     }),
     sourceUrl: S.OptionFromOptionalKey(URLStr).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Original fetch URL retained for provenance." })
+      S.annotateKey({description: "Original fetch URL retained for provenance."})
     ),
     createdAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "UTC instant at which the asset was first stored." })
+      S.annotateKey({description: "UTC instant at which the asset was first stored."})
     ),
   },
   $I.annote("ImageAsset", {
@@ -230,7 +235,7 @@ export class ImageAsset extends S.Class<ImageAsset>($I`ImageAsset`)(
 
   static readonly decodeJsonStringEffect = S.decodeEffect(S.fromJsonString(ImageAsset));
 
-  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ImageAsset, { space: 2 }));
+  static readonly encodeJsonStringEffect = S.encodeEffect(S.fromJsonString(ImageAsset, {space: 2}));
 
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(ImageAsset);
 
@@ -272,22 +277,22 @@ export class ImageRef extends S.Class<ImageRef>($I`ImageRef`)(
     }),
     alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Context-specific alternative text." })
+      S.annotateKey({description: "Context-specific alternative text."})
     ),
     caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Context-specific image caption." })
+      S.annotateKey({description: "Context-specific image caption."})
     ),
     position: NonNegativeInt.annotateKey({
       description: "Zero-based position within the owner content.",
     }),
     context: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Surrounding source text retained for prompt context." })
+      S.annotateKey({description: "Surrounding source text retained for prompt context."})
     ),
     role: S.OptionFromOptionalKey(ImageRole).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Context-specific image role when known." })
+      S.annotateKey({description: "Context-specific image role when known."})
     ),
   },
   $I.annote("ImageRef", {
@@ -334,7 +339,7 @@ export class ImageManifest extends S.Class<ImageManifest>($I`ImageManifest`)(
     }),
     images: S.Array(ImageRef).pipe(
       SchemaUtils.withEmptyArrayDefaults<ImageRef>(),
-      S.annotateKey({ description: "Image references in source order." })
+      S.annotateKey({description: "Image references in source order."})
     ),
     updatedAt: S.DateTimeUtcFromString.annotateKey({
       description: "UTC instant at which the manifest was last updated.",
@@ -404,29 +409,30 @@ export class ImageForPrompt extends S.Class<ImageForPrompt>($I`ImageForPrompt`)(
     }),
     alt: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Alternative text supplied to the model." })
+      S.annotateKey({description: "Alternative text supplied to the model."})
     ),
     caption: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Caption supplied to the model." })
+      S.annotateKey({description: "Caption supplied to the model."})
     ),
     context: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Surrounding text supplied to the model." })
+      S.annotateKey({description: "Surrounding text supplied to the model."})
     ),
     position: S.OptionFromOptionalKey(NonNegativeInt).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Source-document position when available." })
+      S.annotateKey({description: "Source-document position when available."})
     ),
     assetHash: S.OptionFromOptionalKey(Sha256Hex).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Source asset digest retained for traceability." })
+      S.annotateKey({description: "Source asset digest retained for traceability."})
     ),
   },
   $I.annote("ImageForPrompt", {
     description: "Validated base64 image payload and context for multimodal prompting.",
   })
-) {}
+) {
+}
 
 /**
  * Successful result of fetching and identifying an image candidate.
@@ -473,4 +479,5 @@ export class ImageFetchResult extends S.Class<ImageFetchResult>($I`ImageFetchRes
   $I.annote("ImageFetchResult", {
     description: "Fetched image bytes paired with their digest, media type, and discovery provenance.",
   })
-) {}
+) {
+}

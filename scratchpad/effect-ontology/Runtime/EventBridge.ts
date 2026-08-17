@@ -13,7 +13,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt } from "@beep/schema";
-import { Cause, Context, Duration, Effect, Fiber, Layer, Schedule, Stream } from "effect";
+import { Context, Duration, Effect, Fiber, Layer, Schedule, Stream } from "effect";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import { EventBusService } from "../Service/EventBus.ts";
@@ -138,14 +138,12 @@ const makeEventBridge = Effect.gen(function* () {
           });
         })
       ),
-      Effect.catchCause((cause) =>
-        Effect.fail(
-          EventBridgeError.make({
-            phase: "runtime",
-            message: "Ontology event stream terminated.",
-            cause: Cause.squash(cause),
-          })
-        )
+      Effect.mapError((cause) =>
+        EventBridgeError.make({
+          phase: "runtime",
+          message: "Ontology event stream terminated.",
+          cause,
+        })
       ),
       Effect.tapError((error) => Effect.logError("EventBridge stream failed", { error })),
       Effect.retry(bridgeRetrySchedule)

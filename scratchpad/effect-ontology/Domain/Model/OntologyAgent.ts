@@ -530,11 +530,10 @@ class QueryBindingModel extends S.Class<QueryBindingModel>($I`QueryBinding`)(
  * @category models
  * @since 0.0.0
  */
-export const QueryBinding = QueryBindingModel.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(QueryBindingModel)(fc),
-}).pipe(
+export const QueryBinding = QueryBindingModel.pipe(
   $I.annoteSchema("QueryBinding", {
     description: "One immutable row of SPARQL variable bindings.",
+    toArbitrary: () => (fc) => S.toArbitrary(QueryBindingModel)(fc),
   }),
   SchemaUtils.withCodecStatics
 );

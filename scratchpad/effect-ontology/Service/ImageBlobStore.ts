@@ -38,16 +38,6 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageBlobStore");
  * Low-level image storage operations for bytes and metadata.
  *
  *
- * **Example** (Use the ImageBlobStoreService contract)
- *
- * ```ts
- * import type { ImageBlobStoreService } from "@effect-ontology/Service/ImageBlobStore"
- *
- * const acceptsImageBlobStoreService = (_value: ImageBlobStoreService): void => undefined
- *
- * console.log(acceptsImageBlobStoreService)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

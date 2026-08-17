@@ -84,16 +84,6 @@ export const DocumentClassification = S.Struct({
  * Describes the document classification data exposed by this module.
  *
  *
- * **Example** (Use the DocumentClassification contract)
- *
- * ```ts
- * import type { DocumentClassification } from "@effect-ontology/Service/DocumentClassifier"
- *
- * const acceptsDocumentClassification = (_value: DocumentClassification): void => undefined
- *
- * console.log(acceptsDocumentClassification)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -128,16 +118,6 @@ export const BatchClassificationResponse = S.Struct({
  * Describes the batch classification response data exposed by this module.
  *
  *
- * **Example** (Use the BatchClassificationResponse contract)
- *
- * ```ts
- * import type { BatchClassificationResponse } from "@effect-ontology/Service/DocumentClassifier"
- *
- * const acceptsBatchClassificationResponse = (_value: BatchClassificationResponse): void => undefined
- *
- * console.log(acceptsBatchClassificationResponse)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -167,16 +147,6 @@ export const ClassifyInput = S.Struct({
 /**
  * Describes the classify input data exposed by this module.
  *
- *
- * **Example** (Use the ClassifyInput contract)
- *
- * ```ts
- * import type { ClassifyInput } from "@effect-ontology/Service/DocumentClassifier"
- *
- * const acceptsClassifyInput = (_value: ClassifyInput): void => undefined
- *
- * console.log(acceptsClassifyInput)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -214,16 +184,6 @@ export const ClassifyBatchInput = S.Struct({
 /**
  * Describes the classify batch input data exposed by this module.
  *
- *
- * **Example** (Use the ClassifyBatchInput contract)
- *
- * ```ts
- * import type { ClassifyBatchInput } from "@effect-ontology/Service/DocumentClassifier"
- *
- * const acceptsClassifyBatchInput = (_value: ClassifyBatchInput): void => undefined
- *
- * console.log(acceptsClassifyBatchInput)
- * ```
  *
  * @category type-level
  * @since 0.0.0

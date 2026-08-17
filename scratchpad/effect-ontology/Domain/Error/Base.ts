@@ -10,10 +10,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
-import { HttpStatusCode } from "@beep/schema/HttpStatus";
+import {$ScratchpadId} from "@beep/identity";
+import {IRI} from "@beep/rdf";
+import {NonNegativeInt, SchemaUtils, URLStr} from "@beep/schema";
+import {HttpStatusCode} from "@beep/schema/HttpStatus";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -34,10 +34,9 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Base");
  * @category errors
  * @since 0.0.0
  */
-export const ErrorMessage = S.NonEmptyString.annotate({
-  toArbitrary: () => (fc) => fc.string({ minLength: 1, maxLength: 1_024 }),
-}).pipe(
+export const ErrorMessage = S.NonEmptyString.pipe(
   $I.annoteSchema("ErrorMessage", {
+    toArbitrary: () => (fc) => fc.string({minLength: 1, maxLength: 1_024}),
     description: "Non-empty human-readable diagnostic carried by an ontology domain error.",
   }),
   SchemaUtils.withCodecStatics
@@ -75,18 +74,16 @@ export type ErrorMessage = typeof ErrorMessage.Type;
  * @since 0.0.0
  */
 export const OptionalErrorUrl = S.OptionFromNullishOr(URLStr)
-  .pipe(SchemaUtils.withNoneDefault)
-  .annotate({
-    toArbitrary: () => (fc) => {
-      const none = fc.constant(O.none());
-      return {
-        arbitrary: fc.oneof(none, S.toArbitrary(URLStr)(fc).map(O.some)),
-        terminal: none,
-      };
-    },
-  })
   .pipe(
+    SchemaUtils.withNoneDefault,
     $I.annoteSchema("OptionalErrorUrl", {
+      toArbitrary: () => (fc) => {
+        const none = fc.constant(O.none());
+        return {
+          arbitrary: fc.oneof(none, S.toArbitrary(URLStr)(fc).map(O.some)),
+          terminal: none,
+        };
+      },
       description: "Optional canonical URL normalized to an Effect Option.",
     })
   );
@@ -124,18 +121,15 @@ export type OptionalErrorUrl = typeof OptionalErrorUrl.Type;
  * @since 0.0.0
  */
 export const OptionalErrorIri = S.OptionFromNullishOr(IRI)
-  .pipe(SchemaUtils.withNoneDefault)
-  .annotate({
-    toArbitrary: () => (fc) => {
-      const none = fc.constant(O.none());
-      return {
-        arbitrary: fc.oneof(none, S.toArbitrary(IRI)(fc).map(O.some)),
-        terminal: none,
-      };
-    },
-  })
-  .pipe(
+  .pipe(SchemaUtils.withNoneDefault,
     $I.annoteSchema("OptionalErrorIri", {
+      toArbitrary: () => (fc) => {
+        const none = fc.constant(O.none());
+        return {
+          arbitrary: fc.oneof(none, S.toArbitrary(IRI)(fc).map(O.some)),
+          terminal: none,
+        };
+      },
       description: "Optional canonical RDF IRI normalized to an Effect Option.",
     })
   );
@@ -157,7 +151,7 @@ export const OptionalErrorIri = S.OptionFromNullishOr(IRI)
  */
 export type OptionalErrorIri = typeof OptionalErrorIri.Type;
 
-const ErrorDefect = S.Defect({ includeStack: true });
+const ErrorDefect = S.Defect({includeStack: true});
 
 /**
  * Optional underlying defect normalized from an absent object key.
@@ -180,18 +174,16 @@ const ErrorDefect = S.Defect({ includeStack: true });
  * @since 0.0.0
  */
 export const OptionalErrorCause = S.OptionFromNullishOr(ErrorDefect)
-  .pipe(SchemaUtils.withNoneDefault)
-  .annotate({
-    toArbitrary: () => (fc) => {
-      const none = fc.constant(O.none());
-      return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorDefect)(fc).map(O.some)),
-        terminal: none,
-      };
-    },
-  })
   .pipe(
+    SchemaUtils.withNoneDefault,
     $I.annoteSchema("OptionalErrorCause", {
+      toArbitrary: () => (fc) => {
+        const none = fc.constant(O.none());
+        return {
+          arbitrary: fc.oneof(none, S.toArbitrary(ErrorDefect)(fc).map(O.some)),
+          terminal: none,
+        };
+      },
       description: "Optional underlying defect normalized to an Effect Option.",
     })
   );
@@ -229,18 +221,15 @@ export type OptionalErrorCause = typeof OptionalErrorCause.Type;
  * @since 0.0.0
  */
 export const OptionalErrorMessage = S.OptionFromNullishOr(ErrorMessage)
-  .pipe(SchemaUtils.withNoneDefault)
-  .annotate({
-    toArbitrary: () => (fc) => {
-      const none = fc.constant(O.none());
-      return {
-        arbitrary: fc.oneof(none, S.toArbitrary(ErrorMessage)(fc).map(O.some)),
-        terminal: none,
-      };
-    },
-  })
-  .pipe(
+  .pipe(SchemaUtils.withNoneDefault,
     $I.annoteSchema("OptionalErrorMessage", {
+      toArbitrary: () => (fc) => {
+        const none = fc.constant(O.none());
+        return {
+          arbitrary: fc.oneof(none, S.toArbitrary(ErrorMessage)(fc).map(O.some)),
+          terminal: none,
+        };
+      },
       description: "Optional non-empty diagnostic text normalized to an Effect Option.",
     })
   );
@@ -279,18 +268,15 @@ export type OptionalErrorMessage = typeof OptionalErrorMessage.Type;
  * @since 0.0.0
  */
 export const OptionalNonNegativeInt = S.OptionFromNullishOr(NonNegativeInt)
-  .pipe(SchemaUtils.withNoneDefault)
-  .annotate({
-    toArbitrary: () => (fc) => {
-      const none = fc.constant(O.none());
-      return {
-        arbitrary: fc.oneof(none, S.toArbitrary(NonNegativeInt)(fc).map(O.some)),
-        terminal: none,
-      };
-    },
-  })
-  .pipe(
+  .pipe(SchemaUtils.withNoneDefault,
     $I.annoteSchema("OptionalNonNegativeInt", {
+      toArbitrary: () => (fc) => {
+        const none = fc.constant(O.none());
+        return {
+          arbitrary: fc.oneof(none, S.toArbitrary(NonNegativeInt)(fc).map(O.some)),
+          terminal: none,
+        };
+      },
       description: "Optional finite non-negative integer normalized to an Effect Option.",
     })
   );
@@ -328,18 +314,17 @@ export type OptionalNonNegativeInt = typeof OptionalNonNegativeInt.Type;
  * @since 0.0.0
  */
 export const OptionalHttpStatusCode = S.OptionFromNullishOr(HttpStatusCode)
-  .pipe(SchemaUtils.withNoneDefault)
-  .annotate({
-    toArbitrary: () => (fc) => {
-      const none = fc.constant(O.none());
-      return {
-        arbitrary: fc.oneof(none, S.toArbitrary(HttpStatusCode)(fc).map(O.some)),
-        terminal: none,
-      };
-    },
-  })
-  .pipe(
+  .pipe(SchemaUtils.withNoneDefault,
+
+
     $I.annoteSchema("OptionalHttpStatusCode", {
+      toArbitrary: () => (fc) => {
+        const none = fc.constant(O.none());
+        return {
+          arbitrary: fc.oneof(none, S.toArbitrary(HttpStatusCode)(fc).map(O.some)),
+          terminal: none,
+        };
+      },
       description: "Optional valid HTTP response status normalized to an Effect Option.",
     })
   );
@@ -377,7 +362,10 @@ export type OptionalHttpStatusCode = typeof OptionalHttpStatusCode.Type;
  * @since 0.0.0
  */
 export const Milliseconds = NonNegativeInt.annotate({
-  toArbitrary: () => (fc) => fc.integer({ min: 0, max: 86_400_000 }).map(NonNegativeInt.make),
+  toArbitrary: () => (fc) => fc.integer({
+    min: 0,
+    max: 86_400_000
+  }).map(NonNegativeInt.make),
 }).pipe(
   S.brand("Milliseconds"),
   $I.annoteSchema("Milliseconds", {
@@ -418,18 +406,15 @@ export type Milliseconds = typeof Milliseconds.Type;
  * @since 0.0.0
  */
 export const OptionalMilliseconds = S.OptionFromNullishOr(Milliseconds)
-  .pipe(SchemaUtils.withNoneDefault)
-  .annotate({
-    toArbitrary: () => (fc) => {
-      const none = fc.constant(O.none());
-      return {
-        arbitrary: fc.oneof(none, S.toArbitrary(Milliseconds)(fc).map(O.some)),
-        terminal: none,
-      };
-    },
-  })
-  .pipe(
+  .pipe(SchemaUtils.withNoneDefault,
     $I.annoteSchema("OptionalMilliseconds", {
+      toArbitrary: () => (fc) => {
+        const none = fc.constant(O.none());
+        return {
+          arbitrary: fc.oneof(none, S.toArbitrary(Milliseconds)(fc).map(O.some)),
+          terminal: none,
+        };
+      },
       description: "Optional finite non-negative millisecond count normalized to an Effect Option.",
     })
   );
@@ -490,7 +475,8 @@ export class BaseError extends S.TaggedError<BaseError>($I`BaseError`)(
   $I.annote("BaseError", {
     description: "Fallback ontology-domain failure used when no more precise error tag applies.",
   })
-) {}
+) {
+}
 
 /**
  * Typed marker for a deliberately unfinished service method.
@@ -535,7 +521,8 @@ export class NotImplemented extends S.TaggedError<NotImplemented>($I`NotImplemen
   $I.annote("NotImplemented", {
     description: "Typed marker for an intentionally unfinished service method.",
   })
-) {}
+) {
+}
 
 const BaseErrorDefinition = S.Union([BaseError, NotImplemented]).pipe(S.toTaggedUnion("_tag"));
 

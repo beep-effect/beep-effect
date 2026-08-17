@@ -55,16 +55,6 @@ export const CachedExtractionResult = S.Struct({
  * Describes the cached extraction result data exposed by this module.
  *
  *
- * **Example** (Use the CachedExtractionResult contract)
- *
- * ```ts
- * import type { CachedExtractionResult } from "@effect-ontology/Service/ExtractionCache"
- *
- * const acceptsCachedExtractionResult = (_value: CachedExtractionResult): void => undefined
- *
- * console.log(acceptsCachedExtractionResult)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -95,16 +85,6 @@ export const DEFAULT_CACHE_DIR = "output/cache";
 /**
  * Describes the extraction cache service data exposed by this module.
  *
- *
- * **Example** (Use the ExtractionCacheService contract)
- *
- * ```ts
- * import type { ExtractionCacheService } from "@effect-ontology/Service/ExtractionCache"
- *
- * const acceptsExtractionCacheService = (_value: ExtractionCacheService): void => undefined
- *
- * console.log(acceptsExtractionCacheService)
- * ```
  *
  * @category type-level
  * @since 0.0.0

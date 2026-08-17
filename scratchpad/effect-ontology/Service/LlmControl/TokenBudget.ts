@@ -54,16 +54,6 @@ export const BudgetedStage = LiteralKit([
  * Describes the budgeted stage data exposed by this module.
  *
  *
- * **Example** (Use the BudgetedStage contract)
- *
- * ```ts
- * import type { BudgetedStage } from "@effect-ontology/Service/LlmControl/TokenBudget"
- *
- * const acceptsBudgetedStage = (_value: BudgetedStage): void => undefined
- *
- * console.log(acceptsBudgetedStage)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */

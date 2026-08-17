@@ -28,6 +28,7 @@ import { EventBridgeAutoStart } from "./Runtime/EventBridge.ts";
 import { EventBroadcastHubLive } from "./Runtime/EventBroadcastRouter.ts";
 import { HealthCheckService } from "./Runtime/HealthCheck.ts";
 import { HttpServerLive, HttpServerWithoutRepositoriesLive } from "./Runtime/HttpServer.ts";
+import { LinkIngestionBackgroundTasks } from "./Runtime/LinkIngestionRouter.ts";
 import { InferenceJobStoreLive } from "./Runtime/InferenceRouter.ts";
 import { DatabaseReadyLive, PgClientLive } from "./Runtime/Persistence/PostgresLayer.ts";
 import { ShutdownService } from "./Runtime/Shutdown.ts";
@@ -125,6 +126,7 @@ const makeServerLive = (config: Config.Success<typeof ServerConfig>) => {
     Layer.provideMerge(EventBridgeAutoStart),
     Layer.provideMerge(EventBroadcastHubLive),
     Layer.provideMerge(TicketService.Default),
+    Layer.provideMerge(LinkIngestionBackgroundTasks.Default),
     Layer.provideMerge(ActivityDependenciesLayer),
     Layer.provideMerge(PlatformLayer)
   );
@@ -169,7 +171,7 @@ const server = Effect.fn("EffectOntology.server")(function* (config: Config.Succ
   }
 
   // Warm up caches from GCS (runs in background, doesn't block startup)
-  yield* Effect.forkDetach(warmUpCaches);
+  yield* Effect.forkChild(warmUpCaches);
 
   yield* Effect.logInfo(`Server starting on port ${config.port}`);
   yield* Layer.build(makeServerLive(config));
