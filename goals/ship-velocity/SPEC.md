@@ -150,10 +150,12 @@ be closed, not tolerated.
   dashboard on the naive ratio):** count remote hits on the **first cold lane touching each
   task**, never remote/attempted across a whole proof. A remote restore lands in the local cache,
   so every later lane touching the same task scores a *local* hit — one remote read can be counted
-  remote exactly once, and the denominator therefore punishes success. C1's proof measured
-  attempted=528, local-hit=312, remote-hit=60 (11.4% remote-hit rate), miss=156 (29.5% miss
-  rate), yet the honest evidence was a single lane: lint at 30/31 `source: REMOTE` on artifacts
-  never built in that worktree. Two further
+  remote exactly once, and the denominator therefore punishes success. C1's proof measured raw
+  whole-proof counts of attempted=528, local-hit=312, remote-hit=60, miss=156 — recorded here
+  only to demonstrate the distortion, never as rates: any percentage computed over that 528 is
+  the forbidden denominator, and no first-cold-lane accounting exists for this run to compute the
+  real metric from. The honest evidence was a single lane read as a lane: lint at 30/31
+  `source: REMOTE` on artifacts never built in that worktree. Two further
   cautions from the same run: `local-hit` is **not attributable** (a prior local run populates the
   same closure and is indistinguishable after the fact), and hosted lane wall-clock is confounded
   by #740's `filter: blob:none` checkout change, which is unrelated to cache posture. Correctness
