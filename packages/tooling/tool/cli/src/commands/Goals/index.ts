@@ -76,6 +76,13 @@ export * from "./Migration.ts";
  */
 export * from "./PortfolioIndex.ts";
 /**
+ * Operator risk-tier override command.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./SetRiskTier.ts";
+/**
  * Single-writer set-status command.
  *
  * @category cli-commands

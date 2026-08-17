@@ -7,7 +7,8 @@
  * chain, surfaces forks (two children of one parent) as first-class
  * verdicts, and derives the D3 stage values — `furthestStage` as the
  * monotonic high-water mark by ordinal and `resumeStage` as the cursor from
- * the last stage-carrying event — over the unambiguous linear prefix. The
+ * the last stage-carrying event — plus the effective risk-tier override,
+ * all over the unambiguous linear prefix. The
  * trace projection binds the fold result to a `sourceTip` and projector
  * version so staleness is always derivable.
  *
@@ -28,17 +29,18 @@ import {
   PacketChainIssue,
   PacketDerivedState,
   PacketForkVerdict,
+  PacketRiskTierOverrideState,
   PacketTip,
   PacketTraceProjection,
 } from "./PacketCore.schemas.ts";
 import { canonicalJsonTextPretty } from "./PacketDigest.ts";
 import type {
-  PacketEventBody,
   PacketRoot,
   PacketSlug,
   PacketStage,
   PacketStageOrdinal,
   PacketStatusToken,
+  RiskTierOverriddenBody,
   StoredPacketEvent,
 } from "./PacketCore.schemas.ts";
 
@@ -240,29 +242,43 @@ const stepStageCursor = (cursor: StageCursor, stage: PacketStage, ordinal: Packe
 type PrefixDerivation = {
   readonly status: O.Option<PacketStatusToken>;
   readonly cursor: StageCursor;
+  readonly riskTierOverride: O.Option<PacketRiskTierOverrideState>;
 };
 
-const stepPrefixDerivation = (state: PrefixDerivation, body: PacketEventBody): PrefixDerivation => {
+const overrideStateOf = (stored: StoredPacketEvent, body: RiskTierOverriddenBody): PacketRiskTierOverrideState =>
+  PacketRiskTierOverrideState.make({
+    tier: body.tier,
+    reason: body.reason,
+    actor: stored.event.actor,
+    at: stored.event.at,
+  });
+
+const stepPrefixDerivation = (state: PrefixDerivation, stored: StoredPacketEvent): PrefixDerivation => {
+  const body = stored.event.body;
   if (body.type === "stage-entered") {
-    return { status: state.status, cursor: stepStageCursor(state.cursor, body.stage, body.ordinal) };
+    return { ...state, cursor: stepStageCursor(state.cursor, body.stage, body.ordinal) };
   }
   if (body.type === "status-set") {
-    return { status: O.some(body.status), cursor: state.cursor };
+    return { ...state, status: O.some(body.status) };
+  }
+  if (body.type === "risk-tier-overridden") {
+    return { ...state, riskTierOverride: O.some(overrideStateOf(stored, body)) };
   }
   const cursor =
     body.stage !== undefined && body.ordinal !== undefined
       ? stepStageCursor(state.cursor, body.stage, body.ordinal)
       : state.cursor;
-  return { status: O.some(body.status), cursor };
+  return { ...state, status: O.some(body.status), cursor };
 };
 
 const emptyPrefixDerivation: PrefixDerivation = {
   status: O.none(),
   cursor: { furthestStage: O.none(), furthestOrdinal: O.none(), resumeStage: O.none() },
+  riskTierOverride: O.none(),
 };
 
 const derivePrefixValues = (prefix: ReadonlyArray<StoredPacketEvent>): PrefixDerivation =>
-  A.reduce(prefix, emptyPrefixDerivation, (state, stored) => stepPrefixDerivation(state, stored.event.body));
+  A.reduce(prefix, emptyPrefixDerivation, stepPrefixDerivation);
 
 /**
  * Fold one packet's stored events into its deterministic derived state.
@@ -299,7 +315,7 @@ export const foldPacketEvents = (input: {
   const forks = collectForkVerdicts(index);
   const { issues: prefixIssues, prefix } = walkLinearPrefix(index);
   const issues = A.appendAll(missingParentIssues(sorted), prefixIssues);
-  const { cursor, status } = derivePrefixValues(prefix);
+  const { cursor, riskTierOverride, status } = derivePrefixValues(prefix);
   const tip = pipe(
     A.last(prefix),
     O.map((stored) => PacketTip.make({ seq: stored.event.seq, id: stored.id }))
@@ -313,6 +329,7 @@ export const foldPacketEvents = (input: {
     ...optionalProp("furthestStage", cursor.furthestStage),
     ...optionalProp("furthestOrdinal", cursor.furthestOrdinal),
     ...optionalProp("resumeStage", cursor.resumeStage),
+    ...optionalProp("riskTierOverride", riskTierOverride),
     forks,
     issues,
   });

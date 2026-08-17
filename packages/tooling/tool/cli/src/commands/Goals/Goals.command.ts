@@ -15,6 +15,7 @@ import { goalsAdoptCommand } from "./Adopt.ts";
 import { goalsBootstrapCommand } from "./Bootstrap.ts";
 import { goalsDoctorCommand } from "./Doctor.ts";
 import { goalsIndexCommand } from "./PortfolioIndex.ts";
+import { goalsSetRiskTierCommand } from "./SetRiskTier.ts";
 import { goalsSetStatusCommand } from "./SetStatus.ts";
 
 /**
@@ -38,15 +39,17 @@ export const goalsCommand = Command.make("goals", {}, () =>
     "- bun run beep goals index [--write | --check]",
     "- bun run beep goals set-status <slug> <status>",
     "- bun run beep goals set-status --migrate [--write]",
+    '- bun run beep goals set-risk-tier <slug> <tier> --reason "..."',
     "- bun run beep goals bootstrap --slug <slug> --title <t> --mission <m> --plan [--json]",
     "- bun run beep goals adopt <slug> --plan [--json] [--toward <archetype>]",
   ])
 ).pipe(
-  Command.withDescription("Goal-packet lifecycle tooling (doctor, index, set-status, bootstrap, adopt)"),
+  Command.withDescription("Goal-packet lifecycle tooling (doctor, index, set-status, set-risk-tier, bootstrap, adopt)"),
   Command.withSubcommands([
     goalsDoctorCommand,
     goalsIndexCommand,
     goalsSetStatusCommand,
+    goalsSetRiskTierCommand,
     goalsBootstrapCommand,
     goalsAdoptCommand,
   ])

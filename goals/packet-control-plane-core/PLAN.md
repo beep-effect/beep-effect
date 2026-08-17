@@ -59,6 +59,19 @@ tier *computation from change trees* stays in the gated design-gate
 candidate), the full trace projection, and the fork-repair plan surface. Each
 rung is a separate small PR; none may weaken the P1 proof fixtures.
 
+**Rung 1 — risk-tier floor/override (COMPLETE 2026-08-17).** `PacketRiskTier`
+(Light/Standard/Full), the `risk-tier-overridden` event body (tier, replaced
+override, required challengeable reason), last-wins override derivation on
+the linear prefix, `planRiskTierOverride` on the guarded writer, and
+`beep goals set-risk-tier <slug> <tier> --reason ... [--preview]`. The
+override exists only in the stream, so streamless packets refuse instead of
+no-oping (unlike `set-status`, whose manifest is a fallback record); no
+manifest/README/index surface is touched. Projector version stays 1: the
+derivation is additive and absent on old streams, so committed traces and the
+P1 fixtures are byte-identical — proved by the untouched golden fixtures plus
+a new `risk-override` replay fixture. Self-hosted per D9: this packet's own
+stream carries the first live override (event 3, tier `standard`).
+
 ## P4 — Yeet: PR to mergeable
 
 `bun run beep yeet repair → verify → publish --pr → monitor` until
@@ -82,5 +95,7 @@ merely to pass this packet.
 
 ## Current blockers
 
-None. P1 and P2 shipped 2026-08-17; P3 (risk-tier floor/override, full trace
-projection, fork-repair plan surface — one small PR per rung) is startable.
+None. P1, P2, and P3 rung 1 (risk-tier floor/override) shipped 2026-08-17;
+the remaining P3 rungs (full trace projection, fork-repair plan surface, and
+the queued idempotent-skip refinement for self-transitions) are startable —
+one small PR per rung.

@@ -119,9 +119,41 @@ const stageTokenOf = (phase: GoalPhase, index: number): PacketStage => {
   return id !== undefined && isPacketStage(id) ? id : `phase-${index + 1}`;
 };
 
-// The packet-core fold is stage-vocabulary-agnostic; the goals writer owns
-// mapping manifest phases onto a genesis stage/ordinal pair (D3).
-const goalStagePosition = (
+/**
+ * Map a goal manifest's phases onto a genesis stage/ordinal pair.
+ *
+ * **Details**
+ *
+ * The packet-core fold is stage-vocabulary-agnostic; the goals writers own
+ * mapping manifest phases onto a genesis stage/ordinal pair (D3). The chosen
+ * position is the last in-progress phase, else the last complete phase, else
+ * the first declared phase.
+ *
+ * **Example** (A manifest without phases has no position)
+ *
+ * ```ts
+ * import { GoalManifest, goalStagePosition } from "@beep/repo-cli/test/Goals"
+ * import * as O from "effect/Option"
+ *
+ * const manifest = GoalManifest.make({
+ *   initiative: { id: "demo", status: "active" },
+ *   completionGate: {
+ *     operator: "yeet",
+ *     requiresPullRequest: true,
+ *     requiresMergeable: true,
+ *     statement: "Ship via yeet.",
+ *     grandfathered: false,
+ *   },
+ * })
+ * console.log(O.isNone(goalStagePosition(manifest))) // true
+ * ```
+ *
+ * @param manifest - Decoded goal manifest.
+ * @returns The genesis stage/ordinal pair, or `None` without phases.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const goalStagePosition = (
   manifest: GoalManifest
 ): O.Option<{ readonly stage: PacketStage; readonly ordinal: number }> => {
   const phases = goalManifestPhases(manifest);
@@ -155,7 +187,33 @@ const goalStagePosition = (
 
 const shortTip = (id: string): string => pipe(id, Str.slice(0, 12));
 
-const previewEventLine = (event: PacketTransitionPlan["events"][number]): string => {
+/**
+ * Render one planned packet event as an operator preview line.
+ *
+ * **Example** (Render a drafted status-set event)
+ *
+ * ```ts
+ * import { PacketEvent, previewEventLine } from "@beep/repo-cli/test/Goals"
+ *
+ * const event = PacketEvent.make({
+ *   schemaVersion: "packet-event/v1",
+ *   packet: "demo",
+ *   root: "goals",
+ *   seq: 1,
+ *   expectedRevision: 0,
+ *   at: "2026-08-17T00:00:00.000Z",
+ *   actor: "operator",
+ *   body: { type: "packet-created", status: "active" },
+ * })
+ * console.log(previewEventLine(event)) // "would append 1 packet-created: genesis status=active"
+ * ```
+ *
+ * @param event - Drafted event from a guarded-writer plan.
+ * @returns One human-readable preview line.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const previewEventLine = (event: PacketTransitionPlan["events"][number]): string => {
   const body = event.body;
   if (body.type === "status-set") {
     return `would append ${event.seq} status-set: ${body.previous} -> ${body.status}`;
@@ -163,6 +221,10 @@ const previewEventLine = (event: PacketTransitionPlan["events"][number]): string
   if (body.type === "packet-created") {
     const stage = body.stage === undefined ? "" : ` stage=${body.stage}@${body.ordinal}`;
     return `would append ${event.seq} packet-created: genesis status=${body.status}${stage}`;
+  }
+  if (body.type === "risk-tier-overridden") {
+    const previous = body.previous === undefined ? "none" : body.previous;
+    return `would append ${event.seq} risk-tier-overridden: ${previous} -> ${body.tier} (${body.reason})`;
   }
   return `would append ${event.seq} stage-entered: ${body.stage}@${body.ordinal}`;
 };
@@ -200,7 +262,32 @@ const printTransitionPreview = Effect.fn("Goals.printTransitionPreview")(functio
   yield* Console.log("[goals:set-status] preview only — nothing written.");
 });
 
-const loadPacketSurfaces = Effect.fn("Goals.loadPacketSurfaces")(function* (slug: string, status: GoalStatus) {
+/**
+ * Load and decode one goal packet's manifest surfaces by slug.
+ *
+ * **Details**
+ *
+ * Shared front door for the guarded goals writers: resolves the packet
+ * record, requires a parseable manifest, and decodes it as
+ * {@link GoalManifest}, failing with the same typed errors every writer
+ * reports. README surfaces are not touched here — `set-status` layers its
+ * README lifecycle-line handling on top.
+ *
+ * **Example** (Reference the loader)
+ *
+ * ```ts
+ * import { loadGoalPacketManifest } from "@beep/repo-cli/test/Goals"
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(loadGoalPacketManifest("some-goal"))) // true
+ * ```
+ *
+ * @param slug - Goal packet directory name under `goals/`.
+ * @returns The packet record, raw manifest text/object, and decoded manifest.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const loadGoalPacketManifest = Effect.fn("Goals.loadGoalPacketManifest")(function* (slug: string) {
   const records = yield* listGoalPackets();
   const record = yield* pipe(
     A.findFirst(records, (candidate) => candidate.slug === slug),
@@ -214,7 +301,7 @@ const loadPacketSurfaces = Effect.fn("Goals.loadPacketSurfaces")(function* (slug
   if (manifestText === undefined) {
     return yield* GoalPacketNotFoundError.new(
       slug,
-      `"${record.manifestPath}" is missing; backfill it (see \`bun run beep goals set-status --migrate\`) before setting a status.`
+      `"${record.manifestPath}" is missing; backfill it (see \`bun run beep goals set-status --migrate\`) before running a goals writer.`
     );
   }
   const parsed = parseGoalManifestText(manifestText);
@@ -226,6 +313,12 @@ const loadPacketSurfaces = Effect.fn("Goals.loadPacketSurfaces")(function* (slug
       GoalManifestInvalidError.new(slug, `"${record.manifestPath}" does not decode as GoalManifest: ${issue.message}`)
     )
   );
+  const manifest: Readonly<Record<string, unknown>> = isJsonRecord(parsed.value) ? parsed.value : {};
+  return { record, manifestText, manifest, decoded };
+});
+
+const loadPacketSurfaces = Effect.fn("Goals.loadPacketSurfaces")(function* (slug: string, status: GoalStatus) {
+  const { decoded, manifest, manifestText, record } = yield* loadGoalPacketManifest(slug);
 
   const readmeText = record.readmeText;
   if (readmeText === undefined) {
@@ -242,7 +335,6 @@ const loadPacketSurfaces = Effect.fn("Goals.loadPacketSurfaces")(function* (slug
     );
   }
 
-  const manifest: Readonly<Record<string, unknown>> = isJsonRecord(parsed.value) ? parsed.value : {};
   return { record, manifestText, manifest, decoded, rewrittenReadme: rewrittenReadme.value };
 });
 

@@ -15,6 +15,7 @@ export * from "@beep/repo-cli/commands/Goals/Goals.schemas";
 export * from "@beep/repo-cli/commands/Goals/Inventory";
 export * from "@beep/repo-cli/commands/Goals/Migration";
 export * from "@beep/repo-cli/commands/Goals/PortfolioIndex";
+export * from "@beep/repo-cli/commands/Goals/SetRiskTier";
 export * from "@beep/repo-cli/commands/Goals/SetStatus";
 export * from "../commands/Goals/PacketCore/PacketCore.errors.ts";
 export * from "../commands/Goals/PacketCore/PacketCore.schemas.ts";
