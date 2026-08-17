@@ -189,7 +189,7 @@ const ExpectedGeneratedQualityScripts = {
   "beep:audit":
     "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
   "beep:build": "tsc -p tsconfig.json && bun run babel",
-  "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests",
+  "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests",
   "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
@@ -205,7 +205,7 @@ const ExpectedGeneratedQualityScripts = {
 } as const;
 const ExpectedGeneratedStoriesQualityScripts = {
   ...ExpectedGeneratedQualityScripts,
-  "beep:check": "tsgo -b tsconfig.json && bun run beep:check:tests && bun run beep:check:stories",
+  "beep:check": "tsgo -p tsconfig.check.json && bun run beep:check:tests && bun run beep:check:stories",
   "beep:check:stories": "tsc -p tsconfig.stories.json --noEmit",
 } as const;
 const ExpectedNextjsAppScripts = {
@@ -214,7 +214,7 @@ const ExpectedNextjsAppScripts = {
   dev: "portless marketing-web.beep next dev --turbopack",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "next build --turbopack",
-  "beep:check": "tsgo -b tsconfig.json",
+  "beep:check": "tsgo -p tsconfig.check.json",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",
@@ -233,7 +233,7 @@ const ExpectedTauriAppScripts = {
   "dev:tauri": "tauri dev",
   "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
   "beep:build": "vite build",
-  "beep:check": "tsgo -b tsconfig.json",
+  "beep:check": "tsgo -p tsconfig.check.json",
   "beep:lint": "biome check .",
   "beep:lint:fix": "biome check . --write",
   "beep:test": "bunx --bun vitest run",

@@ -61,9 +61,10 @@ const jobTimeoutLog = ghLog("Test Unit", "Complete job", [
 
 const cancelledSiblingLog = ghLog("Test Unit", "Run vitest", ["##[error]The operation was canceled."]);
 
-// Mirrors main Build job 95216658480 (2026-08-16): a torn cross-package read
-// under concurrent builds reports the source-mapped path as "not a module" and
-// cascades into downstream diagnostics; the cascade is part of the fingerprint.
+// Mirrors main Build job 95216658480 (2026-08-16): the torn cross-package read
+// that existed while tsc -b/tsgo -b subgraph builds could rewrite a sibling's
+// dist. The single-project emit law removed every cross-package writer, so
+// this signature must classify as needs-code-fix, not as a rerunnable flake.
 const ts2306TornReadLog = ghLog("Build", "Run bun run beep ci lane build", [
   "##[error]../../foundation/modeling/schema/src/Cuid.ts(10,27): error TS2306: File '/opt/actions-runner/_work/beep-effect/beep-effect/packages/foundation/modeling/utils/src/DateTime.ts' is not a module.",
   "##[error]../../foundation/modeling/schema/src/Cuid.ts(187,19): error TS377030: This has unknown in the requirements channel and unknown in the error channel which is not recommended.",
@@ -116,8 +117,10 @@ describe("yeet monitor flake fingerprints", () => {
     expect(detectYeetMonitorFlakeClass(cancelledSiblingLog)).toStrictEqual(O.none());
   });
 
-  it("recognizes the torn-read TS2306 signature despite its cascade", () => {
-    expect(detectYeetMonitorFlakeClass(ts2306TornReadLog)).toStrictEqual(O.some("ts2306-not-a-module"));
+  it("refuses the retired torn-read TS2306 signature", () => {
+    // Retired with the single-project emit law: no build can tear a sibling's
+    // dist anymore, so a TS2306 is a genuine defect and must not buy a rerun.
+    expect(detectYeetMonitorFlakeClass(ts2306TornReadLog)).toStrictEqual(O.none());
   });
 });
 
@@ -254,7 +257,6 @@ describe("yeet monitor job-shape fingerprints", () => {
     expect(YeetMonitorFlakeClass.Options).toStrictEqual([
       "ts2589-no-location",
       "ci-timeout",
-      "ts2306-not-a-module",
       "setup-5xx",
       "runner-loss",
       "install-failure",
