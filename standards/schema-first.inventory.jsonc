@@ -695,6 +695,14 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
+      "symbol": "KnowledgeLinkDestination",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Inline-link destination intermediate from the shared Markdown reader (destination text, 1-based column, end offset); assembled from RegExp matches in-process and consumed by the same line pass in the census and the roadmap lint, never decoded or persisted."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts",
       "symbol": "KnowledgeRefClassificationInput",
       "kind": "exported-type-literal",
       "status": "exception",
