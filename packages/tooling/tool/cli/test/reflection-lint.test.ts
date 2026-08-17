@@ -61,6 +61,19 @@ todos:
 
 const VALID_REFLECTION_CRLF = Str.replaceAll("\n", "\r\n")(VALID_REFLECTION);
 
+const writeActiveGoal = Effect.fn("writeActiveGoal")(function* (slug: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.makeDirectory(path.join("goals", slug, "ops"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join("goals", slug, "ops", "manifest.json"),
+    `${encodeJson({
+      schemaVersion: "initiative-manifest/v1",
+      initiative: { id: slug, title: slug, status: "active" },
+    })}\n`
+  );
+});
+
 const writeReflection = Effect.fn("writeReflection")(function* (slug: string, file: string, body: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -181,6 +194,42 @@ describe("reflection-artifacts lint command", { concurrent: false }, () => {
           expectReflectionLintSuccess({
             reflectionRequired: false,
             reflection: { body: VALID_REFLECTION, file: "2026-06-09-claude.md" },
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  // The PR #365 YAML traps hid in a completed-only gap: an invalid reflection
+  // in an ACTIVE packet passed this lint while goals doctor failed it. The
+  // frontmatter gate now covers every packet.
+  it(
+    "blocks an active goal whose reflection frontmatter does not decode",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeActiveGoal("in-flight");
+            yield* writeReflection("in-flight", "2026-08-17-claude.md", "# no frontmatter here\n");
+            const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
+            expectReportedFailure(exit);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  it(
+    "does not apply the closeout-presence gate to active goals",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeActiveGoal("in-flight");
+            yield* writeReflection("in-flight", "2026-08-17-claude.md", VALID_REFLECTION);
+            yield* writeActiveGoal("no-reflections-yet");
+            const exit = yield* Effect.exit(runLintCommand(["reflection-artifacts"]));
+            expect(Exit.isSuccess(exit)).toBe(true);
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

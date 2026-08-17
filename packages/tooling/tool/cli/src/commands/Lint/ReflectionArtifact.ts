@@ -1,10 +1,13 @@
 /**
  * Reflection-artifact inventory and enforcement command.
  *
- * Verifies that completed goal packets carry a schema-valid closeout reflection
- * under `goals/<slug>/history/reflections/<YYYY-MM-DD>-<agent>.md`. Packets that
- * opt in via `reflectionRequired: true` in their manifest record the intent
- * explicitly, but all completed packets are gated once they lack a valid
+ * Validates the YAML frontmatter of every reflection artifact under
+ * `goals/<slug>/history/reflections/<YYYY-MM-DD>-<agent>.md` in EVERY packet —
+ * active or completed — so this lint cannot report a false green that
+ * `goals doctor` then fails (the PR #365 YAML traps hid in a completed-only
+ * gap). Only the closeout-presence gate is a completed-packet contract:
+ * packets that opt out via `reflectionRequired: false` in their manifest get
+ * an advisory, and every other completed packet blocks when it lacks a
  * reflection artifact.
  *
  * @packageDocumentation
@@ -13,7 +16,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { decodeYamlTextAs, LiteralKit } from "@beep/schema";
-import { A } from "@beep/utils";
+import { A, thunkFalse } from "@beep/utils";
 import { Console, Effect, FileSystem, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -184,8 +187,8 @@ const frontmatterIsValid = (raw: string): Effect.Effect<boolean> =>
  *
  * **Details**
  *
- * Shared with `beep goals doctor`, which validates reflections in every
- * packet (not only completed ones).
+ * Shared with `beep goals doctor`; both this lint and the doctor validate
+ * reflections in every packet, completed or not.
  *
  * **Example** (Check empty frontmatter validity)
  *
@@ -254,7 +257,8 @@ const REMEDIATION =
   "Write a closeout reflection at goals/<slug>/history/reflections/<YYYY-MM-DD>-<agent>.md via the /reflect skill (copy goals/_template/history/reflections/_TEMPLATE.md); its YAML frontmatter must validate against ReflectionFrontmatter.";
 
 /**
- * Verifies completed goal packets carry a schema-valid closeout reflection.
+ * Validates reflection frontmatter in every packet and closeout presence in
+ * completed ones.
  *
  * **Example** (Log lint runner name)
  *
@@ -278,6 +282,38 @@ export const runReflectionArtifactLint = Effect.fn(function* () {
     if (slug === TEMPLATE_SLUG) {
       continue;
     }
+
+    // Frontmatter must decode in ANY packet, not only completed ones — the
+    // PR #365 YAML traps hid in the completed-only gap, and goals doctor
+    // already validates every packet (Doctor.ts carries the same rule).
+    // `goals/` entries can be plain files (README.md); probing below one
+    // fails with ENOTDIR rather than returning false, so both probes degrade
+    // to "no reflections" instead of failing the whole lint.
+    const reflectionsDir = path.join(GOALS_DIR, slug, ...REFLECTIONS_SUBDIR);
+    const reflectionsDirExists = yield* fs.exists(reflectionsDir).pipe(Effect.orElseSucceed(thunkFalse));
+    const reflectionFiles = reflectionsDirExists
+      ? (yield* fs.readDirectory(reflectionsDir).pipe(Effect.orElseSucceed(A.empty<string>))).filter(
+          reflectionFileNameIsArtifact
+        )
+      : [];
+
+    for (const file of reflectionFiles) {
+      const raw = yield* fs.readFileString(path.join(reflectionsDir, file)).pipe(Effect.orElseSucceed(() => Str.empty));
+      const valid = yield* frontmatterIsValid(raw);
+      if (!valid) {
+        const finding = makeFinding(
+          slug,
+          "error",
+          `Reflection artifact has missing or invalid ReflectionFrontmatter.`,
+          REMEDIATION,
+          `${reflectionsDir}/${file}`
+        );
+        blocking.push(finding);
+      }
+    }
+
+    // The closeout-presence gate and the reflectionRequired opt-out remain
+    // completed-packet contracts.
     const manifestPath = path.join(GOALS_DIR, slug, "ops", "manifest.json");
     const manifestRead = yield* fs
       .readFileString(manifestPath)
@@ -306,12 +342,6 @@ export const runReflectionArtifactLint = Effect.fn(function* () {
       continue;
     }
 
-    const reflectionsDir = path.join(GOALS_DIR, slug, ...REFLECTIONS_SUBDIR);
-    const reflectionsDirExists = yield* fs.exists(reflectionsDir);
-    const reflectionFiles = reflectionsDirExists
-      ? (yield* fs.readDirectory(reflectionsDir)).filter((file) => REFLECTION_FILE_PATTERN.test(file))
-      : [];
-
     if (reflectionFiles.length === 0) {
       const finding = makeFinding(
         slug,
@@ -320,22 +350,6 @@ export const runReflectionArtifactLint = Effect.fn(function* () {
         REMEDIATION
       );
       blocking.push(finding);
-      continue;
-    }
-
-    for (const file of reflectionFiles) {
-      const raw = yield* fs.readFileString(path.join(reflectionsDir, file));
-      const valid = yield* frontmatterIsValid(raw);
-      if (!valid) {
-        const finding = makeFinding(
-          slug,
-          "error",
-          `Reflection artifact has missing or invalid ReflectionFrontmatter.`,
-          REMEDIATION,
-          `${reflectionsDir}/${file}`
-        );
-        blocking.push(finding);
-      }
     }
   }
 
@@ -371,5 +385,7 @@ export const runReflectionArtifactLint = Effect.fn(function* () {
  * @since 0.0.0
  */
 export const lintReflectionArtifactsCommand = Command.make("reflection-artifacts", {}, runReflectionArtifactLint).pipe(
-  Command.withDescription("Verify completed goal packets carry a schema-valid closeout reflection")
+  Command.withDescription(
+    "Validate reflection frontmatter in every goal packet and closeout presence in completed ones"
+  )
 );

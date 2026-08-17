@@ -30,6 +30,7 @@ import { runToExit } from "../../internal/process/index.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
 import { changesetPackageReferencesFromText } from "../Quality/ChangesetGraph.ts";
+import { subtractPackageFromCoverageRegressionBaseline } from "../Quality/internal/CoverageRegression.ts";
 import { syncTsconfigAtRoot } from "../TsconfigSync/index.ts";
 import { DeletePackagePolicyEvaluation } from "./DeletePackage.policy.ts";
 import {
@@ -399,6 +400,12 @@ const runStep = Effect.fn("DeletePackage.runStep")(function* (
 // the --save-baseline write succeeded (P1 round-trip proof), so that one step
 // tolerates exit 1 iff its verified output was provably written. Exit >= 2 is
 // a real fallow fault and always fails.
+//
+// The coverage baseline is deliberately NOT in this table. Its writer re-runs
+// the repo-wide coverage suite (~12 minutes, and coupled to every test in the
+// repo passing) to compute what is, for a leaf deletion, a pure row removal —
+// so the delete path subtracts the target's rows schema-first instead
+// (receipt 9, lab-apps-lifecycle).
 const BASELINE_WRITER_STEPS: ReadonlyArray<BaselineWriterStep> = [
   BaselineWriterStep.make({ label: "fallow boundaries", args: ["run", "beep", "fallow", "boundaries", "--write"] }),
   BaselineWriterStep.make({
@@ -419,7 +426,6 @@ const BASELINE_WRITER_STEPS: ReadonlyArray<BaselineWriterStep> = [
   }),
   BaselineWriterStep.make({ label: "schema catalog", args: ["run", "beep", "lint", "schema-catalog", "--write"] }),
   BaselineWriterStep.make({ label: "Knip baseline", args: ["run", "beep", "quality", "knip", "--write-baseline"] }),
-  BaselineWriterStep.make({ label: "coverage replacement baseline", args: ["run", "coverage:baseline:write"] }),
 ];
 
 const baselineOutputWritten = (before: O.Option<BaselineOutputStamp>, after: O.Option<BaselineOutputStamp>): boolean =>
@@ -495,7 +501,17 @@ const statBaselineOutput = Effect.fn("DeletePackage.statBaselineOutput")(functio
  */
 export const DeletePackageBaselineWriters = { baselineStepOutcome, steps: BASELINE_WRITER_STEPS } as const;
 
-const runBaselineWriters = Effect.fn("DeletePackage.runBaselineWriters")(function* (repoRoot: string) {
+const runBaselineWriters = Effect.fn("DeletePackage.runBaselineWriters")(function* (
+  repoRoot: string,
+  packageName: string
+) {
+  // Coverage first, and not as a shell step: the target's rows are removed
+  // from the committed baseline in-process, which is what a repo-wide
+  // regeneration would produce for a leaf target without the coverage rerun.
+  yield* Console.log(`[delete-package] coverage baseline subtraction: ${packageName}`);
+  yield* subtractPackageFromCoverageRegressionBaseline(repoRoot, packageName).pipe(
+    Effect.mapError(DomainError.newCause("coverage baseline subtraction failed."))
+  );
   for (const step of BASELINE_WRITER_STEPS) {
     yield* Console.log(`[delete-package] ${step.label}: bun ${A.join(step.args, " ")}`);
     const before = yield* statBaselineOutput(repoRoot, step.verifiedOutput);
@@ -711,7 +727,7 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
       Effect.mapError(DomainError.newCause("tsconfig-sync failed after package deletion."))
     );
     if (!options.skipLockfile) yield* runStep(repoRoot, "lockfile refresh", "bun", ["install", "--lockfile-only"]);
-    if (!options.skipBaselines) yield* runBaselineWriters(repoRoot);
+    if (!options.skipBaselines) yield* runBaselineWriters(repoRoot, plan.target.packageName);
     yield* invalidateCiMirrors(repoRoot);
   });
   const geometry = yield* makeRegistrationGeometryService(repoRoot, executePlan);

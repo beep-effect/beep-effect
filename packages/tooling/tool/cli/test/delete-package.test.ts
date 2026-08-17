@@ -17,7 +17,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -182,6 +182,77 @@ describe("delete-package registration geometry", () => {
           expect(A.some(report.hits, (hit) => hit.kind === "import-prod" && hit.owner === "@beep/consumer")).toBe(true);
         })
       ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("classifies packet history and ledger references as historical, not live packet claims", () =>
+    Effect.runPromise(
+      withTempDirectory((repoRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.writeFileString(
+            path.join(repoRoot, "package.json"),
+            '{ "name": "fixture", "private": true, "workspaces": [] }\n'
+          );
+          yield* fs.writeFileString(path.join(repoRoot, "bun.lock"), "");
+          yield* fs.makeDirectory(path.join(repoRoot, "goals", "lab-x", "history"), { recursive: true });
+          yield* fs.makeDirectory(path.join(repoRoot, "goals", "lab-x", "research"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(repoRoot, "goals", "lab-x", "PLAN.md"),
+            "# Plan\n\nShip @beep/courtlistener next.\n"
+          );
+          yield* fs.writeFileString(
+            path.join(repoRoot, "goals", "lab-x", "history", "p4-evidence.md"),
+            "# Evidence\n\nDeleted @beep/courtlistener during the slice.\n"
+          );
+          yield* fs.writeFileString(
+            path.join(repoRoot, "goals", "lab-x", "research", "OPPORTUNITIES.md"),
+            "# Ledger\n\nReceipt: @beep/courtlistener delete cost too much.\n"
+          );
+
+          const report = yield* dependentsOfAtRoot(repoRoot, target);
+          const kindOf = (file: string) =>
+            pipe(
+              A.findFirst(report.hits, (hit) => Str.equivalence(hit.file, file)),
+              O.map((hit) => hit.kind)
+            );
+          expect(kindOf("goals/lab-x/PLAN.md")).toStrictEqual(O.some("packet"));
+          expect(kindOf("goals/lab-x/history/p4-evidence.md")).toStrictEqual(O.some("historical-doc"));
+          expect(kindOf("goals/lab-x/research/OPPORTUNITIES.md")).toStrictEqual(O.some("historical-doc"));
+        })
+      ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("ignores machine-local .beep artifacts in the authored-reference probe", () =>
+    Effect.runPromise(
+      provideNode(
+        withTempDirectory((repoRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* fs.makeDirectory(path.join(repoRoot, ".beep", "yeet", "runs", "20260817"), { recursive: true });
+            yield* fs.writeFileString(
+              path.join(repoRoot, ".beep", "yeet", "runs", "20260817", "pr-body.md"),
+              "Deletes @beep/courtlistener from the workspace.\n"
+            );
+
+            const clean = yield* inspectTargetAtRoot(repoRoot, target);
+            const authoredClean = O.getOrThrow(A.findFirst(clean, (item) => item.surfaceId === "authored-references"));
+            expect(authoredClean.status).toBe("clean");
+
+            yield* fs.makeDirectory(path.join(repoRoot, "infra"), { recursive: true });
+            yield* fs.writeFileString(
+              path.join(repoRoot, "infra", "deploy.yml"),
+              "packages:\n  - '@beep/courtlistener'\n"
+            );
+            const dirty = yield* inspectTargetAtRoot(repoRoot, target);
+            const authoredDirty = O.getOrThrow(A.findFirst(dirty, (item) => item.surfaceId === "authored-references"));
+            expect(authoredDirty.status).toBe("residue");
+            expect(authoredDirty.evidence).toContain("infra/deploy.yml");
+            expect(A.some(authoredDirty.evidence, Str.startsWith(".beep/"))).toBe(false);
+          })
+        )
+      )
     ));
 
   it("refuses deleting a live package whose README carries a promotion record", () =>
@@ -380,4 +451,32 @@ describe("delete-package hard-refuse table", () => {
       expect(cascade[1]).toContain("transitive:");
     }
   );
+});
+
+describe("delete-package packet-claim refusal", () => {
+  const claimReport = (kind: DependentHit["kind"], file: string): DependentsReport =>
+    DependentsReport.make({
+      target,
+      directWorkspaceDependents: [],
+      transitiveWorkspaceDependents: [],
+      hits: [DependentHit.make({ kind, owner: "goals", file: PosixPath.make(file), line: O.some(1), direct: false })],
+    });
+
+  it("soft-refuses a live packet claim when stale packets are not allowed", () => {
+    const refusals = DeletePackagePolicyEvaluation.refusalReasons(
+      target,
+      claimReport("packet", "goals/lab-x/PLAN.md"),
+      policy({ allowStalePackets: false })
+    );
+    expect(A.some(refusals, (refusal) => refusal.kind === "packet-claim" && refusal.severity === "soft")).toBe(true);
+  });
+
+  it("does not refuse on historical-doc hits from packet history or ledgers", () => {
+    const refusals = DeletePackagePolicyEvaluation.refusalReasons(
+      target,
+      claimReport("historical-doc", "goals/lab-x/history/p4-evidence.md"),
+      policy({ allowStalePackets: false })
+    );
+    expect(refusals).toStrictEqual([]);
+  });
 });

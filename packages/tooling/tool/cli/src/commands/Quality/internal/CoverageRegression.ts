@@ -1214,6 +1214,91 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
   }
 );
 
+/**
+ * Remove one workspace's rows from the committed coverage regression baseline
+ * without re-measuring coverage.
+ *
+ * **Details**
+ *
+ * Deleting a leaf workspace cannot change any other package's coverage — the
+ * delete path only admits targets with an empty dependents cascade — so the
+ * correct baseline update is exactly the removal of that workspace's
+ * `packages`, `exemptions`, and `follow_ups` rows, which is what an unscoped
+ * regeneration would produce for those rows without the repo-wide coverage
+ * run it costs. The edit is strictly delete-only: every surviving row and the
+ * document's provenance fields (`generated_at`, `git_sha`) are carried through
+ * byte-identically, matching how scoped merges inherit provenance.
+ *
+ * **Gotchas**
+ *
+ * A missing baseline and a baseline with no rows for the package are both
+ * successful no-ops — lab workspaces never enter the baseline at all, so the
+ * lab delete path lands here by construction. A schema-version-1 document is
+ * refused the same way scoped writes refuse it: v1 must be regenerated in
+ * full before any row-level edit is meaningful.
+ *
+ * @param repoRoot - Repository root.
+ * @param packageName - Workspace package name (`@beep/...`) whose rows are removed.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const subtractPackageFromCoverageRegressionBaseline = Effect.fn(
+  "CoverageRegression.subtractPackageFromCoverageRegressionBaseline"
+)(function* (
+  repoRoot: string,
+  packageName: string
+): Effect.fn.Return<void, CoverageRegressionError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const previous = yield* readPreviousBaseline(repoRoot);
+
+  if (O.isNone(previous)) {
+    yield* Console.log(`[coverage-ratchet] no committed baseline exists; nothing to subtract for ${packageName}`);
+    return;
+  }
+
+  const document = previous.value;
+  if (!isCurrentCoverageRegressionBaseline(document)) {
+    return yield* QualityTaskConfigurationError.new(
+      `Refusing to edit ${coverageRegressionBaselinePath}: schema version 1 requires a full ${coverageRegressionRegenerationCommand} run before package rows can be subtracted.`
+    );
+  }
+
+  const mentioned =
+    R.has(document.packages, packageName) ||
+    R.has(document.exemptions, packageName) ||
+    R.has(document.follow_ups, packageName);
+  if (!mentioned) {
+    yield* Console.log(
+      `[coverage-ratchet] ${coverageRegressionBaselinePath} carries no rows for ${packageName}; nothing to subtract`
+    );
+    return;
+  }
+
+  const next = CoverageRegressionBaseline.make({
+    schema_version: document.schema_version,
+    generated_at: document.generated_at,
+    git_sha: document.git_sha,
+    command: document.command,
+    epsilon: document.epsilon,
+    minimum: document.minimum,
+    exemptions: R.remove(document.exemptions, packageName),
+    follow_ups: R.remove(document.follow_ups, packageName),
+    packages: R.remove(document.packages, packageName),
+  });
+  const content = yield* formatBaseline(next);
+  yield* writeArtifact({
+    path: path.join(repoRoot, coverageRegressionBaselinePath),
+    body: content,
+    onError: (cause) =>
+      QualityTaskConfigurationError.new(
+        `Failed to write ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
+      ),
+  });
+  yield* Console.log(
+    `[coverage-ratchet] subtracted ${packageName} from ${coverageRegressionBaselinePath} (${R.size(next.packages)} package(s) remain)`
+  );
+});
+
 const actualByPackageName = (actuals: ReadonlyArray<CoverageSnapshotEntry>) =>
   R.fromEntries(A.map(actuals, (entry) => [entry.packageName, entry] as const));
 

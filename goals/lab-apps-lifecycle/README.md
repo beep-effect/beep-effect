@@ -9,12 +9,17 @@ All seven phases complete, closed out 2026-08-17. Final work shipped in
 earlier phases in #722 (P0), #723 (P1), #732 + #742 (P2), #752 (P3).
 
 Latest evidence: [`history/p4-first-vertical-slice.md`](./history/p4-first-vertical-slice.md)
-is the round-trip record, [`history/reflections/2026-08-17-claude.md`](./history/reflections/2026-08-17-claude.md)
+is the round-trip record (§4c carries the corrected failure attribution),
+[`history/reflections/2026-08-17-claude.md`](./history/reflections/2026-08-17-claude.md)
 the closeout reflection, and [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md)
-carries eleven friction receipts — of which **receipt 9 is a live defect in
-shipped tooling**: `beep delete-package`'s default path cannot complete on a
-tree with any failing test, because its baseline rebuild runs the repo-wide
-coverage suite, and it removes the package before discovering that.
+carries eleven friction receipts. Receipts 9, 10, and 11 were **fixed
+2026-08-17** in the receipt-9 fix PR: `beep delete-package` now subtracts the
+target's rows from the committed coverage baseline schema-first instead of
+re-running repo-wide coverage, packet `history/**`/`research/**` references
+classify as historical records rather than live claims, `.beep/` is excluded
+from residue scans, and `beep lint reflection-artifacts` validates frontmatter
+in every packet. The reported `@beep/wink` test failure never existed — see
+receipt 9's correction.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

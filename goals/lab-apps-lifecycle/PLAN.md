@@ -217,6 +217,16 @@ fails the delete. Deleting one leaf package is coupled to every other package's
 tests passing. The registration work had already completed correctly by then,
 so the command destroys and then reports failure.
 
+> **Correction (2026-08-17, receipt-9 fix PR):** the failure attribution in
+> the paragraph above is wrong. Run 2's coverage rebuild was green and wrote
+> the 127-package baseline; the `@beep/wink` message was a WARN from the
+> expected-failure path of a passing test, and the exit 1 came from the
+> post-apply doctor's `authored-references` residue on a machine-local
+> `.beep/yeet` artifact. The corrected record is
+> `history/p4-first-vertical-slice.md` §4c and ledger receipt 9's correction;
+> the cost and coupling *properties* stand and were fixed by replacing the
+> coverage rebuild with schema-first row subtraction.
+
 None of the drift is probe removal —
 a lab minted after `HEAD` never entered a committed baseline, so regenerating
 repo-wide to remove it is wasted work by construction, and what it actually
