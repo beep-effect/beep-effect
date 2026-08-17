@@ -11,6 +11,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
+import { thunkTrue } from "@beep/utils/thunk";
 import { Number as Num } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -297,7 +298,7 @@ class ExtractionResultModel extends S.Class<ExtractionResultModel>($I`Extraction
    */
   get isValid(): boolean {
     return O.match(this.validationReport, {
-      onNone: () => true,
+      onNone: thunkTrue,
       onSome: (report) => report.validation.conforms,
     });
   }

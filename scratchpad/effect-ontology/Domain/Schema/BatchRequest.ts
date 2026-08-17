@@ -51,25 +51,29 @@ export class BatchRequestDocument extends S.Class<BatchRequestDocument>($I`Batch
     contentType: MimeType.annotateKey({
       description: "Recognized MIME type of the stored source document.",
     }),
-    sizeBytes: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+    sizeBytes: NonNegativeInt.pipe(
+      S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Optional non-negative source size in bytes.",
       })
     ),
-    documentId: S.OptionFromOptionalKey(DocumentId).pipe(
+    documentId: DocumentId.pipe(
+      S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Optional caller-supplied document identifier; absence requests server derivation.",
       })
     ),
-    eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
+    eventTime: S.DateTimeUtcFromString.pipe(
+      S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Optional UTC instant of the real-world event described by the document.",
       })
     ),
-    publishedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
+    publishedAt: S.DateTimeUtcFromString.pipe(
+      S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
       S.annotateKey({
         description: "Optional UTC instant at which the original source was published.",

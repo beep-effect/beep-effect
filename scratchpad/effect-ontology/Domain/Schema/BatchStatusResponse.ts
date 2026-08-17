@@ -37,7 +37,8 @@ const BatchStatusResponseDefinition = S.TaggedUnion({
           description: "Optional human-readable reason the workflow was suspended.",
         })
       ),
-      lastKnownState: S.OptionFromOptionalKey(BatchState).pipe(
+      lastKnownState: BatchState.pipe(
+        S.OptionFromOptionalKey,
         SchemaUtils.withNoneDefault,
         S.annotateKey({
           description: "Optional last durable state observed before suspension.",

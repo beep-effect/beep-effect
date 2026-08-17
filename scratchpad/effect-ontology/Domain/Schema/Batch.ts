@@ -133,10 +133,10 @@ export class BatchManifest extends S.Class<BatchManifest>($I`BatchManifest`)(
 ) {
   static readonly decodeOptionString = S.decodeOption(S.fromJsonString(BatchManifest));
 
-  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(BatchManifest))
-  static readonly encodeEffectFromJsonStringFormatted = S.encodeEffect(S.fromJsonString(BatchManifest, { space: 2 }))
-  static readonly decodeUnknownEffect = S.decodeUnknownEffect(BatchManifest)
-  static readonly encodeEffectFromJsonString = S.encodeEffect(S.fromJsonString(BatchManifest))
+  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(BatchManifest));
+  static readonly encodeEffectFromJsonStringFormatted = S.encodeEffect(S.fromJsonString(BatchManifest, { space: 2 }));
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(BatchManifest);
+  static readonly encodeEffectFromJsonString = S.encodeEffect(S.fromJsonString(BatchManifest));
 }
 
 /**
@@ -177,7 +177,7 @@ export class ExtractionActivityInput extends S.Class<ExtractionActivityInput>($I
     description: "Document, ontology, namespace, acceleration, and provenance inputs for extraction.",
   })
 ) {
-  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(ExtractionActivityInput))
+  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(ExtractionActivityInput));
 }
 
 /**
@@ -206,7 +206,7 @@ export class ResolutionActivityInput extends S.Class<ResolutionActivityInput>($I
     description: "Batch identity and non-empty extracted graph locations for entity resolution.",
   })
 ) {
-  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(ResolutionActivityInput))
+  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(ResolutionActivityInput));
 }
 
 /**
@@ -240,7 +240,7 @@ export class ValidationActivityInput extends S.Class<ValidationActivityInput>($I
     description: "Resolved graph, ontology, optional shapes, and complete SHACL failure policy.",
   })
 ) {
-  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(ValidationActivityInput))
+  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(ValidationActivityInput));
 }
 
 /**
@@ -349,7 +349,7 @@ export class IngestionActivityInput extends S.Class<IngestionActivityInput>($I`I
     description: "Batch identity, validated graph location, and target namespace for ingestion.",
   })
 ) {
-  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(IngestionActivityInput))
+  static readonly decodeEffectFromJsonString = S.decodeEffect(S.fromJsonString(IngestionActivityInput));
 }
 
 /**
@@ -381,9 +381,9 @@ export class BatchWorkflowPayload extends S.Class<BatchWorkflowPayload>($I`Batch
     ontologyVersion: OntologyVersion,
     ontologyUri: GcsUri,
     targetNamespace: Namespace,
-    shaclUri: S.OptionFromOptionalKey(GcsUri).pipe(SchemaUtils.withNoneDefault),
+    shaclUri: GcsUri.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     documentIds: S.NonEmptyArray(DocumentId),
-    ontologyEmbeddingsUri: S.OptionFromOptionalKey(GcsUri).pipe(SchemaUtils.withNoneDefault),
+    ontologyEmbeddingsUri: GcsUri.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     preprocessing: PreprocessingOptions.pipe(SchemaUtils.withKeyDefaults(defaultPreprocessingOptions)),
   },
   $I.annote("BatchWorkflowPayload", {
@@ -391,7 +391,7 @@ export class BatchWorkflowPayload extends S.Class<BatchWorkflowPayload>($I`Batch
       "Complete ontology-scoped batch workflow payload with non-empty documents and normalized optional artifacts.",
   })
 ) {
-  static readonly decodeUnknownEffect = S.decodeUnknownEffect(BatchWorkflowPayload)
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(BatchWorkflowPayload);
 }
 
 /**

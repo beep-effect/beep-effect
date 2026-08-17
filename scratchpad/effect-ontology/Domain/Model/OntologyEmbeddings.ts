@@ -7,9 +7,11 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
-import { Effect, flow, Number as Num, pipe } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
+import { flow, pipe } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -25,9 +27,17 @@ const EmbeddingVector = S.NonEmptyArray(S.Finite)
       fc
         .tuple(
           fc.double({ min: -1, max: 1, noNaN: true, noDefaultInfinity: true }),
-          fc.array(fc.double({ min: -1, max: 1, noNaN: true, noDefaultInfinity: true }), {
-            maxLength: 31,
-          })
+          fc.array(
+            fc.double({
+              min: -1,
+              max: 1,
+              noNaN: true,
+              noDefaultInfinity: true,
+            }),
+            {
+              maxLength: 31,
+            }
+          )
         )
         .map(([head, tail]) => [head, ...tail]),
   })
@@ -156,7 +166,7 @@ class OntologyEmbeddingsFieldsModel extends S.Class<OntologyEmbeddingsFieldsMode
 
 const hasConsistentEmbeddingDimension = (artifact: OntologyEmbeddingsFieldsModel): boolean =>
   A.every(A.appendAll(artifact.classes, artifact.properties), (element) =>
-    Num.Equivalence(A.length(element.embedding), artifact.dimension)
+    N.Equivalence(A.length(element.embedding), artifact.dimension)
   );
 
 const makeOntologyEmbeddingsArbitrary = (fc: typeof FastCheck) => {
@@ -203,9 +213,11 @@ const OntologyEmbeddingsDefinition = OntologyEmbeddingsFieldsModel.check(
   })
 );
 
-const computeOntologyVersion = Effect.fn("OntologyEmbeddings.computeVersion")(function* (ontologyContent: string) {
-  return yield* S.decodeEffect(Sha256HexFromBytes)(utf8Encoder.encode(ontologyContent));
-});
+const computeOntologyVersion = flow(
+  utf8Encoder.encode,
+  Sha256HexFromBytes.decodeEffect,
+  Effect.withSpan("OntologyEmbeddings.computeVersion")
+);
 
 const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
   GcsUri.fromUnknown(

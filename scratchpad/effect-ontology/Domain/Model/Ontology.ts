@@ -6,13 +6,18 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { PrimaryKey, pipe, Result } from "effect";
+import { IRI } from "@beep/rdf/Iri";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Eq from "effect/Equal";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as PrimaryKey from "effect/PrimaryKey";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ContentHash, Namespace, OntologyName } from "../Identity.ts";
@@ -56,15 +61,21 @@ const semanticLabels = (
   );
 };
 
-const optionalNamesLine = (prefix: string, iris: ReadonlyArray<IRI>): O.Option<string> =>
-  pipe(
-    iris,
-    A.map(localName),
-    A.match({
-      onEmpty: O.none<string>,
-      onNonEmpty: (names) => O.some(`${prefix}: ${A.join(names, ", ")}`),
-    })
-  );
+const optionalNamesLine: {
+  (prefix: string, iris: ReadonlyArray<IRI>): O.Option<string>;
+  (iris: ReadonlyArray<IRI>): (prefix: string) => O.Option<string>;
+} = dual(
+  2,
+  (prefix: string, iris: ReadonlyArray<IRI>): O.Option<string> =>
+    pipe(
+      iris,
+      A.map(localName),
+      A.match({
+        onEmpty: O.none<string>,
+        onNonEmpty: (names) => O.some(`${prefix}: ${A.join(names, ", ")}`),
+      })
+    )
+);
 
 const relatedLine = (
   broader: ReadonlyArray<IRI>,
@@ -300,7 +311,13 @@ export class OntologyRef extends S.Class<OntologyRef>($I`OntologyRef`)(
   static readonly fromPath = (path: unknown) =>
     pipe(
       PathLayout.ontology.decode(path),
-      Result.map(([namespace, name, contentHash]) => OntologyRef.make({ namespace, name, contentHash }))
+      Result.map(([namespace, name, contentHash]) =>
+        OntologyRef.make({
+          namespace,
+          name,
+          contentHash,
+        })
+      )
     );
 }
 
@@ -602,10 +619,19 @@ export const PropertyDefinition = PropertyDefinitionModel.annotate({
  */
 export type PropertyDefinition = typeof PropertyDefinition.Type;
 
-const directParents = (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, child: string): ReadonlyArray<IRI> =>
-  pipe(R.get(hierarchy, child), O.getOrElse(emptyIris));
+const directParents: {
+  (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, child: string): ReadonlyArray<IRI>;
+  (child: string): (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>) => ReadonlyArray<IRI>;
+} = dual(
+  2,
+  (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, child: string): ReadonlyArray<IRI> =>
+    pipe(R.get(hierarchy, child), O.getOrElse(emptyIris))
+);
 
-const ancestorsFor = (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, source: string): ReadonlyArray<IRI> => {
+const ancestorsFor: {
+  (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, source: string): ReadonlyArray<IRI>;
+  (source: string): (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>) => ReadonlyArray<IRI>;
+} = dual(2, (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, source: string): ReadonlyArray<IRI> => {
   const visit = (frontier: ReadonlyArray<IRI>, visited: ReadonlyArray<IRI>): ReadonlyArray<IRI> =>
     pipe(
       frontier,
@@ -619,14 +645,20 @@ const ancestorsFor = (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, s
     );
 
   return visit(directParents(hierarchy, source), []);
-};
+});
 
-const childrenFor = (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, parent: IRI): ReadonlyArray<IRI> =>
-  pipe(
-    R.toEntries(hierarchy),
-    A.filter(([, parents]) => A.contains(parents, parent)),
-    A.map(([child]) => IRI.fromUnknown(child))
-  );
+const childrenFor: {
+  (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, parent: IRI): ReadonlyArray<IRI>;
+  (parent: IRI): (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>) => ReadonlyArray<IRI>;
+} = dual(
+  2,
+  (hierarchy: Readonly<Record<string, ReadonlyArray<IRI>>>, parent: IRI): ReadonlyArray<IRI> =>
+    pipe(
+      R.toEntries(hierarchy),
+      A.filter(([, parents]) => A.contains(parents, parent)),
+      A.map(([child]) => IRI.fromUnknown(child))
+    )
+);
 
 const IriRecordKey = S.String.check(
   S.makeFilter(IRI.is, {
@@ -736,7 +768,7 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
    * @returns The matching definition, or `Option.none`.
    */
   getClass(iri: IRI): O.Option<ClassDefinition> {
-    return A.findFirst(this.classes, (definition) => definition.id === iri);
+    return A.findFirst(this.classes, P.Struct({ id: Eq.equals(iri) }));
   }
 
   /**
@@ -990,8 +1022,11 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
       A.map((iri) => Str.toLowerCase(localName(iri))),
       A.dedupe
     );
-    return A.filter(this.properties, (property) =>
-      A.some(property.domain, (domain) => A.contains(validDomains, Str.toLowerCase(localName(domain))))
+    return A.filter(
+      this.properties,
+      P.Struct({
+        domain: (domain) => A.contains(validDomains, Str.toLowerCase(localName(domain))),
+      })
     );
   }
 
