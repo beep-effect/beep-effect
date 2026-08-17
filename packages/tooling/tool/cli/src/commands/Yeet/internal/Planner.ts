@@ -489,7 +489,11 @@ const monitorChecksStep = (context: RepoRunContext): RepoPlanStep =>
     label: "monitor:pr-checks:watch",
     phase: "monitor",
     command: "gh",
-    args: ["pr", "checks", "--watch"],
+    // `--fail-fast` makes the watch exit on the first failed check instead of
+    // holding a T0 red until the last pending lane ends — this repo's tails
+    // run 20-30 minutes, so without it the monitor's "exits on the first red"
+    // contract was prose, not behavior (ship-velocity A1, research/c2 §1).
+    args: ["pr", "checks", "--watch", "--fail-fast"],
     cwd: context.repoRoot,
     scope: "repo",
     mutability: "readonly",
