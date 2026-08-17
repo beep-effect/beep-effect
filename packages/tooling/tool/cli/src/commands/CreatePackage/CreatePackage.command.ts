@@ -1672,7 +1672,10 @@ const portlessViteDev = (portlessLabel: string, defaultPort: string): string =>
   portlessDev(portlessLabel, `sh -c 'vite --host 127.0.0.1 --port "\${PORT:-${defaultPort}}" --strictPort'`);
 
 // Script table shared by every real app manifest; kind-specific entries layer on top.
-const appBaseScripts = (dev: string, build: string) => ({
+// Labs carry no `coverage` script: ratified lab-apps-lifecycle row 7 requires both
+// the coverage-discovery/disposition exclusions AND omitting the script from lab
+// templates (research/04-governance-gates.md: "Never give labs a `coverage` script").
+const appBaseScripts = (dev: string, build: string, lab: boolean) => ({
   audit: "bun run --if-present beep:audit",
   codegen: "echo 'no codegen needed'",
   dev,
@@ -1684,7 +1687,7 @@ const appBaseScripts = (dev: string, build: string) => ({
   "beep:test": "bunx --bun vitest run",
   build: "bun run beep:build",
   check: "bun run beep:check",
-  coverage: "bunx vitest run --coverage",
+  ...(lab ? {} : { coverage: "bunx vitest run --coverage" }),
   lint: "bun run beep:lint",
   "lint:fix": "bun run beep:lint:fix",
   test: "bun run beep:test",
@@ -1738,7 +1741,7 @@ const VITE_APP_DEV_DEPENDENCIES = {
 const nextjsAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: {
-    ...appBaseScripts(portlessDev(portlessLabel, "next dev --turbopack"), "next build --turbopack"),
+    ...appBaseScripts(portlessDev(portlessLabel, "next dev --turbopack"), "next build --turbopack", lab),
     start: "next start",
   },
   dependencies: {
@@ -1753,7 +1756,7 @@ const nextjsAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestCont
 // package.json manifest for a Vite app workspace.
 const viteAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
-  scripts: appBaseScripts(portlessViteDev(portlessLabel, "5173"), "vite build"),
+  scripts: appBaseScripts(portlessViteDev(portlessLabel, "5173"), "vite build", lab),
   dependencies: {
     react: "catalog:",
     "react-dom": "catalog:",
@@ -1763,9 +1766,13 @@ const viteAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContex
 });
 
 // package.json manifest for a service app workspace.
-const serviceAppManifest = ({ baseManifest, portlessLabel }: AppManifestContext) => ({
+const serviceAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
-  scripts: appBaseScripts(portlessDev(portlessLabel, "sh -c 'bun --watch src/main.ts'"), "tsgo -p tsconfig.check.json"),
+  scripts: appBaseScripts(
+    portlessDev(portlessLabel, "sh -c 'bun --watch src/main.ts'"),
+    "tsgo -p tsconfig.check.json",
+    lab
+  ),
   dependencies: {
     "@beep/identity": "workspace:^",
     "@beep/schema": "workspace:^",
@@ -1781,10 +1788,10 @@ const serviceAppManifest = ({ baseManifest, portlessLabel }: AppManifestContext)
 });
 
 // package.json manifest for a Tauri app workspace.
-const tauriAppManifest = ({ baseManifest, portlessLabel }: AppManifestContext) => ({
+const tauriAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: {
-    ...appBaseScripts(portlessViteDev(portlessLabel, "1420"), "vite build"),
+    ...appBaseScripts(portlessViteDev(portlessLabel, "1420"), "vite build", lab),
     "dev:tauri": "tauri dev",
   },
   dependencies: {

@@ -320,6 +320,10 @@ const expectNoPackageCeremony = (manifest: {
   expect(manifest.files).toBeUndefined();
   expect(manifest.publishConfig).toBeUndefined();
   expect(manifest.scripts.docgen).toBeUndefined();
+  // Ratified row 7 omits the coverage script from lab templates outright, on top
+  // of the coverage discovery/disposition exclusions ("Never give labs a
+  // `coverage` script" — research/04-governance-gates.md).
+  expect(manifest.scripts.coverage).toBeUndefined();
 };
 
 describe("create-package --lab", { concurrent: false }, () => {
