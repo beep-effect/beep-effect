@@ -13,6 +13,7 @@ import { Command } from "effect/unstable/cli";
 import { printLines } from "../../internal/cli/Printer.ts";
 import { goalsDoctorCommand } from "./Doctor.ts";
 import { goalsIndexCommand } from "./PortfolioIndex.ts";
+import { goalsSetRiskTierCommand } from "./SetRiskTier.ts";
 import { goalsSetStatusCommand } from "./SetStatus.ts";
 
 /**
@@ -36,8 +37,9 @@ export const goalsCommand = Command.make("goals", {}, () =>
     "- bun run beep goals index [--write | --check]",
     "- bun run beep goals set-status <slug> <status>",
     "- bun run beep goals set-status --migrate [--write]",
+    '- bun run beep goals set-risk-tier <slug> <tier> --reason "..."',
   ])
 ).pipe(
-  Command.withDescription("Goal-packet lifecycle tooling (doctor, index, set-status)"),
-  Command.withSubcommands([goalsDoctorCommand, goalsIndexCommand, goalsSetStatusCommand])
+  Command.withDescription("Goal-packet lifecycle tooling (doctor, index, set-status, set-risk-tier)"),
+  Command.withSubcommands([goalsDoctorCommand, goalsIndexCommand, goalsSetStatusCommand, goalsSetRiskTierCommand])
 );

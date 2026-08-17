@@ -19,6 +19,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, pipe, Str, thunkFalse } from "@beep/utils";
 import { Context, Effect, FileSystem, Layer, Order, Path } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { PacketCasConflictError, PacketStreamError } from "./PacketCore.errors.ts";
 import { PacketChainIssue, PacketEvent, PacketRoot, PacketSlug, StoredPacketEvent } from "./PacketCore.schemas.ts";
@@ -29,7 +30,7 @@ import {
   renderPacketEventFile,
 } from "./PacketDigest.ts";
 import { foldPacketEvents, upcastPacketEventJson } from "./PacketFold.ts";
-import type { PacketEventId } from "./PacketCore.schemas.ts";
+import type { PacketDerivedState, PacketEventId } from "./PacketCore.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/PacketCore/PacketEventStore");
 
@@ -174,6 +175,62 @@ const readOutcome = (stored: StoredPacketEvent): ReadEventOutcome => ({
 });
 const issueOutcome = (item: PacketChainIssue): ReadEventOutcome => ({ stored: O.none(), issues: A.of(item) });
 
+/**
+ * Fold a listing and refuse ambiguity: integrity issues or a forked chain.
+ *
+ * **Details**
+ *
+ * The shared write-side guard: reads never fail on a broken stream (issues
+ * and forks ride inside the derived state), but every write path — appends
+ * and guarded-writer plans alike — refuses to extend a stream whose history
+ * is ambiguous. Succeeds with the deterministic derived state of an
+ * issue-free, unforked stream.
+ *
+ * **Example** (Guard an empty listing)
+ *
+ * ```ts
+ * import { foldUnambiguousStream, PacketStreamListing, PacketStreamLocator } from "@beep/repo-cli/test/Goals"
+ * import { Effect } from "effect"
+ *
+ * const locator = PacketStreamLocator.make({ packet: "demo", root: "goals", packetPath: "goals/demo" })
+ * const listing = PacketStreamListing.make({ events: [], issues: [] })
+ * console.log(Effect.isEffect(foldUnambiguousStream(locator, listing))) // true
+ * ```
+ *
+ * @param locator - Stream identity being written.
+ * @param listing - Stored events plus advisory issues from a fresh list.
+ * @returns The derived state, or a typed refusal on issues or forks.
+ * @category folding
+ * @since 0.0.0
+ */
+export const foldUnambiguousStream: {
+  (locator: PacketStreamLocator, listing: PacketStreamListing): Effect.Effect<PacketDerivedState, PacketStreamError>;
+  (
+    listing: PacketStreamListing
+  ): (locator: PacketStreamLocator) => Effect.Effect<PacketDerivedState, PacketStreamError>;
+} = dual(
+  2,
+  Effect.fnUntraced(function* (locator: PacketStreamLocator, listing: PacketStreamListing) {
+    if (A.isReadonlyArrayNonEmpty(listing.issues)) {
+      return yield* PacketStreamError.new(
+        locator.packet,
+        `stream has ${A.length(listing.issues)} integrity issue(s); run \`bun run beep explore --check\` and repair before writing (first: ${pipe(
+          A.head(listing.issues),
+          O.match({ onNone: () => "unknown", onSome: (item) => `${item.fileName} ${item.kind}` })
+        )}).`
+      );
+    }
+    const derived = foldPacketEvents({ packet: locator.packet, root: locator.root, events: listing.events });
+    if (A.isReadonlyArrayNonEmpty(derived.forks)) {
+      return yield* PacketStreamError.new(
+        locator.packet,
+        "stream is forked (two children of one parent); repair the fork before writing."
+      );
+    }
+    return derived;
+  })
+);
+
 const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -255,22 +312,7 @@ const makePacketEventStore = Effect.fn("PacketEventStore.make")(function* () {
       );
     }
     const listing = yield* list(locator);
-    if (A.isReadonlyArrayNonEmpty(listing.issues)) {
-      return yield* PacketStreamError.new(
-        locator.packet,
-        `stream has ${A.length(listing.issues)} integrity issue(s); repair them before writing (first: ${pipe(
-          A.head(listing.issues),
-          O.match({ onNone: () => "unknown", onSome: (item) => `${item.fileName} ${item.kind}` })
-        )}).`
-      );
-    }
-    const derived = foldPacketEvents({ packet: locator.packet, root: locator.root, events: listing.events });
-    if (A.isReadonlyArrayNonEmpty(derived.forks)) {
-      return yield* PacketStreamError.new(
-        locator.packet,
-        "stream is forked (two children of one parent); repair the fork before writing."
-      );
-    }
+    const derived = yield* foldUnambiguousStream(locator, listing);
     if (event.expectedRevision !== derived.revision) {
       return yield* PacketCasConflictError.make({
         packet: locator.packet,

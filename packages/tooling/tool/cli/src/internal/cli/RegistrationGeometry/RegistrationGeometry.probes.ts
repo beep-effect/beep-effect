@@ -38,7 +38,10 @@ const SCAN_ROOTS = [
   ".changeset",
   ".github",
 ];
-const EXCLUDED_DIRECTORIES = HashSet.fromIterable([".git", "node_modules", "dist", "coverage", ".turbo"]);
+// `.beep` holds machine-local operator state (yeet run artifacts, CI mirrors);
+// the runtime-artifact probe scans `.beep/ci` deliberately from inside that
+// root, so excluding the top-level entry here never reaches it.
+const EXCLUDED_DIRECTORIES = HashSet.fromIterable([".git", "node_modules", "dist", "coverage", ".turbo", ".beep"]);
 const SOURCE_SUFFIXES = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
 const TEXT_SUFFIXES = [
   ".ts",
@@ -375,8 +378,19 @@ const isBaselineReferenceFile = (file: string): boolean =>
   Str.startsWith(".changeset/")(file) ||
   A.some(BASELINE_REFERENCE_FILES, Str.equivalence(file));
 
+// Inside a packet, only the live planning surface (PLAN/SPEC/GOAL/README/ops)
+// carries claims a deletion must answer for. `history/**` is preserved
+// evidence and `research/**` is the packet's ledger and intel — both record
+// the past, so a deleted package named there is expected, not a stale claim.
+// Receipt 11 (lab-apps-lifecycle): recording a deletion proof in packet
+// history made the proof unrepeatable because these files classified as
+// live packet claims.
+const isPacketHistoricalRecord = (file: string): boolean =>
+  Str.startsWith("goals/")(file) && (Str.includes("/history/")(file) || Str.includes("/research/")(file));
+
 const AUTHORED_KIND_RULES: ReadonlyArray<readonly [matches: (file: string) => boolean, kind: DependentHitKind]> = [
   [isBaselineReferenceFile, "baseline"],
+  [isPacketHistoricalRecord, "historical-doc"],
   [Str.startsWith("goals/"), "packet"],
   [Str.startsWith("research/"), "historical-doc"],
   [Str.equivalence("package.json"), "script"],

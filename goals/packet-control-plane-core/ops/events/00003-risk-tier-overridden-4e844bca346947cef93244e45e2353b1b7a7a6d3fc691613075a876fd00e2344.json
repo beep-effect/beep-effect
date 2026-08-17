@@ -1,0 +1,15 @@
+{
+  "actor": "operator",
+  "at": "2026-08-17T19:57:46.844Z",
+  "body": {
+    "reason": "D9 self-hosting pilot: first live override through the new writer; standard fits the multi-PR guarded-writer scope",
+    "tier": "standard",
+    "type": "risk-tier-overridden"
+  },
+  "expectedRevision": 2,
+  "packet": "packet-control-plane-core",
+  "parent": "6a94f9dd8fff717256700085ffb3540dd54da38fcdf7297be82e94ea6ddaedf9",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 3
+}
