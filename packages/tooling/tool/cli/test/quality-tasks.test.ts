@@ -1,4 +1,9 @@
-import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci";
+import {
+  CiLaneRunOptions,
+  CiLocalStepPlan,
+  ciLaneStepsForTesting,
+  ciLocalStepsForTesting,
+} from "@beep/repo-cli/commands/Ci";
 import {
   collectAuditDiffInputForTesting,
   fallowAuditDiffFallbackArgsForTesting,
@@ -83,6 +88,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { ChildProcess } from "effect/unstable/process";
+import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { GithubCheckLaneWave, QualityTaskInvocation } from "@beep/repo-cli/test/Quality";
 
 const FileSystemLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
@@ -98,6 +104,13 @@ const isDomainError = S.is(DomainError);
 const isQualityTaskFailed = S.is(QualityTaskFailed);
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
 const isString = (value: unknown): value is string => typeof value === "string";
+const qualityLaneArgs = (lanes: ReadonlyArray<GithubCheckLaneSpec>, laneId: string): ReadonlyArray<string> =>
+  pipe(
+    lanes,
+    A.findFirst((lane) => lane.id === laneId),
+    O.map((lane) => lane.step.args),
+    O.getOrThrowWith(() => new Error(`missing quality lane ${laneId}`))
+  );
 const runGit = Effect.fn("QualityTasksTest.runGit")(function* (repoRoot: string, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], {
     cwd: repoRoot,
@@ -502,25 +515,70 @@ describe("quality task adapter", () => {
     expect(A.map(lanes, (lane) => lane.id)).toEqual([
       "quality:build",
       "quality:lint",
+      "quality:lint-policy",
       "quality:check",
+      "quality:check:tsgo-tests",
+      "quality:check:tsgo-smoke",
       "quality:knip",
       "quality:jsdoc-ratchet",
       "quality:docgen",
-      "quality:test",
+      "quality:test-unit",
+      "quality:test-integration",
     ]);
     expect(A.every(lanes, (lane) => lane.stage === "repo-quality")).toBe(true);
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
-    expect(lanes[1]?.step.args).toEqual(["run", "lint"]);
-    expect(lanes[2]?.step.args).toEqual(["run", "check"]);
-    expect(lanes[3]?.step.args).toEqual(["run", "beep", "quality", "knip"]);
-    expect(lanes[4]?.step.args).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
-    expect(lanes[6]?.step.args).toEqual(["run", "test"]);
+    expect(qualityLaneArgs(lanes, "quality:build")).toEqual(["run", "build"]);
+    expect(qualityLaneArgs(lanes, "quality:knip")).toEqual(["run", "beep", "quality", "knip"]);
+    expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
+    // Affected-scoped `beep ci lane check` drops the repo-wide tsgo extras root
+    // `bun run check` carried, so they keep running as their own local lanes.
+    expect(qualityLaneArgs(lanes, "quality:check:tsgo-tests")).toEqual(["run", "beep", "quality", "test-tsgo"]);
+    expect(qualityLaneArgs(lanes, "quality:check:tsgo-smoke")).toEqual(["run", "beep", "quality", "tsgo-smoke"]);
     expect(A.map(githubCheckLanePlan.githubCheckLaneWaves(lanes), (wave) => wave.wave)).toEqual([
       "preflight",
       "heavy",
       "test",
       "documentation",
     ]);
+  });
+
+  // ship-velocity B1: a local green must mean what a hosted green means, so the
+  // pre-push collector dispatches the hosted lane bodies verbatim instead of
+  // running cousin root commands that only approximate them.
+  it("dispatches every replayable required lane through the hosted beep ci lane argv", () => {
+    const lanes = githubCheckQualityLanesForTesting("/repo");
+    const prPlan = CiLocalStepPlan.make({ affected: true, base: "origin/main", onMainBranch: false });
+    const hostedArgs = (laneId: CiLaneId): ReadonlyArray<string> =>
+      O.getOrThrow(A.head(ciLocalStepsForTesting("/repo", [laneId], prPlan))).args;
+
+    expect(qualityLaneArgs(lanes, "quality:lint")).toEqual(hostedArgs("lint"));
+    expect(qualityLaneArgs(lanes, "quality:lint-policy")).toEqual(hostedArgs("lint-policy"));
+    expect(qualityLaneArgs(lanes, "quality:check")).toEqual(hostedArgs("check"));
+    expect(qualityLaneArgs(lanes, "quality:test-unit")).toEqual(hostedArgs("test-unit"));
+    expect(qualityLaneArgs(lanes, "quality:test-integration")).toEqual(hostedArgs("test-integration"));
+
+    expect(qualityLaneArgs(lanes, "quality:check")).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "check",
+      "--affected",
+      "--base",
+      "origin/main",
+      "--summarize",
+    ]);
+  });
+
+  it("keeps the ts2589 flake quarantine on the dispatched check lane", () => {
+    const lanes = githubCheckQualityLanesForTesting("/repo");
+    const quarantined = pipe(
+      lanes,
+      A.filter((lane) => O.isSome(O.fromNullishOr(lane.step.flakeQuarantine))),
+      A.map((lane) => lane.id)
+    );
+
+    expect(quarantined).toEqual(["quality:build", "quality:check"]);
   });
 
   it("maps repo-sanity github checks as collector lanes", () => {
