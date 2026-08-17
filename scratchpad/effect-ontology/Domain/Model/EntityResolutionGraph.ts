@@ -30,15 +30,6 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolutionGr
  */
 export { ResolutionMethod } from "./EntityResolution.ts";
 
-const SimilarityEdgeFields = {
-  similarity: UnitInterval.annotateKey({
-    description: "Normalized similarity score between the two candidate entities.",
-  }),
-  method: ResolutionMethod.annotateKey({
-    description: "Evidence strategy that produced the similarity edge.",
-  }),
-};
-
 /**
  * Weighted candidate edge used while clustering extracted entities.
  *
@@ -58,23 +49,18 @@ const SimilarityEdgeFields = {
  * @since 0.0.0
  */
 export class SimilarityEdge extends S.Class<SimilarityEdge>($I`SimilarityEdge`)(
-  SimilarityEdgeFields,
+  {
+    similarity: UnitInterval.annotateKey({
+      description: "Normalized similarity score between the two candidate entities.",
+    }),
+    method: ResolutionMethod.annotateKey({
+      description: "Evidence strategy that produced the similarity edge.",
+    }),
+  },
   $I.annote("SimilarityEdge", {
     description: "Normalized similarity edge used by entity clustering.",
   })
 ) {}
-
-const EntityResolutionInfoFields = {
-  entityId: EntityId.annotateKey({
-    description: "Identifier of the original extracted entity.",
-  }),
-  similarity: UnitInterval.annotateKey({
-    description: "Similarity between the original and canonical entity.",
-  }),
-  method: ResolutionMethod.annotateKey({
-    description: "Evidence strategy that selected the canonical entity.",
-  }),
-};
 
 /**
  * Explanation of how one extracted entity resolved to its canonical form.
@@ -97,23 +83,21 @@ const EntityResolutionInfoFields = {
  * @since 0.0.0
  */
 export class EntityResolutionInfo extends S.Class<EntityResolutionInfo>($I`EntityResolutionInfo`)(
-  EntityResolutionInfoFields,
+  {
+    entityId: EntityId.annotateKey({
+      description: "Identifier of the original extracted entity.",
+    }),
+    similarity: UnitInterval.annotateKey({
+      description: "Similarity between the original and canonical entity.",
+    }),
+    method: ResolutionMethod.annotateKey({
+      description: "Evidence strategy that selected the canonical entity.",
+    }),
+  },
   $I.annote("EntityResolutionInfo", {
     description: "Resolution evidence linking one extracted entity to its canonical entity.",
   })
 ) {}
-
-const EntityClusterFields = {
-  entities: S.NonEmptyArray(Entity).annotateKey({
-    description: "Non-empty set of extracted entities assigned to the cluster.",
-  }),
-  minSimilarity: UnitInterval.annotateKey({
-    description: "Minimum accepted pairwise similarity in the cluster.",
-  }),
-  methods: S.NonEmptyArray(ResolutionMethod).annotateKey({
-    description: "Resolution methods that contributed to the cluster.",
-  }),
-};
 
 /**
  * Non-empty cluster of extracted entities representing one canonical entity.
@@ -147,21 +131,21 @@ const EntityClusterFields = {
  * @since 0.0.0
  */
 export class EntityCluster extends S.Class<EntityCluster>($I`EntityCluster`)(
-  EntityClusterFields,
+  {
+    entities: S.NonEmptyArray(Entity).annotateKey({
+      description: "Non-empty set of extracted entities assigned to the cluster.",
+    }),
+    minSimilarity: UnitInterval.annotateKey({
+      description: "Minimum accepted pairwise similarity in the cluster.",
+    }),
+    methods: S.NonEmptyArray(ResolutionMethod).annotateKey({
+      description: "Resolution methods that contributed to the cluster.",
+    }),
+  },
   $I.annote("EntityCluster", {
     description: "Non-empty cluster of extracted entities assigned to one canonical identity.",
   })
 ) {}
-
-const ClusteringResultFields = {
-  clusters: S.Array(EntityCluster).pipe(
-    SchemaUtils.withEmptyArrayDefaults<EntityCluster>(),
-    S.annotateKey({ description: "Entity clusters produced by the resolver." })
-  ),
-  embeddingMap: S.HashMap(EntityId, S.NonEmptyArray(S.Finite)).annotateKey({
-    description: "Finite embedding vector indexed by extracted entity identifier.",
-  }),
-};
 
 /**
  * Clustering output together with the embeddings used to derive it.
@@ -179,26 +163,19 @@ const ClusteringResultFields = {
  * @since 0.0.0
  */
 export class ClusteringResult extends S.Class<ClusteringResult>($I`ClusteringResult`)(
-  ClusteringResultFields,
+  {
+    clusters: S.Array(EntityCluster).pipe(
+      SchemaUtils.withEmptyArrayDefaults<EntityCluster>(),
+      S.annotateKey({ description: "Entity clusters produced by the resolver." })
+    ),
+    embeddingMap: S.HashMap(EntityId, S.NonEmptyArray(S.Finite)).annotateKey({
+      description: "Finite embedding vector indexed by extracted entity identifier.",
+    }),
+  },
   $I.annote("ClusteringResult", {
     description: "Entity clusters and the finite vectors used by the clustering pass.",
   })
 ) {}
-
-const EntityResolutionStatsFields = {
-  mentionCount: NonNegativeInt.annotateKey({
-    description: "Number of immutable mention nodes.",
-  }),
-  resolvedCount: NonNegativeInt.annotateKey({
-    description: "Number of canonical resolved-entity nodes.",
-  }),
-  relationCount: NonNegativeInt.annotateKey({
-    description: "Number of canonical relation edges.",
-  }),
-  clusterCount: NonNegativeInt.annotateKey({
-    description: "Number of clusters produced by resolution.",
-  }),
-};
 
 /**
  * Cardinality summary for an entity-resolution graph.
@@ -222,7 +199,20 @@ const EntityResolutionStatsFields = {
  * @since 0.0.0
  */
 export class EntityResolutionStats extends S.Class<EntityResolutionStats>($I`EntityResolutionStats`)(
-  EntityResolutionStatsFields,
+  {
+    mentionCount: NonNegativeInt.annotateKey({
+      description: "Number of immutable mention nodes.",
+    }),
+    resolvedCount: NonNegativeInt.annotateKey({
+      description: "Number of canonical resolved-entity nodes.",
+    }),
+    relationCount: NonNegativeInt.annotateKey({
+      description: "Number of canonical relation edges.",
+    }),
+    clusterCount: NonNegativeInt.annotateKey({
+      description: "Number of clusters produced by resolution.",
+    }),
+  },
   $I.annote("EntityResolutionStats", {
     description: "Non-negative cardinality summary for an entity-resolution graph.",
   })
@@ -255,24 +245,6 @@ const ResolutionGraph = DirectedGraph({ node: ERNode, edge: EREdge }).pipe(
     },
   })
 );
-
-const EntityResolutionGraphFields = {
-  graph: ResolutionGraph.annotateKey({
-    description: "Immutable two-tier mention-to-canonical graph.",
-  }),
-  entityIndex: S.Record(EntityId, NodeIndex).annotateKey({
-    description: "Lookup from entity identifier to graph node index.",
-  }),
-  canonicalMap: S.Record(EntityId, EntityId).annotateKey({
-    description: "Lookup from extracted entity identifier to canonical identifier.",
-  }),
-  createdAt: S.DateTimeUtcFromString.annotateKey({
-    description: "UTC instant at which the graph snapshot was created.",
-  }),
-  stats: EntityResolutionStats.annotateKey({
-    description: "Cardinality summary for the graph snapshot.",
-  }),
-};
 
 /**
  * Immutable entity-resolution graph with lookup indexes and statistics.
@@ -313,7 +285,23 @@ const EntityResolutionGraphFields = {
  * @since 0.0.0
  */
 export class EntityResolutionGraph extends S.Class<EntityResolutionGraph>($I`EntityResolutionGraph`)(
-  EntityResolutionGraphFields,
+  {
+    graph: ResolutionGraph.annotateKey({
+      description: "Immutable two-tier mention-to-canonical graph.",
+    }),
+    entityIndex: S.Record(EntityId, NodeIndex).annotateKey({
+      description: "Lookup from entity identifier to graph node index.",
+    }),
+    canonicalMap: S.Record(EntityId, EntityId).annotateKey({
+      description: "Lookup from extracted entity identifier to canonical identifier.",
+    }),
+    createdAt: S.DateTimeUtcFromString.annotateKey({
+      description: "UTC instant at which the graph snapshot was created.",
+    }),
+    stats: EntityResolutionStats.annotateKey({
+      description: "Cardinality summary for the graph snapshot.",
+    }),
+  },
   $I.annote("EntityResolutionGraph", {
     description: "Indexed immutable graph snapshot produced by entity resolution.",
   })
