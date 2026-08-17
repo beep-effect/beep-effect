@@ -194,3 +194,36 @@ Numbers are STABLE IDS — never renumber to express priority.
    underlying defect class — a gate whose result depends on ambient
    configuration that nobody declared — and both cost an attribution
    investigation before any code could be written.
+
+9. **An unscoped `delete-package` takes longer than ten minutes and leaves
+   `standards/` contaminated if interrupted.** — `unowned` (measured cost of
+   receipt 2)
+
+   *Doing:* P4's First Vertical Slice, running the delete *without*
+   `--skip-baselines` deliberately, because the slice is supposed to prove the
+   real delete including baseline regeneration.
+
+   *Evidence:* the run exceeded a 600s ceiling and was killed mid
+   baseline-regeneration, after two turbo waves of 16 and 17 tasks at ~2m59s
+   each. The registration work had completed — `bun.lock` and the identity
+   segment were already back at committed state and the tree was gone — but six
+   `standards/` files were left rewritten by 23,007 insertions / 26,176
+   deletions, a net loss of ~3,169 lines dominated by
+   `jsdoc-documentation.inventory.jsonc`. None of it was probe removal: neither
+   `HEAD` nor the working copy mentions `round-trip-probe` under `standards/`,
+   because the probe was minted after `HEAD` and never entered a committed
+   baseline. Recovery was `git checkout -- standards/`.
+
+   *Would have prevented it:* receipt 2's fix — scope the delete's baseline
+   write to the deleted workspace instead of regenerating repo-wide. Two
+   additional properties this run makes concrete: the regeneration is not
+   atomic, so an interrupted delete leaves partially-written baselines that look
+   like authored edits; and for a lab it is entirely wasted work, since a
+   package that never appeared in a committed baseline cannot be removed from
+   one.
+
+   *Second-order:* `--skip-baselines` is the flag every previous probe cycle in
+   this packet reached for, which is why the cost stayed invisible until a phase
+   deliberately declined it. A default that everyone overrides is not a default;
+   it is a trap with a well-known workaround, and the workaround is exactly what
+   stops the trap from ever being fixed.
