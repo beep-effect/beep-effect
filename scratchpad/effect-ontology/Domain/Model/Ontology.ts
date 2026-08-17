@@ -1022,11 +1022,8 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
       A.map((iri) => Str.toLowerCase(localName(iri))),
       A.dedupe
     );
-    return A.filter(
-      this.properties,
-      P.Struct({
-        domain: (domain) => A.contains(validDomains, Str.toLowerCase(localName(domain))),
-      })
+    return A.filter(this.properties, (property) =>
+      A.some(property.domain, (domain) => A.contains(validDomains, Str.toLowerCase(localName(domain))))
     );
   }
 

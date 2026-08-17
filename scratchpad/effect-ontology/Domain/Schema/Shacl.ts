@@ -11,8 +11,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
-import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { ShaclValidationResult } from "@beep/semantic-web/services/shacl-validation";
+import { ShaclValidationResult, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import { Duration, flow, Result } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -228,14 +227,8 @@ export const ValidationPolicy = ValidationPolicyFields.annotate({
       Bool.and(
         Bool.not(policy.logOnly),
         Bool.or(
-          Bool.and(
-            policy.failOnViolation,
-            A.some(results, (result) => result.severity === "violation")
-          ),
-          Bool.and(
-            policy.failOnWarning,
-            A.some(results, (result) => result.severity === "warning")
-          )
+          Bool.and(policy.failOnViolation, A.some(results, ShaclValidationViolation.guards.violation)),
+          Bool.and(policy.failOnWarning, A.some(results, ShaclValidationViolation.guards.warning))
         )
       )
     ),

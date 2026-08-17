@@ -17,6 +17,7 @@ import {
   ShaclPropertyShape,
   ShaclSeverity,
   ShaclValidationRequest,
+  ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
 import {
   SparqlQueryRequest,
@@ -79,6 +80,17 @@ describe("Services and Surface", () => {
     expect(fc.sample(S.toArbitrary(ShaclSeverity)(fc), { numRuns: 20, seed: 0x5eed }).every(S.is(ShaclSeverity))).toBe(
       true
     );
+  });
+
+  it("models validation findings as a severity tagged union", () => {
+    const finding = ShaclValidationViolation.cases.warning.make({
+      focusNode: "https://example.com/people/alice",
+      message: "A name is recommended.",
+      path: makeNamedNode("https://schema.org/name"),
+    });
+
+    expect(ShaclValidationViolation.guards.warning(finding)).toBe(true);
+    expect(ShaclValidationViolation.guards.violation(finding)).toBe(false);
   });
 
   it("keeps the package root surface curated to the service contracts", () => {
