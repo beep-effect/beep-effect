@@ -1814,16 +1814,16 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       // 5. Embed all properties (parallelized for ~5x speedup)
       const propertyEmbeddings = yield* Effect.forEach(
         Chunk.toReadonlyArray(properties),
-        (prop) =>
-          Effect.gen(function* () {
-            const text = ElementEmbedding.buildText(prop.label, prop.comment, []);
-            const emb = yield* embedding.embed(text, "search_document");
-            return yield* ElementEmbedding.decodeUnknownEffect({
-              iri: prop.id,
-              text,
-              embedding: A.fromIterable(emb),
-            });
-          }),
+
+        Effect.fnUntraced(function* (prop) {
+          const text = ElementEmbedding.buildText(prop.label, prop.comment, []);
+          const emb = yield* embedding.embed(text, "search_document");
+          return yield* ElementEmbedding.decodeUnknownEffect({
+            iri: prop.id,
+            text,
+            embedding: A.fromIterable(emb),
+          });
+        }),
         { concurrency: 5 }
       );
 
