@@ -403,6 +403,7 @@
     "infra:prepare-gha-runners": "bun run --cwd infra/node_modules/@pulumi/gharunners postinstall",
     "jsdoc:inventory": "bun run beep quality jsdoc-inventory",
     "knip": "knip-bun",
+    "knowledge:refs-rewrite": "bun scripts/knowledge-refs-rewrite.ts",
     "lint": "beep-cli lint",
     "lint:deprecated-apis": "beep-cli lint deprecated-apis",
     "lint:fix": "beep-cli lint --fix",
