@@ -21,6 +21,7 @@ import { isOptionLike } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
 import { Effect, flow, Number as N, Order, pipe } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -529,14 +530,112 @@ export const resolveGitMergeBase = Effect.fn("GitExec.resolveGitMergeBase")(func
   return yield* runGitStructured(["merge-base", "--", leftRef, rightRef], adapter, structuredCapture(cwd));
 });
 
-/** Write one verified commit as a tar archive. @category execution @since 0.0.0 */
+/**
+ * Config flags pinning archive bytes to the repository's canonical form.
+ *
+ * **Details**
+ *
+ * `git archive` consults ambient host state that silently changes the bytes it emits for
+ * byte-identical objects. End-of-line config (`core.autocrlf`, `core.eol`) rewrites text blobs
+ * declared `* text=auto`; the global attributes file (`core.attributesFile`, defaulting to
+ * `$XDG_CONFIG_HOME/git/attributes` even when no config names it) can attach `eol=crlf` to paths,
+ * and an attribute-level `eol` overrides both config keys; `tar.umask` rewrites tar header mode
+ * bits. Every consumer that compares archive bytes exactly then reports drift no source edit can
+ * clear. Pinning all four keys per invocation keeps one archive canonical without disturbing the
+ * ambient config other Git children legitimately read: `-c` outranks every config file, and a set
+ * `core.attributesFile` replaces the entire global attributes layer, XDG default path included.
+ * `tar.umask=0002` restates Git's own default (entry modes 664/775), so the pin is byte-neutral on
+ * clean hosts. The system attributes file has no `-c` escape hatch; {@link gitArchiveEnv} closes it.
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+const CANONICAL_ARCHIVE_CONFIG: ReadonlyArray<string> = [
+  "-c",
+  "core.autocrlf=false",
+  "-c",
+  "core.eol=lf",
+  "-c",
+  "core.attributesFile=/dev/null",
+  "-c",
+  "tar.umask=0002",
+];
+
+/**
+ * Environment overrides completing the archive byte-canonicality contract.
+ *
+ * **Details**
+ *
+ * The system-level attributes file (`$(prefix)/etc/gitattributes`) is the one attribute layer
+ * without a `-c` override, so it is disabled through the environment. The archive spawn extends the
+ * ambient environment with these pairs rather than replacing it, so `PATH` resolution and
+ * credential helpers keep working. Clone-local `.git/info/attributes` outranks every layer and no
+ * invocation can disable it; it is absent from fresh clones and outside this contract.
+ *
+ * **Example** (The env pairs with the argument vector)
+ *
+ * ```ts
+ * import { gitArchiveEnv } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(gitArchiveEnv.GIT_ATTR_NOSYSTEM) // "1"
+ * ```
+ *
+ * @category execution
+ * @since 0.0.0
+ */
+export const gitArchiveEnv: { readonly GIT_ATTR_NOSYSTEM: "1" } = { GIT_ATTR_NOSYSTEM: "1" };
+
+/**
+ * Argument vector writing one commit's canonical tar archive.
+ *
+ * **Details**
+ *
+ * The canonicality overrides lead the vector because Git only honours `-c` before the subcommand.
+ * Keeping the vector a pure value lets the byte-canonicality contract be asserted without spawning
+ * a process. The vector pairs with {@link gitArchiveEnv}, which covers the one layer `-c` cannot
+ * reach.
+ *
+ * **Example** (The overrides lead the subcommand)
+ *
+ * ```ts
+ * import { gitArchiveArgs } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(gitArchiveArgs("/tmp/base.tar", "HEAD")[0]) // "-c"
+ * ```
+ *
+ * @param archivePath - Absolute path the tar is written to.
+ * @param commit - Commit-ish whose tree is archived.
+ * @returns The full `git` argument vector, end-of-line overrides first.
+ * @category execution
+ * @since 0.0.0
+ */
+export const gitArchiveArgs: {
+  (archivePath: string, commit: string): ReadonlyArray<string>;
+  (commit: string): (archivePath: string) => ReadonlyArray<string>;
+} = dual(
+  2,
+  (archivePath: string, commit: string): ReadonlyArray<string> => [
+    ...CANONICAL_ARCHIVE_CONFIG,
+    "archive",
+    "--format=tar",
+    `--output=${archivePath}`,
+    commit,
+  ]
+);
+
+/** Write one verified commit as a tar archive under the canonical byte contract. @category execution @since 0.0.0 */
 export const writeGitArchive = Effect.fn("GitExec.writeGitArchive")(function* <E>(
   cwd: string,
   commit: string,
   archivePath: string,
   adapter: GitCommandErrorAdapter<E>
 ): Effect.fn.Return<void, E, ChildProcessSpawner.ChildProcessSpawner> {
-  yield* runGitRawOutput(cwd, ["archive", "--format=tar", `--output=${archivePath}`, commit], adapter);
+  yield* runGitStructured(gitArchiveArgs(archivePath, commit), adapter, {
+    cwd,
+    stdin: "ignore",
+    env: gitArchiveEnv,
+    extendEnv: true,
+  });
 });
 
 /** Read and strictly parse one recursive full Git tree. @category execution @since 0.0.0 */

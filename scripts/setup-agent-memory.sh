@@ -66,6 +66,35 @@ else
   log "codegraph index already present at ${REPO_ROOT}/.codegraph"
 fi
 
+# --- Effect reference checkout (machine-local, shared across clones/worktrees) ---
+# .repos/effect is gitignored; agents read real Effect v4 source through this link.
+EFFECT_REF="${BEEP_EFFECT_CHECKOUT:-${HOME}/YeeBois/dev/effect}"
+# Canonicalize the path: a relative override would be resolved against $PWD by
+# git clone but against .repos/ by the symlink, silently naming two different
+# locations.
+EFFECT_REF="$(realpath -m -- "${EFFECT_REF}")" || die "cannot resolve BEEP_EFFECT_CHECKOUT '${BEEP_EFFECT_CHECKOUT:-}' to an absolute path"
+EFFECT_LINK="${REPO_ROOT}/.repos/effect"
+# -e not -d: a linked git worktree's .git entry is a file, and that is a valid checkout.
+if [[ ! -e "${EFFECT_REF}/.git" ]]; then
+  log "cloning Effect reference into ${EFFECT_REF}"
+  mkdir -p "$(dirname "${EFFECT_REF}")"
+  git clone --quiet https://github.com/Effect-TS/effect.git "${EFFECT_REF}"
+fi
+mkdir -p "${REPO_ROOT}/.repos"
+if [[ -L "${EFFECT_LINK}" ]]; then
+  if [[ "$(readlink "${EFFECT_LINK}")" != "${EFFECT_REF}" ]]; then
+    log "relinking .repos/effect -> ${EFFECT_REF}"
+    ln -sfn "${EFFECT_REF}" "${EFFECT_LINK}"
+  else
+    log ".repos/effect already linked to ${EFFECT_REF}"
+  fi
+elif [[ -e "${EFFECT_LINK}" ]]; then
+  warn ".repos/effect exists and is not a symlink; remove it and re-run to link the shared checkout"
+else
+  log "linking .repos/effect -> ${EFFECT_REF}"
+  ln -s "${EFFECT_REF}" "${EFFECT_LINK}"
+fi
+
 # --- health probes (non-fatal) ---
 if uvx "${BASIC_MEMORY_PKG}" doctor >/dev/null 2>&1; then
   log "basic-memory doctor: clean"

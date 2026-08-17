@@ -68,9 +68,16 @@ import {
   runSqlIntegrationTestLaneForTesting,
   sqlIntegrationConnectionUriFromEnvForTesting,
   sqlIntegrationStepForTesting,
+  turboStepLocalEnvForTesting,
+  withoutUnusableRemoteCacheForTesting,
   workspaceTaskFiltersForTesting,
   writeCoverageRegressionBaseline,
 } from "@beep/repo-cli/test/Quality";
+import {
+  readTurboCacheEnvironmentSync,
+  resolveTurboCachePlan,
+  turboCachePlanArgs,
+} from "@beep/repo-cli/test/SharedInternals";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { NonNegativeInt } from "@beep/schema/Number";
@@ -245,16 +252,6 @@ const withEnvVarEffect = <Out, E, R>(
       })
   );
 
-const isTurboCacheControlArg = (arg: string): boolean =>
-  arg === "--no-cache" ||
-  arg === "--force" ||
-  Str.startsWith("--force=")(arg) ||
-  arg === "--remote-only" ||
-  Str.startsWith("--remote-only=")(arg) ||
-  arg === "--remote-cache-read-only" ||
-  Str.startsWith("--remote-cache-read-only=")(arg) ||
-  Str.startsWith("--cache=")(arg);
-
 const isTurboConcurrencyArg = (arg: string): boolean =>
   arg === "--concurrency" || Str.startsWith("--concurrency=")(arg);
 
@@ -287,11 +284,18 @@ const withExpectedLabsExclude = (task: string, args: ReadonlyArray<string>): Rea
     })
   );
 };
+
+// The cache posture itself is proven in `turbo-cache.test.ts`; these step
+// assertions prove that whatever the resolver decides is what reaches turbo.
+// Deriving it keeps them green on a checkout configured for remote reads
+// instead of pinning the local-only fallback into every expectation.
+const expectedTurboCacheArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  turboCachePlanArgs(resolveTurboCachePlan(readTurboCacheEnvironmentSync(), { args, ci: Bun.env.CI === "true" }));
 const expectedTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> => [
   "turbo",
   "run",
   task,
-  ...(Bun.env.CI === "true" || A.some(args, isTurboCacheControlArg) ? [] : ["--cache=local:rw"]),
+  ...expectedTurboCacheArgs(args),
   ...withExpectedLabsExclude(task, args),
 ];
 const expectedRootTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> =>
@@ -1024,15 +1028,7 @@ describe("quality task adapter", () => {
       command: "bunx",
       cwd: "/repo",
     });
-    expect(steps[0]?.args).toEqual([
-      "turbo",
-      "run",
-      "check",
-      ...(Bun.env.CI === "true" ? ["--concurrency=4"] : ["--cache=local:rw", "--concurrency=3"]),
-      "--affected",
-      "--summarize",
-      LABS_EXCLUDE_FILTER,
-    ]);
+    expect(steps[0]?.args).toEqual(expectedRootTurboArgs("check", ["--affected", "--summarize"]));
     expect(A.slice(steps, { start: 1 })).toEqual([
       expect.objectContaining({
         label: "check:tsgo:rules",
@@ -3235,5 +3231,66 @@ describe("labs turbo exclusion", () => {
       rootQualityStepsForTesting("/repo", getInvocation(["audit", "--filter=@beep/schema"]))
     );
     expect(argsOf(audit[0])).not.toContain(LABS_EXCLUDE_FILTER);
+  });
+});
+
+describe("unwrapped turbo steps drop an unusable remote cache posture", () => {
+  const remoteStep = (overrides: Partial<{ env: Record<string, string | undefined> }>) =>
+    QualityTaskStep.make({
+      label: "check",
+      command: "bunx",
+      args: ["turbo", "run", "check", "--cache=local:rw,remote:r", "--concurrency=3"],
+      cwd: "/repo",
+      ...overrides,
+    });
+
+  it("opts a credential-free step into op run only when a session is needed", () => {
+    expect(turboStepLocalEnvForTesting(undefined, true)).toEqual(O.some(true));
+    expect(turboStepLocalEnvForTesting(undefined, false)).toEqual(O.none());
+    expect(turboStepLocalEnvForTesting({ CI: "true" }, true)).toEqual(O.none());
+  });
+
+  it("rewrites the posture when the credentials still need an op run session", () => {
+    expect(withoutUnusableRemoteCacheForTesting(remoteStep({}), true).args).toEqual([
+      "turbo",
+      "run",
+      "check",
+      "--cache=local:rw",
+      "--concurrency=3",
+    ]);
+  });
+
+  it("leaves the step untouched when the credentials are already resolved", () => {
+    const step = remoteStep({});
+
+    expect(withoutUnusableRemoteCacheForTesting(step, false)).toBe(step);
+  });
+
+  it("leaves a step carrying no remote posture untouched", () => {
+    const step = QualityTaskStep.make({
+      label: "check",
+      command: "bunx",
+      args: ["turbo", "run", "check", "--cache=local:rw"],
+      cwd: "/repo",
+    });
+
+    expect(withoutUnusableRemoteCacheForTesting(step, true)).toBe(step);
+  });
+
+  it("carries the step environment and quarantine policy through a rewrite", () => {
+    const step = QualityTaskStep.make({
+      label: "coverage:ratchet",
+      command: "bunx",
+      args: ["turbo", "run", "coverage", "--cache=local:rw,remote:r"],
+      cwd: "/repo",
+      env: { CI: "true", BEEP_TEST_DATABASE_URL: "postgres://localhost/beep" },
+      flakeQuarantine: "ts2589-no-location",
+    });
+    const rewritten = withoutUnusableRemoteCacheForTesting(step, true);
+
+    expect(rewritten.args).toEqual(["turbo", "run", "coverage", "--cache=local:rw"]);
+    expect(rewritten.env).toEqual(step.env);
+    expect(rewritten.flakeQuarantine).toBe("ts2589-no-location");
+    expect(rewritten.label).toBe(step.label);
   });
 });

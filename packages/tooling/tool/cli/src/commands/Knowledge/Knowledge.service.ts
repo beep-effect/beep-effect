@@ -19,6 +19,7 @@ import * as S from "effect/Schema";
 import { extract as extractTar } from "tar";
 import { OutputBound, runCapturedStreams } from "../../internal/process/StepExec.ts";
 import {
+  gitArchiveEnv,
   readGitRenames,
   readGitTree,
   resolveGitCommit,
@@ -980,6 +981,7 @@ const makeHermeticEnv = Effect.fn("Knowledge.makeHermeticEnv")(function* (scratc
   }
   return {
     ...directories,
+    ...gitArchiveEnv,
     GIT_CONFIG_GLOBAL: "/dev/null",
     GIT_CONFIG_NOSYSTEM: "1",
   };

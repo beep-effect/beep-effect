@@ -11,10 +11,10 @@ The goal is to make failure, absence, decoding, and dependency wiring explicit a
 
 ## Primary References
 
-- [Effect LLMS guide](.repos/effect-v4/LLMS.md)
-- [Effect ai-docs index](.repos/effect-v4/ai-docs/src/index.md)
-- [Effect migration notes](.repos/effect-v4/MIGRATION.md)
-- [Effect Schema docs](.repos/effect-v4/packages/effect/SCHEMA.md)
+- [Effect LLMS guide](../.repos/effect/LLMS.md)
+- [Effect ai-docs index](../.repos/effect/ai-docs/src/index.md)
+- [Effect migration notes](../.repos/effect/MIGRATION.md)
+- [Effect Schema docs](../.repos/effect/packages/effect/SCHEMA.md)
 
 ## Operating Model
 
@@ -304,7 +304,7 @@ export type Tenant = typeof Tenant.Type
 - Prefer `S.Class` for tagged union member schemas, and use the schema-derived
   `.match` helper when branching directly on the union.
 - Use `S.TaggedUnion` only for canonical `_tag` object-union construction.
-- Reference: [Effect schema docs](.repos/effect-v4/packages/effect/SCHEMA.md:1891) and [toTaggedUnion notes](.repos/effect-v4/packages/effect/SCHEMA.md:1934).
+- Reference: [Effect schema docs](../.repos/effect/packages/effect/SCHEMA.md:1891) and [toTaggedUnion notes](../.repos/effect/packages/effect/SCHEMA.md:1934).
 
 Example:
 
@@ -365,7 +365,7 @@ export const InternalJobEvent = S.TaggedUnion({
 
 - Prefer `Effect.fn("Name")(...)` for reusable/public effectful functions.
 - Use `Effect.fnUntraced(...)` for internal hot paths where tracing overhead is unnecessary.
-- Reference: [Effect.fn docs](.repos/effect-v4/packages/effect/src/Effect.ts:12850) and [Effect.fnUntraced docs](.repos/effect-v4/packages/effect/src/Effect.ts:12821).
+- Reference: [Effect.fn docs](../.repos/effect/packages/effect/src/Effect.ts:12850) and [Effect.fnUntraced docs](../.repos/effect/packages/effect/src/Effect.ts:12821).
 
 Example:
 
@@ -438,7 +438,7 @@ const program = Effect.sleep(pollInterval).pipe(Effect.timeout(timeout))
   - `S.OptionFromNullishOr`
   - `S.OptionFromOptionalKey`
   - `S.OptionFromOptional`
-- Reference: [Schema Option helpers](.repos/effect-v4/packages/effect/src/Schema.ts:5422) and [Schema optional field docs](.repos/effect-v4/packages/effect/SCHEMA.md:636).
+- Reference: [Schema Option helpers](../.repos/effect/packages/effect/src/Schema.ts:5422) and [Schema optional field docs](../.repos/effect/packages/effect/SCHEMA.md:636).
 
 Example:
 
@@ -462,7 +462,7 @@ export class AccountInput extends S.Class<AccountInput>($I`AccountInput`)({
   - Data-first: `fn(self, arg)`
   - Data-last: `pipe(self, fn(arg))`
 - Build these helpers with `dual` from `effect/Function`.
-- Reference: [dual API](.repos/effect-v4/packages/effect/src/Function.ts:106).
+- Reference: [dual API](../.repos/effect/packages/effect/src/Function.ts:106).
 
 Example:
 
@@ -541,7 +541,7 @@ If agent instruction surfaces changed, also run:
 - Application entrypoints and tests may execute effects with `Effect.run*`.
 - Library and domain exports should return `Effect` values.
 - Keep runtime execution in one place so wiring, logging, and lifecycle behavior stay auditable.
-- Reference: [runPromise](.repos/effect-v4/packages/effect/src/Effect.ts:8423), [runSync](.repos/effect-v4/packages/effect/src/Effect.ts:8606), and [runFork](.repos/effect-v4/packages/effect/src/Effect.ts:8264).
+- Reference: [runPromise](../.repos/effect/packages/effect/src/Effect.ts:8423), [runSync](../.repos/effect/packages/effect/src/Effect.ts:8606), and [runFork](../.repos/effect/packages/effect/src/Effect.ts:8264).
 
 Example:
 
@@ -608,7 +608,7 @@ const insertDisposition = Effect.fnUntraced(function* (disposition: CandorDispos
 - Use `Effect.acquireUseRelease` for acquisition/use/release flows.
 - Prefer `Effect.scoped` for helper composition that allocates resources.
 - Do not manually open resources without an explicit finalization strategy.
-- Reference: [acquireUseRelease](.repos/effect-v4/packages/effect/src/Effect.ts:6254) and [scoped](.repos/effect-v4/packages/effect/src/Effect.ts:6079).
+- Reference: [acquireUseRelease](../.repos/effect/packages/effect/src/Effect.ts:6254) and [scoped](../.repos/effect/packages/effect/src/Effect.ts:6079).
 
 Example:
 
@@ -630,7 +630,7 @@ const withConnection = <A, E, R>(
 - Encode retries with `Effect.retry` and `Schedule`.
 - Avoid manual retry loops and ad-hoc mutable counters.
 - Keep retry policy close to the failing effect.
-- Reference: [retry](.repos/effect-v4/packages/effect/src/Effect.ts:3978).
+- Reference: [retry](../.repos/effect/packages/effect/src/Effect.ts:3978).
 
 Example:
 
@@ -647,7 +647,7 @@ const resilientFetch = fetchRemote.pipe(
 - Use `Effect.timeoutOption` when timeout should become `Option.None`.
 - Use `Effect.timeoutOrElse` when timeout should produce a typed fallback effect.
 - Avoid manually racing ad-hoc timers for business logic timeouts.
-- Reference: [timeoutOption](.repos/effect-v4/packages/effect/src/Effect.ts:4421) and [timeoutOrElse](.repos/effect-v4/packages/effect/src/Effect.ts:4467).
+- Reference: [timeoutOption](../.repos/effect/packages/effect/src/Effect.ts:4421) and [timeoutOrElse](../.repos/effect/packages/effect/src/Effect.ts:4467).
 
 Example:
 
@@ -667,7 +667,7 @@ const lookupCachedOnTimeout = slowLookup.pipe(
 - Prefer `Effect.forkChild` so lifecycle is supervised by parent scope.
 - Use `Effect.forkDetach` only for explicit daemon semantics.
 - Make fork intent explicit in code review and comments for detached work.
-- Reference: [forkChild](.repos/effect-v4/packages/effect/src/Effect.ts:7978) and [forkDetach](.repos/effect-v4/packages/effect/src/Effect.ts:8121).
+- Reference: [forkChild](../.repos/effect/packages/effect/src/Effect.ts:7978) and [forkDetach](../.repos/effect/packages/effect/src/Effect.ts:8121).
 
 Example:
 
@@ -687,7 +687,7 @@ const runWithHeartbeat = Effect.fn("Worker.run")(function* () {
 - For non-trivial fan-out, set concurrency in `Effect.forEach`, `Effect.all`, or `Effect.validate`.
 - Avoid implicit unbounded parallelism on large collections.
 - Concurrency should be part of API intent for throughput-sensitive paths.
-- Reference: [forEach concurrency](.repos/effect-v4/packages/effect/src/Effect.ts:990), [all concurrency](.repos/effect-v4/packages/effect/src/Effect.ts:751), [withConcurrency](.repos/effect-v4/packages/effect/src/Effect.ts:6001).
+- Reference: [forEach concurrency](../.repos/effect/packages/effect/src/Effect.ts:990), [all concurrency](../.repos/effect/packages/effect/src/Effect.ts:751), [withConcurrency](../.repos/effect/packages/effect/src/Effect.ts:6001).
 
 Example:
 
@@ -703,7 +703,7 @@ const hydrateUsers = (ids: ReadonlyArray<string>) =>
 - Use `Config` and `ConfigProvider` for configuration loading and parsing.
 - Keep direct `process.env` access out of domain code.
 - Layer/provide config sources explicitly for tests and non-default environments.
-- Reference: [Config](.repos/effect-v4/packages/effect/src/Config.ts) and [ConfigProvider](.repos/effect-v4/packages/effect/src/ConfigProvider.ts:358).
+- Reference: [Config](../.repos/effect/packages/effect/src/Config.ts) and [ConfigProvider](../.repos/effect/packages/effect/src/ConfigProvider.ts:358).
 
 Example:
 
@@ -720,7 +720,7 @@ const loadPort = Effect.fn("Config.loadPort")(function* () {
 - Use `Config.redacted` for secret config values.
 - Use `Redacted.make` for sensitive values coming from non-config sources.
 - Never log secret values after unwrapping.
-- Reference: [Config.redacted](.repos/effect-v4/packages/effect/src/Config.ts:1161) and [Redacted](.repos/effect-v4/packages/effect/src/Redacted.ts).
+- Reference: [Config.redacted](../.repos/effect/packages/effect/src/Config.ts:1161) and [Redacted](../.repos/effect/packages/effect/src/Redacted.ts).
 
 Example:
 
@@ -758,7 +758,7 @@ const findUserOptional = (id: string) =>
 - Use `Effect.fail` for expected business/domain failures.
 - Reserve `Effect.die` / `Effect.orDie` for invariant violations and impossible states.
 - Do not model normal user-facing errors as defects.
-- Reference: [die](.repos/effect-v4/packages/effect/src/Effect.ts:1745) and [orDie](.repos/effect-v4/packages/effect/src/Effect.ts:3557).
+- Reference: [die](../.repos/effect/packages/effect/src/Effect.ts:1745) and [orDie](../.repos/effect/packages/effect/src/Effect.ts:3557).
 
 Example:
 
@@ -783,7 +783,7 @@ const validateInput = Effect.fn("Input.validate")(function* (value: string) {
 - Understand that layer provisioning is shared by default.
 - When isolation is required, use `Effect.provide(..., { local: true })` or `Layer.fresh`.
 - Document why isolation is necessary for behavior-sensitive paths.
-- Reference: [Effect.provide local option](.repos/effect-v4/packages/effect/src/Effect.ts:5592) and [Layer.fresh](.repos/effect-v4/packages/effect/src/Layer.ts:1621).
+- Reference: [Effect.provide local option](../.repos/effect/packages/effect/src/Effect.ts:5592) and [Layer.fresh](../.repos/effect/packages/effect/src/Layer.ts:1621).
 
 Example:
 
@@ -802,7 +802,7 @@ const runIsolated = program.pipe(
 - Derive runtime types from schema definitions instead of duplicating parallel `type` / `interface` models.
 - Keep plain `type` / `interface` for cases schema cannot represent cleanly (complex type-level transforms, utility types, overload-only surfaces).
 - Before choosing nontrivial Schema APIs, check the local Effect v4 source at
-  `.repos/effect-v4/packages/effect/SCHEMA.md` and the relevant source module.
+  `.repos/effect/packages/effect/SCHEMA.md` and the relevant source module.
 
 Example:
 

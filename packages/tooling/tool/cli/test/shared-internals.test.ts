@@ -38,6 +38,7 @@ import {
   SchemaFirstPolicyFinding,
   SchemaFirstPolicyIssuePrefix,
   SchemaFirstPolicySeverity,
+  turboEnvOverrides,
 } from "@beep/repo-cli/test/SharedInternals";
 import { describe, expect, it } from "@effect/vitest";
 import { ConfigProvider, Data, Effect, Layer } from "effect";
@@ -330,5 +331,79 @@ describe("Github plumbing", () => {
       })
     );
     expect(exit._tag).toBe("Failure");
+  });
+});
+
+describe("turboEnvOverrides", () => {
+  const OP_REFERENCE = "op://vault/item/credential";
+  const REMOTE_READ = "local:rw,remote:r";
+
+  const withTurboEnv = (env: Record<string, string>) =>
+    provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown(env)));
+
+  const overridesFor = (
+    env: Record<string, string>,
+    command: string,
+    args: ReadonlyArray<string>
+  ): Record<string, string | undefined> => Effect.runSync(withTurboEnv(env)(turboEnvOverrides(command, args)));
+
+  const opRunArgs = (turboArgs: ReadonlyArray<string>): ReadonlyArray<string> => [
+    "run",
+    "--env-file=.env",
+    "--",
+    "bunx",
+    "turbo",
+    ...turboArgs,
+  ];
+
+  it("returns nothing for a non-turbo command", () => {
+    expect(overridesFor({}, "git", ["status"])).toEqual({});
+    expect(overridesFor({}, "bunx", ["vitest", "run"])).toEqual({});
+    expect(overridesFor({}, "op", ["run", "--env-file=.env", "--", "bun", "run", "build"])).toEqual({});
+  });
+
+  it("guards the TUI on a direct turbo spawn with resolved credentials", () => {
+    expect(
+      overridesFor({ TURBO_TOKEN: "resolved", TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ }, "bunx", [
+        "turbo",
+        "run",
+        "check",
+      ])
+    ).toEqual({ TURBO_UI: "false" });
+  });
+
+  it("scrubs unresolved references and pins the cache posture on a direct spawn", () => {
+    expect(
+      overridesFor(
+        { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: "beep", TURBO_CACHE: REMOTE_READ },
+        "bunx",
+        ["turbo", "run", "check"]
+      )
+    ).toStrictEqual({
+      TURBO_UI: "false",
+      TURBO_API: undefined,
+      TURBO_TOKEN: undefined,
+      TURBO_CACHE: "local:rw",
+    });
+  });
+
+  // Regression guard: `op run` resolves op:// references out of the environment
+  // it is handed, not only out of --env-file. Scrubbing them from a wrapped
+  // spawn deletes the credential it exists to resolve, leaving the wrapped
+  // turbo with none at all.
+  it("keeps unresolved references intact for an op run wrapped spawn", () => {
+    expect(
+      overridesFor(
+        { TURBO_API: OP_REFERENCE, TURBO_TOKEN: OP_REFERENCE, TURBO_TEAM: OP_REFERENCE, TURBO_CACHE: REMOTE_READ },
+        "op",
+        opRunArgs(["run", "check"])
+      )
+    ).toStrictEqual({ TURBO_UI: "false" });
+  });
+
+  it("recognizes a wrapped spawn whose turbo arguments contain their own separator", () => {
+    expect(overridesFor({}, "op", opRunArgs(["run", "coverage", "--", "--maxWorkers=1"]))).toEqual({
+      TURBO_UI: "false",
+    });
   });
 });
