@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { HttpMethod } from "@beep/schema/HttpMethod";
+import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import { A } from "@beep/utils";
 import { Cause, Clock, Duration, Effect, Exit, Layer, Metric, pipe, SchemaAST } from "effect";
 import * as Eq from "effect/Equal";
@@ -16,6 +16,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { HttpApiMiddleware, HttpApiSchema } from "effect/unstable/httpapi";
 import { observeHttpRequest, statusClass } from "../Metric.ts";
+import type { NonNegativeInt } from "@beep/schema";
 import type * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
 import type { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
@@ -23,47 +24,12 @@ const $I = $ObservabilityId.create("server/HttpApiTelemetry");
 const resolveHttpApiStatus = SchemaAST.resolveAt<number>("httpApiStatus");
 
 /**
- * HTTP status code in the standard 100-599 range.
- *
- * **Example** (Decode HTTP status code)
- *
- * ```typescript
- * import { HttpStatusCode } from "@beep/observability/server"
- * import * as S from "effect/Schema"
- *
- * const status = S.decodeUnknownSync(HttpStatusCode)(404)
- * console.log(status)
- * // 404
- * ```
+ * Compatibility export for the canonical schema-owned HTTP status code.
  *
  * @category schemas
  * @since 0.0.0
  */
-export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
-  $I.annoteSchema("HttpStatusCode", {
-    description: "HTTP status code in the standard 100-599 range.",
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * HTTP status code in the standard 100-599 range.
- *
- * **Example** (Type annotated status decode)
- *
- * ```typescript
- * import { HttpStatusCode } from "@beep/observability/server"
- * import * as S from "effect/Schema"
- *
- * const status: HttpStatusCode = S.decodeUnknownSync(HttpStatusCode)(404)
- * console.log(status)
- * // 404
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export type HttpStatusCode = typeof HttpStatusCode.Type;
+export { HttpStatusCode };
 
 class HttpApiStatusField extends S.Class<HttpApiStatusField>($I`HttpApiStatusField`)(
   { status: HttpStatusCode },

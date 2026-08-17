@@ -190,6 +190,14 @@ export const ALLOWLIST_SNAPSHOT = {
     },
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "scratchpad/effect-ontology/Service/Rdf.ts",
+      "kind": "new-map-set",
+      "reason": "Opaque RDF workflow handles require WeakMap identity semantics so the mutable N3 backend remains private, cannot leak through structural properties, and is released with its handle.",
+      "owner": "@beep/scratchpad",
+      "issue": "EFFECT-ONTOLOGY-RDF-OPAQUE-BACKEND"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/ui-system/dock-react/src/internal/AdapterState.ts",
       "kind": "new-map-set",
       "reason": "Adapter state is keyed by host-owned DockAtomGraph identity and DOM roots; WeakMap/WeakSet weak-key semantics prevent retaining disposed graphs and detached elements, which Effect MutableHashMap cannot provide.",

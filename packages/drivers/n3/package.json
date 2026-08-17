@@ -60,7 +60,6 @@
     "n3": "catalog:"
   },
   "devDependencies": {
-    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/n3": "catalog:",
     "@types/node": "catalog:",

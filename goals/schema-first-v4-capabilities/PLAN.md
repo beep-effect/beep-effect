@@ -124,8 +124,6 @@ First Wave 3 pilots completed for
 `packages/foundation/capability/nlp/test/PatternCore.test.ts`,
 the since-removed semantic-web JSON-LD test suite,
 `packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts`,
-`packages/shared/domain/test/LocalDate.test.ts`,
-`packages/shared/domain/test/Organization.test.ts`,
 `packages/shared/domain/test/IdentityNamespaces.test.ts`,
 `packages/shared/domain/test/EntityKernel.test.ts`,
 `packages/shared/ui/test/OrganizationDisplay.test.ts`, the repo-configs route

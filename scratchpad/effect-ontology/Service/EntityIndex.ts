@@ -8,6 +8,8 @@
  * @module Service/EntityIndex
  */
 
+import { NonNegativeInt } from "@beep/schema/Int";
+import { EpochMillis } from "@beep/schema/Timestamp";
 import { Context, Effect, HashMap, HashSet, Layer, Option, Ref, Schema } from "effect";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -303,7 +305,7 @@ export const EntityIndexDefault = EntityIndex.Default;
  */
 export const SerializedEntityIndex = Schema.Struct({
   version: Schema.Literal(1),
-  indexedAt: Schema.Finite,
+  indexedAt: EpochMillis,
   entities: Schema.Array(
     Schema.Struct({
       id: Schema.String,
@@ -354,9 +356,9 @@ export interface PersistentEntityIndexService extends EntityIndexService {
    * Get index statistics
    */
   readonly stats: Effect.Effect<{
-    readonly entityCount: number;
-    readonly typeCount: number;
-    readonly lastPersistedAt: Option.Option<number>;
+    readonly entityCount: NonNegativeInt;
+    readonly typeCount: NonNegativeInt;
+    readonly lastPersistedAt: Option.Option<EpochMillis>;
   }>;
 }
 
@@ -388,7 +390,7 @@ export const makePersistentEntityIndex = dual3(
     Effect.gen(function* () {
       // In-memory state
       const stateRef = yield* Ref.make<IndexState>(emptyState);
-      const lastPersistedRef = yield* Ref.make<Option.Option<number>>(Option.none());
+      const lastPersistedRef = yield* Ref.make<Option.Option<EpochMillis>>(Option.none());
 
       const base = makeEntityIndexMethods(embedding, stateRef);
 
@@ -407,7 +409,7 @@ export const makePersistentEntityIndex = dual3(
             });
           }
         }
-        return { version: 1 as const, indexedAt: yield* Clock.currentTimeMillis, entities };
+        return { version: 1 as const, indexedAt: EpochMillis.make(yield* Clock.currentTimeMillis), entities };
       });
 
       const deserialize = Effect.fn("PersistentEntityIndex.deserialize")(function* (data: SerializedEntityIndex) {
@@ -431,7 +433,9 @@ export const makePersistentEntityIndex = dual3(
         const content = yield* encodeSerializedEntityIndex(serialized).pipe(Effect.orDie);
         yield* storage.set(blobPath, content).pipe(
           Effect.tap(() =>
-            Clock.currentTimeMillis.pipe(Effect.flatMap((now) => Ref.set(lastPersistedRef, Option.some(now))))
+            Clock.currentTimeMillis.pipe(
+              Effect.flatMap((now) => Ref.set(lastPersistedRef, Option.some(EpochMillis.make(now))))
+            )
           ),
           Effect.tap(() =>
             Effect.logInfo("EntityIndex persisted", { path: blobPath, entityCount: serialized.entities.length })
@@ -458,8 +462,8 @@ export const makePersistentEntityIndex = dual3(
         const state = yield* Ref.get(stateRef);
         const lastPersistedAt = yield* Ref.get(lastPersistedRef);
         return {
-          entityCount: HashMap.size(state.entities),
-          typeCount: HashMap.size(state.typeIndex),
+          entityCount: NonNegativeInt.make(HashMap.size(state.entities)),
+          typeCount: NonNegativeInt.make(HashMap.size(state.typeIndex)),
           lastPersistedAt,
         };
       });
@@ -524,12 +528,20 @@ export const PersistentEntityIndexLayer: Layer.Layer<
         clear: Effect.void,
         size: Effect.succeed(0),
         serialize: Effect.gen(function* () {
-          return { version: 1 as const, indexedAt: yield* Clock.currentTimeMillis, entities: [] };
+          return {
+            version: 1 as const,
+            indexedAt: EpochMillis.make(yield* Clock.currentTimeMillis),
+            entities: [],
+          };
         }),
         deserialize: () => Effect.succeed(0),
         persist: Effect.void,
         load: Effect.succeed(0),
-        stats: Effect.succeed({ entityCount: 0, typeCount: 0, lastPersistedAt: Option.none() }),
+        stats: Effect.succeed({
+          entityCount: NonNegativeInt.make(0),
+          typeCount: NonNegativeInt.make(0),
+          lastPersistedAt: Option.none(),
+        }),
       };
       return stubService;
     }

@@ -10,7 +10,7 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import type { NonNegativeInt } from "@beep/schema";
-import { HttpsUrl as CanonicalHttpsUrl, SchemaUtils, Sha256Hex } from "@beep/schema";
+import { SchemaUtils, Sha256Hex } from "@beep/schema";
 import { identity, Match } from "effect";
 import type * as Brand from "effect/Brand";
 import { dual } from "effect/Function";
@@ -27,61 +27,6 @@ const gcsObjectNamePattern = /^(?!\.{1,2}$)(?!\.well-known\/acme-challenge\/)(?!
 type BrandedGcsBucket = string & Brand.Brand<"GcsBucket">;
 type BrandedGcsObject = string & Brand.Brand<"GcsObject">;
 type BrandedGcsUri = `gs://${string}/${string}` & Brand.Brand<"GcsUri">;
-
-const SecureHttpUrlFromSelf = S.declare((input: unknown): input is CanonicalHttpsUrl =>
-  S.is(CanonicalHttpsUrl)(input)
-).annotate({
-  toArbitrary: () => (fc) =>
-    fc.uuid().map((id) => S.decodeSync(CanonicalHttpsUrl)(`https://example.test/resource/${id}`)),
-});
-
-/**
- * Validated absolute HTTPS resource location.
- *
- * @remarks
- * Canonical URL parsing and protocol enforcement remain owned by
- * `@beep/schema`. The declaration layer contributes a constructive arbitrary
- * so schemas that embed remote locations remain property-test ready.
- *
- * @example
- * ```ts
- * import { SecureHttpUrl } from "@effect-ontology/Identity.ts"
- *
- * const url = SecureHttpUrl.fromUnknown("https://example.org/report.pdf")
- * console.log(SecureHttpUrl.is(url)) // true
- * ```
- *
- * @invariant Is an absolute URL whose protocol is exactly `https:`.
- * @category identifiers
- * @since 0.0.0
- */
-export const SecureHttpUrl = CanonicalHttpsUrl.pipe(
-  S.decodeTo(SecureHttpUrlFromSelf),
-  $I.annoteSchema("SecureHttpUrl", {
-    description: "Canonical absolute HTTPS URL with a transparent property-testing generator.",
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime value decoded by {@link SecureHttpUrl}.
- *
- * @example
- * ```ts
- * import {
- *   SecureHttpUrl,
- *   type SecureHttpUrl as SecureHttpUrlValue
- * } from "@effect-ontology/Identity.ts"
- *
- * const url: SecureHttpUrlValue =
- *   SecureHttpUrl.fromUnknown("https://example.org/report.pdf")
- * console.log(url)
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type SecureHttpUrl = typeof SecureHttpUrl.Type;
 
 const utf8Encoder = new TextEncoder();
 const isNotGcsIpv4Address = P.not((value: string) => gcsIpv4AddressPattern.test(value));
@@ -154,6 +99,7 @@ const GcsObjectName = S.String.check(
     toArbitrary: () => (fc) => fc.stringMatching(/^[A-Za-z0-9][A-Za-z0-9._/-]{0,63}$/),
   })
   .pipe(
+    SchemaUtils.withCodecStatics,
     $I.annoteSchema("GcsObjectName", {
       description:
         "Google Cloud Storage flat-namespace object name constrained to the provider's general syntax and 1,024-byte UTF-8 limit.",
@@ -360,9 +306,9 @@ export type IdempotencyKey = typeof IdempotencyKey.Type;
  * @category validation
  * @since 0.0.0
  */
-const GcsBucketEncoded = S.String.check(GcsBucketChecks).pipe(S.brand("GcsBucket"));
+const GcsBucketEncoded = S.String.check(GcsBucketChecks).pipe(S.brand("GcsBucket"), SchemaUtils.withCodecStatics);
 
-const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => S.is(GcsBucketEncoded)(input)).annotate({
+const GcsBucketFromSelf = S.declare((input): input is BrandedGcsBucket => GcsBucketEncoded.is(input)).annotate({
   toArbitrary: () => (fc) =>
     fc
       .stringMatching(gcsBucketNamePattern)
@@ -569,7 +515,7 @@ const GcsObjectChecks = S.makeFilterGroup(
  * @category validation
  * @since 0.0.0
  */
-const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(S.brand("GcsObject"));
+const GcsObjectEncoded = GcsObjectName.check(GcsObjectChecks).pipe(S.brand("GcsObject"), SchemaUtils.withCodecStatics);
 
 const GcsObjectFromSelf = S.declare((input): input is BrandedGcsObject => S.is(GcsObjectEncoded)(input)).annotate({
   toArbitrary: () => (fc) =>

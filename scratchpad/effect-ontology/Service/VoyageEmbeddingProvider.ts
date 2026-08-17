@@ -15,7 +15,7 @@
  * @module Service/VoyageEmbeddingProvider
  */
 
-import { SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Duration, Effect, Layer, Order, Redacted, Schedule, Schema } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -90,11 +90,11 @@ export const DEFAULT_RETRY_AFTER_SECONDS = 60;
 const VoyageEmbeddingData = Schema.Struct({
   object: Schema.Literal("embedding"),
   embedding: Schema.Array(Schema.Finite),
-  index: Schema.Finite,
+  index: NonNegativeInt,
 });
 
 const VoyageUsage = Schema.Struct({
-  total_tokens: Schema.Finite,
+  total_tokens: NonNegativeInt,
 });
 
 const VoyageResponseSchema = Schema.Struct({

@@ -8,6 +8,7 @@
  */
 
 import { Console, Effect } from "effect";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
@@ -59,7 +60,7 @@ const listPendingHandler = Effect.fn("listPendingHandler")(function* (ontology: 
     status: "pending",
     limit,
   });
-  if (links.length === 0) {
+  if (A.isReadonlyArrayEmpty(links)) {
     yield* Console.log("No pending links found.");
     return;
   }
@@ -180,7 +181,7 @@ const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: 
     yield* Console.log(`  Processing: ${link.id}`);
     const result = yield* ingestion.reEnrich(link.id).pipe(
       Effect.catch(
-        Effect.fn(function* (error)  {
+        Effect.fn(function* (error) {
           yield* Console.log(`    Failed: ${error.message}`);
           return O.none();
         })

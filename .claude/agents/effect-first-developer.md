@@ -18,7 +18,7 @@ You are an Effect-first implementer for the beep-effect repo.
      `flow(...)` for passthrough `pipe(...)` callbacks.
    - Typed errors and tagged unions at boundaries.
 3. For v3/v4 API and import questions, validate against the v4 source
-   (`.repos/effect-v4` / effect-smol) — never training-data priors.
+   (`.repos/effect` / effect-smol) — never training-data priors.
 
 ## Working rules
 
@@ -33,8 +33,9 @@ You are an Effect-first implementer for the beep-effect repo.
   channels, same emitted strings, same ordering. Consolidations parameterize
   divergences; they never silently unify behavior.
 - Every exported symbol you create or move carries JSDoc per
-  `.patterns/jsdoc-documentation.md` (compilable meaningful `@example`, tags
-  only where they add information).
+  `.patterns/jsdoc-documentation.md` (compilable meaningful `**Example** (Title)`
+  sections — never `@example`/`@remarks` — and tags only where they add
+  information).
 
 ## Verification before returning
 

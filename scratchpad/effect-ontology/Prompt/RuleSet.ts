@@ -6,6 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import { SchemaUtils } from "@beep/schema";
 import { Match, pipe } from "effect";
 import * as A from "effect/Array";
@@ -16,7 +17,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
-import { IRI } from "../Domain/Model/shared.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import type { RuleCategory } from "./ExtractionRule.ts";
 import { ExtractionRule, ExtractionStage, RuleExample, RuleSeverity } from "./ExtractionRule.ts";

@@ -10,12 +10,12 @@ import { IRIReference } from "@beep/rdf";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { DocumentClass, FilingRootKind, FilingSegment } from "./SemanticFoundation.models.ts";
 import type { TaxonomyConcept, TaxonomySeed } from "./SemanticFoundation.models.ts";
 
 const $I = $OntologyId.create("TaxonomyRegistry");
-const iriEquivalence = S.toEquivalence(IRIReference);
 
 /**
  *  Document metadata supplied to the package-local librarian projection.
@@ -76,7 +76,11 @@ export class FilingPath extends S.Class<FilingPath>($I`FilingPath`)(
  * @since 0.0.0
  */
 export class LibrarianOutput extends S.Class<LibrarianOutput>($I`LibrarianOutput`)(
-  { conceptIri: IRIReference, documentClass: DocumentClass, filingPaths: S.Array(FilingPath) },
+  {
+    conceptIri: IRIReference,
+    documentClass: DocumentClass,
+    filingPaths: S.Array(FilingPath),
+  },
   $I.annote("LibrarianOutput", {
     description: "Pure classification output projected from loaded registry vocabulary data.",
   })
@@ -150,8 +154,11 @@ export const runLibrarianLoop = Effect.fn("TaxonomyRegistry.runLibrarianLoop")(f
   seed: TaxonomySeed,
   input: LibrarianInput
 ) {
-  const concept = yield* A.findFirst(seed.concepts, (candidate) =>
-    iriEquivalence(candidate.iri, input.conceptIri)
+  const concept = yield* A.findFirst(
+    seed.concepts,
+    P.Struct({
+      iri: IRIReference.equivalence(input.conceptIri),
+    })
   ).pipe(
     O.match({
       onNone: () => Effect.fail(TaxonomyConceptNotFound.make({ conceptIri: input.conceptIri })),
@@ -160,8 +167,12 @@ export const runLibrarianLoop = Effect.fn("TaxonomyRegistry.runLibrarianLoop")(f
   );
   yield* Effect.filterOrFail(
     Effect.succeed(concept),
-    (candidate) => A.contains(candidate.documentClasses, input.documentClass),
-    () => UnsupportedDocumentClass.make({ conceptIri: input.conceptIri, documentClass: input.documentClass })
+    P.Struct({ documentClasses: A.contains(input.documentClass) }),
+    () =>
+      UnsupportedDocumentClass.make({
+        conceptIri: input.conceptIri,
+        documentClass: input.documentClass,
+      })
   );
   return LibrarianOutput.make({
     conceptIri: concept.iri,

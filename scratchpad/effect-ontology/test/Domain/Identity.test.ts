@@ -16,8 +16,8 @@ import {
   Namespace,
   OntologyName,
   OntologyVersion,
-  SecureHttpUrl,
 } from "../../Domain/Identity.ts";
+import { IdempotencyKey as UtilityIdempotencyKey } from "../../Utils/IdempotencyKey.ts";
 
 const emptySha256 = ContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
@@ -25,7 +25,6 @@ const identitySchemas: ReadonlyArray<S.Constraint> = [
   LegacyContentHashPrefix,
   ContentHash,
   IdempotencyKey,
-  SecureHttpUrl,
   GcsBucket,
   GcsObject,
   GcsUri,
@@ -39,6 +38,10 @@ const identitySchemas: ReadonlyArray<S.Constraint> = [
 ];
 
 describe("effect-ontology identity schemas", () => {
+  it("keeps idempotency-key utilities on the domain-owned schema", () => {
+    expect(UtilityIdempotencyKey).toBe(IdempotencyKey);
+  });
+
   it("derives arbitraries whose values satisfy every public identity schema", () => {
     for (const schema of identitySchemas) {
       const arbitrary = S.toArbitrary(schema)(fc);
@@ -77,8 +80,6 @@ describe("effect-ontology identity schemas", () => {
   });
 
   it("rejects insecure, ambiguous, reserved, and non-canonical locations", () => {
-    expect(SecureHttpUrl.is("https://example.org/report.pdf")).toBe(true);
-    expect(SecureHttpUrl.is("http://example.org/report.pdf")).toBe(false);
     expect(Result.isFailure(S.decodeResult(GcsBucket)("192.168.5.4"))).toBe(true);
     expect(Result.isFailure(S.decodeResult(GcsBucket)("goog-ontology-state"))).toBe(true);
     expect(Result.isFailure(S.decodeResult(GcsObject)("/snapshots/data.ttl"))).toBe(true);

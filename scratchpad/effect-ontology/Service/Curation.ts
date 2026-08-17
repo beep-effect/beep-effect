@@ -150,8 +150,8 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         : action.replacement.object.value;
       const newClaim = yield* claimRepo.insertClaim({
         ontologyId: action.ontologyId,
-        subjectIri: action.replacement.subject,
-        predicateIri: action.replacement.predicate,
+        subjectIri: action.replacement.subject.value,
+        predicateIri: action.replacement.predicate.value,
         objectValue: replacementObject,
         rank: "normal",
         articleId: original.articleId,
@@ -281,7 +281,10 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       now: DateTime.Utc
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
       // Find canonical entity by IRI
-      const canonicalOpt = yield* entityRegistry.getCanonicalEntityByIri(action.canonicalEntity, action.ontologyId);
+      const canonicalOpt = yield* entityRegistry.getCanonicalEntityByIri(
+        action.canonicalEntity.value,
+        action.ontologyId
+      );
       if (O.isNone(canonicalOpt)) {
         yield* Effect.logWarning("Canonical entity not found for alias", {
           iri: action.canonicalEntity,

@@ -13,9 +13,10 @@
  * @module Runtime/Persistence/PostgresLayer
  */
 
+import { Port } from "@beep/schema/Port";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { PgClient } from "@effect/sql-pg";
-import { Config, Layer, Redacted, Schema } from "effect";
+import { Config, Effect, Layer, Redacted, Schema } from "effect";
 import { ShardingConfig, SqlMessageStorage, SqlRunnerStorage } from "effect/unstable/cluster";
 
 // -----------------------------------------------------------------------------
@@ -24,13 +25,20 @@ import { ShardingConfig, SqlMessageStorage, SqlRunnerStorage } from "effect/unst
 
 export const PostgresConfig = Schema.Struct({
   host: Schema.String,
-  port: Schema.Int,
+  port: Port,
   database: Schema.String,
   username: Schema.String,
   password: Schema.String,
   ssl: Schema.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
 });
 export type PostgresConfig = typeof PostgresConfig.Type;
+
+const PostgresPortConfig = Config.number("POSTGRES_PORT").pipe(
+  Config.withDefault(5432),
+  Config.mapOrFail((value) =>
+    Schema.decodeEffect(Port)(value).pipe(Effect.mapError((error) => new Config.ConfigError(error)))
+  )
+);
 
 // -----------------------------------------------------------------------------
 // Configuration from Environment
@@ -49,7 +57,7 @@ export type PostgresConfig = typeof PostgresConfig.Type;
  */
 export const PostgresConfigFromEnv = Config.all({
   host: Config.string("POSTGRES_HOST").pipe(Config.withDefault("localhost")),
-  port: Config.number("POSTGRES_PORT").pipe(Config.withDefault(5432)),
+  port: PostgresPortConfig,
   database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
   username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
   password: Config.redacted("POSTGRES_PASSWORD"),
@@ -65,7 +73,7 @@ export const PostgresConfigFromEnv = Config.all({
  */
 export const PgClientLive = PgClient.layerConfig({
   host: Config.string("POSTGRES_HOST").pipe(Config.withDefault("localhost")),
-  port: Config.number("POSTGRES_PORT").pipe(Config.withDefault(5432)),
+  port: PostgresPortConfig,
   database: Config.string("POSTGRES_DATABASE").pipe(Config.withDefault("workflow")),
   username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
   password: Config.redacted("POSTGRES_PASSWORD"),

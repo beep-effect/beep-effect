@@ -20,6 +20,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { Tool, Toolkit } from "effect/unstable/ai";
 import * as McpServer from "effect/unstable/ai/McpServer";
+import { StubMcpClientLayer } from "./fixtures/McpClient.ts";
 
 const softRegistration = SourceAuthRegistration.make({
   name: "Soft Fixture Source",
@@ -53,7 +54,12 @@ const softSourceLayer = sanitizedToolkit(SoftToolkit).pipe(Layer.provide(SoftToo
 // time an `it.effect` body calls `callTool`, the merged layer output
 // (including the overridden `ConfigProvider`) is already its ambient context.
 const buildLayer = (env: Record<string, string>) =>
-  Layer.mergeAll(McpServer.McpServer.layer, softSourceLayer, ConfigProvider.layer(ConfigProvider.fromUnknown(env)));
+  Layer.mergeAll(
+    McpServer.McpServer.layer,
+    softSourceLayer,
+    StubMcpClientLayer,
+    ConfigProvider.layer(ConfigProvider.fromUnknown(env))
+  );
 
 const ApiKeyRequiredFailureFromJson = S.fromJsonString(ApiKeyRequiredFailure);
 const StringFromJson = S.fromJsonString(S.String);

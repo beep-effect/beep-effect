@@ -37,8 +37,8 @@ Keep `Schema` as the source of truth for pure data models.
 - Real repository examples: `references/examples.md`
 
 3. Check local Effect v4 source for nontrivial Schema API choices.
-- Start with `.repos/effect-v4/packages/effect/SCHEMA.md`.
-- Confirm behavior in `.repos/effect-v4/packages/effect/src/Schema.ts` or the
+- Start with `.repos/effect/packages/effect/SCHEMA.md`.
+- Confirm behavior in `.repos/effect/packages/effect/src/Schema.ts` or the
   specialized module (`SchemaAST`, `SchemaGetter`, `SchemaIssue`,
   `SchemaRepresentation`, `SchemaTransformation`) when using advanced APIs.
 - Prefer exact upstream or repo-local helpers over memory and ad-hoc plumbing.

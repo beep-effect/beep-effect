@@ -131,6 +131,11 @@ describe("ciLaneStepsForTesting", () => {
     expect([...integration.args]).toEqual(["run", "test", "--", "--integration", "--affected", "--summarize"]);
   });
 
+  it("states the lint-policy full sweep in argv instead of inheriting CI=true", () => {
+    const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "lint-policy", baseOptions));
+    expect([...step.args]).toEqual(["run", "beep", "lint", "policy", "--full"]);
+  });
+
   it("runs the first ecosystem member's type and bundle contracts explicitly", () => {
     const steps = ciLaneStepsForTesting(REPO_ROOT, "ecosystem", baseOptions);
     expect(A.map(steps, (step) => step.command)).toEqual(["bun", "bun"]);
@@ -315,10 +320,25 @@ describe("ciLocalStepsForTesting", () => {
     expect([...step.args]).toEqual(["run", "beep", "ci", "lane", "knip"]);
   });
 
+  it("keeps --summarize on turbo-backed lanes even without the affected shape", () => {
+    const check = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["check"], branchPlan));
+    expect([...check.args]).toEqual(["run", "beep", "ci", "lane", "check", "--summarize"]);
+  });
+
   it("forwards the affected shape to turbo-backed lanes", () => {
     const affectedPlan = CiLocalStepPlan.make({ ...branchPlan, affected: true });
     const lint = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["lint"], affectedPlan));
-    expect([...lint.args]).toEqual(["run", "beep", "ci", "lane", "lint", "--affected", "--base", "origin/main"]);
+    expect([...lint.args]).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "lint",
+      "--affected",
+      "--base",
+      "origin/main",
+      "--summarize",
+    ]);
 
     const docgen = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["docgen"], affectedPlan));
     expect([...docgen.args]).toEqual([

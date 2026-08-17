@@ -131,11 +131,28 @@ export class ExportedToolError extends S.TaggedError<ExportedToolError>($I`Expor
    * @returns A typed export-adapter error value.
    */
   static readonly fromCause: {
-    (cause: unknown, toolName: string, options: { readonly message: string }): ExportedToolError;
-    (toolName: string, options: { readonly message: string }): (cause: unknown) => ExportedToolError;
+    (
+      cause: unknown,
+      toolName: string,
+      options: {
+        readonly message: string;
+      }
+    ): ExportedToolError;
+    (
+      toolName: string,
+      options: {
+        readonly message: string;
+      }
+    ): (cause: unknown) => ExportedToolError;
   } = dual(
     3,
-    (cause: unknown, toolName: string, options: { readonly message: string }): ExportedToolError =>
+    (
+      cause: unknown,
+      toolName: string,
+      options: {
+        readonly message: string;
+      }
+    ): ExportedToolError =>
       ExportedToolError.make({
         cause: O.fromUndefinedOr(cause),
         message: options.message,
@@ -205,7 +222,9 @@ const decodeToolParameters = (
   parameterNames: ReadonlyArray<string>,
   args: ReadonlyArray<unknown>
 ): Effect.Effect<Tool.Parameters<NlpTool>, ExportedToolError> =>
-  S.decodeEffect(tool.parametersSchema)(buildArgsObject(parameterNames, args)).pipe(
+  pipe(
+    buildArgsObject(parameterNames, args),
+    pipe(tool.parametersSchema, S.decodeEffect),
     Obs.trackNlpDuration("nlp.tool.decode_parameters", {
       argument_count: `${A.length(args)}`,
       operation: "decodeToolParameters",

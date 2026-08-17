@@ -8,8 +8,12 @@
  * @module Service/ViolationExplainer
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegNum } from "@beep/schema/Number";
+import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import { Context, Data, Duration, Effect, Layer, Schedule, Schema } from "effect";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -19,7 +23,6 @@ import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
-import type { ShaclViolation } from "./Shacl.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
 
@@ -35,7 +38,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
  */
 export class ExplanationError extends Data.TaggedError("ExplanationError")<{
   readonly message: string;
-  readonly violation: ShaclViolation;
+  readonly violation: ShaclValidationViolation;
   readonly cause?: unknown;
 }> {}
 
@@ -57,7 +60,7 @@ export class ExplanationContext extends Schema.Class<ExplanationContext>("Explan
   /** Domain description for additional context */
   domainDescription: Schema.String.pipe(SchemaUtils.withKeyDefaults("")),
   /** Maximum tokens for the explanation */
-  maxTokens: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(500)),
+  maxTokens: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(500))),
 }) {
   /**
    * Create empty context
@@ -90,17 +93,17 @@ export class LlmViolationExplanation extends Schema.Class<LlmViolationExplanatio
   /** Suggested fix action */
   suggestion: Schema.String,
   /** Severity level */
-  severity: Schema.Literals(["Violation", "Warning", "Info"]),
+  severity: ShaclSeverity,
   /** Affected entity IRIs */
   affectedEntities: Schema.Array(Schema.String),
   /** Confidence in the explanation (0-1) */
-  confidence: Schema.Finite.pipe(SchemaUtils.withKeyDefaults(0.8)),
+  confidence: Confidence.pipe(SchemaUtils.withKeyDefaults(Confidence.make(0.8))),
 }) {
   /**
    * True if this is a critical violation
    */
   get isCritical(): boolean {
-    return this.severity === "Violation";
+    return this.severity === "violation";
   }
 }
 
@@ -112,9 +115,9 @@ export class LlmViolationExplanation extends Schema.Class<LlmViolationExplanatio
  */
 export class BatchExplanationResult extends Schema.Class<BatchExplanationResult>("BatchExplanationResult")({
   explanations: Schema.Array(LlmViolationExplanation),
-  totalViolations: Schema.Finite,
-  explainedCount: Schema.Finite,
-  durationMs: Schema.Finite,
+  totalViolations: NonNegativeInt,
+  explainedCount: NonNegativeInt,
+  durationMs: NonNegNum,
 }) {
   /**
    * True if all violations were explained
@@ -146,7 +149,7 @@ const ExplanationResponseSchema = Schema.Struct({
     title: "Affected Entities",
     description: "IRIs of entities affected by this violation",
   }),
-  confidence: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 })).annotate({
+  confidence: Confidence.annotate({
     title: "Confidence",
     description: "Confidence in the explanation accuracy (0-1)",
   }),
@@ -198,12 +201,12 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
      * Generate explanation for a single violation
      */
     const explain = Effect.fn("ViolationExplainer.explain")(function* (
-      violation: ShaclViolation,
+      violation: ShaclValidationViolation,
       context: ExplanationContext
     ): Effect.fn.Return<LlmViolationExplanation, ExplanationError> {
       yield* Effect.logInfo("ViolationExplainer.explain starting", {
         focusNode: violation.focusNode,
-        path: violation.path,
+        path: O.some(violation.path.value),
         severity: violation.severity,
       });
 
@@ -238,7 +241,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
 
       return LlmViolationExplanation.make({
         focusNode: violation.focusNode,
-        path: violation.path,
+        path: O.some(violation.path.value),
         explanation: result.explanation,
         suggestion: result.suggestion,
         severity: violation.severity,
@@ -251,7 +254,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
      * Explain multiple violations in batch
      */
     const explainBatch = Effect.fn("ViolationExplainer.explainBatch")(function* (
-      violations: ReadonlyArray<ShaclViolation>,
+      violations: ReadonlyArray<ShaclValidationViolation>,
       context: ExplanationContext,
       options?: { concurrency?: number }
     ): Effect.fn.Return<BatchExplanationResult, ExplanationError> {
@@ -278,8 +281,8 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
 
       return BatchExplanationResult.make({
         explanations: [...explanations],
-        totalViolations: violations.length,
-        explainedCount: explanations.length,
+        totalViolations: NonNegativeInt.make(violations.length),
+        explainedCount: NonNegativeInt.make(explanations.length),
         durationMs,
       });
     });
@@ -287,17 +290,17 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
     /**
      * Generate a quick rule-based explanation (no LLM)
      */
-    const explainQuick = (violation: ShaclViolation): LlmViolationExplanation => {
+    const explainQuick = (violation: ShaclValidationViolation): LlmViolationExplanation => {
       const { explanation, suggestion } = generateRuleBasedExplanation(violation);
 
       return LlmViolationExplanation.make({
         focusNode: violation.focusNode,
-        path: violation.path,
+        path: O.some(violation.path.value),
         explanation,
         suggestion,
         severity: violation.severity,
         affectedEntities: [violation.focusNode],
-        confidence: 0.6, // Lower confidence for rule-based
+        confidence: Confidence.make(0.6), // Lower confidence for rule-based
       });
     };
 
@@ -347,7 +350,7 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
        * @returns Explanation (LLM or rule-based)
        */
       explainWithFallback: (
-        violation: ShaclViolation,
+        violation: ShaclValidationViolation,
         context: ExplanationContext
       ): Effect.Effect<LlmViolationExplanation, never> =>
         explain(violation, context).pipe(
@@ -375,13 +378,13 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
 /**
  * Build explanation prompt for LLM
  */
-const buildExplanationPrompt = (violation: ShaclViolation, context: ExplanationContext): string => {
+const buildExplanationPrompt = (violation: ShaclValidationViolation, context: ExplanationContext): string => {
   let parts: Array<string> = [
     "You are an expert at explaining SHACL validation errors in plain language.",
     "",
     "## Violation Details",
     `- **Focus Node**: ${violation.focusNode}`,
-    O.match(violation.path, { onNone: () => "", onSome: (path) => `- **Property Path**: ${path}` }),
+    `- **Property Path**: ${violation.path.value}`,
     `- **Message**: ${violation.message}`,
     `- **Severity**: ${violation.severity}`,
     "",
@@ -421,9 +424,11 @@ const buildExplanationPrompt = (violation: ShaclViolation, context: ExplanationC
 /**
  * Generate rule-based explanation (no LLM)
  */
-const generateRuleBasedExplanation = (violation: ShaclViolation): { explanation: string; suggestion: string } => {
+const generateRuleBasedExplanation = (
+  violation: ShaclValidationViolation
+): { explanation: string; suggestion: string } => {
   const message = Str.toLowerCase(violation.message);
-  const path = O.getOrElse(violation.path, () => "unknown");
+  const path = violation.path.value;
 
   // Cardinality constraints
   if (Str.includes("mincount")(message) || Str.includes("min count")(message)) {

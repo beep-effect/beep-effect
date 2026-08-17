@@ -261,7 +261,7 @@ export class BackendCapabilities extends S.Class<BackendCapabilities>($I`Backend
     }),
     /** Lemmatization (morphological normalization). */
     lemmatization: S.Boolean.annotateKey({
-      description: "",
+      description: "Lemmatization (morphological normalization).",
     }),
     /** Named entity recognition (PERSON, ORG, LOC, ...). */
     ner: S.Boolean.annotateKey({

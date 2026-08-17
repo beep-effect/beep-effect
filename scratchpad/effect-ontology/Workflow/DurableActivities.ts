@@ -15,9 +15,16 @@
  * @since 2.0.0
  */
 
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { IRI, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_USED, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
+import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { SchemaUtils } from "@beep/schema";
 import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegNum } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
 import { Chunk, DateTime, Duration, Effect, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
@@ -28,16 +35,15 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LanguageModel } from "effect/unstable/ai";
 import { Activity } from "effect/unstable/workflow";
-import * as N3 from "n3";
 import { ActivityError, ActivityGenericError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts";
 import type { BatchId } from "../Domain/Identity.ts";
 import { ContentHash, GcsUri } from "../Domain/Identity.ts";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts";
 import { ElementEmbedding, OntologyEmbeddings, OntologyEmbeddingsJson } from "../Domain/Model/OntologyEmbeddings.ts";
-import { EntityId, IRI } from "../Domain/Model/shared.ts";
+import { EntityId } from "../Domain/Model/shared.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
-import { CLAIMS, PROV, RDF, RDFS } from "../Domain/Rdf/Constants.ts";
+import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import type {
   IngestionActivityInput,
   ResolutionActivityInput,
@@ -60,15 +66,20 @@ import { StageTimeoutService } from "../Service/LlmControl/StageTimeout.ts";
 import { generateObjectWithRetry } from "../Service/LlmWithRetry.ts";
 import { parseOntologyFromStore } from "../Service/Ontology.ts";
 import type { RdfStore } from "../Service/Rdf.ts";
-import { RdfBuilder } from "../Service/Rdf.ts";
+import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize } from "../Service/Rdf.ts";
 import { Reasoner, ReasoningConfig } from "../Service/Reasoner.ts";
-import type { ShaclViolation } from "../Service/Shacl.ts";
-import { ShaclService, ShaclValidationReport } from "../Service/Shacl.ts";
+import { ShaclValidationReport, ShaclWorkflowService } from "../Service/Shacl.ts";
 import { GenerationMismatchError, StorageService } from "../Service/Storage.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
 import { extractLocalNameFromIri } from "../Utils/Iri.ts";
 import { computeQuadDelta } from "../Utils/QuadDelta.ts";
+
+const RDF_STATEMENT = makeNamedNode(`${RDF_NAMESPACE}Statement`);
+const RDF_SUBJECT = makeNamedNode(`${RDF_NAMESPACE}subject`);
+const RDF_PREDICATE = makeNamedNode(`${RDF_NAMESPACE}predicate`);
+const RDF_OBJECT = makeNamedNode(`${RDF_NAMESPACE}object`);
+const PROV_GENERATED_AT_TIME = makeNamedNode(`${PROV_NAMESPACE}generatedAtTime`);
 
 // -----------------------------------------------------------------------------
 // Output Schemas (must be serializable for journaling)
@@ -77,46 +88,46 @@ import { computeQuadDelta } from "../Utils/QuadDelta.ts";
 export const ResolutionOutput = S.Struct({
   resolvedUri: GcsUri,
   /** Total entities before resolution */
-  entitiesTotal: S.Finite,
+  entitiesTotal: NonNegativeInt,
   /** Number of clusters formed (resolved entities) */
-  clustersFormed: S.Finite,
+  clustersFormed: NonNegativeInt,
   /** Total relations in merged graph */
-  relationsTotal: S.Finite,
+  relationsTotal: NonNegativeInt,
   /** Compression ratio: 1 - (clustersFormed / entitiesTotal) */
-  compressionRatio: S.Finite,
+  compressionRatio: UnitInterval,
   /** Maps canonical entity ID to source document URIs */
   provenanceMap: S.Record(S.String, S.Array(S.String)),
-  durationMs: S.Finite,
+  durationMs: NonNegNum,
 });
 
 export const ValidationOutput = ValidationActivityOutput;
 
 export const IngestionOutput = S.Struct({
   canonicalUri: GcsUri,
-  triplesIngested: S.Finite,
-  durationMs: S.Finite,
+  triplesIngested: NonNegativeInt,
+  durationMs: NonNegNum,
 });
 
 export const ClaimPersistenceOutput = S.Struct({
   /** Total claims persisted across all documents */
-  claimsPersisted: S.Finite,
+  claimsPersisted: NonNegativeInt,
   /** Number of documents processed */
-  documentsProcessed: S.Finite,
+  documentsProcessed: NonNegativeInt,
   /** Number of documents that failed claim persistence */
-  documentsFailed: S.Finite,
-  durationMs: S.Finite,
+  documentsFailed: NonNegativeInt,
+  durationMs: NonNegNum,
 });
 
 export const CrossBatchResolutionOutput = S.Struct({
   /** Total entities processed */
-  entitiesTotal: S.Finite,
+  entitiesTotal: NonNegativeInt,
   /** Entities matched to existing canonical entities */
-  matchedToExisting: S.Finite,
+  matchedToExisting: NonNegativeInt,
   /** New canonical entities created */
-  newCanonicals: S.Finite,
+  newCanonicals: NonNegativeInt,
   /** Candidates evaluated during blocking */
-  candidatesEvaluated: S.Finite,
-  durationMs: S.Finite,
+  candidatesEvaluated: NonNegativeInt,
+  durationMs: NonNegNum,
 });
 
 export interface CrossBatchResolutionInput {
@@ -141,8 +152,11 @@ const requireContent = (opt: O.Option<string>, key: string) =>
     onSome: (value) => Effect.succeed(value),
   });
 
-const summarizeViolations = (violations: ReadonlyArray<ShaclViolation>) => {
-  const grouped = MutableHashMap.empty<ShaclViolation["severity"], { count: number; sampleMessages: Array<string> }>();
+const summarizeViolations = (violations: ReadonlyArray<ShaclValidationViolation>) => {
+  const grouped = MutableHashMap.empty<
+    ShaclValidationViolation["severity"],
+    { count: number; sampleMessages: Array<string> }
+  >();
 
   for (const violation of violations) {
     const entry = O.getOrElse(
@@ -178,7 +192,7 @@ const parseTurtleStats = Effect.fn("parseTurtleStats")(function* (turtle: string
   const rdf = yield* RdfBuilder;
   const store = yield* rdf.parseTurtle(turtle);
   const typeQuads = yield* rdf.queryStore(store, {
-    predicate: RDF.type,
+    predicate: RDF_TYPE,
   });
   const allQuads = yield* rdf.queryStore(store, {});
   return {
@@ -198,15 +212,14 @@ const parseTurtleStats = Effect.fn("parseTurtleStats")(function* (turtle: string
  */
 const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (store: RdfStore) {
   const rdf = yield* RdfBuilder;
-  const typeQuads = yield* rdf.queryStore(store, { predicate: RDF.type });
-  const labelQuads = yield* rdf.queryStore(store, { predicate: RDFS.label });
+  const typeQuads = yield* rdf.queryStore(store, { predicate: RDF_TYPE });
+  const labelQuads = yield* rdf.queryStore(store, { predicate: RDFS_LABEL });
   const entityTypes = MutableHashMap.empty<string, Array<string>>();
   const entityIris = MutableHashSet.empty<string>();
   for (const quad of typeQuads) {
-    const subjectIri = quad.subject as string;
-    if (subjectIri.startsWith("_:")) continue;
-    const typeIri = quad.object as string;
-    if (typeof typeIri !== "string") continue;
+    if (quad.subject.termType !== "NamedNode" || quad.object.termType !== "NamedNode") continue;
+    const subjectIri = quad.subject.value;
+    const typeIri = quad.object.value;
     if (typeIri.includes("owl#") || typeIri.includes("rdf-schema#")) continue;
     if (subjectIri.startsWith(CLAIMS.namespace)) continue;
     if (typeIri.startsWith(CLAIMS.namespace)) continue;
@@ -217,16 +230,9 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
   }
   const entityLabels = MutableHashMap.empty<string, string>();
   for (const quad of labelQuads) {
-    const subjectIri = quad.subject as string;
+    const subjectIri = quad.subject.value;
     if (MutableHashSet.has(entityIris, subjectIri)) {
-      const label =
-        typeof quad.object === "string"
-          ? quad.object
-          : (
-              quad.object as {
-                value: string;
-              }
-            ).value;
+      const label = quad.object.value;
       MutableHashMap.set(entityLabels, subjectIri, label);
     }
   }
@@ -249,15 +255,16 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
   const allQuads = yield* rdf.queryStore(store, {});
   const relations: Array<Relation> = [];
   for (const quad of allQuads) {
-    const subjectIri = quad.subject as string;
+    if (quad.subject.termType !== "NamedNode") continue;
+    const subjectIri = quad.subject.value;
     const subjectLocalName = extractLocalNameFromIri(subjectIri);
     const subjectId = EntityId.make(subjectLocalName);
     if (!MutableHashSet.has(entityIdSet, subjectId)) continue;
-    const predicate = quad.predicate as string;
-    if (predicate === RDF.type || predicate === RDFS.label) continue;
+    const predicate = quad.predicate.value;
+    if (predicate === RDF_TYPE.value || predicate === RDFS_LABEL.value) continue;
     const objectValue = quad.object;
-    if (typeof objectValue === "string" && !objectValue.startsWith("_:")) {
-      const objectLocalName = extractLocalNameFromIri(objectValue);
+    if (objectValue.termType === "NamedNode") {
+      const objectLocalName = extractLocalNameFromIri(objectValue.value);
       const objectId = EntityId.make(objectLocalName);
       if (MutableHashSet.has(entityIdSet, objectId)) {
         relations.push(
@@ -465,22 +472,22 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
 
       yield* Effect.logInfo("Resolution activity complete", {
         batchId: input.batchId,
-        entitiesTotal: totalEntities,
-        clustersFormed: resolutionGraph.stats.clusterCount,
-        relationsTotal: totalRelations,
-        compressionRatio,
+        entitiesTotal: NonNegativeInt.make(totalEntities),
+        clustersFormed: NonNegativeInt.make(resolutionGraph.stats.clusterCount),
+        relationsTotal: NonNegativeInt.make(totalRelations),
+        compressionRatio: UnitInterval.make(compressionRatio),
         provenanceMapEntries: Object.keys(provenanceMap).length,
-        durationMs: Duration.toMillis(DateTime.distance(start, end)),
+        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       });
 
       return {
         resolvedUri: GcsUri.fromUnknown(`gs://${bucket}/${resolutionPath}`),
-        entitiesTotal: totalEntities,
-        clustersFormed: resolutionGraph.stats.clusterCount,
-        relationsTotal: totalRelations,
-        compressionRatio,
+        entitiesTotal: NonNegativeInt.make(totalEntities),
+        clustersFormed: NonNegativeInt.make(resolutionGraph.stats.clusterCount),
+        relationsTotal: NonNegativeInt.make(totalRelations),
+        compressionRatio: UnitInterval.make(compressionRatio),
         provenanceMap,
-        durationMs: Duration.toMillis(DateTime.distance(start, end)),
+        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(toActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -502,7 +509,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       const storage = yield* StorageService;
       const config = yield* ConfigService;
       const rdf = yield* RdfBuilder;
-      const shacl = yield* ShaclService;
+      const shacl = yield* ShaclWorkflowService;
       const bucket = resolveBucket(config);
 
       yield* Effect.logInfo("Validation activity starting", {
@@ -547,7 +554,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
               ontologyUri: input.ontologyUri,
             });
             const parsed = yield* rdf.parseTurtle(shapesContent);
-            return parsed._store;
+            return parsed;
           }
           yield* Effect.logInfo("Validation: Auto-generating SHACL shapes from ontology", {
             activity: "validation",
@@ -567,7 +574,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
             )
           );
           const ontologyStore = yield* rdf.parseTurtle(ontologyContent);
-          return yield* shacl.generateShapesFromOntology(ontologyStore._store);
+          return yield* shacl.generateShapesFromOntology(ontologyStore);
         },
         Effect.tapCause((cause) =>
           Effect.logError("Validation: Failed to load or generate shapes", {
@@ -585,7 +592,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
 
       // Run validation with policy - this will fail if policy is violated
       const shapes = yield* shapesStore();
-      const report = yield* shacl.validateWithPolicy(dataStore._store, shapes, policy).pipe(
+      const report = yield* shacl.validateWithPolicy(dataStore, shapes, policy).pipe(
         Effect.tapCause((cause) =>
           Effect.logError("Validation: SHACL validation failed", {
             activity: "validation",
@@ -606,17 +613,19 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
 
       yield* Effect.logInfo("Validation activity complete", {
         batchId: input.batchId,
-        conforms: report.conforms,
-        violations: NonNegativeInt.make(report.violations.length),
+        conforms: report.validation.conforms,
+        violations: NonNegativeInt.make(report.validation.violations.length),
         policyApplied: policy,
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       });
 
       return {
         validatedUri: GcsUri.fromUnknown(`gs://${bucket}/${validationGraphPath}`),
-        conforms: report.conforms,
-        violations: NonNegativeInt.make(report.violations.length),
-        violationSummary: P.isTruthy(report.violations.length) ? summarizeViolations(report.violations) : [],
+        conforms: report.validation.conforms,
+        violations: NonNegativeInt.make(report.validation.violations.length),
+        violationSummary: P.isTruthy(report.validation.violations.length)
+          ? summarizeViolations(report.validation.violations)
+          : [],
         reportUri: GcsUri.fromUnknown(`gs://${bucket}/${reportPath}`),
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       };
@@ -688,7 +697,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
           })
         )
       );
-      const newTripleCount = newStore._store.size;
+      const newTripleCount = rdfStoreSize(newStore);
 
       // Optimistic locking merge with retry on conflict
       // This prevents concurrent batches from overwriting each other's data
@@ -712,7 +721,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
               })
             )
           );
-          mergedStats.existingTriples = existingStore._store.size;
+          mergedStats.existingTriples = rdfStoreSize(existingStore);
 
           // Re-parse new graph for merge (since we can't clone N3 stores)
           const newStoreForMerge = yield* rdf.parseTurtle(validatedGraph).pipe(
@@ -780,7 +789,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
             newTriples: mergedStats.newTriples,
             addedTriples: mergedStats.addedTriples,
             deduplicatedTriples,
-            totalTriples: existingStore._store.size,
+            totalTriples: rdfStoreSize(existingStore),
           });
         } else {
           // No existing graph - use new graph as-is
@@ -837,8 +846,8 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
 
       return {
         canonicalUri: GcsUri.fromUnknown(`gs://${bucket}/${canonicalPath}`),
-        triplesIngested: stats.tripleCount,
-        durationMs: Duration.toMillis(DateTime.distance(start, end)),
+        triplesIngested: NonNegativeInt.make(stats.tripleCount),
+        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(toActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -904,10 +913,10 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
         });
         const end = yield* DateTime.now;
         return {
-          claimsPersisted: 0,
-          documentsProcessed: 0,
-          documentsFailed: 0,
-          durationMs: Duration.toMillis(DateTime.distance(start, end)),
+          claimsPersisted: NonNegativeInt.make(0),
+          documentsProcessed: NonNegativeInt.make(0),
+          documentsFailed: NonNegativeInt.make(0),
+          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
         };
       }
 
@@ -976,7 +985,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
             baseNamespace,
             documentId: docMeta.documentId,
             ontologyId: input.ontologyId,
-            defaultConfidence: 0.85,
+            defaultConfidence: Confidence.make(0.85),
           });
 
           if (claims.length === 0) {
@@ -1046,10 +1055,10 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
       });
 
       return {
-        claimsPersisted: totalClaimsPersisted,
-        documentsProcessed,
-        documentsFailed,
-        durationMs: Duration.toMillis(DateTime.distance(start, end)),
+        claimsPersisted: NonNegativeInt.make(totalClaimsPersisted),
+        documentsProcessed: NonNegativeInt.make(documentsProcessed),
+        documentsFailed: NonNegativeInt.make(documentsFailed),
+        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(toActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -1090,11 +1099,11 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
         });
         const end = yield* DateTime.now;
         return {
-          entitiesTotal: 0,
-          matchedToExisting: 0,
-          newCanonicals: 0,
-          candidatesEvaluated: 0,
-          durationMs: Duration.toMillis(DateTime.distance(start, end)),
+          entitiesTotal: NonNegativeInt.make(0),
+          matchedToExisting: NonNegativeInt.make(0),
+          newCanonicals: NonNegativeInt.make(0),
+          candidatesEvaluated: NonNegativeInt.make(0),
+          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
         };
       }
 
@@ -1107,11 +1116,11 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
         });
         const end = yield* DateTime.now;
         return {
-          entitiesTotal: 0,
-          matchedToExisting: 0,
-          newCanonicals: 0,
-          candidatesEvaluated: 0,
-          durationMs: Duration.toMillis(DateTime.distance(start, end)),
+          entitiesTotal: NonNegativeInt.make(0),
+          matchedToExisting: NonNegativeInt.make(0),
+          newCanonicals: NonNegativeInt.make(0),
+          candidatesEvaluated: NonNegativeInt.make(0),
+          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
         };
       }
 
@@ -1156,11 +1165,11 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
       });
 
       return {
-        entitiesTotal: result.stats.totalEntities,
-        matchedToExisting: result.stats.matchedToExisting,
-        newCanonicals: result.stats.createdNew,
-        candidatesEvaluated: result.stats.candidatesEvaluated,
-        durationMs: Duration.toMillis(DateTime.distance(start, end)),
+        entitiesTotal: NonNegativeInt.make(result.stats.totalEntities),
+        matchedToExisting: NonNegativeInt.make(result.stats.matchedToExisting),
+        newCanonicals: NonNegativeInt.make(result.stats.createdNew),
+        candidatesEvaluated: NonNegativeInt.make(result.stats.candidatesEvaluated),
+        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(toActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -1195,15 +1204,15 @@ export const InferenceOutput = S.Struct({
   /** URI of the enriched graph with inferences */
   enrichedGraphUri: GcsUri,
   /** Number of triples inferred */
-  inferredTripleCount: S.Finite,
+  inferredTripleCount: NonNegativeInt,
   /** Total triples after inference */
-  totalTripleCount: S.Finite,
+  totalTripleCount: NonNegativeInt,
   /** Number of provenance quads added */
-  provenanceQuadCount: S.Finite,
+  provenanceQuadCount: NonNegativeInt,
   /** Number of rules applied */
-  rulesApplied: S.Finite,
+  rulesApplied: NonNegativeInt,
   /** Duration in milliseconds */
-  durationMs: S.Finite,
+  durationMs: NonNegNum,
 });
 export type InferenceOutput = typeof InferenceOutput.Type;
 
@@ -1245,12 +1254,12 @@ export const makeInferenceActivity = (input: InferenceInput) =>
         });
         const end = yield* DateTime.now;
         return {
-          enrichedGraphUri: input.resolvedGraphUri as GcsUri,
-          inferredTripleCount: 0,
-          totalTripleCount: 0,
-          provenanceQuadCount: 0,
-          rulesApplied: 0,
-          durationMs: Duration.toMillis(DateTime.distance(start, end)),
+          enrichedGraphUri: GcsUri.fromUnknown(input.resolvedGraphUri),
+          inferredTripleCount: NonNegativeInt.make(0),
+          totalTripleCount: NonNegativeInt.make(0),
+          provenanceQuadCount: NonNegativeInt.make(0),
+          rulesApplied: NonNegativeInt.make(0),
+          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
         };
       }
 
@@ -1288,23 +1297,24 @@ export const makeInferenceActivity = (input: InferenceInput) =>
       let provenanceQuadCount = 0;
       if (delta.deltaCount > 0) {
         const inferenceActivityIri = `urn:provenance:inference:${input.batchId}`;
-        const df = N3.DataFactory;
-
         // Helper to add a quad to the enriched store
         const addQuad = (s: string, p: string, o: string) => {
-          enrichedStore._store.addQuad(
-            df.quad(
-              df.namedNode(s),
-              df.namedNode(p),
-              o.startsWith("http") || o.startsWith("urn:") ? df.namedNode(o) : df.literal(o)
+          rdfStoreAddQuad(
+            enrichedStore,
+            makeQuad(
+              makeNamedNode(s),
+              makeNamedNode(p),
+              o.startsWith("http") || o.startsWith("urn:")
+                ? makeNamedNode(o)
+                : makeLiteral(o, "http://www.w3.org/2001/XMLSchema#string")
             )
           );
         };
 
         // Add inference activity metadata
-        addQuad(inferenceActivityIri, RDF.type, PROV.Activity);
-        addQuad(inferenceActivityIri, PROV.generatedAtTime, DateTime.formatIso(start));
-        addQuad(inferenceActivityIri, PROV.used, input.resolvedGraphUri);
+        addQuad(inferenceActivityIri, RDF_TYPE.value, PROV_ACTIVITY.value);
+        addQuad(inferenceActivityIri, PROV_GENERATED_AT_TIME.value, DateTime.formatIso(start));
+        addQuad(inferenceActivityIri, PROV_USED.value, input.resolvedGraphUri);
         provenanceQuadCount += 3;
 
         // For each inferred triple, add prov:wasGeneratedBy linking to the activity
@@ -1317,15 +1327,15 @@ export const makeInferenceActivity = (input: InferenceInput) =>
           const statementIri = `${inferenceActivityIri}/stmt/${Math.abs(quadHash).toString(16)}`;
 
           // Reify the statement
-          addQuad(statementIri, RDF.type, RDF.Statement);
-          addQuad(statementIri, RDF.subject, quad.subject.value);
-          addQuad(statementIri, RDF.predicate, quad.predicate.value);
+          addQuad(statementIri, RDF_TYPE.value, RDF_STATEMENT.value);
+          addQuad(statementIri, RDF_SUBJECT.value, quad.subject.value);
+          addQuad(statementIri, RDF_PREDICATE.value, quad.predicate.value);
           addQuad(
             statementIri,
-            RDF.object,
+            RDF_OBJECT.value,
             quad.object.termType === "Literal" ? `"${quad.object.value}"` : quad.object.value
           );
-          addQuad(statementIri, PROV.wasGeneratedBy, inferenceActivityIri);
+          addQuad(statementIri, PROV_WAS_GENERATED_BY.value, inferenceActivityIri);
           provenanceQuadCount += 5;
         }
 
@@ -1346,18 +1356,18 @@ export const makeInferenceActivity = (input: InferenceInput) =>
       yield* Effect.logInfo("Inference activity complete", {
         batchId: input.batchId,
         inferredTriples: delta.deltaCount,
-        totalTriples: enrichedStore._store.size,
+        totalTriples: rdfStoreSize(enrichedStore),
         provenanceQuads: provenanceQuadCount,
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       });
 
       return {
         enrichedGraphUri: GcsUri.fromUnknown(`gs://${bucket}/${enrichedPath}`),
-        inferredTripleCount: delta.deltaCount,
-        totalTripleCount: enrichedStore._store.size,
-        provenanceQuadCount,
+        inferredTripleCount: NonNegativeInt.make(delta.deltaCount),
+        totalTripleCount: NonNegativeInt.make(rdfStoreSize(enrichedStore)),
+        provenanceQuadCount: NonNegativeInt.make(provenanceQuadCount),
         rulesApplied: reasoningResult.rulesApplied,
-        durationMs: Duration.toMillis(DateTime.distance(start, end)),
+        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(toActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -1387,13 +1397,13 @@ export const ComputeEmbeddingsOutput = S.Struct({
   /** Version hash of the ontology */
   version: S.String,
   /** Number of class embeddings */
-  classCount: S.Finite,
+  classCount: NonNegativeInt,
   /** Number of property embeddings */
-  propertyCount: S.Finite,
+  propertyCount: NonNegativeInt,
   /** Embedding dimension */
-  dimension: S.Finite,
+  dimension: NonNegativeInt,
   /** Duration in milliseconds */
-  durationMs: S.Finite,
+  durationMs: NonNegNum,
 });
 export type ComputeEmbeddingsOutput = typeof ComputeEmbeddingsOutput.Type;
 
@@ -1521,10 +1531,10 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       return {
         embeddingsUri: GcsUri.fromUnknown(`gs://${bucket}/${embeddingsPath}`),
         version,
-        classCount: classEmbeddings.length,
-        propertyCount: propertyEmbeddings.length,
-        dimension,
-        durationMs: Duration.toMillis(DateTime.distance(start, end)),
+        classCount: NonNegativeInt.make(classEmbeddings.length),
+        propertyCount: NonNegativeInt.make(propertyEmbeddings.length),
+        dimension: NonNegativeInt.make(dimension),
+        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(toActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -1551,7 +1561,7 @@ export const EntityPair = S.Struct({
   /** Types for entity B */
   typesB: S.Array(S.String),
   /** Initial similarity score from embedding/string matching */
-  similarity: S.Finite,
+  similarity: UnitInterval,
 });
 export type EntityPair = typeof EntityPair.Type;
 
@@ -1564,10 +1574,7 @@ export const LlmVerificationInput = S.Struct({
   /** Entity pairs with low confidence to verify */
   entityPairs: S.Array(EntityPair),
   /** Similarity threshold below which to verify (default: 0.7) */
-  verificationThreshold: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).pipe(
-    S.OptionFromOptionalKey,
-    SchemaUtils.withNoneDefault
-  ),
+  verificationThreshold: UnitInterval.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
 });
 export type LlmVerificationInput = typeof LlmVerificationInput.Type;
 
@@ -1582,9 +1589,9 @@ export const VerifiedPair = S.Struct({
   /** Whether LLM confirmed these are the same entity */
   sameEntity: S.Boolean,
   /** LLM confidence in the verification */
-  confidence: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })),
+  confidence: Confidence,
   /** Original similarity score */
-  originalSimilarity: S.Finite,
+  originalSimilarity: UnitInterval,
 });
 export type VerifiedPair = typeof VerifiedPair.Type;
 
@@ -1597,11 +1604,11 @@ export const LlmVerificationOutput = S.Struct({
   /** Pairs rejected as different entities */
   rejected: S.Array(VerifiedPair),
   /** Pairs skipped (above threshold) */
-  skipped: S.Finite,
+  skipped: NonNegativeInt,
   /** Total pairs processed */
-  totalProcessed: S.Finite,
+  totalProcessed: NonNegativeInt,
   /** Duration in milliseconds */
-  durationMs: S.Finite,
+  durationMs: NonNegNum,
 });
 export type LlmVerificationOutput = typeof LlmVerificationOutput.Type;
 
@@ -1612,7 +1619,7 @@ const EntityComparisonSchema = S.Struct({
   sameEntity: S.Boolean.annotate({
     description: "True if these refer to the same real-world entity",
   }),
-  confidence: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).annotate({
+  confidence: Confidence.annotate({
     description: "Confidence in the decision (0-1)",
   }),
   reasoning: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotate({
@@ -1629,13 +1636,13 @@ const EntityComparisonSchema = S.Struct({
 const BatchComparisonSchema = S.Struct({
   results: S.Array(
     S.Struct({
-      index: S.Finite.annotate({
+      index: NonNegativeInt.annotate({
         description: "Index of the pair in the input list (0-based)",
       }),
       sameEntity: S.Boolean.annotate({
         description: "True if these refer to the same real-world entity",
       }),
-      confidence: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).annotate({
+      confidence: Confidence.annotate({
         description: "Confidence in the decision (0-1)",
       }),
     })
@@ -1754,9 +1761,9 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
         return {
           verified: [],
           rejected: [],
-          skipped: skippedCount,
-          totalProcessed: 0,
-          durationMs: Duration.toMillis(DateTime.distance(start, end)),
+          skipped: NonNegativeInt.make(skippedCount),
+          totalProcessed: NonNegativeInt.make(0),
+          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
         };
       }
 
@@ -1848,7 +1855,7 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
           );
 
           // Map results back to pairs
-          type ComparisonResult = { index: number; sameEntity: boolean; confidence: number };
+          type ComparisonResult = { index: number; sameEntity: boolean; confidence: Confidence };
           const resultsMap = HashMap.fromIterable(
             (result.value.results as ReadonlyArray<ComparisonResult>).map((r) => [r.index, r])
           );
@@ -1859,7 +1866,10 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
               entityA: pair.entityA,
               entityB: pair.entityB,
               sameEntity: O.match(llmResult, { onNone: () => false, onSome: (value) => value.sameEntity }),
-              confidence: O.match(llmResult, { onNone: () => 0, onSome: (value) => value.confidence }),
+              confidence: O.match(llmResult, {
+                onNone: () => Confidence.make(0),
+                onSome: (value) => value.confidence,
+              }),
               originalSimilarity: pair.similarity,
             };
 
@@ -1886,9 +1896,9 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
       return {
         verified,
         rejected,
-        skipped: skippedCount,
-        totalProcessed: pairsToVerify.length,
-        durationMs: Duration.toMillis(DateTime.distance(start, end)),
+        skipped: NonNegativeInt.make(skippedCount),
+        totalProcessed: NonNegativeInt.make(pairsToVerify.length),
+        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
       };
     }).pipe(Effect.mapError(toActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -1923,7 +1933,7 @@ const DocumentClassificationResponse = S.Struct({
     description: "2-5 domain tags describing the document topic",
   }),
   /** Complexity score 0-1 */
-  complexityScore: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).annotate({
+  complexityScore: UnitInterval.annotate({
     description: "Document complexity (0=simple, 1=complex)",
   }),
   /** Entity density estimation */
@@ -1947,7 +1957,7 @@ const BatchClassificationResponse = S.Struct({
   classifications: S.Array(
     S.Struct({
       /** Document index in the batch (0-based) */
-      index: S.Finite,
+      index: NonNegativeInt,
       /** Classification result */
       classification: DocumentClassificationResponse,
     })
@@ -1959,12 +1969,12 @@ const BatchClassificationResponse = S.Struct({
  */
 export const PreprocessingOutput = S.Struct({
   enrichedManifestUri: GcsUri,
-  totalDocuments: S.Finite,
-  classifiedCount: S.Finite,
-  failedCount: S.Finite,
-  totalEstimatedTokens: S.Finite,
-  averageComplexity: S.Finite,
-  durationMs: S.Finite,
+  totalDocuments: NonNegativeInt,
+  classifiedCount: NonNegativeInt,
+  failedCount: NonNegativeInt,
+  totalEstimatedTokens: NonNegativeInt,
+  averageComplexity: UnitInterval,
+  durationMs: NonNegNum,
 });
 export type PreprocessingOutput = typeof PreprocessingOutput.Type;
 
@@ -2295,12 +2305,12 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
 
       return {
         enrichedManifestUri: GcsUri.fromUnknown(`gs://${bucket}/${enrichedManifestPath}`),
-        totalDocuments: documentMetadata.length,
-        classifiedCount,
-        failedCount,
-        totalEstimatedTokens,
-        averageComplexity: avgComplexity,
-        durationMs,
+        totalDocuments: NonNegativeInt.make(documentMetadata.length),
+        classifiedCount: NonNegativeInt.make(classifiedCount),
+        failedCount: NonNegativeInt.make(failedCount),
+        totalEstimatedTokens: NonNegativeInt.make(totalEstimatedTokens),
+        averageComplexity: UnitInterval.make(avgComplexity),
+        durationMs: NonNegNum.make(durationMs),
       };
     }).pipe(Effect.mapError(toActivityError)),
     interruptRetryPolicy: activityRetryPolicy,

@@ -23,8 +23,8 @@ import {Context, Data, DateTime, Effect, Layer} from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as P from "effect/Predicate";
-import type {ExtractionRunId, IdempotencyKey} from "../Domain/Identity.ts";
-import {ChunkId, DocumentId, OntologyVersion} from "../Domain/Identity.ts";
+import type { ExtractionRunId, IdempotencyKey } from "../Domain/Identity.ts";
+import { ChunkId, ContentHash, DocumentId, ExtractionRunId as ExtractionRunIdSchema, OntologyVersion } from "../Domain/Identity.ts";
 import type {
   AuditErrorType,
   AuditEventType,
@@ -69,11 +69,8 @@ const sha256Hex = (content: string): string => createHash("sha256").update(conte
  * @returns Deterministic document ID
  */
 const generateDocumentId = (text: string): ExtractionRunId => {
-  const hash = sha256Hex(text);
-  // Use first 12 hex chars to match DocumentId schema pattern
-  // This gives 48 bits of entropy - sufficient for unique document identification
-  const prefix = hash.slice(0, 12);
-  return `doc-${prefix}` as ExtractionRunId;
+  const documentId = DocumentId.fromContentHash(ContentHash.make(sha256Hex(text)));
+  return ExtractionRunIdSchema.make(documentId);
 };
 
 /**
@@ -107,7 +104,7 @@ const metadataKey = (runId: ExtractionRunId): string => runKey(runId, "metadata.
 
 const documentKey = (runId: ExtractionRunId): string => runKey(runId, "input", "document.txt");
 
-const chunkKey = (runId: ExtractionRunId, chunkIndex: number): string =>
+const chunkKey = (runId: ExtractionRunId, chunkIndex: NonNegativeInt): string =>
   runKey(runId, "input", "chunks", `chunk-${chunkIndex}.txt`);
 
 const outputKey = (runId: ExtractionRunId, filename: string): string => runKey(runId, "outputs", filename);
@@ -139,7 +136,11 @@ export interface ExtractionRunServiceMethods {
   /**
    * Save a text chunk
    */
-  saveChunk(runId: ExtractionRunId, chunkIndex: number, chunkText: string): Effect.Effect<ChunkId, ExtractionRunError>;
+  saveChunk(
+    runId: ExtractionRunId,
+    chunkIndex: NonNegativeInt,
+    chunkText: string
+  ): Effect.Effect<ChunkId, ExtractionRunError>;
 
   /**
    * Save an output artifact
@@ -325,14 +326,14 @@ const makeExtractionRunService = Effect.gen(function* () {
 
   const saveChunkRaw = Effect.fn("ExtractionRunService.saveChunk")(function* (
     runId: ExtractionRunId,
-    chunkIndex: number,
+    chunkIndex: NonNegativeInt,
     chunkText: string
   ) {
-    const chunkId = ChunkId.fromDocument(runId, NonNegativeInt.make(chunkIndex));
+    const chunkId = ChunkId.fromDocument(runId, chunkIndex);
     yield* storage.set(chunkKey(runId, chunkIndex), chunkText);
     return chunkId;
   });
-  const saveChunk = (runId: ExtractionRunId, chunkIndex: number, chunkText: string) =>
+  const saveChunk = (runId: ExtractionRunId, chunkIndex: NonNegativeInt, chunkText: string) =>
     saveChunkRaw(runId, chunkIndex, chunkText).pipe(
       Effect.mapError(mapRunError("Failed to save extraction chunk", runId))
     );
@@ -410,7 +411,7 @@ const makeExtractionRunService = Effect.gen(function* () {
         keys.flatMap((key): Array<ExtractionRunId> => {
           const match = /^runs\/([^/]+)\/metadata\.json$/.exec(key);
           const runId = match?.[1];
-          return P.isUndefined(runId) ? [] : [DocumentId.make(runId)];
+          return P.isUndefined(runId) || !DocumentId.is(runId) ? [] : [runId];
         }),
         (runId) => getRun(runId),
         {concurrency: 10}

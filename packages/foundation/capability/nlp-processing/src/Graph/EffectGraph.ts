@@ -264,7 +264,10 @@ export const makeNode: {
   <A>(data: A, parentId?: O.Option<NodeId>, operation?: O.Option<string>): Effect.Effect<GraphNode<A>>;
   (parentId?: O.Option<NodeId>, operation?: O.Option<string>): <A>(data: A) => Effect.Effect<GraphNode<A>>;
 } = dual(
-  (args) => args.length >= 2 || !O.isOption(args[0]),
+  // Data-first only at full arity or when the first argument is the data
+  // itself; the curried form passes two `Option`s, so an arity-2 call whose
+  // first argument is an `Option` is `(parentId, operation)`, not `(data, parentId)`.
+  (args) => args.length >= 3 || !O.isOption(args[0]),
   Effect.fn("makeNode")(function* <A>(
     data: A,
     parentId: O.Option<NodeId> = O.none(),

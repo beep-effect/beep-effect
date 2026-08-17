@@ -219,8 +219,16 @@ const localDefsRefTarget = (schema: JsonObject): O.Option<JsonObject> =>
     return isJsonObject(defs) && isJsonObject(defs[key]) ? O.some(defs[key]) : O.none();
   });
 
+// A parameter class with no fields renders as `anyOf: [object, array]` rather
+// than a bare `type: "object"`, so the object branch has to be recognized too —
+// otherwise a no-argument tool produces an inputSchema with no top-level `type`
+// and fails `McpSchema.Tool`'s validation at registration.
+const isObjectInputTarget = (target: JsonObject): boolean =>
+  target.type === "object" ||
+  (A.isArray(target.anyOf) && target.anyOf.some((branch) => isJsonObject(branch) && branch.type === "object"));
+
 const withTopLevelObjectInputSchema = (schema: JsonObject): JsonObject =>
-  schema.type === "object" || !O.exists(localDefsRefTarget(schema), (target) => target.type === "object")
+  schema.type === "object" || !O.exists(localDefsRefTarget(schema), isObjectInputTarget)
     ? schema
     : { type: "object", ...schema };
 

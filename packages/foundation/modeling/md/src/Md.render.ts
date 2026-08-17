@@ -8,7 +8,7 @@
 import { $MdId } from "@beep/identity";
 import { HtmlFragment, Markdown } from "@beep/schema";
 import { A, Html, R, Str, thunkEmptyStr } from "@beep/utils";
-import { Effect, flow, identity, Match, Number as N, Order, Result, SchemaGetter, SchemaIssue } from "effect";
+import { Effect, flow, identity, Match, Number as N, Order, Result, SchemaGetter, SchemaIssue, Tuple } from "effect";
 import { cast, dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -29,19 +29,16 @@ import {
   renderInlineCode,
   UrlPolicyInput,
 } from "./Md.escape.ts";
-import { Document as DocumentSchema, HeadingLevel, Inline as InlineSchema, TableCell, TableRow } from "./Md.model.ts";
-import type { UrlPolicySpec } from "./Md.escape.ts";
-import type {
-  Block,
-  Document,
-  Heading,
-  Inline,
-  Li,
-  ListItemChild,
-  Table,
+import {
+  Document as DocumentSchema,
+  HeadingLevel,
+  Inline as InlineSchema,
   TableAlignment,
-  TaskItem,
+  TableCell,
+  TableRow,
 } from "./Md.model.ts";
+import type { UrlPolicySpec } from "./Md.escape.ts";
+import type { Block, Document, Heading, Inline, Li, ListItemChild, Table, TaskItem } from "./Md.model.ts";
 
 const $I = $MdId.create("Md.render");
 const joinEmpty = A.join("");
@@ -55,24 +52,24 @@ const mathDelimiterPattern = /\$/g;
 type JsonRecord = Readonly<Record<string, S.Json>>;
 
 const byRecordEntryKeyAscending = <Value>(): Order.Order<readonly [string, Value]> =>
-  Order.mapInput(Order.String, ([key]) => key);
+  Order.mapInput(Order.String, Tuple.get(0));
 
 const jsonControlEscape = (value: string): string => {
   const hex = value.charCodeAt(0).toString(16).padStart(4, "0");
   return `\\u${hex}`;
 };
 
-const escapeJsonCharacter = (value: string): string =>
-  Match.value(value).pipe(
-    Match.when('"', () => '\\"'),
-    Match.when("\\", () => "\\\\"),
-    Match.when("\b", () => "\\b"),
-    Match.when("\f", () => "\\f"),
-    Match.when("\n", () => "\\n"),
-    Match.when("\r", () => "\\r"),
-    Match.when("\t", () => "\\t"),
-    Match.orElse(jsonControlEscape)
-  );
+const escapeJsonCharacter = Match.type<string>().pipe(
+  Match.withReturnType<string>(),
+  Match.when('"', () => '\\"'),
+  Match.when("\\", () => "\\\\"),
+  Match.when("\b", () => "\\b"),
+  Match.when("\f", () => "\\f"),
+  Match.when("\n", () => "\\n"),
+  Match.when("\r", () => "\\r"),
+  Match.when("\t", () => "\\t"),
+  Match.orElse(jsonControlEscape)
+);
 
 const renderJsonString = (value: string): string =>
   `"${pipe(value, Str.replaceAllWith(jsonStringEscapePattern, escapeJsonCharacter))}"`;
@@ -254,10 +251,7 @@ const renderMarkdownDestinationWithTitle = (
 ): string => `${escapeMarkdownDestinationWithPolicy(destination, policy)}${renderMarkdownTitle(title)}`;
 
 const tableAlignmentAt = (align: ReadonlyArray<TableAlignment>, index: number): TableAlignment =>
-  pipe(
-    A.get(align, index),
-    O.getOrElse(() => "none" as const)
-  );
+  pipe(A.get(align, index), O.getOrElse(TableAlignment.thunk.none));
 
 const tableRowColumnCount = (row: TableRow): number => A.length(row.children);
 
@@ -265,13 +259,12 @@ const tableColumnCount: (rows: ReadonlyArray<TableRow>) => number = A.reduce(0, 
   N.max(max, tableRowColumnCount(row))
 );
 
-const markdownTableSeparatorCell = (align: TableAlignment): string =>
-  Match.value(align).pipe(
-    Match.when("left", () => ":---"),
-    Match.when("center", () => ":---:"),
-    Match.when("right", () => "---:"),
-    Match.orElse(() => "---")
-  );
+const markdownTableSeparatorCell = TableAlignment.$match({
+  left: () => ":---",
+  center: () => ":---:",
+  right: () => "---:",
+  none: () => "---",
+});
 
 const renderMarkdownTableSeparator = (columns: number, align: ReadonlyArray<TableAlignment>): string =>
   pipe(
@@ -584,12 +577,12 @@ export function renderMarkdownInline(inline: Inline): string {
   return renderMarkdownInlineMatcher(inline);
 }
 
-const renderHtmlOptionalAttribute = (name: string, value: O.Option<string>): string =>
-  pipe(
-    value,
-    O.map((attributeValue) => ` ${name}="${Html.escapeHtml(attributeValue)}"`),
-    O.getOrElse(thunkEmptyStr)
-  );
+const renderHtmlOptionalAttribute: {
+  (name: string, value: O.Option<string>): string;
+  (value: O.Option<string>): (name: string) => string;
+} = dual(2, (name: string, value: O.Option<string>): string =>
+  O.map(value, (attributeValue) => ` ${name}="${Html.escapeHtml(attributeValue)}"`).pipe(O.getOrElse(thunkEmptyStr))
+);
 
 /**
  * Renders an inline node as an HTML fragment.

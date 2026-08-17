@@ -57,6 +57,7 @@ import {
   renderYeetMonitorComment,
   renderYeetStatusSummary,
   repoProofStepDefinition,
+  restorePublishStashOnFailure,
   restoreStashedWorktreeForTesting,
   runYeetFallowFeedbackForTesting,
   safeOriginBranchFromBaseForTesting,
@@ -422,8 +423,18 @@ describe("yeet planner", () => {
     ).toEqual(["readonly", "write"]);
     expect(findStep(plan.steps, "full:pre-push").waves).toEqual([
       expect.objectContaining({ id: "preflight" }),
-      expect.objectContaining({ id: "heavy", laneIds: ["quality:build", "quality:lint", "quality:check"] }),
-      expect.objectContaining({ id: "test", laneIds: ["quality:test"] }),
+      expect.objectContaining({
+        id: "heavy",
+        laneIds: [
+          "quality:build",
+          "quality:lint",
+          "quality:lint-policy",
+          "quality:check",
+          "quality:check:tsgo-tests",
+          "quality:check:tsgo-smoke",
+        ],
+      }),
+      expect.objectContaining({ id: "test", laneIds: ["quality:test-unit", "quality:test-integration"] }),
       expect.objectContaining({ id: "documentation", laneIds: ["quality:jsdoc-ratchet", "quality:docgen"] }),
     ]);
   });
@@ -2381,6 +2392,65 @@ describe("yeet publish scope helpers", () => {
 
           const stashList = yield* runGitOutputLines(tmpDir, ["stash", "list"]);
           expect(stashList.join("\n")).toContain("yeet-staged-only/");
+        })
+      )
+    ));
+
+  it("restores parked residue when a step in the pre-commit window fails", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ filePath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+
+          yield* fs.writeFileString(filePath, "residue\n");
+          const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
+          expect(O.isSome(stash)).toBe(true);
+          const parkedStatus = yield* runGitStatus(tmpDir);
+          expect(parkedStatus).toBe("");
+
+          const refusal = yield* Effect.fail(
+            YeetCommandError.make({ exitCode: 1, message: "publish refused the staged index" })
+          ).pipe(restorePublishStashOnFailure({ context: tempContext, stash }), Effect.flip);
+
+          expect(refusal.message).toContain("publish refused the staged index");
+          const restored = yield* fs.readFileString(filePath);
+          expect(restored).toBe("residue\n");
+        })
+      )
+    ));
+
+  it("leaves the stash parked when the guarded pre-commit window succeeds", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ filePath, tempContext, tmpDir }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+
+          yield* fs.writeFileString(filePath, "residue\n");
+          const stash = yield* stashUnstagedWorktreeForTesting(tempContext);
+          expect(O.isSome(stash)).toBe(true);
+
+          const committed = yield* Effect.succeed("committed").pipe(
+            restorePublishStashOnFailure({ context: tempContext, stash })
+          );
+
+          expect(committed).toBe("committed");
+          const stillParked = yield* runGitStatus(tmpDir);
+          expect(stillParked).toBe("");
+          const stashList = yield* runGitOutputLines(tmpDir, ["stash", "list"]);
+          expect(stashList.join("\n")).toContain("yeet-staged-only/");
+        })
+      )
+    ));
+
+  it("passes a publish that parked nothing straight through", () =>
+    Effect.runPromise(
+      withTrackedFileRepo(({ tempContext }) =>
+        Effect.gen(function* () {
+          const refusal = yield* Effect.fail(
+            YeetCommandError.make({ exitCode: 1, message: "publish refused the staged index" })
+          ).pipe(restorePublishStashOnFailure({ context: tempContext, stash: O.none() }), Effect.flip);
+
+          expect(refusal.message).toContain("publish refused the staged index");
         })
       )
     ));

@@ -9,8 +9,10 @@
  * @module Utils/Iri
  */
 
+import { SafePnLocal } from "@beep/identity";
+import { IRI } from "@beep/rdf";
 import * as A from "effect/Array";
-import {dual, flow, pipe} from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as N from "effect/Number";
@@ -18,7 +20,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {IRI, LocalName} from "../Domain/Rdf/Types.ts";
 
 /**
  * Build a case-insensitive lookup map from IRIs.
@@ -126,7 +127,7 @@ export const iriExistsCaseInsensitive: {
  * @returns Local name portion
  * @since 0.0.0
  */
-export const extractLocalNameFromIri = (iri: string): LocalName => {
+export const extractLocalNameFromIri = (iri: string): SafePnLocal => {
   const lastSlashOpt = Str.lastIndexOf("/")(iri);
   const lastHashOpt = Str.lastIndexOf("#")(iri);
   return pipe(
@@ -137,13 +138,13 @@ export const extractLocalNameFromIri = (iri: string): LocalName => {
         (v): v is O.Some<number> => O.isSome(v) && P.isNumber(v.value),
       ])
     ),
-    O.map(([{value: lastSlash}, {value: lastHash}]) => {
+    O.map(([{ value: lastSlash }, { value: lastHash }]) => {
       const splitIndex = Math.max(lastSlash, lastHash);
       return N.isGreaterThanOrEqualTo(splitIndex, 0)
-        ? LocalName.decodeSync(Str.slice(splitIndex + 1)(iri))
-        : LocalName.decodeSync(iri);
+        ? S.decodeSync(SafePnLocal)(Str.slice(splitIndex + 1)(iri))
+        : S.decodeSync(SafePnLocal)(iri);
     }),
-    O.getOrElse(() => LocalName.decodeSync(iri))
+    O.getOrElse(() => S.decodeSync(SafePnLocal)(iri))
   );
 };
 

@@ -9,12 +9,11 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { SchemaUtils, URLStr } from "@beep/schema";
 import * as Duration from "effect/Duration";
 import * as S from "effect/Schema";
 import {
   ErrorMessage,
-  ErrorUrl,
   Milliseconds,
   makeOntologyErrorClass,
   OptionalErrorCause,
@@ -88,15 +87,15 @@ const JinaRateLimitErrorBase = S.TaggedError<JinaRateLimitError>($I`JinaRateLimi
   "JinaRateLimitError",
   JinaRateLimitErrorFields,
   {
-  ...$I.annote("JinaRateLimitError", {
-    description: "Jina Reader request rejected because the API quota was exhausted.",
-  }),
-  toArbitrary:
-    ([from]) =>
-    () => ({
-      arbitrary: from.arbitrary.map(makeJinaRateLimitError),
-      terminal: from.terminal?.map(makeJinaRateLimitError),
+    ...$I.annote("JinaRateLimitError", {
+      description: "Jina Reader request rejected because the API quota was exhausted.",
     }),
+    toArbitrary:
+      ([from]) =>
+      () => ({
+        arbitrary: from.arbitrary.map(makeJinaRateLimitError),
+        terminal: from.terminal?.map(makeJinaRateLimitError),
+      }),
   }
 );
 
@@ -200,7 +199,7 @@ export const JinaTimeoutError = makeOntologyErrorClass.make(
   $I`JinaTimeoutError`,
   "JinaTimeoutError",
   {
-    url: ErrorUrl.annotateKey({
+    url: URLStr.annotateKey({
       description: "Canonical source URL whose Jina request timed out.",
     }),
     timeoutMs: Milliseconds.annotateKey({
@@ -247,7 +246,7 @@ const JinaErrorDefinition = S.Union([JinaApiError, JinaRateLimitError, JinaParse
 export const JinaError = JinaErrorDefinition.pipe(
   $I.annoteSchema("JinaError", {
     description: "Exhaustive tagged union of Jina Reader failures.",
-  toArbitrary: () => S.toArbitrary(JinaErrorDefinition),
+    toArbitrary: () => S.toArbitrary(JinaErrorDefinition),
   })
 );
 

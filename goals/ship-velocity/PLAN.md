@@ -18,8 +18,13 @@ phase flips ride the final PR of each phase.
 
 ## P1 — Instant wins
 
-- B1 same-argv lanes (`beep ci lane` from yeet).
-- E1 publish refuses hand-staged INDEX + regenerates from manifests.
+- ~~B1 same-argv lanes (`beep ci lane` from yeet)~~ — done 2026-08-16: the pre-push collector's
+  Lint, Lint Policy, Check, Test Unit, and Test Integration lanes dispatch the hosted
+  `beep ci lane` argv from the shared builder in `Ci/CiLane.ts`, so local and hosted cannot drift.
+  Env posture stays local (B4 owns PR-posture env).
+- ~~E1 publish refuses hand-staged INDEX + regenerates from manifests.~~ Done 2026-08-16
+  (`PortfolioIndexGuard.ts`; renders the projection after the staged-only stash, stages it when it
+  differs, refuses a hand-staged copy that disagrees).
 - C1 local remote-cache read path + checkout env template.
 - A7 monitor hardening quick items (`yeet reply` exit code, cursor persistence, registration
   backoff).

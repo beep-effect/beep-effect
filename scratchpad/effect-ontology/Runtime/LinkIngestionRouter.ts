@@ -113,7 +113,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
         contentType: "text/markdown",
         sizeBytes: NonNegativeInt.make(P.isNotNull(link.wordCount) ? link.wordCount * 5 : 0),
       }));
-      const ontologyVersion = ontologyService.generateVersion(ontologyId, entry.value.iri);
+      const ontologyVersion = yield* ontologyService.generateVersion(ontologyId, entry.value.iri);
       const now = yield* DateTime.now;
 
       const manifest = yield* decodeBatchManifest({

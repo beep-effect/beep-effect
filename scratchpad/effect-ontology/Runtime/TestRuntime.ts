@@ -16,13 +16,14 @@
  * @module Runtime/TestRuntime
  */
 
+import * as Rdf from "@beep/rdf/Rdf";
+import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { BunServices } from "@effect/platform-bun";
 import { ConfigProvider, DateTime, Effect, Layer, ManagedRuntime, Stream } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { Response } from "effect/unstable/ai";
 import { LanguageModel } from "effect/unstable/ai";
-import * as N3 from "n3";
 import { ConfigServiceDefault } from "../Service/Config.ts";
 import { EmbeddingCache } from "../Service/EmbeddingCache.ts";
 import type { EmbeddingProviderMethods } from "../Service/EmbeddingProvider.ts";
@@ -36,8 +37,10 @@ import {
 } from "../Service/LlmControl/index.ts";
 import { NlpService } from "../Service/Nlp.ts";
 import { OntologyService } from "../Service/Ontology.ts";
-import { RdfBuilder } from "../Service/Rdf.ts";
-import { ShaclService, ShaclValidationReport, type ValidationPolicy } from "../Service/Shacl.ts";
+import type { RdfStore } from "../Service/Rdf.ts";
+import { emptyRdfStore, RdfBuilder, rdfStoreSize } from "../Service/Rdf.ts";
+import type { ValidationPolicy } from "../Service/Shacl.ts";
+import { ShaclValidationReport, ShaclWorkflowService } from "../Service/Shacl.ts";
 import { StorageServiceTest } from "../Service/Storage.ts";
 import { MetricsService } from "../Telemetry/Metrics.ts";
 
@@ -112,7 +115,7 @@ export const TestConfigProvider = ConfigProvider.fromUnknown({
 export const MockShaclService = (options?: {
   readonly conforms?: boolean;
   readonly violations?: ReadonlyArray<{
-    readonly severity: "Violation" | "Warning" | "Info";
+    readonly severity: "violation" | "warning" | "info";
     readonly message: string;
     readonly focusNode?: string;
     readonly path?: string;
@@ -120,45 +123,41 @@ export const MockShaclService = (options?: {
     readonly sourceShape?: string;
   }>;
 }) => {
-  const makeReport = Effect.fn("ShaclService.makeTestReport")(function* (dataStore: N3.Store, shapesStore: N3.Store) {
+  const makeReport = Effect.fn("ShaclService.makeTestReport")(function* (dataStore: RdfStore, shapesStore: RdfStore) {
     const violations = (options?.violations ?? []).map((violation) => ({
       focusNode: violation.focusNode ?? "test:node",
+      path: Rdf.makeNamedNode(violation.path ?? "urn:beep:shacl:path:unknown"),
       message: violation.message,
       severity: violation.severity,
-      sourceConstraintComponent: "test:constraint",
-      ...(P.isNotUndefined(violation.path) ? { path: violation.path } : {}),
-      ...(P.isNotUndefined(violation.value) ? { value: violation.value } : {}),
-      ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: violation.sourceShape } : {}),
+      sourceConstraintComponent: Rdf.makeNamedNode("urn:beep:shacl:constraint:test"),
+      ...(P.isNotUndefined(violation.value)
+        ? {
+            value: S.encodeSync(Rdf.Literal)(Rdf.makeLiteral(violation.value, XSD_STRING.value)),
+          }
+        : {}),
+      ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: Rdf.makeNamedNode(violation.sourceShape) } : {}),
     }));
     return yield* S.decodeEffect(ShaclValidationReport)({
-      conforms: violations.length === 0,
-      violations,
+      validation: { conforms: violations.length === 0, violations, truncated: false },
       validatedAt: DateTime.formatIso(yield* DateTime.now),
-      dataGraphTripleCount: dataStore.size,
-      shapesGraphTripleCount: shapesStore.size,
+      dataGraphTripleCount: rdfStoreSize(dataStore),
+      shapesGraphTripleCount: rdfStoreSize(shapesStore),
       durationMs: 0,
     }).pipe(Effect.orDie);
   });
 
-  return Layer.succeed(ShaclService, {
-    validate: makeReport,
-    loadShapes: Effect.fn("ShaclService.loadShapes")((turtle: string) =>
-      Effect.sync(() => {
-        const parser = new N3.Parser();
-        const store = new N3.Store();
-        parser.parse(turtle).forEach((quad) => store.addQuad(quad));
-        return store;
-      })
-    ),
-    loadShapesFromUri: Effect.fn("ShaclService.loadShapesFromUri")(() => Effect.succeed(new N3.Store())),
+  return Layer.succeed(ShaclWorkflowService, {
+    validateWithReport: makeReport,
+    loadShapes: Effect.fn("ShaclService.loadShapes")((_turtle: string) => Effect.succeed(emptyRdfStore())),
+    loadShapesFromUri: Effect.fn("ShaclService.loadShapesFromUri")(() => Effect.succeed(emptyRdfStore())),
     generateShapesFromOntology: Effect.fn("ShaclService.generateShapesFromOntology")(() =>
-      Effect.succeed(new N3.Store())
+      Effect.succeed(emptyRdfStore())
     ),
     clearShapesCache: Effect.void,
     getShapesCacheStats: Effect.succeed({ size: 0, keys: [] as ReadonlyArray<string> }),
     validateWithPolicy: Effect.fn("ShaclService.validateWithPolicy")(function* (
-      dataStore: N3.Store,
-      shapesStore: N3.Store,
+      dataStore: RdfStore,
+      shapesStore: RdfStore,
       _policy: ValidationPolicy
     ) {
       return yield* makeReport(dataStore, shapesStore);
