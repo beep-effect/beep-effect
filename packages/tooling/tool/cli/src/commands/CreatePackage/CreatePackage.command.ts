@@ -1765,8 +1765,15 @@ const VITE_APP_DEV_DEPENDENCIES = {
   vite: "catalog:",
 };
 
+// One app kind's package.json manifest builder. Named so the four builders
+// share a single declared type: without it their differing object-literal
+// return types form a union that `appManifestBuilderFor` cannot widen under
+// `exactOptionalPropertyTypes` (docgen's tsc rejects it even though tsgo
+// accepts it), and the failure moves whenever a dependency table changes.
+type AppManifestBuilder = (ctx: AppManifestContext) => unknown;
+
 // package.json manifest for a Next.js app workspace.
-const nextjsAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
+const nextjsAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: {
     ...appBaseScripts(portlessDev(portlessLabel, "next dev --turbopack"), "next build --turbopack", lab),
@@ -1782,7 +1789,7 @@ const nextjsAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestCont
 });
 
 // package.json manifest for a Vite app workspace.
-const viteAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
+const viteAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: appBaseScripts(portlessViteDev(portlessLabel, "5173"), "vite build", lab),
   dependencies: {
@@ -1794,7 +1801,7 @@ const viteAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContex
 });
 
 // package.json manifest for a service app workspace.
-const serviceAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
+const serviceAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: appBaseScripts(
     portlessDev(portlessLabel, "sh -c 'bun --watch src/main.ts'"),
@@ -1818,7 +1825,7 @@ const serviceAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestCon
 });
 
 // package.json manifest for a Tauri app workspace.
-const tauriAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
+const tauriAppManifest: AppManifestBuilder = ({ baseManifest, lab, portlessLabel }: AppManifestContext) => ({
   ...baseManifest,
   scripts: {
     ...appBaseScripts(portlessViteDev(portlessLabel, "1420"), "vite build", lab),
@@ -1836,13 +1843,16 @@ const tauriAppManifest = ({ baseManifest, lab, portlessLabel }: AppManifestConte
 });
 
 // App kinds that emit a dedicated app manifest; runtime-proof falls through to the package manifest.
-const appManifestBuilderFor = (kind: AppKind): O.Option<(ctx: AppManifestContext) => unknown> =>
+const appManifestBuilderFor = (kind: AppKind): O.Option<AppManifestBuilder> =>
   Match.value(kind).pipe(
     Match.when("nextjs", () => O.some(nextjsAppManifest)),
     Match.when("vite", () => O.some(viteAppManifest)),
     Match.when("service", () => O.some(serviceAppManifest)),
     Match.when("tauri", () => O.some(tauriAppManifest)),
-    Match.when("runtime-proof", () => O.none()),
+    // Bare `O.none` infers `None<unknown>` here, which docgen's tsc rejects
+    // under `exactOptionalPropertyTypes`; the explicit type argument pins it
+    // while keeping the direct helper reference.
+    Match.when("runtime-proof", O.none<AppManifestBuilder>),
     Match.exhaustive
   );
 
