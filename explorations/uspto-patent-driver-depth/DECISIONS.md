@@ -138,7 +138,7 @@ graduated docketing boundary supplies the matter context that the driver cannot
 own.
 
 **Rejected options:** Credential-as-consent; source-wide opt-in flags; treating
-official USPTO free-text search as privilege-safe; putting matter authorization
+official USPTO free-text search as implicitly authorized; putting matter authorization
 inside a driver; omitting cost or attribution policy from BigQuery dispatch.
 
 ## 2026-07-14 — Q7: MCP boundary and gate defaults

@@ -39,4 +39,5 @@ Scaffolded 2026-08-13 from the operator-ratified BRIEF and MAP.
 ## Notes
 
 Synthetic C&H fixtures come first. Any later real OIP diligence data room is
-on-device only and excluded from telemetry and remote evaluation.
+kept out of the repo and out of telemetry. Provider choice stays a
+configuration decision.

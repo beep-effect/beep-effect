@@ -123,6 +123,6 @@ Already-covered — reuse/refine in `@beep/uspto`, NOT new build:
 - NEVER PatentsView: api.patentsview.org was sunset Feb-2025 (410 / 301-redirects HTML to data.uspto.gov/odp). The query-DSL nuggets mcp-uspto#5 and uspto-patents-mcp#1 document PatentsView's JSON _or/_and/_text_any DSL — port the DSL *shape* but retarget it to ODP, never the dead endpoint.
 - ODP key reissue 2026-03-20 (PatentSearch -> ODP) and legacy Developer Hub decommissioned 2026-06-05 — pin to data.uspto.gov/odp + api.uspto.gov X-API-KEY only.
 - EPO OPS (patents-mcp-server#2, patents-mcp-server#13) requires OAuth2 client-credentials secrets — out of offline scope; gate the epo driver behind secret governance (1Password), never commit creds.
-- BigQuery nuggets (patents-mcp-server#10, patents-mcp#3, patents-mcp-server#13) require GCP creds + billing; keep the dry-run cost gate mandatory; out of the offline/privilege-safe default scope.
+- BigQuery nuggets (patents-mcp-server#10, patents-mcp#3, patents-mcp-server#13) require GCP creds + billing; keep the dry-run cost gate mandatory; out of the default scope on cost grounds.
 - ppubs (patents-mcp#1, patents-mcp#2) is an undocumented reverse-engineered USPTO endpoint — fragile and may break without notice; treat as a best-effort full-text tier behind ODP, not a primary source.
 - Codegen precedent = runpod (openapi.json + scripts/generate.ts), but uspto is hand-rolled — EXTEND in place; do NOT add generate.ts blindly or introduce Orval/axios/Zod.

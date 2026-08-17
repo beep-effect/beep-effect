@@ -221,7 +221,7 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`tracked-changes-ingest-wedge`](../goals/tracked-changes-ingest-wedge/README.md).
   The former owns one external-harness baseline; the latter starts with U4 as
   a kill-gate and retains the structural fallback. Synthetic C&H is first;
-  later real OIP data is on-device only. Generator/DMS rungs remain MAP
+  later real OIP data stays out of the repo. Generator/DMS rungs remain MAP
   re-entry points.
 - [`document-structure-ontologies`](./document-structure-ontologies/README.md)
   — graduated 2026-08-13 after live capability verification and four-goal
