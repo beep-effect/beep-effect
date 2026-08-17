@@ -74,3 +74,10 @@ session/machine ids.
 - Third misattributed-composite-hint receipt: PR #728's publish verdict said "inspect the Nix
   error" while the actual hosted red was Test Integration (TS2306 race). Same class as the two
   OSV receipts above — capsule hints must derive from the failing sublane.
+- Stale local dist masked a hosted-only failure class during the check-lane swap: the local
+  check sweep passed only because earlier builds had populated dist/, while CI's dist-less
+  Check lane hit TS6305 everywhere (tsgo redirects composite-project source imports to their
+  built outputs even with references cleared). Lesson for B-track parity: any lane validation
+  claiming CI parity must run from the artifact state CI actually has — wipe derived outputs
+  first (the cold-world script now does). Fix: check.dependsOn ^build, making the lane's
+  input explicit instead of inherited from whatever a -b sub-build left behind.
