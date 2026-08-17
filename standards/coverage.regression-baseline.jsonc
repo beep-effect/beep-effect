@@ -24183,15 +24183,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts": {
-          "lines": 23.47,
-          "statements": 21.77,
+          "lines": 23.34,
+          "statements": 21.65,
           "branches": 25.45,
-          "functions": 10.1,
+          "functions": 10,
           "uncovered": {
-            "lines": 264,
-            "statements": 291,
+            "lines": 266,
+            "statements": 293,
             "branches": 123,
-            "functions": 89
+            "functions": 90
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/HeadInstallPreflight.ts": {
@@ -24312,6 +24312,18 @@
             "statements": 18,
             "branches": 12,
             "functions": 9
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/PortfolioIndexGuard.ts": {
+          "lines": 100,
+          "statements": 95.83,
+          "branches": 100,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts": {
