@@ -1,9 +1,11 @@
 import {
   goalsCommand,
+  PacketCoreLive,
   PacketEvent,
   PacketEventStore,
-  PacketEventStoreLive,
   PacketStreamLocator,
+  PacketTransitionRequest,
+  PacketTransitionWriter,
   packetEventDigest,
   packetEventFileName,
   renderPacketEventFile,
@@ -22,7 +24,7 @@ import { withTempWorkingDirectory, writeProjectFile } from "./support/CommandTes
 const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
 const encodeJson = S.encodeUnknownSync(S.fromJsonString(S.Unknown));
 
-const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
+const testLayer = Layer.mergeAll(NodeServices.layer, PacketCoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
 
 const COMPLETION_GATE = {
   operator: "yeet",
@@ -171,6 +173,44 @@ describe("set-status guarded stream writer", () => {
             expect(A.length(yield* listEventFiles("forked-demo"))).toBe(beforeCount);
             const manifest = yield* fs.readFileString("goals/forked-demo/ops/manifest.json");
             expect(manifest).toContain('"status": "paused"');
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
+    "records previous from the stream's derived status when the manifest snapshot lags",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeStreamPacket("retry-demo");
+            const seeded = yield* Effect.exit(runGoalsCommand(["set-status", "retry-demo", "paused"]));
+            expect(Exit.isSuccess(seeded)).toBe(true);
+
+            // A retry after a partial failure re-reads the manifest before the
+            // manifest edit landed: previousStatus arrives stale ("active"),
+            // but the stream already derives "paused".
+            const writer = yield* PacketTransitionWriter;
+            const plan = yield* writer.plan(
+              PacketTransitionRequest.make({
+                locator: PacketStreamLocator.make({
+                  packet: "retry-demo",
+                  root: "goals",
+                  packetPath: "goals/retry-demo",
+                }),
+                status: "reference",
+                previousStatus: "active",
+                actor: "test",
+                at: "2026-08-17T10:00:00.000Z",
+              })
+            );
+            const last = O.getOrUndefined(A.last(plan.events));
+            expect(last?.body.type).toBe("status-set");
+            if (last?.body.type === "status-set") {
+              expect(last.body.previous).toBe("paused");
+            }
           })
         ).pipe(provideScopedLayer(testLayer))
       ),

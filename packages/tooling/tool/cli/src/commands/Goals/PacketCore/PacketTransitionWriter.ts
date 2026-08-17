@@ -278,6 +278,11 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
         )
       );
     }
+    // The stream is the system of record for its own history: when it already
+    // derives a status (e.g. a retry after a partial failure left the manifest
+    // behind), that derived status is the accurate `previous`, not the
+    // caller's manifest snapshot.
+    const previous = derived.status ?? request.previousStatus;
     const statusSet = PacketEvent.make({
       schemaVersion: "packet-event/v1",
       packet: request.locator.packet,
@@ -287,7 +292,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
       at: request.at,
       actor: request.actor,
       ...optionalProp("parent", parent),
-      body: { type: "status-set", status: request.status, previous: request.previousStatus },
+      body: { type: "status-set", status: request.status, previous },
     });
     return A.append(events, statusSet);
   });

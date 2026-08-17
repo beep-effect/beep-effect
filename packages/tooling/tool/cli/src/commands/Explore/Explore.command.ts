@@ -32,7 +32,7 @@ const checkFlag = Flag.boolean("check").pipe(
  * console.log(exploreCommand.name) // "explore"
  * ```
  *
- * @category commands
+ * @category cli-commands
  * @since 0.0.0
  */
 export const exploreCommand = Command.make(
