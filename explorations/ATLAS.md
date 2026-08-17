@@ -69,8 +69,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   align-stage: ratify identity assurance, requalification policy, and scoped
   human dispositions for exact, digest-bound model arrangements.
 - [`epistemic-belief-view-revision`](./epistemic-belief-view-revision/README.md) —
-  align-stage: ratify contention grouping, selection/abstention policy, and
-  replayable belief-view materialization over a new cross-lineage authority query.
+  shape-stage: align closed 2026-08-17 (verdict-family names + ownership law;
+  `BeliefContentionKey` v1 = authority identity minus evidenceScope with
+  qualifiers in, versioned; on-demand replayable views, no materialization).
+  Next gate: operator review of the drafted BRIEF.
 - **Gold-Intake cohort** (opened 2026-06-29, all at `research`-complete) — 13 new exploration
   packets reconciled from the 219-nugget gold-intake corpus; full matrix +
   provenance in [`_gold-intake/ROUTING.md`](./_gold-intake/ROUTING.md) /
