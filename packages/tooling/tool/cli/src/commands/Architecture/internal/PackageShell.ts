@@ -286,6 +286,23 @@ const packageShellTestTsconfigContent = (): string => `{
 }
 `;
 
+const packageShellCheckTsconfigContent = (): string => `{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  "references": [],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "rootDir": "../../.."
+  }
+}
+`;
+
 const packageShellVitestContent = (): string => `import { defineConfig, mergeConfig } from "vitest/config";
 import shared from "../../../vitest.shared.ts";
 
@@ -500,6 +517,14 @@ export const packageShellFileOperationsFor: {
       writer: "jsonc",
       content: packageShellTestTsconfigContent(),
       description: `Write ${role} package test TypeScript configuration.`,
+    }),
+    WriteFileOperation.make({
+      kind: "write-file",
+      role,
+      path: `${basePath}/tsconfig.check.json`,
+      writer: "jsonc",
+      content: packageShellCheckTsconfigContent(),
+      description: `Write ${role} package check TypeScript configuration.`,
     }),
     WriteFileOperation.make({
       kind: "write-file",

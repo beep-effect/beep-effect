@@ -56,9 +56,9 @@ const deletesOwnEmit = (script: string): boolean => Str.includes("rm -rf dist")(
 const violatesSingleProjectEmit = (script: string): boolean =>
   (usesTypescriptCompiler(script) && usesSubgraphBuilder(script)) || deletesOwnEmit(script);
 
-const buildScriptOf = (raw: string): O.Option<string> => {
+const emitScriptsOf = (raw: string): ReadonlyArray<string> => {
   const parsed = JSON.parse(raw) as { readonly scripts?: Readonly<Record<string, string>> };
-  return O.fromNullishOr(parsed.scripts?.["beep:build"]);
+  return A.getSomes([O.fromNullishOr(parsed.scripts?.["beep:build"]), O.fromNullishOr(parsed.scripts?.["beep:check"])]);
 };
 
 const findRepoRoot = Effect.fnUntraced(function* () {
@@ -82,16 +82,17 @@ const collectViolations = Effect.fnUntraced(function* () {
   const offending: Array<string> = [];
   for (const manifest of manifests) {
     const raw = yield* fs.readFileString(manifest);
-    const build = buildScriptOf(raw);
-    if (O.isSome(build) && violatesSingleProjectEmit(build.value)) {
-      offending.push(`${path.relative(rootDir, manifest)}: ${build.value}`);
+    for (const script of emitScriptsOf(raw)) {
+      if (violatesSingleProjectEmit(script)) {
+        offending.push(`${path.relative(rootDir, manifest)}: ${script}`);
+      }
     }
   }
   return offending;
 });
 
 describe("single-project emit law", () => {
-  it("no beep:build script uses the subgraph builder or --force", () =>
+  it("no beep:build or beep:check script uses the subgraph builder or --force", () =>
     Effect.runPromise(
       Effect.gen(function* () {
         const violations = yield* collectViolations();
