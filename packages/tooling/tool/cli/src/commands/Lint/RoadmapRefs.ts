@@ -5,6 +5,12 @@
  * existing files or directories. Goal phase snapshots are compared with the
  * linked packet manifest when phase data is available, but drift is advisory.
  *
+ * Link extraction rides the shared knowledge link parser (`knowledgeDocumentLines`
+ * + `knowledgeLinkDestinations`), so what counts as a link — and which lines are
+ * prose — is decided in one place; only the roadmap-specific concerns (the
+ * goals/explorations domain filter, trailing phase snapshots, reference-style
+ * definitions) live here.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -23,12 +29,15 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.ts";
 import { makePolicyFindingLogger } from "../../internal/cli/PolicyFindingLogger.ts";
 import { decodeGoalManifest, GoalPhaseStatus } from "../Goals/Goals.schemas.ts";
 import { goalManifestPhases, parseGoalManifestText } from "../Goals/Inventory.ts";
+import { knowledgeDocumentLines, knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
+import type { KnowledgeDocumentLine, KnowledgeLinkDestination } from "../Knowledge/Knowledge.refs.ts";
 
 const $I = $RepoCliId.create("commands/Lint/RoadmapRefs");
 
 const ROADMAP_PATH = "docs/ROADMAP.md";
-const ROADMAP_LINK_PATTERN = /\[[^\]]*\]\(((?:\.\.\/|\.\/)(?:goals|explorations)\/[^)\s]+)\)(?:\s*\((\d+)\/(\d+)\))?/g;
-const ROADMAP_LINK_DEFINITION_PATTERN = /^\s*\[[^\]]+\]:\s+((?:\.\.\/|\.\/)(?:goals|explorations)\/\S+)\s*$/gm;
+const ROADMAP_TARGET_PATTERN = /^(?:\.\.\/|\.\/)(?:goals|explorations)\//;
+const ROADMAP_LINK_DEFINITION_PATTERN = /^\s*\[[^\]]+\]:\s+((?:\.\.\/|\.\/)(?:goals|explorations)\/\S+)\s*$/;
+const PHASE_SNAPSHOT_PATTERN = /^\s*\((\d+)\/(\d+)\)/;
 
 class RoadmapReference extends S.Class<RoadmapReference>($I`RoadmapReference`)(
   {
@@ -71,39 +80,77 @@ const { log: logPolicyFinding } = makePolicyFindingLogger({
     `- ${finding.target} :: ${finding.file} [${finding.severity}] ${finding.message}`,
 });
 
+const phaseSnapshotIn = (text: string): O.Option<readonly [number, number]> => {
+  const match = PHASE_SNAPSHOT_PATTERN.exec(text);
+  if (match === null) {
+    return O.none();
+  }
+  return pipe(
+    O.all([O.fromUndefinedOr(match[1]), O.fromUndefinedOr(match[2])]),
+    O.flatMap(([done, total]) => O.all([N.parse(done), N.parse(total)]))
+  );
+};
+
+/**
+ * The phase snapshot paired to one link: on the same line after the closing paren, or opening the
+ * next prose line when the link closes its own line — the live roadmap wraps long entries that way.
+ *
+ * @param afterLink - The rest of the link's line, from just past the closing paren.
+ * @param nextLine - The document line after the link's, when one exists.
+ * @returns The parsed `(done/total)` counts, or none when no snapshot trails the link.
+ */
+const phaseSnapshotNear = (
+  afterLink: string,
+  nextLine: O.Option<KnowledgeDocumentLine>
+): O.Option<readonly [number, number]> =>
+  Str.isNonEmpty(Str.trim(afterLink))
+    ? phaseSnapshotIn(afterLink)
+    : O.flatMap(nextLine, (line) => (line.prose ? phaseSnapshotIn(line.text) : O.none()));
+
+const definitionReference = (lineText: string): O.Option<RoadmapReference> => {
+  const definition = ROADMAP_LINK_DEFINITION_PATTERN.exec(lineText);
+  return definition !== null && P.isString(definition[1])
+    ? O.some(RoadmapReference.make({ target: definition[1] }))
+    : O.none();
+};
+
+const linkReference = (
+  lines: ReadonlyArray<KnowledgeDocumentLine>,
+  line: KnowledgeDocumentLine,
+  link: KnowledgeLinkDestination
+): O.Option<RoadmapReference> => {
+  if (!ROADMAP_TARGET_PATTERN.test(link.destination)) {
+    return O.none();
+  }
+  // `line.number` is 1-based, so indexing the 0-based array with it lands on the next line.
+  const phaseSnapshot = phaseSnapshotNear(Str.slice(link.end)(line.text), A.get(lines, line.number));
+  return O.some(
+    RoadmapReference.make({
+      target: link.destination,
+      ...pipe(
+        phaseSnapshot,
+        O.map(([done, total]) => ({ phaseDone: done, phaseTotal: total })),
+        O.getOrElse(() => ({}))
+      ),
+    })
+  );
+};
+
+const lineReferences =
+  (lines: ReadonlyArray<KnowledgeDocumentLine>) =>
+  (line: KnowledgeDocumentLine): ReadonlyArray<RoadmapReference> => {
+    if (!line.prose) {
+      return A.empty();
+    }
+    return O.match(definitionReference(line.text), {
+      onSome: A.of,
+      onNone: () => A.getSomes(A.map(knowledgeLinkDestinations(line.text), (link) => linkReference(lines, line, link))),
+    });
+  };
+
 const parseRoadmapReferences = (raw: string): ReadonlyArray<RoadmapReference> => {
-  let references = A.empty<RoadmapReference>();
-
-  for (const match of Str.matchAll(ROADMAP_LINK_PATTERN)(raw)) {
-    const target = match[1];
-    if (!P.isString(target)) {
-      continue;
-    }
-    const phaseSnapshot = pipe(
-      O.all([O.fromUndefinedOr(match[2]), O.fromUndefinedOr(match[3])]),
-      O.flatMap(([done, total]) => O.all([N.parse(done), N.parse(total)]))
-    );
-    references = A.append(
-      references,
-      RoadmapReference.make({
-        target,
-        ...pipe(
-          phaseSnapshot,
-          O.map(([done, total]) => ({ phaseDone: done, phaseTotal: total })),
-          O.getOrElse(() => ({}))
-        ),
-      })
-    );
-  }
-
-  for (const match of Str.matchAll(ROADMAP_LINK_DEFINITION_PATTERN)(raw)) {
-    const target = match[1];
-    if (P.isString(target)) {
-      references = A.append(references, RoadmapReference.make({ target }));
-    }
-  }
-
-  return references;
+  const lines = knowledgeDocumentLines(raw);
+  return A.flatMap(lines, lineReferences(lines));
 };
 
 const targetPath: (target: string) => string = flow(Str.split(/[?#]/), A.head, O.getOrElse(thunkEmptyStr));

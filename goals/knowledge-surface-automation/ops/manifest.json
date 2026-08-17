@@ -57,7 +57,8 @@
     "research/p1-report-refs-tree.md",
     "research/p3-report-refs-rewrite.md",
     "research/p3-hermetic-lane-design.md",
-    "research/p3-hermetic-lane-decisions.md"
+    "research/p3-hermetic-lane-decisions.md",
+    "research/p3-report-roadmap-refs-fold-in.md"
   ],
   "agentLaunchers": [
     {
@@ -87,7 +88,7 @@
     {
       "id": "P3",
       "name": "Workstream A rewrite + hermetic byte gates; C Stage-1 gate",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",

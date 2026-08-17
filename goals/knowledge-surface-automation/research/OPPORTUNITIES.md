@@ -265,3 +265,25 @@ measurement first). Reviewed at each grill.
     `makeHermeticEnv` already pins the probe children's environment. The lane
     that would have caught it is exactly the P3 residue, which is why the
     hermetic lane's assertion is worth reframing (see the P3 report).
+
+- **2026-08-17 — A7 fold-in: two gates fired on the fold-in PR itself, both correctly.**
+  While folding `lint roadmap-refs` into the shared knowledge link parser
+  (`research/p3-report-roadmap-refs-fold-in.md`):
+
+  1. `fallow:audit` blocked the publish with an introduced cognitive-complexity finding on
+     the rewritten `parseRoadmapReferences` — nested loops with `continue`s in one function.
+     The yeet verdict's repair hint pointed at OSV, a repeat of the known misattributed-hint
+     class; the real red step was identifiable only from the log's fallow envelope. Fix was
+     the established idiom: extract branch bodies into sibling helpers (four small functions,
+     `introduced: 0` after).
+  2. The schema-first inventory gate blocked the new exported `KnowledgeLinkDestination`
+     type alias ("exported pure-data type alias should be modeled as an annotated schema").
+     Resolved with a justified exception in `standards/schema-first.inventory.jsonc`, the
+     same record its sealed siblings (`KnowledgeInlineSpan`, `KnowledgeDocumentLine`) carry.
+
+  **What would have prevented the round trips:** both budgets are invisible to the targeted
+  inner loop — `vitest` + `biome` + the lint's own run all pass while `fallow audit --check`
+  and `lint schema-first` fail. A pre-publish habit of running exactly those two on touched
+  files (they are diff-scoped and fast: ~10s and ~35s here) would have caught both before
+  the full proof spent its minutes. The misattributed OSV hint is already a recorded
+  capsule-derivation defect in the ship-velocity packet; this is one more receipt for it.

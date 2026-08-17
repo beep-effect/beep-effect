@@ -86,8 +86,12 @@ describe("roadmap-refs lint command", { concurrent: false }, () => {
               expect(A.some(blocking, Str.includes("../goals/dead/README.md"))).toBe(true);
               expect(A.some(blocking, Str.includes("../goals/dead-ref/README.md"))).toBe(true);
               expect(A.some(blocking, Str.includes("../goals/resolving/README.md"))).toBe(false);
-              expect(advisories).toHaveLength(1);
+              // The fenced dead link must be invisible: the shared parser only reads prose lines.
+              expect(A.some(blocking, Str.includes("fenced-dead"))).toBe(false);
+              expect(advisories).toHaveLength(2);
               expect(A.some(advisories, Str.includes("(0/2) disagrees with manifest phases (1/2)"))).toBe(true);
+              // The wrapped entry's snapshot opens the line after its link, as the live roadmap does.
+              expect(A.some(advisories, Str.includes("(2/2) disagrees with manifest phases (1/2)"))).toBe(true);
             })
           );
         }).pipe(provideScopedLayer(testLayer))
