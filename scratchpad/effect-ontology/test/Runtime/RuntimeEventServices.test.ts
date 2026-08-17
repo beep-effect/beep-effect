@@ -65,22 +65,21 @@ const EventBridgeTest = EventBridgeLive.pipe(
 
 describe("EventBridge", () => {
   it.layer(EventBridgeTest)("with scoped event services", (it) => {
-    it.effect("surfaces a typed runtime failure after the event stream retry budget", () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const bridge = yield* EventBridgeService;
-          const eventBus = yield* EventBusService;
-          const handle = yield* bridge.start;
-          const observed = yield* handle.await.pipe(Effect.flip, Effect.forkScoped);
+    it.effect(
+      "surfaces a typed runtime failure after the event stream retry budget",
+      Effect.fnUntraced(function* () {
+        const bridge = yield* EventBridgeService;
+        const eventBus = yield* EventBusService;
+        const handle = yield* bridge.start;
+        const observed = yield* handle.await.pipe(Effect.flip, Effect.forkScoped);
 
-          yield* eventBus.shutdown;
-          yield* TestClock.adjust("2 seconds");
+        yield* eventBus.shutdown;
+        yield* TestClock.adjust("2 seconds");
 
-          const error = yield* Fiber.join(observed);
-          assert.strictEqual(error._tag, "EventBridgeError");
-          assert.strictEqual(error.phase, "runtime");
-        })
-      )
+        const error = yield* Fiber.join(observed);
+        assert.strictEqual(error._tag, "EventBridgeError");
+        assert.strictEqual(error.phase, "runtime");
+      })
     );
   });
 });

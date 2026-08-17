@@ -303,9 +303,6 @@ export class OntologyRef extends S.Class<OntologyRef>($I`OntologyRef`)(
     return `${this.namespace}/${this.name}`;
   }
 
-  /** Decodes an unknown input into a validated ontology reference. */
-  static readonly fromUnknown = S.decodeUnknownSync(OntologyRef);
-
   /** Parses a canonical ontology storage path. */
   static readonly fromPath = (path: unknown) =>
     pipe(
@@ -738,9 +735,6 @@ export class OntologyContext extends S.Class<OntologyContext>($I`OntologyContext
 ) {
   /** Type guard for decoded ontology contexts. @since 0.0.0 */
   static readonly is = S.is(OntologyContext);
-
-  /** Decode an unknown ontology context or throw a parse error. @since 0.0.0 */
-  static readonly fromUnknown = S.decodeUnknownSync(OntologyContext);
 
   /** Decode an unknown ontology context into an `Option`. @since 0.0.0 */
   static readonly decodeOption = S.decodeUnknownOption(OntologyContext);

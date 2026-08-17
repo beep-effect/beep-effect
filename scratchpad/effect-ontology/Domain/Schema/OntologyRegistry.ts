@@ -100,7 +100,6 @@ export class OntologyEntry extends S.Class<OntologyEntry>($I`OntologyEntry`)(
   })
 ) {
   static readonly is = S.is(OntologyEntry);
-  static readonly fromUnknown = S.decodeUnknownSync(OntologyEntry);
   static readonly decodeOption = S.decodeUnknownOption(OntologyEntry);
 }
 
@@ -132,9 +131,7 @@ export class SharedResources extends S.Class<SharedResources>($I`SharedResources
   $I.annote("SharedResources", {
     description: "Option-normalized storage resources shared by every ontology in a registry.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(SharedResources);
-}
+) {}
 
 /**
  * Complete versioned ontology-registry manifest.
@@ -189,7 +186,6 @@ export class OntologyRegistry extends S.Class<OntologyRegistry>($I`OntologyRegis
   })
 ) {
   static readonly is = S.is(OntologyRegistry);
-  static readonly fromUnknown = S.decodeUnknownSync(OntologyRegistry);
   static readonly decodeOption = S.decodeUnknownOption(OntologyRegistry);
 }
 

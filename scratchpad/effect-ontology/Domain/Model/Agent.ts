@@ -110,25 +110,6 @@ export const AgentType = LiteralKit(["extractor", "validator", "resolver", "corr
  */
 export type AgentType = typeof AgentType.Type;
 
-const AgentMetadataFields = {
-  id: AgentId.annotateKey({
-    description: "Stable implementation identifier.",
-  }),
-  name: S.NonEmptyString.annotateKey({
-    description: "Human-readable display name.",
-  }),
-  description: S.NonEmptyString.annotateKey({
-    description: "Concise explanation of the agent's responsibility.",
-  }),
-  type: AgentType.annotateKey({
-    description: "Functional role played by the agent.",
-  }),
-  version: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Implementation version when independently versioned." })
-  ),
-};
-
 /**
  * Descriptive identity for an executable agent.
  *
@@ -149,22 +130,28 @@ const AgentMetadataFields = {
  * @since 0.0.0
  */
 export class AgentMetadata extends S.Class<AgentMetadata>($I`AgentMetadata`)(
-  AgentMetadataFields,
+  {
+    id: AgentId.annotateKey({
+      description: "Stable implementation identifier.",
+    }),
+    name: S.NonEmptyString.annotateKey({
+      description: "Human-readable display name.",
+    }),
+    description: S.NonEmptyString.annotateKey({
+      description: "Concise explanation of the agent's responsibility.",
+    }),
+    type: AgentType.annotateKey({
+      description: "Functional role played by the agent.",
+    }),
+    version: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Implementation version when independently versioned." })
+    ),
+  },
   $I.annote("AgentMetadata", {
     description: "Stable identity and human-readable metadata for an executable agent.",
   })
 ) {}
-
-const ValidationResultFields = {
-  errors: S.Array(S.NonEmptyString).pipe(
-    SchemaUtils.withEmptyArrayDefaults<string>(),
-    S.annotateKey({ description: "Blocking validation diagnostics." })
-  ),
-  warnings: S.Array(S.NonEmptyString).pipe(
-    SchemaUtils.withEmptyArrayDefaults<string>(),
-    S.annotateKey({ description: "Non-blocking validation diagnostics." })
-  ),
-};
 
 /**
  * Immutable diagnostics produced by agent input validation.
@@ -188,7 +175,16 @@ const ValidationResultFields = {
  * @since 0.0.0
  */
 export class ValidationResult extends S.Class<ValidationResult>($I`ValidationResult`)(
-  ValidationResultFields,
+  {
+    errors: S.Array(S.NonEmptyString).pipe(
+      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.annotateKey({ description: "Blocking validation diagnostics." })
+    ),
+    warnings: S.Array(S.NonEmptyString).pipe(
+      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.annotateKey({ description: "Non-blocking validation diagnostics." })
+    ),
+  },
   $I.annote("ValidationResult", {
     description: "Blocking errors and non-blocking warnings produced by input validation.",
   })
@@ -442,21 +438,6 @@ export const PipelineStatus = S.TaggedUnion({
  */
 export type PipelineStatus = typeof PipelineStatus.Type;
 
-const IntermediateResultFields = {
-  agentId: AgentId.annotateKey({
-    description: "Agent that produced the result.",
-  }),
-  output: S.Json.annotateKey({
-    description: "JSON-compatible output retained for checkpointing.",
-  }),
-  producedAt: S.DateTimeUtcFromString.annotateKey({
-    description: "UTC instant at which the result was produced.",
-  }),
-  duration: S.DurationFromMillis.annotateKey({
-    description: "Non-negative execution duration encoded as milliseconds.",
-  }),
-};
-
 /**
  * JSON-compatible output retained from a completed agent.
  *
@@ -478,39 +459,24 @@ const IntermediateResultFields = {
  * @since 0.0.0
  */
 export class IntermediateResult extends S.Class<IntermediateResult>($I`IntermediateResult`)(
-  IntermediateResultFields,
+  {
+    agentId: AgentId.annotateKey({
+      description: "Agent that produced the result.",
+    }),
+    output: S.Json.annotateKey({
+      description: "JSON-compatible output retained for checkpointing.",
+    }),
+    producedAt: S.DateTimeUtcFromString.annotateKey({
+      description: "UTC instant at which the result was produced.",
+    }),
+    duration: S.DurationFromMillis.annotateKey({
+      description: "Non-negative execution duration encoded as milliseconds.",
+    }),
+  },
   $I.annote("IntermediateResult", {
     description: "Checkpoint-safe JSON output and timing from one completed agent.",
   })
 ) {}
-
-const PipelineStateFields = {
-  pipelineId: S.NonEmptyString.annotateKey({
-    description: "Unique identifier for this pipeline execution.",
-  }),
-  currentAgentId: S.OptionFromOptionalKey(AgentId).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Agent currently executing, when any." })
-  ),
-  completedAgents: S.Array(AgentId).pipe(
-    SchemaUtils.withEmptyArrayDefaults<AgentId>(),
-    S.annotateKey({ description: "Agents that completed successfully." })
-  ),
-  intermediateResults: S.Array(IntermediateResult).pipe(
-    SchemaUtils.withEmptyArrayDefaults<IntermediateResult>(),
-    S.annotateKey({ description: "Checkpoint-safe outputs from completed agents." })
-  ),
-  startedAt: S.DateTimeUtcFromString.annotateKey({
-    description: "UTC instant at which execution began.",
-  }),
-  status: PipelineStatus.annotateKey({
-    description: "Canonical discriminated pipeline status.",
-  }),
-  iterationCount: NonNegativeInt.pipe(
-    SchemaUtils.withKeyDefaults(NonNegativeInt.make(0)),
-    S.annotateKey({ description: "Completed loop iterations." })
-  ),
-};
 
 /**
  * Immutable checkpoint snapshot of a multi-agent pipeline.
@@ -532,7 +498,33 @@ const PipelineStateFields = {
  * @since 0.0.0
  */
 export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
-  PipelineStateFields,
+  {
+    pipelineId: S.NonEmptyString.annotateKey({
+      description: "Unique identifier for this pipeline execution.",
+    }),
+    currentAgentId: S.OptionFromOptionalKey(AgentId).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Agent currently executing, when any." })
+    ),
+    completedAgents: S.Array(AgentId).pipe(
+      SchemaUtils.withEmptyArrayDefaults<AgentId>(),
+      S.annotateKey({ description: "Agents that completed successfully." })
+    ),
+    intermediateResults: S.Array(IntermediateResult).pipe(
+      SchemaUtils.withEmptyArrayDefaults<IntermediateResult>(),
+      S.annotateKey({ description: "Checkpoint-safe outputs from completed agents." })
+    ),
+    startedAt: S.DateTimeUtcFromString.annotateKey({
+      description: "UTC instant at which execution began.",
+    }),
+    status: PipelineStatus.annotateKey({
+      description: "Canonical discriminated pipeline status.",
+    }),
+    iterationCount: NonNegativeInt.pipe(
+      SchemaUtils.withKeyDefaults(NonNegativeInt.make(0)),
+      S.annotateKey({ description: "Completed loop iterations." })
+    ),
+  },
   $I.annote("PipelineState", {
     description: "Immutable checkpoint snapshot for multi-agent pipeline execution.",
   })
@@ -621,7 +613,7 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
   /**
    * Whether the pipeline has completed or failed.
    *
-   * **Example** (Use TerminationConditionFields)
+   * **Example** (Inspect a running pipeline)
    * ```ts
    * import { DateTime } from "effect"
    * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
@@ -641,25 +633,6 @@ export class PipelineState extends S.Class<PipelineState>($I`PipelineState`)(
   }
 }
 
-const TerminationConditionFields = {
-  maxIterations: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(5)),
-    S.annotateKey({ description: "Maximum completed iterations before forced termination." })
-  ),
-  stopOnConformance: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(true),
-    S.annotateKey({ description: "Whether validation conformance terminates the loop." })
-  ),
-  minConfidence: S.OptionFromOptionalKey(Confidence).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Optional confidence floor for continued execution." })
-  ),
-  timeout: S.OptionFromOptionalKey(S.DurationFromMillis).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Optional execution timeout encoded as milliseconds." })
-  ),
-};
-
 /**
  * Stop conditions for a looping agent pipeline.
  *
@@ -676,7 +649,24 @@ const TerminationConditionFields = {
  * @since 0.0.0
  */
 export class TerminationCondition extends S.Class<TerminationCondition>($I`TerminationCondition`)(
-  TerminationConditionFields,
+  {
+    maxIterations: PosInt.pipe(
+      SchemaUtils.withKeyDefaults(PosInt.make(5)),
+      S.annotateKey({ description: "Maximum completed iterations before forced termination." })
+    ),
+    stopOnConformance: S.Boolean.pipe(
+      SchemaUtils.withKeyDefaults(true),
+      S.annotateKey({ description: "Whether validation conformance terminates the loop." })
+    ),
+    minConfidence: S.OptionFromOptionalKey(Confidence).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional confidence floor for continued execution." })
+    ),
+    timeout: S.OptionFromOptionalKey(S.DurationFromMillis).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional execution timeout encoded as milliseconds." })
+    ),
+  },
   $I.annote("TerminationCondition", {
     description: "Schema-defaulted stop policy for iterative agent pipelines.",
   })
@@ -684,7 +674,7 @@ export class TerminationCondition extends S.Class<TerminationCondition>($I`Termi
   /**
    * Constructs the canonical default loop-termination policy.
    *
-   * **Example** (Use CheckpointConfigFields)
+   * **Example** (Inspect default termination)
    * ```ts
    * import { TerminationCondition } from "@effect-ontology/Model/Agent"
    *
@@ -698,25 +688,6 @@ export class TerminationCondition extends S.Class<TerminationCondition>($I`Termi
     return TerminationCondition.make({});
   }
 }
-
-const CheckpointConfigFields = {
-  afterAgents: S.Array(AgentId).pipe(
-    SchemaUtils.withEmptyArrayDefaults<AgentId>(),
-    S.annotateKey({ description: "Agents whose completion triggers a checkpoint." })
-  ),
-  everyNIterations: S.OptionFromOptionalKey(PosInt).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Optional periodic checkpoint interval for loop mode." })
-  ),
-  requireApproval: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(false),
-    S.annotateKey({ description: "Whether a human must approve checkpoint continuation." })
-  ),
-  approvalTimeout: S.OptionFromOptionalKey(S.DurationFromMillis).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Optional approval timeout encoded as milliseconds." })
-  ),
-};
 
 /**
  * Policy controlling pipeline checkpoint creation and approval.
@@ -734,7 +705,24 @@ const CheckpointConfigFields = {
  * @since 0.0.0
  */
 export class CheckpointConfig extends S.Class<CheckpointConfig>($I`CheckpointConfig`)(
-  CheckpointConfigFields,
+  {
+    afterAgents: S.Array(AgentId).pipe(
+      SchemaUtils.withEmptyArrayDefaults<AgentId>(),
+      S.annotateKey({ description: "Agents whose completion triggers a checkpoint." })
+    ),
+    everyNIterations: S.OptionFromOptionalKey(PosInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional periodic checkpoint interval for loop mode." })
+    ),
+    requireApproval: S.Boolean.pipe(
+      SchemaUtils.withKeyDefaults(false),
+      S.annotateKey({ description: "Whether a human must approve checkpoint continuation." })
+    ),
+    approvalTimeout: S.OptionFromOptionalKey(S.DurationFromMillis).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional approval timeout encoded as milliseconds." })
+    ),
+  },
   $I.annote("CheckpointConfig", {
     description: "Schema-defaulted policy for pipeline checkpoint timing and approval.",
   })
@@ -742,7 +730,7 @@ export class CheckpointConfig extends S.Class<CheckpointConfig>($I`CheckpointCon
   /**
    * Constructs the canonical default checkpoint policy.
    *
-   * **Example** (Use AgentStartedFields)
+   * **Example** (Inspect default checkpoint approval)
    * ```ts
    * import { CheckpointConfig } from "@effect-ontology/Model/Agent"
    *
@@ -756,12 +744,6 @@ export class CheckpointConfig extends S.Class<CheckpointConfig>($I`CheckpointCon
     return CheckpointConfig.make({});
   }
 }
-
-const AgentStartedFields = {
-  agentId: AgentId,
-  startedAt: S.DateTimeUtcFromString,
-  inputSummary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-};
 
 /**
  * Event emitted when an agent begins execution.
@@ -783,18 +765,15 @@ const AgentStartedFields = {
  */
 export class AgentStarted extends S.TaggedClass<AgentStarted>($I`AgentStarted`)(
   "AgentStarted",
-  AgentStartedFields,
+  {
+    agentId: AgentId,
+    startedAt: S.DateTimeUtcFromString,
+    inputSummary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  },
   $I.annote("AgentStarted", {
     description: "Lifecycle event recording the start of one agent execution.",
   })
 ) {}
-
-const AgentProgressFields = {
-  agentId: AgentId,
-  progress: Percentage,
-  message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-  timestamp: S.DateTimeUtcFromString,
-};
 
 /**
  * Progress update emitted during agent execution.
@@ -818,18 +797,16 @@ const AgentProgressFields = {
  */
 export class AgentProgress extends S.TaggedClass<AgentProgress>($I`AgentProgress`)(
   "AgentProgress",
-  AgentProgressFields,
+  {
+    agentId: AgentId,
+    progress: Percentage,
+    message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    timestamp: S.DateTimeUtcFromString,
+  },
   $I.annote("AgentProgress", {
     description: "Bounded percentage progress reported by an executing agent.",
   })
 ) {}
-
-const AgentCompletedFields = {
-  agentId: AgentId,
-  completedAt: S.DateTimeUtcFromString,
-  duration: S.DurationFromMillis,
-  outputSummary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
-};
 
 /**
  * Event emitted after successful agent execution.
@@ -852,19 +829,16 @@ const AgentCompletedFields = {
  */
 export class AgentCompleted extends S.TaggedClass<AgentCompleted>($I`AgentCompleted`)(
   "AgentCompleted",
-  AgentCompletedFields,
+  {
+    agentId: AgentId,
+    completedAt: S.DateTimeUtcFromString,
+    duration: S.DurationFromMillis,
+    outputSummary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  },
   $I.annote("AgentCompleted", {
     description: "Lifecycle event recording successful agent completion and duration.",
   })
 ) {}
-
-const AgentFailedFields = {
-  agentId: AgentId,
-  failedAt: S.DateTimeUtcFromString,
-  duration: S.DurationFromMillis,
-  error: S.NonEmptyString,
-  retryable: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
-};
 
 /**
  * Event emitted after failed agent execution.
@@ -888,7 +862,13 @@ const AgentFailedFields = {
  */
 export class AgentFailed extends S.TaggedClass<AgentFailed>($I`AgentFailed`)(
   "AgentFailed",
-  AgentFailedFields,
+  {
+    agentId: AgentId,
+    failedAt: S.DateTimeUtcFromString,
+    duration: S.DurationFromMillis,
+    error: S.NonEmptyString,
+    retryable: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+  },
   $I.annote("AgentFailed", {
     description: "Lifecycle event recording typed failure information for one agent execution.",
   })
@@ -933,12 +913,6 @@ export const CheckpointReason = LiteralKit(["scheduled", "agent-completed", "man
  */
 export type CheckpointReason = typeof CheckpointReason.Type;
 
-const PipelineCheckpointFields = {
-  state: PipelineState,
-  reason: CheckpointReason,
-  timestamp: S.DateTimeUtcFromString,
-};
-
 /**
  * Event carrying an immutable pipeline checkpoint.
  *
@@ -965,19 +939,23 @@ const PipelineCheckpointFields = {
  */
 export class PipelineCheckpoint extends S.TaggedClass<PipelineCheckpoint>($I`PipelineCheckpoint`)(
   "PipelineCheckpoint",
-  PipelineCheckpointFields,
+  {
+    state: PipelineState,
+    reason: CheckpointReason,
+    timestamp: S.DateTimeUtcFromString,
+  },
   $I.annote("PipelineCheckpoint", {
     description: "Lifecycle event carrying an immutable pipeline-state checkpoint.",
   })
 ) {}
 
-const AgentEventDefinition = S.TaggedUnion({
-  AgentStarted: AgentStartedFields,
-  AgentProgress: AgentProgressFields,
-  AgentCompleted: AgentCompletedFields,
-  AgentFailed: AgentFailedFields,
-  PipelineCheckpoint: PipelineCheckpointFields,
-});
+const AgentEventDefinition = S.Union([
+  AgentStarted,
+  AgentProgress,
+  AgentCompleted,
+  AgentFailed,
+  PipelineCheckpoint,
+]).pipe(S.toTaggedUnion("_tag"));
 
 /**
  * Exhaustively discriminated union of agent and pipeline lifecycle events.
@@ -1014,12 +992,11 @@ export const AgentEvent = AgentEventDefinition.pipe(
 /**
  * Runtime value decoded by {@link AgentEvent}.
  *
- * **Example** (Use AgentEvent)
+ * **Example** (Select the lifecycle discriminator)
  * ```ts
  * import type { AgentEvent } from "@effect-ontology/Model/Agent"
- *
- * const tag = (event: AgentEvent): AgentEvent["_tag"] => event._tag
- * console.log(typeof tag) // "function"
+ * const field: keyof AgentEvent = "_tag"
+ * console.log(field) // "_tag"
  * ```
  *
  * @category type-level

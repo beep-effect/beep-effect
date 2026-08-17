@@ -100,9 +100,7 @@ export class ClaimSearchRequest extends S.Class<ClaimSearchRequest>($I`ClaimSear
   $I.annote("ClaimSearchRequest", {
     description: "Claim-search body with normalized filters and constrained pagination defaults.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(ClaimSearchRequest);
-}
+) {}
 
 const PredicateFacet = S.Struct({
   iri: IRI,
@@ -175,9 +173,7 @@ export class EntitySearchRequest extends S.Class<EntitySearchRequest>($I`EntityS
   $I.annote("EntitySearchRequest", {
     description: "Entity-search body with optional ontology-type filter and positive result limit.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(EntitySearchRequest);
-}
+) {}
 
 const EntityTopClaim = S.Struct({
   predicate: IRI,
@@ -267,9 +263,7 @@ export class SuggestionQuery extends S.Class<SuggestionQuery>($I`SuggestionQuery
   $I.annote("SuggestionQuery", {
     description: "Suggestion query with non-empty prefix and a positive limit decoded from URL text.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(SuggestionQuery);
-}
+) {}
 
 /**
  * Individual entity suggestion.
@@ -349,9 +343,7 @@ export class ArticleSearchRequest extends S.Class<ArticleSearchRequest>($I`Artic
   $I.annote("ArticleSearchRequest", {
     description: "Article-search body with normalized filters and constrained pagination defaults.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(ArticleSearchRequest);
-}
+) {}
 
 /**
  * Source-article search hit and its aggregate knowledge counts.

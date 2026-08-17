@@ -14,6 +14,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { Clock, Context, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
+import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import { MetricsService } from "../Telemetry/Metrics.ts";
 import { hashVersionedEmbeddingKey } from "../Utils/Hash.ts";
 import { EmbeddingCache } from "./EmbeddingCache.ts";
@@ -152,7 +153,15 @@ export const EmbeddingServiceLive: Layer.Layer<
         const startTime = yield* Clock.currentTimeMillis;
 
         // Generate versioned cache key (includes provider/model/dimension)
-        const hash = yield* hashVersionedEmbeddingKey(text, taskType, metadata);
+        const hash = yield* hashVersionedEmbeddingKey(text, taskType, metadata).pipe(
+          Effect.mapError((cause) =>
+            EmbeddingError.make({
+              message: "Failed to compute the embedding cache key",
+              provider: metadata.providerId,
+              cause: O.some(cause),
+            })
+          )
+        );
 
         // Check cache first
         const cached = yield* cache.get(hash);

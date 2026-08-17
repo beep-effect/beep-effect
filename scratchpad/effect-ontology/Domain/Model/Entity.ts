@@ -22,7 +22,7 @@ import { Attributes, EntityId } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/Entity");
 
-const EvidenceSpanFields = {
+const EvidenceSpanShape = S.Struct({
   ...TextAnchorFields,
   confidence: S.OptionFromOptionalKey(Confidence).pipe(
     SchemaUtils.withNoneDefault,
@@ -30,10 +30,14 @@ const EvidenceSpanFields = {
       description: "System confidence in the evidence span when measured.",
     })
   ),
-};
+}).pipe(
+  $I.annoteSchema("EvidenceSpanShape", {
+    description: "Reusable canonical text-anchor fields with optional extraction confidence.",
+  })
+);
 
 class EvidenceSpanModel extends S.Class<EvidenceSpanModel>($I`EvidenceSpanModel`)(
-  EvidenceSpanFields,
+  EvidenceSpanShape.fields,
   $I.annote("EvidenceSpanModel", {
     description: "Canonical text anchor with optional experiment extraction confidence.",
   })
@@ -130,69 +134,17 @@ export const EvidenceSpan = LegacyEvidenceSpan.pipe(
 /**
  * Runtime value decoded by {@link EvidenceSpan}.
  *
- * **Example** (Use EvidenceSpan)
- *
+ * **Example** (Select the quoted text)
  * ```ts
  * import type { EvidenceSpan } from "@effect-ontology/Model/Entity"
- *
- * const length = (span: EvidenceSpan): number => span.endChar - span.startChar
- * console.log(typeof length) // "function"
+ * const field: keyof EvidenceSpan = "quote"
+ * console.log(field) // "quote"
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
 export type EvidenceSpan = typeof EvidenceSpan.Type;
-
-const EntityFields = {
-  id: EntityId.annotateKey({
-    description: "Stable snake-case identifier assigned during extraction.",
-  }),
-  mention: S.NonEmptyString.annotateKey({
-    description: "Original non-empty source mention.",
-  }),
-  types: S.NonEmptyArray(IRI).annotateKey({
-    description: "One or more ontology classes instantiated by the entity.",
-  }),
-  attributes: Attributes.pipe(
-    SchemaUtils.withKeyDefaults({}),
-    S.annotateKey({
-      description: "Ontology property values asserted for the entity.",
-    })
-  ),
-  chunkIndex: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Zero-based source chunk index when available." })
-  ),
-  chunkId: S.OptionFromOptionalKey(ChunkId).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Stable source chunk identifier when available." })
-  ),
-  documentId: S.OptionFromOptionalKey(DocumentId).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Content-derived source document identifier when available." })
-  ),
-  sourceUri: S.OptionFromOptionalKey(GcsUri).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Canonical source-object URI when available." })
-  ),
-  extractedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "UTC system instant at which extraction occurred." })
-  ),
-  eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "UTC domain instant described by the source when available." })
-  ),
-  mentions: S.Array(EvidenceSpan).pipe(
-    SchemaUtils.withEmptyArrayDefaults<EvidenceSpan>(),
-    S.annotateKey({ description: "All source spans supporting this entity." })
-  ),
-  groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "System-measured source-grounding confidence." })
-  ),
-};
 
 /**
  * Entity extracted from text and classified by an ontology.
@@ -223,7 +175,55 @@ const EntityFields = {
  * @since 0.0.0
  */
 export class Entity extends S.Class<Entity>($I`Entity`)(
-  EntityFields,
+  {
+    id: EntityId.annotateKey({
+      description: "Stable snake-case identifier assigned during extraction.",
+    }),
+    mention: S.NonEmptyString.annotateKey({
+      description: "Original non-empty source mention.",
+    }),
+    types: S.NonEmptyArray(IRI).annotateKey({
+      description: "One or more ontology classes instantiated by the entity.",
+    }),
+    attributes: Attributes.pipe(
+      SchemaUtils.withKeyDefaults({}),
+      S.annotateKey({
+        description: "Ontology property values asserted for the entity.",
+      })
+    ),
+    chunkIndex: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Zero-based source chunk index when available." })
+    ),
+    chunkId: S.OptionFromOptionalKey(ChunkId).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Stable source chunk identifier when available." })
+    ),
+    documentId: S.OptionFromOptionalKey(DocumentId).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Content-derived source document identifier when available." })
+    ),
+    sourceUri: S.OptionFromOptionalKey(GcsUri).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Canonical source-object URI when available." })
+    ),
+    extractedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "UTC system instant at which extraction occurred." })
+    ),
+    eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "UTC domain instant described by the source when available." })
+    ),
+    mentions: S.Array(EvidenceSpan).pipe(
+      SchemaUtils.withEmptyArrayDefaults<EvidenceSpan>(),
+      S.annotateKey({ description: "All source spans supporting this entity." })
+    ),
+    groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "System-measured source-grounding confidence." })
+    ),
+  },
   $I.annote("Entity", {
     description: "Immutable ontology-typed entity with normalized provenance and grounding data.",
   })
@@ -296,22 +296,6 @@ export const RelationObject = S.TaggedUnion({
  */
 export type RelationObject = typeof RelationObject.Type;
 
-const RelationFields = {
-  subjectId: EntityId.annotateKey({
-    description: "Entity identifier in the subject position.",
-  }),
-  predicate: IRI.annotateKey({
-    description: "Ontology property IRI in the predicate position.",
-  }),
-  object: RelationObject.annotateKey({
-    description: "Explicit entity reference or literal object value.",
-  }),
-  evidence: S.OptionFromOptionalKey(EvidenceSpan).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Source span supporting the relation when available." })
-  ),
-};
-
 /**
  * Ontology relation between an extracted subject and a typed object value.
  *
@@ -336,7 +320,21 @@ const RelationFields = {
  * @since 0.0.0
  */
 export class Relation extends S.Class<Relation>($I`Relation`)(
-  RelationFields,
+  {
+    subjectId: EntityId.annotateKey({
+      description: "Entity identifier in the subject position.",
+    }),
+    predicate: IRI.annotateKey({
+      description: "Ontology property IRI in the predicate position.",
+    }),
+    object: RelationObject.annotateKey({
+      description: "Explicit entity reference or literal object value.",
+    }),
+    evidence: S.OptionFromOptionalKey(EvidenceSpan).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Source span supporting the relation when available." })
+    ),
+  },
   $I.annote("Relation", {
     description: "Immutable ontology relation with an explicitly classified object value.",
   })
@@ -397,7 +395,7 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
   /**
    * Structural hash over the RDF-like subject-predicate-object signature.
    *
-   * **Example** (Use KnowledgeGraphFields)
+   * **Example** (Inspect an empty graph)
    *
    * ```ts
    * import { Hash } from "effect"
@@ -425,21 +423,6 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
   }
 }
 
-const KnowledgeGraphFields = {
-  entities: S.Array(Entity).pipe(
-    SchemaUtils.withEmptyArrayDefaults<Entity>(),
-    S.annotateKey({ description: "All extracted entities." })
-  ),
-  relations: S.Array(Relation).pipe(
-    SchemaUtils.withEmptyArrayDefaults<Relation>(),
-    S.annotateKey({ description: "All extracted ontology relations." })
-  ),
-  sourceText: S.OptionFromOptionalKey(S.String).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Original source text when retained for provenance." })
-  ),
-};
-
 /**
  * Complete entity-and-relation extraction result.
  *
@@ -465,7 +448,20 @@ const KnowledgeGraphFields = {
  * @since 0.0.0
  */
 export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
-  KnowledgeGraphFields,
+  {
+    entities: S.Array(Entity).pipe(
+      SchemaUtils.withEmptyArrayDefaults<Entity>(),
+      S.annotateKey({ description: "All extracted entities." })
+    ),
+    relations: S.Array(Relation).pipe(
+      SchemaUtils.withEmptyArrayDefaults<Relation>(),
+      S.annotateKey({ description: "All extracted ontology relations." })
+    ),
+    sourceText: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Original source text when retained for provenance." })
+    ),
+  },
   $I.annote("KnowledgeGraph", {
     description: "Immutable extraction aggregate containing ontology-typed entities and relations.",
   })

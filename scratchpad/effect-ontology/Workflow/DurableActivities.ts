@@ -28,7 +28,19 @@ import { NonNegativeInt } from "@beep/schema/Int";
 import { NonNegNum } from "@beep/schema/Number";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { Chunk, DateTime, Duration, Effect, HashMap, MutableHashMap, MutableHashSet, Order, Schedule } from "effect";
+import {
+  Cause,
+  Chunk,
+  DateTime,
+  Duration,
+  Effect,
+  HashMap,
+  Inspectable,
+  MutableHashMap,
+  MutableHashSet,
+  Order,
+  Schedule,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -444,14 +456,14 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
       const graphContents = yield* Effect.forEach(
         input.documentGraphUris,
         (uri) =>
-          storage.get(stripGsPrefix(uri)).pipe(
-            Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), uri)),
+          storage.getOption(stripGsPrefix(uri)).pipe(
+            Effect.flatMap((content) => requireContent(content, uri)),
             Effect.tapCause((cause) =>
               Effect.logError("Resolution: Failed to load document graph", {
                 activity: "resolution",
                 batchId: input.batchId,
                 graphUri: uri,
-                cause: String(cause),
+                cause: Cause.pretty(cause),
               })
             )
           ),
@@ -468,7 +480,9 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
           }).pipe(
             Effect.catch((err) =>
               Effect.gen(function* () {
-                yield* Effect.logWarning("Failed to parse document graph, skipping", { error: String(err) });
+                yield* Effect.logWarning("Failed to parse document graph, skipping", {
+                  error: Inspectable.toStringUnknown(err),
+                });
                 return KnowledgeGraph.make({ entities: [], relations: [] });
               })
             )
@@ -637,13 +651,13 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
         hasShaclUri: input.shaclUri.pipe(O.fromNullishOr, O.isSome),
       });
 
-      const resolvedGraph = yield* storage.get(stripGsPrefix(input.resolvedGraphUri)).pipe(
-        Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), input.resolvedGraphUri)),
+      const resolvedGraph = yield* storage.getOption(stripGsPrefix(input.resolvedGraphUri)).pipe(
+        Effect.flatMap((content) => requireContent(content, input.resolvedGraphUri)),
         Effect.tapCause((cause) =>
           Effect.logError("Validation: Failed to load resolved graph", {
             activity: "validation",
             batchId: input.batchId,
-            cause: String(cause),
+            cause: Cause.pretty(cause),
           })
         )
       );
@@ -653,7 +667,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
           Effect.logError("Validation: Failed to parse turtle", {
             activity: "validation",
             batchId: input.batchId,
-            cause: String(cause),
+            cause: Cause.pretty(cause),
           })
         )
       );
@@ -665,15 +679,15 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       const shapesStore = Effect.fn("onNone")(
         function* () {
           const shapesPath = input.ontologyUri.replace(/[^/]+\.ttl$/i, "shapes.ttl");
-          const shapesContent = yield* storage.get(stripGsPrefix(shapesPath));
-          if (shapesContent !== undefined) {
+          const shapesContent = yield* storage.getOption(stripGsPrefix(shapesPath));
+          if (O.isSome(shapesContent)) {
             yield* Effect.logInfo("Validation: Found shapes.ttl via auto-discovery", {
               activity: "validation",
               batchId: input.batchId,
               shapesPath,
               ontologyUri: input.ontologyUri,
             });
-            return yield* rdf.parseTurtle(shapesContent);
+            return yield* rdf.parseTurtle(shapesContent.value);
           }
           yield* Effect.logInfo("Validation: Auto-generating SHACL shapes from ontology", {
             activity: "validation",
@@ -681,14 +695,14 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
             ontologyUri: input.ontologyUri,
             triedShapesPath: shapesPath,
           });
-          const ontologyContent = yield* storage.get(stripGsPrefix(input.ontologyUri)).pipe(
-            Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), input.ontologyUri)),
+          const ontologyContent = yield* storage.getOption(stripGsPrefix(input.ontologyUri)).pipe(
+            Effect.flatMap((content) => requireContent(content, input.ontologyUri)),
             Effect.tapCause((cause) =>
               Effect.logError("Validation: Failed to load ontology", {
                 activity: "validation",
                 batchId: input.batchId,
                 ontologyUri: input.ontologyUri,
-                cause: String(cause),
+                cause: Cause.pretty(cause),
               })
             )
           );
@@ -699,7 +713,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
           Effect.logError("Validation: Failed to load or generate shapes", {
             activity: "validation",
             batchId: input.batchId,
-            cause: String(cause),
+            cause: Cause.pretty(cause),
           })
         )
       );
@@ -716,7 +730,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
           Effect.logError("Validation: SHACL validation failed", {
             activity: "validation",
             batchId: input.batchId,
-            cause: String(cause),
+            cause: Cause.pretty(cause),
           })
         )
       );
@@ -788,13 +802,13 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
         targetNamespace: input.targetNamespace,
       });
 
-      const validatedGraph = yield* storage.get(stripGsPrefix(input.validatedGraphUri)).pipe(
-        Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), input.validatedGraphUri)),
+      const validatedGraph = yield* storage.getOption(stripGsPrefix(input.validatedGraphUri)).pipe(
+        Effect.flatMap((content) => requireContent(content, input.validatedGraphUri)),
         Effect.tapCause((cause) =>
           Effect.logError("Ingestion: Failed to load validated graph", {
             activity: "ingestion",
             batchId: input.batchId,
-            cause: String(cause),
+            cause: Cause.pretty(cause),
           })
         )
       );
@@ -805,7 +819,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
             yield* Effect.logError("Ingestion: Failed to parse validated graph for stats", {
               activity: "ingestion",
               batchId: input.batchId,
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
             });
             // Return zeros but the error is logged - consider making this fail
             return { entityCount: 0, tripleCount: 0 };
@@ -825,7 +839,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
         Effect.mapError((error) =>
           ActivityGenericError.make({
             message: `Failed to parse new graph: ${error.message}`,
-            cause: O.some(String(error)),
+            cause: O.some(Inspectable.toStringUnknown(error)),
           })
         )
       );
@@ -853,7 +867,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
             Effect.mapError((error) =>
               ActivityGenericError.make({
                 message: `Failed to parse existing graph: ${error.message}`,
-                cause: O.some(String(error)),
+                cause: O.some(Inspectable.toStringUnknown(error)),
               })
             )
           );
@@ -864,7 +878,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
             Effect.mapError((error) =>
               ActivityGenericError.make({
                 message: `Failed to parse new graph for merge: ${error.message}`,
-                cause: O.some(String(error)),
+                cause: O.some(Inspectable.toStringUnknown(error)),
               })
             )
           );
@@ -1205,7 +1219,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
               yield* Effect.logWarning("Failed to persist claims for document", {
                 batchId: input.batchId,
                 graphUri,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               });
               if (config.extraction.strictPersistence) {
                 return yield* Effect.fail(error);
@@ -2541,14 +2555,14 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         (doc, index) =>
           Effect.gen(function* () {
             const sourcePath = stripGsPrefix(doc.sourceUri);
-            const content = yield* storage.get(sourcePath).pipe(
-              Effect.map((opt) => opt ?? (() => "")()),
+            const content = yield* storage.getOption(sourcePath).pipe(
+              Effect.map(O.getOrElse(() => "")),
               Effect.catch((error) =>
                 Effect.gen(function* () {
                   yield* Effect.logWarning("Failed to load document for preview", {
                     documentId: doc.documentId,
                     sourcePath,
-                    error: String(error),
+                    error: Inspectable.toStringUnknown(error),
                   });
                   return "";
                 })
@@ -2640,7 +2654,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
                 yield* Effect.logWarning("Classification batch failed, using defaults", {
                   batchId: input.batchId,
                   batchStart: i,
-                  error: String(error),
+                  error: Inspectable.toStringUnknown(error),
                 });
                 return { value: { classifications: [] } };
               })

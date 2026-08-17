@@ -447,7 +447,7 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
     /**
      * Delete embedding
      */
-    const remove = Effect.fn(function* (
+    const remove = Effect.fn("EmbeddingRepository.remove")(function* (
       ontologyId: string,
       entityType: EmbeddingEntityType,
       entityId: string
@@ -467,7 +467,7 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository>()(
     /**
      * Delete all embeddings for an ontology and entity type
      */
-    const removeByType = Effect.fn(function* (
+    const removeByType = Effect.fn("EmbeddingRepository.removeByType")(function* (
       ontologyId: string,
       entityType: EmbeddingEntityType
     ): Effect.fn.Return<void, DrizzleError> {

@@ -11,6 +11,7 @@ import { ExtractionRunError } from "../../Service/ExtractionRun.ts";
 import { TimeoutError } from "../../Service/LlmControl/StageTimeout.ts";
 import { NomicNlpError } from "../../Service/NomicNlp.ts";
 import { OntologyAgentError } from "../../Service/OntologyAgent.ts";
+import { OntologyNotFoundError, RegistryNotFoundError, RegistryParseError } from "../../Service/OntologyRegistry.ts";
 import { ProgressStreamingError } from "../../Service/ProgressStreaming.ts";
 import { ReasoningError, RuleParseError } from "../../Service/Reasoner.ts";
 import { ReconciliationError } from "../../Service/ReconciliationService.ts";
@@ -44,6 +45,13 @@ describe("schema-backed service errors", () => {
           OntologyAgentError.make({ operation: "parseOntology", message: "Ontology parsing failed." })
         )
       );
+      assert.isTrue(RegistryNotFoundError.is(RegistryNotFoundError.make({ path: "config/registry.json" })));
+      assert.isTrue(
+        RegistryParseError.is(
+          RegistryParseError.make({ path: "config/registry.json", cause: "Invalid registry document." })
+        )
+      );
+      assert.isTrue(OntologyNotFoundError.is(OntologyNotFoundError.make({ identifier: "seattle", type: "id" })));
       assert.isTrue(
         ProgressStreamingError.is(
           ProgressStreamingError.make({ reason: "QueueOverflow", message: "The progress queue is full." })

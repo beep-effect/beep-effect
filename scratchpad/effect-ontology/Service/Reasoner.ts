@@ -423,7 +423,7 @@ const makeReasoner = (): Effect.Effect<ReasonerShape> =>
     /**
      * Core reasoning function - mutates the store
      */
-    const reason = Effect.fn(function* (
+    const reason = Effect.fn("Reasoner.reason")(function* (
       store: RdfStore,
       config: ReasoningConfig
     ): Effect.fn.Return<ReasoningResult, ReasoningError | RuleParseError> {
@@ -481,7 +481,7 @@ const makeReasoner = (): Effect.Effect<ReasonerShape> =>
     /**
      * Copy-based reasoning function
      */
-    const reasonCopy = Effect.fn(function* (
+    const reasonCopy = Effect.fn("Reasoner.reasonCopy")(function* (
       store: RdfStore,
       config: ReasoningConfig
     ): Effect.fn.Return<
@@ -538,7 +538,7 @@ const makeReasoner = (): Effect.Effect<ReasonerShape> =>
        * @param store - The RDF store to reason over (will be mutated)
        * @returns Reasoning result
        */
-      reasonForValidation: Effect.fn(function* (
+      reasonForValidation: Effect.fn("Reasoner.reasonForValidation")(function* (
         store: RdfStore
       ): Effect.fn.Return<ReasoningResult, ReasoningError | RuleParseError> {
         yield* Effect.logDebug("Reasoner.reasonForValidation - applying subclass inference");

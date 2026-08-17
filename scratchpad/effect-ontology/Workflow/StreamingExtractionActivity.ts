@@ -355,8 +355,8 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       // 1. Read source document
       const sourceKey = stripGsPrefix(input.sourceUri);
       const sourceContent = yield* storage
-        .get(sourceKey)
-        .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), sourceKey)));
+        .getOption(sourceKey)
+        .pipe(Effect.flatMap((opt) => requireContent(opt, sourceKey)));
 
       yield* Effect.logInfo("Source document loaded", {
         documentId: input.documentId,
@@ -365,8 +365,8 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
 
       // 2. Load ontology and compute content hash for cache invalidation
       const ontologyKey = stripGsPrefix(input.ontologyUri);
-      const ontologyContent = yield* storage.get(ontologyKey).pipe(
-        Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), ontologyKey)),
+      const ontologyContent = yield* storage.getOption(ontologyKey).pipe(
+        Effect.flatMap((opt) => requireContent(opt, ontologyKey)),
         Effect.mapError((error) =>
           ActivityError.serviceFailure("StorageService", `get ontology ${ontologyKey}`, error, true)
         )

@@ -25,6 +25,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { PubSub as GCloudPubSub } from "@google-cloud/pubsub";
 import {
+  Cause,
   Clock,
   Config,
   Context,
@@ -345,7 +346,7 @@ const makeEventBroadcastHubMemory = Effect.gen(function* () {
   const pubsubs = MutableHashMap.empty<string, PubSub.PubSub<BroadcastEvent>>();
   const clientCounts = MutableHashMap.empty<string, number>();
 
-  const getOrCreatePubSub = Effect.fn(function* (ontologyId: string) {
+  const getOrCreatePubSub = Effect.fn("EventBroadcastRouter.getOrCreatePubSub")(function* (ontologyId: string) {
     return yield* O.match(MutableHashMap.get(pubsubs, ontologyId), {
       onNone: () =>
         PubSub.unbounded<BroadcastEvent>().pipe(
@@ -355,13 +356,16 @@ const makeEventBroadcastHubMemory = Effect.gen(function* () {
     });
   });
 
-  const broadcast = Effect.fn(function* (ontologyId: string, event: BroadcastEvent) {
+  const broadcast = Effect.fn("EventBroadcastRouter.cloud.broadcast")(function* (
+    ontologyId: string,
+    event: BroadcastEvent
+  ) {
     const ps = yield* getOrCreatePubSub(ontologyId);
     yield* PubSub.publish(ps, event);
     yield* Effect.logDebug("Event broadcast (memory)", { ontologyId, event: event.entry.event });
   });
 
-  const subscribe = Effect.fn(function* (ontologyId: string) {
+  const subscribe = Effect.fn("EventBroadcastRouter.cloud.subscribe")(function* (ontologyId: string) {
     const ps = yield* getOrCreatePubSub(ontologyId);
     const queue = yield* PubSub.subscribe(ps);
     // Track client count
@@ -496,13 +500,16 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
     subscriptionId: instanceSubscriptionId,
   });
 
-  const broadcast = Effect.fn(function* (ontologyId: string, event: BroadcastEvent) {
+  const broadcast = Effect.fn("EventBroadcastRouter.memory.broadcast")(function* (
+    ontologyId: string,
+    event: BroadcastEvent
+  ) {
     const ps = yield* getOrCreatePubSub(ontologyId);
     yield* PubSub.publish(ps, event);
     yield* Effect.logDebug("Event broadcast (local)", { ontologyId, event: event.entry.event });
   });
 
-  const subscribe = Effect.fn(function* (ontologyId: string) {
+  const subscribe = Effect.fn("EventBroadcastRouter.memory.subscribe")(function* (ontologyId: string) {
     const ps = yield* getOrCreatePubSub(ontologyId);
     const queue = yield* PubSub.subscribe(ps);
     // Track client count
@@ -666,9 +673,9 @@ export const EventBroadcastRouter = HttpRouter.addAll([
 
       return HttpServerResponse.empty();
     }).pipe(
-      Effect.catch((error) =>
+      Effect.catchCause((cause) =>
         Effect.gen(function* () {
-          yield* Effect.logError("WebSocket upgrade failed", { error: String(error) });
+          yield* Effect.logError("WebSocket upgrade failed", { cause: Cause.pretty(cause) });
           return yield* HttpServerResponse.json(
             {
               error: "WEBSOCKET_ERROR",

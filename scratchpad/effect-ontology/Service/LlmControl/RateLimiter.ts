@@ -193,7 +193,7 @@ export class CentralRateLimiterService extends Context.Service<
 /**
  * Create rate limiter with configuration
  */
-const make = Effect.fn("make")(function* (config: RateLimiterConfig = DEFAULT_CONFIG) {
+const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiterConfig = DEFAULT_CONFIG) {
   const initialTime = yield* Clock.currentTimeMillis;
   const state = yield* Ref.make<RateLimiterState>({
     requestsThisMinute: 0,
@@ -216,7 +216,7 @@ const make = Effect.fn("make")(function* (config: RateLimiterConfig = DEFAULT_CO
         : s
     );
   return {
-    acquire: Effect.fn(function* (estimatedTokens: number) {
+    acquire: Effect.fn("CentralRateLimiter.acquire")(function* (estimatedTokens: number) {
       const now = Number(yield* Clock.currentTimeMillis);
       const current = yield* Ref.get(state);
       if (current.circuitState === "open") {
@@ -261,7 +261,7 @@ const make = Effect.fn("make")(function* (config: RateLimiterConfig = DEFAULT_CO
         tokensThisMinute: s.tokensThisMinute + estimatedTokens,
       }));
     }),
-    release: Effect.fn(function* (_actualTokens: number, success: boolean) {
+    release: Effect.fn("CentralRateLimiter.release")(function* (_actualTokens: number, success: boolean) {
       yield* semaphore.release(1);
       const now = Number(yield* Clock.currentTimeMillis);
       yield* Ref.update(state, (s) => {

@@ -189,7 +189,6 @@ export class InferenceRunRequest extends S.Class<InferenceRunRequest>($I`Inferen
   })
 ) {
   static readonly is = S.is(InferenceRunRequest);
-  static readonly fromUnknown = S.decodeUnknownSync(InferenceRunRequest);
   static readonly decodeOption = S.decodeUnknownOption(InferenceRunRequest);
 }
 
@@ -289,7 +288,6 @@ export class InferenceRunResponse extends S.Class<InferenceRunResponse>($I`Infer
   })
 ) {
   static readonly is = S.is(InferenceRunResponse);
-  static readonly fromUnknown = S.decodeUnknownSync(InferenceRunResponse);
 }
 
 /**
@@ -331,5 +329,4 @@ export class InferenceStatusResponse extends S.Class<InferenceStatusResponse>($I
   })
 ) {
   static readonly is = S.is(InferenceStatusResponse);
-  static readonly fromUnknown = S.decodeUnknownSync(InferenceStatusResponse);
 }

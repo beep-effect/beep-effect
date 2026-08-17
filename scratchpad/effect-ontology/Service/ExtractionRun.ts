@@ -240,7 +240,7 @@ export interface ExtractionRunServiceMethods {
   /**
    * Get run by idempotency key
    */
-  getByKey(key: IdempotencyKey): Effect.Effect<ExtractionRun | null, ExtractionRunError>;
+  getByKey(key: IdempotencyKey): Effect.Effect<O.Option<ExtractionRun>, ExtractionRunError>;
 
   /**
    * Emit an audit event to the run's metadata
@@ -505,9 +505,9 @@ const makeExtractionRunService = Effect.gen(function* () {
 
   const getByKeyRaw = Effect.fn("ExtractionRunService.getByKey")(function* (key: IdempotencyKey) {
     const runId = R.get(yield* getKeyIndex, key);
-    if (O.isNone(runId)) return null;
+    if (O.isNone(runId)) return O.none<ExtractionRun>();
     const content = yield* storage.get(metadataKey(runId.value));
-    return P.isUndefined(content) ? null : yield* decodeExtractionRun(content);
+    return P.isUndefined(content) ? O.none<ExtractionRun>() : O.some(yield* decodeExtractionRun(content));
   });
   const getByKey = (key: IdempotencyKey) =>
     getByKeyRaw(key).pipe(Effect.mapError(mapRunError("Failed to read extraction run by idempotency key")));

@@ -14,6 +14,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
 import { Context, Duration, Effect, HashMap, Layer, Ref } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { CircuitBreaker, CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
@@ -186,7 +187,7 @@ export interface EmbeddingCircuitBreakerService {
   readonly isAvailable: (providerId: EmbeddingProviderId) => Effect.Effect<boolean>;
   readonly findAvailableProvider: (
     providers: ReadonlyArray<EmbeddingProviderId>
-  ) => Effect.Effect<EmbeddingProviderId | null>;
+  ) => Effect.Effect<O.Option<EmbeddingProviderId>>;
   readonly reset: (providerId: EmbeddingProviderId) => Effect.Effect<void>;
   readonly resetAll: Effect.Effect<void>;
 }
@@ -237,7 +238,10 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
        * @param providerId - The embedding provider ID
        * @param effect - The effect to protect
        */
-      const protect = Effect.fn(function* <A, E, R>(providerId: EmbeddingProviderId, effect: Effect.Effect<A, E, R>) {
+      const protect = Effect.fn("EmbeddingCircuitBreaker.protect")(function* <A, E, R>(
+        providerId: EmbeddingProviderId,
+        effect: Effect.Effect<A, E, R>
+      ) {
         const circuit = yield* getOrCreateCircuit(providerId);
         return yield* circuit.protect(effect);
       });
@@ -245,7 +249,9 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
       /**
        * Get circuit status for a provider
        */
-      const getStatus = Effect.fn(function* (providerId: EmbeddingProviderId): Effect.fn.Return<CircuitStatus> {
+      const getStatus = Effect.fn("EmbeddingCircuitBreaker.getStatus")(function* (
+        providerId: EmbeddingProviderId
+      ): Effect.fn.Return<CircuitStatus> {
         const circuit = yield* getOrCreateCircuit(providerId);
         const state = yield* circuit.getState();
         return {
@@ -262,12 +268,8 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
         const circuits = yield* Ref.get(circuitsRef);
         const entries = HashMap.toEntries(circuits);
 
-        if (entries.length === 0) {
-          return [];
-        }
-
         return yield* Effect.all(
-          entries.map(([providerId, circuit]) =>
+          A.map(entries, ([providerId, circuit]) =>
             circuit.getState().pipe(
               Effect.map((state) => ({
                 providerId,
@@ -275,7 +277,8 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
                 isAvailable: state !== "open",
               }))
             )
-          )
+          ),
+          { concurrency: "unbounded" }
         );
       });
 
@@ -288,16 +291,16 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
       /**
        * Find first available provider from a list
        */
-      const findAvailableProvider = Effect.fn(function* (
+      const findAvailableProvider = Effect.fn("EmbeddingCircuitBreaker.findAvailableProvider")(function* (
         providers: ReadonlyArray<EmbeddingProviderId>
-      ): Effect.fn.Return<EmbeddingProviderId | null> {
+      ): Effect.fn.Return<O.Option<EmbeddingProviderId>> {
         for (const providerId of providers) {
           const available = yield* isAvailable(providerId);
           if (available) {
-            return providerId;
+            return O.some(providerId);
           }
         }
-        return null;
+        return O.none();
       });
 
       /**

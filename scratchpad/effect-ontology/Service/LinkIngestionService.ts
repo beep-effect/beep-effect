@@ -25,7 +25,7 @@ import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import { and, eq, inArray, lt } from "drizzle-orm";
-import { Cache, Clock, Context, DateTime, Duration, Effect, Layer } from "effect";
+import { Cache, Clock, Context, DateTime, Duration, Effect, Inspectable, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -281,7 +281,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
     /**
      * Ingest a single URL
      */
-    const ingestUrl = Effect.fn(function* (
+    const ingestUrl = Effect.fn("LinkIngestionService.ingestUrl")(function* (
       url: string,
       options: IngestOptions
     ): Effect.fn.Return<IngestResult, LinkIngestionError> {
@@ -382,7 +382,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
                 Effect.catch((error) =>
                   Effect.logWarning("Failed to store image, continuing", {
                     url: fetchResult.candidate.sourceUrl,
-                    error: String(error),
+                    error: Inspectable.toStringUnknown(error),
                   })
                 )
               ),
@@ -615,7 +615,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
     /**
      * Get content from storage for a link
      */
-    const getContent = (link: IngestedLinkRow) => storage.get(link.storageUri).pipe(Effect.map(O.fromNullishOr));
+    const getContent = (link: IngestedLinkRow) => storage.getOption(link.storageUri);
 
     /**
      * Re-enrich a pending/failed link

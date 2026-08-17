@@ -12,7 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
-import { Clock, Context, DateTime, Duration, Effect, Layer, Queue, Ref, Stream } from "effect";
+import { Clock, Context, DateTime, Duration, Effect, Inspectable, Layer, Queue, Ref, Stream } from "effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -396,13 +396,13 @@ export const EventBusServiceMemory = Layer.effect(
                 id,
                 attempts,
                 maxAttempts,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               });
             } else {
               yield* Effect.logError("Job failed, max attempts reached", {
                 id,
                 attempts,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               });
             }
             return yield* Effect.fail(error);

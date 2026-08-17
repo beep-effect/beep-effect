@@ -11,12 +11,17 @@
  * @since 0.0.0
  */
 
-import type { IRI } from "@beep/rdf";
+import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
+import { MutableHashMapFromSelf } from "@beep/schema/MutableHashMap";
 import { MutableHashMap, MutableHashSet, Number as N } from "effect";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
+
+const $I = $ScratchpadId.create("effect-ontology/Utils/Iri");
 
 /**
  * Build a case-insensitive lookup map from IRIs.
@@ -97,12 +102,13 @@ export const normalizeIri: {
 /**
  * Normalize an array of IRIs to their canonical forms.
  *
- * **Example** (Inspect normalize iris)
+ * **Example** (Normalize an empty collection)
  *
  * ```ts
  * import { normalizeIris } from "@effect-ontology/Utils/Iri"
+ * import * as MutableHashMap from "effect/MutableHashMap"
  *
- * console.log(normalizeIris)
+ * console.log(normalizeIris([], MutableHashMap.empty()).length) // 0
  * ```
  *
  * @param inputs - Array of IRIs to normalize
@@ -123,12 +129,13 @@ export const normalizeIris: {
 /**
  * Check if an IRI exists in the canonical set (case-insensitively).
  *
- * **Example** (Inspect iri exists case insensitive)
+ * **Example** (Check an empty canonical map)
  *
  * ```ts
  * import { iriExistsCaseInsensitive } from "@effect-ontology/Utils/Iri"
+ * import * as MutableHashMap from "effect/MutableHashMap"
  *
- * console.log(iriExistsCaseInsensitive)
+ * console.log(iriExistsCaseInsensitive("https://example.com/A", MutableHashMap.empty())) // false
  * ```
  *
  * @param input - IRI to check
@@ -178,27 +185,33 @@ export const extractLocalNameFromIri = (iri: string): string => {
 /**
  * Result of building a local name to IRI map, including collision info
  *
- * **Example** (Reference LocalNameMapResult fields)
+ * **Example** (Build a collision-aware local-name map)
  *
  * ```ts
- * import type { LocalNameMapResult } from "@effect-ontology/Utils/Iri"
+ * import { IRI } from "@beep/rdf"
+ * import { buildLocalNameToIriMapSafe } from "@effect-ontology/Utils/Iri"
  *
- * const localNameMapResultFields: ReadonlyArray<keyof LocalNameMapResult> = ["map", "collisions", "hasCollisions"]
- *
- * console.log(localNameMapResultFields)
+ * const result = buildLocalNameToIriMapSafe([IRI.make("https://example.com/Person")])
+ * console.log(result.hasCollisions) // false
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface LocalNameMapResult {
-  /** The local name to IRI mapping (last IRI wins for collisions) */
-  readonly map: MutableHashMap.MutableHashMap<string, IRI>;
-  /** Map of local names that had collisions to all their IRIs */
-  readonly collisions: MutableHashMap.MutableHashMap<string, ReadonlyArray<IRI>>;
-  /** Whether any collisions were detected */
-  readonly hasCollisions: boolean;
-}
+export class LocalNameMapResult extends S.Class<LocalNameMapResult>($I`LocalNameMapResult`)(
+  {
+    map: MutableHashMapFromSelf({ key: S.String, value: IRI }).annotateKey({
+      description: "Case-insensitive local-name mapping; the last IRI wins when names collide.",
+    }),
+    collisions: MutableHashMapFromSelf({ key: S.String, value: S.Array(IRI) }).annotateKey({
+      description: "All IRIs associated with each colliding local name.",
+    }),
+    hasCollisions: S.Boolean.annotateKey({ description: "Whether any local-name collision was detected." }),
+  },
+  $I.annote("LocalNameMapResult", {
+    description: "Mutable local-name lookup state and its collision inventory.",
+  })
+) {}
 
 /**
  * Build a case-insensitive local name to IRI map with collision detection.
@@ -345,12 +358,13 @@ export const expandTypesToIris: {
 /**
  * Get all valid local names from a set of IRIs.
  *
- * **Example** (Inspect get local name set)
+ * **Example** (Collect no local names)
  *
  * ```ts
  * import { getLocalNameSet } from "@effect-ontology/Utils/Iri"
+ * import * as MutableHashSet from "effect/MutableHashSet"
  *
- * console.log(getLocalNameSet)
+ * console.log(MutableHashSet.size(getLocalNameSet([]))) // 0
  * ```
  *
  * @param iris - Array of canonical IRIs

@@ -21,7 +21,7 @@ import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { WinkStringArray } from "@beep/wink/Wink.models";
 import { WinkEngine } from "@beep/wink/Wink.service";
 import { WinkCorpusManager } from "@beep/wink/WinkCorpus.service";
-import { Context, Duration, Effect, Layer, MutableHashMap, Order, Schedule } from "effect";
+import { Context, Duration, Effect, Inspectable, Layer, MutableHashMap, Order, pipe, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -33,6 +33,11 @@ import type { ChunkingStrategy } from "../Domain/Schema/DocumentMetadata.ts";
 import { defaultChunkingParams } from "../Domain/Schema/DocumentMetadata.ts";
 import { enhanceTextForSearch } from "../Utils/Text.ts";
 import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts";
+
+const SimilaritySearchResultOrder = Order.mapInput(
+  Order.flip(Order.Number),
+  (result: { readonly score: number }) => result.score
+);
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Nlp");
 
@@ -568,7 +573,7 @@ function chunkBySize(text: string, maxChunkSize: number, startIndex: number): Ar
   return chunks;
 }
 
-const EMBEDDING_TIMEOUT_MS = 10_000;
+const EMBEDDING_TIMEOUT = Duration.seconds(10);
 
 type WinkSentenceView = {
   readonly out: () => string;
@@ -636,33 +641,34 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
       ) {
         const queryVector = yield* embedding
           .embed(query, "search_query")
-          .pipe(Effect.retry(embeddingRetrySchedule), Effect.timeout(Duration.millis(EMBEDDING_TIMEOUT_MS)));
+          .pipe(Effect.retry(embeddingRetrySchedule), Effect.timeout(EMBEDDING_TIMEOUT));
         const docEmbeddings = yield* Effect.all(
           docs.map((doc, index) =>
             embedding.embed(doc, "search_document").pipe(
               Effect.retry(embeddingRetrySchedule),
-              Effect.timeout(Duration.millis(EMBEDDING_TIMEOUT_MS)),
-              Effect.map((docVector) => ({ doc, index, embedding: docVector })),
+              Effect.timeout(EMBEDDING_TIMEOUT),
+              Effect.map((docVector) => O.some({ doc, index, embedding: docVector })),
               Effect.tapError((error) =>
                 Effect.logWarning("Embedding failed after retries", {
                   docPreview: doc.slice(0, 100),
-                  error: String(error),
+                  error: Inspectable.toStringUnknown(error),
                 })
               ),
-              Effect.orElseSucceed(() => null)
+              Effect.orElseSucceed(O.none)
             )
           ),
           { concurrency: 5 }
         );
-        const results = docEmbeddings
-          .filter((item): item is NonNullable<typeof item> => item !== null)
-          .map(({ doc, embedding: docVector, index }) => {
+        const results = pipe(
+          A.getSomes(docEmbeddings),
+          A.map(({ doc, embedding: docVector, index }) => {
             const score = embedding.cosineSimilarity(queryVector, docVector);
             return { doc, index, score };
-          })
-          .filter((r) => r.score > 0)
-          .sort((a, b) => b.score - a.score)
-          .slice(0, k);
+          }),
+          A.filter((result) => result.score > 0),
+          A.sort(SimilaritySearchResultOrder),
+          A.take(k)
+        );
         return results;
       }),
       chunkText: Effect.fn("NlpService.chunkText")(function* (text: string, options?: ChunkOptions) {
@@ -859,7 +865,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         const texts = documents.map(([, document]) => document);
         const embeddings = yield* embedding.embedBatch(texts, "search_document").pipe(
           Effect.retry(embeddingRetrySchedule),
-          Effect.timeout(Duration.millis(EMBEDDING_TIMEOUT_MS * texts.length)),
+          Effect.timeout(Duration.times(EMBEDDING_TIMEOUT, texts.length)),
           Effect.tapError((cause) =>
             Effect.logWarning("Ontology semantic index embedding failed", {
               documentCount: texts.length,
@@ -940,7 +946,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         }
         const queryEmbedding = yield* embedding
           .embed(query, "search_query")
-          .pipe(Effect.retry(embeddingRetrySchedule), Effect.timeout(Duration.millis(EMBEDDING_TIMEOUT_MS)));
+          .pipe(Effect.retry(embeddingRetrySchedule), Effect.timeout(EMBEDDING_TIMEOUT));
         const results: Array<
           OntologySearchResult & {
             score: number;

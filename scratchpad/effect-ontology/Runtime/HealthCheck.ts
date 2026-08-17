@@ -11,7 +11,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Context, DateTime, Duration, Effect, Layer, Redacted } from "effect";
+import { Context, DateTime, Duration, Effect, Inspectable, Layer, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -212,7 +212,7 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
           Effect.catch((error) =>
             Effect.logWarning("Ontology file health check failed", {
               path: config.ontology.path,
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
             }).pipe(Effect.as(healthError))
           )
         );
@@ -230,7 +230,7 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
             Effect.catch((error) =>
               Effect.logWarning("Storage connectivity check failed", {
                 bucket: config.storage.bucket,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               }).pipe(Effect.as(healthError))
             )
           );

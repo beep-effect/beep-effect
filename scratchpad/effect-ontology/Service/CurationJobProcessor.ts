@@ -235,7 +235,10 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
     /**
      * Process jobs in a loop until queue is empty
      */
-    const processAllPending = Effect.fn(function* (): Effect.fn.Return<JobProcessingStats, JobProcessorError> {
+    const processAllPending = Effect.fn("CurationJobProcessor.processAllPending")(function* (): Effect.fn.Return<
+      JobProcessingStats,
+      JobProcessorError
+    > {
       const startTime = yield* Clock.currentTimeMillis;
       let jobsProcessed = 0;
       let errors = 0;
@@ -254,10 +257,10 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
             })
           ),
           Effect.catch(
-            Effect.fn(function* (error) {
+            Effect.fn("CurationJobProcessor.recordJobError")(function* (error: JobProcessorError) {
               errors++;
               yield* Effect.logError("Job processing failed", {
-                error: String(error),
+                errorTag: error._tag,
               });
               return O.none<void>();
             })
@@ -294,7 +297,7 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
      * Run background job processor that polls every interval
      * Use this in development or when not using Pub/Sub push subscriptions
      */
-    const runBackground = Effect.fn(function* (
+    const runBackground = Effect.fn("CurationJobProcessor.runBackground")(function* (
       pollInterval: Duration.Duration = Duration.seconds(5)
     ): Effect.fn.Return<Fiber.Fiber<never, never>, never> {
       const processor = Effect.gen(function* () {
@@ -303,7 +306,9 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
           yield* processAllPending();
         }
       }).pipe(
-        Effect.catch((error) => Effect.logError("Background processor error", { error: String(error) })),
+        Effect.catch((error: JobProcessorError) =>
+          Effect.logError("Background processor error", { errorTag: error._tag })
+        ),
         Effect.repeat(Schedule.spaced(pollInterval)),
         Effect.forever
       );

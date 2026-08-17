@@ -180,7 +180,7 @@ export const createExtractionStarted: {
   }): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionStartedEvent>;
 } = dual(
   2,
-  Effect.fn(function* (
+  Effect.fn("ProgressStreaming.createExtractionStarted")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
     textMetadata: {
       characterCount: PosInt;
@@ -233,7 +233,7 @@ export const createChunkingProgress: {
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkingProgressEvent>;
 } = dual(
   4,
-  Effect.fn(function* (
+  Effect.fn("ProgressStreaming.createChunkingProgress")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
     chunksCompleted: NonNegativeInt,
     chunksProcessing: NonNegativeInt,
@@ -281,7 +281,7 @@ export const createChunkProcessingStarted: {
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingStartedEvent>;
 } = dual(
   4,
-  Effect.fn(function* (
+  Effect.fn("ProgressStreaming.createChunkProcessingStarted")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
     chunkIndex: NonNegativeInt,
     chunkTextLength: PosInt,
@@ -333,7 +333,7 @@ export const createEntityFound: {
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<EntityFoundEvent>;
 } = dual(
   5,
-  Effect.fn(function* (
+  Effect.fn("ProgressStreaming.createEntityFound")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
     chunkIndex: NonNegativeInt,
     entityId: string,
@@ -391,7 +391,7 @@ export const createRelationFound: {
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<RelationFoundEvent>;
 } = dual(
   6,
-  Effect.fn(function* (
+  Effect.fn("ProgressStreaming.createRelationFound")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
     chunkIndex: NonNegativeInt,
     subjectId: string,
@@ -449,7 +449,7 @@ export const createChunkProcessingComplete: {
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingCompleteEvent>;
 } = dual(
   6,
-  Effect.fn(function* (
+  Effect.fn("ProgressStreaming.createChunkProcessingComplete")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
     chunkIndex: NonNegativeInt,
     entityCount: NonNegativeInt,
@@ -507,7 +507,7 @@ export const createExtractionComplete: {
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionCompleteEvent>;
 } = dual(
   7,
-  Effect.fn(function* (
+  Effect.fn("ProgressStreaming.createExtractionComplete")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
     totalEntities: NonNegativeInt,
     totalRelations: NonNegativeInt,
@@ -574,7 +574,7 @@ export const createExtractionFailed: {
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionFailedEvent>;
 } = dual(
   5,
-  Effect.fn(function* (
+  Effect.fn("ProgressStreaming.createExtractionFailed")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
     errorType: string,
     errorMessage: string,
@@ -635,7 +635,7 @@ export const createRecoverableError: {
   ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<RecoverableErrorEvent>;
 } = dual(
   6,
-  Effect.fn(function* (
+  Effect.fn("ProgressStreaming.createRecoverableError")(function* (
     ref: Ref.Ref<ProgressBuilderState>,
     chunkIndex: NonNegativeInt,
     errorType: string,
@@ -856,7 +856,7 @@ export const enqueueEvent: {
   ): (ref: Ref.Ref<BackpressureState>) => Effect.Effect<O.Option<BackpressureWarningEvent>, ProgressStreamingError>;
 } = dual(
   2,
-  Effect.fn(function* (
+  Effect.fn("ProgressStreaming.enqueueEvent")(function* (
     ref: Ref.Ref<BackpressureState>,
     event: ProgressEvent
   ): Effect.fn.Return<O.Option<BackpressureWarningEvent>, ProgressStreamingError> {
@@ -925,13 +925,12 @@ export const enqueueEvent: {
  * @since 0.0.0
  */
 export const dequeueEvent = (ref: Ref.Ref<BackpressureState>): Effect.Effect<O.Option<ProgressEvent>> =>
-  Ref.modify(ref, (state) => {
-    if (state.eventQueue.length === 0) {
-      return [O.none(), state];
-    }
-    const [first, ...rest] = state.eventQueue;
-    return [O.some(first), { ...state, eventQueue: rest }];
-  });
+  Ref.modify(ref, (state) =>
+    A.match(state.eventQueue, {
+      onEmpty: () => [O.none(), state],
+      onNonEmpty: ([first, ...rest]) => [O.some(first), { ...state, eventQueue: rest }],
+    })
+  );
 
 /**
  * Get current queue size
@@ -972,22 +971,20 @@ export const getQueueSize = (ref: Ref.Ref<BackpressureState>): Effect.Effect<num
  * @category services
  * @since 0.0.0
  */
-export const combineProgressStreams = dual2(
-  (
-    streams: ReadonlyArray<Stream.Stream<ProgressEvent, Error>>,
+export const combineProgressStreams: {
+  <E, R>(
     concurrency: number
-  ): Stream.Stream<ProgressEvent, Error> => {
-    if (streams.length === 0) {
-      return Stream.empty;
-    }
-
-    if (streams.length === 1) {
-      return streams[0];
-    }
-
-    // Merge all streams with bounded concurrency
-    return Stream.mergeAll(streams, { concurrency });
-  }
+  ): (streams: ReadonlyArray<Stream.Stream<ProgressEvent, E, R>>) => Stream.Stream<ProgressEvent, E, R>;
+  <E, R>(
+    streams: ReadonlyArray<Stream.Stream<ProgressEvent, E, R>>,
+    concurrency: number
+  ): Stream.Stream<ProgressEvent, E, R>;
+} = dual(
+  2,
+  <E, R>(
+    streams: ReadonlyArray<Stream.Stream<ProgressEvent, E, R>>,
+    concurrency: number
+  ): Stream.Stream<ProgressEvent, E, R> => Stream.mergeAll(streams, { concurrency })
 );
 
 /**
@@ -1004,15 +1001,27 @@ export const combineProgressStreams = dual2(
  * @category services
  * @since 0.0.0
  */
-export const withBackpressure = dual2(
-  (stream: Stream.Stream<ProgressEvent, Error>, config: BackpressureConfig): Stream.Stream<ProgressEvent, Error> =>
+export const withBackpressure: {
+  <E, R>(
+    config: BackpressureConfig
+  ): (stream: Stream.Stream<ProgressEvent, E, R>) => Stream.Stream<ProgressEvent, E | ProgressStreamingError, R>;
+  <E, R>(
+    stream: Stream.Stream<ProgressEvent, E, R>,
+    config: BackpressureConfig
+  ): Stream.Stream<ProgressEvent, E | ProgressStreamingError, R>;
+} = dual(
+  2,
+  <E, R>(
+    stream: Stream.Stream<ProgressEvent, E, R>,
+    config: BackpressureConfig
+  ): Stream.Stream<ProgressEvent, E | ProgressStreamingError, R> =>
     Stream.unwrap(
       Effect.gen(function* () {
         const handlerRef = yield* makeBackpressureHandler(config);
 
         return stream.pipe(
           Stream.mapEffect(
-            Effect.fn(function* (event) {
+            Effect.fn("ProgressStreaming.withBackpressure.event")(function* (event) {
               const warning = yield* enqueueEvent(handlerRef, event);
               if (O.isSome(warning)) {
                 // Emit warning followed by original event

@@ -31,7 +31,7 @@ import { Subgraph, SubgraphExtractor } from "./SubgraphExtractor.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/GraphRAG");
 
-const RetrievalOptionsFields = {
+const RetrievalOptionsShape = S.Struct({
   topK: PosInt.pipe(
     SchemaUtils.withKeyDefaults(PosInt.make(5)),
     S.annotateKey({ description: "Maximum embedding matches used as graph seeds." })
@@ -60,24 +60,33 @@ const RetrievalOptionsFields = {
     SchemaUtils.withKeyDefaults(true),
     S.annotateKey({ description: "Whether relations are rendered into generation context." })
   ),
-};
+}).pipe(
+  $I.annoteSchema("RetrievalOptionsShape", {
+    description: "Reusable schema field set for graph retrieval and context rendering policies.",
+  })
+);
 
-const GenerationOptionsFields = {
+const GenerationOptionsShape = S.Struct({
   retryPolicy: RetryPolicy.pipe(
     SchemaUtils.withKeyDefaults(RetryPolicy.make({})),
     S.annotateKey({ description: "Validated attempt, backoff, and overall deadline policy." })
   ),
-};
+}).pipe(
+  $I.annoteSchema("GenerationOptionsShape", {
+    description: "Reusable schema field set for retry-aware graph generation policies.",
+  })
+);
 
 /**
  * Retrieved entity with its fused relevance and exact graph distance.
  *
- * **Example** (Inspect the scored-node schema)
+ * **Example** (Reject an incomplete scored node)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ScoredNode } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(ScoredNode)
+ * console.log(S.is(ScoredNode)({})) // false
  * ```
  *
  * @category models
@@ -98,12 +107,21 @@ export class ScoredNode extends S.Class<ScoredNode>($I`ScoredNode`)(
 /**
  * Statistics for one graph-retrieval operation.
  *
- * **Example** (Inspect retrieval statistics)
+ * **Example** (Construct retrieval statistics)
  *
  * ```ts
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { RetrievalStats } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(RetrievalStats)
+ * const stats = RetrievalStats.make({
+ *   seedCount: NonNegativeInt.make(1),
+ *   nodeCount: NonNegativeInt.make(3),
+ *   edgeCount: NonNegativeInt.make(2),
+ *   hops: NonNegativeInt.make(1),
+ *   avgScore: Confidence.make(0.8)
+ * })
+ * console.log(stats.nodeCount) // 3
  * ```
  *
  * @category models
@@ -138,7 +156,7 @@ export class RetrievalStats extends S.Class<RetrievalStats>($I`RetrievalStats`)(
  * @since 0.0.0
  */
 export class RetrievalOptions extends S.Class<RetrievalOptions>($I`RetrievalOptions`)(
-  RetrievalOptionsFields,
+  RetrievalOptionsShape.fields,
   $I.annote("RetrievalOptions", {
     description: "Validated semantic seed, traversal-bound, and context-rendering policy.",
   })
@@ -147,15 +165,12 @@ export class RetrievalOptions extends S.Class<RetrievalOptions>($I`RetrievalOpti
 /**
  * Constructor input accepted by {@link RetrievalOptions}.
  *
- *
- * **Example** (Use the RetrievalOptionsInput contract)
- *
+ * **Example** (Apply retrieval input defaults)
  * ```ts
+ * import { RetrievalOptions } from "@effect-ontology/Service/GraphRAG"
  * import type { RetrievalOptionsInput } from "@effect-ontology/Service/GraphRAG"
- *
- * const acceptsRetrievalOptionsInput = (_value: RetrievalOptionsInput): void => undefined
- *
- * console.log(acceptsRetrievalOptionsInput)
+ * const input: RetrievalOptionsInput = {}
+ * console.log(RetrievalOptions.make(input).topK) // 5
  * ```
  *
  * @category type-level
@@ -166,12 +181,13 @@ export type RetrievalOptionsInput = (typeof RetrievalOptions)["~type.make.in"];
 /**
  * Complete retrieval output used to ground a generated answer.
  *
- * **Example** (Inspect the retrieval-result schema)
+ * **Example** (Reject an incomplete retrieval result)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { RetrievalResult } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(RetrievalResult)
+ * console.log(S.is(RetrievalResult)({})) // false
  * ```
  *
  * @category models
@@ -206,7 +222,7 @@ export class RetrievalResult extends S.Class<RetrievalResult>($I`RetrievalResult
  * @since 0.0.0
  */
 export class GenerationOptions extends S.Class<GenerationOptions>($I`GenerationOptions`)(
-  GenerationOptionsFields,
+  GenerationOptionsShape.fields,
   $I.annote("GenerationOptions", {
     description: "Validated retry and deadline policy for grounded language-model generation.",
   })
@@ -215,15 +231,12 @@ export class GenerationOptions extends S.Class<GenerationOptions>($I`GenerationO
 /**
  * Constructor input accepted by {@link GenerationOptions}.
  *
- *
- * **Example** (Use the GenerationOptionsInput contract)
- *
+ * **Example** (Apply generation input defaults)
  * ```ts
+ * import { GenerationOptions } from "@effect-ontology/Service/GraphRAG"
  * import type { GenerationOptionsInput } from "@effect-ontology/Service/GraphRAG"
- *
- * const acceptsGenerationOptionsInput = (_value: GenerationOptionsInput): void => undefined
- *
- * console.log(acceptsGenerationOptionsInput)
+ * const input: GenerationOptionsInput = {}
+ * console.log(GenerationOptions.make(input).retryPolicy.maxAttempts) // 3
  * ```
  *
  * @category type-level
@@ -247,7 +260,7 @@ export type GenerationOptionsInput = (typeof GenerationOptions)["~type.make.in"]
  * @since 0.0.0
  */
 export class AnswerOptions extends S.Class<AnswerOptions>($I`AnswerOptions`)(
-  { ...RetrievalOptionsFields, ...GenerationOptionsFields },
+  { ...RetrievalOptionsShape.fields, ...GenerationOptionsShape.fields },
   $I.annote("AnswerOptions", {
     description: "Validated retrieval, context-rendering, timeout, and retry policy for answering a query.",
   })
@@ -256,15 +269,12 @@ export class AnswerOptions extends S.Class<AnswerOptions>($I`AnswerOptions`)(
 /**
  * Constructor input accepted by {@link AnswerOptions}.
  *
- *
- * **Example** (Use the AnswerOptionsInput contract)
- *
+ * **Example** (Apply answer input defaults)
  * ```ts
+ * import { AnswerOptions } from "@effect-ontology/Service/GraphRAG"
  * import type { AnswerOptionsInput } from "@effect-ontology/Service/GraphRAG"
- *
- * const acceptsAnswerOptionsInput = (_value: AnswerOptionsInput): void => undefined
- *
- * console.log(acceptsAnswerOptionsInput)
+ * const input: AnswerOptionsInput = {}
+ * console.log(AnswerOptions.make(input).maxNodes) // 50
  * ```
  *
  * @category type-level
@@ -289,8 +299,8 @@ export type AnswerOptionsInput = (typeof AnswerOptions)["~type.make.in"];
  */
 export class FormatContextOptions extends S.Class<FormatContextOptions>($I`FormatContextOptions`)(
   {
-    includeAttributes: RetrievalOptionsFields.includeAttributes,
-    includeRelations: RetrievalOptionsFields.includeRelations,
+    includeAttributes: RetrievalOptionsShape.fields.includeAttributes,
+    includeRelations: RetrievalOptionsShape.fields.includeRelations,
   },
   $I.annote("FormatContextOptions", {
     description: "Validated switches controlling attribute and relation rendering in graph context.",
@@ -300,15 +310,12 @@ export class FormatContextOptions extends S.Class<FormatContextOptions>($I`Forma
 /**
  * Constructor input accepted by {@link FormatContextOptions}.
  *
- *
- * **Example** (Use the FormatContextOptionsInput contract)
- *
+ * **Example** (Apply formatting input defaults)
  * ```ts
+ * import { FormatContextOptions } from "@effect-ontology/Service/GraphRAG"
  * import type { FormatContextOptionsInput } from "@effect-ontology/Service/GraphRAG"
- *
- * const acceptsFormatContextOptionsInput = (_value: FormatContextOptionsInput): void => undefined
- *
- * console.log(acceptsFormatContextOptionsInput)
+ * const input: FormatContextOptionsInput = {}
+ * console.log(FormatContextOptions.make(input).includeRelations) // true
  * ```
  *
  * @category type-level
@@ -319,12 +326,13 @@ export type FormatContextOptionsInput = (typeof FormatContextOptions)["~type.mak
 /**
  * Grounded language-model answer whose citations are canonical entity IDs.
  *
- * **Example** (Inspect the grounded-answer schema)
+ * **Example** (Reject an incomplete grounded answer)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { GroundedAnswer } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(GroundedAnswer)
+ * console.log(S.is(GroundedAnswer)({})) // false
  * ```
  *
  * @category models
@@ -346,12 +354,13 @@ export class GroundedAnswer extends S.Class<GroundedAnswer>($I`GroundedAnswer`)(
 /**
  * One directed knowledge-graph relation in an answer explanation path.
  *
- * **Example** (Inspect the reasoning-step schema)
+ * **Example** (Reject an incomplete reasoning step)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ReasoningStep } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(ReasoningStep)
+ * console.log(S.is(ReasoningStep)({})) // false
  * ```
  *
  * @category models
@@ -372,12 +381,13 @@ export class ReasoningStep extends S.Class<ReasoningStep>($I`ReasoningStep`)(
 /**
  * Complete path-based derivation for a grounded answer.
  *
- * **Example** (Inspect the reasoning-trace schema)
+ * **Example** (Reject an incomplete reasoning trace)
  *
  * ```ts
+ * import * as S from "effect/Schema"
  * import { ReasoningTrace } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(ReasoningTrace)
+ * console.log(S.is(ReasoningTrace)({})) // false
  * ```
  *
  * @category models
@@ -413,7 +423,7 @@ export class ReasoningTrace extends S.Class<ReasoningTrace>($I`ReasoningTrace`)(
  */
 export class ExplainOptions extends S.Class<ExplainOptions>($I`ExplainOptions`)(
   {
-    ...GenerationOptionsFields,
+    ...GenerationOptionsShape.fields,
     generateStepExplanations: S.Boolean.pipe(
       SchemaUtils.withKeyDefaults(true),
       S.annotateKey({ description: "Whether a language model explains the selected path and each step." })
@@ -427,15 +437,12 @@ export class ExplainOptions extends S.Class<ExplainOptions>($I`ExplainOptions`)(
 /**
  * Constructor input accepted by {@link ExplainOptions}.
  *
- *
- * **Example** (Use the ExplainOptionsInput contract)
- *
+ * **Example** (Apply explanation input defaults)
  * ```ts
+ * import { ExplainOptions } from "@effect-ontology/Service/GraphRAG"
  * import type { ExplainOptionsInput } from "@effect-ontology/Service/GraphRAG"
- *
- * const acceptsExplainOptionsInput = (_value: ExplainOptionsInput): void => undefined
- *
- * console.log(acceptsExplainOptionsInput)
+ * const input: ExplainOptionsInput = {}
+ * console.log(ExplainOptions.make(input).generateStepExplanations) // true
  * ```
  *
  * @category type-level
@@ -495,15 +502,11 @@ const ReasoningTraceOutput = S.Struct({
 /**
  * Effectful GraphRAG service with natural data-first and data-last methods.
  *
- *
- * **Example** (Use the GraphRAGService contract)
- *
+ * **Example** (Select the retrieval operation)
  * ```ts
  * import type { GraphRAGService } from "@effect-ontology/Service/GraphRAG"
- *
- * const acceptsGraphRAGService = (_value: GraphRAGService): void => undefined
- *
- * console.log(acceptsGraphRAGService)
+ * const operation: keyof GraphRAGService = "retrieve"
+ * console.log(operation) // "retrieve"
  * ```
  *
  * @category services
@@ -1116,9 +1119,10 @@ ${stepsDescription}`,
  * **Example** (Compose the live GraphRAG layer)
  *
  * ```ts
+ * import { Layer } from "effect"
  * import { GraphRAGDefault } from "@effect-ontology/Service/GraphRAG"
  *
- * console.log(GraphRAGDefault)
+ * console.log(Layer.isLayer(GraphRAGDefault)) // true
  * ```
  *
  * @category layers

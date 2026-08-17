@@ -41,6 +41,7 @@ import {
   Effect,
   HashMap,
   HashSet,
+  Inspectable,
   Layer,
   MutableHashMap,
   MutableHashSet,
@@ -114,7 +115,7 @@ const loadAndMergeExternalVocabularies = Effect.fn("loadAndMergeExternalVocabula
           : { path: externalPath };
         yield* Effect.logWarning("Failed to load external vocabularies, continuing with main ontology only", {
           ...logContext,
-          error: String(error),
+          error: Inspectable.toStringUnknown(error),
         });
         return undefined;
       })
@@ -129,7 +130,7 @@ const loadAndMergeExternalVocabularies = Effect.fn("loadAndMergeExternalVocabula
             : { path: externalPath };
           yield* Effect.logWarning("Failed to parse external vocabularies, continuing with main ontology only", {
             ...logContext,
-            error: String(error),
+            error: Inspectable.toStringUnknown(error),
           });
           return yield* rdfBuilder.createStore;
         })
@@ -251,7 +252,7 @@ export const parseOntologyFromStore: {
             Effect.gen(function* () {
               yield* Effect.logWarning("Failed to fetch predicate metadata, using empty map", {
                 predicate,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               });
               return MutableHashMap.empty<string, Array<string>>();
             })
@@ -338,7 +339,7 @@ export const parseOntologyFromStore: {
             Effect.gen(function* () {
               yield* Effect.logWarning("Failed to fetch domain/range metadata, using empty map", {
                 predicate,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               });
               return MutableHashMap.empty<string, Array<string>>();
             })
@@ -811,7 +812,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               Effect.gen(function* () {
                 yield* Effect.logDebug("Registry resolution failed, falling back to direct load", {
                   identifier,
-                  error: String(error),
+                  error: Inspectable.toStringUnknown(error),
                 });
                 return O.none<OntologyEntry>();
               })
@@ -1195,9 +1196,9 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               return Chunk.fromIterable(MutableHashMap.values(classesMap));
             }).pipe(
               Effect.catch(
-                Effect.fn(function* (error) {
+                Effect.fnUntraced(function* (error) {
                   yield* Effect.logWarning("Semantic search failed, using BM25 fallback", {
-                    error: String(error),
+                    error: Inspectable.toStringUnknown(error),
                     query,
                   });
                   return Chunk.empty<ClassDefinition>();
@@ -1284,9 +1285,9 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
               return Chunk.fromIterable(MutableHashMap.values(classesMap));
             }).pipe(
               Effect.catch(
-                Effect.fn(function* (error) {
+                Effect.fnUntraced(function* (error) {
                   yield* Effect.logWarning("Semantic search with embeddings failed, using BM25 fallback", {
-                    error: String(error),
+                    error: Inspectable.toStringUnknown(error),
                     query,
                   });
                   return Chunk.empty<ClassDefinition>();

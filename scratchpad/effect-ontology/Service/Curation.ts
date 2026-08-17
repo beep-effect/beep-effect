@@ -143,7 +143,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     /**
      * Handle CorrectTripleAction
      */
-    const handleCorrectTriple = Effect.fn(function* (
+    const handleCorrectTriple = Effect.fn("Curation.handleCorrectTriple")(function* (
       action: CorrectTripleAction,
       now: DateTime.Utc
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
@@ -232,7 +232,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     /**
      * Handle MarkAsWrongAction
      */
-    const handleMarkAsWrong = Effect.fn(function* (
+    const handleMarkAsWrong = Effect.fn("Curation.handleMarkAsWrong")(function* (
       action: MarkAsWrongAction,
       now: DateTime.Utc
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
@@ -307,7 +307,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     /**
      * Handle AddAliasAction
      */
-    const handleAddAlias = Effect.fn(function* (
+    const handleAddAlias = Effect.fn("Curation.handleAddAlias")(function* (
       action: AddAliasAction,
       now: DateTime.Utc
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
@@ -384,7 +384,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     /**
      * Handle PromoteToPreferredAction
      */
-    const handlePromoteToPreferred = Effect.fn(function* (
+    const handlePromoteToPreferred = Effect.fn("Curation.handlePromoteToPreferred")(function* (
       action: PromoteToPreferredAction,
       now: DateTime.Utc
     ): Effect.fn.Return<CurationResult, CurationServiceError> {
@@ -443,7 +443,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     /**
      * Create a positive example from a corrected claim
      */
-    const createExampleFromClaim = Effect.fn(function* (
+    const createExampleFromClaim = Effect.fn("Curation.createExampleFromClaim")(function* (
       ontologyId: string,
       newClaim: {
         id: string;
@@ -486,7 +486,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
     /**
      * Create a negative example from a wrong claim
      */
-    const createNegativeExample = Effect.fn(function* (
+    const createNegativeExample = Effect.fn("Curation.createNegativeExample")(function* (
       ontologyId: string,
       claim: { subjectIri: string; predicateIri: string; objectValue: string },
       action: MarkAsWrongAction

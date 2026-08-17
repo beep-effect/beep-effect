@@ -19,7 +19,6 @@ import { $ScratchpadId } from "@beep/identity";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { OntologyRegistry } from "../Domain/Schema/OntologyRegistry.ts";
@@ -43,40 +42,18 @@ const $I = $ScratchpadId.create("effect-ontology/Service/OntologyRegistry");
  * @category errors
  * @since 0.0.0
  */
-export class RegistryNotFoundError {
-  /**
-   * Stable discriminator for registry lookup failures.
-   *
-   * **Example** (Use the _tag field)
-   *
-   * ```ts
-   * import type { RegistryNotFoundError } from "@effect-ontology/Service/OntologyRegistry"
-   *
-   * type RegistryNotFoundError_tag = RegistryNotFoundError["_tag"]
-   * const acceptsRegistryNotFoundError_tag = (_value: RegistryNotFoundError_tag): void => undefined
-   *
-   * console.log(acceptsRegistryNotFoundError_tag)
-   * ```
-   */
-  readonly _tag = "RegistryNotFoundError";
-  /**
-   * Storage path that could not be resolved.
-   *
-   * **Example** (Use the path field)
-   *
-   * ```ts
-   * import type { RegistryNotFoundError } from "@effect-ontology/Service/OntologyRegistry"
-   *
-   * type RegistryNotFoundErrorPath = RegistryNotFoundError["path"]
-   * const acceptsRegistryNotFoundErrorPath = (_value: RegistryNotFoundErrorPath): void => undefined
-   *
-   * console.log(acceptsRegistryNotFoundErrorPath)
-   * ```
-   */
-  readonly path: string;
-  constructor(path: string) {
-    this.path = path;
-  }
+export class RegistryNotFoundError extends S.TaggedError<RegistryNotFoundError>($I`RegistryNotFoundError`)(
+  "RegistryNotFoundError",
+  {
+    path: S.String.annotateKey({
+      description: "Storage path that could not be resolved.",
+    }),
+  },
+  $I.annote("RegistryNotFoundError", {
+    description: "Failure raised when the configured ontology registry cannot be loaded from storage.",
+  })
+) {
+  static readonly is = S.is(this);
 }
 
 /**
@@ -93,56 +70,21 @@ export class RegistryNotFoundError {
  * @category errors
  * @since 0.0.0
  */
-export class RegistryParseError {
-  /**
-   * Stable discriminator for registry parsing failures.
-   *
-   * **Example** (Use the _tag field)
-   *
-   * ```ts
-   * import type { RegistryParseError } from "@effect-ontology/Service/OntologyRegistry"
-   *
-   * type RegistryParseError_tag = RegistryParseError["_tag"]
-   * const acceptsRegistryParseError_tag = (_value: RegistryParseError_tag): void => undefined
-   *
-   * console.log(acceptsRegistryParseError_tag)
-   * ```
-   */
-  readonly _tag = "RegistryParseError";
-  /**
-   * Storage path containing the invalid registry document.
-   *
-   * **Example** (Use the path field)
-   *
-   * ```ts
-   * import type { RegistryParseError } from "@effect-ontology/Service/OntologyRegistry"
-   *
-   * type RegistryParseErrorPath = RegistryParseError["path"]
-   * const acceptsRegistryParseErrorPath = (_value: RegistryParseErrorPath): void => undefined
-   *
-   * console.log(acceptsRegistryParseErrorPath)
-   * ```
-   */
-  readonly path: string;
-  /**
-   * Underlying parse failure retained for diagnostics.
-   *
-   * **Example** (Use the cause field)
-   *
-   * ```ts
-   * import type { RegistryParseError } from "@effect-ontology/Service/OntologyRegistry"
-   *
-   * type RegistryParseErrorCause = RegistryParseError["cause"]
-   * const acceptsRegistryParseErrorCause = (_value: RegistryParseErrorCause): void => undefined
-   *
-   * console.log(acceptsRegistryParseErrorCause)
-   * ```
-   */
-  readonly cause: unknown;
-  constructor(path: string, cause: unknown) {
-    this.path = path;
-    this.cause = cause;
-  }
+export class RegistryParseError extends S.TaggedError<RegistryParseError>($I`RegistryParseError`)(
+  "RegistryParseError",
+  {
+    path: S.String.annotateKey({
+      description: "Storage path containing the invalid registry document.",
+    }),
+    cause: S.Defect({ includeStack: true }).annotateKey({
+      description: "Underlying schema failure retained for diagnostics.",
+    }),
+  },
+  $I.annote("RegistryParseError", {
+    description: "Failure raised when the stored ontology registry cannot be decoded.",
+  })
+) {
+  static readonly is = S.is(this);
 }
 
 /**
@@ -159,56 +101,21 @@ export class RegistryParseError {
  * @category errors
  * @since 0.0.0
  */
-export class OntologyNotFoundError {
-  /**
-   * Stable discriminator for missing ontology entries.
-   *
-   * **Example** (Use the _tag field)
-   *
-   * ```ts
-   * import type { OntologyNotFoundError } from "@effect-ontology/Service/OntologyRegistry"
-   *
-   * type OntologyNotFoundError_tag = OntologyNotFoundError["_tag"]
-   * const acceptsOntologyNotFoundError_tag = (_value: OntologyNotFoundError_tag): void => undefined
-   *
-   * console.log(acceptsOntologyNotFoundError_tag)
-   * ```
-   */
-  readonly _tag = "OntologyNotFoundError";
-  /**
-   * Ontology identifier or IRI that could not be resolved.
-   *
-   * **Example** (Use the identifier field)
-   *
-   * ```ts
-   * import type { OntologyNotFoundError } from "@effect-ontology/Service/OntologyRegistry"
-   *
-   * type OntologyNotFoundErrorIdentifier = OntologyNotFoundError["identifier"]
-   * const acceptsOntologyNotFoundErrorIdentifier = (_value: OntologyNotFoundErrorIdentifier): void => undefined
-   *
-   * console.log(acceptsOntologyNotFoundErrorIdentifier)
-   * ```
-   */
-  readonly identifier: string;
-  /**
-   * Registry field used for the failed lookup.
-   *
-   * **Example** (Use the type field)
-   *
-   * ```ts
-   * import type { OntologyNotFoundError } from "@effect-ontology/Service/OntologyRegistry"
-   *
-   * type OntologyNotFoundErrorType = OntologyNotFoundError["type"]
-   * const acceptsOntologyNotFoundErrorType = (_value: OntologyNotFoundErrorType): void => undefined
-   *
-   * console.log(acceptsOntologyNotFoundErrorType)
-   * ```
-   */
-  readonly type: "id" | "iri";
-  constructor(identifier: string, type: "id" | "iri") {
-    this.identifier = identifier;
-    this.type = type;
-  }
+export class OntologyNotFoundError extends S.TaggedError<OntologyNotFoundError>($I`OntologyNotFoundError`)(
+  "OntologyNotFoundError",
+  {
+    identifier: S.String.annotateKey({
+      description: "Ontology identifier or IRI that could not be resolved.",
+    }),
+    type: S.Literals(["id", "iri"]).annotateKey({
+      description: "Registry field used for the failed lookup.",
+    }),
+  },
+  $I.annote("OntologyNotFoundError", {
+    description: "Failure raised when an ontology is absent from the configured registry.",
+  })
+) {
+  static readonly is = S.is(this);
 }
 
 /**
@@ -265,28 +172,28 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
     const registryPath = O.getOrElse(config.ontology.registryPath, () => DEFAULT_REGISTRY_PATH);
 
     // Cache the loaded registry
-    let cachedRegistry: OntologyRegistry | null = null;
+    let cachedRegistry = O.none<OntologyRegistry>();
 
     /**
      * Load the registry from storage
      */
     const loadRegistry = Effect.gen(function* () {
-      if (P.isNotNull(cachedRegistry)) {
-        return cachedRegistry;
+      if (O.isSome(cachedRegistry)) {
+        return cachedRegistry.value;
       }
 
       yield* Effect.logInfo("Loading ontology registry", { path: registryPath });
 
       const contentOpt = yield* storage
         .getOption(registryPath)
-        .pipe(Effect.mapError(() => new RegistryNotFoundError(registryPath)));
+        .pipe(Effect.mapError(() => RegistryNotFoundError.make({ path: registryPath })));
 
       if (O.isNone(contentOpt)) {
-        return yield* Effect.fail(new RegistryNotFoundError(registryPath));
+        return yield* RegistryNotFoundError.make({ path: registryPath });
       }
 
       const registry = yield* S.decodeEffect(OntologyRegistryJson)(contentOpt.value).pipe(
-        Effect.mapError((cause) => new RegistryParseError(registryPath, cause))
+        Effect.mapError((cause) => RegistryParseError.make({ path: registryPath, cause }))
       );
 
       yield* Effect.logInfo("Ontology registry loaded", {
@@ -295,14 +202,14 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
         ontologies: A.map(registry.ontologies, (ontology) => ontology.id),
       });
 
-      cachedRegistry = registry;
+      cachedRegistry = O.some(registry);
       return registry;
     });
 
     /**
      * Get ontology entry by short ID (e.g., "seattle")
      */
-    const getById = Effect.fn("getById")(function* (id: string) {
+    const getById = Effect.fn("OntologyRegistry.getById")(function* (id: string) {
       const registry = yield* loadRegistry;
       return A.findFirst(registry.ontologies, (ontology) => ontology.id === id);
     });
@@ -310,7 +217,7 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
     /**
      * Get ontology entry by IRI (e.g., "https://effect-ontology.dev/seattle")
      */
-    const getByIri = Effect.fn("getByIri")(function* (iri: string) {
+    const getByIri = Effect.fn("OntologyRegistry.getByIri")(function* (iri: string) {
       const registry = yield* loadRegistry;
       return A.findFirst(registry.ontologies, (ontology) => ontology.iri === iri);
     });
@@ -324,7 +231,7 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
      * - Direct path: "canonical/seattle/ontology.ttl" -> returns as-is
      * - GCS URI: "gs://bucket/path" -> strips prefix, returns path
      */
-    const resolveToPath = Effect.fn("resolveToPath")(function* (uri: string) {
+    const resolveToPath = Effect.fn("OntologyRegistry.resolveToPath")(function* (uri: string) {
       if (Str.startsWith("gs://")(uri)) {
         return Str.replace(/^gs:\/\/[^/]+\//, "")(uri);
       }
@@ -336,19 +243,19 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
         if (O.isSome(entry)) {
           return entry.value.storagePath;
         }
-        return yield* Effect.fail(new OntologyNotFoundError(uri, "iri"));
+        return yield* OntologyNotFoundError.make({ identifier: uri, type: "iri" });
       }
       const entry = yield* getById(uri);
       if (O.isSome(entry)) {
         return entry.value.storagePath;
       }
-      return yield* Effect.fail(new OntologyNotFoundError(uri, "id"));
+      return yield* OntologyNotFoundError.make({ identifier: uri, type: "id" });
     });
 
     /**
      * Resolve an ontology URI to its full entry (if in registry)
      */
-    const resolveToEntry = Effect.fn("resolveToEntry")(function* (uri: string) {
+    const resolveToEntry = Effect.fn("OntologyRegistry.resolveToEntry")(function* (uri: string) {
       if (Str.startsWith("http")(uri)) {
         return yield* getByIri(uri);
       }
@@ -371,7 +278,7 @@ export class OntologyRegistryService extends Context.Service<OntologyRegistrySer
      * Clear the cached registry (for testing or forced refresh)
      */
     const clearCache = Effect.sync(() => {
-      cachedRegistry = null;
+      cachedRegistry = O.none();
     });
 
     return {

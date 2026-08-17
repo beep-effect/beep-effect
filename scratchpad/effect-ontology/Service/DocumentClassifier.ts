@@ -13,7 +13,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Context, Effect, Layer, MutableHashMap } from "effect";
+import { Context, Effect, Inspectable, Layer, MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -412,7 +412,7 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I
         Effect.catch((error) =>
           Effect.gen(function* () {
             yield* Effect.logWarning("Document classification failed, using defaults", {
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
             });
             return defaultClassification;
           })
@@ -457,7 +457,7 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I
             Effect.gen(function* () {
               yield* Effect.logWarning("Batch classification failed, using defaults for all", {
                 batchSize: input.documents.length,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               });
               const classifications = MutableHashMap.empty<number, DocumentClassification>();
               for (const doc of input.documents) {
@@ -517,7 +517,7 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I
                   Effect.gen(function* () {
                     yield* Effect.logWarning("Classification batch failed", {
                       batchIndex,
-                      error: String(error),
+                      error: Inspectable.toStringUnknown(error),
                     });
                     return { value: { classifications: [] } };
                   })

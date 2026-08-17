@@ -10,39 +10,47 @@
  * @since 0.0.0
  */
 
-import type { IRI } from "@beep/rdf";
-import { makeNamedNode } from "@beep/rdf";
+import { $ScratchpadId } from "@beep/identity";
+import { IRI, makeNamedNode } from "@beep/rdf";
 import { XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { dual2 } from "./Dual.ts";
 
 const XSD_DATE = makeNamedNode(`${XSD_NAMESPACE}date`);
 const XSD_DATE_TIME = makeNamedNode(`${XSD_NAMESPACE}dateTime`);
 const XSD_DECIMAL = makeNamedNode(`${XSD_NAMESPACE}decimal`);
+const $I = $ScratchpadId.create("effect-ontology/Utils/Datatype");
 
 /**
  * Result of datatype normalization
  *
- * **Example** (Reference NormalizedValue fields)
+ * **Example** (Construct a normalized value)
  *
  * ```ts
- * import type { NormalizedValue } from "@effect-ontology/Utils/Datatype"
+ * import { IRI } from "@beep/rdf"
+ * import { NormalizedValue } from "@effect-ontology/Utils/Datatype"
  *
- * const normalizedValueFields: ReadonlyArray<keyof NormalizedValue> = ["value", "datatype"]
- *
- * console.log(normalizedValueFields)
+ * const normalized = NormalizedValue.make({
+ *   value: "42",
+ *   datatype: IRI.make("http://www.w3.org/2001/XMLSchema#integer")
+ * })
+ * console.log(normalized.value) // "42"
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface NormalizedValue {
-  /** Normalized string representation of the value */
-  readonly value: string;
-  /** XSD datatype IRI */
-  readonly datatype: IRI;
-}
+export class NormalizedValue extends S.Class<NormalizedValue>($I`NormalizedValue`)(
+  {
+    value: S.String.annotateKey({ description: "Normalized string representation of the value." }),
+    datatype: IRI.annotateKey({ description: "XSD datatype IRI describing the normalized value." }),
+  },
+  $I.annote("NormalizedValue", {
+    description: "Normalized lexical value paired with its XSD datatype IRI.",
+  })
+) {}
 
 // -----------------------------------------------------------------------------
 // Regex patterns for datatype detection
@@ -169,12 +177,12 @@ export const normalizeDatatype = dual2((value: string, expectedType: IRI | undef
 /**
  * Check if a value is likely a date
  *
- * **Example** (Inspect is date)
+ * **Example** (Recognize an ISO date)
  *
  * ```ts
  * import { isDate } from "@effect-ontology/Utils/Datatype"
  *
- * console.log(isDate)
+ * console.log(isDate("2024-12-16")) // true
  * ```
  *
  * @param value - Value to check
@@ -187,12 +195,12 @@ export const isDate = (value: string): boolean => ISO_DATE_PATTERN.test(Str.trim
 /**
  * Check if a value is likely a dateTime
  *
- * **Example** (Inspect is date time)
+ * **Example** (Recognize an ISO date-time)
  *
  * ```ts
  * import { isDateTime } from "@effect-ontology/Utils/Datatype"
  *
- * console.log(isDateTime)
+ * console.log(isDateTime("2024-12-16T12:30:00Z")) // true
  * ```
  *
  * @param value - Value to check
@@ -205,12 +213,12 @@ export const isDateTime = (value: string): boolean => ISO_DATETIME_PATTERN.test(
 /**
  * Check if a value is likely a numeric type
  *
- * **Example** (Inspect is numeric)
+ * **Example** (Recognize scientific notation)
  *
  * ```ts
  * import { isNumeric } from "@effect-ontology/Utils/Datatype"
  *
- * console.log(isNumeric)
+ * console.log(isNumeric("1.5e10")) // true
  * ```
  *
  * @param value - Value to check
@@ -226,12 +234,12 @@ export const isNumeric = (value: string): boolean => {
 /**
  * Check if a value is likely a boolean
  *
- * **Example** (Inspect is boolean)
+ * **Example** (Recognize a boolean lexical value)
  *
  * ```ts
  * import { isBoolean } from "@effect-ontology/Utils/Datatype"
  *
- * console.log(isBoolean)
+ * console.log(isBoolean("TRUE")) // true
  * ```
  *
  * @param value - Value to check

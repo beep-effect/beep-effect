@@ -46,27 +46,25 @@ const AgentConcurrency = PosInt.check(
     SchemaUtils.withCodecStatics
   );
 
-const OntologyAgentConfigFields = {
-  ontology: S.OptionFromOptionalKey(OntologyRef).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Exact ontology version, or no override to use the configured default." })
-  ),
-  validationPolicy: ValidationPolicy.pipe(
-    SchemaUtils.withKeyDefaults(ValidationPolicy.fromUnknown({})),
-    S.annotateKey({ description: "Severity-to-workflow failure policy." })
-  ),
-  concurrency: AgentConcurrency.pipe(
-    SchemaUtils.withKeyDefaults(AgentConcurrency.make(4)),
-    S.annotateKey({ description: "Maximum concurrently executing extraction tasks." })
-  ),
-  chunking: ChunkingConfig.pipe(
-    SchemaUtils.withKeyDefaults(ChunkingConfig.default()),
-    S.annotateKey({ description: "Schema-defaulted text chunking policy." })
-  ),
-};
-
 class OntologyAgentConfigModel extends S.Class<OntologyAgentConfigModel>($I`OntologyAgentConfig`)(
-  OntologyAgentConfigFields,
+  {
+    ontology: S.OptionFromOptionalKey(OntologyRef).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Exact ontology version, or no override to use the configured default." })
+    ),
+    validationPolicy: ValidationPolicy.pipe(
+      SchemaUtils.withKeyDefaults(ValidationPolicy.fromUnknown({})),
+      S.annotateKey({ description: "Severity-to-workflow failure policy." })
+    ),
+    concurrency: AgentConcurrency.pipe(
+      SchemaUtils.withKeyDefaults(AgentConcurrency.make(4)),
+      S.annotateKey({ description: "Maximum concurrently executing extraction tasks." })
+    ),
+    chunking: ChunkingConfig.pipe(
+      SchemaUtils.withKeyDefaults(ChunkingConfig.default()),
+      S.annotateKey({ description: "Schema-defaulted text chunking policy." })
+    ),
+  },
   $I.annote("OntologyAgentConfig", {
     description: "Complete schema-defaulted policy for ontology-agent operations.",
   })
@@ -95,8 +93,7 @@ class OntologyAgentConfigModel extends S.Class<OntologyAgentConfigModel>($I`Onto
  * @since 0.0.0
  */
 export const OntologyAgentConfig = OntologyAgentConfigModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(OntologyAgentConfigFields))(fc).map((fields) => OntologyAgentConfigModel.make(fields)),
+  toArbitrary: () => (fc) => S.toArbitrary(OntologyAgentConfigModel)(fc),
 }).pipe(
   $I.annoteSchema("OntologyAgentConfig", {
     description: "Complete schema-defaulted policy for ontology-agent operations.",
@@ -111,12 +108,11 @@ export const OntologyAgentConfig = OntologyAgentConfigModel.annotate({
 /**
  * Runtime value decoded by {@link OntologyAgentConfig}.
  *
- * **Example** (Use OntologyAgentConfig)
+ * **Example** (Select the concurrency policy)
  * ```ts
  * import type { OntologyAgentConfig } from "@effect-ontology/Model/OntologyAgent"
- *
- * const concurrency = (config: OntologyAgentConfig): number => config.concurrency
- * console.log(typeof concurrency) // "function"
+ * const field: keyof OntologyAgentConfig = "concurrency"
+ * console.log(field) // "concurrency"
  * ```
  *
  * @category type-level
@@ -124,18 +120,16 @@ export const OntologyAgentConfig = OntologyAgentConfigModel.annotate({
  */
 export type OntologyAgentConfig = typeof OntologyAgentConfig.Type;
 
-const ExtractionMetricsFields = {
-  entityCount: NonNegativeInt,
-  relationCount: NonNegativeInt,
-  chunkCount: NonNegativeInt,
-  inputTokens: NonNegativeInt,
-  outputTokens: NonNegativeInt,
-  duration: S.DurationFromMillis,
-  runId: S.OptionFromOptionalKey(ExtractionRunId).pipe(SchemaUtils.withNoneDefault),
-};
-
 class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`ExtractionMetrics`)(
-  ExtractionMetricsFields,
+  {
+    entityCount: NonNegativeInt,
+    relationCount: NonNegativeInt,
+    chunkCount: NonNegativeInt,
+    inputTokens: NonNegativeInt,
+    outputTokens: NonNegativeInt,
+    duration: S.DurationFromMillis,
+    runId: S.OptionFromOptionalKey(ExtractionRunId).pipe(SchemaUtils.withNoneDefault),
+  },
   $I.annote("ExtractionMetrics", {
     description: "Non-negative extraction counts, token use, elapsed duration, and optional run identity.",
   })
@@ -192,8 +186,7 @@ class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`Extracti
  * @since 0.0.0
  */
 export const ExtractionMetrics = ExtractionMetricsModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(ExtractionMetricsFields))(fc).map((fields) => ExtractionMetricsModel.make(fields)),
+  toArbitrary: () => (fc) => S.toArbitrary(ExtractionMetricsModel)(fc),
 }).pipe(
   $I.annoteSchema("ExtractionMetrics", {
     description: "Non-negative extraction counts, token use, elapsed duration, and optional run identity.",
@@ -204,31 +197,17 @@ export const ExtractionMetrics = ExtractionMetricsModel.annotate({
 /**
  * Runtime value decoded by {@link ExtractionMetrics}.
  *
- * **Example** (Use ExtractionMetrics)
+ * **Example** (Select the token counter)
  * ```ts
  * import type { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent"
- *
- * const tokens = (metrics: ExtractionMetrics): number => metrics.totalTokens
- * console.log(typeof tokens) // "function"
+ * const field: keyof ExtractionMetrics = "inputTokens"
+ * console.log(field) // "inputTokens"
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
 export type ExtractionMetrics = typeof ExtractionMetrics.Type;
-
-const ExtractionResultFields = {
-  graph: KnowledgeGraph,
-  metrics: ExtractionMetrics,
-  turtle: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Optional RDF graph serialized as Turtle." })
-  ),
-  validationReport: S.OptionFromOptionalKey(ShaclValidationReport).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Optional SHACL report produced for the extracted graph." })
-  ),
-};
 
 /**
  * Complete result of one ontology extraction operation.
@@ -238,19 +217,29 @@ const ExtractionResultFields = {
  * Turtle and validation absence are explicit `Option` values. Convenience
  * accessors are colocated with the schema-backed result.
  *
- * **Example** (Use ExtractionResult)
+ * **Example** (Reject an incomplete extraction result)
  * ```ts
- * import type { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
- *
- * const count = (result: ExtractionResult): number => result.entities.length
- * console.log(typeof count) // "function"
+ * import * as S from "effect/Schema"
+ * import { ExtractionResult } from "@effect-ontology/Model/OntologyAgent"
+ * console.log(S.is(ExtractionResult)({})) // false
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionResult`)(
-  ExtractionResultFields,
+  {
+    graph: KnowledgeGraph,
+    metrics: ExtractionMetrics,
+    turtle: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional RDF graph serialized as Turtle." })
+    ),
+    validationReport: S.OptionFromOptionalKey(ShaclValidationReport).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional SHACL report produced for the extracted graph." })
+    ),
+  },
   $I.annote("ExtractionResult", {
     description: "Knowledge graph, metrics, optional Turtle, and optional SHACL validation report.",
   })
@@ -339,33 +328,31 @@ export class ExtractionResult extends S.Class<ExtractionResult>($I`ExtractionRes
   }
 }
 
-const ExtractWithClaimsOptionsFields = {
-  ontologyId: S.NonEmptyString.annotateKey({
-    description: "Ontology-registry identifier used by the extraction operation.",
-  }),
-  articleId: S.NonEmptyString.annotateKey({
-    description: "Source article identifier retained as claim provenance.",
-  }),
-  autoCreateAssertions: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(false),
-    S.annotateKey({ description: "Whether extracted claims are immediately promoted to assertions." })
-  ),
-  defaultConfidence: Confidence.pipe(
-    SchemaUtils.withKeyDefaults(Confidence.make(0.8)),
-    S.annotateKey({ description: "Confidence used when extraction supplies no measured value." })
-  ),
-  targetNamespace: S.OptionFromOptionalKey(IRI).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Optional local namespace used when minting entity IRIs." })
-  ),
-  agentConfig: S.OptionFromOptionalKey(OntologyAgentConfig).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Optional per-operation agent-policy override." })
-  ),
-};
-
 class ExtractWithClaimsOptionsModel extends S.Class<ExtractWithClaimsOptionsModel>($I`ExtractWithClaimsOptions`)(
-  ExtractWithClaimsOptionsFields,
+  {
+    ontologyId: S.NonEmptyString.annotateKey({
+      description: "Ontology-registry identifier used by the extraction operation.",
+    }),
+    articleId: S.NonEmptyString.annotateKey({
+      description: "Source article identifier retained as claim provenance.",
+    }),
+    autoCreateAssertions: S.Boolean.pipe(
+      SchemaUtils.withKeyDefaults(false),
+      S.annotateKey({ description: "Whether extracted claims are immediately promoted to assertions." })
+    ),
+    defaultConfidence: Confidence.pipe(
+      SchemaUtils.withKeyDefaults(Confidence.make(0.8)),
+      S.annotateKey({ description: "Confidence used when extraction supplies no measured value." })
+    ),
+    targetNamespace: S.OptionFromOptionalKey(IRI).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional local namespace used when minting entity IRIs." })
+    ),
+    agentConfig: S.OptionFromOptionalKey(OntologyAgentConfig).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional per-operation agent-policy override." })
+    ),
+  },
   $I.annote("ExtractWithClaimsOptions", {
     description: "Schema-defaulted options for extraction with claim provenance.",
   })
@@ -399,10 +386,7 @@ class ExtractWithClaimsOptionsModel extends S.Class<ExtractWithClaimsOptionsMode
  * @since 0.0.0
  */
 export const ExtractWithClaimsOptions = ExtractWithClaimsOptionsModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(ExtractWithClaimsOptionsFields))(fc).map((fields) =>
-      ExtractWithClaimsOptionsModel.make(fields)
-    ),
+  toArbitrary: () => (fc) => S.toArbitrary(ExtractWithClaimsOptionsModel)(fc),
 }).pipe(
   $I.annoteSchema("ExtractWithClaimsOptions", {
     description: "Schema-defaulted options for extraction with claim provenance.",
@@ -413,12 +397,11 @@ export const ExtractWithClaimsOptions = ExtractWithClaimsOptionsModel.annotate({
 /**
  * Runtime value decoded by {@link ExtractWithClaimsOptions}.
  *
- * **Example** (Use ExtractWithClaimsOptions)
+ * **Example** (Select the article identifier)
  * ```ts
  * import type { ExtractWithClaimsOptions } from "@effect-ontology/Model/OntologyAgent"
- *
- * const article = (options: ExtractWithClaimsOptions): string => options.articleId
- * console.log(typeof article) // "function"
+ * const field: keyof ExtractWithClaimsOptions = "articleId"
+ * console.log(field) // "articleId"
  * ```
  *
  * @category type-level
@@ -426,25 +409,14 @@ export const ExtractWithClaimsOptions = ExtractWithClaimsOptionsModel.annotate({
  */
 export type ExtractWithClaimsOptions = typeof ExtractWithClaimsOptions.Type;
 
-const ExtractWithClaimsResultFields = {
-  ...ExtractionResultFields,
-  claimCount: NonNegativeInt.annotateKey({
-    description: "Number of provenance-bearing claims created from extracted relations.",
-  }),
-  articleId: S.NonEmptyString.annotateKey({
-    description: "Source article identifier assigned to claim provenance.",
-  }),
-};
-
 /**
  * Extraction result augmented with claim-provenance metadata.
  *
- * **Example** (Use ExtractWithClaimsResult)
+ * **Example** (Reject an incomplete claim extraction result)
  * ```ts
- * import type { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
- *
- * const hasClaims = (result: ExtractWithClaimsResult): boolean => result.hasClaims
- * console.log(typeof hasClaims) // "function"
+ * import * as S from "effect/Schema"
+ * import { ExtractWithClaimsResult } from "@effect-ontology/Model/OntologyAgent"
+ * console.log(S.is(ExtractWithClaimsResult)({})) // false
  * ```
  *
  * @invariant Claim count is non-negative and article identity is non-empty.
@@ -452,7 +424,15 @@ const ExtractWithClaimsResultFields = {
  * @since 0.0.0
  */
 export class ExtractWithClaimsResult extends S.Class<ExtractWithClaimsResult>($I`ExtractWithClaimsResult`)(
-  ExtractWithClaimsResultFields,
+  {
+    ...ExtractionResult.fields,
+    claimCount: NonNegativeInt.annotateKey({
+      description: "Number of provenance-bearing claims created from extracted relations.",
+    }),
+    articleId: S.NonEmptyString.annotateKey({
+      description: "Source article identifier assigned to claim provenance.",
+    }),
+  },
   $I.annote("ExtractWithClaimsResult", {
     description: "Extraction result extended with claim count and source-article provenance.",
   })
@@ -522,15 +502,13 @@ export class ExtractWithClaimsResult extends S.Class<ExtractWithClaimsResult>($I
   }
 }
 
-const QueryBindingFields = {
-  bindings: S.Record(S.String, S.String).pipe(
-    SchemaUtils.withKeyDefaults({}),
-    S.annotateKey({ description: "SPARQL variable names mapped to serialized RDF terms." })
-  ),
-};
-
 class QueryBindingModel extends S.Class<QueryBindingModel>($I`QueryBinding`)(
-  QueryBindingFields,
+  {
+    bindings: S.Record(S.String, S.String).pipe(
+      SchemaUtils.withKeyDefaults({}),
+      S.annotateKey({ description: "SPARQL variable names mapped to serialized RDF terms." })
+    ),
+  },
   $I.annote("QueryBinding", {
     description: "One immutable row of SPARQL variable bindings.",
   })
@@ -553,8 +531,7 @@ class QueryBindingModel extends S.Class<QueryBindingModel>($I`QueryBinding`)(
  * @since 0.0.0
  */
 export const QueryBinding = QueryBindingModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(QueryBindingFields))(fc).map((fields) => QueryBindingModel.make(fields)),
+  toArbitrary: () => (fc) => S.toArbitrary(QueryBindingModel)(fc),
 }).pipe(
   $I.annoteSchema("QueryBinding", {
     description: "One immutable row of SPARQL variable bindings.",
@@ -565,12 +542,11 @@ export const QueryBinding = QueryBindingModel.annotate({
 /**
  * Runtime value decoded by {@link QueryBinding}.
  *
- * **Example** (Use QueryBinding)
+ * **Example** (Select the binding map)
  * ```ts
  * import type { QueryBinding } from "@effect-ontology/Model/OntologyAgent"
- *
- * const width = (row: QueryBinding): number => Object.keys(row.bindings).length
- * console.log(typeof width) // "function"
+ * const field: keyof QueryBinding = "bindings"
+ * console.log(field) // "bindings"
  * ```
  *
  * @category type-level
@@ -578,24 +554,22 @@ export const QueryBinding = QueryBindingModel.annotate({
  */
 export type QueryBinding = typeof QueryBinding.Type;
 
-const QueryResultFields = {
-  answer: S.NonEmptyString.annotateKey({
-    description: "Natural-language answer grounded in the query bindings.",
-  }),
-  sparql: S.NonEmptyString.annotateKey({
-    description: "Generated SPARQL query retained for transparency.",
-  }),
-  bindings: S.Array(QueryBinding).pipe(
-    SchemaUtils.withEmptyArrayDefaults<QueryBinding>(),
-    S.annotateKey({ description: "Raw result rows returned by SPARQL evaluation." })
-  ),
-  confidence: Confidence.annotateKey({
-    description: "Confidence in the grounded natural-language answer.",
-  }),
-};
-
 class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
-  QueryResultFields,
+  {
+    answer: S.NonEmptyString.annotateKey({
+      description: "Natural-language answer grounded in the query bindings.",
+    }),
+    sparql: S.NonEmptyString.annotateKey({
+      description: "Generated SPARQL query retained for transparency.",
+    }),
+    bindings: S.Array(QueryBinding).pipe(
+      SchemaUtils.withEmptyArrayDefaults<QueryBinding>(),
+      S.annotateKey({ description: "Raw result rows returned by SPARQL evaluation." })
+    ),
+    confidence: Confidence.annotateKey({
+      description: "Confidence in the grounded natural-language answer.",
+    }),
+  },
   $I.annote("QueryResult", {
     description: "Natural-language answer, transparent SPARQL, bindings, and confidence.",
   })
@@ -646,8 +620,7 @@ class QueryResultModel extends S.Class<QueryResultModel>($I`QueryResult`)(
  * @since 0.0.0
  */
 export const QueryResult = QueryResultModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(QueryResultFields))(fc).map((fields) => QueryResultModel.make(fields)),
+  toArbitrary: () => (fc) => S.toArbitrary(QueryResultModel)(fc),
 }).pipe(
   $I.annoteSchema("QueryResult", {
     description: "Natural-language answer, transparent SPARQL, bindings, and confidence.",
@@ -658,12 +631,11 @@ export const QueryResult = QueryResultModel.annotate({
 /**
  * Runtime value decoded by {@link QueryResult}.
  *
- * **Example** (Use QueryResult)
+ * **Example** (Select the answer field)
  * ```ts
  * import type { QueryResult } from "@effect-ontology/Model/OntologyAgent"
- *
- * const answer = (result: QueryResult): string => result.answer
- * console.log(typeof answer) // "function"
+ * const field: keyof QueryResult = "answer"
+ * console.log(field) // "answer"
  * ```
  *
  * @category type-level
@@ -671,14 +643,12 @@ export const QueryResult = QueryResultModel.annotate({
  */
 export type QueryResult = typeof QueryResult.Type;
 
-const ReasoningResultFields = {
-  inferredTripleCount: NonNegativeInt,
-  rulesApplied: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
-  duration: S.DurationFromMillis,
-};
-
 class ReasoningResultModel extends S.Class<ReasoningResultModel>($I`ReasoningResult`)(
-  ReasoningResultFields,
+  {
+    inferredTripleCount: NonNegativeInt,
+    rulesApplied: S.Array(S.NonEmptyString).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    duration: S.DurationFromMillis,
+  },
   $I.annote("ReasoningResult", {
     description: "Inferred-triple count, applied reasoning rules, and elapsed duration.",
   })
@@ -706,8 +676,7 @@ class ReasoningResultModel extends S.Class<ReasoningResultModel>($I`ReasoningRes
  * @since 0.0.0
  */
 export const ReasoningResult = ReasoningResultModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(ReasoningResultFields))(fc).map((fields) => ReasoningResultModel.make(fields)),
+  toArbitrary: () => (fc) => S.toArbitrary(ReasoningResultModel)(fc),
 }).pipe(
   $I.annoteSchema("ReasoningResult", {
     description: "Inferred-triple count, applied reasoning rules, and elapsed duration.",
@@ -718,12 +687,11 @@ export const ReasoningResult = ReasoningResultModel.annotate({
 /**
  * Runtime value decoded by {@link ReasoningResult}.
  *
- * **Example** (Use ReasoningResult)
+ * **Example** (Select inferred triples)
  * ```ts
  * import type { ReasoningResult } from "@effect-ontology/Model/OntologyAgent"
- *
- * const count = (result: ReasoningResult): number => result.inferredTripleCount
- * console.log(typeof count) // "function"
+ * const field: keyof ReasoningResult = "inferredTripleCount"
+ * console.log(field) // "inferredTripleCount"
  * ```
  *
  * @category type-level
@@ -731,23 +699,21 @@ export const ReasoningResult = ReasoningResultModel.annotate({
  */
 export type ReasoningResult = typeof ReasoningResult.Type;
 
-const ViolationsByLevelFields = {
-  violations: S.Array(S.NonEmptyString).pipe(
-    SchemaUtils.withEmptyArrayDefaults<string>(),
-    S.annotateKey({ description: "Blocking SHACL Violation diagnostics." })
-  ),
-  warnings: S.Array(S.NonEmptyString).pipe(
-    SchemaUtils.withEmptyArrayDefaults<string>(),
-    S.annotateKey({ description: "Non-blocking SHACL Warning diagnostics." })
-  ),
-  info: S.Array(S.NonEmptyString).pipe(
-    SchemaUtils.withEmptyArrayDefaults<string>(),
-    S.annotateKey({ description: "Informational SHACL diagnostics." })
-  ),
-};
-
 class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`ViolationsByLevel`)(
-  ViolationsByLevelFields,
+  {
+    violations: S.Array(S.NonEmptyString).pipe(
+      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.annotateKey({ description: "Blocking SHACL Violation diagnostics." })
+    ),
+    warnings: S.Array(S.NonEmptyString).pipe(
+      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.annotateKey({ description: "Non-blocking SHACL Warning diagnostics." })
+    ),
+    info: S.Array(S.NonEmptyString).pipe(
+      SchemaUtils.withEmptyArrayDefaults<string>(),
+      S.annotateKey({ description: "Informational SHACL diagnostics." })
+    ),
+  },
   $I.annote("ViolationsByLevel", {
     description: "SHACL diagnostics partitioned by standard severity.",
   })
@@ -814,8 +780,7 @@ class ViolationsByLevelModel extends S.Class<ViolationsByLevelModel>($I`Violatio
  * @since 0.0.0
  */
 export const ViolationsByLevel = ViolationsByLevelModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(ViolationsByLevelFields))(fc).map((fields) => ViolationsByLevelModel.make(fields)),
+  toArbitrary: () => (fc) => S.toArbitrary(ViolationsByLevelModel)(fc),
 }).pipe(
   $I.annoteSchema("ViolationsByLevel", {
     description: "SHACL diagnostics partitioned by standard severity.",
@@ -826,12 +791,11 @@ export const ViolationsByLevel = ViolationsByLevelModel.annotate({
 /**
  * Runtime value decoded by {@link ViolationsByLevel}.
  *
- * **Example** (Use ViolationsByLevel)
+ * **Example** (Select blocking violations)
  * ```ts
  * import type { ViolationsByLevel } from "@effect-ontology/Model/OntologyAgent"
- *
- * const count = (grouped: ViolationsByLevel): number => grouped.totalCount
- * console.log(typeof count) // "function"
+ * const field: keyof ViolationsByLevel = "violations"
+ * console.log(field) // "violations"
  * ```
  *
  * @category type-level
@@ -839,28 +803,26 @@ export const ViolationsByLevel = ViolationsByLevelModel.annotate({
  */
 export type ViolationsByLevel = typeof ViolationsByLevel.Type;
 
-const ViolationExplanationFields = {
-  focusNode: S.NonEmptyString.annotateKey({
-    description: "Serialized RDF term for the focus node that failed validation.",
-  }),
-  path: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Optional serialized SHACL property path." })
-  ),
-  explanation: S.NonEmptyString.annotateKey({
-    description: "Context-aware human-readable explanation of the violation.",
-  }),
-  suggestion: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-    SchemaUtils.withNoneDefault,
-    S.annotateKey({ description: "Optional corrective action when one can be determined." })
-  ),
-  severity: ShaclSeverity.annotateKey({
-    description: "Standard SHACL severity assigned to the diagnostic.",
-  }),
-};
-
 class ViolationExplanationModel extends S.Class<ViolationExplanationModel>($I`ViolationExplanation`)(
-  ViolationExplanationFields,
+  {
+    focusNode: S.NonEmptyString.annotateKey({
+      description: "Serialized RDF term for the focus node that failed validation.",
+    }),
+    path: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional serialized SHACL property path." })
+    ),
+    explanation: S.NonEmptyString.annotateKey({
+      description: "Context-aware human-readable explanation of the violation.",
+    }),
+    suggestion: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional corrective action when one can be determined." })
+    ),
+    severity: ShaclSeverity.annotateKey({
+      description: "Standard SHACL severity assigned to the diagnostic.",
+    }),
+  },
   $I.annote("ViolationExplanation", {
     description: "Explainable SHACL diagnostic with focus, path, severity, and optional correction.",
   })
@@ -888,8 +850,7 @@ class ViolationExplanationModel extends S.Class<ViolationExplanationModel>($I`Vi
  * @since 0.0.0
  */
 export const ViolationExplanation = ViolationExplanationModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(ViolationExplanationFields))(fc).map((fields) => ViolationExplanationModel.make(fields)),
+  toArbitrary: () => (fc) => S.toArbitrary(ViolationExplanationModel)(fc),
 }).pipe(
   $I.annoteSchema("ViolationExplanation", {
     description: "Explainable SHACL diagnostic with focus, path, severity, and optional correction.",
@@ -900,12 +861,11 @@ export const ViolationExplanation = ViolationExplanationModel.annotate({
 /**
  * Runtime value decoded by {@link ViolationExplanation}.
  *
- * **Example** (Use ViolationExplanation)
+ * **Example** (Select the explanation)
  * ```ts
  * import type { ViolationExplanation } from "@effect-ontology/Model/OntologyAgent"
- *
- * const text = (value: ViolationExplanation): string => value.explanation
- * console.log(typeof text) // "function"
+ * const field: keyof ViolationExplanation = "explanation"
+ * console.log(field) // "explanation"
  * ```
  *
  * @category type-level
@@ -913,25 +873,23 @@ export const ViolationExplanation = ViolationExplanationModel.annotate({
  */
 export type ViolationExplanation = typeof ViolationExplanation.Type;
 
-const EnhancedValidationReportFields = {
-  conforms: S.Boolean.annotateKey({
-    description: "Whether the data graph conforms to every evaluated shape.",
-  }),
-  explanations: S.Array(ViolationExplanation).pipe(
-    SchemaUtils.withEmptyArrayDefaults<ViolationExplanation>(),
-    S.annotateKey({ description: "Context-aware explanation for each surfaced diagnostic." })
-  ),
-  byLevel: ViolationsByLevel.pipe(
-    SchemaUtils.withKeyDefaults(ViolationsByLevelModel.make({})),
-    S.annotateKey({ description: "Diagnostics partitioned by SHACL severity." })
-  ),
-  duration: S.DurationFromMillis,
-  dataGraphTripleCount: NonNegativeInt,
-  shapesCount: NonNegativeInt,
-};
-
 class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportModel>($I`EnhancedValidationReport`)(
-  EnhancedValidationReportFields,
+  {
+    conforms: S.Boolean.annotateKey({
+      description: "Whether the data graph conforms to every evaluated shape.",
+    }),
+    explanations: S.Array(ViolationExplanation).pipe(
+      SchemaUtils.withEmptyArrayDefaults<ViolationExplanation>(),
+      S.annotateKey({ description: "Context-aware explanation for each surfaced diagnostic." })
+    ),
+    byLevel: ViolationsByLevel.pipe(
+      SchemaUtils.withKeyDefaults(ViolationsByLevelModel.make({})),
+      S.annotateKey({ description: "Diagnostics partitioned by SHACL severity." })
+    ),
+    duration: S.DurationFromMillis,
+    dataGraphTripleCount: NonNegativeInt,
+    shapesCount: NonNegativeInt,
+  },
   $I.annote("EnhancedValidationReport", {
     description: "SHACL conformance report augmented with grouped and explainable diagnostics.",
   })
@@ -1032,10 +990,7 @@ class EnhancedValidationReportModel extends S.Class<EnhancedValidationReportMode
  * @since 0.0.0
  */
 export const EnhancedValidationReport = EnhancedValidationReportModel.annotate({
-  toArbitrary: () => (fc) =>
-    S.toArbitrary(S.Struct(EnhancedValidationReportFields))(fc).map((fields) =>
-      EnhancedValidationReportModel.make(fields)
-    ),
+  toArbitrary: () => (fc) => S.toArbitrary(EnhancedValidationReportModel)(fc),
 }).pipe(
   $I.annoteSchema("EnhancedValidationReport", {
     description: "SHACL conformance report augmented with grouped and explainable diagnostics.",
@@ -1046,12 +1001,11 @@ export const EnhancedValidationReport = EnhancedValidationReportModel.annotate({
 /**
  * Runtime value decoded by {@link EnhancedValidationReport}.
  *
- * **Example** (Use EnhancedValidationReport)
+ * **Example** (Select the conformance field)
  * ```ts
  * import type { EnhancedValidationReport } from "@effect-ontology/Model/OntologyAgent"
- *
- * const conforms = (report: EnhancedValidationReport): boolean => report.isValid
- * console.log(typeof conforms) // "function"
+ * const field: keyof EnhancedValidationReport = "conforms"
+ * console.log(field) // "conforms"
  * ```
  *
  * @category type-level

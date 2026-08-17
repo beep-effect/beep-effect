@@ -391,7 +391,7 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
     /**
      * Create a new example
      */
-    const create = Effect.fn(function* (
+    const create = Effect.fn("ExamplesRepository.create")(function* (
       input: CreateExampleInputInput
     ): Effect.fn.Return<LlmExampleRow, DrizzleError | S.SchemaError> {
       const resolvedInput = CreateExampleInput.make(input);

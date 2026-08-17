@@ -19,15 +19,12 @@ import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { EvidenceSpan as EvidenceSpanValue } from "../Domain/Model/Entity.ts";
 import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { buildLocalNameToIriMapSafe, expandLocalNameToIri, extractLocalNameFromIri } from "../Utils/Iri.ts";
-import { EmptyVocabularyError } from "./Errors.ts";
-
-// Re-export for convenience
-export { EmptyVocabularyError };
 
 /**
  * Coerce string array to IRI array.
@@ -45,20 +42,8 @@ const asIriArray = A.map((value: string) => IRI.make(value));
  *
  * @internal
  */
-const unionFromStringArray = <T extends string>(
-  values: ReadonlyArray<T>,
-  errorType: "classes" | "properties"
-): S.Codec<T, T, never, never> => {
-  if (A.isReadonlyArrayEmpty(values)) {
-    throw EmptyVocabularyError.make({
-      message: `Cannot create schema with zero ${errorType} IRIs`,
-      type: errorType,
-    });
-  }
-
-  // Create individual Literal schemas for each IRI
-  return S.Literals(values);
-};
+const unionFromStringArray = <T extends string>(values: ReadonlyArray<T>): S.Codec<T, T, never, never> =>
+  S.Literals(values);
 
 /**
  * Helper: Creates a local name schema with case-insensitive validation
@@ -74,20 +59,10 @@ const unionFromStringArray = <T extends string>(
  *
  * @internal
  */
-const localNameSchema = (
-  propertyIris: ReadonlyArray<IRI>,
-  errorType: "classes" | "properties"
-): S.Codec<string, string, never, never> => {
-  if (A.isReadonlyArrayEmpty(propertyIris)) {
-    throw EmptyVocabularyError.make({
-      message: `Cannot create schema with zero ${errorType} IRIs`,
-      type: errorType,
-    });
-  }
-
+const localNameSchema = (propertyIris: ReadonlyArray<IRI>): S.Codec<string, string, never, never> => {
   // Build case-insensitive local name to IRI map for validation
   const { map: localNameMap } = buildLocalNameToIriMapSafe(propertyIris);
-  const localNames = propertyIris.map(extractLocalNameFromIri);
+  const localNames = A.map(propertyIris, extractLocalNameFromIri);
 
   // Schema that validates local names (case-insensitive) and normalizes to canonical form
   return S.String.pipe(
@@ -103,12 +78,12 @@ const localNameSchema = (
       }),
     }),
     S.check(
-      S.makeFilter((name) => MutableHashMap.has(localNameMap, name.toLowerCase()), {
-        message: `Predicate must be one of: ${localNames.slice(0, 10).join(", ")}${localNames.length > 10 ? "..." : ""}`,
+      S.makeFilter((name) => MutableHashMap.has(localNameMap, Str.toLowerCase(name)), {
+        message: `Predicate must be one of: ${A.join(A.take(localNames, 10), ", ")}${A.length(localNames) > 10 ? "..." : ""}`,
       })
     ),
     S.annotate({
-      description: `Property name (one of: ${localNames.join(", ")})`,
+      description: `Property name (one of: ${A.join(localNames, ", ")})`,
     })
   );
 };
@@ -160,29 +135,22 @@ const localNameSchema = (
  */
 export const makeRelationSchema = dual2(
   (validEntityIds: ReadonlyArray<string>, properties: ReadonlyArray<PropertyDefinition>) => {
-    if (A.isReadonlyArrayEmpty(validEntityIds)) {
-      throw EmptyVocabularyError.make({
-        message: "Cannot create relation schema with zero entity IDs from Stage 1",
-        type: "classes",
-      });
-    }
-
     // Create entity ID union - constrains subjectId and object (when entity reference)
-    const EntityIdUnion = unionFromStringArray(validEntityIds, "classes");
+    const EntityIdUnion = unionFromStringArray(validEntityIds);
 
     // Group properties by rangeType for predicate-discriminated schemas
-    const objectProperties = properties.filter((p) => p.rangeType === "object");
-    const datatypeProperties = properties.filter((p) => p.rangeType === "datatype");
+    const objectProperties = A.filter(properties, (property) => property.rangeType === "object");
+    const datatypeProperties = A.filter(properties, (property) => property.rangeType === "datatype");
 
     // Create local name schemas for each property type
     // LLM outputs local names (e.g., "playsFor") which are expanded to full IRIs post-extraction
     const ObjectPropertyUnion = A.match(objectProperties, {
       onEmpty: O.none,
-      onNonEmpty: (values) => O.some(localNameSchema(asIriArray(A.map(values, (value) => value.id)), "properties")),
+      onNonEmpty: (values) => O.some(localNameSchema(asIriArray(A.map(values, (value) => value.id)))),
     });
     const DatatypePropertyUnion = A.match(datatypeProperties, {
       onEmpty: O.none,
-      onNonEmpty: (values) => O.some(localNameSchema(asIriArray(A.map(values, (value) => value.id)), "properties")),
+      onNonEmpty: (values) => O.some(localNameSchema(asIriArray(A.map(values, (value) => value.id)))),
     });
 
     // Create relation schemas discriminated by rangeType
@@ -193,16 +161,13 @@ export const makeRelationSchema = dual2(
       readonly evidence: O.Option<EvidenceSpanValue>;
     };
 
-    const relationSchemas: Array<S.Codec<RelationOutput, unknown, never, never>> = [];
-
-    // Object property relation schema: object must be entity ID only
-    if (O.isSome(ObjectPropertyUnion)) {
-      relationSchemas.push(
+    const relationSchemas: Array<S.Codec<RelationOutput, unknown, never, never>> = A.getSomes([
+      O.map(ObjectPropertyUnion, (predicate) =>
         S.Struct({
           subjectId: EntityIdUnion.annotate({
             description: "Subject entity ID - MUST be one of the entity IDs identified in Stage 1",
           }),
-          predicate: ObjectPropertyUnion.value.annotate({
+          predicate: predicate.annotate({
             description: "Object property name (e.g., 'playsFor') - use local name, not full URI",
           }),
           object: EntityIdUnion.annotate({
@@ -214,17 +179,13 @@ export const makeRelationSchema = dual2(
         }).annotate({
           description: "Object property relation - links two entities",
         })
-      );
-    }
-
-    // Datatype property relation schema: object must be literal only (NOT entity ID)
-    if (O.isSome(DatatypePropertyUnion)) {
-      relationSchemas.push(
+      ),
+      O.map(DatatypePropertyUnion, (predicate) =>
         S.Struct({
           subjectId: EntityIdUnion.annotate({
             description: "Subject entity ID - MUST be one of the entity IDs identified in Stage 1",
           }),
-          predicate: DatatypePropertyUnion.value.annotate({
+          predicate: predicate.annotate({
             description: "Datatype property name (e.g., 'hasAge') - use local name, not full URI",
           }),
           object: S.Union([
@@ -246,27 +207,17 @@ export const makeRelationSchema = dual2(
         }).annotate({
           description: "Datatype property relation - has literal value",
         })
-      );
-    }
+      ),
+    ]);
 
-    // Create union of relation schemas (discriminated by predicate rangeType)
-    // If only one type exists, use that schema directly
-    const RelationSchema =
-      relationSchemas.length === 1
-        ? relationSchemas[0]
-        : relationSchemas.length === 2
-          ? S.Union([relationSchemas[0], relationSchemas[1]])
-          : (() => {
-              throw EmptyVocabularyError.make({
-                message: "Cannot create relation schema with zero properties",
-                type: "properties",
-              });
-            })();
+    // An empty member list is the schema-level representation of an impossible
+    // relation. Callers may still produce the valid empty relation graph.
+    const RelationSchema = S.Union(relationSchemas);
 
     // Extract property local names for the description
-    const objectPropertyNames = objectProperties.map((p) => extractLocalNameFromIri(p.id));
-    const datatypePropertyNames = datatypeProperties.map((p) => extractLocalNameFromIri(p.id));
-    const allPropertyNames = [...objectPropertyNames, ...datatypePropertyNames];
+    const objectPropertyNames = A.map(objectProperties, (property) => extractLocalNameFromIri(property.id));
+    const datatypePropertyNames = A.map(datatypeProperties, (property) => extractLocalNameFromIri(property.id));
+    const allPropertyNames = A.appendAll(objectPropertyNames, datatypePropertyNames);
 
     // Full relation graph schema
     return S.Struct({
@@ -279,14 +230,14 @@ export const makeRelationSchema = dual2(
       description: `Extract relationships between entities identified in Stage 1.
 
 CRITICAL RULES:
-- Subject MUST be one of the entity IDs from Stage 1: ${validEntityIds.slice(0, 5).join(", ")}${
-        validEntityIds.length > 5 ? "..." : ""
+- Subject MUST be one of the entity IDs from Stage 1: ${A.join(A.take(validEntityIds, 5), ", ")}${
+        A.length(validEntityIds) > 5 ? "..." : ""
       }
 - Object can be either:
   - An entity ID from Stage 1 (for relationships between entities)
   - A literal string/number/boolean (for datatype properties)
 - Use the exact entity IDs from Stage 1 - do not create new IDs
-- Use LOCAL NAMES for predicates (e.g., '${allPropertyNames.slice(0, 3).join("', '")}') - NOT full URIs
+- Use LOCAL NAMES for predicates (e.g., '${A.join(A.take(allPropertyNames, 3), "', '")}') - NOT full URIs
 - Predicate MUST be one of the allowed property names
 - Include evidence with character offsets: text quote, startChar (0-indexed), endChar (exclusive)
 - Extract as many relations as possible`,

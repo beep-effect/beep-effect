@@ -201,7 +201,7 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
     /**
      * Enrich raw markdown content
      */
-    const enrich = Effect.fn(function* (
+    const enrich = Effect.fn("ContentEnrichmentAgent.enrich")(function* (
       content: string,
       url?: string
     ): Effect.fn.Return<EnrichedContent, ContentEnrichmentError> {

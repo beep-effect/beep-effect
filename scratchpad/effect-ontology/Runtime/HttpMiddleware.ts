@@ -10,7 +10,7 @@
  * @since 0.0.0
  */
 
-import { Clock, Effect, HashSet, Random, Redacted } from "effect";
+import { Clock, Effect, HashSet, Inspectable, Random, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -206,7 +206,7 @@ export const makeLoggingMiddleware = Effect.sync(() =>
               requestId,
               method,
               path,
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
               durationMs: elapsed,
             });
           })

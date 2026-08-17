@@ -11,10 +11,40 @@
  */
 
 import { createHash } from "node:crypto";
+import { $ScratchpadId } from "@beep/identity";
 import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { dual2, dual3 } from "./Dual.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Utils/Hash");
+
+/**
+ * Describes a failed WebCrypto digest operation.
+ *
+ * **Example** (Inspect the operation)
+ *
+ * ```ts
+ * import { HashingError } from "@effect-ontology/Utils/Hash"
+ *
+ * const error = HashingError.make({ operation: "sha256", cause: "WebCrypto unavailable" })
+ * console.log(error.operation)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class HashingError extends S.TaggedError<HashingError>($I`HashingError`)(
+  "HashingError",
+  {
+    operation: S.Literals(["sha256", "sha256-bytes"]),
+    cause: S.Defect({ includeStack: true }),
+  },
+  $I.annote("HashingError", {
+    description: "Failure while computing a SHA-256 digest through WebCrypto.",
+  })
+) {}
 
 /**
  * Convert Uint8Array to hex string
@@ -47,8 +77,11 @@ const toHex = (buffer: ArrayBuffer): string => {
  * @category utilities
  * @since 0.0.0
  */
-export const sha256 = (input: string): Effect.Effect<string> =>
-  Effect.promise(() => globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(input)).then(toHex));
+export const sha256 = (input: string): Effect.Effect<string, HashingError> =>
+  Effect.tryPromise({
+    try: () => globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(input)).then(toHex),
+    catch: (cause) => HashingError.make({ operation: "sha256", cause }),
+  });
 
 /**
  * Generate a cache key for embedding lookups
@@ -73,7 +106,7 @@ export const sha256 = (input: string): Effect.Effect<string> =>
  * @since 0.0.0
  */
 export const hashEmbeddingKey = dual2(
-  (text: string, taskType: string): Effect.Effect<string> => sha256(`${text}::${taskType}`)
+  (text: string, taskType: string): Effect.Effect<string, HashingError> => sha256(`${text}::${taskType}`)
 );
 
 /**
@@ -193,7 +226,7 @@ export interface EmbeddingKeyMetadata {
  * @since 0.0.0
  */
 export const hashVersionedEmbeddingKey = dual3(
-  (text: string, taskType: string, metadata: EmbeddingKeyMetadata): Effect.Effect<string> =>
+  (text: string, taskType: string, metadata: EmbeddingKeyMetadata): Effect.Effect<string, HashingError> =>
     sha256(`${metadata.providerId}::${metadata.modelId}::${metadata.dimension}::${taskType}::${text}`)
 );
 
@@ -240,8 +273,11 @@ export const hashVersionedEmbeddingKeySync = dual3(
  * @category utilities
  * @since 0.0.0
  */
-export const sha256Bytes = (bytes: BufferSource): Effect.Effect<string> =>
-  Effect.promise(() => globalThis.crypto.subtle.digest("SHA-256", bytes).then(toHex));
+export const sha256Bytes = (bytes: BufferSource): Effect.Effect<string, HashingError> =>
+  Effect.tryPromise({
+    try: () => globalThis.crypto.subtle.digest("SHA-256", bytes).then(toHex),
+    catch: (cause) => HashingError.make({ operation: "sha256-bytes", cause }),
+  });
 
 /**
  * Synchronous SHA-256 hash of bytes

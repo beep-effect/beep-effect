@@ -153,7 +153,7 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
       const toImageForPrompt: ImagePromptAdapterService["toImageForPrompt"] = (refs) =>
         Effect.forEach(
           refs,
-          Effect.fn(function* (ref) {
+          Effect.fnUntraced(function* (ref) {
             // Load asset metadata
             const assetOpt = yield* blobStore.getMetadata(ref.assetHash);
             if (O.isNone(assetOpt)) {

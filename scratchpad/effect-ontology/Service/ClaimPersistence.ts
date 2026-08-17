@@ -123,7 +123,7 @@ export class ClaimPersistenceService extends Context.Service<ClaimPersistenceSer
      * @param graphUri - URI of the RDF graph file (optional)
      * @returns Persistence result with article ID and insert count
      */
-    const persistClaims = Effect.fn(function* (
+    const persistClaims = Effect.fn("ClaimPersistence.persistClaims")(function* (
       claims: ReadonlyArray<ClaimData>,
       articleMeta: ArticleMetadata,
       graphUri?: string

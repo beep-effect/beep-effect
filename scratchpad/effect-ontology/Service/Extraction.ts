@@ -36,8 +36,7 @@ import {
   generateStructuredRelationPrompt,
 } from "../Prompt/index.ts";
 import { makeEntitySchema } from "../Schema/EntityFactory.ts";
-import type { Mention } from "../Schema/MentionFactory.ts";
-import { MentionGraph } from "../Schema/MentionFactory.ts";
+import { Mention, MentionGraph } from "../Schema/MentionFactory.ts";
 import type { RelationGraph } from "../Schema/RelationFactory.ts";
 import { makeRelationSchema } from "../Schema/RelationFactory.ts";
 import { annotateExtraction, annotateLlmCall, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
@@ -359,11 +358,12 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
           )
         );
         const mentions = response.value.mentions.map(
-          (m): Mention => ({
-            id: P.isTruthy(m.id) && /^[a-z][a-z0-9_]*$/.test(m.id) ? m.id : generateEntityId(m.mention),
-            mention: m.mention,
-            context: O.getOrElse(m.context, () => ""),
-          })
+          (m): Mention =>
+            Mention.make({
+              id: P.isTruthy(m.id) && /^[a-z][a-z0-9_]*$/.test(m.id) ? m.id : generateEntityId(m.mention),
+              mention: m.mention,
+              context: m.context,
+            })
         );
         yield* Effect.logInfo("Mention extraction complete", {
           stage: "mention-extraction",
@@ -384,7 +384,9 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
     MentionExtractor,
     MentionExtractor.of({
       extract: Effect.fn("MentionExtractor.extract")((_text: string) =>
-        Effect.succeed(Chunk.fromIterable([{ id: "test_entity", mention: "Test Entity", context: "A test entity" }]))
+        Effect.succeed(
+          Chunk.of(Mention.make({ id: "test_entity", mention: "Test Entity", context: O.some("A test entity") }))
+        )
       ),
     })
   );

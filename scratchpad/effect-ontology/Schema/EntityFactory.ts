@@ -18,15 +18,13 @@ import { SchemaUtils } from "@beep/schema";
 import { MutableHashMap, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { buildLocalNameToIriMapSafe, expandLocalNameToIri, extractLocalNameFromIri } from "../Utils/Iri.ts";
-import { EmptyVocabularyError } from "./Errors.ts";
-
-// Re-export for convenience
-export { EmptyVocabularyError };
 
 /**
  * Helper: Creates a local name schema with case-insensitive validation
@@ -42,20 +40,10 @@ export { EmptyVocabularyError };
  *
  * @internal
  */
-const localNameSchema = (
-  classIris: ReadonlyArray<IRI>,
-  errorType: "classes" | "properties"
-): S.Codec<string, string, never, never> => {
-  if (A.isReadonlyArrayEmpty(classIris)) {
-    throw EmptyVocabularyError.make({
-      message: `Cannot create schema with zero ${errorType} IRIs`,
-      type: errorType,
-    });
-  }
-
+const localNameSchema = (classIris: ReadonlyArray<IRI>): S.Codec<string, string, never, never> => {
   // Build case-insensitive local name to IRI map for validation
   const { map: localNameMap } = buildLocalNameToIriMapSafe(classIris);
-  const localNames = classIris.map(extractLocalNameFromIri);
+  const localNames = A.map(classIris, extractLocalNameFromIri);
 
   // Schema that validates local names (case-insensitive) and normalizes to canonical form
   return S.String.pipe(
@@ -71,12 +59,12 @@ const localNameSchema = (
       }),
     }),
     S.check(
-      S.makeFilter((name) => MutableHashMap.has(localNameMap, name.toLowerCase()), {
-        message: `Type must be one of: ${localNames.slice(0, 10).join(", ")}${localNames.length > 10 ? "..." : ""}`,
+      S.makeFilter((name) => MutableHashMap.has(localNameMap, Str.toLowerCase(name)), {
+        message: `Type must be one of: ${A.join(A.take(localNames, 10), ", ")}${A.length(localNames) > 10 ? "..." : ""}`,
       })
     ),
     S.annotate({
-      description: `Class name (one of: ${localNames.join(", ")})`,
+      description: `Class name (one of: ${A.join(localNames, ", ")})`,
     })
   );
 };
@@ -134,62 +122,44 @@ const localNameSchema = (
 export const makeEntitySchema = dual2(
   (classes: ReadonlyArray<ClassDefinition>, datatypeProperties: ReadonlyArray<PropertyDefinition>) => {
     // Extract class IRIs from ClassDefinition objects
-    const classIris = classes.map((c) => c.id);
+    const classIris = A.map(classes, (classDefinition) => classDefinition.id);
 
     // Create local name schema for types array elements
     // LLM outputs local names (e.g., "Player") which are validated and later expanded to full IRIs
-    const ClassLocalName = localNameSchema(classIris, "classes");
+    const ClassLocalName = localNameSchema(classIris);
 
     // Determine available property names for description
-    const availableProps = datatypeProperties.map((p) => extractLocalNameFromIri(p.id));
-    const propList =
-      availableProps.length > 0
-        ? ` (allowed: ${availableProps.slice(0, 10).join(", ")}${availableProps.length > 10 ? "..." : ""})`
-        : "";
+    const availableProps = A.map(datatypeProperties, (property) => extractLocalNameFromIri(property.id));
+    const propList = A.match(availableProps, {
+      onEmpty: () => "",
+      onNonEmpty: (properties) =>
+        ` (allowed: ${A.join(A.take(properties, 10), ", ")}${A.length(properties) > 10 ? "..." : ""})`,
+    });
 
     // Dynamic Attributes Schema
     // If properties are provided, build a specific Struct to enforce cardinality and valid keys
-    let AttributesSchema: S.Codec<Record<string, unknown>, unknown, never, never>;
-
-    if (datatypeProperties.length > 0) {
-      const fields: Record<string, S.Codec<unknown, unknown, never, never>> = {};
-
-      // Build case-insensitive local name map for key normalization
-      // const propMap = buildLocalNameToIriMap(datatypeProperties.map((p) => p.id))
-
-      for (const prop of datatypeProperties) {
-        const localName = extractLocalNameFromIri(prop.id);
-
-        // Value schema: String, Number, or Boolean
-        const valueSchema = S.Union([S.String, S.Finite, S.Boolean]);
-
-        // If functional, use single value. If not functional (or unspecified), allow arrays.
-        // Note: We use S.optional for all fields as entities only have a subset of attributes
-        fields[localName] = (prop.isFunctional ? valueSchema : S.Union([valueSchema, S.Array(valueSchema)])).pipe(
-          S.OptionFromOptionalKey,
-          SchemaUtils.withNoneDefault
-        );
-      }
-
-      AttributesSchema = S.Struct(fields).pipe(
-        // We want to handle case-insensitive keys if possible, but Struct expects exact keys.
-        // LLMs are usually good with the specified keys.
-        // To be safe, we can leave it strict or just allow excess (but we want to guide them).
-        // For now, strict Struct with local names is best for token efficiency and enforcement.
-        S.annotate({
+    const valueSchema = S.Union([S.String, S.Finite, S.Boolean]);
+    const AttributesSchema: S.Codec<Record<string, unknown>, unknown, never, never> = A.match(datatypeProperties, {
+      onEmpty: () =>
+        S.Record(S.String, S.Union([valueSchema, S.Array(valueSchema)])).annotate({
+          description: "Entity attributes as property-value pairs",
+        }),
+      onNonEmpty: (properties) =>
+        S.Struct(
+          R.fromEntries(
+            A.map(properties, (property) => [
+              extractLocalNameFromIri(property.id),
+              (property.isFunctional ? valueSchema : S.Union([valueSchema, S.Array(valueSchema)])).pipe(
+                S.OptionFromOptionalKey,
+                SchemaUtils.withNoneDefault
+              ),
+            ])
+          )
+        ).annotate({
           title: "Attributes",
           description: `Entity attributes. Use these exact property names:${propList}`,
-        })
-      );
-    } else {
-      // Fallback if no properties provided (permissive mode)
-      AttributesSchema = S.Record(
-        S.String,
-        S.Union([S.String, S.Finite, S.Boolean, S.Array(S.Union([S.String, S.Finite, S.Boolean]))])
-      ).annotate({
-        description: "Entity attributes as property-value pairs",
-      });
-    }
+        }),
+    });
 
     // Single entity schema matching Entity domain model
     const EntitySchema = S.Struct({

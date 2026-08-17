@@ -27,6 +27,25 @@ const legacyEvidence = {
 
 describe("extraction factory evidence", () => {
   it.effect(
+    "models empty vocabularies as schemas with no valid members",
+    Effect.fnUntraced(function* () {
+      const entityGraph = yield* S.decodeEffect(makeEntitySchema([], []))({ entities: [] });
+      const relationGraph = yield* S.decodeEffect(makeRelationSchema([], []))({ relations: [] });
+      const invalidEntity = S.decodeResult(makeEntitySchema([], []))({
+        entities: [{ id: "ada", mention: "Ada", types: ["Person"] }],
+      });
+      const invalidRelation = S.decodeResult(makeRelationSchema([], []))({
+        relations: [{ subjectId: "ada", predicate: "knows", object: "bob" }],
+      });
+
+      expect(entityGraph.entities).toEqual([]);
+      expect(relationGraph.relations).toEqual([]);
+      expect(Result.isFailure(invalidEntity)).toBe(true);
+      expect(Result.isFailure(invalidRelation)).toBe(true);
+    })
+  );
+
+  it.effect(
     "decodes entity-factory evidence to the canonical quote representation",
     Effect.fnUntraced(function* () {
       const person = yield* decodePerson;

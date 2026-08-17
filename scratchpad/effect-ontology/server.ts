@@ -46,15 +46,11 @@ import { JinaReaderClient } from "./Service/JinaReaderClient.ts";
 import { LinkIngestionService } from "./Service/LinkIngestionService.ts";
 import { TicketService } from "./Service/Ticket.ts";
 
-// Load port from environment
-const port = Effect.runSync(Config.number("PORT").pipe(Config.withDefault(8080)));
-
-// Check if PostgreSQL is configured
-const postgresHost = Effect.runSync(Config.string("POSTGRES_HOST").pipe(Config.option));
-const usePostgres = O.isSome(postgresHost);
-
-// Check if repository caching is enabled (default: true in production)
-const useCaching = Effect.runSync(Config.boolean("ENABLE_REPO_CACHING").pipe(Config.withDefault(true)));
+const ServerConfig = Config.all({
+  port: Config.number("PORT").pipe(Config.withDefault(8080)),
+  postgresHost: Config.string("POSTGRES_HOST").pipe(Config.option),
+  useCaching: Config.boolean("ENABLE_REPO_CACHING").pipe(Config.withDefault(true)),
+});
 
 // Base platform layer (provides FileSystem, Path, etc.)
 const PlatformLayer = BunServices.layer;
@@ -70,104 +66,69 @@ const ClusterWorkflowEngineLive = ClusterWorkflowEngine.layer.pipe(
   Layer.provideMerge(PgClientLive)
 );
 
-// Select workflow engine based on PostgreSQL availability
-// - With POSTGRES_HOST: Use ClusterWorkflowEngine for durable workflows
-// - Without: Use in-memory engine (development only, no crash recovery)
-const WorkflowEngineLive = usePostgres ? ClusterWorkflowEngineLive : WorkflowEngine.layerMemory;
-
-// Pre-compose WorkflowOrchestrator with all its dependencies
-// Workflow layer has dependencies provided before construction (see WorkflowLayers)
-const WorkflowOrchestratorWithDependencies = WorkflowOrchestratorFullLayer.pipe(
-  Layer.provideMerge(WorkflowEngineLive),
-  Layer.provideMerge(PlatformLayer)
-);
-
-// =============================================================================
-// Server Layer Composition
-// =============================================================================
-// Several layers need ConfigService and StorageService from ActivityDependenciesLayer.
-// Pre-compose layers that have dependencies on ActivityDependenciesLayer.
-
-// BatchStatePersistenceLayer needs StorageService
-const BatchStatePersistenceWithDeps = BatchStatePersistenceLayer.pipe(
-  Layer.provideMerge(ActivityDependenciesLayer),
-  Layer.provideMerge(PlatformLayer)
-);
-
-// HealthCheckService needs ConfigService and StorageService
-const HealthCheckWithDeps = HealthCheckService.Default.pipe(
-  Layer.provideMerge(ActivityDependenciesLayer),
-  Layer.provideMerge(PlatformLayer)
-);
-
-// Repository layers (when PostgreSQL is configured)
-// PgDrizzle layer provides drizzle ORM access over PgClient
-// Base repositories bundle - ClaimRepository + ArticleRepository
-const BaseRepositoriesLayer = Layer.mergeAll(ClaimRepository.Default, ArticleRepository.Default).pipe(
-  Layer.provideMerge(DatabaseReadyLive)
-);
-
-// Cached repositories layer (wraps base repositories with Effect.Cache)
-const CachedRepositoriesLayer = Layer.mergeAll(CachedClaimRepository.Default, CachedArticleRepository.Default).pipe(
-  Layer.provideMerge(BaseRepositoriesLayer)
-);
-
-// Combined repositories layer
-// When caching is enabled, provides both base and cached repos
-// When disabled, provides only base repos
-const RepositoriesLayer = useCaching
-  ? Layer.mergeAll(BaseRepositoriesLayer, CachedRepositoriesLayer)
-  : BaseRepositoriesLayer;
-
-// ClaimPersistenceService layer (depends on repositories)
-const ClaimPersistenceLayer = usePostgres
-  ? ClaimPersistenceService.Default.pipe(Layer.provideMerge(RepositoriesLayer))
-  : Layer.empty; // No persistence without PostgreSQL
-
-// LinkIngestionService layer (depends on Drizzle, Storage, LLM, Jina, Image services)
-// Only available with PostgreSQL
 const ImageServicesLayer = ImageStore.Live.pipe(
   Layer.provideMerge(ImageBlobStore.Live),
   Layer.provideMerge(ActivityDependenciesLayer)
 );
 
-const PostgresLinkIngestionLayer = LinkIngestionService.Default.pipe(
-  Layer.provideMerge(ContentEnrichmentAgent.Default),
-  Layer.provideMerge(JinaReaderClient.Default),
-  Layer.provideMerge(ImageExtractor.Default),
-  Layer.provideMerge(ImageFetcher.Default),
-  Layer.provideMerge(ImageServicesLayer),
-  Layer.provideMerge(DatabaseReadyLive)
-);
+const makeServerLive = (config: Config.Success<typeof ServerConfig>) => {
+  const usePostgres = O.isSome(config.postgresHost);
+  const workflowEngineLive = usePostgres ? ClusterWorkflowEngineLive : WorkflowEngine.layerMemory;
+  const workflowOrchestratorWithDependencies = WorkflowOrchestratorFullLayer.pipe(
+    Layer.provideMerge(workflowEngineLive),
+    Layer.provideMerge(PlatformLayer)
+  );
+  const batchStatePersistenceWithDeps = BatchStatePersistenceLayer.pipe(
+    Layer.provideMerge(ActivityDependenciesLayer),
+    Layer.provideMerge(PlatformLayer)
+  );
+  const healthCheckWithDeps = HealthCheckService.Default.pipe(
+    Layer.provideMerge(ActivityDependenciesLayer),
+    Layer.provideMerge(PlatformLayer)
+  );
+  const baseRepositoriesLayer = Layer.mergeAll(ClaimRepository.Default, ArticleRepository.Default).pipe(
+    Layer.provideMerge(DatabaseReadyLive)
+  );
+  const cachedRepositoriesLayer = Layer.mergeAll(CachedClaimRepository.Default, CachedArticleRepository.Default).pipe(
+    Layer.provideMerge(baseRepositoriesLayer)
+  );
+  const repositoriesLayer = config.useCaching
+    ? Layer.mergeAll(baseRepositoriesLayer, cachedRepositoriesLayer)
+    : baseRepositoriesLayer;
+  const claimPersistenceLayer = usePostgres
+    ? ClaimPersistenceService.Default.pipe(Layer.provideMerge(repositoriesLayer))
+    : Layer.empty;
+  const postgresLinkIngestionLayer = LinkIngestionService.Default.pipe(
+    Layer.provideMerge(ContentEnrichmentAgent.Default),
+    Layer.provideMerge(JinaReaderClient.Default),
+    Layer.provideMerge(ImageExtractor.Default),
+    Layer.provideMerge(ImageFetcher.Default),
+    Layer.provideMerge(ImageServicesLayer),
+    Layer.provideMerge(DatabaseReadyLive)
+  );
+  const linkIngestionLayer = usePostgres ? postgresLinkIngestionLayer : LinkIngestionService.Disabled;
+  const repositoryBackedHttpServerLive = HttpServerLive.pipe(Layer.provideMerge(repositoriesLayer));
+  const selectedHttpServerLive = usePostgres ? repositoryBackedHttpServerLive : HttpServerWithoutRepositoriesLive;
 
-const LinkIngestionLayer = usePostgres ? PostgresLinkIngestionLayer : LinkIngestionService.Disabled;
-
-const RepositoryBackedHttpServerLive = HttpServerLive.pipe(Layer.provideMerge(RepositoriesLayer));
-const SelectedHttpServerLive = usePostgres ? RepositoryBackedHttpServerLive : HttpServerWithoutRepositoriesLive;
-
-// EventLogServer.Storage layer for WebSocket event streaming
-// Uses PostgreSQL for persistence when available, otherwise in-memory
-
-// Uses Layer.provideMerge throughout for order-independent composition.
-// Later provideMerge layers PROVIDE to earlier layers in the chain.
-const ServerLive = SelectedHttpServerLive.pipe(
-  Layer.provideMerge(InferenceJobStoreLive),
-  Layer.provideMerge(BunHttpServer.layer({ port, idleTimeout: 255 })), // Bun max is 255s (Cloud Run uses longer timeouts via nginx)
-  Layer.provideMerge(WorkflowEngineLive),
-  Layer.provideMerge(WorkflowOrchestratorWithDependencies),
-  Layer.provideMerge(BatchStateBridgeLive), // Bridge BatchStateHub → EventBroadcastHub for WebSocket
-  Layer.provideMerge(BatchStateHubLayer),
-  Layer.provideMerge(BatchStatePersistenceWithDeps),
-  Layer.provideMerge(HealthCheckWithDeps),
-  Layer.provideMerge(ClaimPersistenceLayer), // ClaimPersistenceService (for activity persistence)
-  Layer.provideMerge(LinkIngestionLayer), // LinkIngestionService for URL ingestion
-  Layer.provideMerge(ImageServicesLayer), // ImageBlobStore + ImageStore for image routes
-  Layer.provideMerge(EventBridgeAutoStart), // Bridges EventBusService → EventBroadcastHub (needs both below)
-  Layer.provideMerge(EventBroadcastHubLive), // EventBroadcastHub for real-time WebSocket events
-  Layer.provideMerge(TicketService.Default), // TicketService for WebSocket authentication
-  Layer.provideMerge(ActivityDependenciesLayer), // EventBusService + other activity deps
-  Layer.provideMerge(PlatformLayer)
-);
+  return selectedHttpServerLive.pipe(
+    Layer.provideMerge(InferenceJobStoreLive),
+    Layer.provideMerge(BunHttpServer.layer({ port: config.port, idleTimeout: 255 })),
+    Layer.provideMerge(workflowEngineLive),
+    Layer.provideMerge(workflowOrchestratorWithDependencies),
+    Layer.provideMerge(BatchStateBridgeLive),
+    Layer.provideMerge(BatchStateHubLayer),
+    Layer.provideMerge(batchStatePersistenceWithDeps),
+    Layer.provideMerge(healthCheckWithDeps),
+    Layer.provideMerge(claimPersistenceLayer),
+    Layer.provideMerge(linkIngestionLayer),
+    Layer.provideMerge(ImageServicesLayer),
+    Layer.provideMerge(EventBridgeAutoStart),
+    Layer.provideMerge(EventBroadcastHubLive),
+    Layer.provideMerge(TicketService.Default),
+    Layer.provideMerge(ActivityDependenciesLayer),
+    Layer.provideMerge(PlatformLayer)
+  );
+};
 
 // Warm up caches from GCS (if configured)
 const warmUpCaches = Effect.gen(function* () {
@@ -191,8 +152,9 @@ const warmUpCaches = Effect.gen(function* () {
 });
 
 // Server program with graceful shutdown
-const server = Effect.gen(function* () {
+const server = Effect.fn("EffectOntology.server")(function* (config: Config.Success<typeof ServerConfig>) {
   const shutdown = yield* ShutdownService;
+  const usePostgres = O.isSome(config.postgresHost);
 
   yield* Effect.logInfo(
     usePostgres
@@ -203,14 +165,14 @@ const server = Effect.gen(function* () {
     usePostgres ? "EventLog storage: PostgreSQL (persistent)" : "EventLog storage: Memory (events lost on restart)"
   );
   if (usePostgres) {
-    yield* Effect.logInfo(`Repository caching: ${useCaching ? "enabled" : "disabled"}`);
+    yield* Effect.logInfo(`Repository caching: ${config.useCaching ? "enabled" : "disabled"}`);
   }
 
   // Warm up caches from GCS (runs in background, doesn't block startup)
   yield* Effect.forkDetach(warmUpCaches);
 
-  yield* Effect.logInfo(`Server starting on port ${port}`);
-  yield* Layer.build(ServerLive);
+  yield* Effect.logInfo(`Server starting on port ${config.port}`);
+  yield* Layer.build(makeServerLive(config));
 
   // BunRuntime.runMain owns SIGINT/SIGTERM handling and interrupts this main
   // fiber. Keep the server layer in the surrounding scope so request draining
@@ -231,9 +193,10 @@ const server = Effect.gen(function* () {
 // in-flight counter. ServerLive must not construct a second Default.
 const main = Effect.scoped(
   Effect.gen(function* () {
+    const config = yield* ServerConfig;
     const shutdownContext = yield* Layer.build(ShutdownService.Default);
     const platformContext = yield* Layer.build(PlatformLayer);
-    return yield* server.pipe(Effect.provide(shutdownContext), Effect.provide(platformContext));
+    return yield* server(config).pipe(Effect.provide(shutdownContext), Effect.provide(platformContext));
   }).pipe(Effect.tapCause(Effect.logError))
 );
 

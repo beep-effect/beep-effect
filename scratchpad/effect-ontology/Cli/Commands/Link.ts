@@ -14,7 +14,6 @@ import { PosInt } from "@beep/schema/Int";
 import { Console, Effect, FileSystem, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { Command, Flag as Options } from "effect/unstable/cli";
 import { RdfBuilder } from "../../Service/Rdf.ts";
@@ -116,33 +115,33 @@ To create a link, run:`);
   }
   yield* Console.log(`Verifying Wikidata entity: ${wikidataId}`);
   const wikidataEntity = yield* wikidata.getEntity(wikidataId);
-  if (P.isNull(wikidataEntity)) {
+  if (O.isNone(wikidataEntity)) {
     yield* Console.error(`Wikidata entity not found: ${wikidataId}`);
     return;
   }
-  yield* Console.log(`  Found: ${wikidataEntity.label}`);
-  if (O.isSome(wikidataEntity.description)) {
-    yield* Console.log(`  Description: ${wikidataEntity.description}`);
+  yield* Console.log(`  Found: ${wikidataEntity.value.label}`);
+  if (O.isSome(wikidataEntity.value.description)) {
+    yield* Console.log(`  Description: ${wikidataEntity.value.description.value}`);
   }
-  yield* Console.log(`  URI: ${wikidataEntity.conceptUri}`);
+  yield* Console.log(`  URI: ${wikidataEntity.value.conceptUri}`);
   yield* Console.log("");
   if (dryRun) {
     yield* Console.log("Dry run - link not created");
     yield* Console.log(`Would create owl:sameAs link:`);
-    yield* Console.log(`  ${entityIri} owl:sameAs ${wikidataEntity.conceptUri}`);
+    yield* Console.log(`  ${entityIri} owl:sameAs ${wikidataEntity.value.conceptUri}`);
     return;
   }
   const sameAsTriple = `
 @prefix owl: <https://www.w3.org/2002/07/owl#> .
 
-<${entityIri}> owl:sameAs <${wikidataEntity.conceptUri}> .
+<${entityIri}> owl:sameAs <${wikidataEntity.value.conceptUri}> .
 `;
   if (O.isSome(graph)) {
     const fs = yield* FileSystem.FileSystem;
     const graphContent = yield* fs.readFileString(graph.value);
     const store = yield* rdf.parseTurtle(graphContent);
     yield* rdf.addSameAsLinks(store, {
-      [entityIri]: wikidataEntity.conceptUri,
+      [entityIri]: wikidataEntity.value.conceptUri,
     });
     const updatedGraph = yield* rdf.toTurtle(store);
     if (O.isSome(output)) {

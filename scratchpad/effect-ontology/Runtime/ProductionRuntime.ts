@@ -21,6 +21,7 @@ import { OpenAiClient, OpenAiLanguageModel } from "@effect/ai-openai";
 import { Effect, Layer, Match } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
+import type { AppConfig } from "../Service/Config.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { EntityExtractor, MentionExtractor, RelationExtractor } from "../Service/Extraction.ts";
 import { Grounder } from "../Service/Grounder.ts";
@@ -85,6 +86,26 @@ export class UnsupportedLlmProviderError extends S.TaggedError<UnsupportedLlmPro
   })
 ) {}
 
+const selectLanguageModelLayer = Match.type<AppConfig>().pipe(
+  Match.when({ llm: { provider: "anthropic" } }, (config) => {
+    const client = AnthropicClient.layer({ apiKey: config.llm.apiKey }).pipe(Layer.provide(FetchHttpClient.layer));
+    return Effect.succeed(
+      AnthropicLanguageModel.layer({ model: config.llm.model }).pipe(
+        Layer.provide(RateLimitedAnthropicClientLayer.pipe(Layer.provide(client)))
+      )
+    );
+  }),
+  Match.when({ llm: { provider: "openai" } }, (config) => {
+    const client = OpenAiClient.layer({ apiKey: config.llm.apiKey }).pipe(Layer.provide(FetchHttpClient.layer));
+    return Effect.succeed(
+      OpenAiLanguageModel.layer({ model: config.llm.model }).pipe(
+        Layer.provide(RateLimitedOpenAiClientLayer.pipe(Layer.provide(client)))
+      )
+    );
+  }),
+  Match.orElse(() => UnsupportedLlmProviderError.make({ provider: "google" }))
+);
+
 /**
  * Create LanguageModel layer with ConfigService
  *
@@ -113,26 +134,7 @@ export const makeLanguageModelLayer = Layer.unwrap(
   Effect.gen(function* () {
     const config = yield* ConfigService;
 
-    return yield* Match.value(config.llm.provider).pipe(
-      Match.when("anthropic", () => {
-        const client = AnthropicClient.layer({ apiKey: config.llm.apiKey }).pipe(Layer.provide(FetchHttpClient.layer));
-        return Effect.succeed(
-          AnthropicLanguageModel.layer({ model: config.llm.model }).pipe(
-            Layer.provide(RateLimitedAnthropicClientLayer.pipe(Layer.provide(client)))
-          )
-        );
-      }),
-      Match.when("openai", () => {
-        const client = OpenAiClient.layer({ apiKey: config.llm.apiKey }).pipe(Layer.provide(FetchHttpClient.layer));
-        return Effect.succeed(
-          OpenAiLanguageModel.layer({ model: config.llm.model }).pipe(
-            Layer.provide(RateLimitedOpenAiClientLayer.pipe(Layer.provide(client)))
-          )
-        );
-      }),
-      Match.when("google", (provider) => UnsupportedLlmProviderError.make({ provider })),
-      Match.exhaustive
-    );
+    return yield* selectLanguageModelLayer(config);
   })
 );
 

@@ -431,7 +431,15 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
         }
 
         // Compute hash
-        const hash = yield* sha256Bytes(bytes);
+        const hash = yield* sha256Bytes(bytes).pipe(
+          Effect.mapError((cause) =>
+            ImageFetchError.make({
+              message: "Fetched image hashing failed",
+              url: candidate.sourceUrl,
+              cause: O.some(cause),
+            })
+          )
+        );
 
         return yield* S.decodeUnknownEffect(ImageFetchResult)({ bytes, hash, contentType, candidate }).pipe(
           Effect.mapError((cause) =>

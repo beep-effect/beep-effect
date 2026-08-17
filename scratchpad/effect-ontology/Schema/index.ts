@@ -11,5 +11,4 @@
  */
 
 export { type EntityGraph, type EntityGraphSchema, makeEntitySchema } from "./EntityFactory.ts";
-export { EmptyVocabularyError } from "./Errors.ts";
 export { makeRelationSchema, type RelationGraph, type RelationGraphSchema } from "./RelationFactory.ts";

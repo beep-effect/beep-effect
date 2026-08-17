@@ -33,6 +33,7 @@ const batchIdOption = Options.string("batch-id").pipe(
   Options.withAlias("b"),
   Options.withDescription("Batch ID to analyze")
 );
+const TypeCountOrder = Order.mapInput(Order.flip(Order.Number), (entry: readonly [string, number]) => entry[1]);
 
 const manifestOption = Options.file("manifest").pipe(
   Options.withAlias("m"),
@@ -253,9 +254,7 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
     }
   }
   yield* Console.log("\n--- Entity Type Distribution ---");
-  const sortedTypes = A.fromIterable(typeDistribution)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10);
+  const sortedTypes = A.take(A.sort(A.fromIterable(typeDistribution), TypeCountOrder), 10);
   for (const [type, count] of sortedTypes) {
     yield* Console.log(`  ${type}: ${count}`);
   }

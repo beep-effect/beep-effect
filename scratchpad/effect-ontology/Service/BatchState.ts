@@ -166,7 +166,7 @@ export const BatchStatePersistenceLayer = Persistence.layerKvs.pipe(
  * @category services
  * @since 0.0.0
  */
-export const persistState = Effect.fn(function* (state: BatchState) {
+export const persistState = Effect.fn("BatchState.persistState")(function* (state: BatchState) {
   const storage = yield* StorageService;
   const encoded = yield* encodeState(state).pipe(
     Effect.mapError((cause) =>
@@ -202,9 +202,9 @@ export const persistState = Effect.fn(function* (state: BatchState) {
  * @category services
  * @since 0.0.0
  */
-export const getBatchStateFromStore = Effect.fn(function* (batchId: BatchId) {
+export const getBatchStateFromStore = Effect.fn("BatchState.getFromStore")(function* (batchId: BatchId) {
   const storage = yield* StorageService;
-  const stored = yield* storage.get(stateKey(batchId)).pipe(
+  const stored = yield* storage.getOption(stateKey(batchId)).pipe(
     Effect.mapError((cause) =>
       BatchStatePersistenceError.make({
         batchId,
@@ -216,7 +216,7 @@ export const getBatchStateFromStore = Effect.fn(function* (batchId: BatchId) {
 
   return yield* Effect.transposeOption(
     O.map(
-      O.fromUndefinedOr(stored),
+      stored,
       flow(
         decodeState,
         Effect.mapError((cause) =>
@@ -245,7 +245,7 @@ export const getBatchStateFromStore = Effect.fn(function* (batchId: BatchId) {
  * @category services
  * @since 0.0.0
  */
-export const publishState = Effect.fn(function* (state: BatchState) {
+export const publishState = Effect.fn("BatchState.publishState")(function* (state: BatchState) {
   const hub = yield* BatchStateHub;
   yield* persistState(state);
   yield* PubSub.publish(hub, state);

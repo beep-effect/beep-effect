@@ -231,12 +231,11 @@ const stageFromState = Match.type<BatchState>().pipe(
   Match.exhaustive
 );
 
-const toFailedState = (state: BatchState, cause: Cause.Cause<unknown>): BatchState => {
+const toFailedState = (state: BatchState, cause: Cause.Cause<unknown>, failedAt: DateTime.Utc): BatchState => {
   if (P.isTagged(state, "Failed")) {
     return state;
   }
 
-  const failedAt = DateTime.nowUnsafe();
   const failedStage = stageFromState(state);
 
   return BatchState.cases.Failed.make({
@@ -272,7 +271,7 @@ const pollResultToBatchState = Match.type<Workflow.Result<BatchState, AnyWorkflo
           const stored = yield* getBatchStateFromStore(context.batchId);
           const fallback = O.getOrUndefined(stored);
           if (P.isNotUndefined(fallback)) {
-            return toFailedState(fallback, cause);
+            return toFailedState(fallback, cause, yield* DateTime.now);
           }
           return yield* WorkflowError.make({
             message: `Workflow ${context.executionId} failed`,
@@ -454,7 +453,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             })
       ).pipe(
         Effect.tap(
-          Effect.fn(function* (result) {
+          Effect.fnUntraced(function* (result) {
             const updatedPreprocessingState = BatchState.cases.Preprocessing.make({
               batchId,
               ontologyId: manifest.ontologyId,
@@ -475,7 +474,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
           Effect.fnUntraced(function* (error) {
             yield* Effect.logWarning("Preprocessing failed, continuing with original manifest", {
               batchId,
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
             });
             return {
               enrichedManifestUri: GcsUri.fromUnknown(manifestUri),
@@ -508,11 +507,11 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       const enrichedManifestRaw = yield* storage.get(enrichedManifestKey).pipe(
         Effect.flatMap((opt) => expectValue(O.fromNullishOr(opt), enrichedManifestKey)),
         Effect.catch(
-          Effect.fn(function* (error) {
+          Effect.fnUntraced(function* (error) {
             yield* Effect.logWarning("Failed to load enriched manifest, falling back to basic manifest", {
               batchId,
               enrichedManifestUri: preprocessingResult.enrichedManifestUri,
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
             });
             // Return null to signal fallback
             return null;
@@ -548,7 +547,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       // Continues processing remaining documents even when some fail
       const extractionResults = yield* Effect.forEach(
         manifest.documents,
-        Effect.fn(function* (doc) {
+        Effect.fnUntraced(function* (doc) {
           const startedAt = yield* DateTime.now;
 
           // Mark document as processing
@@ -591,7 +590,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
               })
             ),
             Effect.catch(
-              Effect.fn(function* (error) {
+              Effect.fnUntraced(function* (error) {
                 const completedAt = yield* DateTime.now;
                 const errorMessage = serializeError(error);
 
@@ -823,7 +822,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             Effect.catch((error) =>
               Effect.logWarning("Failed to publish ValidationFailed event", {
                 batchId,
-                error: String(error),
+                error: Inspectable.toStringUnknown(error),
               })
             )
           );
@@ -938,7 +937,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
           Effect.catch((error) =>
             Effect.logWarning("Failed to publish ExtractionCompleted event", {
               batchId,
-              error: String(error),
+              error: Inspectable.toStringUnknown(error),
             })
           )
         );

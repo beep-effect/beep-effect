@@ -198,7 +198,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
        *
        * @param ontologyId - Ontology scope for candidate retrieval
        */
-      const loadCandidates = Effect.fn(function* (
+      const loadCandidates = Effect.fn("CrossBatchEntityResolver.loadCandidates")(function* (
         ontologyId: string,
         entities: ReadonlyArray<Entity>,
         config: CrossBatchResolverConfig = DEFAULT_CONFIG
@@ -325,7 +325,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
        *
        * @param ontologyId - Ontology scope for entity creation
        */
-      const updateRegistry = Effect.fn(function* (
+      const updateRegistry = Effect.fn("CrossBatchEntityResolver.updateRegistry")(function* (
         ontologyId: string,
         resolutionResult: {
           canonicalMap: Record<string, string>;
@@ -401,7 +401,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
        *
        * @param ontologyId - Ontology scope for entity resolution
        */
-      const resolve = Effect.fn(function* (
+      const resolve = Effect.fn("CrossBatchEntityResolver.resolve")(function* (
         ontologyId: string,
         entities: ReadonlyArray<Entity>,
         batchId: string,
@@ -472,7 +472,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
       /**
        * Check if entity registry is empty
        */
-      const isEmpty = Effect.fn(function* (ontologyId: string) {
+      const isEmpty = Effect.fn("CrossBatchEntityResolver.isEmpty")(function* (ontologyId: string) {
         const count = yield* registry.countCanonicalEntities(ontologyId);
         return count === 0;
       });

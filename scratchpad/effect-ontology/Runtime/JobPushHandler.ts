@@ -12,7 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { DateTime, Effect, Match } from "effect";
+import { DateTime, Effect, Inspectable, Match } from "effect";
 import * as S from "effect/Schema";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
@@ -200,7 +200,7 @@ export const JobPushRouter = HttpRouter.addAll([
             {
               processed: false,
               messageId: "unknown",
-              error: `Parse error: ${String(error)}`,
+              error: `Parse error: ${Inspectable.toStringUnknown(error)}`,
             },
             { status: 400 }
           ),

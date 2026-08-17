@@ -9,7 +9,7 @@ import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Cause, DateTime, Effect, HashSet, Layer, MutableHashMap, MutableHashSet, Random } from "effect";
+import { Cause, DateTime, Effect, HashSet, Inspectable, Layer, MutableHashMap, MutableHashSet, Random } from "effect";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
@@ -93,7 +93,7 @@ const OntologyScopeQuery = S.Struct({ ontologyId: S.NonEmptyString }).annotate({
   description: "Required ontology scope for repository-backed HTTP lookups.",
 });
 
-const createManifest = Effect.fn(function* (request: BatchRequest) {
+const createManifest = Effect.fn("HttpServer.createManifest")(function* (request: BatchRequest) {
   const storage = yield* StorageService;
   const now = yield* DateTime.now;
   const batchId = yield* O.match(request.batchId, {
@@ -142,7 +142,7 @@ const createManifest = Effect.fn(function* (request: BatchRequest) {
   });
 });
 
-const stageManifest = Effect.fn(function* (manifest: BatchManifest) {
+const stageManifest = Effect.fn("HttpServer.stageManifest")(function* (manifest: BatchManifest) {
   const storage = yield* StorageService;
   const config = yield* ConfigService;
 
@@ -184,7 +184,7 @@ const toPayload = (
 // Timeline API Helpers
 // =============================================================================
 
-const articleRowToArticleSummary = Effect.fn(function* (article: ArticleRow) {
+const articleRowToArticleSummary = Effect.fn("HttpServer.articleRowToArticleSummary")(function* (article: ArticleRow) {
   const now = yield* DateTime.now;
   const uri = yield* IRI.decodeEffect(article.uri);
   return ArticleSummary.make({
@@ -197,7 +197,10 @@ const articleRowToArticleSummary = Effect.fn(function* (article: ArticleRow) {
   });
 });
 
-const claimRowToClaimWithRank = Effect.fn(function* (claim: ClaimRow, article: ArticleRow) {
+const claimRowToClaimWithRank = Effect.fn("HttpServer.claimRowToClaimWithRank")(function* (
+  claim: ClaimRow,
+  article: ArticleRow
+) {
   const now = yield* DateTime.now;
   const subject = yield* IRI.decodeEffect(claim.subjectIri);
   const predicate = yield* IRI.decodeEffect(claim.predicateIri);
@@ -303,7 +306,7 @@ export const TimelineRouter = HttpRouter.addAll([
       // Get articles for each claim
       const claimsWithArticles = yield* Effect.forEach(
         claims,
-        Effect.fn(function* (claim) {
+        Effect.fnUntraced(function* (claim) {
           const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
           if (O.isNone(articleOpt)) {
             return O.none<ClaimWithRank>();
@@ -366,7 +369,7 @@ export const TimelineRouter = HttpRouter.addAll([
       // Get articles for each claim
       const claimsWithArticles = yield* Effect.forEach(
         claimResults,
-        Effect.fn(function* (claim) {
+        Effect.fnUntraced(function* (claim) {
           const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
           if (O.isNone(articleOpt)) {
             return O.none<ClaimWithRank>();
@@ -502,7 +505,7 @@ export const SearchRouter = HttpRouter.addAll([
             },
             { status: 400 }
           ),
-        onSuccess: Effect.fn(function* (request) {
+        onSuccess: Effect.fnUntraced(function* (request) {
           const claimRepo = yield* ClaimRepository;
           const articleRepo = yield* ArticleRepository;
 
@@ -585,7 +588,7 @@ export const SearchRouter = HttpRouter.addAll([
             },
             { status: 400 }
           ),
-        onSuccess: Effect.fn(function* (request) {
+        onSuccess: Effect.fnUntraced(function* (request) {
           const claimRepo = yield* ClaimRepository;
 
           const limit = request.limit;
@@ -744,7 +747,7 @@ export const SearchRouter = HttpRouter.addAll([
             },
             { status: 400 }
           ),
-        onSuccess: Effect.fn(function* (request) {
+        onSuccess: Effect.fnUntraced(function* (request) {
           const articleRepo = yield* ArticleRepository;
           const claimRepo = yield* ClaimRepository;
 
@@ -787,7 +790,7 @@ export const SearchRouter = HttpRouter.addAll([
           // Get claim counts
           const results = yield* Effect.forEach(
             page,
-            Effect.fn(function* (article) {
+            Effect.fnUntraced(function* (article) {
               const claims = yield* claimRepo.getClaims({
                 ontologyId: request.ontologyId,
                 articleId: article.id,
@@ -884,7 +887,7 @@ export const ExtractionRouter = HttpRouter.addAll([
           HttpServerResponse.json(
             {
               error: "NOT_FOUND",
-              message: String(error),
+              message: Inspectable.toStringUnknown(error),
             },
             { status: 404 }
           )

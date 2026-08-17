@@ -12,7 +12,7 @@
 
 import { NonNegativeInt } from "@beep/schema/Int";
 import { EpochMillis } from "@beep/schema/Timestamp";
-import { Clock, Context, Effect, HashMap, HashSet, Layer, Order, Ref } from "effect";
+import { Cause, Clock, Context, Effect, HashMap, HashSet, Layer, Order, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -461,7 +461,7 @@ export interface PersistentEntityIndexService extends EntityIndexService {
    * Load index from GCS
    * @returns Number of entities loaded, 0 if no persisted index found
    */
-  readonly load: Effect.Effect<number>;
+  readonly load: Effect.Effect<number, Effect.Error<ReturnType<StorageServiceMethods["getOption"]>>>;
 
   /**
    * Get index statistics
@@ -566,15 +566,17 @@ export const makePersistentEntityIndex = dual3(
           Effect.tap(() =>
             Effect.logInfo("EntityIndex persisted", { path: blobPath, entityCount: serialized.entities.length })
           ),
-          Effect.catch((error) => Effect.logWarning("Failed to persist EntityIndex", { error: String(error) }))
+          Effect.catchCause((cause) =>
+            Effect.logWarning("Failed to persist EntityIndex", { cause: Cause.pretty(cause) })
+          )
         );
       });
 
       const load = Effect.gen(function* () {
         const blobPath = `${indexPath}/current.json`;
-        const content = yield* storage.get(blobPath).pipe(Effect.orElseSucceed(() => undefined));
-        if (P.isUndefined(content)) return 0;
-        const decoded = decodeSerializedEntityIndex(content);
+        const content = yield* storage.getOption(blobPath);
+        if (O.isNone(content)) return 0;
+        const decoded = decodeSerializedEntityIndex(content.value);
         if (O.isNone(decoded)) {
           yield* Effect.logWarning("Failed to decode persisted EntityIndex", { path: blobPath });
           return 0;

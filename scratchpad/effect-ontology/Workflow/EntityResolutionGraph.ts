@@ -406,7 +406,7 @@ const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
  * @since 0.0.0
  */
 export const buildEntityResolutionGraph = dual2(
-  Effect.fn(function* (
+  Effect.fn("EntityResolutionGraph.build")(function* (
     kg: KnowledgeGraph,
     config: EntityResolutionConfig
   ): Effect.fn.Return<EntityResolutionGraph, never, EmbeddingService> {
@@ -547,11 +547,12 @@ export const buildEntityResolutionGraph = dual2(
       }
     });
 
+    const createdAt = yield* DateTime.now;
     return EntityResolutionGraphModel.make({
       graph,
       entityIndex,
       canonicalMap,
-      createdAt: DateTime.nowUnsafe(),
+      createdAt,
       stats: EntityResolutionStats.make({
         mentionCount: NonNegativeInt.make(mentionRecords.length),
         resolvedCount: NonNegativeInt.make(resolvedEntities.length),

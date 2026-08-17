@@ -62,7 +62,6 @@ export class VocabularyRef extends S.Class<VocabularyRef>($I`VocabularyRef`)(
   })
 ) {
   static readonly is = S.is(VocabularyRef);
-  static readonly fromUnknown = S.decodeUnknownSync(VocabularyRef);
 }
 
 /**
@@ -125,7 +124,6 @@ export class OntologySummary extends S.Class<OntologySummary>($I`OntologySummary
   })
 ) {
   static readonly is = S.is(OntologySummary);
-  static readonly fromUnknown = S.decodeUnknownSync(OntologySummary);
 }
 
 /**
@@ -206,7 +204,6 @@ export class ClassSummary extends S.Class<ClassSummary>($I`ClassSummary`)(
   })
 ) {
   static readonly is = S.is(ClassSummary);
-  static readonly fromUnknown = S.decodeUnknownSync(ClassSummary);
 }
 
 /**
@@ -276,7 +273,6 @@ export class PropertySummary extends S.Class<PropertySummary>($I`PropertySummary
   })
 ) {
   static readonly is = S.is(PropertySummary);
-  static readonly fromUnknown = S.decodeUnknownSync(PropertySummary);
 }
 
 /**
@@ -454,5 +450,4 @@ export class OntologyDetailResponse extends S.Class<OntologyDetailResponse>($I`O
   })
 ) {
   static readonly is = S.is(OntologyDetailResponse);
-  static readonly fromUnknown = S.decodeUnknownSync(OntologyDetailResponse);
 }

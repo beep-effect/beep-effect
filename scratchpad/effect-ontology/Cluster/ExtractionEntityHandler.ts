@@ -201,8 +201,8 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       yield* Ref.update(cancellationRegistry, HashMap.set(keyString, cancelSignal));
 
       const existingRun = yield* runService.getByKey(idempotencyKey);
-      if (P.isNotNull(existingRun) && RunStatus.guards.Complete(existingRun.status)) {
-        const stats = O.getOrElse(existingRun.stats, () => emptyStats);
+      if (O.isSome(existingRun) && RunStatus.guards.Complete(existingRun.value.status)) {
+        const stats = O.getOrElse(existingRun.value.stats, () => emptyStats);
         return Stream.make(
           yield* makeEvent(runId, "extraction_complete", 100, {
             totalEntities: "entityCount" in stats ? stats.entityCount : stats.totalEntities,
@@ -403,8 +403,8 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
     function* (envelope: ClusterEntity.Request<typeof GetCachedResultRpc>) {
       const key = IdempotencyKey.make(envelope.payload.idempotencyKey);
       const run = yield* runService.getByKey(key);
-      if (P.isNull(run) || !P.isTagged(run.status, "Complete")) return O.none<KnowledgeGraphResult>();
-      const durationMs = O.match(run.stats, {
+      if (O.isNone(run) || !P.isTagged(run.value.status, "Complete")) return O.none<KnowledgeGraphResult>();
+      const durationMs = O.match(run.value.stats, {
         onNone: thunk0,
         onSome: (stats) => Duration.toMillis(stats.duration),
       });
@@ -413,9 +413,9 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         relations: [],
         metadata: {
           idempotencyKey: envelope.payload.idempotencyKey,
-          ontologyId: `${run.config.ontology.namespace}/${run.config.ontology.name}`,
-          ontologyVersion: O.getOrElse(run.ontologyVersion, () => ""),
-          extractedAt: DateTime.formatIso(run.status.completedAt),
+          ontologyId: `${run.value.config.ontology.namespace}/${run.value.config.ontology.name}`,
+          ontologyVersion: O.getOrElse(run.value.ontologyVersion, () => ""),
+          extractedAt: DateTime.formatIso(run.value.status.completedAt),
           durationMs,
         },
       });
@@ -427,8 +427,8 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
     function* (envelope: ClusterEntity.Request<typeof CancelExtractionRpc>) {
       const key = IdempotencyKey.make(envelope.payload.idempotencyKey);
       const run = yield* runService.getByKey(key);
-      if (P.isNull(run)) return yield* ExtractionError.make({ message: "Extraction not found" });
-      if (P.isTagged(run.status, "Complete") || P.isTagged(run.status, "Failed")) return false;
+      if (O.isNone(run)) return yield* ExtractionError.make({ message: "Extraction not found" });
+      if (P.isTagged(run.value.status, "Complete") || P.isTagged(run.value.status, "Failed")) return false;
 
       const signal = HashMap.get(yield* Ref.get(cancellationRegistry), key);
       if (O.isSome(signal)) {
@@ -436,7 +436,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         yield* Ref.update(cancellationRegistry, HashMap.remove(key));
       }
       yield* runService.failRun(
-        run.id,
+        run.value.id,
         "cancelled",
         O.getOrElse(envelope.payload.reason, () => "User cancelled")
       );
@@ -448,7 +448,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
   const getExtractionStatus = Effect.fn("ExtractionEntityHandler.getExtractionStatus")(
     function* (envelope: ClusterEntity.Request<typeof GetExtractionStatusRpc>) {
       const run = yield* runService.getByKey(IdempotencyKey.make(envelope.payload.idempotencyKey));
-      if (P.isNull(run)) {
+      if (O.isNone(run)) {
         return ExtractionStatus.cases.pending.make({
           progress: O.some(Percentage.make(0)),
           startedAt: O.none<string>(),
@@ -456,19 +456,21 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           error: O.none<string>(),
         });
       }
-      const completedAt = P.isTagged(run.status, "Complete")
-        ? O.some(DateTime.formatIso(run.status.completedAt))
+      const completedAt = P.isTagged(run.value.status, "Complete")
+        ? O.some(DateTime.formatIso(run.value.status.completedAt))
         : O.none();
-      const error = P.isTagged(run.status, "Failed") ? O.some(run.status.error.message) : O.none();
+      const error = P.isTagged(run.value.status, "Failed") ? O.some(run.value.status.error.message) : O.none();
       const fields = {
         progress: O.some(
-          Percentage.make(P.isTagged(run.status, "Complete") ? 100 : P.isTagged(run.status, "Running") ? 50 : 0)
+          Percentage.make(
+            P.isTagged(run.value.status, "Complete") ? 100 : P.isTagged(run.value.status, "Running") ? 50 : 0
+          )
         ),
-        startedAt: O.some(DateTime.formatIso(run.createdAt)),
+        startedAt: O.some(DateTime.formatIso(run.value.createdAt)),
         completedAt,
         error,
       };
-      return RunStatus.match(run.status, {
+      return RunStatus.match(run.value.status, {
         Pending: (): ExtractionStatus => ExtractionStatus.cases.pending.make(fields),
         Running: (): ExtractionStatus => ExtractionStatus.cases.running.make(fields),
         Complete: (): ExtractionStatus => ExtractionStatus.cases.complete.make(fields),

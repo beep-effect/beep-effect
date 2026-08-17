@@ -410,162 +410,160 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
     /**
      * Search for entities matching the query
      */
-    const searchEntities = (
+    const searchEntities = Effect.fn("WikidataClient.searchEntities")(function* (
       query: string,
       input: SearchOptionsInput = {}
-    ): Effect.Effect<ReadonlyArray<WikidataCandidate>, WikidataApiError | WikidataRateLimitError> =>
-      Effect.gen(function* () {
-        const { language, limit, strictLanguage, type } = SearchOptions.make(input);
-        yield* awaitRateLimit;
+    ): Effect.fn.Return<ReadonlyArray<WikidataCandidate>, WikidataApiError | WikidataRateLimitError> {
+      const { language, limit, strictLanguage, type } = SearchOptions.make(input);
+      yield* awaitRateLimit;
 
-        // Build request
-        const params = new URLSearchParams({
-          action: "wbsearchentities",
-          format: "json",
-          search: query,
-          language,
-          uselang: language,
-          type,
-          limit: String(Math.min(limit, 50)),
-          strictlanguage: strictLanguage ? "1" : "0",
-          // Respect server load with maxlag
-          maxlag: "5",
-        });
-
-        const request = HttpClientRequest.get(`${WIKIDATA_API_URL}?${params.toString()}`);
-
-        const res = yield* httpClient.execute(request).pipe(
-          Effect.mapError((error) =>
-            WikidataApiError.make({
-              message: `Failed to search Wikidata: ${error}`,
-              cause: O.some(error),
-            })
-          )
-        );
-
-        // Check for rate limiting
-        if (res.status === 429) {
-          const retryAfter = res.headers["retry-after"];
-          const seconds = P.isTruthy(retryAfter) ? parseInt(retryAfter, 10) : 60;
-          return yield* WikidataRateLimitError.make({
-            retryAfter: Duration.seconds(seconds),
-          });
-        }
-
-        // Check for maxlag exceeded
-        if (res.status === 503) {
-          return yield* WikidataRateLimitError.make({
-            retryAfter: Duration.seconds(5),
-          });
-        }
-
-        // Parse JSON from response
-        const response = yield* res.json.pipe(
-          Effect.mapError((error) =>
-            WikidataApiError.make({
-              message: `Failed to parse Wikidata response: ${error}`,
-              cause: O.some(error),
-            })
-          )
-        );
-
-        // Parse response
-        const parsed = yield* S.decodeUnknownEffect(WikidataSearchResponse)(response).pipe(
-          Effect.mapError((error) =>
-            WikidataApiError.make({
-              message: `Failed to parse Wikidata response: ${error}`,
-              cause: O.some(error),
-            })
-          )
-        );
-
-        // Convert to candidates with scores
-        const candidates = A.map(
-          parsed.search,
-          (result, index): WikidataCandidate => ({
-            qid: result.id,
-            label: O.getOrElse(result.label, () => result.title),
-            description: result.description,
-            matchType: result.match.type === "label" ? "label" : "alias",
-            matchLanguage: result.match.language,
-            score: Percentage.make(calculateScore(query, result, index, parsed.search.length)),
-            conceptUri: result.concepturi,
-          })
-        );
-
-        // Sort by score descending
-        return A.sort(
-          candidates,
-          Order.mapInput(Order.flip(Order.Number), (candidate: WikidataCandidate) => candidate.score)
-        );
+      // Build request
+      const params = new URLSearchParams({
+        action: "wbsearchentities",
+        format: "json",
+        search: query,
+        language,
+        uselang: language,
+        type,
+        limit: String(Math.min(limit, 50)),
+        strictlanguage: strictLanguage ? "1" : "0",
+        // Respect server load with maxlag
+        maxlag: "5",
       });
+
+      const request = HttpClientRequest.get(`${WIKIDATA_API_URL}?${params.toString()}`);
+
+      const res = yield* httpClient.execute(request).pipe(
+        Effect.mapError((error) =>
+          WikidataApiError.make({
+            message: `Failed to search Wikidata: ${error}`,
+            cause: O.some(error),
+          })
+        )
+      );
+
+      // Check for rate limiting
+      if (res.status === 429) {
+        const retryAfter = res.headers["retry-after"];
+        const seconds = P.isTruthy(retryAfter) ? parseInt(retryAfter, 10) : 60;
+        return yield* WikidataRateLimitError.make({
+          retryAfter: Duration.seconds(seconds),
+        });
+      }
+
+      // Check for maxlag exceeded
+      if (res.status === 503) {
+        return yield* WikidataRateLimitError.make({
+          retryAfter: Duration.seconds(5),
+        });
+      }
+
+      // Parse JSON from response
+      const response = yield* res.json.pipe(
+        Effect.mapError((error) =>
+          WikidataApiError.make({
+            message: `Failed to parse Wikidata response: ${error}`,
+            cause: O.some(error),
+          })
+        )
+      );
+
+      // Parse response
+      const parsed = yield* S.decodeUnknownEffect(WikidataSearchResponse)(response).pipe(
+        Effect.mapError((error) =>
+          WikidataApiError.make({
+            message: `Failed to parse Wikidata response: ${error}`,
+            cause: O.some(error),
+          })
+        )
+      );
+
+      // Convert to candidates with scores
+      const candidates = A.map(
+        parsed.search,
+        (result, index): WikidataCandidate => ({
+          qid: result.id,
+          label: O.getOrElse(result.label, () => result.title),
+          description: result.description,
+          matchType: result.match.type === "label" ? "label" : "alias",
+          matchLanguage: result.match.language,
+          score: Percentage.make(calculateScore(query, result, index, parsed.search.length)),
+          conceptUri: result.concepturi,
+        })
+      );
+
+      // Sort by score descending
+      return A.sort(
+        candidates,
+        Order.mapInput(Order.flip(Order.Number), (candidate: WikidataCandidate) => candidate.score)
+      );
+    });
 
     /**
      * Get entity details by Q-ID
      */
-    const getEntity = (
+    const getEntity = Effect.fn("WikidataClient.getEntity")(function* (
       qid: string,
       language: string = "en"
-    ): Effect.Effect<WikidataCandidate | null, WikidataApiError> =>
-      Effect.gen(function* () {
-        yield* awaitRateLimit;
-        const params = new URLSearchParams({
-          action: "wbgetentities",
-          format: "json",
-          ids: qid,
-          languages: language,
-          props: "labels|descriptions|aliases",
-        });
-
-        const request = HttpClientRequest.get(`${WIKIDATA_API_URL}?${params.toString()}`);
-
-        const res = yield* httpClient.execute(request).pipe(
-          Effect.mapError((error) =>
-            WikidataApiError.make({
-              message: `Failed to get entity ${qid}: ${error}`,
-              cause: O.some(error),
-            })
-          )
-        );
-
-        const response = yield* res.json.pipe(
-          Effect.mapError((error) =>
-            WikidataApiError.make({
-              message: `Failed to parse entity response: ${error}`,
-              cause: O.some(error),
-            })
-          )
-        );
-
-        const decoded = yield* S.decodeUnknownEffect(WikidataEntityResponse)(response).pipe(
-          Effect.mapError((error) =>
-            WikidataApiError.make({
-              message: "Failed to decode entity response",
-              cause: O.some(error),
-            })
-          )
-        );
-        const entity = R.get(decoded.entities, qid);
-        if (O.isNone(entity)) {
-          return null;
-        }
-
-        const label = O.getOrElse(
-          O.map(R.get(entity.value.labels, language), (text) => text.value),
-          () => qid
-        );
-        const description = O.map(R.get(entity.value.descriptions, language), (text) => text.value);
-
-        return {
-          qid: entity.value.id,
-          label,
-          description,
-          matchType: "label",
-          matchLanguage: language,
-          score: Percentage.make(100), // Direct lookup
-          conceptUri: `https://www.wikidata.org/entity/${qid}`,
-        };
+    ): Effect.fn.Return<O.Option<WikidataCandidate>, WikidataApiError> {
+      yield* awaitRateLimit;
+      const params = new URLSearchParams({
+        action: "wbgetentities",
+        format: "json",
+        ids: qid,
+        languages: language,
+        props: "labels|descriptions|aliases",
       });
+
+      const request = HttpClientRequest.get(`${WIKIDATA_API_URL}?${params.toString()}`);
+
+      const res = yield* httpClient.execute(request).pipe(
+        Effect.mapError((error) =>
+          WikidataApiError.make({
+            message: `Failed to get entity ${qid}: ${error}`,
+            cause: O.some(error),
+          })
+        )
+      );
+
+      const response = yield* res.json.pipe(
+        Effect.mapError((error) =>
+          WikidataApiError.make({
+            message: `Failed to parse entity response: ${error}`,
+            cause: O.some(error),
+          })
+        )
+      );
+
+      const decoded = yield* S.decodeUnknownEffect(WikidataEntityResponse)(response).pipe(
+        Effect.mapError((error) =>
+          WikidataApiError.make({
+            message: "Failed to decode entity response",
+            cause: O.some(error),
+          })
+        )
+      );
+      const entity = R.get(decoded.entities, qid);
+      if (O.isNone(entity)) {
+        return O.none();
+      }
+
+      const label = O.getOrElse(
+        O.map(R.get(entity.value.labels, language), (text) => text.value),
+        () => qid
+      );
+      const description = O.map(R.get(entity.value.descriptions, language), (text) => text.value);
+
+      return O.some({
+        qid: entity.value.id,
+        label,
+        description,
+        matchType: "label",
+        matchLanguage: language,
+        score: Percentage.make(100), // Direct lookup
+        conceptUri: `https://www.wikidata.org/entity/${qid}`,
+      });
+    });
 
     /**
      * Validate Q-ID format

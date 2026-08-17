@@ -11,7 +11,7 @@
  */
 
 import { Unknown } from "@beep/schema/Unknown";
-import { Effect } from "effect";
+import { Effect, Inspectable } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -73,7 +73,7 @@ export const AssetRouter = HttpRouter.addAll([
           Effect.logWarning("Storage error fetching document content", {
             path,
             docId,
-            error: String(error),
+            error: Inspectable.toStringUnknown(error),
           })
         )
       );
@@ -128,7 +128,7 @@ export const AssetRouter = HttpRouter.addAll([
           Effect.logWarning("Storage error fetching document graph", {
             path,
             docId,
-            error: String(error),
+            error: Inspectable.toStringUnknown(error),
           })
         )
       );
@@ -201,7 +201,7 @@ export const AssetRouter = HttpRouter.addAll([
           Effect.logWarning("Storage error fetching link content", {
             storageUri: link.value.storageUri,
             linkId,
-            error: String(error),
+            error: Inspectable.toStringUnknown(error),
           })
         )
       );
@@ -262,7 +262,7 @@ export const AssetRouter = HttpRouter.addAll([
           Effect.logWarning("Storage error fetching validation report", {
             path,
             batchId: rawBatchId,
-            error: String(error),
+            error: Inspectable.toStringUnknown(error),
           })
         )
       );
@@ -334,7 +334,7 @@ export const AssetRouter = HttpRouter.addAll([
           Effect.logWarning("Storage error fetching canonical graph", {
             path,
             batchId: rawBatchId,
-            error: String(error),
+            error: Inspectable.toStringUnknown(error),
           })
         )
       );

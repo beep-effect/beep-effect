@@ -10,15 +10,20 @@
  * @since 0.0.0
  */
 
-import type { Quad } from "@beep/rdf/Rdf";
+import { $ScratchpadId } from "@beep/identity";
+import { Quad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { NonNegativeInt } from "@beep/schema";
 import { Effect, HashMap, MutableHashSet } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { RdfStore } from "../Service/Rdf.ts";
 import { rdfStoreAllQuads } from "../Service/Rdf.ts";
 import { dual2 } from "./Dual.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Utils/QuadDelta");
 
 /**
  * Serializes a quad to a canonical string form for comparison.
@@ -46,29 +51,35 @@ const serializeQuad = (quad: Quad): string => {
 /**
  * Delta result containing new quads and statistics
  *
- * **Example** (Reference QuadDelta fields)
+ * **Example** (Construct an empty delta)
  *
  * ```ts
- * import type { QuadDelta } from "@effect-ontology/Utils/QuadDelta"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { QuadDelta } from "@effect-ontology/Utils/QuadDelta"
  *
- * const quadDeltaFields: ReadonlyArray<keyof QuadDelta> = ["newQuads", "originalCount", "enrichedCount"]
- *
- * console.log(quadDeltaFields)
+ * const delta = QuadDelta.make({
+ *   newQuads: [],
+ *   originalCount: NonNegativeInt.make(0),
+ *   enrichedCount: NonNegativeInt.make(0),
+ *   deltaCount: NonNegativeInt.make(0)
+ * })
+ * console.log(delta.deltaCount) // 0
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface QuadDelta {
-  /** Quads present in enriched but not in original */
-  readonly newQuads: ReadonlyArray<Quad>;
-  /** Count of original quads */
-  readonly originalCount: number;
-  /** Count of enriched quads */
-  readonly enrichedCount: number;
-  /** Count of new quads (enrichedCount - originalCount if no duplicates removed) */
-  readonly deltaCount: number;
-}
+export class QuadDelta extends S.Class<QuadDelta>($I`QuadDelta`)(
+  {
+    newQuads: S.Array(Quad).annotateKey({ description: "Quads present in the enriched graph only." }),
+    originalCount: NonNegativeInt.annotateKey({ description: "Number of quads in the original graph." }),
+    enrichedCount: NonNegativeInt.annotateKey({ description: "Number of quads in the enriched graph." }),
+    deltaCount: NonNegativeInt.annotateKey({ description: "Number of newly inferred quads." }),
+  },
+  $I.annote("QuadDelta", {
+    description: "New RDF quads and non-negative graph-size statistics for one enrichment delta.",
+  })
+) {}
 
 /**
  * Computes the delta between two RDF stores.
@@ -118,12 +129,12 @@ export const computeQuadDelta: {
         }
       }
 
-      return {
+      return QuadDelta.make({
         newQuads,
-        originalCount: originalQuads.length,
-        enrichedCount: enrichedQuads.length,
-        deltaCount: newQuads.length,
-      };
+        originalCount: NonNegativeInt.make(originalQuads.length),
+        enrichedCount: NonNegativeInt.make(enrichedQuads.length),
+        deltaCount: NonNegativeInt.make(newQuads.length),
+      });
     })
 );
 
@@ -135,12 +146,15 @@ export const computeQuadDelta: {
  * Useful for understanding which reasoning rules contributed
  * to the inferred triples.
  *
- * **Example** (Inspect group delta by predicate)
+ * **Example** (Group an empty delta)
  *
  * ```ts
- * import { groupDeltaByPredicate } from "@effect-ontology/Utils/QuadDelta"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import * as HashMap from "effect/HashMap"
+ * import { groupDeltaByPredicate, QuadDelta } from "@effect-ontology/Utils/QuadDelta"
  *
- * console.log(groupDeltaByPredicate)
+ * const zero = NonNegativeInt.make(0)
+ * console.log(HashMap.size(groupDeltaByPredicate(QuadDelta.make({ newQuads: [], originalCount: zero, enrichedCount: zero, deltaCount: zero })))) // 0
  * ```
  *
  * @category utilities
@@ -161,12 +175,14 @@ export const groupDeltaByPredicate = (delta: QuadDelta): HashMap.HashMap<string,
 /**
  * Filters delta to only include type inferences (rdf:type triples).
  *
- * **Example** (Inspect filter type inferences)
+ * **Example** (Filter an empty delta)
  *
  * ```ts
- * import { filterTypeInferences } from "@effect-ontology/Utils/QuadDelta"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { filterTypeInferences, QuadDelta } from "@effect-ontology/Utils/QuadDelta"
  *
- * console.log(filterTypeInferences)
+ * const zero = NonNegativeInt.make(0)
+ * console.log(filterTypeInferences(QuadDelta.make({ newQuads: [], originalCount: zero, enrichedCount: zero, deltaCount: zero })).length) // 0
  * ```
  *
  * @category utilities
@@ -178,12 +194,14 @@ export const filterTypeInferences = (delta: QuadDelta): ReadonlyArray<Quad> =>
 /**
  * Creates a summary of the delta for logging/telemetry.
  *
- * **Example** (Inspect summarize delta)
+ * **Example** (Summarize an empty delta)
  *
  * ```ts
- * import { summarizeDelta } from "@effect-ontology/Utils/QuadDelta"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { summarizeDelta, QuadDelta } from "@effect-ontology/Utils/QuadDelta"
  *
- * console.log(summarizeDelta)
+ * const zero = NonNegativeInt.make(0)
+ * console.log(summarizeDelta(QuadDelta.make({ newQuads: [], originalCount: zero, enrichedCount: zero, deltaCount: zero })).inferenceRatio) // 0
  * ```
  *
  * @category utilities

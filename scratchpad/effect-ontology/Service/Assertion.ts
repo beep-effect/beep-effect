@@ -327,7 +327,15 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         .toString(36)
         .slice(0, 6);
       const uniqueSuffix = `${(yield* Clock.currentTimeMillis).toString(36)}${randomSuffix}`;
-      const id = AssertionId.fromContentHash(ContentHash.make(yield* sha256(uniqueSuffix)));
+      const hash = yield* sha256(uniqueSuffix).pipe(
+        Effect.mapError(() =>
+          AssertionError.make({
+            operation: "create",
+            message: "Failed to compute the assertion identifier",
+          })
+        )
+      );
+      const id = AssertionId.fromContentHash(ContentHash.make(hash));
       const assertionRow: AssertionRow = {
         id,
         ontologyId: input.ontologyId,
@@ -647,7 +655,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
     /**
      * Get count of assertions matching filter
      */
-    const count = Effect.fn(function* (filter: AssertionFilter) {
+    const count = Effect.fn("Assertion.count")(function* (filter: AssertionFilter) {
       const results = yield* query(filter);
       return results.length;
     });

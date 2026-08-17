@@ -233,7 +233,7 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
         // Track shapes cache for getShapesCacheStats
         const shapesCache = yield* Ref.make(HashMap.empty<string, N3.Store>());
 
-        const makeReport = Effect.fn(function* (
+        const makeReport = Effect.fn("ShaclWorkflow.makeReport")(function* (
           dataStore: RdfStore,
           shapesStore: RdfStore
         ): Effect.fn.Return<ShaclValidationReport> {
@@ -348,9 +348,9 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
         validateWithReport,
         loadShapes,
         loadShapesFromUri: Effect.fn("ShaclService.loadShapesFromUri")((shapesUri: string) =>
-          storage.get(stripGsPrefix(shapesUri)).pipe(
+          storage.getOption(stripGsPrefix(shapesUri)).pipe(
             Effect.flatMap((maybeContent) =>
-              O.match(O.fromNullishOr(maybeContent), {
+              O.match(maybeContent, {
                 onNone: () =>
                   Effect.fail(
                     ShapesLoadError.make({

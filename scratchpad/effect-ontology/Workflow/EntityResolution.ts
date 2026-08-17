@@ -251,7 +251,7 @@ const mergeEntityCluster = (
  * @since 0.0.0
  */
 export const resolveEntities = dual2(
-  Effect.fn(function* (
+  Effect.fn("EntityResolution.resolve")(function* (
     graph: KnowledgeGraph,
     input: EntityResolutionConfigInput
   ): Effect.fn.Return<KnowledgeGraph, never, never> {

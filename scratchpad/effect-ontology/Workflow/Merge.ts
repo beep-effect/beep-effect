@@ -10,15 +10,21 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import type { IRI } from "@beep/rdf";
+import { NonNegativeInt } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { HashMap, HashSet, MutableHashMap, Order } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import type { Relation } from "../Domain/Model/Entity.ts";
 import { Entity, KnowledgeGraph, RelationObject } from "../Domain/Model/Entity.ts";
+import { EntityId } from "../Domain/Model/shared.ts";
 import { dual2 } from "../Utils/Dual.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Workflow/Merge");
 
 /**
  * Merge conflict information
@@ -28,40 +34,37 @@ import { dual2 } from "../Utils/Dual.ts";
  * Records conflicts detected during entity attribute merging.
  *
  *
- * **Example** (Use the MergeConflict contract)
+ * **Example** (Construct a merge conflict)
  *
  * ```ts
- * import type { MergeConflict } from "@effect-ontology/Workflow/Merge"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { MergeConflict } from "@effect-ontology/Workflow/Merge"
  *
- * const acceptsMergeConflict = (_value: MergeConflict): void => undefined
- *
- * console.log(acceptsMergeConflict)
+ * const conflict = MergeConflict.make({
+ *   entityId: EntityId.make("entity_1"),
+ *   property: "name",
+ *   values: ["Ada", "Augusta"],
+ *   chunkIndexes: []
+ * })
+ * console.log(conflict.property) // "name"
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface MergeConflict {
-  /**
-   * Entity ID with conflict
-   */
-  readonly entityId: string;
-
-  /**
-   * Property key that conflicted
-   */
-  readonly property: string;
-
-  /**
-   * Conflicting values
-   */
-  readonly values: ReadonlyArray<unknown>;
-
-  /**
-   * Chunk indexes that contributed conflicting values
-   */
-  readonly chunkIndexes: ReadonlyArray<number>;
-}
+export class MergeConflict extends S.Class<MergeConflict>($I`MergeConflict`)(
+  {
+    entityId: EntityId.annotateKey({ description: "Entity whose attributes conflict." }),
+    property: S.NonEmptyString.annotateKey({ description: "Entity property with conflicting values." }),
+    values: S.Array(S.Unknown).annotateKey({ description: "Conflicting values observed for the property." }),
+    chunkIndexes: S.Array(NonNegativeInt).annotateKey({
+      description: "Source chunk indexes that contributed conflicting values.",
+    }),
+  },
+  $I.annote("MergeConflict", {
+    description: "Conflicting entity-property values and the source chunks that produced them.",
+  })
+) {}
 
 /**
  * Order instance for Entity (by id)
@@ -275,12 +278,14 @@ export const mergeGraphs = dual2((a: KnowledgeGraph, b: KnowledgeGraph): Knowled
  * Returns both the merged graph and a list of conflicts detected during merging.
  * Useful for UI review tools and quality assurance.
  *
- * **Example** (Inspect merge graphs with conflicts)
+ * **Example** (Merge two empty graphs without conflicts)
  *
  * ```ts
+ * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { mergeGraphsWithConflicts } from "@effect-ontology/Workflow/Merge"
  *
- * console.log(mergeGraphsWithConflicts)
+ * const [, conflicts] = mergeGraphsWithConflicts(KnowledgeGraph.make({}), KnowledgeGraph.make({}))
+ * console.log(conflicts.length) // 0
  * ```
  *
  * @param a - First graph

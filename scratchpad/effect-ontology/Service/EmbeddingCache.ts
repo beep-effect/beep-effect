@@ -20,7 +20,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
-import type { ConfigService } from "./Config.ts";
+import { ConfigService } from "./Config.ts";
 import type { StorageServiceMethods } from "./Storage.ts";
 import { StorageService } from "./Storage.ts";
 
@@ -208,7 +208,7 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
         };
 
         return {
-          get: Effect.fn(function* (hash: string) {
+          get: Effect.fn("EmbeddingCache.inMemory.get")(function* (hash: string) {
             const now = yield* Clock.currentTimeMillis;
             const map = yield* Ref.get(cache);
             const entry = HashMap.get(map, hash);
@@ -227,7 +227,7 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
             );
             return O.some(entry.value.embedding);
           }),
-          set: Effect.fn(function* (hash: string, embedding: Embedding) {
+          set: Effect.fn("EmbeddingCache.inMemory.set")(function* (hash: string, embedding: Embedding) {
             const now = yield* Clock.currentTimeMillis;
             yield* Ref.update(cache, (map) => {
               const evicted = evictLRU(map);
@@ -238,7 +238,7 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
               });
             });
           }),
-          has: Effect.fn(function* (hash: string) {
+          has: Effect.fn("EmbeddingCache.inMemory.has")(function* (hash: string) {
             const now = yield* Clock.currentTimeMillis;
             const map = yield* Ref.get(cache);
             const entry = HashMap.get(map, hash);
@@ -393,7 +393,7 @@ const encodeEmbeddingBlob = S.encodeEffect(S.fromJsonString(EmbeddingBlob));
  * @category constructors
  * @since 0.0.0
  */
-export const makePersistentEmbeddingCache = Effect.fn(function* (
+export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersistent")(function* (
   storage: StorageServiceMethods,
   cachePath: string,
   input: EmbeddingCacheConfigInput = {}
@@ -435,7 +435,9 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
   };
 
   // Load embedding from GCS
-  const loadFromStorage = Effect.fn(function* (hash: string): Effect.fn.Return<O.Option<Embedding>, EmbeddingError> {
+  const loadFromStorage = Effect.fn("EmbeddingCache.loadFromStorage")(function* (
+    hash: string
+  ): Effect.fn.Return<O.Option<Embedding>, EmbeddingError> {
     const blobPath = `${cachePath}/${Str.takeLeft(2)(hash)}/${hash}.json`;
     const content = yield* storage.getOption(blobPath).pipe(Effect.mapError(storageError));
     if (O.isNone(content)) return O.none();
@@ -456,7 +458,10 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
   });
 
   // Save embedding to GCS
-  const saveToStorage = Effect.fn(function* (hash: string, embedding: Embedding): Effect.fn.Return<void> {
+  const saveToStorage = Effect.fn("EmbeddingCache.saveToStorage")(function* (
+    hash: string,
+    embedding: Embedding
+  ): Effect.fn.Return<void> {
     const blobPath = `${cachePath}/${Str.takeLeft(2)(hash)}/${hash}.json`;
     const now = yield* Clock.currentTimeMillis;
 
@@ -482,7 +487,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
   });
 
   return {
-    get: Effect.fn(function* (hash: string) {
+    get: Effect.fn("EmbeddingCache.persistent.get")(function* (hash: string) {
       const now = yield* Clock.currentTimeMillis;
       const map = yield* Ref.get(memoryCache);
       const entry = HashMap.get(map, hash);
@@ -539,7 +544,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
       return O.none();
     }),
 
-    set: Effect.fn(function* (hash: string, embedding: Embedding) {
+    set: Effect.fn("EmbeddingCache.persistent.set")(function* (hash: string, embedding: Embedding) {
       const now = yield* Clock.currentTimeMillis;
 
       // Store in memory
@@ -556,7 +561,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
       yield* Effect.forkDetach(saveToStorage(hash, embedding));
     }),
 
-    has: Effect.fn(function* (hash: string) {
+    has: Effect.fn("EmbeddingCache.persistent.has")(function* (hash: string) {
       const now = yield* Clock.currentTimeMillis;
       const map = yield* Ref.get(memoryCache);
       const entry = HashMap.get(map, hash);
@@ -662,9 +667,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
 const PersistentEmbeddingCacheLayer = Layer.effect(
   PersistentEmbeddingCache,
   Effect.gen(function* () {
-    // Import dynamically to avoid circular dependency
-    const { ConfigService: ConfigSvc } = yield* Effect.promise(() => import("./Config.ts"));
-    const config = yield* ConfigSvc;
+    const config = yield* ConfigService;
     const storage = yield* StorageService;
 
     const cachePath = O.getOrUndefined(config.embedding.cachePath);
@@ -695,7 +698,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
       };
 
       return {
-        get: Effect.fn(function* (hash: string) {
+        get: Effect.fn("EmbeddingCache.fallback.get")(function* (hash: string) {
           const now = yield* Clock.currentTimeMillis;
           const map = yield* Ref.get(cache);
           const entry = HashMap.get(map, hash);
@@ -712,7 +715,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
           );
           return O.some(entry.value.embedding);
         }),
-        set: Effect.fn(function* (hash: string, embedding: Embedding) {
+        set: Effect.fn("EmbeddingCache.fallback.set")(function* (hash: string, embedding: Embedding) {
           const now = yield* Clock.currentTimeMillis;
           yield* Ref.update(cache, (map) => {
             const evicted = evictLRU(map);
@@ -723,7 +726,7 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
             });
           });
         }),
-        has: Effect.fn(function* (hash: string) {
+        has: Effect.fn("EmbeddingCache.fallback.has")(function* (hash: string) {
           const now = yield* Clock.currentTimeMillis;
           const map = yield* Ref.get(cache);
           const entry = HashMap.get(map, hash);

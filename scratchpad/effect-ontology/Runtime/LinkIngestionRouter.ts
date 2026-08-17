@@ -12,7 +12,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
-import { Cause, DateTime, Effect, HashSet, Random, Schedule } from "effect";
+import { Cause, DateTime, Effect, HashSet, Inspectable, Random, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -216,7 +216,10 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       );
     }).pipe(
       Effect.catch((error) =>
-        HttpServerResponse.json({ error: "BATCH_CREATION_ERROR", message: String(error) }, { status: 500 })
+        HttpServerResponse.json(
+          { error: "BATCH_CREATION_ERROR", message: Inspectable.toStringUnknown(error) },
+          { status: 500 }
+        )
       )
     )
   ),

@@ -34,8 +34,9 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
+import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import type { Config } from "effect";
-import { Cause, Clock, Context, DateTime, Duration, Effect, HashMap, Inspectable, Layer, Match, Ref } from "effect";
+import { Clock, Context, DateTime, Duration, Effect, HashMap, Inspectable, Layer, Match, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -78,33 +79,68 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Agent/AgentCoordinator"
 // =============================================================================
 
 /**
- * Options for pipeline execution
+ * Schema-backed policy controlling agent execution.
  *
- *
- * **Example** (Use the ExecutionOptions contract)
+ * **Example** (Use fail-fast defaults)
  *
  * ```ts
- * import type { ExecutionOptions } from "@effect-ontology/Service/Agent/AgentCoordinator"
+ * import { ExecutionPolicy } from "@effect-ontology/Service/Agent/AgentCoordinator"
  *
- * const acceptsExecutionOptions = (_value: ExecutionOptions): void => undefined
+ * const policy = ExecutionPolicy.make({})
+ * console.log(policy.continueOnError) // false
+ * ```
  *
- * console.log(acceptsExecutionOptions)
+ * @category schemas
+ * @since 0.0.0
+ */
+export class ExecutionPolicy extends S.Class<ExecutionPolicy>($I`ExecutionPolicy`)(
+  {
+    agentTimeout: S.Duration.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+      description: "Maximum duration allowed for one agent execution.",
+    }),
+    continueOnError: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)).annotateKey({
+      description: "Whether the pipeline should continue after an agent fails.",
+    }),
+  },
+  $I.annote("ExecutionPolicy", {
+    description: "Timeout and failure-continuation policy shared by agent pipeline execution modes.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link ExecutionPolicy}.
+ *
+ * **Example** (Enable failure continuation)
+ *
+ * ```ts
+ * import type { ExecutionPolicyInput } from "@effect-ontology/Service/Agent/AgentCoordinator"
+ *
+ * const policy: ExecutionPolicyInput = { continueOnError: true }
+ * console.log(policy)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface ExecutionOptions {
-  /**
-   * Maximum duration allowed for one agent execution.
-   */
-  readonly agentTimeout?: Duration.Duration;
+export type ExecutionPolicyInput = Exclude<(typeof ExecutionPolicy)["~type.make.in"], void>;
 
-  /**
-   * Whether to continue on agent failure
-   */
-  readonly continueOnError?: boolean;
-
+/**
+ * Behavioral hooks invoked while a pipeline executes.
+ *
+ * **Example** (Observe pipeline events)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import type { ExecutionHooks } from "@effect-ontology/Service/Agent/AgentCoordinator"
+ *
+ * const hooks: ExecutionHooks = { onEvent: () => Effect.void }
+ * console.log(hooks)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface ExecutionHooks {
   /**
    * Callback for checkpoint events
    */
@@ -115,6 +151,38 @@ export interface ExecutionOptions {
    */
   readonly onEvent?: (event: AgentEvent) => Effect.Effect<void>;
 }
+
+/**
+ * Policy input and behavioral hooks accepted by pipeline operations.
+ *
+ * **Example** (Configure execution)
+ *
+ * ```ts
+ * import type { ExecutionOptions } from "@effect-ontology/Service/Agent/AgentCoordinator"
+ *
+ * const options: ExecutionOptions = { continueOnError: false }
+ * console.log(options)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ExecutionOptions = ExecutionPolicyInput & ExecutionHooks;
+
+interface ResolvedExecutionOptions {
+  readonly policy: ExecutionPolicy;
+  readonly onCheckpoint: O.Option<(state: PipelineState) => Effect.Effect<void>>;
+  readonly onEvent: O.Option<(event: AgentEvent) => Effect.Effect<void>>;
+}
+
+const resolveExecutionOptions = (options?: ExecutionOptions): ResolvedExecutionOptions => {
+  const option = O.fromUndefinedOr(options);
+  return {
+    policy: ExecutionPolicy.make(O.getOrElse(option, () => ({}))),
+    onCheckpoint: O.flatMap(option, ({ onCheckpoint }) => O.fromUndefinedOr(onCheckpoint)),
+    onEvent: O.flatMap(option, ({ onEvent }) => O.fromUndefinedOr(onEvent)),
+  };
+};
 
 /**
  * Result of pipeline execution
@@ -305,6 +373,32 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       });
     });
 
+    const invokeHook = Effect.fn("AgentCoordinator.invokeHook")(function* <A>(
+      hook: O.Option<(value: A) => Effect.Effect<void>>,
+      value: A
+    ) {
+      if (O.isSome(hook)) yield* hook.value(value);
+    });
+
+    const makeFailedPipelineState = Effect.fn("AgentCoordinator.makeFailedPipelineState")(function* (
+      pipelineId: string,
+      startedAt: DateTime.Utc,
+      iterationCount: NonNegativeInt = NonNegativeInt.make(0)
+    ) {
+      const failedAt = yield* DateTime.now;
+      return PipelineState.make({
+        pipelineId,
+        completedAgents: [],
+        intermediateResults: [],
+        startedAt,
+        status: PipelineStatus.cases.Failed.make({
+          failedAt,
+          error: "Pipeline execution failed",
+        }),
+        iterationCount,
+      });
+    });
+
     /**
      * Execute a single agent and collect events
      */
@@ -313,11 +407,11 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         agent: Agent<I, O, E, never>,
         input: I,
         eventsRef: Ref.Ref<Array<AgentEvent>>,
-        options?: ExecutionOptions
+        execution: ResolvedExecutionOptions
       ): Effect.fn.Return<
         {
           output: O;
-          duration: number;
+          duration: Duration.Duration;
         },
         AgentExecutionError
       > {
@@ -331,7 +425,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
           inputSummary: O.some(summarizeInput(input)),
         });
         yield* Ref.update(eventsRef, (events) => [...events, startedEvent]);
-        if (P.isNotUndefined(options?.onEvent)) yield* options.onEvent(startedEvent);
+        yield* invokeHook(execution.onEvent, startedEvent);
 
         // Run validation if present
         if (O.isSome(agent.validate)) {
@@ -346,7 +440,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
               retryable: false,
             });
             yield* Ref.update(eventsRef, (events) => [...events, failedEvent]);
-            if (P.isNotUndefined(options?.onEvent)) yield* options.onEvent(failedEvent);
+            yield* invokeHook(execution.onEvent, failedEvent);
 
             return yield* AgentExecutionError.make({
               agentId,
@@ -357,51 +451,71 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         }
 
         // Execute agent with optional timeout
-        const executeWithTimeout = P.isNotUndefined(options?.agentTimeout)
-          ? agent.execute(input).pipe(Effect.timeout(options.agentTimeout))
-          : agent.execute(input);
+        const executeWithTimeout = O.match(execution.policy.agentTimeout, {
+          onNone: () => agent.execute(input).pipe(Effect.map(O.some)),
+          onSome: (timeout) => agent.execute(input).pipe(Effect.timeoutOption(timeout)),
+        });
 
-        const result = yield* executeWithTimeout.pipe(
+        const resultOption = yield* executeWithTimeout.pipe(
           Effect.catch(
             Effect.fnUntraced(function* (error) {
-              const isTimeout = Cause.isTimeoutError(error);
               const failedAt = yield* DateTime.now;
               const failedEvent = AgentFailed.make({
                 agentId,
                 failedAt,
                 duration: DateTime.distance(startTime, failedAt),
-                error: isTimeout ? "Agent execution timed out" : Inspectable.toStringUnknown(error),
-                retryable: !isTimeout,
+                error: Inspectable.toStringUnknown(error),
+                retryable: true,
               });
               yield* Ref.update(eventsRef, (events) => [...events, failedEvent]);
-              if (P.isNotUndefined(options?.onEvent)) yield* options.onEvent(failedEvent);
+              yield* invokeHook(execution.onEvent, failedEvent);
 
               return yield* AgentExecutionError.make({
                 agentId,
-                message: isTimeout ? "Agent execution timed out" : String(error),
+                message: Inspectable.toStringUnknown(error),
                 cause: O.some(error),
-                retryable: !isTimeout,
+                retryable: true,
               });
             })
           )
         );
 
+        if (O.isNone(resultOption)) {
+          const failedAt = yield* DateTime.now;
+          const failedEvent = AgentFailed.make({
+            agentId,
+            failedAt,
+            duration: DateTime.distance(startTime, failedAt),
+            error: "Agent execution timed out",
+            retryable: false,
+          });
+          yield* Ref.update(eventsRef, (events) => [...events, failedEvent]);
+          yield* invokeHook(execution.onEvent, failedEvent);
+
+          return yield* AgentExecutionError.make({
+            agentId,
+            message: "Agent execution timed out",
+            retryable: false,
+          });
+        }
+        const result = resultOption.value;
+
         const completedAt = yield* DateTime.now;
-        const duration = Duration.toMillis(DateTime.distance(startTime, completedAt));
+        const duration = DateTime.distance(startTime, completedAt);
 
         // Emit completed event
         const completedEvent = AgentCompleted.make({
           agentId,
           completedAt,
-          duration: Duration.millis(duration),
+          duration,
           outputSummary: O.some(summarizeOutput(result)),
         });
         yield* Ref.update(eventsRef, (events) => [...events, completedEvent]);
-        if (P.isNotUndefined(options?.onEvent)) yield* options.onEvent(completedEvent);
+        yield* invokeHook(execution.onEvent, completedEvent);
 
         return { output: result, duration };
       },
-      (effect, agent, _input, eventsRef, options) =>
+      (effect, agent, _input, eventsRef, execution) =>
         effect.pipe(
           Effect.catch((error) => {
             if (AgentExecutionError.is(error)) {
@@ -417,7 +531,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
                 retryable: false,
               });
               yield* Ref.update(eventsRef, (events) => [...events, failedEvent]);
-              if (P.isNotUndefined(options?.onEvent)) yield* options.onEvent(failedEvent);
+              yield* invokeHook(execution.onEvent, failedEvent);
               return yield* AgentExecutionError.make({
                 agentId: agent.metadata.id,
                 message: String(error),
@@ -432,11 +546,12 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
     /**
      * Execute agents sequentially
      */
-    const executeSequential = Effect.fn(function* (
+    const executeSequential = Effect.fn("AgentCoordinator.executeSequential")(function* (
       task: AgentTask,
       agentIds: ReadonlyArray<AgentIdType>,
       options?: ExecutionOptions
     ): Effect.fn.Return<ExecutionResult, PipelineExecutionError> {
+      const execution = resolveExecutionOptions(options);
       const pipelineId = `seq-${task.taskId}-${yield* Clock.currentTimeMillis}`;
       let state = yield* createPipelineState(pipelineId);
       state = PipelineState.make({
@@ -474,39 +589,46 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
           currentAgentId: O.some(agentId),
         });
 
-        const result = yield* executeAgent(agent, currentInput, eventsRef, options).pipe(
-          Effect.mapError((e) =>
-            PipelineExecutionError.make({
-              pipelineId,
-              message: e.message,
-              failedAgentId: O.some(agentId),
-              state,
-              cause: O.some(e),
+        const result = yield* executeAgent(agent, currentInput, eventsRef, execution).pipe(
+          Effect.map(O.some),
+          Effect.catch(
+            Effect.fnUntraced(function* (error) {
+              if (execution.policy.continueOnError) {
+                state = PipelineState.make({
+                  ...state,
+                  currentAgentId: O.none(),
+                });
+                return O.none();
+              }
+
+              const failedAt = yield* DateTime.now;
+              state = PipelineState.make({
+                ...state,
+                status: PipelineStatus.cases.Failed.make({
+                  failedAt,
+                  error: error.message,
+                }),
+              });
+              return yield* PipelineExecutionError.make({
+                pipelineId,
+                message: error.message,
+                failedAgentId: O.some(agentId),
+                state,
+                cause: O.some(error),
+              });
             })
-          ),
-          Effect.catch((error) => {
-            if (P.isNotUndefined(options?.continueOnError)) {
-              return Effect.succeed({ output: null, duration: 0 });
-            }
-            state = PipelineState.make({
-              ...state,
-              status: PipelineStatus.cases.Failed.make({
-                failedAt: DateTime.nowUnsafe(),
-                error: error.message,
-              }),
-            });
-            return Effect.fail(error);
-          })
+          )
         );
 
-        if (result.output !== null) {
+        if (O.isSome(result)) {
+          const { duration, output } = result.value;
           // Store intermediate result
           const now = yield* DateTime.now;
           const intermediateResult = IntermediateResult.make({
             agentId,
-            output: result.output,
+            output,
             producedAt: now,
-            duration: Duration.millis(result.duration),
+            duration,
           });
 
           state = PipelineState.make({
@@ -516,8 +638,8 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
             currentAgentId: O.none(),
           });
 
-          outputsMap = HashMap.set(outputsMap, agentId, result.output);
-          currentInput = result.output;
+          outputsMap = HashMap.set(outputsMap, agentId, output);
+          currentInput = output;
         }
       }
 
@@ -535,7 +657,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         timestamp: completedAt,
       });
       yield* Ref.update(eventsRef, (events) => [...events, checkpointEvent]);
-      if (P.isNotUndefined(options?.onCheckpoint)) yield* options.onCheckpoint(state);
+      yield* invokeHook(execution.onCheckpoint, state);
 
       const events = yield* Ref.get(eventsRef);
 
@@ -549,12 +671,13 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
     /**
      * Execute agents in a loop until condition is met
      */
-    const executeLoop = Effect.fn(function* (
+    const executeLoop = Effect.fn("AgentCoordinator.executeLoop")(function* (
       task: AgentTask,
       agentIds: ReadonlyArray<AgentIdType>,
       termination: TerminationCondition,
       options?: ExecutionOptions
     ): Effect.fn.Return<ExecutionResult, PipelineExecutionError> {
+      const execution = resolveExecutionOptions(options);
       const pipelineId = `loop-${task.taskId}-${yield* Clock.currentTimeMillis}`;
       let state = yield* createPipelineState(pipelineId);
       state = PipelineState.make({
@@ -588,14 +711,15 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         iteration++;
 
         // Emit iteration progress
+        const progressAt = yield* DateTime.now;
         const progressEvent = AgentProgress.make({
           agentId: AgentId.make("coordinator"),
           progress: Percentage.make((iteration / termination.maxIterations) * 100),
           message: O.some(`Starting iteration ${iteration}`),
-          timestamp: DateTime.nowUnsafe(),
+          timestamp: progressAt,
         });
         yield* Ref.update(eventsRef, (events) => [...events, progressEvent]);
-        if (P.isNotUndefined(options?.onEvent)) yield* options.onEvent(progressEvent);
+        yield* invokeHook(execution.onEvent, progressEvent);
 
         // Execute each agent in sequence
         for (const registered of agents) {
@@ -608,44 +732,44 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
             iterationCount: NonNegativeInt.make(iteration),
           });
 
-          const result = yield* executeAgent(agent, currentInput, eventsRef, options).pipe(
-            Effect.mapError((e) =>
-              PipelineExecutionError.make({
-                pipelineId,
-                message: e.message,
-                failedAgentId: O.some(agentId),
-                state,
-                cause: O.some(e),
+          const result = yield* executeAgent(agent, currentInput, eventsRef, execution).pipe(
+            Effect.map(O.some),
+            Effect.catch(
+              Effect.fnUntraced(function* (error) {
+                if (execution.policy.continueOnError) return O.none();
+
+                const failedAt = yield* DateTime.now;
+                state = PipelineState.make({
+                  ...state,
+                  status: PipelineStatus.cases.Failed.make({
+                    failedAt,
+                    error: error.message,
+                  }),
+                });
+                return yield* PipelineExecutionError.make({
+                  pipelineId,
+                  message: error.message,
+                  failedAgentId: O.some(agentId),
+                  state,
+                  cause: O.some(error),
+                });
               })
-            ),
-            Effect.catch((error) => {
-              if (P.isNotUndefined(options?.continueOnError)) {
-                return Effect.succeed({ output: null, duration: 0 });
-              }
-              state = PipelineState.make({
-                ...state,
-                status: PipelineStatus.cases.Failed.make({
-                  failedAt: DateTime.nowUnsafe(),
-                  error: error.message,
-                }),
-              });
-              return Effect.fail(error);
-            })
+            )
           );
 
-          if (result.output !== null) {
-            outputsMap = HashMap.set(outputsMap, agentId, result.output);
+          if (O.isSome(result)) {
+            outputsMap = HashMap.set(outputsMap, agentId, result.value.output);
 
             // Check termination conditions
             if (termination.stopOnConformance) {
-              const maybeReport = result.output;
+              const maybeReport = result.value.output;
               if (P.isObject(maybeReport) && P.hasProperty(maybeReport, "conforms") && maybeReport.conforms === true) {
                 shouldContinue = false;
                 break;
               }
             }
 
-            currentInput = result.output;
+            currentInput = result.value.output;
           }
         }
 
@@ -687,7 +811,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         timestamp: completedAt,
       });
       yield* Ref.update(eventsRef, (events) => [...events, finalCheckpoint]);
-      if (P.isNotUndefined(options?.onCheckpoint)) yield* options.onCheckpoint(state);
+      yield* invokeHook(execution.onCheckpoint, state);
 
       const events = yield* Ref.get(eventsRef);
 
@@ -701,11 +825,12 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
     /**
      * Execute agents in parallel
      */
-    const executeParallel = Effect.fn(function* (
+    const executeParallel = Effect.fn("AgentCoordinator.executeParallel")(function* (
       task: AgentTask,
       agentIds: ReadonlyArray<AgentIdType>,
       options?: ExecutionOptions & { concurrency?: number }
     ): Effect.fn.Return<ExecutionResult, PipelineExecutionError> {
+      const execution = resolveExecutionOptions(options);
       const pipelineId = `par-${task.taskId}-${yield* Clock.currentTimeMillis}`;
       let state = yield* createPipelineState(pipelineId);
       state = PipelineState.make({
@@ -713,7 +838,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         status: PipelineStatus.cases.Running.make({}),
       });
       const eventsRef = yield* Ref.make<Array<AgentEvent>>([]);
-      const concurrency = options?.concurrency ?? config.runtime.concurrency;
+      const concurrency = O.getOrElse(O.fromUndefinedOr(options?.concurrency), () => config.runtime.concurrency);
 
       // Get all agents upfront
       const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>> = [];
@@ -732,35 +857,36 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
 
       // Execute all agents in parallel
       const results = yield* Effect.all(
-        agents.map((registered) => {
+        A.map(agents, (registered) => {
           const agent = registered.agent;
-          return executeAgent(agent, task, eventsRef, options).pipe(
-            Effect.map(({ duration, output }) => ({
-              agentId: agent.metadata.id,
-              output,
-              duration,
-              success: true,
-            })),
-            Effect.catch((error) => {
-              if (P.isNotUndefined(options?.continueOnError)) {
-                return Effect.succeed({
-                  agentId: agent.metadata.id,
-                  output: null,
-                  duration: 0,
-                  success: false,
-                  error,
-                });
-              }
-              return Effect.fail(
-                PipelineExecutionError.make({
+          return executeAgent(agent, task, eventsRef, execution).pipe(
+            Effect.map(({ duration, output }) =>
+              O.some({
+                agentId: agent.metadata.id,
+                output,
+                duration,
+              })
+            ),
+            Effect.catch(
+              Effect.fnUntraced(function* (error) {
+                if (execution.policy.continueOnError) return O.none();
+
+                const failedAt = yield* DateTime.now;
+                return yield* PipelineExecutionError.make({
                   pipelineId,
                   message: error.message,
                   failedAgentId: O.some(agent.metadata.id),
-                  state,
+                  state: PipelineState.make({
+                    ...state,
+                    status: PipelineStatus.cases.Failed.make({
+                      failedAt,
+                      error: error.message,
+                    }),
+                  }),
                   cause: O.some(error),
-                })
-              );
-            })
+                });
+              })
+            )
           );
         }),
         { concurrency }
@@ -772,19 +898,17 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       const intermediateResults: Array<IntermediateResult> = [];
       const completedAt = yield* DateTime.now;
 
-      for (const r of results) {
-        if (r.success && r.output !== null) {
-          outputsMap = HashMap.set(outputsMap, r.agentId, r.output);
-          completedAgentIds.push(r.agentId);
-          intermediateResults.push(
-            IntermediateResult.make({
-              agentId: r.agentId,
-              output: r.output,
-              producedAt: completedAt,
-              duration: Duration.millis(r.duration),
-            })
-          );
-        }
+      for (const result of A.getSomes(results)) {
+        outputsMap = HashMap.set(outputsMap, result.agentId, result.output);
+        completedAgentIds.push(result.agentId);
+        intermediateResults.push(
+          IntermediateResult.make({
+            agentId: result.agentId,
+            output: result.output,
+            producedAt: completedAt,
+            duration: result.duration,
+          })
+        );
       }
 
       state = PipelineState.make({
@@ -800,7 +924,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         timestamp: completedAt,
       });
       yield* Ref.update(eventsRef, (events) => [...events, checkpointEvent]);
-      if (P.isNotUndefined(options?.onCheckpoint)) yield* options.onCheckpoint(state);
+      yield* invokeHook(execution.onCheckpoint, state);
 
       const events = yield* Ref.get(eventsRef);
 
@@ -865,26 +989,29 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       Match.exhaustive
     );
 
-    const execute = (
-      task: AgentTask,
-      pipelineConfig: PipelineConfig,
-      options?: ExecutionOptions
-    ): Effect.Effect<ExecutionResult, PipelineExecutionError> => {
-      const agentIds = A.map(O.getOrElse(pipelineConfig.agentSequence, A.empty<string>), (id) => AgentId.make(id));
+    const execute = Effect.fn("AgentCoordinator.execute")(
+      (
+        task: AgentTask,
+        pipelineConfig: PipelineConfig,
+        options?: ExecutionOptions
+      ): Effect.Effect<ExecutionResult, PipelineExecutionError> => {
+        const agentIds = A.map(O.getOrElse(pipelineConfig.agentSequence, A.empty<string>), (id) => AgentId.make(id));
 
-      return executePipelineMode(pipelineConfig.mode)(task, pipelineConfig, agentIds, options);
-    };
+        return executePipelineMode(pipelineConfig.mode)(task, pipelineConfig, agentIds, options);
+      }
+    );
 
     /**
      * Run pipeline until a condition is met
      */
-    const runUntil = Effect.fn(function* (
+    const runUntil = Effect.fn("AgentCoordinator.runUntil")(function* (
       task: AgentTask,
       agentIds: ReadonlyArray<AgentIdType>,
       condition: (state: PipelineState) => boolean,
       maxIterations: number,
       options?: ExecutionOptions
     ): Effect.fn.Return<ExecutionResult, PipelineExecutionError> {
+      const execution = resolveExecutionOptions(options);
       const pipelineId = `until-${task.taskId}-${yield* Clock.currentTimeMillis}`;
       let state = yield* createPipelineState(pipelineId);
       state = PipelineState.make({
@@ -926,14 +1053,24 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
             iterationCount: NonNegativeInt.make(iteration),
           });
 
-          const result = yield* executeAgent(agent, currentInput, eventsRef, options).pipe(
-            Effect.mapError((e) =>
-              PipelineExecutionError.make({
-                pipelineId,
-                message: e.message,
-                failedAgentId: O.some(agentId),
-                state,
-                cause: O.some(e),
+          const result = yield* executeAgent(agent, currentInput, eventsRef, execution).pipe(
+            Effect.catch(
+              Effect.fnUntraced(function* (error) {
+                const failedAt = yield* DateTime.now;
+                state = PipelineState.make({
+                  ...state,
+                  status: PipelineStatus.cases.Failed.make({
+                    failedAt,
+                    error: error.message,
+                  }),
+                });
+                return yield* PipelineExecutionError.make({
+                  pipelineId,
+                  message: error.message,
+                  failedAgentId: O.some(agentId),
+                  state,
+                  cause: O.some(error),
+                });
               })
             )
           );
@@ -952,7 +1089,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
                 agentId,
                 output: result.output,
                 producedAt: now,
-                duration: Duration.millis(result.duration),
+                duration: result.duration,
               }),
             ],
             currentAgentId: O.none(),
@@ -990,11 +1127,12 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
      * @param options - Execution options (callbacks, timeouts)
      * @returns RefinementResult with final graph, status, and metrics
      */
-    const refineUntilConformant = Effect.fn(function* (
+    const refineUntilConformant = Effect.fn("AgentCoordinator.refineUntilConformant")(function* (
       graph: KnowledgeGraph | RdfStore,
       refinementConfig: RefinementConfig,
       options?: ExecutionOptions
     ): Effect.fn.Return<RefinementResult, PipelineExecutionError> {
+      const execution = resolveExecutionOptions(options);
       const pipelineId = `refine-${yield* Clock.currentTimeMillis}`;
       const startTime = yield* DateTime.now;
       const eventsRef = yield* Ref.make<Array<AgentEvent>>([]);
@@ -1005,39 +1143,25 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
 
       // Get agents
       const validatorRegistered = yield* getAgent(validatorId).pipe(
-        Effect.mapError(() =>
-          PipelineExecutionError.make({
-            pipelineId,
-            message: `Validator agent not found: ${validatorId}`,
-            state: PipelineState.make({
+        Effect.catch(
+          Effect.fnUntraced(function* () {
+            return yield* PipelineExecutionError.make({
               pipelineId,
-              completedAgents: [],
-              intermediateResults: [],
-              startedAt: startTime,
-              status: PipelineStatus.cases.Failed.make({
-                failedAt: DateTime.nowUnsafe(),
-                error: "Pipeline execution failed",
-              }),
-            }),
+              message: `Validator agent not found: ${validatorId}`,
+              state: yield* makeFailedPipelineState(pipelineId, startTime),
+            });
           })
         )
       );
 
       const correctorRegistered = yield* getAgent(correctorId).pipe(
-        Effect.mapError(() =>
-          PipelineExecutionError.make({
-            pipelineId,
-            message: `Corrector agent not found: ${correctorId}`,
-            state: PipelineState.make({
+        Effect.catch(
+          Effect.fnUntraced(function* () {
+            return yield* PipelineExecutionError.make({
               pipelineId,
-              completedAgents: [],
-              intermediateResults: [],
-              startedAt: startTime,
-              status: PipelineStatus.cases.Failed.make({
-                failedAt: DateTime.nowUnsafe(),
-                error: "Pipeline execution failed",
-              }),
-            }),
+              message: `Corrector agent not found: ${correctorId}`,
+              state: yield* makeFailedPipelineState(pipelineId, startTime),
+            });
           })
         )
       );
@@ -1056,14 +1180,15 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         iteration++;
 
         // Emit progress event
+        const progressAt = yield* DateTime.now;
         const progressEvent = AgentProgress.make({
           agentId: AgentId.make("refiner"),
           progress: Percentage.make((iteration / refinementConfig.maxIterations) * 100),
           message: O.some(`Refinement iteration ${iteration}/${refinementConfig.maxIterations}`),
-          timestamp: DateTime.nowUnsafe(),
+          timestamp: progressAt,
         });
         yield* Ref.update(eventsRef, (events) => [...events, progressEvent]);
-        if (P.isNotUndefined(options?.onEvent)) yield* options.onEvent(progressEvent);
+        yield* invokeHook(execution.onEvent, progressEvent);
 
         // Step 1: Validate
         const validationResult = yield* executeAgent(
@@ -1073,47 +1198,31 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
             graph: O.some(currentGraph),
           }),
           eventsRef,
-          options
+          execution
         ).pipe(
-          Effect.mapError((e) =>
-            PipelineExecutionError.make({
-              pipelineId,
-              message: `Validation failed: ${e.message}`,
-              failedAgentId: O.some(validatorId),
-              state: PipelineState.make({
+          Effect.catch(
+            Effect.fnUntraced(function* (e) {
+              return yield* PipelineExecutionError.make({
                 pipelineId,
-                completedAgents: [],
-                intermediateResults: [],
-                startedAt: startTime,
-                status: PipelineStatus.cases.Failed.make({
-                  failedAt: DateTime.nowUnsafe(),
-                  error: "Pipeline execution failed",
-                }),
-                iterationCount: NonNegativeInt.make(iteration),
-              }),
-              cause: O.some(e),
+                message: `Validation failed: ${e.message}`,
+                failedAgentId: O.some(validatorId),
+                state: yield* makeFailedPipelineState(pipelineId, startTime, NonNegativeInt.make(iteration)),
+                cause: O.some(e),
+              });
             })
           )
         );
 
         const validationTask = yield* S.decodeEffect(AgentTask)(validationResult.output).pipe(
-          Effect.mapError((cause) =>
-            PipelineExecutionError.make({
-              pipelineId,
-              message: "Validator returned an invalid agent task",
-              failedAgentId: O.some(validatorId),
-              state: PipelineState.make({
+          Effect.catch(
+            Effect.fnUntraced(function* (cause) {
+              return yield* PipelineExecutionError.make({
                 pipelineId,
-                completedAgents: [],
-                intermediateResults: [],
-                startedAt: startTime,
-                status: PipelineStatus.cases.Failed.make({
-                  failedAt: DateTime.nowUnsafe(),
-                  error: "Pipeline execution failed",
-                }),
-                iterationCount: NonNegativeInt.make(iteration),
-              }),
-              cause: O.some(cause),
+                message: "Validator returned an invalid agent task",
+                failedAgentId: O.some(validatorId),
+                state: yield* makeFailedPipelineState(pipelineId, startTime, NonNegativeInt.make(iteration)),
+                cause: O.some(cause),
+              });
             })
           )
         );
@@ -1122,17 +1231,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
             pipelineId,
             message: "Validator returned no SHACL validation report",
             failedAgentId: O.some(validatorId),
-            state: PipelineState.make({
-              pipelineId,
-              completedAgents: [],
-              intermediateResults: [],
-              startedAt: startTime,
-              status: PipelineStatus.cases.Failed.make({
-                failedAt: DateTime.nowUnsafe(),
-                error: "Pipeline execution failed",
-              }),
-              iterationCount: NonNegativeInt.make(iteration),
-            }),
+            state: yield* makeFailedPipelineState(pipelineId, startTime, NonNegativeInt.make(iteration)),
           });
         }
         const validationReport = validationTask.validationReport.value;
@@ -1153,47 +1252,31 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
             validationReport: O.some(validationReport),
           }),
           eventsRef,
-          options
+          execution
         ).pipe(
-          Effect.mapError((e) =>
-            PipelineExecutionError.make({
-              pipelineId,
-              message: `Correction failed: ${e.message}`,
-              failedAgentId: O.some(correctorId),
-              state: PipelineState.make({
+          Effect.catch(
+            Effect.fnUntraced(function* (e) {
+              return yield* PipelineExecutionError.make({
                 pipelineId,
-                completedAgents: [],
-                intermediateResults: [],
-                startedAt: startTime,
-                status: PipelineStatus.cases.Failed.make({
-                  failedAt: DateTime.nowUnsafe(),
-                  error: "Pipeline execution failed",
-                }),
-                iterationCount: NonNegativeInt.make(iteration),
-              }),
-              cause: O.some(e),
+                message: `Correction failed: ${e.message}`,
+                failedAgentId: O.some(correctorId),
+                state: yield* makeFailedPipelineState(pipelineId, startTime, NonNegativeInt.make(iteration)),
+                cause: O.some(e),
+              });
             })
           )
         );
 
         const correctionOutput = yield* S.decodeEffect(AgentTask)(correctionResult.output).pipe(
-          Effect.mapError((cause) =>
-            PipelineExecutionError.make({
-              pipelineId,
-              message: "Corrector returned an invalid agent task",
-              failedAgentId: O.some(correctorId),
-              state: PipelineState.make({
+          Effect.catch(
+            Effect.fnUntraced(function* (cause) {
+              return yield* PipelineExecutionError.make({
                 pipelineId,
-                completedAgents: [],
-                intermediateResults: [],
-                startedAt: startTime,
-                status: PipelineStatus.cases.Failed.make({
-                  failedAt: DateTime.nowUnsafe(),
-                  error: "Pipeline execution failed",
-                }),
-                iterationCount: NonNegativeInt.make(iteration),
-              }),
-              cause: O.some(cause),
+                message: "Corrector returned an invalid agent task",
+                failedAgentId: O.some(correctorId),
+                state: yield* makeFailedPipelineState(pipelineId, startTime, NonNegativeInt.make(iteration)),
+                cause: O.some(cause),
+              });
             })
           )
         );
@@ -1226,6 +1309,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
           O.isSome(refinementConfig.checkpointInterval) &&
           iteration % refinementConfig.checkpointInterval.value === 0
         ) {
+          const checkpointAt = yield* DateTime.now;
           const checkpointEvent = PipelineCheckpoint.make({
             state: PipelineState.make({
               pipelineId,
@@ -1236,17 +1320,16 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
               iterationCount: NonNegativeInt.make(iteration),
             }),
             reason: "scheduled",
-            timestamp: DateTime.nowUnsafe(),
+            timestamp: checkpointAt,
           });
           yield* Ref.update(eventsRef, (events) => [...events, checkpointEvent]);
-          if (P.isNotUndefined(options?.onCheckpoint)) {
-            yield* options.onCheckpoint(checkpointEvent.state);
-          }
+          yield* invokeHook(execution.onCheckpoint, checkpointEvent.state);
         }
 
         // Check timeout
         if (O.isSome(refinementConfig.timeoutMs)) {
-          const elapsed = DateTime.distance(startTime, DateTime.nowUnsafe());
+          const now = yield* DateTime.now;
+          const elapsed = DateTime.distance(startTime, now);
           if (Duration.toMillis(elapsed) >= refinementConfig.timeoutMs.value) {
             status = "timeout";
             break;
@@ -1273,9 +1356,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
         timestamp: completedAt,
       });
       yield* Ref.update(eventsRef, (events) => [...events, finalCheckpoint]);
-      if (P.isNotUndefined(options?.onCheckpoint)) {
-        yield* options.onCheckpoint(finalState);
-      }
+      yield* invokeHook(execution.onCheckpoint, finalState);
 
       return RefinementResult.make({
         graph: currentGraph,

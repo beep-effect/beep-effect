@@ -14,7 +14,6 @@ import { Model, VariantField } from "@beep/effect-drizzle";
 import * as pg from "@beep/effect-drizzle/pg";
 import { $ScratchpadId } from "@beep/identity";
 import { sql } from "drizzle-orm";
-import { customType } from "drizzle-orm/pg-core";
 import { Number as Num, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -41,44 +40,6 @@ const nullableColumn = <Schema extends S.Top>(schema: Schema) => {
     jsonUpdate: optional,
   });
 };
-
-// =============================================================================
-// Custom Types
-// =============================================================================
-
-/**
- * Create a pgvector custom type for a specific dimension.
- *
- * **Example** (Inspect vector n)
- *
- * ```ts
- * import { vectorN } from "@effect-ontology/Repository/schema"
- *
- * console.log(vectorN)
- * ```
- *
- * @param dimension - Vector dimension (e.g., 512, 768, 1024)
- * @returns Drizzle custom type for pgvector
- * @category repositories
- * @since 0.0.0
- */
-export const vectorN = (dimension: number) =>
-  customType<{ data: ReadonlyArray<number>; driverData: string }>({
-    dataType() {
-      return `vector(${dimension})`;
-    },
-    toDriver(value: ReadonlyArray<number>): string {
-      return `[${A.join(
-        A.map(value, (entry) => `${entry}`),
-        ","
-      )}]`;
-    },
-    fromDriver(value: string): ReadonlyArray<number> {
-      // Parse "[0.1,0.2,...]" format from PostgreSQL
-      const cleaned = Str.replace(/^\[|\]$/g, "")(value);
-      return A.map(Str.split(",")(cleaned), Num.Number);
-    },
-  });
 
 const EmbeddingVectorValues = S.Array(S.Finite).check(
   S.isLengthBetween(768, 768, {
@@ -1750,4 +1711,4 @@ export type EmbeddingRow = Embeddings;
  * @category type-level
  * @since 0.0.0
  */
-export type EmbeddingInsertRow = typeof embeddings.$inferInsert;
+export type EmbeddingInsertRow = typeof Embeddings.insert.Type;

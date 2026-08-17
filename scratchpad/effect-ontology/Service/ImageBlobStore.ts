@@ -156,12 +156,12 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
             .getUint8Array(PathLayout.image.original(imagePathHash(hash)))
             .pipe(Effect.map((bytes) => bytes !== undefined)),
 
-        putMetadata: Effect.fn(function* (asset: ImageAsset) {
+        putMetadata: Effect.fn("ImageBlobStore.putMetadata")(function* (asset: ImageAsset) {
           const json = yield* ImageAsset.encodeJsonStringEffect(asset);
           yield* storage.set(PathLayout.image.metadata(imagePathHash(asset.hash)), json);
         }),
 
-        getMetadata: Effect.fn(function* (hash: string) {
+        getMetadata: Effect.fn("ImageBlobStore.getMetadata")(function* (hash: string) {
           const content = yield* storage.getOption(PathLayout.image.metadata(imagePathHash(hash)));
           if (O.isNone(content)) return O.none();
 
@@ -169,7 +169,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
           return O.some(asset);
         }),
 
-        putBytesWithMetadata: Effect.fn(function* (
+        putBytesWithMetadata: Effect.fn("ImageBlobStore.putBytesWithMetadata")(function* (
           hash: string,
           bytes: Uint8Array,
           contentType: string,

@@ -11,24 +11,28 @@
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { $ScratchpadId } from "@beep/identity";
 import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
 import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Effect, Hash, MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { Entity, Relation } from "../Domain/Model/Entity.ts";
 import { RelationObject } from "../Domain/Model/Entity.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
-import type { ClaimRank } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import type { CreateClaimInput } from "../Service/Claim.ts";
 import { dual2, dual3, dual4 } from "./Dual.ts";
 import { buildIri } from "./Rdf.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Utils/ClaimFactory");
 
 // =============================================================================
 // Constants
@@ -64,31 +68,63 @@ const claimQuad = (input: {
 /**
  * Options for claim creation
  *
- * **Example** (Reference ClaimFactoryOptions fields)
+ * **Example** (Construct claim factory options)
  *
  * ```ts
- * import type { ClaimFactoryOptions } from "@effect-ontology/Utils/ClaimFactory"
+ * import { ClaimFactoryOptions } from "@effect-ontology/Utils/ClaimFactory"
  *
- * const claimFactoryOptionsFields: ReadonlyArray<keyof ClaimFactoryOptions> = ["baseNamespace", "documentId", "ontologyId"]
- *
- * console.log(claimFactoryOptionsFields)
+ * const options = ClaimFactoryOptions.make({
+ *   baseNamespace: "https://example.com/entity/",
+ *   documentId: "document-1",
+ *   ontologyId: "ontology-1"
+ * })
+ * console.log(options.defaultConfidence) // 0.85
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface ClaimFactoryOptions {
-  /** Base namespace for entity IRIs */
-  readonly baseNamespace: string;
-  /** Document ID (used as articleId in claims) */
-  readonly documentId: string;
-  /** Ontology ID for namespace scoping */
-  readonly ontologyId: string;
-  /** Default confidence score (0-1) */
-  readonly defaultConfidence?: Confidence;
-  /** Default claim rank */
-  readonly defaultRank?: ClaimRank;
-}
+export class ClaimFactoryOptions extends S.Class<ClaimFactoryOptions>($I`ClaimFactoryOptions`)(
+  {
+    baseNamespace: S.NonEmptyString.annotateKey({ description: "Base namespace used to construct entity IRIs." }),
+    documentId: S.NonEmptyString.annotateKey({ description: "Source document identifier stored as the article ID." }),
+    ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope assigned to generated claims." }),
+    defaultConfidence: Confidence.pipe(
+      SchemaUtils.withKeyDefaults(Confidence.make(0.85)),
+      S.annotateKey({ description: "Confidence used when source evidence has no score." })
+    ),
+  },
+  $I.annote("ClaimFactoryOptions", {
+    description: "Schema-defaulted namespace, provenance, and confidence policy for generated claims.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link ClaimFactoryOptions}.
+ *
+ * **Example** (Select the ontology scope)
+ * ```ts
+ * import type { ClaimFactoryOptionsInput } from "@effect-ontology/Utils/ClaimFactory"
+ * const field: keyof ClaimFactoryOptionsInput = "ontologyId"
+ * console.log(field) // "ontologyId"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ClaimFactoryOptionsInput = (typeof ClaimFactoryOptions)["~type.make.in"];
+
+class IriCollisionEntity extends S.Class<IriCollisionEntity>($I`IriCollisionEntity`)(
+  {
+    mention: S.NonEmptyString,
+    types: S.Array(IRI),
+    documentId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    chunkIndex: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("IriCollisionEntity", {
+    description: "Entity details retained when multiple extracted entities map to the same IRI.",
+  })
+) {}
 
 /**
  * IRI collision warning - two entities would produce the same IRI
@@ -98,58 +134,82 @@ export interface ClaimFactoryOptions {
  * Captures details about colliding entities for debugging and reporting.
  * This happens when two entities have the same ID but different content.
  *
- * **Example** (Reference IriCollisionWarning fields)
+ * **Example** (Construct a collision warning)
  *
  * ```ts
- * import type { IriCollisionWarning } from "@effect-ontology/Utils/ClaimFactory"
+ * import { IRI } from "@beep/rdf"
+ * import { IriCollisionWarning } from "@effect-ontology/Utils/ClaimFactory"
  *
- * const iriCollisionWarningFields: ReadonlyArray<keyof IriCollisionWarning> = ["entityId", "iri", "entities"]
- *
- * console.log(iriCollisionWarningFields)
+ * const warning = IriCollisionWarning.make({
+ *   entityId: "ada_lovelace",
+ *   iri: IRI.make("https://example.com/entity/ada_lovelace"),
+ *   entities: []
+ * })
+ * console.log(warning.entityId) // "ada_lovelace"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface IriCollisionWarning {
-  /** The entity ID that collides */
-  readonly entityId: string;
-  /** The IRI that would be produced */
-  readonly iri: string;
-  /** All entities with this ID (first is kept, others are duplicates) */
-  readonly entities: ReadonlyArray<{
-    readonly mention: string;
-    readonly types: ReadonlyArray<string>;
-    readonly documentId?: string;
-    readonly chunkIndex?: number;
-  }>;
-}
+export class IriCollisionWarning extends S.Class<IriCollisionWarning>($I`IriCollisionWarning`)(
+  {
+    entityId: S.NonEmptyString.annotateKey({ description: "Entity identifier shared by colliding records." }),
+    iri: IRI.annotateKey({ description: "IRI produced for the colliding entity identifier." }),
+    entities: S.Array(IriCollisionEntity).annotateKey({
+      description: "Entity records that produced the same IRI.",
+    }),
+  },
+  $I.annote("IriCollisionWarning", {
+    description: "Entity records that would silently collapse to the same generated IRI.",
+  })
+) {}
 
 /**
  * Result of IRI collision detection
  *
- * **Example** (Reference IriCollisionReport fields)
+ * **Example** (Construct an empty collision report)
  *
  * ```ts
- * import type { IriCollisionReport } from "@effect-ontology/Utils/ClaimFactory"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { IriCollisionReport } from "@effect-ontology/Utils/ClaimFactory"
  *
- * const iriCollisionReportFields: ReadonlyArray<keyof IriCollisionReport> = ["hasCollisions", "collisions", "totalEntities"]
- *
- * console.log(iriCollisionReportFields)
+ * const report = IriCollisionReport.make({
+ *   collisions: [],
+ *   totalEntities: NonNegativeInt.make(0),
+ *   uniqueEntities: NonNegativeInt.make(0)
+ * })
+ * console.log(report.hasCollisions) // false
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface IriCollisionReport {
-  /** Whether any collisions were detected */
-  readonly hasCollisions: boolean;
-  /** List of collision warnings */
-  readonly collisions: ReadonlyArray<IriCollisionWarning>;
-  /** Total entity count before deduplication */
-  readonly totalEntities: number;
-  /** Unique entity count after deduplication */
-  readonly uniqueEntities: number;
+export class IriCollisionReport extends S.Class<IriCollisionReport>($I`IriCollisionReport`)(
+  {
+    collisions: S.Array(IriCollisionWarning).annotateKey({ description: "Detected IRI collisions." }),
+    totalEntities: NonNegativeInt.annotateKey({ description: "Entity count before deduplication." }),
+    uniqueEntities: NonNegativeInt.annotateKey({ description: "Entity count after grouping by identifier." }),
+  },
+  $I.annote("IriCollisionReport", {
+    description: "Collision inventory and entity counts for generated IRIs.",
+  })
+) {
+  /**
+   * Whether the report contains at least one collision.
+   *
+   * **Example** (Inspect an empty report)
+   * ```ts
+   * import { NonNegativeInt } from "@beep/schema"
+   * import { IriCollisionReport } from "@effect-ontology/Utils/ClaimFactory"
+   * const zero = NonNegativeInt.make(0)
+   * console.log(IriCollisionReport.make({ collisions: [], totalEntities: zero, uniqueEntities: zero }).hasCollisions)
+   * ```
+   *
+   * @returns `true` when at least one IRI collision was detected.
+   */
+  get hasCollisions(): boolean {
+    return A.isReadonlyArrayNonEmpty(this.collisions);
+  }
 }
 
 /**
@@ -159,14 +219,11 @@ export interface IriCollisionReport {
  *
  * Extended version of CreateClaimInput with generated claimId
  *
- * **Example** (Reference ClaimData fields)
- *
+ * **Example** (Select the generated identifier)
  * ```ts
  * import type { ClaimData } from "@effect-ontology/Utils/ClaimFactory"
- *
- * const claimDataFields: ReadonlyArray<keyof ClaimData> = ["claimId"]
- *
- * console.log(claimDataFields)
+ * const field: keyof ClaimData = "claimId"
+ * console.log(field) // "claimId"
  * ```
  *
  * @category type-level
@@ -237,20 +294,19 @@ export const detectIriCollisions = dual2((entities: Iterable<Entity>, baseNamesp
           entities: A.map(entityList, (e) => ({
             mention: e.mention,
             types: e.types,
-            ...(O.isSome(e.documentId) ? { documentId: e.documentId.value } : {}),
-            ...(O.isSome(e.chunkIndex) ? { chunkIndex: e.chunkIndex.value } : {}),
+            documentId: e.documentId,
+            chunkIndex: e.chunkIndex,
           })),
         });
       }
     }
   }
 
-  return {
-    hasCollisions: collisions.length > 0,
+  return IriCollisionReport.make({
     collisions,
-    totalEntities,
-    uniqueEntities: MutableHashMap.size(entityMap),
-  };
+    totalEntities: NonNegativeInt.make(totalEntities),
+    uniqueEntities: NonNegativeInt.make(MutableHashMap.size(entityMap)),
+  });
 });
 
 /**
@@ -261,12 +317,13 @@ export const detectIriCollisions = dual2((entities: Iterable<Entity>, baseNamesp
  * Effect-native version that logs warnings for collisions but continues.
  * Use this in pipelines where you want to track collisions without failing.
  *
- * **Example** (Inspect check iri collisions)
+ * **Example** (Create an empty collision check)
  *
  * ```ts
  * import { checkIriCollisions } from "@effect-ontology/Utils/ClaimFactory"
+ * import { Effect } from "effect"
  *
- * console.log(checkIriCollisions)
+ * console.log(Effect.isEffect(checkIriCollisions([], "https://example.com/entity/"))) // true
  * ```
  *
  * @param entities - Array of Entity objects
@@ -309,12 +366,12 @@ export const checkIriCollisions = dual2(
  *
  * Uses content hash to ensure same fact produces same ID (idempotent).
  *
- * **Example** (Inspect generate claim id)
+ * **Example** (Generate a stable claim identifier)
  *
  * ```ts
  * import { generateClaimId } from "@effect-ontology/Utils/ClaimFactory"
  *
- * console.log(generateClaimId)
+ * console.log(generateClaimId("https://example.com/ada", "https://schema.org/name", "Ada", "document-1"))
  * ```
  *
  * @param subjectIri - Subject IRI
@@ -376,9 +433,9 @@ export const generateClaimId = dual4(
  * @category utilities
  * @since 0.0.0
  */
-export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOptions): ReadonlyArray<ClaimData> => {
+export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOptionsInput): ReadonlyArray<ClaimData> => {
   const claims: Array<ClaimData> = [];
-  const { baseNamespace, defaultConfidence = Confidence.make(0.85), documentId, ontologyId } = options;
+  const { baseNamespace, defaultConfidence, documentId, ontologyId } = ClaimFactoryOptions.make(options);
 
   // Build subject IRI
   const subjectIri = buildIri(baseNamespace, entity.id);
@@ -476,8 +533,8 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
  * @category utilities
  * @since 0.0.0
  */
-export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryOptions): ClaimData => {
-  const { baseNamespace, defaultConfidence = Confidence.make(0.85), documentId, ontologyId } = options;
+export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryOptionsInput): ClaimData => {
+  const { baseNamespace, defaultConfidence, documentId, ontologyId } = ClaimFactoryOptions.make(options);
 
   // Build subject IRI
   const subjectIri = buildIri(baseNamespace, relation.subjectId);
@@ -524,12 +581,17 @@ export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryO
 /**
  * Convert multiple entities to claims
  *
- * **Example** (Inspect entities to claims)
+ * **Example** (Convert an empty entity collection)
  *
  * ```ts
  * import { entitiesToClaims } from "@effect-ontology/Utils/ClaimFactory"
  *
- * console.log(entitiesToClaims)
+ * const claims = entitiesToClaims([], {
+ *   baseNamespace: "https://example.com/entity/",
+ *   documentId: "document-1",
+ *   ontologyId: "ontology-1"
+ * })
+ * console.log(claims.length) // 0
  * ```
  *
  * @param entities - Iterable of Entity objects
@@ -539,7 +601,7 @@ export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryO
  * @since 0.0.0
  */
 export const entitiesToClaims = dual2(
-  (entities: Iterable<Entity>, options: ClaimFactoryOptions): ReadonlyArray<ClaimData> => {
+  (entities: Iterable<Entity>, options: ClaimFactoryOptionsInput): ReadonlyArray<ClaimData> => {
     const claims: Array<ClaimData> = [];
 
     for (const entity of entities) {
@@ -556,12 +618,17 @@ export const entitiesToClaims = dual2(
 /**
  * Convert multiple relations to claims
  *
- * **Example** (Inspect relations to claims)
+ * **Example** (Convert an empty relation collection)
  *
  * ```ts
  * import { relationsToClaims } from "@effect-ontology/Utils/ClaimFactory"
  *
- * console.log(relationsToClaims)
+ * const claims = relationsToClaims([], {
+ *   baseNamespace: "https://example.com/entity/",
+ *   documentId: "document-1",
+ *   ontologyId: "ontology-1"
+ * })
+ * console.log(claims.length) // 0
  * ```
  *
  * @param relations - Iterable of Relation objects
@@ -571,7 +638,7 @@ export const entitiesToClaims = dual2(
  * @since 0.0.0
  */
 export const relationsToClaims = dual2(
-  (relations: Iterable<Relation>, options: ClaimFactoryOptions): ReadonlyArray<ClaimData> => {
+  (relations: Iterable<Relation>, options: ClaimFactoryOptionsInput): ReadonlyArray<ClaimData> => {
     const claims: Array<ClaimData> = [];
 
     for (const relation of relations) {
@@ -585,12 +652,17 @@ export const relationsToClaims = dual2(
 /**
  * Convert a KnowledgeGraph (entities + relations) to claims
  *
- * **Example** (Inspect knowledge graph to claims)
+ * **Example** (Convert an empty graph)
  *
  * ```ts
  * import { knowledgeGraphToClaims } from "@effect-ontology/Utils/ClaimFactory"
  *
- * console.log(knowledgeGraphToClaims)
+ * const claims = knowledgeGraphToClaims([], [], {
+ *   baseNamespace: "https://example.com/entity/",
+ *   documentId: "document-1",
+ *   ontologyId: "ontology-1"
+ * })
+ * console.log(claims.length) // 0
  * ```
  *
  * @param entities - Iterable of Entity objects
@@ -604,7 +676,7 @@ export const knowledgeGraphToClaims = dual3(
   (
     entities: Iterable<Entity>,
     relations: Iterable<Relation>,
-    options: ClaimFactoryOptions
+    options: ClaimFactoryOptionsInput
   ): ReadonlyArray<ClaimData> => [...entitiesToClaims(entities, options), ...relationsToClaims(relations, options)]
 );
 
@@ -620,12 +692,24 @@ export const knowledgeGraphToClaims = dual3(
  * Pure function that generates RDF quads without requiring database persistence.
  * Uses the CLAIMS vocabulary for reification.
  *
- * **Example** (Inspect claim data to quads)
+ * **Example** (Reify one claim)
  *
  * ```ts
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { ClaimId } from "@effect-ontology/Schema/KnowledgeModel"
  * import { claimDataToQuads } from "@effect-ontology/Utils/ClaimFactory"
  *
- * console.log(claimDataToQuads)
+ * const quads = claimDataToQuads({
+ *   claimId: ClaimId.make("claim-abc123def456"),
+ *   subjectIri: "https://example.com/ada",
+ *   predicateIri: "https://schema.org/name",
+ *   objectValue: "Ada",
+ *   objectType: "literal",
+ *   articleId: "document-1",
+ *   ontologyId: "ontology-1",
+ *   confidence: Confidence.make(1)
+ * }, undefined, undefined)
+ * console.log(quads.length > 0) // true
  * ```
  *
  * @param claim - ClaimData to convert
@@ -795,12 +879,12 @@ export const claimDataToQuads = dual3(
 /**
  * Convert multiple ClaimData to RDF quads
  *
- * **Example** (Inspect claims data to quads)
+ * **Example** (Convert no claims)
  *
  * ```ts
  * import { claimsDataToQuads } from "@effect-ontology/Utils/ClaimFactory"
  *
- * console.log(claimsDataToQuads)
+ * console.log(claimsDataToQuads([], undefined, undefined).length) // 0
  * ```
  *
  * @param claims - Array of ClaimData

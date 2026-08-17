@@ -180,7 +180,7 @@ const ontologyIdOption = Options.string("ontology").pipe(
   Options.withDescription("Ontology ID for scoping (e.g., 'seattle')")
 );
 
-const ingestLinkHandler = Effect.fn(function* (
+const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
   url: string,
   ontologyId: string,
   skipEnrich: boolean,

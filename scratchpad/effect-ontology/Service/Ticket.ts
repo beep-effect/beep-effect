@@ -12,7 +12,8 @@
 
 import { randomBytes } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
-import { Clock, Context, DateTime, Duration, Effect, HashSet, Layer, Schedule } from "effect";
+import { Clock, Context, DateTime, Duration, Effect, HashSet, Layer, Number as N, Schedule } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -23,11 +24,11 @@ import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Ticket");
 
-/** Default ticket TTL in milliseconds (5 minutes) */
-const DEFAULT_TTL_MS = 5 * 60 * 1000;
+/** Default ticket lifetime. */
+const DEFAULT_TTL = Duration.minutes(5);
 
 /** Cleanup interval for expired tickets */
-const CLEANUP_INTERVAL_MS = 60 * 1000;
+const CLEANUP_INTERVAL = Duration.minutes(1);
 
 const generateSecureToken = Effect.sync(() => randomBytes(32).toString("base64url"));
 
@@ -81,22 +82,24 @@ const makeTicketService = Effect.gen(function* () {
     );
   });
 
-  yield* cleanup.pipe(Effect.schedule(Schedule.fixed(Duration.millis(CLEANUP_INTERVAL_MS))), Effect.forkDetach);
+  yield* cleanup.pipe(Effect.schedule(Schedule.fixed(CLEANUP_INTERVAL)), Effect.forkDetach);
 
   const createTicket = Effect.fn("TicketService.createTicket")(function* (
     ontologyId: string,
     apiKey: string,
-    ttlMs: number = DEFAULT_TTL_MS
+    ttl: Duration.Duration = DEFAULT_TTL
   ) {
     const ticket = yield* generateSecureToken;
     const now = yield* Clock.currentTimeMillis;
-    const expiresAt = now + ttlMs;
-    const record = TicketRecord.fromUnknown({ ticket, ontologyId, apiKey, createdAt: now, expiresAt });
+    const expiresAt = now + Duration.toMillis(ttl);
+    const record = yield* S.decodeEffect(TicketRecord)({ ticket, ontologyId, apiKey, createdAt: now, expiresAt }).pipe(
+      Effect.mapError(() => AuthenticationError.make({ message: "Invalid ticket record", reason: "invalid" }))
+    );
     yield* persistTicket(ticket, record);
     yield* Effect.logDebug(
-      `Created ticket for ontology=${ontologyId} expires=${DateTime.toDateUtc(DateTime.makeUnsafe(expiresAt)).toISOString()}`
+      `Created ticket for ontology=${ontologyId} expires=${DateTime.formatIso(DateTime.makeUnsafe(expiresAt))}`
     );
-    return { ticket, expiresAt, ttlSeconds: Math.floor(ttlMs / 1000) };
+    return { ticket, expiresAt, ttlSeconds: N.round(Duration.toSeconds(ttl)) };
   });
 
   const validateTicket = Effect.fn("TicketService.validateTicket")(function* (ticket: string) {
@@ -139,7 +142,7 @@ const makeTicketService = Effect.gen(function* () {
         Effect.orElseSucceed(() => false)
       )
     );
-    return flags.filter((active) => active).length;
+    return A.length(A.filter(flags, P.isTruthy));
   });
 
   const validateApiKey = Effect.fn("TicketService.validateApiKey")(function* (

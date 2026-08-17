@@ -106,7 +106,6 @@ export class TicketResponse extends S.Class<TicketResponse>($I`TicketResponse`)(
   })
 ) {
   static readonly is = S.is(TicketResponse);
-  static readonly fromUnknown = S.decodeUnknownSync(TicketResponse);
 }
 
 /**
@@ -162,6 +161,5 @@ export class TicketRecord extends S.Class<TicketRecord>($I`TicketRecord`)(
   })
 ) {
   static readonly is = S.is(TicketRecord);
-  static readonly fromUnknown = S.decodeUnknownSync(TicketRecord);
   static readonly decodeOption = S.decodeUnknownOption(TicketRecord);
 }

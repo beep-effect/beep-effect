@@ -124,7 +124,6 @@ export class IngestLinkRequest extends S.Class<IngestLinkRequest>($I`IngestLinkR
   })
 ) {
   static readonly is = S.is(IngestLinkRequest);
-  static readonly fromUnknown = S.decodeUnknownSync(IngestLinkRequest);
 }
 
 /**
@@ -180,7 +179,6 @@ export class IngestLinkResponse extends S.Class<IngestLinkResponse>($I`IngestLin
   })
 ) {
   static readonly is = S.is(IngestLinkResponse);
-  static readonly fromUnknown = S.decodeUnknownSync(IngestLinkResponse);
 }
 
 /**
@@ -236,7 +234,6 @@ export class BatchIngestRequest extends S.Class<BatchIngestRequest>($I`BatchInge
   })
 ) {
   static readonly is = S.is(BatchIngestRequest);
-  static readonly fromUnknown = S.decodeUnknownSync(BatchIngestRequest);
 }
 
 const BatchIngestResultDefinition = S.TaggedUnion({
@@ -521,9 +518,7 @@ export class ListLinksQuery extends S.Class<ListLinksQuery>($I`ListLinksQuery`)(
   $I.annote("ListLinksQuery", {
     description: "Link-list query with Option-normalized filters and schema-owned pagination defaults.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(ListLinksQuery);
-}
+) {}
 
 /**
  * Compact projection of one ingested link.
@@ -588,9 +583,7 @@ export class LinkSummary extends S.Class<LinkSummary>($I`LinkSummary`)(
   $I.annote("LinkSummary", {
     description: "Compact ingested-link projection with canonical content identity and normalized optional metadata.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(LinkSummary);
-}
+) {}
 
 /**
  * Paginated response listing ingested links.
@@ -682,5 +675,4 @@ export class LinkDetail extends S.Class<LinkDetail>($I`LinkDetail`)(
   })
 ) {
   static readonly is = S.is(LinkDetail);
-  static readonly fromUnknown = S.decodeUnknownSync(LinkDetail);
 }

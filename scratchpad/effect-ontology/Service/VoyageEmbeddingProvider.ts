@@ -19,7 +19,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import { Duration, Effect, Inspectable, Layer, Match, Order, Redacted, Schedule } from "effect";
+import { Duration, Effect, Inspectable, Layer, Match, Number as Num, Order, Redacted, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -165,36 +165,38 @@ export const DEFAULT_TIMEOUT = Duration.seconds(30);
 export const DEFAULT_MAX_RETRIES = 3;
 
 /**
- * Default initial retry delay in milliseconds
+ * Default initial retry delay.
  *
  * **Example** (Inspect default initial retry delay ms)
  *
  * ```ts
- * import { DEFAULT_INITIAL_RETRY_DELAY_MS } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ * import { DEFAULT_INITIAL_RETRY_DELAY } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ * import * as Duration from "effect/Duration"
  *
- * console.log(DEFAULT_INITIAL_RETRY_DELAY_MS)
+ * console.log(Duration.toMillis(DEFAULT_INITIAL_RETRY_DELAY))
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const DEFAULT_INITIAL_RETRY_DELAY_MS = 1_000;
+export const DEFAULT_INITIAL_RETRY_DELAY = Duration.seconds(1);
 
 /**
- * Default retry-after value when header is missing (in seconds)
+ * Default retry-after value when the response header is missing.
  *
  * **Example** (Inspect default retry after seconds)
  *
  * ```ts
- * import { DEFAULT_RETRY_AFTER_SECONDS } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ * import { DEFAULT_RETRY_AFTER } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ * import * as Duration from "effect/Duration"
  *
- * console.log(DEFAULT_RETRY_AFTER_SECONDS)
+ * console.log(Duration.toSeconds(DEFAULT_RETRY_AFTER))
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const DEFAULT_RETRY_AFTER_SECONDS = 60;
+export const DEFAULT_RETRY_AFTER = Duration.minutes(1);
 
 // =============================================================================
 // Response Schema
@@ -235,16 +237,13 @@ const VoyageErrorSchema = S.Struct({
  *
  * @internal
  */
-const parseRetryAfterMs = (response: HttpClientResponse.HttpClientResponse): number => {
-  const retryAfter = response.headers["retry-after"];
-  if (P.isTruthy(retryAfter)) {
-    const seconds = parseInt(retryAfter, 10);
-    if (!Number.isNaN(seconds)) {
-      return seconds * 1000;
-    }
-  }
-  return DEFAULT_RETRY_AFTER_SECONDS * 1000;
-};
+const parseRetryAfter = (response: HttpClientResponse.HttpClientResponse): Duration.Duration =>
+  O.fromNullishOr(response.headers["retry-after"]).pipe(
+    O.flatMap(Num.parse),
+    O.filter((seconds) => seconds >= 0),
+    O.map(Duration.seconds),
+    O.getOrElse(() => DEFAULT_RETRY_AFTER)
+  );
 
 /**
  * Check if HTTP status code is transient (retryable)
@@ -274,7 +273,7 @@ const mapVoyageError = (error: unknown, timeout: Duration.Duration): AnyEmbeddin
         return EmbeddingRateLimitError.make({
           message: "Voyage API rate limit exceeded",
           provider: "voyage",
-          retryAfterMs: O.some(Milliseconds.make(DEFAULT_RETRY_AFTER_SECONDS * 1000)),
+          retryAfterMs: O.some(Milliseconds.make(Duration.toMillis(DEFAULT_RETRY_AFTER))),
         });
       }
       return EmbeddingError.make({
@@ -394,7 +393,7 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
    * Uses exponential backoff with jitter, respects rate limiter
    */
   const retrySchedule = Schedule.max([
-    Schedule.exponential(Duration.millis(DEFAULT_INITIAL_RETRY_DELAY_MS)),
+    Schedule.exponential(DEFAULT_INITIAL_RETRY_DELAY),
     Schedule.recurs(DEFAULT_MAX_RETRIES),
   ]).pipe(Schedule.jittered);
 
@@ -430,7 +429,7 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
               EmbeddingRateLimitError.make({
                 message: `Voyage API rate limit: ${O.getOrElse(errorBody.detail, () => "rate limit exceeded")}`,
                 provider: "voyage",
-                retryAfterMs: O.some(Milliseconds.make(parseRetryAfterMs(res))),
+                retryAfterMs: O.some(Milliseconds.make(Duration.toMillis(parseRetryAfter(res)))),
               })
             )
           )

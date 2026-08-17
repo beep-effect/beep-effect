@@ -163,7 +163,6 @@ export class ArticleSummary extends S.Class<ArticleSummary>($I`ArticleSummary`)(
   })
 ) {
   static readonly is = S.is(ArticleSummary);
-  static readonly fromUnknown = S.decodeUnknownSync(ArticleSummary);
 }
 
 /**
@@ -244,9 +243,7 @@ export class CorrectionSummary extends S.Class<CorrectionSummary>($I`CorrectionS
   $I.annote("CorrectionSummary", {
     description: "Compact correction record linking an original claim to an optional replacement.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(CorrectionSummary);
-}
+) {}
 
 /**
  * Article detail response with its timeline claims and aggregate counts.
@@ -300,9 +297,7 @@ export class TimelineEntityQuery extends S.Class<TimelineEntityQuery>($I`Timelin
   $I.annote("TimelineEntityQuery", {
     description: "Entity-timeline query with optional UTC snapshot/range and a false deprecated-claim default.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(TimelineEntityQuery);
-}
+) {}
 
 /**
  * Timeline response for one entity IRI.
@@ -360,9 +355,7 @@ export class TimelineClaimsQuery extends S.Class<TimelineClaimsQuery>($I`Timelin
   $I.annote("TimelineClaimsQuery", {
     description: "Timeline-claim filters with Option-normalized criteria and constrained pagination defaults.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(TimelineClaimsQuery);
-}
+) {}
 
 /**
  * Paginated response containing timeline claims.
@@ -516,9 +509,7 @@ export class ConflictsQuery extends S.Class<ConflictsQuery>($I`ConflictsQuery`)(
   $I.annote("ConflictsQuery", {
     description: "Conflict filters with Option-normalized criteria and constrained pagination defaults.",
   })
-) {
-  static readonly fromUnknown = S.decodeUnknownSync(ConflictsQuery);
-}
+) {}
 
 const ConflictPair = {
   id: S.NonEmptyString,

@@ -35,12 +35,12 @@ const byRrfScoreDescending = Order.mapInput(
  * RRF formula: score = sum(1 / (k + rank)) for each list containing the item
  * where rank is 1-indexed and k is a constant (typically 60).
  *
- * **Example** (Inspect rrf score)
+ * **Example** (Score two ranks)
  *
  * ```ts
  * import { rrfScore } from "@effect-ontology/Utils/Retrieval"
  *
- * console.log(rrfScore)
+ * console.log(rrfScore([1, 2], 60) > 0) // true
  * ```
  *
  * @param ranks - Array of 1-indexed ranks
@@ -61,12 +61,13 @@ export const rrfScore = dual2((ranks: ReadonlyArray<number>, k: number): number 
  * Takes multiple ranked lists of items and produces a single fused list
  * sorted by RRF score. Items are identified by their `id` field.
  *
- * **Example** (Inspect rrf fusion)
+ * **Example** (Fuse two ranked lists)
  *
  * ```ts
  * import { rrfFusion } from "@effect-ontology/Utils/Retrieval"
  *
- * console.log(rrfFusion)
+ * const fused = rrfFusion([[{ id: "a" }], [{ id: "a" }, { id: "b" }]], 60)
+ * console.log(fused[0]?.id) // "a"
  * ```
  *
  * @param rankedLists - Array of ranked lists, each sorted by relevance
@@ -198,12 +199,11 @@ export const ExpandedTerm = ExpandedTermSource.mapMembers(
 /**
  * Runtime value decoded by {@link ExpandedTerm}.
  *
- * **Example** (Read an expanded term)
+ * **Example** (Select the expansion source)
  * ```ts
  * import type { ExpandedTerm } from "@effect-ontology/Utils/Retrieval"
- *
- * const source = (term: ExpandedTerm): ExpandedTerm["source"] => term.source
- * console.log(typeof source) // "function"
+ * const field: keyof ExpandedTerm = "source"
+ * console.log(field) // "source"
  * ```
  *
  * @category type-level

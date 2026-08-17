@@ -17,8 +17,10 @@ import { PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Struct from "@beep/utils/Struct";
-import { Effect, Inspectable } from "effect";
+import { Effect, Inspectable, Order, pipe } from "effect";
+import * as A from "effect/Array";
 import { flow } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { IdempotencyKey } from "../Domain/Identity.ts";
@@ -137,18 +139,22 @@ export const normalizeText = flow(
  * @since 0.0.0
  */
 export const hashParams = (params: ExtractionParams): string => {
-  // Only include defined values
-  const defined = Struct.entries(params)
-    .filter(([_, v]) => v !== undefined)
-    .sort(([a], [b]) => a.localeCompare(b));
-
-  if (defined.length === 0) {
-    return "0".repeat(16);
-  }
-
-  const sorted = defined.map(([k, v]) => `${k}:${Inspectable.toStringUnknown(v)}`).join("|");
-
-  return sha256Sync(sorted);
+  const defined = pipe(
+    Struct.entries(params),
+    A.filter(([, value]) => P.isNotUndefined(value))
+  );
+  const sortedDefined = A.sort(
+    defined,
+    Order.mapInput(Order.String, (entry: (typeof defined)[number]) => entry[0])
+  );
+  return A.match(sortedDefined, {
+    onEmpty: () => Str.repeat(16)("0"),
+    onNonEmpty: flow(
+      A.map(([key, value]) => `${key}:${Inspectable.toStringUnknown(value)}`),
+      A.join("|"),
+      sha256Sync
+    ),
+  });
 };
 
 /**

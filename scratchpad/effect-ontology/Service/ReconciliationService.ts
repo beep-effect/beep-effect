@@ -17,7 +17,6 @@ import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Context, DateTime, Effect, Layer, Order, Random } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import { StorageService } from "./Storage.ts";
@@ -259,7 +258,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
       yield* Effect.logDebug("Reconciling entity", { entityIri, label, types });
 
       // Check if already linked
-      const existingLinkOpt = yield* storage.get(`${LINKS_PREFIX}${encodeURIComponent(entityIri)}`).pipe(
+      const existingLinkOpt = yield* storage.getOption(`${LINKS_PREFIX}${encodeURIComponent(entityIri)}`).pipe(
         Effect.mapError((e) =>
           ReconciliationError.make({
             message: `Failed to check existing link: ${e}`,
@@ -269,7 +268,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
         )
       );
 
-      if (existingLinkOpt !== undefined) {
+      if (O.isSome(existingLinkOpt)) {
         yield* Effect.logDebug("Entity already linked", { entityIri });
         return {
           entityIri,
@@ -435,7 +434,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
         const tasks: Array<VerificationTask> = [];
 
         for (const key of taskKeys) {
-          const contentOpt = yield* storage.get(key).pipe(
+          const contentOpt = yield* storage.getOption(key).pipe(
             Effect.mapError((e) =>
               ReconciliationError.make({
                 message: `Failed to read task: ${e}`,
@@ -445,8 +444,8 @@ export class ReconciliationService extends Context.Service<ReconciliationService
             )
           );
 
-          if (P.isNotUndefined(contentOpt)) {
-            const task = decodeVerificationTaskOption(contentOpt);
+          if (O.isSome(contentOpt)) {
+            const task = decodeVerificationTaskOption(contentOpt.value);
             if (O.isSome(task) && task.value.status === "pending") {
               tasks.push(task.value);
             }
@@ -469,7 +468,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
       qid: string
     ): Effect.fn.Return<void, ReconciliationError> {
       const taskKey = `${QUEUE_PREFIX}${taskId}`;
-      const contentOpt = yield* storage.get(taskKey).pipe(
+      const contentOpt = yield* storage.getOption(taskKey).pipe(
         Effect.mapError((e) =>
           ReconciliationError.make({
             message: `Failed to read task: ${e}`,
@@ -478,13 +477,13 @@ export class ReconciliationService extends Context.Service<ReconciliationService
           })
         )
       );
-      if (P.isUndefined(contentOpt)) {
+      if (O.isNone(contentOpt)) {
         return yield* ReconciliationError.make({
           message: `Task not found: ${taskId}`,
           entityIri: "",
         });
       }
-      const task = yield* decodeVerificationTask(contentOpt).pipe(
+      const task = yield* decodeVerificationTask(contentOpt.value).pipe(
         Effect.mapError((cause) =>
           ReconciliationError.make({
             message: `Failed to decode verification task: ${cause}`,
@@ -527,7 +526,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
       taskId: string
     ): Effect.fn.Return<void, ReconciliationError> {
       const taskKey = `${QUEUE_PREFIX}${taskId}`;
-      const contentOpt = yield* storage.get(taskKey).pipe(
+      const contentOpt = yield* storage.getOption(taskKey).pipe(
         Effect.mapError((e) =>
           ReconciliationError.make({
             message: `Failed to read task: ${e}`,
@@ -537,14 +536,14 @@ export class ReconciliationService extends Context.Service<ReconciliationService
         )
       );
 
-      if (P.isUndefined(contentOpt)) {
+      if (O.isNone(contentOpt)) {
         return yield* ReconciliationError.make({
           message: `Task not found: ${taskId}`,
           entityIri: "",
         });
       }
 
-      const task = yield* decodeVerificationTask(contentOpt).pipe(
+      const task = yield* decodeVerificationTask(contentOpt.value).pipe(
         Effect.mapError((cause) =>
           ReconciliationError.make({
             message: `Failed to decode verification task: ${cause}`,
@@ -593,7 +592,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
       }>,
       ReconciliationError
     > {
-      const contentOpt = yield* storage.get(`${LINKS_PREFIX}${encodeURIComponent(entityIri)}`).pipe(
+      const contentOpt = yield* storage.getOption(`${LINKS_PREFIX}${encodeURIComponent(entityIri)}`).pipe(
         Effect.mapError((e) =>
           ReconciliationError.make({
             message: `Failed to get link: ${e}`,
@@ -603,11 +602,11 @@ export class ReconciliationService extends Context.Service<ReconciliationService
         )
       );
 
-      if (P.isUndefined(contentOpt)) {
+      if (O.isNone(contentOpt)) {
         return O.none();
       }
 
-      return O.map(decodeWikidataLinkOption(contentOpt), (data) => ({
+      return O.map(decodeWikidataLinkOption(contentOpt.value), (data) => ({
         qid: data.qid,
         wikidataUri: data.wikidataUri,
       }));
