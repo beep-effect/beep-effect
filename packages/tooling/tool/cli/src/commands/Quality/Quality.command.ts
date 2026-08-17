@@ -2056,6 +2056,8 @@ export const runTsgoSmokeCheck = Effect.fn("QualityScriptCommands.runTsgoSmokeCh
  * console.log(typeof isModuleTagScannedPathForTesting !== "undefined") // true
  * ```
  *
+ * @param path - Path service used to normalize the candidate file path.
+ * @returns Whether the file belongs in the module-tags scan.
  * @category testing
  * @since 0.0.0
  */
