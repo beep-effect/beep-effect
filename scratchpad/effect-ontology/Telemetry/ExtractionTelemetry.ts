@@ -6,7 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Context, Effect, Ref } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -20,6 +20,7 @@ class UsageState extends S.Class<UsageState>($I`UsageState`)(
   {
     chunkCount: NonNegativeInt,
     attemptCount: NonNegativeInt,
+    recordedAttempts: NonNegativeInt,
     reportedAttempts: NonNegativeInt,
     completeAttempts: NonNegativeInt,
     inputTokens: NonNegativeInt,
@@ -34,6 +35,7 @@ const emptyUsageState = (): UsageState =>
   UsageState.make({
     chunkCount: NonNegativeInt.make(0),
     attemptCount: NonNegativeInt.make(0),
+    recordedAttempts: NonNegativeInt.make(0),
     reportedAttempts: NonNegativeInt.make(0),
     completeAttempts: NonNegativeInt.make(0),
     inputTokens: NonNegativeInt.make(0),
@@ -51,14 +53,14 @@ const toUsage = (state: UsageState): ProviderTokenUsage => {
     return ProviderTokenUsage.cases.Complete.make({
       inputTokens: state.inputTokens,
       outputTokens: state.outputTokens,
-      attemptCount: state.attemptCount,
+      attemptCount: PosInt.make(state.attemptCount),
     });
   }
   return ProviderTokenUsage.cases.Partial.make({
     inputTokens: state.inputTokens,
     outputTokens: state.outputTokens,
-    attemptCount: state.attemptCount,
-    missingAttempts: NonNegativeInt.make(state.attemptCount - state.completeAttempts),
+    attemptCount: PosInt.make(state.attemptCount),
+    missingAttempts: PosInt.make(state.attemptCount - state.completeAttempts),
   });
 };
 
@@ -107,9 +109,12 @@ const makeExtractionTelemetry = Effect.fn("ExtractionTelemetry.make")(function* 
         Ref.update(state, (current) => {
           const reported = O.isSome(inputTokens) || O.isSome(outputTokens);
           const complete = O.isSome(inputTokens) && O.isSome(outputTokens);
+          const hasPendingAttempt = current.recordedAttempts < current.attemptCount;
+          const attemptCount = hasPendingAttempt ? current.attemptCount : increment(current.attemptCount);
           return UsageState.make({
             chunkCount: current.chunkCount,
-            attemptCount: current.attemptCount,
+            attemptCount,
+            recordedAttempts: increment(current.recordedAttempts),
             reportedAttempts: reported ? increment(current.reportedAttempts) : current.reportedAttempts,
             completeAttempts: complete ? increment(current.completeAttempts) : current.completeAttempts,
             inputTokens: O.match(inputTokens, {

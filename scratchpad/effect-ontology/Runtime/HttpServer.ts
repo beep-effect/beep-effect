@@ -37,7 +37,7 @@ import type { BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
 import { BatchManifest } from "../Domain/Schema/Batch.ts";
 import type { PreprocessingOptions } from "../Domain/Schema/BatchRequest.ts";
 import { BatchRequest } from "../Domain/Schema/BatchRequest.ts";
-import { ClaimId, ClaimRank, TextSpan } from "../Domain/Schema/KnowledgeModel.ts";
+import { ClaimRank, TextSpan } from "../Domain/Schema/KnowledgeModel.ts";
 import {
   ArticleSearchRequest,
   ArticleSearchResponse,
@@ -51,7 +51,6 @@ import {
   SuggestionQuery,
   SuggestionsResponse,
 } from "../Domain/Schema/Search.ts";
-import type { CorrectionSummary } from "../Domain/Schema/Timeline.ts";
 import {
   ArticleDetailResponse,
   ArticleSummary,
@@ -60,6 +59,9 @@ import {
   ConflictsQuery,
   ConflictsResponse,
   ConflictTransition,
+  CorrectionSummary,
+  PersistedClaimId,
+  PersistedCorrectionId,
   TimelineClaimsQuery,
   TimelineClaimsResponse,
   TimelineEntityQuery,
@@ -260,7 +262,7 @@ const claimRowToClaimWithRank = Effect.fn("HttpServer.claimRowToClaimWithRank")(
   );
 
   return ClaimWithRank.make({
-    id: ClaimId.make(`claim-${Str.takeLeft(12)(Str.replace(/-/g, "")(claim.id))}`),
+    id: PersistedClaimId.make(claim.id),
     subject,
     predicate,
     object,
@@ -384,7 +386,7 @@ export const TimelineRouter = HttpRouter.addAll([
         ontologyId: queryParams.ontologyId,
         subjectIri: decodedIri,
         includeDeprecated: queryParams.includeDeprecated,
-        limit: 100,
+        limit: PosInt.make(100),
       });
 
       // Get articles for each claim
@@ -414,15 +416,41 @@ export const TimelineRouter = HttpRouter.addAll([
         return true;
       });
 
-      // Get corrections (simplified - would need correction repository)
-      const correctionsList: Array<CorrectionSummary> = [];
+      const correctionSourceClaims = queryParams.includeDeprecated
+        ? claims
+        : yield* claimRepo.getClaims({
+            ontologyId: queryParams.ontologyId,
+            subjectIri: decodedIri,
+            includeDeprecated: true,
+          });
+      const correctionEntries = yield* Effect.forEach(
+        correctionSourceClaims,
+        (claim) => claimRepo.getCorrectionChain(claim.id),
+        { concurrency: "unbounded" }
+      );
+      const correctionsList = A.map(
+        A.dedupeWith(A.flatten(correctionEntries), (left, right) =>
+          Equal.equals(left.correction.id, right.correction.id)
+        ),
+        (entry) =>
+          CorrectionSummary.make({
+            id: PersistedCorrectionId.make(entry.correction.id),
+            correctionType: entry.correction.correctionType,
+            reason: O.fromNullishOr(entry.correction.reason),
+            correctionDate: DateTime.fromDateUnsafe(entry.correction.correctionDate),
+            originalClaimId: PersistedClaimId.make(entry.originalClaimId),
+            newClaimId: O.map(entry.newClaimId, PersistedClaimId.make),
+          })
+      );
 
-      return yield* HttpServerResponse.schemaJson(TimelineEntityResponse)({
-        iri: decodedIri,
-        asOf: queryParams.asOf,
-        claims: validClaims,
-        corrections: correctionsList,
-      });
+      return yield* HttpServerResponse.schemaJson(TimelineEntityResponse)(
+        TimelineEntityResponse.make({
+          iri: decodedIri,
+          asOf: queryParams.asOf,
+          claims: validClaims,
+          corrections: correctionsList,
+        })
+      );
     })
   ),
   HttpRouter.route(
@@ -443,7 +471,7 @@ export const TimelineRouter = HttpRouter.addAll([
         ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
         ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
         ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
-        limit: limit + 1, // Fetch one extra to check hasMore
+        limit: PosInt.make(limit + 1), // Fetch one extra to check hasMore
         offset,
       });
 
@@ -476,13 +504,15 @@ export const TimelineRouter = HttpRouter.addAll([
         ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
       });
 
-      return yield* HttpServerResponse.schemaJson(TimelineClaimsResponse)({
-        claims: validClaims,
-        total: NonNegativeInt.make(total),
-        limit: PosInt.make(limit),
-        offset: NonNegativeInt.make(offset),
-        hasMore,
-      });
+      return yield* HttpServerResponse.schemaJson(TimelineClaimsResponse)(
+        TimelineClaimsResponse.make({
+          claims: validClaims,
+          total: NonNegativeInt.make(total),
+          limit: PosInt.make(limit),
+          offset: NonNegativeInt.make(offset),
+          hasMore,
+        })
+      );
     })
   ),
   HttpRouter.route(
@@ -532,12 +562,14 @@ export const TimelineRouter = HttpRouter.addAll([
         ConflictsQuery.make({ ontologyId: queryParams.ontologyId, articleId: O.some(UUID.make(articleId)) })
       );
 
-      return yield* HttpServerResponse.schemaJson(ArticleDetailResponse)({
-        article: yield* articleRowToArticleSummary(article),
-        claims: claimsWithRank,
-        entityCount: NonNegativeInt.make(HashSet.size(uniqueSubjects)),
-        conflictCount: NonNegativeInt.make(conflictCounts.total),
-      });
+      return yield* HttpServerResponse.schemaJson(ArticleDetailResponse)(
+        ArticleDetailResponse.make({
+          article: yield* articleRowToArticleSummary(article),
+          claims: claimsWithRank,
+          entityCount: NonNegativeInt.make(HashSet.size(uniqueSubjects)),
+          conflictCount: NonNegativeInt.make(conflictCounts.total),
+        })
+      );
     })
   ),
   HttpRouter.route(
@@ -620,7 +652,7 @@ export const SearchRouter = HttpRouter.addAll([
           HttpServerResponse.json(
             {
               error: "VALIDATION_ERROR",
-              message: error.toString(),
+              message: Inspectable.toStringUnknown(error, 0),
             },
             { status: 400 }
           ),
@@ -681,15 +713,17 @@ export const SearchRouter = HttpRouter.addAll([
           const validClaims = A.take(A.drop(filteredClaims, offset), limit);
           const hasMore = filteredClaims.length > offset + limit;
 
-          return yield* HttpServerResponse.schemaJson(ClaimSearchResponse)({
-            query: request.query,
-            claims: validClaims,
-            total: NonNegativeInt.make(filteredClaims.length),
-            limit,
-            offset,
-            hasMore,
-            facets: O.none(),
-          });
+          return yield* HttpServerResponse.schemaJson(ClaimSearchResponse)(
+            ClaimSearchResponse.make({
+              query: request.query,
+              claims: validClaims,
+              total: NonNegativeInt.make(filteredClaims.length),
+              limit,
+              offset,
+              hasMore,
+              facets: O.none(),
+            })
+          );
         }),
       })
     )
@@ -703,7 +737,7 @@ export const SearchRouter = HttpRouter.addAll([
           HttpServerResponse.json(
             {
               error: "VALIDATION_ERROR",
-              message: error.toString(),
+              message: Inspectable.toStringUnknown(error, 0),
             },
             { status: 400 }
           ),
@@ -716,7 +750,7 @@ export const SearchRouter = HttpRouter.addAll([
           const claims = yield* claimRepo.getClaims({
             ontologyId: request.ontologyId,
             includeDeprecated: false,
-            limit: 1000,
+            limit: PosInt.make(1000),
           });
 
           // Group by subject and filter by query
@@ -778,11 +812,13 @@ export const SearchRouter = HttpRouter.addAll([
             })
           );
 
-          return yield* HttpServerResponse.schemaJson(EntitySearchResponse)({
-            query: request.query,
-            entities,
-            total: NonNegativeInt.make(entities.length),
-          });
+          return yield* HttpServerResponse.schemaJson(EntitySearchResponse)(
+            EntitySearchResponse.make({
+              query: request.query,
+              entities,
+              total: NonNegativeInt.make(entities.length),
+            })
+          );
         }),
       })
     )
@@ -815,7 +851,7 @@ export const SearchRouter = HttpRouter.addAll([
       const claims = yield* claimRepo.getClaims({
         ontologyId: queryParams.ontologyId,
         includeDeprecated: false,
-        limit: 500,
+        limit: PosInt.make(500),
       });
 
       const prefixLower = Str.toLowerCase(queryParams.prefix);
@@ -847,10 +883,12 @@ export const SearchRouter = HttpRouter.addAll([
         )
       );
 
-      return yield* HttpServerResponse.schemaJson(SuggestionsResponse)({
-        prefix: queryParams.prefix,
-        suggestions: suggestionList,
-      });
+      return yield* HttpServerResponse.schemaJson(SuggestionsResponse)(
+        SuggestionsResponse.make({
+          prefix: queryParams.prefix,
+          suggestions: suggestionList,
+        })
+      );
     })
   ),
   HttpRouter.route(
@@ -862,7 +900,7 @@ export const SearchRouter = HttpRouter.addAll([
           HttpServerResponse.json(
             {
               error: "VALIDATION_ERROR",
-              message: error.toString(),
+              message: Inspectable.toStringUnknown(error, 0),
             },
             { status: 400 }
           ),
@@ -933,13 +971,15 @@ export const SearchRouter = HttpRouter.addAll([
 
           const total = NonNegativeInt.make(filtered.length);
 
-          return yield* HttpServerResponse.schemaJson(ArticleSearchResponse)({
-            articles: results,
-            total: NonNegativeInt.make(total),
-            limit,
-            offset,
-            hasMore,
-          });
+          return yield* HttpServerResponse.schemaJson(ArticleSearchResponse)(
+            ArticleSearchResponse.make({
+              articles: results,
+              total: NonNegativeInt.make(total),
+              limit,
+              offset,
+              hasMore,
+            })
+          );
         }),
       })
     )
@@ -1183,6 +1223,9 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
           app.pipe(
             Effect.catchCause(
               Effect.fnUntraced(function* (cause) {
+                if (Cause.hasInterrupts(cause)) {
+                  return yield* Effect.failCause(cause);
+                }
                 const requestId = Math.abs(yield* Random.nextInt).toString(16);
 
                 yield* Effect.logError("Unhandled error in HTTP handler", {
@@ -1198,17 +1241,6 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
                       type: "defect",
                     },
                     { status: 500 }
-                  );
-                }
-
-                if (Cause.hasInterrupts(cause)) {
-                  return yield* HttpServerResponse.json(
-                    {
-                      error: "Request was cancelled",
-                      requestId,
-                      type: "interrupted",
-                    },
-                    { status: 503 }
                   );
                 }
 

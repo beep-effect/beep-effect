@@ -184,7 +184,7 @@ const extractHandler = Effect.fn("extractHandler")(function* (
     chunking: ChunkingConfig.make({
       maxChunkSize: PosInt.make(2000),
       preserveSentences: true,
-      overlapTokens: NonNegativeInt.make(50),
+      overlapSentences: NonNegativeInt.make(2),
     }),
     llm: LlmConfig.make({
       model: "claude-haiku-4-5",
@@ -193,7 +193,6 @@ const extractHandler = Effect.fn("extractHandler")(function* (
       timeout: Duration.millis(60000),
     }),
     concurrency: PosInt.make(concurrency),
-    enableGrounding: true,
   });
   const workflow = yield* ExtractionWorkflow;
   const { graph } = yield* workflow.extract(inputText, runConfig);

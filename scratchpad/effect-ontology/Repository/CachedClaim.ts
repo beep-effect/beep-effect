@@ -18,7 +18,7 @@ const $I = $ScratchpadId.create("effect-ontology/Repository/CachedClaim");
 import { Cache, Data, Duration, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import type { ClaimId, CorrectionId } from "./Claim.ts";
+import type { PersistedClaimId, PersistedCorrectionId } from "./Claim.ts";
 import { ClaimRepository } from "./Claim.ts";
 import type { ClaimInsertRow } from "./schema.ts";
 
@@ -82,7 +82,8 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
     });
 
     // Cached single claim lookup
-    const getClaim = (id: ClaimId, ontologyId: string) => Cache.get(claimCache, scopedCacheKey(id, ontologyId));
+    const getClaim = (id: PersistedClaimId, ontologyId: string) =>
+      Cache.get(claimCache, scopedCacheKey(id, ontologyId));
 
     // Cached subject query
     const getClaimsBySubject = (subjectIri: string, ontologyId: string) =>
@@ -103,8 +104,8 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
 
     // Invalidate caches on deprecation
     const deprecateClaim = Effect.fn("CachedClaimRepository.deprecateClaim")(function* (
-      claimId: ClaimId,
-      correctionId: CorrectionId,
+      claimId: PersistedClaimId,
+      correctionId: PersistedCorrectionId,
       ontologyId: string
     ) {
       const existing = yield* repo.getClaim(claimId, ontologyId);
@@ -119,15 +120,18 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
     // Invalidate caches on batch insert
     const insertClaimsBatch = (claimList: Array<ClaimInsertRow>) =>
       repo.insertClaimsBatch(claimList).pipe(
-        Effect.tap((_results) =>
+        Effect.tap((results) =>
           Effect.all(
-            // Invalidate subject caches for all affected subjects
-            pipe(
-              claimList,
-              A.map((claim) => scopedCacheKey(claim.subjectIri, claim.ontologyId)),
-              HashSet.fromIterable,
-              HashSet.map((iri) => Cache.invalidate(subjectCache, iri))
-            ),
+            [
+              ...pipe(
+                claimList,
+                A.map((claim) => scopedCacheKey(claim.subjectIri, claim.ontologyId)),
+                HashSet.fromIterable,
+                A.fromIterable,
+                A.map((key) => Cache.invalidate(subjectCache, key))
+              ),
+              ...A.map(results, (claim) => Cache.invalidate(claimCache, scopedCacheKey(claim.id, claim.ontologyId))),
+            ],
             { concurrency: "unbounded", discard: true }
           )
         )
@@ -136,18 +140,35 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
     // Invalidate caches on upsert batch
     const upsertClaimsBatch = (claimList: Array<ClaimInsertRow>) =>
       repo.upsertClaimsBatch(claimList).pipe(
-        Effect.tap((_results) =>
+        Effect.tap((results) =>
           Effect.all(
-            pipe(
-              claimList,
-              A.map((claim) => scopedCacheKey(claim.subjectIri, claim.ontologyId)),
-              HashSet.fromIterable,
-              HashSet.map((iri) => Cache.invalidate(subjectCache, iri))
-            ),
+            [
+              ...pipe(
+                claimList,
+                A.map((claim) => scopedCacheKey(claim.subjectIri, claim.ontologyId)),
+                HashSet.fromIterable,
+                A.fromIterable,
+                A.map((key) => Cache.invalidate(subjectCache, key))
+              ),
+              ...A.map(results, (claim) => Cache.invalidate(claimCache, scopedCacheKey(claim.id, claim.ontologyId))),
+            ],
             { concurrency: "unbounded", discard: true }
           )
         )
       );
+
+    const promoteToPreferred = Effect.fn("CachedClaimRepository.promoteToPreferred")(function* (
+      claimId: PersistedClaimId,
+      ontologyId: string
+    ) {
+      const existing = yield* repo.getClaim(claimId, ontologyId);
+      yield* repo.promoteToPreferred(claimId, ontologyId);
+      yield* Cache.invalidate(claimCache, scopedCacheKey(claimId, ontologyId));
+      yield* O.match(existing, {
+        onNone: () => Effect.void,
+        onSome: (claim) => Cache.invalidate(subjectCache, scopedCacheKey(claim.subjectIri, ontologyId)),
+      });
+    });
 
     return {
       getClaim,
@@ -161,7 +182,7 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
       getClaimsByArticle: repo.getClaimsByArticle,
       getPreferredClaims: repo.getPreferredClaims,
       getClaimHistory: repo.getClaimHistory,
-      promoteToPreferred: repo.promoteToPreferred,
+      promoteToPreferred,
       insertCorrection: repo.insertCorrection,
       getCorrection: repo.getCorrection,
       linkClaimsToCorrection: repo.linkClaimsToCorrection,

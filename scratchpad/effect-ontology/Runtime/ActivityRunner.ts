@@ -62,25 +62,25 @@ const getActivityPayload = Config.string("ACTIVITY_PAYLOAD").pipe(Config.withDef
  *
  * Schema validation happens at ingress - the decoded payload is passed directly to the activity.
  */
-const runExtraction = Effect.fnUntraced(function* runExtraction(payloadJson: string) {
+const runExtraction = Effect.fn("ActivityRunner.runExtraction")(function* (payloadJson: string) {
   const payload = yield* ExtractionActivityInput.decodeEffectFromJsonString(payloadJson);
   const activity = makeStreamingExtractionActivity(payload);
   return yield* activity.execute;
 });
 
-const runResolution = Effect.fnUntraced(function* runResolution(payloadJson: string) {
+const runResolution = Effect.fn("ActivityRunner.runResolution")(function* (payloadJson: string) {
   const payload = yield* ResolutionActivityInput.decodeEffectFromJsonString(payloadJson);
   const activity = makeResolutionActivity(payload);
   return yield* activity.execute;
 });
 
-const runValidation = Effect.fnUntraced(function* runValidation(payloadJson: string) {
+const runValidation = Effect.fn("ActivityRunner.runValidation")(function* (payloadJson: string) {
   const payload = yield* ValidationActivityInput.decodeEffectFromJsonString(payloadJson);
   const activity = makeValidationActivity(payload);
   return yield* activity.execute;
 });
 
-const runIngestion = Effect.fnUntraced(function* runIngestion(payloadJson: string) {
+const runIngestion = Effect.fn("ActivityRunner.runIngestion")(function* (payloadJson: string) {
   const payload = yield* IngestionActivityInput.decodeEffectFromJsonString(payloadJson);
   const activity = makeIngestionActivity(payload);
   return yield* activity.execute;
@@ -94,7 +94,10 @@ const activityHandler = Match.type<ActivityName>().pipe(
   Match.exhaustive
 );
 
-const dispatchActivity = Effect.fnUntraced(function* dispatchActivity(name: ActivityName, payloadJson: string) {
+const dispatchActivity = Effect.fn("ActivityRunner.dispatchActivity")(function* (
+  name: ActivityName,
+  payloadJson: string
+) {
   return yield* activityHandler(name)(payloadJson);
 });
 

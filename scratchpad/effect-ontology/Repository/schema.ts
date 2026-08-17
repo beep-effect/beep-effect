@@ -13,6 +13,7 @@
 import { Model, VariantField } from "@beep/effect-drizzle";
 import * as pg from "@beep/effect-drizzle/pg";
 import { $ScratchpadId } from "@beep/identity";
+import { Sha256Hex } from "@beep/schema/Sha256";
 import { sql } from "drizzle-orm";
 import { Number as Num, SchemaGetter } from "effect";
 import * as A from "effect/Array";
@@ -26,6 +27,7 @@ const $I = $ScratchpadId.create("effect-ontology/Repository/schema");
 
 const CorrectionType = S.Literals(["retraction", "clarification", "update", "amendment"]);
 const ClaimObjectType = S.Literals(["iri", "literal"]);
+const Sha256HexString = Sha256Hex.pipe(S.decodeTo(S.String));
 const nullableColumn = <Schema extends S.Top>(schema: Schema) => {
   const nullable = S.NullOr(schema);
   const optional = S.optional(nullable);
@@ -372,14 +374,10 @@ export class Conflicts extends Model<Conflicts>("Conflicts")(
       pg.columnName("accepted_claim_id")
     ),
     resolvedBy: nullableColumn(S.String).pipe(pg.text(), pg.columnName("resolved_by")),
-    resolvedByFingerprint: nullableColumn(S.String).pipe(pg.text(), pg.columnName("resolved_by_fingerprint")),
+    resolvedByFingerprint: nullableColumn(Sha256HexString).pipe(pg.text(), pg.columnName("resolved_by_fingerprint")),
     resolvedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("resolved_at")),
     resolutionNotes: nullableColumn(S.String).pipe(pg.text(), pg.columnName("resolution_notes")),
-    detectedAt: nullableColumn(S.Date).pipe(
-      pg.timestamp({ mode: "date" }),
-      pg.defaultNow(),
-      pg.columnName("detected_at")
-    ),
+    detectedAt: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.defaultNow(), pg.columnName("detected_at")),
   },
   (table) => [
     pg.Table.index("idx_conflicts_ontology_status", [table.ontologyId, table.status]),

@@ -17,11 +17,10 @@ import type { Stream } from "effect";
 import { Context, DateTime, Effect, Layer, Match } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import type * as S from "effect/Schema";
+import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { EventBusError } from "../Domain/Error/EventBus.ts";
 import { ContentHash } from "../Domain/Identity.ts";
-import { EntityId } from "../Domain/Model/shared.ts";
 import type {
   AddAliasAction,
   CorrectTripleAction,
@@ -33,7 +32,7 @@ import type {
 import { BackgroundJobId, EmbeddingJob, PromptCacheJob } from "../Domain/Schema/JobSchema.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
-import { EntityRegistryRepository, normalizeEntityMention } from "../Repository/EntityRegistry.ts";
+import { CanonicalEntityId, EntityRegistryRepository, normalizeEntityMention } from "../Repository/EntityRegistry.ts";
 import { ExamplesRepository } from "../Repository/Examples.ts";
 import { sha256SyncFull } from "../Utils/Hash.ts";
 import { EmbeddingService } from "./Embedding.ts";
@@ -317,6 +316,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       }
 
       const canonical = canonicalOpt.value;
+      const canonicalEntityId = yield* S.decodeEffect(CanonicalEntityId)(canonical.id);
 
       // Embed the alias
       const prefixedMention = `${action.ontologyId}: ${action.aliasMention}`;
@@ -325,7 +325,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       // Insert alias
       const alias = yield* entityRegistry.insertAlias({
         ontologyId: action.ontologyId,
-        canonicalEntityId: canonical.id,
+        canonicalEntityId,
         mention: action.aliasMention,
         mentionNormalized: normalizeEntityMention(action.aliasMention),
         embedding: embedding,
@@ -336,7 +336,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
       // Rebuild blocking tokens
       yield* entityRegistry.rebuildBlockingTokens(
         action.ontologyId,
-        canonical.id,
+        canonicalEntityId,
         `${canonical.canonicalMention} ${action.aliasMention}`
       );
 
@@ -347,7 +347,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
             ContentHash.make(sha256SyncFull(`${action.ontologyId}:${canonical.id}:${DateTime.toEpochMillis(now)}`))
           ),
           ontologyId: action.ontologyId,
-          canonicalEntityId: EntityId.make(canonical.id),
+          canonicalEntityId,
           reason: "alias_added",
           createdAt: now,
         })

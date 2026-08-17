@@ -3,6 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ExtractionMetrics } from "../../Domain/Model/OntologyAgent.ts";
 import {
   captureExtractionTelemetry,
@@ -66,6 +67,38 @@ describe("ExtractionTelemetry", () => {
           Unavailable: ({ attemptCount }) => attemptCount,
         })
       ).toBe(1);
+    })
+  );
+
+  it.effect(
+    "records provider usage atomically when an explicit attempt signal is absent",
+    Effect.fnUntraced(function* () {
+      const [, snapshot] = yield* captureExtractionTelemetry(recordProviderUsage({ inputTokens: 3, outputTokens: 2 }));
+
+      expect(
+        ProviderTokenUsage.match(snapshot.usage, {
+          Complete: ({ attemptCount, inputTokens, outputTokens }) => ({ attemptCount, inputTokens, outputTokens }),
+          Partial: () => undefined,
+          Unavailable: () => undefined,
+        })
+      ).toEqual({ attemptCount: 1, inputTokens: 3, outputTokens: 2 });
+    })
+  );
+
+  it.effect(
+    "rejects partial usage whose missing count exceeds its attempt count",
+    Effect.fnUntraced(function* () {
+      yield* Effect.sync(() => {
+        const decoded = S.decodeOption(ProviderTokenUsage)({
+          _tag: "Partial",
+          inputTokens: 1,
+          outputTokens: 0,
+          attemptCount: 1,
+          missingAttempts: 2,
+        });
+
+        expect(O.isNone(decoded)).toBe(true);
+      });
     })
   );
 

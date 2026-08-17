@@ -9,7 +9,7 @@ import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
 import { PrimaryKey, Tuple } from "effect";
 import * as S from "effect/Schema";
-import { DocumentId, IdempotencyKey, OntologyVersion } from "../Identity.ts";
+import { ChunkId, DocumentId, IdempotencyKey, OntologyVersion } from "../Identity.ts";
 import { PathLayout } from "../PathLayout.ts";
 import { OntologyRef } from "./Ontology.ts";
 import { OutputType } from "./OutputType.ts";
@@ -273,7 +273,7 @@ const ChunkSize = PosInt.check(
     {
       identifier: $I`ChunkSizeRangeCheck`,
       title: "Chunk Size Range",
-      description: "A chunk size from 100 through 10,000 tokens.",
+      description: "A chunk size from 100 through 10,000 UTF-16 characters.",
       message: "Chunk size must be an integer between 100 and 10000.",
     }
   )
@@ -289,18 +289,18 @@ const ChunkSize = PosInt.check(
   })
   .pipe(
     $I.annoteSchema("ChunkSize", {
-      description: "Maximum extraction chunk size measured in tokens.",
+      description: "Maximum extraction chunk size measured in UTF-16 characters.",
     })
   );
 
-const OverlapTokens = NonNegativeInt.check(
+const SentenceOverlap = NonNegativeInt.check(
   S.isBetween(
-    { minimum: 0, maximum: 200 },
+    { minimum: 0, maximum: 20 },
     {
-      identifier: $I`OverlapTokensRangeCheck`,
-      title: "Chunk Overlap Range",
-      description: "A chunk overlap from zero through 200 tokens.",
-      message: "Chunk overlap must be an integer between 0 and 200.",
+      identifier: $I`SentenceOverlapRangeCheck`,
+      title: "Sentence Overlap Range",
+      description: "A chunk overlap from zero through 20 sentences.",
+      message: "Sentence overlap must be an integer between 0 and 20.",
     }
   )
 )
@@ -309,13 +309,13 @@ const OverlapTokens = NonNegativeInt.check(
       fc
         .integer({
           min: 0,
-          max: 200,
+          max: 20,
         })
         .map(NonNegativeInt.make),
   })
   .pipe(
-    $I.annoteSchema("OverlapTokens", {
-      description: "Number of tokens repeated between adjacent extraction chunks.",
+    $I.annoteSchema("SentenceOverlap", {
+      description: "Number of complete sentences repeated between adjacent extraction chunks.",
     })
   );
 
@@ -328,7 +328,7 @@ const OverlapTokens = NonNegativeInt.check(
  *
  * const config = ChunkingConfig.default()
  * console.log(config.maxChunkSize) // 4000
- * console.log(config.overlapTokens) // 50
+ * console.log(config.overlapSentences) // 2
  * ```
  *
  * @category configuration
@@ -338,7 +338,7 @@ export class ChunkingConfig extends S.Class<ChunkingConfig>($I`ChunkingConfig`)(
   {
     maxChunkSize: ChunkSize.pipe(SchemaUtils.withKeyDefaults(ChunkSize.make(4_000))),
     preserveSentences: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    overlapTokens: OverlapTokens.pipe(SchemaUtils.withKeyDefaults(OverlapTokens.make(50))),
+    overlapSentences: SentenceOverlap.pipe(SchemaUtils.withKeyDefaults(SentenceOverlap.make(2))),
   },
   $I.annote("ChunkingConfig", {
     description: "Bounded, schema-defaulted policy for extraction text chunking.",
@@ -347,7 +347,7 @@ export class ChunkingConfig extends S.Class<ChunkingConfig>($I`ChunkingConfig`)(
   /**
    * Constructs the canonical chunking policy.
    *
-   * **Example** (Use Temperature)
+   * **Example** (Use the default chunking policy)
    * ```ts
    * import { ChunkingConfig } from "@effect-ontology/Model/ExtractionRun"
    *
@@ -578,10 +578,6 @@ export class RunConfig extends S.Class<RunConfig>($I`RunConfig`)(
       SchemaUtils.withKeyDefaults(GroundingPolicy.cases.Enabled.make({})),
       S.annotateKey({ description: "Grounding policy applied to extracted facts." })
     ),
-    enableGrounding: S.Boolean.pipe(
-      SchemaUtils.withKeyDefaults(true),
-      S.annotateKey({ description: "Deprecated compatibility ingress retained for historical run snapshots." })
-    ),
   },
   $I.annote("RunConfig", {
     description: "Ontology, chunking, model, concurrency, and grounding snapshot for a run.",
@@ -687,8 +683,8 @@ export class ExtractionRun extends S.Class<ExtractionRun>($I`ExtractionRun`)(
    * @param index - Zero-based chunk index.
    * @returns A run-scoped chunk identifier in `{runId}-chunk-{index}` form.
    */
-  static chunkId(runId: DocumentId, index: NonNegativeInt): string {
-    return `${runId}-chunk-${index}`;
+  static chunkId(runId: DocumentId, index: NonNegativeInt): ChunkId {
+    return ChunkId.fromDocument(runId, index);
   }
 
   /**

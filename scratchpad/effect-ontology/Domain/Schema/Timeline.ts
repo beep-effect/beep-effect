@@ -7,13 +7,15 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema/Sha256";
 import { UUID } from "@beep/schema/String";
 import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { OptionalConfidence } from "../Model/shared.ts";
-import { ClaimId, ClaimRank, RdfObject, TextSpan } from "./KnowledgeModel.ts";
+import { ClaimRank, RdfObject, TextSpan } from "./KnowledgeModel.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Timeline");
+const Sha256HexString = Sha256Hex.pipe(S.decodeTo(S.String));
 
 /**
  * Claim-rank vocabulary re-exported for timeline source-path parity.
@@ -29,6 +31,66 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Timeline");
  * @since 0.0.0
  */
 export { ClaimRank };
+
+/**
+ * Database UUID identifying one persisted claim row.
+ *
+ * **Example** (Decode a persisted claim identifier)
+ *
+ * ```ts
+ * import { PersistedClaimId } from "@effect-ontology/Schema/Timeline"
+ *
+ * const id = PersistedClaimId.make("00000000-0000-4000-8000-000000000011")
+ * console.log(id)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersistedClaimId = UUID.annotate({
+  toArbitrary: () => (fc) => fc.uuid().map(UUID.make),
+}).pipe(
+  $I.annoteSchema("PersistedClaimId", {
+    description: "Database UUID identifying a persisted claim row, distinct from a content-derived ClaimId.",
+  })
+);
+/**
+ * Runtime value decoded by {@link PersistedClaimId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersistedClaimId = typeof PersistedClaimId.Type;
+
+/**
+ * Database UUID identifying one persisted correction row.
+ *
+ * **Example** (Decode a persisted correction identifier)
+ *
+ * ```ts
+ * import { PersistedCorrectionId } from "@effect-ontology/Schema/Timeline"
+ *
+ * const id = PersistedCorrectionId.make("00000000-0000-4000-8000-000000000099")
+ * console.log(id)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const PersistedCorrectionId = UUID.annotate({
+  toArbitrary: () => (fc) => fc.uuid().map(UUID.make),
+}).pipe(
+  $I.annoteSchema("PersistedCorrectionId", {
+    description: "Database UUID identifying a persisted correction row.",
+  })
+);
+/**
+ * Runtime value decoded by {@link PersistedCorrectionId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type PersistedCorrectionId = typeof PersistedCorrectionId.Type;
 
 const BooleanQueryValueDefinition = LiteralKit(["true", "false", "1", "0"]).pipe(
   S.decodeTo(S.Boolean, {
@@ -188,7 +250,7 @@ export class ArticleSummary extends S.Class<ArticleSummary>($I`ArticleSummary`)(
  */
 export class ClaimWithRank extends S.Class<ClaimWithRank>($I`ClaimWithRank`)(
   {
-    id: ClaimId,
+    id: PersistedClaimId,
     subject: IRI,
     predicate: IRI,
     object: RdfObject,
@@ -221,12 +283,12 @@ export class ClaimWithRank extends S.Class<ClaimWithRank>($I`ClaimWithRank`)(
  * import { CorrectionSummary } from "@effect-ontology/Schema/Timeline"
  *
  * const correction = S.decodeUnknownOption(CorrectionSummary)({
- *   id: "correction-42",
- *   correctionType: "superseded",
+ *   id: "00000000-0000-4000-8000-000000000099",
+ *   correctionType: "update",
  *   correctionDate: "2026-07-25T12:00:00.000Z",
- *   originalClaimId: "claim-abc123def456"
+ *   originalClaimId: "00000000-0000-4000-8000-000000000011"
  * })
- * console.log(O.map(correction, (value) => value.correctionType)) // Some("superseded")
+ * console.log(O.map(correction, (value) => value.correctionType)) // Some("update")
  * ```
  *
  * @category models
@@ -234,12 +296,12 @@ export class ClaimWithRank extends S.Class<ClaimWithRank>($I`ClaimWithRank`)(
  */
 export class CorrectionSummary extends S.Class<CorrectionSummary>($I`CorrectionSummary`)(
   {
-    id: S.NonEmptyString,
+    id: PersistedCorrectionId,
     correctionType: S.NonEmptyString,
     reason: S.OptionFromNullishOr(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     correctionDate: S.DateTimeUtcFromString,
-    originalClaimId: ClaimId,
-    newClaimId: S.OptionFromNullishOr(ClaimId).pipe(SchemaUtils.withNoneDefault),
+    originalClaimId: PersistedClaimId,
+    newClaimId: S.OptionFromNullishOr(PersistedClaimId).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("CorrectionSummary", {
     description: "Compact correction record linking an original claim to an optional replacement.",
@@ -547,7 +609,7 @@ export type ConflictKind = typeof ConflictKind.Type;
 export class ConflictActor extends S.Class<ConflictActor>($I`ConflictActor`)(
   {
     principal: S.NonEmptyString,
-    credentialFingerprint: S.Option(S.NonEmptyString),
+    credentialFingerprint: S.Option(Sha256HexString),
   },
   $I.annote("ConflictActor", {
     description: "Authenticated request principal and optional irreversible credential fingerprint.",
@@ -606,7 +668,7 @@ const ClaimConflictDefinition = S.TaggedUnion({
     ...ConflictPair,
     resolution: S.Struct({
       strategy: S.NonEmptyString,
-      acceptedClaimId: ClaimId,
+      acceptedClaimId: PersistedClaimId,
       resolvedBy: S.NonEmptyString,
       resolvedAt: S.DateTimeUtcFromString,
       notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),

@@ -24,6 +24,7 @@ import { ChunkId, DocumentId, GcsUri } from "../Identity.ts";
 import { Attributes, EntityId } from "./shared.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/Entity");
+const noConfidence: () => O.Option<Confidence> = O.none;
 
 const EvidenceSpanShape = S.Struct({
   ...TextAnchorFields,
@@ -233,12 +234,20 @@ const NotEvaluatedGrounding = GroundingDecision.cases.NotEvaluated.make({});
 /**
  * Source-grounded observation of one extracted entity occurrence.
  *
- * **Example** (Inspect the entity observation schema)
+ * **Example** (Decode an entity observation)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { EntityObservation } from "@effect-ontology/Model/Entity"
  *
- * console.log(S.is(EntityObservation)({})) // false
+ * const observation = S.decodeUnknownOption(EntityObservation)({
+ *   id: "urn:example:observation:entity:ada",
+ *   provenance: "urn:example:provenance:entity:ada",
+ *   activity: "urn:example:activity:extract",
+ *   source: "urn:example:source:document",
+ *   evidence: [{ text: "Ada", startChar: 0, endChar: 3 }]
+ * })
+ * console.log(O.map(observation, (value) => value.evidence[0].quote)) // Some("Ada")
  * ```
  *
  * @category models
@@ -266,12 +275,20 @@ export class EntityObservation extends S.Class<EntityObservation>($I`EntityObser
 /**
  * Source-grounded observation of one extracted relation occurrence.
  *
- * **Example** (Inspect the relation observation schema)
+ * **Example** (Decode a relation observation)
  * ```ts
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { RelationObservation } from "@effect-ontology/Model/Entity"
  *
- * console.log(S.is(RelationObservation)({})) // false
+ * const observation = S.decodeUnknownOption(RelationObservation)({
+ *   id: "urn:example:observation:relation:knows",
+ *   provenance: "urn:example:provenance:relation:knows",
+ *   activity: "urn:example:activity:extract",
+ *   source: "urn:example:source:document",
+ *   evidence: [{ text: "Ada knew Charles", startChar: 0, endChar: 16 }]
+ * })
+ * console.log(O.map(observation, (value) => value.evidence.length)) // Some(1)
  * ```
  *
  * @category models
@@ -419,10 +436,6 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
       SchemaUtils.withEmptyArrayDefaults<EvidenceSpan>(),
       S.annotateKey({ description: "All source spans supporting this entity." })
     ),
-    groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "Deprecated compatibility ingress for the historical scalar grounding score." })
-    ),
     grounding: GroundingDecision.pipe(
       SchemaUtils.withKeyDefaults(NotEvaluatedGrounding),
       S.annotateKey({ description: "Current aggregate grounding decision for the entity." })
@@ -441,6 +454,34 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
 
   /** Non-throwing decoder for untrusted extraction output. */
   static readonly decodeOption = S.decodeUnknownOption(Entity);
+
+  /**
+   * Confidence carried by the canonical grounding decision when evaluated.
+   *
+   * **Example** (Read evaluated grounding confidence)
+   * ```ts
+   * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+   * import * as O from "effect/Option"
+   * import { Entity, GroundingDecision } from "@effect-ontology/Model/Entity"
+   *
+   * const entity = Entity.make({
+   *   id: "ada_lovelace",
+   *   mention: "Ada Lovelace",
+   *   types: ["https://schema.org/Person"],
+   *   grounding: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(0.9) })
+   * })
+   * console.log(O.getOrNull(entity.groundingConfidence)) // 0.9
+   * ```
+   *
+   * @returns `None` when grounding was not evaluated; otherwise the decision confidence.
+   */
+  get groundingConfidence(): O.Option<Confidence> {
+    return GroundingDecision.match(this.grounding, {
+      NotEvaluated: noConfidence,
+      Supported: ({ confidence }) => O.some(confidence),
+      Rejected: ({ confidence }) => O.some(confidence),
+    });
+  }
 }
 
 /**

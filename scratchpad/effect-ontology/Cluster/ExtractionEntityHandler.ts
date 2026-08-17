@@ -43,7 +43,7 @@ import { OntologyRef } from "../Domain/Model/Ontology.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { EntityExtractor, RelationExtractor } from "../Service/Extraction.ts";
 import { ExtractionRunService, getRunIdFromText } from "../Service/ExtractionRun.ts";
-import { Grounder } from "../Service/Grounder.ts";
+import { Grounder, RelationVerificationInput } from "../Service/Grounder.ts";
 import { CentralRateLimiterService, StageTimeoutService, TokenBudgetService } from "../Service/LlmControl/index.ts";
 import { NlpService } from "../Service/Nlp.ts";
 import { OntologyService } from "../Service/Ontology.ts";
@@ -254,7 +254,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           chunking: {
             maxChunkSize: PosInt.make(500),
             preserveSentences: true,
-            overlapTokens: NonNegativeInt.make(0),
+            overlapSentences: NonNegativeInt.make(0),
           },
           llm: {
             model: config.llm.model,
@@ -267,7 +267,6 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           grounding: config.grounder.enabled
             ? GroundingPolicy.cases.Enabled.make({})
             : GroundingPolicy.cases.Disabled.make({}),
-          enableGrounding: config.grounder.enabled,
         },
         { idempotencyKey, ontologyVersion }
       );
@@ -312,10 +311,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
             ? yield* grounder
                 .verifyRelationBatch(
                   chunk.text,
-                  A.map(relationArray, (relation) => ({
-                    context: chunk.text,
-                    relation,
-                  }))
+                  A.map(relationArray, (relation) => RelationVerificationInput.make({ context: chunk.text, relation }))
                 )
                 .pipe(Effect.map(A.filter((result) => result.grounded)))
             : A.map(relationArray, (relation) => ({

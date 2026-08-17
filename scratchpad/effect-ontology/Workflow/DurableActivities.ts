@@ -19,6 +19,7 @@
  */
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { $ScratchpadId } from "@beep/identity";
 import { IRI, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { datasetToProvBundle, provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_USED, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
@@ -51,7 +52,7 @@ import * as Str from "effect/String";
 import { LanguageModel } from "effect/unstable/ai";
 import { Activity } from "effect/unstable/workflow";
 import { ActivityError, ActivityGenericError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts";
-import { BatchId, ContentHash, GcsUri } from "../Domain/Identity.ts";
+import { BatchId, ContentHash, GcsUri, OntologyName } from "../Domain/Identity.ts";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts";
 import { ElementEmbedding, OntologyEmbeddings, OntologyEmbeddingsJson } from "../Domain/Model/OntologyEmbeddings.ts";
@@ -84,11 +85,13 @@ import { Reasoner, ReasoningConfig } from "../Service/Reasoner.ts";
 import { ShaclValidationReport, ShaclWorkflowService } from "../Service/Shacl.ts";
 import { GenerationMismatchError, StorageService } from "../Service/Storage.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
-import { knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
+import { claimExtractionArtifactFromQuads, knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
 import { extractLocalNameFromIri } from "../Utils/Iri.ts";
 import { computeQuadDelta } from "../Utils/QuadDelta.ts";
 import { refineKnowledgeGraph } from "../Utils/RefineKG.ts";
 import { mergeGraphs } from "./Merge.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Workflow/DurableActivities");
 
 const RDF_STATEMENT = makeNamedNode(`${RDF_NAMESPACE}Statement`);
 const RDF_SUBJECT = makeNamedNode(`${RDF_NAMESPACE}subject`);
@@ -207,17 +210,18 @@ export const ClaimPersistenceOutput = S.Struct({
  * @category schemas
  * @since 0.0.0
  */
-export const CrossBatchResolutionOutput = S.Struct({
-  /** Total entities processed */
-  entitiesTotal: NonNegativeInt,
-  /** Entities matched to existing canonical entities */
-  matchedToExisting: NonNegativeInt,
-  /** New canonical entities created */
-  newCanonicals: NonNegativeInt,
-  /** Candidates evaluated during blocking */
-  candidatesEvaluated: NonNegativeInt,
-  durationMs: NonNegNum,
-});
+export class CrossBatchResolutionOutput extends S.Class<CrossBatchResolutionOutput>($I`CrossBatchResolutionOutput`)(
+  {
+    entitiesTotal: NonNegativeInt,
+    matchedToExisting: NonNegativeInt,
+    newCanonicals: NonNegativeInt,
+    candidatesEvaluated: NonNegativeInt,
+    duration: S.DurationFromMillis,
+  },
+  $I.annote("CrossBatchResolutionOutput", {
+    description: "Cross-batch resolution counts and an Effect Duration execution measurement.",
+  })
+) {}
 
 /**
  * Describes the cross batch resolution input data exposed by this module.
@@ -236,15 +240,17 @@ export const CrossBatchResolutionOutput = S.Struct({
  * @category type-level
  * @since 0.0.0
  */
-export interface CrossBatchResolutionInput {
-  readonly batchId: string;
-  /** Path to the resolved graph from within-batch resolution */
-  readonly resolvedGraphUri: string;
-  /** Whether to enable cross-batch resolution */
-  readonly enabled: boolean;
-  /** Ontology scope for entity resolution */
-  readonly ontologyId: string;
-}
+export class CrossBatchResolutionInput extends S.Class<CrossBatchResolutionInput>($I`CrossBatchResolutionInput`)(
+  {
+    batchId: BatchId,
+    resolvedGraphUri: GcsUri,
+    enabled: S.Boolean,
+    ontologyId: OntologyName,
+  },
+  $I.annote("CrossBatchResolutionInput", {
+    description: "Validated batch, graph, enablement, and ontology scope for cross-batch entity resolution.",
+  })
+) {}
 
 // -----------------------------------------------------------------------------
 // Shared helpers
@@ -365,6 +371,7 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
   }
   const entityIdSet = MutableHashSet.fromIterable(entities.map((e) => e.id));
   const allQuads = yield* rdf.queryStore(store, {});
+  const extractionArtifact = yield* claimExtractionArtifactFromQuads(allQuads);
   const relations: Array<Relation> = [];
   for (const quad of allQuads) {
     if (quad.subject.termType !== "NamedNode") continue;
@@ -393,6 +400,14 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
     entities,
     relations,
     provenance,
+    entityObservations: O.match(extractionArtifact, {
+      onNone: () => [],
+      onSome: (artifact) => artifact.entityObservations,
+    }),
+    relationObservations: O.match(extractionArtifact, {
+      onNone: () => [],
+      onSome: (artifact) => artifact.relationObservations,
+    }),
   });
 });
 
@@ -1099,12 +1114,13 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
         const result = yield* Effect.gen(function* () {
           const graphPath = stripGsPrefix(graphUri);
           const graphContent = yield* storage
-            .get(graphPath)
-            .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), graphPath)));
+            .getOption(graphPath)
+            .pipe(Effect.flatMap((content) => requireContent(content, graphPath)));
 
           // Parse TriG to extract entities and relations (preserves named graphs)
           const store = yield* rdf.parseTriG(graphContent);
           const knowledgeGraph = yield* storeToKnowledgeGraph(store);
+          const extractionArtifact = yield* claimExtractionArtifactFromQuads(yield* rdf.queryStore(store, {}));
 
           // Get metadata for this document
           // Try to find metadata by matching graph URI path to sourceUri
@@ -1130,11 +1146,15 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
           const match = config.rdf.baseNamespace.match(/^https?:\/\/[^/]+\//);
           const baseDomain = P.isNotNull(match) ? match[0] : "https://example.org/";
           const baseNamespace = `${baseDomain}${input.targetNamespace}/`;
-          const claims = knowledgeGraphToClaims(knowledgeGraph.entities, knowledgeGraph.relations, {
-            baseNamespace,
-            documentId: docMeta.documentId,
-            ontologyId: input.ontologyId,
-            defaultConfidence: Confidence.make(0.85),
+          const claims = O.match(extractionArtifact, {
+            onNone: () =>
+              knowledgeGraphToClaims(knowledgeGraph.entities, knowledgeGraph.relations, {
+                baseNamespace,
+                documentId: docMeta.documentId,
+                ontologyId: input.ontologyId,
+                defaultConfidence: Confidence.make(0.85),
+              }),
+            onSome: (artifact) => artifact.claims,
           });
 
           if (claims.length === 0) {
@@ -1266,7 +1286,7 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
           matchedToExisting: NonNegativeInt.make(0),
           newCanonicals: NonNegativeInt.make(0),
           candidatesEvaluated: NonNegativeInt.make(0),
-          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+          duration: DateTime.distance(start, end),
         };
       }
 
@@ -1296,8 +1316,8 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
       // Load resolved graph
       const graphPath = stripGsPrefix(input.resolvedGraphUri);
       const graphContent = yield* storage
-        .get(graphPath)
-        .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), graphPath)));
+        .getOption(graphPath)
+        .pipe(Effect.flatMap((content) => requireContent(content, graphPath)));
 
       // Parse graph and extract entities
       const store = yield* rdf.parseTurtle(graphContent);
@@ -1329,7 +1349,7 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
         matchedToExisting: NonNegativeInt.make(result.stats.matchedToExisting),
         newCanonicals: NonNegativeInt.make(result.stats.createdNew),
         candidatesEvaluated: NonNegativeInt.make(result.stats.candidatesEvaluated),
-        durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
+        duration: DateTime.distance(start, end),
       };
     }).pipe(Effect.mapError(toActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
@@ -1480,8 +1500,8 @@ export const makeInferenceActivity = (input: InferenceInput) =>
       // 1. Load resolved graph
       const graphPath = stripGsPrefix(input.resolvedGraphUri);
       const graphContent = yield* storage
-        .get(graphPath)
-        .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), graphPath)));
+        .getOption(graphPath)
+        .pipe(Effect.flatMap((content) => requireContent(content, graphPath)));
       const originalStore = yield* rdf.parseTurtle(graphContent);
 
       // 2. Apply reasoning (creates a copy, doesn't mutate original)
@@ -1708,8 +1728,8 @@ export const makeComputeEmbeddingsActivity = (input: ComputeEmbeddingsInput) =>
       // 1. Load ontology content
       const ontologyPath = stripGsPrefix(input.ontologyUri);
       const ontologyContent = yield* storage
-        .get(ontologyPath)
-        .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), ontologyPath)));
+        .getOption(ontologyPath)
+        .pipe(Effect.flatMap((content) => requireContent(content, ontologyPath)));
 
       // 2. Compute version hash
       const version = yield* OntologyEmbeddings.computeVersion(ontologyContent);
@@ -2391,7 +2411,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         classifyDocuments: shouldClassify,
         adaptiveChunking: input.preprocessing.adaptiveChunking,
         priorityOrdering: input.preprocessing.priorityOrdering,
-        chunkingStrategyOverride: O.getOrUndefined(input.preprocessing.chunkingStrategyOverride),
+        chunkingStrategyOverride: input.preprocessing.chunkingStrategyOverride,
         classificationBatchSize: input.preprocessing.classificationBatchSize,
       };
 
@@ -2404,8 +2424,8 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
       // 1. Load the batch manifest
       const manifestPath = stripGsPrefix(input.manifestUri);
       const manifestContent = yield* storage
-        .get(manifestPath)
-        .pipe(Effect.flatMap((opt) => requireContent(O.fromNullishOr(opt), manifestPath)));
+        .getOption(manifestPath)
+        .pipe(Effect.flatMap((content) => requireContent(content, manifestPath)));
       const manifest = yield* BatchManifest.decodeEffectFromJsonString(manifestContent).pipe(
         Effect.mapError((e) => notFoundError("BatchManifest", `Parse error: ${e}`))
       );
@@ -2422,7 +2442,16 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
           Effect.gen(function* () {
             const sourcePath = stripGsPrefix(doc.sourceUri);
             const content = yield* storage.getOption(sourcePath).pipe(
-              Effect.map(O.getOrElse(() => "")),
+              Effect.tap((content) =>
+                O.match(content, {
+                  onNone: () =>
+                    Effect.logWarning("Document is absent while loading preprocessing preview", {
+                      documentId: doc.documentId,
+                      sourcePath,
+                    }),
+                  onSome: () => Effect.void,
+                })
+              ),
               Effect.catch((error) =>
                 Effect.gen(function* () {
                   yield* Effect.logWarning("Failed to load document for preview", {
@@ -2430,7 +2459,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
                     sourcePath,
                     error: Inspectable.toStringUnknown(error),
                   });
-                  return "";
+                  return O.none<string>();
                 })
               )
             );
@@ -2440,7 +2469,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
               sourceUri: doc.sourceUri,
               contentType: doc.contentType,
               sizeBytes: doc.sizeBytes,
-              preview: content.slice(0, PREVIEW_SIZE),
+              preview: O.map(content, Str.slice(0, PREVIEW_SIZE)),
             };
           }),
         { concurrency: 10 }
@@ -2470,13 +2499,17 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
             sizeBytes: NonNegativeInt.make(p.sizeBytes),
             preprocessedAt,
           });
-          if (overrideStrategy === undefined) return fallback;
-          const params = ChunkingStrategy.parameters(overrideStrategy);
-          return DocumentMetadata.make({
-            ...fallback,
-            chunkingStrategy: overrideStrategy,
-            suggestedChunkSize: params.chunkSize,
-            suggestedOverlap: params.overlapSentences,
+          return O.match(overrideStrategy, {
+            onNone: () => fallback,
+            onSome: (strategy) => {
+              const params = ChunkingStrategy.parameters(strategy);
+              return DocumentMetadata.make({
+                ...fallback,
+                chunkingStrategy: strategy,
+                suggestedChunkSize: params.chunkSize,
+                suggestedOverlap: params.overlapSentences,
+              });
+            },
           });
         });
         failedCount = previews.length;
@@ -2488,11 +2521,15 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         const batchSize = options.classificationBatchSize;
         for (let i = 0; i < previews.length; i += batchSize) {
           const batch = previews.slice(i, i + batchSize);
-          const batchPreviews = batch.map((p) => ({
-            index: p.index,
-            preview: p.preview,
-            contentType: p.contentType,
-          }));
+          const batchPreviews = A.getSomes(
+            A.map(batch, (preview) =>
+              O.map(preview.preview, (text) => ({
+                index: preview.index,
+                preview: text,
+                contentType: preview.contentType,
+              }))
+            )
+          );
 
           yield* Effect.logDebug("Classifying batch", {
             batchId: input.batchId,
@@ -2542,15 +2579,15 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
             const tokens = DocumentMetadata.estimateTokens(p.sizeBytes);
 
             const complexityScore = UnitInterval.make(classification.value.complexityScore);
-            const strategy =
-              options.chunkingStrategyOverride ??
-              (options.adaptiveChunking
+            const strategy = O.getOrElse(options.chunkingStrategyOverride, () =>
+              options.adaptiveChunking
                 ? ChunkingStrategy.recommend(
                     classification.value.documentType,
                     classification.value.entityDensity,
                     complexityScore
                   )
-                : ChunkingStrategy.Enum.standard);
+                : ChunkingStrategy.Enum.standard
+            );
             const chunkParameters = ChunkingStrategy.parameters(strategy);
 
             const priority = DocumentMetadata.computePriority(

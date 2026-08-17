@@ -55,6 +55,25 @@ describe("NlpService canonical Wink adapter", () => {
     );
 
     it.effect(
+      "measures chunk limits in characters and preserves source offsets",
+      Effect.fnUntraced(function* () {
+        const nlp = yield* NlpService;
+        const text = "One. Two. Three.";
+        const chunks = yield* nlp.chunkText(text, {
+          maxChunkSize: 9,
+          overlapSentences: 0,
+          preserveSentences: true,
+        });
+
+        assert.deepEqual(
+          chunks.map((chunk) => text.slice(chunk.startOffset, chunk.endOffset)),
+          chunks.map((chunk) => chunk.text)
+        );
+        assert.isTrue(chunks.every((chunk) => chunk.text.length <= 9));
+      })
+    );
+
+    it.effect(
       "ranks documents without exposing a Wink runtime index",
       Effect.fnUntraced(function* () {
         const nlp = yield* NlpService;

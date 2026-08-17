@@ -1,6 +1,7 @@
 import { DrizzleError } from "@beep/drizzle";
 import { PgliteTestLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
+import { IRI } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
 import { DateTime, Effect, Layer } from "effect";
 import * as A from "effect/Array";
@@ -9,7 +10,7 @@ import * as S from "effect/Schema";
 import { SqlClient } from "effect/unstable/sql";
 import { ArticleRepository } from "../../Repository/Article.ts";
 import { CachedClaimRepository } from "../../Repository/CachedClaim.ts";
-import { EntityRegistryRepository } from "../../Repository/EntityRegistry.ts";
+import { CanonicalEntityId, EntityRegistryRepository } from "../../Repository/EntityRegistry.ts";
 import { ExamplesRepository } from "../../Repository/Examples.ts";
 import { IngestedLinks, LinkBatches, LinkBatchItems } from "../../Repository/schema.ts";
 
@@ -24,13 +25,14 @@ const RepositoryTestLayer = Layer.mergeAll(
 const resetTables = Effect.fn("RepositoryOntologyIsolation.resetTables")(function* () {
   const sql = yield* SqlClient.SqlClient;
   yield* sql`DROP TABLE IF EXISTS conflicts`;
+  yield* sql`DROP TABLE IF EXISTS entity_blocking_tokens`;
   yield* sql`DROP TABLE IF EXISTS entity_aliases`;
   yield* sql`DROP TABLE IF EXISTS canonical_entities`;
   yield* sql`DROP TABLE IF EXISTS claims`;
   yield* sql`DROP TABLE IF EXISTS articles`;
   yield* sql`
     CREATE TABLE articles (
-      id UUID PRIMARY KEY,
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       uri TEXT NOT NULL,
       ontology_id TEXT NOT NULL,
       source_name TEXT,
@@ -46,7 +48,7 @@ const resetTables = Effect.fn("RepositoryOntologyIsolation.resetTables")(functio
   `;
   yield* sql`
     CREATE TABLE claims (
-      id UUID PRIMARY KEY,
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       article_id UUID NOT NULL,
       ontology_id TEXT NOT NULL,
       subject_iri TEXT NOT NULL,
@@ -89,7 +91,7 @@ const resetTables = Effect.fn("RepositoryOntologyIsolation.resetTables")(functio
   `;
   yield* sql`
     CREATE TABLE canonical_entities (
-      id UUID PRIMARY KEY,
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       ontology_id TEXT NOT NULL,
       iri TEXT NOT NULL,
       canonical_mention TEXT NOT NULL,
@@ -106,7 +108,7 @@ const resetTables = Effect.fn("RepositoryOntologyIsolation.resetTables")(functio
   `;
   yield* sql`
     CREATE TABLE entity_aliases (
-      id UUID PRIMARY KEY,
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       ontology_id TEXT NOT NULL,
       canonical_entity_id UUID NOT NULL REFERENCES canonical_entities(id),
       mention TEXT NOT NULL,
@@ -120,6 +122,16 @@ const resetTables = Effect.fn("RepositoryOntologyIsolation.resetTables")(functio
       UNIQUE (ontology_id, mention_normalized)
     )
   `;
+  yield* sql`
+    CREATE TABLE entity_blocking_tokens (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      ontology_id TEXT NOT NULL,
+      canonical_entity_id UUID NOT NULL REFERENCES canonical_entities(id),
+      token TEXT NOT NULL,
+      token_type TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
 });
 
 const OntologyA = "ontology-a";
@@ -128,8 +140,9 @@ const ArticleA = "00000000-0000-4000-8000-000000000001";
 const ArticleB = "00000000-0000-4000-8000-000000000002";
 const ClaimA = "00000000-0000-4000-8000-000000000011";
 const ClaimB = "00000000-0000-4000-8000-000000000012";
-const EntityA = "00000000-0000-4000-8000-000000000021";
-const EntityB = "00000000-0000-4000-8000-000000000022";
+const MalformedClaim = "00000000-0000-4000-8000-000000000013";
+const EntityA = CanonicalEntityId.make("00000000-0000-4000-8000-000000000021");
+const EntityB = CanonicalEntityId.make("00000000-0000-4000-8000-000000000022");
 const PublishedAt = DateTime.toDateUtc(DateTime.makeUnsafe("2026-08-17T12:00:00.000Z"));
 
 describe.sequential("repository ontology isolation", () => {
@@ -275,6 +288,137 @@ describe.sequential("repository ontology isolation", () => {
     );
 
     it.effect(
+      "invalidates a cached miss after a batch insert",
+      Effect.fnUntraced(function* () {
+        yield* resetTables();
+        const articles = yield* ArticleRepository;
+        const claims = yield* CachedClaimRepository;
+        yield* articles.insertArticlesBatch([
+          {
+            id: ArticleA,
+            uri: "https://example.test/cached-miss",
+            ontologyId: OntologyA,
+            publishedAt: PublishedAt,
+          },
+        ]);
+
+        const before = yield* claims.getClaim(ClaimA, OntologyA);
+        yield* claims.insertClaimsBatch([
+          {
+            id: ClaimA,
+            articleId: ArticleA,
+            ontologyId: OntologyA,
+            subjectIri: "https://example.test/entity/batched",
+            predicateIri: "https://example.test/predicate/name",
+            objectValue: "Inserted",
+          },
+        ]);
+        const after = yield* claims.getClaim(ClaimA, OntologyA);
+
+        assert.isTrue(O.isNone(before));
+        assert.strictEqual(O.map(after, (claim) => claim.id).pipe(O.getOrNull), ClaimA);
+      })
+    );
+
+    it.effect(
+      "invalidates claim and subject caches after preferred-rank promotion",
+      Effect.fnUntraced(function* () {
+        yield* resetTables();
+        const articles = yield* ArticleRepository;
+        const claims = yield* CachedClaimRepository;
+        const subjectIri = "https://example.test/entity/promoted";
+        yield* articles.insertArticlesBatch([
+          {
+            id: ArticleA,
+            uri: "https://example.test/promoted",
+            ontologyId: OntologyA,
+            publishedAt: PublishedAt,
+          },
+        ]);
+        yield* claims.insertClaim({
+          id: ClaimA,
+          articleId: ArticleA,
+          ontologyId: OntologyA,
+          subjectIri,
+          predicateIri: "https://example.test/predicate/name",
+          objectValue: "Promoted",
+        });
+
+        yield* claims.getClaim(ClaimA, OntologyA);
+        yield* claims.getClaimsBySubject(subjectIri, OntologyA);
+        yield* claims.promoteToPreferred(ClaimA, OntologyA);
+        const claim = yield* claims.getClaim(ClaimA, OntologyA);
+        const subjectClaims = yield* claims.getClaimsBySubject(subjectIri, OntologyA);
+
+        assert.strictEqual(O.map(claim, (row) => row.rank).pipe(O.getOrNull), "preferred");
+        assert.strictEqual(subjectClaims[0]?.rank, "preferred");
+      })
+    );
+
+    it.effect(
+      "creates a canonical entity with its initial alias and rolls back when the alias conflicts",
+      Effect.fnUntraced(function* () {
+        yield* resetTables();
+        const registry = yield* EntityRegistryRepository;
+        const sql = yield* SqlClient.SqlClient;
+        const embedding = A.replicate(0.1, 768);
+        const first = yield* registry.insertCanonicalEntityWithAlias(
+          {
+            ontologyId: OntologyA,
+            iri: IRI.make("https://example.test/entity/ada"),
+            canonicalMention: "Ada Lovelace",
+            types: [IRI.make("https://schema.org/Person")],
+            embedding,
+          },
+          {
+            ontologyId: OntologyA,
+            mention: "Ada Lovelace",
+            mentionNormalized: "ada lovelace",
+            embedding,
+            resolutionMethod: "new_canonical",
+            resolutionConfidence: "1.0",
+          },
+          ["ada", "lovelace"]
+        );
+
+        const aliases = yield* registry.getAliasesForCanonical(OntologyA, CanonicalEntityId.make(first.id));
+        const tokenRows = yield* sql<{ readonly count: number }>`
+          SELECT COUNT(*)::int AS count FROM entity_blocking_tokens
+          WHERE ontology_id = ${OntologyA} AND canonical_entity_id = ${first.id}
+        `;
+        const duplicateExit = yield* registry
+          .insertCanonicalEntityWithAlias(
+            {
+              ontologyId: OntologyA,
+              iri: IRI.make("https://example.test/entity/ada-duplicate"),
+              canonicalMention: "Ada",
+              types: [IRI.make("https://schema.org/Person")],
+              embedding,
+            },
+            {
+              ontologyId: OntologyA,
+              mention: "ADA LOVELACE",
+              mentionNormalized: "ada lovelace",
+              embedding,
+              resolutionMethod: "new_canonical",
+              resolutionConfidence: "1.0",
+            },
+            ["ada"]
+          )
+          .pipe(Effect.exit);
+        const rolledBack = yield* registry.getCanonicalEntityByIri(
+          OntologyA,
+          "https://example.test/entity/ada-duplicate"
+        );
+
+        assert.strictEqual(aliases.length, 1);
+        assert.strictEqual(tokenRows[0]?.count, 2);
+        assert.isTrue(duplicateExit._tag === "Failure");
+        assert.isTrue(O.isNone(rolledBack));
+      })
+    );
+
+    it.effect(
       "isolates canonical entity IDs, IRIs, and aliases by ontology",
       Effect.fnUntraced(function* () {
         yield* resetTables();
@@ -337,7 +481,7 @@ describe.sequential("repository ontology isolation", () => {
             object_value,
             rank
           ) VALUES (
-            ${ClaimA},
+            ${MalformedClaim},
             ${ArticleA},
             ${OntologyA},
             'https://example.test/entity/a',
@@ -348,7 +492,7 @@ describe.sequential("repository ontology isolation", () => {
         `;
 
         const articleError = yield* articles.getArticle(ArticleA, "").pipe(Effect.flip);
-        const claimError = yield* claims.getClaim(ClaimA, OntologyA).pipe(Effect.flip);
+        const claimError = yield* claims.getClaim(MalformedClaim, OntologyA).pipe(Effect.flip);
 
         assert.instanceOf(articleError, DrizzleError);
         assert.strictEqual(articleError.operation, "decodeRows");

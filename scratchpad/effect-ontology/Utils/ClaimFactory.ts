@@ -18,7 +18,7 @@ import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Str as BeepStr } from "@beep/utils";
-import { Effect, Hash, MutableHashMap } from "effect";
+import { Effect, Equal, Hash, MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
@@ -27,7 +27,12 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { Entity, EvidenceSpan, GroundingDecision, Relation } from "../Domain/Model/Entity.ts";
-import { GroundingDecision as GroundingDecisionSchema, RelationObject } from "../Domain/Model/Entity.ts";
+import {
+  EntityObservation,
+  GroundingDecision as GroundingDecisionSchema,
+  RelationObject,
+  RelationObservation,
+} from "../Domain/Model/Entity.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import { CreateClaimInput } from "../Service/Claim.ts";
@@ -44,6 +49,8 @@ const RDF_SUBJECT = makeCanonicalNamedNode(`${RDF_NAMESPACE}subject`);
 const RDF_PREDICATE = makeCanonicalNamedNode(`${RDF_NAMESPACE}predicate`);
 const RDF_OBJECT = makeCanonicalNamedNode(`${RDF_NAMESPACE}object`);
 const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
+const EXTRACTION_ARTIFACT = makeCanonicalNamedNode(`${CLAIMS.namespace}ExtractionArtifact`);
+const SERIALIZED_EXTRACTION_ARTIFACT = makeCanonicalNamedNode(`${CLAIMS.namespace}serializedExtractionArtifact`);
 
 const canonicalNamedNode = (value: IRI | NamedNode): NamedNode => (P.isString(value) ? makeNamedNode(value) : value);
 
@@ -264,6 +271,42 @@ export class ClaimData extends S.Class<ClaimData>($I`ClaimData`)(
     description: "Validated claim creation payload paired with its generated identifier.",
   })
 ) {}
+
+/**
+ * Exact schema-backed payload persisted with one extracted document graph.
+ *
+ * **Details**
+ *
+ * The payload is embedded in the RDF artifact so claim persistence does not
+ * need to reconstruct lossy domain values from presentation triples.
+ *
+ * **Example** (Inspect the durable extraction artifact schema)
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ClaimExtractionArtifact } from "@effect-ontology/Utils/ClaimFactory"
+ *
+ * console.log(S.is(ClaimExtractionArtifact)({ claims: [], entityObservations: [], relationObservations: [] }))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ClaimExtractionArtifact extends S.Class<ClaimExtractionArtifact>($I`ClaimExtractionArtifact`)(
+  {
+    claims: S.Array(ClaimData),
+    entityObservations: S.Array(EntityObservation),
+    relationObservations: S.Array(RelationObservation),
+  },
+  $I.annote("ClaimExtractionArtifact", {
+    description: "Exact durable claims and grounding observations for one extracted document graph.",
+  })
+) {}
+
+const ClaimExtractionArtifactJson = S.fromJsonString(ClaimExtractionArtifact).pipe(
+  $I.annoteSchema("ClaimExtractionArtifactJson", {
+    description: "JSON-string wire codec for the exact durable extraction artifact embedded in RDF.",
+  })
+);
 
 // =============================================================================
 // IRI Collision Detection
@@ -958,3 +1001,92 @@ export const claimsDataToQuads = dual3(
     return allQuads;
   }
 );
+
+/**
+ * Encode the exact extraction artifact as schema-owned RDF payload quads.
+ *
+ * **Example** (Inspect the effectful encoder)
+ * ```ts
+ * import { ClaimExtractionArtifact, claimExtractionArtifactToQuads } from "@effect-ontology/Utils/ClaimFactory"
+ *
+ * const encoded = claimExtractionArtifactToQuads(
+ *   ClaimExtractionArtifact.make({ claims: [], entityObservations: [], relationObservations: [] }),
+ *   "urn:example:graph"
+ * )
+ * console.log(encoded)
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const claimExtractionArtifactToQuads = dual2(
+  Effect.fn("ClaimFactory.claimExtractionArtifactToQuads")(function* (
+    artifact: ClaimExtractionArtifact,
+    graphUri: string
+  ) {
+    const payload = yield* S.encodeEffect(ClaimExtractionArtifactJson)(artifact);
+    const graph = IRI.fromUnknown(graphUri);
+    const artifactIri = IRI.fromUnknown(`${graphUri}:extraction-artifact`);
+    return [
+      claimQuad({
+        subject: artifactIri,
+        predicate: RDF_TYPE,
+        object: EXTRACTION_ARTIFACT,
+        graph,
+      }),
+      claimQuad({
+        subject: artifactIri,
+        predicate: SERIALIZED_EXTRACTION_ARTIFACT,
+        object: claimLiteral({ value: payload }),
+        graph,
+      }),
+    ];
+  })
+);
+
+/**
+ * Decode an exact extraction artifact embedded by {@link claimExtractionArtifactToQuads}.
+ *
+ * **Details**
+ *
+ * Absence is represented with `Option` for compatibility with legacy RDF
+ * artifacts. Once an artifact marker exists, a missing or malformed payload is
+ * a schema failure rather than an empty extraction.
+ *
+ * **Example** (Decode a legacy graph without an embedded artifact)
+ * ```ts
+ * import { claimExtractionArtifactFromQuads } from "@effect-ontology/Utils/ClaimFactory"
+ *
+ * console.log(claimExtractionArtifactFromQuads([]))
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const claimExtractionArtifactFromQuads = Effect.fn("ClaimFactory.claimExtractionArtifactFromQuads")(function* (
+  input: Iterable<Quad>
+) {
+  const quads = A.fromIterable(input);
+  const artifactSubject = A.findFirst(
+    quads,
+    (quad) =>
+      Equal.equals(quad.predicate.value, RDF_TYPE.value) &&
+      Equal.equals(quad.object.termType, "NamedNode") &&
+      Equal.equals(quad.object.value, EXTRACTION_ARTIFACT.value)
+  ).pipe(O.map((quad) => quad.subject.value));
+
+  if (O.isNone(artifactSubject)) return O.none<ClaimExtractionArtifact>();
+
+  const payload = A.findFirst(
+    quads,
+    (quad) =>
+      Equal.equals(quad.subject.value, artifactSubject.value) &&
+      Equal.equals(quad.predicate.value, SERIALIZED_EXTRACTION_ARTIFACT.value) &&
+      Equal.equals(quad.object.termType, "Literal")
+  ).pipe(
+    O.map((quad) => quad.object.value),
+    O.getOrElse(() => "")
+  );
+
+  return O.some(yield* S.decodeEffect(ClaimExtractionArtifactJson)(payload));
+});

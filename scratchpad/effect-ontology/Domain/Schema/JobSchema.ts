@@ -12,7 +12,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { HttpsUrl, LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { HttpsUrl, LiteralKit, NonNegativeInt, SchemaUtils, UUID } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ContentHash, OntologyName } from "../Identity.ts";
 import { EntityId } from "../Model/shared.ts";
@@ -95,7 +95,7 @@ const CommonJobFields = {
 const BackgroundJobDefinition = S.TaggedUnion({
   EmbeddingJob: {
     ...CommonJobFields,
-    canonicalEntityId: EntityId,
+    canonicalEntityId: UUID,
     reason: S.NonEmptyString,
   },
   PromptCacheJob: {

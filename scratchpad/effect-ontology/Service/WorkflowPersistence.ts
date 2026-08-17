@@ -22,9 +22,22 @@ import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storag
  * Adapts our StorageService (which extends KeyValueStore) to the standard
  * KeyValueStore.KeyValueStore tag that Persistence.layerKeyValueStore expects.
  *
+ * **Details**
+ *
  * The prefix "workflow-state/" isolates workflow persistence from other storage.
+ *
+ * **Example** (Inspect the storage adapter)
+ *
+ * ```ts
+ * import { StorageKeyValueStoreLive } from "@effect-ontology/Service/WorkflowPersistence"
+ *
+ * console.log(StorageKeyValueStoreLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
  */
-const StorageKeyValueStoreLive = Layer.effect(
+export const StorageKeyValueStoreLive = Layer.effect(
   KeyValueStore.KeyValueStore,
   Effect.gen(function* () {
     const storage = yield* StorageService;
@@ -33,9 +46,9 @@ const StorageKeyValueStoreLive = Layer.effect(
     const prefixKey = (key: string) => `${prefix}${key}`;
 
     return KeyValueStore.make({
-      get: (key) => storage.get(prefixKey(key)).pipe(Effect.orElseSucceed(() => undefined)),
+      get: (key) => storage.get(prefixKey(key)),
 
-      getUint8Array: (key) => storage.getUint8Array(prefixKey(key)).pipe(Effect.orElseSucceed(() => undefined)),
+      getUint8Array: (key) => storage.getUint8Array(prefixKey(key)),
 
       set: (key, value) => storage.set(prefixKey(key), value).pipe(Effect.asVoid),
 

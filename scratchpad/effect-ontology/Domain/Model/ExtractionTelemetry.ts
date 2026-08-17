@@ -6,7 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema/Int";
+import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as S from "effect/Schema";
 import { KnowledgeGraph } from "./Entity.ts";
 
@@ -29,26 +29,34 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionTelemetr
  * @since 0.0.0
  */
 export const ProviderTokenUsage = (() => {
-  const schema = S.TaggedUnion({
+  const definition = S.TaggedUnion({
     Complete: {
       inputTokens: NonNegativeInt,
       outputTokens: NonNegativeInt,
-      attemptCount: NonNegativeInt,
+      attemptCount: PosInt,
     },
     Partial: {
       inputTokens: NonNegativeInt,
       outputTokens: NonNegativeInt,
-      attemptCount: NonNegativeInt,
-      missingAttempts: NonNegativeInt,
+      attemptCount: PosInt,
+      missingAttempts: PosInt,
     },
     Unavailable: {
       attemptCount: NonNegativeInt,
     },
   });
+  const schema = definition.check(
+    S.makeFilter((usage) => usage._tag !== "Partial" || usage.missingAttempts <= usage.attemptCount, {
+      identifier: $I`ProviderTokenUsageAttemptCheck`,
+      title: "Provider Token Usage Attempt Counts",
+      description: "Partial usage cannot report more missing attempts than total attempts.",
+      message: "Expected missingAttempts to be less than or equal to attemptCount.",
+    })
+  );
   return schema.pipe(
     $I.annoteSchema("ProviderTokenUsage", {
       description: "Complete, partial, or unavailable provider-reported token usage across all attempts.",
-      toArbitrary: () => (fc) => S.toArbitrary(schema)(fc),
+      toArbitrary: () => (fc) => S.toArbitrary(definition)(fc).filter(S.is(schema)),
     })
   );
 })();
@@ -99,13 +107,21 @@ export class ExtractionTelemetry extends S.Class<ExtractionTelemetry>($I`Extract
  * Telemetry reports actual chunk and provider-attempt accounting without
  * fabricating unavailable usage as zero.
  *
- * **Example** (Inspect an extraction outcome)
+ * **Example** (Read outcome telemetry)
  *
  * ```ts
- * import type { ExtractionOutcome } from "@effect-ontology/Model/ExtractionTelemetry"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import { ExtractionOutcome, ExtractionTelemetry, ProviderTokenUsage } from "@effect-ontology/Model/ExtractionTelemetry"
  *
- * const chunkCount = (outcome: ExtractionOutcome) => outcome.telemetry.chunkCount
- * console.log(chunkCount)
+ * const outcome = ExtractionOutcome.make({
+ *   graph: KnowledgeGraph.make({}),
+ *   telemetry: ExtractionTelemetry.make({
+ *     chunkCount: NonNegativeInt.make(0),
+ *     usage: ProviderTokenUsage.cases.Unavailable.make({ attemptCount: NonNegativeInt.make(0) })
+ *   })
+ * })
+ * console.log(outcome.telemetry.chunkCount) // 0
  * ```
  *
  * @category models

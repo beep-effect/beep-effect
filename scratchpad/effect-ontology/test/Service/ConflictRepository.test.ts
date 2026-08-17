@@ -11,10 +11,15 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { HttpRouter } from "effect/unstable/http";
 import { SqlClient } from "effect/unstable/sql";
-import { ConflictActor, ConflictsQuery, ConflictTransition } from "../../Domain/Schema/Timeline.ts";
+import {
+  ConflictActor,
+  ConflictsQuery,
+  ConflictTransition,
+  TimelineEntityResponse,
+} from "../../Domain/Schema/Timeline.ts";
 import { ArticleRepository } from "../../Repository/Article.ts";
 import { ClaimRepository } from "../../Repository/Claim.ts";
-import { ConflictRepository } from "../../Repository/Conflict.ts";
+import { ConflictRepository, canonicalConflictPair, EqualConflictPairError } from "../../Repository/Conflict.ts";
 import { CurrentConflictActor } from "../../Runtime/HttpMiddleware.ts";
 import { TimelineRouter } from "../../Runtime/HttpServer.ts";
 
@@ -32,12 +37,16 @@ const ClaimA = "00000000-0000-4000-8000-000000000011";
 const ClaimB = "00000000-0000-4000-8000-000000000012";
 const ClaimC = "00000000-0000-4000-8000-000000000013";
 const ClaimD = "00000000-0000-4000-8000-000000000014";
+const CorrectionA = "00000000-0000-4000-8000-000000000099";
 const ValidFrom = DateTime.toDateUtc(DateTime.makeUnsafe("2026-08-01T00:00:00.000Z"));
 const ValidTo = DateTime.toDateUtc(DateTime.makeUnsafe("2026-08-31T00:00:00.000Z"));
+const CredentialFingerprint = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
 const resetTables = Effect.fn("ConflictRepositoryTest.resetTables")(function* () {
   const sql = yield* SqlClient.SqlClient;
   yield* sql`DROP TABLE IF EXISTS conflicts`;
+  yield* sql`DROP TABLE IF EXISTS correction_claims`;
+  yield* sql`DROP TABLE IF EXISTS corrections`;
   yield* sql`DROP TABLE IF EXISTS claims`;
   yield* sql`DROP TABLE IF EXISTS articles`;
   yield* sql`
@@ -95,10 +104,29 @@ const resetTables = Effect.fn("ConflictRepositoryTest.resetTables")(function* ()
       resolved_by_fingerprint TEXT,
       resolved_at TIMESTAMPTZ,
       resolution_notes TEXT,
-      detected_at TIMESTAMPTZ DEFAULT NOW(),
+      detected_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       UNIQUE (ontology_id, claim_a_id, claim_b_id),
       CONSTRAINT conflicts_conflict_type_check CHECK (conflict_type IN ('position', 'temporal')),
       CONSTRAINT conflicts_canonical_claim_pair_check CHECK (claim_a_id < claim_b_id)
+    )
+  `;
+  yield* sql`
+    CREATE TABLE corrections (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      correction_type TEXT NOT NULL,
+      source_article_id UUID,
+      reason TEXT,
+      correction_date TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      processed_at TIMESTAMPTZ
+    )
+  `;
+  yield* sql`
+    CREATE TABLE correction_claims (
+      correction_id UUID NOT NULL,
+      original_claim_id UUID NOT NULL,
+      new_claim_id UUID,
+      PRIMARY KEY (correction_id, original_claim_id)
     )
   `;
   yield* sql`
@@ -152,11 +180,19 @@ const insertConflictFixtures = Effect.fn("ConflictRepositoryTest.insertConflictF
       validTo: ValidTo,
     },
   ]);
+  yield* claims.insertCorrection({
+    id: CorrectionA,
+    correctionType: "update",
+    sourceArticleId: ArticleA,
+    reason: "Superseded by the reviewed claim",
+    correctionDate: ValidFrom,
+  });
+  yield* claims.linkClaimsToCorrection(CorrectionA, ClaimA, ClaimB);
 });
 
 const HttpActor = ConflictActor.make({
   principal: "api-key",
-  credentialFingerprint: O.some("http-test-fingerprint"),
+  credentialFingerprint: O.some(CredentialFingerprint),
 });
 
 const SeededRepositoryTestLayer = Layer.effectDiscard(
@@ -228,6 +264,21 @@ describe.sequential("ConflictRepository", () => {
     );
 
     it.effect(
+      "returns persisted correction identifiers in a claim correction chain",
+      Effect.fnUntraced(function* () {
+        yield* resetTables();
+        yield* insertConflictFixtures();
+        const claims = yield* ClaimRepository;
+        const chain = yield* claims.getCorrectionChain(ClaimA);
+
+        assert.strictEqual(chain.length, 1);
+        assert.strictEqual(chain[0]?.correction.id, CorrectionA);
+        assert.strictEqual(chain[0]?.originalClaimId, ClaimA);
+        assert.strictEqual(O.getOrNull(chain[0]?.newClaimId ?? O.none()), ClaimB);
+      })
+    );
+
+    it.effect(
       "preserves ignored and resolved terminal states during redetection",
       Effect.fnUntraced(function* () {
         yield* resetTables();
@@ -242,7 +293,10 @@ describe.sequential("ConflictRepository", () => {
           A.findFirst(records, (record) => Equal.equals(record.conflict.conflictType, "temporal")),
           () => "missing temporal conflict"
         ).pipe(Effect.orDie);
-        const actor = ConflictActor.make({ principal: "api-key", credentialFingerprint: O.some("fingerprint") });
+        const actor = ConflictActor.make({
+          principal: "api-key",
+          credentialFingerprint: O.some(CredentialFingerprint),
+        });
         const ignored = yield* conflicts.transition(
           OntologyA,
           position.conflict.id,
@@ -262,7 +316,7 @@ describe.sequential("ConflictRepository", () => {
         const ignoredRecord = yield* Effect.fromOption(ignored, () => "missing ignored conflict").pipe(Effect.orDie);
         const resolvedRecord = yield* Effect.fromOption(resolved, () => "missing resolved conflict").pipe(Effect.orDie);
         assert.strictEqual(ignoredRecord.conflict.resolvedBy, "api-key");
-        assert.strictEqual(ignoredRecord.conflict.resolvedByFingerprint, "fingerprint");
+        assert.strictEqual(ignoredRecord.conflict.resolvedByFingerprint, CredentialFingerprint);
         assert.strictEqual(resolvedRecord.conflict.acceptedClaimId, temporal.conflict.claimBId);
 
         const redetectedIgnored = yield* conflicts.recordDetected({
@@ -287,6 +341,16 @@ describe.sequential("ConflictRepository", () => {
     );
 
     it.effect(
+      "rejects an equal persisted claim pair before persistence",
+      Effect.fnUntraced(function* () {
+        const error = yield* canonicalConflictPair(ClaimA, ClaimA).pipe(Effect.flip);
+
+        assert.instanceOf(error, EqualConflictPairError);
+        assert.strictEqual(error.claimId, ClaimA);
+      })
+    );
+
+    it.effect(
       "classifies malformed persistence rows as decodeRows failures",
       Effect.fnUntraced(function* () {
         yield* resetTables();
@@ -295,6 +359,21 @@ describe.sequential("ConflictRepository", () => {
         const conflicts = yield* ConflictRepository;
         yield* sql`ALTER TABLE conflicts DROP CONSTRAINT conflicts_conflict_type_check`;
         yield* sql`UPDATE conflicts SET conflict_type = 'unsupported'`;
+
+        const error = yield* conflicts.list(ConflictsQuery.make({ ontologyId: OntologyA })).pipe(Effect.flip);
+        assert.instanceOf(error, DrizzleError);
+        assert.strictEqual(error.operation, "decodeRows");
+      })
+    );
+
+    it.effect(
+      "classifies malformed actor fingerprints as decodeRows failures",
+      Effect.fnUntraced(function* () {
+        yield* resetTables();
+        yield* insertConflictFixtures();
+        const sql = yield* SqlClient.SqlClient;
+        const conflicts = yield* ConflictRepository;
+        yield* sql`UPDATE conflicts SET resolved_by_fingerprint = 'not-a-sha256'`;
 
         const error = yield* conflicts.list(ConflictsQuery.make({ ontologyId: OntologyA })).pipe(Effect.flip);
         assert.instanceOf(error, DrizzleError);
@@ -318,6 +397,24 @@ describe.sequential("ConflictRepository", () => {
         Effect.sync(() => HttpRouter.toWebHandler(TimelineHttpTestLayer, { disableLogger: true })),
         Effect.fnUntraced(function* (webHandler) {
           const requestContext = Context.empty();
+          const entityResponse = yield* Effect.tryPromise(() =>
+            webHandler.handler(
+              new Request(
+                `http://effect-ontology.test/v1/timeline/entities/${encodeURIComponent("https://example.test/entities/position")}?ontologyId=${OntologyA}`
+              ),
+              requestContext
+            )
+          );
+          const entityText = yield* Effect.tryPromise(() => entityResponse.text());
+          assert.strictEqual(entityResponse.status, 200, entityText);
+          const entityTimeline = yield* S.decodeEffect(S.fromJsonString(TimelineEntityResponse))(entityText);
+          assert.deepStrictEqual(
+            A.map(entityTimeline.corrections, (correction) => correction.id),
+            [CorrectionA]
+          );
+          assert.strictEqual(entityTimeline.corrections[0]?.originalClaimId, ClaimA);
+          assert.strictEqual(O.getOrNull(entityTimeline.corrections[0]?.newClaimId ?? O.none()), ClaimB);
+
           const listResponse = yield* Effect.tryPromise(() =>
             webHandler.handler(
               new Request("http://effect-ontology.test/v1/timeline/conflicts?ontologyId=ontology-a&limit=1&offset=0"),

@@ -255,7 +255,7 @@ export const JobPushRouter = HttpRouter.addAll([
           Effect.catchTags({
             JobParseError: Effect.fnUntraced(function* (e) {
               yield* Effect.logError("Failed to parse job payload", {
-                error: String(e.cause),
+                error: Inspectable.toStringUnknown(e.cause, 0),
               });
               // Return 400 to not retry on job schema errors
               return yield* HttpServerResponse.json(
@@ -269,7 +269,7 @@ export const JobPushRouter = HttpRouter.addAll([
             }),
             ProcessingError: Effect.fnUntraced(function* (e) {
               yield* Effect.logError("Job processing failed", {
-                error: String(e.cause),
+                error: Inspectable.toStringUnknown(e.cause, 0),
               });
               // Return 500 to trigger retry
               return yield* HttpServerResponse.json(

@@ -14,7 +14,18 @@ import type { IRI } from "@beep/rdf";
 import { NodeIndex } from "@beep/schema/Graph";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { DateTime, Effect, Graph, HashMap, HashSet, MutableHashMap, MutableHashSet, Number as N, Order } from "effect";
+import {
+  DateTime,
+  Effect,
+  Graph,
+  HashMap,
+  HashSet,
+  Inspectable,
+  MutableHashMap,
+  MutableHashSet,
+  Number as N,
+  Order,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -109,20 +120,23 @@ export const clusterEntities = dual3(
 
       if (config.embeddingWeight > 0) {
         const entityEmbeddings = yield* Effect.all(
-          entities.map((entity) =>
+          A.map(entities, (entity) =>
             embeddingService.embed(entity.mention, "clustering").pipe(
-              Effect.map((embedding) => ({ entityId: entity.id, embedding })),
-              Effect.orElseSucceed(() => null) // Gracefully handle embedding failures
+              Effect.map((embedding) => O.some({ entityId: entity.id, embedding })),
+              Effect.catch((error) =>
+                Effect.logWarning("Entity embedding unavailable; continuing with lexical similarity", {
+                  entityId: entity.id,
+                  error: Inspectable.toStringUnknown(error, 0),
+                }).pipe(Effect.as(O.none()))
+              )
             )
           ),
           { concurrency: 5 }
         );
 
         // Store valid embeddings in MutableHashMap for O(1) lookup
-        for (const item of entityEmbeddings) {
-          if (P.isNotNull(item)) {
-            MutableHashMap.set(embeddingMap, item.entityId, item.embedding);
-          }
+        for (const item of A.getSomes(entityEmbeddings)) {
+          MutableHashMap.set(embeddingMap, item.entityId, item.embedding);
         }
       }
 

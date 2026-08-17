@@ -11,11 +11,9 @@
  * @since 0.0.0
  */
 
-import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { ObjectRef } from "@beep/rdf/Prov";
 import { NonNegativeInt } from "@beep/schema/Int";
-import { getSomesStruct } from "@beep/utils/Option";
 import { Cause, Chunk, Duration, Effect, Exit, HashSet, Inspectable, Layer, Number as N, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -45,8 +43,13 @@ import type { Mention } from "../Service/Extraction.ts";
 import { EntityExtractor, MentionExtractor, RelationExtractor } from "../Service/Extraction.ts";
 import { ExtractionRunService, ExtractionRunServiceDefault } from "../Service/ExtractionRun.ts";
 import { ExtractionWorkflow } from "../Service/ExtractionWorkflow.ts";
-import type { RelationVerificationInput } from "../Service/Grounder.ts";
-import { EntityGrounderResult, Grounder, GrounderResult } from "../Service/Grounder.ts";
+import {
+  EntityGrounderResult,
+  Grounder,
+  GrounderResult,
+  RelationEntityContext,
+  RelationVerificationInput,
+} from "../Service/Grounder.ts";
 import type { TextChunk } from "../Service/Nlp.ts";
 import { NlpService } from "../Service/Nlp.ts";
 import { OntologyService } from "../Service/Ontology.ts";
@@ -106,21 +109,10 @@ const isSystemicError = (error: unknown): boolean => {
   return false;
 };
 
-const getChunkId = (runId: string, index: number) => `${runId}_chunk_${index}`;
-
 const notEvaluated = GroundingDecision.cases.NotEvaluated.make({});
 
 const isPublishable = (decision: GroundingDecision): boolean =>
   GroundingDecision.guards.NotEvaluated(decision) || GroundingDecision.guards.Supported(decision);
-
-const noConfidence: () => O.Option<Confidence> = O.none;
-
-const groundingConfidence = (decision: GroundingDecision): O.Option<Confidence> =>
-  GroundingDecision.match(decision, {
-    NotEvaluated: noConfidence,
-    Supported: ({ confidence }): O.Option<Confidence> => O.some(confidence),
-    Rejected: ({ confidence }): O.Option<Confidence> => O.some(confidence),
-  });
 
 const applyGroundingThreshold = (decision: GroundingDecision, threshold: number): GroundingDecision =>
   GroundingDecision.match(decision, {
@@ -225,6 +217,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
           .chunkText(text, {
             maxChunkSize: config.chunking.maxChunkSize,
             preserveSentences: config.chunking.preserveSentences,
+            overlapSentences: config.chunking.overlapSentences,
           })
           .pipe(
             Effect.withLogSpan("chunking"),
@@ -388,7 +381,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       })
                     )
                   );
-                const chunkId = getChunkId(run.id, chunk.index);
+                const chunkId = ChunkId.fromDocument(run.id, NonNegativeInt.make(chunk.index));
                 const rawEntityArray = Chunk.toReadonlyArray(rawEntities);
                 const activity = yield* decodeObjectRef(
                   `urn:beep:effect-ontology:activity:extraction:${run.id}:chunk:${chunk.index}`
@@ -457,13 +450,12 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                         types: result.entity.types,
                         attributes: result.entity.attributes,
                         chunkIndex: O.some(NonNegativeInt.make(chunk.index)),
-                        chunkId: O.some(ChunkId.make(chunkId)),
+                        chunkId: O.some(chunkId),
                         documentId: result.entity.documentId,
                         sourceUri: result.entity.sourceUri,
                         extractedAt: result.entity.extractedAt,
                         eventTime: result.entity.eventTime,
                         mentions: result.entity.mentions,
-                        groundingConfidence: groundingConfidence(result.decision),
                         grounding: result.decision,
                         observations: [observation],
                       }),
@@ -564,33 +556,29 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                   (relation) => {
                     const subject = A.findFirst(entityArray, (entity) => entity.id === relation.subjectId);
                     const predicate = A.findFirst(propertyArray, (property) => property.id === relation.predicate);
-                    return {
+                    return RelationVerificationInput.make({
                       context: chunk.text,
                       relation,
-                      ...getSomesStruct({
-                        subject: O.map(subject, (value) => ({
+                      subject: O.map(subject, (value) =>
+                        RelationEntityContext.make({
                           entityId: value.id,
                           mention: value.mention,
                           types: value.types,
-                        })),
-                        predicate,
-                      }),
+                        })
+                      ),
+                      predicate,
                       object: RelationObject.match(relation.object, {
-                        EntityReference: ({ value }): NonNullable<RelationVerificationInput["object"]> => {
+                        EntityReference: ({ value }) => {
                           const referencedEntity = A.findFirst(entityArray, (entity) => entity.id === value);
-                          return {
-                            entityId: value,
-                            ...O.getOrElse(
-                              O.map(referencedEntity, ({ mention, types }) => ({ mention, types })),
-                              () => ({})
-                            ),
-                          };
+                          return O.map(referencedEntity, ({ mention, types }) =>
+                            RelationEntityContext.make({ entityId: value, mention, types })
+                          );
                         },
-                        Text: ({ value }): NonNullable<RelationVerificationInput["object"]> => ({ literal: value }),
-                        Number: ({ value }): NonNullable<RelationVerificationInput["object"]> => ({ literal: value }),
-                        Boolean: ({ value }): NonNullable<RelationVerificationInput["object"]> => ({ literal: value }),
+                        Text: O.none,
+                        Number: O.none,
+                        Boolean: O.none,
                       }),
-                    };
+                    });
                   }
                 );
                 const verificationResults = yield* GroundingPolicy.match(config.grounding, {

@@ -16,11 +16,12 @@ import type { IRI } from "@beep/rdf";
 import { ProvBundle } from "@beep/rdf/Prov";
 import { NonNegativeInt } from "@beep/schema";
 import * as A from "@beep/utils/Array";
-import { HashMap, HashSet, MutableHashMap, Order, pipe, Tuple } from "effect";
+import { DateTime, HashMap, HashSet, Inspectable, Order } from "effect";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { Relation } from "../Domain/Model/Entity.ts";
 import {
   Entity,
@@ -101,7 +102,47 @@ const RelationOrder: Order.Order<Relation> = Order.combine(
   )
 );
 
-const TypeFrequencyOrder = Order.mapInput(Order.flip(Order.Number), (entry: readonly [IRI, number]) => entry[1]);
+const EvidenceOrder = Order.combine(
+  Order.mapInput(Order.Number, (evidence: Entity["mentions"][number]) => evidence.startChar),
+  Order.combine(
+    Order.mapInput(Order.Number, (evidence: Entity["mentions"][number]) => evidence.endChar),
+    Order.mapInput(Order.String, (evidence: Entity["mentions"][number]) => evidence.quote)
+  )
+);
+
+const MentionOrder = Order.combine(
+  Order.mapInput(Order.Number, (mention: string) => Str.length(mention)),
+  Order.String
+);
+
+type EntityAttribute = Entity["attributes"][string];
+
+const canonicalAttribute = (left: EntityAttribute, right: EntityAttribute): EntityAttribute =>
+  Order.min(Order.String)(Inspectable.toStringUnknown(left, 0), Inspectable.toStringUnknown(right, 0)) ===
+  Inspectable.toStringUnknown(left, 0)
+    ? left
+    : right;
+
+const canonicalOption = <Value>(
+  order: Order.Order<Value>,
+  left: O.Option<Value>,
+  right: O.Option<Value>
+): O.Option<Value> => O.firstSomeOf([O.zipWith(left, right, Order.min(order)), left, right]);
+
+const canonicalAttributes = (left: Entity["attributes"], right: Entity["attributes"]): Entity["attributes"] => {
+  let attributes = left;
+  for (const [key, rightValue] of R.toEntries(right)) {
+    attributes = R.set(
+      attributes,
+      key,
+      O.match(R.get(attributes, key), {
+        onNone: () => rightValue,
+        onSome: (leftValue) => canonicalAttribute(leftValue, rightValue),
+      })
+    );
+  }
+  return attributes;
+};
 
 const groundingRank = (decision: GroundingDecision): number =>
   GroundingDecision.match(decision, {
@@ -138,23 +179,28 @@ const preferGrounding = (left: GroundingDecision, right: GroundingDecision): Gro
 };
 
 const dedupeById = <TValue extends { readonly id: string }>(values: ReadonlyArray<TValue>): ReadonlyArray<TValue> =>
-  A.dedupeWith(values, (left, right) => left.id === right.id);
+  A.dedupeWith(
+    A.sort(
+      values,
+      Order.mapInput(Order.String, (value: TValue) => `${value.id}:${Inspectable.toStringUnknown(value, 0)}`)
+    ),
+    (left, right) => Eq.equals(left.id, right.id)
+  );
 
 const mergeEntity = (left: Entity, right: Entity): Entity => {
   const grounding = preferGrounding(left.grounding, right.grounding);
   return Entity.make({
     id: left.id,
-    mention: right.mention.length > left.mention.length ? right.mention : left.mention,
+    mention: Order.max(MentionOrder)(left.mention, right.mention),
     types: selectBestTypes(left.types, right.types),
-    attributes: { ...left.attributes, ...right.attributes },
-    chunkIndex: O.orElse(left.chunkIndex, () => right.chunkIndex),
-    chunkId: O.orElse(left.chunkId, () => right.chunkId),
-    documentId: O.orElse(left.documentId, () => right.documentId),
-    sourceUri: O.orElse(left.sourceUri, () => right.sourceUri),
-    extractedAt: O.orElse(left.extractedAt, () => right.extractedAt),
-    eventTime: O.orElse(left.eventTime, () => right.eventTime),
-    mentions: A.appendAll(left.mentions, right.mentions),
-    groundingConfidence: confidenceOf(grounding),
+    attributes: canonicalAttributes(left.attributes, right.attributes),
+    chunkIndex: canonicalOption(Order.Number, left.chunkIndex, right.chunkIndex),
+    chunkId: canonicalOption(Order.String, left.chunkId, right.chunkId),
+    documentId: canonicalOption(Order.String, left.documentId, right.documentId),
+    sourceUri: canonicalOption(Order.String, left.sourceUri, right.sourceUri),
+    extractedAt: canonicalOption(DateTime.Order, left.extractedAt, right.extractedAt),
+    eventTime: canonicalOption(DateTime.Order, left.eventTime, right.eventTime),
+    mentions: A.dedupeWith(A.sort(A.appendAll(left.mentions, right.mentions), EvidenceOrder), Eq.equals),
     grounding,
     observations: dedupeById(A.appendAll(left.observations, right.observations)),
   });
@@ -166,7 +212,7 @@ const mergeRelation = (left: Relation, right: Relation): Relation => {
     subjectId: left.subjectId,
     predicate: left.predicate,
     object: left.object,
-    evidence: O.orElse(left.evidence, () => right.evidence),
+    evidence: canonicalOption(EvidenceOrder, left.evidence, right.evidence),
     grounding,
     observations: dedupeById(A.appendAll(left.observations, right.observations)),
   });
@@ -209,23 +255,29 @@ const mergeGraphData = (left: KnowledgeGraph, right: KnowledgeGraph): KnowledgeG
   KnowledgeGraph.make({
     entities: mergeEntityCollections(left.entities, right.entities),
     relations: mergeRelationCollections(left.relations, right.relations),
-    sourceText: O.orElse(left.sourceText, () => right.sourceText),
+    sourceText: canonicalOption(Order.String, left.sourceText, right.sourceText),
     provenance: ProvBundle.make({
-      records: A.dedupeWith(A.appendAll(left.provenance.records, right.provenance.records), Eq.equals),
+      records: A.dedupeWith(
+        A.sort(
+          A.appendAll(left.provenance.records, right.provenance.records),
+          Order.mapInput(Order.String, (record) => Inspectable.toStringUnknown(record, 0))
+        ),
+        Eq.equals
+      ),
     }),
     entityObservations: dedupeById(A.appendAll(left.entityObservations, right.entityObservations)),
     relationObservations: dedupeById(A.appendAll(left.relationObservations, right.relationObservations)),
   });
 
 /**
- * Select best types using frequency voting
+ * Select a canonical bounded union of entity types.
  *
- * Counts occurrences of each type and selects the most frequent ones.
- * Prefers types that appear in majority of occurrences.
+ * Sorting and retaining the lowest three values makes the operation associative,
+ * commutative, and deterministic under unordered parallel reduction.
  *
  * @param existingTypes - Types from existing entity
  * @param newTypes - Types from new entity occurrence
- * @returns Selected types (most frequent, up to 2-3 types)
+ * @returns Canonically ordered entity types, limited to three values.
  *
  * @internal
  */
@@ -233,62 +285,11 @@ const selectBestTypes = (
   existingTypes: A.NonEmptyReadonlyArray<IRI>,
   newTypes: A.NonEmptyReadonlyArray<IRI>
 ): A.NonEmptyReadonlyArray<IRI> => {
-  const ensureNonEmpty = (types: ReadonlyArray<IRI>): A.NonEmptyReadonlyArray<IRI> =>
-    O.match(A.head(types), {
-      onNone: () => [existingTypes[0]],
-      onSome: (first) => [first, ...A.drop(types, 1)],
-    });
-  // Count type frequencies
-  const typeFrequency = MutableHashMap.empty<IRI, number>();
-
-  // Count existing types (weighted as 1 occurrence)
-  for (const type of existingTypes) {
-    MutableHashMap.set(typeFrequency, type, O.getOrElse(MutableHashMap.get(typeFrequency, type), () => 0) + 1);
-  }
-
-  // Count new types (weighted as 1 occurrence)
-  for (const type of newTypes) {
-    MutableHashMap.set(typeFrequency, type, O.getOrElse(MutableHashMap.get(typeFrequency, type), () => 0) + 1);
-  }
-
-  // If only one type, return it
-  if (MutableHashMap.size(typeFrequency) === 1) {
-    return typeFrequency.pipe(MutableHashMap.keys, A.fromIterable, ensureNonEmpty);
-  }
-
-  // Sort by frequency (descending)
-  const sortedTypes = A.sort(A.fromIterable(typeFrequency), TypeFrequencyOrder);
-
-  // Select top types:
-  // - If highest frequency is >= 2, take all types with that frequency
-  // - Otherwise, take top 2-3 types (but at least the most frequent)
-  const maxFrequency = sortedTypes[0][1];
-  const selectedTypes = A.empty<IRI>();
-
-  if (maxFrequency >= 2) {
-    // Majority voting: take all types that appear in majority
-    for (const [type, freq] of sortedTypes) {
-      if (freq >= maxFrequency) {
-        selectedTypes.push(type);
-      } else {
-        break;
-      }
-    }
-    // Limit to top 3 even if multiple have same frequency
-    return ensureNonEmpty(A.slice(selectedTypes, { start: 0, end: 3 }));
-  } else {
-    // No clear majority: take top 2-3 most frequent
-    // Prefer keeping 1-2 types for clarity
-    return ensureNonEmpty(
-      pipe(
-        A.slice(sortedTypes, {
-          start: 0,
-          end: 2,
-        }),
-        A.map(Tuple.get(0))
-      )
-    );
-  }
+  const selected = A.take(A.dedupe(A.sort(A.appendAll(existingTypes, newTypes), Order.String)), 3);
+  return A.match(selected, {
+    onEmpty: () => [existingTypes[0]],
+    onNonEmpty: (types) => types,
+  });
 };
 
 /**

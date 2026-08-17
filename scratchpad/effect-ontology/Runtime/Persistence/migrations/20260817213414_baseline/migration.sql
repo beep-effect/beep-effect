@@ -84,7 +84,7 @@ CREATE TABLE "conflicts" (
 	"resolved_by_fingerprint" text,
 	"resolved_at" timestamp with time zone,
 	"resolution_notes" text,
-	"detected_at" timestamp with time zone DEFAULT now(),
+	"detected_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "conflicts_conflict_type_check" CHECK ("conflict_type" IN ('position', 'temporal')),
 	CONSTRAINT "conflicts_status_check" CHECK ("status" IN ('pending', 'resolved', 'ignored')),
 	CONSTRAINT "conflicts_canonical_claim_pair_check" CHECK ("claim_a_id" < "claim_b_id"),

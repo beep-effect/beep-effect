@@ -45,14 +45,13 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Nlp");
  * Tokenization result
  *
  *
- * **Example** (Use the TokenizeResult contract)
+ * **Example** (Represent tokenized text)
  *
  * ```ts
  * import type { TokenizeResult } from "@effect-ontology/Service/Nlp"
  *
- * const acceptsTokenizeResult = (_value: TokenizeResult): void => undefined
- *
- * console.log(acceptsTokenizeResult)
+ * const result: TokenizeResult = { tokens: ["ada"], sentences: ["Ada."], entities: ["Ada"] }
+ * console.log(result.tokens[0]) // "ada"
  * ```
  *
  * @category type-level
@@ -68,14 +67,13 @@ export interface TokenizeResult {
  * BM25 similarity result
  *
  *
- * **Example** (Use the SimilarityResult contract)
+ * **Example** (Represent a ranked document)
  *
  * ```ts
  * import type { SimilarityResult } from "@effect-ontology/Service/Nlp"
  *
- * const acceptsSimilarityResult = (_value: SimilarityResult): void => undefined
- *
- * console.log(acceptsSimilarityResult)
+ * const result: SimilarityResult = { doc: "semantic graph", score: 0.9, index: 0 }
+ * console.log(result.score) // 0.9
  * ```
  *
  * @category type-level
@@ -91,14 +89,13 @@ export interface SimilarityResult {
  * Text chunk with offset information
  *
  *
- * **Example** (Use the TextChunk contract)
+ * **Example** (Represent a source-aligned chunk)
  *
  * ```ts
  * import type { TextChunk } from "@effect-ontology/Service/Nlp"
  *
- * const acceptsTextChunk = (_value: TextChunk): void => undefined
- *
- * console.log(acceptsTextChunk)
+ * const chunk: TextChunk = { index: 0, text: "Ada.", startOffset: 0, endOffset: 4 }
+ * console.log(chunk.endOffset - chunk.startOffset) // 4
  * ```
  *
  * @category type-level
@@ -115,14 +112,13 @@ export interface TextChunk {
  * Chunking options
  *
  *
- * **Example** (Use the ChunkOptions contract)
+ * **Example** (Configure character and sentence units)
  *
  * ```ts
  * import type { ChunkOptions } from "@effect-ontology/Service/Nlp"
  *
- * const acceptsChunkOptions = (_value: ChunkOptions): void => undefined
- *
- * console.log(acceptsChunkOptions)
+ * const options: ChunkOptions = { maxChunkSize: 500, overlapSentences: 2, preserveSentences: true }
+ * console.log(options.overlapSentences) // 2
  * ```
  *
  * @category type-level
@@ -157,16 +153,6 @@ export interface ChunkOptions {
  * Opaque BM25 index for ontology search
  *
  *
- * **Example** (Use the OntologyBM25Index contract)
- *
- * ```ts
- * import type { OntologyBM25Index } from "@effect-ontology/Service/Nlp"
- *
- * const acceptsOntologyBM25Index = (_value: OntologyBM25Index): void => undefined
- *
- * console.log(acceptsOntologyBM25Index)
- * ```
- *
  * @category type-level
  * @since 0.0.0
  */
@@ -181,16 +167,6 @@ export interface OntologyBM25Index {
 /**
  * Opaque semantic index for ontology search
  *
- *
- * **Example** (Use the OntologySemanticIndex contract)
- *
- * ```ts
- * import type { OntologySemanticIndex } from "@effect-ontology/Service/Nlp"
- *
- * const acceptsOntologySemanticIndex = (_value: OntologySemanticIndex): void => undefined
- *
- * console.log(acceptsOntologySemanticIndex)
- * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -238,14 +214,13 @@ const decodeWinkStrings = (value: unknown, operation: string, text: string) =>
  * Search result from ontology BM25 index
  *
  *
- * **Example** (Use the OntologySearchResult contract)
+ * **Example** (Represent an ontology search hit)
  *
  * ```ts
  * import type { OntologySearchResult } from "@effect-ontology/Service/Nlp"
  *
- * const acceptsOntologySearchResult = (_value: OntologySearchResult): void => undefined
- *
- * console.log(acceptsOntologySearchResult)
+ * const result: OntologySearchResult = { iri: "https://schema.org/Person", score: 0.8 }
+ * console.log(result.iri) // "https://schema.org/Person"
  * ```
  *
  * @category type-level

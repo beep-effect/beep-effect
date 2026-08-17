@@ -14,7 +14,7 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NamedNode } from "@beep/rdf";
-import { SchemaUtils } from "@beep/schema";
+import { SchemaUtils, UUID } from "@beep/schema";
 import * as S from "effect/Schema";
 import { OntologyName } from "../Identity.ts";
 import { ClaimId, RdfObject } from "./KnowledgeModel.ts";
@@ -634,7 +634,7 @@ export type CurationEvent = typeof CurationEvent.Type;
 const CurationJobDefinition = S.TaggedUnion({
   EmbeddingJob: {
     ontologyId: OntologyName,
-    canonicalEntityId: S.NonEmptyString,
+    canonicalEntityId: UUID,
     reason: S.NonEmptyString,
   },
   PromptCacheJob: {
@@ -657,7 +657,7 @@ const CurationJobDefinition = S.TaggedUnion({
  * const job = S.decodeUnknownOption(EmbeddingJob)({
  *   _tag: "EmbeddingJob",
  *   ontologyId: "claims",
- *   canonicalEntityId: "entity-1",
+ *   canonicalEntityId: "00000000-0000-4000-8000-000000000001",
  *   reason: "alias added"
  * })
  * console.log(O.isSome(job)) // true
@@ -715,7 +715,7 @@ export const PromptCacheJob = CurationJobDefinition.cases.PromptCacheJob.pipe(
  * const job = S.decodeUnknownOption(CurationJob)({
  *   _tag: "EmbeddingJob",
  *   ontologyId: "claims",
- *   canonicalEntityId: "entity-1",
+ *   canonicalEntityId: "00000000-0000-4000-8000-000000000001",
  *   reason: "alias added"
  * })
  * console.log(O.isSome(job)) // true

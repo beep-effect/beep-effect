@@ -674,16 +674,18 @@ export const EventBroadcastRouter = HttpRouter.addAll([
       return HttpServerResponse.empty();
     }).pipe(
       Effect.catchCause((cause) =>
-        Effect.gen(function* () {
-          yield* Effect.logError("WebSocket upgrade failed", { cause: Cause.pretty(cause) });
-          return yield* HttpServerResponse.json(
-            {
-              error: "WEBSOCKET_ERROR",
-              message: "Failed to upgrade connection",
-            },
-            { status: 500 }
-          );
-        })
+        Cause.hasInterrupts(cause)
+          ? Effect.failCause(cause)
+          : Effect.gen(function* () {
+              yield* Effect.logError("WebSocket upgrade failed", { cause: Cause.pretty(cause) });
+              return yield* HttpServerResponse.json(
+                {
+                  error: "WEBSOCKET_ERROR",
+                  message: "Failed to upgrade connection",
+                },
+                { status: 500 }
+              );
+            })
       )
     )
   ),

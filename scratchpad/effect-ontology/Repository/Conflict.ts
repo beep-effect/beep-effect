@@ -8,6 +8,9 @@
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
+import { NonNegativeInt } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema/Sha256";
+import { UUID } from "@beep/schema/String";
 import { aliasedTable, and, count, desc, eq, or } from "drizzle-orm";
 import { Context, DateTime, Effect, Equal, Layer, Match, Order } from "effect";
 import * as A from "effect/Array";
@@ -19,6 +22,7 @@ import type { ConflictInsertRow } from "./schema.ts";
 import { Claims, Conflicts, claims, conflicts } from "./schema.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Conflict");
+const UUIDString = UUID.pipe(S.decodeTo(S.String));
 
 const claimA = aliasedTable(claims, "conflict_claim_a");
 const claimB = aliasedTable(claims, "conflict_claim_b");
@@ -57,13 +61,13 @@ export const ConflictRecord = ConflictRecordDefinition.pipe(
  */
 export type ConflictRecord = typeof ConflictRecord.Type;
 
-const ConflictCounts = S.Struct({ total: S.Int, pending: S.Int }).pipe(
+const ConflictCounts = S.Struct({ total: NonNegativeInt, pending: NonNegativeInt }).pipe(
   $I.annoteSchema("ConflictCounts", {
     description: "Unpaginated total and pending conflict counts for one query scope.",
   })
 );
 
-const CountRow = S.Struct({ count: S.Int });
+const CountRow = S.Struct({ count: NonNegativeInt });
 
 type ConflictComparableClaim = {
   readonly objectValue: string;
@@ -71,15 +75,46 @@ type ConflictComparableClaim = {
   readonly validTo?: Date | null | undefined;
 };
 
-type ConflictUpdate = {
-  readonly status: "ignored" | "resolved";
-  readonly resolutionStrategy: string | null;
-  readonly acceptedClaimId: string | null;
-  readonly resolvedBy: string;
-  readonly resolvedByFingerprint: string | null;
-  readonly resolvedAt: Date;
-  readonly resolutionNotes: string | null;
-};
+class ConflictUpdate extends S.Class<ConflictUpdate>($I`ConflictUpdate`)(
+  {
+    status: S.Literals(["ignored", "resolved"]),
+    resolutionStrategy: S.NullOr(S.String),
+    acceptedClaimId: S.NullOr(UUIDString),
+    resolvedBy: S.NonEmptyString,
+    resolvedByFingerprint: S.NullOr(Sha256Hex.pipe(S.decodeTo(S.String))),
+    resolvedAt: S.Date,
+    resolutionNotes: S.NullOr(S.String),
+  },
+  $I.annote("ConflictUpdate", {
+    description: "Validated terminal conflict-state columns written atomically by the repository.",
+  })
+) {}
+
+/**
+ * Signals that a persisted claim was paired with itself.
+ *
+ * **Example** (Inspect an equal-pair failure)
+ *
+ * ```ts
+ * import { EqualConflictPairError } from "@effect-ontology/Repository/Conflict"
+ *
+ * const error = EqualConflictPairError.make({
+ *   claimId: "00000000-0000-4000-8000-000000000011"
+ * })
+ *
+ * console.log(error._tag) // "EqualConflictPairError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EqualConflictPairError extends S.TaggedError<EqualConflictPairError>($I`EqualConflictPairError`)(
+  "EqualConflictPairError",
+  { claimId: UUIDString },
+  $I.annote("EqualConflictPairError", {
+    description: "Conflict pair construction failed because both sides identify the same persisted claim.",
+  })
+) {}
 
 const normalizeDecodedRows = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
   effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("decodeRows", cause)));
@@ -101,19 +136,33 @@ const decodeCountRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEf
  * **Example** (Order a claim pair)
  *
  * ```ts
+ * import { Effect } from "effect"
  * import { canonicalConflictPair } from "@effect-ontology/Repository/Conflict"
  *
- * console.log(canonicalConflictPair("claim-b", "claim-a")) // ["claim-a", "claim-b"]
+ * const program = Effect.gen(function* () {
+ *   const pair = yield* canonicalConflictPair(
+ *     "00000000-0000-4000-8000-000000000012",
+ *     "00000000-0000-4000-8000-000000000011"
+ *   )
+ *
+ *   console.log(pair)
+ * })
+ *
+ * console.log(program)
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
 export const canonicalConflictPair: {
-  (right: string): (left: string) => readonly [string, string];
-  (left: string, right: string): readonly [string, string];
-} = dual(2, (left: string, right: string): readonly [string, string] =>
-  Order.isLessThan(Order.String)(left, right) ? [left, right] : [right, left]
+  (right: string): (left: string) => Effect.Effect<readonly [string, string], EqualConflictPairError>;
+  (left: string, right: string): Effect.Effect<readonly [string, string], EqualConflictPairError>;
+} = dual(
+  2,
+  Effect.fn("ConflictRepository.canonicalConflictPair")(function* (left: string, right: string) {
+    if (Equal.equals(left, right)) return yield* EqualConflictPairError.make({ claimId: left });
+    return Order.isLessThan(Order.String)(left, right) ? [left, right] : [right, left];
+  })
 );
 
 /**
@@ -254,7 +303,7 @@ export class ConflictRepository extends Context.Service<ConflictRepository>()($I
     const recordDetected = Effect.fn("ConflictRepository.recordDetected")(function* (
       detected: Pick<ConflictInsertRow, "ontologyId" | "conflictType" | "claimAId" | "claimBId">
     ) {
-      const [claimAId, claimBId] = canonicalConflictPair(detected.claimAId, detected.claimBId);
+      const [claimAId, claimBId] = yield* canonicalConflictPair(detected.claimAId, detected.claimBId);
       const rows = yield* normalizeQueryError(
         drizzle
           .insert(conflicts)
@@ -282,29 +331,31 @@ export class ConflictRepository extends Context.Service<ConflictRepository>()($I
       const toUpdate: (transition: ConflictTransition) => ConflictUpdate = Match.type<ConflictTransition>().pipe(
         Match.when(
           { _tag: "ignore" },
-          ({ notes }): ConflictUpdate => ({
-            status: "ignored",
-            resolutionStrategy: null,
-            acceptedClaimId: null,
-            resolvedBy: actor.principal,
-            resolvedByFingerprint: O.getOrNull(actor.credentialFingerprint),
-            resolvedAt: now,
-            resolutionNotes: O.getOrNull(notes),
-          })
+          ({ notes }): ConflictUpdate =>
+            ConflictUpdate.make({
+              status: "ignored",
+              resolutionStrategy: null,
+              acceptedClaimId: null,
+              resolvedBy: actor.principal,
+              resolvedByFingerprint: O.getOrNull(actor.credentialFingerprint),
+              resolvedAt: now,
+              resolutionNotes: O.getOrNull(notes),
+            })
         ),
         Match.when(
           { _tag: "resolve" },
-          ({ acceptedClaim, notes, strategy }): ConflictUpdate => ({
-            status: "resolved",
-            resolutionStrategy: strategy,
-            acceptedClaimId: Equal.equals(acceptedClaim, "claimA")
-              ? existing.value.conflict.claimAId
-              : existing.value.conflict.claimBId,
-            resolvedBy: actor.principal,
-            resolvedByFingerprint: O.getOrNull(actor.credentialFingerprint),
-            resolvedAt: now,
-            resolutionNotes: O.getOrNull(notes),
-          })
+          ({ acceptedClaim, notes, strategy }): ConflictUpdate =>
+            ConflictUpdate.make({
+              status: "resolved",
+              resolutionStrategy: strategy,
+              acceptedClaimId: Equal.equals(acceptedClaim, "claimA")
+                ? existing.value.conflict.claimAId
+                : existing.value.conflict.claimBId,
+              resolvedBy: actor.principal,
+              resolvedByFingerprint: O.getOrNull(actor.credentialFingerprint),
+              resolvedAt: now,
+              resolutionNotes: O.getOrNull(notes),
+            })
         ),
         Match.exhaustive
       );

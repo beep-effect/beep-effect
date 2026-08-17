@@ -21,7 +21,7 @@ import * as P from "effect/Predicate";
 const $I = $ScratchpadId.create("effect-ontology/Repository/Examples");
 
 import { PostgresDrizzle } from "@beep/postgres";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, sql as drizzleSql, eq } from "drizzle-orm";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -536,16 +536,19 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
      */
     const recordUsage = (id: ExampleId, wasSuccessful: boolean): Effect.Effect<void, DrizzleError> =>
       Effect.asVoid(
-        normalizeQueryError(sql`
-          UPDATE llm_examples
-          SET
-            usage_count = usage_count + 1,
-            success_rate = CASE
-              WHEN usage_count = 0 THEN ${wasSuccessful ? 1 : 0}::numeric(4,3)
-              ELSE (success_rate * usage_count + ${wasSuccessful ? 1 : 0}) / (usage_count + 1)
-            END
-          WHERE id = ${id}
-        `)
+        normalizeQueryError(
+          drizzle
+            .update(llmExamples)
+            .set({
+              usageCount: drizzleSql`${llmExamples.usageCount} + 1`,
+              successRate: drizzleSql`CASE
+                WHEN ${llmExamples.usageCount} = 0 THEN ${wasSuccessful ? 1 : 0}::numeric(4,3)
+                ELSE (${llmExamples.successRate} * ${llmExamples.usageCount} + ${wasSuccessful ? 1 : 0}) /
+                  (${llmExamples.usageCount} + 1)
+              END`,
+            })
+            .where(eq(llmExamples.id, id))
+        )
       );
 
     /**

@@ -13,6 +13,8 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/rdf";
+import { UUID } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, flow, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
@@ -45,9 +47,9 @@ import { CanonicalEntities, canonicalEntities, EntityAliases, entityAliases, ent
  * **Example** (Create CanonicalEntityId)
  *
  * ```ts
- * import type { CanonicalEntityId } from "@effect-ontology/Repository/EntityRegistry"
+ * import { CanonicalEntityId } from "@effect-ontology/Repository/EntityRegistry"
  *
- * const canonicalEntityId: CanonicalEntityId = "canonical-entity-id-1"
+ * const canonicalEntityId = CanonicalEntityId.make("00000000-0000-4000-8000-000000000001")
  *
  * console.log(canonicalEntityId)
  * ```
@@ -55,16 +57,28 @@ import { CanonicalEntities, canonicalEntities, EntityAliases, entityAliases, ent
  * @category type-level
  * @since 0.0.0
  */
-export type CanonicalEntityId = string;
+export const CanonicalEntityId = UUID.pipe(
+  $I.annoteSchema("CanonicalEntityId", {
+    description: "Database identity of a canonical entity in the persistent registry.",
+  })
+);
+
+/**
+ * Decoded database identity accepted by {@link CanonicalEntityId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type CanonicalEntityId = typeof CanonicalEntityId.Type;
 /**
  * Describes the entity alias id data exposed by this module.
  *
  * **Example** (Create EntityAliasId)
  *
  * ```ts
- * import type { EntityAliasId } from "@effect-ontology/Repository/EntityRegistry"
+ * import { EntityAliasId } from "@effect-ontology/Repository/EntityRegistry"
  *
- * const entityAliasId: EntityAliasId = "entity-alias-id-1"
+ * const entityAliasId = EntityAliasId.make("00000000-0000-4000-8000-000000000002")
  *
  * console.log(entityAliasId)
  * ```
@@ -72,19 +86,38 @@ export type CanonicalEntityId = string;
  * @category type-level
  * @since 0.0.0
  */
-export type EntityAliasId = string;
+export const EntityAliasId = UUID.pipe(
+  $I.annoteSchema("EntityAliasId", {
+    description: "Database identity of an entity alias in the persistent registry.",
+  })
+);
+
+/**
+ * Decoded database identity accepted by {@link EntityAliasId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EntityAliasId = typeof EntityAliasId.Type;
 
 /**
  * A candidate entity returned from blocking/similarity search
  *
- * **Example** (Reference BlockingCandidate fields)
+ * **Example** (Create a blocking candidate)
  *
  * ```ts
- * import type { BlockingCandidate } from "@effect-ontology/Repository/EntityRegistry"
+ * import { IRI } from "@beep/rdf"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
+ * import { BlockingCandidate, CanonicalEntityId } from "@effect-ontology/Repository/EntityRegistry"
  *
- * const blockingCandidateFields: ReadonlyArray<keyof BlockingCandidate> = ["canonicalEntityId", "iri", "mention"]
- *
- * console.log(blockingCandidateFields)
+ * const candidate = BlockingCandidate.make({
+ *   canonicalEntityId: CanonicalEntityId.make("00000000-0000-4000-8000-000000000001"),
+ *   iri: IRI.make("https://example.org/entities/ada"),
+ *   mention: "Ada",
+ *   types: [IRI.make("https://schema.org/Person")],
+ *   similarity: UnitInterval.make(0.9)
+ * })
+ * console.log(candidate.mention) // "Ada"
  * ```
  *
  * @category type-level
@@ -92,10 +125,10 @@ export type EntityAliasId = string;
  */
 export class BlockingCandidate extends S.Class<BlockingCandidate>($I`BlockingCandidate`)(
   {
-    canonicalEntityId: S.NonEmptyString,
-    iri: S.NonEmptyString,
+    canonicalEntityId: CanonicalEntityId,
+    iri: IRI,
     mention: S.NonEmptyString,
-    types: S.Array(S.NonEmptyString),
+    types: S.Array(IRI),
     similarity: UnitInterval,
   },
   $I.annote("BlockingCandidate", {
@@ -122,14 +155,17 @@ export const normalizeEntityMention = flow(Str.toLowerCase, Str.trim);
 /**
  * Describes the canonical entity filter data exposed by this module.
  *
- * **Example** (Reference CanonicalEntityFilter fields)
+ * **Example** (Filter canonical entities)
  *
  * ```ts
  * import type { CanonicalEntityFilter } from "@effect-ontology/Repository/EntityRegistry"
  *
- * const canonicalEntityFilterFields: ReadonlyArray<keyof CanonicalEntityFilter> = ["ontologyId", "types", "limit"]
- *
- * console.log(canonicalEntityFilterFields)
+ * const filter: CanonicalEntityFilter = {
+ *   ontologyId: "claims",
+ *   types: ["https://schema.org/Person"],
+ *   limit: 20
+ * }
+ * console.log(filter.limit) // 20
  * ```
  *
  * @category type-level
@@ -151,9 +187,9 @@ const PgVector = S.Finite.pipe(
 );
 
 const CanonicalEntitySqlRow = S.Struct({
-  id: S.String,
+  id: CanonicalEntityId,
   ontologyId: S.String,
-  iri: S.String,
+  iri: IRI,
   canonicalMention: S.String,
   types: S.String.pipe(S.Array, S.mutable),
   embedding: PgVector,
@@ -170,9 +206,9 @@ const CanonicalEntitySqlRow = S.Struct({
 );
 
 const EntityAliasSqlRow = S.Struct({
-  id: S.String,
+  id: EntityAliasId,
   ontologyId: S.String,
-  canonicalEntityId: S.String,
+  canonicalEntityId: CanonicalEntityId,
   mention: S.String,
   mentionNormalized: S.String,
   embedding: S.NullOr(PgVector),
@@ -188,10 +224,10 @@ const EntityAliasSqlRow = S.Struct({
 );
 
 const BlockingCandidateSqlRow = S.Struct({
-  canonicalEntityId: S.NonEmptyString,
-  iri: S.NonEmptyString,
+  canonicalEntityId: CanonicalEntityId,
+  iri: IRI,
   mention: S.NonEmptyString,
-  types: S.Array(S.NonEmptyString),
+  types: S.Array(IRI),
   similarity: UnitInterval,
 }).pipe(
   $I.annoteSchema("BlockingCandidateSqlRow", {
@@ -497,6 +533,63 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
       });
 
       /**
+       * Creates a canonical entity together with its first alias and blocking tokens.
+       *
+       * The canonical row is never observable without the alias that established it.
+       */
+      const insertCanonicalEntityWithAlias = Effect.fn("insertCanonicalEntityWithAlias")(function* (
+        entity: CanonicalEntityInsertRow,
+        initialAlias: Omit<EntityAliasInsertRow, "canonicalEntityId">,
+        tokens: ReadonlyArray<string>
+      ): Effect.fn.Return<CanonicalEntityRow, DrizzleError> {
+        return yield* normalizeQueryError(
+          drizzle.transaction(
+            Effect.fnUntraced(function* (tx) {
+              const canonicalRows = yield* tx
+                .insert(canonicalEntities)
+                .values({
+                  ontologyId: O.getOrElse(O.fromUndefinedOr(entity.ontologyId), () => "default"),
+                  iri: entity.iri,
+                  canonicalMention: entity.canonicalMention,
+                  types: A.fromIterable(O.getOrElse(O.fromUndefinedOr(entity.types), A.empty)),
+                  embedding: formatVector(entity.embedding),
+                  mergeCount: O.getOrElse(O.fromNullishOr(entity.mergeCount), () => 1),
+                  confidenceAvg: O.getOrNull(O.fromNullishOr(entity.confidenceAvg)),
+                })
+                .returning();
+              const [canonical] = yield* decodeOneCanonicalEntitySqlRow(canonicalRows);
+              const embeddingValue = O.map(O.fromNullishOr(initialAlias.embedding), formatVector).pipe(O.getOrNull);
+              yield* tx.insert(entityAliases).values({
+                ontologyId: O.getOrElse(O.fromUndefinedOr(initialAlias.ontologyId), () => "default"),
+                canonicalEntityId: canonical.id,
+                mention: initialAlias.mention,
+                mentionNormalized: initialAlias.mentionNormalized,
+                embedding: embeddingValue,
+                resolutionMethod: initialAlias.resolutionMethod,
+                resolutionConfidence: initialAlias.resolutionConfidence,
+                firstBatchId: O.getOrNull(O.fromNullishOr(initialAlias.firstBatchId)),
+                sourceArticleId: O.getOrNull(O.fromNullishOr(initialAlias.sourceArticleId)),
+              });
+              if (A.isReadonlyArrayNonEmpty(tokens)) {
+                yield* tx.insert(entityBlockingTokens).values(
+                  A.map(
+                    tokens,
+                    (token): EntityBlockingTokenInsertRow => ({
+                      ontologyId: canonical.ontologyId,
+                      canonicalEntityId: canonical.id,
+                      token: Str.toLowerCase(token),
+                      tokenType: "mention",
+                    })
+                  )
+                );
+              }
+              return canonical;
+            })
+          )
+        );
+      });
+
+      /**
        * Find alias by exact mention (normalized) within an ontology
        *
        * @param ontologyId - Ontology scope for the search
@@ -652,6 +745,7 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
       return {
         // Canonical entities
         insertCanonicalEntity,
+        insertCanonicalEntityWithAlias,
         getCanonicalEntity,
         getCanonicalEntityByIri,
         findSimilarEntities,

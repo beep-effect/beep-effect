@@ -63,8 +63,8 @@ if (Str.isEmpty(externalUrl)) {
           });
           const names = A.map(yield* readJournal(undefined), (row) => row.name);
           assert.deepEqual(names, [
-            "20260817205112_baseline",
-            "20260817205129_postgres_features",
+            "20260817213414_baseline",
+            "20260817213424_postgres_features",
             FutureMigration.name,
           ]);
           assert.strictEqual(database, yield* PostgresDrizzle);

@@ -12,7 +12,7 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import { Clock, Context, Effect, HashMap, Layer, Random, Ref } from "effect";
+import { Clock, Context, Effect, HashMap, Inspectable, Layer, Random, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -166,7 +166,7 @@ const InferenceRouterDefinition = HttpRouter.addAll([
           HttpServerResponse.json(
             {
               error: "VALIDATION_ERROR",
-              message: error.toString(),
+              message: Inspectable.toStringUnknown(error, 0),
             },
             { status: 400 }
           ),

@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 
-import { Cause, DateTime, Effect, HashSet, Redacted } from "effect";
+import { Cause, DateTime, Effect, HashSet, Inspectable, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -81,7 +81,7 @@ const createTicketHandler = Effect.gen(function* () {
     Effect.flatMap(decodeTicketRequest),
     Effect.mapError((cause) =>
       AuthenticationError.make({
-        message: `Invalid request body: ${cause.toString()}`,
+        message: `Invalid request body: ${Inspectable.toStringUnknown(cause, 0)}`,
         reason: "invalid",
       })
     )
@@ -98,7 +98,7 @@ const createTicketHandler = Effect.gen(function* () {
   const response = yield* decodeTicketResponse(result).pipe(
     Effect.mapError((cause) =>
       AuthenticationError.make({
-        message: `Invalid ticket response: ${cause.toString()}`,
+        message: `Invalid ticket response: ${Inspectable.toStringUnknown(cause, 0)}`,
         reason: "invalid",
       })
     )
@@ -166,14 +166,16 @@ export const AuthRouter = HttpRouter.addAll([
     createTicketHandler.pipe(
       Effect.catchTag("AuthenticationError", handleAuthError),
       Effect.catchCause((cause) =>
-        Effect.logError("Ticket request failed unexpectedly", { cause: Cause.pretty(cause) }).pipe(
-          Effect.as(
-            HttpServerResponse.jsonUnsafe(
-              { error: "INTERNAL_SERVER_ERROR", message: "Ticket creation failed" },
-              { status: 500 }
+        Cause.hasInterrupts(cause)
+          ? Effect.failCause(cause)
+          : Effect.logError("Ticket request failed unexpectedly", { cause: Cause.pretty(cause) }).pipe(
+              Effect.as(
+                HttpServerResponse.jsonUnsafe(
+                  { error: "INTERNAL_SERVER_ERROR", message: "Ticket creation failed" },
+                  { status: 500 }
+                )
+              )
             )
-          )
-        )
       )
     )
   ),

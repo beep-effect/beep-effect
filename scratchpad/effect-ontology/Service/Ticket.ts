@@ -12,17 +12,46 @@
 
 import { randomBytes } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { Clock, Context, DateTime, Duration, Effect, HashSet, Layer, Number as N, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { AuthenticationError, TicketExpiredError, TicketNotFoundError } from "../Domain/Error/Auth.ts";
-import { Milliseconds } from "../Domain/Error/Base.ts";
+import { ErrorMessage, Milliseconds } from "../Domain/Error/Base.ts";
 import { TicketRecord } from "../Domain/Schema/Auth.ts";
 import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Ticket");
+
+const TicketStorageOperation = LiteralKit(["persist", "load", "remove", "list"]);
+
+/**
+ * Reports an infrastructure failure while storing or consuming a one-time ticket.
+ *
+ * **Example** (Inspect a ticket storage failure)
+ *
+ * ```ts
+ * import { TicketStorageError } from "@effect-ontology/Service/Ticket"
+ *
+ * console.log(TicketStorageError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class TicketStorageError extends S.TaggedError<TicketStorageError>($I`TicketStorageError`)(
+  "TicketStorageError",
+  {
+    message: ErrorMessage.annotateKey({ description: "Opaque ticket-storage failure summary." }),
+    operation: TicketStorageOperation.annotateKey({ description: "Storage operation that failed." }),
+    cause: S.Defect({ includeStack: true }).annotateKey({ description: "Underlying storage or codec defect." }),
+  },
+  $I.annote("TicketStorageError", {
+    description: "Typed infrastructure failure preserving one-time ticket storage semantics.",
+  })
+) {}
 
 /** Default ticket lifetime. */
 const DEFAULT_TTL = Duration.minutes(5);
@@ -34,6 +63,13 @@ const generateSecureToken = Effect.sync(() => randomBytes(32).toString("base64ur
 
 const ticketStorageKey = (ticket: string) => `ws-tickets/${ticket}`;
 
+const ticketStorageError = (operation: typeof TicketStorageOperation.Type) => (cause: unknown) =>
+  TicketStorageError.make({
+    message: `Ticket ${operation} operation failed.`,
+    operation,
+    cause,
+  });
+
 const makeTicketService = Effect.gen(function* () {
   const storage = yield* StorageService;
 
@@ -42,22 +78,24 @@ const makeTicketService = Effect.gen(function* () {
   const persistTicket = (ticket: string, record: TicketRecord) =>
     S.encodeEffect(TicketRecordJson)(record).pipe(
       Effect.flatMap((encoded) => storage.set(ticketStorageKey(ticket), encoded)),
-      Effect.ignore
+      Effect.mapError(ticketStorageError("persist"))
     );
 
   const loadStoredTicket = (ticket: string) =>
-    storage.get(ticketStorageKey(ticket)).pipe(
-      Effect.flatMap((content) =>
-        P.isUndefined(content)
-          ? Effect.succeed(O.none<TicketRecord>())
-          : S.decodeEffect(TicketRecordJson)(content).pipe(Effect.map(O.some))
+    storage.getOption(ticketStorageKey(ticket)).pipe(
+      Effect.flatMap(
+        O.match({
+          onNone: () => Effect.succeed(O.none<TicketRecord>()),
+          onSome: (content) => S.decodeEffect(TicketRecordJson)(content).pipe(Effect.map(O.some)),
+        })
       ),
-      Effect.orElseSucceed(O.none<TicketRecord>)
+      Effect.mapError(ticketStorageError("load"))
     );
 
-  const removeStoredTicket = (ticket: string) => storage.remove(ticketStorageKey(ticket)).pipe(Effect.ignore);
+  const removeStoredTicket = (ticket: string) =>
+    storage.remove(ticketStorageKey(ticket)).pipe(Effect.mapError(ticketStorageError("remove")));
 
-  const listTicketKeys = storage.list("ws-tickets/").pipe(Effect.orElseSucceed((): Array<string> => []));
+  const listTicketKeys = storage.list("ws-tickets/").pipe(Effect.mapError(ticketStorageError("list")));
 
   const cleanup = Effect.gen(function* () {
     const keys = yield* listTicketKeys;
@@ -65,24 +103,30 @@ const makeTicketService = Effect.gen(function* () {
     yield* Effect.forEach(
       keys,
       (key) =>
-        storage.get(key).pipe(
-          Effect.flatMap((content) => {
-            if (P.isUndefined(content)) {
-              return Effect.void;
-            }
-            return S.decodeEffect(TicketRecordJson)(content).pipe(
-              Effect.flatMap((record) =>
-                record.expiresAt.epochMilliseconds <= now ? storage.remove(key) : Effect.void
-              )
-            );
-          }),
-          Effect.ignore
+        storage.getOption(key).pipe(
+          Effect.flatMap(
+            O.match({
+              onNone: () => Effect.void,
+              onSome: (content) =>
+                S.decodeEffect(TicketRecordJson)(content).pipe(
+                  Effect.flatMap((record) =>
+                    record.expiresAt.epochMilliseconds <= now ? storage.remove(key) : Effect.void
+                  )
+                ),
+            })
+          ),
+          Effect.mapError(ticketStorageError("load")),
+          Effect.catch((error) => Effect.logWarning("Ticket cleanup entry failed", { operation: error.operation }))
         ),
       { concurrency: 10, discard: true }
     );
   });
 
-  yield* cleanup.pipe(Effect.schedule(Schedule.fixed(CLEANUP_INTERVAL)), Effect.forkScoped);
+  yield* cleanup.pipe(
+    Effect.catch((error) => Effect.logWarning("Ticket cleanup cycle failed", { operation: error.operation })),
+    Effect.schedule(Schedule.fixed(CLEANUP_INTERVAL)),
+    Effect.forkScoped
+  );
 
   const createTicket = Effect.fn("TicketService.createTicket")(function* (
     ontologyId: string,
@@ -130,16 +174,17 @@ const makeTicketService = Effect.gen(function* () {
     const keys = yield* listTicketKeys;
     const now = yield* Clock.currentTimeMillis;
     const flags = yield* Effect.forEach(keys, (key) =>
-      storage.get(key).pipe(
-        Effect.flatMap((content) => {
-          if (P.isUndefined(content)) {
-            return Effect.succeed(false);
-          }
-          return S.decodeEffect(TicketRecordJson)(content).pipe(
-            Effect.map((record) => record.expiresAt.epochMilliseconds > now)
-          );
-        }),
-        Effect.orElseSucceed(() => false)
+      storage.getOption(key).pipe(
+        Effect.flatMap(
+          O.match({
+            onNone: () => Effect.succeed(false),
+            onSome: (content) =>
+              S.decodeEffect(TicketRecordJson)(content).pipe(
+                Effect.map((record) => record.expiresAt.epochMilliseconds > now)
+              ),
+          })
+        ),
+        Effect.mapError(ticketStorageError("load"))
       )
     );
     return A.length(A.filter(flags, P.isTruthy));

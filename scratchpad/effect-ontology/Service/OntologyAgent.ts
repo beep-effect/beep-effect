@@ -1158,7 +1158,6 @@ const buildRunConfig = (configService: AppConfig, agentConfig?: OntologyAgentCon
       chunking: resolvedAgentConfig.chunking,
       llm: llmConfig,
       concurrency: resolvedAgentConfig.concurrency,
-      enableGrounding: true,
     });
   });
 

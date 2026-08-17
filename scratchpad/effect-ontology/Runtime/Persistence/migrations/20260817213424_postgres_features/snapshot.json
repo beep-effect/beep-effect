@@ -1,8 +1,8 @@
 {
+  "id": "4b13c90d-2cfe-4cc1-9e9d-7b07f02ec3cc",
+  "prevIds": ["becc7530-01f9-44d3-bbed-cd6922065efe"],
   "version": "8",
   "dialect": "postgres",
-  "id": "b14d71cc-56a6-4f95-ab18-169ba82524bb",
-  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -962,7 +962,7 @@
     {
       "type": "timestamp with time zone",
       "typeSchema": null,
-      "notNull": false,
+      "notNull": true,
       "dimensions": 0,
       "default": "now()",
       "generated": null,

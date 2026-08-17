@@ -14,7 +14,8 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { IRI } from "@beep/rdf";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { Str as BeepStr } from "@beep/utils";
 import { Context, Effect, HashMap, Layer, Stream } from "effect";
 import * as A from "effect/Array";
@@ -23,12 +24,14 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { LanguageModel } from "effect/unstable/ai";
 import { Entity, GroundingDecision, Relation, RelationObject } from "../Domain/Model/Entity.ts";
-import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
+import { PropertyDefinition } from "../Domain/Model/Ontology.ts";
+import { EntityId } from "../Domain/Model/shared.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithRetry } from "./LlmWithRetry.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Grounder");
+const noConfidence: () => O.Option<Confidence> = O.none;
 
 /**
  * Verification result schema returned by LLM (single relation)
@@ -110,39 +113,64 @@ const BatchEntityVerification = S.Struct({
  * Input required to verify an entity
  *
  *
- * **Example** (Use the EntityVerificationInput contract)
+ * **Example** (Create an entity verification request)
  *
  * ```ts
- * import type { EntityVerificationInput } from "@effect-ontology/Service/Grounder"
+ * import { IRI } from "@beep/rdf"
+ * import { Entity } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { EntityVerificationInput } from "@effect-ontology/Service/Grounder"
  *
- * const acceptsEntityVerificationInput = (_value: EntityVerificationInput): void => undefined
- *
- * console.log(acceptsEntityVerificationInput)
+ * const input = EntityVerificationInput.make({
+ *   context: "Ada wrote the first published algorithm.",
+ *   entity: Entity.make({
+ *     id: EntityId.make("ada"),
+ *     mention: "Ada",
+ *     types: [IRI.make("https://schema.org/Person")]
+ *   })
+ * })
+ * console.log(input.entity.mention) // "Ada"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface EntityVerificationInput {
-  readonly context: string;
-  readonly entity: Entity;
-}
+export class EntityVerificationInput extends S.Class<EntityVerificationInput>($I`EntityVerificationInput`)(
+  {
+    context: S.NonEmptyString,
+    entity: Entity,
+  },
+  $I.annote("EntityVerificationInput", {
+    description: "Source context and schema-owned entity supplied to grounding verification.",
+  })
+) {}
 
 /**
  * Entity grounding result
  *
  *
- * **Example** (Use the EntityGrounderResult contract)
+ * **Example** (Represent a supported entity)
  *
  * ```ts
- * import type { EntityGrounderResult } from "@effect-ontology/Service/Grounder"
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { IRI } from "@beep/rdf"
+ * import { Entity, GroundingDecision } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { EntityGrounderResult } from "@effect-ontology/Service/Grounder"
  *
- * const acceptsEntityGrounderResult = (_value: EntityGrounderResult): void => undefined
- *
- * console.log(acceptsEntityGrounderResult)
+ * const result = EntityGrounderResult.make({
+ *   decision: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(0.9) }),
+ *   typeMatch: true,
+ *   entity: Entity.make({
+ *     id: EntityId.make("ada"),
+ *     mention: "Ada",
+ *     types: [IRI.make("https://schema.org/Person")]
+ *   })
+ * })
+ * console.log(result.grounded) // true
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class EntityGrounderResult extends S.Class<EntityGrounderResult>($I`EntityGrounderResult`)(
@@ -158,11 +186,18 @@ export class EntityGrounderResult extends S.Class<EntityGrounderResult>($I`Entit
   /**
    * Whether this entity observation passed grounding verification.
    *
-   * **Example** (Inspect the getter)
+   * **Example** (Check a supported entity)
    * ```ts
+   * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+   * import { Entity, GroundingDecision } from "@effect-ontology/Model/Entity"
    * import { EntityGrounderResult } from "@effect-ontology/Service/Grounder"
    *
-   * console.log(Reflect.getOwnPropertyDescriptor(EntityGrounderResult.prototype, "grounded")?.get !== undefined)
+   * const result = EntityGrounderResult.make({
+   *   decision: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(1) }),
+   *   typeMatch: true,
+   *   entity: Entity.make({ id: "ada", mention: "Ada", types: ["https://schema.org/Person"] })
+   * })
+   * console.log(result.grounded) // true
    * ```
    *
    * @returns `true` only when the schema-owned decision is `Supported`.
@@ -174,74 +209,114 @@ export class EntityGrounderResult extends S.Class<EntityGrounderResult>($I`Entit
   /**
    * Numeric compatibility view of the schema-owned grounding decision.
    *
-   * **Example** (Inspect the getter)
+   * **Example** (Preserve unevaluated confidence absence)
    * ```ts
+   * import * as O from "effect/Option"
+   * import { Entity, GroundingDecision } from "@effect-ontology/Model/Entity"
    * import { EntityGrounderResult } from "@effect-ontology/Service/Grounder"
    *
-   * console.log(Reflect.getOwnPropertyDescriptor(EntityGrounderResult.prototype, "confidence")?.get !== undefined)
+   * const result = EntityGrounderResult.make({
+   *   decision: GroundingDecision.cases.NotEvaluated.make({}),
+   *   typeMatch: false,
+   *   entity: Entity.make({ id: "ada", mention: "Ada", types: ["https://schema.org/Person"] })
+   * })
+   * console.log(O.isNone(result.confidence)) // true
    * ```
    *
-   * @returns The verifier confidence, or zero when grounding was not evaluated.
+   * @returns The verifier confidence, or `None` when grounding was not evaluated.
    */
-  get confidence(): Confidence {
+  get confidence(): O.Option<Confidence> {
     return GroundingDecision.match(this.decision, {
-      NotEvaluated: () => Confidence.make(0),
-      Supported: ({ confidence }) => confidence,
-      Rejected: ({ confidence }) => confidence,
+      NotEvaluated: noConfidence,
+      Supported: ({ confidence }) => O.some(confidence),
+      Rejected: ({ confidence }) => O.some(confidence),
     });
   }
 }
 
 /**
+ * Display metadata for an entity occupying a relation position.
+ *
+ * **Example** (Create relation entity context)
+ * ```ts
+ * import { IRI } from "@beep/rdf"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { RelationEntityContext } from "@effect-ontology/Service/Grounder"
+ *
+ * const context = RelationEntityContext.make({
+ *   entityId: EntityId.make("ada_lovelace"),
+ *   mention: "Ada Lovelace",
+ *   types: [IRI.make("https://schema.org/Person")]
+ * })
+ * console.log(context.mention) // "Ada Lovelace"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RelationEntityContext extends S.Class<RelationEntityContext>($I`RelationEntityContext`)(
+  {
+    entityId: EntityId,
+    mention: S.NonEmptyString,
+    types: S.Array(IRI).pipe(SchemaUtils.withEmptyArrayDefaults()),
+  },
+  $I.annote("RelationEntityContext", {
+    description: "Optional display metadata for an entity occupying a relation position.",
+  })
+) {}
+
+/**
  * Input required to verify a relation triple
  *
  *
- * **Example** (Use the RelationVerificationInput contract)
+ * **Example** (Create a relation verification request)
  *
  * ```ts
- * import type { RelationVerificationInput } from "@effect-ontology/Service/Grounder"
+ * import { IRI } from "@beep/rdf"
+ * import { Relation, RelationObject } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { RelationVerificationInput } from "@effect-ontology/Service/Grounder"
  *
- * const acceptsRelationVerificationInput = (_value: RelationVerificationInput): void => undefined
- *
- * console.log(acceptsRelationVerificationInput)
+ * const input = RelationVerificationInput.make({
+ *   context: "Ada knew Charles.",
+ *   relation: Relation.make({
+ *     subjectId: EntityId.make("ada"),
+ *     predicate: IRI.make("https://schema.org/knows"),
+ *     object: RelationObject.cases.EntityReference.make({ value: EntityId.make("charles") })
+ *   })
+ * })
+ * console.log(input.relation.subjectId) // "ada"
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface RelationVerificationInput {
-  readonly context: string;
-  readonly object?: {
-    readonly entityId?: string;
-    readonly literal?: string | number | boolean;
-    readonly mention?: string;
-    readonly types?: ReadonlyArray<string>;
-  };
-  readonly predicate?: PropertyDefinition;
-  readonly relation: Relation;
-  readonly subject?: {
-    readonly entityId: string;
-    readonly mention: string;
-    readonly types: ReadonlyArray<string>;
-  };
-}
+export class RelationVerificationInput extends S.Class<RelationVerificationInput>($I`RelationVerificationInput`)(
+  {
+    context: S.NonEmptyString,
+    relation: Relation,
+    subject: S.OptionFromOptionalKey(RelationEntityContext).pipe(SchemaUtils.withNoneDefault),
+    predicate: S.OptionFromOptionalKey(PropertyDefinition).pipe(SchemaUtils.withNoneDefault),
+    object: S.OptionFromOptionalKey(RelationEntityContext).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("RelationVerificationInput", {
+    description: "Canonical relation plus optional decoded ontology and entity display metadata.",
+  })
+) {}
 
 const relationObjectPrompt = (
   relation: Relation,
-  object: RelationVerificationInput["object"]
-): readonly [label: string, detail: string] => {
-  const context = O.fromNullishOr(object);
-  const mention = O.flatMap(context, (value) => O.fromNullishOr(value.mention));
-  const types = O.flatMap(context, (value) => O.fromNullishOr(value.types));
-  return RelationObject.match(relation.object, {
+  object: O.Option<RelationEntityContext>
+): readonly [label: string, detail: string] =>
+  RelationObject.match(relation.object, {
     EntityReference: ({ value }): readonly [string, string] => [
-      O.match(mention, {
+      O.match(object, {
         onNone: () => value,
-        onSome: (label) => `${label} (${value})`,
+        onSome: ({ mention }) => `${mention} (${value})`,
       }),
-      O.match(types, {
+      O.match(object, {
         onNone: () => "",
-        onSome: (values) => `\nObject types: ${A.join(values, ", ")}`,
+        onSome: ({ types }) => `\nObject types: ${A.join(types, ", ")}`,
       }),
     ],
     Text: ({ value }): readonly [string, string] => [value, ""],
@@ -251,7 +326,6 @@ const relationObjectPrompt = (
       "",
     ],
   });
-};
 
 /**
  * Build prompt for single relation verification
@@ -260,10 +334,10 @@ const relationObjectPrompt = (
  */
 const buildGrounderPrompt = ({ context, object, predicate, relation, subject }: RelationVerificationInput): string => {
   const predicateLabel = O.getOrElse(
-    O.map(O.fromNullishOr(predicate), (value) => value.label),
+    O.map(predicate, (value) => value.label),
     () => relation.predicate
   );
-  const subjectLabel = O.match(O.fromNullishOr(subject), {
+  const subjectLabel = O.match(subject, {
     onNone: () => relation.subjectId,
     onSome: (value) => `${value.mention} (${value.entityId})`,
   });
@@ -292,10 +366,10 @@ Instructions:
 const formatRelationForBatch = (input: RelationVerificationInput, index: number): string => {
   const { object, predicate, relation, subject } = input;
   const predicateLabel = O.getOrElse(
-    O.map(O.fromNullishOr(predicate), (value) => value.label),
+    O.map(predicate, (value) => value.label),
     () => relation.predicate
   );
-  const subjectLabel = O.match(O.fromNullishOr(subject), {
+  const subjectLabel = O.match(subject, {
     onNone: () => relation.subjectId,
     onSome: (value) => `${value.mention} (${value.entityId})`,
   });
@@ -397,17 +471,27 @@ Instructions:
  * Grounder verification result
  *
  *
- * **Example** (Use the GrounderResult contract)
+ * **Example** (Represent an unevaluated relation)
  *
  * ```ts
- * import type { GrounderResult } from "@effect-ontology/Service/Grounder"
+ * import * as O from "effect/Option"
+ * import { IRI } from "@beep/rdf"
+ * import { GroundingDecision, Relation, RelationObject } from "@effect-ontology/Model/Entity"
+ * import { EntityId } from "@effect-ontology/Model/shared"
+ * import { GrounderResult } from "@effect-ontology/Service/Grounder"
  *
- * const acceptsGrounderResult = (_value: GrounderResult): void => undefined
- *
- * console.log(acceptsGrounderResult)
+ * const result = GrounderResult.make({
+ *   decision: GroundingDecision.cases.NotEvaluated.make({}),
+ *   relation: Relation.make({
+ *     subjectId: EntityId.make("ada"),
+ *     predicate: IRI.make("https://schema.org/knows"),
+ *     object: RelationObject.cases.EntityReference.make({ value: EntityId.make("charles") })
+ *   })
+ * })
+ * console.log(O.isNone(result.confidence)) // true
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class GrounderResult extends S.Class<GrounderResult>($I`GrounderResult`)(
@@ -422,11 +506,21 @@ export class GrounderResult extends S.Class<GrounderResult>($I`GrounderResult`)(
   /**
    * Whether this relation observation passed grounding verification.
    *
-   * **Example** (Inspect the getter)
+   * **Example** (Check a supported relation)
    * ```ts
+   * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+   * import { GroundingDecision, Relation, RelationObject } from "@effect-ontology/Model/Entity"
    * import { GrounderResult } from "@effect-ontology/Service/Grounder"
    *
-   * console.log(Reflect.getOwnPropertyDescriptor(GrounderResult.prototype, "grounded")?.get !== undefined)
+   * const result = GrounderResult.make({
+   *   decision: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(1) }),
+   *   relation: Relation.make({
+   *     subjectId: "ada",
+   *     predicate: "https://schema.org/knows",
+   *     object: RelationObject.cases.EntityReference.make({ value: "charles" })
+   *   })
+   * })
+   * console.log(result.grounded) // true
    * ```
    *
    * @returns `true` only when the schema-owned decision is `Supported`.
@@ -436,22 +530,32 @@ export class GrounderResult extends S.Class<GrounderResult>($I`GrounderResult`)(
   }
 
   /**
-   * Numeric compatibility view of the schema-owned grounding decision.
+   * Optional confidence view of the schema-owned grounding decision.
    *
-   * **Example** (Inspect the getter)
+   * **Example** (Preserve unevaluated confidence absence)
    * ```ts
+   * import * as O from "effect/Option"
+   * import { GroundingDecision, Relation, RelationObject } from "@effect-ontology/Model/Entity"
    * import { GrounderResult } from "@effect-ontology/Service/Grounder"
    *
-   * console.log(Reflect.getOwnPropertyDescriptor(GrounderResult.prototype, "confidence")?.get !== undefined)
+   * const result = GrounderResult.make({
+   *   decision: GroundingDecision.cases.NotEvaluated.make({}),
+   *   relation: Relation.make({
+   *     subjectId: "ada",
+   *     predicate: "https://schema.org/knows",
+   *     object: RelationObject.cases.EntityReference.make({ value: "charles" })
+   *   })
+   * })
+   * console.log(O.isNone(result.confidence)) // true
    * ```
    *
-   * @returns The verifier confidence, or zero when grounding was not evaluated.
+   * @returns The verifier confidence, or `None` when grounding was not evaluated.
    */
-  get confidence(): Confidence {
+  get confidence(): O.Option<Confidence> {
     return GroundingDecision.match(this.decision, {
-      NotEvaluated: () => Confidence.make(0),
-      Supported: ({ confidence }) => confidence,
-      Rejected: ({ confidence }) => confidence,
+      NotEvaluated: noConfidence,
+      Supported: ({ confidence }) => O.some(confidence),
+      Rejected: ({ confidence }) => O.some(confidence),
     });
   }
 }
@@ -725,7 +829,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
       verifyRelationStream: (
         context: string,
         relations: Stream.Stream<RelationVerificationInput>,
-        batchSize: number = DEFAULT_BATCH_SIZE
+        batchSize: PosInt = PosInt.make(DEFAULT_BATCH_SIZE)
       ) =>
         relations.pipe(
           Stream.grouped(batchSize),

@@ -41,7 +41,12 @@ import { ConfigService } from "../Service/Config.ts";
 import { ExtractionWorkflow } from "../Service/ExtractionWorkflow.ts";
 import { RdfBuilder, rdfStoreAddQuad } from "../Service/Rdf.ts";
 import { StorageService } from "../Service/Storage.ts";
-import { claimsDataToQuads, knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
+import {
+  ClaimExtractionArtifact,
+  claimExtractionArtifactToQuads,
+  claimsDataToQuads,
+  knowledgeGraphToClaims,
+} from "../Utils/ClaimFactory.ts";
 import { dual3 } from "../Utils/Dual.ts";
 import { makeProvenanceUri } from "../Utils/Provenance.ts";
 
@@ -228,7 +233,7 @@ export const buildRunConfig = dual3(
     const chunkingConfig = ChunkingConfig.make({
       maxChunkSize: PosInt.make(input.chunking.chunkSize),
       preserveSentences: input.chunking.preserveSentences,
-      overlapTokens: NonNegativeInt.make(50),
+      overlapSentences: NonNegativeInt.make(2),
     });
 
     // Build LlmConfig from service config
@@ -250,7 +255,6 @@ export const buildRunConfig = dual3(
             batchSize: llmConfig.groundingBatchSize,
           })
         : GroundingPolicy.cases.Disabled.make({}),
-      enableGrounding: llmConfig.groundingEnabled,
     });
   }
 );
@@ -400,7 +404,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
         ontologyRef: runConfig.ontology.shortId,
         chunkSize: runConfig.chunking.maxChunkSize,
         concurrency: runConfig.concurrency,
-        enableGrounding: runConfig.enableGrounding,
+        grounding: runConfig.grounding.mode,
       });
 
       // 4. Run 6-phase streaming extraction
@@ -473,6 +477,15 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
 
       // Add claim quads to the store
       A.forEach(claimQuads, (quad) => rdfStoreAddQuad(store, quad));
+      const extractionArtifactQuads = yield* claimExtractionArtifactToQuads(
+        ClaimExtractionArtifact.make({
+          claims,
+          entityObservations: graph.entityObservations,
+          relationObservations: graph.relationObservations,
+        }),
+        provenanceUri
+      );
+      A.forEach(extractionArtifactQuads, (quad) => rdfStoreAddQuad(store, quad));
 
       yield* Effect.logInfo("Claims created from extraction", {
         documentId: input.documentId,
