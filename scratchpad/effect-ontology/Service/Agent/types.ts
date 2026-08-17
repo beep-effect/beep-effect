@@ -68,6 +68,16 @@ export const AgentGraph: S.Codec<AgentGraphValue, unknown> = S.Union([KnowledgeG
 /**
  * Decoded graph value produced by {@link AgentGraph}.
  *
+ * **Example** (Accept an agent graph)
+ *
+ * ```ts
+ * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
+ * import type { AgentGraph } from "@effect-ontology/Service/Agent/types"
+ *
+ * const graph: AgentGraph = KnowledgeGraph.make({})
+ * console.log(graph)
+ * ```
+ *
  * @see {@link AgentGraph} for the runtime schema and accepted graph representations.
  * @category type-level
  * @since 0.0.0

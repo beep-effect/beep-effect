@@ -149,25 +149,7 @@ const loadAndMergeExternalVocabularies = Effect.fn("loadAndMergeExternalVocabula
   }
 });
 
-/**
- * Parse ontology from RDF store using RdfService queries
- *
- * **Details**
- *
- * Uses RdfService's queryStore to extract classes and properties.
- * Works with domain types (IRI, Quad) instead of N3 types.
- *
- * **Example** (Inspect parse ontology from store)
- *
- * ```ts
- * import { parseOntologyFromStore } from "@effect-ontology/Service/Ontology"
- *
- * console.log(parseOntologyFromStore)
- * ```
- *
- * @category parsing
- * @since 0.0.0
- */
+/** Minimal RDF query capability consumed by the ontology parser. */
 type OntologyQueryService = {
   readonly queryStore: (
     store: RdfStore,
@@ -187,11 +169,36 @@ type ParsedOntology = {
   readonly propertyHierarchy: Record<string, Array<IRI>>;
 };
 
+/**
+ * Extracts ontology classes, properties, and hierarchies from an RDF store.
+ *
+ * **Details**
+ *
+ * Queries canonical RDF terms through the supplied service and preserves the
+ * parser's typed failure channel. Both data-first and data-last call forms are
+ * supported.
+ *
+ * **Example** (Inspect the parser API)
+ *
+ * ```ts
+ * import { parseOntologyFromStore } from "@effect-ontology/Service/Ontology"
+ *
+ * console.log(typeof parseOntologyFromStore) // "function"
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
 export const parseOntologyFromStore: {
-  (rdf: OntologyQueryService, store: RdfStore, ontologyPath: string): Effect.Effect<ParsedOntology, OntologyParsingFailed>;
-  (store: RdfStore, ontologyPath: string): (
-    rdf: OntologyQueryService
-  ) => Effect.Effect<ParsedOntology, OntologyParsingFailed>;
+  (
+    rdf: OntologyQueryService,
+    store: RdfStore,
+    ontologyPath: string
+  ): Effect.Effect<ParsedOntology, OntologyParsingFailed>;
+  (
+    store: RdfStore,
+    ontologyPath: string
+  ): (rdf: OntologyQueryService) => Effect.Effect<ParsedOntology, OntologyParsingFailed>;
 } = dual3(
   (
     rdf: {

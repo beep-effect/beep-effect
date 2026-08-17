@@ -247,21 +247,8 @@ export const BatchStage = LiteralKit([
  */
 export type BatchStage = typeof BatchStage.Type;
 
-/**
- * Defines every lifecycle state and payload for a durable extraction batch.
- *
- * **Example** (Match a batch state)
- *
- * ```ts
- * import { BatchStateDefinition } from "@effect-ontology/Domain/Model/BatchWorkflow"
- *
- * console.log(BatchStateDefinition.cases.Pending)
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const BatchStateDefinition = S.TaggedUnion({
+/** Internal stage-specific members from which the public {@link BatchState} schema is derived. */
+const BatchStateDefinition = S.TaggedUnion({
   Pending: {
     ...BatchIdentityFields,
     documentCount: NonNegativeInt,

@@ -52,56 +52,56 @@ import type { EventEntry } from "../Service/EventBus.ts";
 import { OntologyService } from "../Service/Ontology.ts";
 import { TicketService } from "../Service/Ticket.ts";
 
+const $I = $ScratchpadId.create("effect-ontology/Runtime/EventBroadcastRouter");
+
 // =============================================================================
 // Protocol Types
 // =============================================================================
 
 /**
- * Event message sent to WebSocket clients
+ * Schema for ontology event envelopes broadcast to WebSocket clients.
  *
- * **Example** (Validate broadcast event)
+ * **Example** (Reject an incomplete event envelope)
  *
  * ```ts
  * import { BroadcastEvent } from "@effect-ontology/Runtime/EventBroadcastRouter"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(BroadcastEvent)({}))
+ * console.log(S.is(BroadcastEvent)({ type: "event" })) // false
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-type BroadcastEventValue = {
-  readonly type: "event";
-  readonly entry: OntologyEventEntry;
-  readonly ontologyId: OntologyName;
-  readonly timestamp: NonNegativeInt;
-};
-
-export const BroadcastEvent: S.Codec<BroadcastEventValue, unknown> = S.Struct({
+export const BroadcastEvent = S.Struct({
   type: S.tag("event"),
   entry: OntologyEventEntry,
   ontologyId: OntologyName,
   timestamp: NonNegativeInt,
-});
+}).pipe(
+  $I.annoteSchema("BroadcastEvent", {
+    description: "Ontology event envelope broadcast to WebSocket clients.",
+  })
+);
+
 /**
- * Describes the broadcast event data exposed by this module.
+ * Decoded ontology event envelope produced by {@link BroadcastEvent}.
  *
- *
- * **Example** (Use the BroadcastEvent contract)
+ * **Example** (Read an event envelope)
  *
  * ```ts
  * import type { BroadcastEvent } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
- * const acceptsBroadcastEvent = (_value: BroadcastEvent): void => undefined
+ * const readOntology = (event: BroadcastEvent): string => event.ontologyId
  *
- * console.log(acceptsBroadcastEvent)
+ * console.log(readOntology)
  * ```
  *
+ * @see {@link BroadcastEvent} for the runtime schema and decoding behavior.
  * @category type-level
  * @since 0.0.0
  */
-export type BroadcastEvent = BroadcastEventValue;
+export type BroadcastEvent = typeof BroadcastEvent.Type;
 
 /**
  * Ping message to keep connection alive
@@ -121,10 +121,24 @@ export type BroadcastEvent = BroadcastEventValue;
 export const PingMessage = S.Struct({
   type: S.tag("ping"),
   timestamp: NonNegativeInt,
-});
+}).pipe(
+  $I.annoteSchema("PingMessage", {
+    description: "Keep-alive message emitted by the WebSocket event stream.",
+  })
+);
 
 /**
  * Decoded keep-alive message produced by {@link PingMessage}.
+ *
+ * **Example** (Read a ping timestamp)
+ *
+ * ```ts
+ * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { PingMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * const message: PingMessage = PingMessage.make({ timestamp: NonNegativeInt.make(0) })
+ * console.log(message.timestamp) // 0
+ * ```
  *
  * @see {@link PingMessage} for the runtime schema and decoding behavior.
  * @category type-level
@@ -152,10 +166,28 @@ export const ConnectedMessage = S.Struct({
   ontologyId: S.String,
   serverId: S.String,
   timestamp: NonNegativeInt,
-});
+}).pipe(
+  $I.annoteSchema("ConnectedMessage", {
+    description: "Connection acknowledgement identifying the ontology and serving instance.",
+  })
+);
 
 /**
  * Decoded connection acknowledgement produced by {@link ConnectedMessage}.
+ *
+ * **Example** (Read the serving instance)
+ *
+ * ```ts
+ * import { NonNegativeInt } from "@beep/schema/Int"
+ * import { ConnectedMessage } from "@effect-ontology/Runtime/EventBroadcastRouter"
+ *
+ * const message: ConnectedMessage = ConnectedMessage.make({
+ *   ontologyId: "football",
+ *   serverId: "server-1",
+ *   timestamp: NonNegativeInt.make(0)
+ * })
+ * console.log(message.serverId) // "server-1"
+ * ```
  *
  * @see {@link ConnectedMessage} for the runtime schema and decoding behavior.
  * @category type-level
@@ -243,8 +275,6 @@ export interface EventBroadcastHubMethods {
    */
   readonly getClientCount: (ontologyId: string) => Effect.Effect<number>;
 }
-
-const $I = $ScratchpadId.create("effect-ontology/Runtime/EventBroadcastRouter");
 
 /**
  * Exposes event broadcast hub for composition by callers of this module.
