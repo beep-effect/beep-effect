@@ -10,6 +10,7 @@
  */
 
 export * from "./CostCalculator.ts";
+export * from "./ExtractionTelemetry.ts";
 export * from "./LlmAttributes.ts";
 export * from "./Metrics.ts";
 export * from "./Tracing.ts";

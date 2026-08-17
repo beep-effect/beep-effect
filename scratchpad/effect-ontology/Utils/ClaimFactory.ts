@@ -17,15 +17,17 @@ import { IRI, makeNamedNode as makeCanonicalNamedNode, makeLiteral, makeNamedNod
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Str as BeepStr } from "@beep/utils";
 import { Effect, Hash, MutableHashMap } from "effect";
 import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { Entity, Relation } from "../Domain/Model/Entity.ts";
-import { RelationObject } from "../Domain/Model/Entity.ts";
+import type { Entity, EvidenceSpan, GroundingDecision, Relation } from "../Domain/Model/Entity.ts";
+import { GroundingDecision as GroundingDecisionSchema, RelationObject } from "../Domain/Model/Entity.ts";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import { CreateClaimInput } from "../Service/Claim.ts";
@@ -60,6 +62,30 @@ const claimQuad = (input: {
   const graph = P.isString(input.graph) ? makeNamedNode(input.graph) : input.graph;
   return P.isUndefined(graph) ? makeQuad(subject, predicate, object) : makeQuad(subject, predicate, { object, graph });
 };
+
+const groundingConfidence = (
+  decision: GroundingDecision,
+  evidenceConfidence: O.Option<Confidence>,
+  defaultConfidence: Confidence
+): Confidence =>
+  GroundingDecisionSchema.match(decision, {
+    NotEvaluated: () => O.getOrElse(evidenceConfidence, () => defaultConfidence),
+    Supported: ({ confidence }) => confidence,
+    Rejected: ({ confidence }) => confidence,
+  });
+
+const preferredObservationEvidence = <
+  TObservation extends {
+    readonly evidence: ReadonlyArray<EvidenceSpan>;
+    readonly grounding: GroundingDecision;
+  },
+>(
+  observations: ReadonlyArray<TObservation>
+) =>
+  O.orElse(
+    A.findFirst(observations, (observation) => GroundingDecisionSchema.guards.Supported(observation.grounding)),
+    () => A.findFirst(observations, (observation) => GroundingDecisionSchema.guards.NotEvaluated(observation.grounding))
+  ).pipe(O.flatMap((observation) => A.head(observation.evidence)));
 
 // =============================================================================
 // Types
@@ -439,6 +465,9 @@ export const generateClaimId = dual4(
  * @since 0.0.0
  */
 export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOptionsInput): ReadonlyArray<ClaimData> => {
+  if (GroundingDecisionSchema.guards.Rejected(entity.grounding)) {
+    return [];
+  }
   const claims: Array<ClaimData> = [];
   const { baseNamespace, defaultConfidence, documentId, ontologyId } = ClaimFactoryOptions.make(options);
 
@@ -446,7 +475,7 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
   const subjectIri = buildIri(baseNamespace, entity.id);
 
   // Get evidence from entity mentions (first mention if available)
-  const firstMention = A.head(entity.mentions);
+  const firstMention = O.orElse(preferredObservationEvidence(entity.observations), () => A.head(entity.mentions));
   const evidence = O.map(firstMention, (mention) => ({
     text: mention.quote,
     startOffset: mention.startChar,
@@ -454,9 +483,10 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
   }));
 
   // Confidence from first mention or default
-  const confidence = O.getOrElse(
+  const confidence = groundingConfidence(
+    entity.grounding,
     O.flatMap(firstMention, (mention) => mention.confidence),
-    () => defaultConfidence
+    defaultConfidence
   );
 
   // 1. Create claims for each rdf:type
@@ -478,7 +508,11 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
 
   // 2. Create claims for each attribute
   for (const [predicateIri, value] of R.toEntries(entity.attributes)) {
-    const objectValue = String(value);
+    const objectValue = P.isNumber(value)
+      ? BeepStr.fromNumber(value)
+      : P.isBoolean(value)
+        ? Bool.match(value, { onFalse: () => "false", onTrue: () => "true" })
+        : value;
     const objectType = P.isString(value) && Str.startsWith("http")(value) ? "iri" : "literal";
 
     const claimId = generateClaimId(subjectIri, predicateIri, objectValue, documentId);
@@ -548,20 +582,25 @@ export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryO
   const [objectValue, objectType] = RelationObject.match(relation.object, {
     EntityReference: ({ value }): readonly [string, "iri" | "literal"] => [buildIri(baseNamespace, value), "iri"],
     Text: ({ value }): readonly [string, "iri" | "literal"] => [value, "literal"],
-    Number: ({ value }): readonly [string, "iri" | "literal"] => [String(value), "literal"],
-    Boolean: ({ value }): readonly [string, "iri" | "literal"] => [String(value), "literal"],
+    Number: ({ value }): readonly [string, "iri" | "literal"] => [BeepStr.fromNumber(value), "literal"],
+    Boolean: ({ value }): readonly [string, "iri" | "literal"] => [
+      Bool.match(value, { onFalse: () => "false", onTrue: () => "true" }),
+      "literal",
+    ],
   });
 
   // Get evidence from relation
-  const evidence = O.map(relation.evidence, (span) => ({
+  const firstEvidence = O.orElse(preferredObservationEvidence(relation.observations), () => relation.evidence);
+  const evidence = O.map(firstEvidence, (span) => ({
     text: span.quote,
     startOffset: span.startChar,
     endOffset: span.endChar,
   }));
 
-  const confidence = O.getOrElse(
-    O.flatMap(relation.evidence, (span) => span.confidence),
-    () => defaultConfidence
+  const confidence = groundingConfidence(
+    relation.grounding,
+    O.flatMap(firstEvidence, (span) => span.confidence),
+    defaultConfidence
   );
 
   const claimId = generateClaimId(subjectIri, relation.predicate, objectValue, documentId);
@@ -647,7 +686,9 @@ export const relationsToClaims = dual2(
     const claims: Array<ClaimData> = [];
 
     for (const relation of relations) {
-      claims.push(relationToClaim(relation, options));
+      if (!GroundingDecisionSchema.guards.Rejected(relation.grounding)) {
+        claims.push(relationToClaim(relation, options));
+      }
     }
 
     return claims;
@@ -789,7 +830,7 @@ export const claimDataToQuads = dual3(
         subject: claimIri,
         predicate: CLAIMS.confidence,
         object: claimLiteral({
-          value: String(claim.confidence),
+          value: BeepStr.fromNumber(claim.confidence),
           datatype: XSD_DOUBLE,
         }),
         graph,
@@ -857,7 +898,7 @@ export const claimDataToQuads = dual3(
           subject: evidenceIri,
           predicate: CLAIMS.startOffset,
           object: claimLiteral({
-            value: String(claim.evidence.startOffset),
+            value: BeepStr.fromNumber(claim.evidence.startOffset),
             datatype: XSD_INTEGER,
           }),
           graph,
@@ -869,7 +910,7 @@ export const claimDataToQuads = dual3(
           subject: evidenceIri,
           predicate: CLAIMS.endOffset,
           object: claimLiteral({
-            value: String(claim.evidence.endOffset),
+            value: BeepStr.fromNumber(claim.evidence.endOffset),
             datatype: XSD_INTEGER,
           }),
           graph,

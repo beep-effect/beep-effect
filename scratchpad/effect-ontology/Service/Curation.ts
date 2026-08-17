@@ -18,7 +18,6 @@ import { Context, DateTime, Effect, Layer, Match } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import type * as S from "effect/Schema";
-import * as Str from "effect/String";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { EventBusError } from "../Domain/Error/EventBus.ts";
 import { ContentHash } from "../Domain/Identity.ts";
@@ -34,7 +33,7 @@ import type {
 import { BackgroundJobId, EmbeddingJob, PromptCacheJob } from "../Domain/Schema/JobSchema.ts";
 import { ClaimId } from "../Domain/Schema/KnowledgeModel.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
-import { EntityRegistryRepository } from "../Repository/EntityRegistry.ts";
+import { EntityRegistryRepository, normalizeEntityMention } from "../Repository/EntityRegistry.ts";
 import { ExamplesRepository } from "../Repository/Examples.ts";
 import { sha256SyncFull } from "../Utils/Hash.ts";
 import { EmbeddingService } from "./Embedding.ts";
@@ -328,7 +327,7 @@ export class CurationService extends Context.Service<CurationService>()($I`Curat
         ontologyId: action.ontologyId,
         canonicalEntityId: canonical.id,
         mention: action.aliasMention,
-        mentionNormalized: Str.trim(Str.toLowerCase(action.aliasMention)),
+        mentionNormalized: normalizeEntityMention(action.aliasMention),
         embedding: embedding,
         resolutionMethod: action.resolutionMethod,
         resolutionConfidence: String(action.confidence),

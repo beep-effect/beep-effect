@@ -5,11 +5,24 @@
  * @since 0.0.0
  */
 
+import { DrizzleError } from "@beep/drizzle";
 import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
+import { UUID } from "@beep/schema/String";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { Cause, DateTime, Effect, HashSet, Inspectable, Layer, MutableHashMap, MutableHashSet, Random } from "effect";
+import {
+  Cause,
+  DateTime,
+  Effect,
+  Equal,
+  HashSet,
+  Inspectable,
+  Layer,
+  MutableHashMap,
+  MutableHashSet,
+  Random,
+} from "effect";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
@@ -42,9 +55,11 @@ import type { CorrectionSummary } from "../Domain/Schema/Timeline.ts";
 import {
   ArticleDetailResponse,
   ArticleSummary,
+  ClaimConflict,
   ClaimWithRank,
   ConflictsQuery,
   ConflictsResponse,
+  ConflictTransition,
   TimelineClaimsQuery,
   TimelineClaimsResponse,
   TimelineEntityQuery,
@@ -52,6 +67,8 @@ import {
 } from "../Domain/Schema/Timeline.ts";
 import { ArticleRepository } from "../Repository/Article.ts";
 import { ClaimRepository } from "../Repository/Claim.ts";
+import type { ConflictRecord } from "../Repository/Conflict.ts";
+import { ConflictRepository } from "../Repository/Conflict.ts";
 import type { ArticleRow, ClaimRow } from "../Repository/schema.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { OntologyService } from "../Service/Ontology.ts";
@@ -61,7 +78,12 @@ import { AssetRouter } from "./AssetRouter.ts";
 import { AuthRouter } from "./AuthRouter.ts";
 import { EventBroadcastRouter } from "./EventBroadcastRouter.ts";
 import { HealthCheckService } from "./HealthCheck.ts";
-import { makeAuthMiddleware, makeLoggingMiddleware, makeShutdownMiddleware } from "./HttpMiddleware.ts";
+import {
+  CurrentConflictActor,
+  makeAuthMiddleware,
+  makeLoggingMiddleware,
+  makeShutdownMiddleware,
+} from "./HttpMiddleware.ts";
 import { ImageRouter } from "./ImageRouter.ts";
 import { InferenceRouter } from "./InferenceRouter.ts";
 import { LinkIngestionRouter } from "./LinkIngestionRouter.ts";
@@ -255,6 +277,68 @@ const claimRowToClaimWithRank = Effect.fn("HttpServer.claimRowToClaimWithRank")(
   });
 });
 
+const conflictRecordToClaimConflict = Effect.fn("HttpServer.conflictRecordToClaimConflict")(function* (
+  record: ConflictRecord
+) {
+  const articleRepo = yield* ArticleRepository;
+  const articleA = yield* articleRepo.getArticle(record.claimA.articleId, record.conflict.ontologyId);
+  const articleB = yield* articleRepo.getArticle(record.claimB.articleId, record.conflict.ontologyId);
+  const requireArticle = (article: O.Option<ArticleRow>, claimId: string) =>
+    Effect.fromOption(article, () =>
+      DrizzleError.fromUnknown("decodeRows", {
+        claimId,
+        reason: "Conflict references a claim whose article is unavailable in the ontology scope.",
+      })
+    );
+  const claimA = yield* claimRowToClaimWithRank(record.claimA, yield* requireArticle(articleA, record.claimA.id));
+  const claimB = yield* claimRowToClaimWithRank(record.claimB, yield* requireArticle(articleB, record.claimB.id));
+  const base = {
+    id: record.conflict.id,
+    ontologyId: record.conflict.ontologyId,
+    conflictType: record.conflict.conflictType,
+    claimA,
+    claimB,
+  };
+
+  if (Equal.equals(record.conflict.status, "pending")) {
+    return ClaimConflict.cases.pending.make(base);
+  }
+
+  const resolvedBy = yield* Effect.fromOption(O.fromNullishOr(record.conflict.resolvedBy), () =>
+    DrizzleError.fromUnknown("decodeRows", { conflictId: record.conflict.id, missing: "resolvedBy" })
+  );
+  const resolvedAt = yield* Effect.fromOption(O.fromNullishOr(record.conflict.resolvedAt), () =>
+    DrizzleError.fromUnknown("decodeRows", { conflictId: record.conflict.id, missing: "resolvedAt" })
+  );
+  if (Equal.equals(record.conflict.status, "ignored")) {
+    return ClaimConflict.cases.ignored.make({
+      ...base,
+      resolution: {
+        resolvedBy,
+        resolvedAt: DateTime.fromDateUnsafe(resolvedAt),
+        notes: O.fromNullishOr(record.conflict.resolutionNotes),
+      },
+    });
+  }
+
+  const strategy = yield* Effect.fromOption(O.fromNullishOr(record.conflict.resolutionStrategy), () =>
+    DrizzleError.fromUnknown("decodeRows", { conflictId: record.conflict.id, missing: "resolutionStrategy" })
+  );
+  const acceptedClaimId = yield* Effect.fromOption(O.fromNullishOr(record.conflict.acceptedClaimId), () =>
+    DrizzleError.fromUnknown("decodeRows", { conflictId: record.conflict.id, missing: "acceptedClaimId" })
+  );
+  return ClaimConflict.cases.resolved.make({
+    ...base,
+    resolution: {
+      strategy,
+      acceptedClaimId: Equal.equals(acceptedClaimId, record.claimA.id) ? claimA.id : claimB.id,
+      resolvedBy,
+      resolvedAt: DateTime.fromDateUnsafe(resolvedAt),
+      notes: O.fromNullishOr(record.conflict.resolutionNotes),
+    },
+  });
+});
+
 // =============================================================================
 // Timeline Router
 // =============================================================================
@@ -419,6 +503,7 @@ export const TimelineRouter = HttpRouter.addAll([
 
       const articleRepo = yield* ArticleRepository;
       const claimRepo = yield* ClaimRepository;
+      const conflictRepo = yield* ConflictRepository;
       const queryParams = yield* HttpServerRequest.schemaSearchParams(OntologyScopeQuery);
 
       // Get article
@@ -443,14 +528,15 @@ export const TimelineRouter = HttpRouter.addAll([
       // Count unique entities (subjects)
       const uniqueSubjects = HashSet.fromIterable(A.map(claims, (claim) => claim.subjectIri));
 
-      // TODO: Count conflicts when ConflictRepository is implemented
-      const conflictCount = 0;
+      const conflictCounts = yield* conflictRepo.counts(
+        ConflictsQuery.make({ ontologyId: queryParams.ontologyId, articleId: O.some(UUID.make(articleId)) })
+      );
 
       return yield* HttpServerResponse.schemaJson(ArticleDetailResponse)({
         article: yield* articleRowToArticleSummary(article),
         claims: claimsWithRank,
         entityCount: NonNegativeInt.make(HashSet.size(uniqueSubjects)),
-        conflictCount: NonNegativeInt.make(conflictCount),
+        conflictCount: NonNegativeInt.make(conflictCounts.total),
       });
     })
   ),
@@ -458,16 +544,49 @@ export const TimelineRouter = HttpRouter.addAll([
     "GET",
     "/v1/timeline/conflicts",
     Effect.gen(function* () {
-      yield* HttpServerRequest.schemaSearchParams(ConflictsQuery).pipe(
-        Effect.orElseSucceed(() => ConflictsQuery.make({}))
+      const query = yield* HttpServerRequest.schemaSearchParams(ConflictsQuery);
+      const conflictRepo = yield* ConflictRepository;
+      const records = yield* conflictRepo.list(query);
+      const counts = yield* conflictRepo.counts(query);
+      return yield* HttpServerResponse.schemaJson(ConflictsResponse)(
+        ConflictsResponse.make({
+          conflicts: yield* Effect.forEach(records, conflictRecordToClaimConflict),
+          total: NonNegativeInt.make(counts.total),
+          pendingCount: NonNegativeInt.make(counts.pending),
+        })
       );
+    })
+  ),
+  HttpRouter.route(
+    "PATCH",
+    "/v1/timeline/conflicts/:id",
+    Effect.gen(function* () {
+      const params = yield* HttpRouter.params;
+      const id = yield* S.decodeUnknownEffect(UUID)(params.id);
+      const query = yield* HttpServerRequest.schemaSearchParams(OntologyScopeQuery);
+      const action = yield* HttpServerRequest.schemaBodyJson(ConflictTransition);
+      const actor = yield* CurrentConflictActor;
+      const conflictRepo = yield* ConflictRepository;
+      const transitioned = yield* conflictRepo.transition(query.ontologyId, id, action, actor);
 
-      // For now, return empty conflicts (would need ConflictRepository)
-      // TODO: Use query parameters for filtering when ConflictRepository is implemented
-      return yield* HttpServerResponse.schemaJson(ConflictsResponse)({
-        conflicts: [],
-        total: NonNegativeInt.make(0),
-        pendingCount: NonNegativeInt.make(0),
+      if (O.isSome(transitioned)) {
+        return yield* HttpServerResponse.schemaJson(ClaimConflict)(
+          yield* conflictRecordToClaimConflict(transitioned.value)
+        );
+      }
+
+      const existing = yield* conflictRepo.get(query.ontologyId, id);
+      return yield* O.match(existing, {
+        onNone: () =>
+          HttpServerResponse.json(
+            { error: "NOT_FOUND", message: `Conflict "${id}" was not found in the requested ontology.` },
+            { status: 404 }
+          ),
+        onSome: () =>
+          HttpServerResponse.json(
+            { error: "CONFLICT_ALREADY_TERMINAL", message: `Conflict "${id}" is already resolved or ignored.` },
+            { status: 409 }
+          ),
       });
     })
   ),
@@ -750,6 +869,7 @@ export const SearchRouter = HttpRouter.addAll([
         onSuccess: Effect.fnUntraced(function* (request) {
           const articleRepo = yield* ArticleRepository;
           const claimRepo = yield* ClaimRepository;
+          const conflictRepo = yield* ConflictRepository;
 
           const limit = request.limit;
           const offset = request.offset;
@@ -796,11 +916,17 @@ export const SearchRouter = HttpRouter.addAll([
                 articleId: article.id,
                 includeDeprecated: true,
               });
+              const conflictCounts = yield* conflictRepo.counts(
+                ConflictsQuery.make({
+                  ontologyId: request.ontologyId,
+                  articleId: O.some(UUID.make(article.id)),
+                })
+              );
 
               return ArticleSearchResult.make({
                 article: yield* articleRowToArticleSummary(article),
                 claimCount: NonNegativeInt.make(claims.length),
-                conflictCount: NonNegativeInt.make(0), // Would need ConflictRepository
+                conflictCount: NonNegativeInt.make(conflictCounts.total),
               });
             })
           );

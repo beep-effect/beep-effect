@@ -23,6 +23,7 @@ const RepositoryTestLayer = Layer.mergeAll(
 
 const resetTables = Effect.fn("RepositoryOntologyIsolation.resetTables")(function* () {
   const sql = yield* SqlClient.SqlClient;
+  yield* sql`DROP TABLE IF EXISTS conflicts`;
   yield* sql`DROP TABLE IF EXISTS entity_aliases`;
   yield* sql`DROP TABLE IF EXISTS canonical_entities`;
   yield* sql`DROP TABLE IF EXISTS claims`;
@@ -66,6 +67,24 @@ const resetTables = Effect.fn("RepositoryOntologyIsolation.resetTables")(functio
       evidence_start_offset INTEGER,
       evidence_end_offset INTEGER,
       UNIQUE (article_id, subject_iri, predicate_iri, object_value)
+    )
+  `;
+  yield* sql`
+    CREATE TABLE conflicts (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      ontology_id TEXT NOT NULL,
+      conflict_type TEXT NOT NULL,
+      claim_a_id UUID NOT NULL REFERENCES claims(id),
+      claim_b_id UUID NOT NULL REFERENCES claims(id),
+      status TEXT NOT NULL DEFAULT 'pending',
+      resolution_strategy TEXT,
+      accepted_claim_id UUID REFERENCES claims(id),
+      resolved_by TEXT,
+      resolved_by_fingerprint TEXT,
+      resolved_at TIMESTAMPTZ,
+      resolution_notes TEXT,
+      detected_at TIMESTAMPTZ DEFAULT NOW(),
+      UNIQUE (ontology_id, claim_a_id, claim_b_id)
     )
   `;
   yield* sql`
@@ -219,6 +238,39 @@ describe.sequential("repository ontology isolation", () => {
           A.map(withoutGraph, (article) => article.id),
           [ArticleB]
         );
+      })
+    );
+
+    it.effect(
+      "invalidates the cached subject query when a claim is deprecated",
+      Effect.fnUntraced(function* () {
+        yield* resetTables();
+        const articles = yield* ArticleRepository;
+        const claims = yield* CachedClaimRepository;
+
+        yield* articles.insertArticlesBatch([
+          {
+            id: ArticleA,
+            uri: "https://example.test/cache-invalidation",
+            ontologyId: OntologyA,
+            publishedAt: PublishedAt,
+          },
+        ]);
+        yield* claims.insertClaim({
+          id: ClaimA,
+          articleId: ArticleA,
+          ontologyId: OntologyA,
+          subjectIri: "https://example.test/entity/cached",
+          predicateIri: "https://example.test/predicate/name",
+          objectValue: "Cached",
+        });
+
+        const before = yield* claims.getClaimsBySubject("https://example.test/entity/cached", OntologyA);
+        yield* claims.deprecateClaim(ClaimA, "00000000-0000-4000-8000-000000000099", OntologyA);
+        const after = yield* claims.getClaimsBySubject("https://example.test/entity/cached", OntologyA);
+
+        assert.strictEqual(before.length, 1);
+        assert.strictEqual(after.length, 0);
       })
     );
 

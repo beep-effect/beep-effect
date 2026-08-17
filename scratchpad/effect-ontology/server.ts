@@ -15,15 +15,18 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import { BunHttpServer, BunRuntime, BunServices } from "@effect/platform-bun";
 import { Config, Effect, Layer } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { ClusterWorkflowEngine, SingleRunner } from "effect/unstable/cluster";
 import { WorkflowEngine } from "effect/unstable/workflow";
 import { ArticleRepository } from "./Repository/Article.ts";
 import { CachedArticleRepository } from "./Repository/CachedArticle.ts";
 import { CachedClaimRepository } from "./Repository/CachedClaim.ts";
 import { ClaimRepository } from "./Repository/Claim.ts";
+import { ConflictRepository } from "./Repository/Conflict.ts";
 import { EventBridgeAutoStart } from "./Runtime/EventBridge.ts";
 import { EventBroadcastHubLive } from "./Runtime/EventBroadcastRouter.ts";
 import { HealthCheckService } from "./Runtime/HealthCheck.ts";
@@ -32,7 +35,11 @@ import { InferenceJobStoreLive } from "./Runtime/InferenceRouter.ts";
 import { LinkIngestionBackgroundTasks } from "./Runtime/LinkIngestionRouter.ts";
 import { DatabaseReadyLive, PgClientLive } from "./Runtime/Persistence/PostgresLayer.ts";
 import { ShutdownService } from "./Runtime/Shutdown.ts";
-import { ActivityDependenciesLayer, WorkflowOrchestratorFullLayer } from "./Runtime/WorkflowLayers.ts";
+import {
+  ActivityDependenciesLayer,
+  CrossBatchEntityResolverBundle,
+  WorkflowOrchestratorFullLayer,
+} from "./Runtime/WorkflowLayers.ts";
 import { BatchStateHubLayer, BatchStatePersistenceLayer } from "./Service/BatchState.ts";
 import { BatchStateBridgeLive } from "./Service/BatchStateBridge.ts";
 import { ClaimPersistenceService } from "./Service/ClaimPersistence.ts";
@@ -47,11 +54,41 @@ import { JinaReaderClient } from "./Service/JinaReaderClient.ts";
 import { LinkIngestionService } from "./Service/LinkIngestionService.ts";
 import { TicketService } from "./Service/Ticket.ts";
 
+const $I = $ScratchpadId.create("effect-ontology/server");
+
+const ServerConfigValue = S.Struct({
+  port: S.Finite,
+  postgresHost: S.Option(S.NonEmptyString),
+  useCaching: S.Boolean,
+  entityRegistryEnabled: S.Boolean,
+}).check(
+  S.makeFilter(
+    (config) =>
+      config.entityRegistryEnabled && O.isNone(config.postgresHost)
+        ? {
+            path: ["entityRegistryEnabled"],
+            issue: "ENTITY_REGISTRY_ENABLED requires POSTGRES_HOST.",
+          }
+        : undefined,
+    {
+      identifier: $I`EntityRegistryRequiresPostgres`,
+      title: "Entity Registry Requires PostgreSQL",
+      description: "Server configuration that never enables the persistent entity registry without PostgreSQL.",
+      message: "ENTITY_REGISTRY_ENABLED requires POSTGRES_HOST.",
+    }
+  )
+);
+
 const ServerConfig = Config.all({
   port: Config.number("PORT").pipe(Config.withDefault(8080)),
   postgresHost: Config.string("POSTGRES_HOST").pipe(Config.option),
   useCaching: Config.boolean("ENABLE_REPO_CACHING").pipe(Config.withDefault(true)),
-});
+  entityRegistryEnabled: Config.boolean("ENTITY_REGISTRY_ENABLED").pipe(Config.withDefault(false)),
+}).pipe(
+  Config.mapOrFail((config) =>
+    S.decodeEffect(ServerConfigValue)(config).pipe(Effect.mapError((error) => new Config.ConfigError(error)))
+  )
+);
 
 // Base platform layer (provides FileSystem, Path, etc.)
 const PlatformLayer = BunServices.layer;
@@ -87,9 +124,11 @@ const makeServerLive = (config: Config.Success<typeof ServerConfig>) => {
     Layer.provideMerge(ActivityDependenciesLayer),
     Layer.provideMerge(PlatformLayer)
   );
-  const baseRepositoriesLayer = Layer.mergeAll(ClaimRepository.Default, ArticleRepository.Default).pipe(
-    Layer.provideMerge(DatabaseReadyLive)
-  );
+  const baseRepositoriesLayer = Layer.mergeAll(
+    ClaimRepository.Default,
+    ConflictRepository.Default,
+    ArticleRepository.Default
+  ).pipe(Layer.provideMerge(DatabaseReadyLive));
   const cachedRepositoriesLayer = Layer.mergeAll(CachedClaimRepository.Default, CachedArticleRepository.Default).pipe(
     Layer.provideMerge(baseRepositoriesLayer)
   );
@@ -98,6 +137,9 @@ const makeServerLive = (config: Config.Success<typeof ServerConfig>) => {
     : baseRepositoriesLayer;
   const claimPersistenceLayer = usePostgres
     ? ClaimPersistenceService.Default.pipe(Layer.provideMerge(repositoriesLayer))
+    : Layer.empty;
+  const crossBatchResolverLayer = config.entityRegistryEnabled
+    ? CrossBatchEntityResolverBundle.pipe(Layer.provideMerge(DatabaseReadyLive))
     : Layer.empty;
   const postgresLinkIngestionLayer = LinkIngestionService.Default.pipe(
     Layer.provideMerge(ContentEnrichmentAgent.Default),
@@ -121,6 +163,7 @@ const makeServerLive = (config: Config.Success<typeof ServerConfig>) => {
     Layer.provideMerge(batchStatePersistenceWithDeps),
     Layer.provideMerge(healthCheckWithDeps),
     Layer.provideMerge(claimPersistenceLayer),
+    Layer.provideMerge(crossBatchResolverLayer),
     Layer.provideMerge(linkIngestionLayer),
     Layer.provideMerge(ImageServicesLayer),
     Layer.provideMerge(EventBridgeAutoStart),

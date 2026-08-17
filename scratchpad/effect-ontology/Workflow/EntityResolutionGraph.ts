@@ -20,7 +20,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import type { Entity, KnowledgeGraph, Relation } from "../Domain/Model/Entity.ts";
-import { RelationObject } from "../Domain/Model/Entity.ts";
+import { GroundingDecision, RelationObject } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionConfig, EREdge, ERNode } from "../Domain/Model/EntityResolution.ts";
 import { MentionRecord, RelationEdge, ResolutionEdge, ResolvedEntity } from "../Domain/Model/EntityResolution.ts";
 import type {
@@ -535,27 +535,35 @@ export const buildEntityResolutionGraph = dual2(
 
       // Add RelationEdges between ResolvedEntities (canonicalized)
       for (const rel of kg.relations) {
-        const sourceCanonical = canonicalMap[rel.subjectId];
-        const targetCanonical = RelationObject.guards.EntityReference(rel.object)
-          ? canonicalMap[rel.object.value]
-          : undefined;
-
-        if (P.isTruthy(sourceCanonical) && P.isNotUndefined(targetCanonical)) {
-          const sourceIdx = MutableHashMap.get(resolvedIndexes, sourceCanonical);
-          const targetIdx = MutableHashMap.get(resolvedIndexes, targetCanonical);
-
-          if (O.isSome(sourceIdx) && O.isSome(targetIdx)) {
+        const canonicalEndpoints = O.all({
+          source: R.get(canonicalMap, rel.subjectId),
+          target: RelationObject.match(rel.object, {
+            EntityReference: ({ value }) => R.get(canonicalMap, value),
+            Text: O.none,
+            Number: O.none,
+            Boolean: O.none,
+          }),
+        });
+        O.flatMap(canonicalEndpoints, ({ source, target }) => {
+          const sourceIdx = MutableHashMap.get(resolvedIndexes, source);
+          const targetIdx = MutableHashMap.get(resolvedIndexes, target);
+          const grounding = GroundingDecision.match(rel.grounding, {
+            NotEvaluated: () => ({ grounded: false, confidence: O.none() }),
+            Supported: ({ confidence }) => ({ grounded: true, confidence: O.some(confidence) }),
+            Rejected: ({ confidence }) => ({ grounded: false, confidence: O.some(confidence) }),
+          });
+          return O.map(O.all({ sourceIdx, targetIdx }), (indexes) =>
             Graph.addEdge(
               mutable,
-              sourceIdx.value,
-              targetIdx.value,
+              indexes.sourceIdx,
+              indexes.targetIdx,
               RelationEdge.make({
                 predicate: rel.predicate,
-                grounded: false, // TODO: integrate with Grounder
+                ...grounding,
               })
-            );
-          }
-        }
+            )
+          );
+        });
       }
     });
 

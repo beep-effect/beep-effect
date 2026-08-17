@@ -4,9 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, Sha256Hex } from "@beep/schema";
-import { PrimaryKey } from "effect";
+import { PrimaryKey, Tuple } from "effect";
 import * as S from "effect/Schema";
 import { DocumentId, IdempotencyKey, OntologyVersion } from "../Identity.ts";
 import { PathLayout } from "../PathLayout.ts";
@@ -467,6 +468,77 @@ const Concurrency = PosInt.check(
     })
   );
 
+const GroundingMode = LiteralKit(["Disabled", "Enabled"]);
+
+class GroundingDisabled extends S.Class<GroundingDisabled>($I`GroundingDisabled`)(
+  { mode: S.tag(GroundingMode.Enum.Disabled) },
+  $I.annote("GroundingDisabled", {
+    description: "Grounding verification is disabled while observations remain explicitly not evaluated.",
+  })
+) {}
+
+class GroundingEnabled extends S.Class<GroundingEnabled>($I`GroundingEnabled`)(
+  {
+    mode: S.tag(GroundingMode.Enum.Enabled),
+    threshold: Confidence.pipe(
+      SchemaUtils.withKeyDefaults(Confidence.make(0.8)),
+      S.annotateKey({ description: "Minimum verifier confidence required to publish a supported fact." })
+    ),
+    batchSize: PosInt.pipe(
+      SchemaUtils.withKeyDefaults(PosInt.make(5)),
+      S.annotateKey({ description: "Positive maximum number of facts sent in one grounding request." })
+    ),
+  },
+  $I.annote("GroundingEnabled", {
+    description: "Enabled grounding policy with schema-owned confidence and batch-size bounds.",
+  })
+) {}
+
+/**
+ * Grounding policy captured with an extraction run.
+ *
+ * **Example** (Configure grounding)
+ * ```ts
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { PosInt } from "@beep/schema"
+ * import { GroundingPolicy } from "@effect-ontology/Model/ExtractionRun"
+ *
+ * const policy = GroundingPolicy.cases.Enabled.make({
+ *   threshold: Confidence.make(0.8),
+ *   batchSize: PosInt.make(5)
+ * })
+ * console.log(policy.mode) // "Enabled"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const GroundingPolicy = GroundingMode.mapMembers(
+  Tuple.evolve([() => GroundingDisabled, () => GroundingEnabled])
+).pipe(
+  $I.annoteSchema("GroundingPolicy", {
+    description: "Disabled or enabled extraction grounding with explicit operational policy.",
+    toArbitrary: () => (fc) => fc.oneof(S.toArbitrary(GroundingDisabled)(fc), S.toArbitrary(GroundingEnabled)(fc)),
+  }),
+  S.toTaggedUnion("mode")
+);
+
+/**
+ * Runtime value decoded by {@link GroundingPolicy}.
+ *
+ * **Example** (Disable grounding explicitly)
+ * ```ts
+ * import { GroundingPolicy } from "@effect-ontology/Model/ExtractionRun"
+ *
+ * const policy = GroundingPolicy.cases.Disabled.make({})
+ * console.log(policy.mode) // "Disabled"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GroundingPolicy = typeof GroundingPolicy.Type;
+
 /**
  * Complete immutable configuration snapshot for an extraction run.
  *
@@ -502,7 +574,14 @@ export class RunConfig extends S.Class<RunConfig>($I`RunConfig`)(
     chunking: ChunkingConfig,
     llm: LlmConfig,
     concurrency: Concurrency.pipe(SchemaUtils.withKeyDefaults(Concurrency.make(4))),
-    enableGrounding: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    grounding: GroundingPolicy.pipe(
+      SchemaUtils.withKeyDefaults(GroundingPolicy.cases.Enabled.make({})),
+      S.annotateKey({ description: "Grounding policy applied to extracted facts." })
+    ),
+    enableGrounding: S.Boolean.pipe(
+      SchemaUtils.withKeyDefaults(true),
+      S.annotateKey({ description: "Deprecated compatibility ingress retained for historical run snapshots." })
+    ),
   },
   $I.annote("RunConfig", {
     description: "Ontology, chunking, model, concurrency, and grounding snapshot for a run.",

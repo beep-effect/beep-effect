@@ -19,11 +19,18 @@ import {
 } from "../Runtime/Persistence/PostgresLayer.ts";
 import { ArticleRepository } from "./Article.ts";
 import { ClaimRepository } from "./Claim.ts";
+import { ConflictRepository } from "./Conflict.ts";
 import { EmbeddingRepository } from "./Embedding.ts";
 import { EntityRegistryRepository } from "./EntityRegistry.ts";
 
 export { type ArticleFilter, ArticleRepository } from "./Article.ts";
 export { type ClaimFilter, ClaimRepository, type ConflictCandidate } from "./Claim.ts";
+export {
+  ConflictRecord,
+  ConflictRepository,
+  canonicalConflictPair,
+  detectConflictKind,
+} from "./Conflict.ts";
 export {
   type EmbeddingEntityType,
   EmbeddingRepository,
@@ -118,6 +125,22 @@ export const DrizzleWithPgLive = DatabaseReadyLive;
 export const ClaimRepositoryLive = ClaimRepository.Default.pipe(Layer.provide(DatabaseReadyLive));
 
 /**
+ * ConflictRepository with Drizzle.
+ *
+ * **Example** (Inspect the live conflict layer)
+ *
+ * ```ts
+ * import { ConflictRepositoryLive } from "@effect-ontology/Repository/index"
+ *
+ * console.log(ConflictRepositoryLive)
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const ConflictRepositoryLive = ConflictRepository.Default.pipe(Layer.provide(DatabaseReadyLive));
+
+/**
  * ArticleRepository with Drizzle
  *
  * **Example** (Inspect article repository live)
@@ -190,6 +213,7 @@ export const EmbeddingRepositoryLive = EmbeddingRepository.Default.pipe(Layer.pr
  */
 export const RepositoriesLive = Layer.mergeAll(
   ClaimRepositoryLive,
+  ConflictRepositoryLive,
   ArticleRepositoryLive,
   EntityRegistryRepositoryLive,
   EmbeddingRepositoryLive
@@ -218,6 +242,7 @@ export const makeTestRepositoriesLayer = (config: {
 }) =>
   Layer.mergeAll(
     ClaimRepository.Default,
+    ConflictRepository.Default,
     ArticleRepository.Default,
     EntityRegistryRepository.Default,
     EmbeddingRepository.Default

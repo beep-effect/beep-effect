@@ -24,6 +24,7 @@ import { Prompt } from "effect/unstable/ai";
 import type * as AiError from "effect/unstable/ai/AiError";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
+import { recordProviderAttempt, recordProviderUsage } from "../Telemetry/ExtractionTelemetry.ts";
 import { annotateError, annotateLlmCall, annotateRetry, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { sha256Sync } from "../Utils/Hash.ts";
 import { makeCachedPromptFromStructured } from "./PromptCache.ts";
@@ -114,7 +115,8 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
   const schemaJson = yield* schema.pipe(S.toJsonSchemaDocument, Unknown.encodeUnknownEffectFromJsonString);
   const schemaHash = sha256Sync(schemaJson);
 
-  const attempt = Ref.update(attemptCount, (count) => count + 1).pipe(
+  const attempt = recordProviderAttempt.pipe(
+    Effect.andThen(Ref.update(attemptCount, (count) => count + 1)),
     Effect.andThen(
       llm.generateObject({
         prompt: promptObj,
@@ -148,6 +150,10 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
         const outputTokens = response.usage.outputTokens.total ?? 0;
 
         yield* Effect.all([
+          recordProviderUsage({
+            inputTokens: response.usage.inputTokens.total,
+            outputTokens: response.usage.outputTokens.total,
+          }),
           Effect.logInfo(`${serviceName} LLM response`, {
             stage: Str.toLowerCase(serviceName),
             inputTokens,

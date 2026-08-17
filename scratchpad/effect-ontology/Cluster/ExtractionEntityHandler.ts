@@ -38,7 +38,7 @@ import type { Entity as ClusterEntity } from "effect/unstable/cluster";
 import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { ContentHash, IdempotencyKey, Namespace, OntologyName } from "../Domain/Identity.ts";
-import { RunStatus } from "../Domain/Model/ExtractionRun.ts";
+import { GroundingPolicy, RunStatus } from "../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { EntityExtractor, RelationExtractor } from "../Service/Extraction.ts";
@@ -264,6 +264,9 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           },
           concurrency: PosInt.make(config.runtime.concurrency),
           ontology: ontologyRef,
+          grounding: config.grounder.enabled
+            ? GroundingPolicy.cases.Enabled.make({})
+            : GroundingPolicy.cases.Disabled.make({}),
           enableGrounding: config.grounder.enabled,
         },
         { idempotencyKey, ontologyVersion }

@@ -20,6 +20,7 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import { datasetToProvBundle, provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_USED, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
@@ -78,7 +79,7 @@ import { EntityResolutionService } from "../Service/EntityResolution.ts";
 import { generateObjectWithRetry } from "../Service/LlmWithRetry.ts";
 import { parseOntologyFromStore } from "../Service/Ontology.ts";
 import type { RdfStore } from "../Service/Rdf.ts";
-import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize } from "../Service/Rdf.ts";
+import { RdfBuilder, rdfStoreAddQuad, rdfStoreSize, rdfStoreToDataset } from "../Service/Rdf.ts";
 import { Reasoner, ReasoningConfig } from "../Service/Reasoner.ts";
 import { ShaclValidationReport, ShaclWorkflowService } from "../Service/Shacl.ts";
 import { GenerationMismatchError, StorageService } from "../Service/Storage.ts";
@@ -86,6 +87,8 @@ import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { knowledgeGraphToClaims } from "../Utils/ClaimFactory.ts";
 import { extractLocalNameFromIri } from "../Utils/Iri.ts";
 import { computeQuadDelta } from "../Utils/QuadDelta.ts";
+import { refineKnowledgeGraph } from "../Utils/RefineKG.ts";
+import { mergeGraphs } from "./Merge.ts";
 
 const RDF_STATEMENT = makeNamedNode(`${RDF_NAMESPACE}Statement`);
 const RDF_SUBJECT = makeNamedNode(`${RDF_NAMESPACE}subject`);
@@ -318,6 +321,9 @@ const parseTurtleStats = Effect.fn("parseTurtleStats")(function* (turtle: string
  */
 const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (store: RdfStore) {
   const rdf = yield* RdfBuilder;
+  const provenance = yield* rdfStoreToDataset(store).pipe(
+    Effect.flatMap((dataset) => Effect.fromResult(datasetToProvBundle(dataset)))
+  );
   const typeQuads = yield* rdf.queryStore(store, { predicate: RDF_TYPE });
   const labelQuads = yield* rdf.queryStore(store, { predicate: RDFS_LABEL });
   const entityTypes = MutableHashMap.empty<string, Array<string>>();
@@ -386,6 +392,7 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
   return KnowledgeGraph.make({
     entities,
     relations,
+    provenance,
   });
 });
 
@@ -523,54 +530,16 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
         }
       });
 
-      // Merge all graphs and rewrite entity IDs using canonicalMap
-      const mergedEntities = knowledgeGraphs.flatMap((kg) => kg.entities);
-      const mergedRelations = knowledgeGraphs.flatMap((kg) => kg.relations);
-
-      // Rewrite entity IDs to canonical IDs
-      const rewrittenEntities = mergedEntities.map((entity) => {
-        const canonicalId = resolutionGraph.canonicalMap[entity.id] ?? entity.id;
-        return Entity.make({
-          ...entity,
-          id: EntityId.make(canonicalId),
-        });
-      });
-
-      // Deduplicate entities by canonical ID (keep first occurrence)
-      const seenIds = MutableHashSet.empty<string>();
-      const uniqueEntities = rewrittenEntities.filter((entity) => {
-        if (MutableHashSet.has(seenIds, entity.id)) return false;
-        MutableHashSet.add(seenIds, entity.id);
-        return true;
-      });
-
-      // Rewrite relation IDs
-      const rewrittenRelations = mergedRelations.map((rel) => {
-        const canonicalSubject = resolutionGraph.canonicalMap[rel.subjectId] ?? rel.subjectId;
-        const canonicalObject =
-          rel.object._tag === "EntityReference"
-            ? RelationObject.cases.EntityReference.make({
-                value: resolutionGraph.canonicalMap[rel.object.value] ?? rel.object.value,
-              })
-            : rel.object;
-        return Relation.make({
-          subjectId: canonicalSubject,
-          predicate: rel.predicate,
-          object: canonicalObject,
-        });
-      });
-
-      // Create resolved KnowledgeGraph
-      const resolvedGraph = KnowledgeGraph.make({
-        entities: uniqueEntities,
-        relations: rewrittenRelations,
-      });
+      const mergedGraph = A.reduce(knowledgeGraphs, KnowledgeGraph.make({}), mergeGraphs);
+      const resolvedGraph = refineKnowledgeGraph(mergedGraph, resolutionGraph);
 
       // 5. Serialize to Turtle with owl:sameAs links and save
       const store = yield* rdf.createStore;
       yield* rdf.addEntities(store, resolvedGraph.entities);
       yield* rdf.addRelations(store, resolvedGraph.relations);
       yield* rdf.addSameAsLinks(store, resolutionGraph.canonicalMap);
+      const provenanceDataset = yield* Effect.fromResult(provBundleToDataset(resolvedGraph.provenance));
+      A.forEach(provenanceDataset.quads, (quad) => rdfStoreAddQuad(store, quad));
       const resolvedTurtle = yield* rdf.toTurtle(store);
       const resolutionPath = PathLayout.batch.resolution(input.batchId);
       yield* storage.set(resolutionPath, resolvedTurtle);
@@ -1301,24 +1270,21 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
         };
       }
 
-      // Get cross-batch resolver (optional - may not be configured)
+      // Runtime compositions outside the server may omit the resolver, so the
+      // enabled path must fail explicitly rather than reporting false success.
       const resolverOpt = yield* Effect.serviceOption(CrossBatchEntityResolver);
-
-      if (O.isNone(resolverOpt)) {
-        yield* Effect.logInfo("Cross-batch resolution skipped - resolver not configured", {
-          batchId: input.batchId,
-        });
-        const end = yield* DateTime.now;
-        return {
-          entitiesTotal: NonNegativeInt.make(0),
-          matchedToExisting: NonNegativeInt.make(0),
-          newCanonicals: NonNegativeInt.make(0),
-          candidatesEvaluated: NonNegativeInt.make(0),
-          durationMs: NonNegNum.make(Duration.toMillis(DateTime.distance(start, end))),
-        };
-      }
-
-      const resolver = resolverOpt.value;
+      const resolver = yield* O.match(resolverOpt, {
+        onNone: () =>
+          Effect.fail(
+            ActivityError.serviceFailure(
+              "CrossBatchEntityResolver",
+              "resolve enabled batch",
+              "Cross-batch resolution is enabled but its resolver service is unavailable.",
+              false
+            )
+          ),
+        onSome: Effect.succeed,
+      });
       const storage = yield* StorageService;
       const rdf = yield* RdfBuilder;
 

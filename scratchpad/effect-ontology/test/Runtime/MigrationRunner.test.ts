@@ -55,7 +55,8 @@ describe.sequential("effect-ontology migrations", () => {
         assert.include(baseline, "CREATE EXTENSION IF NOT EXISTS pg_trgm");
         assert.isBelow(baseline.indexOf("CREATE EXTENSION IF NOT EXISTS vector"), baseline.indexOf("vector(768)"));
         assert.include(baseline, 'CONSTRAINT "claims_rank_check"');
-        assert.include(baseline, 'CONSTRAINT "different_claims"');
+        assert.include(baseline, 'CONSTRAINT "conflicts_canonical_claim_pair_check"');
+        assert.include(baseline, 'CONSTRAINT "conflicts_resolution_state_check"');
         assert.include(baseline, 'CONSTRAINT "ingested_links_status_check"');
         assert.include(baseline, 'CREATE INDEX "idx_claims_derived_at"');
       })

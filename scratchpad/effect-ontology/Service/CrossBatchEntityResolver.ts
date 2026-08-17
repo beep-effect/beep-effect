@@ -13,19 +13,17 @@
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { PosInt } from "@beep/schema/Int";
+import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, HashMap, HashSet, Layer, MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
-import type { Entity } from "../Domain/Model/Entity.ts";
-import type { BlockingCandidate } from "../Repository/EntityRegistry.ts";
-import { EntityRegistryRepository } from "../Repository/EntityRegistry.ts";
+import { Entity } from "../Domain/Model/Entity.ts";
+import { BlockingCandidate, EntityRegistryRepository, normalizeEntityMention } from "../Repository/EntityRegistry.ts";
 import { EmbeddingService } from "./Embedding.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/CrossBatchEntityResolver");
@@ -64,16 +62,17 @@ export type CrossBatchResolutionError = AnyEmbeddingError | DrizzleError;
  * @category type-level
  * @since 0.0.0
  */
-export interface CrossBatchResolutionResult {
-  /** Map from extracted entity ID to canonical IRI */
-  readonly canonicalMap: Record<string, string>;
-  /** IRIs of new canonical entities created this batch */
-  readonly newCanonicals: ReadonlyArray<string>;
-  /** Entities merged into existing canonicals */
-  readonly mergedEntities: ReadonlyArray<MergedEntity>;
-  /** Resolution statistics */
-  readonly stats: ResolutionStats;
-}
+export class CrossBatchResolutionResult extends S.Class<CrossBatchResolutionResult>($I`CrossBatchResolutionResult`)(
+  {
+    canonicalMap: S.Record(S.String, S.String),
+    newCanonicals: S.Array(S.String),
+    mergedEntities: S.Array(S.suspend(() => MergedEntity)),
+    stats: S.suspend(() => ResolutionStats),
+  },
+  $I.annote("CrossBatchResolutionResult", {
+    description: "Canonical mappings, newly created identities, merges, and counts produced for one extraction batch.",
+  })
+) {}
 
 /**
  * Describes the merged entity data exposed by this module.
@@ -92,12 +91,19 @@ export interface CrossBatchResolutionResult {
  * @category type-level
  * @since 0.0.0
  */
-export interface MergedEntity {
-  readonly entityId: string;
-  readonly canonicalIri: string;
-  readonly confidence: number;
-  readonly method: string;
-}
+export class MergedEntity extends S.Class<MergedEntity>($I`MergedEntity`)(
+  {
+    entity: Entity,
+    entityId: S.NonEmptyString,
+    canonicalEntityId: S.NonEmptyString,
+    canonicalIri: S.NonEmptyString,
+    confidence: UnitInterval,
+    method: S.NonEmptyString,
+  },
+  $I.annote("MergedEntity", {
+    description: "Extracted entity identity matched to an existing canonical IRI.",
+  })
+) {}
 
 /**
  * Describes the resolution stats data exposed by this module.
@@ -116,12 +122,30 @@ export interface MergedEntity {
  * @category type-level
  * @since 0.0.0
  */
-export interface ResolutionStats {
-  readonly totalEntities: number;
-  readonly matchedToExisting: number;
-  readonly createdNew: number;
-  readonly candidatesEvaluated: number;
-}
+export class ResolutionStats extends S.Class<ResolutionStats>($I`ResolutionStats`)(
+  {
+    totalEntities: NonNegativeInt,
+    matchedToExisting: NonNegativeInt,
+    createdNew: NonNegativeInt,
+    candidatesEvaluated: NonNegativeInt,
+  },
+  $I.annote("ResolutionStats", {
+    description: "Non-negative counts describing one cross-batch resolution pass.",
+  })
+) {}
+
+class MatchedEntity extends S.Class<MatchedEntity>($I`MatchedEntity`)(
+  {
+    entity: Entity,
+    embedding: S.Array(S.Finite),
+    candidate: BlockingCandidate,
+    confidence: UnitInterval,
+    method: S.NonEmptyString,
+  },
+  $I.annote("MatchedEntity", {
+    description: "Internal lossless match retaining the extracted entity, vector, and selected canonical candidate.",
+  })
+) {}
 
 /**
  * Configuration for cross-batch entity resolution
@@ -137,24 +161,35 @@ export interface ResolutionStats {
  * @category schemas
  * @since 0.0.0
  */
-export class CrossBatchResolverConfig extends S.Class<CrossBatchResolverConfig>("CrossBatchResolverConfig")({
-  /** Minimum similarity for candidate retrieval (ANN search) */
-  candidateThreshold: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.6))),
-
-  /** Minimum similarity for final resolution decision */
-  resolutionThreshold: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.8))),
-
-  /** Maximum candidates per entity from ANN search */
-  maxCandidatesPerEntity: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
-
-  /** Maximum candidates from token blocking */
-  maxBlockingCandidates: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(100))),
-
-  /** Namespace prefix for generated canonical IRIs */
-  canonicalNamespace: S.String.pipe(SchemaUtils.withKeyDefaults("https://example.org/entities/")),
-}) {}
-
-const DEFAULT_CONFIG = CrossBatchResolverConfig.make({});
+export class CrossBatchResolverConfig extends S.Class<CrossBatchResolverConfig>($I`CrossBatchResolverConfig`)(
+  {
+    candidateThreshold: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0.6)),
+      S.annotateKey({ description: "Minimum similarity admitted by candidate retrieval." })
+    ),
+    resolutionThreshold: UnitInterval.pipe(
+      SchemaUtils.withKeyDefaults(UnitInterval.make(0.8)),
+      S.annotateKey({ description: "Minimum similarity required to reuse a canonical entity." })
+    ),
+    maxCandidatesPerEntity: PosInt.pipe(
+      SchemaUtils.withKeyDefaults(PosInt.make(20)),
+      S.annotateKey({ description: "Positive maximum number of ANN candidates per entity." })
+    ),
+    maxBlockingCandidates: PosInt.pipe(
+      SchemaUtils.withKeyDefaults(PosInt.make(100)),
+      S.annotateKey({ description: "Positive maximum number of token-blocking candidates." })
+    ),
+    canonicalNamespace: S.NonEmptyString.pipe(
+      SchemaUtils.withKeyDefaults("https://example.org/entities/"),
+      S.annotateKey({ description: "Namespace used for newly created canonical entity IRIs." })
+    ),
+  },
+  $I.annote("CrossBatchResolverConfig", {
+    description: "Schema-defaulted candidate, resolution, and canonical-identity policy.",
+  })
+) {
+  static readonly default = (): CrossBatchResolverConfig => CrossBatchResolverConfig.make({});
+}
 
 // =============================================================================
 // Service
@@ -191,21 +226,16 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
       const loadCandidates = Effect.fn("CrossBatchEntityResolver.loadCandidates")(function* (
         ontologyId: string,
         entities: ReadonlyArray<Entity>,
-        config: CrossBatchResolverConfig = DEFAULT_CONFIG
+        embeddings: ReadonlyArray<ReadonlyArray<number>>,
+        config: CrossBatchResolverConfig = CrossBatchResolverConfig.default()
       ): Effect.fn.Return<HashMap.HashMap<string, Array<BlockingCandidate>>, CrossBatchResolutionError> {
-        if (entities.length === 0) {
+        if (A.isReadonlyArrayEmpty(entities)) {
           return HashMap.empty<string, Array<BlockingCandidate>>();
         }
 
         yield* Effect.logDebug("Loading candidates for entities", {
           entityCount: entities.length,
         });
-
-        // Generate embeddings for all entities
-        const embeddings = yield* embeddingService.embedBatch(
-          A.map(entities, (entity) => entity.mention),
-          "clustering"
-        );
 
         // Build candidate map
         let candidateMap = HashMap.empty<string, Array<BlockingCandidate>>();
@@ -260,15 +290,15 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         entities: ReadonlyArray<Entity>,
         embeddings: ReadonlyArray<ReadonlyArray<number>>,
         candidateMap: HashMap.HashMap<string, Array<BlockingCandidate>>,
-        config: CrossBatchResolverConfig = DEFAULT_CONFIG
+        config: CrossBatchResolverConfig = CrossBatchResolverConfig.default()
       ): {
         canonicalMap: Record<string, string>;
-        mergedEntities: Array<MergedEntity>;
+        matchedEntities: Array<MatchedEntity>;
         unresolvedEntities: Array<{ entity: Entity; embedding: ReadonlyArray<number> }>;
         candidatesEvaluated: number;
       } => {
         const canonicalMap: Record<string, string> = {};
-        const mergedEntities: Array<MergedEntity> = [];
+        const matchedEntities: Array<MatchedEntity> = [];
         const unresolvedEntities: Array<{ entity: Entity; embedding: ReadonlyArray<number> }> = [];
         let candidatesEvaluated = 0;
 
@@ -279,36 +309,50 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
 
           candidatesEvaluated += candidates.length;
 
-          // Find best matching candidate above threshold
-          let bestMatch: { candidate: BlockingCandidate; similarity: number } | null = null;
+          const bestMatch = A.reduce(
+            candidates,
+            O.none<{ readonly candidate: BlockingCandidate; readonly similarity: UnitInterval }>(),
+            (current, candidate) =>
+              candidate.similarity < config.resolutionThreshold
+                ? current
+                : O.match(current, {
+                    onNone: () => O.some({ candidate, similarity: candidate.similarity }),
+                    onSome: (best) =>
+                      candidate.similarity > best.similarity
+                        ? O.some({ candidate, similarity: candidate.similarity })
+                        : current,
+                  })
+          );
 
-          for (const candidate of candidates) {
-            // Use embedding similarity as primary metric
-            // Could enhance with string similarity, type overlap, etc.
-            if (candidate.similarity >= config.resolutionThreshold) {
-              if (P.isNull(bestMatch) || candidate.similarity > bestMatch.similarity) {
-                bestMatch = { candidate, similarity: candidate.similarity };
-              }
-            }
-          }
-
-          if (P.isNotNull(bestMatch)) {
-            // Matched to existing canonical
-            canonicalMap[entity.id] = bestMatch.candidate.iri;
-            mergedEntities.push({
-              entityId: entity.id,
-              canonicalIri: bestMatch.candidate.iri,
-              confidence: bestMatch.similarity,
-              method: "embedding_similarity",
-            });
-          } else {
-            // No match - will become new canonical
-            unresolvedEntities.push({ entity, embedding });
-          }
+          O.match(bestMatch, {
+            onNone: () => unresolvedEntities.push({ entity, embedding }),
+            onSome: ({ candidate, similarity }) => {
+              canonicalMap[entity.id] = candidate.iri;
+              matchedEntities.push(
+                MatchedEntity.make({
+                  entity,
+                  embedding,
+                  candidate,
+                  confidence: similarity,
+                  method: "embedding_similarity",
+                })
+              );
+            },
+          });
         }
 
-        return { canonicalMap, mergedEntities, unresolvedEntities, candidatesEvaluated };
+        return { canonicalMap, matchedEntities, unresolvedEntities, candidatesEvaluated };
       };
+
+      const toMergedEntity = (match: MatchedEntity): MergedEntity =>
+        MergedEntity.make({
+          entity: match.entity,
+          entityId: match.entity.id,
+          canonicalEntityId: match.candidate.canonicalEntityId,
+          canonicalIri: match.candidate.iri,
+          confidence: match.confidence,
+          method: match.method,
+        });
 
       /**
        * Phase 3: Update registry with new/merged entities
@@ -317,12 +361,13 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
        */
       const updateRegistry = Effect.fn("CrossBatchEntityResolver.updateRegistry")(function* (
         ontologyId: string,
+        batchId: string,
         resolutionResult: {
           canonicalMap: Record<string, string>;
-          mergedEntities: Array<MergedEntity>;
+          matchedEntities: Array<MatchedEntity>;
           unresolvedEntities: Array<{ entity: Entity; embedding: ReadonlyArray<number> }>;
         },
-        config: CrossBatchResolverConfig = DEFAULT_CONFIG
+        config: CrossBatchResolverConfig = CrossBatchResolverConfig.default()
       ): Effect.fn.Return<
         {
           canonicalMap: Record<string, string>;
@@ -330,27 +375,22 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         },
         DrizzleError
       > {
-        const { canonicalMap, mergedEntities, unresolvedEntities } = resolutionResult;
+        const { canonicalMap, matchedEntities, unresolvedEntities } = resolutionResult;
         let newCanonicalIris: Array<string> = [];
 
         // Update existing canonicals with merge info
-        for (const merged of mergedEntities) {
-          // Get the original entity from mergedEntities - need to pass it through
-          // For now, just record the alias from the mention we matched
-          // The original entity mention is in the merged.entityId but we need the Entity object
-
-          // Insert alias for this mention
-          // Note: We need to look up the canonical entity ID from IRI
-          const canonicalOpt = yield* registry.getCanonicalEntityByIri(ontologyId, merged.canonicalIri);
-          if (O.isSome(canonicalOpt)) {
-            const canonical = canonicalOpt.value;
-            // We don't have the original entity mention here - this needs refactoring
-            // For now, skip alias insertion for merged entities
-            // TODO: Pass Entity through resolution result for alias creation
-
-            // Touch the canonical entity to update last_seen_at
-            yield* registry.touchCanonicalEntity(ontologyId, canonical.id);
-          }
+        for (const match of matchedEntities) {
+          yield* registry.insertAlias({
+            ontologyId,
+            canonicalEntityId: match.candidate.canonicalEntityId,
+            mention: match.entity.mention,
+            mentionNormalized: normalizeEntityMention(match.entity.mention),
+            embedding: match.embedding,
+            resolutionMethod: match.method,
+            resolutionConfidence: String(match.confidence),
+            firstBatchId: batchId,
+          });
+          yield* registry.touchCanonicalEntity(ontologyId, match.candidate.canonicalEntityId);
         }
 
         // Create new canonicals for unresolved entities
@@ -395,18 +435,18 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         ontologyId: string,
         entities: ReadonlyArray<Entity>,
         batchId: string,
-        config: CrossBatchResolverConfig = DEFAULT_CONFIG
+        config: CrossBatchResolverConfig = CrossBatchResolverConfig.default()
       ): Effect.fn.Return<CrossBatchResolutionResult, CrossBatchResolutionError> {
-        if (entities.length === 0) {
+        if (A.isReadonlyArrayEmpty(entities)) {
           return {
             canonicalMap: {},
             newCanonicals: [],
             mergedEntities: [],
             stats: {
-              totalEntities: 0,
-              matchedToExisting: 0,
-              createdNew: 0,
-              candidatesEvaluated: 0,
+              totalEntities: NonNegativeInt.make(0),
+              matchedToExisting: NonNegativeInt.make(0),
+              createdNew: NonNegativeInt.make(0),
+              candidatesEvaluated: NonNegativeInt.make(0),
             },
           };
         }
@@ -424,7 +464,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         );
 
         // Phase 1: Load candidates
-        const candidateMap = yield* loadCandidates(ontologyId, entities, config);
+        const candidateMap = yield* loadCandidates(ontologyId, entities, embeddings, config);
 
         // Phase 2: Resolve against candidates
         const resolutionResult = resolveEntities(entities, embeddings, candidateMap, config);
@@ -432,6 +472,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         // Phase 3: Update registry
         const finalResult = yield* updateRegistry(
           ontologyId,
+          batchId,
           {
             ...resolutionResult,
             unresolvedEntities: resolutionResult.unresolvedEntities,
@@ -440,10 +481,10 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         );
 
         const stats: ResolutionStats = {
-          totalEntities: entities.length,
-          matchedToExisting: resolutionResult.mergedEntities.length,
-          createdNew: finalResult.newCanonicals.length,
-          candidatesEvaluated: resolutionResult.candidatesEvaluated,
+          totalEntities: NonNegativeInt.make(entities.length),
+          matchedToExisting: NonNegativeInt.make(resolutionResult.matchedEntities.length),
+          createdNew: NonNegativeInt.make(finalResult.newCanonicals.length),
+          candidatesEvaluated: NonNegativeInt.make(resolutionResult.candidatesEvaluated),
         };
 
         yield* Effect.logInfo("Cross-batch entity resolution complete", {
@@ -454,7 +495,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         return {
           canonicalMap: finalResult.canonicalMap,
           newCanonicals: finalResult.newCanonicals,
-          mergedEntities: resolutionResult.mergedEntities,
+          mergedEntities: A.map(resolutionResult.matchedEntities, toMergedEntity),
           stats,
         };
       });

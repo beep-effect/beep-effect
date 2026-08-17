@@ -20,14 +20,12 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ClaimRank } from "../Domain/Schema/KnowledgeModel.ts";
 import { LinkStatus } from "../Domain/Schema/LinkIngestion.ts";
+import { ConflictKind, ConflictStatus } from "../Domain/Schema/Timeline.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/schema");
 
 const CorrectionType = S.Literals(["retraction", "clarification", "update", "amendment"]);
 const ClaimObjectType = S.Literals(["iri", "literal"]);
-const ConflictType = S.Literals(["position", "temporal", "contradictory", "duplicate"]);
-const ConflictStatus = S.Literals(["pending", "resolved", "ignored"]);
-
 const nullableColumn = <Schema extends S.Top>(schema: Schema) => {
   const nullable = S.NullOr(schema);
   const optional = S.optional(nullable);
@@ -362,7 +360,8 @@ export class CorrectionClaims extends Model<CorrectionClaims>("CorrectionClaims"
 export class Conflicts extends Model<Conflicts>("Conflicts")(
   {
     id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
-    conflictType: ConflictType.pipe(pg.text(), pg.columnName("conflict_type")),
+    ontologyId: S.NonEmptyString.pipe(pg.text(), pg.columnName("ontology_id")),
+    conflictType: ConflictKind.pipe(pg.text(), pg.columnName("conflict_type")),
     claimAId: S.String.pipe(pg.uuid(), pg.references(ClaimsReference), pg.columnName("claim_a_id")),
     claimBId: S.String.pipe(pg.uuid(), pg.references(ClaimsReference), pg.columnName("claim_b_id")),
     status: ConflictStatus.pipe(pg.text(), pg.default("pending")),
@@ -373,6 +372,7 @@ export class Conflicts extends Model<Conflicts>("Conflicts")(
       pg.columnName("accepted_claim_id")
     ),
     resolvedBy: nullableColumn(S.String).pipe(pg.text(), pg.columnName("resolved_by")),
+    resolvedByFingerprint: nullableColumn(S.String).pipe(pg.text(), pg.columnName("resolved_by_fingerprint")),
     resolvedAt: nullableColumn(S.Date).pipe(pg.timestamp({ mode: "date" }), pg.columnName("resolved_at")),
     resolutionNotes: nullableColumn(S.String).pipe(pg.text(), pg.columnName("resolution_notes")),
     detectedAt: nullableColumn(S.Date).pipe(
@@ -382,14 +382,34 @@ export class Conflicts extends Model<Conflicts>("Conflicts")(
     ),
   },
   (table) => [
-    pg.Table.index("idx_conflicts_status", [table.status]),
+    pg.Table.index("idx_conflicts_ontology_status", [table.ontologyId, table.status]),
     pg.Table.index("idx_conflicts_claims", [table.claimAId, table.claimBId]),
-    pg.Table.check(
-      sql<boolean>`${table.conflictType} IN ('position', 'temporal', 'contradictory', 'duplicate')`,
-      "conflicts_conflict_type_check"
-    ),
+    pg.Table.uniqueIndex("conflicts_ontology_claim_pair_unique", [table.ontologyId, table.claimAId, table.claimBId]),
+    pg.Table.check(sql<boolean>`${table.conflictType} IN ('position', 'temporal')`, "conflicts_conflict_type_check"),
     pg.Table.check(sql<boolean>`${table.status} IN ('pending', 'resolved', 'ignored')`, "conflicts_status_check"),
-    pg.Table.check(sql<boolean>`${table.claimAId} <> ${table.claimBId}`, "different_claims"),
+    pg.Table.check(sql<boolean>`${table.claimAId} < ${table.claimBId}`, "conflicts_canonical_claim_pair_check"),
+    pg.Table.check(
+      sql<boolean>`(
+        (${table.status} = 'pending'
+          AND ${table.resolutionStrategy} IS NULL
+          AND ${table.acceptedClaimId} IS NULL
+          AND ${table.resolvedBy} IS NULL
+          AND ${table.resolvedByFingerprint} IS NULL
+          AND ${table.resolvedAt} IS NULL
+          AND ${table.resolutionNotes} IS NULL)
+        OR (${table.status} = 'ignored'
+          AND ${table.resolutionStrategy} IS NULL
+          AND ${table.acceptedClaimId} IS NULL
+          AND ${table.resolvedBy} IS NOT NULL
+          AND ${table.resolvedAt} IS NOT NULL)
+        OR (${table.status} = 'resolved'
+          AND ${table.resolutionStrategy} IS NOT NULL
+          AND ${table.acceptedClaimId} IS NOT NULL
+          AND ${table.resolvedBy} IS NOT NULL
+          AND ${table.resolvedAt} IS NOT NULL)
+      )`,
+      "conflicts_resolution_state_check"
+    ),
   ]
 ) {}
 

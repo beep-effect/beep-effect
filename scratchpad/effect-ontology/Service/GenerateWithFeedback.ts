@@ -16,6 +16,7 @@ import * as AiError from "effect/unstable/ai/AiError";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as Prompt from "effect/unstable/ai/Prompt";
 import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
+import { recordProviderAttempt, recordProviderUsage } from "../Telemetry/ExtractionTelemetry.ts";
 import { makeCachedPromptFromStructured } from "./PromptCache.ts";
 import { RetryPolicy, retryEffect } from "./Retry.ts";
 
@@ -126,7 +127,8 @@ export const generateObjectWithFeedback = Effect.fn("generateObjectWithFeedback"
   const promptRef = yield* Ref.make(makePrompt(options.prompt, policy.enablePromptCaching));
   const attemptRef = yield* Ref.make(0);
 
-  const attempt = Effect.gen(function* () {
+  const attempt = Effect.fn("GenerateWithFeedback.attempt")(function* () {
+    yield* recordProviderAttempt;
     const attemptNumber = yield* Ref.updateAndGet(attemptRef, (current) => current + 1);
     const prompt = yield* Ref.get(promptRef);
     return yield* llm
@@ -136,6 +138,12 @@ export const generateObjectWithFeedback = Effect.fn("generateObjectWithFeedback"
         objectName: policy.objectName,
       })
       .pipe(
+        Effect.tap((response) =>
+          recordProviderUsage({
+            inputTokens: response.usage.inputTokens.total,
+            outputTokens: response.usage.outputTokens.total,
+          })
+        ),
         Effect.tapError((error) =>
           AiError.isAiError(error) && error.reason._tag === "InvalidOutputError"
             ? Effect.all([
@@ -157,7 +165,7 @@ export const generateObjectWithFeedback = Effect.fn("generateObjectWithFeedback"
       );
   });
 
-  return yield* attempt.pipe(
+  return yield* attempt().pipe(
     retryEffect(retryPolicy),
     Effect.tap(() =>
       Ref.get(attemptRef).pipe(

@@ -36,6 +36,35 @@ import type { StorageServiceMethods } from "./Storage.ts";
 import { StorageService } from "./Storage.ts";
 
 /**
+ * Configuration failure for the persistent entity index.
+ *
+ * **Example** (Create a missing-path failure)
+ *
+ * ```ts
+ * import { PersistentEntityIndexConfigError } from "@effect-ontology/Service/EntityIndex"
+ *
+ * const error = PersistentEntityIndexConfigError.make({
+ *   message: "Persistent entity index requires a storage path"
+ * })
+ * console.log(error._tag) // "PersistentEntityIndexConfigError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class PersistentEntityIndexConfigError extends S.TaggedError<PersistentEntityIndexConfigError>(
+  $I`PersistentEntityIndexConfigError`
+)(
+  "PersistentEntityIndexConfigError",
+  {
+    message: S.NonEmptyString,
+  },
+  $I.annote("PersistentEntityIndexConfigError", {
+    description: "Failure raised when persistent entity-index configuration is incomplete.",
+  })
+) {}
+
+/**
  * Scored entity result from similarity search
  *
  *
@@ -610,7 +639,7 @@ export const makePersistentEntityIndex = dual3(
  */
 export const PersistentEntityIndexLayer: Layer.Layer<
   PersistentEntityIndex,
-  never,
+  PersistentEntityIndexConfigError,
   ConfigService | StorageService | EmbeddingService
 > = Layer.effect(
   PersistentEntityIndex,
@@ -620,36 +649,9 @@ export const PersistentEntityIndexLayer: Layer.Layer<
     const embeddingSvc = yield* EmbeddingService;
 
     if (O.isNone(config.embedding.entityIndexPath)) {
-      // No persistence path configured - return stub that logs but does nothing
-      yield* Effect.logDebug("PersistentEntityIndex: disabled (no EMBEDDING_ENTITY_INDEX_PATH set)");
-
-      // Return a minimal stub implementation
-      const stubService: PersistentEntityIndexService = {
-        index: () => Effect.succeed(0),
-        findSimilar: () => Effect.succeed([]),
-        findByType: () => Effect.succeed([]),
-        add: () => Effect.void,
-        remove: () => Effect.succeed(false),
-        get: () => Effect.succeed(O.none()),
-        clear: Effect.void,
-        size: Effect.succeed(0),
-        serialize: Effect.gen(function* () {
-          return {
-            version: 1,
-            indexedAt: EpochMillis.make(yield* Clock.currentTimeMillis),
-            entities: [],
-          };
-        }),
-        deserialize: () => Effect.succeed(0),
-        persist: Effect.void,
-        load: Effect.succeed(0),
-        stats: Effect.succeed({
-          entityCount: NonNegativeInt.make(0),
-          typeCount: NonNegativeInt.make(0),
-          lastPersistedAt: O.none(),
-        }),
-      };
-      return stubService;
+      return yield* PersistentEntityIndexConfigError.make({
+        message: "PersistentEntityIndex requires EMBEDDING_ENTITY_INDEX_PATH",
+      });
     }
 
     // Persistence enabled

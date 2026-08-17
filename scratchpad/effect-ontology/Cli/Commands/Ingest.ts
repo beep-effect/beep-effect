@@ -10,16 +10,11 @@
  */
 
 import { NonNegativeInt } from "@beep/schema/Int";
+import { Console, DateTime, Effect, FileSystem, Path, Random } from "effect";
 import * as A from "effect/Array";
-import * as Console from "effect/Console";
-import * as DateTime from "effect/DateTime";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
-import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
-import * as Random from "effect/Random";
 import * as Str from "effect/String";
 import * as Argument from "effect/unstable/cli/Argument";
 import * as Command from "effect/unstable/cli/Command";

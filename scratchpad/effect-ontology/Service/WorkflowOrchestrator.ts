@@ -50,7 +50,7 @@ import { BatchId, DocumentId, GcsUri } from "../Domain/Identity.ts";
 import type { DocumentStatus } from "../Domain/Model/BatchWorkflow.ts";
 import { BatchState } from "../Domain/Model/BatchWorkflow.ts";
 import { BatchManifest, BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
-import { EnrichedManifest } from "../Domain/Schema/DocumentMetadata.ts";
+import { ChunkingParams, defaultChunkingParams, EnrichedManifest } from "../Domain/Schema/DocumentMetadata.ts";
 import {
   makeClaimPersistenceActivity,
   makeCrossBatchResolutionActivity,
@@ -576,6 +576,15 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             ontologyId: manifest.ontologyId,
             targetNamespace: manifest.targetNamespace,
             ontologyEmbeddingsUri: payload.ontologyEmbeddingsUri,
+            chunking: O.match(docMetadata, {
+              onNone: () => defaultChunkingParams.standard,
+              onSome: (metadata) =>
+                ChunkingParams.make({
+                  chunkSize: metadata.suggestedChunkSize,
+                  overlapSentences: metadata.suggestedOverlap,
+                  preserveSentences: defaultChunkingParams[metadata.chunkingStrategy].preserveSentences,
+                }),
+            }),
             eventTime: O.flatMap(docMetadata, (metadata) => metadata.eventTime),
             publishedAt: O.flatMap(docMetadata, (metadata) => metadata.publishedAt),
             title: O.flatMap(docMetadata, (metadata) => metadata.title),

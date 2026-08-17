@@ -756,10 +756,6 @@ export interface RdfBuilderShape {
    * @since 0.0.0
    */
   readonly cloneStore: (source: RdfStore) => Effect.Effect<RdfStore, RdfError, never>;
-  readonly validate: (
-    store: RdfStore,
-    shapesGraph: string
-  ) => Effect.Effect<{ conforms: boolean; report: string }, never, never>;
 }
 
 /**
@@ -775,7 +771,6 @@ export interface RdfBuilderShape {
  * - `addEntities`: Convert Entity domain objects to RDF
  * - `addRelations`: Convert Relation domain objects to RDF
  * - `toTurtle`: Serialize to Turtle with prefixes
- * - `validate`: SHACL validation placeholder
  *
  * **Example** (Inspect the RDF-builder layer)
  *
@@ -1618,21 +1613,6 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
               message: `Failed to clone store: ${error}`,
               cause: O.some(error),
             }),
-        }),
-
-      /**
-       * SHACL validation placeholder
-       *
-       * Future: Integrate SHACL validator
-       *
-       * @param _rdfStore - RdfStore to validate
-       * @param _shapesGraph - SHACL shapes as Turtle string
-       * @returns Validation result
-       */
-      validate: (_rdfStore: RdfStore, _shapesGraph: string) =>
-        Effect.succeed({
-          conforms: true,
-          report: "SHACL validation not yet implemented",
         }),
     } satisfies RdfBuilderShape;
   }),

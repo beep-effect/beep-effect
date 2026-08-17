@@ -21,6 +21,7 @@ import { ShaclValidationReport, ValidationPolicy } from "../Schema/Shacl.ts";
 import type { Entity, Relation } from "./Entity.ts";
 import { KnowledgeGraph } from "./Entity.ts";
 import { ChunkingConfig } from "./ExtractionRun.ts";
+import { ProviderTokenUsage } from "./ExtractionTelemetry.ts";
 import { OntologyRef } from "./Ontology.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/OntologyAgent");
@@ -120,13 +121,35 @@ export const OntologyAgentConfig = OntologyAgentConfigModel.annotate({
  */
 export type OntologyAgentConfig = typeof OntologyAgentConfig.Type;
 
-class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`ExtractionMetrics`)(
+/**
+ * Measurements produced by a completed extraction operation.
+ *
+ * **Example** (Decode extraction metrics)
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent"
+ *
+ * const metrics = S.decodeUnknownOption(ExtractionMetrics)({
+ *   entityCount: 2,
+ *   relationCount: 1,
+ *   chunkCount: 1,
+ *   usage: { _tag: "Complete", attemptCount: 1, inputTokens: 100, outputTokens: 20 },
+ *   duration: 40
+ * })
+ * console.log(O.map(metrics, (value) => value.totalTokens))
+ * ```
+ *
+ * @invariant All counters are non-negative and duration is represented by `Duration`.
+ * @category models
+ * @since 0.0.0
+ */
+export class ExtractionMetrics extends S.Class<ExtractionMetrics>($I`ExtractionMetrics`)(
   {
     entityCount: NonNegativeInt,
     relationCount: NonNegativeInt,
     chunkCount: NonNegativeInt,
-    inputTokens: NonNegativeInt,
-    outputTokens: NonNegativeInt,
+    usage: ProviderTokenUsage,
     duration: S.DurationFromMillis,
     runId: S.OptionFromOptionalKey(ExtractionRunId).pipe(SchemaUtils.withNoneDefault),
   },
@@ -147,8 +170,7 @@ class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`Extracti
    *   entityCount: 0,
    *   relationCount: 0,
    *   chunkCount: 1,
-   *   inputTokens: 80,
-   *   outputTokens: 20,
+   *   usage: { _tag: "Complete", attemptCount: 1, inputTokens: 80, outputTokens: 20 },
    *   duration: 5
    * })
    * console.log(O.map(metrics, (value) => value.totalTokens))
@@ -156,58 +178,14 @@ class ExtractionMetricsModel extends S.Class<ExtractionMetricsModel>($I`Extracti
    *
    * @returns Sum of the non-negative input and output token counters.
    */
-  get totalTokens(): number {
-    return Num.sum(this.inputTokens, this.outputTokens);
+  get totalTokens(): O.Option<NonNegativeInt> {
+    return ProviderTokenUsage.match(this.usage, {
+      Complete: ({ inputTokens, outputTokens }) => O.some(NonNegativeInt.make(Num.sum(inputTokens, outputTokens))),
+      Partial: ({ inputTokens, outputTokens }) => O.some(NonNegativeInt.make(Num.sum(inputTokens, outputTokens))),
+      Unavailable: O.none,
+    });
   }
 }
-
-/**
- * Measurements produced by a completed extraction operation.
- *
- * **Example** (Use ExtractionMetrics)
- * ```ts
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- * import { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent"
- *
- * const metrics = S.decodeUnknownOption(ExtractionMetrics)({
- *   entityCount: 2,
- *   relationCount: 1,
- *   chunkCount: 1,
- *   inputTokens: 100,
- *   outputTokens: 20,
- *   duration: 40
- * })
- * console.log(O.map(metrics, (value) => value.totalTokens))
- * ```
- *
- * @invariant All counters are non-negative and duration is represented by `Duration`.
- * @category models
- * @since 0.0.0
- */
-export const ExtractionMetrics = ExtractionMetricsModel.annotate({
-  toArbitrary: () => (fc) => S.toArbitrary(ExtractionMetricsModel)(fc),
-}).pipe(
-  $I.annoteSchema("ExtractionMetrics", {
-    description: "Non-negative extraction counts, token use, elapsed duration, and optional run identity.",
-  }),
-  SchemaUtils.withCodecStatics
-);
-
-/**
- * Runtime value decoded by {@link ExtractionMetrics}.
- *
- * **Example** (Select the token counter)
- * ```ts
- * import type { ExtractionMetrics } from "@effect-ontology/Model/OntologyAgent"
- * const field: keyof ExtractionMetrics = "inputTokens"
- * console.log(field) // "inputTokens"
- * ```
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ExtractionMetrics = typeof ExtractionMetrics.Type;
 
 /**
  * Complete result of one ontology extraction operation.

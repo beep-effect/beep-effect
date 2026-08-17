@@ -10,14 +10,42 @@
  * @since 0.0.0
  */
 
-import { Clock, Effect, HashSet, Inspectable, Random, Redacted } from "effect";
+import { $ScratchpadId } from "@beep/identity";
+import { Clock, Context, Effect, HashSet, Inspectable, Random, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { HttpMiddleware, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
+import { ConflictActor } from "../Domain/Schema/Timeline.ts";
 import { ConfigService } from "../Service/Config.ts";
+import { sha256 } from "../Utils/Hash.ts";
 import { ShutdownService } from "./Shutdown.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Runtime/HttpMiddleware");
+
+/**
+ * Request-local actor used for auditable conflict transitions.
+ *
+ * **Example** (Inspect the request service)
+ *
+ * ```ts
+ * import { CurrentConflictActor } from "@effect-ontology/Runtime/HttpMiddleware"
+ *
+ * console.log(CurrentConflictActor)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class CurrentConflictActor extends Context.Service<CurrentConflictActor, ConflictActor>()(
+  $I`CurrentConflictActor`
+) {}
+
+const SystemConflictActor = ConflictActor.make({
+  principal: "system",
+  credentialFingerprint: O.none(),
+});
 
 /**
  * Paths that are exempt from authentication (health checks)
@@ -69,7 +97,7 @@ export const makeAuthMiddleware = Effect.gen(function* () {
 
   // Skip auth if not required
   if (!config.api.requireAuth) {
-    return HttpMiddleware.make((app) => app);
+    return HttpMiddleware.make((app) => app.pipe(Effect.provideService(CurrentConflictActor, SystemConflictActor)));
   }
 
   // Parse API keys
@@ -90,7 +118,7 @@ export const makeAuthMiddleware = Effect.gen(function* () {
 
       // Skip auth for public paths
       if (isPublicPath(path)) {
-        return yield* app;
+        return yield* app.pipe(Effect.provideService(CurrentConflictActor, SystemConflictActor));
       }
 
       // Get API key from header
@@ -115,7 +143,16 @@ export const makeAuthMiddleware = Effect.gen(function* () {
       }
 
       // API key valid, proceed with request
-      return yield* app;
+      const credentialFingerprint = yield* sha256(apiKey);
+      return yield* app.pipe(
+        Effect.provideService(
+          CurrentConflictActor,
+          ConflictActor.make({
+            principal: "api-key",
+            credentialFingerprint: O.some(credentialFingerprint),
+          })
+        )
+      );
     })
   );
 });

@@ -11,18 +11,34 @@
  * @since 0.0.0
  */
 
+import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
+import { $ScratchpadId } from "@beep/identity";
+import { ObjectRef } from "@beep/rdf/Prov";
 import { NonNegativeInt } from "@beep/schema/Int";
-import { UnitInterval } from "@beep/schema/UnitInterval";
+import { getSomesStruct } from "@beep/utils/Option";
 import { Cause, Chunk, Duration, Effect, Exit, HashSet, Inspectable, Layer, Number as N, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { LlmRateLimit, LlmTimeout } from "../Domain/Error/Llm.ts";
 import { ChunkId } from "../Domain/Identity.ts";
-import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts";
+import {
+  Entity,
+  EntityObservation,
+  EvidenceSpan,
+  GroundingDecision,
+  KnowledgeGraph,
+  makeExtractionProvenanceBundle,
+  Relation,
+  RelationObject,
+  RelationObservation,
+} from "../Domain/Model/Entity.ts";
 import type { RunConfig } from "../Domain/Model/ExtractionRun.ts";
+import { GroundingPolicy } from "../Domain/Model/ExtractionRun.ts";
+import { ExtractionOutcome } from "../Domain/Model/ExtractionTelemetry.ts";
 import { ClassDefinition } from "../Domain/Model/Ontology.ts";
 import { ConfigService, ConfigServiceDefault } from "../Service/Config.ts";
 import type { Mention } from "../Service/Extraction.ts";
@@ -30,17 +46,33 @@ import { EntityExtractor, MentionExtractor, RelationExtractor } from "../Service
 import { ExtractionRunService, ExtractionRunServiceDefault } from "../Service/ExtractionRun.ts";
 import { ExtractionWorkflow } from "../Service/ExtractionWorkflow.ts";
 import type { RelationVerificationInput } from "../Service/Grounder.ts";
-import { Grounder } from "../Service/Grounder.ts";
+import { EntityGrounderResult, Grounder, GrounderResult } from "../Service/Grounder.ts";
 import type { TextChunk } from "../Service/Nlp.ts";
 import { NlpService } from "../Service/Nlp.ts";
 import { OntologyService } from "../Service/Ontology.ts";
 import { StorageServiceLive } from "../Service/Storage.ts";
+import { captureExtractionTelemetry, recordExtractionChunkCount } from "../Telemetry/ExtractionTelemetry.ts";
 import { annotateExtraction, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { mergeGraphs } from "./Merge.ts";
 
-const GROUNDER_CONFIDENCE_THRESHOLD = 0.8;
+const $I = $ScratchpadId.create("effect-ontology/Workflow/StreamingExtraction");
+
 const SYSTEMIC_ERROR_CODES = ["ECONNREFUSED", "ETIMEDOUT", "ENOTFOUND"];
 const SYSTEMIC_ERROR_MESSAGES = ["connection refused", "database connection", "too many requests"];
+
+class GroundingWorkflowError extends S.TaggedError<GroundingWorkflowError>($I`GroundingWorkflowError`)(
+  "GroundingWorkflowError",
+  {
+    message: S.NonEmptyString,
+    cause: S.Defect({ includeStack: true }),
+    text: S.NonEmptyString,
+  },
+  $I.annote("GroundingWorkflowError", {
+    description: "Typed failure preserving an enabled grounding operation that must halt extraction.",
+  })
+) {
+  static readonly is = S.is(this);
+}
 
 const renderUnknownError = (error: unknown): string =>
   P.isError(error) ? error.message : Inspectable.toStringUnknown(error, 0);
@@ -52,6 +84,9 @@ const unknownErrorType = (error: unknown): string =>
  * Determine if an error is systemic and should halt the workflow
  */
 const isSystemicError = (error: unknown): boolean => {
+  if (GroundingWorkflowError.is(error)) {
+    return true;
+  }
   // Unwrap ExtractionError if present
   const cause = ExtractionError.is(error) ? O.getOrElse(error.cause, () => error) : error;
 
@@ -72,6 +107,64 @@ const isSystemicError = (error: unknown): boolean => {
 };
 
 const getChunkId = (runId: string, index: number) => `${runId}_chunk_${index}`;
+
+const notEvaluated = GroundingDecision.cases.NotEvaluated.make({});
+
+const isPublishable = (decision: GroundingDecision): boolean =>
+  GroundingDecision.guards.NotEvaluated(decision) || GroundingDecision.guards.Supported(decision);
+
+const noConfidence: () => O.Option<Confidence> = O.none;
+
+const groundingConfidence = (decision: GroundingDecision): O.Option<Confidence> =>
+  GroundingDecision.match(decision, {
+    NotEvaluated: noConfidence,
+    Supported: ({ confidence }): O.Option<Confidence> => O.some(confidence),
+    Rejected: ({ confidence }): O.Option<Confidence> => O.some(confidence),
+  });
+
+const applyGroundingThreshold = (decision: GroundingDecision, threshold: number): GroundingDecision =>
+  GroundingDecision.match(decision, {
+    NotEvaluated: () => decision,
+    Supported: ({ confidence }) =>
+      confidence >= threshold ? decision : GroundingDecision.cases.Rejected.make({ confidence }),
+    Rejected: () => decision,
+  });
+
+const rejectTypeMismatch = (decision: GroundingDecision, typeMatch: boolean): GroundingDecision =>
+  GroundingDecision.match(decision, {
+    NotEvaluated: () => decision,
+    Supported: ({ confidence }) => (typeMatch ? decision : GroundingDecision.cases.Rejected.make({ confidence })),
+    Rejected: () => decision,
+  });
+
+const evidenceForContext = Effect.fn("StreamingExtraction.evidenceForContext")(function* (context: string) {
+  return yield* S.decodeEffect(EvidenceSpan)({
+    text: context,
+    startChar: 0,
+    endChar: context.length,
+  });
+});
+
+const entityEvidence = Effect.fn("StreamingExtraction.entityEvidence")(function* (entity: Entity, context: string) {
+  return yield* A.match(entity.mentions, {
+    onEmpty: () => evidenceForContext(context).pipe(Effect.map(A.of)),
+    onNonEmpty: Effect.succeed,
+  });
+});
+
+const relationEvidence = Effect.fn("StreamingExtraction.relationEvidence")(function* (
+  relation: Relation,
+  context: string
+) {
+  return yield* O.match(relation.evidence, {
+    onNone: () => evidenceForContext(context).pipe(Effect.map(A.of)),
+    onSome: (evidence) => Effect.succeed(A.of(evidence)),
+  });
+});
+
+const decodeObjectRef = Effect.fn("StreamingExtraction.decodeObjectRef")(function* (value: string) {
+  return yield* S.decodeEffect(ObjectRef)(value);
+});
 
 /**
  * Validates and represents make extraction workflow values at runtime.
@@ -147,6 +240,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
               })
             )
           );
+        yield* recordExtractionChunkCount(NonNegativeInt.make(chunks.length));
 
         // Save chunks to run folder
         yield* Effect.all(
@@ -296,37 +390,109 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                   );
                 const chunkId = getChunkId(run.id, chunk.index);
                 const rawEntityArray = Chunk.toReadonlyArray(rawEntities);
-                const entityVerificationResults = A.isReadonlyArrayNonEmpty(rawEntityArray)
-                  ? yield* grounder.verifyEntityBatch(chunk.text, rawEntityArray).pipe(
+                const activity = yield* decodeObjectRef(
+                  `urn:beep:effect-ontology:activity:extraction:${run.id}:chunk:${chunk.index}`
+                );
+                const source = yield* decodeObjectRef(`urn:beep:effect-ontology:source:${run.id}:chunk:${chunk.index}`);
+                const entityVerificationResults = yield* GroundingPolicy.match(config.grounding, {
+                  Disabled: () =>
+                    Effect.succeed(
+                      A.map(rawEntityArray, (entity) =>
+                        EntityGrounderResult.make({ decision: notEvaluated, entity, typeMatch: true })
+                      )
+                    ),
+                  Enabled: (policy) =>
+                    Effect.forEach(
+                      A.chunksOf(rawEntityArray, policy.batchSize),
+                      (batch) => grounder.verifyEntityBatch(chunk.text, batch),
+                      { concurrency: 1 }
+                    ).pipe(
+                      Effect.map((batches) => A.flatten(batches)),
+                      Effect.map((results) =>
+                        A.map(results, (result) =>
+                          EntityGrounderResult.make({
+                            decision: rejectTypeMismatch(
+                              applyGroundingThreshold(result.decision, policy.threshold),
+                              result.typeMatch
+                            ),
+                            entity: result.entity,
+                            typeMatch: result.typeMatch,
+                          })
+                        )
+                      ),
                       Effect.annotateLogs({ chunkIndex: chunk.index }),
                       Effect.withLogSpan(`chunk-${chunk.index}-entity-grounding`),
                       Effect.mapError((error) =>
-                        ExtractionError.make({
+                        GroundingWorkflowError.make({
                           message: `Entity grounding verification failed for chunk ${chunk.index}`,
-                          cause: O.some(error),
-                          text: O.some(chunk.text),
+                          cause: error,
+                          text: chunk.text,
                         })
                       )
-                    )
-                  : [];
-                const entities = A.map(entityVerificationResults, (result) => {
-                  const entity = result.entity;
-                  const groundingConfidence = result.grounded ? result.confidence : 0;
-                  return Entity.make({
-                    id: entity.id,
-                    mention: entity.mention,
-                    types: [...entity.types],
-                    attributes: { ...entity.attributes },
-                    chunkIndex: O.some(NonNegativeInt.make(chunk.index)),
-                    chunkId: O.some(ChunkId.make(chunkId)),
-                    groundingConfidence: O.some(UnitInterval.make(groundingConfidence)),
-                  });
+                    ),
                 });
+                const entityAudit = yield* Effect.forEach(
+                  entityVerificationResults,
+                  Effect.fn("StreamingExtraction.makeEntityObservation")(function* (
+                    result: EntityGrounderResult,
+                    index: number
+                  ) {
+                    const provenance = yield* decodeObjectRef(
+                      `urn:beep:effect-ontology:artifact:${run.id}:chunk:${chunk.index}:entity:${index}`
+                    );
+                    const observationId = yield* decodeObjectRef(`${provenance}:observation`);
+                    const evidence = yield* entityEvidence(result.entity, chunk.text);
+                    const observation = EntityObservation.make({
+                      id: observationId,
+                      provenance,
+                      activity,
+                      source,
+                      evidence,
+                      grounding: result.decision,
+                    });
+                    return {
+                      entity: Entity.make({
+                        id: result.entity.id,
+                        mention: result.entity.mention,
+                        types: result.entity.types,
+                        attributes: result.entity.attributes,
+                        chunkIndex: O.some(NonNegativeInt.make(chunk.index)),
+                        chunkId: O.some(ChunkId.make(chunkId)),
+                        documentId: result.entity.documentId,
+                        sourceUri: result.entity.sourceUri,
+                        extractedAt: result.entity.extractedAt,
+                        eventTime: result.entity.eventTime,
+                        mentions: result.entity.mentions,
+                        groundingConfidence: groundingConfidence(result.decision),
+                        grounding: result.decision,
+                        observations: [observation],
+                      }),
+                      observation,
+                      provenance,
+                    };
+                  })
+                );
+                const entityObservations = A.map(entityAudit, ({ observation }) => observation);
+                const entityProvenance = makeExtractionProvenanceBundle(
+                  activity,
+                  source,
+                  A.map(entityAudit, ({ provenance }) => provenance)
+                );
+                const entities = pipe(
+                  entityAudit,
+                  A.map(({ entity }) => entity),
+                  A.filter((entity) => isPublishable(entity.grounding))
+                );
                 yield* Effect.logInfo("Entity grounding verification complete", {
                   stage: "entity-grounding",
                   chunkIndex: chunk.index,
                   inputEntities: rawEntityArray.length,
-                  groundedEntities: A.length(A.filter(entityVerificationResults, (result) => result.grounded)),
+                  supportedEntities: A.length(
+                    A.filter(entityVerificationResults, (result) => GroundingDecision.guards.Supported(result.decision))
+                  ),
+                  rejectedEntities: A.length(
+                    A.filter(entityVerificationResults, (result) => GroundingDecision.guards.Rejected(result.decision))
+                  ),
                 });
                 const entitiesChunk = Chunk.fromIterable(entities);
                 const entityArray = entities;
@@ -338,6 +504,8 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                   return KnowledgeGraph.make({
                     entities: [],
                     relations: [],
+                    provenance: entityProvenance,
+                    entityObservations,
                   });
                 }
                 const typeArray = A.fromIterable(
@@ -373,6 +541,8 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                   return KnowledgeGraph.make({
                     entities: entityArray,
                     relations: [],
+                    provenance: entityProvenance,
+                    entityObservations,
                   });
                 }
                 const relations = yield* relationExtractor
@@ -392,72 +562,131 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                 const verificationInputs: ReadonlyArray<RelationVerificationInput> = A.map(
                   relationArray,
                   (relation) => {
-                    const subject = O.getOrUndefined(
-                      A.findFirst(entityArray, (entity) => entity.id === relation.subjectId)
-                    );
-                    const objectEntity = P.isTagged(relation.object, "EntityReference")
-                      ? O.getOrUndefined(A.findFirst(entityArray, (entity) => entity.id === relation.object.value))
-                      : undefined;
-                    const predicate = O.getOrUndefined(
-                      A.findFirst(propertyArray, (property) => property.id === relation.predicate)
-                    );
+                    const subject = A.findFirst(entityArray, (entity) => entity.id === relation.subjectId);
+                    const predicate = A.findFirst(propertyArray, (property) => property.id === relation.predicate);
                     return {
                       context: chunk.text,
                       relation,
-                      ...(P.isNotUndefined(subject)
-                        ? {
-                            subject: {
-                              entityId: subject.id,
-                              mention: subject.mention,
-                              types: subject.types,
-                            },
-                          }
-                        : {}),
-                      ...(P.isNotUndefined(predicate) ? { predicate } : {}),
-                      object:
-                        relation.object._tag === "EntityReference"
-                          ? {
-                              entityId: relation.object.value,
-                              ...(P.isNotUndefined(objectEntity)
-                                ? {
-                                    mention: objectEntity.mention,
-                                    types: objectEntity.types,
-                                  }
-                                : {}),
-                            }
-                          : {
-                              literal: relation.object.value,
-                            },
+                      ...getSomesStruct({
+                        subject: O.map(subject, (value) => ({
+                          entityId: value.id,
+                          mention: value.mention,
+                          types: value.types,
+                        })),
+                        predicate,
+                      }),
+                      object: RelationObject.match(relation.object, {
+                        EntityReference: ({ value }): NonNullable<RelationVerificationInput["object"]> => {
+                          const referencedEntity = A.findFirst(entityArray, (entity) => entity.id === value);
+                          return {
+                            entityId: value,
+                            ...O.getOrElse(
+                              O.map(referencedEntity, ({ mention, types }) => ({ mention, types })),
+                              () => ({})
+                            ),
+                          };
+                        },
+                        Text: ({ value }): NonNullable<RelationVerificationInput["object"]> => ({ literal: value }),
+                        Number: ({ value }): NonNullable<RelationVerificationInput["object"]> => ({ literal: value }),
+                        Boolean: ({ value }): NonNullable<RelationVerificationInput["object"]> => ({ literal: value }),
+                      }),
                     };
                   }
                 );
-                const verificationResults = A.isReadonlyArrayNonEmpty(verificationInputs)
-                  ? yield* grounder.verifyRelationBatch(chunk.text, verificationInputs).pipe(
+                const verificationResults = yield* GroundingPolicy.match(config.grounding, {
+                  Disabled: () =>
+                    Effect.succeed(
+                      A.map(verificationInputs, ({ relation }) =>
+                        GrounderResult.make({ decision: notEvaluated, relation })
+                      )
+                    ),
+                  Enabled: (policy) =>
+                    Effect.forEach(
+                      A.chunksOf(verificationInputs, policy.batchSize),
+                      (batch) => grounder.verifyRelationBatch(chunk.text, batch),
+                      { concurrency: 1 }
+                    ).pipe(
+                      Effect.map((batches) => A.flatten(batches)),
+                      Effect.map((results) =>
+                        A.map(results, (result) =>
+                          GrounderResult.make({
+                            decision: applyGroundingThreshold(result.decision, policy.threshold),
+                            relation: result.relation,
+                          })
+                        )
+                      ),
                       Effect.annotateLogs({ chunkIndex: chunk.index }),
-                      Effect.withLogSpan(`chunk-${chunk.index}-grounding`),
+                      Effect.withLogSpan(`chunk-${chunk.index}-relation-grounding`),
                       Effect.mapError((error) =>
-                        ExtractionError.make({
-                          message: `Grounder verification failed for chunk ${chunk.index}`,
-                          cause: O.some(error),
-                          text: O.some(chunk.text),
+                        GroundingWorkflowError.make({
+                          message: `Relation grounding verification failed for chunk ${chunk.index}`,
+                          cause: error,
+                          text: chunk.text,
                         })
                       )
-                    )
-                  : [];
-                const verifiedRelationArray = pipe(
+                    ),
+                });
+                const relationAudit = yield* Effect.forEach(
                   verificationResults,
-                  A.filter((result) => result.grounded && result.confidence >= GROUNDER_CONFIDENCE_THRESHOLD),
-                  A.map((result) => result.relation)
+                  Effect.fn("StreamingExtraction.makeRelationObservation")(function* (
+                    result: GrounderResult,
+                    index: number
+                  ) {
+                    const provenance = yield* decodeObjectRef(
+                      `urn:beep:effect-ontology:artifact:${run.id}:chunk:${chunk.index}:relation:${index}`
+                    );
+                    const observationId = yield* decodeObjectRef(`${provenance}:observation`);
+                    const evidence = yield* relationEvidence(result.relation, chunk.text);
+                    const observation = RelationObservation.make({
+                      id: observationId,
+                      provenance,
+                      activity,
+                      source,
+                      evidence,
+                      grounding: result.decision,
+                    });
+                    return {
+                      relation: Relation.make({
+                        subjectId: result.relation.subjectId,
+                        predicate: result.relation.predicate,
+                        object: result.relation.object,
+                        evidence: result.relation.evidence,
+                        grounding: result.decision,
+                        observations: [observation],
+                      }),
+                      observation,
+                      provenance,
+                    };
+                  })
+                );
+                const relationObservations = A.map(relationAudit, ({ observation }) => observation);
+                const verifiedRelationArray = pipe(
+                  relationAudit,
+                  A.map(({ relation }) => relation),
+                  A.filter((relation) => isPublishable(relation.grounding))
                 );
                 yield* Effect.logInfo("Grounder verification complete", {
                   stage: "grounder",
                   chunkIndex: chunk.index,
                   inputRelations: relationArray.length,
-                  verifiedRelations: verifiedRelationArray.length,
+                  publishedRelations: verifiedRelationArray.length,
+                  rejectedRelations: A.length(
+                    A.filter(verificationResults, (result) => GroundingDecision.guards.Rejected(result.decision))
+                  ),
                 });
                 const fragment = KnowledgeGraph.make({
                   entities: entityArray,
                   relations: verifiedRelationArray,
+                  provenance: makeExtractionProvenanceBundle(
+                    activity,
+                    source,
+                    A.appendAll(
+                      A.map(entityAudit, ({ provenance }) => provenance),
+                      A.map(relationAudit, ({ provenance }) => provenance)
+                    )
+                  ),
+                  entityObservations,
+                  relationObservations,
                 });
                 yield* Effect.all([
                   Effect.logDebug("Chunk processing complete", {
@@ -557,24 +786,26 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
         );
       },
       (effect, text) =>
-        effect.pipe(
-          Effect.mapError(
-            (error: unknown): ExtractionError =>
-              ExtractionError.is(error)
-                ? error
-                : ExtractionError.make({
-                    message: `Streaming extraction failed: ${renderUnknownError(error)}`,
-                    cause: O.some(error),
-                    text: O.some(text),
-                  })
-          ),
-          Effect.withSpan("extraction-pipeline", {
-            attributes: {
-              "extraction.type": "streaming",
-            },
-          }),
-          Effect.provideService(ConfigService, configService)
-        )
+        captureExtractionTelemetry(
+          effect.pipe(
+            Effect.mapError(
+              (error: unknown): ExtractionError =>
+                ExtractionError.is(error)
+                  ? error
+                  : ExtractionError.make({
+                      message: `Streaming extraction failed: ${renderUnknownError(error)}`,
+                      cause: O.some(error),
+                      text: O.some(text),
+                    })
+            ),
+            Effect.withSpan("extraction-pipeline", {
+              attributes: {
+                "extraction.type": "streaming",
+              },
+            }),
+            Effect.provideService(ConfigService, configService)
+          )
+        ).pipe(Effect.map(([graph, telemetry]) => ExtractionOutcome.make({ graph, telemetry })))
     ),
   };
 });

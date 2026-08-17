@@ -11,12 +11,9 @@
 
 import { IRI } from "@beep/rdf/Iri";
 import { PosInt } from "@beep/schema/Int";
+import { Console, Effect, FileSystem, Result } from "effect";
 import * as A from "effect/Array";
-import * as Console from "effect/Console";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import * as Command from "effect/unstable/cli/Command";
 import * as Flag from "effect/unstable/cli/Flag";

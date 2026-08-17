@@ -7,6 +7,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { UUID } from "@beep/schema/String";
 import { DateTime, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
 import { OptionalConfidence } from "../Model/shared.ts";
@@ -463,7 +464,21 @@ export class CorrectionHistoryResponse extends S.Class<CorrectionHistoryResponse
   })
 ) {}
 
-const ConflictStatus = LiteralKit(["pending", "resolved", "ignored"])
+/**
+ * Lifecycle vocabulary for persisted claim conflicts.
+ *
+ * **Example** (Check a pending status)
+ *
+ * ```ts
+ * import { ConflictStatus } from "@effect-ontology/Domain/Schema/Timeline"
+ *
+ * console.log(ConflictStatus.is.pending("pending")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ConflictStatus = LiteralKit(["pending", "resolved", "ignored"])
   .annotate({
     toArbitrary: () => (fc) => fc.constantFrom("pending", "resolved", "ignored"),
   })
@@ -473,15 +488,71 @@ const ConflictStatus = LiteralKit(["pending", "resolved", "ignored"])
     })
   );
 
-const ConflictType = LiteralKit(["position", "temporal", "contradictory", "duplicate"])
+/**
+ * Decoded lifecycle value accepted by {@link ConflictStatus}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConflictStatus = typeof ConflictStatus.Type;
+
+/**
+ * Authoritative semantic categories persisted for claim conflicts.
+ *
+ * **Example** (Check a temporal conflict kind)
+ *
+ * ```ts
+ * import { ConflictKind } from "@effect-ontology/Domain/Schema/Timeline"
+ *
+ * console.log(ConflictKind.is.temporal("temporal")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ConflictKind = LiteralKit(["position", "temporal"])
   .annotate({
-    toArbitrary: () => (fc) => fc.constantFrom("position", "temporal", "contradictory", "duplicate"),
+    toArbitrary: () => (fc) => fc.constantFrom("position", "temporal"),
   })
   .annotate(
-    $I.annote("ConflictType", {
-      description: "Supported semantic categories of claim conflict.",
+    $I.annote("ConflictKind", {
+      description: "Authoritative semantic categories persisted for claim conflicts.",
     })
   );
+
+/**
+ * Decoded semantic category accepted by {@link ConflictKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConflictKind = typeof ConflictKind.Type;
+
+/**
+ * Request-local identity recorded when a conflict reaches a terminal state.
+ *
+ * **Example** (Create a system actor)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ConflictActor } from "@effect-ontology/Domain/Schema/Timeline"
+ *
+ * const actor = ConflictActor.make({ principal: "system", credentialFingerprint: O.none() })
+ * console.log(actor.principal) // "system"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ConflictActor extends S.Class<ConflictActor>($I`ConflictActor`)(
+  {
+    principal: S.NonEmptyString,
+    credentialFingerprint: S.Option(S.NonEmptyString),
+  },
+  $I.annote("ConflictActor", {
+    description: "Authenticated request principal and optional irreversible credential fingerprint.",
+  })
+) {}
 
 /**
  * Filter and pagination query for detected claim conflicts.
@@ -492,7 +563,7 @@ const ConflictType = LiteralKit(["position", "temporal", "contradictory", "dupli
  * import * as S from "effect/Schema"
  * import { ConflictsQuery } from "@effect-ontology/Schema/Timeline"
  *
- * const query = S.decodeUnknownOption(ConflictsQuery)({})
+ * const query = S.decodeUnknownOption(ConflictsQuery)({ ontologyId: "acme" })
  * console.log(O.map(query, (value) => value.limit)) // Some(20)
  * ```
  *
@@ -501,8 +572,10 @@ const ConflictType = LiteralKit(["position", "temporal", "contradictory", "dupli
  */
 export class ConflictsQuery extends S.Class<ConflictsQuery>($I`ConflictsQuery`)(
   {
+    ontologyId: S.NonEmptyString,
     status: S.OptionFromOptionalKey(ConflictStatus).pipe(SchemaUtils.withNoneDefault),
     subject: S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
+    articleId: S.OptionFromOptionalKey(UUID).pipe(SchemaUtils.withNoneDefault),
     limit: PositiveIntQuery.pipe(SchemaUtils.withKeyDefaults(PosInt.make(20))),
     offset: NonNegativeIntQuery.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
   },
@@ -513,7 +586,8 @@ export class ConflictsQuery extends S.Class<ConflictsQuery>($I`ConflictsQuery`)(
 
 const ConflictPair = {
   id: S.NonEmptyString,
-  conflictType: ConflictType,
+  ontologyId: S.NonEmptyString,
+  conflictType: ConflictKind,
   claimA: ClaimWithRank,
   claimB: ClaimWithRank,
 };
@@ -523,6 +597,8 @@ const ClaimConflictDefinition = S.TaggedUnion({
   ignored: {
     ...ConflictPair,
     resolution: S.Struct({
+      resolvedBy: S.NonEmptyString,
+      resolvedAt: S.DateTimeUtcFromString,
       notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     }),
   },
@@ -531,6 +607,7 @@ const ClaimConflictDefinition = S.TaggedUnion({
     resolution: S.Struct({
       strategy: S.NonEmptyString,
       acceptedClaimId: ClaimId,
+      resolvedBy: S.NonEmptyString,
       resolvedAt: S.DateTimeUtcFromString,
       notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     }),
@@ -579,6 +656,48 @@ export const ClaimConflict = ClaimConflictDefinition.pipe(
  * @since 0.0.0
  */
 export type ClaimConflict = typeof ClaimConflict.Type;
+
+const ConflictTransitionDefinition = S.TaggedUnion({
+  ignore: {
+    notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  },
+  resolve: {
+    acceptedClaim: LiteralKit(["claimA", "claimB"]),
+    strategy: S.NonEmptyString,
+    notes: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+  },
+});
+
+/**
+ * Tagged command accepted by the conflict transition endpoint.
+ *
+ * **Example** (Ignore a conflict)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ConflictTransition } from "@effect-ontology/Domain/Schema/Timeline"
+ *
+ * const action = ConflictTransition.cases.ignore.make({ notes: O.none() })
+ * console.log(action._tag) // "ignore"
+ * ```
+ *
+ * @category dtos
+ * @since 0.0.0
+ */
+export const ConflictTransition = ConflictTransitionDefinition.pipe(
+  $I.annoteSchema("ConflictTransition", {
+    description: "One legal pending-to-terminal claim-conflict transition.",
+    toArbitrary: () => S.toArbitrary(ConflictTransitionDefinition),
+  })
+);
+
+/**
+ * Runtime value decoded by {@link ConflictTransition}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConflictTransition = typeof ConflictTransition.Type;
 
 /**
  * Response containing detected claim conflicts and aggregate counts.

@@ -15,7 +15,13 @@ import { MimeType, NonNegativeInt, NonNegNum, SchemaUtils } from "@beep/schema";
 import { ShaclSeverity } from "@beep/semantic-web/services/shacl-validation";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyName, OntologyVersion } from "../Identity.ts";
-import { defaultPreprocessingOptions, LanguageCode, PreprocessingOptions } from "./DocumentMetadata.ts";
+import {
+  ChunkingParams,
+  defaultChunkingParams,
+  defaultPreprocessingOptions,
+  LanguageCode,
+  PreprocessingOptions,
+} from "./DocumentMetadata.ts";
 import { ValidationPolicy } from "./Shacl.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Batch");
@@ -168,6 +174,10 @@ export class ExtractionActivityInput extends S.Class<ExtractionActivityInput>($I
     ontologyId: OntologyName,
     targetNamespace: Namespace,
     ontologyEmbeddingsUri: S.OptionFromOptionalKey(GcsUri).pipe(SchemaUtils.withNoneDefault),
+    chunking: ChunkingParams.pipe(
+      SchemaUtils.withKeyDefaults(defaultChunkingParams.standard),
+      S.annotateKey({ description: "Schema-defaulted preprocessing chunking hints for extraction." })
+    ),
     eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
     publishedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(SchemaUtils.withNoneDefault),
     title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),

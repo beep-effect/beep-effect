@@ -223,6 +223,27 @@ export {
    */
   ClaimWithRank,
   /**
+   * Request-local identity recorded for conflict transitions.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  ConflictActor,
+  /**
+   * Authoritative persisted conflict kinds.
+   *
+   * @category schemas
+   * @since 0.0.0
+   */
+  ConflictKind,
+  /**
+   * Conflict lifecycle statuses.
+   *
+   * @category schemas
+   * @since 0.0.0
+   */
+  ConflictStatus,
+  /**
    * Bounded query for claim-conflict discovery.
    *
    * **Example** (Use index)
@@ -248,6 +269,13 @@ export {
    * @since 0.0.0
    */
   ConflictsResponse,
+  /**
+   * Tagged pending-to-terminal conflict command.
+   *
+   * @category dtos
+   * @since 0.0.0
+   */
+  ConflictTransition,
   /**
    * Query parameters for article correction history.
    *

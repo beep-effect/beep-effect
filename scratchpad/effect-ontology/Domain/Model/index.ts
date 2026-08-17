@@ -119,6 +119,19 @@ export * from "./EntityResolutionGraph.ts";
  */
 export * from "./ExtractionRun.ts";
 /**
+ * Extraction workflow telemetry and successful outcome values.
+ *
+ * **Example** (Inspect extraction telemetry)
+ * ```ts
+ * import { ExtractionTelemetry } from "@effect-ontology/Model/index"
+ * console.log(ExtractionTelemetry)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./ExtractionTelemetry.ts";
+/**
  * Validated image candidates, assets, references, and manifests.
  *
  * **Example** (Use index)

@@ -14,13 +14,15 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { Str as BeepStr } from "@beep/utils";
 import { Context, Effect, HashMap, Layer, Stream } from "effect";
+import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LanguageModel } from "effect/unstable/ai";
-import type { Entity, Relation } from "../Domain/Model/Entity.ts";
+import { Entity, GroundingDecision, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
@@ -31,7 +33,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Grounder");
 /**
  * Verification result schema returned by LLM (single relation)
  */
-const VerificationSchema = S.Struct({
+const Verification = S.Struct({
   grounded: S.Boolean,
   confidence: Confidence,
 }).annotate({
@@ -42,7 +44,7 @@ const VerificationSchema = S.Struct({
 /**
  * Batch verification result schema
  */
-const BatchVerificationSchema = S.Struct({
+const BatchVerification = S.Struct({
   results: S.Array(
     S.Struct({
       index: NonNegativeInt.annotate({
@@ -64,7 +66,7 @@ const BatchVerificationSchema = S.Struct({
 /**
  * Entity verification result schema returned by LLM
  */
-const EntityVerificationSchema = S.Struct({
+const EntityVerification = S.Struct({
   grounded: S.Boolean.annotate({
     description: "Whether the entity mention is found in the context",
   }),
@@ -82,7 +84,7 @@ const EntityVerificationSchema = S.Struct({
 /**
  * Batch entity verification result schema
  */
-const BatchEntityVerificationSchema = S.Struct({
+const BatchEntityVerification = S.Struct({
   results: S.Array(
     S.Struct({
       index: NonNegativeInt.annotate({
@@ -143,11 +145,51 @@ export interface EntityVerificationInput {
  * @category type-level
  * @since 0.0.0
  */
-export interface EntityGrounderResult {
-  readonly grounded: boolean;
-  readonly typeMatch: boolean;
-  readonly confidence: number;
-  readonly entity: Entity;
+export class EntityGrounderResult extends S.Class<EntityGrounderResult>($I`EntityGrounderResult`)(
+  {
+    decision: GroundingDecision,
+    typeMatch: S.Boolean,
+    entity: Entity,
+  },
+  $I.annote("EntityGrounderResult", {
+    description: "Schema-owned grounding decision paired with its extracted entity.",
+  })
+) {
+  /**
+   * Whether this entity observation passed grounding verification.
+   *
+   * **Example** (Inspect the getter)
+   * ```ts
+   * import { EntityGrounderResult } from "@effect-ontology/Service/Grounder"
+   *
+   * console.log(Reflect.getOwnPropertyDescriptor(EntityGrounderResult.prototype, "grounded")?.get !== undefined)
+   * ```
+   *
+   * @returns `true` only when the schema-owned decision is `Supported`.
+   */
+  get grounded(): boolean {
+    return GroundingDecision.guards.Supported(this.decision);
+  }
+
+  /**
+   * Numeric compatibility view of the schema-owned grounding decision.
+   *
+   * **Example** (Inspect the getter)
+   * ```ts
+   * import { EntityGrounderResult } from "@effect-ontology/Service/Grounder"
+   *
+   * console.log(Reflect.getOwnPropertyDescriptor(EntityGrounderResult.prototype, "confidence")?.get !== undefined)
+   * ```
+   *
+   * @returns The verifier confidence, or zero when grounding was not evaluated.
+   */
+  get confidence(): Confidence {
+    return GroundingDecision.match(this.decision, {
+      NotEvaluated: () => Confidence.make(0),
+      Supported: ({ confidence }) => confidence,
+      Rejected: ({ confidence }) => confidence,
+    });
+  }
 }
 
 /**
@@ -184,23 +226,48 @@ export interface RelationVerificationInput {
   };
 }
 
+const relationObjectPrompt = (
+  relation: Relation,
+  object: RelationVerificationInput["object"]
+): readonly [label: string, detail: string] => {
+  const context = O.fromNullishOr(object);
+  const mention = O.flatMap(context, (value) => O.fromNullishOr(value.mention));
+  const types = O.flatMap(context, (value) => O.fromNullishOr(value.types));
+  return RelationObject.match(relation.object, {
+    EntityReference: ({ value }): readonly [string, string] => [
+      O.match(mention, {
+        onNone: () => value,
+        onSome: (label) => `${label} (${value})`,
+      }),
+      O.match(types, {
+        onNone: () => "",
+        onSome: (values) => `\nObject types: ${A.join(values, ", ")}`,
+      }),
+    ],
+    Text: ({ value }): readonly [string, string] => [value, ""],
+    Number: ({ value }): readonly [string, string] => [BeepStr.fromNumber(value), ""],
+    Boolean: ({ value }): readonly [string, string] => [
+      Bool.match(value, { onFalse: () => "false", onTrue: () => "true" }),
+      "",
+    ],
+  });
+};
+
 /**
  * Build prompt for single relation verification
  *
  * @internal
  */
 const buildGrounderPrompt = ({ context, object, predicate, relation, subject }: RelationVerificationInput): string => {
-  const predicateLabel = predicate?.label ?? relation.predicate;
-  const subjectLabel = P.isNotUndefined(subject) ? `${subject.mention} (${subject.entityId})` : relation.subjectId;
-
-  const objectLabel = P.isString(relation.object)
-    ? P.isNotUndefined(object?.mention)
-      ? `${object.mention} (${relation.object})`
-      : relation.object
-    : String(relation.object);
-
-  const objectDetail =
-    P.isString(relation.object) && P.isNotUndefined(object?.types) ? `\nObject types: ${object.types.join(", ")}` : "";
+  const predicateLabel = O.getOrElse(
+    O.map(O.fromNullishOr(predicate), (value) => value.label),
+    () => relation.predicate
+  );
+  const subjectLabel = O.match(O.fromNullishOr(subject), {
+    onNone: () => relation.subjectId,
+    onSome: (value) => `${value.mention} (${value.entityId})`,
+  });
+  const [objectLabel, objectDetail] = relationObjectPrompt(relation, object);
 
   return `You are a verifier that determines whether a triple is grounded in the provided context.
 
@@ -224,14 +291,15 @@ Instructions:
  */
 const formatRelationForBatch = (input: RelationVerificationInput, index: number): string => {
   const { object, predicate, relation, subject } = input;
-  const predicateLabel = predicate?.label ?? relation.predicate;
-  const subjectLabel = P.isNotUndefined(subject) ? `${subject.mention} (${subject.entityId})` : relation.subjectId;
-
-  const objectLabel = P.isString(relation.object)
-    ? P.isNotUndefined(object?.mention)
-      ? `${object.mention} (${relation.object})`
-      : relation.object
-    : String(relation.object);
+  const predicateLabel = O.getOrElse(
+    O.map(O.fromNullishOr(predicate), (value) => value.label),
+    () => relation.predicate
+  );
+  const subjectLabel = O.match(O.fromNullishOr(subject), {
+    onNone: () => relation.subjectId,
+    onSome: (value) => `${value.mention} (${value.entityId})`,
+  });
+  const [objectLabel] = relationObjectPrompt(relation, object);
 
   return `${index}. <${subjectLabel}, ${predicateLabel}, ${objectLabel}>`;
 };
@@ -242,7 +310,7 @@ const formatRelationForBatch = (input: RelationVerificationInput, index: number)
  * @internal
  */
 const buildBatchGrounderPrompt = (context: string, inputs: ReadonlyArray<RelationVerificationInput>): string => {
-  const triplesFormatted = inputs.map((input, index) => formatRelationForBatch(input, index)).join("\n");
+  const triplesFormatted = A.join(A.map(inputs, formatRelationForBatch), "\n");
 
   return `You are a verifier that determines whether triples are grounded in the provided context.
 
@@ -267,7 +335,7 @@ Instructions:
  * @internal
  */
 const buildEntityGrounderPrompt = ({ context, entity }: EntityVerificationInput): string => {
-  const typesStr = entity.types.join(", ");
+  const typesStr = A.join(entity.types, ", ");
 
   return `You are a verifier that determines whether an extracted entity is grounded in the provided context.
 
@@ -294,7 +362,7 @@ Instructions:
  * @internal
  */
 const formatEntityForBatch = (entity: Entity, index: number): string => {
-  const typesStr = entity.types.join(", ");
+  const typesStr = A.join(entity.types, ", ");
   return `${index}. "${entity.mention}" [${typesStr}]`;
 };
 
@@ -304,7 +372,7 @@ const formatEntityForBatch = (entity: Entity, index: number): string => {
  * @internal
  */
 const buildBatchEntityGrounderPrompt = (context: string, entities: ReadonlyArray<Entity>): string => {
-  const entitiesFormatted = entities.map((entity, index) => formatEntityForBatch(entity, index)).join("\n");
+  const entitiesFormatted = A.join(A.map(entities, formatEntityForBatch), "\n");
 
   return `You are a verifier that determines whether extracted entities are grounded in the provided context.
 
@@ -342,11 +410,185 @@ Instructions:
  * @category type-level
  * @since 0.0.0
  */
-export interface GrounderResult {
-  readonly grounded: boolean;
-  readonly confidence: number;
-  readonly relation: Relation;
+export class GrounderResult extends S.Class<GrounderResult>($I`GrounderResult`)(
+  {
+    decision: GroundingDecision,
+    relation: Relation,
+  },
+  $I.annote("GrounderResult", {
+    description: "Schema-owned grounding decision paired with its extracted relation.",
+  })
+) {
+  /**
+   * Whether this relation observation passed grounding verification.
+   *
+   * **Example** (Inspect the getter)
+   * ```ts
+   * import { GrounderResult } from "@effect-ontology/Service/Grounder"
+   *
+   * console.log(Reflect.getOwnPropertyDescriptor(GrounderResult.prototype, "grounded")?.get !== undefined)
+   * ```
+   *
+   * @returns `true` only when the schema-owned decision is `Supported`.
+   */
+  get grounded(): boolean {
+    return GroundingDecision.guards.Supported(this.decision);
+  }
+
+  /**
+   * Numeric compatibility view of the schema-owned grounding decision.
+   *
+   * **Example** (Inspect the getter)
+   * ```ts
+   * import { GrounderResult } from "@effect-ontology/Service/Grounder"
+   *
+   * console.log(Reflect.getOwnPropertyDescriptor(GrounderResult.prototype, "confidence")?.get !== undefined)
+   * ```
+   *
+   * @returns The verifier confidence, or zero when grounding was not evaluated.
+   */
+  get confidence(): Confidence {
+    return GroundingDecision.match(this.decision, {
+      NotEvaluated: () => Confidence.make(0),
+      Supported: ({ confidence }) => confidence,
+      Rejected: ({ confidence }) => confidence,
+    });
+  }
 }
+
+const GroundingBatchKind = LiteralKit(["entity", "relation"]);
+
+/**
+ * Grounder response omitted one or more requested batch entries.
+ *
+ * **Example** (Construct an incomplete-batch failure)
+ * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { GroundingProtocolError } from "@effect-ontology/Service/Grounder"
+ *
+ * const error = GroundingProtocolError.make({
+ *   kind: "entity",
+ *   expectedCount: NonNegativeInt.make(2),
+ *   receivedCount: NonNegativeInt.make(1),
+ *   missingIndexes: [NonNegativeInt.make(1)]
+ * })
+ * console.log(error._tag) // "GroundingProtocolError"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class GroundingProtocolError extends S.TaggedError<GroundingProtocolError>($I`GroundingProtocolError`)(
+  "GroundingProtocolError",
+  {
+    kind: GroundingBatchKind,
+    expectedCount: NonNegativeInt,
+    receivedCount: NonNegativeInt,
+    missingIndexes: S.Array(NonNegativeInt),
+  },
+  $I.annote("GroundingProtocolError", {
+    description: "Incomplete or malformed indexed response from batched grounding verification.",
+  })
+) {
+  static readonly is = S.is(this);
+}
+
+type IndexedRelationVerification = (typeof BatchVerification.Type)["results"][number];
+type IndexedEntityVerification = (typeof BatchEntityVerification.Type)["results"][number];
+
+const groundingDecision = (grounded: boolean, confidence: Confidence): GroundingDecision =>
+  Bool.match(grounded, {
+    onFalse: () => GroundingDecision.cases.Rejected.make({ confidence }),
+    onTrue: () => GroundingDecision.cases.Supported.make({ confidence }),
+  });
+
+const missingIndexes = <TValue>(inputs: ReadonlyArray<TValue>, results: HashMap.HashMap<number, unknown>) =>
+  A.getSomes(
+    A.map(inputs, (_, index) =>
+      HashMap.has(results, index) ? O.none<NonNegativeInt>() : O.some(NonNegativeInt.make(index))
+    )
+  );
+
+const validateRelationBatch = Effect.fn("Grounder.validateRelationBatch")(function* (
+  inputs: ReadonlyArray<RelationVerificationInput>,
+  results: ReadonlyArray<IndexedRelationVerification>
+) {
+  const byIndex = HashMap.fromIterable(
+    A.map(results, (result): readonly [number, IndexedRelationVerification] => [result.index, result])
+  );
+  const missing = missingIndexes(inputs, byIndex);
+  if (
+    A.isReadonlyArrayNonEmpty(missing) ||
+    HashMap.size(byIndex) !== inputs.length ||
+    results.length !== inputs.length
+  ) {
+    return yield* GroundingProtocolError.make({
+      kind: "relation",
+      expectedCount: NonNegativeInt.make(inputs.length),
+      receivedCount: NonNegativeInt.make(results.length),
+      missingIndexes: missing,
+    });
+  }
+  return yield* Effect.forEach(inputs, (input, index) =>
+    O.match(HashMap.get(byIndex, index), {
+      onNone: () =>
+        GroundingProtocolError.make({
+          kind: "relation",
+          expectedCount: NonNegativeInt.make(inputs.length),
+          receivedCount: NonNegativeInt.make(results.length),
+          missingIndexes: [NonNegativeInt.make(index)],
+        }),
+      onSome: (result) =>
+        Effect.succeed(
+          GrounderResult.make({
+            decision: groundingDecision(result.grounded, result.confidence),
+            relation: input.relation,
+          })
+        ),
+    })
+  );
+});
+
+const validateEntityBatch = Effect.fn("Grounder.validateEntityBatch")(function* (
+  entities: ReadonlyArray<Entity>,
+  results: ReadonlyArray<IndexedEntityVerification>
+) {
+  const byIndex = HashMap.fromIterable(
+    A.map(results, (result): readonly [number, IndexedEntityVerification] => [result.index, result])
+  );
+  const missing = missingIndexes(entities, byIndex);
+  if (
+    A.isReadonlyArrayNonEmpty(missing) ||
+    HashMap.size(byIndex) !== entities.length ||
+    results.length !== entities.length
+  ) {
+    return yield* GroundingProtocolError.make({
+      kind: "entity",
+      expectedCount: NonNegativeInt.make(entities.length),
+      receivedCount: NonNegativeInt.make(results.length),
+      missingIndexes: missing,
+    });
+  }
+  return yield* Effect.forEach(entities, (entity, index) =>
+    O.match(HashMap.get(byIndex, index), {
+      onNone: () =>
+        GroundingProtocolError.make({
+          kind: "entity",
+          expectedCount: NonNegativeInt.make(entities.length),
+          receivedCount: NonNegativeInt.make(results.length),
+          missingIndexes: [NonNegativeInt.make(index)],
+        }),
+      onSome: (result) =>
+        Effect.succeed(
+          EntityGrounderResult.make({
+            decision: groundingDecision(result.grounded, result.confidence),
+            typeMatch: result.typeMatch,
+            entity,
+          })
+        ),
+    })
+  );
+});
 
 /**
  * Default batch size for grouped verification
@@ -382,7 +624,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
         const prompt = buildGrounderPrompt(input);
         const result = yield* generateObjectWithRetry({
           prompt,
-          schema: VerificationSchema,
+          schema: Verification,
           objectName: "GroundingDecision",
           serviceName: "Grounder",
           model: config.llm.model,
@@ -406,22 +648,21 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
           ),
           Effect.withSpan("grounder-single-verification")
         );
-        return {
-          grounded: result.value.grounded,
-          confidence: result.value.confidence,
+        return GrounderResult.make({
+          decision: groundingDecision(result.value.grounded, result.value.confidence),
           relation: input.relation,
-        };
+        });
       }),
       verifyRelationBatch: Effect.fn("Grounder.verifyRelationBatch")(
         function* (context: string, inputs: ReadonlyArray<RelationVerificationInput>) {
-          if (inputs.length === 0) {
+          if (A.isReadonlyArrayEmpty(inputs)) {
             return [];
           }
           if (inputs.length === 1) {
             const prompt = buildGrounderPrompt(inputs[0]);
             const result = yield* generateObjectWithRetry({
               prompt,
-              schema: VerificationSchema,
+              schema: Verification,
               objectName: "GroundingDecision",
               serviceName: "Grounder",
               model: config.llm.model,
@@ -436,17 +677,16 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
               }),
             }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
             return [
-              {
-                grounded: result.value.grounded,
-                confidence: result.value.confidence,
+              GrounderResult.make({
+                decision: groundingDecision(result.value.grounded, result.value.confidence),
                 relation: inputs[0].relation,
-              },
+              }),
             ];
           }
           const prompt = buildBatchGrounderPrompt(context, inputs);
           const response = yield* generateObjectWithRetry({
             prompt,
-            schema: BatchVerificationSchema,
+            schema: BatchVerification,
             objectName: "BatchGroundingDecision",
             serviceName: "Grounder",
             model: config.llm.model,
@@ -457,20 +697,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
               [LlmAttributes.PROMPT_LENGTH]: prompt.length,
             },
           }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
-          type GrounderResult = {
-            index: number;
-            grounded: boolean;
-            confidence: number;
-          };
-          const resultsMap = HashMap.fromIterable(response.value.results.map((r: GrounderResult) => [r.index, r]));
-          return inputs.map((input, index) => {
-            const result = HashMap.get(resultsMap, index);
-            return {
-              grounded: O.match(result, { onNone: () => false, onSome: (value) => value.grounded }),
-              confidence: O.match(result, { onNone: () => Confidence.make(0), onSome: (value) => value.confidence }),
-              relation: input.relation,
-            };
-          });
+          return yield* validateRelationBatch(inputs, response.value.results);
         },
         (effect, inputs) =>
           effect.pipe(
@@ -479,10 +706,13 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                 Effect.logDebug("Grounder batch verification complete", {
                   stage: "grounder",
                   batchSize: inputs.length,
-                  groundedCount: results.filter((r) => r.grounded).length,
+                  groundedCount: A.length(A.filter(results, (result) => result.grounded)),
                 }),
                 Effect.annotateCurrentSpan(LlmAttributes.RELATION_COUNT, inputs.length),
-                Effect.annotateCurrentSpan("grounder.grounded_count", results.filter((r) => r.grounded).length),
+                Effect.annotateCurrentSpan(
+                  "grounder.grounded_count",
+                  A.length(A.filter(results, (result) => result.grounded))
+                ),
               ])
             ),
             Effect.withSpan("grounder-batch-verification", {
@@ -504,7 +734,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             const prompt = buildBatchGrounderPrompt(context, batchArray);
             return generateObjectWithRetry({
               prompt,
-              schema: BatchVerificationSchema,
+              schema: BatchVerification,
               objectName: "BatchGroundingDecision",
               serviceName: "Grounder",
               model: config.llm.model,
@@ -516,27 +746,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
               },
             }).pipe(
               Effect.provideService(LanguageModel.LanguageModel, llm),
-              Effect.map((response) => {
-                type GrounderResult = {
-                  index: number;
-                  grounded: boolean;
-                  confidence: number;
-                };
-                const resultsMap = HashMap.fromIterable(
-                  response.value.results.map((r: GrounderResult) => [r.index, r])
-                );
-                return batchArray.map((input, index) => {
-                  const result = HashMap.get(resultsMap, index);
-                  return {
-                    grounded: O.match(result, { onNone: () => false, onSome: (value) => value.grounded }),
-                    confidence: O.match(result, {
-                      onNone: () => Confidence.make(0),
-                      onSome: (value) => value.confidence,
-                    }),
-                    relation: input.relation,
-                  };
-                });
-              })
+              Effect.flatMap((response) => validateRelationBatch(batchArray, response.value.results))
             );
           }),
           Stream.flattenIterable
@@ -545,7 +755,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
         const prompt = buildEntityGrounderPrompt(input);
         const result = yield* generateObjectWithRetry({
           prompt,
-          schema: EntityVerificationSchema,
+          schema: EntityVerification,
           objectName: "EntityGroundingDecision",
           serviceName: "Grounder",
           model: config.llm.model,
@@ -572,16 +782,15 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
           ),
           Effect.withSpan("grounder-entity-verification")
         );
-        return {
-          grounded: result.value.grounded,
+        return EntityGrounderResult.make({
+          decision: groundingDecision(result.value.grounded, result.value.confidence),
           typeMatch: result.value.typeMatch,
-          confidence: result.value.confidence,
           entity: input.entity,
-        };
+        });
       }),
       verifyEntityBatch: Effect.fn("Grounder.verifyEntityBatch")(
         function* (context: string, entities: ReadonlyArray<Entity>) {
-          if (entities.length === 0) {
+          if (A.isReadonlyArrayEmpty(entities)) {
             return [];
           }
           if (entities.length === 1) {
@@ -589,7 +798,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             const prompt = buildEntityGrounderPrompt(input);
             const result = yield* generateObjectWithRetry({
               prompt,
-              schema: EntityVerificationSchema,
+              schema: EntityVerification,
               objectName: "EntityGroundingDecision",
               serviceName: "Grounder",
               model: config.llm.model,
@@ -600,18 +809,17 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
               },
             }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
             return [
-              {
-                grounded: result.value.grounded,
+              EntityGrounderResult.make({
+                decision: groundingDecision(result.value.grounded, result.value.confidence),
                 typeMatch: result.value.typeMatch,
-                confidence: result.value.confidence,
                 entity: entities[0],
-              },
+              }),
             ];
           }
           const prompt = buildBatchEntityGrounderPrompt(context, entities);
           const response = yield* generateObjectWithRetry({
             prompt,
-            schema: BatchEntityVerificationSchema,
+            schema: BatchEntityVerification,
             objectName: "BatchEntityGroundingDecision",
             serviceName: "Grounder",
             model: config.llm.model,
@@ -622,22 +830,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
               [LlmAttributes.PROMPT_LENGTH]: prompt.length,
             },
           }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
-          type EntityResult = {
-            index: number;
-            grounded: boolean;
-            typeMatch: boolean;
-            confidence: number;
-          };
-          const resultsMap = HashMap.fromIterable(response.value.results.map((r: EntityResult) => [r.index, r]));
-          return entities.map((entity, index) => {
-            const result = HashMap.get(resultsMap, index);
-            return {
-              grounded: O.match(result, { onNone: () => false, onSome: (value) => value.grounded }),
-              typeMatch: O.match(result, { onNone: () => false, onSome: (value) => value.typeMatch }),
-              confidence: O.match(result, { onNone: () => Confidence.make(0), onSome: (value) => value.confidence }),
-              entity,
-            };
-          });
+          return yield* validateEntityBatch(entities, response.value.results);
         },
         (effect, _context, entities) =>
           effect.pipe(
@@ -646,10 +839,13 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                 Effect.logDebug("Grounder batch entity verification complete", {
                   stage: "grounder",
                   batchSize: entities.length,
-                  groundedCount: results.filter((r) => r.grounded).length,
+                  groundedCount: A.length(A.filter(results, (result) => result.grounded)),
                 }),
                 Effect.annotateCurrentSpan(LlmAttributes.ENTITY_COUNT, entities.length),
-                Effect.annotateCurrentSpan("grounder.entity_grounded_count", results.filter((r) => r.grounded).length),
+                Effect.annotateCurrentSpan(
+                  "grounder.entity_grounded_count",
+                  A.length(A.filter(results, (result) => result.grounded))
+                ),
               ])
             ),
             Effect.withSpan("grounder-batch-entity-verification", {
@@ -669,46 +865,51 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
    */
   static Test = Layer.succeed(Grounder, {
     verifyRelation: Effect.fn("Grounder.verifyRelation")((input: RelationVerificationInput) =>
-      Effect.succeed({
-        grounded: true,
-        confidence: Confidence.make(1),
-        relation: input.relation,
-      })
+      Effect.succeed(
+        GrounderResult.make({
+          decision: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(1) }),
+          relation: input.relation,
+        })
+      )
     ),
     verifyRelationBatch: Effect.fn("Grounder.verifyRelationBatch")(
       (_context: string, inputs: ReadonlyArray<RelationVerificationInput>) =>
         Effect.succeed(
-          inputs.map((input) => ({
-            grounded: true,
-            confidence: Confidence.make(1),
-            relation: input.relation,
-          }))
+          A.map(inputs, (input) =>
+            GrounderResult.make({
+              decision: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(1) }),
+              relation: input.relation,
+            })
+          )
         )
     ),
     verifyRelationStream: (_context: string, relations: Stream.Stream<RelationVerificationInput>) =>
       relations.pipe(
-        Stream.map((input) => ({
-          grounded: true,
-          confidence: Confidence.make(1),
-          relation: input.relation,
-        }))
+        Stream.map((input) =>
+          GrounderResult.make({
+            decision: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(1) }),
+            relation: input.relation,
+          })
+        )
       ),
     verifyEntity: Effect.fn("Grounder.verifyEntity")((input: EntityVerificationInput) =>
-      Effect.succeed({
-        grounded: true,
-        typeMatch: true,
-        confidence: Confidence.make(1),
-        entity: input.entity,
-      })
+      Effect.succeed(
+        EntityGrounderResult.make({
+          decision: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(1) }),
+          typeMatch: true,
+          entity: input.entity,
+        })
+      )
     ),
     verifyEntityBatch: Effect.fn("Grounder.verifyEntityBatch")((_context: string, entities: ReadonlyArray<Entity>) =>
       Effect.succeed(
-        entities.map((entity) => ({
-          grounded: true,
-          typeMatch: true,
-          confidence: Confidence.make(1),
-          entity,
-        }))
+        A.map(entities, (entity) =>
+          EntityGrounderResult.make({
+            decision: GroundingDecision.cases.Supported.make({ confidence: Confidence.make(1) }),
+            typeMatch: true,
+            entity,
+          })
+        )
       )
     ),
   });

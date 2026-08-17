@@ -34,6 +34,7 @@ import type { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Err
 import type { ValidationPolicyError, ValidationReportError } from "../Domain/Error/Shacl.ts";
 import { ContentHash, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
+import type { ExtractionOutcome } from "../Domain/Model/ExtractionTelemetry.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
 import type { ExtractWithClaimsOptions } from "../Domain/Model/OntologyAgent.ts";
 import {
@@ -135,6 +136,15 @@ const decodeAgentModel = <A, I>(
       })
     )
   );
+
+const makeExtractionMetrics = (outcome: ExtractionOutcome, duration: Duration.Duration): ExtractionMetrics =>
+  ExtractionMetrics.make({
+    entityCount: NonNegativeInt.make(outcome.graph.entities.length),
+    relationCount: NonNegativeInt.make(outcome.graph.relations.length),
+    chunkCount: outcome.telemetry.chunkCount,
+    usage: outcome.telemetry.usage,
+    duration,
+  });
 
 /**
  * OntologyAgent - Unified interface for ontology-guided operations
@@ -277,7 +287,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           });
 
           // Execute extraction workflow
-          const graph = yield* extractionWorkflow.extract(text, runConfig);
+          const outcome = yield* extractionWorkflow.extract(text, runConfig);
+          const { graph } = outcome;
 
           yield* Effect.logDebug("Extraction complete, building RDF store", {
             entityCount: graph.entities.length,
@@ -296,18 +307,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const duration = DateTime.distance(startTime, endTime);
 
           // Build metrics from graph
-          const metrics = yield* decodeAgentModel(
-            ExtractionMetrics,
-            {
-              entityCount: NonNegativeInt.make(graph.entities.length),
-              relationCount: NonNegativeInt.make(graph.relations.length),
-              chunkCount: NonNegativeInt.make(1), // TODO: Get actual chunk count from workflow
-              inputTokens: NonNegativeInt.make(0), // TODO: Track from workflow when available
-              outputTokens: NonNegativeInt.make(0),
-              duration: Duration.toMillis(duration),
-            },
-            "extraction metrics"
-          );
+          const metrics = makeExtractionMetrics(outcome, duration);
 
           yield* Effect.logInfo("OntologyAgent.extract complete", {
             entityCount: metrics.entityCount,
@@ -374,7 +374,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           });
 
           // Execute extraction workflow
-          const graph = yield* extractionWorkflow.extract(text, runConfig);
+          const outcome = yield* extractionWorkflow.extract(text, runConfig);
+          const { graph } = outcome;
 
           yield* Effect.logDebug("Extraction complete, creating claims from relations", {
             entityCount: graph.entities.length,
@@ -462,18 +463,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const duration = DateTime.distance(startTime, endTime);
 
           // Build metrics from graph
-          const metrics = yield* decodeAgentModel(
-            ExtractionMetrics,
-            {
-              entityCount: NonNegativeInt.make(graph.entities.length),
-              relationCount: NonNegativeInt.make(graph.relations.length),
-              chunkCount: NonNegativeInt.make(1),
-              inputTokens: NonNegativeInt.make(0),
-              outputTokens: NonNegativeInt.make(0),
-              duration: Duration.toMillis(duration),
-            },
-            "claim extraction metrics"
-          );
+          const metrics = makeExtractionMetrics(outcome, duration);
 
           yield* Effect.logInfo("OntologyAgent.extractWithClaims complete", {
             entityCount: metrics.entityCount,
@@ -539,7 +529,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           });
 
           // Execute extraction workflow
-          const graph = yield* extractionWorkflow.extract(text, runConfig);
+          const outcome = yield* extractionWorkflow.extract(text, runConfig);
+          const { graph } = outcome;
 
           yield* Effect.logDebug("Extraction complete, building RDF store", {
             entityCount: graph.entities.length,
@@ -583,18 +574,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const duration = DateTime.distance(startTime, endTime);
 
           // Build metrics from graph
-          const metrics = yield* decodeAgentModel(
-            ExtractionMetrics,
-            {
-              entityCount: NonNegativeInt.make(graph.entities.length),
-              relationCount: NonNegativeInt.make(graph.relations.length),
-              chunkCount: NonNegativeInt.make(1),
-              inputTokens: NonNegativeInt.make(0),
-              outputTokens: NonNegativeInt.make(0),
-              duration: Duration.toMillis(duration),
-            },
-            "reasoned extraction metrics"
-          );
+          const metrics = makeExtractionMetrics(outcome, duration);
 
           yield* Effect.logInfo("OntologyAgent.extractWithReasoning complete", {
             entityCount: metrics.entityCount,
@@ -640,7 +620,8 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           });
 
           // Execute extraction
-          const graph = yield* extractionWorkflow.extract(text, runConfig);
+          const outcome = yield* extractionWorkflow.extract(text, runConfig);
+          const { graph } = outcome;
 
           // Build RDF store from extracted graph
           const rdfStore = yield* rdfBuilder.createStore;
@@ -685,18 +666,7 @@ export class OntologyAgent extends Context.Service<OntologyAgent>()($I`OntologyA
           const duration = DateTime.distance(startTime, endTime);
 
           // Build metrics
-          const metrics = yield* decodeAgentModel(
-            ExtractionMetrics,
-            {
-              entityCount: NonNegativeInt.make(graph.entities.length),
-              relationCount: NonNegativeInt.make(graph.relations.length),
-              chunkCount: NonNegativeInt.make(1),
-              inputTokens: NonNegativeInt.make(0),
-              outputTokens: NonNegativeInt.make(0),
-              duration: Duration.toMillis(duration),
-            },
-            "validated extraction metrics"
-          );
+          const metrics = makeExtractionMetrics(outcome, duration);
 
           yield* Effect.logInfo("OntologyAgent.extractAndValidate complete", {
             entityCount: metrics.entityCount,

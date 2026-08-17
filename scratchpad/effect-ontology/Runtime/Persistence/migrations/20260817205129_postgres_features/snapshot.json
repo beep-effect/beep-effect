@@ -1,8 +1,8 @@
 {
+  "id": "8607ec71-426b-449a-b7ef-4c6249490069",
+  "prevIds": ["b14d71cc-56a6-4f95-ab18-169ba82524bb"],
   "version": "8",
   "dialect": "postgres",
-  "id": "b6249dba-275c-4aee-a548-db313f233171",
-  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -824,6 +824,19 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "name": "ontology_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
       "name": "conflict_type",
       "entityType": "columns",
       "schema": "public",
@@ -903,6 +916,19 @@
       "generated": null,
       "identity": null,
       "name": "resolved_by",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "resolved_by_fingerprint",
       "entityType": "columns",
       "schema": "public",
       "table": "conflicts"
@@ -2868,6 +2894,13 @@
       "nameExplicit": true,
       "columns": [
         {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
           "value": "status",
           "isExpression": false,
           "asc": true,
@@ -2880,7 +2913,7 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_conflicts_status",
+      "name": "idx_conflicts_ontology_status",
       "entityType": "indexes",
       "schema": "public",
       "table": "conflicts"
@@ -2909,6 +2942,41 @@
       "method": "btree",
       "concurrently": false,
       "name": "idx_conflicts_claims",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "claim_a_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "claim_b_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "conflicts_ontology_claim_pair_unique",
       "entityType": "indexes",
       "schema": "public",
       "table": "conflicts"
@@ -3743,7 +3811,7 @@
       "table": "entity_aliases"
     },
     {
-      "nameExplicit": false,
+      "nameExplicit": true,
       "columns": ["canonical_entity_id"],
       "schemaTo": "public",
       "tableTo": "canonical_entities",
@@ -3756,7 +3824,7 @@
       "table": "entity_blocking_tokens"
     },
     {
-      "nameExplicit": false,
+      "nameExplicit": true,
       "columns": ["batch_id"],
       "schemaTo": "public",
       "tableTo": "link_batches",
@@ -3769,7 +3837,7 @@
       "table": "link_batch_items"
     },
     {
-      "nameExplicit": false,
+      "nameExplicit": true,
       "columns": ["link_id"],
       "schemaTo": "public",
       "tableTo": "ingested_links",
@@ -3783,7 +3851,7 @@
     },
     {
       "columns": ["correction_id", "original_claim_id"],
-      "nameExplicit": false,
+      "nameExplicit": true,
       "name": "correction_claims_pkey",
       "entityType": "pks",
       "schema": "public",
@@ -3791,7 +3859,7 @@
     },
     {
       "columns": ["batch_id", "link_id"],
-      "nameExplicit": false,
+      "nameExplicit": true,
       "name": "link_batch_items_pkey",
       "entityType": "pks",
       "schema": "public",
@@ -3926,7 +3994,7 @@
       "table": "claims"
     },
     {
-      "value": "\"conflict_type\" IN ('position', 'temporal', 'contradictory', 'duplicate')",
+      "value": "\"conflict_type\" IN ('position', 'temporal')",
       "name": "conflicts_conflict_type_check",
       "entityType": "checks",
       "schema": "public",
@@ -3940,8 +4008,15 @@
       "table": "conflicts"
     },
     {
-      "value": "\"claim_a_id\" <> \"claim_b_id\"",
-      "name": "different_claims",
+      "value": "\"claim_a_id\" < \"claim_b_id\"",
+      "name": "conflicts_canonical_claim_pair_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "value": "(\n        (\"status\" = 'pending'\n          AND \"resolution_strategy\" IS NULL\n          AND \"accepted_claim_id\" IS NULL\n          AND \"resolved_by\" IS NULL\n          AND \"resolved_by_fingerprint\" IS NULL\n          AND \"resolved_at\" IS NULL\n          AND \"resolution_notes\" IS NULL)\n        OR (\"status\" = 'ignored'\n          AND \"resolution_strategy\" IS NULL\n          AND \"accepted_claim_id\" IS NULL\n          AND \"resolved_by\" IS NOT NULL\n          AND \"resolved_at\" IS NOT NULL)\n        OR (\"status\" = 'resolved'\n          AND \"resolution_strategy\" IS NOT NULL\n          AND \"accepted_claim_id\" IS NOT NULL\n          AND \"resolved_by\" IS NOT NULL\n          AND \"resolved_at\" IS NOT NULL)\n      )",
+      "name": "conflicts_resolution_state_check",
       "entityType": "checks",
       "schema": "public",
       "table": "conflicts"

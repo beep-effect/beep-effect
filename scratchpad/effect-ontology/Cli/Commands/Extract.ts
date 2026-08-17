@@ -196,7 +196,7 @@ const extractHandler = Effect.fn("extractHandler")(function* (
     enableGrounding: true,
   });
   const workflow = yield* ExtractionWorkflow;
-  const graph = yield* workflow.extract(inputText, runConfig);
+  const { graph } = yield* workflow.extract(inputText, runConfig);
   yield* Console.error(`\nExtracted: ${graph.entities.length} entities, ${graph.relations.length} relations`);
   if (format === "json") {
     const output = {

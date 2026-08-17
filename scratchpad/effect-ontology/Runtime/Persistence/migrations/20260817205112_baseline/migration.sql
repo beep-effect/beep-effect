@@ -1,5 +1,5 @@
 -- Drizzle Kit emits extension-dependent vector columns but cannot declare their
--- prerequisite extensions. Keep this reviewed prelude before every CREATE TABLE.
+-- prerequisite extensions. This generator-owned prelude must precede every CREATE TABLE.
 CREATE EXTENSION IF NOT EXISTS vector;--> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS pg_trgm;--> statement-breakpoint
 CREATE TABLE "articles" (
@@ -73,6 +73,7 @@ CREATE TABLE "claims" (
 --> statement-breakpoint
 CREATE TABLE "conflicts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+	"ontology_id" text NOT NULL,
 	"conflict_type" text NOT NULL,
 	"claim_a_id" uuid NOT NULL,
 	"claim_b_id" uuid NOT NULL,
@@ -80,12 +81,32 @@ CREATE TABLE "conflicts" (
 	"resolution_strategy" text,
 	"accepted_claim_id" uuid,
 	"resolved_by" text,
+	"resolved_by_fingerprint" text,
 	"resolved_at" timestamp with time zone,
 	"resolution_notes" text,
 	"detected_at" timestamp with time zone DEFAULT now(),
-	CONSTRAINT "conflicts_conflict_type_check" CHECK ("conflict_type" IN ('position', 'temporal', 'contradictory', 'duplicate')),
+	CONSTRAINT "conflicts_conflict_type_check" CHECK ("conflict_type" IN ('position', 'temporal')),
 	CONSTRAINT "conflicts_status_check" CHECK ("status" IN ('pending', 'resolved', 'ignored')),
-	CONSTRAINT "different_claims" CHECK ("claim_a_id" <> "claim_b_id")
+	CONSTRAINT "conflicts_canonical_claim_pair_check" CHECK ("claim_a_id" < "claim_b_id"),
+	CONSTRAINT "conflicts_resolution_state_check" CHECK ((
+        ("status" = 'pending'
+          AND "resolution_strategy" IS NULL
+          AND "accepted_claim_id" IS NULL
+          AND "resolved_by" IS NULL
+          AND "resolved_by_fingerprint" IS NULL
+          AND "resolved_at" IS NULL
+          AND "resolution_notes" IS NULL)
+        OR ("status" = 'ignored'
+          AND "resolution_strategy" IS NULL
+          AND "accepted_claim_id" IS NULL
+          AND "resolved_by" IS NOT NULL
+          AND "resolved_at" IS NOT NULL)
+        OR ("status" = 'resolved'
+          AND "resolution_strategy" IS NOT NULL
+          AND "accepted_claim_id" IS NOT NULL
+          AND "resolved_by" IS NOT NULL
+          AND "resolved_at" IS NOT NULL)
+      ))
 );
 --> statement-breakpoint
 CREATE TABLE "correction_claims" (
@@ -246,8 +267,9 @@ CREATE INDEX "idx_claims_ontology_id" ON "claims" ("ontology_id");--> statement-
 CREATE INDEX "idx_claims_ontology_subject" ON "claims" ("ontology_id","subject_iri");--> statement-breakpoint
 CREATE INDEX "idx_claims_ontology_predicate" ON "claims" ("ontology_id","predicate_iri");--> statement-breakpoint
 CREATE INDEX "idx_claims_ontology_subject_predicate" ON "claims" ("ontology_id","subject_iri","predicate_iri");--> statement-breakpoint
-CREATE INDEX "idx_conflicts_status" ON "conflicts" ("status");--> statement-breakpoint
+CREATE INDEX "idx_conflicts_ontology_status" ON "conflicts" ("ontology_id","status");--> statement-breakpoint
 CREATE INDEX "idx_conflicts_claims" ON "conflicts" ("claim_a_id","claim_b_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "conflicts_ontology_claim_pair_unique" ON "conflicts" ("ontology_id","claim_a_id","claim_b_id");--> statement-breakpoint
 CREATE INDEX "idx_correction_claims_original" ON "correction_claims" ("original_claim_id");--> statement-breakpoint
 CREATE INDEX "idx_correction_claims_new" ON "correction_claims" ("new_claim_id");--> statement-breakpoint
 CREATE INDEX "idx_corrections_type" ON "corrections" ("correction_type");--> statement-breakpoint

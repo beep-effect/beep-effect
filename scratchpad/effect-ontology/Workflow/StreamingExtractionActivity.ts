@@ -20,6 +20,7 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
 import { Crypto, DateTime, Duration, Effect, Encoding, pipe, Schedule } from "effect";
 import * as A from "effect/Array";
@@ -30,7 +31,7 @@ import { Activity } from "effect/unstable/workflow";
 import { ActivityError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts";
 import { ContentHash, DocumentId, GcsUri, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { Entity, KnowledgeGraph } from "../Domain/Model/Entity.ts";
-import { ChunkingConfig, LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
+import { ChunkingConfig, GroundingPolicy, LlmConfig, RunConfig } from "../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
 import type { ExtractionActivityInput } from "../Domain/Schema/Batch.ts";
@@ -209,6 +210,9 @@ export const buildRunConfig = dual3(
       temperature: number;
       maxTokens: number;
       timeout: Duration.Duration;
+      groundingEnabled: boolean;
+      groundingThreshold: Confidence;
+      groundingBatchSize: PosInt;
     },
     ontologyContentHash: ContentHash
   ): RunConfig => {
@@ -222,8 +226,8 @@ export const buildRunConfig = dual3(
 
     // Build ChunkingConfig - use preprocessing hints if available, otherwise defaults
     const chunkingConfig = ChunkingConfig.make({
-      maxChunkSize: PosInt.make(500), // Default chunk size (TODO: get from preprocessing hints)
-      preserveSentences: true,
+      maxChunkSize: PosInt.make(input.chunking.chunkSize),
+      preserveSentences: input.chunking.preserveSentences,
       overlapTokens: NonNegativeInt.make(50),
     });
 
@@ -240,7 +244,13 @@ export const buildRunConfig = dual3(
       chunking: chunkingConfig,
       llm: llmConfigSchema,
       concurrency: PosInt.make(5), // Default concurrency
-      enableGrounding: true, // Always enable grounding for quality
+      grounding: llmConfig.groundingEnabled
+        ? GroundingPolicy.cases.Enabled.make({
+            threshold: llmConfig.groundingThreshold,
+            batchSize: llmConfig.groundingBatchSize,
+          })
+        : GroundingPolicy.cases.Disabled.make({}),
+      enableGrounding: llmConfig.groundingEnabled,
     });
   }
 );
@@ -276,7 +286,7 @@ export const enrichEntityMetadata = dual3(
         sourceUri: O.some(input.sourceUri),
         extractedAt: O.some(extractedAt),
         // Inherit eventTime from document metadata (if available)
-        eventTime: input.eventTime ?? entity.eventTime,
+        eventTime: O.orElse(input.eventTime, () => entity.eventTime),
       })
     )
 );
@@ -378,6 +388,9 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
           temperature: 0.0, // Deterministic extraction
           maxTokens: config.llm.maxTokens,
           timeout: config.llm.retryPolicy.attemptTimeout,
+          groundingEnabled: config.grounder.enabled,
+          groundingThreshold: config.grounder.confidenceThreshold,
+          groundingBatchSize: config.grounder.batchSize,
         },
         ontologyContentHash
       );
@@ -391,16 +404,19 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
       });
 
       // 4. Run 6-phase streaming extraction
-      const rawGraph = yield* extractionWorkflow.extract(sourceContent, runConfig).pipe(
+      const outcome = yield* extractionWorkflow.extract(sourceContent, runConfig).pipe(
         Effect.withLogSpan("streaming-extraction-6-phase"),
-        Effect.tap((graph) =>
+        Effect.tap(({ graph, telemetry }) =>
           Effect.logInfo("Streaming extraction complete", {
             documentId: input.documentId,
             entityCount: graph.entities.length,
             relationCount: graph.relations.length,
+            chunkCount: telemetry.chunkCount,
+            tokenUsage: telemetry.usage._tag,
           })
         )
       );
+      const rawGraph = outcome.graph;
 
       // 5. Enrich entities with document metadata
       const extractedAt = yield* DateTime.now;
@@ -410,12 +426,15 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
         entities: enrichedEntities,
         relations: rawGraph.relations,
         sourceText: O.some(sourceContent),
+        provenance: rawGraph.provenance,
+        entityObservations: rawGraph.entityObservations,
+        relationObservations: rawGraph.relationObservations,
       });
 
       yield* Effect.logInfo("Entities enriched with document metadata", {
         documentId: input.documentId,
         entityCount: graph.entities.length,
-        hasEventTime: input.eventTime !== undefined,
+        hasEventTime: O.isSome(input.eventTime),
       });
 
       // 6. Generate provenance URI and create claims
@@ -431,6 +450,8 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
         graphUri: provenanceUri,
         targetNamespace: input.targetNamespace,
       });
+      const provenanceDataset = yield* Effect.fromResult(provBundleToDataset(graph.provenance));
+      A.forEach(provenanceDataset.quads, (quad) => rdfStoreAddQuad(store, quad));
 
       // 7. Create claims from extracted entities and relations
       // Convert Namespace identifier to full IRI

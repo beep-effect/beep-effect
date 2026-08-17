@@ -1,3 +1,4 @@
+-- Custom SQL migration file, put your code below! --
 -- PostgreSQL features that Drizzle's table metadata cannot currently express.
 ALTER TABLE embeddings ADD COLUMN content_tsv tsvector GENERATED ALWAYS AS (to_tsvector('english', COALESCE(content_text, ''))) STORED;
 --> statement-breakpoint

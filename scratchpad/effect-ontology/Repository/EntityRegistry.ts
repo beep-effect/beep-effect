@@ -13,7 +13,8 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, HashSet, Layer, pipe } from "effect";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { Context, Effect, flow, HashSet, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -89,13 +90,34 @@ export type EntityAliasId = string;
  * @category type-level
  * @since 0.0.0
  */
-export interface BlockingCandidate {
-  readonly canonicalEntityId: string;
-  readonly iri: string;
-  readonly mention: string;
-  readonly types: ReadonlyArray<string>;
-  readonly similarity: number;
-}
+export class BlockingCandidate extends S.Class<BlockingCandidate>($I`BlockingCandidate`)(
+  {
+    canonicalEntityId: S.NonEmptyString,
+    iri: S.NonEmptyString,
+    mention: S.NonEmptyString,
+    types: S.Array(S.NonEmptyString),
+    similarity: UnitInterval,
+  },
+  $I.annote("BlockingCandidate", {
+    description: "Ontology-scoped canonical entity candidate returned by token or embedding blocking.",
+  })
+) {}
+
+/**
+ * Normalizes an entity mention for alias identity and lookup.
+ *
+ * **Example** (Normalize an alias mention)
+ *
+ * ```ts
+ * import { normalizeEntityMention } from "@effect-ontology/Repository/EntityRegistry"
+ *
+ * console.log(normalizeEntityMention("  Ada LOVELACE ")) // "ada lovelace"
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
+ */
+export const normalizeEntityMention = flow(Str.toLowerCase, Str.trim);
 
 /**
  * Describes the canonical entity filter data exposed by this module.
@@ -166,11 +188,11 @@ const EntityAliasSqlRow = S.Struct({
 );
 
 const BlockingCandidateSqlRow = S.Struct({
-  canonicalEntityId: S.String,
-  iri: S.String,
-  mention: S.String,
-  types: S.Array(S.String),
-  similarity: S.Finite,
+  canonicalEntityId: S.NonEmptyString,
+  iri: S.NonEmptyString,
+  mention: S.NonEmptyString,
+  types: S.Array(S.NonEmptyString),
+  similarity: UnitInterval,
 }).pipe(
   $I.annoteSchema("BlockingCandidateSqlRow", {
     description: "Decoded blocking or vector-search candidate returned by PostgreSQL.",
@@ -481,7 +503,7 @@ export class EntityRegistryRepository extends Context.Service<EntityRegistryRepo
        * @param mention - The mention to look up
        */
       const findAliasByMention = Effect.fn("findAliasByMention")(function* (ontologyId: string, mention: string) {
-        const normalized = pipe(mention, Str.toLowerCase, Str.trim);
+        const normalized = normalizeEntityMention(mention);
         const rows = yield* normalizeQueryError(
           drizzle
             .select()

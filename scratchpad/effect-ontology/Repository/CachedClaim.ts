@@ -17,6 +17,7 @@ const $I = $ScratchpadId.create("effect-ontology/Repository/CachedClaim");
 
 import { Cache, Data, Duration, Effect } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import type { ClaimId, CorrectionId } from "./Claim.ts";
 import { ClaimRepository } from "./Claim.ts";
 import type { ClaimInsertRow } from "./schema.ts";
@@ -101,20 +102,19 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
       );
 
     // Invalidate caches on deprecation
-    const deprecateClaim = (claimId: ClaimId, correctionId: CorrectionId, ontologyId: string) =>
-      repo.deprecateClaim(claimId, correctionId, ontologyId).pipe(
-        Effect.tap(() =>
-          // Invalidate the claim's cache entry
-          Cache.invalidate(claimCache, scopedCacheKey(claimId, ontologyId)).pipe(
-            Effect.tap(
-              () =>
-                // We'd need to know the subjectIri to invalidate subject cache
-                // For now, skip subject cache invalidation on deprecation
-                Effect.void
-            )
-          )
-        )
-      );
+    const deprecateClaim = Effect.fn("CachedClaimRepository.deprecateClaim")(function* (
+      claimId: ClaimId,
+      correctionId: CorrectionId,
+      ontologyId: string
+    ) {
+      const existing = yield* repo.getClaim(claimId, ontologyId);
+      yield* repo.deprecateClaim(claimId, correctionId, ontologyId);
+      yield* Cache.invalidate(claimCache, scopedCacheKey(claimId, ontologyId));
+      yield* O.match(existing, {
+        onNone: () => Effect.void,
+        onSome: (claim) => Cache.invalidate(subjectCache, scopedCacheKey(claim.subjectIri, ontologyId)),
+      });
+    });
 
     // Invalidate caches on batch insert
     const insertClaimsBatch = (claimList: Array<ClaimInsertRow>) =>

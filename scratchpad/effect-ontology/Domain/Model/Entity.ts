@@ -9,10 +9,13 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance/TextAnchor";
 import { IRI } from "@beep/rdf";
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
-import { Hash, pipe, SchemaGetter } from "effect";
+import type { ProvRecord } from "@beep/rdf/Prov";
+import { ObjectRef, Activity as ProvActivity, ProvBundle, Entity as ProvEntity } from "@beep/rdf/Prov";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { Hash, pipe, SchemaGetter, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -146,6 +149,203 @@ export const EvidenceSpan = LegacyEvidenceSpan.pipe(
  */
 export type EvidenceSpan = typeof EvidenceSpan.Type;
 
+const GroundingStatus = LiteralKit(["NotEvaluated", "Supported", "Rejected"]);
+
+class GroundingNotEvaluated extends S.Class<GroundingNotEvaluated>($I`GroundingNotEvaluated`)(
+  { status: S.tag(GroundingStatus.Enum.NotEvaluated) },
+  $I.annote("GroundingNotEvaluated", {
+    description: "Grounding decision was intentionally not evaluated.",
+  })
+) {}
+
+class GroundingSupported extends S.Class<GroundingSupported>($I`GroundingSupported`)(
+  {
+    status: S.tag(GroundingStatus.Enum.Supported),
+    confidence: Confidence.annotateKey({
+      description: "Verifier confidence that the source supports the extracted fact.",
+    }),
+  },
+  $I.annote("GroundingSupported", {
+    description: "Source context supports the extracted fact at the recorded confidence.",
+  })
+) {}
+
+class GroundingRejected extends S.Class<GroundingRejected>($I`GroundingRejected`)(
+  {
+    status: S.tag(GroundingStatus.Enum.Rejected),
+    confidence: Confidence.annotateKey({
+      description: "Verifier confidence in rejecting the extracted fact.",
+    }),
+  },
+  $I.annote("GroundingRejected", {
+    description: "Source context does not support the extracted fact at the recorded confidence.",
+  })
+) {}
+
+/**
+ * Grounding outcome attached to an extracted entity or relation.
+ *
+ * **Example** (Construct a supported decision)
+ * ```ts
+ * import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { GroundingDecision } from "@effect-ontology/Model/Entity"
+ *
+ * const decision = GroundingDecision.cases.Supported.make({ confidence: Confidence.make(0.9) })
+ * console.log(decision.status) // "Supported"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GroundingDecision = GroundingStatus.mapMembers(
+  Tuple.evolve([() => GroundingNotEvaluated, () => GroundingSupported, () => GroundingRejected])
+).pipe(
+  $I.annoteSchema("GroundingDecision", {
+    description: "Auditable grounding lifecycle for an extracted entity or relation.",
+    toArbitrary: () => (fc) =>
+      fc.oneof(
+        S.toArbitrary(GroundingNotEvaluated)(fc),
+        S.toArbitrary(GroundingSupported)(fc),
+        S.toArbitrary(GroundingRejected)(fc)
+      ),
+  }),
+  S.toTaggedUnion("status")
+);
+
+/**
+ * Runtime value decoded by {@link GroundingDecision}.
+ *
+ * **Example** (Inspect a not-evaluated decision)
+ * ```ts
+ * import { GroundingDecision } from "@effect-ontology/Model/Entity"
+ *
+ * const decision = GroundingDecision.cases.NotEvaluated.make({})
+ * console.log(decision.status) // "NotEvaluated"
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GroundingDecision = typeof GroundingDecision.Type;
+
+const NotEvaluatedGrounding = GroundingDecision.cases.NotEvaluated.make({});
+
+/**
+ * Source-grounded observation of one extracted entity occurrence.
+ *
+ * **Example** (Inspect the entity observation schema)
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EntityObservation } from "@effect-ontology/Model/Entity"
+ *
+ * console.log(S.is(EntityObservation)({})) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EntityObservation extends S.Class<EntityObservation>($I`EntityObservation`)(
+  {
+    id: ObjectRef.annotateKey({ description: "Deterministic identifier of this entity observation." }),
+    provenance: ObjectRef.annotateKey({ description: "PROV entity record describing the observed artifact." }),
+    activity: ObjectRef.annotateKey({ description: "PROV activity that produced the observation." }),
+    source: ObjectRef.annotateKey({ description: "PROV entity used as grounding source context." }),
+    evidence: S.NonEmptyArray(EvidenceSpan).annotateKey({
+      description: "One or more source-text spans used to identify and ground the entity.",
+    }),
+    grounding: GroundingDecision.pipe(
+      SchemaUtils.withKeyDefaults(NotEvaluatedGrounding),
+      S.annotateKey({ description: "Grounding outcome for this occurrence." })
+    ),
+  },
+  $I.annote("EntityObservation", {
+    description: "One provenance-linked, evidence-anchored observation of an extracted entity.",
+  })
+) {}
+
+/**
+ * Source-grounded observation of one extracted relation occurrence.
+ *
+ * **Example** (Inspect the relation observation schema)
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RelationObservation } from "@effect-ontology/Model/Entity"
+ *
+ * console.log(S.is(RelationObservation)({})) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RelationObservation extends S.Class<RelationObservation>($I`RelationObservation`)(
+  {
+    id: ObjectRef.annotateKey({ description: "Deterministic identifier of this relation observation." }),
+    provenance: ObjectRef.annotateKey({ description: "PROV entity record describing the observed relation." }),
+    activity: ObjectRef.annotateKey({ description: "PROV activity that produced the observation." }),
+    source: ObjectRef.annotateKey({ description: "PROV entity used as grounding source context." }),
+    evidence: S.NonEmptyArray(EvidenceSpan).annotateKey({
+      description: "One or more source-text spans used to ground the relation.",
+    }),
+    grounding: GroundingDecision.pipe(
+      SchemaUtils.withKeyDefaults(NotEvaluatedGrounding),
+      S.annotateKey({ description: "Grounding outcome for this occurrence." })
+    ),
+  },
+  $I.annote("RelationObservation", {
+    description: "One provenance-linked, evidence-anchored observation of an extracted relation.",
+  })
+) {}
+
+/**
+ * Constructs the canonical empty provenance bundle used by new graphs.
+ *
+ * @internal
+ */
+const emptyProvenance = (): ProvBundle => ProvBundle.make({ records: [] });
+
+/**
+ * Builds graph-level PROV records for one extraction activity and its artifacts.
+ *
+ * **Example** (Create an empty artifact bundle)
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ObjectRef } from "@beep/rdf/Prov"
+ * import { makeExtractionProvenanceBundle } from "@effect-ontology/Model/Entity"
+ *
+ * const activity = S.decodeUnknownOption(ObjectRef)("urn:example:activity")
+ * const source = S.decodeUnknownOption(ObjectRef)("urn:example:source")
+ * const bundle = O.map(O.all({ activity, source }), ({ activity, source }) =>
+ *   makeExtractionProvenanceBundle(activity, source, []))
+ * console.log(O.map(bundle, (value) => value.records.length)) // Some(2)
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeExtractionProvenanceBundle: {
+  (activity: ObjectRef, source: ObjectRef, artifacts: ReadonlyArray<ObjectRef>): ProvBundle;
+  (source: ObjectRef, artifacts: ReadonlyArray<ObjectRef>): (activity: ObjectRef) => ProvBundle;
+} = dual(
+  3,
+  (activity: ObjectRef, source: ObjectRef, artifacts: ReadonlyArray<ObjectRef>): ProvBundle =>
+    ProvBundle.make({
+      records: [
+        ProvActivity.make({ id: O.some(activity), used: O.some([source]) }),
+        ProvEntity.make({ id: O.some(source) }),
+        ...A.map(
+          artifacts,
+          (artifact): ProvRecord =>
+            ProvEntity.make({
+              id: O.some(artifact),
+              wasGeneratedBy: O.some([activity]),
+              hadPrimarySource: O.some([source]),
+            })
+        ),
+      ],
+    })
+);
+
 /**
  * Entity extracted from text and classified by an ontology.
  *
@@ -221,7 +421,15 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
     ),
     groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(
       SchemaUtils.withNoneDefault,
-      S.annotateKey({ description: "System-measured source-grounding confidence." })
+      S.annotateKey({ description: "Deprecated compatibility ingress for the historical scalar grounding score." })
+    ),
+    grounding: GroundingDecision.pipe(
+      SchemaUtils.withKeyDefaults(NotEvaluatedGrounding),
+      S.annotateKey({ description: "Current aggregate grounding decision for the entity." })
+    ),
+    observations: S.Array(EntityObservation).pipe(
+      SchemaUtils.withEmptyArrayDefaults<EntityObservation>(),
+      S.annotateKey({ description: "All evidence-anchored observations retained for this entity." })
     ),
   },
   $I.annote("Entity", {
@@ -333,6 +541,14 @@ export class Relation extends S.Class<Relation>($I`Relation`)(
     evidence: S.OptionFromOptionalKey(EvidenceSpan).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({ description: "Source span supporting the relation when available." })
+    ),
+    grounding: GroundingDecision.pipe(
+      SchemaUtils.withKeyDefaults(NotEvaluatedGrounding),
+      S.annotateKey({ description: "Current aggregate grounding decision for the relation." })
+    ),
+    observations: S.Array(RelationObservation).pipe(
+      SchemaUtils.withEmptyArrayDefaults<RelationObservation>(),
+      S.annotateKey({ description: "All evidence-anchored observations retained for this relation." })
     ),
   },
   $I.annote("Relation", {
@@ -460,6 +676,18 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph>($I`KnowledgeGraph`)(
     sourceText: S.OptionFromOptionalKey(S.String).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({ description: "Original source text when retained for provenance." })
+    ),
+    provenance: ProvBundle.pipe(
+      SchemaUtils.withKeyDefaults(emptyProvenance()),
+      S.annotateKey({ description: "Canonical PROV records retained for graph-level audit." })
+    ),
+    entityObservations: S.Array(EntityObservation).pipe(
+      SchemaUtils.withEmptyArrayDefaults<EntityObservation>(),
+      S.annotateKey({ description: "Entity observations retained even when policy excludes their facts." })
+    ),
+    relationObservations: S.Array(RelationObservation).pipe(
+      SchemaUtils.withEmptyArrayDefaults<RelationObservation>(),
+      S.annotateKey({ description: "Relation observations retained even when policy excludes their facts." })
     ),
   },
   $I.annote("KnowledgeGraph", {

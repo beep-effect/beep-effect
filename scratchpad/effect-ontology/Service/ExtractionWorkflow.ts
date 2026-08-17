@@ -14,8 +14,8 @@ import { $ScratchpadId } from "@beep/identity";
 import type { Effect } from "effect";
 import { Context } from "effect";
 import type { ExtractionError } from "../Domain/Error/Extraction.ts";
-import type { KnowledgeGraph } from "../Domain/Model/Entity.ts";
 import type { RunConfig } from "../Domain/Model/ExtractionRun.ts";
+import type { ExtractionOutcome } from "../Domain/Model/ExtractionTelemetry.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ExtractionWorkflow");
 
@@ -28,7 +28,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ExtractionWorkflow");
  * @since 0.0.0
  */
 export interface ExtractionWorkflowMethods {
-  readonly extract: (text: string, config: RunConfig) => Effect.Effect<KnowledgeGraph, ExtractionError>;
+  readonly extract: (text: string, config: RunConfig) => Effect.Effect<ExtractionOutcome, ExtractionError>;
 }
 
 // Define the Tag
