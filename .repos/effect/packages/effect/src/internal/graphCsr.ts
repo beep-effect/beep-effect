@@ -45,6 +45,7 @@ export interface Csr {
   outgoingEdgeCsr: AdjacencyWithEdges | undefined
   // Edge data and endpoints share this insertion-order compact edge domain.
   edgesByIndex: Array<Graph.Edge<any>> | undefined
+  edgeIdsByIndex: Array<Graph.EdgeIndex> | undefined
   compactEdgeEndpoints: EdgeEndpoints | undefined
   // Null marks the dense id fast path; undefined means the edge domain has not been inspected yet.
   indexByEdgeId: Map<Graph.EdgeIndex, number> | null | undefined
@@ -59,8 +60,32 @@ export const getNodeIndex = (csr: Csr, nodeId: Graph.NodeIndex): number | undefi
     : csr.indexByNodeId.get(nodeId)
 
 /** @internal */
+const materializeEdges = (csr: Csr): void => {
+  if (csr.edgesByIndex !== undefined) {
+    return
+  }
+  const graphEdges = toImpl(csr.graph).edges
+  const edgeIds = new Array<Graph.EdgeIndex>(graphEdges.size)
+  const edges = new Array<Graph.Edge<any>>(graphEdges.size)
+  let index = 0
+  for (const [edgeId, edge] of graphEdges) {
+    edgeIds[index] = edgeId
+    edges[index++] = edge
+  }
+  csr.edgeIdsByIndex = edgeIds
+  csr.edgesByIndex = edges
+}
+
+/** @internal */
 export const getEdges = (csr: Csr): Array<Graph.Edge<any>> => {
-  return csr.edgesByIndex ?? (csr.edgesByIndex = Array.from(toImpl(csr.graph).edges.values()))
+  materializeEdges(csr)
+  return csr.edgesByIndex!
+}
+
+/** @internal */
+export const getEdgeIds = (csr: Csr): Array<Graph.EdgeIndex> => {
+  materializeEdges(csr)
+  return csr.edgeIdsByIndex!
 }
 
 const makeAdjacency = (csr: Csr, incoming: boolean): Adjacency => {
@@ -208,13 +233,17 @@ export const get = <N, E, T extends Graph.Kind>(
   }
 
   // Node ids and data are captured together so an iterator never consults mutable maps after it starts.
-  const nodeIds = Array.from(impl.nodes.keys())
+  const nodeIds = new Array<Graph.NodeIndex>(impl.nodes.size)
+  const nodeData = new Array<any>(impl.nodes.size)
   let compactNodeIds = true
-  for (let i = 0; i < nodeIds.length; i++) {
-    if (nodeIds[i] !== i) {
+  let nodePosition = 0
+  for (const [nodeId, data] of impl.nodes) {
+    nodeIds[nodePosition] = nodeId
+    nodeData[nodePosition] = data
+    if (nodeId !== nodePosition) {
       compactNodeIds = false
-      break
     }
+    nodePosition++
   }
 
   const indexByNodeId = compactNodeIds ? undefined : new Map<Graph.NodeIndex, number>()
@@ -228,12 +257,13 @@ export const get = <N, E, T extends Graph.Kind>(
     type: impl.type,
     graph,
     nodeIds,
-    nodeData: Array.from(impl.nodes.values()),
+    nodeData,
     indexByNodeId,
     outgoingCsr: undefined,
     incomingCsr: undefined,
     outgoingEdgeCsr: undefined,
     edgesByIndex: undefined,
+    edgeIdsByIndex: undefined,
     compactEdgeEndpoints: undefined,
     indexByEdgeId: undefined
   }
