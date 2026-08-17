@@ -117,9 +117,19 @@ const walkDirectory = (
     )
   );
 
+// Only a provable NotFound reads as absence: any other stat failure (for example
+// PermissionDenied) leaves existence unverifiable, and an adoption plan compiled over
+// unverifiable state could misreport a real packet as packet-not-found.
 const directoryExists = Effect.fn("Goals.packetDirectoryExists")(function* (target: string) {
   const fs = yield* FileSystem.FileSystem;
-  const info = yield* fs.stat(target).pipe(Effect.map(O.some), Effect.orElseSucceed(O.none));
+  const info = yield* fs.stat(target).pipe(
+    Effect.map(O.some),
+    Effect.catchIf(
+      (error) => error.reason._tag === "NotFound",
+      () => Effect.succeedNone
+    ),
+    Effect.mapError(GoalPlanOperationalError.new(`Failed to stat "${target}".`))
+  );
   return O.exists(info, (value) => value.type === "Directory");
 });
 
