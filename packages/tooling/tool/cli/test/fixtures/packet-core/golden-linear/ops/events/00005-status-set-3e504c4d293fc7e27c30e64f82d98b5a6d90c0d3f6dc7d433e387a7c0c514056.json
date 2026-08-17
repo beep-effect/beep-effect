@@ -1,0 +1,15 @@
+{
+  "actor": "fixture",
+  "at": "2026-08-17T00:04:00.000Z",
+  "body": {
+    "previous": "active",
+    "status": "paused",
+    "type": "status-set"
+  },
+  "expectedRevision": 4,
+  "packet": "golden-linear",
+  "parent": "1632ff0221f3fee4db3fd86f6f436c6ae2d7b7054adae15dcf29d67cfaee2086",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 5
+}

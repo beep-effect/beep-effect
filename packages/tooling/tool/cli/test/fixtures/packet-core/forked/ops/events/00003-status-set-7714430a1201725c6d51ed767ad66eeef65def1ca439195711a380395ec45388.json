@@ -1,0 +1,15 @@
+{
+  "actor": "fixture",
+  "at": "2026-08-17T00:02:30.000Z",
+  "body": {
+    "previous": "active",
+    "status": "paused",
+    "type": "status-set"
+  },
+  "expectedRevision": 2,
+  "packet": "forked",
+  "parent": "580ff1d410cfd7b055d14632b63d0c258ec69a4d2305f2475515ed1ee17f2882",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 3
+}

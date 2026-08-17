@@ -1,0 +1,15 @@
+{
+  "actor": "operator",
+  "at": "2026-08-17T15:13:10.305Z",
+  "body": {
+    "previous": "active",
+    "status": "active",
+    "type": "status-set"
+  },
+  "expectedRevision": 1,
+  "packet": "packet-control-plane-core",
+  "parent": "44c68c33af36948157d827cf2b053336770f277666b1069cc8c9857085d5eb45",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 2
+}

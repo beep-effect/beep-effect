@@ -1,0 +1,15 @@
+{
+  "actor": "operator",
+  "at": "2026-08-17T15:13:10.305Z",
+  "body": {
+    "ordinal": 1,
+    "stage": "P1",
+    "status": "active",
+    "type": "packet-created"
+  },
+  "expectedRevision": 0,
+  "packet": "packet-control-plane-core",
+  "root": "goals",
+  "schemaVersion": "packet-event/v1",
+  "seq": 1
+}

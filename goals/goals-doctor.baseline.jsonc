@@ -3,7 +3,6 @@
   "note": "Inherited goals-doctor findings (advisory). New findings block. This baseline may only shrink; regenerate with bun run beep goals doctor --write-baseline after burning findings down.",
   "findings": [
     "agent-effectiveness-loop readme-status-line",
-    "agentic-cad-patent-tooling readme-status-line",
     "agentic-professional-runtime readme-status-line",
     "canonical-slice-factory readme-status-line",
     "dedup-clone-engine readme-status-line",
