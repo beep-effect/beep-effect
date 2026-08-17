@@ -44,7 +44,7 @@ The user corrected two misconceptions the recon agents surfaced. These become a
    off course and start blurring up our vision."
 
 2. **The corpus is prep, not a runtime feeder.** "The corpus lives in
-   `/home/elpresidank/data-home/oppold-corpus/`. This was produced by
+   [the machine-local Oppold corpus home]. This was produced by
    `packages/tooling/tool/cli/src/commands/Corpus`. This corpus work was some initial
    cleaning-up-data work so that when the system is ready we have some clean data to
    work with, from my father's actual 25-year corpus."
@@ -83,12 +83,12 @@ Provided by the user as additional grounding for the packet:
   understand: **types, schemas, flows, diagrams, visualizations** (e.g.
   `docs/PROSE_TO_PROOF_GRAPH.html`).
 - **Learns by porting other codebases.** Began in Python (now rusty). Found
-  **TrustGraph** (Python, `/home/elpresidank/YeeBois/dev/trustgraph/`) and decided to
-  port it to TypeScript and make it **Effect-native** (`/home/elpresidank/YeeBois/dev/trustgraph/ts/`).
-- Lexical/chat lineage: `/home/elpresidank/YeeBois/dev/text_editor_ui/lexical/*.md`
+  **TrustGraph** (Python, upstream: https://github.com/trustgraph-ai/trustgraph) and decided to
+  port it to TypeScript and make it **Effect-native** (https://github.com/trustgraph-ai/trustgraph/tree/main/ts).
+- Lexical/chat lineage: machine-local lexical-clone `*.md`
   reports (`effect-v4-ai-chat-sync`, `effect-v4-anthropic-model-catalog-report`,
   `effect-v4-isanyof-bug-report`, `effect-v4-lexical-node-schema`,
-  `effect-v4-streamobject-proposal`) → `/home/elpresidank/YeeBois/projects/effect-lexical-chat`
+  `effect-v4-streamobject-proposal`) → the machine-local `effect-lexical-chat` checkout
   → current repo packages: `packages/foundation/modeling/lexical`,
   `packages/foundation/modeling/md`, `apps/professional-desktop`.
 - The vision for the product & repo is **grand & very technical**; even with strong

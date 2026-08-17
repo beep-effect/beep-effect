@@ -98,7 +98,7 @@ OpenClaw's runtime also writes to it (auth profiles, channel state)?
 **Answer:** Full-file ownership, research-gated: aspire to render the entire
 file from the typed Effect schema, with runtime-mutable state relocated to
 whatever separation OpenClaw natively supports (P3 source-dive of
-`~/YeeBois/dev/openclaw` decides). If research proves runtime state is
+the machine-local `openclaw` clone decides). If research proves runtime state is
 inseparable, fall back explicitly to managed-subset merge — recorded as a
 decision revision, not silent drift.
 
@@ -154,10 +154,10 @@ the deployment worth porting.
 
 **Question:** Vendor OpenClaw into `.repos/openclaw/` for this exploration?
 
-**Answer:** No — use the existing clone at `~/YeeBois/dev/openclaw` (pinned
+**Answer:** No — use the existing machine-local `openclaw` clone (pinned
 SHA cited in `research/SOURCES.md`). Broader convention: any repo found
 valuable for implementation or style — especially anything Effect-involved —
-gets cloned to `~/YeeBois/dev/` for the human to inspect, cited pinned.
+gets cloned into the machine-local dev-clones directory for the human to inspect, cited pinned.
 Vendoring into `.repos/` is deferred as a MAP-level option, triggered only if
 the `@beep/openclaw` driver needs in-tree types/fixtures.
 

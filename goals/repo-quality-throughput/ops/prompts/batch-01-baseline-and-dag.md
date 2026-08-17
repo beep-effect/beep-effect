@@ -1,7 +1,7 @@
 # Batch 1 Prompt: Baseline And Graph
 
 You are one of six read-only agents for
-`/home/elpresidank/YeeBois/projects/beep-effect`.
+this `beep-effect` checkout.
 
 ## Mission
 

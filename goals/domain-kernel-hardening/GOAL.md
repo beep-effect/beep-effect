@@ -1,6 +1,6 @@
 # GOAL: harden the shared-kernel persisted-entity base
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: `beep-effect` (this checkout).
 
 Outcome: `BaseEntity` carries `Principal`-typed soft-delete and is the single
 canonical audit base, with the typed-error (`.errors.ts`) convention in place for

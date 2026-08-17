@@ -73,7 +73,7 @@ until repo-memory v0 ships and validates artifact-to-packet.
 
 ## 3. TrustGraph TypeScript Port
 
-**Location:** `~/YeeBois/dev/trustgraph/ts`
+**Location:** the machine-local TrustGraph TypeScript port (`ts/`; upstream Python project: https://github.com/trustgraph-ai/trustgraph)
 
 **Status:** Complete, deployable port. All Python services reimplemented in
 imperative TypeScript. Microservices over NATS JetStream, FalkorDB + Qdrant

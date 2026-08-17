@@ -1,7 +1,7 @@
 # Batch 2 Prompt: Implementation Hotspots
 
 You are one of six read-only agents for
-`/home/elpresidank/YeeBois/projects/beep-effect`.
+this `beep-effect` checkout.
 
 ## Mission
 

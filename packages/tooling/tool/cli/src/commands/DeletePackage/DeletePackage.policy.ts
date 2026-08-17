@@ -8,8 +8,13 @@
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect";
 import * as O from "effect/Option";
+import { isLabsWorkspacePath } from "../../internal/cli/Labs/index.ts";
 import { DeletePackageRefusal } from "./DeletePackage.schemas.ts";
-import type { DependentsReport, RegistrationTarget } from "../../internal/cli/RegistrationGeometry/index.ts";
+import type {
+  DependentsReport,
+  RegistrationObservation,
+  RegistrationTarget,
+} from "../../internal/cli/RegistrationGeometry/index.ts";
 import type { DeletePackagePolicy } from "./DeletePackage.schemas.ts";
 
 const PROTECTED_SLUGS = ["identity", "schema", "utils", "types", "repo-cli", "repo-utils", "repo-configs"];
@@ -105,6 +110,20 @@ const REFUSAL_RULES: ReadonlyArray<RefusalRule> = [
         })
       )
     ),
+  (_target, _report, policy) =>
+    refuseWhen(policy.dropData && policy.dataConnectionNonLocal && !policy.allowNonLocalData, () =>
+      DeletePackageRefusal.cases.hard.make({
+        kind: "data-non-local",
+        detail: "--drop-data against a non-local DATABASE_URL requires --allow-non-local-data.",
+      })
+    ),
+  (_target, _report, policy) =>
+    refuseWhen(policy.dropData && policy.dataResourceDeclared && !policy.dataOwnershipProven, () =>
+      DeletePackageRefusal.cases.hard.make({
+        kind: "data-ownership",
+        detail: "Declared postgres schema is not mechanically derived from the lab slug; refusing the drop.",
+      })
+    ),
 ];
 
 const refusalReasons = (
@@ -119,8 +138,25 @@ const dependentsCascadeLines = (report: DependentsReport): ReadonlyArray<string>
   ...A.map(report.hits, (hit) => `${hit.kind}: ${hit.owner} ${hit.file}`),
 ];
 
+// P2-D17 belt-and-braces scoping: `consent-required` is green ONLY for the
+// dedicated lab-postgres-schema surface AND a labs-path target, so any future
+// non-lab data resource still blocks the doctor.
+const acceptedConsentObservation = (target: RegistrationTarget, item: RegistrationObservation): boolean =>
+  Str.equivalence(item.status, "consent-required") &&
+  Str.equivalence(item.surfaceId, "lab-postgres-schema") &&
+  isLabsWorkspacePath(target.packagePath);
+
+const doctorIsClean = (target: RegistrationTarget, observations: ReadonlyArray<RegistrationObservation>): boolean =>
+  A.every(
+    observations,
+    (item) =>
+      Str.equivalence(item.status, "clean") ||
+      Str.equivalence(item.status, "historical") ||
+      acceptedConsentObservation(target, item)
+  );
+
 /**
- * Evaluate deletion refusals and render the dependency cascade.
+ * Evaluate deletion refusals, doctor cleanliness, and the dependency cascade.
  *
  * **Example** (Inspect available policy operations)
  *
@@ -133,4 +169,4 @@ const dependentsCascadeLines = (report: DependentsReport): ReadonlyArray<string>
  * @category utilities
  * @since 0.0.0
  */
-export const DeletePackagePolicyEvaluation = { dependentsCascadeLines, refusalReasons };
+export const DeletePackagePolicyEvaluation = { dependentsCascadeLines, doctorIsClean, refusalReasons };

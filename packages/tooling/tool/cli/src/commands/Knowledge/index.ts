@@ -12,7 +12,9 @@
  * @since 0.0.0
  */
 export {
+  applyKnowledgeRefsCheck,
   knowledgeCommand,
+  knowledgeRefsCheckFailure,
   knowledgeRefsCommand,
   knowledgeSemanticDeltaCommand,
   knowledgeSemanticDeltaFailure,

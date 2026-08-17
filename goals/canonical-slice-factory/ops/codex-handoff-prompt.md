@@ -51,7 +51,7 @@ Use these as references only:
 - `goals/canonical-slice-factory/history/repo-architecture-automation-reference.md`
 - `packages/tooling/tool/cli/test/fixtures/repo-architecture-automation`
 - `packages/fixture-lab/specimen`
-- `~/YeeBois/projects/beep-effect4/packages/_internal/db-admin`
+- `packages/_internal/db-admin` in the machine-local `beep-effect4` checkout
 
 The old automation packet and `fixture-lab/Specimen` are superseded. The Effect
 v3 db-admin package is a capability reference for migration aggregation and live

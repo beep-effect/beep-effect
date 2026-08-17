@@ -1,6 +1,6 @@
 # GOAL: bring the desktop chat surface to full POC parity
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: this `beep-effect` checkout.
 
 Outcome: `apps/professional-desktop` reaches feature parity with the
 `effect-lexical-chat` POC — restore the dropped observability/devtooling/UX
@@ -18,7 +18,7 @@ Compact `/goal` launcher — the packet files are the contract:
 - `goals/chat-surface-parity/{README.md,ops/manifest.json}`
 
 Read those, then `AGENTS.md`, `CLAUDE.md`, and standards named by `SPEC.md`.
-Proof-repo (read-only): `/home/elpresidank/YeeBois/projects/effect-lexical-chat/`
+Proof-repo (read-only): the machine-local `effect-lexical-chat` checkout
 — esp. `server/{AssistantTurn,BlockRepair,MermaidValidator,Observability}.ts`.
 
 The atom architecture is ALREADY at parity (our `Chat.atoms.ts` is a verbatim

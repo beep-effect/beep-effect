@@ -200,6 +200,21 @@ export {
   knowledgeCommand,
 } from "./commands/Knowledge/index.ts";
 /**
+ * Lab-app lifecycle command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export {
+  /**
+   * Lab-app lifecycle command group.
+   *
+   * @category cli-commands
+   * @since 0.0.0
+   */
+  labsCommand,
+} from "./commands/Labs/index.ts";
+/**
  * Effect laws command group.
  *
  * @category cli-commands

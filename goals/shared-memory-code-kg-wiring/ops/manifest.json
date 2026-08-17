@@ -78,7 +78,7 @@
     "Required source files are missing or materially contradictory.",
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
-    "The external bake-off evidence at ~/YeeBois/research/codebase_graph_and_memory is unavailable and a decision depends on it.",
+    "The machine-local codebase-graph/memory bake-off evidence is unavailable and a decision depends on it.",
     "The same blocker repeats after reasonable investigation."
   ]
 }

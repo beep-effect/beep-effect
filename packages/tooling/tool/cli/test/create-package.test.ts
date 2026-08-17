@@ -617,7 +617,7 @@ describe("create-package", { concurrent: false }, () => {
               })
             );
 
-            expect(result).toContain("--type app requires --app-kind nextjs, tauri, or runtime-proof");
+            expect(result).toContain("--type app requires --app-kind nextjs, vite, service, tauri, or runtime-proof");
           })
         )
       ),
@@ -739,6 +739,70 @@ describe("create-package", { concurrent: false }, () => {
 
             yield* expectIdentityRegistration({ fs, path, rootDir }, "desktop-shell", "DesktopShell");
           })
+        )
+      ),
+    CreatePackageTestTimeoutMs
+  );
+
+  it(
+    "creates Vite apps without package API boilerplate and skips workspace append when apps/* covers the path",
+    () =>
+      Effect.runPromise(
+        withBootstrappedRootConfig(
+          {
+            workspaces: ["packages/foundation/modeling/identity", "apps/*"],
+            references: ["packages/foundation/modeling/identity"],
+            paths: {
+              "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
+              "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
+            },
+            syncpackSources: ["package.json", "packages/foundation/modeling/identity/package.json"],
+          },
+          ({ fs, path, rootDir }) =>
+            Effect.gen(function* () {
+              yield* bootstrapIdentityWorkspace(rootDir);
+
+              yield* runCreatePackageCommand([
+                "vite-shell",
+                "--type",
+                "app",
+                "--app-kind",
+                "vite",
+                "--description",
+                "A Vite app shell",
+              ]);
+
+              const packageDir = path.join(rootDir, "apps", "vite-shell");
+              const generatedPackage = decodeGeneratedPackageManifest(
+                yield* readJsonFile(path.join(packageDir, "package.json"))
+              );
+
+              expect(generatedPackage.scripts.dev).toBe(
+                "portless vite-shell.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'"
+              );
+              expect(generatedPackage.scripts.docgen).toBeUndefined();
+              expect(generatedPackage.exports).toBeUndefined();
+              expect(generatedPackage.files).toBeUndefined();
+              expect(generatedPackage.publishConfig).toBeUndefined();
+              expect(generatedPackage.dependencies).toMatchObject({
+                react: "catalog:",
+                "react-dom": "catalog:",
+              });
+
+              const rootPackage = decodeRootPackage(yield* readJsonFile(path.join(rootDir, "package.json")));
+              expect(rootPackage.workspaces).toEqual(["packages/foundation/modeling/identity", "apps/*"]);
+
+              expect(yield* fs.exists(path.join(packageDir, "src", "App.tsx"))).toBe(true);
+              expect(yield* fs.exists(path.join(packageDir, "index.html"))).toBe(true);
+              expect(yield* fs.exists(path.join(packageDir, "postcss.config.mjs"))).toBe(false);
+              expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
+              const globalsCss = yield* fs.readFileString(path.join(packageDir, "src", "styles", "globals.css"));
+              expect(globalsCss).toContain(":root");
+              const appTsconfig = yield* readJsoncFile(path.join(packageDir, "tsconfig.json"));
+              expect(appTsconfig.compilerOptions.rootDir).toBe("../..");
+
+              yield* expectIdentityRegistration({ fs, path, rootDir }, "vite-shell", "ViteShell");
+            })
         )
       ),
     CreatePackageTestTimeoutMs

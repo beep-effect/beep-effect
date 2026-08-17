@@ -215,3 +215,44 @@ export class KnowledgeIntroducedFindingsError extends S.TaggedError<KnowledgeInt
     description: "The report contains one or more introduced blocking Stage-1 findings.",
   })
 ) {}
+
+/**
+ * The gate failure raised when a checked census still carries live host-path debt.
+ *
+ * **Details**
+ *
+ * `beep knowledge refs --check` prints the whole census before raising this error, so the operator
+ * always sees the offending observations alongside the non-zero exit. `liveDebtCount` mirrors the
+ * number of live observations in the gated classification set (`actionable-host-path` and
+ * `external-mirror-reference`) — the observation classes that map to the reserved
+ * `host-path-in-live-guidance` finding kind.
+ *
+ * **Example** (Signal standing host-path debt)
+ *
+ * ```ts
+ * import { KnowledgeHostPathDebtError } from "@beep/repo-cli/commands/Knowledge/Knowledge.errors"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const error = KnowledgeHostPathDebtError.make({
+ *   message: "knowledge refs --check: 3 live host-path observation(s).",
+ *   liveDebtCount: NonNegativeInt.make(3),
+ * })
+ *
+ * console.log(error.liveDebtCount) // 3
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class KnowledgeHostPathDebtError extends S.TaggedError<KnowledgeHostPathDebtError>(
+  $I`KnowledgeHostPathDebtError`
+)(
+  "KnowledgeHostPathDebtError",
+  {
+    message: S.String,
+    liveDebtCount: NonNegativeInt,
+  },
+  $I.annote("KnowledgeHostPathDebtError", {
+    description: "The checked census carries live host-path observations in the gated classes.",
+  })
+) {}

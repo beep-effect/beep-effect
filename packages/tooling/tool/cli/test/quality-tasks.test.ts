@@ -258,12 +258,41 @@ const isTurboCacheControlArg = (arg: string): boolean =>
 const isTurboConcurrencyArg = (arg: string): boolean =>
   arg === "--concurrency" || Str.startsWith("--concurrency=")(arg);
 
+// lab-apps-lifecycle P2 (ratified row 9): the exact filter literal every
+// excluded root turbo task must carry, inserted before any `--` passthrough
+// tail so it stays a turbo option instead of leaking into the child task argv.
+const LABS_EXCLUDE_FILTER = "--filter=!./apps/labs/**";
+const LABS_EXCLUDED_TASKS: ReadonlyArray<string> = [
+  "check",
+  "lint",
+  "lint:fix",
+  "test",
+  "test:integration",
+  "test:integration:parallel",
+  "test:integration:serial",
+  "coverage",
+];
+const withExpectedLabsExclude = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> => {
+  if (!A.contains(LABS_EXCLUDED_TASKS, task) || A.contains(args, LABS_EXCLUDE_FILTER)) {
+    return args;
+  }
+  return pipe(
+    A.findFirstIndex(args, (arg) => arg === "--"),
+    O.match({
+      onNone: (): ReadonlyArray<string> => [...args, LABS_EXCLUDE_FILTER],
+      onSome: (index) => {
+        const [head, tail] = A.splitAt(args, index);
+        return [...head, LABS_EXCLUDE_FILTER, ...tail];
+      },
+    })
+  );
+};
 const expectedTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> => [
   "turbo",
   "run",
   task,
   ...(Bun.env.CI === "true" || A.some(args, isTurboCacheControlArg) ? [] : ["--cache=local:rw"]),
-  ...args,
+  ...withExpectedLabsExclude(task, args),
 ];
 const expectedRootTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> =>
   expectedTurboArgs(
@@ -1002,6 +1031,7 @@ describe("quality task adapter", () => {
       ...(Bun.env.CI === "true" ? ["--concurrency=4"] : ["--cache=local:rw", "--concurrency=3"]),
       "--affected",
       "--summarize",
+      LABS_EXCLUDE_FILTER,
     ]);
     expect(A.slice(steps, { start: 1 })).toEqual([
       expect.objectContaining({
@@ -1176,6 +1206,7 @@ describe("quality task adapter", () => {
       "lint:deprecated-apis",
       "lint:docgen",
       "knowledge:semantic-delta",
+      "knowledge:refs-check",
       "lint:schema-first",
       "lint:terse-effect",
       "lint:jsdoc",
@@ -1209,6 +1240,7 @@ describe("quality task adapter", () => {
       "lint:deprecated-apis",
       "lint:docgen",
       "knowledge:semantic-delta",
+      "knowledge:refs-check",
       "lint:schema-first",
       "lint:terse-effect",
       "lint:jsdoc",
@@ -2217,6 +2249,7 @@ describe("quality task adapter", () => {
         "build",
         "--concurrency=4",
         "--summarize",
+        LABS_EXCLUDE_FILTER,
         "--force",
         "--remote-only",
         "--output-logs=errors-only",
@@ -3097,4 +3130,110 @@ describe("quality task adapter", () => {
         })
       )
     ));
+});
+
+// lab-apps-lifecycle P2 (ratified row 9): the labs exclude filter is injected
+// at the Tasks.ts turboRunArgs funnel AFTER owned-arg parsing, so it must
+// appear in every excluded task's final argv without demoting repo-wide steps,
+// flipping coverage into its scoped shape, or leaking past a `--` passthrough.
+describe("labs turbo exclusion", () => {
+  const argsOf = (step: QualityTaskStep | undefined): ReadonlyArray<string> => [...(step?.args ?? [])];
+
+  const expectEndsWithLabsExclude = (step: QualityTaskStep | undefined): void => {
+    expect(A.takeRight(argsOf(step), 1)).toEqual([LABS_EXCLUDE_FILTER]);
+  };
+
+  const argIndexOf = (args: ReadonlyArray<string>, target: string): number =>
+    pipe(
+      A.findFirstIndex(args, (arg) => arg === target),
+      O.getOrElse(() => -1)
+    );
+
+  it("ends check argvs with the labs exclude while repo-wide tsgo steps survive", () => {
+    for (const argv of [["check", "--affected", "--summarize"], ["check"]]) {
+      const steps = rootQualityStepsForTesting("/repo", getInvocation(argv));
+      expect(A.map(steps, (step) => step.label)).toEqual([
+        "check",
+        "check:tsgo:rules",
+        "check:tsgo:tests",
+        "check:tsgo:smoke",
+      ]);
+      expectEndsWithLabsExclude(steps[0]);
+    }
+  });
+
+  it("ends lint, unit, integration, and scoped coverage argvs with the labs exclude", () => {
+    expectEndsWithLabsExclude(
+      rootQualityStepsForTesting("/repo", getInvocation(["lint", "--affected", "--summarize"]))[0]
+    );
+    expectEndsWithLabsExclude(rootQualityStepsForTesting("/repo", getInvocation(["lint"]))[0]);
+
+    expectEndsWithLabsExclude(rootQualityStepsForTesting("/repo", getInvocation(["test", "--unit"]))[0]);
+
+    const integration = rootQualityStepsForTesting("/repo", getInvocation(["test", "--integration"]));
+    expect(A.map(integration, (step) => step.label)).toEqual(["test:integration:parallel", "test:integration:serial"]);
+    expectEndsWithLabsExclude(integration[0]);
+    expectEndsWithLabsExclude(integration[1]);
+
+    const coverage = withEnvVar("BEEP_FC_SEED", undefined, () =>
+      withEnvVar("NODE_OPTIONS", undefined, () => rootQualityStepsForTesting("/repo", getInvocation(["coverage"])))
+    );
+    expectEndsWithLabsExclude(coverage[0]);
+  });
+
+  it("composes an explicit user filter with the labs exclude while still dropping repo-wide steps", () => {
+    const steps = rootQualityStepsForTesting("/repo", getInvocation(["check", "--filter=@beep/schema"]));
+    expect(steps).toHaveLength(1);
+    expect(argsOf(steps[0])).toContain("--filter=@beep/schema");
+    expectEndsWithLabsExclude(steps[0]);
+  });
+
+  it("keeps the labs exclude ahead of the coverage vitest passthrough and inside every shard", () => {
+    const baseline = withEnvVar("BEEP_FC_SEED", undefined, () =>
+      withEnvVar("NODE_OPTIONS", undefined, () =>
+        rootQualityStepsForTesting("/repo", getInvocation(["coverage", "--", "--write-baseline", "--concurrency=1"]))
+      )
+    );
+    const baselineArgs = argsOf(baseline[0]);
+    const filterIndex = argIndexOf(baselineArgs, LABS_EXCLUDE_FILTER);
+    const delimiterIndex = argIndexOf(baselineArgs, "--");
+    expect(filterIndex).toBeGreaterThan(-1);
+    expect(delimiterIndex).toBeGreaterThan(filterIndex);
+
+    const fullSteps = coverageFullStepsForTesting(
+      "/repo",
+      [
+        "@beep/repo-cli",
+        "@beep/repo-utils",
+        "@beep/a",
+        "@beep/b",
+        "@beep/c",
+        "@beep/d",
+        "@beep/e",
+        "@beep/f",
+        "@beep/g",
+        "@beep/h",
+      ],
+      []
+    );
+    expect(argsOf(fullSteps[0])).toContain(LABS_EXCLUDE_FILTER);
+    for (const step of A.drop(fullSteps, 1)) {
+      const shardArgs = argsOf(step);
+      const shardFilterIndex = argIndexOf(shardArgs, LABS_EXCLUDE_FILTER);
+      const shardDelimiterIndex = argIndexOf(shardArgs, "--");
+      expect(shardFilterIndex).toBeGreaterThan(-1);
+      expect(shardDelimiterIndex).toBeGreaterThan(shardFilterIndex);
+      expect(A.some(shardArgs, Str.startsWith("--filter=@beep/"))).toBe(true);
+    }
+  });
+
+  it("keeps build and audit turbo graphs unfiltered (excluded-task boundary)", () => {
+    const build = rootQualityStepsForTesting("/repo", getInvocation(["build"]));
+    expect(argsOf(build[0])).not.toContain(LABS_EXCLUDE_FILTER);
+
+    const audit = withEnvVar("CI", undefined, () =>
+      rootQualityStepsForTesting("/repo", getInvocation(["audit", "--filter=@beep/schema"]))
+    );
+    expect(argsOf(audit[0])).not.toContain(LABS_EXCLUDE_FILTER);
+  });
 });

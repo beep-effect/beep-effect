@@ -8,9 +8,9 @@ The goal is to replace duplicate full clones like `beep-effect2` and `beep-effec
 
 Canonical paths for this machine:
 
-- Main checkout: `/home/elpresidank/YeeBois/projects/beep-effect`
-- Worktree root: `/home/elpresidank/YeeBois/projects/beep-effect-worktrees`
-- Starter worktree: `/home/elpresidank/YeeBois/projects/beep-effect-worktrees/playground`
+- Main checkout: `<checkout-root>`
+- Worktree root: `<checkout-root>-worktrees`
+- Starter worktree: `<checkout-root>-worktrees/playground`
 
 Why this layout:
 
@@ -35,14 +35,14 @@ Important rules:
 List all worktrees:
 
 ```bash
-git -C /home/elpresidank/YeeBois/projects/beep-effect worktree list
+git -C <checkout-root> worktree list
 ```
 
 Create a new sibling worktree from `main`:
 
 ```bash
-git -C /home/elpresidank/YeeBois/projects/beep-effect \
-  worktree add /home/elpresidank/YeeBois/projects/beep-effect-worktrees/feature-x \
+git -C <checkout-root> \
+  worktree add <checkout-root>-worktrees/feature-x \
   -b worktree/feature-x \
   main
 ```
@@ -50,35 +50,35 @@ git -C /home/elpresidank/YeeBois/projects/beep-effect \
 Create a worktree for an existing branch:
 
 ```bash
-git -C /home/elpresidank/YeeBois/projects/beep-effect \
-  worktree add /home/elpresidank/YeeBois/projects/beep-effect-worktrees/beepgraph \
+git -C <checkout-root> \
+  worktree add <checkout-root>-worktrees/beepgraph \
   feat/beepgraph-messaging
 ```
 
 Remove a worktree cleanly:
 
 ```bash
-git -C /home/elpresidank/YeeBois/projects/beep-effect \
-  worktree remove /home/elpresidank/YeeBois/projects/beep-effect-worktrees/feature-x
+git -C <checkout-root> \
+  worktree remove <checkout-root>-worktrees/feature-x
 ```
 
 Prune stale metadata:
 
 ```bash
-git -C /home/elpresidank/YeeBois/projects/beep-effect worktree prune
+git -C <checkout-root> worktree prune
 ```
 
 Lock a long-lived worktree so Git will not prune it accidentally:
 
 ```bash
-git -C /home/elpresidank/YeeBois/projects/beep-effect \
-  worktree lock /home/elpresidank/YeeBois/projects/beep-effect-worktrees/playground
+git -C <checkout-root> \
+  worktree lock <checkout-root>-worktrees/playground
 ```
 
 Repair broken metadata if a path moved:
 
 ```bash
-git -C /home/elpresidank/YeeBois/projects/beep-effect worktree repair
+git -C <checkout-root> worktree repair
 ```
 
 ## `beep-effect` Workflow
@@ -86,7 +86,7 @@ git -C /home/elpresidank/YeeBois/projects/beep-effect worktree repair
 Recommended flow for a new feature:
 
 1. Start from the main checkout and make sure `main` is clean.
-2. Add a sibling worktree under `/home/elpresidank/YeeBois/projects/beep-effect-worktrees`.
+2. Add a sibling worktree under `<checkout-root>-worktrees`.
 3. Open that worktree as its own project in WebStorm.
 4. Run bootstrap commands inside that worktree.
 5. Launch Claude Code or Codex CLI from that worktree root.
@@ -94,8 +94,8 @@ Recommended flow for a new feature:
 Bootstrap checklist for a fresh worktree:
 
 ```bash
-git -C /home/elpresidank/YeeBois/projects/beep-effect-worktrees/playground submodule update --init --recursive
-cd /home/elpresidank/YeeBois/projects/beep-effect-worktrees/playground
+git -C <checkout-root>-worktrees/playground submodule update --init --recursive
+cd <checkout-root>-worktrees/playground
 bun install
 ```
 
@@ -181,7 +181,7 @@ Default recommendation for this repo:
 Good:
 
 ```bash
-cd /home/elpresidank/YeeBois/projects/beep-effect-worktrees/playground
+cd <checkout-root>-worktrees/playground
 claude
 ```
 
@@ -220,14 +220,14 @@ Default recommendation:
 Good:
 
 ```bash
-cd /home/elpresidank/YeeBois/projects/beep-effect-worktrees/playground
+cd <checkout-root>-worktrees/playground
 codex
 ```
 
 Also good:
 
 ```bash
-codex -C /home/elpresidank/YeeBois/projects/beep-effect-worktrees/playground
+codex -C <checkout-root>-worktrees/playground
 ```
 
 The project `.codex/config.toml` uses `approval_policy = "on-request"` and
@@ -261,7 +261,7 @@ Recommended use here:
 Use this sequence instead of creating another `beep-effectN` clone:
 
 1. Decide which branch or feature needs isolation.
-2. Create a worktree under `/home/elpresidank/YeeBois/projects/beep-effect-worktrees`.
+2. Create a worktree under `<checkout-root>-worktrees`.
 3. Bootstrap it.
 4. Move your IDE and agent session into that worktree.
 5. Retire the old duplicate clone only after the branch is merged or intentionally migrated.

@@ -190,10 +190,18 @@ const generatedComposers = $I.compose(
   "effect-drizzle"
 );
 
+// GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
+const generatedLabComposers = {};
+// GENERATED LAB COMPOSERS END
+
 const composers = {
   ...generatedComposers,
+  ...generatedLabComposers,
   $LangExtractId: generatedComposers.$LangextractId,
 };
+
+// GENERATED LAB EXPORTS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
+// GENERATED LAB EXPORTS END
 
 // --- foundation ---
 

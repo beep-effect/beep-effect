@@ -87,6 +87,36 @@ layer(TestLayer)("Workspaces", (it) => {
     );
 
     it.effect(
+      "should resolve only existing members when a workspace glob matches zero directories",
+      Effect.fn(function* () {
+        const fs = yield* Fs.FileSystem;
+        const tmpDir = yield* fs.makeTempDirectory();
+        const packageDir = pathApi.join(tmpDir, "packages", "pkg-a");
+
+        // The apps/labs/* glob is declared before any lab exists (ratified
+        // lab-apps row 1): resolution must yield only the existing members.
+        const workspaces = yield* Effect.acquireUseRelease(
+          Effect.gen(function* () {
+            yield* fs.makeDirectory(packageDir, { recursive: true });
+            yield* fs.writeFileString(
+              pathApi.join(tmpDir, "package.json"),
+              '{ "name": "root", "workspaces": ["packages/*", "apps/labs/*"] }'
+            );
+            yield* fs.writeFileString(
+              pathApi.join(packageDir, "package.json"),
+              '{ "name": "@mock/pkg-a", "version": "1.0.0" }'
+            );
+          }),
+          () => resolveWorkspaceDirs(tmpDir),
+          () => fs.remove(tmpDir, { recursive: true })
+        );
+
+        expect(HashMap.size(workspaces)).toBe(1);
+        expect(HashMap.has(workspaces, "@mock/pkg-a")).toBe(true);
+      })
+    );
+
+    it.effect(
       "should fail with NoSuchFileError for missing root",
       Effect.fn(function* () {
         const result = yield* resolveWorkspaceDirs("/nonexistent/root").pipe(

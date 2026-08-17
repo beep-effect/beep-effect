@@ -224,6 +224,16 @@ A technical failure that should be logged, traced, retried, or translated at a
 boundary, but should not directly drive product behavior in domain/use-case
 code.
 
+## Lab App
+
+A private, law-abiding experimental application under `apps/labs/*`. A lab app
+is production-shaped and durable while useful, but path-scoped out of package
+ceremony so create and delete do not accumulate per-app shared configuration.
+It is not a doctrine-11 feature-flag experiment inside a product runtime, and it
+is not the law-relaxed, throwaway Scratchpad Lane. Product slices and public
+package surfaces must not import a lab app; promotion moves earned work into its
+lawful durable home. Doctrine: [15-lab-apps.md](./15-lab-apps.md).
+
 ## Modeling Package
 
 A `foundation` kind for reusable schemas, brands, identity contracts, and
@@ -409,7 +419,8 @@ tables, and UI. Drivers stay repo-level instead of being slice package kinds.
 A temporary experiment home under `scratchpad/` or explicitly temporary
 `packages/_internal/*` packages. Scratchpad code may prove an idea, but product
 slices and public package exports must not import it. Promotion re-enters
-through the smallest legal slice shape.
+through the smallest legal slice shape. The lawful next step for an experiment
+that outgrows the lane is a [Lab App](#lab-app).
 
 ## Tables Package
 

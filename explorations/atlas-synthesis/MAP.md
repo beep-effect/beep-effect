@@ -380,7 +380,7 @@ SHACL subset fully expresses the claim shape (to be proven in Packet A P1/P2).
 ### Verification (2026-06-17)
 
 Skeptical on-disk audit of every MAP citation against
-`/home/elpresidank/YeeBois/projects/beep-effect3/packages`. **Verdict: PASS — no
+`packages/` in the beep-effect3 sibling checkout. **Verdict: PASS — no
 corrections required.**
 
 - **All retained HAVE bricks resolve to real source files** (packages use a grouped

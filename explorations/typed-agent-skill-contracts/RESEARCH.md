@@ -80,7 +80,7 @@ competitor.
 
 Seven parallel Codex lanes (gpt-5.6-sol, reasoning=high) mined
 [OpenLinkSoftware/ai-agent-skills](https://github.com/OpenLinkSoftware/ai-agent-skills)
-(MIT; local clone `~/YeeBois/research/daily/08-10-2026/ai-agent-skills/`), ~40 skills. Full
+(MIT; machine-local `ai-agent-skills` clone in the daily research corpus), ~40 skills. Full
 reports vendored under [`research/mining/`](./research/mining/); cross-lane rollup in
 [`research/mining/SYNTHESIS.md`](./research/mining/SYNTHESIS.md). A prior same-day Fable pass
 covered the `agent-rdf-memory/` skill (hub-and-spoke sparse manifest, PromptIntent routing

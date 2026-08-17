@@ -28,15 +28,15 @@ the closeout PR.
   peak.
 - Unit: `~/.config/systemd/user/beep-ai-metrics-forwarder.service`, rewritten
   **2026-08-07 01:45** (`.pre-p0` backups of the 2026-07-14 versions sit alongside).
-  `EnvironmentFile=~/.config/beep/ai-metrics.env` (3 lines, 0600). Secrets are op:// refs:
+  `EnvironmentFile` points at `~/.config/beep/ai-metrics.env` (3 lines, 0600). Secrets are op:// refs:
   `op://TBK/ai-metrics/hash-salt`, `op://TBK/ai-metrics/raw-archive-key`.
-- **Data root is XDG, outside every repo**: `/home/elpresidank/.local/state/beep/ai-metrics`
+- **Data root is XDG, outside every repo**: `~/.local/state/beep/ai-metrics`
   — raw 15G, derived 5.1G (`derived/ai-metrics.duckdb`), config-snapshots 141M, reports/.
   Data spans 2026-05-06 → 2026-08-10. No checkout anywhere still holds a
-  `.beep/ai-metrics` (verified by find across `~/YeeBois/projects`). The multi-checkout
+  `.beep/ai-metrics` (verified by find across every local checkout). The multi-checkout
   fragmentation problem is already solved; only the docs still claim otherwise.
 - The unit runs `bun packages/tooling/tool/cli/src/bin.ts` with
-  `WorkingDirectory=/home/elpresidank/YeeBois/projects/beep-effect`. That checkout is on
+  `WorkingDirectory` set to the machine-local `beep-effect` checkout. That checkout is on
   branch `research/nightly-routine-p0-docs` at `bced3879f7` (2026-08-08), **10 commits
   behind origin/main**. So the forwarder code the timer executes is whatever that branch
   holds — decide deliberately whether to fast-forward/pin it (the

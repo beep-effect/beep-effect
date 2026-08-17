@@ -115,6 +115,15 @@ jobs:
             timeout_minutes: 30
             uses_turbo: "false"
             install_typos: "false"
+          # lab-apps-lifecycle P2 (ratified row 10): visible, permanently
+          # NON-required labs proof lane. Never add "Labs" to the required
+          # ruleset (10240248).
+          - id: labs
+            name: Labs
+            runner: ubuntu-24.04
+            timeout_minutes: 40
+            uses_turbo: "true"
+            install_typos: "true"
     env:
       # Pull requests stay local-only even when repository secrets are
       # available. Trusted main pushes receive read-write remote-cache access.
@@ -169,6 +178,20 @@ jobs:
               should_run=false
             elif grep -Eq '(^packages/tooling/tool/docgen/|^packages/tooling/tool/cli/src/commands/Docgen/|^(\.bun-version|bun\.lock|package\.json|turbo\.json|tsconfig(\..*)?\.json)$)' <<< "$changed_files"; then
               docgen_mode=full
+            fi
+          fi
+
+          # lab-apps-lifecycle P2 (ratified row 10): PR runs of the labs lane
+          # only fire for direct labs-path or shared-toolchain changes; push
+          # events always run the full labs set.
+          if [[ "${{ matrix.id }}" == "labs" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            base_ref="origin/${GITHUB_BASE_REF:-main}"
+            if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
+              git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+            fi
+            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
+            if ! grep -Eq '(^apps/labs/|^\.github/workflows/check\.yml$|^(bun\.lock|package\.json|turbo\.json)$)' <<< "$changed_files"; then
+              should_run=false
             fi
           fi
 
@@ -265,6 +288,11 @@ jobs:
               else
                 run_lane ci lane docgen --mode full
               fi
+              ;;
+            labs)
+              # No --affected: the lane's positive labs filter must not union
+              # with an affected selector (lab-apps-lifecycle P2, row 10).
+              run_lane ci lane labs --summarize
               ;;
           esac
 

@@ -929,6 +929,12 @@ export const ProofFixture = 1;
           yield* fs.makeDirectory(path.dirname(staleDocgenPath), { recursive: true });
           yield* fs.writeFileString(staleDocgenPath, encodeJson({ srcDir: "src" }));
 
+          // A stray docgen.json below the ceremony-exempt labs root must stay
+          // invisible to the orphan scan (goals/lab-apps-lifecycle D2).
+          const labsDocgenPath = path.join(tmpDir, "apps", "labs", "demo", "docgen.json");
+          yield* fs.makeDirectory(path.dirname(labsDocgenPath), { recursive: true });
+          yield* fs.writeFileString(labsDocgenPath, encodeJson({ srcDir: "src" }));
+
           const orphaned = yield* discoverOrphanDocgenConfigPaths(tmpDir);
           const error = yield* aggregateGeneratedDocs().pipe(Effect.flip);
 

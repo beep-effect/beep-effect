@@ -161,7 +161,7 @@ generated indexes.
 ## Db-Admin Reference
 
 The Effect v3 repo contains the richer db-admin precedent at
-`~/YeeBois/projects/beep-effect4/packages/_internal/db-admin`. Treat it as a
+`packages/_internal/db-admin` in the machine-local `beep-effect4` checkout. Treat it as a
 capability reference, not a topology template. Inspect these files before
 designing the current package:
 

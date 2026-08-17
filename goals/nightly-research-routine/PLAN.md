@@ -29,7 +29,7 @@ here are the working decomposition; keep both in sync on phase flips.
 - [ ] `beep research nightly status` — report timer/stamp state, any blocking
       prior research PR, the latest run result, and its PR/check state without
       invoking a model.
-- [ ] Dedicated clone bootstrap doc/script (`~/YeeBois/projects/beep-effect-nightly`).
+- [ ] Dedicated clone bootstrap doc/script (the machine-local `beep-effect-nightly` clone).
 - [ ] Grok CLI fallback lane (`grok -p … --output-format streaming-json`)
       behind a flag.
 - [ ] First supervised run end-to-end; then first unattended boot-triggered run.

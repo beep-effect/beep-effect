@@ -319,6 +319,12 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
 /**
  * Build the branch-only changeset-status preflight lane.
  *
+ * **Details**
+ *
+ * Routes through the path-aware wrapper — `beep quality changeset-status`
+ * with `--since origin/main` — so lab-only branches stay changeset-ceremony exempt
+ * (lab-apps-lifecycle P2, ratified row 8).
+ *
  * **Example** (Inspect the changeset preflight)
  *
  * ```ts
@@ -337,7 +343,7 @@ export const githubCheckChangesetStatusLane = (repoRoot: string): GithubCheckLan
     "quality:changeset-status",
     "repo-quality",
     "preflight",
-    bunRunLane(repoRoot, "quality:changeset-status", ["changeset:status:since-main"])
+    repoCliLane(repoRoot, "quality:changeset-status", ["changeset-status", "--since", "origin/main"])
   );
 
 /**

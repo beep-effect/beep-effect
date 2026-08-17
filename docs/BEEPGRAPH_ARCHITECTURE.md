@@ -63,7 +63,7 @@ The question this doc answers: *between the two reference architectures I compar
 graft from each?* The user asked for **one** choice, plus the cherry-picks.
 
 > A full concept-by-concept comparison of the two reference systems lives at
-> `~/YeeBois/dev/effect-ontology/packages/@core-v2/docs/ontology_research/trustgraph_comparison_research.md`.
+> `@core-v2/docs/ontology_research/trustgraph_comparison_research.md` in the effect-ontology project (machine-local checkout).
 > This doc does not repeat it; it *decides* against it.
 
 ---
@@ -314,9 +314,9 @@ multi-store projection, retrieval, and packaging that effect-ontology lacks.
 
 ## 12. Appendix — evidence
 
-**Repo legend:** `beep` = `/home/elpresidank/YeeBois/projects/beep-effect/` ·
-`EO` = `~/YeeBois/dev/effect-ontology/packages/@core-v2/src/` ·
-`TG-Py` = `~/YeeBois/dev/trustgraph/` · `TG-TS` = `~/YeeBois/dev/trustgraph/ts/`
+**Repo legend:** `beep` = this repository's root ·
+`EO` = `@core-v2/src/` in the effect-ontology project (machine-local checkout) ·
+`TG-Py` = the trustgraph repo root (upstream: https://github.com/trustgraph-ai/trustgraph) · `TG-TS` = its `ts/` subtree
 
 - **Authority / criteria:** `beep standards/memory-architecture/{00-no-escape-theorem,01-memory-layer-taxonomy,04-decision-log,05-context-graph-capability-assessment}.md`; `beep goals/agentic-professional-runtime/SPEC.md`; `beep goals/ontology-modeling-foundation/SPEC.md:10-11`.
 - **beep live:** `beep packages/foundation/modeling/rdf/src/{Rdf.ts,Vocab/Owl.ts}`; `beep packages/foundation/capability/semantic-web/src/{prov.ts,adapters/shacl-engine.ts}`; `beep packages/epistemic/domain/src/entities/{CandidateClaim,Evidence,Activity}`, `values/ClaimLifecycle`; `beep docker-compose.yml` (`pgvector/pgvector:pg17`).

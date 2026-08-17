@@ -33,6 +33,7 @@ import {
   isUnresolvedSecretReference,
   turboEnvOverrides,
 } from "../../internal/cli/EnvConfig.ts";
+import { isLabsWorkspacePath, LABS_TURBO_EXCLUDE_FILTER } from "../../internal/cli/Labs/index.ts";
 import {
   formatCommandLine,
   QualityTaskStep,
@@ -687,13 +688,56 @@ const ciFreshTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
 
 const isUnscopedInvocation = (args: ReadonlyArray<string>): boolean => A.isReadonlyArrayEmpty(args);
 
-const turboRunArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> => [
-  "turbo",
-  "run",
-  ...tasks,
-  ...localTurboCacheArgs(args),
-  ...args,
+// lab-apps-lifecycle P2 (ratified row 9): labs never enter the required root
+// turbo graphs. The exclude filter joins the argv at final assembly, AFTER the
+// owned-arg parsers (isExplicitTurboScopeArg, shouldRunRepoWideSteps,
+// parseCoverageTaskOptions) have classified the caller-visible args, so it can
+// never demote repo-wide steps or flip coverage into its scoped shape. `build`
+// stays outside this set deliberately (ratified-minimal); the coverage:prebuild
+// step carries the filter explicitly instead.
+const LABS_EXCLUDED_TURBO_TASKS: ReadonlyArray<string> = [
+  "check",
+  "lint",
+  "lint:fix",
+  "test",
+  "test:integration",
+  "test:integration:parallel",
+  "test:integration:serial",
+  "coverage",
 ];
+
+const isTurboPassthroughDelimiter = (arg: string): boolean => arg === "--";
+
+const labsExcludeFilterArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.some(tasks, (task) => A.contains(LABS_EXCLUDED_TURBO_TASKS, task)) && !A.contains(args, LABS_TURBO_EXCLUDE_FILTER)
+    ? A.of(LABS_TURBO_EXCLUDE_FILTER)
+    : A.empty<string>();
+
+// Split turbo args at the `--` passthrough delimiter so injected turbo options
+// never leak into the child task argv (coverage steps forward Vitest args).
+const splitAtTurboPassthrough = (
+  args: ReadonlyArray<string>
+): readonly [ReadonlyArray<string>, ReadonlyArray<string>] =>
+  pipe(
+    A.findFirstIndex(args, isTurboPassthroughDelimiter),
+    O.match({
+      onNone: (): readonly [ReadonlyArray<string>, ReadonlyArray<string>] => [args, A.empty<string>()],
+      onSome: (index) => A.splitAt(args, index),
+    })
+  );
+
+const turboRunArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const [optionArgs, passthroughArgs] = splitAtTurboPassthrough(args);
+  return [
+    "turbo",
+    "run",
+    ...tasks,
+    ...localTurboCacheArgs(args),
+    ...optionArgs,
+    ...labsExcludeFilterArgs(tasks, optionArgs),
+    ...passthroughArgs,
+  ];
+};
 
 const boundedRootTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.some(args, isTurboConcurrencyArg)
@@ -1696,6 +1740,9 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
   // Paired merge-base/HEAD comparison, so it is never file-scoped: it fails only on findings
   // introduced by this branch and lets the corpus keep its inherited ones.
   repoCliStep(repoRoot, "knowledge:semantic-delta", ["knowledge", "semantic-delta"]),
+  // Whole-tree census with a zero-tolerance gate on live host-path classes; never file-scoped
+  // because any tracked document can introduce a machine-local reference.
+  repoCliStep(repoRoot, "knowledge:refs-check", ["knowledge", "refs", "--check"]),
   repoCliStep(repoRoot, "lint:schema-first", ["lint", "schema-first"]),
   ...scopedLawStep(repoRoot, "lint:terse-effect", "terse-effect", ["--check", "--advisory"], files),
   bunxStep(repoRoot, "lint:jsdoc", ["eslint", ".", "--max-warnings=0"]),
@@ -1951,7 +1998,15 @@ const coverageFullSteps = (
   const shards = planCoverageFullShards(packageNames, COVERAGE_FULL_SHARD_COUNT);
 
   return [
-    turboStep(repoRoot, "coverage:prebuild", ["build"], [CI_TURBO_CONCURRENCY_ARG, "--summarize", ...passthroughArgs]),
+    // The prebuild turbo task is `build`, which stays outside
+    // LABS_EXCLUDED_TURBO_TASKS (ratified-minimal), so the required Coverage
+    // Regression lane excludes labs here explicitly (lab-apps-lifecycle P2 row 9).
+    turboStep(
+      repoRoot,
+      "coverage:prebuild",
+      ["build"],
+      [CI_TURBO_CONCURRENCY_ARG, "--summarize", LABS_TURBO_EXCLUDE_FILTER, ...passthroughArgs]
+    ),
     ...A.map(shards, (shard) =>
       coverageFullShardStep(repoRoot, shard.index, shard.packageNames, passthroughArgs, writeBaseline)
     ),
@@ -1993,10 +2048,14 @@ const runFullShardedCoverage = Effect.fn("QualityTasks.runFullShardedCoverage")(
   repoRoot: string,
   args: ReadonlyArray<string>
 ) {
+  const path = yield* Path.Path;
   const owners = yield* workspaceTaskOwners(repoRoot);
   const packageNames = pipe(
     owners,
     A.filter(ownerDefinesScript("coverage")),
+    // lab-apps-lifecycle P2 (ratified row 9): labs never join the full-coverage
+    // shard owner set, even when a lab defines a coverage script.
+    A.filter((owner) => !isLabsWorkspacePath(path.relative(repoRoot, owner.packageDir))),
     A.map((owner) => owner.packageName)
   );
   if (A.isReadonlyArrayEmpty(packageNames)) {

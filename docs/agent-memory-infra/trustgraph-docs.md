@@ -110,7 +110,7 @@ The `03` "trust/reputation scoring" claim is not confirmed by the fetched primar
 
 # References
 
-Fetch note: Firecrawl CLI was attempted first for `https://trustgraph.ai/llms.txt` and returned `Error: fetch failed`. Browser fetch succeeded, so the fallback copy under `/tmp/claude-1000/.../scratchpad/llms/trustgraph-llms.txt` was not used. Links omitted because of network failure: none.
+Fetch note: Firecrawl CLI was attempted first for `https://trustgraph.ai/llms.txt` and returned `Error: fetch failed`. Browser fetch succeeded, so the machine-local scratch fallback copy of `trustgraph-llms.txt` was not used. Links omitted because of network failure: none.
 
 Official TrustGraph pages fetched or cited:
 

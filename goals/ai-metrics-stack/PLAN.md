@@ -30,7 +30,7 @@ Status: completed
 Status: completed
 
 - Added source discovery for Codex, Claude Code, and OpenClaw safe gateway
-  metadata, with configurable repo/home/unit roots, last-seven-days defaults,
+  metadata, with configurable repo, home, and unit roots, last-seven-days defaults,
   `--since`, `--max-files`, and `--all`.
 - Replaced the install-spec hardcoded transcript assumption with source
   discovery, config snapshot, and privacy-check planned commands.
@@ -138,7 +138,7 @@ Status: completed
 - Production collection is workstation-owned by
   `beep-ai-metrics-forwarder.timer` at a six-hour cadence. The unit executes
   from the clean `beep-effect` checkout and writes all durable state to
-  `/home/elpresidank/.local/state/beep/ai-metrics`; no checkout contains a
+  `~/.local/state/beep/ai-metrics`; no checkout contains a
   `.beep/ai-metrics` tree.
 - The source cap remains intentionally bounded at 50 files per source and 32
   MiB per file. The fixed-branch closeout run included 50 of 179 Codex

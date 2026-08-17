@@ -15,7 +15,7 @@ persistence it shipped are the substrate this packet extends.
 
 Provenance: graduated from `explorations/agent-chat-interface`. Tables were a
 named follow-on in that exploration's MAP. Proof-repo reference (read-only):
-`/home/elpresidank/YeeBois/projects/effect-lexical-chat/` (effect catalog
+the machine-local `effect-lexical-chat` checkout (effect catalog
 `4.0.0-beta.79`; our repo is on `4.0.0-beta.83` — re-validate API drift).
 
 ## Background: the parity audit

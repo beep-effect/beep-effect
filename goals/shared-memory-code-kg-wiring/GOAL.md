@@ -5,7 +5,7 @@ running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative unless prefixed with `~`.
 
 Outcome: Claude Code, Codex CLI, Grok CLI, and Cursor all read/write one shared
-basic-memory store (`~/YeeBois/memory/beep-shared`) and query one codegraph
+basic-memory store (project `beep-shared`, machine-local) and query one codegraph
 code-KG for this repo, keyless end-to-end; cognee is retired from the durable
 dev-memory role and `standards/memory-architecture/` + `AGENTS.md` say so.
 
@@ -19,13 +19,13 @@ contract:
 
 Read those first, then `AGENTS.md`, `CLAUDE.md`, and
 `standards/memory-architecture/`. External evidence (read-only):
-`~/YeeBois/research/codebase_graph_and_memory/BAKEOFF.md` and
+the machine-local codebase-graph/memory bake-off dossier `BAKEOFF.md` and
 `_research/bakeoff/` beside it. Higher-priority repo standards outrank packet
 prose when they conflict.
 
 Scope:
 
-- In: `~/YeeBois/memory/beep-shared` (create), `.mcp.json`, `.gitignore`,
+- In: the shared `beep-shared` store (create; machine-local), `.mcp.json`, `.gitignore`,
   `standards/memory-architecture/`, `AGENTS.md` Agent Memory section,
   machine-local MCP registration for Codex/Grok/Cursor, `goals/INDEX.md`
   regeneration.

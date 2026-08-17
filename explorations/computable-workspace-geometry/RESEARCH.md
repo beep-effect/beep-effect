@@ -1,8 +1,7 @@
 # Research — pretext technical map, the isomorphism, the cost audit
 
 Self-contained: written so a cold session (any model) can act on this without
-the originating conversation. Sources: firsthand reads of the local clone at
-`~/YeeBois/dev/pretext` (README.md, thoughts.md, RESEARCH.md, AGENTS.md,
+the originating conversation. Sources: firsthand reads of the machine-local `pretext` clone (README.md, thoughts.md, RESEARCH.md, AGENTS.md,
 src/measurement.ts, status/dashboard.json) plus an Explore-agent full-tree map,
 2026-07-12.
 

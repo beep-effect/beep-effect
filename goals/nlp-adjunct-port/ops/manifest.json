@@ -33,7 +33,7 @@
   "root_files": ["README.md", "SPEC.md", "history/reflection-log.md"],
   "references": {
     "plan": "~/.claude/plans/wondrous-pondering-dragonfly.md",
-    "adjunct_source": "~/YeeBois/dev/adjunct/src/Mcp",
+    "adjunct_source": "adjunct project (machine-local checkout), src/Mcp",
     "downstream": "goals/ip-law-knowledge-graph"
   },
   "completionGate": {

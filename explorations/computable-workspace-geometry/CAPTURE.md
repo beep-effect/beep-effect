@@ -35,7 +35,7 @@ arrived and cracked the thing open one level deeper.
 > The year is 2026, pretext...agents...beep block dock?
 >
 > I've cloned this repository for our amusement.
-> [here](/home/elpresidank/YeeBois/dev/pretext)
+> here: the machine-local `pretext` clone (npm `@chenglou/pretext`)
 >
 > I highly suggest you scour that codebase and tell me if you see what I'm
 > seeing. (I might be seeing things because I've been up for too long though.

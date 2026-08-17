@@ -12,7 +12,7 @@ dated heading at the bottom.
 Benjamin's ask (session, 2026-08-08): read the X post
 https://x.com/ItsJulioPereyra/status/2085772997944803682 announcing the
 harvey-labs firm-knowledge dataset; clone is local at
-`~/YeeBois/research/harvey-labs`. "I want you to use claude opus-5 sub agents
+`harvey-labs`, outside this repo. "I want you to use claude opus-5 sub agents
 in a workflow to mine it for knowledge, information, 'gold' that we could
 leverage, use or benefit from and put them in a new exploration packet for
 further deepening."

@@ -20,7 +20,7 @@ RULES
 
 - **Cluster / origin:** an Academia.edu recommendation download of 524
   paper files — 519 PDFs plus five non-PDF papers
-  (acquired at the transient path `~/Downloads/research-7-24-26`, waves
+  (acquired in the transient machine-local `research-7-24-26` pile, waves
   2026-06-29 and 2026-07-24/25) —
   normalized to **443 canonical papers** and mined through a tiered
   triage → deep-read → synthesis pipeline. (The "444 unique titles" figure

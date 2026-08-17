@@ -48,7 +48,7 @@ the future `legal-rule-time-identity` goal (not yet scaffolded), which opens onl
   USPTO benchmark path; a fired trigger reopens this hub at `decompose`.
 
 - 2026-08-01: packet opened from a grill-with-docs interview; corpus at
-  `~/YeeBois/research/legal-patent-ontology-knowledge-graph-and-related-research/`
+  `legal-patent-ontology-knowledge-graph-and-related-research` (machine-local)
   inventoried into CAPTURE; 8 campaign decisions locked into DECISIONS
   (codex-mines-inside-Workflow engine, papers-full/repos-triaged intake, 4
   sequential deep-research tracks, post-synthesis /adhd, gold-intake artifact

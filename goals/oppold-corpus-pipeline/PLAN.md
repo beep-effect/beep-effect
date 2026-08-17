@@ -20,8 +20,8 @@ Status: `completed`
 ### P0 Salvage & Inventory
 
 - Source order: ESD-USB `LH_Emails/` (26 PSTs, removable media — highest
-  risk) → `~/Documents/$RE5ARTA/` → `~/Documents/LH_Emails/` →
-  `~/data-home/Oppold_IP_Law/` → `~/data-home/Precision Planting Seed Firmer
+  risk) → machine-local `Documents/$RE5ARTA/` → `Documents/LH_Emails/` →
+  `Oppold_IP_Law/` → `Precision Planting Seed Firmer
   Adam CAD Package/` (catalog-only copy; the directory stays an active
   project workspace).
 - Provenance manifest records per file: origin absolute path, size, mtime,

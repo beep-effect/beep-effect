@@ -32,13 +32,13 @@ dated heading at the bottom.
 >
 > Reference screenshots (local; open while researching):
 >
-> 1. `~/Pictures/Screenshots/Screenshot_20260730_095907.png` — `Option` type
+> 1. local screenshot `Screenshot_20260730_095907.png` — `Option` type
 >    hover: problem statement + **When to use** bullets + `@see` graph +
 >    `@category` / `@since`
-> 2. `~/Pictures/Screenshots/Screenshot_20260730_100034.png` — `Option.none`
+> 2. local screenshot `Screenshot_20260730_100034.png` — `Option.none`
 >    hover: **When to use**, **Details**, titled **Example**, ASCII annotation
 >    in the example, console output comment
-> 3. `~/Pictures/Screenshots/Screenshot_20260730_100340.png` — `Schema.TaggedUnion`
+> 3. local screenshot `Screenshot_20260730_100340.png` — `Schema.TaggedUnion`
 >    hover: dense one-paragraph summary with `{@link}`, titled example that
 >    exercises the full API (`match`), then `@see` / `@category` / `@since`
 >
@@ -163,7 +163,7 @@ dated heading at the bottom.
 Screenshots stay as local path references (public repo; they show the user's
 IDE and project tree). Copy into `assets/` only if the user opts in later.
 
-1. `~/Pictures/Screenshots/Screenshot_20260730_095907.png` — hover on
+1. local screenshot `Screenshot_20260730_095907.png` — hover on
    `O.Option<string>` (`import * as O from "effect/Option"` scratch file).
    Renders: signature `type Option<A> = O.None<A> | O.Some<A>`; one dense
    lead paragraph with inline-code tokens; bold **When to use** heading; a
@@ -171,13 +171,13 @@ IDE and project tree). Copy into `assets/` only if the user opts in later.
    phrase ("some — for creating a `Some`", "none — for creating a `None`",
    "match — for pattern matching") rendered as links; `@category` — models;
    `@since` — 2.0.0.
-2. `~/Pictures/Screenshots/Screenshot_20260730_100034.png` — hover on
+2. local screenshot `Screenshot_20260730_100034.png` — hover on
    `Option.none()`. Renders: **When to use** sentence; **Details** bullets
    (`Option<never>` subtype note; singleton note); **Example** with
    parenthesized title "(Creating an empty Option)"; fenced code with named
    import, ASCII type-annotation arrow (`// ┌── Option<never>` / `// ▼`),
    `console.log(noValue)` and `// Output: { _id: 'Option', _tag: 'None' }`.
-3. `~/Pictures/Screenshots/Screenshot_20260730_100340.png` — hover on
+3. local screenshot `Screenshot_20260730_100340.png` — hover on
    `S.TaggedUnion(...)`. Renders: dense one-paragraph summary with a working
    `{@link TaggedStruct}` inline link and inline-code utility names (`cases`,
    `guards`, `isAnyOf`, `match`); titled **Example** "(Pattern matching a

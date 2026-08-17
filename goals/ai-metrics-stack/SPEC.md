@@ -93,7 +93,7 @@ output.
   workstation-local; only sanitized derived/report/status artifacts may sync to
   dankserver.
 - Production workstation data root:
-  `/home/elpresidank/.local/state/beep/ai-metrics`. It is XDG state outside
+  `~/.local/state/beep/ai-metrics`. It is XDG state outside
   every repository, so collection history is independent of checkout choice.
 - V1 completion posture: the first production-complete milestone may close
   with provider/model/tool/token/cost metrics explicitly reported as

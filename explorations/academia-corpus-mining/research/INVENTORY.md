@@ -29,8 +29,8 @@ committed inventory).
 
 ## Corpus facts (S0–S2, 2026-07-25)
 
-- Source (acquisition, transient — no longer on disk):
-  `~/Downloads/research-7-24-26` — 524 files scanned (519 PDFs + 4
+- Source (acquisition, transient — no longer on disk): the machine-local
+  `research-7-24-26` pile — 524 files scanned (519 PDFs + 4
   doc/docx + 1 pre-extracted article markdown; the prior synthesis markdown
   excluded as a non-paper).
 - 447 unique by SHA-256 (77 exact-duplicate files collapsed), 443 canonical

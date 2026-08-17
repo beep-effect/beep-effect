@@ -16,8 +16,8 @@ Source initiative:
 The first need is meticulous documentation of the live
 <https://playground.lexical.dev/> page: screenshots, keybindings, text
 highlighting, blocks, nodes, settings, and interactions, cross-checked against
-the local source at
-`/home/elpresidank/YeeBois/dev/text_editor_ui/lexical/packages/lexical-playground/`.
+the upstream source at
+https://github.com/facebook/lexical/tree/main/packages/lexical-playground.
 
 The resulting substrate should extend `@beep/editor`, make feature availability
 configurable, and later support Professional Desktop authoring surfaces for

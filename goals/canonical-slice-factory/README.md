@@ -80,5 +80,5 @@ under the repo's evolution/deprecation discipline.
   compact retained lessons from the deleted prior packet
 - Deleted `repo-architecture-automation` fixtures and `packages/fixture-lab/specimen`
   remain available through git history only
-- `~/YeeBois/projects/beep-effect4/packages/_internal/db-admin` - Effect v3
+- `packages/_internal/db-admin` in the machine-local `beep-effect4` checkout - Effect v3
   db-admin capability reference for drizzle-kit migration aggregation

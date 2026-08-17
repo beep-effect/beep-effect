@@ -1373,6 +1373,39 @@ fixture acceptance implementation and no production acceptance composition
 root; promotion therefore proves that existing boundary and the fail-closed
 vertical adapter without claiming live product protection.
 
+## 2026-08-13: Establish `apps/labs/*` And Zero-Root-Churn Lab Registration
+
+- **Status:** Active
+
+Decision:
+
+Law-abiding experimental applications live under `apps/labs/*`. Labs are
+private executable workspaces, not a fifth non-slice family, architecture role,
+Scratchpad sublane, or feature-flag experiment. They obey the full code law and
+are exempt only from package ceremony through one-time path-scoped rules.
+
+The labs root uses zero-root-churn registration: one workspace glob and one set
+of gate scopes replace per-lab workspace, changeset, coverage, docgen,
+Storybook, and CI rows. Registration geometry is the single declared surface
+set interpreted forward by create-package, inversely by delete-package, and as
+declared-versus-actual probes by doctor. Root TypeScript solution references
+exclude labs; package-local checks and a visible non-required labs lane own
+their typechecking. Lab identity composers remain real package composers in a
+mechanically generated labs segment. Labs never publish `@beep/*` APIs, add
+tables to `packages/*/tables`, or become dependencies of product slices.
+
+Rationale:
+
+The architecture north star already requires experiments to be easy to create,
+easy to delete, and production-shaped. Scratchpad makes creation cheap by
+relaxing laws; ordinary apps preserve laws but accumulate shared registration
+and deletion ceremony. The labs convention combines full code-law fidelity
+with path-derived ceremony exemption, while registration geometry makes
+deletion completeness testable instead of relying on a parallel hand-written
+checklist. Keeping the CI lane non-required prevents a stale lab from blocking
+unrelated upstream work, while requiring the lab's own PR to pass preserves the
+claim that it is a faithful proving ground.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

@@ -105,7 +105,7 @@ Novelty-rate-over-time is the routine's health metric.
 
 ## 9. Environment & checkout
 
-Dedicated full clone `~/YeeBois/projects/beep-effect-nightly` owned
+Dedicated full clone named `beep-effect-nightly` (machine-local, outside this checkout) owned
 exclusively by the routine. Before resetting, the publisher checks for an open
 PR from an earlier `research/<date>` branch; while one exists, the next run is
 blocked without advancing the last-successful-run stamp. Otherwise it fetches

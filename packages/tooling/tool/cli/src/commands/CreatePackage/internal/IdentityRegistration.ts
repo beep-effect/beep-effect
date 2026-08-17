@@ -6,10 +6,11 @@
  */
 
 import { DomainError, getWorkspaceDir, resolveWorkspaceDirs, TSMorphService } from "@beep/repo-utils";
-import { A, Str, Text } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, FileSystem, Order, Path, pipe } from "effect";
 import { Project, SyntaxKind } from "ts-morph";
+import { toIdentityAccessorName, typedIdentityExportBlock } from "./IdentityExportBlock.ts";
 import type { CallExpression, SourceFile, VariableDeclaration } from "ts-morph";
 
 /**
@@ -34,66 +35,6 @@ export const IDENTITY_PACKAGE_NAME = "@beep/identity" as const;
  * @since 0.0.0
  */
 export const IDENTITY_PACKAGES_EXPORT_PATH = ["src", "packages.ts"] as const;
-
-/**
- * Build the identity composer accessor name for a package.
- *
- * **Example** (Derive accessor from package)
- *
- * ```ts
- * import { toIdentityAccessorName } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- *
- * const result = toIdentityAccessorName("@beep/repo-cli")
- * console.log(result) // rendered command output
- * ```
- *
- * @param packageName - Workspace package name to derive the composer accessor from.
- * @returns The PascalCase identity composer accessor name (e.g. `$RepoCliId`).
- * @category utilities
- * @since 0.0.0
- */
-const toIdentityAccessorName = (packageName: string): string => `$${Str.pascalCase(packageName)}Id`;
-
-/**
- * Render the typed identity composer export block for a package.
- *
- * **Example** (Render typed export block)
- *
- * ```ts
- * import { typedIdentityExportBlock } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- *
- * const result = typedIdentityExportBlock("RepoCli", "$RepoCliId")
- * console.log(result) // rendered command output
- * ```
- *
- * @param packageName - Workspace package name the exported identity composer targets.
- * @returns The rendered TypeScript export block declaring the typed identity composer.
- * @category utilities
- * @since 0.0.0
- */
-const typedIdentityExportBlock = (packageName: string): string => {
-  const accessorName = toIdentityAccessorName(packageName);
-  const exampleName = Str.pascalCase(packageName);
-  return Text.joinLines([
-    "",
-    "/**",
-    ` * Identity composer for \`@beep/${packageName}\`.`,
-    " *",
-    " * **Example** (Make package ID)",
-    " *",
-    " * ```ts",
-    ` * import { ${accessorName} } from "@beep/identity"`,
-    " *",
-    ` * const id = ${accessorName}.make("${exampleName}")`,
-    " * void id",
-    " * ```",
-    " *",
-    " * @category configuration",
-    " * @since 0.0.0",
-    " */",
-    `export const ${accessorName}: Identity.IdentityComposer<"@beep/${packageName}"> = composers.${accessorName};`,
-  ]);
-};
 
 /**
  * Resolve the repo-relative identity package composer file path.
@@ -432,46 +373,6 @@ const collectWorkspaceIdentityEntries = Effect.fn("IdentityRegistration.collectW
 });
 
 /**
- * Register every workspace package missing from the identity composer
- * registry, returning the slugs that were registered.
- *
- * **Example** (Register missing workspace packages)
- *
- * ```ts
- * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
- * import { Effect } from "effect"
- *
- * const program = CreatePackageIdentityRegistration.registerMissingWorkspaceIdentityPackages("/repo")
- * console.log(Effect.isEffect(program)) // true
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-const registerMissingWorkspaceIdentityPackages = Effect.fn(
-  "IdentityRegistration.registerMissingWorkspaceIdentityPackages"
-)(function* (repoRoot: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const identityPackagesFilePath = yield* resolveIdentityPackagesFilePath(repoRoot);
-  const entries = yield* collectWorkspaceIdentityEntries(repoRoot);
-  const absolutePath = path.join(repoRoot, identityPackagesFilePath);
-  const registryContent = yield* fs
-    .readFileString(absolutePath)
-    .pipe(Effect.mapError(DomainError.newCause(`Failed to read "${absolutePath}"`)));
-  const missing = missingIdentityRegistrations(
-    registryContent,
-    A.map(entries, ([slug]) => slug)
-  );
-
-  for (const slug of missing) {
-    yield* ensureIdentityPackageRegistration(identityPackagesFilePath, slug);
-  }
-
-  return missing;
-});
-
-/**
  * Internal identity registration surface used by the create-package command.
  *
  * **Example** (Access identity registration helpers)
@@ -493,7 +394,6 @@ export const CreatePackageIdentityRegistration = {
   missingIdentityRegistrations,
   registeredIdentityComposerSlugs,
   registeredIdentityExportSlugs,
-  registerMissingWorkspaceIdentityPackages,
   removeIdentityPackageRegistration,
   resolveIdentityPackagesFilePath,
   toIdentityAccessorName,

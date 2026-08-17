@@ -28,7 +28,7 @@ Operator dump (paraphrased from the kickoff session):
 > (CLAUDE.md symlink) as well. Pause at points for plan-mode interviews
 > (/grill-with-docs). Use codex GPT-5.6 Sol medium for subagent work to
 > preserve the Fable 5 weekly limit. Many clones & worktrees of beep-effect
-> live in ~/YeeBois/projects/ — their .beep dirs and agent memories count.
+> live in [the machine-local projects dir] — their .beep dirs and agent memories count.
 
 Screenshot provided (not committed — public repo, browser chrome shows
 private bookmarks): Phoenix UI at

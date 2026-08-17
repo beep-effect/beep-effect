@@ -9,8 +9,8 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Spark
 
-519 research PDFs landed in `~/Downloads/research-7-24-26` (**acquisition
-site, no longer present — see Corpus location below**) from Academia.edu
+519 research PDFs landed in the machine-local `research-7-24-26` download
+pile (**no longer present — see Corpus location below**) from Academia.edu
 interest recommendations — two waves (June 29: LLM agents, memory,
 metacognition, neuro-symbolic, document understanding; July 24–25: legal
 ontologies, AI-and-law). With five non-PDF papers that is 524 files,
@@ -20,8 +20,8 @@ work streams and land the intelligence here for later goal graduation.
 
 ## Corpus location (verified 2026-08-17)
 
-The source PDFs were **not retained**. `~/Downloads/research-7-24-26` was a
-transient acquisition site and no longer exists. Nothing is lost that this
+The source PDFs were **not retained**. The machine-local `research-7-24-26`
+download pile was a transient acquisition site and no longer exists. Nothing is lost that this
 packet depends on: the durable artifact is the normalized library, and every
 paper's extracted text survived.
 
@@ -47,7 +47,7 @@ citable content of all 443 papers is intact.
    text extracts. This only matters for a paper whose figures carry the
    argument.
 2. **No DOIs or URLs were recorded** in any of the 443 meta records
-   (`srcPath` points at the dead Downloads path). Re-acquisition would be
+   (`srcPath` points at the dead download-pile path). Re-acquisition would be
    title-based search per paper, not a link fetch.
 
 ### Identifier backfill (2026-08-17)
@@ -110,7 +110,7 @@ tree.
   re-triage by definition. Five first-page-grounded batches classified the
   199-paper no-note backlog as core 2 / extended 44 / excluded 153; all 46
   core+extended papers were deep-read (46/46 notes, zero failures). External
-  synthesis: `~/YeeBois/research/academia-2026-07/synthesis/wave2-synthesis.md`.
+  synthesis: `synthesis/wave2-synthesis.md` in the machine-local academia-2026-07 research corpus.
   It found zero contradictions of the master ten findings and produced 14
   routing proposals, including `legal-inference-policy`,
   `ontology-curation-governance`, `evidence-source-policy-calibration`, and
@@ -150,5 +150,5 @@ tree.
   prior June-29 synthesis adopted into `research/`; S0–S2 + T1 triage
   complete (443 papers: 185 deep-read / 93 maybe / 165 catalog-only);
   external normalized corpus library established at
-  `~/YeeBois/research/academia-2026-07/` (public repo — no copyrighted
+  the machine-local `academia-2026-07` corpus home (public repo — no copyrighted
   PDFs/full texts committed here).

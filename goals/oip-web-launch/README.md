@@ -17,7 +17,7 @@ Browser smoke evidence follows separately from the driver.
 ## Overview
 
 This initiative migrated the prototype OIP law-firm website from
-`/home/elpresidank/Documents/OP_IP_LAW/site` into the bootstrapped
+the machine-local OP_IP_LAW prototype site into the bootstrapped
 `@beep/oip-web` app.
 
 The first milestone was a faithful port-and-refactor: preserve the existing

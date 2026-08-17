@@ -3,7 +3,7 @@
 ## Copy-Paste Prompt For A Fresh Codex Session
 
 You are starting a fresh Codex session in
-`/home/elpresidank/YeeBois/projects/beep-effect`.
+this `beep-effect` checkout.
 
 Your mission is **not** to continue implementation immediately. Your mission is
 to review the AI metrics stack initiative with a fresh set of eyes, find gaps

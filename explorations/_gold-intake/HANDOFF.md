@@ -1,6 +1,6 @@
 # Gold Intake — Handoff Runbook
 
-> **For a Claude Code / Codex session rooted at `~/YeeBois/projects/beep-effect`.**
+> **For a Claude Code / Codex session rooted at this repository's checkout root.**
 > This staging folder is the bridge from an external research effort into this repo's
 > `explorations/` → `goals/` pipeline. Read this file first, then drive the phases below.
 
@@ -91,4 +91,4 @@ Re-ground, then start Phase 1:
 2. Re-confirm the seed against the current tree, route the remaining/long-tail nuggets, and produce `ROUTING.md` + `routing.json`; bring the matrix back for approval before opening any packet.
 3. On approval, scaffold the approved P1 wedges and run the per-wedge pipeline (Phase 2 → 3).
 
-_Source provenance: mined at `~/YeeBois/research/law_stuff/repos` (2026-06-29). This folder retains the full source for traceability._
+_Source provenance: mined from the machine-local `law_stuff/repos` research shelf (2026-06-29). This folder retains the full source for traceability._

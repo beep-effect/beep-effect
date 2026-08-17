@@ -1,6 +1,6 @@
 # /goal: Firecrawl Driver
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo: `beep-effect` (this checkout).
 
 Mission: implement `@beep/firecrawl` at `packages/drivers/firecrawl` as a
 technical Firecrawl driver, then finish verification, PR, CI, review, Greptile,
@@ -29,7 +29,7 @@ repo-native fallback.
 
 Before coding, refresh
 `goals/firecrawl-driver/research/firecrawl-sdk-inventory.md`. Record local
-clone path `/home/elpresidank/YeeBois/dev/firecrawl`, clone commit/status,
+source checkout (upstream `https://github.com/firecrawl/firecrawl`), commit/status,
 current npm `firecrawl` version, installed package version, docs/OpenAPI refs,
 SDK files inspected, in-scope/excluded methods, schema names, LiteralKit
 domains, tagged unions, Option/nullish policy, watcher event model, live smoke
