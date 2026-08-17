@@ -393,7 +393,6 @@ export class DocumentIntakeState extends S.Class<DocumentIntakeState>($I`Documen
   /**
    * Replace the vault-selection operator status.
    */
-  // fallow-ignore-next-line unused-class-member -- invoked as state.<method>() inside registry.update callbacks in this module; fallow 3.14 misses S.Class instance-method receivers
   withVaultSelection(vaultSelection: VaultSelectionState): DocumentIntakeState {
     return DocumentIntakeState.make({ ...this, vaultSelection });
   }
