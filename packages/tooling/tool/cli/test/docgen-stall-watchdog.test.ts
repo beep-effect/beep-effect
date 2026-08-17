@@ -1,6 +1,7 @@
 import { runDocgenStepWithStallWatchdogForTesting } from "@beep/repo-cli/test/Docgen";
 import { runToExit } from "@beep/repo-cli/test/Process";
 import { findRepoRoot } from "@beep/repo-utils/Root";
+import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Duration, Effect } from "effect";
@@ -24,7 +25,7 @@ describe("commands/Docgen docgen step stall watchdog", () => {
         first: Duration.seconds(30),
         retry: Duration.seconds(30),
       });
-    }, Effect.provide(NodeServices.layer))
+    }, provideScopedLayer(NodeServices.layer))
   );
 
   it.live(
@@ -40,7 +41,7 @@ describe("commands/Docgen docgen step stall watchdog", () => {
       );
 
       expect(Result.isFailure(outcome)).toBe(true);
-    }, Effect.provide(NodeServices.layer))
+    }, provideScopedLayer(NodeServices.layer))
   );
 
   it.live(
@@ -58,7 +59,7 @@ describe("commands/Docgen docgen step stall watchdog", () => {
       );
 
       expect(Result.isFailure(outcome)).toBe(true);
-    }, Effect.provide(NodeServices.layer))
+    }, provideScopedLayer(NodeServices.layer))
   );
 });
 
@@ -81,7 +82,7 @@ describe("internal/process runToExit force-kill escalation", () => {
       });
 
       expect(exitCode).toBe(0);
-    }, Effect.provide(NodeServices.layer))
+    }, provideScopedLayer(NodeServices.layer))
   );
 
   it.live(
@@ -98,6 +99,6 @@ describe("internal/process runToExit force-kill escalation", () => {
       });
 
       expect(exitCode).not.toBe(0);
-    }, Effect.provide(NodeServices.layer))
+    }, provideScopedLayer(NodeServices.layer))
   );
 });
