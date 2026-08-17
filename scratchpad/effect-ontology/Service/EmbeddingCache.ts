@@ -10,6 +10,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { PosInt, SchemaUtils } from "@beep/schema";
 import { EpochMillis } from "@beep/schema/Timestamp";
 import { Clock, Context, Duration, Effect, HashMap, Layer, Ref } from "effect";
 import * as A from "effect/Array";
@@ -88,10 +89,32 @@ interface CacheEntry {
  * @category type-level
  * @since 0.0.0
  */
-export interface EmbeddingCacheConfig {
-  readonly ttlMs: number;
-  readonly maxEntries: number;
-}
+export class EmbeddingCacheConfig extends S.Class<EmbeddingCacheConfig>($I`EmbeddingCacheConfig`)(
+  {
+    ttl: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.hours(1))),
+    maxEntries: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(10_000))),
+  },
+  $I.annote("EmbeddingCacheConfig", {
+    description: "Entry lifetime and capacity bound for an embedding cache.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link EmbeddingCacheConfig}.
+ *
+ * **Example** (Configure an embedding cache)
+ *
+ * ```ts
+ * import type { EmbeddingCacheConfigInput } from "@effect-ontology/Service/EmbeddingCache"
+ *
+ * const config: EmbeddingCacheConfigInput = { maxEntries: 100 }
+ * console.log(config)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EmbeddingCacheConfigInput = (typeof EmbeddingCacheConfig)["~type.make.in"];
 
 /**
  * Default cache configuration
@@ -107,10 +130,7 @@ export interface EmbeddingCacheConfig {
  * @category services
  * @since 0.0.0
  */
-export const defaultCacheConfig: EmbeddingCacheConfig = {
-  ttlMs: Duration.toMillis(Duration.hours(1)),
-  maxEntries: 10000,
-};
+export const defaultCacheConfig = EmbeddingCacheConfig.make({});
 
 /**
  * EmbeddingCache service interface
@@ -158,13 +178,15 @@ export class EmbeddingCache extends Context.Service<EmbeddingCache, EmbeddingCac
    * @since 0.0.0
    * @category layers
    */
-  static readonly InMemory = (config: EmbeddingCacheConfig = defaultCacheConfig): Layer.Layer<EmbeddingCache> =>
+  static readonly InMemory = (input: EmbeddingCacheConfigInput = {}): Layer.Layer<EmbeddingCache> =>
     Layer.effect(
       EmbeddingCache,
       Effect.gen(function* () {
+        const config = EmbeddingCacheConfig.make(input);
         const cache = yield* Ref.make(HashMap.empty<string, CacheEntry>());
 
-        const isExpired = (entry: CacheEntry, now: number): boolean => now - entry.createdAt > config.ttlMs;
+        const isExpired = (entry: CacheEntry, now: number): boolean =>
+          now - entry.createdAt > Duration.toMillis(config.ttl);
 
         const evictLRU = (map: HashMap.HashMap<string, CacheEntry>): HashMap.HashMap<string, CacheEntry> => {
           if (HashMap.size(map) < config.maxEntries) return map;
@@ -372,8 +394,9 @@ const encodeEmbeddingBlob = S.encodeEffect(S.fromJsonString(EmbeddingBlob));
 export const makePersistentEmbeddingCache = Effect.fn(function* (
   storage: StorageServiceMethods,
   cachePath: string,
-  config: EmbeddingCacheConfig = defaultCacheConfig
+  input: EmbeddingCacheConfigInput = {}
 ): Effect.fn.Return<PersistentEmbeddingCacheService> {
+  const config = EmbeddingCacheConfig.make(input);
   // In-memory cache for fast lookups
   const memoryCache = yield* Ref.make(HashMap.empty<string, CacheEntry>());
 
@@ -385,7 +408,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
     persistentMisses: 0,
   });
 
-  const isExpired = (entry: CacheEntry, now: number): boolean => now - entry.createdAt > config.ttlMs;
+  const isExpired = (entry: CacheEntry, now: number): boolean => now - entry.createdAt > Duration.toMillis(config.ttl);
 
   const evictLRU = (map: HashMap.HashMap<string, CacheEntry>): HashMap.HashMap<string, CacheEntry> => {
     if (HashMap.size(map) < config.maxEntries) return map;
@@ -419,7 +442,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
     if (P.isUndefined(entry)) return O.none();
 
     const now = yield* Clock.currentTimeMillis;
-    if (now - entry.createdAt > config.ttlMs) {
+    if (now - entry.createdAt > Duration.toMillis(config.ttl)) {
       // Expired in storage too
       return O.none();
     }
@@ -572,7 +595,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
 
             for (const [hash, entry] of R.toEntries(blob.value.embeddings)) {
               // Skip expired entries
-              if (now - entry.createdAt > config.ttlMs) continue;
+              if (now - entry.createdAt > Duration.toMillis(config.ttl)) continue;
 
               yield* Ref.update(memoryCache, (map) => {
                 if (HashMap.size(map) >= config.maxEntries) return map;
@@ -626,7 +649,7 @@ export const makePersistentEmbeddingCache = Effect.fn(function* (
  * otherwise provides standard in-memory EmbeddingCache.
  *
  * Dependencies:
- * - ConfigService (for embedding.cachePath, cacheTtlHours, cacheMaxEntries)
+ * - ConfigService (for embedding.cachePath, cacheTtl, cacheMaxEntries)
  * - StorageService (for GCS persistence when cachePath is set)
  *
  * @since 0.0.0
@@ -646,12 +669,13 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
       // No persistence path configured - return in-memory only
       yield* Effect.logDebug("Embedding cache: in-memory only (no EMBEDDING_CACHE_PATH set)");
       const cache = yield* Ref.make(HashMap.empty<string, CacheEntry>());
-      const cacheConfig: EmbeddingCacheConfig = {
-        ttlMs: Duration.toMillis(Duration.hours(config.embedding.cacheTtlHours)),
+      const cacheConfig = EmbeddingCacheConfig.make({
+        ttl: config.embedding.cacheTtl,
         maxEntries: config.embedding.cacheMaxEntries,
-      };
+      });
 
-      const isExpired = (entry: CacheEntry, now: number): boolean => now - entry.createdAt > cacheConfig.ttlMs;
+      const isExpired = (entry: CacheEntry, now: number): boolean =>
+        now - entry.createdAt > Duration.toMillis(cacheConfig.ttl);
 
       const evictLRU = (map: HashMap.HashMap<string, CacheEntry>): HashMap.HashMap<string, CacheEntry> => {
         if (HashMap.size(map) < cacheConfig.maxEntries) return map;
@@ -725,10 +749,10 @@ const PersistentEmbeddingCacheLayer = Layer.effect(
 
     // Persistence enabled - create persistent cache
     yield* Effect.logInfo("Embedding cache: GCS-backed persistence enabled", { cachePath });
-    const cacheConfig: EmbeddingCacheConfig = {
-      ttlMs: Duration.toMillis(Duration.hours(config.embedding.cacheTtlHours)),
+    const cacheConfig = EmbeddingCacheConfig.make({
+      ttl: config.embedding.cacheTtl,
       maxEntries: config.embedding.cacheMaxEntries,
-    };
+    });
 
     return yield* makePersistentEmbeddingCache(storage, cachePath, cacheConfig);
   })

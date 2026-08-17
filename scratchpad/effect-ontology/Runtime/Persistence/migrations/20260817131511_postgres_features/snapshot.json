@@ -1,0 +1,4078 @@
+{
+  "id": "2a3706e0-9524-4a56-b616-b7477c4eee16",
+  "prevIds": [
+    "b6249dba-275c-4aee-a548-db313f233171"
+  ],
+  "version": "8",
+  "dialect": "postgres",
+  "ddl": [
+    {
+      "isRlsEnabled": false,
+      "name": "articles",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "batch_runs",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "canonical_entities",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "claims",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "conflicts",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "correction_claims",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "corrections",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "embeddings",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "entity_aliases",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "entity_blocking_tokens",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "ingested_links",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "link_batch_items",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "link_batches",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "llm_examples",
+      "entityType": "tables",
+      "schema": "public"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "uri",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "ontology_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "source_name",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "headline",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "published_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "ingested_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "graph_uri",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "content_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "batch_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "documents_total",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "documents_processed",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "claims_extracted",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "conflicts_detected",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "started_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "completed_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "error_message",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "error_details",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'default'",
+      "generated": null,
+      "identity": null,
+      "name": "ontology_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "iri",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "canonical_mention",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "types",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "vector(768)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "embedding",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "1",
+      "generated": null,
+      "identity": null,
+      "name": "merge_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "numeric(4,3)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "confidence_avg",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "first_seen_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "last_seen_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "article_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "ontology_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "subject_iri",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "predicate_iri",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "object_value",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "'iri'",
+      "generated": null,
+      "identity": null,
+      "name": "object_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "object_datatype",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "object_language",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'normal'",
+      "generated": null,
+      "identity": null,
+      "name": "rank",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "valid_from",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "valid_to",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "asserted_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "derived_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "deprecated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "deprecated_by",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "numeric(4,3)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "confidence_score",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "evidence_text",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "evidence_start_offset",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "evidence_end_offset",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "conflict_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "claim_a_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "claim_b_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "resolution_strategy",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "accepted_claim_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "resolved_by",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "resolved_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "resolution_notes",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "detected_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "correction_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "correction_claims"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "original_claim_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "correction_claims"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "new_claim_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "correction_claims"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "correction_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "source_article_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "reason",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "correction_date",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "processed_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "type": "varchar(20)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "entity_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "entity_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'default'",
+      "generated": null,
+      "identity": null,
+      "name": "ontology_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "type": "vector(768)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "embedding",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "content_text",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'nomic-embed-text-v1.5'",
+      "generated": null,
+      "identity": null,
+      "name": "model",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'default'",
+      "generated": null,
+      "identity": null,
+      "name": "ontology_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "canonical_entity_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "mention",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "mention_normalized",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "type": "vector(768)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "embedding",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "resolution_method",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "type": "numeric(4,3)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "resolution_confidence",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "first_batch_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "source_article_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_blocking_tokens"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'default'",
+      "generated": null,
+      "identity": null,
+      "name": "ontology_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_blocking_tokens"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "canonical_entity_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_blocking_tokens"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "token",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_blocking_tokens"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "'mention'",
+      "generated": null,
+      "identity": null,
+      "name": "token_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "entity_blocking_tokens"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "varchar(64)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "content_hash",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "ontology_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "source_uri",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "varchar(32)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "source_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "headline",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "description",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "published_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "author",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "organization",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "varchar(8)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "'en'",
+      "generated": null,
+      "identity": null,
+      "name": "language",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "'[]'",
+      "generated": null,
+      "identity": null,
+      "name": "topics",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "'[]'",
+      "generated": null,
+      "identity": null,
+      "name": "key_entities",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "storage_uri",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "varchar(16)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "fetched_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "enriched_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "processed_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "error_message",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "word_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "metadata",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "updated_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "batch_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "link_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "extraction_run_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "article_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "started_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "completed_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "error_message",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "batch_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "links_total",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "links_processed",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "links_failed",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "ontology_uri",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "started_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "completed_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "error_message",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "gen_random_uuid()",
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "ontology_id",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "example_type",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'manual'",
+      "generated": null,
+      "identity": null,
+      "name": "source",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "input_text",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "target_class",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "target_predicate",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "evidence_text",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "evidence_start_offset",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "evidence_end_offset",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "expected_output",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "prompt_messages",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "explanation",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "vector(768)",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "embedding",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "false",
+      "generated": null,
+      "identity": null,
+      "name": "is_negative",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "negative_pattern",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "name": "usage_count",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "numeric(4,3)",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "success_rate",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_by",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "type": "boolean",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "true",
+      "generated": null,
+      "identity": null,
+      "name": "is_active",
+      "entityType": "columns",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "uri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "articles_ontology_uri_unique",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "uri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_articles_uri",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "source_name",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_articles_source",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "published_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_articles_published",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_articles_ontology_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "source_name",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_articles_ontology_source",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "published_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_articles_ontology_published",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "articles"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "batch_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_batch_runs_batch_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_batch_runs_status",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "canonical_entities_ontology_iri_unique",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_canonical_entities_iri",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_canonical_entities_ontology_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_canonical_entities_ontology_iri",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "canonical_entities"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "article_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "subject_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "predicate_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "object_value",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_natural_key",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "article_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_article",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "subject_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_subject",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "predicate_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_predicate",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "rank",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_rank",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "valid_from",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "valid_to",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_valid_period",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "deprecated_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": "\"deprecated_at\" IS NOT NULL",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_deprecated",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "derived_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": "\"derived_at\" IS NOT NULL",
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_derived_at",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "subject_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "predicate_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_subject_predicate",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_ontology_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "subject_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_ontology_subject",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "predicate_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_ontology_predicate",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "subject_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "predicate_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_claims_ontology_subject_predicate",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_conflicts_status",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "claim_a_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "claim_b_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_conflicts_claims",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "original_claim_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_correction_claims_original",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "correction_claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "new_claim_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_correction_claims_new",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "correction_claims"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "correction_type",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_corrections_type",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "source_article_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_corrections_source",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "correction_date",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_corrections_date",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "entity_type",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "entity_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_embeddings_ontology_entity_unique",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "entity_type",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_embeddings_entity_type_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "entity_type",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_embeddings_ontology_type_idx",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "mention_normalized",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_entity_aliases_ontology_mention",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "canonical_entity_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_entity_aliases_canonical",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_entity_aliases_ontology",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "token",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_blocking_tokens_token",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "entity_blocking_tokens"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "canonical_entity_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_blocking_tokens_entity",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "entity_blocking_tokens"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "token",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_blocking_tokens_ontology_token",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "entity_blocking_tokens"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "token",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "canonical_entity_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_blocking_tokens_composite",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "entity_blocking_tokens"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_ingested_links_status",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "source_uri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_ingested_links_source_uri",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "fetched_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_ingested_links_fetched_at",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "source_type",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_ingested_links_source_type",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "organization",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_ingested_links_organization",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_ingested_links_ontology_id",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_ingested_links_ontology_status",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "content_hash",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_ingested_links_ontology_content_unique",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "link_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_link_batch_items_link",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_link_batch_items_status",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_link_batches_status",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "link_batches"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "example_type",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_llm_examples_ontology_type",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "is_active",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_llm_examples_ontology_active",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "is_negative",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "idx_llm_examples_is_negative",
+      "entityType": "indexes",
+      "schema": "public",
+      "table": "llm_examples"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "article_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "articles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "claims_article_id_articles_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "deprecated_by"
+      ],
+      "schemaTo": "public",
+      "tableTo": "corrections",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "claims_deprecated_by_corrections_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "claim_a_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "claims",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "conflicts_claim_a_id_claims_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "claim_b_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "claims",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "conflicts_claim_b_id_claims_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "accepted_claim_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "claims",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "conflicts_accepted_claim_id_claims_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "correction_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "corrections",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "correction_claims_correction_id_corrections_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "correction_claims"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "original_claim_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "claims",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "correction_claims_original_claim_id_claims_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "correction_claims"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "new_claim_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "claims",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "correction_claims_new_claim_id_claims_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "correction_claims"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "source_article_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "articles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "corrections_source_article_id_articles_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "canonical_entity_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "canonical_entities",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "entity_aliases_canonical_entity_id_canonical_entities_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "source_article_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "articles",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "entity_aliases_source_article_id_articles_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "entity_aliases"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "canonical_entity_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "canonical_entities",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "entity_blocking_tokens_Sx4xpmtdQjTC_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "entity_blocking_tokens"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "batch_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "link_batches",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "link_batch_items_batch_id_link_batches_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "link_id"
+      ],
+      "schemaTo": "public",
+      "tableTo": "ingested_links",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "CASCADE",
+      "name": "link_batch_items_link_id_ingested_links_id_fkey",
+      "entityType": "fks",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "columns": [
+        "correction_id",
+        "original_claim_id"
+      ],
+      "nameExplicit": false,
+      "name": "correction_claims_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "correction_claims"
+    },
+    {
+      "columns": [
+        "batch_id",
+        "link_id"
+      ],
+      "nameExplicit": false,
+      "name": "link_batch_items_pkey",
+      "entityType": "pks",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "articles_pkey",
+      "schema": "public",
+      "table": "articles",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "batch_runs_pkey",
+      "schema": "public",
+      "table": "batch_runs",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "canonical_entities_pkey",
+      "schema": "public",
+      "table": "canonical_entities",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "claims_pkey",
+      "schema": "public",
+      "table": "claims",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "conflicts_pkey",
+      "schema": "public",
+      "table": "conflicts",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "corrections_pkey",
+      "schema": "public",
+      "table": "corrections",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "embeddings_pkey",
+      "schema": "public",
+      "table": "embeddings",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "entity_aliases_pkey",
+      "schema": "public",
+      "table": "entity_aliases",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "entity_blocking_tokens_pkey",
+      "schema": "public",
+      "table": "entity_blocking_tokens",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "ingested_links_pkey",
+      "schema": "public",
+      "table": "ingested_links",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "link_batches_pkey",
+      "schema": "public",
+      "table": "link_batches",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "llm_examples_pkey",
+      "schema": "public",
+      "table": "llm_examples",
+      "entityType": "pks"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "batch_id"
+      ],
+      "nullsNotDistinct": false,
+      "name": "batch_runs_batch_id_key",
+      "schema": "public",
+      "table": "batch_runs",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "batch_id"
+      ],
+      "nullsNotDistinct": false,
+      "name": "link_batches_batch_id_key",
+      "schema": "public",
+      "table": "link_batches",
+      "entityType": "uniques"
+    },
+    {
+      "value": "\"status\" IN ('pending', 'running', 'completed', 'failed')",
+      "name": "batch_runs_status_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "batch_runs"
+    },
+    {
+      "value": "\"rank\" IN ('preferred', 'normal', 'deprecated')",
+      "name": "claims_rank_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "claims"
+    },
+    {
+      "value": "\"conflict_type\" IN ('position', 'temporal', 'contradictory', 'duplicate')",
+      "name": "conflicts_conflict_type_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "value": "\"status\" IN ('pending', 'resolved', 'ignored')",
+      "name": "conflicts_status_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "value": "\"claim_a_id\" <> \"claim_b_id\"",
+      "name": "different_claims",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "conflicts"
+    },
+    {
+      "value": "\"correction_type\" IN ('retraction', 'clarification', 'update', 'amendment')",
+      "name": "corrections_correction_type_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "corrections"
+    },
+    {
+      "value": "\"entity_type\" IN ('class', 'entity', 'claim', 'example')",
+      "name": "embeddings_entity_type_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "embeddings"
+    },
+    {
+      "value": "\"status\" IN ('pending', 'enriched', 'processing', 'processed', 'failed', 'skipped')",
+      "name": "ingested_links_status_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "ingested_links"
+    },
+    {
+      "value": "\"status\" IN ('pending', 'processing', 'completed', 'failed')",
+      "name": "link_batch_items_status_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "link_batch_items"
+    },
+    {
+      "value": "\"status\" IN ('pending', 'running', 'completed', 'failed')",
+      "name": "link_batches_status_check",
+      "entityType": "checks",
+      "schema": "public",
+      "table": "link_batches"
+    }
+  ],
+  "renames": []
+}

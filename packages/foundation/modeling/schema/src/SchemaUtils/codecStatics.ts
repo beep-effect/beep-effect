@@ -5,9 +5,10 @@
  * **Details**
  *
  * Each combinator binds one decode/encode interpreter — Effect, Result,
- * Option, Exit, Promise, or Sync — so consuming modules call
- * `MySchema.decodeUnknownEffect(raw)` instead of accumulating free-floating
- * `const decodeX = S.decodeUnknownEffect(X)` helpers.
+ * Option, Exit, Promise, or Sync — for both direct values and JSON strings, so
+ * consuming modules call `MySchema.decodeUnknownEffect(raw)` or
+ * `MySchema.decodeUnknownEffectFromJsonString(raw)` instead of accumulating
+ * free-floating codec helpers.
  *
  * Intended for branded, refined, and union const schemas. `Schema.Class` and
  * `Schema.TaggedClass` lose their constructor identity when piped, so concrete
@@ -36,6 +37,8 @@ type ServiceFreeCodec<Sch extends S.Constraint> = S.Schema<Sch["Type"]> &
  * Effect services.
  */
 type EffectCapableCodec<Sch extends S.Constraint> = S.Schema<Sch["Type"]> & S.Constraint;
+
+type JsonStringCodec<Sch extends S.Constraint> = S.fromJsonString<Sch>;
 
 /**
  * Guard, assertion, and dual equivalence statics attached by every codec group.
@@ -74,7 +77,7 @@ export interface SharedCodecStatics<Sch extends S.Constraint> {
 }
 
 /**
- * Shared statics plus the throwing synchronous decode/encode quartet.
+ * Shared statics plus synchronous codecs for direct and JSON-string boundaries.
  *
  * @typeParam Sch - Service-free schema the statics interpret.
  * @see {@link withSyncCodecStatics} for the combinator that attaches these statics.
@@ -83,13 +86,17 @@ export interface SharedCodecStatics<Sch extends S.Constraint> {
  */
 export interface SyncCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends SharedCodecStatics<Sch> {
   readonly decodeSync: ReturnType<typeof S.decodeSync<Sch>>;
+  readonly decodeSyncFromJsonString: ReturnType<typeof S.decodeSync<JsonStringCodec<Sch>>>;
   readonly decodeUnknownSync: ReturnType<typeof S.decodeUnknownSync<Sch>>;
+  readonly decodeUnknownSyncFromJsonString: ReturnType<typeof S.decodeUnknownSync<JsonStringCodec<Sch>>>;
   readonly encodeSync: ReturnType<typeof S.encodeSync<Sch>>;
+  readonly encodeSyncFromJsonString: ReturnType<typeof S.encodeSync<JsonStringCodec<Sch>>>;
   readonly encodeUnknownSync: ReturnType<typeof S.encodeUnknownSync<Sch>>;
+  readonly encodeUnknownSyncFromJsonString: ReturnType<typeof S.encodeUnknownSync<JsonStringCodec<Sch>>>;
 }
 
 /**
- * Shared statics plus the Promise decode/encode quartet.
+ * Shared statics plus Promise codecs for direct and JSON-string boundaries.
  *
  * @typeParam Sch - Service-free schema the statics interpret.
  * @see {@link withPromiseCodecStatics} for the combinator that attaches these statics.
@@ -98,13 +105,17 @@ export interface SyncCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends Sha
  */
 export interface PromiseCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends SharedCodecStatics<Sch> {
   readonly decodePromise: ReturnType<typeof S.decodePromise<Sch>>;
+  readonly decodePromiseFromJsonString: ReturnType<typeof S.decodePromise<JsonStringCodec<Sch>>>;
   readonly decodeUnknownPromise: ReturnType<typeof S.decodeUnknownPromise<Sch>>;
+  readonly decodeUnknownPromiseFromJsonString: ReturnType<typeof S.decodeUnknownPromise<JsonStringCodec<Sch>>>;
   readonly encodePromise: ReturnType<typeof S.encodePromise<Sch>>;
+  readonly encodePromiseFromJsonString: ReturnType<typeof S.encodePromise<JsonStringCodec<Sch>>>;
   readonly encodeUnknownPromise: ReturnType<typeof S.encodeUnknownPromise<Sch>>;
+  readonly encodeUnknownPromiseFromJsonString: ReturnType<typeof S.encodeUnknownPromise<JsonStringCodec<Sch>>>;
 }
 
 /**
- * Shared statics plus the Effect decode/encode quartet.
+ * Shared statics plus Effect codecs for direct and JSON-string boundaries.
  *
  * @typeParam Sch - Schema the statics interpret, including service-requiring codecs.
  * @see {@link withEffectCodecStatics} for the combinator that attaches these statics.
@@ -113,13 +124,17 @@ export interface PromiseCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends 
  */
 export interface EffectCodecStatics<Sch extends EffectCapableCodec<Sch>> extends SharedCodecStatics<Sch> {
   readonly decodeEffect: ReturnType<typeof S.decodeEffect<Sch>>;
+  readonly decodeEffectFromJsonString: ReturnType<typeof S.decodeEffect<JsonStringCodec<Sch>>>;
   readonly decodeUnknownEffect: ReturnType<typeof S.decodeUnknownEffect<Sch>>;
+  readonly decodeUnknownEffectFromJsonString: ReturnType<typeof S.decodeUnknownEffect<JsonStringCodec<Sch>>>;
   readonly encodeEffect: ReturnType<typeof S.encodeEffect<Sch>>;
+  readonly encodeEffectFromJsonString: ReturnType<typeof S.encodeEffect<JsonStringCodec<Sch>>>;
   readonly encodeUnknownEffect: ReturnType<typeof S.encodeUnknownEffect<Sch>>;
+  readonly encodeUnknownEffectFromJsonString: ReturnType<typeof S.encodeUnknownEffect<JsonStringCodec<Sch>>>;
 }
 
 /**
- * Shared statics plus the Exit decode/encode quartet.
+ * Shared statics plus Exit codecs for direct and JSON-string boundaries.
  *
  * @typeParam Sch - Service-free schema the statics interpret.
  * @see {@link withExitCodecStatics} for the combinator that attaches these statics.
@@ -128,13 +143,17 @@ export interface EffectCodecStatics<Sch extends EffectCapableCodec<Sch>> extends
  */
 export interface ExitCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends SharedCodecStatics<Sch> {
   readonly decodeExit: ReturnType<typeof S.decodeExit<Sch>>;
+  readonly decodeExitFromJsonString: ReturnType<typeof S.decodeExit<JsonStringCodec<Sch>>>;
   readonly decodeUnknownExit: ReturnType<typeof S.decodeUnknownExit<Sch>>;
+  readonly decodeUnknownExitFromJsonString: ReturnType<typeof S.decodeUnknownExit<JsonStringCodec<Sch>>>;
   readonly encodeExit: ReturnType<typeof S.encodeExit<Sch>>;
+  readonly encodeExitFromJsonString: ReturnType<typeof S.encodeExit<JsonStringCodec<Sch>>>;
   readonly encodeUnknownExit: ReturnType<typeof S.encodeUnknownExit<Sch>>;
+  readonly encodeUnknownExitFromJsonString: ReturnType<typeof S.encodeUnknownExit<JsonStringCodec<Sch>>>;
 }
 
 /**
- * Shared statics plus the Option decode/encode quartet.
+ * Shared statics plus Option codecs for direct and JSON-string boundaries.
  *
  * @typeParam Sch - Service-free schema the statics interpret.
  * @see {@link withOptionCodecStatics} for the combinator that attaches these statics.
@@ -143,13 +162,17 @@ export interface ExitCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends Sha
  */
 export interface OptionCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends SharedCodecStatics<Sch> {
   readonly decodeOption: ReturnType<typeof S.decodeOption<Sch>>;
+  readonly decodeOptionFromJsonString: ReturnType<typeof S.decodeOption<JsonStringCodec<Sch>>>;
   readonly decodeUnknownOption: ReturnType<typeof S.decodeUnknownOption<Sch>>;
+  readonly decodeUnknownOptionFromJsonString: ReturnType<typeof S.decodeUnknownOption<JsonStringCodec<Sch>>>;
   readonly encodeOption: ReturnType<typeof S.encodeOption<Sch>>;
+  readonly encodeOptionFromJsonString: ReturnType<typeof S.encodeOption<JsonStringCodec<Sch>>>;
   readonly encodeUnknownOption: ReturnType<typeof S.encodeUnknownOption<Sch>>;
+  readonly encodeUnknownOptionFromJsonString: ReturnType<typeof S.encodeUnknownOption<JsonStringCodec<Sch>>>;
 }
 
 /**
- * Shared statics plus the Result decode/encode quartet.
+ * Shared statics plus Result codecs for direct and JSON-string boundaries.
  *
  * @typeParam Sch - Service-free schema the statics interpret.
  * @see {@link withResultCodecStatics} for the combinator that attaches these statics.
@@ -158,9 +181,13 @@ export interface OptionCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends S
  */
 export interface ResultCodecStatics<Sch extends ServiceFreeCodec<Sch>> extends SharedCodecStatics<Sch> {
   readonly decodeResult: ReturnType<typeof S.decodeResult<Sch>>;
+  readonly decodeResultFromJsonString: ReturnType<typeof S.decodeResult<JsonStringCodec<Sch>>>;
   readonly decodeUnknownResult: ReturnType<typeof S.decodeUnknownResult<Sch>>;
+  readonly decodeUnknownResultFromJsonString: ReturnType<typeof S.decodeUnknownResult<JsonStringCodec<Sch>>>;
   readonly encodeResult: ReturnType<typeof S.encodeResult<Sch>>;
+  readonly encodeResultFromJsonString: ReturnType<typeof S.encodeResult<JsonStringCodec<Sch>>>;
   readonly encodeUnknownResult: ReturnType<typeof S.encodeUnknownResult<Sch>>;
+  readonly encodeUnknownResultFromJsonString: ReturnType<typeof S.encodeUnknownResult<JsonStringCodec<Sch>>>;
 }
 
 const makeSharedCodecStatics = <Sch extends S.Schema<Sch["Type"]> & S.Constraint>(
@@ -219,19 +246,26 @@ const attachCodecStatics =
  *
  * @typeParam Sch - Service-free schema receiving the sync codec statics.
  * @param self - The schema receiving the sync codec statics.
- * @returns The schema with shared statics plus the sync decode/encode quartet.
+ * @returns The schema with shared statics plus direct and JSON-string sync codecs.
  * @see {@link SharedCodecStatics} for the `asserts`, `is`, and `equivalence` statics included in every group.
  * @see {@link withEffectCodecStatics} for the Effect-returning group preferred in library code.
  * @category combinators
  * @since 0.0.0
  */
 export const withSyncCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self: Sch): Sch & SyncCodecStatics<Sch> =>
-  attachCodecStatics((schema: Sch) => ({
-    decodeSync: S.decodeSync(schema),
-    decodeUnknownSync: S.decodeUnknownSync(schema),
-    encodeSync: S.encodeSync(schema),
-    encodeUnknownSync: S.encodeUnknownSync(schema),
-  }))(self);
+  attachCodecStatics((schema: Sch) => {
+    const fromJsonStringSchema = S.fromJsonString(schema);
+    return {
+      decodeSync: S.decodeSync(schema),
+      decodeSyncFromJsonString: S.decodeSync(fromJsonStringSchema),
+      decodeUnknownSync: S.decodeUnknownSync(schema),
+      decodeUnknownSyncFromJsonString: S.decodeUnknownSync(fromJsonStringSchema),
+      encodeSync: S.encodeSync(schema),
+      encodeSyncFromJsonString: S.encodeSync(fromJsonStringSchema),
+      encodeUnknownSync: S.encodeUnknownSync(schema),
+      encodeUnknownSyncFromJsonString: S.encodeUnknownSync(fromJsonStringSchema),
+    };
+  })(self);
 
 /**
  * Attach {@link PromiseCodecStatics} to a schema value. Designed to be used
@@ -263,18 +297,25 @@ export const withSyncCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self: Sc
  *
  * @typeParam Sch - Service-free schema receiving the Promise codec statics.
  * @param self - The schema receiving the Promise codec statics.
- * @returns The schema with shared statics plus the Promise decode/encode quartet.
+ * @returns The schema with shared statics plus direct and JSON-string Promise codecs.
  * @see {@link SharedCodecStatics} for the `asserts`, `is`, and `equivalence` statics included in every group.
  * @category combinators
  * @since 0.0.0
  */
 export const withPromiseCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self: Sch): Sch & PromiseCodecStatics<Sch> =>
-  attachCodecStatics((schema: Sch) => ({
-    decodePromise: S.decodePromise(schema),
-    decodeUnknownPromise: S.decodeUnknownPromise(schema),
-    encodePromise: S.encodePromise(schema),
-    encodeUnknownPromise: S.encodeUnknownPromise(schema),
-  }))(self);
+  attachCodecStatics((schema: Sch) => {
+    const fromJsonStringSchema = S.fromJsonString(schema);
+    return {
+      decodePromise: S.decodePromise(schema),
+      decodePromiseFromJsonString: S.decodePromise(fromJsonStringSchema),
+      decodeUnknownPromise: S.decodeUnknownPromise(schema),
+      decodeUnknownPromiseFromJsonString: S.decodeUnknownPromise(fromJsonStringSchema),
+      encodePromise: S.encodePromise(schema),
+      encodePromiseFromJsonString: S.encodePromise(fromJsonStringSchema),
+      encodeUnknownPromise: S.encodeUnknownPromise(schema),
+      encodeUnknownPromiseFromJsonString: S.encodeUnknownPromise(fromJsonStringSchema),
+    };
+  })(self);
 
 /**
  * Attach {@link EffectCodecStatics} to a schema value. Designed to be used
@@ -302,18 +343,25 @@ export const withPromiseCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self:
  *
  * @typeParam Sch - Schema receiving the Effect codec statics.
  * @param self - The schema receiving the Effect codec statics.
- * @returns The schema with shared statics plus the Effect decode/encode quartet.
+ * @returns The schema with shared statics plus direct and JSON-string Effect codecs.
  * @see {@link SharedCodecStatics} for the `asserts`, `is`, and `equivalence` statics included in every group.
  * @category combinators
  * @since 0.0.0
  */
 export const withEffectCodecStatics = <Sch extends EffectCapableCodec<Sch>>(self: Sch): Sch & EffectCodecStatics<Sch> =>
-  attachCodecStatics((schema: Sch) => ({
-    decodeEffect: S.decodeEffect(schema),
-    decodeUnknownEffect: S.decodeUnknownEffect(schema),
-    encodeEffect: S.encodeEffect(schema),
-    encodeUnknownEffect: S.encodeUnknownEffect(schema),
-  }))(self);
+  attachCodecStatics((schema: Sch) => {
+    const fromJsonStringSchema = S.fromJsonString(schema);
+    return {
+      decodeEffect: S.decodeEffect(schema),
+      decodeEffectFromJsonString: S.decodeEffect(fromJsonStringSchema),
+      decodeUnknownEffect: S.decodeUnknownEffect(schema),
+      decodeUnknownEffectFromJsonString: S.decodeUnknownEffect(fromJsonStringSchema),
+      encodeEffect: S.encodeEffect(schema),
+      encodeEffectFromJsonString: S.encodeEffect(fromJsonStringSchema),
+      encodeUnknownEffect: S.encodeUnknownEffect(schema),
+      encodeUnknownEffectFromJsonString: S.encodeUnknownEffect(fromJsonStringSchema),
+    };
+  })(self);
 
 /**
  * Attach {@link ExitCodecStatics} to a schema value. Designed to be used with
@@ -346,18 +394,25 @@ export const withEffectCodecStatics = <Sch extends EffectCapableCodec<Sch>>(self
  *
  * @typeParam Sch - Service-free schema receiving the Exit codec statics.
  * @param self - The schema receiving the Exit codec statics.
- * @returns The schema with shared statics plus the Exit decode/encode quartet.
+ * @returns The schema with shared statics plus direct and JSON-string Exit codecs.
  * @see {@link SharedCodecStatics} for the `asserts`, `is`, and `equivalence` statics included in every group.
  * @category combinators
  * @since 0.0.0
  */
 export const withExitCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self: Sch): Sch & ExitCodecStatics<Sch> =>
-  attachCodecStatics((schema: Sch) => ({
-    decodeExit: S.decodeExit(schema),
-    decodeUnknownExit: S.decodeUnknownExit(schema),
-    encodeExit: S.encodeExit(schema),
-    encodeUnknownExit: S.encodeUnknownExit(schema),
-  }))(self);
+  attachCodecStatics((schema: Sch) => {
+    const fromJsonStringSchema = S.fromJsonString(schema);
+    return {
+      decodeExit: S.decodeExit(schema),
+      decodeExitFromJsonString: S.decodeExit(fromJsonStringSchema),
+      decodeUnknownExit: S.decodeUnknownExit(schema),
+      decodeUnknownExitFromJsonString: S.decodeUnknownExit(fromJsonStringSchema),
+      encodeExit: S.encodeExit(schema),
+      encodeExitFromJsonString: S.encodeExit(fromJsonStringSchema),
+      encodeUnknownExit: S.encodeUnknownExit(schema),
+      encodeUnknownExitFromJsonString: S.encodeUnknownExit(fromJsonStringSchema),
+    };
+  })(self);
 
 /**
  * Attach {@link OptionCodecStatics} to a schema value. Designed to be used
@@ -390,18 +445,25 @@ export const withExitCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self: Sc
  *
  * @typeParam Sch - Service-free schema receiving the Option codec statics.
  * @param self - The schema receiving the Option codec statics.
- * @returns The schema with shared statics plus the Option decode/encode quartet.
+ * @returns The schema with shared statics plus direct and JSON-string Option codecs.
  * @see {@link SharedCodecStatics} for the `asserts`, `is`, and `equivalence` statics included in every group.
  * @category combinators
  * @since 0.0.0
  */
 export const withOptionCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self: Sch): Sch & OptionCodecStatics<Sch> =>
-  attachCodecStatics((schema: Sch) => ({
-    decodeOption: S.decodeOption(schema),
-    decodeUnknownOption: S.decodeUnknownOption(schema),
-    encodeOption: S.encodeOption(schema),
-    encodeUnknownOption: S.encodeUnknownOption(schema),
-  }))(self);
+  attachCodecStatics((schema: Sch) => {
+    const fromJsonStringSchema = S.fromJsonString(schema);
+    return {
+      decodeOption: S.decodeOption(schema),
+      decodeOptionFromJsonString: S.decodeOption(fromJsonStringSchema),
+      decodeUnknownOption: S.decodeUnknownOption(schema),
+      decodeUnknownOptionFromJsonString: S.decodeUnknownOption(fromJsonStringSchema),
+      encodeOption: S.encodeOption(schema),
+      encodeOptionFromJsonString: S.encodeOption(fromJsonStringSchema),
+      encodeUnknownOption: S.encodeUnknownOption(schema),
+      encodeUnknownOptionFromJsonString: S.encodeUnknownOption(fromJsonStringSchema),
+    };
+  })(self);
 
 /**
  * Attach {@link ResultCodecStatics} to a schema value. Designed to be used
@@ -434,15 +496,22 @@ export const withOptionCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self: 
  *
  * @typeParam Sch - Service-free schema receiving the Result codec statics.
  * @param self - The schema receiving the Result codec statics.
- * @returns The schema with shared statics plus the Result decode/encode quartet.
+ * @returns The schema with shared statics plus direct and JSON-string Result codecs.
  * @see {@link SharedCodecStatics} for the `asserts`, `is`, and `equivalence` statics included in every group.
  * @category combinators
  * @since 0.0.0
  */
 export const withResultCodecStatics = <Sch extends ServiceFreeCodec<Sch>>(self: Sch): Sch & ResultCodecStatics<Sch> =>
-  attachCodecStatics((schema: Sch) => ({
-    decodeResult: S.decodeResult(schema),
-    decodeUnknownResult: S.decodeUnknownResult(schema),
-    encodeResult: S.encodeResult(schema),
-    encodeUnknownResult: S.encodeUnknownResult(schema),
-  }))(self);
+  attachCodecStatics((schema: Sch) => {
+    const fromJsonStringSchema = S.fromJsonString(schema);
+    return {
+      decodeResult: S.decodeResult(schema),
+      decodeResultFromJsonString: S.decodeResult(fromJsonStringSchema),
+      decodeUnknownResult: S.decodeUnknownResult(schema),
+      decodeUnknownResultFromJsonString: S.decodeUnknownResult(fromJsonStringSchema),
+      encodeResult: S.encodeResult(schema),
+      encodeResultFromJsonString: S.encodeResult(fromJsonStringSchema),
+      encodeUnknownResult: S.encodeUnknownResult(schema),
+      encodeUnknownResultFromJsonString: S.encodeUnknownResult(fromJsonStringSchema),
+    };
+  })(self);

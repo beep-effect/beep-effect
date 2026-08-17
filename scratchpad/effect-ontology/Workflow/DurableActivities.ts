@@ -63,7 +63,6 @@ import { ConfigService } from "../Service/Config.ts";
 import { CrossBatchEntityResolver, CrossBatchResolverConfig } from "../Service/CrossBatchEntityResolver.ts";
 import { EmbeddingService } from "../Service/Embedding.ts";
 import { EntityResolutionService } from "../Service/EntityResolution.ts";
-import { StageTimeoutService } from "../Service/LlmControl/StageTimeout.ts";
 import { generateObjectWithRetry } from "../Service/LlmWithRetry.ts";
 import { parseOntologyFromStore } from "../Service/Ontology.ts";
 import type { RdfStore } from "../Service/Rdf.ts";
@@ -2191,7 +2190,6 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
     execute: Effect.gen(function* () {
       const start = yield* DateTime.now;
       const config = yield* ConfigService;
-      const timeout = yield* StageTimeoutService;
       const llm = yield* LanguageModel.LanguageModel;
 
       const threshold = O.getOrElse(input.verificationThreshold, () => DEFAULT_VERIFICATION_THRESHOLD);
@@ -2231,33 +2229,19 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
           const pair = batch[0];
           const prompt = buildComparisonPrompt(pair);
 
-          const result = yield* timeout.withTimeout(
-            "entity_verification",
-            generateObjectWithRetry({
-              llm,
-              prompt,
-              schema: EntityComparisonSchema,
-              objectName: "EntityComparison",
-              serviceName: "LlmVerification",
-              model: config.llm.model,
-              provider: config.llm.provider,
-              retryConfig: {
-                initialDelayMs: config.runtime.retryInitialDelayMs,
-                maxDelayMs: config.runtime.retryMaxDelayMs,
-                maxAttempts: config.runtime.retryMaxAttempts,
-                timeoutMs: config.llm.timeoutMs,
-              },
-              spanAttributes: {
-                [LlmAttributes.PROMPT_LENGTH]: prompt.length,
-                "verification.pair_index": i,
-              },
-            }),
-            () =>
-              Effect.logWarning("Entity verification approaching timeout", {
-                batchId: input.batchId,
-                pairIndex: i,
-              })
-          );
+          const result = yield* generateObjectWithRetry({
+            prompt,
+            schema: EntityComparisonSchema,
+            objectName: "EntityComparison",
+            serviceName: "LlmVerification",
+            model: config.llm.model,
+            provider: config.llm.provider,
+            retryPolicy: config.llm.retryPolicy,
+            spanAttributes: {
+              [LlmAttributes.PROMPT_LENGTH]: prompt.length,
+              "verification.pair_index": i,
+            },
+          }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
 
           const verifiedPair: VerifiedPair = {
             entityA: pair.entityA,
@@ -2276,35 +2260,20 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
           // Batch verification
           const prompt = buildBatchComparisonPrompt(batch);
 
-          const result = yield* timeout.withTimeout(
-            "entity_verification",
-            generateObjectWithRetry({
-              llm,
-              prompt,
-              schema: BatchComparisonSchema,
-              objectName: "BatchEntityComparison",
-              serviceName: "LlmVerification",
-              model: config.llm.model,
-              provider: config.llm.provider,
-              retryConfig: {
-                initialDelayMs: config.runtime.retryInitialDelayMs,
-                maxDelayMs: config.runtime.retryMaxDelayMs,
-                maxAttempts: config.runtime.retryMaxAttempts,
-                timeoutMs: config.llm.timeoutMs * 2,
-              },
-              spanAttributes: {
-                [LlmAttributes.PROMPT_LENGTH]: prompt.length,
-                "verification.batch_size": batch.length,
-                "verification.batch_start": i,
-              },
-            }),
-            () =>
-              Effect.logWarning("Batch entity verification approaching timeout", {
-                batchId: input.batchId,
-                batchStart: i,
-                batchSize: batch.length,
-              })
-          );
+          const result = yield* generateObjectWithRetry({
+            prompt,
+            schema: BatchComparisonSchema,
+            objectName: "BatchEntityComparison",
+            serviceName: "LlmVerification",
+            model: config.llm.model,
+            provider: config.llm.provider,
+            retryPolicy: config.llm.retryPolicy,
+            spanAttributes: {
+              [LlmAttributes.PROMPT_LENGTH]: prompt.length,
+              "verification.batch_size": batch.length,
+              "verification.batch_start": i,
+            },
+          }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
 
           // Map results back to pairs
           const resultsMap = HashMap.fromIterable(result.value.results.map((r) => [r.index, r]));
@@ -2639,25 +2608,20 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
           });
 
           const result = yield* generateObjectWithRetry({
-            llm,
             prompt: buildClassificationPrompt(batchPreviews),
             schema: BatchClassificationResponse,
             objectName: "batch_classification",
             serviceName: "Preprocessing",
             model: config.llm.model,
             provider: config.llm.provider,
-            retryConfig: {
-              initialDelayMs: 1000,
-              maxDelayMs: 30000,
-              maxAttempts: 3,
-              timeoutMs: 60000,
-            },
+            retryPolicy: config.llm.retryPolicy,
             spanAttributes: {
               "preprocessing.batch_id": input.batchId,
               "preprocessing.batch_start": i,
               "preprocessing.batch_size": batch.length,
             },
           }).pipe(
+            Effect.provideService(LanguageModel.LanguageModel, llm),
             Effect.catch((error) =>
               Effect.gen(function* () {
                 yield* Effect.logWarning("Classification batch failed, using defaults", {

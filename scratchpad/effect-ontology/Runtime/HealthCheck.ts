@@ -10,11 +10,13 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { Context, DateTime, Duration, Effect, Layer, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { ConfigService } from "../Service/Config.ts";
 import { StorageService } from "../Service/Storage.ts";
 
@@ -39,12 +41,105 @@ const healthError: "error" = "error";
  * @category type-level
  * @since 0.0.0
  */
-export interface HealthResult {
-  readonly status: "ok" | "degraded" | "error";
-  readonly timestamp: string;
-  readonly checks?: Record<string, "ok" | "error">;
-  readonly error?: string;
-}
+/**
+ * Aggregate status exposed by a health probe.
+ *
+ * **Example** (Inspect health statuses)
+ *
+ * ```ts
+ * import { HealthStatus } from "@effect-ontology/Runtime/HealthCheck"
+ *
+ * console.log(HealthStatus.Options)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HealthStatus = LiteralKit(["ok", "degraded", "error"]).pipe(
+  $I.annoteSchema("HealthStatus", {
+    description: "Aggregate runtime health states exposed by probes.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link HealthStatus}.
+ *
+ * **Example** (Use a health status)
+ *
+ * ```ts
+ * import type { HealthStatus } from "@effect-ontology/Runtime/HealthCheck"
+ *
+ * const status: HealthStatus = "degraded"
+ * console.log(status)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HealthStatus = typeof HealthStatus.Type;
+
+/**
+ * Outcome of one named health dependency check.
+ *
+ * **Example** (Inspect dependency check statuses)
+ *
+ * ```ts
+ * import { HealthCheckStatus } from "@effect-ontology/Runtime/HealthCheck"
+ *
+ * console.log(HealthCheckStatus.Options)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HealthCheckStatus = LiteralKit(["ok", "error"]).pipe(
+  $I.annoteSchema("HealthCheckStatus", {
+    description: "Outcome of one named runtime health dependency check.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link HealthCheckStatus}.
+ *
+ * **Example** (Use a dependency check status)
+ *
+ * ```ts
+ * import type { HealthCheckStatus } from "@effect-ontology/Runtime/HealthCheck"
+ *
+ * const status: HealthCheckStatus = "ok"
+ * console.log(status)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HealthCheckStatus = typeof HealthCheckStatus.Type;
+
+/**
+ * Timestamped aggregate result returned by runtime health probes.
+ *
+ * **Example** (Inspect the health result schema)
+ *
+ * ```ts
+ * import { HealthResult } from "@effect-ontology/Runtime/HealthCheck"
+ *
+ * console.log(HealthResult)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class HealthResult extends S.Class<HealthResult>($I`HealthResult`)(
+  {
+    status: HealthStatus,
+    timestamp: S.NonEmptyString,
+    checks: S.optionalKey(S.Record(S.String, HealthCheckStatus)),
+    error: S.optionalKey(S.NonEmptyString),
+  },
+  $I.annote("HealthResult", {
+    description: "Timestamped aggregate health status with optional dependency results and failure detail.",
+  })
+) {}
 
 /**
  * HealthCheckService - Liveness and readiness probes

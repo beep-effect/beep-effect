@@ -77,23 +77,25 @@ describe("effect-ontology SHACL schemas", () => {
     })
   );
 
-  it("applies schema defaults and keeps workflow policy separate from report conformance", () => {
-    const defaults = ValidationPolicy.fromUnknown({});
-    const strict = ValidationPolicy.fromUnknown({ failOnWarning: true });
-    const logOnly = ValidationPolicy.fromUnknown({
-      failOnViolation: true,
-      failOnWarning: true,
-      logOnly: true,
-    });
+  it.effect("applies schema defaults and keeps workflow policy separate from report conformance", () =>
+    Effect.gen(function* () {
+      const defaults = yield* S.decodeEffect(ValidationPolicy)({});
+      const strict = yield* S.decodeEffect(ValidationPolicy)({ failOnWarning: true });
+      const logOnly = yield* S.decodeEffect(ValidationPolicy)({
+        failOnViolation: true,
+        failOnWarning: true,
+        logOnly: true,
+      });
 
-    expect(defaults).toEqual({
-      failOnViolation: true,
-      failOnWarning: false,
-      logOnly: false,
-    });
-    expect(ValidationPolicy.shouldFail(defaults, [violation])).toBe(true);
-    expect(ValidationPolicy.shouldFail(defaults, [warning])).toBe(false);
-    expect(ValidationPolicy.shouldFail(strict, [warning])).toBe(true);
-    expect(ValidationPolicy.shouldFail(logOnly, [violation, warning])).toBe(false);
-  });
+      expect(defaults).toEqual({
+        failOnViolation: true,
+        failOnWarning: false,
+        logOnly: false,
+      });
+      expect(ValidationPolicy.shouldFail(defaults, [violation])).toBe(true);
+      expect(ValidationPolicy.shouldFail(defaults, [warning])).toBe(false);
+      expect(ValidationPolicy.shouldFail(strict, [warning])).toBe(true);
+      expect(ValidationPolicy.shouldFail(logOnly, [violation, warning])).toBe(false);
+    })
+  );
 });

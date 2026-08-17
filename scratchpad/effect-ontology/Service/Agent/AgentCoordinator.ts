@@ -34,16 +34,17 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
-import { Clock, Context, DateTime, Duration, Effect, HashMap, Inspectable, Layer, Match, Ref } from "effect";
+import { Cause, Clock, Context, DateTime, Duration, Effect, HashMap, Inspectable, Layer, Match, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { Agent, AgentEvent, AgentId as AgentIdType, AgentType } from "../../Domain/Model/Agent.ts";
+import type { Agent, AgentId as AgentIdType, AgentType } from "../../Domain/Model/Agent.ts";
 import {
   AgentCompleted,
+  AgentEvent,
   AgentFailed,
   AgentId,
   AgentMetadata,
@@ -94,9 +95,9 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Agent/AgentCoordinator"
  */
 export interface ExecutionOptions {
   /**
-   * Maximum time per agent in milliseconds
+   * Maximum duration allowed for one agent execution.
    */
-  readonly agentTimeoutMs?: number;
+  readonly agentTimeout?: Duration.Duration;
 
   /**
    * Whether to continue on agent failure
@@ -128,14 +129,17 @@ export interface ExecutionOptions {
  * console.log(acceptsExecutionResult)
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
-export interface ExecutionResult {
-  readonly state: PipelineState;
-  readonly events: ReadonlyArray<AgentEvent>;
-  readonly outputs: HashMap.HashMap<AgentIdType, unknown>;
-}
+export class ExecutionResult extends S.Class<ExecutionResult>($I`ExecutionResult`)(
+  {
+    state: PipelineState,
+    events: S.Array(AgentEvent),
+    outputs: S.HashMap(AgentId, S.Unknown),
+  },
+  $I.annote("ExecutionResult", { description: "Validated state, events, and outputs from one pipeline execution." })
+) {}
 
 // =============================================================================
 // Service Definition
@@ -166,18 +170,35 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
 
     // Agent registry (mutable ref)
     const registryRef = yield* Ref.make<
-      HashMap.HashMap<AgentIdType, RegisteredAgent<AgentTask, AgentTask, unknown, never>>
+      HashMap.HashMap<AgentIdType, RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>>
     >(HashMap.empty());
 
     /**
      * Register an agent with the coordinator
      */
-    const register = Effect.fn("AgentCoordinator.register")(function* (
-      agent: Agent<AgentTask, AgentTask, unknown, never>,
+    const register = Effect.fn("AgentCoordinator.register")(function* <E>(
+      agent: Agent<AgentTask, AgentTask, E, never>,
       agentType: AgentType = agent.metadata.type
     ) {
-      const registered: RegisteredAgent<AgentTask, AgentTask, unknown, never> = {
-        agent,
+      const normalizedAgent: Agent<AgentTask, AgentTask, AgentExecutionError, never> = {
+        metadata: agent.metadata,
+        validate: agent.validate,
+        execute: (input) =>
+          agent.execute(input).pipe(
+            Effect.mapError((error) =>
+              AgentExecutionError.is(error)
+                ? error
+                : AgentExecutionError.make({
+                    agentId: agent.metadata.id,
+                    message: Inspectable.toStringUnknown(error),
+                    cause: O.some(error),
+                    retryable: false,
+                  })
+            )
+          ),
+      };
+      const registered: RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never> = {
+        agent: normalizedAgent,
         registeredAt: DateTime.toEpochMillis(yield* DateTime.now),
         agentType,
         enabled: true,
@@ -292,14 +313,14 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
         }
 
         // Execute agent with optional timeout
-        const executeWithTimeout = P.isNotUndefined(options?.agentTimeoutMs)
-          ? agent.execute(input).pipe(Effect.timeout(options.agentTimeoutMs))
+        const executeWithTimeout = P.isNotUndefined(options?.agentTimeout)
+          ? agent.execute(input).pipe(Effect.timeout(options.agentTimeout))
           : agent.execute(input);
 
         const result = yield* executeWithTimeout.pipe(
           Effect.catch((error) =>
             Effect.gen(function* () {
-              const isTimeout = P.hasProperty(error, "_tag") && error._tag === "TimeoutError";
+              const isTimeout = Cause.isTimeoutError(error);
               const failedAt = yield* DateTime.now;
               const failedEvent = AgentFailed.make({
                 agentId,
@@ -339,7 +360,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
       (effect, agent, _input, eventsRef, options) =>
         effect.pipe(
           Effect.catch((error) => {
-            if (error._tag === "AgentExecutionError") {
+            if (AgentExecutionError.is(error)) {
               return error;
             }
             return Effect.gen(function* () {
@@ -382,7 +403,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
       let outputsMap = HashMap.empty<AgentIdType, unknown>();
 
       // Get all agents upfront
-      const agents: Array<RegisteredAgent<AgentTask, AgentTask, unknown, never>> = [];
+      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>> = [];
       for (const id of agentIds) {
         const agent = yield* getAgent(id).pipe(
           Effect.mapError((e) =>
@@ -474,11 +495,11 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
 
       const events = yield* Ref.get(eventsRef);
 
-      return {
+      return ExecutionResult.make({
         state,
         events,
         outputs: outputsMap,
-      };
+      });
     });
 
     /**
@@ -501,7 +522,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
       let outputsMap = HashMap.empty<AgentIdType, unknown>();
 
       // Get all agents upfront
-      const agents: Array<RegisteredAgent<AgentTask, AgentTask, unknown, never>> = [];
+      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>> = [];
       for (const id of agentIds) {
         const agent = yield* getAgent(id).pipe(
           Effect.mapError((e) =>
@@ -626,11 +647,11 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
 
       const events = yield* Ref.get(eventsRef);
 
-      return {
+      return ExecutionResult.make({
         state,
         events,
         outputs: outputsMap,
-      };
+      });
     });
 
     /**
@@ -651,7 +672,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
       const concurrency = options?.concurrency ?? config.runtime.concurrency;
 
       // Get all agents upfront
-      const agents: Array<RegisteredAgent<AgentTask, AgentTask, unknown, never>> = [];
+      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>> = [];
       for (const id of agentIds) {
         const agent = yield* getAgent(id).pipe(
           Effect.mapError((e) =>
@@ -739,11 +760,11 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
 
       const events = yield* Ref.get(eventsRef);
 
-      return {
+      return ExecutionResult.make({
         state,
         events,
         outputs: outputsMap,
-      };
+      });
     });
 
     /**
@@ -793,7 +814,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
       let outputsMap = HashMap.empty<AgentIdType, unknown>();
 
       // Get all agents upfront
-      const agents: Array<RegisteredAgent<AgentTask, AgentTask, unknown, never>> = [];
+      const agents: Array<RegisteredAgent<AgentTask, AgentTask, AgentExecutionError, never>> = [];
       for (const id of agentIds) {
         const agent = yield* getAgent(id).pipe(
           Effect.mapError((e) =>
@@ -867,11 +888,11 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator>()($I`Age
 
       const events = yield* Ref.get(eventsRef);
 
-      return {
+      return ExecutionResult.make({
         state,
         events,
         outputs: outputsMap,
-      };
+      });
     });
 
     /**

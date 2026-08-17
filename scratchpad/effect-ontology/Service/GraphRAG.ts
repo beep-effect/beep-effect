@@ -9,18 +9,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
-import {
-  Context,
-  Duration,
-  Effect,
-  HashMap,
-  HashSet,
-  Inspectable,
-  Layer,
-  Match,
-  Number as Num,
-  Order as Ord,
-} from "effect";
+import { Context, Effect, HashMap, HashSet, Inspectable, Layer, Match, Number as Num, Order as Ord } from "effect";
 import * as A from "effect/Array";
 import type { TimeoutError } from "effect/Cause";
 import { dual, pipe } from "effect/Function";
@@ -29,7 +18,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type * as AiError from "effect/unstable/ai/AiError";
-import * as LanguageModel from "effect/unstable/ai/LanguageModel";
+import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import { OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { KnowledgeGraph } from "../Domain/Model/Entity.ts";
@@ -37,6 +26,7 @@ import { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { EntityIndex } from "./EntityIndex.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
+import { RetryPolicy } from "./Retry.ts";
 import { Subgraph, SubgraphExtractor } from "./SubgraphExtractor.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/GraphRAG");
@@ -73,13 +63,9 @@ const RetrievalOptionsFields = {
 };
 
 const GenerationOptionsFields = {
-  timeout: S.Duration.pipe(
-    SchemaUtils.withKeyDefaults(Duration.seconds(30)),
-    S.annotateKey({ description: "Maximum duration allowed for each language-model attempt." })
-  ),
-  maxAttempts: PosInt.pipe(
-    SchemaUtils.withKeyDefaults(PosInt.make(3)),
-    S.annotateKey({ description: "Maximum generation attempts, including the initial attempt." })
+  retryPolicy: RetryPolicy.pipe(
+    SchemaUtils.withKeyDefaults(RetryPolicy.make({})),
+    S.annotateKey({ description: "Validated attempt, backoff, and overall deadline policy." })
   ),
 };
 
@@ -213,7 +199,7 @@ export class RetrievalResult extends S.Class<RetrievalResult>($I`RetrievalResult
  * import { GenerationOptions } from "@effect-ontology/Service/GraphRAG"
  *
  * const options = GenerationOptions.make({})
- * console.log(options.maxAttempts) // 3
+ * console.log(options.retryPolicy.maxAttempts) // 3
  * ```
  *
  * @category models
@@ -222,7 +208,7 @@ export class RetrievalResult extends S.Class<RetrievalResult>($I`RetrievalResult
 export class GenerationOptions extends S.Class<GenerationOptions>($I`GenerationOptions`)(
   GenerationOptionsFields,
   $I.annote("GenerationOptions", {
-    description: "Validated per-attempt timeout and total language-model attempt bound.",
+    description: "Validated retry and deadline policy for grounded language-model generation.",
   })
 ) {}
 
@@ -254,7 +240,7 @@ export type GenerationOptionsInput = (typeof GenerationOptions)["~type.make.in"]
  * import { AnswerOptions } from "@effect-ontology/Service/GraphRAG"
  *
  * const options = AnswerOptions.make({})
- * console.log(options.topK, options.maxAttempts)
+ * console.log(options.topK, options.retryPolicy.maxAttempts)
  * ```
  *
  * @category models
@@ -839,9 +825,16 @@ const defaultStepExplanation = (step: ReasoningStep): string =>
 
 const mapGenerationError =
   (query: string, operation: string) =>
-  (error: AiError.AiError | TimeoutError): GraphRAGGenerationError | TimeoutError =>
+  (error: AiError.AiError | S.SchemaError | TimeoutError): GraphRAGGenerationError | TimeoutError =>
     Match.value(error).pipe(
       Match.tag("TimeoutError", (timeout) => timeout),
+      Match.tag("SchemaError", (cause) =>
+        GraphRAGGenerationError.make({
+          message: `${operation} policy validation failed: ${cause.message}`,
+          query,
+          cause: O.some(cause),
+        })
+      ),
       Match.orElse((cause) =>
         GraphRAGGenerationError.make({
           message: `${operation} failed: ${cause.reason._tag}`,
@@ -974,9 +967,8 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
       query: string,
       optionsInput: GenerationOptionsInput
     ) {
-      const llm = yield* LanguageModel.LanguageModel;
       const options = GenerationOptions.make(optionsInput);
-      const response = yield* generateObjectWithFeedback(llm, {
+      const response = yield* generateObjectWithFeedback({
         prompt: `You are a knowledge graph assistant. Answer the question using only the supplied context.
 
 ${retrieval.context}
@@ -987,9 +979,8 @@ ${query}
 Return exact entity IDs from [id: ...] markers as citations. Explain when the graph is insufficient.`,
         schema: GroundedAnswerOutput,
         objectName: "grounded_answer",
-        maxAttempts: options.maxAttempts,
         serviceName: "GraphRAG.generate",
-        timeout: options.timeout,
+        retryPolicy: options.retryPolicy,
       }).pipe(Effect.mapError(mapGenerationError(query, "Grounded answer generation")));
 
       const availableIds = HashSet.fromIterable(A.map(retrieval.subgraph.nodes, (entity) => entity.id));
@@ -1028,8 +1019,7 @@ Return exact entity IDs from [id: ...] markers as citations. Explain when the gr
         includeRelations: options.includeRelations,
       });
       return yield* generate(retrieval, query, {
-        timeout: options.timeout,
-        maxAttempts: options.maxAttempts,
+        retryPolicy: options.retryPolicy,
       });
     });
 
@@ -1057,7 +1047,6 @@ Return exact entity IDs from [id: ...] markers as citations. Explain when the gr
         });
       }
 
-      const llm = yield* LanguageModel.LanguageModel;
       const stepsDescription = pipe(
         steps,
         A.map(
@@ -1066,7 +1055,7 @@ Return exact entity IDs from [id: ...] markers as citations. Explain when the gr
         ),
         A.join("\n")
       );
-      const response = yield* generateObjectWithFeedback(llm, {
+      const response = yield* generateObjectWithFeedback({
         prompt: `Explain how the precomputed knowledge-graph path supports this answer.
 
 ## Question
@@ -1079,9 +1068,8 @@ ${answerValue.answer}
 ${stepsDescription}`,
         schema: ReasoningTraceOutput,
         objectName: "reasoning_trace",
-        maxAttempts: options.maxAttempts,
         serviceName: "GraphRAG.explain",
-        timeout: options.timeout,
+        retryPolicy: options.retryPolicy,
       }).pipe(Effect.mapError(mapGenerationError(answerValue.retrieval.query, "Reasoning trace generation")));
 
       return ReasoningTrace.make({

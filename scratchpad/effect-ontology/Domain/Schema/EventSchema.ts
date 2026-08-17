@@ -222,6 +222,57 @@ const BatchStateChangedPayload = BatchStateChangedPayloadDefinition.annotate({
   })
 );
 
+const EventEntryFields = {
+  id: S.NonEmptyString,
+  primaryKey: S.NonEmptyString,
+  createdAt: S.DateTimeUtc,
+};
+
+const OntologyEventEntryDefinition = S.Union([
+  S.Struct({ ...EventEntryFields, event: S.tag("ClaimCorrected"), payload: ClaimCorrectedPayload }),
+  S.Struct({ ...EventEntryFields, event: S.tag("ClaimDeprecated"), payload: ClaimDeprecatedPayload }),
+  S.Struct({ ...EventEntryFields, event: S.tag("AliasAdded"), payload: AliasAddedPayload }),
+  S.Struct({ ...EventEntryFields, event: S.tag("ClaimPromoted"), payload: ClaimPromotedPayload }),
+  S.Struct({ ...EventEntryFields, event: S.tag("EntityLinked"), payload: EntityLinkedPayload }),
+  S.Struct({ ...EventEntryFields, event: S.tag("ExtractionCompleted"), payload: ExtractionCompletedPayload }),
+  S.Struct({ ...EventEntryFields, event: S.tag("ValidationFailed"), payload: ValidationFailedPayload }),
+  S.Struct({ ...EventEntryFields, event: S.tag("BatchStateChanged"), payload: BatchStateChangedPayload }),
+]).pipe(S.toTaggedUnion("event"));
+
+/**
+ * Canonical journal entry pairing every ontology event tag with its payload schema.
+ *
+ * **Example** (Inspect canonical ontology event cases)
+ * ```ts
+ * import { OntologyEventEntry } from "@effect-ontology/Schema/EventSchema"
+ * console.log(Object.keys(OntologyEventEntry.cases).length) // 8
+ * ```
+ *
+ * @category events
+ * @since 0.0.0
+ */
+export const OntologyEventEntry = OntologyEventEntryDefinition.pipe(
+  $I.annoteSchema("OntologyEventEntry", {
+    description: "Schema-validated journal entry whose event tag determines its canonical payload.",
+    toArbitrary: () => S.toArbitrary(OntologyEventEntryDefinition),
+  })
+);
+
+/**
+ * Runtime journal entry decoded by {@link OntologyEventEntry}.
+ *
+ * **Example** (Use the OntologyEventEntry contract)
+ * ```ts
+ * import type { OntologyEventEntry } from "@effect-ontology/Schema/EventSchema"
+ * const eventName = (entry: OntologyEventEntry) => entry.event
+ * console.log(eventName)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type OntologyEventEntry = typeof OntologyEventEntry.Type;
+
 /**
  * EventLog definitions emitted by extraction and batch workflows.
  *

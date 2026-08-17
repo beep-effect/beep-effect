@@ -11,11 +11,11 @@
  * @since 0.0.0
  */
 
+import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PosInt } from "@beep/schema/Int";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import { Context, Effect, HashMap, HashSet, Layer, MutableHashMap } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -52,7 +52,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/CrossBatchEntityResolve
  * @category type-level
  * @since 0.0.0
  */
-export type CrossBatchResolutionError = AnyEmbeddingError | EffectDrizzleQueryError | SqlError.SqlError;
+export type CrossBatchResolutionError = AnyEmbeddingError | DrizzleError | SqlError.SqlError;
 
 // =============================================================================
 // Types
@@ -339,7 +339,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
           canonicalMap: Record<string, string>;
           newCanonicals: Array<string>;
         },
-        EffectDrizzleQueryError | SqlError.SqlError
+        DrizzleError | SqlError.SqlError
       > {
         const { canonicalMap, mergedEntities, unresolvedEntities } = resolutionResult;
         let newCanonicalIris: Array<string> = [];

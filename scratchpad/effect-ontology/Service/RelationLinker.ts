@@ -13,6 +13,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import type { IRI } from "@beep/rdf";
 import { Chunk, Context, Effect, HashSet, Layer } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts";
@@ -113,7 +114,7 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
         let remappedCount = 0;
         let literalObjectCount = 0;
 
-        const linkedRelations: Array<LinkedRelation> = [];
+        const linkedRelations = A.empty<LinkedRelation>()
 
         for (const relation of relations) {
           // Canonicalize subject - unwrap Option with fallback to original
@@ -170,7 +171,7 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
     deduplicateLinked: (linkingResult: LinkingResult): Effect.Effect<Chunk.Chunk<Relation>, never> =>
       Effect.sync(() => {
         let seen = HashSet.empty<string>();
-        const deduplicated: Array<Relation> = [];
+        const deduplicated = A.empty<Relation>()
 
         for (const linked of linkingResult.linkedRelations) {
           // Create canonical key

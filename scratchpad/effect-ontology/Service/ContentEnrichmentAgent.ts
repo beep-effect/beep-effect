@@ -175,13 +175,7 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
     const llm = yield* LanguageModel.LanguageModel;
     const config = yield* ConfigService;
 
-    const { model, provider, timeoutMs } = config.llm;
-    const retryConfig = {
-      initialDelayMs: config.runtime.retryInitialDelayMs,
-      maxDelayMs: config.runtime.retryMaxDelayMs,
-      maxAttempts: config.runtime.retryMaxAttempts,
-      timeoutMs,
-    };
+    const { model, provider, retryPolicy } = config.llm;
 
     /**
      * Enrich content from JinaContent response
@@ -220,19 +214,19 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
       };
 
       const response = yield* generateObjectWithRetry({
-        llm,
         prompt,
         schema: EnrichmentOutputSchema,
         objectName: "enrichedContent",
         serviceName: "ContentEnrichment",
         model,
         provider,
-        retryConfig,
+        retryPolicy,
         spanAttributes: {
           "content.url": url ?? "unknown",
           "content.wordCount": wordCount,
         },
       }).pipe(
+        Effect.provideService(LanguageModel.LanguageModel, llm),
         Effect.mapError((error) =>
           ContentEnrichmentError.make({
             message: `Failed to enrich content: ${error}`,

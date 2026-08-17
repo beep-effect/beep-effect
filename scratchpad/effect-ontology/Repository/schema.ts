@@ -4,29 +4,34 @@
  * **Details**
  *
  * PostgreSQL schema for claims, articles, corrections, conflicts, and batch runs.
- * Matches the SQL migration at `src/Runtime/Persistence/migrations/001_claims_schema.sql`.
+ * Drives the generated baseline under `Runtime/Persistence/migrations`.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { Model } from "@beep/effect-drizzle";
+import * as pg from "@beep/effect-drizzle/pg";
+import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   customType,
   index,
   integer,
   jsonb,
   numeric,
-  pgEnum,
   pgTable,
   primaryKey,
   text,
   timestamp,
   uniqueIndex,
   uuid,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { Number as Num } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 // =============================================================================
@@ -92,122 +97,6 @@ const vector768 = vectorN(768);
  * @category tables
  */
 
-/**
- * Custom type for pgvector embedding columns (256-dimensional).
- * Used for Matryoshka representation learning (truncated embeddings).
- *
- * **Example** (Inspect claim rank enum)
- *
- * ```ts
- * import { claimRankEnum } from "@effect-ontology/Repository/schema"
- *
- * console.log(claimRankEnum)
- * ```
- *
- * @category repositories
- * @since 0.0.0
- */
-
-// =============================================================================
-// Enums
-// =============================================================================
-
-export const claimRankEnum = pgEnum("claim_rank", ["preferred", "normal", "deprecated"]);
-/**
- * Provides repository access for object type enum.
- *
- * **Example** (Inspect object type enum)
- *
- * ```ts
- * import { objectTypeEnum } from "@effect-ontology/Repository/schema"
- *
- * console.log(objectTypeEnum)
- * ```
- *
- * @category repositories
- * @since 0.0.0
- */
-export const objectTypeEnum = pgEnum("object_type", ["iri", "literal", "typed_literal"]);
-/**
- * Provides repository access for correction type enum.
- *
- * **Example** (Inspect correction type enum)
- *
- * ```ts
- * import { correctionTypeEnum } from "@effect-ontology/Repository/schema"
- *
- * console.log(correctionTypeEnum)
- * ```
- *
- * @category repositories
- * @since 0.0.0
- */
-export const correctionTypeEnum = pgEnum("correction_type", ["retraction", "clarification", "update", "amendment"]);
-/**
- * Provides repository access for conflict type enum.
- *
- * **Example** (Inspect conflict type enum)
- *
- * ```ts
- * import { conflictTypeEnum } from "@effect-ontology/Repository/schema"
- *
- * console.log(conflictTypeEnum)
- * ```
- *
- * @category repositories
- * @since 0.0.0
- */
-export const conflictTypeEnum = pgEnum("conflict_type", ["position", "temporal", "contradictory", "duplicate"]);
-/**
- * Provides repository access for conflict status enum.
- *
- * **Example** (Inspect conflict status enum)
- *
- * ```ts
- * import { conflictStatusEnum } from "@effect-ontology/Repository/schema"
- *
- * console.log(conflictStatusEnum)
- * ```
- *
- * @category repositories
- * @since 0.0.0
- */
-export const conflictStatusEnum = pgEnum("conflict_status", ["pending", "resolved", "ignored"]);
-/**
- * Provides repository access for resolution strategy enum.
- *
- * **Example** (Inspect resolution strategy enum)
- *
- * ```ts
- * import { resolutionStrategyEnum } from "@effect-ontology/Repository/schema"
- *
- * console.log(resolutionStrategyEnum)
- * ```
- *
- * @category repositories
- * @since 0.0.0
- */
-export const resolutionStrategyEnum = pgEnum("resolution_strategy", [
-  "temporal_precedence",
-  "source_authority",
-  "manual",
-]);
-/**
- * Provides repository access for batch status enum.
- *
- * **Example** (Inspect batch status enum)
- *
- * ```ts
- * import { batchStatusEnum } from "@effect-ontology/Repository/schema"
- *
- * console.log(batchStatusEnum)
- * ```
- *
- * @category repositories
- * @since 0.0.0
- */
-export const batchStatusEnum = pgEnum("batch_status", ["pending", "running", "completed", "failed"]);
-
 // =============================================================================
 // Articles Table
 // =============================================================================
@@ -226,31 +115,32 @@ export const batchStatusEnum = pgEnum("batch_status", ["pending", "running", "co
  * @category repositories
  * @since 0.0.0
  */
-export const articles = pgTable(
-  "articles",
+class Articles extends Model<Articles>("Articles")(
   {
-    id: uuid("id").primaryKey().defaultRandom(),
-    uri: text("uri").notNull(),
-    ontologyId: text("ontology_id").notNull(),
-    sourceName: text("source_name"),
-    headline: text("headline"),
-    publishedAt: timestamp("published_at", { withTimezone: true }).notNull(),
-    ingestedAt: timestamp("ingested_at", { withTimezone: true }).defaultNow(),
-    graphUri: text("graph_uri"),
-    contentHash: text("content_hash"),
-    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+    id: S.String.pipe(pg.uuid(), pg.primaryKey(), pg.defaultExpr(sql<string>`gen_random_uuid()`)),
+    uri: S.NonEmptyString.pipe(pg.text()),
+    ontologyId: S.NonEmptyString.pipe(pg.text(), pg.columnName("ontology_id")),
+    sourceName: S.NullOr(S.String).pipe(pg.text(), pg.columnName("source_name")),
+    headline: S.NullOr(S.String).pipe(pg.text()),
+    publishedAt: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.columnName("published_at")),
+    ingestedAt: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.defaultNow(), pg.columnName("ingested_at")),
+    graphUri: S.NullOr(S.String).pipe(pg.text(), pg.columnName("graph_uri")),
+    contentHash: S.NullOr(S.String).pipe(pg.text(), pg.columnName("content_hash")),
+    createdAt: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.defaultNow(), pg.columnName("created_at")),
+    updatedAt: S.Date.pipe(pg.timestamp({ mode: "date" }), pg.defaultNow(), pg.columnName("updated_at")),
   },
   (table) => [
-    uniqueIndex("articles_ontology_uri_unique").on(table.ontologyId, table.uri),
-    index("idx_articles_uri").on(table.uri),
-    index("idx_articles_source").on(table.sourceName),
-    index("idx_articles_published").on(table.publishedAt),
-    index("idx_articles_ontology_id").on(table.ontologyId),
-    index("idx_articles_ontology_source").on(table.ontologyId, table.sourceName),
-    index("idx_articles_ontology_published").on(table.ontologyId, table.publishedAt),
+    pg.Table.uniqueIndex("articles_ontology_uri_unique", [table.ontologyId, table.uri]),
+    pg.Table.index("idx_articles_uri", [table.uri]),
+    pg.Table.index("idx_articles_source", [table.sourceName]),
+    pg.Table.index("idx_articles_published", [table.publishedAt]),
+    pg.Table.index("idx_articles_ontology_id", [table.ontologyId]),
+    pg.Table.index("idx_articles_ontology_source", [table.ontologyId, table.sourceName]),
+    pg.Table.index("idx_articles_ontology_published", [table.ontologyId, table.publishedAt]),
   ]
-);
+) {}
+
+export const articles = pg.toPgTable(Articles);
 
 // =============================================================================
 // Corrections Table (defined before claims due to FK reference)
@@ -282,6 +172,10 @@ export const corrections = pgTable(
     processedAt: timestamp("processed_at", { withTimezone: true }),
   },
   (table) => [
+    check(
+      "corrections_correction_type_check",
+      sql`${table.correctionType} IN ('retraction', 'clarification', 'update', 'amendment')`
+    ),
     index("idx_corrections_type").on(table.correctionType),
     index("idx_corrections_source").on(table.sourceArticleId),
     index("idx_corrections_date").on(table.correctionDate),
@@ -324,6 +218,7 @@ export const claims = pgTable(
     validFrom: timestamp("valid_from", { withTimezone: true }),
     validTo: timestamp("valid_to", { withTimezone: true }),
     assertedAt: timestamp("asserted_at", { withTimezone: true }).defaultNow(),
+    derivedAt: timestamp("derived_at", { withTimezone: true }),
     deprecatedAt: timestamp("deprecated_at", { withTimezone: true }),
     deprecatedBy: uuid("deprecated_by").references(() => corrections.id),
     confidenceScore: numeric("confidence_score", { precision: 4, scale: 3 }),
@@ -339,12 +234,14 @@ export const claims = pgTable(
     index("idx_claims_predicate").on(table.predicateIri),
     index("idx_claims_rank").on(table.rank),
     index("idx_claims_valid_period").on(table.validFrom, table.validTo),
-    index("idx_claims_deprecated").on(table.deprecatedAt),
+    index("idx_claims_deprecated").on(table.deprecatedAt).where(sql`${table.deprecatedAt} IS NOT NULL`),
+    index("idx_claims_derived_at").on(table.derivedAt).where(sql`${table.derivedAt} IS NOT NULL`),
     index("idx_claims_subject_predicate").on(table.subjectIri, table.predicateIri),
     index("idx_claims_ontology_id").on(table.ontologyId),
     index("idx_claims_ontology_subject").on(table.ontologyId, table.subjectIri),
     index("idx_claims_ontology_predicate").on(table.ontologyId, table.predicateIri),
     index("idx_claims_ontology_subject_predicate").on(table.ontologyId, table.subjectIri, table.predicateIri),
+    check("claims_rank_check", sql`${table.rank} IN ('preferred', 'normal', 'deprecated')`),
   ]
 );
 
@@ -424,6 +321,12 @@ export const conflicts = pgTable(
   (table) => [
     index("idx_conflicts_status").on(table.status),
     index("idx_conflicts_claims").on(table.claimAId, table.claimBId),
+    check(
+      "conflicts_conflict_type_check",
+      sql`${table.conflictType} IN ('position', 'temporal', 'contradictory', 'duplicate')`
+    ),
+    check("conflicts_status_check", sql`${table.status} IN ('pending', 'resolved', 'ignored')`),
+    check("different_claims", sql`${table.claimAId} <> ${table.claimBId}`),
   ]
 );
 
@@ -461,32 +364,12 @@ export const batchRuns = pgTable(
     errorDetails: jsonb("error_details"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   },
-  (table) => [index("idx_batch_runs_batch_id").on(table.batchId), index("idx_batch_runs_status").on(table.status)]
+  (table) => [
+    index("idx_batch_runs_batch_id").on(table.batchId),
+    index("idx_batch_runs_status").on(table.status),
+    check("batch_runs_status_check", sql`${table.status} IN ('pending', 'running', 'completed', 'failed')`),
+  ]
 );
-
-// =============================================================================
-// Schema Migrations Table
-// =============================================================================
-
-/**
- * Provides repository access for schema migrations.
- *
- * **Example** (Inspect schema migrations)
- *
- * ```ts
- * import { schemaMigrations } from "@effect-ontology/Repository/schema"
- *
- * console.log(schemaMigrations)
- * ```
- *
- * @category repositories
- * @since 0.0.0
- */
-export const schemaMigrations = pgTable("schema_migrations", {
-  version: integer("version").primaryKey(),
-  name: text("name").notNull(),
-  appliedAt: timestamp("applied_at", { withTimezone: true }).defaultNow(),
-});
 
 // =============================================================================
 // Entity Registry Tables (Cross-Batch Entity Linking)
@@ -995,14 +878,14 @@ export const ingestedLinks = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
 
     // Content identification (content-addressed, unique per ontology)
-    contentHash: text("content_hash").notNull(),
+    contentHash: varchar("content_hash", { length: 64 }).notNull(),
 
     // Ontology scoping
     ontologyId: text("ontology_id").notNull(),
 
     // Source information
     sourceUri: text("source_uri"),
-    sourceType: text("source_type"),
+    sourceType: varchar("source_type", { length: 32 }),
 
     // Enriched metadata
     headline: text("headline"),
@@ -1010,7 +893,7 @@ export const ingestedLinks = pgTable(
     publishedAt: timestamp("published_at", { withTimezone: true }),
     author: text("author"),
     organization: text("organization"),
-    language: text("language").default("en"),
+    language: varchar("language", { length: 8 }).default("en"),
 
     // Topics and entities (JSONB for flexibility)
     topics: jsonb("topics").$type<Array<string>>().default([]),
@@ -1020,10 +903,10 @@ export const ingestedLinks = pgTable(
     storageUri: text("storage_uri").notNull(),
 
     // Processing status
-    status: text("status").notNull().default("pending"),
+    status: varchar("status", { length: 16 }).notNull().default("pending"),
 
     // Timestamps
-    fetchedAt: timestamp("fetched_at", { withTimezone: true }).defaultNow(),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
     enrichedAt: timestamp("enriched_at", { withTimezone: true }),
     processedAt: timestamp("processed_at", { withTimezone: true }),
 
@@ -1050,6 +933,10 @@ export const ingestedLinks = pgTable(
     index("idx_ingested_links_ontology_status").on(table.ontologyId, table.status),
     // Composite unique: same content can exist in multiple ontologies
     uniqueIndex("idx_ingested_links_ontology_content_unique").on(table.ontologyId, table.contentHash),
+    check(
+      "ingested_links_status_check",
+      sql`${table.status} IN ('pending', 'enriched', 'processing', 'processed', 'failed', 'skipped')`
+    ),
   ]
 );
 
@@ -1096,7 +983,10 @@ export const linkBatches = pgTable(
     // Error
     errorMessage: text("error_message"),
   },
-  (table) => [index("idx_link_batches_status").on(table.status)]
+  (table) => [
+    index("idx_link_batches_status").on(table.status),
+    check("link_batches_status_check", sql`${table.status} IN ('pending', 'running', 'completed', 'failed')`),
+  ]
 );
 
 /**
@@ -1145,6 +1035,10 @@ export const linkBatchItems = pgTable(
     primaryKey({ columns: [table.batchId, table.linkId] }),
     index("idx_link_batch_items_link").on(table.linkId),
     index("idx_link_batch_items_status").on(table.status),
+    check(
+      "link_batch_items_status_check",
+      sql`${table.status} IN ('pending', 'processing', 'completed', 'failed')`
+    ),
   ]
 );
 
@@ -1363,22 +1257,6 @@ export type LlmExampleInsertRow = typeof llmExamples.$inferInsert;
 // =============================================================================
 
 /**
- * Entity type enum for embeddings
- *
- * **Example** (Inspect embedding entity type enum)
- *
- * ```ts
- * import { embeddingEntityTypeEnum } from "@effect-ontology/Repository/schema"
- *
- * console.log(embeddingEntityTypeEnum)
- * ```
- *
- * @category repositories
- * @since 0.0.0
- */
-export const embeddingEntityTypeEnum = pgEnum("embedding_entity_type", ["class", "entity", "claim", "example"]);
-
-/**
  * Embeddings Table
  *
  * **Details**
@@ -1409,7 +1287,7 @@ export const embeddings = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
 
     // What this embedding represents
-    entityType: text("entity_type").notNull(), // class | entity | claim | example
+    entityType: varchar("entity_type", { length: 20 }).notNull(), // class | entity | claim | example
     entityId: text("entity_id").notNull(),
 
     // Ontology scoping
@@ -1434,6 +1312,7 @@ export const embeddings = pgTable(
     uniqueIndex("idx_embeddings_ontology_entity_unique").on(table.ontologyId, table.entityType, table.entityId),
     index("idx_embeddings_entity_type_idx").on(table.entityType),
     index("idx_embeddings_ontology_type_idx").on(table.ontologyId, table.entityType),
+    check("embeddings_entity_type_check", sql`${table.entityType} IN ('class', 'entity', 'claim', 'example')`),
     // Note: IVFFlat and GIN indexes are created in migration SQL
   ]
 );

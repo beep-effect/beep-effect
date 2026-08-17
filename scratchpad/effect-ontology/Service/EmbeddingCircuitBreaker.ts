@@ -12,10 +12,12 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
 import { Context, Duration, Effect, HashMap, Layer, Ref } from "effect";
 import * as O from "effect/Option";
-import type { CircuitBreaker, CircuitBreakerConfig, CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
-import { makeCircuitBreaker } from "../Runtime/CircuitBreaker.ts";
+import * as S from "effect/Schema";
+import type { CircuitBreaker, CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
+import { CircuitState, makeCircuitBreaker } from "../Runtime/CircuitBreaker.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCircuitBreaker");
 
@@ -24,23 +26,42 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCircuitBreaker
 // =============================================================================
 
 /**
- * Supported embedding provider identifiers
+ * Supported embedding provider identifiers managed by circuit breakers.
  *
  *
  * **Example** (Use the EmbeddingProviderId contract)
  *
  * ```ts
+ * import { EmbeddingProviderId } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
+ *
+ * console.log(EmbeddingProviderId.Options)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EmbeddingProviderId = LiteralKit(["voyage", "nomic", "openai"]).pipe(
+  $I.annoteSchema("EmbeddingProviderId", {
+    description: "Embedding providers managed by the circuit-breaker service.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link EmbeddingProviderId}.
+ *
+ * **Example** (Use an embedding provider identifier)
+ *
+ * ```ts
  * import type { EmbeddingProviderId } from "@effect-ontology/Service/EmbeddingCircuitBreaker"
  *
- * const acceptsEmbeddingProviderId = (_value: EmbeddingProviderId): void => undefined
- *
- * console.log(acceptsEmbeddingProviderId)
+ * const provider: EmbeddingProviderId = "voyage"
+ * console.log(provider)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export type EmbeddingProviderId = "voyage" | "nomic" | "openai";
+export type EmbeddingProviderId = typeof EmbeddingProviderId.Type;
 
 /**
  * Provider-specific circuit breaker configuration
@@ -59,14 +80,16 @@ export type EmbeddingProviderId = "voyage" | "nomic" | "openai";
  * @category type-level
  * @since 0.0.0
  */
-export interface ProviderCircuitConfig {
-  /** Number of consecutive failures before opening circuit */
-  readonly maxFailures: number;
-  /** Time to wait before attempting recovery */
-  readonly resetTimeoutMs: number;
-  /** Number of successful calls needed to close circuit */
-  readonly successThreshold: number;
-}
+export class ProviderCircuitConfig extends S.Class<ProviderCircuitConfig>($I`ProviderCircuitConfig`)(
+  {
+    maxFailures: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(3))),
+    resetTimeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(30))),
+    successThreshold: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(2))),
+  },
+  $I.annote("ProviderCircuitConfig", {
+    description: "Failure, recovery-delay, and recovery-success thresholds for an embedding provider.",
+  })
+) {}
 
 /**
  * Circuit breaker status for observability
@@ -85,11 +108,16 @@ export interface ProviderCircuitConfig {
  * @category type-level
  * @since 0.0.0
  */
-export interface CircuitStatus {
-  readonly providerId: EmbeddingProviderId;
-  readonly state: "closed" | "open" | "half_open";
-  readonly isAvailable: boolean;
-}
+export class CircuitStatus extends S.Class<CircuitStatus>($I`CircuitStatus`)(
+  {
+    providerId: EmbeddingProviderId,
+    state: CircuitState,
+    isAvailable: S.Boolean,
+  },
+  $I.annote("CircuitStatus", {
+    description: "Current circuit state and availability of one embedding provider.",
+  })
+) {}
 
 // =============================================================================
 // Default Configuration
@@ -111,20 +139,16 @@ export interface CircuitStatus {
  */
 export const DEFAULT_EMBEDDING_CIRCUIT_CONFIG: Record<EmbeddingProviderId, ProviderCircuitConfig> = {
   voyage: {
-    maxFailures: 3,
-    resetTimeoutMs: 30_000, // 30 seconds
-    successThreshold: 2,
+    maxFailures: PosInt.make(3),
+    resetTimeout: Duration.seconds(30),
+    successThreshold: PosInt.make(2),
   },
-  nomic: {
-    maxFailures: 5,
-    resetTimeoutMs: 60_000, // 1 minute (local, more tolerant)
-    successThreshold: 1,
-  },
-  openai: {
-    maxFailures: 3,
-    resetTimeoutMs: 30_000,
-    successThreshold: 2,
-  },
+  nomic: ProviderCircuitConfig.make({
+    maxFailures: PosInt.make(5),
+    resetTimeout: Duration.minutes(1),
+    successThreshold: PosInt.make(1),
+  }),
+  openai: ProviderCircuitConfig.make({}),
 };
 
 // =============================================================================
@@ -198,12 +222,7 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
         return yield* O.match(HashMap.get(circuits, providerId), {
           onNone: Effect.fn("EmbeddingCircuitBreaker.getOrCreateCircuit.onNone")(function* () {
             const config = DEFAULT_EMBEDDING_CIRCUIT_CONFIG[providerId];
-            const circuitConfig: CircuitBreakerConfig = {
-              maxFailures: config.maxFailures,
-              resetTimeout: Duration.millis(config.resetTimeoutMs),
-              successThreshold: config.successThreshold,
-            };
-            const circuit = yield* makeCircuitBreaker(circuitConfig);
+            const circuit = yield* makeCircuitBreaker(config);
             yield* Ref.update(circuitsRef, HashMap.set(providerId, circuit));
             yield* Effect.logDebug(`Created circuit breaker for ${providerId}`);
             return circuit;

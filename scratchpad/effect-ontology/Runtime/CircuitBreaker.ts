@@ -16,7 +16,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
 import { Clock, Duration, Effect, Ref } from "effect";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -24,6 +24,9 @@ import * as S from "effect/Schema";
 import { CircuitOpenError } from "../Domain/Error/Circuit.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/CircuitBreaker");
+const NonNegativeCounter = S.Finite.check(
+  S.isGreaterThanOrEqualTo(0, { message: "Expected a non-negative circuit-breaker counter" })
+);
 
 /**
  * Circuit breaker state
@@ -42,12 +45,41 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/CircuitBreaker");
  * @category type-level
  * @since 0.0.0
  */
+/**
+ * Runtime state of a circuit breaker.
+ *
+ * **Example** (Inspect circuit states)
+ *
+ * ```ts
+ * import { CircuitState } from "@effect-ontology/Runtime/CircuitBreaker"
+ *
+ * console.log(CircuitState.Options)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const CircuitState = LiteralKit(["closed", "open", "half_open"]).pipe(
   $I.annoteSchema("CircuitState", {
     description: "Closed set of runtime circuit-breaker states.",
   })
 );
 
+/**
+ * Runtime value accepted by {@link CircuitState}.
+ *
+ * **Example** (Use a circuit state)
+ *
+ * ```ts
+ * import type { CircuitState } from "@effect-ontology/Runtime/CircuitBreaker"
+ *
+ * const state: CircuitState = "closed"
+ * console.log(state)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CircuitState = typeof CircuitState.Type;
 
 /**
@@ -78,6 +110,21 @@ export class CircuitBreakerConfig extends S.Class<CircuitBreakerConfig>($I`Circu
   })
 ) {}
 
+/**
+ * Constructor input accepted by {@link CircuitBreakerConfig}.
+ *
+ * **Example** (Configure a circuit breaker)
+ *
+ * ```ts
+ * import type { CircuitBreakerConfigInput } from "@effect-ontology/Runtime/CircuitBreaker"
+ *
+ * const config: CircuitBreakerConfigInput = {}
+ * console.log(config)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CircuitBreakerConfigInput = (typeof CircuitBreakerConfig)["~type.make.in"];
 
 /**
@@ -102,9 +149,9 @@ export const DEFAULT_CIRCUIT_CONFIG = CircuitBreakerConfig.make({});
 class CircuitBreakerState extends S.Class<CircuitBreakerState>($I`CircuitBreakerState`)(
   {
     state: CircuitState,
-    failureCount: NonNegativeInt,
-    successCount: NonNegativeInt,
-    lastFailureTime: NonNegativeInt,
+    failureCount: NonNegativeCounter,
+    successCount: NonNegativeCounter,
+    lastFailureTime: NonNegativeCounter,
   },
   $I.annote("CircuitBreakerState", {
     description: "Mutable runtime counters and state held by a circuit breaker Ref.",
@@ -133,9 +180,9 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (
   const config = CircuitBreakerConfig.make(input);
   const stateRef = yield* Ref.make<CircuitBreakerState>(CircuitBreakerState.make({
     state: "closed",
-    failureCount: NonNegativeInt.make(0),
-    successCount: NonNegativeInt.make(0),
-    lastFailureTime: NonNegativeInt.make(0),
+    failureCount: 0,
+    successCount: 0,
+    lastFailureTime: 0,
   }));
   const getState = Ref.get(stateRef);
   const recordSuccess = Effect.gen(function* () {

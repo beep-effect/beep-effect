@@ -80,9 +80,10 @@ describe("effect-ontology schema-owned domain behavior", () => {
   it.effect("constructs a complete conservative metadata fallback without nullish fields", () =>
     Effect.gen(function* () {
       const preprocessedAt = yield* S.decodeEffect(S.DateTimeUtcFromString)("2026-07-25T12:00:00.000Z");
+      const sourceUri = yield* S.decodeEffect(GcsUri)("gs://beep-input/documents/report.txt");
       const metadata = DocumentMetadata.fallback({
         documentId: DocumentId.make("doc-abc123def456"),
-        sourceUri: GcsUri.fromUnknown("gs://beep-input/documents/report.txt"),
+        sourceUri,
         contentType: MimeType.make("text/plain"),
         sizeBytes: NonNegativeInt.make(4_000),
         preprocessedAt,

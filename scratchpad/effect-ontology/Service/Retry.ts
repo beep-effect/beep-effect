@@ -7,10 +7,10 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { PosInt, SchemaUtils } from "@beep/schema";
-import { Cause, Duration, Effect, Schedule } from "effect";
+import type { Cause } from "effect";
+import { Duration, Effect, Number as Num, Schedule } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
-import * as Num from "effect/Number";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -64,6 +64,7 @@ const RetryPolicyInvariantCheck = S.makeFilter(
     identifier: $I`RetryPolicyInvariantCheck`,
     title: "Retry Policy Deadline Invariant",
     description: "Retry delays are ordered and the overall deadline can accommodate the complete attempt budget.",
+    message: "Retry policy deadlines must accommodate every attempt and retry delay.",
   }
 );
 
@@ -148,7 +149,7 @@ export class RetryPolicy extends S.Class<RetryPolicy>($I`RetryPolicy`)(
  * @category type-level
  * @since 0.0.0
  */
-export type RetryPolicyInput = (typeof RetryPolicy)["~type.make.in"];
+export type RetryPolicyInput = Exclude<(typeof RetryPolicy)["~type.make.in"], void>;
 
 const retryableNetworkCodes = ["ECONNREFUSED", "ETIMEDOUT", "ENOTFOUND", "ECONNRESET", "EPIPE"];
 
@@ -209,8 +210,8 @@ export const isRetryableError = (error: unknown): boolean => {
     return true;
   }
 
-  const message = Str.toLowerCase(error.message);
-  return !A.some(nonRetryableMessagePatterns, Str.includes(message));
+  const message = P.isString(error.message) ? Str.toLowerCase(error.message) : "";
+  return !A.some(nonRetryableMessagePatterns, (pattern) => Str.includes(pattern)(message));
 };
 
 /**
@@ -228,8 +229,7 @@ export const isRetryableError = (error: unknown): boolean => {
  * @category constructors
  * @since 0.0.0
  */
-export const makeRetryPolicy = (policyInput: RetryPolicyInput) => {
-  const policy = RetryPolicy.make(policyInput);
+export const makeRetryPolicy = (policy: RetryPolicy) => {
   const uncappedSchedule = Schedule.exponential(policy.initialDelay).pipe(
     Schedule.modifyDelay(({ duration }) => Effect.succeed(Duration.min(duration, policy.maxDelay))),
     Schedule.tap(({ attempt }) => {
@@ -256,8 +256,8 @@ export const makeRetryPolicy = (policyInput: RetryPolicyInput) => {
 const retryEffectImpl = Effect.fn("Retry.retryEffect")(function* <A, E, R>(
   self: Effect.Effect<A, E, R>,
   policyInput: RetryPolicyInput
-): Effect.fn.Return<A, E | Cause.TimeoutError, R> {
-  const policy = RetryPolicy.make(policyInput);
+): Effect.fn.Return<A, E | Cause.TimeoutError | S.SchemaError, R> {
+  const policy = yield* S.decodeEffect(RetryPolicy)(P.isUndefined(policyInput) ? {} : policyInput);
   return yield* self.pipe(
     Effect.timeout(policy.attemptTimeout),
     Effect.retry(makeRetryPolicy(policy)),
@@ -288,6 +288,11 @@ const retryEffectImpl = Effect.fn("Retry.retryEffect")(function* <A, E, R>(
  * @since 0.0.0
  */
 export const retryEffect = dual<
-  (policy: RetryPolicyInput) => <A, E, R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Cause.TimeoutError, R>,
-  <A, E, R>(self: Effect.Effect<A, E, R>, policy: RetryPolicyInput) => Effect.Effect<A, E | Cause.TimeoutError, R>
+  (
+    policy: RetryPolicyInput
+  ) => <A, E, R>(self: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Cause.TimeoutError | S.SchemaError, R>,
+  <A, E, R>(
+    self: Effect.Effect<A, E, R>,
+    policy: RetryPolicyInput
+  ) => Effect.Effect<A, E | Cause.TimeoutError | S.SchemaError, R>
 >(2, retryEffectImpl);

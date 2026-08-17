@@ -10,10 +10,12 @@
  */
 
 import { IRI } from "@beep/rdf";
+import { PosInt } from "@beep/schema/Int";
 import { Console, Effect, FileSystem } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Command, Flag as Options } from "effect/unstable/cli";
@@ -83,7 +85,7 @@ const linkHandler = Effect.fn("linkHandler")(function* (
   if (O.isSome(search)) {
     yield* Console.log(`Searching Wikidata for: "${search.value}"`);
     yield* Console.log("");
-    const candidates = yield* wikidata.searchEntities(search.value, { limit });
+    const candidates = yield* wikidata.searchEntities(search.value, { limit: PosInt.make(limit) });
     if (A.isReadonlyArrayEmpty(candidates)) {
       yield* Console.log("No candidates found.");
       return;
@@ -110,7 +112,7 @@ To create a link, run:`);
     return;
   }
   const entityIriResult = S.decodeResult(IRI)(entityIri);
-  if (entityIriResult._tag === "Failure") {
+  if (Result.isFailure(entityIriResult)) {
     yield* Console.error(`Invalid entity IRI: ${entityIri}`);
     return;
   }

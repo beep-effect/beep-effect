@@ -88,7 +88,10 @@ export class ShapesLoadError extends S.TaggedError<ShapesLoadError>($I`ShapesLoa
   $I.annote("ShapesLoadError", {
     description: "Failure to load a SHACL shapes graph.",
   })
-) {}
+) {
+
+  static readonly is = S.is(ShapesLoadError)
+}
 
 /**
  * Failure to generate or serialize a SHACL validation report.

@@ -17,7 +17,7 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import { BatchId, ContentHash, DocumentId, GcsBucket, GcsUri, Namespace } from "../Domain/Identity.ts";
-import { BatchStage } from "../Domain/Model/BatchWorkflow.ts";
+import { BatchStage, BatchState } from "../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
 import { BatchManifest, BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
 import { ConfigService } from "../Service/Config.ts";
@@ -178,7 +178,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
         Effect.gen(function* () {
           const state = yield* pollToBatchState(String(batchId)).pipe(
             Effect.flatMap((current) =>
-              current._tag === "Complete" || current._tag === "Failed"
+              BatchState.isTerminal(current)
                 ? Effect.succeed(current)
                 : BatchNotTerminalError.make({
                     batchId,
@@ -187,7 +187,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
             ),
             Effect.retry({ times: 120, schedule: Schedule.spaced("5 seconds") })
           );
-          const failed = state._tag === "Failed";
+          const failed = BatchState.guards.Failed(state);
           yield* Effect.forEach(
             links,
             (link) =>

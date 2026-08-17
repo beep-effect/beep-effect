@@ -16,7 +16,19 @@ import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import type { UnitInterval } from "@beep/schema/UnitInterval";
 import { thunk0 } from "@beep/utils/thunk";
-import { Chunk, DateTime, Deferred, Duration, Effect, HashMap, HashSet, Random, Ref, Stream } from "effect";
+import {
+  Chunk,
+  DateTime,
+  Deferred,
+  Duration,
+  Effect,
+  HashMap,
+  HashSet,
+  Inspectable,
+  Random,
+  Ref,
+  Stream,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -24,6 +36,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { Entity as ClusterEntity } from "effect/unstable/cluster";
 import { ProgressEventSchema } from "../Contract/ProgressStreaming.ts";
+import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { ContentHash, IdempotencyKey, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { RunStatus } from "../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
@@ -85,6 +98,14 @@ const emptyStats = ExtractionStats.make({});
 
 type CancellationSignal = Deferred.Deferred<void>;
 
+const toExtractionError = (error: unknown): ExtractionError =>
+  ExtractionError.is(error)
+    ? error
+    : ExtractionError.make({
+        message: Inspectable.toStringUnknown(error),
+        cause: O.some(error),
+      });
+
 const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
   runId: string,
   tag: string,
@@ -100,7 +121,7 @@ const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
     timestamp,
     overallProgress,
     ...extra,
-  }).pipe(Effect.mapError(String));
+  }).pipe(Effect.mapError(toExtractionError));
 });
 
 const toExtractionParams = (
@@ -239,7 +260,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
             model: config.llm.model,
             temperature: config.llm.temperature,
             maxTokens: PosInt.make(config.llm.maxTokens),
-            timeout: Duration.millis(config.llm.timeoutMs),
+            timeout: config.llm.retryPolicy.attemptTimeout,
           },
           concurrency: PosInt.make(config.runtime.concurrency),
           ontology: ontologyRef,
@@ -362,14 +383,14 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           const idempotencyKey = IdempotencyKey.make(
             computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params))
           );
-          const errorMessage = String(error);
+          const extractionError = toExtractionError(error);
           return Effect.gen(function* () {
-            yield* runService.failRun(runId, "llm_error", errorMessage).pipe(Effect.ignore);
+            yield* runService.failRun(runId, "llm_error", extractionError.message).pipe(Effect.ignore);
             yield* Ref.update(cancellationRegistry, HashMap.remove(idempotencyKey));
             return Stream.make(
               yield* makeEvent(runId, "extraction_failed", 0, {
                 errorType: "extraction_error",
-                errorMessage,
+                errorMessage: extractionError.message,
                 isRecoverable: false,
               })
             );
@@ -399,14 +420,14 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         },
       });
     },
-    (effect) => effect.pipe(Effect.mapError((error) => error.message))
+    (effect) => effect.pipe(Effect.mapError(toExtractionError))
   );
 
   const cancelExtraction = Effect.fn("ExtractionEntityHandler.cancelExtraction")(
     function* (envelope: ClusterEntity.Request<typeof CancelExtractionRpc>) {
       const key = IdempotencyKey.make(envelope.payload.idempotencyKey);
       const run = yield* runService.getByKey(key);
-      if (P.isNull(run)) return yield* Effect.fail("Extraction not found");
+      if (P.isNull(run)) return yield* ExtractionError.make({ message: "Extraction not found" });
       if (P.isTagged(run.status, "Complete") || P.isTagged(run.status, "Failed")) return false;
 
       const signal = HashMap.get(yield* Ref.get(cancellationRegistry), key);
@@ -421,7 +442,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       );
       return true;
     },
-    (effect) => effect.pipe(Effect.mapError((error) => (P.isString(error) ? error : error.message)))
+    (effect) => effect.pipe(Effect.mapError(toExtractionError))
   );
 
   const getExtractionStatus = Effect.fn("ExtractionEntityHandler.getExtractionStatus")(
@@ -454,7 +475,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         Failed: (): ExtractionStatus => ExtractionStatus.cases.failed.make(fields),
       });
     },
-    (effect) => effect.pipe(Effect.mapError((error) => error.message))
+    (effect) => effect.pipe(Effect.mapError(toExtractionError))
   );
 
   return {

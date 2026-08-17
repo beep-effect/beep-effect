@@ -40,7 +40,12 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Workflow, WorkflowEngine } from "effect/unstable/workflow";
-import { WorkflowError, WorkflowNotFoundError, WorkflowSuspendedError } from "../Domain/Error/Workflow.ts";
+import {
+  AnyWorkflowError,
+  WorkflowError,
+  WorkflowNotFoundError,
+  WorkflowSuspendedError,
+} from "../Domain/Error/Workflow.ts";
 import { BatchId, DocumentId, GcsUri } from "../Domain/Identity.ts";
 import type { DocumentStatus } from "../Domain/Model/BatchWorkflow.ts";
 import { BatchState } from "../Domain/Model/BatchWorkflow.ts";
@@ -88,6 +93,16 @@ const serializeError = (error: unknown): string => {
   }
   return Inspectable.toStringUnknown(error);
 };
+
+const isWorkflowError = S.is(WorkflowError);
+
+const toWorkflowError = (error: unknown): WorkflowError =>
+  isWorkflowError(error)
+    ? error
+    : WorkflowError.make({
+        message: serializeError(error),
+        cause: O.some(error),
+      });
 
 /**
  * Extract filename from a path (local or GCS URI)
@@ -171,7 +186,7 @@ type PipelineStage = "pending" | "preprocessing" | "extracting" | "resolving" | 
 export const BatchExtractionWorkflow = Workflow.make("batch-extraction", {
   payload: BatchWorkflowPayload,
   success: BatchState,
-  error: S.String,
+  error: AnyWorkflowError,
   idempotencyKey: (payload: BatchWorkflowPayloadType) => {
     const hash = Hash.string(
       Inspectable.toStringUnknown({
@@ -280,7 +295,7 @@ export const pollToBatchState = Effect.fn("WorkflowOrchestrator.pollToBatchState
     Match.tag("Complete", (complete) =>
       Exit.match(complete.exit, {
         onSuccess: Effect.succeed,
-        onFailure: Effect.fn("WorkflowOrchestrator.pollToBatchState.onFailure")(function* (cause: Cause.Cause<string>) {
+        onFailure: Effect.fn("WorkflowOrchestrator.pollToBatchState.onFailure")(function* (cause) {
           const stored = yield* getBatchStateFromStore(batchId);
           const fallback = O.getOrUndefined(stored);
           if (P.isNotUndefined(fallback)) {
@@ -944,10 +959,13 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
 
         yield* emitState(failedState);
 
-        return yield* Effect.fail(Cause.pretty(cause));
+        return yield* WorkflowError.make({
+          message: Cause.pretty(cause),
+          cause: O.some(Cause.squash(cause)),
+        });
       })
     );
-  }).pipe(Effect.mapError(String))
+  }).pipe(Effect.mapError(toWorkflowError))
 );
 
 // -----------------------------------------------------------------------------
@@ -982,7 +1000,7 @@ export interface WorkflowOrchestratorMethods {
    * @param payload - Workflow payload containing batchId, manifestUri, ontologyVersion
    * @returns The execution ID (same as batchId for idempotency)
    */
-  readonly start: (payload: BatchWorkflowPayloadType) => Effect.Effect<string, string>;
+  readonly start: (payload: BatchWorkflowPayloadType) => Effect.Effect<string, AnyWorkflowError>;
 
   /**
    * Start and wait for workflow completion
@@ -990,7 +1008,7 @@ export interface WorkflowOrchestratorMethods {
    * @param payload - Workflow payload
    * @returns The final BatchState on success
    */
-  readonly startAndWait: (payload: BatchWorkflowPayloadType) => Effect.Effect<BatchState, string>;
+  readonly startAndWait: (payload: BatchWorkflowPayloadType) => Effect.Effect<BatchState, AnyWorkflowError>;
 
   /**
    * Poll for workflow result
@@ -998,7 +1016,7 @@ export interface WorkflowOrchestratorMethods {
    * @param executionId - The workflow execution ID (batchId)
    * @returns The workflow result if complete, undefined if still running
    */
-  readonly poll: (executionId: string) => Effect.Effect<O.Option<Workflow.Result<BatchState, string>>>;
+  readonly poll: (executionId: string) => Effect.Effect<O.Option<Workflow.Result<BatchState, AnyWorkflowError>>>;
 
   /**
    * Interrupt a running workflow

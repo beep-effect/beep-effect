@@ -218,7 +218,7 @@ export const buildRunConfig = dual3(
       model: string;
       temperature: number;
       maxTokens: number;
-      timeoutMs: number;
+      timeout: Duration.Duration;
     },
     ontologyContentHash: ContentHash
   ): RunConfig => {
@@ -242,7 +242,7 @@ export const buildRunConfig = dual3(
       model: llmConfig.model,
       temperature: llmConfig.temperature,
       maxTokens: PosInt.make(llmConfig.maxTokens),
-      timeout: Duration.millis(llmConfig.timeoutMs),
+      timeout: llmConfig.timeout,
     });
 
     return RunConfig.make({
@@ -387,7 +387,7 @@ export const makeStreamingExtractionActivity = (input: ExtractionActivityInput) 
           model: config.llm.model,
           temperature: 0.0, // Deterministic extraction
           maxTokens: config.llm.maxTokens,
-          timeoutMs: config.llm.timeoutMs,
+          timeout: config.llm.retryPolicy.attemptTimeout,
         },
         ontologyContentHash
       );

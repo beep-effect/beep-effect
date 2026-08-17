@@ -23,7 +23,7 @@
 import { createHash } from "node:crypto";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, lt } from "drizzle-orm";
 import { Cache, Clock, Context, DateTime, Duration, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -717,8 +717,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
 
         // Build condition: status in (pending, processing) AND updatedAt < cutoff
         const baseCondition = and(
-          sql`${ingestedLinks.status} IN ('pending', 'processing')`,
-          sql`${ingestedLinks.updatedAt} < ${cutoffDate}`
+          inArray(ingestedLinks.status, ["pending", "processing"]),
+          lt(ingestedLinks.updatedAt, cutoffDate)
         );
 
         // Add ontology filter if provided

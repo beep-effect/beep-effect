@@ -115,33 +115,36 @@ describe("effect-ontology model behavior", () => {
     expect(relation.object._tag).toBe("Text");
   });
 
-  it("enforces batch transitions and derives progress from stage payloads", () => {
-    const batch = BatchIdentity.make({
-      batchId: BatchId.make("batch-deadbeefcafe"),
-      ontologyId: "football",
-      manifestUri: GcsUri.fromUnknown("gs://beep-ontology/manifest.json"),
-      ontologyVersion: OntologyVersion.fromParts(
-        Namespace.make("football"),
-        OntologyName.make("premier_league"),
-        ContentHash.make("a".repeat(64))
-      ),
-      createdAt: now,
-      updatedAt: now,
-    });
-    const pending = BatchState.cases.Pending.make({
-      batchId: batch.batchId,
-      ontologyId: batch.ontologyId,
-      manifestUri: batch.manifestUri,
-      ontologyVersion: batch.ontologyVersion,
-      createdAt: batch.createdAt,
-      updatedAt: batch.updatedAt,
-      documentCount: NonNegativeInt.make(0),
-    });
+  it.effect("enforces batch transitions and derives progress from stage payloads", () =>
+    Effect.gen(function* () {
+      const manifestUri = yield* S.decodeEffect(GcsUri)("gs://beep-ontology/manifest.json");
+      const batch = BatchIdentity.make({
+        batchId: BatchId.make("batch-deadbeefcafe"),
+        ontologyId: "football",
+        manifestUri,
+        ontologyVersion: OntologyVersion.fromParts(
+          Namespace.make("football"),
+          OntologyName.make("premier_league"),
+          ContentHash.make("a".repeat(64))
+        ),
+        createdAt: now,
+        updatedAt: now,
+      });
+      const pending = BatchState.cases.Pending.make({
+        batchId: batch.batchId,
+        ontologyId: batch.ontologyId,
+        manifestUri: batch.manifestUri,
+        ontologyVersion: batch.ontologyVersion,
+        createdAt: batch.createdAt,
+        updatedAt: batch.updatedAt,
+        documentCount: NonNegativeInt.make(0),
+      });
 
-    expect(BatchState.isValidTransition("Pending", "Preprocessing")).toBe(true);
-    expect(BatchState.isValidTransition("Pending", "Validating")).toBe(false);
-    expect(BatchState.progressPercent(pending)).toEqual(O.some(0));
-  });
+      expect(BatchState.isValidTransition("Pending", "Preprocessing")).toBe(true);
+      expect(BatchState.isValidTransition("Pending", "Validating")).toBe(false);
+      expect(BatchState.progressPercent(pending)).toEqual(O.some(0));
+    })
+  );
 
   it("builds stable run-scoped chunk identifiers without a free helper", () => {
     const chunkId = ExtractionRun.chunkId(DocumentId.make("doc-deadbeefcafe"), NonNegativeInt.make(2));
@@ -149,64 +152,70 @@ describe("effect-ontology model behavior", () => {
     expect(chunkId).toBe("doc-deadbeefcafe-chunk-2");
   });
 
-  it("traverses cyclic class hierarchies without recursion failure", () => {
-    const parent = IRI.make("https://example.org/Parent");
-    const child = IRI.make("https://example.org/Child");
-    const propertyInput = {
-      id: IRI.make("https://example.org/name"),
-      label: "name",
-      domain: [parent],
-      range: [IRI.make("http://www.w3.org/2001/XMLSchema#string")],
-      rangeType: "datatype",
-    };
-    const property = PropertyDefinition.fromUnknown(propertyInput);
-    const context = OntologyContext.fromUnknown({
-      classes: [
-        { id: parent, label: "Parent" },
-        { id: child, label: "Child" },
-      ],
-      properties: [propertyInput],
-      hierarchy: {
-        [child]: [parent],
-        [parent]: [child],
-      },
-    });
+  it.effect("traverses cyclic class hierarchies without recursion failure", () =>
+    Effect.gen(function* () {
+      const parent = IRI.make("https://example.org/Parent");
+      const child = IRI.make("https://example.org/Child");
+      const property = yield* S.decodeEffect(PropertyDefinition)({
+        id: IRI.make("https://example.org/name"),
+        label: "name",
+        domain: [parent],
+        range: [IRI.make("http://www.w3.org/2001/XMLSchema#string")],
+        rangeType: "datatype",
+      });
+      const propertyInput = yield* S.encodeEffect(PropertyDefinition)(property);
+      const context = yield* S.decodeEffect(OntologyContext)({
+        classes: [
+          { id: parent, label: "Parent" },
+          { id: child, label: "Child" },
+        ],
+        properties: [propertyInput],
+        hierarchy: {
+          [child]: [parent],
+          [parent]: [child],
+        },
+      });
 
-    expect(context.isSubClassOf(child, parent)).toBe(true);
-    expect(context.getAllSuperClasses(child)).toEqual([parent, child]);
-    expect(context.getPropertiesForClass(child)).toEqual([property]);
-  });
+      expect(context.isSubClassOf(child, parent)).toBe(true);
+      expect(context.getAllSuperClasses(child)).toEqual([parent, child]);
+      expect(context.getPropertiesForClass(child)).toEqual([property]);
+    })
+  );
 
-  it("normalizes obvious agent and extraction defaults at schema construction", () => {
-    const config = OntologyAgentConfig.default();
-    const options = ExtractWithClaimsOptions.fromUnknown({
-      ontologyId: "seattle",
-      articleId: "article-001",
-    });
+  it.effect("normalizes obvious agent and extraction defaults at schema construction", () =>
+    Effect.gen(function* () {
+      const config = OntologyAgentConfig.default();
+      const options = yield* S.decodeEffect(ExtractWithClaimsOptions)({
+        ontologyId: "seattle",
+        articleId: "article-001",
+      });
 
-    expect(config.concurrency).toBe(4);
-    expect(config.chunking.preserveSentences).toBe(true);
-    expect(options.autoCreateAssertions).toBe(false);
-    expect(options.defaultConfidence).toBe(0.8);
-    expect(O.isNone(options.targetNamespace)).toBe(true);
-  });
+      expect(config.concurrency).toBe(4);
+      expect(config.chunking.preserveSentences).toBe(true);
+      expect(options.autoCreateAssertions).toBe(false);
+      expect(options.defaultConfidence).toBe(0.8);
+      expect(O.isNone(options.targetNamespace)).toBe(true);
+    })
+  );
 
-  it("derives enhanced validation counts instead of storing stale duplicates", () => {
-    const grouped = ViolationsByLevel.fromUnknown({
-      violations: ["Expected one name."],
-      warnings: ["A preferred label is recommended."],
-    });
-    const report = EnhancedValidationReport.fromUnknown({
-      conforms: false,
-      byLevel: grouped,
-      duration: 4,
-      dataGraphTripleCount: 10,
-      shapesCount: 2,
-    });
+  it.effect("derives enhanced validation counts instead of storing stale duplicates", () =>
+    Effect.gen(function* () {
+      const grouped = yield* S.decodeEffect(ViolationsByLevel)({
+        violations: ["Expected one name."],
+        warnings: ["A preferred label is recommended."],
+      });
+      const report = yield* S.decodeEffect(EnhancedValidationReport)({
+        conforms: false,
+        byLevel: grouped,
+        duration: 4,
+        dataGraphTripleCount: 10,
+        shapesCount: 2,
+      });
 
-    expect(report.violationCount).toBe(2);
-    expect(report.isValid).toBe(false);
-  });
+      expect(report.violationCount).toBe(2);
+      expect(report.isValid).toBe(false);
+    })
+  );
 
   it("rejects ontology embedding artifacts with inconsistent dimensions", () => {
     const artifact = S.decodeResult(OntologyEmbeddings)({

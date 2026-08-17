@@ -11,6 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema/Int";
 import { Clock, Context, DateTime, Effect, Layer, Queue, Ref, Stream } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -20,8 +21,10 @@ import type * as EventGroup from "effect/unstable/eventlog/EventGroup";
 import * as EventJournal from "effect/unstable/eventlog/EventJournal";
 import * as SqlEventJournal from "effect/unstable/eventlog/SqlEventJournal";
 import * as PersistedQueue from "effect/unstable/persistence/PersistedQueue";
+import { SqlClient, SqlSchema } from "effect/unstable/sql";
 import { EventBusError } from "../Domain/Error/EventBus.ts";
-import { CurationEventGroup, ExtractionEventGroup } from "../Domain/Schema/EventSchema.ts";
+import type { OntologyEventEntry as OntologyEventEntryValue } from "../Domain/Schema/EventSchema.ts";
+import { CurationEventGroup, ExtractionEventGroup, OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
 import type { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 import { BackgroundJobSchema } from "../Domain/Schema/JobSchema.ts";
 
@@ -55,29 +58,35 @@ export interface JobWithMetadata {
 }
 
 /**
- * Event entry from journal
+ * Runtime schema for a canonical event entry from the journal.
  *
  *
- * **Example** (Use the EventEntry contract)
+ * **Example** (Inspect the event entry schema)
  *
  * ```ts
+ * import { EventEntry } from "@effect-ontology/Service/EventBus"
+ * console.log(EventEntry)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EventEntry = S.toType(OntologyEventEntry);
+
+/**
+ * Runtime event entry paired with its canonical EventGroup payload.
+ *
+ * **Example** (Use the EventEntry contract)
+ * ```ts
  * import type { EventEntry } from "@effect-ontology/Service/EventBus"
- *
- * const acceptsEventEntry = (_value: EventEntry): void => undefined
- *
- * console.log(acceptsEventEntry)
+ * const eventName = (entry: EventEntry) => entry.event
+ * console.log(eventName)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface EventEntry {
-  readonly id: string;
-  readonly event: string;
-  readonly primaryKey: string;
-  readonly payload: unknown;
-  readonly createdAt: DateTime.Utc;
-}
+export type EventEntry = OntologyEventEntryValue;
 
 // =============================================================================
 // Service Interface
@@ -285,28 +294,36 @@ export const EventBusServiceMemory = Layer.effect(
       Effect.gen(function* () {
         const now = yield* DateTime.now;
         const sequence = yield* Ref.getAndUpdate(eventIdCounter, (value) => value + 1);
-        const entry: EventEntry = {
+        const entry = yield* S.decodeUnknownEffect(EventEntry)({
           id: `evt_${yield* Clock.currentTimeMillis}_${sequence}`,
           event: prepared.event,
           primaryKey: prepared.primaryKey,
           payload: prepared.payload,
           createdAt: now,
-        };
+        }).pipe(
+          Effect.mapError((cause) =>
+            EventBusError.make({
+              method: "publishEvent",
+              message: `Failed to validate event entry: ${prepared.event}`,
+              cause: O.some(cause),
+            })
+          )
+        );
 
-        yield* Queue.offer(eventSubscribers, entry);
+        yield* Queue.offer(eventSubscribers, entry).pipe(
+          Effect.mapError((cause) =>
+            EventBusError.make({
+              method: "publishEvent",
+              message: `Failed to publish event: ${prepared.event}`,
+              cause: O.some(cause),
+            })
+          )
+        );
         yield* Effect.logDebug("Event published", {
           event: prepared.event,
           primaryKey: prepared.primaryKey,
         });
-      }).pipe(
-        Effect.mapError((cause) =>
-          EventBusError.make({
-            method: "publishEvent",
-            message: `Failed to publish event: ${prepared.event}`,
-            cause,
-          })
-        )
-      );
+      });
 
     const publishCurationEvent: EventBusServiceMethods["publishCurationEvent"] = Effect.fn("publishCurationEvent")(
       function* (tag, payload) {
@@ -482,6 +499,7 @@ export const EventBusServiceSql = Layer.effect(
   Effect.gen(function* () {
     // Get the EventJournal from context (provided by SqlEventJournal.layer)
     const journal = yield* EventJournal.EventJournal;
+    const sql = yield* SqlClient.SqlClient;
 
     // Create a typed PersistedQueue for background jobs
     const jobQueue = yield* PersistedQueue.make({
@@ -577,15 +595,24 @@ export const EventBusServiceSql = Layer.effect(
     const subscribeEvents: EventBusServiceMethods["subscribeEvents"] = Effect.sync(() =>
       Stream.fromSubscription(eventChanges).pipe(
         Stream.mapEffect((entry) =>
-          decodeEventPayload(entry.event, entry.payload).pipe(
-            Effect.map((payload) => ({
+          Effect.gen(function* () {
+            const payload = yield* decodeEventPayload(entry.event, entry.payload);
+            return yield* S.decodeUnknownEffect(EventEntry)({
               id: entry.idString,
               event: entry.event,
               primaryKey: entry.primaryKey,
               payload,
               createdAt: entry.createdAt,
-            }))
-          )
+            }).pipe(
+              Effect.mapError((cause) =>
+                EventBusError.make({
+                  method: "subscribeEvents",
+                  message: `Failed to validate journal event: ${entry.event}`,
+                  cause: O.some(cause),
+                })
+              )
+            );
+          })
         ),
         Stream.mapError((cause) =>
           EventBusError.make({
@@ -597,8 +624,26 @@ export const EventBusServiceSql = Layer.effect(
       )
     );
 
-    // SQL implementation doesn't have a pending count API - would need custom query
-    const pendingJobCount: EventBusServiceMethods["pendingJobCount"] = Effect.succeed(0);
+    const readPendingJobCount = SqlSchema.findOne({
+      Request: S.Void,
+      Result: S.Struct({ count: NonNegativeInt }),
+      execute: () => sql`
+        SELECT COUNT(*)::int AS count
+        FROM effect_queue
+        WHERE queue_name = ${JOBS_QUEUE_NAME}
+          AND completed = FALSE
+      `,
+    });
+    const pendingJobCount: EventBusServiceMethods["pendingJobCount"] = readPendingJobCount(undefined).pipe(
+      Effect.map((row) => row.count),
+      Effect.mapError((cause) =>
+        EventBusError.make({
+          method: "pendingJobCount",
+          message: "Failed to count pending persisted jobs",
+          cause: O.some(cause),
+        })
+      )
+    );
 
     const shutdown: EventBusServiceMethods["shutdown"] = Effect.logInfo("EventBusService SQL shutdown");
 

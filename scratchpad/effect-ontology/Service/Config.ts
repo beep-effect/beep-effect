@@ -6,9 +6,10 @@
  */
 
 import { $ScratchpadId, CoreVocab } from "@beep/identity";
+import { IRI } from "@beep/rdf";
+import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { Config, ConfigProvider, Context, Duration, Effect, Layer, Redacted } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -142,7 +143,9 @@ const EmbeddingSettings = S.Struct({
     SchemaUtils.withKeyDefaults("Xenova/nomic-embed-text-v1"),
     S.annotateKey({ description: "Transformers.js model identifier for local inference." })
   ),
-  voyageApiKey: S.Option(S.Redacted(S.String)).pipe(
+  voyageApiKey: S.String.pipe(
+    S.Redacted,
+    S.Option,
     SchemaUtils.withKeyDefaults(O.none()),
     S.annotateKey({ description: "Optional redacted Voyage API credential." })
   ),
@@ -257,20 +260,28 @@ const RdfSettings = S.Struct({
     SchemaUtils.withKeyDefaults(RdfOutputFormat.Enum.Turtle),
     S.annotateKey({ description: "Default RDF serialization format." })
   ),
-  prefixes: S.Record(S.String, S.String).pipe(
+  prefixes: S.Struct({
+    schema: IRI,
+    rdf: IRI,
+    rdfs: IRI,
+    owl: IRI,
+    xsd: IRI,
+  }).pipe(
     SchemaUtils.withKeyDefaults({
-      schema: "http://schema.org/",
-      rdf: CoreVocab.rdf.iri,
-      rdfs: CoreVocab.rdfs.iri,
-      owl: CoreVocab.owl.iri,
-      xsd: XSD_NAMESPACE,
+      schema: IRI.make("http://schema.org/"),
+      rdf: IRI.make(CoreVocab.rdf.iri),
+      rdfs: IRI.make(CoreVocab.rdfs.iri),
+      owl: IRI.make(CoreVocab.owl.iri),
+      xsd: IRI.make(XSD_NAMESPACE),
     }),
     S.annotateKey({ description: "Stable RDF namespace-prefix map." })
   ),
 });
 
 const ApiSettings = S.Struct({
-  keys: S.Option(S.Redacted(S.String)).pipe(
+  keys: S.String.pipe(
+    S.Redacted,
+    S.Option,
     SchemaUtils.withKeyDefaults(O.none()),
     S.annotateKey({ description: "Optional redacted comma-separated API keys." })
   ),
@@ -281,7 +292,9 @@ const ApiSettings = S.Struct({
 });
 
 const JinaSettings = S.Struct({
-  apiKey: S.Option(S.Redacted(S.String)).pipe(
+  apiKey: S.String.pipe(
+    S.Redacted,
+    S.Option,
     SchemaUtils.withKeyDefaults(O.none()),
     S.annotateKey({ description: "Optional redacted Jina Reader API credential." })
   ),
@@ -457,18 +470,14 @@ const GrounderConfig = Config.nested("GROUNDER")(
 
 const EmbeddingConfig = Config.nested("EMBEDDING")(
   Config.all({
-    provider: Config.schema(EmbeddingProvider, "PROVIDER").pipe(
-      Config.withDefault(DEFAULT_CONFIG.embedding.provider)
-    ),
+    provider: Config.schema(EmbeddingProvider, "PROVIDER").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.provider)),
     model: Config.nonEmptyString("MODEL").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.model)),
     dimension: Config.schema(PosInt, "DIMENSION").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.dimension)),
     transformersModelId: Config.nonEmptyString("TRANSFORMERS_MODEL_ID").pipe(
       Config.withDefault(DEFAULT_CONFIG.embedding.transformersModelId)
     ),
     voyageApiKey: Config.option(Config.redacted("VOYAGE_API_KEY")),
-    voyageModel: Config.nonEmptyString("VOYAGE_MODEL").pipe(
-      Config.withDefault(DEFAULT_CONFIG.embedding.voyageModel)
-    ),
+    voyageModel: Config.nonEmptyString("VOYAGE_MODEL").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.voyageModel)),
     timeout: Config.duration("TIMEOUT").pipe(Config.withDefault(DEFAULT_CONFIG.embedding.timeout)),
     rateLimitRpm: Config.schema(PosInt, "RATE_LIMIT_RPM").pipe(
       Config.withDefault(DEFAULT_CONFIG.embedding.rateLimitRpm)
@@ -519,9 +528,7 @@ const InferenceConfig = Config.nested("INFERENCE")(
   Config.all({
     enabled: Config.boolean("ENABLED").pipe(Config.withDefault(DEFAULT_CONFIG.inference.enabled)),
     profile: Config.schema(InferenceProfile, "PROFILE").pipe(Config.withDefault(DEFAULT_CONFIG.inference.profile)),
-    persistDerived: Config.boolean("PERSIST_DERIVED").pipe(
-      Config.withDefault(DEFAULT_CONFIG.inference.persistDerived)
-    ),
+    persistDerived: Config.boolean("PERSIST_DERIVED").pipe(Config.withDefault(DEFAULT_CONFIG.inference.persistDerived)),
   })
 );
 
@@ -531,17 +538,13 @@ const ValidationConfig = Config.nested("VALIDATION")(
     failOnViolation: Config.boolean("FAIL_ON_VIOLATION").pipe(
       Config.withDefault(DEFAULT_CONFIG.validation.failOnViolation)
     ),
-    failOnWarning: Config.boolean("FAIL_ON_WARNING").pipe(
-      Config.withDefault(DEFAULT_CONFIG.validation.failOnWarning)
-    ),
+    failOnWarning: Config.boolean("FAIL_ON_WARNING").pipe(Config.withDefault(DEFAULT_CONFIG.validation.failOnWarning)),
   })
 );
 
 const RdfConfig = Config.nested("RDF")(
   Config.all({
-    baseNamespace: Config.nonEmptyString("BASE_NAMESPACE").pipe(
-      Config.withDefault(DEFAULT_CONFIG.rdf.baseNamespace)
-    ),
+    baseNamespace: Config.nonEmptyString("BASE_NAMESPACE").pipe(Config.withDefault(DEFAULT_CONFIG.rdf.baseNamespace)),
     outputFormat: Config.schema(RdfOutputFormat, "OUTPUT_FORMAT").pipe(
       Config.withDefault(DEFAULT_CONFIG.rdf.outputFormat)
     ),
@@ -561,9 +564,7 @@ const JinaConfig = Config.nested("JINA")(
     apiKey: Config.option(Config.redacted("API_KEY")),
     rateLimitRpm: Config.schema(PosInt, "RATE_LIMIT_RPM").pipe(Config.withDefault(DEFAULT_CONFIG.jina.rateLimitRpm)),
     timeout: Config.duration("TIMEOUT").pipe(Config.withDefault(DEFAULT_CONFIG.jina.timeout)),
-    maxConcurrent: Config.schema(PosInt, "MAX_CONCURRENT").pipe(
-      Config.withDefault(DEFAULT_CONFIG.jina.maxConcurrent)
-    ),
+    maxConcurrent: Config.schema(PosInt, "MAX_CONCURRENT").pipe(Config.withDefault(DEFAULT_CONFIG.jina.maxConcurrent)),
     baseUrl: Config.nonEmptyString("BASE_URL").pipe(Config.withDefault(DEFAULT_CONFIG.jina.baseUrl)),
   })
 );

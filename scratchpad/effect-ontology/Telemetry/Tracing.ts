@@ -10,8 +10,13 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
+import { SchemaUtils, URLStr } from "@beep/schema";
 import { Layer } from "effect";
+import * as S from "effect/Schema";
 import { OtlpTracer } from "effect/unstable/observability";
+
+const $I = $ScratchpadId.create("effect-ontology/Telemetry/Tracing");
 
 /**
  * Tracing configuration
@@ -29,14 +34,33 @@ import { OtlpTracer } from "effect/unstable/observability";
  * @category type-level
  * @since 0.0.0
  */
-export interface TracingConfig {
-  /** Service name for traces */
-  readonly serviceName: string;
-  /** OTLP endpoint URL (defaults to http://localhost:4318/v1/traces for Jaeger OTLP) */
-  readonly otlpEndpoint?: string;
-  /** Enable/disable tracing (defaults to true) */
-  readonly enabled?: boolean;
-}
+export class TracingConfig extends S.Class<TracingConfig>($I`TracingConfig`)(
+  {
+    serviceName: S.NonEmptyString,
+    otlpEndpoint: URLStr.pipe(SchemaUtils.withKeyDefaults(URLStr.make("http://localhost:4318/v1/traces"))),
+    enabled: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+  },
+  $I.annote("TracingConfig", {
+    description: "Service identity, OTLP trace endpoint, and tracing enablement policy.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link TracingConfig}.
+ *
+ * **Example** (Configure tracing)
+ *
+ * ```ts
+ * import type { TracingConfigInput } from "@effect-ontology/Telemetry/Tracing"
+ *
+ * const config: TracingConfigInput = { serviceName: "effect-ontology" }
+ * console.log(config)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type TracingConfigInput = (typeof TracingConfig)["~type.make.in"];
 
 /**
  * Create OpenTelemetry tracing layer using Effect's OtlpTracer.
@@ -61,17 +85,16 @@ export interface TracingConfig {
  * @category layers
  * @since 0.0.0
  */
-export const makeTracingLayer = (config: TracingConfig) => {
+export const makeTracingLayer = (input: TracingConfigInput) => {
+  const config = TracingConfig.make(input);
   if (config.enabled === false) {
     return Layer.empty;
   }
 
   // Default to Jaeger's OTLP endpoint (Jaeger supports OTLP natively)
   // For Jaeger: http://localhost:4318/v1/traces (OTLP HTTP)
-  const otlpEndpoint = config.otlpEndpoint ?? "http://localhost:4318/v1/traces";
-
   return OtlpTracer.layer({
-    url: otlpEndpoint,
+    url: config.otlpEndpoint,
     resource: {
       serviceName: config.serviceName,
     },

@@ -12,7 +12,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { SchemaUtils, UnknownRecord } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -171,7 +171,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       const extraOptions = O.match(task.ingestionOptions, {
         onNone: () => ({}),
         onSome: (value): Record<string, unknown> =>
-          O.getOrElse(S.decodeUnknownOption(S.Record(S.String, S.Unknown))(value), () => ({})),
+          O.getOrElse(S.decodeUnknownOption(UnknownRecord)(value), () => ({})),
       });
       const ingestResult = yield* ingestionOpt.value.ingestUrl(task.sourceUrl.value, {
         ontologyId: task.ontologyId.value,
@@ -207,7 +207,29 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       ),
       execute: executeIngestion,
     };
-    const extractor: Agent<AgentTask, AgentTask, AgentInputError | unknown> = {
+    const executeExtraction = Effect.fn("AgentKit.extractor.execute")(function* (task: AgentTask) {
+      if (O.isNone(task.text)) {
+        return yield* AgentInputError.make({
+          taskId: task.taskId,
+          message: "Extraction requires text",
+          missing: ["text"],
+        });
+      }
+      const agentConfig: OntologyAgentConfig | undefined = O.getOrUndefined(task.agentConfig);
+      const result = yield* ontologyAgent.extract(task.text.value, agentConfig);
+      const rdfStore = yield* buildStoreFromGraph(result.graph);
+      const ontologyContext = O.isSome(task.ontologyContext)
+        ? task.ontologyContext.value
+        : yield* ontologyService.ontology;
+      return mergeTask(task, {
+        knowledgeGraph: O.some(result.graph),
+        graph: O.some(result.graph),
+        rdfStore: O.some(rdfStore),
+        turtle: result.turtle,
+        ontologyContext: O.some(ontologyContext),
+      });
+    });
+    const extractor: Agent<AgentTask, AgentTask, Effect.Error<ReturnType<typeof executeExtraction>>> = {
       metadata: AgentMetadata.make({
         id: AgentId.make("extractor"),
         name: "Ontology Extractor",
@@ -218,30 +240,20 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
       validate: O.some((task) =>
         Effect.succeed(O.isSome(task.text) ? ValidationResult.pass() : ValidationResult.fail(["text is required"]))
       ),
-      execute: Effect.fn(function* (task): Effect.fn.Return<AgentTask, AgentInputError | unknown, never> {
-        if (O.isNone(task.text)) {
-          return yield* AgentInputError.make({
-            taskId: task.taskId,
-            message: "Extraction requires text",
-            missing: ["text"],
-          });
-        }
-        const agentConfig: OntologyAgentConfig | undefined = O.getOrUndefined(task.agentConfig);
-        const result = yield* ontologyAgent.extract(task.text.value, agentConfig);
-        const rdfStore = yield* buildStoreFromGraph(result.graph);
-        const ontologyContext = O.isSome(task.ontologyContext)
-          ? task.ontologyContext.value
-          : yield* ontologyService.ontology;
-        return mergeTask(task, {
-          knowledgeGraph: O.some(result.graph),
-          graph: O.some(result.graph),
-          rdfStore: O.some(rdfStore),
-          turtle: result.turtle,
-          ontologyContext: O.some(ontologyContext),
-        });
-      }),
+      execute: executeExtraction,
     };
-    const validator: Agent<AgentTask, AgentTask, AgentInputError | unknown> = {
+    const executeValidation = Effect.fn("AgentKit.validator.execute")(function* (task: AgentTask) {
+      const rdfStore = yield* resolveStore(task);
+      const shapesStore = yield* getShapesStore;
+      const report = yield* shaclService.validateWithReport(rdfStore, shapesStore);
+      const explanations = ontologyAgent.explainViolations(report.validation.violations);
+      return mergeTask(task, {
+        rdfStore: O.some(rdfStore),
+        validationReport: O.some(report),
+        validationExplanations: O.some(explanations),
+      });
+    });
+    const validator: Agent<AgentTask, AgentTask, Effect.Error<ReturnType<typeof executeValidation>>> = {
       metadata: AgentMetadata.make({
         id: AgentId.make("validator"),
         name: "SHACL Validator",
@@ -256,19 +268,29 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
             : ValidationResult.fail(["rdfStore, turtle, or knowledgeGraph is required"])
         )
       ),
-      execute: Effect.fn(function* (task): Effect.fn.Return<AgentTask, AgentInputError | unknown, never> {
-        const rdfStore = yield* resolveStore(task);
-        const shapesStore = yield* getShapesStore;
-        const report = yield* shaclService.validateWithReport(rdfStore, shapesStore);
-        const explanations = ontologyAgent.explainViolations(report.validation.violations);
-        return mergeTask(task, {
-          rdfStore: O.some(rdfStore),
-          validationReport: O.some(report),
-          validationExplanations: O.some(explanations),
-        });
-      }),
+      execute: executeValidation,
     };
-    const correctorAgent: Agent<AgentTask, AgentTask, AgentInputError | unknown> = {
+    const executeCorrection = Effect.fn("AgentKit.corrector.execute")(function* (task: AgentTask) {
+      if (O.isNone(task.validationReport)) {
+        return yield* AgentInputError.make({
+          taskId: task.taskId,
+          message: "Correction requires validationReport",
+          missing: ["validationReport"],
+        });
+      }
+      const rdfStore = yield* resolveStore(task);
+      const ontologyContext = O.isSome(task.ontologyContext)
+        ? task.ontologyContext.value
+        : yield* ontologyService.ontology;
+      const result = yield* corrector.correctAll(task.validationReport.value, rdfStore, ontologyContext);
+      const turtle = yield* rdfBuilder.toTurtle(rdfStore);
+      return mergeTask(task, {
+        rdfStore: O.some(rdfStore),
+        turtle: O.some(turtle),
+        correctionResult: O.some(result),
+      });
+    });
+    const correctorAgent: Agent<AgentTask, AgentTask, Effect.Error<ReturnType<typeof executeCorrection>>> = {
       metadata: AgentMetadata.make({
         id: AgentId.make("corrector"),
         name: "SHACL Corrector",
@@ -283,26 +305,7 @@ export class AgentKit extends Context.Service<AgentKit>()($I`AgentKit`, {
             : ValidationResult.fail(["validationReport is required"])
         )
       ),
-      execute: Effect.fn(function* (task): Effect.fn.Return<AgentTask, AgentInputError | unknown, never> {
-        if (O.isNone(task.validationReport)) {
-          return yield* AgentInputError.make({
-            taskId: task.taskId,
-            message: "Correction requires validationReport",
-            missing: ["validationReport"],
-          });
-        }
-        const rdfStore = yield* resolveStore(task);
-        const ontologyContext = O.isSome(task.ontologyContext)
-          ? task.ontologyContext.value
-          : yield* ontologyService.ontology;
-        const result = yield* corrector.correctAll(task.validationReport.value, rdfStore, ontologyContext);
-        const turtle = yield* rdfBuilder.toTurtle(rdfStore);
-        return mergeTask(task, {
-          rdfStore: O.some(rdfStore),
-          turtle: O.some(turtle),
-          correctionResult: O.some(result),
-        });
-      }),
+      execute: executeCorrection,
     };
     const registerDefaults = Effect.fn("registerDefaults")(function* () {
       const coordinator = yield* AgentCoordinator;

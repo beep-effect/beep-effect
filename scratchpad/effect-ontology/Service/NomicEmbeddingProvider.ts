@@ -64,7 +64,7 @@ export const NomicEmbeddingProviderLive: Layer.Layer<EmbeddingProvider, never, N
 
       const embedBatch: EmbeddingProviderMethods["embedBatch"] = Effect.fn("NomicEmbeddingProvider.embedBatch")(
         function* (requests: ReadonlyArray<EmbeddingRequest>) {
-          if (requests.length === 0) {
+          if (A.isReadonlyArrayEmpty(requests)) {
             return [];
           }
           const taskType = mapTaskType(requests[0].taskType);

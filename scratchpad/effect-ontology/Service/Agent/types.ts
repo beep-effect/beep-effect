@@ -784,7 +784,7 @@ export class RefinementResult extends S.Class<RefinementResult>("RefinementResul
  * @category type-level
  * @since 0.0.0
  */
-export interface RegisteredAgent<I = unknown, O = unknown, E = unknown, R = never> {
+export interface RegisteredAgent<I = unknown, O = unknown, E = never, R = never> {
   /**
    * The agent implementation
    */
@@ -901,7 +901,9 @@ export class AgentExecutionError extends S.TaggedError<AgentExecutionError>($I`A
     retryable: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
   },
   $I.annote("AgentExecutionError", { description: "Failure while executing a single orchestration agent." })
-) {}
+) {
+  static readonly is = S.is(AgentExecutionError);
+}
 
 /**
  * PipelineExecutionError - Error during pipeline execution

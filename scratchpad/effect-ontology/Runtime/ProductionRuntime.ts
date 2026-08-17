@@ -15,6 +15,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { URLStr } from "@beep/schema";
 import { AnthropicClient, AnthropicLanguageModel } from "@effect/ai-anthropic";
 import { OpenAiClient, OpenAiLanguageModel } from "@effect/ai-openai";
 import { Effect, Layer, Match } from "effect";
@@ -210,7 +211,7 @@ export const ExtractionLayersLive = Layer.mergeAll(
  */
 export const TracingLive = makeTracingLayer({
   serviceName: "effect-ontology-extraction",
-  otlpEndpoint: "http://localhost:4318/v1/traces",
+  otlpEndpoint: URLStr.make("http://localhost:4318/v1/traces"),
   enabled: true,
 }).pipe(Layer.provide(FetchHttpClient.layer));
 

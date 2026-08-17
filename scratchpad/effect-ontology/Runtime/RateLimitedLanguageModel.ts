@@ -14,6 +14,7 @@
 
 import { AnthropicClient } from "@effect/ai-anthropic";
 import { OpenAiClient } from "@effect/ai-openai";
+import { PosInt } from "@beep/schema/Int";
 import { Clock, DateTime, Duration, Effect, Layer, Ref, Stream } from "effect";
 import * as O from "effect/Option";
 import { AiError } from "effect/unstable/ai";
@@ -48,9 +49,9 @@ const makeAiProtection = Effect.fn("RateLimitedAiClient.makeProtection")(functio
   const config = yield* ConfigService;
   const limiter = yield* RateLimiter.make;
   const circuitBreaker = yield* makeCircuitBreaker({
-    maxFailures: 5,
+    maxFailures: PosInt.make(5),
     resetTimeout: Duration.minutes(2),
-    successThreshold: 2,
+    successThreshold: PosInt.make(2),
   });
   const callCount = yield* Ref.make(0);
   const rateLimit = RATE_LIMITS[config.llm.provider] ?? { perSecond: 2, perMinute: 20 };

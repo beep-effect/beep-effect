@@ -395,24 +395,18 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I
       classify: Effect.fn("DocumentClassifier.classify")(
         function* (input: ClassifyInput) {
           const result = yield* generateObjectWithRetry({
-            llm,
             prompt: buildSinglePrompt(input.preview, O.getOrUndefined(input.contentType)),
             schema: DocumentClassification,
             objectName: "document_classification",
             serviceName: "DocumentClassifier",
             model: config.llm.model,
             provider: config.llm.provider,
-            retryConfig: {
-              initialDelayMs: 1000,
-              maxDelayMs: 30000,
-              maxAttempts: 3,
-              timeoutMs: 30000,
-            },
+            retryPolicy: config.llm.retryPolicy,
             spanAttributes: {
               "classifier.mode": "single",
               "classifier.content_type": O.getOrElse(input.contentType, () => "unknown"),
             },
-          });
+          }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
           return result.value;
         },
         Effect.catch((error) =>
@@ -430,7 +424,6 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I
             return MutableHashMap.empty<number, DocumentClassification>();
           }
           const result = yield* generateObjectWithRetry({
-            llm,
             prompt: buildBatchPrompt(
               A.map(input.documents, (document) => ({
                 index: document.index,
@@ -443,17 +436,12 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I
             serviceName: "DocumentClassifier",
             model: config.llm.model,
             provider: config.llm.provider,
-            retryConfig: {
-              initialDelayMs: 1000,
-              maxDelayMs: 30000,
-              maxAttempts: 3,
-              timeoutMs: 60000,
-            },
+            retryPolicy: config.llm.retryPolicy,
             spanAttributes: {
               "classifier.mode": "batch",
               "classifier.batch_size": input.documents.length,
             },
-          });
+          }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
           const classifications = MutableHashMap.empty<number, DocumentClassification>();
           for (const item of result.value.classifications) {
             MutableHashMap.set(classifications, item.index, item.classification);
@@ -511,25 +499,20 @@ export class DocumentClassifier extends Context.Service<DocumentClassifier>()($I
                 batchSize: batch.length,
               });
               const result = yield* generateObjectWithRetry({
-                llm,
                 prompt: buildBatchPrompt(batch),
                 schema: BatchClassificationResponse,
                 objectName: "batch_classification",
                 serviceName: "DocumentClassifier",
                 model: config.llm.model,
                 provider: config.llm.provider,
-                retryConfig: {
-                  initialDelayMs: 1000,
-                  maxDelayMs: 30000,
-                  maxAttempts: 3,
-                  timeoutMs: 60000,
-                },
+                retryPolicy: config.llm.retryPolicy,
                 spanAttributes: {
                   "classifier.mode": "auto_batch",
                   "classifier.batch_index": batchIndex,
                   "classifier.batch_size": batch.length,
                 },
               }).pipe(
+                Effect.provideService(LanguageModel.LanguageModel, llm),
                 Effect.catch((error) =>
                   Effect.gen(function* () {
                     yield* Effect.logWarning("Classification batch failed", {

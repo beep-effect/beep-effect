@@ -11,8 +11,7 @@
  */
 
 import { Effect, Layer } from "effect";
-import type { HttpClient } from "effect/unstable/http";
-import { FetchHttpClient } from "effect/unstable/http";
+import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { ConfigService, ConfigServiceDefault } from "../Service/Config.ts";
 import { EmbeddingCache } from "../Service/EmbeddingCache.ts";
 import type { EmbeddingProvider } from "../Service/EmbeddingProvider.ts";
@@ -22,10 +21,8 @@ import {
   EmbeddingRateLimiterVoyage,
   makeEmbeddingRateLimiter,
 } from "../Service/EmbeddingRateLimiter.ts";
-import { NomicEmbeddingProviderDefault, NomicEmbeddingProviderLive } from "../Service/NomicEmbeddingProvider.ts";
-import type { NomicNlpService } from "../Service/NomicNlp.ts";
-import { NomicNlpServiceLive } from "../Service/NomicNlp.ts";
-import { VoyageEmbeddingProviderDefault, VoyageEmbeddingProviderLive } from "../Service/VoyageEmbeddingProvider.ts";
+import { NomicEmbeddingProviderDefault } from "../Service/NomicEmbeddingProvider.ts";
+import { VoyageEmbeddingProviderDefault } from "../Service/VoyageEmbeddingProvider.ts";
 import { MetricsService } from "../Telemetry/Metrics.ts";
 
 // =============================================================================
@@ -56,12 +53,12 @@ import { MetricsService } from "../Telemetry/Metrics.ts";
  */
 export const EmbeddingProviderFromConfig: Layer.Layer<
   EmbeddingProvider,
-  never,
-  ConfigService | NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
+  AnyEmbeddingError,
+  ConfigService
 > = Layer.unwrap<
   EmbeddingProvider,
+  AnyEmbeddingError,
   never,
-  NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient,
   never,
   ConfigService
 >(
@@ -77,9 +74,12 @@ export const EmbeddingProviderFromConfig: Layer.Layer<
     // - Voyage: EmbeddingRateLimiter | HttpClient.HttpClient
     // Union: NomicNlpService | EmbeddingRateLimiter | HttpClient.HttpClient
     if (config.embedding.provider === "voyage") {
-      return VoyageEmbeddingProviderLive.pipe(Layer.provide(configLayer));
+      return VoyageEmbeddingProviderDefault.pipe(
+        Layer.provide(EmbeddingRateLimiterFromConfig.pipe(Layer.provide(configLayer))),
+        Layer.provide(configLayer)
+      );
     } else {
-      return NomicEmbeddingProviderLive.pipe(Layer.provide(configLayer));
+      return NomicEmbeddingProviderDefault.pipe(Layer.provide(configLayer));
     }
   })
 );
@@ -165,7 +165,7 @@ export const NomicEmbeddingInfrastructure: Layer.Layer<
  */
 export const VoyageEmbeddingInfrastructure: Layer.Layer<
   EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache,
-  never,
+  AnyEmbeddingError,
   ConfigService
 > = Layer.mergeAll(
   VoyageEmbeddingProviderDefault.pipe(Layer.provide(EmbeddingRateLimiterVoyage)),
@@ -200,13 +200,16 @@ export const VoyageEmbeddingInfrastructure: Layer.Layer<
  */
 export const EmbeddingInfrastructure: Layer.Layer<
   EmbeddingProvider | EmbeddingRateLimiter | EmbeddingCache,
-  never,
+  AnyEmbeddingError,
   ConfigService
-> = EmbeddingProviderFromConfig.pipe(
-  Layer.provideMerge(EmbeddingRateLimiterFromConfig),
-  Layer.provideMerge(EmbeddingCache.Default),
-  Layer.provideMerge(FetchHttpClient.layer),
-  Layer.provideMerge(NomicNlpServiceLive)
+> = Layer.unwrap(
+  Effect.gen(function* () {
+    const config = yield* ConfigService;
+    const configLayer = Layer.succeed(ConfigService, config);
+    return (config.embedding.provider === "voyage" ? VoyageEmbeddingInfrastructure : NomicEmbeddingInfrastructure).pipe(
+      Layer.provide(configLayer)
+    );
+  })
 );
 
 /**

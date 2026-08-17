@@ -18,7 +18,7 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Context, Effect, Layer } from "effect";
 import * as O from "effect/Option";
@@ -126,8 +126,8 @@ export class HybridSearchResult extends S.Class<HybridSearchResult>($I`HybridSea
     entityId: S.NonEmptyString,
     entityType: EmbeddingEntityType,
     rrfScore: UnitInterval,
-    vectorRank: PosInt,
-    textRank: PosInt,
+    vectorRank: NonNegativeInt,
+    textRank: NonNegativeInt,
   },
   $I.annote("HybridSearchResult", {
     description: "Repository entity and its reciprocal-rank-fusion search scores.",
@@ -160,6 +160,21 @@ export class SimilaritySearchOptions extends S.Class<SimilaritySearchOptions>($I
   })
 ) {}
 
+/**
+ * Constructor input accepted by {@link SimilaritySearchOptions}.
+ *
+ * **Example** (Configure similarity search)
+ *
+ * ```ts
+ * import type { SimilaritySearchOptionsInput } from "@effect-ontology/Repository/Embedding"
+ *
+ * const options: SimilaritySearchOptionsInput = { limit: 10 }
+ * console.log(options)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type SimilaritySearchOptionsInput = (typeof SimilaritySearchOptions)["~type.make.in"];
 
 /**
@@ -189,6 +204,21 @@ export class HybridSearchOptions extends S.Class<HybridSearchOptions>($I`HybridS
   })
 ) {}
 
+/**
+ * Constructor input accepted by {@link HybridSearchOptions}.
+ *
+ * **Example** (Configure hybrid search)
+ *
+ * ```ts
+ * import type { HybridSearchOptionsInput } from "@effect-ontology/Repository/Embedding"
+ *
+ * const options: HybridSearchOptionsInput = { limit: 10 }
+ * console.log(options)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type HybridSearchOptionsInput = (typeof HybridSearchOptions)["~type.make.in"];
 
 const PgVector = S.Finite.pipe(

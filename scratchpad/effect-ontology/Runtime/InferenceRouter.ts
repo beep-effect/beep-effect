@@ -45,6 +45,12 @@ interface InferenceJobState {
 /**
  * Scoped storage used by one inference-router runtime.
  *
+ * **Example** (Inspect the inference job store service)
+ * ```ts
+ * import { InferenceJobStore } from "@effect-ontology/Runtime/InferenceRouter"
+ * console.log(InferenceJobStore)
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -58,6 +64,12 @@ export class InferenceJobStore extends Context.Service<
 
 /**
  * Ref-backed bounded inference-job storage isolated per layer instance.
+ *
+ * **Example** (Inspect the inference job store layer)
+ * ```ts
+ * import { InferenceJobStoreLive } from "@effect-ontology/Runtime/InferenceRouter"
+ * console.log(InferenceJobStoreLive)
+ * ```
  *
  * @category layers
  * @since 0.0.0
@@ -98,6 +110,12 @@ const InferenceFailureStage = LiteralKit(["parse", "reason", "serialize", "stati
 /**
  * Typed failure raised while executing an inference request.
  *
+ * **Example** (Inspect the typed inference failure)
+ * ```ts
+ * import { InferenceExecutionError } from "@effect-ontology/Runtime/InferenceRouter"
+ * console.log(InferenceExecutionError.make)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -113,7 +131,7 @@ export class InferenceExecutionError extends S.TaggedError<InferenceExecutionErr
   })
 ) {}
 
-const generateJobId = Random.nextInt.pipe(Effect.map((value) => `infer-${Math.abs(value).toString(16)}`));
+const generateJobId = Random.nextIntBetween(0, 0x7fffffff).pipe(Effect.map((value) => `infer-${value.toString(16)}`));
 
 // =============================================================================
 // Router Definition
@@ -136,7 +154,7 @@ const generateJobId = Random.nextInt.pipe(Effect.map((value) => `infer-${Math.ab
  * console.log(InferenceRouter)
  * ```
  *
- * @category schemas
+ * @category layers
  * @since 0.0.0
  */
 const InferenceRouterDefinition = HttpRouter.addAll([
@@ -276,7 +294,8 @@ const InferenceRouterDefinition = HttpRouter.addAll([
 
             return yield* HttpServerResponse.schemaJson(InferenceRunResponse)(response);
           },
-          Effect.catch(
+          Effect.catchTag(
+            "InferenceExecutionError",
             Effect.fn(function* (error) {
               yield* Effect.logError("Inference failed", { error });
 
@@ -336,6 +355,12 @@ const InferenceRouterDefinition = HttpRouter.addAll([
 
 /**
  * Inference router with runtime-local bounded job storage.
+ *
+ * **Example** (Inspect the inference router layer)
+ * ```ts
+ * import { InferenceRouter } from "@effect-ontology/Runtime/InferenceRouter"
+ * console.log(InferenceRouter)
+ * ```
  *
  * @category layers
  * @since 0.0.0

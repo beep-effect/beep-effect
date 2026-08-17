@@ -12,10 +12,10 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
-import { Clock, Context, Duration, Effect, Layer, Order } from "effect";
+import { Clock, Context, Duration, Effect, Layer, Order, Ref, Semaphore } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -98,15 +98,51 @@ export class WikidataRateLimitError extends S.TaggedError<WikidataRateLimitError
 // =============================================================================
 
 /**
- * A candidate entity from Wikidata search
+ * Fields through which a Wikidata entity search can match.
  *
- * **Example** (Validate wikidata candidate)
+ * **Example** (Inspect Wikidata match types)
+ *
+ * ```ts
+ * import { WikidataMatchType } from "@effect-ontology/Service/WikidataClient"
+ *
+ * console.log(WikidataMatchType.Options)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WikidataMatchType = LiteralKit(["label", "alias"]).pipe(
+  $I.annoteSchema("WikidataMatchType", {
+    description: "Wikidata search fields that can match an entity query.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link WikidataMatchType}.
+ *
+ * **Example** (Use a Wikidata match type)
+ *
+ * ```ts
+ * import type { WikidataMatchType } from "@effect-ontology/Service/WikidataClient"
+ *
+ * const matchType: WikidataMatchType = "label"
+ * console.log(matchType)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type WikidataMatchType = typeof WikidataMatchType.Type;
+
+/**
+ * Scored Wikidata entity candidate normalized from API responses.
+ *
+ * **Example** (Inspect the candidate schema)
  *
  * ```ts
  * import { WikidataCandidate } from "@effect-ontology/Service/WikidataClient"
- * import * as S from "effect/Schema"
  *
- * console.log(S.is(WikidataCandidate)({}))
+ * console.log(WikidataCandidate)
  * ```
  *
  * @category schemas
@@ -120,14 +156,18 @@ export const WikidataCandidate = S.Struct({
   /** Entity description */
   description: S.Option(S.String),
   /** How the search matched (label or alias) */
-  matchType: S.Literals(["label", "alias"]),
+  matchType: WikidataMatchType,
   /** Language of the match */
   matchLanguage: S.String,
   /** Normalized score (0-100) */
   score: Percentage,
   /** Wikidata concept URI */
   conceptUri: S.String,
-});
+}).pipe(
+  $I.annoteSchema("WikidataCandidate", {
+    description: "Scored Wikidata entity candidate normalized from a search or direct lookup response.",
+  })
+);
 /**
  * Describes the wikidata candidate data exposed by this module.
  *
@@ -148,32 +188,89 @@ export const WikidataCandidate = S.Struct({
 export type WikidataCandidate = typeof WikidataCandidate.Type;
 
 /**
- * Options for entity search
+ * Wikidata entity families accepted by entity search.
  *
  *
- * **Example** (Use the SearchOptions contract)
+ * **Example** (Inspect Wikidata entity types)
  *
  * ```ts
- * import type { SearchOptions } from "@effect-ontology/Service/WikidataClient"
+ * import { WikidataEntityType } from "@effect-ontology/Service/WikidataClient"
  *
- * const acceptsSearchOptions = (_value: SearchOptions): void => undefined
+ * console.log(WikidataEntityType.Options)
+ * ```
  *
- * console.log(acceptsSearchOptions)
+ * @category schemas
+ * @since 0.0.0
+ */
+export const WikidataEntityType = LiteralKit(["item", "property", "lexeme"]).pipe(
+  $I.annoteSchema("WikidataEntityType", {
+    description: "Wikidata entity families accepted by wbsearchentities.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link WikidataEntityType}.
+ *
+ * **Example** (Use a Wikidata entity type)
+ *
+ * ```ts
+ * import type { WikidataEntityType } from "@effect-ontology/Service/WikidataClient"
+ *
+ * const type: WikidataEntityType = "item"
+ * console.log(type)
  * ```
  *
  * @category type-level
  * @since 0.0.0
  */
-export interface SearchOptions {
-  /** Language code for search (default: "en") */
-  readonly language?: string;
-  /** Maximum results to return (default: 10, max: 50) */
-  readonly limit?: number;
-  /** Entity type to search for */
-  readonly type?: "item" | "property" | "lexeme";
-  /** Strict language matching */
-  readonly strictLanguage?: boolean;
-}
+export type WikidataEntityType = typeof WikidataEntityType.Type;
+
+const WikidataSearchLimit = PosInt.check(
+  S.isLessThanOrEqualTo(50, { message: "Expected at most 50 Wikidata search results" })
+);
+
+/**
+ * Validated options for a Wikidata entity search.
+ *
+ * **Example** (Use default search options)
+ *
+ * ```ts
+ * import { SearchOptions } from "@effect-ontology/Service/WikidataClient"
+ *
+ * console.log(SearchOptions.make({}).limit)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class SearchOptions extends S.Class<SearchOptions>($I`SearchOptions`)(
+  {
+    language: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("en")),
+    limit: WikidataSearchLimit.pipe(SchemaUtils.withKeyDefaults(PosInt.make(10))),
+    type: WikidataEntityType.pipe(SchemaUtils.withKeyDefaults(WikidataEntityType.Enum.item)),
+    strictLanguage: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+  },
+  $I.annote("SearchOptions", {
+    description: "Language, bounded result count, entity family, and language-matching policy for Wikidata search.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link SearchOptions}.
+ *
+ * **Example** (Configure a Wikidata search)
+ *
+ * ```ts
+ * import type { SearchOptionsInput } from "@effect-ontology/Service/WikidataClient"
+ *
+ * const options: SearchOptionsInput = { limit: 5 }
+ * console.log(options)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SearchOptionsInput = (typeof SearchOptions)["~type.make.in"];
 
 // =============================================================================
 // API Response Schemas
@@ -294,27 +391,31 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
   make: Effect.gen(function* () {
     const httpClient = yield* HttpClient.HttpClient;
 
-    // Rate limiting state
-    let lastRequestTime = 0;
-    const minRequestInterval = 100; // 100ms between requests
+    const lastRequestTime = yield* Ref.make(0);
+    const rateLimitGate = yield* Semaphore.make(1);
+    const minRequestInterval = Duration.millis(100);
+    const awaitRateLimit = rateLimitGate.withPermits(1)(
+      Effect.gen(function* () {
+        const now = yield* Clock.currentTimeMillis;
+        const previous = yield* Ref.get(lastRequestTime);
+        const remaining = Duration.toMillis(minRequestInterval) - (now - previous);
+        if (remaining > 0) {
+          yield* Effect.sleep(Duration.millis(remaining));
+        }
+        yield* Ref.set(lastRequestTime, yield* Clock.currentTimeMillis);
+      })
+    );
 
     /**
      * Search for entities matching the query
      */
     const searchEntities = (
       query: string,
-      options: SearchOptions = {}
+      input: SearchOptionsInput = {}
     ): Effect.Effect<ReadonlyArray<WikidataCandidate>, WikidataApiError | WikidataRateLimitError> =>
       Effect.gen(function* () {
-        const { language = "en", limit = 10, strictLanguage = false, type = "item" } = options;
-
-        // Simple rate limiting
-        const now = yield* Clock.currentTimeMillis;
-        const timeSinceLastRequest = now - lastRequestTime;
-        if (timeSinceLastRequest < minRequestInterval) {
-          yield* Effect.sleep(Duration.millis(minRequestInterval - timeSinceLastRequest));
-        }
-        lastRequestTime = yield* Clock.currentTimeMillis;
+        const { language, limit, strictLanguage, type } = SearchOptions.make(input);
+        yield* awaitRateLimit;
 
         // Build request
         const params = new URLSearchParams({
@@ -406,6 +507,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
       language: string = "en"
     ): Effect.Effect<WikidataCandidate | null, WikidataApiError> =>
       Effect.gen(function* () {
+        yield* awaitRateLimit;
         const params = new URLSearchParams({
           action: "wbgetentities",
           format: "json",

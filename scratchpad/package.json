@@ -7,7 +7,7 @@
   "scripts": {
     "audit:effect-ontology-arbitraries": "bun effect-ontology/scripts/audit-arbitraries.ts",
     "audit:effect-ontology-docs": "bun effect-ontology/scripts/audit-documentation.ts",
-    "check:effect-ontology": "tsgo -p effect-ontology/tsconfig.json --noEmit --pretty false && bun run --cwd .. beep laws native-runtime --check --include 'scratchpad/effect-ontology/**/*.ts'",
+    "check:effect-ontology": "tsgo -p effect-ontology/tsconfig.json --noEmit --pretty false && bun run migrations:check:effect-ontology && bun run --cwd .. beep laws native-runtime --check --include 'scratchpad/effect-ontology/**/*.ts'",
     "claudecode:check": "bun run claudecode:typecheck && bun run claudecode:test && bun run claudecode:lint",
     "claudecode:lint": "biome check --config-path claudecode/biome.jsonc claudecode test/claudecode",
     "claudecode:lint:fix": "biome check --write --config-path claudecode/biome.jsonc claudecode test/claudecode",
@@ -15,13 +15,16 @@
     "claudecode:typecheck": "tsgo -p claudecode/tsconfig.json --noEmit",
     "docgen": "bun run ../packages/tooling/tool/docgen/src/bin.ts",
     "docgen:effect-ontology": "bun run ../packages/tooling/tool/docgen/src/bin.ts --config-file docgen.effect-ontology.json",
+    "generate:effect-ontology-migrations": "bunx --bun drizzle-kit generate --config effect-ontology/drizzle.config.ts",
     "lint:effect-ontology": "biome check --config-path effect-ontology/biome.jsonc effect-ontology",
+    "migrations:check:effect-ontology": "bun effect-ontology/scripts/check-migrations-drift.ts",
     "test:effect-ontology": "bunx --bun vitest run --config effect-ontology/vitest.config.ts"
   },
   "dependencies": {
     "@beep/dock": "workspace:^",
     "@beep/dock-react": "workspace:^",
     "@beep/drizzle": "workspace:^",
+    "@beep/effect-drizzle": "workspace:^",
     "@beep/epistemic-domain": "workspace:^",
     "@beep/file-processing": "workspace:^",
     "@beep/identity": "workspace:^",
@@ -57,8 +60,10 @@
   },
   "devDependencies": {
     "@effect/vitest": "catalog:",
+    "@beep/pglite": "workspace:^",
     "@types/n3": "catalog:",
     "@types/node": "catalog:",
+    "drizzle-kit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

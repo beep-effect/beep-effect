@@ -18,6 +18,7 @@
 
 import * as Rdf from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import { BunServices } from "@effect/platform-bun";
 import { ConfigProvider, DateTime, Effect, Layer, ManagedRuntime, Stream } from "effect";
 import * as A from "effect/Array";
@@ -143,6 +144,17 @@ export const MockShaclService = (options?: {
     readonly sourceShape?: string;
   }>;
 }) => {
+  const makeEncodedLiteral = (
+    value: string
+  ): {
+    readonly termType: "Literal";
+    readonly value: string;
+    readonly datatype: { readonly termType: "NamedNode"; readonly value: string };
+  } => ({
+    termType: "Literal",
+    value,
+    datatype: Rdf.makeNamedNode(XSD_STRING.value),
+  });
   const makeReport = Effect.fn("ShaclService.makeTestReport")(function* (dataStore: RdfStore, shapesStore: RdfStore) {
     const violations = (options?.violations ?? []).map((violation) => ({
       focusNode: violation.focusNode ?? "test:node",
@@ -152,7 +164,7 @@ export const MockShaclService = (options?: {
       sourceConstraintComponent: Rdf.makeNamedNode("urn:beep:shacl:constraint:test"),
       ...(P.isNotUndefined(violation.value)
         ? {
-            value: Rdf.Literal.encodeSync(Rdf.makeLiteral(violation.value, XSD_STRING.value)),
+            value: makeEncodedLiteral(violation.value),
           }
         : {}),
       ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: Rdf.makeNamedNode(violation.sourceShape) } : {}),
@@ -163,7 +175,14 @@ export const MockShaclService = (options?: {
       dataGraphTripleCount: rdfStoreSize(dataStore),
       shapesGraphTripleCount: rdfStoreSize(shapesStore),
       durationMs: 0,
-    }).pipe(Effect.orDie);
+    }).pipe(
+      Effect.mapError((cause) =>
+        ShaclValidationError.make({
+          reason: "engineFailure",
+          message: `Invalid mock SHACL report: ${cause.message}`,
+        })
+      )
+    );
   });
 
   return Layer.succeed(ShaclWorkflowService, {

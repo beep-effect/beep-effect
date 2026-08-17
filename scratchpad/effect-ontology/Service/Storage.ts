@@ -11,7 +11,7 @@ import {
   writeFileWithinCanonicalRootAtomically,
 } from "@beep/file-processing/PathSafety";
 import { $ScratchpadId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Storage } from "@google-cloud/storage";
 import { Clock, Context, Effect, FileSystem, Inspectable, Layer, Match, MutableHashMap, Path } from "effect";
 import * as A from "effect/Array";
@@ -76,10 +76,15 @@ const isLocalStorageKey = S.is(LocalStorageKey);
  * @category type-level
  * @since 0.0.0
  */
-export interface ObjectWithGeneration {
-  readonly content: string;
-  readonly generation: string;
-}
+export class ObjectWithGeneration extends S.Class<ObjectWithGeneration>($I`ObjectWithGeneration`)(
+  {
+    content: S.String,
+    generation: S.NonEmptyString,
+  },
+  $I.annote("ObjectWithGeneration", {
+    description: "Stored text together with the backend generation used for optimistic locking.",
+  })
+) {}
 
 /**
  * Error thrown when setIfGenerationMatch fails due to concurrent modification
@@ -208,12 +213,68 @@ export class StorageService extends Context.Service<StorageService, StorageServi
  * @category type-level
  * @since 0.0.0
  */
-export interface StorageConfigValue {
-  readonly type: "local" | "gcs" | "memory";
-  readonly bucketName?: string; // Required for GCS
-  readonly localPath?: string; // Required for Local
-  readonly pathPrefix?: string;
-}
+/**
+ * Supported object-storage backend identifiers.
+ *
+ * **Example** (Inspect storage backends)
+ *
+ * ```ts
+ * import { StorageBackend } from "@effect-ontology/Service/Storage"
+ *
+ * console.log(StorageBackend.Options)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const StorageBackend = LiteralKit(["local", "gcs", "memory"]).pipe(
+  $I.annoteSchema("StorageBackend", {
+    description: "Supported object-storage backend implementations.",
+  })
+);
+
+/**
+ * Runtime value accepted by {@link StorageBackend}.
+ *
+ * **Example** (Use a storage backend)
+ *
+ * ```ts
+ * import type { StorageBackend } from "@effect-ontology/Service/Storage"
+ *
+ * const backend: StorageBackend = "memory"
+ * console.log(backend)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type StorageBackend = typeof StorageBackend.Type;
+
+/**
+ * Backend selection and backend-specific storage locations.
+ *
+ * **Example** (Inspect storage configuration)
+ *
+ * ```ts
+ * import { StorageConfigValue } from "@effect-ontology/Service/Storage"
+ *
+ * console.log(StorageConfigValue)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class StorageConfigValue extends S.Class<StorageConfigValue>($I`StorageConfigValue`)(
+  {
+    type: StorageBackend,
+    bucketName: S.optionalKey(S.NonEmptyString),
+    localPath: S.optionalKey(S.NonEmptyString),
+    pathPrefix: S.optionalKey(S.String),
+  },
+  $I.annote("StorageConfigValue", {
+    description: "Backend selection and backend-specific object-storage location settings.",
+  })
+) {}
 
 /**
  * Provides the storage config service capability.

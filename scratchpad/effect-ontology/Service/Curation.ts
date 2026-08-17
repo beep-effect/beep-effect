@@ -13,7 +13,6 @@
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import type { Stream } from "effect";
 import { Context, DateTime, Effect, Layer, Match } from "effect";
 import * as O from "effect/Option";
@@ -66,13 +65,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Curation");
  * @category type-level
  * @since 0.0.0
  */
-export type CurationServiceError =
-  | DrizzleError
-  | EffectDrizzleQueryError
-  | SqlError.SqlError
-  | S.SchemaError
-  | AnyEmbeddingError
-  | EventBusError;
+export type CurationServiceError = DrizzleError | SqlError.SqlError | S.SchemaError | AnyEmbeddingError | EventBusError;
 
 /**
  * Result of applying a curation action

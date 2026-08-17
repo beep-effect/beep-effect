@@ -12,13 +12,14 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { Context, DateTime, Layer } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Article");
 
 import { PostgresDrizzle } from "@beep/postgres";
-import { and, desc, eq, gte, like, lte, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, like, lte } from "drizzle-orm";
 import { Effect } from "effect";
 import type { ArticleInsertRow } from "./schema.ts";
 import { articles } from "./schema.ts";
@@ -193,7 +194,7 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
     const getArticles = Effect.fn("getArticles")(function* (filter: ArticleFilter) {
       const conditions = buildWhereConditions(filter);
       let query = drizzle.select().from(articles).orderBy(desc(articles.publishedAt)).$dynamic();
-      if (conditions.length > 0) {
+      if (A.isReadonlyArrayNonEmpty(conditions)) {
         query = query.where(and(...conditions));
       }
       if (P.isNotUndefined(filter.limit)) {
@@ -227,7 +228,7 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
      */
     const countArticles = Effect.fn("countArticles")(function* (filter: ArticleFilter = {}) {
       const conditions = buildWhereConditions(filter);
-      let query = drizzle.select({ count: sql<number>`count(*)::int` }).from(articles).$dynamic();
+      let query = drizzle.select({ count: count() }).from(articles).$dynamic();
       if (conditions.length > 0) {
         query = query.where(and(...conditions));
       }
@@ -243,7 +244,7 @@ export class ArticleRepository extends Context.Service<ArticleRepository>()($I`A
      * Insert multiple articles in a batch
      */
     const insertArticlesBatch = Effect.fn("insertArticlesBatch")(function* (articleList: Array<ArticleInsertRow>) {
-      if (articleList.length === 0) return [];
+      if (A.isReadonlyArrayEmpty(articleList)) return [];
       return yield* drizzle.insert(articles).values(articleList).returning();
     });
 

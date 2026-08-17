@@ -1,7 +1,7 @@
 import { IRI, makeDataset } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
-import { Effect } from "effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Entity, Relation, RelationObject } from "../../Domain/Model/Entity.ts";
@@ -13,15 +13,17 @@ import { ExplanationContext } from "../../Service/ViolationExplainer.ts";
 describe("canonical service schema boundaries", () => {
   it.effect("round-trips canonical extraction entities and relations", () =>
     Effect.gen(function* () {
-      const ada = EntityId.fromUnknown("ada_lovelace");
+      const ada = yield* S.decodeEffect(EntityId)("ada_lovelace");
+      const personIri = yield* S.decodeEffect(IRI)("https://schema.org/Person");
+      const nameIri = yield* S.decodeEffect(IRI)("https://schema.org/name");
       const entity = Entity.make({
         id: ada,
         mention: "Ada Lovelace",
-        types: [IRI.fromUnknown("https://schema.org/Person")],
+        types: [personIri],
       });
       const relation = Relation.make({
         subjectId: ada,
-        predicate: IRI.fromUnknown("https://schema.org/name"),
+        predicate: nameIri,
         object: RelationObject.cases.Text.make({ value: "Ada Lovelace" }),
       });
       const cached: CachedExtractionResult = {

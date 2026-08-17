@@ -22,6 +22,7 @@ import { LiteralKit, NonNegativeInt, NonNegNum, PosInt } from "@beep/schema";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Clock, Context, Effect, Layer, Match } from "effect";
 import * as O from "effect/Option";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { RdfStore } from "./Rdf.ts";
@@ -423,7 +424,7 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
       const profileRules = getRulesForProfile(config.profile);
       const allRules = [...profileRules, ...config.customRules];
 
-      if (allRules.length === 0) {
+      if (A.isReadonlyArrayEmpty(allRules)) {
         yield* Effect.logDebug("No rules to apply");
         return ReasoningResult.make({
           inferredTripleCount: NonNegativeInt.make(0),
@@ -541,8 +542,8 @@ export class Reasoner extends Context.Service<Reasoner>()($I`Reasoner`, {
        * @param config - Reasoning configuration
        * @returns True if reasoning would add new triples
        */
-      wouldInfer: (store: RdfStore, config: ReasoningConfig): Effect.Effect<boolean, ReasoningError | RuleParseError> =>
-        Effect.gen(function* () {
+      wouldInfer:
+        Effect.fn("Reasoner.wouldInfer")(function* (store: RdfStore, config: ReasoningConfig): Effect.fn.Return<boolean, ReasoningError | RuleParseError> {
           const { result } = yield* reasonCopy(store, config);
           return result.hasInferences;
         }),

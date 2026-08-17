@@ -555,7 +555,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
     const registryOpt = yield* Effect.serviceOption(OntologyRegistryService);
 
     // Cache ontology with configurable TTL to allow refresh without restart
-    const cacheTtl = Duration.seconds(config.ontology.cacheTtlSeconds);
+    const cacheTtl = config.ontology.cacheTtl;
     const getOntology = yield* Effect.cachedWithTTL(cacheTtl)(
       Effect.gen(function* () {
         const ontologyPath = config.ontology.path;

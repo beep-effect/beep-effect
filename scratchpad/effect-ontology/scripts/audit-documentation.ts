@@ -600,7 +600,7 @@ for await (const relativePath of sourceModules.scan({ cwd: sourceRoot.pathname }
       }
     }
 
-    if (ts.isClassDeclaration(statement)) {
+    if (ts.isClassDeclaration(statement) && hasModifier(statement, ts.SyntaxKind.ExportKeyword)) {
       auditClassMembers(relativePath, statement, sourceFile);
     }
   }

@@ -50,20 +50,36 @@ const $I = $ScratchpadId.create("effect-ontology/Service/JinaReaderClient");
  * @category type-level
  * @since 0.0.0
  */
-export interface FetchOptions {
-  /** Include images in markdown output (default: false) */
-  readonly includeImages?: boolean;
-  /** Include links in markdown output (default: true) */
-  readonly includeLinks?: boolean;
-  /** Return forward links found in the page */
-  readonly returnLinks?: boolean;
-  /** Target selector for extraction (CSS selector) */
-  readonly targetSelector?: string;
-  /** Wait for specific selector before extraction */
-  readonly waitForSelector?: string;
-  /** Custom timeout in ms (overrides config) */
-  readonly timeoutMs?: number;
-}
+export class FetchOptions extends S.Class<FetchOptions>($I`FetchOptions`)(
+  {
+    includeImages: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    includeLinks: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    returnLinks: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    targetSelector: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    waitForSelector: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    timeout: S.Duration.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("FetchOptions", {
+    description: "Reader rendering switches, optional selectors, and optional request-timeout override.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link FetchOptions}.
+ *
+ * **Example** (Configure a Reader request)
+ *
+ * ```ts
+ * import type { FetchOptionsInput } from "@effect-ontology/Service/JinaReaderClient"
+ *
+ * const options: FetchOptionsInput = { returnLinks: true }
+ * console.log(options)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type FetchOptionsInput = (typeof FetchOptions)["~type.make.in"];
 
 /**
  * Response from Jina Reader API with parsed content
@@ -82,11 +98,15 @@ export interface FetchOptions {
  * @category type-level
  * @since 0.0.0
  */
-export interface JinaResponse {
-  readonly content: JinaContent;
-  /** Forward links found in the page (if returnLinks=true) */
-  readonly links?: ReadonlyArray<string>;
-}
+export class JinaResponse extends S.Class<JinaResponse>($I`JinaResponse`)(
+  {
+    content: JinaContent,
+    links: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("JinaResponse", {
+    description: "Reader content and optional forward links discovered in the source page.",
+  })
+) {}
 
 // =============================================================================
 // Internal Response Schema
@@ -158,7 +178,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
     const httpClient = yield* HttpClient.HttpClient;
     const config = yield* ConfigService;
 
-    const { apiKey, baseUrl, rateLimitRpm, timeoutMs: configTimeout } = config.jina;
+    const { apiKey, baseUrl, rateLimitRpm, timeout: configTimeout } = config.jina;
 
     // Create rate limiter based on config
     const rateLimiter = makeRateLimiter(rateLimitRpm);
@@ -181,7 +201,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
      */
     const fetchUrl = Effect.fn("JinaReaderClient.fetchUrl")(function* (
       url: string,
-      options: FetchOptions = {}
+      input: FetchOptionsInput = {}
     ): Effect.fn.Return<JinaResponse, JinaApiError | JinaRateLimitError | JinaParseError | JinaTimeoutError> {
       // Wait for rate limit
       yield* rateLimiter.acquire;
@@ -195,7 +215,8 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
         )
       );
 
-      const timeout = options.timeoutMs ?? configTimeout;
+      const options = FetchOptions.make(input);
+      const timeout = O.getOrElse(options.timeout, () => configTimeout);
 
       // Build request URL
       const requestUrl = `${baseUrl}/${encodeURIComponent(targetUrl)}`;
@@ -210,26 +231,26 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
       if (options.includeLinks === false) {
         headers["X-No-Links"] = "true";
       }
-      if (P.isNotUndefined(options.returnLinks)) {
+      if (options.returnLinks) {
         headers["X-Return-Links"] = "true";
       }
-      if (P.isNotUndefined(options.targetSelector)) {
-        headers["X-Target-Selector"] = options.targetSelector;
-      }
-      if (P.isNotUndefined(options.waitForSelector)) {
-        headers["X-Wait-For-Selector"] = options.waitForSelector;
-      }
+      O.map(options.targetSelector, (selector) => {
+        headers["X-Target-Selector"] = selector;
+      });
+      O.map(options.waitForSelector, (selector) => {
+        headers["X-Wait-For-Selector"] = selector;
+      });
 
       const request = HttpClientRequest.get(requestUrl).pipe(HttpClientRequest.setHeaders(headers));
 
       // Execute with timeout
       const response = yield* httpClient.execute(request).pipe(
-        Effect.timeout(Duration.millis(timeout)),
+        Effect.timeout(timeout),
         Effect.catchTag("TimeoutError", () =>
           Effect.fail(
             JinaTimeoutError.make({
               url: targetUrl,
-              timeoutMs: Milliseconds.make(timeout),
+              timeoutMs: Milliseconds.make(Duration.toMillis(timeout)),
             })
           )
         ),
@@ -316,7 +337,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
       // Extract links if present
       const links = O.map(parsed.data.links, R.keys);
 
-      return O.isSome(links) ? { content, links: links.value } : { content };
+      return JinaResponse.make({ content, links });
     });
 
     /**
@@ -324,7 +345,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
      */
     const fetchMarkdown = (
       url: string,
-      options: FetchOptions = {}
+      options: FetchOptionsInput = {}
     ): Effect.Effect<string, JinaApiError | JinaRateLimitError | JinaParseError | JinaTimeoutError> =>
       fetchUrl(url, options).pipe(Effect.map((response) => response.content.content));
 

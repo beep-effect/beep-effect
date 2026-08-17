@@ -139,8 +139,9 @@ describe("effect-ontology domain errors", () => {
       const suspended = Workflow.WorkflowSuspendedError.make({
         message: "Paused.",
       });
+      const imageUrl = yield* S.decodeEffect(URLStr)("https://example.com/image.png");
       const timeout = Image.ImageTimeoutError.make({
-        url: URLStr.fromUnknown("https://example.com/image.png"),
+        url: imageUrl,
         timeoutMs: Base.Milliseconds.make(250),
       });
 

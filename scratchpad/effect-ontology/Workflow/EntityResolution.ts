@@ -10,15 +10,21 @@
  * @since 0.0.0
  */
 
+import { $ScratchpadId } from "@beep/identity";
 import type { IRI } from "@beep/rdf";
+import { SchemaUtils } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { Effect, MutableHashMap, MutableHashSet, Order } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { combinedSimilarity, overlapRatio } from "../Utils/String.ts";
+
+const $I = $ScratchpadId.create("effect-ontology/Workflow/EntityResolution");
 
 /**
  * Configuration for entity resolution
@@ -37,30 +43,33 @@ import { combinedSimilarity, overlapRatio } from "../Utils/String.ts";
  * @category type-level
  * @since 0.0.0
  */
-export interface EntityResolutionConfig {
-  /**
-   * Minimum string similarity threshold for mention matching (0.0 to 1.0)
-   * Higher values require more similar mentions to be considered matches
-   *
-   * @default 0.7
-   */
-  readonly mentionSimilarityThreshold: number;
+export class EntityResolutionConfig extends S.Class<EntityResolutionConfig>($I`EntityResolutionConfig`)(
+  {
+    mentionSimilarityThreshold: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.7))),
+    requireTypeOverlap: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    typeOverlapRatio: UnitInterval.pipe(SchemaUtils.withKeyDefaults(UnitInterval.make(0.5))),
+  },
+  $I.annote("EntityResolutionConfig", {
+    description: "Mention similarity and type-overlap thresholds used by the legacy graph merge workflow.",
+  })
+) {}
 
-  /**
-   * Whether to require type overlap for entity merging
-   *
-   * @default true
-   */
-  readonly requireTypeOverlap: boolean;
-
-  /**
-   * Minimum ratio of type overlap (0.0 to 1.0)
-   * Only used if requireTypeOverlap is true
-   *
-   * @default 0.5
-   */
-  readonly typeOverlapRatio: number;
-}
+/**
+ * Constructor input accepted by {@link EntityResolutionConfig}.
+ *
+ * **Example** (Configure entity resolution)
+ *
+ * ```ts
+ * import type { EntityResolutionConfigInput } from "@effect-ontology/Workflow/EntityResolution"
+ *
+ * const config: EntityResolutionConfigInput = { requireTypeOverlap: false }
+ * console.log(config)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EntityResolutionConfigInput = (typeof EntityResolutionConfig)["~type.make.in"];
 
 /**
  * Exposes default config for composition by callers of this module.
@@ -76,11 +85,7 @@ export interface EntityResolutionConfig {
  * @category constants
  * @since 0.0.0
  */
-export const DEFAULT_CONFIG: EntityResolutionConfig = {
-  mentionSimilarityThreshold: 0.7,
-  requireTypeOverlap: true,
-  typeOverlapRatio: 0.5,
-};
+export const DEFAULT_CONFIG = EntityResolutionConfig.make({});
 
 /**
  * Check if two entities should be merged based on similarity criteria
@@ -245,9 +250,9 @@ const mergeEntityCluster = (
  * @since 0.0.0
  */
 export const resolveEntities = dual2(
-  (graph: KnowledgeGraph, config: Partial<EntityResolutionConfig>): Effect.Effect<KnowledgeGraph, never, never> =>
+  (graph: KnowledgeGraph, input: EntityResolutionConfigInput): Effect.Effect<KnowledgeGraph, never, never> =>
     Effect.gen(function* () {
-      const cfg: EntityResolutionConfig = { ...DEFAULT_CONFIG, ...config };
+      const cfg = EntityResolutionConfig.make(input);
 
       yield* Effect.logInfo("Starting entity resolution", {
         stage: "entity-resolution",

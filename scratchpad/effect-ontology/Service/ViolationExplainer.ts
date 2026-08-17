@@ -16,7 +16,7 @@ import { Dataset } from "@beep/rdf";
 import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { NonNegNum } from "@beep/schema/Number";
 import { ShaclSeverity, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { Clock, Context, Duration, Effect, Layer, Schedule } from "effect";
+import { Clock, Context, Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -280,14 +280,6 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 
-    // Retry schedule for LLM calls
-    const retrySchedule = Schedule.exponential(Duration.millis(config.runtime.retryInitialDelayMs)).pipe(
-      Schedule.modifyDelay(({ duration }) =>
-        Effect.succeed(Duration.min(duration, Duration.millis(config.runtime.retryMaxDelayMs)))
-      ),
-      Schedule.jittered
-    );
-
     /**
      * Generate explanation for a single violation
      */
@@ -303,15 +295,14 @@ export class ViolationExplainer extends Context.Service<ViolationExplainer>()($I
 
       const prompt = buildExplanationPrompt(violation, context);
 
-      const response = yield* generateObjectWithFeedback(llm, {
+      const response = yield* generateObjectWithFeedback({
         prompt,
         schema: ExplanationResponseSchema,
         objectName: "ExplanationResponse",
-        maxAttempts: PosInt.make(config.runtime.retryMaxAttempts),
         serviceName: "ViolationExplainer",
-        timeout: Duration.millis(config.llm.timeoutMs),
-        retrySchedule,
+        retryPolicy: config.llm.retryPolicy,
       }).pipe(
+        Effect.provideService(LanguageModel.LanguageModel, llm),
         Effect.mapError((error) =>
           ExplanationError.make({
             message: `Failed to generate explanation: ${error._tag}`,

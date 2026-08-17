@@ -13,13 +13,15 @@
 
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { SchemaUtils as SchemaDefaults } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Percentage } from "@beep/schema/Percentage";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { UUID } from "@beep/schema/String";
 import { ISOStr } from "@beep/schema/Timestamp";
-import { pipe } from "effect";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { Duration, pipe } from "effect";
 import * as S from "effect/Schema";
 import { ExtractionRunId } from "../Domain/Identity.ts";
 
@@ -1892,37 +1894,102 @@ export type ProgressEvent = typeof ProgressEventSchema.Type;
  * **Example** (Configure bounded event delivery)
  *
  * ```ts
- * import type { BackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming"
+ * import { BackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming"
+ * import { Duration } from "effect"
  *
- * const config: BackpressureConfig = {
+ * const config = BackpressureConfig.make({
  *   maxQueueSize: 500,
  *   warningThreshold: 0.75,
  *   strategy: "block_producer",
- *   blockTimeoutMs: 2_000,
+ *   blockTimeout: Duration.seconds(2),
  *   detailedEventSampleRate: 0.25
- * }
+ * })
  * console.log(config.strategy) // "block_producer"
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export interface BackpressureConfig {
-  /** Maximum number of pending events retained before overflow handling begins. */
-  readonly maxQueueSize: number;
+/**
+ * Queue-overflow strategy used by progress streaming.
+ *
+ * **Example** (Inspect overflow strategies)
+ *
+ * ```ts
+ * import { BackpressureStrategy } from "@effect-ontology/Contract/ProgressStreaming"
+ *
+ * console.log(BackpressureStrategy.Options)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const BackpressureStrategy = LiteralKit(["drop_oldest", "drop_newest", "block_producer", "close_stream"]).pipe(
+  $I.annoteSchema("BackpressureStrategy", {
+    description: "Deterministic queue-overflow policies supported by progress streaming.",
+  })
+);
 
-  /** Queue-occupancy ratio from zero to one at which the server emits a warning. */
-  readonly warningThreshold: number;
+/**
+ * Runtime value accepted by {@link BackpressureStrategy}.
+ *
+ * **Example** (Use an overflow strategy)
+ *
+ * ```ts
+ * import type { BackpressureStrategy } from "@effect-ontology/Contract/ProgressStreaming"
+ *
+ * const strategy: BackpressureStrategy = "drop_oldest"
+ * console.log(strategy)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BackpressureStrategy = typeof BackpressureStrategy.Type;
 
-  /** Deterministic action applied when the event queue reaches capacity. */
-  readonly strategy: "drop_oldest" | "drop_newest" | "block_producer" | "close_stream";
+/**
+ * Schema-defaulted queue capacity, warning, overflow, blocking, and sampling policy.
+ *
+ * **Example** (Use the default queue policy)
+ *
+ * ```ts
+ * import { BackpressureConfig } from "@effect-ontology/Contract/ProgressStreaming"
+ *
+ * console.log(BackpressureConfig.make({}).maxQueueSize)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export class BackpressureConfig extends S.Class<BackpressureConfig>($I`BackpressureConfig`)(
+  {
+    maxQueueSize: PosInt.pipe(SchemaDefaults.withKeyDefaults(PosInt.make(1000))),
+    warningThreshold: UnitInterval.pipe(SchemaDefaults.withKeyDefaults(UnitInterval.make(0.8))),
+    strategy: BackpressureStrategy.pipe(SchemaDefaults.withKeyDefaults(BackpressureStrategy.Enum.drop_oldest)),
+    blockTimeout: S.Duration.pipe(SchemaDefaults.withKeyDefaults(Duration.seconds(5))),
+    detailedEventSampleRate: UnitInterval.pipe(SchemaDefaults.withKeyDefaults(UnitInterval.make(0.1))),
+  },
+  $I.annote("BackpressureConfig", {
+    description: "Capacity, warning, overflow, blocking, and sampling policy for progress-event queues.",
+  })
+) {}
 
-  /** Optional producer-block duration in milliseconds before fallback overflow handling. */
-  readonly blockTimeoutMs?: number;
-
-  /** Fraction of entity and relation discovery events emitted; lifecycle events are never sampled. */
-  readonly detailedEventSampleRate: number;
-}
+/**
+ * Constructor input accepted by {@link BackpressureConfig}.
+ *
+ * **Example** (Configure event delivery)
+ *
+ * ```ts
+ * import type { BackpressureConfigInput } from "@effect-ontology/Contract/ProgressStreaming"
+ *
+ * const config: BackpressureConfigInput = { maxQueueSize: 500 }
+ * console.log(config)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type BackpressureConfigInput = (typeof BackpressureConfig)["~type.make.in"];
 
 /**
  * Conservative queue policy that warns at 80 percent capacity, drops the oldest
@@ -1940,12 +2007,7 @@ export interface BackpressureConfig {
  * @category configuration
  * @since 0.0.0
  */
-export const DefaultBackpressureConfig: BackpressureConfig = {
-  maxQueueSize: 1000,
-  warningThreshold: 0.8,
-  strategy: "drop_oldest",
-  detailedEventSampleRate: 0.1,
-};
+export const DefaultBackpressureConfig = BackpressureConfig.make({});
 
 // =============================================================================
 // Cancellation Semantics
@@ -2084,101 +2146,106 @@ export class CancellationResponse extends S.Class<CancellationResponse>($I`Cance
  * @category protocols
  * @since 0.0.0
  */
-export interface ErrorRecoverySemantics {
-  /**
-   * Systemic Errors (LlmTimeout, LlmRateLimit, DatabaseConnection, etc.)
-   *
-   * - Emit ExtractionFailedEvent with isRecoverable = true/false
-   * - Extraction stream ends
-   * - Partial results available in event
-   * - Client can:
-   *   - Resume from lastSuccessfulChunkIndex (if resumable)
-   *   - Retry entire extraction from beginning
-   *   - Accept partial results
-   *
-   * LlmRateLimit specifically:
-   * - isTemporary = true
-   * - retryAfterMs indicates wait duration
-   * - Client should wait and retry (exponential backoff recommended)
-   */
-  readonly systemicErrors: {
-    /** Systemic failures are fatal to the active extraction attempt. */
-    readonly fatal: true;
-    /** The progress stream terminates after a systemic failure. */
-    readonly streamEnds: true;
-    /** The terminal event may carry usable work completed before failure. */
-    readonly partialResults: true;
-    /** Resumption is available only when a successful chunk checkpoint exists. */
-    readonly resumable: "some";
-  };
+export class ErrorRecoverySemantics extends S.Class<ErrorRecoverySemantics>($I`ErrorRecoverySemantics`)(
+  {
+    /**
+     * Systemic Errors (LlmTimeout, LlmRateLimit, DatabaseConnection, etc.)
+     *
+     * - Emit ExtractionFailedEvent with isRecoverable = true/false
+     * - Extraction stream ends
+     * - Partial results available in event
+     * - Client can:
+     *   - Resume from lastSuccessfulChunkIndex (if resumable)
+     *   - Retry entire extraction from beginning
+     *   - Accept partial results
+     *
+     * LlmRateLimit specifically:
+     * - isTemporary = true
+     * - retryAfterMs indicates wait duration
+     * - Client should wait and retry (exponential backoff recommended)
+     */
+    systemicErrors: S.Struct({
+      /** Systemic failures are fatal to the active extraction attempt. */
+      fatal: S.Literal(true),
+      /** The progress stream terminates after a systemic failure. */
+      streamEnds: S.Literal(true),
+      /** The terminal event may carry usable work completed before failure. */
+      partialResults: S.Literal(true),
+      /** Resumption is available only when a successful chunk checkpoint exists. */
+      resumable: S.Literal("some"),
+    }),
 
-  /**
-   * Content Errors (Entity extraction fails for a chunk, but other chunks ok)
-   *
-   * - Emit RecoverableErrorEvent
-   * - Extraction continues with next chunk
-   * - This chunk contributes empty results
-   * - Client sees stream continue, progress updates after error
-   *
-   * Examples:
-   * - LLM returns unparseable response for one chunk
-   * - Grounding verification times out for one chunk
-   * - Text preprocessing fails for one chunk
-   */
-  readonly contentErrors: {
-    /** Content failures do not halt the overall extraction. */
-    readonly fatal: false;
-    /** The progress stream remains open after a content failure. */
-    readonly streamEnds: false;
-    /** The failed chunk contributes no partial entity or relation payload. */
-    readonly partialResults: false;
-    /** The chunk that produced the content failure is omitted. */
-    readonly chunkSkipped: true;
-    /** Processing advances to the next available chunk. */
-    readonly continuesWithNextChunk: true;
-  };
+    /**
+     * Content Errors (Entity extraction fails for a chunk, but other chunks ok)
+     *
+     * - Emit RecoverableErrorEvent
+     * - Extraction continues with next chunk
+     * - This chunk contributes empty results
+     * - Client sees stream continue, progress updates after error
+     *
+     * Examples:
+     * - LLM returns unparseable response for one chunk
+     * - Grounding verification times out for one chunk
+     * - Text preprocessing fails for one chunk
+     */
+    contentErrors: S.Struct({
+      /** Content failures do not halt the overall extraction. */
+      fatal: S.Literal(false),
+      /** The progress stream remains open after a content failure. */
+      streamEnds: S.Literal(false),
+      /** The failed chunk contributes no partial entity or relation payload. */
+      partialResults: S.Literal(false),
+      /** The chunk that produced the content failure is omitted. */
+      chunkSkipped: S.Literal(true),
+      /** Processing advances to the next available chunk. */
+      continuesWithNextChunk: S.Literal(true),
+    }),
 
-  /**
-   * Backpressure (Client consuming too slowly)
-   *
-   * - Emit BackpressureWarningEvent
-   * - If client doesn't speed up:
-   *   - Based on config.strategy: drop_oldest | drop_newest | block_producer | close_stream
-   *   - Event loss may occur
-   * - Client should increase parallelism or event consumption rate
-   * - Extraction continues server-side regardless
-   */
-  readonly backpressure: {
-    /** Queue pressure does not itself fail server-side extraction. */
-    readonly fatal: false;
-    /** The stream closes only when the configured overflow strategy requires it. */
-    readonly streamEnds: "maybe";
-    /** Drop strategies may discard queued progress events. */
-    readonly eventLossPossible: true;
-    /** The client should accelerate consumption or acknowledgment. */
-    readonly clientShouldAction: true;
-  };
+    /**
+     * Backpressure (Client consuming too slowly)
+     *
+     * - Emit BackpressureWarningEvent
+     * - If client doesn't speed up:
+     *   - Based on config.strategy: drop_oldest | drop_newest | block_producer | close_stream
+     *   - Event loss may occur
+     * - Client should increase parallelism or event consumption rate
+     * - Extraction continues server-side regardless
+     */
+    backpressure: S.Struct({
+      /** Queue pressure does not itself fail server-side extraction. */
+      fatal: S.Literal(false),
+      /** The stream closes only when the configured overflow strategy requires it. */
+      streamEnds: S.Literal("maybe"),
+      /** Drop strategies may discard queued progress events. */
+      eventLossPossible: S.Literal(true),
+      /** The client should accelerate consumption or acknowledgment. */
+      clientShouldAction: S.Literal(true),
+    }),
 
-  /**
-   * Client Cancellation
-   *
-   * - Client sends CancellationRequest
-   * - Server emits ExtractionCancelledEvent
-   * - Extraction stream ends gracefully
-   * - Partial results available
-   * - Server cleans up resources
-   */
-  readonly clientCancellation: {
-    /** Client cancellation is an expected control path rather than a failure. */
-    readonly fatal: false;
-    /** Acknowledged cancellation terminates the active stream. */
-    readonly streamEnds: true;
-    /** The server releases extraction resources through its normal cleanup path. */
-    readonly graceful: true;
-    /** The terminal cancellation event may carry usable completed work. */
-    readonly partialResults: true;
-  };
-}
+    /**
+     * Client Cancellation
+     *
+     * - Client sends CancellationRequest
+     * - Server emits ExtractionCancelledEvent
+     * - Extraction stream ends gracefully
+     * - Partial results available
+     * - Server cleans up resources
+     */
+    clientCancellation: S.Struct({
+      /** Client cancellation is an expected control path rather than a failure. */
+      fatal: S.Literal(false),
+      /** Acknowledged cancellation terminates the active stream. */
+      streamEnds: S.Literal(true),
+      /** The server releases extraction resources through its normal cleanup path. */
+      graceful: S.Literal(true),
+      /** The terminal cancellation event may carry usable completed work. */
+      partialResults: S.Literal(true),
+    }),
+  },
+  $I.annote("ErrorRecoverySemantics", {
+    description: "Canonical stream termination, partial-result, and client recovery behavior by failure class.",
+  })
+) {}
 
 /**
  * Canonical recovery behavior clients can consult when implementing progress
@@ -2196,7 +2263,7 @@ export interface ErrorRecoverySemantics {
  * @category protocols
  * @since 0.0.0
  */
-export const ErrorRecoverySemanticsSpec: ErrorRecoverySemantics = {
+export const ErrorRecoverySemanticsSpec = ErrorRecoverySemantics.make({
   systemicErrors: {
     fatal: true,
     streamEnds: true,
@@ -2222,7 +2289,7 @@ export const ErrorRecoverySemanticsSpec: ErrorRecoverySemantics = {
     graceful: true,
     partialResults: true,
   },
-};
+});
 
 // =============================================================================
 // RPC Message Contract (JSON-serializable wrapper)

@@ -36,7 +36,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SimilarityScorer");
  * console.log(acceptsSimilarityResult)
  * ```
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export class SimilarityResult extends S.Class<SimilarityResult>($I`SimilarityResult`)(

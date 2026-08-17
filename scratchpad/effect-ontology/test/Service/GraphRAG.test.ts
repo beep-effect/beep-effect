@@ -11,6 +11,7 @@ import { Entity, KnowledgeGraph, Relation, RelationObject } from "../../Domain/M
 import { EntityId } from "../../Domain/Model/shared.ts";
 import { EntityIndex } from "../../Service/EntityIndex.ts";
 import { GraphRAG, GraphRAGGenerationError } from "../../Service/GraphRAG.ts";
+import { RetryPolicy } from "../../Service/Retry.ts";
 import { SubgraphExtractor } from "../../Service/SubgraphExtractor.ts";
 
 const alice = Entity.make({
@@ -182,7 +183,13 @@ describe("GraphRAG", () => {
           includeAttributes: true,
           includeRelations: true,
         };
-        const generationOptions = { timeout: Duration.seconds(1), maxAttempts: PosInt.make(1) };
+        const generationOptions = {
+          retryPolicy: RetryPolicy.make({
+            attemptTimeout: Duration.seconds(1),
+            maxAttempts: PosInt.make(1),
+            jitter: false,
+          }),
+        };
 
         const retrievalFirst = yield* graphRag.retrieve(graph, "Who knows Carol?", retrievalOptions);
         const retrievalLast = yield* graphRag.retrieve("Who knows Carol?", retrievalOptions)(graph);
@@ -234,7 +241,13 @@ describe("GraphRAG", () => {
           includeRelations: true,
         });
         const error = yield* graphRag
-          .generate(retrieval, retrieval.query, { timeout: Duration.seconds(1), maxAttempts: PosInt.make(1) })
+          .generate(retrieval, retrieval.query, {
+            retryPolicy: RetryPolicy.make({
+              attemptTimeout: Duration.seconds(1),
+              maxAttempts: PosInt.make(1),
+              jitter: false,
+            }),
+          })
           .pipe(Effect.flip);
 
         assert.isTrue(GraphRAGGenerationError.is(error));

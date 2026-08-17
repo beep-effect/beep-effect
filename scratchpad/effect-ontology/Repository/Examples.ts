@@ -34,19 +34,17 @@ import { llmExamples } from "./schema.ts";
 // =============================================================================
 
 /**
- * Describes the example id data exposed by this module.
+ * Non-empty identifier of a stored few-shot example.
  *
  * **Example** (Create ExampleId)
  *
  * ```ts
- * import type { ExampleId } from "@effect-ontology/Repository/Examples"
+ * import { ExampleId } from "@effect-ontology/Repository/Examples"
  *
- * const exampleId: ExampleId = "example-id-1"
- *
- * console.log(exampleId)
+ * console.log(ExampleId.make("example-id-1"))
  * ```
  *
- * @category type-level
+ * @category schemas
  * @since 0.0.0
  */
 export const ExampleId = S.NonEmptyString.pipe(
@@ -55,6 +53,21 @@ export const ExampleId = S.NonEmptyString.pipe(
   })
 );
 
+/**
+ * Runtime value accepted by {@link ExampleId}.
+ *
+ * **Example** (Use an example identifier)
+ *
+ * ```ts
+ * import type { ExampleId } from "@effect-ontology/Repository/Examples"
+ *
+ * const id: ExampleId = "example-id-1"
+ * console.log(id)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ExampleId = typeof ExampleId.Type;
 
 /**
@@ -232,6 +245,21 @@ export class ExampleRetrievalOptions extends S.Class<ExampleRetrievalOptions>($I
   })
 ) {}
 
+/**
+ * Constructor input accepted by {@link ExampleRetrievalOptions}.
+ *
+ * **Example** (Configure example retrieval)
+ *
+ * ```ts
+ * import type { ExampleRetrievalOptionsInput } from "@effect-ontology/Repository/Examples"
+ *
+ * const options: ExampleRetrievalOptionsInput = { k: 3 }
+ * console.log(options)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type ExampleRetrievalOptionsInput = (typeof ExampleRetrievalOptions)["~type.make.in"];
 
 /**
@@ -274,6 +302,21 @@ export class CreateExampleInput extends S.Class<CreateExampleInput>($I`CreateExa
   })
 ) {}
 
+/**
+ * Constructor input accepted by {@link CreateExampleInput}.
+ *
+ * **Example** (Reference example creation input)
+ *
+ * ```ts
+ * import type { CreateExampleInputInput } from "@effect-ontology/Repository/Examples"
+ *
+ * const accept = (_input: CreateExampleInputInput): void => undefined
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
 export type CreateExampleInputInput = (typeof CreateExampleInput)["~type.make.in"];
 
 const PgVector = S.Finite.pipe(
@@ -470,42 +513,30 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository>()($I
           ExampleRetrievalOptions.make(options);
         const vectorStr = formatVector(embedding);
 
-        // Build dynamic query based on filters
-        let query = `
-          SELECT
-            id, ontology_id as "ontologyId", example_type as "exampleType",
-            input_text as "inputText", expected_output as "expectedOutput",
-            prompt_messages as "promptMessages", explanation,
-            is_negative as "isNegative", COALESCE(usage_count, 0)::int as "usageCount",
-            1 - (embedding <=> $1::vector) as similarity
+        const conditions = [
+          sql`ontology_id = ${ontologyId}`,
+          sql`is_active = true`,
+          sql`1 - (embedding <=> ${vectorStr}::vector) >= ${minSimilarity}`,
+          ...(includeNegatives ? [] : [sql`is_negative = false`]),
+          ...(P.isNotUndefined(targetClass) ? [sql`target_class = ${targetClass}`] : []),
+          ...(P.isNotUndefined(targetPredicate) ? [sql`target_predicate = ${targetPredicate}`] : []),
+        ];
+        const results = yield* sql`
+          SELECT id,
+                 ontology_id as "ontologyId",
+                 example_type as "exampleType",
+                 input_text as "inputText",
+                 expected_output as "expectedOutput",
+                 prompt_messages as "promptMessages",
+                 explanation,
+                 is_negative as "isNegative",
+                 COALESCE(usage_count, 0)::int as "usageCount",
+                 1 - (embedding <=> ${vectorStr}::vector) as similarity
           FROM llm_examples
-          WHERE ontology_id = $2
-            AND is_active = true
-            AND 1 - (embedding <=> $1::vector) >= $3
+          WHERE ${sql.and(conditions)}
+          ORDER BY embedding <=> ${vectorStr}::vector
+          LIMIT ${k}
         `;
-        const params: Array<unknown> = [vectorStr, ontologyId, minSimilarity];
-        let paramIdx = 4;
-
-        if (!includeNegatives) {
-          query += ` AND is_negative = false`;
-        }
-
-        if (P.isNotUndefined(targetClass)) {
-          query += ` AND target_class = $${paramIdx}`;
-          params.push(targetClass);
-          paramIdx++;
-        }
-
-        if (P.isNotUndefined(targetPredicate)) {
-          query += ` AND target_predicate = $${paramIdx}`;
-          params.push(targetPredicate);
-          paramIdx++;
-        }
-
-        query += ` ORDER BY embedding <=> $1::vector LIMIT $${paramIdx}`;
-        params.push(k);
-
-        const results = yield* sql.unsafe(query, params);
         return yield* decodeScoredExampleSqlRows(results);
       }).pipe(Effect.mapError((cause) => toSqlError("ExamplesRepository.findSimilar", cause)));
 

@@ -17,7 +17,8 @@
  * @since 0.0.0
  */
 
-import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { $ScratchpadId } from "@beep/identity";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { Duration, Effect, Inspectable, Layer, Match, Order, Redacted, Schedule } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -38,6 +39,8 @@ import type { EmbeddingProviderMethods, EmbeddingRequest, ProviderMetadata } fro
 import { cosineSimilarity, EmbeddingProvider } from "./EmbeddingProvider.ts";
 import { EmbeddingRateLimiter } from "./EmbeddingRateLimiter.ts";
 
+const $I = $ScratchpadId.create("effect-ontology/Service/VoyageEmbeddingProvider");
+
 // =============================================================================
 // Constants
 // =============================================================================
@@ -48,26 +51,69 @@ import { EmbeddingRateLimiter } from "./EmbeddingRateLimiter.ts";
 const VOYAGE_API_URL = "https://api.voyageai.com/v1/embeddings";
 
 /**
- * Voyage model dimensions
+ * Supported Voyage embedding model identifiers.
  *
  * **Example** (Inspect voyage models)
  *
  * ```ts
+ * import { VoyageModel } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * console.log(VoyageModel.Options)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const VoyageModel = LiteralKit([
+  "voyage-3",
+  "voyage-3.5-lite",
+  "voyage-code-3",
+  "voyage-finance-2",
+  "voyage-multilingual-2",
+  "voyage-law-2",
+]).pipe(
+  $I.annoteSchema("VoyageModel", {
+    description: "Voyage embedding models with known output dimensions.",
+  })
+);
+
+/** Runtime model identifier accepted by {@link VoyageModel}.
+ *
+ * **Example** (Use a Voyage model)
+ *
+ * ```ts
+ * import type { VoyageModel } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * const model: VoyageModel = "voyage-3.5-lite"
+ * console.log(model)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type VoyageModel = typeof VoyageModel.Type;
+
+/**
+ * Known output dimension for every supported Voyage model.
+ *
+ * **Example** (Inspect Voyage dimensions)
+ *
+ * ```ts
  * import { VOYAGE_MODELS } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
- * console.log(VOYAGE_MODELS)
+ * console.log(VOYAGE_MODELS["voyage-3.5-lite"])
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const VOYAGE_MODELS: Record<string, number> = {
-  "voyage-3": 1024,
-  "voyage-3.5-lite": 512,
-  "voyage-code-3": 1024,
-  "voyage-finance-2": 1024,
-  "voyage-multilingual-2": 1024,
-  "voyage-law-2": 1024,
+export const VOYAGE_MODELS: Record<VoyageModel, PosInt> = {
+  "voyage-3": PosInt.make(1024),
+  "voyage-3.5-lite": PosInt.make(512),
+  "voyage-code-3": PosInt.make(1024),
+  "voyage-finance-2": PosInt.make(1024),
+  "voyage-multilingual-2": PosInt.make(1024),
+  "voyage-law-2": PosInt.make(1024),
 };
 
 /**
@@ -84,7 +130,7 @@ export const VOYAGE_MODELS: Record<string, number> = {
  * @category constants
  * @since 0.0.0
  */
-export const DEFAULT_VOYAGE_MODEL = "voyage-3.5-lite";
+export const DEFAULT_VOYAGE_MODEL: VoyageModel = VoyageModel.Enum["voyage-3.5-lite"];
 
 /**
  * Default timeout in milliseconds
@@ -92,15 +138,15 @@ export const DEFAULT_VOYAGE_MODEL = "voyage-3.5-lite";
  * **Example** (Inspect default timeout ms)
  *
  * ```ts
- * import { DEFAULT_TIMEOUT_MS } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ * import { DEFAULT_TIMEOUT } from "@effect-ontology/Service/VoyageEmbeddingProvider"
  *
- * console.log(DEFAULT_TIMEOUT_MS)
+ * console.log(DEFAULT_TIMEOUT)
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const DEFAULT_TIMEOUT_MS = 30_000;
+export const DEFAULT_TIMEOUT = Duration.seconds(30);
 
 /**
  * Default retry configuration for transient errors
@@ -210,7 +256,7 @@ const parseRetryAfterMs = (response: HttpClientResponse.HttpClientResponse): num
  *
  * @internal
  */
-const mapVoyageError = (error: unknown, timeoutMs: number): AnyEmbeddingError => {
+const mapVoyageError = (error: unknown, timeout: Duration.Duration): AnyEmbeddingError => {
   // Check for specific error types by their _tag property
   if (P.isObject(error) && "_tag" in error) {
     const tagged = error;
@@ -219,7 +265,7 @@ const mapVoyageError = (error: unknown, timeoutMs: number): AnyEmbeddingError =>
       return EmbeddingTimeoutError.make({
         message: "Voyage API timeout",
         provider: "voyage",
-        timeoutMs: Milliseconds.make(timeoutMs),
+        timeoutMs: Milliseconds.make(Duration.toMillis(timeout)),
       });
     }
 
@@ -275,14 +321,33 @@ const mapVoyageError = (error: unknown, timeoutMs: number): AnyEmbeddingError =>
  * @category type-level
  * @since 0.0.0
  */
-export interface VoyageProviderConfig {
-  /** Voyage API key */
-  readonly apiKey: string;
-  /** Model to use (default: voyage-3.5-lite) */
-  readonly model?: string;
-  /** Request timeout in ms (default: 30000) */
-  readonly timeoutMs?: number;
-}
+export class VoyageProviderConfig extends S.Class<VoyageProviderConfig>($I`VoyageProviderConfig`)(
+  {
+    apiKey: S.Redacted(S.NonEmptyString),
+    model: VoyageModel.pipe(SchemaUtils.withKeyDefaults(DEFAULT_VOYAGE_MODEL)),
+    timeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT)),
+  },
+  $I.annote("VoyageProviderConfig", {
+    description: "Secret API credential, supported model, and request timeout for Voyage embeddings.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link VoyageProviderConfig}.
+ *
+ * **Example** (Reference Voyage provider input)
+ *
+ * ```ts
+ * import type { VoyageProviderConfigInput } from "@effect-ontology/Service/VoyageEmbeddingProvider"
+ *
+ * const accept = (_config: VoyageProviderConfigInput): void => undefined
+ * console.log(accept)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type VoyageProviderConfigInput = (typeof VoyageProviderConfig)["~type.make.in"];
 
 /**
  * Create VoyageEmbeddingProvider with explicit config
@@ -299,14 +364,16 @@ export interface VoyageProviderConfig {
  * @since 0.0.0
  */
 export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
-  config: VoyageProviderConfig
+  input: VoyageProviderConfigInput
 ): Effect.fn.Return<EmbeddingProviderMethods, never, HttpClient.HttpClient | EmbeddingRateLimiter> {
   const httpClient = yield* HttpClient.HttpClient;
   const rateLimiter = yield* EmbeddingRateLimiter;
 
-  const model = config.model ?? DEFAULT_VOYAGE_MODEL;
-  const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-  const dimension = VOYAGE_MODELS[model] ?? 512;
+  const config = VoyageProviderConfig.make(input);
+  const model = config.model;
+  const timeout = config.timeout;
+  const timeoutMs = Duration.toMillis(timeout);
+  const dimension = VOYAGE_MODELS[model];
 
   const metadata: ProviderMetadata = {
     providerId: "voyage",
@@ -427,7 +494,7 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
           // unlike bodyJson which returns Effect<HttpClientRequest, HttpBodyError>
           const request = HttpClientRequest.post(VOYAGE_API_URL).pipe(
             HttpClientRequest.setHeaders({
-              Authorization: `Bearer ${config.apiKey}`,
+              Authorization: `Bearer ${Redacted.value(config.apiKey)}`,
               "Content-Type": "application/json",
             }),
             HttpClientRequest.bodyJsonUnsafe({
@@ -440,8 +507,8 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
           // Execute request with timeout and proper response handling
           const embeddings = yield* httpClient.execute(request).pipe(
             // Map HTTP client errors (network, connection) to embedding errors
-            Effect.mapError((e) => mapVoyageError(e, timeoutMs)),
-            Effect.timeout(Duration.millis(timeoutMs)),
+            Effect.mapError((e) => mapVoyageError(e, timeout)),
+            Effect.timeout(timeout),
             Effect.catchTag("TimeoutError", () =>
               Effect.fail(
                 EmbeddingTimeoutError.make({
@@ -492,7 +559,7 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
  */
 export const VoyageEmbeddingProviderLive: Layer.Layer<
   EmbeddingProvider,
-  never,
+  AnyEmbeddingError,
   ConfigService | EmbeddingRateLimiter | HttpClient.HttpClient
 > = Layer.effect(
   EmbeddingProvider,
@@ -500,17 +567,27 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
     const config = yield* ConfigService;
 
     // Get API key from config (will be added in Config.ts update)
-    const apiKeyOption = config.embedding.voyageApiKey;
-    const apiKey = apiKeyOption._tag === "Some" ? Redacted.value(apiKeyOption.value) : "";
+    const apiKey = yield* O.match(config.embedding.voyageApiKey, {
+      onNone: () =>
+        Effect.fail(
+          EmbeddingError.make({
+            message: "EMBEDDING_VOYAGE_API_KEY is required for the Voyage provider",
+            provider: "voyage",
+          })
+        ),
+      onSome: Effect.succeed,
+    });
+    const model = yield* S.decodeUnknownEffect(VoyageModel)(config.embedding.voyageModel).pipe(
+      Effect.mapError((cause) =>
+        EmbeddingError.make({
+          message: `Unsupported Voyage embedding model: ${config.embedding.voyageModel}`,
+          provider: "voyage",
+          cause: O.some(cause),
+        })
+      )
+    );
 
-    if (P.not(P.isTruthy)(apiKey)) {
-      yield* Effect.logWarning("EMBEDDING_VOYAGE_API_KEY not set, Voyage provider may fail");
-    }
-
-    const model = config.embedding.voyageModel ?? DEFAULT_VOYAGE_MODEL;
-    const timeoutMs = config.embedding.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-
-    return yield* makeVoyageProvider({ apiKey, model, timeoutMs });
+    return yield* makeVoyageProvider({ apiKey, model, timeout: config.embedding.timeout });
   })
 );
 
@@ -530,6 +607,6 @@ export const VoyageEmbeddingProviderLive: Layer.Layer<
  */
 export const VoyageEmbeddingProviderDefault: Layer.Layer<
   EmbeddingProvider,
-  never,
+  AnyEmbeddingError,
   ConfigService | EmbeddingRateLimiter
 > = VoyageEmbeddingProviderLive.pipe(Layer.provide(FetchHttpClient.layer));

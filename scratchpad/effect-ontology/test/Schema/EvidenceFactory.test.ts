@@ -7,12 +7,12 @@ import { ClassDefinition, PropertyDefinition } from "../../Domain/Model/Ontology
 import { makeEntitySchema } from "../../Schema/EntityFactory.ts";
 import { makeRelationSchema } from "../../Schema/RelationFactory.ts";
 
-const person = ClassDefinition.fromUnknown({
+const decodePerson = S.decodeEffect(ClassDefinition)({
   id: "https://schema.org/#Person",
   label: "Person",
 });
 
-const knows = PropertyDefinition.fromUnknown({
+const decodeKnows = S.decodeEffect(PropertyDefinition)({
   id: "https://schema.org/#knows",
   label: "knows",
   rangeType: "object",
@@ -28,6 +28,7 @@ const legacyEvidence = {
 describe("extraction factory evidence", () => {
   it.effect("decodes entity-factory evidence to the canonical quote representation", () =>
     Effect.gen(function* () {
+      const person = yield* decodePerson;
       const schema = makeEntitySchema([person], []);
       const output = yield* S.decodeEffect(schema)({
         entities: [
@@ -48,6 +49,7 @@ describe("extraction factory evidence", () => {
 
   it.effect("shares canonical width validation across relation-factory evidence", () =>
     Effect.gen(function* () {
+      const knows = yield* decodeKnows;
       const schema = makeRelationSchema(["ada", "bob"], [knows]);
       const valid = yield* S.decodeEffect(schema)({
         relations: [

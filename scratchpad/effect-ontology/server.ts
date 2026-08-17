@@ -20,7 +20,6 @@ import { makeDrizzleLayer } from "@beep/postgres";
 import { BunHttpServer, BunRuntime, BunServices } from "@effect/platform-bun";
 import { PgClient } from "@effect/sql-pg";
 import { Cause, Config, Effect, Layer, Schedule } from "effect";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ClusterWorkflowEngine, SingleRunner } from "effect/unstable/cluster";
@@ -36,7 +35,7 @@ import { EventBroadcastHubLive } from "./Runtime/EventBroadcastRouter.ts";
 import { HealthCheckService } from "./Runtime/HealthCheck.ts";
 import { HttpServerLive, HttpServerWithoutRepositoriesLive } from "./Runtime/HttpServer.ts";
 import { InferenceJobStoreLive } from "./Runtime/InferenceRouter.ts";
-import { AllMigrations, MigrationRunner } from "./Runtime/Persistence/MigrationRunner.ts";
+import { migrateOnBoot } from "./Runtime/Persistence/MigrationRunner.ts";
 import { ShutdownService } from "./Runtime/Shutdown.ts";
 import { ActivityDependenciesLayer, WorkflowOrchestratorFullLayer } from "./Runtime/WorkflowLayers.ts";
 import { BatchStateHubLayer, BatchStatePersistenceLayer } from "./Service/BatchState.ts";
@@ -76,6 +75,8 @@ const PgClientLive = PgClient.layerConfig({
   username: Config.string("POSTGRES_USER").pipe(Config.withDefault("workflow")),
   password: Config.redacted("POSTGRES_PASSWORD"),
 });
+
+const PgDrizzleLive = makeDrizzleLayer().pipe(Layer.provideMerge(PgClientLive));
 
 // Durable WorkflowEngine backed by PostgreSQL via @effect/cluster
 // SingleRunner with SQL storage enables durable execution with crash recovery
@@ -128,25 +129,18 @@ const checkDatabaseReady = Effect.gen(function* () {
 
 // Run database migrations at startup
 const runMigrations = Effect.gen(function* () {
-  const runner = yield* MigrationRunner;
-  const result = yield* runner.runMigrations(AllMigrations);
-
-  const migrationError = A.head(result.errors);
-  if (O.isSome(migrationError)) {
-    yield* Effect.logError("Migration errors", { errors: result.errors });
-    return yield* ServerStartupError.make({
-      message: `Migration failed: ${migrationError.value.message}`,
-      cause: O.some(migrationError.value),
-    });
-  }
-
-  yield* Effect.logInfo("Migrations complete", {
-    applied: result.applied.length,
-    skipped: result.skipped.length,
-  });
+  yield* migrateOnBoot.pipe(
+    Effect.mapError((cause) =>
+      ServerStartupError.make({
+        message: "Effect ontology database migration failed.",
+        cause: O.some(cause),
+      })
+    )
+  );
+  yield* Effect.logInfo("Effect ontology migrations are current");
 });
 
-const DatabaseStartupLive = MigrationRunner.Default.pipe(Layer.provideMerge(PgClientLive));
+const DatabaseStartupLive = PgDrizzleLive;
 
 // Pre-compose WorkflowOrchestrator with all its dependencies
 // Workflow layer has dependencies provided before construction (see WorkflowLayers)
@@ -175,8 +169,6 @@ const HealthCheckWithDeps = HealthCheckService.Default.pipe(
 
 // Repository layers (when PostgreSQL is configured)
 // PgDrizzle layer provides drizzle ORM access over PgClient
-const PgDrizzleLive = makeDrizzleLayer().pipe(Layer.provideMerge(PgClientLive));
-
 // Base repositories bundle - ClaimRepository + ArticleRepository
 const BaseRepositoriesLayer = Layer.mergeAll(ClaimRepository.Default, ArticleRepository.Default).pipe(
   Layer.provideMerge(PgDrizzleLive)
@@ -320,7 +312,8 @@ const server = Effect.gen(function* () {
 const main = Effect.scoped(
   Effect.gen(function* () {
     const shutdownContext = yield* Layer.build(ShutdownService.Default);
-    return yield* server.pipe(Effect.provide(shutdownContext));
+    const platformContext = yield* Layer.build(PlatformLayer);
+    return yield* server.pipe(Effect.provide(shutdownContext), Effect.provide(platformContext));
   }).pipe(Effect.tapCause(Effect.logError))
 );
 

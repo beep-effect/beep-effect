@@ -131,7 +131,16 @@ type N3Store = N3.Store;
  *
  * @since 0.0.0
  */
-const RdfStoreBrand: unique symbol = Symbol.for("@beep/scratchpad/effect-ontology/RdfStore");
+class RdfStoreHandle {
+  readonly #backend: N3Store;
+
+  constructor(backend: N3Store) {
+    this.#backend = backend;
+  }
+
+  static readonly is = (value: unknown): value is RdfStoreHandle => value instanceof RdfStoreHandle;
+  static readonly backend = (store: RdfStoreHandle): N3Store => store.#backend;
+}
 
 /**
  * Describes the rdf store data exposed by this module.
@@ -150,12 +159,7 @@ const RdfStoreBrand: unique symbol = Symbol.for("@beep/scratchpad/effect-ontolog
  * @category type-level
  * @since 0.0.0
  */
-export interface RdfStore {
-  readonly _tag: "RdfStore";
-  readonly [RdfStoreBrand]: true;
-}
-
-const rdfStoreBackends = new WeakMap<object, N3Store>();
+export type RdfStore = RdfStoreHandle;
 
 /**
  *  Guard for opaque workflow-store handles created by this module.
@@ -171,17 +175,9 @@ const rdfStoreBackends = new WeakMap<object, N3Store>();
  * @category predicates
  * @since 0.0.0
  */
-export const isRdfStore = (value: unknown): value is RdfStore =>
-  P.isTagged("RdfStore")(value) &&
-  P.hasProperty(value, RdfStoreBrand) &&
-  value[RdfStoreBrand] === true &&
-  rdfStoreBackends.has(value);
+export const isRdfStore = RdfStoreHandle.is;
 
-const makeRdfStore = (store: N3Store): RdfStore => {
-  const handle: RdfStore = { _tag: "RdfStore", [RdfStoreBrand]: true };
-  rdfStoreBackends.set(handle, store);
-  return handle;
-};
+const makeRdfStore = (store: N3Store): RdfStore => new RdfStoreHandle(store);
 
 /**
  *  Create an empty mutable workflow store without exposing the backend.
@@ -216,15 +212,7 @@ export const emptyRdfStore = (): RdfStore => makeRdfStore(new N3.Store());
 export const rdfStoreFromDataset = (dataset: CanonicalRdf.Dataset): RdfStore =>
   makeRdfStore(new N3.Store(A.map(dataset.quads, canonicalQuadToN3)));
 
-const backend = (store: RdfStore): N3Store =>
-  O.fromUndefinedOr(rdfStoreBackends.get(store)).pipe(
-    O.getOrThrowWith(() =>
-      RdfError.make({
-        message: "RdfStore backend invariant violated: handle was not created by this module",
-        cause: O.none(),
-      })
-    )
-  );
+const backend = RdfStoreHandle.backend;
 
 /**
  *  Return the current number of canonical quads in a workflow store.
@@ -1644,8 +1632,8 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        *
        * Future: Integrate SHACL validator
        *
-       * @param store - RdfStore to validate
-       * @param shapesGraph - SHACL shapes as Turtle string
+       * @param _rdfStore - RdfStore to validate
+       * @param _shapesGraph - SHACL shapes as Turtle string
        * @returns Validation result
        */
       validate: (_rdfStore: RdfStore, _shapesGraph: string) =>

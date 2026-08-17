@@ -11,9 +11,10 @@
  * @since 0.0.0
  */
 
-import { Effect, Layer, Redacted, Ref } from "effect";
+import { Effect, Layer, Ref } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { FetchHttpClient, HttpClient } from "effect/unstable/http";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
@@ -25,7 +26,7 @@ import type { Embedding, EmbeddingProviderMethods, EmbeddingRequest } from "./Em
 import { cosineSimilarity, EmbeddingProvider } from "./EmbeddingProvider.ts";
 import { EmbeddingRateLimiter, EmbeddingRateLimiterVoyage } from "./EmbeddingRateLimiter.ts";
 import { NomicNlpService } from "./NomicNlp.ts";
-import { makeVoyageProvider } from "./VoyageEmbeddingProvider.ts";
+import { makeVoyageProvider, VoyageModel } from "./VoyageEmbeddingProvider.ts";
 
 // =============================================================================
 // Types
@@ -152,7 +153,7 @@ const makeProtectedProvider = (
  */
 export const EmbeddingProviderFallbackLive: Layer.Layer<
   EmbeddingProvider,
-  never,
+  AnyEmbeddingError,
   ConfigService | EmbeddingCircuitBreaker | EmbeddingRateLimiter | HttpClient.HttpClient | NomicNlpService
 > = Layer.effect(
   EmbeddingProvider,
@@ -171,13 +172,22 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
     });
 
     // Create Voyage provider if API key is configured
-    const voyageApiKeyStr = O.map(config.embedding.voyageApiKey, Redacted.value).pipe(O.getOrNull);
+    const voyageApiKey = O.getOrNull(config.embedding.voyageApiKey);
+    const voyageModel = yield* S.decodeUnknownEffect(VoyageModel)(config.embedding.voyageModel).pipe(
+      Effect.mapError((cause) =>
+        EmbeddingError.make({
+          message: `Unsupported Voyage embedding model: ${config.embedding.voyageModel}`,
+          provider: "voyage",
+          cause: O.some(cause),
+        })
+      )
+    );
 
-    const voyageProvider: EmbeddingProviderMethods | null = P.isNotNull(voyageApiKeyStr)
+    const voyageProvider: EmbeddingProviderMethods | null = P.isNotNull(voyageApiKey)
       ? yield* makeVoyageProvider({
-          apiKey: voyageApiKeyStr,
-          model: config.embedding.voyageModel ?? "voyage-3.5-lite",
-          timeoutMs: config.embedding.timeoutMs ?? 30_000,
+          apiKey: voyageApiKey,
+          model: voyageModel,
+          timeout: config.embedding.timeout,
         }).pipe(
           Effect.provideService(HttpClient.HttpClient, httpClient),
           Effect.provideService(EmbeddingRateLimiter, rateLimiter)
@@ -301,7 +311,11 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
  * @category layers
  * @since 0.0.0
  */
-export const EmbeddingProviderFallbackDefault: Layer.Layer<EmbeddingProvider, never, ConfigService | NomicNlpService> =
+export const EmbeddingProviderFallbackDefault: Layer.Layer<
+  EmbeddingProvider,
+  AnyEmbeddingError,
+  ConfigService | NomicNlpService
+> =
   EmbeddingProviderFallbackLive.pipe(
     Layer.provide(EmbeddingCircuitBreaker.Default),
     Layer.provide(EmbeddingRateLimiterVoyage),

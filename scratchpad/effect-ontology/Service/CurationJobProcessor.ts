@@ -11,8 +11,8 @@
  * @since 0.0.0
  */
 
+import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import type { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors";
 import type { Fiber } from "effect";
 import { Clock, Context, Duration, Effect, Layer, Match, Schedule } from "effect";
 import * as O from "effect/Option";
@@ -46,7 +46,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/CurationJobProcessor");
  * @category type-level
  * @since 0.0.0
  */
-export type JobProcessorError = EffectDrizzleQueryError | AnyEmbeddingError | EventBusError;
+export type JobProcessorError = DrizzleError | AnyEmbeddingError | EventBusError;
 
 /**
  * Job processing statistics

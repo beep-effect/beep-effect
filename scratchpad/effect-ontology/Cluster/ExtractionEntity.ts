@@ -20,6 +20,7 @@ import * as S from "effect/Schema";
 import { Entity } from "effect/unstable/cluster";
 import * as Rpc from "effect/unstable/rpc/Rpc";
 import { ProgressEventSchema } from "../Contract/ProgressStreaming.ts";
+import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { Entity as DomainEntity, Relation } from "../Domain/Model/Entity.ts";
 
 // IdempotencyKey utilities used by entity handlers
@@ -237,7 +238,7 @@ export type KnowledgeGraphResult = typeof KnowledgeGraphResult.Type;
 export const ExtractFromTextRpc = Rpc.make("ExtractFromText", {
   payload: ExtractFromTextPayload,
   success: ProgressEventSchema,
-  error: S.String,
+  error: ExtractionError,
   stream: true,
 });
 
@@ -262,7 +263,7 @@ export const ExtractFromTextRpc = Rpc.make("ExtractFromText", {
 export const GetCachedResultRpc = Rpc.make("GetCachedResult", {
   payload: GetCachedResultPayload,
   success: S.Option(KnowledgeGraphResult),
-  error: S.String,
+  error: ExtractionError,
 });
 
 /**
@@ -285,7 +286,7 @@ export const CancelExtractionRpc = Rpc.make("CancelExtraction", {
     reason: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   }),
   success: S.Boolean,
-  error: S.String,
+  error: ExtractionError,
 });
 
 /** Current state of an extraction run. */
@@ -357,7 +358,7 @@ export const GetExtractionStatusRpc = Rpc.make("GetExtractionStatus", {
     idempotencyKey: S.String,
   }),
   success: ExtractionStatus,
-  error: S.String,
+  error: ExtractionError,
 });
 
 // =============================================================================

@@ -10,9 +10,9 @@ Mutable execution plan. Contract: [`SPEC.md`](./SPEC.md); binding decisions:
 | P0 | Bootstrap packet | complete | Packet on disk; inventory seeded (10 confirmed + 4 disqualified) and schema-valid; decisions seeded. |
 | P1 | Inventory sweep (grok lanes) | complete | Corpus swept until dry (rounds 6+7 both zero-new); lane outputs merged; 100% of confirmed evidence-verified. |
 | G1 | GATE 1 — inventory ratification | **passed 2026-08-17** | Benjamin ratified all 46; no strikes, Tier 2 included. |
-| P2 | Design (codex Sol medium) | in progress | One design per confirmed instance under `designs/`, all schema-first-compliant. |
-| P3 | Design review (orchestrator) | pending | Zero findings across all designs. |
-| G2 | GATE 2 — design ratification | pending | Benjamin ratifies reviewed designs. |
+| P2 | Design (codex Sol medium) | complete | 37 documents covering all 46 instances (36 per-instance + 1 ten-instance CLI-family design). |
+| P3 | Design review (orchestrator) | complete | Zero findings: 13 deep reviews (all Tier 2s + family core), 23 mechanism-verified skims, mechanical sweeps across all 37 docs, migration-completeness sampling, v4 API verification. |
+| G2 | GATE 2 — design ratification | **awaiting Benjamin** | Benjamin ratifies reviewed designs. |
 | P4 | Apply + land (codex, yeet) | pending | Tiered PRs mergeable; inventory statuses advanced to `applied`. |
 | P5 | Close | pending | Reflection landed; lifecycle flipped in the same PR as final work. |
 

@@ -11,6 +11,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { PosInt, SchemaUtils } from "@beep/schema";
 import { HttpStatusCode } from "@beep/schema/HttpStatus";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Context, Duration, Effect, Layer, Schedule, Stream } from "effect";
@@ -41,7 +42,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ImageFetcher");
 /**
  * Default fetch timeout in milliseconds
  */
-const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_TIMEOUT = Duration.seconds(30);
 
 const isBlockedImageHost = (hostname: string): boolean => {
   const host = Str.toLowerCase(hostname);
@@ -109,16 +110,34 @@ const isRetryableImageError = (error: ImageError): boolean =>
  * @category type-level
  * @since 0.0.0
  */
-export interface ImageFetchOptions {
-  /** Timeout in milliseconds (default: 30000) */
-  readonly timeoutMs?: number;
-  /** Maximum image size in bytes (default: 10MB) */
-  readonly maxSizeBytes?: number;
-  /** Custom allowed content types (default: common image types) */
-  readonly allowedTypes?: ReadonlyArray<string>;
-  /** Enable retries for transient failures (default: true) */
-  readonly retry?: boolean;
-}
+export class ImageFetchOptions extends S.Class<ImageFetchOptions>($I`ImageFetchOptions`)(
+  {
+    timeout: S.Duration.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT)),
+    maxSizeBytes: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(DEFAULT_MAX_SIZE_BYTES))),
+    allowedTypes: S.NonEmptyArray(S.NonEmptyString).pipe(SchemaUtils.withKeyDefaults(ALLOWED_CONTENT_TYPES)),
+    retry: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+  },
+  $I.annote("ImageFetchOptions", {
+    description: "Request timeout, byte ceiling, accepted media types, and retry policy for image fetching.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link ImageFetchOptions}.
+ *
+ * **Example** (Configure image fetching)
+ *
+ * ```ts
+ * import type { ImageFetchOptionsInput } from "@effect-ontology/Service/ImageFetcher"
+ *
+ * const options: ImageFetchOptionsInput = { retry: false }
+ * console.log(options)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ImageFetchOptionsInput = (typeof ImageFetchOptions)["~type.make.in"];
 
 // =============================================================================
 // Service Interface
@@ -158,7 +177,7 @@ export interface ImageFetcherService {
    */
   readonly fetch: (
     candidate: ImageCandidate,
-    options?: ImageFetchOptions
+    options?: ImageFetchOptionsInput
   ) => Effect.Effect<ImageFetchResult, ImageError>;
 
   /**
@@ -173,7 +192,7 @@ export interface ImageFetcherService {
    */
   readonly fetchAll: (
     candidates: ReadonlyArray<ImageCandidate>,
-    options?: ImageFetchOptions
+    options?: ImageFetchOptionsInput
   ) => Effect.Effect<ReadonlyArray<ImageFetchResult>>;
 
   /**
@@ -267,11 +286,10 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
 
       const fetchAttempt = Effect.fn("ImageFetcher.fetchAttempt")(function* (
         candidate: ImageCandidate,
-        options: ImageFetchOptions = {}
+        input: ImageFetchOptionsInput = {}
       ) {
-        const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
-        const maxSizeBytes = options.maxSizeBytes ?? DEFAULT_MAX_SIZE_BYTES;
-        const allowedTypes = options.allowedTypes ?? ALLOWED_CONTENT_TYPES;
+        const options = ImageFetchOptions.make(input);
+        const { allowedTypes, maxSizeBytes, timeout } = options;
 
         const parsedUrl = yield* Effect.try({
           try: () => new URL(candidate.sourceUrl),
@@ -305,12 +323,12 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
 
         // Execute with timeout
         const response = yield* httpClient.execute(requestWithReferrer).pipe(
-          Effect.timeout(Duration.millis(timeoutMs)),
+          Effect.timeout(timeout),
           Effect.catchTag("TimeoutError", () =>
             Effect.fail(
               ImageTimeoutError.make({
                 url: candidate.sourceUrl,
-                timeoutMs: Milliseconds.make(timeoutMs),
+                timeoutMs: Milliseconds.make(Duration.toMillis(timeout)),
               })
             )
           ),

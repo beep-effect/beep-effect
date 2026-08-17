@@ -19,8 +19,8 @@
 import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId, CoreVocab } from "@beep/identity";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
-import { PosInt, SchemaUtils } from "@beep/schema";
-import { Context, Duration, Effect, Layer, Schedule } from "effect";
+import { SchemaUtils } from "@beep/schema";
+import { Context, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -31,6 +31,7 @@ import { ErrorMessage, OptionalErrorCause, OptionalNonNegativeInt } from "../Dom
 import type { OntologyContext } from "../Domain/Model/Ontology.ts";
 import { ConfigService } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
+import type { RetryPolicy } from "./Retry.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/SparqlGenerator");
 
@@ -195,14 +196,6 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
 
-    // Retry schedule for LLM calls
-    const retrySchedule = Schedule.exponential(Duration.millis(config.runtime.retryInitialDelayMs)).pipe(
-      Schedule.modifyDelay(({ duration }) =>
-        Effect.succeed(Duration.min(duration, Duration.millis(config.runtime.retryMaxDelayMs)))
-      ),
-      Schedule.jittered
-    );
-
     return {
       /**
        * Generate SPARQL query from natural language question
@@ -249,15 +242,14 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
           });
 
           // Call LLM for structured output
-          const response = yield* generateObjectWithFeedback(llm, {
+          const response = yield* generateObjectWithFeedback({
             prompt,
             schema: SparqlResponseSchema,
             objectName: "SparqlResponse",
-            maxAttempts: PosInt.make(config.runtime.retryMaxAttempts),
             serviceName: "SparqlGenerator",
-            timeout: Duration.millis(config.llm.timeoutMs),
-            retrySchedule,
+            retryPolicy: config.llm.retryPolicy,
           }).pipe(
+            Effect.provideService(LanguageModel.LanguageModel, llm),
             Effect.mapError((error) =>
               SparqlGenerationError.make({
                 message: `Failed to generate SPARQL: ${error._tag}`,
@@ -278,14 +270,12 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
 
             // Attempt correction
             const corrected = yield* correctQuery(
-              llm,
               result.sparql,
               syntaxError.message,
               schemaContext,
-              config.runtime.retryMaxAttempts,
-              config.llm.timeoutMs,
-              retrySchedule
+              config.llm.retryPolicy
             ).pipe(
+              Effect.provideService(LanguageModel.LanguageModel, llm),
               Effect.mapError((error) =>
                 SparqlGenerationError.make({
                   message: `SPARQL correction failed: ${error.message}`,
@@ -334,14 +324,8 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
 
           const schemaContext = formatSchemaContext(ontology);
 
-          const corrected = yield* correctQuery(
-            llm,
-            sparql,
-            error,
-            schemaContext,
-            config.runtime.retryMaxAttempts,
-            config.llm.timeoutMs,
-            retrySchedule
+          const corrected = yield* correctQuery(sparql, error, schemaContext, config.llm.retryPolicy).pipe(
+            Effect.provideService(LanguageModel.LanguageModel, llm)
           );
 
           yield* Effect.logInfo("SparqlGenerator.correct complete", {
@@ -550,25 +534,20 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
  * Correct a SPARQL query using LLM
  */
 const correctQuery = (
-  llm: LanguageModel.Service,
   sparql: string,
   error: string,
   schemaContext: string,
-  maxAttempts: number,
-  timeoutMs: number,
-  retrySchedule: Schedule.Schedule<unknown, unknown, never>
-): Effect.Effect<string, SparqlCorrectionError> =>
+  retryPolicy: RetryPolicy
+): Effect.Effect<string, SparqlCorrectionError, LanguageModel.LanguageModel> =>
   Effect.gen(function* () {
     const prompt = buildCorrectionPrompt(sparql, error, schemaContext);
 
-    const response = yield* generateObjectWithFeedback(llm, {
+    const response = yield* generateObjectWithFeedback({
       prompt,
       schema: SparqlResponseSchema,
       objectName: "SparqlResponse",
-      maxAttempts: PosInt.make(maxAttempts),
       serviceName: "SparqlGenerator.correct",
-      timeout: Duration.millis(timeoutMs),
-      retrySchedule,
+      retryPolicy,
     }).pipe(
       Effect.mapError(() =>
         SparqlCorrectionError.make({

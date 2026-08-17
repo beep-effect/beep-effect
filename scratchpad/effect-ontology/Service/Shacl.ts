@@ -28,7 +28,6 @@ import { ShaclValidationServiceLive } from "@beep/shacl";
 import { Context, DateTime, Duration, Effect, HashMap, Layer, MutableHashMap, Order, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as N3 from "n3";
 import { ShapesLoadError, ValidationPolicyError, ValidationReportError } from "../Domain/Error/Shacl.ts";
@@ -363,7 +362,7 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
               })
             ),
             Effect.mapError((cause) =>
-              S.is(ShapesLoadError)(cause)
+              ShapesLoadError.is(cause)
                 ? cause
                 : ShapesLoadError.make({
                     message: `Failed to load SHACL shapes from ${shapesUri}: ${cause}`,

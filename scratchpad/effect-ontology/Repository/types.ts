@@ -596,6 +596,7 @@ export const Claim = S.Struct({
   validFrom: S.NullOr(S.DateTimeUtc),
   validTo: S.NullOr(S.DateTimeUtc),
   assertedAt: S.DateTimeUtc,
+  derivedAt: S.NullOr(S.DateTimeUtc),
   deprecatedAt: S.NullOr(S.DateTimeUtc),
   deprecatedBy: S.NullOr(CorrectionId),
   confidenceScore: S.NullOr(Confidence),

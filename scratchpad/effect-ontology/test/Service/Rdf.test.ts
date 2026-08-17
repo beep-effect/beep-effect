@@ -2,7 +2,7 @@ import { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Exit, Layer } from "effect";
-import { RdfBuilder, rdfStoreApplyRules, rdfStoreSize, rdfStoreToDataset } from "../../Service/Rdf.ts";
+import { isRdfStore, RdfBuilder, rdfStoreApplyRules, rdfStoreSize, rdfStoreToDataset } from "../../Service/Rdf.ts";
 
 const RdfBuilderTest = RdfBuilder.Default.pipe(
   Layer.provide(
@@ -76,7 +76,7 @@ describe("RdfBuilder", () => {
         assert.include(serialized, "rdf:predicate");
         assert.include(serialized, "rdf:object");
         assert.include(serialized, "0.8");
-        assert.strictEqual(Reflect.ownKeys(store).length, 2);
+        assert.strictEqual(Reflect.ownKeys(store).length, 0);
         assert.isFalse("_store" in store);
       })
     );
@@ -141,16 +141,12 @@ describe("RdfBuilder", () => {
       })
     );
 
-    it.effect("maps detached store invariant failures to SerializationFailed", () =>
+    it.effect("rejects detached structural copies of opaque stores", () =>
       Effect.gen(function* () {
         const rdf = yield* RdfBuilder;
         const store = yield* rdf.createStore;
-        const detachedStore = { ...store };
-        const error = yield* rdf.toTurtle(detachedStore).pipe(Effect.flip);
-
-        assert.strictEqual(error._tag, "SerializationFailed");
-        assert.include(error.message, "canonical Dataset");
-      })
+        return { ...store };
+      }).pipe(Effect.map((detachedStore) => assert.isFalse(isRdfStore(detachedStore))))
     );
   });
 });

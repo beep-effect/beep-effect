@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -69,15 +70,17 @@ describe("effect-ontology identity schemas", () => {
     expect(BatchId.fromContentHash(emptySha256)).toBe("batch-e3b0c44298fc");
   });
 
-  it("constructs and resolves canonical GCS URIs without duplicating existing URIs", () => {
-    const bucket = GcsBucket.fromUnknown("beep-ontology-state");
-    const objectPath = GcsObject.fromUnknown("snapshots/ontology-v1.ttl");
-    const uri = GcsUri.fromParts(bucket, objectPath);
+  it.effect("constructs and resolves canonical GCS URIs without duplicating existing URIs", () =>
+    Effect.gen(function* () {
+      const bucket = yield* S.decodeEffect(GcsBucket)("beep-ontology-state");
+      const objectPath = yield* S.decodeEffect(GcsObject)("snapshots/ontology-v1.ttl");
+      const uri = GcsUri.fromParts(bucket, objectPath);
 
-    expect(uri).toBe("gs://beep-ontology-state/snapshots/ontology-v1.ttl");
-    expect(GcsUri.resolve(objectPath, bucket)).toBe(uri);
-    expect(GcsUri.resolve(uri, bucket)).toBe(uri);
-  });
+      expect(uri).toBe("gs://beep-ontology-state/snapshots/ontology-v1.ttl");
+      expect(GcsUri.resolve(objectPath, bucket)).toBe(uri);
+      expect(GcsUri.resolve(uri, bucket)).toBe(uri);
+    })
+  );
 
   it("rejects insecure, ambiguous, reserved, and non-canonical locations", () => {
     expect(Result.isFailure(S.decodeResult(GcsBucket)("192.168.5.4"))).toBe(true);

@@ -20,7 +20,7 @@ import * as P from "effect/Predicate";
 const $I = $ScratchpadId.create("effect-ontology/Repository/Claim");
 
 import { PostgresDrizzle } from "@beep/postgres";
-import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
+import { and, count, desc, eq, isNull, or } from "drizzle-orm";
 import { DateTime, Effect } from "effect";
 import type { ClaimInsertRow, ClaimRow, CorrectionInsertRow } from "./schema.ts";
 import { claims, correctionClaims, corrections } from "./schema.ts";
@@ -150,6 +150,8 @@ export interface ConflictCandidate {
 export class ClaimRepository extends Context.Service<ClaimRepository>()($I`ClaimRepository`, {
   make: Effect.gen(function* () {
     const drizzle = yield* PostgresDrizzle;
+    const normalizeQueryError = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, DrizzleError, R> =>
+      effect.pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
 
     // -------------------------------------------------------------------------
     // CRUD Operations
@@ -412,7 +414,7 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
      */
     const countClaims = Effect.fn("countClaims")(function* (filter: ClaimFilter) {
       const conditions = buildWhereConditions(filter);
-      let query = drizzle.select({ count: sql<number>`count(*)::int` }).from(claims).$dynamic();
+      let query = drizzle.select({ count: count() }).from(claims).$dynamic();
       if (conditions.length > 0) {
         query = query.where(and(...conditions));
       }
@@ -422,31 +424,64 @@ export class ClaimRepository extends Context.Service<ClaimRepository>()($I`Claim
 
     return {
       // CRUD
-      insertClaim,
-      getClaim,
-      getClaims,
+      insertClaim: Effect.fn("ClaimRepository.insertClaim")((claim: ClaimInsertRow) =>
+        normalizeQueryError(insertClaim(claim))
+      ),
+      getClaim: Effect.fn("ClaimRepository.getClaim")((id: ClaimId) => normalizeQueryError(getClaim(id))),
+      getClaims: Effect.fn("ClaimRepository.getClaims")((filter: ClaimFilter) =>
+        normalizeQueryError(getClaims(filter))
+      ),
 
       // Queries
-      getClaimsByArticle,
-      getClaimsBySubject,
-      getPreferredClaims,
-      getClaimHistory,
+      getClaimsByArticle: Effect.fn("ClaimRepository.getClaimsByArticle")((articleId: ArticleId) =>
+        normalizeQueryError(getClaimsByArticle(articleId))
+      ),
+      getClaimsBySubject: Effect.fn("ClaimRepository.getClaimsBySubject")((subjectIri: string) =>
+        normalizeQueryError(getClaimsBySubject(subjectIri))
+      ),
+      getPreferredClaims: Effect.fn("ClaimRepository.getPreferredClaims")((subjectIri: string, predicateIri: string) =>
+        normalizeQueryError(getPreferredClaims(subjectIri, predicateIri))
+      ),
+      getClaimHistory: Effect.fn("ClaimRepository.getClaimHistory")((subjectIri: string, predicateIri: string) =>
+        normalizeQueryError(getClaimHistory(subjectIri, predicateIri))
+      ),
 
       // Deprecation & Corrections
-      deprecateClaim,
-      promoteToPreferred,
-      insertCorrection,
-      getCorrection,
-      linkClaimsToCorrection,
-      getCorrectionChain,
+      deprecateClaim: Effect.fn("ClaimRepository.deprecateClaim")((claimId: ClaimId, correctionId: CorrectionId) =>
+        normalizeQueryError(deprecateClaim(claimId, correctionId))
+      ),
+      promoteToPreferred: Effect.fn("ClaimRepository.promoteToPreferred")((claimId: ClaimId) =>
+        normalizeQueryError(promoteToPreferred(claimId))
+      ),
+      insertCorrection: Effect.fn("ClaimRepository.insertCorrection")((correction: CorrectionInsertRow) =>
+        normalizeQueryError(insertCorrection(correction))
+      ),
+      getCorrection: Effect.fn("ClaimRepository.getCorrection")((id: CorrectionId) =>
+        normalizeQueryError(getCorrection(id))
+      ),
+      linkClaimsToCorrection: Effect.fn("ClaimRepository.linkClaimsToCorrection")(
+        (correctionId: CorrectionId, originalClaimId: ClaimId, newClaimId?: ClaimId) =>
+          normalizeQueryError(linkClaimsToCorrection(correctionId, originalClaimId, newClaimId))
+      ),
+      getCorrectionChain: Effect.fn("ClaimRepository.getCorrectionChain")((claimId: ClaimId) =>
+        normalizeQueryError(getCorrectionChain(claimId))
+      ),
 
       // Conflict Detection
-      findConflictingClaims,
+      findConflictingClaims: Effect.fn("ClaimRepository.findConflictingClaims")((claim: ClaimInsertRow | ClaimRow) =>
+        normalizeQueryError(findConflictingClaims(claim))
+      ),
 
       // Bulk
-      insertClaimsBatch,
-      upsertClaimsBatch,
-      countClaims,
+      insertClaimsBatch: Effect.fn("ClaimRepository.insertClaimsBatch")((claimList: Array<ClaimInsertRow>) =>
+        normalizeQueryError(insertClaimsBatch(claimList))
+      ),
+      upsertClaimsBatch: Effect.fn("ClaimRepository.upsertClaimsBatch")((claimList: Array<ClaimInsertRow>) =>
+        normalizeQueryError(upsertClaimsBatch(claimList))
+      ),
+      countClaims: Effect.fn("ClaimRepository.countClaims")((filter: ClaimFilter) =>
+        normalizeQueryError(countClaims(filter))
+      ),
     };
   }),
 }) {

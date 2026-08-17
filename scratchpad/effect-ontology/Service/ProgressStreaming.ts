@@ -12,33 +12,35 @@
 
 import type { Confidence } from "@beep/epistemic-domain/values/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import { Percentage } from "@beep/schema/Percentage";
 import { UUID } from "@beep/schema/String";
 import { ISOStr } from "@beep/schema/Timestamp";
-import { Chunk, Clock, DateTime, Effect, HashSet, Match, Random, Ref, Stream } from "effect";
+import { Chunk, Clock, DateTime, Duration, Effect, HashSet, Match, Random, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { v4 as uuidv4 } from "uuid";
-import type { BackpressureConfig, ProgressEvent } from "../Contract/ProgressStreaming.ts";
+import type { BackpressureConfigInput, ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import {
+  BackpressureConfig,
   BackpressureWarningEvent,
   ChunkingProgressEvent,
   ChunkProcessingCompleteEvent,
   ChunkProcessingStartedEvent,
-  DefaultBackpressureConfig,
   EntityFoundEvent,
   ExtractionCompleteEvent,
   ExtractionFailedEvent,
   ExtractionFailedRetryStrategy,
   ExtractionStartedEvent,
+  ProgressEventSchema,
   RecoverableErrorEvent,
   RelationFoundEvent,
 } from "../Contract/ProgressStreaming.ts";
-import type { ExtractionRunId } from "../Domain/Identity.ts";
+import { ExtractionRunId } from "../Domain/Identity.ts";
 import { dual2 } from "../Utils/Dual.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ProgressStreaming");
@@ -98,12 +100,17 @@ export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError
  * @category type-level
  * @since 0.0.0
  */
-export interface ProgressBuilderState {
-  readonly runId: ExtractionRunId;
-  readonly totalChunks: PosInt;
-  readonly processedChunks: NonNegativeInt;
-  readonly currentPhaseProgress: Percentage;
-}
+export class ProgressBuilderState extends S.Class<ProgressBuilderState>($I`ProgressBuilderState`)(
+  {
+    runId: ExtractionRunId,
+    totalChunks: PosInt,
+    processedChunks: NonNegativeInt,
+    currentPhaseProgress: Percentage,
+  },
+  $I.annote("ProgressBuilderState", {
+    description: "Extraction run identity, chunk counts, and current phase progress held by the event builder.",
+  })
+) {}
 
 // =============================================================================
 // Progress Event Builder (Functional)
@@ -125,12 +132,14 @@ export interface ProgressBuilderState {
  */
 export const makeProgressBuilder = dual2(
   (runId: ExtractionRunId, totalChunks: PosInt): Effect.Effect<Ref.Ref<ProgressBuilderState>> =>
-    Ref.make<ProgressBuilderState>({
-      runId,
-      totalChunks,
-      processedChunks: NonNegativeInt.make(0),
-      currentPhaseProgress: Percentage.make(0),
-    })
+    Ref.make(
+      ProgressBuilderState.make({
+        runId,
+        totalChunks,
+        processedChunks: NonNegativeInt.make(0),
+        currentPhaseProgress: Percentage.make(0),
+      })
+    )
 );
 
 /**
@@ -712,11 +721,18 @@ export const setPhaseProgress = dual2(
  * @category type-level
  * @since 0.0.0
  */
-export interface BackpressureState {
-  readonly config: BackpressureConfig;
-  readonly eventQueue: ReadonlyArray<ProgressEvent>;
-  readonly lastWarnTime: number;
-}
+export class BackpressureState extends S.Class<BackpressureState>($I`BackpressureState`)(
+  {
+    config: BackpressureConfig,
+    eventQueue: S.Array(ProgressEventSchema),
+    lastWarnTime: S.Finite.check(
+      S.isGreaterThanOrEqualTo(0, { message: "Expected a non-negative backpressure warning timestamp" })
+    ),
+  },
+  $I.annote("BackpressureState", {
+    description: "Resolved queue policy, queued progress events, and the last warning timestamp.",
+  })
+) {}
 
 /**
  * Create backpressure handler state
@@ -733,13 +749,15 @@ export interface BackpressureState {
  * @since 0.0.0
  */
 export const makeBackpressureHandler = (
-  config: BackpressureConfig = DefaultBackpressureConfig
+  input: BackpressureConfigInput = {}
 ): Effect.Effect<Ref.Ref<BackpressureState>> =>
-  Ref.make<BackpressureState>({
-    config,
-    eventQueue: [],
-    lastWarnTime: 0,
-  });
+  Ref.make(
+    BackpressureState.make({
+      config: BackpressureConfig.make(input),
+      eventQueue: [],
+      lastWarnTime: 0,
+    })
+  );
 
 /**
  * Check if event should be included based on sampling
@@ -814,7 +832,7 @@ export const enqueueEvent: {
         Match.when("drop_newest", () => Effect.succeed(O.none())),
         Match.when("block_producer", () =>
           Effect.gen(function* () {
-            yield* Effect.sleep(state.config.blockTimeoutMs ?? 5000);
+            yield* Effect.sleep(state.config.blockTimeout);
             const afterWait = yield* Ref.get(ref);
             if (afterWait.eventQueue.length >= state.config.maxQueueSize) {
               return yield* ProgressStreamingError.make({
@@ -1013,21 +1031,54 @@ export const withBackpressure = dual2(
  * @category type-level
  * @since 0.0.0
  */
-export interface ResumableExtractionState {
-  readonly runId: ExtractionRunId;
-  readonly lastSuccessfulChunkIndex: NonNegativeInt;
-  readonly partialResults: {
-    entityCount: NonNegativeInt;
-    relationCount: NonNegativeInt;
-  };
-  readonly pausedAt: Date;
-  readonly pauseReason?: {
-    errorType: string;
-    message: string;
-    isRecoverable: boolean;
-    retryAfterMs?: PosInt;
-  };
-}
+class ResumablePartialResults extends S.Class<ResumablePartialResults>($I`ResumablePartialResults`)(
+  {
+    entityCount: NonNegativeInt,
+    relationCount: NonNegativeInt,
+  },
+  $I.annote("ResumablePartialResults", {
+    description: "Entity and relation counts retained at an extraction pause point.",
+  })
+) {}
+
+class PauseReason extends S.Class<PauseReason>($I`PauseReason`)(
+  {
+    errorType: S.NonEmptyString,
+    message: S.NonEmptyString,
+    isRecoverable: S.Boolean,
+    retryAfter: S.Duration.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("PauseReason", {
+    description: "Failure and optional retry delay that caused extraction to pause.",
+  })
+) {}
+
+/**
+ * Checkpoint and recovery context retained for a resumable extraction.
+ *
+ * **Example** (Inspect resumable extraction state)
+ *
+ * ```ts
+ * import { ResumableExtractionState } from "@effect-ontology/Service/ProgressStreaming"
+ *
+ * console.log(ResumableExtractionState)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ResumableExtractionState extends S.Class<ResumableExtractionState>($I`ResumableExtractionState`)(
+  {
+    runId: ExtractionRunId,
+    lastSuccessfulChunkIndex: NonNegativeInt,
+    partialResults: ResumablePartialResults,
+    pausedAt: S.Date,
+    pauseReason: PauseReason.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+  },
+  $I.annote("ResumableExtractionState", {
+    description: "Checkpoint, partial counts, pause time, and recovery reason for a resumable extraction.",
+  })
+) {}
 
 /**
  * Extract resumable state from ExtractionFailedEvent
@@ -1051,21 +1102,25 @@ export const extractResumableState: {
     return O.none();
   }
 
-  return O.some({
-    runId,
-    lastSuccessfulChunkIndex: event.lastSuccessfulChunkIndex.value,
-    partialResults: {
-      entityCount: event.partialResults.value.entityCount,
-      relationCount: event.partialResults.value.relationCount,
-    },
-    pausedAt: DateTime.toDateUtc(DateTime.makeUnsafe(event.timestamp)),
-    pauseReason: {
-      errorType: event.errorType,
-      message: event.errorMessage,
-      isRecoverable: event.isRecoverable,
-      ...O.getOrUndefined(
-        O.flatMap(event.retryStrategy, (strategy) => O.map(strategy.delayMs, (retryAfterMs) => ({ retryAfterMs })))
+  return O.some(
+    ResumableExtractionState.make({
+      runId,
+      lastSuccessfulChunkIndex: event.lastSuccessfulChunkIndex.value,
+      partialResults: {
+        entityCount: event.partialResults.value.entityCount,
+        relationCount: event.partialResults.value.relationCount,
+      },
+      pausedAt: DateTime.toDateUtc(DateTime.makeUnsafe(event.timestamp)),
+      pauseReason: O.some(
+        PauseReason.make({
+          errorType: event.errorType,
+          message: event.errorMessage,
+          isRecoverable: event.isRecoverable,
+          retryAfter: O.flatMap(event.retryStrategy, (strategy) =>
+            O.map(strategy.delayMs, (retryAfterMs) => Duration.millis(retryAfterMs))
+          ),
+        })
       ),
-    },
-  });
+    })
+  );
 });

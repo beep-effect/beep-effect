@@ -24,13 +24,30 @@
 import { $ScratchpadId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { PubSub as GCloudPubSub } from "@google-cloud/pubsub";
-import { Clock, Config, Context, Effect, FiberMap, Layer, MutableHashMap, PubSub, Random, Stream } from "effect";
+import {
+  Clock,
+  Config,
+  Context,
+  Deferred,
+  Duration,
+  Effect,
+  FiberMap,
+  Layer,
+  MutableHashMap,
+  PubSub,
+  Random,
+  Schedule,
+  Stream,
+} from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import { HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http";
 import type * as Socket from "effect/unstable/socket/Socket";
+import { OntologyName } from "../Domain/Identity.ts";
+import { OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
+import type { EventEntry } from "../Service/EventBus.ts";
 import { OntologyService } from "../Service/Ontology.ts";
 import { TicketService } from "../Service/Ticket.ts";
 
@@ -55,11 +72,8 @@ import { TicketService } from "../Service/Ticket.ts";
  */
 export const BroadcastEvent = S.Struct({
   type: S.tag("event"),
-  id: S.String,
-  event: S.String,
-  primaryKey: S.String,
-  payload: S.Unknown,
-  ontologyId: S.String,
+  entry: OntologyEventEntry,
+  ontologyId: OntologyName,
   timestamp: NonNegativeInt,
 });
 /**
@@ -158,13 +172,7 @@ export const ServerMessage = S.Union([BroadcastEvent, PingMessage, ConnectedMess
  */
 export type ServerMessage = typeof ServerMessage.Type;
 
-const PubSubEventPayload = S.Struct({
-  ontologyId: S.optionalKey(S.String),
-  event: S.optionalKey(S.String),
-  primaryKey: S.optionalKey(S.String),
-});
-
-const decodePubSubEventPayload = S.decodeUnknownOption(S.fromJsonString(PubSubEventPayload));
+const decodePubSubEventPayload = S.decodeUnknownOption(S.fromJsonString(OntologyEventEntry));
 const encodeServerMessage = S.encodeEffect(S.fromJsonString(ServerMessage));
 
 // =============================================================================
@@ -229,8 +237,22 @@ export class EventBroadcastHub extends Context.Service<EventBroadcastHub, EventB
 /**
  * Configuration for Cloud Pub/Sub event subscription
  */
-class PubSubSubscriptionError extends S.TaggedError<PubSubSubscriptionError>()("PubSubSubscriptionError", {
-  message: S.String,
+class PubSubSubscriptionError extends S.TaggedError<PubSubSubscriptionError>($I`PubSubSubscriptionError`)(
+  "PubSubSubscriptionError",
+  {
+    message: S.NonEmptyString,
+    cause: S.Defect({ includeStack: true }),
+  },
+  $I.annote("PubSubSubscriptionError", {
+    description: "Typed failure while creating or running the Cloud Pub/Sub event subscription.",
+  })
+) {}
+
+const isSubscriptionAlreadyExists = S.is(S.Struct({ code: S.Literal(6) }));
+
+class PubSubCreateError extends S.TaggedError<PubSubCreateError>($I`PubSubCreateError`)("PubSubCreateError", {
+  alreadyExists: S.Boolean,
+  cause: S.Defect({ includeStack: true }),
 }) {}
 
 /**
@@ -276,7 +298,7 @@ const makeEventBroadcastHubMemory = Effect.gen(function* () {
   const broadcast = Effect.fn(function* (ontologyId: string, event: BroadcastEvent) {
     const ps = yield* getOrCreatePubSub(ontologyId);
     yield* PubSub.publish(ps, event);
-    yield* Effect.logDebug("Event broadcast (memory)", { ontologyId, event: event.event });
+    yield* Effect.logDebug("Event broadcast (memory)", { ontologyId, event: event.entry.event });
   });
 
   const subscribe = Effect.fn(function* (ontologyId: string) {
@@ -333,64 +355,91 @@ const makeEventBroadcastHubPubSub = Effect.gen(function* () {
   // One subscription per replica so every instance receives every event.
   const nowMillis = yield* Clock.currentTimeMillis;
   const instanceSubscriptionId = `${config.eventsSubscriptionId}-${process.pid}-${nowMillis.toString(36)}`;
-  const subscription = yield* Effect.tryPromise({
-    try: () =>
-      pubsub.topic(config.eventsTopicId).createSubscription(instanceSubscriptionId, {
-        expirationPolicy: { ttl: { seconds: 86_400 } },
-      }),
-    catch: (cause) => PubSubSubscriptionError.make({ message: String(cause) }),
-  }).pipe(
-    Effect.map(([created]) => created),
-    Effect.orElseSucceed(() => pubsub.subscription(instanceSubscriptionId))
-  );
+  const createSubscription = Effect.fn("EventBroadcastHub.createSubscription")(function* () {
+    return yield* Effect.tryPromise({
+      try: () =>
+        pubsub.topic(config.eventsTopicId).createSubscription(instanceSubscriptionId, {
+          expirationPolicy: { ttl: { seconds: 86_400 } },
+        }),
+      catch: (cause) => PubSubCreateError.make({ alreadyExists: isSubscriptionAlreadyExists(cause), cause }),
+    }).pipe(
+      Effect.map(([created]) => created),
+      Effect.catchIf(
+        (error) => error.alreadyExists,
+        () => Effect.succeed(pubsub.subscription(instanceSubscriptionId))
+      ),
+      Effect.mapError((error) =>
+        PubSubSubscriptionError.make({
+          message: "Failed to create the Cloud Pub/Sub subscription.",
+          cause: error.cause,
+        })
+      )
+    );
+  });
 
-  subscription.on("message", (message) => {
-    const data = decodePubSubEventPayload(message.data.toString());
-    if (O.isSome(data)) {
-      const ontologyId = message.attributes?.ontologyId ?? data.value.ontologyId;
-
-      if (P.isNotUndefined(ontologyId)) {
+  const runSubscription = Effect.fn("EventBroadcastHub.runSubscription")(function* (
+    subscription: ReturnType<typeof pubsub.subscription>
+  ) {
+    const failed = yield* Deferred.make<void, PubSubSubscriptionError>();
+    subscription.on("message", (message) => {
+      const data = decodePubSubEventPayload(message.data.toString());
+      if (O.isSome(data)) {
+        const ontologyId = data.value.payload.ontologyId;
         const event: BroadcastEvent = {
           type: "event",
-          id: message.id,
-          event: message.attributes?.eventType ?? data.value.event ?? "unknown",
-          primaryKey: message.attributes?.primaryKey ?? data.value.primaryKey ?? message.id,
-          payload: data.value,
+          entry: data.value,
           ontologyId,
           timestamp: NonNegativeInt.make(message.publishTime?.getTime() ?? 0),
         };
-
-        // Broadcast to local WebSocket clients
         O.map(MutableHashMap.get(localPubsubs, ontologyId), (pubsub) => PubSub.publishUnsafe(pubsub, event));
+        message.ack();
+      } else {
+        message.nack();
       }
-
-      message.ack();
-    } else {
-      message.nack();
-    }
+    });
+    subscription.on("error", (cause) => {
+      runFork(
+        Deferred.fail(
+          failed,
+          PubSubSubscriptionError.make({ message: "Cloud Pub/Sub event subscription terminated.", cause })
+        )
+      );
+    });
+    return yield* Deferred.await(failed).pipe(
+      Effect.ensuring(
+        Effect.tryPromise({
+          try: () => subscription.close(),
+          catch: (cause) =>
+            PubSubSubscriptionError.make({ message: "Failed to close the Cloud Pub/Sub subscription.", cause }),
+        }).pipe(
+          Effect.catchTag("PubSubSubscriptionError", (error) =>
+            Effect.logWarning("Pub/Sub subscription cleanup failed", { error })
+          )
+        )
+      )
+    );
   });
 
-  subscription.on("error", (error) => {
-    runFork(Effect.logError("Pub/Sub subscription error", { error: String(error) }));
-  });
+  const initialSubscription = yield* createSubscription();
+  const reconnect = createSubscription().pipe(
+    Effect.flatMap(runSubscription),
+    Effect.tapError((error) => Effect.logError("Pub/Sub subscription failed; reconnecting", { error })),
+    Effect.retry(Schedule.exponential(Duration.millis(100)))
+  );
+  yield* runSubscription(initialSubscription).pipe(
+    Effect.catchTag("PubSubSubscriptionError", () => reconnect),
+    Effect.forkScoped
+  );
 
   yield* Effect.logInfo("EventBroadcastHub started (Cloud Pub/Sub mode)", {
     projectId: config.projectId,
     subscriptionId: instanceSubscriptionId,
   });
 
-  // Cleanup on shutdown
-  yield* Effect.addFinalizer(() =>
-    Effect.tryPromise({
-      try: () => subscription.close(),
-      catch: () => undefined,
-    }).pipe(Effect.ignore)
-  );
-
   const broadcast = Effect.fn(function* (ontologyId: string, event: BroadcastEvent) {
     const ps = yield* getOrCreatePubSub(ontologyId);
     yield* PubSub.publish(ps, event);
-    yield* Effect.logDebug("Event broadcast (local)", { ontologyId, event: event.event });
+    yield* Effect.logDebug("Event broadcast (local)", { ontologyId, event: event.entry.event });
   });
 
   const subscribe = Effect.fn(function* (ontologyId: string) {
@@ -577,7 +626,7 @@ export const EventBroadcastRouter = HttpRouter.addAll([
 const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.Socket, ontologyId: string) {
   const hub = yield* EventBroadcastHub;
   const writer = yield* socket.writer;
-  const serverId = Math.abs(yield* Random.nextInt).toString(16);
+  const serverId = (yield* Random.nextIntBetween(0, 0x7fffffff)).toString(16);
   const connected: ServerMessage = {
     type: "connected",
     ontologyId,
@@ -632,33 +681,18 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
  * import { Effect } from "effect"
  * import { broadcastDomainEvent } from "@effect-ontology/Runtime/EventBroadcastRouter"
  *
- * const broadcast = broadcastDomainEvent("seattle", {
- *   event: "ExtractionCompleted",
- *   primaryKey: "extraction:batch-42",
- *   payload: { batchId: "batch-42", entityCount: 42 }
- * })
- * console.log(Effect.isEffect(broadcast)) // true
+ * console.log(Effect.isEffect(broadcastDomainEvent)) // false
  * ```
  *
  * @category services
  * @since 0.0.0
  */
-export const broadcastDomainEvent = Effect.fn("broadcastDomainEvent")(function* (
-  ontologyId: string,
-  event: {
-    event: string;
-    primaryKey: string;
-    payload: unknown;
-  }
-) {
+export const broadcastDomainEvent = Effect.fn("broadcastDomainEvent")(function* (event: EventEntry) {
   const hub = yield* EventBroadcastHub;
-  const eventId = Math.abs(yield* Random.nextInt).toString(16);
+  const ontologyId = event.payload.ontologyId;
   const broadcastEvent: BroadcastEvent = {
     type: "event",
-    id: eventId,
-    event: event.event,
-    primaryKey: event.primaryKey,
-    payload: event.payload,
+    entry: event,
     ontologyId,
     timestamp: NonNegativeInt.make(yield* Clock.currentTimeMillis),
   };

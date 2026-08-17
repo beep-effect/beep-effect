@@ -32,10 +32,10 @@ import { $ScratchpadId } from "@beep/identity";
 import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
-import { NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { NonNegNum } from "@beep/schema/Number";
 import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import { Clock, Context, Duration, Effect, Layer, Match, Schedule } from "effect";
+import { Clock, Context, Effect, Layer, Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -435,12 +435,6 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
   make: Effect.gen(function* () {
     const config = yield* ConfigService;
     const llm = yield* LanguageModel.LanguageModel;
-    const retrySchedule = Schedule.exponential(Duration.millis(config.runtime.retryInitialDelayMs)).pipe(
-      Schedule.modifyDelay(({ duration }) =>
-        Effect.succeed(Duration.min(duration, Duration.millis(config.runtime.retryMaxDelayMs)))
-      ),
-      Schedule.jittered
-    );
     const classifyViolation = (violation: ShaclValidationViolation): CorrectionStrategy => {
       const message = Str.toLowerCase(violation.message);
       if (
@@ -573,15 +567,14 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent>()($I`Correct
       });
       const entityContext = getEntityContext(store, violation.focusNode);
       const prompt = buildCorrectionPrompt(violation, strategy, entityContext, ontologyContext);
-      const response = yield* generateObjectWithFeedback(llm, {
+      const response = yield* generateObjectWithFeedback({
         prompt,
         schema: CorrectionResponseSchema,
         objectName: "CorrectionResponse",
-        maxAttempts: PosInt.make(config.runtime.retryMaxAttempts),
         serviceName: "CorrectorAgent",
-        timeout: Duration.millis(config.llm.timeoutMs),
-        retrySchedule,
+        retryPolicy: config.llm.retryPolicy,
       }).pipe(
+        Effect.provideService(LanguageModel.LanguageModel, llm),
         Effect.mapError((error) =>
           CorrectionError.make({
             message: `Failed to generate correction: ${error._tag}`,
