@@ -254,12 +254,18 @@ layer(NodeServices.layer)("GitExec archive hostile-profile canonicality", (it) =
       const tmpDir = yield* fs.makeTempDirectory();
 
       const body = Effect.gen(function* () {
-        const repoDir = path.join(tmpDir, "repo");
+        // The checkout deliberately sits under a deep, spaced, non-ASCII path so the differential
+        // exercises location-depth behavior in the live spawn path (the retired ASLR control's real
+        // half — research/p3-hermetic-lane-decisions.md H2/H3), and archives land in a spaced
+        // output directory so `--output` quoting is exercised live rather than only as argv.
+        const repoDir = path.join(tmpDir, "nested depth", "ünïcode", "level-3", "repo");
+        const outDir = path.join(tmpDir, "out put ü");
         const hostileXdg = path.join(tmpDir, "xdg-hostile");
         const cleanXdg = path.join(tmpDir, "xdg-clean");
         const home = path.join(tmpDir, "home");
         const umaskConfig = path.join(tmpDir, "umask.gitconfig");
         yield* fs.makeDirectory(repoDir, { recursive: true });
+        yield* fs.makeDirectory(outDir, { recursive: true });
         yield* fs.makeDirectory(path.join(hostileXdg, "git"), { recursive: true });
         yield* fs.makeDirectory(cleanXdg, { recursive: true });
         yield* fs.makeDirectory(home, { recursive: true });
@@ -301,7 +307,7 @@ layer(NodeServices.layer)("GitExec archive hostile-profile canonicality", (it) =
           argsFor: (out: string) => ReadonlyArray<string>,
           env: Record<string, string>
         ) {
-          const out = path.join(tmpDir, name);
+          const out = path.join(outDir, name);
           yield* Effect.sync(() => runGit(repoDir, argsFor(out), env));
           return yield* fs.readFile(out);
         });
