@@ -29,6 +29,7 @@ const snapshot = (overrides: Partial<Parameters<typeof YeetWatchSnapshot.make>[0
     checks: [],
     headSha: "aaa111",
     mergeable: "MERGEABLE",
+    prNumber: 751,
     state: "OPEN",
     threads: [],
     ...overrides,

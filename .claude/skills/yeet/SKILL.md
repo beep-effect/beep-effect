@@ -142,7 +142,12 @@ bun run beep yeet monitor --until-merged
 - Stream one NDJSON row per PR state transition (typed `yeet-watch/v1` rows:
   check transitions, thread open/resolve, mergeability, head supersession)
   until the PR settles; exits non-zero on a red wave, a closed PR, or a poll
-  error:
+  error. Every observed red also appends a failure capsule — derived from the
+  failing check's own record — to `<checkout>/.beep/inbox/failures.ndjson`
+  (`yeet-inbox/v1`) and advances the wave record at
+  `.beep/inbox/dispatch.json` (`yeet-dispatch/v1`): first red for a head opens
+  the repair session, later reds queue with headSha+lane dedup, a new push
+  supersedes the wave:
 
 ```bash
 bun run beep yeet monitor --watch
