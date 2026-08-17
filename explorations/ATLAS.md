@@ -66,8 +66,10 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   single-user parity. First goal graduated:
   [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md).
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
-  align-stage: ratify identity assurance, requalification policy, and scoped
-  human dispositions for exact, digest-bound model arrangements.
+  shape-stage: align closed 2026-08-17 (three-tier identity-assurance floor;
+  conservative full-vs-bounded requalification matrix with sentinel
+  escalation; five-status immutable disposition, human-only supersession).
+  Next gate: operator review of the drafted BRIEF.
 - [`epistemic-belief-view-revision`](./epistemic-belief-view-revision/README.md) —
   shape-stage: align closed 2026-08-17 (verdict-family names + ownership law;
   `BeliefContentionKey` v1 = authority identity minus evidenceScope with

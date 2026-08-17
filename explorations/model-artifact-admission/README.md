@@ -2,8 +2,13 @@
 
 ## Status
 
-Stage: `align`
+Stage: `shape`
 Status: `active`
+
+Align closed 2026-08-17: three-tier identity-assurance floor, the conservative
+requalification matrix, and the five-status immutable disposition semantics
+all ratified — see [`DECISIONS.md`](./DECISIONS.md). Next gate: operator
+review of the drafted [`BRIEF.md`](./BRIEF.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

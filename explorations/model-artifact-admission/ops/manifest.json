@@ -4,11 +4,9 @@
     "slug": "model-artifact-admission",
     "title": "Model Artifact Admission",
     "status": "active",
-    "stage": "align",
+    "stage": "shape",
     "openQuestions": [
-      "What minimum hosted identity-assurance level is required for each admitted role and data class?",
-      "Which exact component changes and sentinel regressions require full requalification rather than a bounded delta suite?",
-      "Which ModelArrangementDisposition statuses, restrictions, expiry, and supersession semantics should align ratify?"
+      "Operator BRIEF review gate: does BRIEF.md correctly frame the problem, appetite, ratified sketch, rabbit holes, and no-gos before decompose?"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -17,6 +15,6 @@
       "supersededBy": null
     },
     "created": "2026-07-25",
-    "updated": "2026-08-13"
+    "updated": "2026-08-17"
   }
 }
