@@ -20,13 +20,13 @@ import {
   StoredPacketEvent,
   upcastPacketEventJson,
 } from "@beep/repo-cli/test/Goals";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as fc from "fast-check";
+import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
 const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
@@ -137,7 +137,7 @@ describe("schema-derived properties", () => {
         const reencoded = encodeTraceEntry(decodeTraceEntry(encoded));
         return canonicalJsonText(reencoded) === canonicalJsonText(encoded);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });
