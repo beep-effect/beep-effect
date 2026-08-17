@@ -2280,6 +2280,62 @@ const stripAngleWrapping = (destination: string): string =>
 const isExternalDestination = (destination: string): boolean =>
   Str.includes("://")(destination) || Str.startsWith("mailto:")(destination) || Str.startsWith("#")(destination);
 
+/**
+ * One Markdown inline-link destination, angle-wrapping stripped, with where it sits on the line.
+ *
+ * @see {@link knowledgeLinkDestinations} for the reader that produces them.
+ * @category models
+ * @since 0.0.0
+ */
+export type KnowledgeLinkDestination = {
+  readonly destination: string;
+  readonly column: number;
+  readonly end: number;
+};
+
+const linkDestinationOf = (match: RegExpExecArray): O.Option<KnowledgeLinkDestination> => {
+  const prefix = match[1];
+  const raw = match[2];
+  return P.isString(prefix) && P.isString(raw)
+    ? O.some({
+        destination: stripAngleWrapping(raw),
+        column: match.index + Str.length(prefix) + 1,
+        end: match.index + Str.length(match[0]),
+      })
+    : O.none();
+};
+
+/**
+ * Reads every Markdown inline-link destination on one line, in source order.
+ *
+ * **Details**
+ *
+ * This is the shared link parser: the census link bus and `lint roadmap-refs` both read link
+ * destinations through it, so one grammar decides what counts as a link everywhere. Angle wrapping
+ * (`<dest>`) is stripped and an optional quoted title is tolerated; filtering — external schemes,
+ * domain prefixes — stays with each caller, mirroring how {@link knowledgeInlineSpans} leaves the
+ * command predicate to its readers. `column` is the 1-based column of the destination's first
+ * character; `end` is the 0-based offset just past the link's closing paren, which is what a caller
+ * pairing trailing annotations to the link keys on.
+ *
+ * **Example** (Read one destination from a line)
+ *
+ * ```ts
+ * import { knowledgeLinkDestinations } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.map(knowledgeLinkDestinations("see [the plan](../goals/x/PLAN.md) first"), (link) => link.destination))
+ * // [ "../goals/x/PLAN.md" ]
+ * ```
+ *
+ * @param lineText - One document line, already known to sit outside every fence.
+ * @returns Every inline-link destination on the line, in source order.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const knowledgeLinkDestinations = (lineText: string): ReadonlyArray<KnowledgeLinkDestination> =>
+  A.getSomes(A.map(knowledgeLineMatches(LINK_DESTINATION_PATTERN, lineText), linkDestinationOf));
+
 const repoPathCandidatesOn = (documentPath: string, lineText: string): ReadonlyArray<RepoPathCandidate> => {
   const inlines = A.map(
     A.filter(knowledgeInlineSpans(lineText), (inline) => !isKnowledgeCommandSpan(inline.span)),
@@ -2290,21 +2346,15 @@ const repoPathCandidatesOn = (documentPath: string, lineText: string): ReadonlyA
     })
   );
   const links = A.getSomes(
-    A.map(knowledgeLineMatches(LINK_DESTINATION_PATTERN, lineText), (match) => {
-      const prefix = match[1];
-      const raw = match[2];
-      if (!P.isString(prefix) || !P.isString(raw)) {
-        return O.none<RepoPathCandidate>();
-      }
-      const destination = stripAngleWrapping(raw);
-      return isExternalDestination(destination)
+    A.map(knowledgeLinkDestinations(lineText), (link) =>
+      isExternalDestination(link.destination)
         ? O.none<RepoPathCandidate>()
         : O.some({
-            raw: destination,
-            column: match.index + Str.length(prefix) + 1,
-            outcome: repoPathOutcome(documentPath, destination, true),
-          });
-    })
+            raw: link.destination,
+            column: link.column,
+            outcome: repoPathOutcome(documentPath, link.destination, true),
+          })
+    )
   );
   return A.appendAll(inlines, links);
 };
