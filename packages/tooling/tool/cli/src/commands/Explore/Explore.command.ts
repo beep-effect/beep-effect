@@ -1,6 +1,8 @@
 /**
  * Explore command group.
  *
+ * **Details**
+ *
  * Read-only exploration/goal packet-stream tooling: `beep explore --check`
  * folds every opted-in packet event stream and reports forks, integrity
  * issues, and stale trace projections (advisory in this first slice).
