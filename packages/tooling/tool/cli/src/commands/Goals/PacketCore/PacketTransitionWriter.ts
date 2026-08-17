@@ -572,7 +572,7 @@ const makePacketTransitionWriter = Effect.fn("PacketTransitionWriter.make")(func
     }
     const listing = yield* store.list(locator);
     const derived = foldPacketEvents({ packet: locator.packet, root: locator.root, events: listing.events });
-    const traceText = yield* renderPacketTraceFile(projectPacketTrace(derived)).pipe(
+    const traceText = yield* renderPacketTraceFile(projectPacketTrace(derived, listing.events)).pipe(
       Effect.mapError(streamErrorFromSchema(locator.packet, "trace projection could not be rendered"))
     );
     yield* fs

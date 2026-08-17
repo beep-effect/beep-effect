@@ -8,6 +8,7 @@ import {
   PacketEventStore,
   PacketEventStoreLive,
   PacketStreamLocator,
+  PacketTraceEntry,
   PacketTraceProjection,
   packetEventDigest,
   packetEventFileName,
@@ -19,12 +20,13 @@ import {
   StoredPacketEvent,
   upcastPacketEventJson,
 } from "@beep/repo-cli/test/Goals";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, FileSystem, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
 const testLayer = Layer.mergeAll(NodeServices.layer, PacketEventStoreLive.pipe(Layer.provideMerge(NodeServices.layer)));
@@ -120,6 +122,23 @@ describe("canonical encoding and digests", () => {
     expect(upcastPacketEventJson(unknownVersion)).toBe(unknownVersion);
     expect(upcastPacketEventJson("scalar")).toBe("scalar");
     expect("packet-event/v1" in PACKET_EVENT_UPCASTERS).toBe(true);
+  });
+});
+
+describe("schema-derived properties", () => {
+  const PacketTraceEntryArbitrary = S.toArbitrary(PacketTraceEntry)(fc);
+  const encodeTraceEntry = S.encodeUnknownSync(PacketTraceEntry);
+  const decodeTraceEntry = S.decodeUnknownSync(PacketTraceEntry);
+
+  it("round-trips arbitrary timeline entries through encode/decode byte-stably", () => {
+    fc.assert(
+      fc.property(PacketTraceEntryArbitrary, (entry) => {
+        const encoded = encodeTraceEntry(entry);
+        const reencoded = encodeTraceEntry(decodeTraceEntry(encoded));
+        return canonicalJsonText(reencoded) === canonicalJsonText(encoded);
+      }),
+      fcRuns(50)
+    );
   });
 });
 
@@ -325,7 +344,7 @@ describe("golden replay (committed fixture)", () => {
           expect(derived.issues).toStrictEqual([]);
 
           const expectedTrace = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.json`);
-          const renderedTrace = yield* renderPacketTraceFile(projectPacketTrace(derived));
+          const renderedTrace = yield* renderPacketTraceFile(projectPacketTrace(derived, listing.events));
           expect(renderedTrace).toBe(expectedTrace);
 
           const expectedDerived = yield* fs.readFileString(`${GOLDEN_PATH}/expected-derived.json`);
@@ -357,12 +376,34 @@ describe("golden replay (committed fixture)", () => {
           expect(derived.issues).toStrictEqual([]);
 
           const expectedTrace = yield* fs.readFileString(`${RISK_OVERRIDE_PATH}/expected-trace.json`);
-          const renderedTrace = yield* renderPacketTraceFile(projectPacketTrace(derived));
+          const renderedTrace = yield* renderPacketTraceFile(projectPacketTrace(derived, listing.events));
           expect(renderedTrace).toBe(expectedTrace);
 
           const expectedDerived = yield* fs.readFileString(`${RISK_OVERRIDE_PATH}/expected-derived.json`);
           const encodedDerived = yield* S.encodeUnknownEffect(PacketDerivedState)(derived);
           expect(canonicalJsonTextPretty(encodedDerived)).toBe(expectedDerived);
+        }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+
+  it(
+    "retires the committed v1 trace: stale by decode under the v2 projector, bytes changed",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          // Projections are disposable derived copies: a v1 trace is never
+          // upcast — it fails the v2 decode, explore --check reports it as
+          // packet-trace-stale, and the next write regenerates it.
+          const v1Text = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.v1.json`);
+          const decoded = yield* Effect.exit(S.decodeEffect(S.fromJsonString(PacketTraceProjection))(v1Text));
+          expect(Exit.isFailure(decoded)).toBe(true);
+
+          const v2Text = yield* fs.readFileString(`${GOLDEN_PATH}/expected-trace.json`);
+          expect(v2Text).not.toBe(v1Text);
+          expect(v2Text).toContain('"timeline"');
+          expect(v2Text).toContain('"projectorVersion": 2');
         }).pipe(provideScopedLayer(testLayer))
       ),
     20_000
@@ -384,6 +425,12 @@ describe("golden replay (committed fixture)", () => {
           expect(derived.forks[0]?.parentSeq).toBe(2);
           expect(derived.forks[0]?.children.length).toBe(2);
           expect(derived.revision).toBe(2);
+
+          // The timeline stops at the unambiguous prefix: both seq-3 children
+          // are ambiguous history and must not project.
+          const trace = projectPacketTrace(derived, listing.events);
+          expect(A.length(trace.timeline)).toBe(2);
+          expect(A.map(trace.timeline, (entry) => entry.seq)).toStrictEqual([1, 2]);
 
           const tipId = O.getOrUndefined(O.map(O.fromUndefinedOr(derived.tip), (tip) => tip.id));
           const next = PacketEvent.make({
@@ -526,12 +573,12 @@ describe("packetTraceIsStale", () => {
             { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
           ]);
           const derived = foldPacketEvents({ packet: "demo", root: "goals", events });
-          const fresh = projectPacketTrace(derived);
+          const fresh = projectPacketTrace(derived, events);
           expect(packetTraceIsStale(fresh, derived)).toBe(false);
 
           const emptyDerived = foldPacketEvents({ packet: "demo", root: "goals", events: [] });
           expect(packetTraceIsStale(fresh, emptyDerived)).toBe(true);
-          expect(packetTraceIsStale(projectPacketTrace(emptyDerived), derived)).toBe(true);
+          expect(packetTraceIsStale(projectPacketTrace(emptyDerived, []), derived)).toBe(true);
 
           const outdated = PacketTraceProjection.make({ ...fresh, projectorVersion: fresh.projectorVersion + 1 });
           expect(packetTraceIsStale(outdated, derived)).toBe(true);

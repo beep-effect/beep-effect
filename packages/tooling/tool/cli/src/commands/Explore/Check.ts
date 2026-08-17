@@ -28,7 +28,11 @@ import {
 } from "../Goals/PacketCore/PacketFold.ts";
 import { PACKET_TRACE_SEGMENTS } from "../Goals/PacketCore/PacketTransitionWriter.ts";
 import type { GoalDoctorFindingKind } from "../Goals/Doctor.ts";
-import type { PacketDerivedState, PacketTraceProjection } from "../Goals/PacketCore/PacketCore.schemas.ts";
+import type {
+  PacketDerivedState,
+  PacketTraceProjection,
+  StoredPacketEvent,
+} from "../Goals/PacketCore/PacketCore.schemas.ts";
 
 const finding = (slug: string, kind: GoalDoctorFindingKind, message: string, keySuffix = ""): GoalDoctorFinding =>
   GoalDoctorFinding.make({
@@ -52,7 +56,8 @@ const derivedSummary = (root: string, slug: string, derived: PacketDerivedState)
 const traceFindings = Effect.fn("Explore.traceFindings")(function* (
   packetPath: string,
   slug: string,
-  derived: PacketDerivedState
+  derived: PacketDerivedState,
+  events: ReadonlyArray<StoredPacketEvent>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -91,7 +96,7 @@ const traceFindings = Effect.fn("Explore.traceFindings")(function* (
   }
   // The trace is a whole-file derivation: any byte drift from the re-rendered
   // projection (not just a moved sourceTip) means the committed copy lies.
-  const rendered = yield* renderPacketTraceFile(projectPacketTrace(derived)).pipe(
+  const rendered = yield* renderPacketTraceFile(projectPacketTrace(derived, events)).pipe(
     Effect.map(O.some),
     Effect.orElseSucceed(O.none<string>)
   );
@@ -131,7 +136,7 @@ const streamFindings = Effect.fn("Explore.streamFindings")(function* (
       )
     );
   }
-  findings = A.appendAll(findings, yield* traceFindings(packetPath, slug, derived));
+  findings = A.appendAll(findings, yield* traceFindings(packetPath, slug, derived, listing.events));
   return { derived, findings };
 });
 

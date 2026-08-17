@@ -92,7 +92,7 @@ describe("explore --check", () => {
             const soloId = yield* writeEvent("goals/solo", solo);
             yield* writeProjectFile(
               "goals/solo/ops/trace.json",
-              `{"schemaVersion":"packet-trace/v1","projectorVersion":1,"sourceTip":{"seq":9,"id":"${"c".repeat(64)}"},"derived":{"packet":"solo","root":"goals","revision":9,"forks":[],"issues":[]}}\n`
+              `{"schemaVersion":"packet-trace/v1","projectorVersion":2,"sourceTip":{"seq":9,"id":"${"c".repeat(64)}"},"timeline":[],"derived":{"packet":"solo","root":"goals","revision":9,"forks":[],"issues":[]}}\n`
             );
 
             // Third stream: healthy events with the byte-exact derived trace.
@@ -107,20 +107,21 @@ describe("explore --check", () => {
               body: { type: "packet-created", status: "active", stage: "P0", ordinal: 0 },
             });
             const healthyId = yield* writeEvent("goals/sound", healthy);
+            const healthyStored = [
+              StoredPacketEvent.make({
+                id: healthyId,
+                fileName: packetEventFileName(healthy, healthyId),
+                event: healthy,
+              }),
+            ];
             const healthyDerived = foldPacketEvents({
               packet: "sound",
               root: "goals",
-              events: [
-                StoredPacketEvent.make({
-                  id: healthyId,
-                  fileName: packetEventFileName(healthy, healthyId),
-                  event: healthy,
-                }),
-              ],
+              events: healthyStored,
             });
             yield* writeProjectFile(
               "goals/sound/ops/trace.json",
-              yield* renderPacketTraceFile(projectPacketTrace(healthyDerived))
+              yield* renderPacketTraceFile(projectPacketTrace(healthyDerived, healthyStored))
             );
 
             // Fourth stream: trace that is not JSON at all.
@@ -161,12 +162,13 @@ describe("explore --check", () => {
               body: { type: "packet-created", status: "active", stage: "P0", ordinal: 0 },
             });
             const id = yield* writeEvent("goals/drift", event);
+            const driftStored = [StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event })];
             const derived = foldPacketEvents({
               packet: "drift",
               root: "goals",
-              events: [StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event })],
+              events: driftStored,
             });
-            const traceText = yield* renderPacketTraceFile(projectPacketTrace(derived));
+            const traceText = yield* renderPacketTraceFile(projectPacketTrace(derived, driftStored));
             // sourceTip stays intact; the derived body is tampered.
             yield* writeProjectFile(
               "goals/drift/ops/trace.json",
