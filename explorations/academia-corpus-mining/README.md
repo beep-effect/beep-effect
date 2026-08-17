@@ -9,7 +9,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Spark
 
-519 research PDFs landed in `~/Downloads/research-7-24-26` from Academia.edu
+519 research PDFs landed in the machine-local `research-7-24-26` download pile from Academia.edu
 interest recommendations — two waves (June 29: LLM agents, memory,
 metacognition, neuro-symbolic, document understanding; July 24–25: legal
 ontologies, AI-and-law). With five non-PDF papers that is 524 files,

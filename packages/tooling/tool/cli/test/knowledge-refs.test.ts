@@ -258,6 +258,18 @@ describe("knowledge refs golden fixture matrix", () => {
     })
   );
 
+  it.effect("a Downloads descendant is machine residue, only the exact mention is portable", () =>
+    Effect.gen(function* () {
+      const report = yield* scanFixture({
+        ".claude/skills/demo/SKILL.md": "Exports land under ~/Downloads but never cite ~/Downloads/report.csv here.\n",
+      });
+      expect(verdicts(report.observations)).toEqual([
+        "portable-home-convention/not-applicable",
+        "external-mirror-reference/not-applicable",
+      ]);
+    })
+  );
+
   it.effect("a packet data directory is an archival segment", () =>
     Effect.gen(function* () {
       const report = yield* scanFixture({

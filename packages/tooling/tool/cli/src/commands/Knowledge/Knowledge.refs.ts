@@ -1732,10 +1732,10 @@ export const extractKnowledgeHostAnchors = (lineText: string): ReadonlyArray<Kno
   ]);
 };
 
-// Every member is a config/state/toolchain/user directory convention of a named product or of
-// the XDG basedir spec — portable across machines by definition, which is the class semantic.
-// Widening this set is a deliberate CLI PR per ratified decision A3; the batch after `~/.openclaw`
-// was admitted by the Workstream A rewrite pass with per-prefix rationale in
+// Every member is a config/state/toolchain directory convention of a named product or of the XDG
+// basedir spec — portable across machines by definition, which is the class semantic. Widening
+// this set is a deliberate CLI PR per ratified decision A3; the batch after `~/.openclaw` was
+// admitted by the Workstream A rewrite pass with per-prefix rationale in
 // goals/knowledge-surface-automation/research/p3-report-refs-rewrite.md.
 const PORTABLE_HOME_CONVENTIONS = HashSet.make(
   "~/.claude",
@@ -1751,9 +1751,13 @@ const PORTABLE_HOME_CONVENTIONS = HashSet.make(
   "~/.oracle",
   "~/.portless",
   "~/.portless-lan",
-  "~/.supermemory-claude",
-  "~/Downloads"
+  "~/.supermemory-claude"
 );
+
+// Exact-mention conventions: naming the XDG user directory itself is portable, but any concrete
+// descendant (`~/Downloads/report.csv`) is machine session residue and stays gated — a prefix
+// admission here would let live guidance park arbitrary machine-local files behind the folder name.
+const PORTABLE_HOME_EXACT_CONVENTIONS = HashSet.make("~/Downloads");
 const TEMP_CONVENTIONS = HashSet.make("/tmp/portless");
 
 const hasConventionPrefix = (conventions: HashSet.HashSet<string>, token: string): boolean =>
@@ -1828,7 +1832,10 @@ export type KnowledgeRefClassificationInput = {
  * @returns The convention, mirror, or actionable class for a live host anchor.
  */
 const classifyLiveHostAnchor = (anchor: KnowledgeHostAnchor, token: string): KnowledgeRefClassification => {
-  if (KnowledgeHostAnchor.is["home-relative"](anchor) && hasConventionPrefix(PORTABLE_HOME_CONVENTIONS, token)) {
+  if (
+    KnowledgeHostAnchor.is["home-relative"](anchor) &&
+    (hasConventionPrefix(PORTABLE_HOME_CONVENTIONS, token) || HashSet.has(PORTABLE_HOME_EXACT_CONVENTIONS, token))
+  ) {
     return KnowledgeRefClassification.Enum["portable-home-convention"];
   }
   if (KnowledgeHostAnchor.is.temp(anchor) && hasConventionPrefix(TEMP_CONVENTIONS, token)) {

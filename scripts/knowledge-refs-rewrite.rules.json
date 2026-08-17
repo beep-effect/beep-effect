@@ -1582,6 +1582,76 @@
       "replace": "shared store outside the repo (machine-local), registered as the",
       "count": 1,
       "note": "B4: the basic-memory project name on line 20 identifies the store."
+    },
+    {
+      "path": ".claude/skills/codex-findings/SKILL.md",
+      "find": "bun run beep codex findings ingest --from ~/Downloads/codex-security-findings-<timestamp>.csv",
+      "replace": "bun run beep codex findings ingest --from <download-dir>/codex-security-findings-<timestamp>.csv",
+      "count": 1,
+      "note": "review follow-up: Downloads descendants gate; <download-dir> is the browser download directory (conventionally ~/Downloads)"
+    },
+    {
+      "path": ".claude/skills/codex-findings/SKILL.md",
+      "find": "bun run beep codex findings ingest --refresh --from ~/Downloads/codex-security-findings-<timestamp>.csv",
+      "replace": "bun run beep codex findings ingest --refresh --from <download-dir>/codex-security-findings-<timestamp>.csv",
+      "count": 1,
+      "note": "review follow-up: same descendant rewrite for the refresh flow"
+    },
+    {
+      "path": ".claude/skills/codex-findings/SKILL.md",
+      "find": "```sh\nbun run beep codex findings ingest --from <download-dir>/codex-security-findings-<timestamp>.csv\n```\n\nUseful flags:",
+      "replace": "```sh\nbun run beep codex findings ingest --from <download-dir>/codex-security-findings-<timestamp>.csv\n```\n\n`<download-dir>` is the browser download directory (conventionally `~/Downloads`).\n\nUseful flags:",
+      "count": 1,
+      "note": "review follow-up: define the placeholder once, with the exact-mention convention"
+    },
+    {
+      "path": "docs/agent-memory-infra/oracle-deep-research.md",
+      "find": "provided the final answer at ~/Downloads/deep-research-report.md, transcribed",
+      "replace": "provided the final answer as the downloaded deep-research-report.md, transcribed",
+      "count": 1,
+      "note": "review follow-up: session download residue named without the path"
+    },
+    {
+      "path": "explorations/academia-corpus-mining/README.md",
+      "find": "landed in `~/Downloads/research-7-24-26` from",
+      "replace": "landed in the machine-local `research-7-24-26` download pile from",
+      "count": 1,
+      "note": "review follow-up: Downloads descendant"
+    },
+    {
+      "path": "explorations/academia-corpus-mining/CAPTURE.md",
+      "find": "download pile at `~/Downloads/research-7-24-26` is",
+      "replace": "machine-local download pile `research-7-24-26` is",
+      "count": 1,
+      "note": "review follow-up: Downloads descendant"
+    },
+    {
+      "path": "explorations/document-structure-ontologies/RESEARCH.md",
+      "find": "- Local clone: `~/Downloads/ontologies/doco` (docs",
+      "replace": "- Local clone: machine-local `ontologies/doco` download (docs",
+      "count": 1,
+      "note": "review follow-up: Downloads descendant"
+    },
+    {
+      "path": "explorations/document-structure-ontologies/CAPTURE.md",
+      "find": "in ~/Downloads/ontologies:",
+      "replace": "in the machine-local ontology downloads:",
+      "count": 1,
+      "note": "review follow-up: Downloads descendant"
+    },
+    {
+      "path": "explorations/document-structure-ontologies/CAPTURE.md",
+      "find": "locally: `~/Downloads/ontologies/doco`",
+      "replace": "locally into the machine-local ontology downloads (`ontologies/doco`)",
+      "count": 1,
+      "note": "review follow-up: Downloads descendant"
+    },
+    {
+      "path": "explorations/graphnosis-prior-art/CAPTURE.md",
+      "find": "from `~/Downloads/RESEARCH_08_06_26/`, copied",
+      "replace": "from the machine-local `RESEARCH_08_06_26` download batch, copied",
+      "count": 1,
+      "note": "review follow-up: Downloads descendant"
     }
   ]
 }

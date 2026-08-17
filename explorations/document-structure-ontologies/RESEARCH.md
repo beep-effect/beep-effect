@@ -17,7 +17,7 @@
   discussion, acknowledgements). Structure and rhetoric are orthogonal: one
   node can be both `doco:Section` and `deo:Introduction`. Spec:
   https://sparontologies.github.io/doco/current/doco.html
-- Local clone: `~/Downloads/ontologies/doco` (docs/current has ttl, jsonld,
+- Local clone: machine-local `ontologies/doco` download (docs/current has ttl, jsonld,
   nt, owl, graphml). PO/DEO not vendored — `owl:imports` purl.org IRIs only.
 - Worked examples model sentences as first-class `pattern:Inline` nodes
   ordered via the Collections Ontology (`co:firstItem`/`co:nextItem`), text

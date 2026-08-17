@@ -103,7 +103,7 @@ two that look least like anything we already have.
 
 ### Added by Benjamin, same day — two Graphnosis PDFs
 
-Dropped in from `~/Downloads/RESEARCH_08_06_26/`, copied into this packet's `assets/`:
+Dropped in from the machine-local `RESEARCH_08_06_26` download batch, copied into this packet's `assets/`:
 
 - [`assets/graphnosis-whitepaper.pdf`](./assets/graphnosis-whitepaper.pdf) — 35 pages, PDF
   CreationDate 2026-06-26. Presumed to be (or sibling to) the "Un-Brain" paper the README cites

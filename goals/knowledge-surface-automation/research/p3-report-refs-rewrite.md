@@ -20,14 +20,20 @@ The verdict's 122-row set had grown to **447 live gated rows** by 2026-08-16
    only in-scope tracked `data/` files are that packet's captures; zero `data/`
    paths exist at the frozen baseline commit, so the baseline-agreement test is
    unaffected).
-2. **Structural: portable-home-convention batch (≈36 rows).** Ten prefixes were
+2. **Structural: portable-home-convention batch (≈36 rows).** Nine prefixes were
    admitted per ratified A3 (widening is a deliberate CLI PR): `~/.cache`,
    `~/.cargo`, `~/.cursor`, `~/.local/state/beep`, `~/.mem0`, `~/.oracle`,
-   `~/.portless`, `~/.portless-lan`, `~/.supermemory-claude`, `~/Downloads`.
-   Every member is a config/state/toolchain/user directory convention of a named
-   product or the XDG basedir spec — the exact class semantic `~/.openclaw`'s
-   admission established. Rows spelled home-absolutely were rewritten to tilde
-   form so the (deliberately home-relative-only) convention check can see them.
+   `~/.portless`, `~/.portless-lan`, `~/.supermemory-claude`. Every member is a
+   config/state/toolchain directory convention of a named product or the XDG
+   basedir spec — the exact class semantic `~/.openclaw`'s admission
+   established. Rows spelled home-absolutely were rewritten to tilde form so
+   the (deliberately home-relative-only) convention check can see them.
+   `~/Downloads` is admitted as an **exact-mention convention only** (review
+   hardening on the PR): naming the XDG download directory is portable, but any
+   concrete descendant stays gated — a prefix admission would have let live
+   guidance park arbitrary machine-local files behind the folder name, the
+   laundering surface the stop conditions name. The nine live descendant rows
+   were rewritten instead (rules 227–236).
 3. **Textual: 226-rule mechanical rewrite + 2 manual folds (233 remaining
    rows across 126 files).** Drafted per file-context by four fan-out agents
    under a written bucket policy, reviewed centrally (zero conflicting rules,
