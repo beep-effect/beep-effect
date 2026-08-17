@@ -36,6 +36,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
+import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 import type { PhoenixSdkShape } from "@beep/phoenix";
@@ -198,6 +199,10 @@ const runtimeLayer = (duckDbPath: string) =>
     DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))
   );
 
+type PhoenixAggregateOutcome = (
+  request: HttpClientRequest.HttpClientRequest
+) => Effect.Effect<HttpClientResponse.HttpClientResponse, HttpClientError.HttpClientError>;
+
 const phoenixInventoryHttpLayer = Layer.succeed(
   HttpClient.HttpClient,
   HttpClient.make((request) =>
@@ -256,69 +261,97 @@ const phoenixRuntimeLayer = (duckDbPath: string) =>
 // Inventory answers; the per-project aggregate query does not. This is the shape a
 // large store actually presents -- identity is cheap, aggregates over the spans
 // table are not -- and the doctor must still report Phoenix as reachable with the
-// counts marked unmeasured rather than collapsing the whole section.
-const phoenixAggregatesUnavailableHttpLayer = Layer.succeed(
-  HttpClient.HttpClient,
-  HttpClient.make((request) =>
-    Effect.gen(function* () {
-      const url = HttpClientRequest.toUrl(request).pipe(
-        O.map((value) => value.toString()),
-        O.getOrElse(() => request.url)
-      );
+// counts marked unmeasured rather than collapsing the whole section. The aggregate
+// outcome is supplied per test so each can pick which way that query fails --
+// rejected, undecodable, or unreachable -- because the section's message has to
+// name the mode it actually hit rather than blaming all three on a timeout.
+const phoenixAggregatesUnavailableHttpLayer = (aggregateOutcome: PhoenixAggregateOutcome) =>
+  Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) =>
+      Effect.gen(function* () {
+        const url = HttpClientRequest.toUrl(request).pipe(
+          O.map((value) => value.toString()),
+          O.getOrElse(() => request.url)
+        );
 
-      if (request.method !== "POST" || url !== "https://phoenix.test/graphql") {
+        if (request.method !== "POST" || url !== "https://phoenix.test/graphql") {
+          return HttpClientResponse.fromWeb(
+            request,
+            Response.json({ ok: true }, { headers: { "x-phoenix-server-version": "9.9.9-test" } })
+          );
+        }
+
+        const body = yield* pipe(
+          request.body._tag === "Uint8Array"
+            ? Effect.succeed(new TextDecoder().decode(request.body.body))
+            : Effect.succeed(""),
+          Effect.orElseSucceed(() => "")
+        );
+
+        if (Str.includes("AgentEffectivenessPhoenixProjectStats")(body)) {
+          return yield* aggregateOutcome(request);
+        }
+
         return HttpClientResponse.fromWeb(
           request,
-          Response.json({ ok: true }, { headers: { "x-phoenix-server-version": "9.9.9-test" } })
-        );
-      }
-
-      const body = yield* pipe(
-        request.body._tag === "Uint8Array"
-          ? Effect.succeed(new TextDecoder().decode(request.body.body))
-          : Effect.succeed(""),
-        Effect.orElseSucceed(() => "")
-      );
-
-      if (Str.includes("AgentEffectivenessPhoenixProjectStats")(body)) {
-        return HttpClientResponse.fromWeb(
-          request,
-          Response.json({ errors: [{ message: "timeout" }] }, { status: 500 })
-        );
-      }
-
-      return HttpClientResponse.fromWeb(
-        request,
-        Response.json({
-          data: {
-            datasetCount: 0,
-            evaluatorCount: 0,
-            projectCount: 1,
-            projects: {
-              edges: [
-                {
-                  node: {
-                    name: "beep-jsdoc-worker-eval",
-                    sessionAnnotationNames: [],
-                    spanAnnotationNames: ["agent.loop.status"],
-                    traceAnnotationsNames: ["agent.outcome"],
+          Response.json({
+            data: {
+              datasetCount: 0,
+              evaluatorCount: 0,
+              projectCount: 1,
+              projects: {
+                edges: [
+                  {
+                    node: {
+                      name: "beep-jsdoc-worker-eval",
+                      sessionAnnotationNames: [],
+                      spanAnnotationNames: ["agent.loop.status"],
+                      traceAnnotationsNames: ["agent.outcome"],
+                    },
                   },
-                },
-              ],
+                ],
+              },
+              promptCount: 0,
+              serverStatus: { insufficientStorage: false },
             },
-            promptCount: 0,
-            serverStatus: { insufficientStorage: false },
-          },
-        })
-      );
-    })
-  )
-);
+          })
+        );
+      })
+    )
+  );
 
-const phoenixAggregatesUnavailableRuntimeLayer = (duckDbPath: string) =>
+// Phoenix rejects the aggregate query outright.
+const phoenixAggregateRejected: PhoenixAggregateOutcome = (request) =>
+  Effect.succeed(
+    HttpClientResponse.fromWeb(
+      request,
+      Response.json({ errors: [{ message: "query exceeded row budget" }] }, { status: 500 })
+    )
+  );
+
+// Phoenix answers 200 with a body the aggregate schema cannot decode: the node is
+// missing every count field the query asked for.
+const phoenixAggregateUndecodable: PhoenixAggregateOutcome = (request) =>
+  Effect.succeed(
+    HttpClientResponse.fromWeb(
+      request,
+      Response.json({ data: { projects: { edges: [{ node: { name: "beep-jsdoc-worker-eval" } }] } } })
+    )
+  );
+
+// The aggregate request never reaches Phoenix at all.
+const phoenixAggregateUnreachable: PhoenixAggregateOutcome = (request) =>
+  Effect.fail(
+    new HttpClientError.HttpClientError({
+      reason: new HttpClientError.TransportError({ description: "connection refused", request }),
+    })
+  );
+
+const phoenixAggregatesUnavailableRuntimeLayer = (duckDbPath: string, aggregateOutcome: PhoenixAggregateOutcome) =>
   Layer.mergeAll(
     NodeServices.layer,
-    phoenixAggregatesUnavailableHttpLayer,
+    phoenixAggregatesUnavailableHttpLayer(aggregateOutcome),
     DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))
   );
 
@@ -522,9 +555,84 @@ describe("@beep/repo-ai-metrics agent-effectiveness", () => {
           expect(report.phoenix.projects[0]?.recordCount).toBeNull();
           expect(report.phoenix.projects[0]?.traceCount).toBeNull();
           expect(Str.includes("unmeasured")(report.phoenix.message)).toBe(true);
+          // The message must name the mode it actually hit. Reporting a rejected
+          // query as a timeout sends an operator after store size instead of the
+          // server's own refusal.
+          expect(Str.includes("HTTP 500")(report.phoenix.message)).toBe(true);
+          expect(Str.includes("budget")(report.phoenix.message)).toBe(false);
         }).pipe(
           provideScopedLayer(
-            phoenixAggregatesUnavailableRuntimeLayer(path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"))
+            phoenixAggregatesUnavailableRuntimeLayer(
+              path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
+              phoenixAggregateRejected
+            )
+          )
+        );
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("distinguishes an undecodable aggregate response from a rejected one", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const path = yield* Path.Path;
+        yield* Effect.gen(function* () {
+          const dataRoot = path.join(tmpDir, "metrics");
+          const report = yield* makeAgentEffectivenessDoctorReport(
+            AgentEffectivenessDoctorInput.make({
+              dataRoot,
+              noPhoenix: false,
+              phoenixBaseUrl: "https://phoenix.test",
+              workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
+            })
+          );
+
+          expect(report.phoenix.projectCount).toBe(1);
+          expect(report.phoenix.projects[0]?.traceCount).toBeNull();
+          expect(Str.includes("could not be decoded")(report.phoenix.message)).toBe(true);
+          // A 200 carrying an unreadable body is not a rejection and not a timeout.
+          expect(Str.includes("HTTP")(report.phoenix.message)).toBe(false);
+          expect(Str.includes("budget")(report.phoenix.message)).toBe(false);
+        }).pipe(
+          provideScopedLayer(
+            phoenixAggregatesUnavailableRuntimeLayer(
+              path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
+              phoenixAggregateUndecodable
+            )
+          )
+        );
+      })
+    ).pipe(provideScopedLayer(NodeServices.layer))
+  );
+
+  it.effect("reports an aggregate query that never reached Phoenix as unreachable", () =>
+    withTempDirectory(
+      Effect.fnUntraced(function* (tmpDir) {
+        const path = yield* Path.Path;
+        yield* Effect.gen(function* () {
+          const dataRoot = path.join(tmpDir, "metrics");
+          const report = yield* makeAgentEffectivenessDoctorReport(
+            AgentEffectivenessDoctorInput.make({
+              dataRoot,
+              noPhoenix: false,
+              phoenixBaseUrl: "https://phoenix.test",
+              workerEvalReportPath: path.join(tmpDir, "missing-worker-report.json"),
+            })
+          );
+
+          // The inventory still answered, so the section stays readable rather
+          // than collapsing to `unavailable`.
+          expect(report.phoenix.projectCount).toBe(1);
+          expect(report.phoenix.projects[0]?.traceCount).toBeNull();
+          expect(Str.includes("could not be reached")(report.phoenix.message)).toBe(true);
+          expect(Str.includes("budget")(report.phoenix.message)).toBe(false);
+          expect(Str.includes("HTTP")(report.phoenix.message)).toBe(false);
+        }).pipe(
+          provideScopedLayer(
+            phoenixAggregatesUnavailableRuntimeLayer(
+              path.join(tmpDir, "metrics/derived/ai-metrics.duckdb"),
+              phoenixAggregateUnreachable
+            )
           )
         );
       })

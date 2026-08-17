@@ -24,6 +24,7 @@ import { A, O, P, Str } from "@beep/utils";
 import { DateTime, Duration, Effect, FileSystem, flow, HashMap, Match, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -119,12 +120,14 @@ query AgentEffectivenessPhoenixProjectStats {
 `;
 
 /**
- * Ceiling on the per-project aggregate query.
+ * Ceiling on the per-project aggregate query, in seconds.
  *
  * Deliberately short: these numbers are advisory, and the doctor is more useful
  * fast-and-partial than slow-and-complete.
  */
-const phoenixProjectStatsTimeout = Duration.seconds(10);
+const phoenixProjectStatsTimeoutSeconds = 10;
+
+const phoenixProjectStatsTimeout = Duration.seconds(phoenixProjectStatsTimeoutSeconds);
 
 /**
  * Status emitted by agent-effectiveness reports.
@@ -367,6 +370,12 @@ export class AgentEffectivenessAnnotationPlanInput extends S.Class<AgentEffectiv
  * separate because Phoenix scopes annotations to traces, spans, and sessions
  * independently, and the doctor uses them to tell whether the repo's own
  * annotation names are already present on a project.
+ *
+ * **Gotchas**
+ *
+ * `hasTraces`, `recordCount`, and `traceCount` come from a separately-timed
+ * aggregate query and are null when that query did not return — unmeasured, not
+ * zero. The section's `message` names why it did not return.
  *
  * **Example** (Reading one project out of the inventory)
  *
@@ -2345,21 +2354,44 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
 
   // Aggregates run as their own bounded request. A store too large to aggregate
   // must still yield a reachable, readable inventory, so every failure mode here
-  // -- encode, transport, non-2xx, decode, timeout -- collapses to None and the
-  // section reports counts as unmeasured rather than reporting Phoenix as down.
+  // -- encode, transport, non-2xx, decode, timeout -- degrades the counts to
+  // unmeasured rather than reporting Phoenix as down. Each mode carries its own
+  // operator-facing reason: a single "timed out" label would send an operator
+  // hunting store size when Phoenix actually rejected the query or was
+  // unreachable.
   const stats = yield* HttpClientRequest.bodyJson(HttpClientRequest.post(`${input.phoenixBaseUrl}/graphql`), {
     query: phoenixProjectStatsQuery,
   }).pipe(
-    Effect.flatMap((statsRequest) => client.execute(pipe(statsRequest, HttpClientRequest.accept("application/json")))),
-    Effect.filterOrFail((statsResponse) => statsResponse.status >= 200 && statsResponse.status < 300),
-    Effect.flatMap(HttpClientResponse.schemaBodyJson(S.Unknown)),
-    Effect.flatMap(decodePhoenixGraphqlProjectStatsResponse),
+    Effect.mapError(() => "the aggregate query could not be encoded"),
+    Effect.flatMap((statsRequest) =>
+      client
+        .execute(pipe(statsRequest, HttpClientRequest.accept("application/json")))
+        .pipe(Effect.mapError(() => "Phoenix could not be reached for the aggregate query"))
+    ),
+    Effect.flatMap((statsResponse) =>
+      statsResponse.status >= 200 && statsResponse.status < 300
+        ? Effect.succeed(statsResponse)
+        : Effect.fail(`Phoenix answered the aggregate query with HTTP ${statsResponse.status}`)
+    ),
+    Effect.flatMap((statsResponse) =>
+      HttpClientResponse.schemaBodyJson(S.Unknown)(statsResponse).pipe(
+        Effect.flatMap(decodePhoenixGraphqlProjectStatsResponse),
+        Effect.mapError(() => "the aggregate response could not be decoded")
+      )
+    ),
     Effect.timeoutOption(phoenixProjectStatsTimeout),
-    Effect.orElseSucceed(() => O.none<PhoenixGraphqlProjectStatsResponse>())
+    Effect.flatMap(
+      O.match({
+        onNone: () => Effect.fail(`the aggregate query exceeded its ${phoenixProjectStatsTimeoutSeconds}s budget`),
+        onSome: Effect.succeed<PhoenixGraphqlProjectStatsResponse>,
+      })
+    ),
+    Effect.result
   );
 
   const statsByProjectName = pipe(
     stats,
+    Result.getSuccess,
     O.map((resolved) =>
       pipe(
         resolved.data.projects.edges,
@@ -2399,7 +2431,7 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
       });
     })
   );
-  const statsMeasured = O.isSome(statsByProjectName);
+  const statsUnmeasuredReason = Result.getFailure(stats);
   const hasTraceBearingProject = pipe(
     projectsList,
     A.some((project) => project.hasTraces === true)
@@ -2409,11 +2441,16 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
     baseUrl: input.phoenixBaseUrl,
     datasetCount: data.datasetCount,
     evaluatorCount: data.evaluatorCount,
-    message: !statsMeasured
-      ? "Phoenix is reachable; per-project trace counts timed out and are reported as unmeasured."
-      : hasTraceBearingProject
-        ? "Phoenix is reachable and has trace-bearing projects."
-        : "Phoenix is reachable but no trace-bearing projects were reported.",
+    message: pipe(
+      statsUnmeasuredReason,
+      O.match({
+        onNone: () =>
+          hasTraceBearingProject
+            ? "Phoenix is reachable and has trace-bearing projects."
+            : "Phoenix is reachable but no trace-bearing projects were reported.",
+        onSome: (reason) => `Phoenix is reachable; per-project trace counts are unmeasured because ${reason}.`,
+      })
+    ),
     projectCount: data.projectCount,
     projects: projectsList,
     promptCount: data.promptCount,
