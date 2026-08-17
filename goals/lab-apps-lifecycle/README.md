@@ -9,8 +9,8 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 ## Mission
 
 Law-abiding experimental apps under `apps/labs/*` — minted by
-`bun run beep create-package` variants (nextjs, vite, service; tauri in a
-later phase) — plus a `beep delete-package` command that fully prunes a
+`bun run beep create-package` variants (nextjs, vite, service, tauri) — plus
+a `beep delete-package` command that fully prunes a
 package or app from every registration surface, both standing on a
 schema-first registration-geometry model with a `doctor` residue audit.
 

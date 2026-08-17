@@ -637,6 +637,57 @@ describe("create-package", { concurrent: false }, () => {
   );
 
   it(
+    "refuses to scaffold into a directory that already exists",
+    () =>
+      Effect.runPromise(
+        withBootstrappedRootConfig(IdentityOnlyRootConfig, ({ fs, path, rootDir }) =>
+          Effect.gen(function* () {
+            yield* bootstrapIdentityWorkspace(rootDir);
+            yield* runCreatePackageCommand([
+              "occupied-app",
+              "--type",
+              "app",
+              "--app-kind",
+              "vite",
+              "--description",
+              "First scaffold",
+            ]);
+
+            const packageDir = path.join(rootDir, "apps", "occupied-app");
+            const sentinel = path.join(packageDir, "src-tauri", "icons", "icon.png");
+            yield* fs.makeDirectory(path.dirname(sentinel), { recursive: true });
+            yield* fs.writeFileString(sentinel, "author-replaced");
+
+            const result = yield* runCreatePackageCommand([
+              "occupied-app",
+              "--type",
+              "app",
+              "--app-kind",
+              "tauri",
+              "--description",
+              "Second scaffold over the first",
+            ]).pipe(
+              Effect.match({
+                onFailure: toFailureMessage,
+                onSuccess: () => "success",
+              })
+            );
+
+            expect(result).toContain("Directory already exists");
+            // This refusal is what keeps the plan's `copy-asset` action safe to
+            // write unconditionally: a generated asset can never land on top of
+            // one an author edited, because a second scaffold never runs. If this
+            // guard is ever relaxed, the overwrite in
+            // `FileGenerationPlanService` becomes reachable and needs its own
+            // skip-if-present branch.
+            expect(yield* fs.readFileString(sentinel)).toBe("author-replaced");
+          })
+        )
+      ),
+    CreatePackageTestTimeoutMs
+  );
+
+  it(
     "creates Next.js apps without package API boilerplate",
     () =>
       Effect.runPromise(
@@ -734,6 +785,21 @@ describe("create-package", { concurrent: false }, () => {
             expect(yield* fs.exists(path.join(packageDir, "docgen.json"))).toBe(false);
             expect(yield* fs.exists(path.join(packageDir, "src", "App.tsx"))).toBe(true);
             expect(yield* fs.exists(path.join(packageDir, "src-tauri", "tauri.conf.json"))).toBe(true);
+
+            // `tauri::generate_context!()` opens this icon while the macro expands, so
+            // a Tauri crate without it does not compile. Assert the PNG signature
+            // rather than mere existence: the asset path exists precisely because a
+            // Handlebars string round-trip would corrupt these high bytes.
+            const iconBytes = yield* fs.readFile(path.join(packageDir, "src-tauri", "icons", "icon.png"));
+            expect(A.take(A.fromIterable(iconBytes), 8)).toStrictEqual([
+              0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+            ]);
+            expect(iconBytes.length).toBeGreaterThan(1024);
+
+            const tauriConf = yield* fs.readFileString(path.join(packageDir, "src-tauri", "tauri.conf.json"));
+            expect(tauriConf).toContain(`"icon": ["icons/icon.png"]`);
+            // The webview must load the same portless route the `dev` script serves.
+            expect(tauriConf).toContain(`"devUrl": "http://desktop-shell.beep.localhost:1355"`);
 
             const appTsconfig = decodeTsconfigPaths(yield* readJsoncFile(path.join(packageDir, "tsconfig.json")));
             expect(appTsconfig.compilerOptions.paths).toMatchObject({

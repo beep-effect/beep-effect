@@ -5,7 +5,8 @@
 Status: `active` — P0 complete 2026-08-14 (PR #722); P1 complete 2026-08-16
 (PR #723, delete-package + registration geometry merged as `e97f73be44`);
 P2 complete 2026-08-17 (substrate PR #732 merged as `afe4cdfaa7`, plus the
-lab-minting PR that scaffolded `apps/labs/trustgraph-workbench`); P3 next.
+lab-minting PR that scaffolded `apps/labs/trustgraph-workbench`); P3 complete
+2026-08-17 (tauri lab AppKind, spike recorded below); P4 next.
 
 ## Phases
 
@@ -14,7 +15,7 @@ lab-minting PR that scaffolded `apps/labs/trustgraph-workbench`); P3 next.
 | P0 Census ratification and geometry schema design | complete | Re-verify the registration-surface census (`research/02` §19, `research/05` §7) against the live tree; design the `RegistrationSurface` geometry schema and the labs identity-segment mechanism (SPEC D6/D8); ratify the exact gate-scoping entry list from `research/04`. | Geometry schema reviewed (schema-first skill loaded); census deltas recorded in `research/`; gate entry list ratified in this plan. |
 | P1 Implement delete-package with doctor mode | complete | `beep delete-package` per `research/05` §9 (phases 0–10): dependents scan + refuse table, plan/dry-run/check, identity remove + orphan lint, workspace-literal remove, tsconfig-sync, lockfile, baseline regen, changeset policy. Doctor proves against a synthetic residue fixture built from the #680 classes (SPEC Track A); any matching live residue found at P1 time is swept in the same PR as a bonus. | Track A acceptance boxes in SPEC pass; PR mergeable via yeet. |
 | P2 Implement apps/labs substrate and v1 variants | complete | One-time `apps/labs/*` glob + gate scoping PR; lab manifest schema + `beep labs list`; vite + service AppKinds (nextjs reused); GLOSSARY "lab app"; promotion runbook; scaffold the trustgraph-ts workbench lab shell. | Track B acceptance boxes (except tauri + round-trip) pass; PRs mergeable via yeet. |
-| P3 Tauri lab variant (spike then land) | pending | Toolchain/CI spike (rust on runners, portless semantics for the webview, professional-desktop overlap), then land tauri as a lab AppKind on the existing templates. | Spike outcome recorded; tauri lab scaffolds and typechecks; PR mergeable. |
+| P3 Tauri lab variant (spike then land) | complete | Toolchain/CI spike (rust on runners, portless semantics for the webview, professional-desktop overlap), then land tauri as a lab AppKind on the existing templates. | Spike outcome recorded; tauri lab scaffolds and typechecks; PR mergeable. |
 | P4 Verify create/delete round-trip | pending | Run the First Vertical Slice: vite lab scaffold → serve → delete → doctor green, clean tree. | Round-trip evidence recorded in `history/`; doctor green. |
 | P5 Yeet: final PR to mergeable | pending | Publish remaining work through yeet and drive to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P6 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence updated; closeout reflection exists. |
@@ -120,6 +121,53 @@ glob for the `service` AppKind; `--parent-dir apps/labs` without `--lab`
 bypassing every lab construction rule; and lab dependency tables declaring
 workspace packages no emitted file imports, which would fail the required Knip
 context on the first lab.
+
+## P3 Outcome (2026-08-17)
+
+**Spike result: the CI half of D4's toolchain question is a non-issue.** The
+Labs lane (`CiLane.ts:923`) runs one bundled `turbo run check lint test` over
+the labs glob, and no lab script invokes cargo. The repo's only Rust toolchain
+step (`check.yml:358`) is path-gated to `apps/professional-desktop/**` plus the
+shared-toolchain files, so it never fires for `apps/labs/**`. A full local lane
+replay with two labs present: **22 tasks, 22 successful, 19.9s, zero cargo
+invocations**. A tauri lab therefore adds no Rust time to any lane, required or
+not — the `dev:tauri` script is a developer-local affordance.
+
+Tauri already existed as a non-lab AppKind with all fourteen templates, so P3
+reduced to lifting one refusal guard — except that executing the gates per
+variant (the P2 lesson) found the templates emit a crate that **does not
+compile**:
+
+| probe | gate | before | after |
+| --- | --- | --- | --- |
+| lab | check / lint / test | 0 / 0 / 0 | 0 / 0 / 0 |
+| lab | `cargo check` | **101** | 0 (22s) |
+| non-lab | check / lint / test | 0 / 0 / 0 | 0 / 0 / 0 |
+| non-lab | `cargo check` | **101** | 0 (22s) |
+
+`tauri::generate_context!()` opens `src-tauri/icons/icon.png` while the macro
+expands. The template emitted `"icon": []` and no icons directory, so every
+generated Tauri crate — lab and non-lab alike, since the templates are shared —
+panicked at build time. Measured, not argued: as generated → 101; with
+`bundle.active: false` → still 101; with an icon present → 0. The defect
+predates this packet and survived because the three gates that run are the
+three gates that cannot compile Rust.
+
+Two template defects fixed, and one mechanism added:
+
+- **The icon is now a generated file.** Being binary, it cannot pass through
+  the Handlebars string renderer, so `create-package` gained a verbatim
+  asset-copy path (`StaticAssetSpec` → `PlannedAsset` → the `copy-asset`
+  generation action). The tests assert the emitted PNG's signature bytes, not
+  merely its existence — a string round-trip would corrupt exactly those bytes.
+- **`devUrl`/`devCsp` now use `{{portlessLabel}}`.** They hardcoded
+  `<name>.beep.localhost:1355`, so a lab's webview pointed at a host its own
+  `dev` script never serves (`<name>.labs.beep`). Both variants verified.
+
+The create→delete round-trip was also exercised on the heaviest variant: delete
+reported "zero declared residue" and swept 1.1 GB of gitignored `src-tauri/target`
+plus `gen/` and `Cargo.lock`, leaving `standards/` untouched. That is a bonus
+data point, not P4 — the First Vertical Slice remains the specified vite loop.
 
 ## P6 Closeout Checklist
 
