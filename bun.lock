@@ -62,6 +62,27 @@
         "@types/node": "catalog:",
       },
     },
+    "apps/labs/trustgraph-workbench": {
+      "name": "@beep/trustgraph-workbench",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/ui": "workspace:^",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@testing-library/dom": "catalog:",
+        "@testing-library/react": "catalog:",
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "@vitejs/plugin-react": "catalog:",
+        "jsdom": "catalog:",
+        "typescript": "catalog:",
+        "vite": "catalog:",
+      },
+    },
     "apps/oip-web": {
       "name": "@beep/oip-web",
       "version": "0.1.4",
@@ -3308,6 +3329,8 @@
     "@beep/test-utils": ["@beep/test-utils@workspace:packages/tooling/test-kit/test-utils"],
 
     "@beep/tika": ["@beep/tika@workspace:packages/drivers/tika"],
+
+    "@beep/trustgraph-workbench": ["@beep/trustgraph-workbench@workspace:apps/labs/trustgraph-workbench"],
 
     "@beep/tsgo-shim": ["@beep/tsgo-shim@workspace:tools/tsgo-shim"],
 
