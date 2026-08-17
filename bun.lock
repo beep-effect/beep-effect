@@ -303,10 +303,13 @@
       "dependencies": {
         "@beep/agents-domain": "workspace:^",
         "@beep/agents-use-cases": "workspace:^",
+        "@beep/identity": "workspace:^",
         "@beep/md": "workspace:^",
         "@beep/observability": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@beep/workspace-use-cases": "workspace:^",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -1121,6 +1124,7 @@
         "@arizeai/phoenix-client": "catalog:",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -1387,6 +1391,7 @@
       "name": "@beep/epistemic-client",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-use-cases": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
@@ -1443,6 +1448,7 @@
         "@beep/epistemic-tables": "workspace:^",
         "@beep/epistemic-use-cases": "workspace:^",
         "@beep/file-processing": "workspace:^",
+        "@beep/identity": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
         "@beep/observability": "workspace:^",
         "@beep/postgres": "workspace:^",
@@ -2220,6 +2226,7 @@
         "@beep/oxigraph": "workspace:^",
         "@beep/rdf-canonize": "workspace:^",
         "@beep/shacl": "workspace:^",
+        "@beep/utils": "workspace:^",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -2265,6 +2272,7 @@
         "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/semantic-web": "workspace:^",
+        "@beep/utils": "workspace:^",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -2668,6 +2676,7 @@
         "@beep/schema": "workspace:^",
         "@beep/semantic-web": "workspace:^",
         "@beep/shacl": "workspace:^",
+        "@beep/test-utils": "workspace:^",
         "@beep/utils": "workspace:^",
         "@beep/wink": "workspace:^",
         "@effect/ai-anthropic": "catalog:",

@@ -16,9 +16,6 @@
     },
     {
       "path": "../../../tooling/test-kit/test-utils/tsconfig.json"
-    },
-    {
-      "path": "../../modeling/utils/tsconfig.json"
     }
   ]
 }

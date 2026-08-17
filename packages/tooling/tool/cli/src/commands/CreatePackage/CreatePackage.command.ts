@@ -1531,7 +1531,7 @@ const generatePackageJson: (
       babel: babelScript,
       "beep:audit":
         "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:test:integration && bun run beep:lint",
-      "beep:build": "tsc -b tsconfig.json && bun run babel",
+      "beep:build": "tsc -p tsconfig.json && bun run babel",
       "beep:check": checkScript,
       "beep:check:tests": "tsgo -p tsconfig.test.json --noEmit",
       ...storyCheckScripts,

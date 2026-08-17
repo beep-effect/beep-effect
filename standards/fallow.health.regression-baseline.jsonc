@@ -10,16 +10,6 @@
         "count": 1
       }
     },
-    "apps/professional-desktop/src/App.tsx": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
-    "apps/professional-desktop/src/chat/ui/Composer.tsx": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "apps/professional-desktop/src/chat/ui/Sidebar.tsx": {
       "complexity_moderate": {
         "count": 1
@@ -28,11 +18,6 @@
     "apps/professional-desktop/src/chat/ui/Thread.tsx": {
       "complexity_moderate": {
         "count": 1
-      }
-    },
-    "apps/professional-desktop/src/intake/DocumentIntakeTarget.tsx": {
-      "complexity_moderate": {
-        "count": 2
       }
     },
     "apps/professional-desktop/src/spikes/Graph3DSpike.tsx": {
@@ -140,11 +125,6 @@
         "count": 1
       }
     },
-    "packages/drivers/libpff/src/Libpff.pffexport.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts": {
       "crap_moderate": {
         "count": 1
@@ -205,6 +185,14 @@
         "count": 1
       }
     },
+    "packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts": {
+      "complexity_critical": {
+        "count": 1
+      },
+      "crap_critical": {
+        "count": 1
+      }
+    },
     "packages/foundation/capability/langextract/src/Alignment/index.ts": {
       "complexity_moderate": {
         "count": 2
@@ -215,22 +203,6 @@
     },
     "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts": {
       "complexity_moderate": {
-        "count": 1
-      }
-    },
-    "packages/foundation/capability/semantic-web/src/adapters/jsonld-document.ts": {
-      "complexity_moderate": {
-        "count": 1
-      },
-      "crap_moderate": {
-        "count": 1
-      }
-    },
-    "packages/foundation/capability/semantic-web/src/adapters/shacl-engine.ts": {
-      "complexity_critical": {
-        "count": 1
-      },
-      "crap_critical": {
         "count": 1
       }
     },
@@ -247,7 +219,7 @@
     },
     "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts": {
       "crap_moderate": {
-        "count": 1
+        "count": 2
       }
     },
     "packages/foundation/modeling/rdf/src/Iri.ts": {
@@ -367,11 +339,6 @@
         "count": 2
       }
     },
-    "packages/foundation/ui-system/editor/src/chat/typeahead.tsx": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/foundation/ui-system/ui/src/components/calendar-event-card.tsx": {
       "complexity_critical": {
         "count": 1
@@ -406,11 +373,6 @@
       "crap_high": {
         "count": 2
       },
-      "crap_moderate": {
-        "count": 2
-      }
-    },
-    "packages/foundation/ui-system/ui/src/components/field.tsx": {
       "crap_moderate": {
         "count": 2
       }
@@ -687,11 +649,6 @@
       }
     },
     "packages/tooling/library/repo-utils/src/Workspaces.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
-    "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts": {
       "complexity_moderate": {
         "count": 1
       }
@@ -995,13 +952,13 @@
     },
     "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts": {
       "complexity_moderate": {
-        "count": 7
+        "count": 6
       },
       "crap_moderate": {
         "count": 4
       }
     },
-    "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts": {
+    "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateTitles.ts": {
       "complexity_high": {
         "count": 1
       },
@@ -1085,11 +1042,6 @@
         "count": 1
       }
     },
-    "packages/tooling/tool/cli/src/commands/Worktree/Worktree.command.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/tooling/tool/cli/src/commands/Yeet/internal/Guards.ts": {
       "complexity_high": {
         "count": 1
@@ -1126,11 +1078,6 @@
         "count": 1
       }
     },
-    "packages/tooling/tool/cli/src/internal/tsmorph/TypePredicates.ts": {
-      "complexity_moderate": {
-        "count": 1
-      }
-    },
     "packages/tooling/tool/cli/test/docgen.test.ts": {
       "complexity_critical": {
         "count": 1
@@ -1146,27 +1093,26 @@
       "complexity_moderate": {
         "count": 1
       }
-    },
-    "vitest.shared.ts": {
-      "crap_high": {
-        "count": 1
-      }
     }
   },
   "runtime_coverage_findings": [],
   "target_keys": [
-    "packages/tooling/tool/cli/src/commands/Yeet/internal/Guards.ts:complexity",
-    "packages/foundation/capability/semantic-web/src/adapters/shacl-engine.ts:complexity",
     "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstScan.ts:complexity",
-    "packages/tooling/tool/cli/src/commands/Docgen/Docgen.render.ts:complexity",
+    "packages/ecosystem/effect-drizzle/src/pg/model.ts:complexity",
     "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts:complexity",
-    "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts:complexity",
+    "packages/tooling/tool/cli/src/commands/Yeet/internal/Guards.ts:complexity",
+    "packages/tooling/tool/cli/src/commands/Docgen/Docgen.render.ts:complexity",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts:complexity",
     "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:complexity",
+    "packages/ontology/use-cases/src/aggregates/Session/Session.sparql.ts:complexity",
     "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts:complexity",
     "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts:complexity",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateApply.ts:complexity",
+    "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocMigrateRewrite.ts:complexity",
+    "packages/epistemic/server/src/ShaclValidation/BoundedShaclValidator.layer.ts:complexity",
     "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:complexity",
-    "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts:complexity",
     "packages/foundation/ui-system/ui/src/themes/components/button.ts:complexity",
+    "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts:complexity",
     "packages/foundation/ui-system/ui/src/components/live-waveform.tsx:complexity",
     "packages/foundation/ui-system/ui/src/components/orb.tsx:complexity"
   ]

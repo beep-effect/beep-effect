@@ -544,11 +544,13 @@ export class CiFleetController extends pulumi.ComponentResource {
           },
         },
         instance_allocation_strategy: "price-capacity-optimized",
-        // Bring-up posture: cutover night saw three correlated spot-reclaim
-        // events kill six jobs in two hours (one swept three VMs in the same
-        // second), so waves could not complete. Return to "spot" with a
-        // one-line revert once steady-state wave stability is proven.
-        instance_target_capacity_type: "on-demand",
+        // P1 spot revert (2026-08-16): the measured on-demand week was calm —
+        // 20/528 re-runs since 2026-08-11, all attributed to lane-wedge
+        // reruns, one glob-timeout flake, and supersede cancels; zero
+        // capacity-class. Tripwire stays armed: >2 interruption re-runs/week
+        // sends the longest lanes back to on-demand
+        // (goals/ci-fleet-residue/research/p1-spot-revert-baseline.md).
+        instance_target_capacity_type: "spot",
         instance_termination_watcher: {
           enable: true,
           enable_runner_deregistration: true,

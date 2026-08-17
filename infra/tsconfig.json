@@ -29,9 +29,6 @@
     },
     {
       "path": "../packages/tooling/test-kit/test-utils/tsconfig.json"
-    },
-    {
-      "path": "../packages/foundation/primitive/types/tsconfig.json"
     }
   ]
 }

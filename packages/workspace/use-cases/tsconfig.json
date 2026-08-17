@@ -25,9 +25,6 @@
     },
     {
       "path": "../domain/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/modeling/utils/tsconfig.json"
     }
   ]
 }

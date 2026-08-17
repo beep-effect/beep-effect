@@ -31,12 +31,6 @@
     },
     {
       "path": "../../tooling/test-kit/test-utils/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/modeling/provenance/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/modeling/utils/tsconfig.json"
     }
   ]
 }

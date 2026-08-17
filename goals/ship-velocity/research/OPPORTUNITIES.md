@@ -64,3 +64,13 @@ session/machine ids.
   `bunx --version` proof in the bake script and a self-heal in the fast path for
   already-activated images. Pattern for A5/bake-style gates: verify the consumer's exact argv
   surface, not the artifact's existence.
+- The TS2306 torn-read race recurred on PR #728 — the very PR deleting the stale tsconfig
+  references — between @beep/observability and @beep/schema, a pair whose reference IS inside
+  the declared dep closure (audit clean). Ordering-by-declared-deps is therefore proven
+  INSUFFICIENT for this class; the writer must be something ordering cannot fence (nested
+  tsc -b upstream rebuild, in-place `babel dist --out-dir dist` rewrite, or a concurrent cache
+  restore into the read package's directory). Escalated to a mechanism pin-down; the permanent
+  fix must remove cross-package writes, not just add ordering edges.
+- Third misattributed-composite-hint receipt: PR #728's publish verdict said "inspect the Nix
+  error" while the actual hosted red was Test Integration (TS2306 race). Same class as the two
+  OSV receipts above — capsule hints must derive from the failing sublane.

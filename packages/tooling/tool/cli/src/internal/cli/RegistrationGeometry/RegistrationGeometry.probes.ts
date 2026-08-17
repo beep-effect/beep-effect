@@ -168,8 +168,13 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
     "pending-changeset": Effect.fn(function* (pending) {
       const changesetRoot = path.join(repoRoot, ".changeset");
       const files = yield* collectFiles(changesetRoot, [".md"]);
+      // The dedicated `{}` deletion note is the intentional record the delete
+      // itself emits; only OTHER pending changesets naming the package are
+      // residue.
+      const deletionNoteFile = `delete-${Str.replace("@beep/", Str.empty)(pending.packageName)}.md`;
       let evidence = A.empty<string>();
       for (const file of files) {
+        if (Str.equivalence(path.basename(file), deletionNoteFile)) continue;
         const content = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => Str.empty));
         if (Str.includes(pending.packageName)(content))
           evidence = A.append(evidence, normalizePath(path.relative(repoRoot, file)));

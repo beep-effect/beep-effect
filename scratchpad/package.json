@@ -37,6 +37,7 @@
     "@beep/schema": "workspace:^",
     "@beep/semantic-web": "workspace:^",
     "@beep/shacl": "workspace:^",
+    "@beep/test-utils": "workspace:^",
     "@beep/utils": "workspace:^",
     "@beep/wink": "workspace:^",
     "@effect/ai-anthropic": "catalog:",

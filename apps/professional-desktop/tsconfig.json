@@ -257,9 +257,6 @@
     },
     {
       "path": "../../packages/workspace/use-cases/tsconfig.json"
-    },
-    {
-      "path": "../../packages/drivers/oxigraph/tsconfig.json"
     }
   ]
 }
