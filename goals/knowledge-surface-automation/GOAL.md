@@ -21,7 +21,7 @@ current phase.
 
 - **A** clone-agnostic references: mechanical path-rewrite pass via repo-shipped
   ast-grep/comby rules, then `beep knowledge refs|relink|rename` with typed URI buses
-  (`repo://`, `host://`, `upstream://`), git-tree-resolved validation, hermetic lane.
+  (`repo://`, `host://`, `upstream://`), git-tree-resolved validation, hermetic byte gates.
 - **B** vendored-skill warehouse: pristine snapshot + ordered patch series +
   reconstructed installs (`beep skills provenance|materialize`), one effective tree
   feeding both skill dirs, Renovate-driven bump PRs, hunk-decision ledger.

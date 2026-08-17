@@ -45,12 +45,14 @@ ids in `ops/manifest.json` remain milestone labels, not sequencing gates.
 Grill the six open items in SPEC.md with Benjamin; outcomes land as their own docs-only
 PR before any implementation PR (per feedback-grill-decisions-pr-separation).
 
-## P3 — Workstream A rewrite + hermetic lane; C Stage-1 gate
+## P3 — Workstream A rewrite + hermetic byte gates; C Stage-1 gate
 
 - ast-grep/comby rewrite rules shipped into the repo; mechanical path rewrite pass;
   scan becomes the standing diff-scoped gate.
-- Hermetic clean-clone lane (emptied `$HOME`); ASLR torture variant as an optional
-  scheduled lane.
+- Hermetic byte canonicality delivered as call-site config pinning plus hostile-profile
+  differential tests with negative-control witnesses in the existing test lane — no
+  hosted clean-clone lane, no ASLR variant (ratified 2026-08-17,
+  `research/p3-hermetic-lane-decisions.md`).
 - C Stage-1 semantic-delta gate wired into the existing quality job.
 
 ## P4 — Workstreams B, D, E behind gates; C Stage 2
