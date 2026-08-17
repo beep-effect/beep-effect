@@ -688,6 +688,69 @@ export const stashUnstagedWorktreeForTesting = stashUnstagedWorktree;
 export const restoreStashedWorktreeForTesting = restoreStashedWorktree;
 
 /**
+ * Hand parked residue back when a step between the stash and the commit fails.
+ *
+ * **Details**
+ *
+ * `--staged-only` parks unstaged residue in a marked stash before the commit,
+ * and publish's post-commit finalizer only covers phases that run *after* the
+ * commit lands. Every step in the window between — derived-file guards, the
+ * commit phase itself — therefore owns its own restoration, or a refusal leaves
+ * the operator's work parked in a stash they were never told about. A `none`
+ * stash means the publish is not staged-only, so the effect passes through
+ * untouched.
+ *
+ * **Gotchas**
+ *
+ * Restoration also runs on interruption, and never replaces the original
+ * failure: {@link restoreStashedWorktree} reports its own trouble on stderr
+ * instead of failing, so the cause the operator sees is the one that stopped
+ * the publish.
+ *
+ * **Example** (Restore residue when the guarded step fails)
+ *
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { RepoRunContext, restorePublishStashOnFailure, YeetStashState } from "@beep/repo-cli/test/Yeet"
+ *
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/closeout",
+ *   cwd: ".",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: ".",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * const stash = YeetStashState.make({
+ *   createdAt: "2026-07-08T00:00:00.000Z",
+ *   marker: "yeet-staged-only/feature/2026-07-08T00:00:00.000Z",
+ *   stashSha: "abc123"
+ * })
+ *
+ * const guarded = Effect.succeed("committed").pipe(
+ *   restorePublishStashOnFailure({ context, stash: O.some(stash) })
+ * )
+ * ```
+ *
+ * @param scope - Repo context whose worktree receives the restored stash, plus
+ * the stash identity recorded when residue was parked (`none` for a publish
+ * that parked nothing).
+ * @returns A combinator that restores residue on failure or interruption.
+ * @category resource-management
+ * @since 0.0.0
+ */
+export const restorePublishStashOnFailure =
+  (scope: { readonly context: RepoRunContext; readonly stash: O.Option<YeetStashState> }) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | ChildProcessSpawner.ChildProcessSpawner> =>
+    O.match(scope.stash, {
+      onNone: () => effect,
+      onSome: (state) => Effect.onError(effect, () => restoreStashedWorktree(scope.context, state)),
+    });
+
+/**
  * Measure how far the publish branch is behind the refreshed base ref.
  *
  * **Example** (Assess base freshness for a context)

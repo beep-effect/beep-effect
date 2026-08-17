@@ -68,6 +68,7 @@ import {
   YeetRunMode,
   YeetRunPlanModeOptions,
 } from "./Planner.ts";
+import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
 import {
   acquireFullProofLock,
   assertReusableVerifiedState,
@@ -82,6 +83,7 @@ import {
   postCommitProofChangedAfterEarlyPushMessage,
   prePushLocalShasFromStdin,
   prePushShaMismatches,
+  restorePublishStashOnFailure,
   restoreStashedWorktree,
   stageReviewedPublishIntent,
   stashUnstagedWorktree,
@@ -438,10 +440,22 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
         yield* Ref.update(extras, (state) => ({ ...state, stash }));
       }
 
-      const commitResults = yield* runPhase(plan.context, commitSteps, recorder);
-      if (A.some(commitResults, (result) => result.exitCode !== 0)) {
-        return yield* failWithIssueArtifacts(plan.context, commitSteps, commitResults, "yeet commit phase failed.");
-      }
+      // Everything from here to the commit runs inside the stash window, whose
+      // restoration the post-commit finalizer below does not cover: a derived-file
+      // refusal or a failing commit hook must hand the parked residue back rather
+      // than strand it in a stash the operator was never told about.
+      yield* Effect.gen(function* () {
+        // `goals/INDEX.md` is a derived whole-file projection, so it is rendered
+        // here rather than trusted from the index: the worktree now equals the
+        // staged tree (residue is parked), which makes this the only point where
+        // the projection provably describes the commit being made.
+        yield* enforcePortfolioIndexPublishIntent(plan.context, publishIntent);
+
+        const commitResults = yield* runPhase(plan.context, commitSteps, recorder);
+        if (A.some(commitResults, (result) => result.exitCode !== 0)) {
+          return yield* failWithIssueArtifacts(plan.context, commitSteps, commitResults, "yeet commit phase failed.");
+        }
+      }).pipe(restorePublishStashOnFailure({ context: plan.context, stash }));
     }
   }
 
