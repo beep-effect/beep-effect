@@ -150,7 +150,11 @@ const CourtInferenceConfidence = S.Finite.annotateKey({
  * })
  *
  * console.log(inference.level) // "appellate"
- * console.log(O.getOrNull(inference.state)) // "NY"
+ * console.log(CourtInference.match(inference, {
+ *   federal: () => null,
+ *   state: ({ state }) => O.getOrNull(state),
+ *   unknown: () => null,
+ * })) // "NY"
  * ```
  *
  * @category models
