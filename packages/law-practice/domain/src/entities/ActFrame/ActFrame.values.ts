@@ -320,6 +320,12 @@ export const ActFrameSlot = ActFrameSlotKind.mapMembers(
   })
 );
 
+/**
+ * Decoded representation of one named place in an act frame.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type ActFrameSlot = typeof ActFrameSlot.Type;
 
 /**
