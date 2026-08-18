@@ -57,7 +57,12 @@ the C5 metric correction and the new C7 item below.
   15s p95), and three reds on one head produce one session record with three queued capsules.
   Live session attach/spawn is deliberately not part of A1: attaching consumes the inbox via
   A2's hook adapters, and spawn-when-owner-busy needs A4's leases.
-- A2 hook-mutex + ACK inbox (Claude deny / Codex inject / Grok tail adapters).
+- A2 hook-mutex + ACK inbox (Claude deny / Codex inject / Grok tail adapters). In progress —
+  PR-1 of 3 landed the shared contract: `yeet inbox list|ack|append` porcelain, `yeet-ack/v1`
+  receipts (fix SHA / reasoned wontfix / thread URL; receipt existence is the ack even when
+  unreadable), and the joined inbox view with liveness against the `yeet-dispatch/v1` wave
+  record. PR-2 wires the Claude adapters (PreToolUse deny + incident mode, session splice;
+  settings.json edit is operator-gated); PR-3 the Codex inject + Grok tail.
 - A3 can't-leave-the-scene (Stop-hook veto + yeet poison-pill + waives).
 - A5 package-scoped gates (skill instructions + script gap fill + create-package templates).
 - A6 merge-ready v2.

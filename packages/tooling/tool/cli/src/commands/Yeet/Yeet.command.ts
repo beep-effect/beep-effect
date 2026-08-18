@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import {
@@ -15,6 +16,8 @@ import {
   runYeetPlanContractCheck,
 } from "./internal/FallowFeedback.ts";
 import { runYeet } from "./internal/Handler.ts";
+import { YeetInboxSeverity } from "./internal/Inbox.ts";
+import { runYeetInboxAck, runYeetInboxAppend, runYeetInboxList } from "./internal/InboxPorcelain.ts";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.ts";
 import {
   runYeetMerge,
@@ -219,6 +222,51 @@ const expectArgsFlag = Flag.string("expect-args").pipe(
   Flag.withDescription("Required plan step args rendered as a space-separated string"),
   Flag.withDefault("")
 );
+
+const inboxUnackedFlag = Flag.boolean("unacked").pipe(Flag.withDescription("Show only rows without an ack receipt"));
+
+const inboxSeverityFlagChoices: ReadonlyArray<readonly ["all" | YeetInboxSeverity, "all" | YeetInboxSeverity]> = [
+  ["all", "all"],
+  ...A.map(YeetInboxSeverity.Options, (tier) => [tier, tier] as const),
+];
+
+const inboxSeverityFlag = Flag.choiceWithValue("severity", inboxSeverityFlagChoices).pipe(
+  Flag.withDescription("Show only rows of this severity tier"),
+  Flag.withDefault("all" as const)
+);
+
+const inboxFixShaFlag = Flag.string("fix-sha").pipe(
+  Flag.withDescription("Acknowledge the row as fixed by this commit"),
+  Flag.withDefault("")
+);
+
+const inboxWontfixFlag = Flag.boolean("wontfix").pipe(
+  Flag.withDescription("Acknowledge the row as deliberately not fixed; requires --reason")
+);
+
+const inboxReasonFlag = Flag.string("reason").pipe(
+  Flag.withDescription("Why the row is not being fixed; only applies with --wontfix"),
+  Flag.withDefault("")
+);
+
+const inboxThreadUrlFlag = Flag.string("thread-url").pipe(
+  Flag.withDescription("Acknowledge the row as continued in this review thread"),
+  Flag.withDefault("")
+);
+
+const inboxRowStdinFlag = Flag.boolean("from-stdin").pipe(
+  Flag.withDescription("Read one inbox row JSON document from stdin")
+);
+
+const inboxAckIdArgument = Argument.string("id").pipe(
+  Argument.withDescription("Inbox row id to acknowledge, as printed by yeet inbox list")
+);
+
+const inboxListFlags = {
+  json: jsonFlag,
+  severity: inboxSeverityFlag,
+  unacked: inboxUnackedFlag,
+} as const;
 
 const sharedFlags = {
   base: baseFlag,
@@ -434,6 +482,31 @@ const yeetFallowFixtureCheckCommand = Command.make(
   ({ assert, emit, fixturePath }) => runYeetFallowFixtureCheck({ assertions: assert, emit, fixturePath })
 ).pipe(Command.withDescription("Verify Fallow envelope fixtures map into Yeet quality issues"));
 
+const yeetInboxListCommand = Command.make("list", inboxListFlags, runYeetInboxList).pipe(
+  Command.withDescription("List the checkout's failure inbox rows joined with ack state and wave liveness")
+);
+
+const yeetInboxAckCommand = Command.make(
+  "ack",
+  {
+    fixSha: inboxFixShaFlag,
+    id: inboxAckIdArgument,
+    reason: inboxReasonFlag,
+    threadUrl: inboxThreadUrlFlag,
+    wontfix: inboxWontfixFlag,
+  },
+  runYeetInboxAck
+).pipe(Command.withDescription("Acknowledge one inbox row with a fix SHA, a reasoned wontfix, or a thread URL"));
+
+const yeetInboxAppendCommand = Command.make("append", { fromStdin: inboxRowStdinFlag }, runYeetInboxAppend).pipe(
+  Command.withDescription("Append one typed failure row from stdin to the checkout's inbox")
+);
+
+const yeetInboxCommand = Command.make("inbox", inboxListFlags, runYeetInboxList).pipe(
+  Command.withDescription("Read and acknowledge the checkout's typed failure inbox"),
+  Command.withSubcommands([yeetInboxListCommand, yeetInboxAckCommand, yeetInboxAppendCommand])
+);
+
 const yeetPlanContractCheckCommand = Command.make(
   "plan-contract-check",
   {
@@ -476,6 +549,7 @@ export const yeetCommand = Command.make("yeet", publishFlags, (options) => runYe
     yeetSweepCommand,
     yeetMergeCommand,
     yeetReplyCommand,
+    yeetInboxCommand,
     yeetPrePushHookCommand,
     yeetFallowFeedbackCommand,
     yeetFallowFixtureCheckCommand,
