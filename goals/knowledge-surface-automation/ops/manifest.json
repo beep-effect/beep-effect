@@ -59,7 +59,8 @@
     "research/p3-hermetic-lane-design.md",
     "research/p3-hermetic-lane-decisions.md",
     "research/p3-report-roadmap-refs-fold-in.md",
-    "research/p1-report-bootstrap-adopt-plan.md"
+    "research/p1-report-bootstrap-adopt-plan.md",
+    "research/p4-goals-projection-design.md"
   ],
   "agentLaunchers": [
     {
