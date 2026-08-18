@@ -997,6 +997,57 @@ export class PacketForkVerdict extends S.Class<PacketForkVerdict>($I`PacketForkV
 ) {}
 
 /**
+ * Deterministic, read-only repair plan for one fork of a stream.
+ *
+ * **Details**
+ *
+ * The plan never writes: it targets the innermost fork on the first fork's
+ * surviving path (rebasing onto a forked tip would enlarge that fork), names
+ * the surviving child (the first in seq-then-digest order —
+ * content-deterministic, no clock trust), the tip the surviving chain
+ * reaches, replacement drafts that re-sequence every losing-branch body onto
+ * that tip, and the losing event files an applier would remove. Bodies,
+ * timestamps, and actors carry over verbatim — history is rebased, never
+ * rewritten — so a rebased `status-set` keeps its original-branch `previous`
+ * as recorded provenance rather than re-deriving it against the new
+ * predecessor. Plans are computed one fork at a time; applying one may
+ * reveal the next.
+ *
+ * **Example** (Construct an empty-survivor plan shape)
+ *
+ * ```ts
+ * import { PacketForkRepairPlan, PacketForkVerdict } from "@beep/repo-cli/test/Goals"
+ *
+ * const plan = PacketForkRepairPlan.make({
+ *   packet: "demo",
+ *   root: "goals",
+ *   fork: PacketForkVerdict.make({ parentSeq: 1, children: ["a".repeat(64), "b".repeat(64)] }),
+ *   survivor: "a".repeat(64),
+ *   rebaseDrafts: [],
+ *   filesToRemove: [],
+ * })
+ * console.log(plan.survivor === "a".repeat(64)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PacketForkRepairPlan extends S.Class<PacketForkRepairPlan>($I`PacketForkRepairPlan`)(
+  {
+    packet: PacketSlug,
+    root: PacketRoot,
+    fork: PacketForkVerdict,
+    survivor: PacketEventId,
+    survivorTip: S.optionalKey(PacketTip),
+    rebaseDrafts: S.Array(PacketEvent),
+    filesToRemove: S.Array(S.String),
+  },
+  $I.annote("PacketForkRepairPlan", {
+    description: "Read-only first-fork repair plan: surviving child, rebased drafts, files to remove.",
+  })
+) {}
+
+/**
  * Chain-integrity issue kinds a stream read or fold can report.
  *
  * **Example** (Check issue-kind membership)

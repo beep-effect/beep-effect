@@ -16,6 +16,7 @@
 
 import { A, O, pipe, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, Order, Path } from "effect";
+import { constUndefined } from "effect/Function";
 import { GoalDoctorFinding } from "../Goals/Doctor.ts";
 import { parseGoalManifestText, TEMPLATE_SLUG } from "../Goals/Inventory.ts";
 import { decodePacketTraceProjection, isPacketSlug, PacketRoot } from "../Goals/PacketCore/PacketCore.schemas.ts";
@@ -23,6 +24,7 @@ import { PacketEventStore, PacketStreamLocator } from "../Goals/PacketCore/Packe
 import {
   foldPacketEvents,
   packetTraceIsStale,
+  planForkRepair,
   projectPacketTrace,
   renderPacketTraceFile,
 } from "../Goals/PacketCore/PacketFold.ts";
@@ -125,13 +127,23 @@ const streamFindings = Effect.fn("Explore.streamFindings")(function* (
       finding(slug, "packet-stream-integrity", `${item.fileName}: ${item.kind} — ${item.detail}`, item.fileName)
     );
   }
+  const repairPlan = A.isReadonlyArrayNonEmpty(derived.forks)
+    ? yield* planForkRepair({ packet: slug, root, events: listing.events }).pipe(
+        Effect.map(O.getOrUndefined),
+        Effect.orElseSucceed(constUndefined)
+      )
+    : undefined;
   for (const fork of derived.forks) {
+    const planSummary =
+      repairPlan !== undefined && repairPlan.fork.parent === fork.parent && repairPlan.fork.parentSeq === fork.parentSeq
+        ? ` repair plan (read-only): keep ${pipe(repairPlan.survivor, Str.slice(0, 12))}, rebase ${A.length(repairPlan.rebaseDrafts)} event(s), remove ${A.length(repairPlan.filesToRemove)} file(s).`
+        : "";
     findings = A.append(
       findings,
       finding(
         slug,
         "packet-stream-fork",
-        `two or more children of one parent at seq ${fork.parentSeq} (${A.length(fork.children)} branches); repair the fork before writing.`,
+        `two or more children of one parent at seq ${fork.parentSeq} (${A.length(fork.children)} branches); repair the fork before writing.${planSummary}`,
         `${fork.parentSeq}`
       )
     );

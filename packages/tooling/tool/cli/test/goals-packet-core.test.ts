@@ -14,6 +14,7 @@ import {
   packetEventFileName,
   packetTraceIsStale,
   parsePacketEventFileName,
+  planForkRepair,
   projectPacketTrace,
   renderPacketEventFile,
   renderPacketTraceFile,
@@ -66,6 +67,21 @@ const chainEvents = Effect.fnUntraced(function* (
     parent = O.some(id);
   }
   return stored;
+});
+
+const applyPlanInMemory = Effect.fnUntraced(function* (
+  events: ReadonlyArray<StoredPacketEvent>,
+  plan: { readonly filesToRemove: ReadonlyArray<string>; readonly rebaseDrafts: ReadonlyArray<PacketEvent> }
+) {
+  let applied = A.filter(events, (stored) => !A.contains(plan.filesToRemove, stored.fileName));
+  for (const draftEvent of plan.rebaseDrafts) {
+    const id = yield* packetEventDigest(draftEvent);
+    applied = A.append(
+      applied,
+      StoredPacketEvent.make({ id, fileName: packetEventFileName(draftEvent, id), event: draftEvent })
+    );
+  }
+  return applied;
 });
 
 describe("canonical encoding and digests", () => {
@@ -450,6 +466,165 @@ describe("golden replay (committed fixture)", () => {
             expect(String(Cause.squash(result.cause))).toContain("forked");
           }
         }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+});
+
+describe("planForkRepair", () => {
+  it(
+    "plans no repair for an unforked stream",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const events = yield* chainEvents("demo", [
+            { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
+          ]);
+          const plan = yield* planForkRepair({ packet: "demo", root: "goals", events });
+          expect(O.isNone(plan)).toBe(true);
+        })
+      ),
+    20_000
+  );
+
+  it(
+    "plans the committed fork fixture: survivor, rebased draft, file removal — and the applied plan folds linear",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const store = yield* PacketEventStore;
+          const listing = yield* store.list(
+            PacketStreamLocator.make({ packet: "forked", root: "goals", packetPath: FORKED_PATH })
+          );
+          const plan = O.getOrUndefined(
+            yield* planForkRepair({ packet: "forked", root: "goals", events: listing.events })
+          );
+          expect(plan).toBeDefined();
+          if (plan === undefined) {
+            return;
+          }
+          // Deterministic survivor: the fork verdict's first child in
+          // seq-then-digest order.
+          expect(plan.survivor).toBe(plan.fork.children[0]);
+          expect(plan.fork.parentSeq).toBe(2);
+          expect(plan.survivorTip?.seq).toBe(3);
+          expect(plan.survivorTip?.id).toBe(plan.survivor);
+          expect(A.length(plan.rebaseDrafts)).toBe(1);
+          expect(A.length(plan.filesToRemove)).toBe(1);
+
+          const losingId = plan.fork.children[1];
+          const losing = A.findFirst(listing.events, (stored) => stored.id === losingId);
+          expect(O.isSome(losing)).toBe(true);
+          const draft = plan.rebaseDrafts[0];
+          expect(draft?.seq).toBe(4);
+          expect(draft?.expectedRevision).toBe(3);
+          expect(draft?.parent).toBe(plan.survivor);
+          if (O.isSome(losing) && draft !== undefined) {
+            // History is rebased, never rewritten: body, timestamp, and actor
+            // carry over verbatim.
+            expect(draft.body).toStrictEqual(losing.value.event.body);
+            expect(draft.at).toBe(losing.value.event.at);
+            expect(draft.actor).toBe(losing.value.event.actor);
+            expect(plan.filesToRemove[0]).toBe(losing.value.fileName);
+          }
+
+          // Apply the plan in memory: drop the losing subtree, append the
+          // drafts, fold — the stream must be linear with nothing lost.
+          const applied = yield* applyPlanInMemory(listing.events, plan);
+          const repaired = foldPacketEvents({ packet: "forked", root: "goals", events: applied });
+          expect(repaired.forks).toStrictEqual([]);
+          expect(repaired.issues).toStrictEqual([]);
+          expect(repaired.revision).toBe(4);
+          const timeline = projectPacketTrace(repaired, applied).timeline;
+          expect(A.length(timeline)).toBe(4);
+        }).pipe(provideScopedLayer(testLayer))
+      ),
+    20_000
+  );
+});
+
+describe("planForkRepair on nested forks", () => {
+  const siblingOf = Effect.fnUntraced(function* (
+    parentId: string | undefined,
+    seq: number,
+    at: string,
+    body: EventBody
+  ) {
+    const event = PacketEvent.make({
+      schemaVersion: "packet-event/v1",
+      packet: "demo",
+      root: "goals",
+      seq,
+      ...(parentId === undefined ? {} : { parent: parentId }),
+      expectedRevision: seq - 1,
+      at,
+      actor: "test",
+      body,
+    });
+    const id = yield* packetEventDigest(event);
+    return StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event });
+  });
+
+  it(
+    "descends to the innermost fork on the surviving path instead of enlarging it",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const base = yield* chainEvents("demo", [
+            { body: { type: "packet-created", status: "active" }, at: "2026-08-17T00:00:00.000Z" },
+            { body: { type: "stage-entered", stage: "align", ordinal: 2 }, at: "2026-08-17T00:01:00.000Z" },
+          ]);
+          const parentId = storedIdAt(base, 1);
+          // Outer fork: two seq-3 children of the seq-2 event.
+          const outerA = yield* siblingOf(parentId, 3, "2026-08-17T00:02:00.000Z", {
+            type: "status-set",
+            status: "paused",
+            previous: "active",
+          });
+          const outerB = yield* siblingOf(parentId, 3, "2026-08-17T00:02:30.000Z", {
+            type: "status-set",
+            status: "reference",
+            previous: "active",
+          });
+          // Nested forks: two seq-4 children under EACH seq-3 branch, so the
+          // surviving path always ends at a nested fork.
+          let all = A.appendAll(base, [outerA, outerB]);
+          for (const branch of [outerA, outerB]) {
+            const childA = yield* siblingOf(branch.id, 4, "2026-08-17T00:03:00.000Z", {
+              type: "status-set",
+              status: "active",
+              previous: "paused",
+            });
+            const childB = yield* siblingOf(branch.id, 4, "2026-08-17T00:03:30.000Z", {
+              type: "status-set",
+              status: "paused",
+              previous: "active",
+            });
+            all = A.appendAll(all, [childA, childB]);
+          }
+          const before = foldPacketEvents({ packet: "demo", root: "goals", events: all });
+          expect(A.length(before.forks)).toBe(3);
+          const outerFork = before.forks[0];
+          expect(outerFork?.parentSeq).toBe(2);
+
+          const plan = O.getOrUndefined(yield* planForkRepair({ packet: "demo", root: "goals", events: all }));
+          expect(plan).toBeDefined();
+          if (plan === undefined || outerFork === undefined) {
+            return;
+          }
+          // The planned fork hangs off the OUTER fork's survivor, one level in.
+          expect(plan.fork.parentSeq).toBe(3);
+          expect(plan.fork.parent).toBe(outerFork.children[0]);
+          expect(A.length(plan.rebaseDrafts)).toBe(1);
+
+          // Applying the plan removes the nested fork without enlarging any
+          // other: fork count strictly shrinks and no verdict gains children.
+          const applied = yield* applyPlanInMemory(all, plan);
+          const after = foldPacketEvents({ packet: "demo", root: "goals", events: applied });
+          expect(A.length(after.forks)).toBe(2);
+          expect(A.every(after.forks, (fork) => A.length(fork.children) === 2)).toBe(true);
+          expect(A.some(after.forks, (fork) => fork.parent === plan.fork.parent)).toBe(false);
+        })
       ),
     20_000
   );

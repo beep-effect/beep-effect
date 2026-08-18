@@ -86,6 +86,18 @@ byte-exact expected traces for both fixtures, a committed
 `expected-trace.v1.json` retirement witness, and the live packet's
 regenerated `ops/trace.json` (fresh under `beep explore --check`).
 
+**Rung 3 — fork-repair plan surface (COMPLETE 2026-08-17).** The D5 "fork
+verdict/repair plan" concept lands as `PacketForkRepairPlan` plus the pure
+`planForkRepair` derivation: deterministic survivor (the fork's first child
+in seq-then-digest order — content-deterministic, no clock trust), losing
+branches' bodies re-drafted onto the surviving tip with recorded timestamps
+and actors preserved, and the losing files listed for removal. Read-only by
+design: `beep explore --check` appends the plan summary to the first fork's
+finding; no writer applies plans here (the fleet-scale repair *flow* is the
+projection-migration candidate's scope). Proof: the committed fork fixture
+plans deterministically, and applying the plan in memory folds linear at
+revision 4 with zero forks/issues and a 4-entry timeline — nothing lost.
+
 ## P4 — Yeet: PR to mergeable
 
 `bun run beep yeet repair → verify → publish --pr → monitor` until
@@ -109,7 +121,6 @@ merely to pass this packet.
 
 ## Current blockers
 
-None. P1, P2, and P3 rungs 1–2 (risk-tier floor/override; full trace
-projection) shipped 2026-08-17; the remaining P3 rungs (fork-repair plan
-surface, and the queued idempotent-skip refinement for self-transitions) are
-startable — one small PR per rung.
+None. P1, P2, and all three ratified P3 rungs shipped 2026-08-17. The
+queued idempotent-skip refinement for self-transitions remains an optional
+rung; otherwise P5 close is next.

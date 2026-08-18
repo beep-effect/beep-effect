@@ -134,6 +134,8 @@ describe("explore --check", () => {
             const output = yield* consoleText();
             expect(output).toContain("streams=4");
             expect(output).toContain("[packet-stream-fork]");
+            expect(output).toContain("repair plan (read-only): keep ");
+            expect(output).toContain("rebase 1 event(s), remove 1 file(s)");
             expect(output).toContain("[packet-trace-missing]");
             expect(output).toContain("[packet-trace-stale]");
             expect(output).toContain("does not parse as JSON");

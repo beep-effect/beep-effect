@@ -5,7 +5,8 @@
  *
  * Pure derivations only: the fold orders stored events, verifies the parent
  * chain, surfaces forks (two children of one parent) as first-class
- * verdicts, and derives the D3 stage values — `furthestStage` as the
+ * verdicts (with a deterministic read-only repair plan for the first fork),
+ * and derives the D3 stage values — `furthestStage` as the
  * monotonic high-water mark by ordinal and `resumeStage` as the cursor from
  * the last stage-carrying event — plus the effective risk-tier override,
  * all over the unambiguous linear prefix. The
@@ -28,13 +29,15 @@ import {
   PACKET_PROJECTOR_VERSION,
   PacketChainIssue,
   PacketDerivedState,
+  PacketEvent,
+  PacketForkRepairPlan,
   PacketForkVerdict,
   PacketRiskTierOverrideState,
   PacketTip,
   PacketTraceEntry,
   PacketTraceProjection,
 } from "./PacketCore.schemas.ts";
-import { canonicalJsonTextPretty } from "./PacketDigest.ts";
+import { canonicalJsonTextPretty, packetEventDigest } from "./PacketDigest.ts";
 import type {
   PacketRoot,
   PacketSlug,
@@ -183,6 +186,14 @@ const missingParentIssues = (events: ReadonlyArray<StoredPacketEvent>): Readonly
   return issues;
 };
 
+const soleChildOf = (
+  index: MutableHashMap.MutableHashMap<string, ReadonlyArray<StoredPacketEvent>>,
+  key: string
+): O.Option<StoredPacketEvent> => {
+  const children = pipe(MutableHashMap.get(index, key), O.getOrElse(A.empty<StoredPacketEvent>));
+  return A.length(children) === 1 ? A.head(children) : O.none();
+};
+
 type LinearPrefix = {
   readonly prefix: ReadonlyArray<StoredPacketEvent>;
   readonly issues: ReadonlyArray<PacketChainIssue>;
@@ -196,11 +207,7 @@ const walkLinearPrefix = (
   let key = GENESIS_PARENT_KEY;
   let previous = O.none<StoredPacketEvent>();
   for (;;) {
-    const children = pipe(MutableHashMap.get(index, key), O.getOrElse(A.empty<StoredPacketEvent>));
-    if (A.length(children) !== 1) {
-      break;
-    }
-    const next = pipe(A.head(children), O.getOrUndefined);
+    const next = O.getOrUndefined(soleChildOf(index, key));
     if (next === undefined) {
       break;
     }
@@ -457,3 +464,191 @@ export const renderPacketTraceFile: (trace: PacketTraceProjection) => Effect.Eff
     const encoded = yield* encodePacketTrace(trace);
     return canonicalJsonTextPretty(encoded);
   });
+
+const walkChainFrom = (
+  index: MutableHashMap.MutableHashMap<string, ReadonlyArray<StoredPacketEvent>>,
+  startKey: string
+): ReadonlyArray<StoredPacketEvent> => {
+  let chain = A.empty<StoredPacketEvent>();
+  let key = startKey;
+  for (;;) {
+    const next = O.getOrUndefined(soleChildOf(index, key));
+    if (next === undefined) {
+      break;
+    }
+    chain = A.append(chain, next);
+    key = next.id;
+  }
+  return chain;
+};
+
+const subtreeOf = (
+  index: MutableHashMap.MutableHashMap<string, ReadonlyArray<StoredPacketEvent>>,
+  roots: ReadonlyArray<StoredPacketEvent>
+): ReadonlyArray<StoredPacketEvent> => {
+  let queue = roots;
+  let all = A.empty<StoredPacketEvent>();
+  for (;;) {
+    const head = A.head(queue);
+    if (O.isNone(head)) {
+      break;
+    }
+    queue = A.drop(queue, 1);
+    all = A.append(all, head.value);
+    queue = A.appendAll(queue, pipe(MutableHashMap.get(index, head.value.id), O.getOrElse(A.empty<StoredPacketEvent>)));
+  }
+  return A.sort(all, storedBySeqThenId);
+};
+
+const rebaseDraftsOnto = Effect.fnUntraced(function* (
+  packet: PacketSlug,
+  root: PacketRoot,
+  tip: PacketTip,
+  losing: ReadonlyArray<StoredPacketEvent>
+) {
+  let drafts = A.empty<PacketEvent>();
+  let parent = tip.id;
+  let seq = tip.seq;
+  for (const stored of losing) {
+    seq += 1;
+    const draft = PacketEvent.make({
+      schemaVersion: "packet-event/v1",
+      packet,
+      root,
+      seq,
+      parent,
+      expectedRevision: seq - 1,
+      at: stored.event.at,
+      actor: stored.event.actor,
+      body: stored.event.body,
+    });
+    drafts = A.append(drafts, draft);
+    parent = yield* packetEventDigest(draft);
+  }
+  return drafts;
+});
+
+type SurvivingWalk = {
+  readonly survivorId: string;
+  readonly tip: PacketTip;
+};
+
+const survivingWalkOf = (
+  sorted: ReadonlyArray<StoredPacketEvent>,
+  index: MutableHashMap.MutableHashMap<string, ReadonlyArray<StoredPacketEvent>>,
+  fork: PacketForkVerdict
+): O.Option<SurvivingWalk> => {
+  const survivorId = pipe(
+    A.head(fork.children),
+    O.getOrElse(() => "")
+  );
+  const survivorStored = A.findFirst(sorted, (stored) => stored.id === survivorId);
+  if (O.isNone(survivorStored)) {
+    return O.none();
+  }
+  const chain = A.prepend(walkChainFrom(index, survivorId), survivorStored.value);
+  const tip = pipe(
+    A.last(chain),
+    O.map((stored) => PacketTip.make({ seq: stored.event.seq, id: stored.id })),
+    O.getOrElse(() => PacketTip.make({ seq: survivorStored.value.event.seq, id: survivorId }))
+  );
+  return O.some({ survivorId, tip });
+};
+
+type PlannableFork = SurvivingWalk & {
+  readonly fork: PacketForkVerdict;
+};
+
+// Rebasing onto a tip that itself forks would ENLARGE the nested fork (a
+// third child), so the plan descends the surviving path to the innermost
+// fork: each applied plan strictly shrinks the fork set, and re-planning
+// works outward one fork at a time.
+const innermostPlannableFork = (
+  sorted: ReadonlyArray<StoredPacketEvent>,
+  index: MutableHashMap.MutableHashMap<string, ReadonlyArray<StoredPacketEvent>>,
+  verdicts: ReadonlyArray<PacketForkVerdict>,
+  first: PacketForkVerdict
+): O.Option<PlannableFork> => {
+  let fork = first;
+  for (let depth = 0; depth <= A.length(verdicts); depth += 1) {
+    const walk = survivingWalkOf(sorted, index, fork);
+    if (O.isNone(walk)) {
+      return O.none();
+    }
+    const nested = A.findFirst(verdicts, (verdict) => verdict.parent === walk.value.tip.id);
+    if (O.isNone(nested)) {
+      return O.some({ fork, survivorId: walk.value.survivorId, tip: walk.value.tip });
+    }
+    fork = nested.value;
+  }
+  return O.none();
+};
+
+/**
+ * Compute the deterministic repair plan for one fork of a stream.
+ *
+ * **Details**
+ *
+ * Read-only and content-deterministic: the survivor is the fork's first
+ * child in seq-then-digest order, the losing branches' bodies are re-drafted
+ * onto the surviving chain's tip with their recorded timestamps and actors
+ * preserved, and the losing event files are listed for removal. An unforked
+ * stream plans to `None`. Applying the plan is not this function's job —
+ * writers stay guarded and separate.
+ *
+ * **Example** (An unforked stream needs no repair)
+ *
+ * ```ts
+ * import { planForkRepair } from "@beep/repo-cli/test/Goals"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const program = planForkRepair({ packet: "demo", root: "goals", events: [] })
+ * Effect.runPromise(program).then((plan) => console.log(O.isNone(plan))) // true
+ * ```
+ *
+ * @param input - Packet identity plus its stored events.
+ * @returns The first-fork repair plan, or `None` for an unforked stream.
+ * @category folding
+ * @since 0.0.0
+ */
+export const planForkRepair: (input: {
+  readonly packet: PacketSlug;
+  readonly root: PacketRoot;
+  readonly events: ReadonlyArray<StoredPacketEvent>;
+}) => Effect.Effect<O.Option<PacketForkRepairPlan>, S.SchemaError> = Effect.fnUntraced(function* (input: {
+  readonly packet: PacketSlug;
+  readonly root: PacketRoot;
+  readonly events: ReadonlyArray<StoredPacketEvent>;
+}) {
+  const sorted = A.sort(input.events, storedBySeqThenId);
+  const index = buildChildIndex(sorted);
+  const verdicts = collectForkVerdicts(index);
+  const firstFork = A.head(verdicts);
+  if (O.isNone(firstFork)) {
+    return O.none<PacketForkRepairPlan>();
+  }
+  const plannable = innermostPlannableFork(sorted, index, verdicts, firstFork.value);
+  if (O.isNone(plannable)) {
+    return O.none<PacketForkRepairPlan>();
+  }
+  const { fork, survivorId, tip } = plannable.value;
+  const losingRoots = pipe(
+    A.drop(fork.children, 1),
+    A.map((id) => A.findFirst(sorted, (stored) => stored.id === id)),
+    A.getSomes
+  );
+  const losing = subtreeOf(index, losingRoots);
+  const rebaseDrafts = yield* rebaseDraftsOnto(input.packet, input.root, tip, losing);
+  return O.some(
+    PacketForkRepairPlan.make({
+      packet: input.packet,
+      root: input.root,
+      fork,
+      survivor: survivorId,
+      survivorTip: tip,
+      rebaseDrafts,
+      filesToRemove: A.map(losing, (stored) => stored.fileName),
+    })
+  );
+});
