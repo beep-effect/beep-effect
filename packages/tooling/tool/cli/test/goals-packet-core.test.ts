@@ -543,6 +543,50 @@ describe("planForkRepair", () => {
   );
 });
 
+describe("planForkRepair on genesis forks", () => {
+  it(
+    "plans a genesis fork: absent parent, losing genesis rebased to seq 2",
+    () =>
+      Effect.runPromise(
+        Effect.gen(function* () {
+          const genesisA = PacketEvent.make({
+            schemaVersion: "packet-event/v1",
+            packet: "demo",
+            root: "goals",
+            seq: 1,
+            expectedRevision: 0,
+            at: "2026-08-17T00:00:00.000Z",
+            actor: "test",
+            body: { type: "packet-created", status: "active" },
+          });
+          const genesisB = PacketEvent.make({ ...genesisA, at: "2026-08-17T00:00:01.000Z" });
+          let events = A.empty<StoredPacketEvent>();
+          for (const event of [genesisA, genesisB]) {
+            const id = yield* packetEventDigest(event);
+            events = A.append(events, StoredPacketEvent.make({ id, fileName: packetEventFileName(event, id), event }));
+          }
+          const plan = O.getOrUndefined(yield* planForkRepair({ packet: "demo", root: "goals", events }));
+          expect(plan).toBeDefined();
+          if (plan === undefined) {
+            return;
+          }
+          expect(plan.fork.parent).toBeUndefined();
+          expect(plan.fork.parentSeq).toBe(0);
+          const draft = plan.rebaseDrafts[0];
+          expect(draft?.seq).toBe(2);
+          expect(draft?.parent).toBe(plan.survivor);
+          expect(draft?.body.type).toBe("packet-created");
+
+          const applied = yield* applyPlanInMemory(events, plan);
+          const repaired = foldPacketEvents({ packet: "demo", root: "goals", events: applied });
+          expect(repaired.forks).toStrictEqual([]);
+          expect(repaired.revision).toBe(2);
+        })
+      ),
+    20_000
+  );
+});
+
 describe("planForkRepair on nested forks", () => {
   const siblingOf = Effect.fnUntraced(function* (
     parentId: string | undefined,

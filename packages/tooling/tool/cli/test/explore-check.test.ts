@@ -148,6 +148,44 @@ describe("explore --check", () => {
   );
 
   it(
+    "attaches the repair-plan summary to exactly one of two same-parentSeq forks",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            // Two distinct orphan parents, each with two seq-2 children: two
+            // fork verdicts share parentSeq 1, but only the planned fork may
+            // carry the summary (identity is the parent digest, not the seq).
+            for (const parentByte of ["a", "b"]) {
+              for (const at of ["2026-08-17T00:00:00.000Z", "2026-08-17T00:00:01.000Z"]) {
+                const event = PacketEvent.make({
+                  schemaVersion: "packet-event/v1",
+                  packet: "twinned",
+                  root: "goals",
+                  seq: 2,
+                  parent: parentByte.repeat(64),
+                  expectedRevision: 1,
+                  at,
+                  actor: "test",
+                  body: { type: "status-set", status: "paused", previous: "active" },
+                });
+                yield* writeEvent("goals/twinned", event);
+              }
+            }
+            const exit = yield* Effect.exit(runExploreCommand(["--check"]));
+            expect(Exit.isSuccess(exit)).toBe(true);
+            const output = yield* consoleText();
+            const forkCount = A.length(Str.split(output, "[packet-stream-fork]")) - 1;
+            const summaryCount = A.length(Str.split(output, "repair plan (read-only)")) - 1;
+            expect(forkCount).toBe(2);
+            expect(summaryCount).toBe(1);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    30_000
+  );
+
+  it(
     "flags a decodable trace whose content drifts from the folded stream",
     () =>
       Effect.runPromise(
