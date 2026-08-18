@@ -16,7 +16,7 @@ const $I = $SchemaId.create("Unknown");
  *
  * **When to use**
  *
- * Use at an intentionally untyped boundary that still needs consistent Effect,
+ * Use when an intentionally untyped boundary still needs consistent Effect,
  * Promise, Sync, Exit, Result, Option, or JSON-string codec entry points.
  *
  * **Details**
