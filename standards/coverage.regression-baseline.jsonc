@@ -21449,13 +21449,13 @@
         "packages/tooling/tool/cli/src/commands/Explore/Check.ts": {
           "lines": 95.94,
           "statements": 96.05,
-          "branches": 93.33,
+          "branches": 90.5,
           "functions": 100,
           "uncovered": {
-            "lines": 3,
-            "statements": 3,
-            "branches": 2,
-            "functions": 0
+            "lines": 14,
+            "statements": 14,
+            "branches": 10,
+            "functions": 4
           }
         },
         "packages/tooling/tool/cli/src/commands/Explore/Explore.command.ts": {
@@ -22011,15 +22011,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketFold.ts": {
-          "lines": 93.69,
-          "statements": 93.8,
-          "branches": 91.66,
+          "lines": 92.5,
+          "statements": 92.7,
+          "branches": 87,
           "functions": 92.3,
           "uncovered": {
-            "lines": 7,
-            "statements": 7,
-            "branches": 4,
-            "functions": 2
+            "lines": 20,
+            "statements": 20,
+            "branches": 16,
+            "functions": 4
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts": {
