@@ -101,6 +101,7 @@ export class GoalFrontierEntry extends S.Class(...)({
 export class GoalFrontierReport extends S.Class(...)({
   schemaVersion: S.tag("goal-frontier/v1"),
   readiness: CapabilityReadiness,
+  evidence: S.optionalKey(S.Unknown),                                  // reserved (contract 5): absent until D9/D10
   frontier: S.Array(GoalFrontierEntry),                                // sorted by slug
   fog: S.Array(CapabilitySlug),                                        // orphan capabilities, sorted
   cycles: S.Array(S.Array(S.String)),                                  // sorted SCCs of packet slugs
@@ -112,6 +113,7 @@ export class GoalUnlockStep extends S.Class(...)({
 }) {}
 export class GoalExplainReport extends S.Class(...)({
   schemaVersion: S.tag("goal-explain/v1"),
+  evidence: S.optionalKey(S.Unknown),                                  // reserved (contract 5): absent until D9/D10
   slug: S.String,
   status: GoalStatus,
   executionCapable: S.Boolean,
@@ -122,7 +124,8 @@ export class GoalExplainReport extends S.Class(...)({
 }) {}
 export class CapabilityCatalogEntry extends S.Class(...)({
   capability: CapabilitySlug,
-  providers: S.Array(S.String), consumers: S.Array(S.String),
+  providers: S.Array(CapabilityProviderRow),                           // slug + status: reference-provides visible
+  consumers: S.Array(S.String),
   collision: S.Boolean,                                                // >1 provider (informational, D4)
   orphan: S.Boolean,                                                   // consumers without providers
   duplicates: S.Array(S.String),                                       // packets declaring it twice (D5)
@@ -135,8 +138,9 @@ export class CapabilityCatalogReport extends S.Class(...)({
 ```
 
 The catalog IS the phase-0 report for the D5/D8 finding classes
-(duplicate-declaration, stranded-capability, reference-provides): they surface as
-catalog fields first; doctor gates arrive in a later PR only after the catalog's
+(duplicate-declaration, stranded-capability, reference-provides): providers carry
+their packet status so a `reference` provider is directly visible in the report,
+duplicates and strands are explicit fields, and every class surfaces here first; doctor gates arrive in a later PR only after the catalog's
 false-positive rate is eyeballed, mirroring the A/B/C pattern.
 
 ## Command surface
@@ -174,10 +178,17 @@ Sketches; binding comes from the differential, not this prose.
   `reach(a,b) AND reach(b,a)`, grouped and sorted. Fixture 3 pins it.
 - **shortest-unlock**: `WITH RECURSIVE walk(frontier_path, tail, depth)` BFS from
   the target's unsatisfied capabilities toward providers, path stored as a
-  `/`-joined slug string with an `instr` cycle guard, `ORDER BY depth LIMIT 1`
-  per capability, D7 annotation joined from `packets.execution_capable`. When the
-  only path crosses a non-execution-capable packet the step says so; when the
-  target sits in an SCC the report returns the cycle instead of a path (fixture 3).
+  slug string joined AND bounded by `/` (`'/a/b/'`), with the cycle guard testing
+  `instr(frontier_path, '/' || candidate || '/')` so one slug being a substring of
+  another can never false-positive, `ORDER BY depth LIMIT 1`
+  per capability, D7 annotation joined from `packets.execution_capable`.
+  `unlockPath` merges the per-capability shortest paths as a union deduplicated by
+  slug, ordered by `(depth, slug)` — a stable "work these, shallowest first" list,
+  not a globally minimal unlock set (Steiner-style global minimization is
+  explicitly out of v1; if the eyeball wants it, that is a new fixture and its own
+  decision). When the only path crosses a non-execution-capable packet the step
+  says so; when the target sits in an SCC the report returns the cycle instead of
+  a path (fixture 3).
 
 The pure-TS evaluator implements the same four questions with `HashMap`/`HashSet`
 set algebra and explicit BFS — small enough to review as obviously correct, which
