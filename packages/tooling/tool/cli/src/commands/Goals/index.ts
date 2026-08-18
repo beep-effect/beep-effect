@@ -6,6 +6,27 @@
  */
 
 /**
+ * Read-only adoption snapshot, pure adoption compiler, and adopt command.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Adopt.ts";
+/**
+ * Materialization-plan schema surface.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export * from "./Bootstrap.schemas.ts";
+/**
+ * Pure bootstrap plan compiler and bootstrap command.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Bootstrap.ts";
+/**
  * Doctor command and baseline-ratchet exports.
  *
  * @category cli-commands

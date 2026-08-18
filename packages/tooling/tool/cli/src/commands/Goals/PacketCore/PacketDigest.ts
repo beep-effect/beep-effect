@@ -172,6 +172,30 @@ export const canonicalJsonTextPretty = (value: unknown): string => `${canonicalA
  */
 export const sha256Hex = (text: string): string => createHash("sha256").update(text).digest("hex");
 
+/**
+ * Compute the lowercase sha-256 hex digest of exact bytes.
+ *
+ * **Details**
+ *
+ * Digesting decoded text is lossy for non-UTF-8 content (invalid sequences
+ * collapse to U+FFFD), so hash-pinning file contents must digest the raw bytes
+ * — this variant matches what external `sha256sum` tooling reports.
+ *
+ * **Example** (Digest empty bytes)
+ *
+ * ```ts
+ * import { sha256HexBytes } from "@beep/repo-cli/test/Goals"
+ *
+ * console.log(sha256HexBytes(new Uint8Array()).length) // 64
+ * ```
+ *
+ * @param bytes - Exact bytes to digest.
+ * @returns Lowercase 64-character hex digest.
+ * @category encoding
+ * @since 0.0.0
+ */
+export const sha256HexBytes = (bytes: Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
+
 const encodePacketEvent = S.encodeUnknownEffect(PacketEvent);
 
 /**

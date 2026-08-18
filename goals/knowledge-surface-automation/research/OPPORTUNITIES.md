@@ -320,3 +320,21 @@ measurement first). Reviewed at each grill.
   then read the file's uncovered ranges) before pushing; wiring lines into an uncovered
   function need either a directly testable seam (export the helper and pin it) or a
   deliberate floor adjustment, decided before the hosted lane spends 13 minutes finding it.
+
+## 2026-08-17 — scoped baseline writes capture environment-dependent coverage
+
+- **What happened:** clearing the new-file Coverage Regression identity for PR #762 with
+  `TURBO_SCM_BASE=origin/main bun run coverage -- --affected --write-baseline` also
+  tightened every other `@beep/repo-cli` per-file floor to the dev machine's achieved
+  values. `internal/cli/EnvConfig.ts` covers environment-dependent branches, so the local
+  run reaches 74.66/75/77.77 (lines/statements/functions) while the hosted runner reaches
+  exactly the old committed floors (73.33/73.68/74.07) — the write minted floors the
+  hosted lane can never satisfy, and the next hosted run went red on a file the PR never
+  touched.
+- **Evidence:** Coverage Regression run 32079431847 on PR #762; `git show HEAD~1` of
+  `standards/coverage.regression-baseline.jsonc` matches the hosted numbers digit-for-digit.
+- **Prevention:** after a scoped `--write-baseline`, diff the baseline for tightened
+  entries on files the PR did not touch and restore them to their committed values —
+  only the new-file identities and floors for deliberately covered files belong in the
+  commit. A writer flag that only ADDS missing file identities without tightening
+  existing entries would remove the hazard class.
