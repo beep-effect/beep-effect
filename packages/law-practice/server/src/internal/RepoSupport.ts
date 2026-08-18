@@ -117,7 +117,7 @@ export interface RowDecoders<Operation, Unavailable> {
  *
  * **When to use**
  *
- * Use once per repository adapter, immediately after its
+ * Use to build one decoder pair per repository adapter, immediately after its
  * `repositoryUnavailable` combinator is defined, and destructure both decoders
  * from the result.
  *
