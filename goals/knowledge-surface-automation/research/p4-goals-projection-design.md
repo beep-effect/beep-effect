@@ -183,7 +183,8 @@ Sketches; binding comes from the differential, not this prose.
   another can never false-positive, `ORDER BY depth LIMIT 1`
   per capability, D7 annotation joined from `packets.execution_capable`.
   `unlockPath` merges the per-capability shortest paths as a union deduplicated by
-  slug, ordered by `(depth, slug)` — a stable "work these, shallowest first" list,
+  slug — a slug appearing on several paths at different depths keeps its MINIMUM
+  depth — ordered by `(depth, slug)`: a stable "work these, shallowest first" list,
   not a globally minimal unlock set (Steiner-style global minimization is
   explicitly out of v1; if the eyeball wants it, that is a new fixture and its own
   decision). When the only path crosses a non-execution-capable packet the step
