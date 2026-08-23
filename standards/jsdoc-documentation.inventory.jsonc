@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-08-23T19:30:03.148Z",
+  "generatedAt": "2026-08-23T20:45:22.768Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65638,8 +65638,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Qa/Qa.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Qa/Qa.command.ts",
-          "line": 309,
-          "anchor": "packages-tooling-tool-cli-src-commands-qa-qa-command-ts-309-qacommand",
+          "line": 307,
+          "anchor": "packages-tooling-tool-cli-src-commands-qa-qa-command-ts-307-qacommand",
           "currentTags": [
             "@category",
             "@since"

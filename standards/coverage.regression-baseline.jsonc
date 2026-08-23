@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-23T19:29:57.780Z",
-  "git_sha": "7a5ff1881b38f31b174f2fa809006c136389fef9",
+  "generated_at": "2026-08-23T21:08:33.808Z",
+  "git_sha": "2e42603b4bc6aef34a2f5031030b4c6b1f6acf3e",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
@@ -20007,15 +20007,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 73.18,
-      "statements": 72.93,
-      "branches": 59.65,
-      "functions": 65.96,
+      "lines": 73.33,
+      "statements": 73.08,
+      "branches": 59.73,
+      "functions": 66.16,
       "uncovered": {
-        "lines": 8394,
-        "statements": 8826,
-        "branches": 4694,
-        "functions": 3132
+        "lines": 8361,
+        "statements": 8791,
+        "branches": 4692,
+        "functions": 3120
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -24015,13 +24015,13 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BunResolver.ts": {
-          "lines": 55.35,
-          "statements": 54.86,
-          "branches": 43.47,
-          "functions": 68.75,
+          "lines": 69.53,
+          "statements": 69.07,
+          "branches": 53.57,
+          "functions": 83.87,
           "uncovered": {
-            "lines": 50,
-            "statements": 51,
+            "lines": 46,
+            "statements": 47,
             "branches": 39,
             "functions": 5
           }
@@ -24087,15 +24087,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/UpdateApplierService.ts": {
-          "lines": 16.85,
-          "statements": 16.12,
-          "branches": 0,
-          "functions": 0,
+          "lines": 44.56,
+          "statements": 44.79,
+          "branches": 8.33,
+          "functions": 50,
           "uncovered": {
-            "lines": 74,
-            "statements": 78,
-            "branches": 12,
-            "functions": 25
+            "lines": 51,
+            "statements": 53,
+            "branches": 11,
+            "functions": 14
           }
         },
         "packages/tooling/tool/cli/src/commands/VersionSync/internal/updaters/PackageJsonUpdater.ts": {
@@ -24111,15 +24111,27 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/VersionSync/internal/updaters/PlainTextUpdater.ts": {
-          "lines": 12.5,
-          "statements": 12.5,
-          "branches": 0,
-          "functions": 0,
+          "lines": 87.5,
+          "statements": 87.5,
+          "branches": 50,
+          "functions": 100,
           "uncovered": {
-            "lines": 7,
-            "statements": 7,
-            "branches": 2,
-            "functions": 1
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/VersionSync/internal/updaters/VercelJsonUpdater.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/VersionSync/internal/updaters/YamlFileUpdater.ts": {

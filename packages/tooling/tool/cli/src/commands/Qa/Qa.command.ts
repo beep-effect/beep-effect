@@ -101,12 +101,10 @@ const portFlag = Flag.integer("port").pipe(
   Flag.withDefault(43117)
 );
 const cursorFlag = Flag.boolean("cursor").pipe(
-  Flag.withDefault(false),
   Flag.withDescription("Render the witness cursor dot (disable with --no-cursor)"),
   Flag.withDefault(true)
 );
 const beaconFlag = Flag.boolean("beacon").pipe(
-  Flag.withDefault(false),
   Flag.withDescription("Run the clock sync beacon (disable with --no-beacon)"),
   Flag.withDefault(true)
 );

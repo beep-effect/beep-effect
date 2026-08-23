@@ -110,6 +110,6 @@ export const versionSyncCommand = Command.make(
   })
 ).pipe(
   Command.withDescription(
-    "Detect and fix version drift across .bun-version, package.json, .nvmrc, CI workflows, docker-compose.yml, biome.jsonc, and the root Effect catalog"
+    "Detect and fix version drift across Bun runtime pins and checksums, Node pins, CI workflows, Docker images, Biome, and the root Effect catalog"
   )
 );
