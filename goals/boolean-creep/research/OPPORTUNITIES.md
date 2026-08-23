@@ -82,3 +82,35 @@ first-class output). Public repo: paths relative, no secrets, no session ids.
 - **Prevention:** derive the staleness remediation command from the registered
   CI lane descriptor, or update the gate descriptor to prescribe
   `bun run beep ci lane jsdoc-ratchet`.
+
+## 2026-08-23 — hosted property depth exceeded the local Yeet proof
+
+- **Doing:** monitoring the first hosted run after an exact-head local Yeet
+  verification.
+- **Evidence:** the hosted Property Laws lane found a Tika error round-trip
+  equivalence failure after 153 tests with seed `20260708` and path `152`;
+  the same commit's 25-lane local Yeet plan had passed without running that
+  hosted property depth.
+- **Prevention:** include the hosted property command and its configured run
+  count in local Yeet verification, and print the deterministic seed and path
+  in the local verdict so a counterexample can be replayed exactly.
+
+## 2026-08-23 — shared mock crossed concurrent Effect tests
+
+- **Doing:** adding stable coverage for the desktop Tauri IPC writer.
+- **Evidence:** the instrumented package suite ran four `it.effect` cases
+  concurrently; their shared hoisted `invoke` mock interleaved calls, causing
+  three contradictory call-count failures despite each behavior passing alone.
+- **Prevention:** mark suites that mutate a shared hoisted mock sequential, or
+  give each concurrent case an isolated dependency layer instead of shared
+  module-level mock state.
+
+## 2026-08-23 — detached-head Semgrep preflight lost its Git worktree
+
+- **Doing:** running clean-head Yeet verification from an isolated worktree.
+- **Evidence:** Semgrep reported `fatal: not a git repository` while trying to
+  configure `safe.directory` against the original checkout's worktree metadata;
+  the scan still completed with zero findings.
+- **Prevention:** create detached verification worktrees from a stable Git
+  common directory, or pass Semgrep a validated repository path instead of a
+  worktree metadata path that can disappear during preflight cleanup.
