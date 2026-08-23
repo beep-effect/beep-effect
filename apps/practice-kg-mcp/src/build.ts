@@ -18,10 +18,10 @@ import { makePracticeKgBuildLayer } from "./runtime/index.ts";
 
 const corpusRoot = Flag.directory("corpus-root", { mustExist: true });
 const bundleOut = Flag.directory("bundle-out").pipe(Flag.optional);
-const includeRefresh = Flag.boolean("include-refresh");
-const skipEmails = Flag.boolean("skip-emails");
+const includeRefresh = Flag.boolean("include-refresh").pipe(Flag.withDefault(false));
+const skipEmails = Flag.boolean("skip-emails").pipe(Flag.withDefault(false));
 const maxTextBytes = Flag.integer("max-text-bytes").pipe(Flag.optional);
-const overwrite = Flag.boolean("overwrite");
+const overwrite = Flag.boolean("overwrite").pipe(Flag.withDefault(false));
 
 const buildCommand = Command.make(
   "build",

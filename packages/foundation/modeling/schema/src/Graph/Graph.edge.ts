@@ -4,15 +4,17 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Effect, Graph as Graph_, SchemaIssue, SchemaParser, SchemaTransformation } from "effect";
+
+import { Effect, SchemaIssue, SchemaParser, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 import { EdgeEncoded } from "./Graph.encoded.ts";
 import { isEdge } from "./Graph.guards.ts";
 import { $I, toRawEdgeEncoded } from "./Graph.shared.ts";
+import type { Graph as Graph_ } from "effect";
 import type { EdgeEncodedSchema, EdgeIso } from "./Graph.encoded.ts";
 
 /**
- * Schema for validating existing `Graph.Edge` instances.
+ * Schema for validating existing `Graph.Edge` values.
  *
  * **Example** (Build EdgeFromSelf schema)
  *
@@ -39,7 +41,7 @@ export interface EdgeFromSelf<Data extends S.Top>
 }
 
 /**
- * Schema for transforming encoded edge payloads into `Graph.Edge` instances.
+ * Schema for transforming encoded edge payloads into `Graph.Edge` values.
  *
  * **Example** (Build EdgeTransform schema)
  *
@@ -82,7 +84,7 @@ export interface Edge<Data extends S.Top> extends S.decodeTo<EdgeFromSelf<S.toTy
 }
 
 /**
- * Schema for validating existing `Graph.Edge` instances while applying the
+ * Schema for validating existing `Graph.Edge` values while applying the
  * provided payload schema.
  *
  * **Example** (Validate Edge with payload)
@@ -114,13 +116,11 @@ export const EdgeFromSelf = <Data extends S.Top>(data: Data): EdgeFromSelf<Data>
         return Effect.flatMap(
           SchemaParser.decodeUnknownEffect(encoded)(toRawEdgeEncoded(input), options),
           Effect.fnUntraced(function* (edge) {
-            return yield* Effect.succeed(
-              new Graph_.Edge({
-                source: edge.source,
-                target: edge.target,
-                data: edge.data,
-              })
-            );
+            return yield* Effect.succeed({
+              source: edge.source,
+              target: edge.target,
+              data: edge.data,
+            });
           })
         );
       };
@@ -135,7 +135,7 @@ export const EdgeFromSelf = <Data extends S.Top>(data: Data): EdgeFromSelf<Data>
         importDeclaration: 'import * as Graph from "effect/Graph"',
       },
       expected: "Graph.Edge",
-      description: "Schema for existing Effect graph edges.",
+      description: "Schema for existing Effect graph edge values.",
       toEquivalence:
         ([data]) =>
         (self, that) =>
@@ -179,14 +179,12 @@ export const EdgeTransform = <Data extends S.Top>(data: Data): EdgeTransform<Dat
     S.decodeTo(
       data.pipe(S.toType, EdgeFromSelf),
       SchemaTransformation.transformOrFail({
-        decode: (encoded) =>
-          Effect.succeed(
-            new Graph_.Edge({
-              source: encoded.source,
-              target: encoded.target,
-              data: encoded.data,
-            })
-          ),
+        decode: (encoded): Effect.Effect<Graph_.Edge<Data["Type"]>> =>
+          Effect.succeed({
+            source: encoded.source,
+            target: encoded.target,
+            data: encoded.data,
+          }),
         encode: (edge, options) => SchemaParser.decodeUnknownEffect(decodedEdge)(toRawEdgeEncoded(edge), options),
       })
     )

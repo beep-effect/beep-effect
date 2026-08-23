@@ -32,15 +32,21 @@ const targetFlag = Flag.string("target").pipe(
   Flag.optional
 );
 
-const allFlag = Flag.boolean("all").pipe(Flag.withDescription("Sync every checked-in target"));
+const allFlag = Flag.boolean("all").pipe(Flag.withDefault(false), Flag.withDescription("Sync every checked-in target"));
 const includeAuthenticatedFlag = Flag.boolean("include-authenticated").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Include sync targets that require configured authenticated source access when --all is used")
 );
 const checkFlag = Flag.boolean("check").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Report drift without writing files and exit non-zero when changes are needed")
 );
-const dryRunFlag = Flag.boolean("dry-run").pipe(Flag.withDescription("Preview file updates without writing them"));
+const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Preview file updates without writing them")
+);
 const verboseFlag = Flag.boolean("verbose").pipe(
+  Flag.withDefault(false),
   Flag.withAlias("v"),
   Flag.withDescription("Log unchanged targets in addition to changed targets")
 );

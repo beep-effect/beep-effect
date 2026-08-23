@@ -2245,6 +2245,7 @@ const githubChecksCommand = Command.make(
     ),
     head: Flag.string("head").pipe(Flag.withDefault("HEAD"), Flag.withDescription("Head git ref for affected checks")),
     collectAll: Flag.boolean("collect-all").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Run every local GitHub-check wave after failures instead of stopping before later waves")
     ),
     mode: Argument.choice("mode", GITHUB_CHECK_MODE_VALUES).pipe(Argument.withDescription("GitHub check mode to run")),
@@ -2263,6 +2264,7 @@ const githubChecksPlanContractCheckCommand = Command.make(
   "plan-contract-check",
   {
     expectPromotedFallowLanes: Flag.boolean("expect-promoted-fallow-lanes").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Assert that every matrix-promoted Fallow lane is wired into the selected GitHub check mode")
     ),
     featureMatrix: Flag.string("feature-matrix").pipe(
@@ -2294,6 +2296,7 @@ const devQualityCommand = Command.make(
       Flag.withDescription("Head git ref for the local development quality range")
     ),
     surface: Flag.boolean("surface").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Also run affected docgen and repo-export checks for public surface edits")
     ),
   },
@@ -2373,6 +2376,7 @@ const jsdocRatchetCommand = Command.make(
       Flag.withDescription("Generated JSDoc documentation inventory JSONC path")
     ),
     writeBaseline: Flag.boolean("write-baseline").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Rewrite the JSDoc totals regression baseline from the generated inventory")
     ),
   },
@@ -2444,8 +2448,12 @@ const jsdocMigrateApplyCommand = Command.make(
     titles: Flag.string("titles").pipe(Flag.withDescription("titles.jsonl input path"), Flag.optional),
     overrides: Flag.string("overrides").pipe(Flag.withDescription("overrides.jsonl input path"), Flag.optional),
     manifest: Flag.string("manifest").pipe(Flag.withDescription("Proof manifest output path"), Flag.optional),
-    dryRun: Flag.boolean("dry-run").pipe(Flag.withDescription("Report outcomes without writing any file")),
+    dryRun: Flag.boolean("dry-run").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Report outcomes without writing any file")
+    ),
     syntheticTitles: Flag.boolean("synthetic-titles").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Generate in-memory placeholder titles for the residue measurement")
     ),
   },
@@ -2504,6 +2512,7 @@ const knipCommand = Command.make(
       Flag.withDescription("Committed Knip regression baseline JSONC path")
     ),
     writeBaseline: Flag.boolean("write-baseline").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Rewrite the Knip regression baseline from the current normalized finding set")
     ),
   },
@@ -2531,7 +2540,7 @@ const turboConfigProofCommand = Command.make(
       Flag.withDefault("affected"),
       Flag.withDescription("Dry-run selector: affected for CI shape, filter-range for deterministic base/head probes")
     ),
-    json: Flag.boolean("json").pipe(Flag.withDescription("Print the proof report as JSON")),
+    json: Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the proof report as JSON")),
     taskArgs: Argument.string("task").pipe(
       Argument.variadic,
       Argument.withDescription("Optional Turbo tasks to prove; defaults to lint check test docgen")
@@ -2578,7 +2587,7 @@ const packageVerifyCommand = Command.make(
       Argument.variadic,
       Argument.withDescription("Optional workspace package name to verify")
     ),
-    quick: Flag.boolean("quick").pipe(Flag.withDescription("Run lint and check only")),
+    quick: Flag.boolean("quick").pipe(Flag.withDefault(false), Flag.withDescription("Run lint and check only")),
   },
   ({ packageArgs, quick }) =>
     runQualityProgram(runPackageVerifyCli({ packageArgs: variadicStrings(packageArgs), quick }))
@@ -2605,7 +2614,10 @@ const changesetGraphCommand = Command.make("changeset-graph", {}, () =>
 const qualityProfileDetectCommand = Command.make(
   "detect",
   {
-    json: Flag.boolean("json").pipe(Flag.withDescription("Print the detected profile as JSON")),
+    json: Flag.boolean("json").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print the detected profile as JSON")
+    ),
   },
   ({ json }) => runQualityProgram(printQualityProfileDetection(detectQualityProfile(), json))
 ).pipe(Command.withDescription("Detect the local quality hardware profile"));
@@ -2613,7 +2625,7 @@ const qualityProfileDetectCommand = Command.make(
 const qualityProfileConfigCommand = Command.make(
   "config",
   {
-    json: Flag.boolean("json").pipe(Flag.withDescription("Print the profile config as JSON")),
+    json: Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Print the profile config as JSON")),
     profile: Argument.choice("profile", QualityHardwareProfile.Options).pipe(
       Argument.withDescription("Quality hardware profile to inspect")
     ),

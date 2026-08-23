@@ -796,7 +796,7 @@ export const runSchemaCatalog = Effect.fn("SchemaCatalog.run")(function* (option
 export const lintSchemaCatalogCommand = Command.make(
   "schema-catalog",
   {
-    write: Flag.boolean("write").pipe(Flag.withDescription(`Refresh ${SCHEMA_CATALOG_PATH}`)),
+    write: Flag.boolean("write").pipe(Flag.withDefault(false), Flag.withDescription(`Refresh ${SCHEMA_CATALOG_PATH}`)),
   },
   Effect.fn(function* ({ write }) {
     yield* runSchemaCatalog(SchemaCatalogOptions.make({ write }));

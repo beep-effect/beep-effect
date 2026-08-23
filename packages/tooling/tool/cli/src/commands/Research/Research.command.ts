@@ -117,10 +117,14 @@ const researchRootFlag = Flag.directory("research-root", { mustExist: true }).pi
 );
 /** @since 0.0.0 */
 const starsFlag = Flag.boolean("stars").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Also card GitHub starred repositories via the gh CLI")
 );
 /** @since 0.0.0 */
-const forceFlag = Flag.boolean("force").pipe(Flag.withDescription("Rewrite cards that already exist"));
+const forceFlag = Flag.boolean("force").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Rewrite cards that already exist")
+);
 /** @since 0.0.0 */
 const onlyFlag = Flag.string("only").pipe(
   Flag.withDescription("Only card clones whose directory name contains this substring"),
@@ -196,6 +200,7 @@ const researchNotionPullCommand = Command.make(
 
 /** @since 0.0.0 */
 const dryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Report what would be pushed to Cognee without pushing")
 );
 
@@ -239,6 +244,7 @@ const researchDigestCommand = Command.make(
 
 /** @since 0.0.0 */
 const commitFlag = Flag.boolean("commit").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Commit the vault after the daily run when it changed")
 );
 
@@ -269,6 +275,7 @@ const researchDailyCommand = Command.make(
 
 /** @since 0.0.0 */
 const uninstallFlag = Flag.boolean("uninstall").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Disable and remove the research systemd user timers")
 );
 

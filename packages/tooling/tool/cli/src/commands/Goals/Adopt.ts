@@ -491,9 +491,13 @@ const towardFlag = Flag.choice("toward", PhaseArchetype.Options).pipe(
   Flag.withDescription("Archetype to measure against; defaults to inference from the packet's phase shape")
 );
 const planFlag = Flag.boolean("plan").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Compile and print the adoption plan (the only mode this slice ships)")
 );
-const jsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Print the plan as canonical JSON"));
+const jsonFlag = Flag.boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Print the plan as canonical JSON")
+);
 
 const runAdoptPlan = Effect.fn("Goals.runAdoptPlan")(function* (options: {
   readonly slug: string;

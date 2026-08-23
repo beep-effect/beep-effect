@@ -154,30 +154,39 @@ const prefixFlag = Flag.string("prefix").pipe(
   Flag.withDescription("Generated filename prefix without dots, path separators, or embedded NUL bytes")
 );
 const sortDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the planned renames without touching files")
 );
 const flattenMediaDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the planned moves without touching files")
 );
 const stripDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the planned metadata rewrites without touching files")
 );
 const normalizeDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the planned normalizations without writing files")
 );
 const createCaptionsDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the planned caption sidecars without writing files")
 );
 const archiveDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the planned poor-candidate archival without moving files")
 );
 const curateImagesDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Validate and print every disposition without writing derivatives")
 );
 const auditImagesOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Overwrite an existing regular-file image audit manifest")
 );
 const curateImagesOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Overwrite existing regular-file curation outputs and manifest")
 );
 const captionTextFlag = Flag.string("caption").pipe(
@@ -185,11 +194,13 @@ const captionTextFlag = Flag.string("caption").pipe(
   Flag.withDescription("Caption text to write to newly created sidecar files")
 );
 const normalizeDedupeFlag = Flag.boolean("dedupe").pipe(
+  Flag.withDefault(false),
   Flag.withDescription(
     "Skip later files whose normalized bytes exactly duplicate an earlier normalized output; implied by --move-duplicates-to"
   )
 );
 const processExportChildrenFlag = Flag.boolean("export-children").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Export child artifacts from archive-like sources such as PST")
 );
 const normalizeMoveDuplicatesToFlag = Flag.directory("move-duplicates-to").pipe(
@@ -197,15 +208,19 @@ const normalizeMoveDuplicatesToFlag = Flag.directory("move-duplicates-to").pipe(
   Flag.optional
 );
 const cropBordersDryRunFlag = Flag.boolean("dry-run").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print detected border crops without rewriting files")
 );
 const overwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Overwrite existing normalized outputs, duplicate move targets, and manifest")
 );
 const archiveOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Overwrite existing archived files, sidecars, and manifest")
 );
 const processOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Overwrite an existing files process output directory")
 );
 const processTikaJarFlag = Flag.file("tika-jar", { mustExist: true }).pipe(
@@ -225,9 +240,11 @@ const processPffexportFlag = Flag.string("pffexport").pipe(
   Flag.optional
 );
 const createCaptionsOverwriteFlag = Flag.boolean("overwrite").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Overwrite existing caption sidecar files")
 );
 const withDimensionsFlag = Flag.boolean("with-dimensions").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Include probed image or video dimensions in generated media filenames")
 );
 const candidateProfileFlag = Flag.choiceWithValue("profile", [["character-lora", "character-lora"]]).pipe(
@@ -254,7 +271,10 @@ const sidecarsFlag = Flag.string("sidecars").pipe(
   Flag.withDefault("txt"),
   Flag.withDescription("Same-stem sidecars to move with archived images: none or a comma-separated extension list")
 );
-const jsonFlag = Flag.boolean("json").pipe(Flag.withDescription("Emit a machine-readable JSON report"));
+const jsonFlag = Flag.boolean("json").pipe(
+  Flag.withDefault(false),
+  Flag.withDescription("Emit a machine-readable JSON report")
+);
 const borderToleranceFlag = Flag.float("tolerance").pipe(
   Flag.withDefault(12),
   Flag.withDescription("Maximum RGB channel distance for near-solid border pixels")

@@ -3,8 +3,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-08-17T22:55:02.910Z",
-  "git_sha": "ed9cc4b8746133a8b19827374e24478850943a6b",
+  "generated_at": "2026-08-23T19:29:57.780Z",
+  "git_sha": "7a5ff1881b38f31b174f2fa809006c136389fef9",
   "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
@@ -8247,10 +8247,10 @@
     },
     "@beep/file-processing": {
       "path": "packages/foundation/capability/file-processing",
-      "lines": 83.22,
-      "statements": 83.22,
-      "branches": 84.93,
-      "functions": 69.9,
+      "lines": 83.33,
+      "statements": 83.33,
+      "branches": 85.33,
+      "functions": 70.19,
       "uncovered": {
         "lines": 50,
         "statements": 51,
@@ -8403,10 +8403,10 @@
           }
         },
         "packages/foundation/capability/file-processing/src/PathSafety/PathSafety.service.ts": {
-          "lines": 90.32,
-          "statements": 88.88,
-          "branches": 93.75,
-          "functions": 80,
+          "lines": 90.62,
+          "statements": 89.23,
+          "branches": 94.44,
+          "functions": 81.25,
           "uncovered": {
             "lines": 6,
             "statements": 7,
@@ -20007,15 +20007,15 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 72.51,
-      "statements": 72.25,
-      "branches": 58.93,
-      "functions": 65.16,
+      "lines": 73.18,
+      "statements": 72.93,
+      "branches": 59.65,
+      "functions": 65.96,
       "uncovered": {
-        "lines": 8403,
-        "statements": 8837,
-        "branches": 4691,
-        "functions": 3133
+        "lines": 8394,
+        "statements": 8826,
+        "branches": 4694,
+        "functions": 3132
       },
       "files": {
         "packages/tooling/tool/cli/src/bin-main.ts": {
@@ -21447,15 +21447,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Explore/Check.ts": {
-          "lines": 95.94,
-          "statements": 96.05,
-          "branches": 90.5,
+          "lines": 97.36,
+          "statements": 97.43,
+          "branches": 94.59,
           "functions": 100,
           "uncovered": {
-            "lines": 14,
-            "statements": 14,
-            "branches": 10,
-            "functions": 4
+            "lines": 2,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Explore/Explore.command.ts": {
@@ -22011,15 +22011,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketFold.ts": {
-          "lines": 92.5,
-          "statements": 92.7,
-          "branches": 87,
-          "functions": 92.3,
+          "lines": 93.54,
+          "statements": 93.75,
+          "branches": 88.7,
+          "functions": 93.02,
           "uncovered": {
-            "lines": 20,
-            "statements": 20,
-            "branches": 16,
-            "functions": 4
+            "lines": 12,
+            "statements": 12,
+            "branches": 7,
+            "functions": 3
           }
         },
         "packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketTransitionWriter.ts": {
@@ -24207,10 +24207,10 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts": {
-          "lines": 90.41,
-          "statements": 80.48,
+          "lines": 92.04,
+          "statements": 83.5,
           "branches": 0,
-          "functions": 0,
+          "functions": 6.25,
           "uncovered": {
             "lines": 7,
             "statements": 16,
@@ -24266,6 +24266,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/ArtifactPaths.ts": {
           "lines": 100,
           "statements": 100,
@@ -24303,15 +24315,15 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/FallowFeedback.ts": {
-          "lines": 61.9,
-          "statements": 61.5,
-          "branches": 16.27,
-          "functions": 55.84,
+          "lines": 63.24,
+          "statements": 63.07,
+          "branches": 17.5,
+          "functions": 56.57,
           "uncovered": {
-            "lines": 72,
-            "statements": 77,
-            "branches": 72,
-            "functions": 34
+            "lines": 68,
+            "statements": 72,
+            "branches": 66,
+            "functions": 33
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/GateStaleness.ts": {
@@ -24375,6 +24387,30 @@
           }
         },
         "packages/tooling/tool/cli/src/commands/Yeet/internal/Inbox.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxPorcelain.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Yeet/internal/InboxView.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -24855,15 +24891,15 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts": {
-          "lines": 73.33,
-          "statements": 73.68,
+          "lines": 74.66,
+          "statements": 75,
           "branches": 80,
-          "functions": 74.07,
+          "functions": 77.77,
           "uncovered": {
-            "lines": 20,
-            "statements": 20,
+            "lines": 19,
+            "statements": 19,
             "branches": 9,
-            "functions": 7
+            "functions": 6
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts": {
@@ -24891,7 +24927,7 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/Flags.ts": {
-          "lines": 82.35,
+          "lines": 83.33,
           "statements": 83.33,
           "branches": 40,
           "functions": 50,
@@ -25131,6 +25167,18 @@
           }
         },
         "packages/tooling/tool/cli/src/internal/cli/RunMode.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/internal/cli/Stdin.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

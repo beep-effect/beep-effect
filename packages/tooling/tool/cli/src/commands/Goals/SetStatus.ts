@@ -422,12 +422,15 @@ const statusArgument = Argument.string("status").pipe(
   Argument.optional
 );
 const migrateFlag = Flag.boolean("migrate").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Run the mechanical census-locked status migration over every packet")
 );
 const migrateWriteFlag = Flag.boolean("write").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Apply --migrate edits (default is a dry-run report)")
 );
 const previewFlag = Flag.boolean("preview").pipe(
+  Flag.withDefault(false),
   Flag.withDescription("Print the guarded transition plan (fold, events to append, derived state) without writing")
 );
 

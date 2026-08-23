@@ -16,7 +16,7 @@ const JsonRpcHeaders = S.Array(S.Unknown);
 
 const jsonRpcRequestImpl = <A, I>(method: string, params: S.Codec<A, I>) =>
   S.Struct({
-    headers: JsonRpcHeaders,
+    headers: JsonRpcHeaders.pipe(S.withDecodingDefaultKey(Effect.succeed([]))),
     id: JsonRpcId,
     jsonrpc: S.Literal("2.0"),
     method: S.Literal(method),
