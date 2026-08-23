@@ -1,6 +1,6 @@
 ---
 name: unslop
-description: Cut AI tells from human-facing prose. Apply to writing tasks without rewriting code, identifiers, established domain terms, or required technical syntax.
+description: Cut AI tells whenever producing or editing human-facing prose, including prose within coding tasks such as docs, comments, messages, and summaries. Do not rewrite code, identifiers, established domain terms, or required technical syntax.
 ---
 
 # Unslop
@@ -11,12 +11,14 @@ Edit text to remove AI patterns and add human voice.
 
 1. Scan for the patterns below.
 2. Rewrite. Preserve meaning, match intended tone.
-3. Add soul (see next section).
+3. Add soul when the requested audience and tone permit it (see next section).
 4. Self-audit: "What makes this obviously AI generated?" Fix remaining tells.
 
 ## Adding soul
 
 Removing patterns is half the job. Sterile, voiceless writing is just as obvious.
+
+Use this pass only when the requested audience and tone permit a personal voice. For neutral, formal, legal, or controlled prose, preserve precision and do not add opinions or deliberate messiness that were not in the source.
 
 - **Have opinions.** React to facts instead of neutrally listing pros and cons.
 - **Vary rhythm.** Short sentences. Then longer ones that take their time. Mix it up.
@@ -73,7 +75,7 @@ Removing patterns is half the job. Sterile, voiceless writing is just as obvious
 
 ### Plain speech
 
-27. **Say what it does, not how it feels.** "the database stays close at hand", "SQL you can read", "types that follow your schema" name a feeling. The fix names the mechanism or a number: "`.toSQL()` returns the exact string sent to the database", "a column rename fails the build". Ask what the sentence tells the reader to do or know, then write that. If you can't restate it as a concrete instruction, fact, or number, cut it. One more check: if the sentence could appear unchanged in another project's docs, it says nothing about this one. Cut it.
+27. **Say what it does, not how it feels.** "the database stays close at hand", "SQL you can read", "types that follow your schema" name a feeling. The fix names the mechanism or a number: "`.toSQL()` returns the exact string sent to the database", "a column rename fails the build". Ask what the sentence tells the reader to do or know, then write that. If you can't restate it as a concrete instruction, fact, or number, cut it. For generic promotional filler, ask whether the sentence conveys a project-specific fact or essential reusable guidance. Cut it only when the answer is no. Preserve prerequisites, safety and security warnings, compatibility notes, accessibility instructions, standards, and other necessary guidance even when it applies to more than one project.
 28. **Shorten or split dense sentences.** If the reader has to backtrack to parse a sentence, break it in two or drop clauses. One idea per sentence.
 29. **Active voice.** Prefer it. Catch "is/are/was/were + past participle" and name the actor: "queries are validated" becomes "the compiler validates queries", "the file is parsed by the loader" becomes "the loader parses the file". Passive is fine only when the actor is unknown or genuinely doesn't matter.
 30. **Cut adverbs, or use a stronger verb.** "runs quickly" becomes "is fast" or the number. "significantly improves" becomes the measured delta. An adverb propping up a weak verb means the verb is wrong.
