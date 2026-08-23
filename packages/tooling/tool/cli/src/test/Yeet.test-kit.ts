@@ -6,6 +6,7 @@
  */
 
 export * from "@beep/repo-cli/commands/Yeet/index";
+export * from "../commands/Yeet/internal/Ack.ts";
 export * from "../commands/Yeet/internal/ArtifactPaths.ts";
 export * from "../commands/Yeet/internal/AttemptJournal.ts";
 export * from "../commands/Yeet/internal/Closeout.ts";
@@ -32,6 +33,8 @@ export {
 export * from "../commands/Yeet/internal/Guards.ts";
 export * from "../commands/Yeet/internal/Handler.ts";
 export * from "../commands/Yeet/internal/Inbox.ts";
+export * from "../commands/Yeet/internal/InboxPorcelain.ts";
+export * from "../commands/Yeet/internal/InboxView.ts";
 export * from "../commands/Yeet/internal/IssueArtifacts.ts";
 export * from "../commands/Yeet/internal/IssueClassification.ts";
 export * from "../commands/Yeet/internal/IssueParser.ts";

@@ -482,3 +482,21 @@ is itself the fourth receipt below; the batching is the symptom, not the practic
   away; (2) a docstring that assigns a responsibility "upstream" is a claim about a mechanism and
   needs the same mechanism check as an exoneration — name the call site that implements it or
   implement it where the claim lives.
+
+## 2026-08-17 — A2 PR-1: the per-file coverage ratchet is only probeable by the full lane
+
+- What was happening: landing the `yeet inbox` CLI (PR #759). The new-file coverage ratchet
+  (`no baseline file identity` → every new file needs near-total coverage) failed four times,
+  and each attempt cost a full `beep ci lane coverage` run (~11 min local, ~14 min hosted)
+  because nothing cheaper evaluates the ratchet's per-file verdict.
+- Evidence: hosted job 95500703836 (first red), then local lane runs coverage-lane2/3/4/5 in
+  this session's scratchpad; the passing run compared 127 packages to adjudicate 4 files.
+  A fifth round-trip came from proving a fix on a tree that then changed (the `CommandStdinSource`
+  rework landed after the green lane run — proof binds to the exact tree, and the hosted rerun
+  caught the drift).
+- What would have prevented it: a `beep quality coverage-probe --filter=@beep/repo-cli
+  --files <changed>` that runs the package's vitest coverage once and evaluates ONLY the
+  ratchet's per-file rules against the changed set (the ratchet compare is already pure —
+  `CoverageRegression.ts` — it just has no entry point below the full lane). Sub-minute
+  feedback instead of four ~11-minute loops; also makes "re-verify after any source edit"
+  cheap enough that stale-tree proofs stop being tempting.

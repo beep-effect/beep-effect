@@ -16,6 +16,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { csvValues } from "../../../internal/cli/Flags.ts";
+import { readStdinDocument } from "../../../internal/cli/Stdin.ts";
 import { commandTextForStep, RepoRunPlan } from "../../../internal/repo-run/index.ts";
 import {
   FallowFeatureFamily,
@@ -651,30 +652,12 @@ export const runYeetFallowFixtureCheck = Effect.fn("YeetFallowFeedback.runYeetFa
   yield* Console.log(`[yeet] Fallow fixture check ok: ${options.fixturePath}`);
 });
 
-const readStdinText = Effect.fn("YeetFallowFeedback.readStdinText")(function* (
-  fromStdin: boolean
-): Effect.fn.Return<string, YeetCommandError> {
-  if (!fromStdin) {
-    return yield* YeetCommandError.make({
-      message: "yeet plan-contract-check requires --from-stdin.",
-      exitCode: 1,
-    });
-  }
-  if (process.stdin.isTTY) {
-    return yield* YeetCommandError.make({
-      message: "yeet plan-contract-check --from-stdin received no stdin.",
-      exitCode: 1,
-    });
-  }
-  return yield* Effect.tryPromise(() => Bun.stdin.text()).pipe(
-    Effect.mapError((cause) =>
-      YeetCommandError.make({
-        message: `Failed to read yeet plan stdin: ${cause instanceof Error ? cause.message : String(cause)}`,
-        exitCode: 1,
-      })
-    )
-  );
-});
+const readStdinText = (fromStdin: boolean): Effect.Effect<string, YeetCommandError> =>
+  readStdinDocument(fromStdin, {
+    missingFlag: "yeet plan-contract-check requires --from-stdin.",
+    noStdin: "yeet plan-contract-check --from-stdin received no stdin.",
+    readFailurePrefix: "Failed to read yeet plan stdin",
+  }).pipe(Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 })));
 
 const decodePlanText = Effect.fn("YeetFallowFeedback.decodePlanText")(function* (
   text: string
