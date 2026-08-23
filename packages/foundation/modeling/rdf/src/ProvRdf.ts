@@ -210,6 +210,7 @@ const encodeScalar = (value: string | number | boolean): Result.Result<Literal, 
       pipe(
         S.encodeResult(S.FiniteFromString)(number),
         Result.map((encoded) => literal(encoded, XSD_DOUBLE)),
+        /* istanbul ignore next -- Entity's schema admits only finite numeric prov:value inputs */
         Result.mapError(() => codecError("Unable to encode a finite prov:value number"))
       )
     ),
@@ -464,6 +465,7 @@ const ensureUniqueRecordSubjects = (
         recordQuads,
         A.findFirst((value) => samePredicate(value.predicate, RDF_TYPE)),
         O.match({
+          /* istanbul ignore next -- every successful record encoder emits its RDF type quad */
           onNone: () => Result.fail(codecError("Encoded PROV record is missing its RDF type")),
           onSome: (typeQuad) => Result.succeed(serializeTerm(typeQuad.subject)),
         })
@@ -888,15 +890,21 @@ const decodeRecordByType = Match.type<string>().pipe(
   )
 );
 
-const decodeRecord = (quads: ReadonlyArray<Quad>, typeQuad: Quad): Result.Result<ProvRecordType, ProvRdfCodecError> =>
-  decodeRecordByType(S.is(NamedNode)(typeQuad.object) ? typeQuad.object.value : "")(quads, typeQuad.subject);
-
-const isProvType = (value: ObjectTerm): boolean =>
+const isProvType = (value: ObjectTerm): value is NamedNode =>
   S.is(NamedNode)(value) && Str.startsWith(PROV_NAMESPACE)(value.value);
 
-const ensureUniqueTypeSubjects = (
-  typeQuads: ReadonlyArray<Quad>
-): Result.Result<ReadonlyArray<Quad>, ProvRdfCodecError> =>
+const isProvTypeQuad = (value: Quad): value is Quad & { readonly object: NamedNode } =>
+  samePredicate(value.predicate, RDF_TYPE) && isProvType(value.object);
+
+const decodeRecord = (
+  quads: ReadonlyArray<Quad>,
+  typeQuad: Quad & { readonly object: NamedNode }
+): Result.Result<ProvRecordType, ProvRdfCodecError> =>
+  decodeRecordByType(typeQuad.object.value)(quads, typeQuad.subject);
+
+const ensureUniqueTypeSubjects = <TypeQuad extends Quad>(
+  typeQuads: ReadonlyArray<TypeQuad>
+): Result.Result<ReadonlyArray<TypeQuad>, ProvRdfCodecError> =>
   A.length(A.dedupe(A.map(typeQuads, (value) => serializeTerm(value.subject)))) === A.length(typeQuads)
     ? Result.succeed(typeQuads)
     : Result.fail(codecError("Multiple supported PROV RDF types share one subject"));
@@ -923,7 +931,7 @@ const datasetToProvBundleInternal = (
   options: ProvRdfCodecOptions = defaultOptions
 ): Result.Result<ProvBundle, ProvRdfCodecError> => {
   const quads = A.filter(dataset.quads, inSelectedGraph(selectGraph(options)));
-  const typeQuads = A.filter(quads, (value) => samePredicate(value.predicate, RDF_TYPE) && isProvType(value.object));
+  const typeQuads = A.filter(quads, isProvTypeQuad);
   return pipe(
     typeQuads,
     ensureUniqueTypeSubjects,

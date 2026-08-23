@@ -23,7 +23,7 @@ import {
 import * as ProvVocabulary from "@beep/rdf/Vocab/Prov";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
-import { XSD_DATE_TIME, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
+import { XSD_DATE_TIME, XSD_DOUBLE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
@@ -31,6 +31,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import type { Literal } from "@beep/rdf/Rdf";
 
 const RoundTripEntitySeed = S.Struct({
   index: NonNegativeInt,
@@ -286,6 +287,27 @@ describe("ProvRdf", () => {
     expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
   });
 
+  it("rejects malformed, unsupported, and language-tagged prov:value literals", () => {
+    const subject = makeNamedNode("urn:example:invalid-scalars");
+    const datasetWithValue = (value: Literal) =>
+      makeDataset([
+        makeQuad(subject, RDF_TYPE, ProvVocabulary.PROV_ENTITY),
+        makeQuad(subject, ProvVocabulary.PROV_VALUE, value),
+      ]);
+
+    expect(Result.isFailure(datasetToProvBundle(datasetWithValue(makeLiteral("not-a-number", XSD_DOUBLE.value))))).toBe(
+      true
+    );
+    expect(
+      Result.isFailure(datasetToProvBundle(datasetWithValue(makeLiteral("2026-08-17", XSD_DATE_TIME.value))))
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        datasetToProvBundle(datasetWithValue(makeLiteral("bonjour", XSD_STRING.value, { language: "fr" })))
+      )
+    ).toBe(true);
+  });
+
   it("rejects a named node used where a PROV timestamp requires a literal", () => {
     const subject = makeNamedNode("urn:example:external-timestamped-entity");
     const dataset = makeDataset([
@@ -322,13 +344,33 @@ describe("ProvRdf", () => {
       const reservedBundle = ProvBundle.make({
         records: [Entity.make({ id: O.some(ObjectRef.make("urn:beep:rdf:prov:record:123")) })],
       });
+      const localBundle = ProvBundle.make({
+        records: [Entity.make({ id: O.some(ObjectRef.make("local-entity")) })],
+      });
       const encodedReserved = yield* Effect.fromResult(provBundleToDataset(reservedBundle));
       const decodedReserved = yield* Effect.fromResult(datasetToProvBundle(encodedReserved));
+      const encodedLocal = yield* Effect.fromResult(provBundleToDataset(localBundle));
+      const decodedLocal = yield* Effect.fromResult(datasetToProvBundle(encodedLocal));
 
       expect(areDatasetsEquivalent(externalDataset, reencodedExternal)).toBe(true);
       expect(decodedReserved.records).toEqual(reservedBundle.records);
+      expect(decodedLocal.records).toEqual(localBundle.records);
     })
   );
+
+  it("rejects malformed and invalid encoded object references", () => {
+    const subject = makeNamedNode("urn:example:encoded-reference-errors");
+    const datasetWithReference = (value: string) =>
+      makeDataset([
+        makeQuad(subject, RDF_TYPE, ProvVocabulary.PROV_ENTITY),
+        makeQuad(subject, ProvVocabulary.PROV_WAS_DERIVED_FROM, makeNamedNode(value)),
+      ]);
+
+    expect(Result.isFailure(datasetToProvBundle(datasetWithReference("urn:beep:rdf:prov:ref:*")))).toBe(true);
+    expect(
+      Result.isFailure(datasetToProvBundle(datasetWithReference("urn:beep:rdf:prov:ref:aGFzIHdoaXRlc3BhY2U")))
+    ).toBe(true);
+  });
 
   it("rejects a literal used where a PROV reference requires a named node", () => {
     const subject = makeNamedNode("urn:example:derived-entity");
@@ -413,6 +455,13 @@ describe("ProvRdf", () => {
       makeQuad(relation, ProvVocabulary.PROV_ENTITY_PROPERTY, qualifiedEntity),
       makeQuad(activity, ProvVocabulary.PROV_USED, directEntity),
     ]);
+
+    expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
+  });
+
+  it("rejects a qualified relation without its required parent and target", () => {
+    const relation = makeNamedNode("urn:example:incomplete-usage");
+    const dataset = makeDataset([makeQuad(relation, RDF_TYPE, ProvVocabulary.PROV_USAGE)]);
 
     expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
   });

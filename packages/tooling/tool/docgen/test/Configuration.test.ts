@@ -11,7 +11,6 @@ import * as S from "effect/Schema";
 const encodeJson = Unknown.encodeSyncFromJsonString;
 
 const makeLoadArgs = (): Parameters<typeof Configuration.load>[0] => ({
-  configFile: O.none(),
   projectHomepage: O.none(),
   srcLink: O.none(),
   srcDir: O.none(),
@@ -71,7 +70,7 @@ const expectConfig = (actual: Configuration.ConfigurationShape, expected: Config
 
 describe("Configuration", () => {
   layer(makeTestLayer())((it) =>
-    it.effect("uses defaults when no docgen.json is present", () =>
+    it.effect("uses defaults when configFile is omitted and no docgen.json is present", () =>
       Configuration.load(makeLoadArgs()).pipe(
         Effect.flatMap(
           Effect.fnUntraced(function* (config) {

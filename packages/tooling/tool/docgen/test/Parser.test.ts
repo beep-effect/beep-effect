@@ -1480,6 +1480,54 @@ Since v1.0.0`
       )
     );
 
+    it.effect("should parse public getters and exclude ignored, private, and static getters", () =>
+      expectMarkdown(
+        Parser.parseClasses,
+        `/**
+      * description
+      * @since 1.0.0
+      */
+      export class C {
+        /**
+         * visible getter
+         * @since 1.1.0
+         */
+        get value(): string { return "value" }
+        /** @ignore */
+        get ignored(): string { return "ignored" }
+        private get secret(): string { return "secret" }
+        static get version(): number { return 1 }
+      }`,
+        `## C (class)
+
+description
+
+**Signature**
+
+\`\`\`ts
+declare class C
+\`\`\`
+
+[Source](https://github.com/effect-ts/docgen/blob/main/src/test.ts#L5)
+
+Since v1.0.0
+
+### value (property)
+
+visible getter
+
+**Signature**
+
+\`\`\`ts
+readonly value: string
+\`\`\`
+
+[Source](https://github.com/effect-ts/docgen/blob/main/src/test.ts#L10)
+
+Since v1.1.0`
+      )
+    );
+
     it.effect("should return a `Class`", () =>
       expectMarkdown(
         Parser.parseClasses,

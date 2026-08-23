@@ -59,3 +59,26 @@ first-class output). Public repo: paths relative, no secrets, no session ids.
   the focused lockfile passed `bun install --frozen-lockfile`.
 - **Prevention:** have agent bootstrap verify the resolved Bun executable's
   reported version against `.bun-version` before any lockfile-writing command.
+
+## 2026-08-23 — full local Yeet proof omitted hosted blocking lanes
+
+- **Doing:** proving the repaired PR head locally before publishing it.
+- **Evidence:** `bun run beep yeet verify` passed every planned lane, but the
+  hosted `Property Laws` and `Coverage Regression` checks later failed; neither
+  lane appeared in the local 25-lane verdict. The property failure was a
+  load-sensitive mention-unmount race that passed 10 consecutive focused
+  reruns locally, while coverage reported concrete uncovered units.
+- **Prevention:** make the full Yeet plan include every required hosted quality
+  lane, especially property tests and coverage, or report those omissions as
+  explicit unproven gates before allowing publish proof reuse.
+
+## 2026-08-23 — Yeet suggested a retired CI lane id
+
+- **Doing:** refreshing the stale JSDoc CI inventory reported by
+  `bun run beep yeet status --remote`.
+- **Evidence:** Yeet prescribed `bun run beep ci lane jsdoc-inventory`, but the
+  CLI rejected that id; live `CiLane.ts` shows the inventory is produced by the
+  `jsdoc-ratchet` lane before its ratchet step.
+- **Prevention:** derive the staleness remediation command from the registered
+  CI lane descriptor, or update the gate descriptor to prescribe
+  `bun run beep ci lane jsdoc-ratchet`.
