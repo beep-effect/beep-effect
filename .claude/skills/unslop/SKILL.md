@@ -1,6 +1,6 @@
 ---
 name: unslop
-description: Cut AI tells from any writing. Must always apply.
+description: Cut AI tells from human-facing prose. Apply to writing tasks without rewriting code, identifiers, established domain terms, or required technical syntax.
 ---
 
 # Unslop
@@ -47,7 +47,7 @@ Removing patterns is half the job. Sterile, voiceless writing is just as obvious
 
 ### Style
 
-13. **Em dash overuse.** Avoid em dashes entirely. Use periods or commas only (no parentheses, no en dashes, no hyphen-as-dash substitutes). Em dashes are an AI tell, and reaching for parentheses instead just trades one tell for another. If a thought needs separation, end the sentence or use a comma.
+13. **Em dash overuse.** Avoid em dashes entirely. Use periods or commas instead, and do not use parentheses, en dashes, or hyphens merely as dash substitutes. Keep parentheses when they carry required syntax, citations, or technical grouping. If a thought needs separation, end the sentence or use a comma.
 14. **Colon overuse.** Colons are fine before a list or example. Not as mid-sentence connectors. "If you're coming from traditional automation: instead of registering event handlers, you describe conditions" adds nothing with the colon. Rewrite to let the point stand on its own without comparison framing. "Describing when the scheduler should fire works best as plain English." Same meaning, no crutch punctuation.
 15. **Boldface overuse.** Don't bold every proper noun or acronym.
 16. **Inline-header lists.** The tell is a bold label and colon that restates the line: "**Performance:** Performance improved...". Convert those to prose. A bold lead-in that ends in a period, names the item, and is followed by genuinely new detail ("**Schema in TypeScript.** Tables live in one file.") is fine, not a tell.
@@ -69,7 +69,7 @@ Removing patterns is half the job. Sterile, voiceless writing is just as obvious
 
 ### Jargon
 
-26. **Abstract metaphor nouns.** Substrate, wedge, vector, locus, vantage, nexus, primitive (as noun), harness (as metaphor), surface (as in "API surface"), bedrock, scaffolding (as metaphor), modality, paradigm, gold-plating, ratchet (as metaphor), evacuate (for moving code), endgame, north star, flywheel. These read as technical but usually have a plainer concrete word. "Substrate" becomes "base". "Wedge in" becomes "add". "Vector" becomes "way" or "method". "Gold-plating" becomes "more than the job needs". "Ratchet" becomes the mechanism's real name or "a limit that only tightens". "Evacuate" becomes "move out". "Endgame" becomes "the last phase". Pick the concrete word.
+26. **Abstract metaphor nouns.** Substrate, wedge, vector, locus, vantage, nexus, primitive (as noun), harness (as metaphor), surface, bedrock, scaffolding (as metaphor), modality, paradigm, gold-plating, ratchet (as metaphor), evacuate (for moving code), endgame, north star, flywheel. Replace these when they are vague metaphors, not when they are established project vocabulary. Never rewrite code, identifiers, or domain terms such as "API surface" or a named quality ratchet. When a plainer word is accurate, "substrate" becomes "base", "wedge in" becomes "add", and "vector" becomes "way" or "method". Pick the concrete word.
 
 ### Plain speech
 
