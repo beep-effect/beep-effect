@@ -84,6 +84,9 @@ sandbox_mode = "workspace-write"
     name = "turborepo"
     enabled = true
   [[skills.config]]
+    name = "unslop"
+    enabled = true
+  [[skills.config]]
     name = "yeet"
     enabled = true
 
