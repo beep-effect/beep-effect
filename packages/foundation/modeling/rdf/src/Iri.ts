@@ -7,8 +7,7 @@
 import { $RdfId } from "@beep/identity/packages";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { A, Str } from "@beep/utils";
-import { pipe, SchemaTransformation } from "effect";
-import { identity } from "effect/Function";
+import { pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { SCHEMA_ORG_NAMESPACE } from "./Vocab/generated/SchemaOrg.terms.ts";
@@ -810,9 +809,9 @@ const startsWithinOrigin = (value: string, origin: string): boolean =>
  * same vocabulary, but RDF IRI equality is codepoint-strict, so mixed forms
  * silently break joins, SPARQL matches, and SHACL paths. The consumer owns
  * canonicalization: this helper implements the lossless `http -> https`
- * rewrite (including the stray `www.schema.org` host) that the IRI codecs
- * apply on decode. Other vocabularies are never scheme-rewritten — W3C and
- * DCMI namespaces are canonically `http`.
+ * rewrite (including the stray `www.schema.org` host) at schema.org-aware
+ * boundaries. Generic IRI codecs preserve codepoint identity; other
+ * vocabularies are never scheme-rewritten.
  *
  * **Example** (Canonicalize a legacy schema.org IRI)
  *
@@ -836,13 +835,6 @@ export const canonicalizeSchemaOrgIri = (value: string): string =>
     })
   );
 
-const isCanonicalSchemaOrgIri = (value: string): boolean => value === canonicalizeSchemaOrgIri(value);
-
-const schemaOrgCanonicalTransformation = SchemaTransformation.transform({
-  decode: canonicalizeSchemaOrgIri,
-  encode: identity,
-});
-
 const makeTrimmedSyntaxChecks = (
   identifier: string,
   title: string,
@@ -862,12 +854,6 @@ const makeTrimmedSyntaxChecks = (
       title: `${title} Syntax`,
       description,
       message,
-    }),
-    S.makeFilter(isCanonicalSchemaOrgIri, {
-      identifier: $I.create(identifier).make("SchemaOrgCanonicalCheck"),
-      title: `${title} Schema.org Canonical Namespace`,
-      description: "Schema.org IRIs written against the canonical https://schema.org/ namespace.",
-      message: "schema.org IRIs must use the canonical https://schema.org/ namespace",
     }),
   ] as const;
 
@@ -951,20 +937,16 @@ const iriChecks = makeNonEmptyReferenceChecks("IRI", "IRI", "An RFC 3987 IRI.", 
  * @since 0.0.0
  */
 export const IRIReference = S.String.pipe(
-  S.decodeTo(
-    S.String.check(iriReferenceChecks)
-      .annotate({
-        toArbitrary: () => (fc) => fc.constantFrom(...IriReferenceArbitraryValues),
-      })
-      .pipe(S.brand("IRIReference")),
-    schemaOrgCanonicalTransformation
-  ),
+  S.check(iriReferenceChecks),
+  S.annotate({
+    toArbitrary: () => (fc) => fc.constantFrom(...IriReferenceArbitraryValues),
+  }),
+  S.brand("IRIReference"),
   SchemaUtils.withStatics((schema) => ({
     equivalence: SchemaUtils.toEquivalence(schema),
   })),
   $I.annoteSchema("IRIReference", {
-    description:
-      "RFC 3987 IRI reference syntax, including both absolute and relative forms. Decoding canonicalizes legacy schema.org namespaces to https://schema.org/.",
+    description: "RFC 3987 IRI reference syntax, including both absolute and relative forms.",
   }),
   SchemaUtils.withCodecStatics
 );
@@ -1048,17 +1030,13 @@ export type RelativeIRIReference = typeof RelativeIRIReference.Type;
  * @since 0.0.0
  */
 export const AbsoluteIRI = S.String.pipe(
-  S.decodeTo(
-    S.String.check(absoluteIriChecks)
-      .annotate({
-        toArbitrary: () => (fc) => fc.constantFrom(...AbsoluteIriArbitraryValues),
-      })
-      .pipe(S.brand("AbsoluteIRI")),
-    schemaOrgCanonicalTransformation
-  ),
+  S.check(absoluteIriChecks),
+  S.annotate({
+    toArbitrary: () => (fc) => fc.constantFrom(...AbsoluteIriArbitraryValues),
+  }),
+  S.brand("AbsoluteIRI"),
   $I.annoteSchema("AbsoluteIRI", {
-    description:
-      "RFC 3987 absolute IRI syntax without a fragment component. Decoding canonicalizes legacy schema.org namespaces to https://schema.org/.",
+    description: "RFC 3987 absolute IRI syntax without a fragment component.",
   }),
   SchemaUtils.withCodecStatics
 );
@@ -1097,16 +1075,13 @@ export type AbsoluteIRI = typeof AbsoluteIRI.Type;
  * @since 0.0.0
  */
 export const IRI = S.String.pipe(
-  S.decodeTo(
-    S.String.check(iriChecks)
-      .annotate({
-        toArbitrary: () => (fc) => fc.constantFrom(...IriArbitraryValues),
-      })
-      .pipe(S.brand("IRI")),
-    schemaOrgCanonicalTransformation
-  ),
+  S.check(iriChecks),
+  S.annotate({
+    toArbitrary: () => (fc) => fc.constantFrom(...IriArbitraryValues),
+  }),
+  S.brand("IRI"),
   $I.annoteSchema("IRI", {
-    description: "RFC 3987 IRI syntax. Decoding canonicalizes legacy schema.org namespaces to https://schema.org/.",
+    description: "RFC 3987 IRI syntax.",
   }),
   SchemaUtils.withCodecStatics,
   SchemaUtils.withResultCodecStatics,

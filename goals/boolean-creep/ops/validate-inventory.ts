@@ -115,7 +115,7 @@ export const DisqualifiedRecord = S.Struct({
 
 export const InventoryRecord = S.Union([QualifiedRecord, DisqualifiedRecord]);
 
-const decodeRecord = S.decodeUnknownResult(InventoryRecord);
+const decodeRecordLine = S.decodeUnknownResult(S.fromJsonString(InventoryRecord));
 
 const repoRoot = new URL("../../..", import.meta.url).pathname;
 const defaultInventory = `${repoRoot}goals/boolean-creep/data/inventory.jsonl`;
@@ -131,13 +131,7 @@ for (const target of targets) {
   for (const [index, line] of lines.entries()) {
     total += 1;
     const where = `${target}:${index + 1}`;
-    const parsed = Result.try(() => JSON.parse(line) as unknown);
-    if (Result.isFailure(parsed)) {
-      failures += 1;
-      console.error(`${where}: invalid JSON`);
-      continue;
-    }
-    const decoded = decodeRecord(parsed.success);
+    const decoded = decodeRecordLine(line);
     if (Result.isFailure(decoded)) {
       failures += 1;
       console.error(`${where}: ${decoded.failure.message}`);

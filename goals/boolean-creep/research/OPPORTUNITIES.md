@@ -49,3 +49,13 @@ first-class output). Public repo: paths relative, no secrets, no session ids.
 - **Prevention:** install the locked workspace dependencies before creating a
   merge commit in a fresh worktree, or make the hook report that prerequisite
   before invoking commitlint.
+
+## 2026-08-23 — pinned Bun installation reported a different runtime
+
+- **Doing:** regenerating `bun.lock` after removing a deleted ghost workspace.
+- **Evidence:** the repo pins Bun 1.3.14, but the executable installed under
+  that version reported 1.4.0; `bun install` removed 66 unrelated lock entries
+  in addition to the target workspace. The unrelated churn was restored, and
+  the focused lockfile passed `bun install --frozen-lockfile`.
+- **Prevention:** have agent bootstrap verify the resolved Bun executable's
+  reported version against `.bun-version` before any lockfile-writing command.

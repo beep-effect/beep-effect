@@ -6,8 +6,9 @@
  * The canonical namespace is `https://schema.org/` (the form schema.org uses
  * for editorial work, term-page canonical URLs, and download flavours since
  * v12.0). The legacy `http://schema.org/` spelling remains valid in external
- * data; the `@beep/rdf` IRI codecs canonicalize it to `https` on decode and
- * reject it on construction, so repo-minted terms are always the `https` form.
+ * data and generic `@beep/rdf` IRI codecs preserve it exactly. Schema.org-aware
+ * boundaries can opt into `canonicalizeSchemaOrgIri`; the vocabulary constants
+ * in this module mint the canonical `https` form.
  *
  * @packageDocumentation
  * @since 0.0.0

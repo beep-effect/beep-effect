@@ -488,8 +488,6 @@ export class Literal extends S.Class<Literal>($I`Literal`)(
   })
 ) {
   static readonly decodeUnknownResult = S.decodeUnknownResult(this);
-
-  static readonly encodeSync = S.encodeSync(this);
 }
 
 /**

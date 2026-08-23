@@ -286,6 +286,38 @@ export const PROV_HAD_PRIMARY_SOURCE = makeNamedNode(`${PROV_NAMESPACE}hadPrimar
 export const PROV_WAS_DERIVED_FROM = makeNamedNode(`${PROV_NAMESPACE}wasDerivedFrom`);
 
 /**
+ * `prov:wasQuotedFrom` term.
+ *
+ * **Example** (Inspect Direct quotation property)
+ *
+ * ```ts
+ * import { PROV_WAS_QUOTED_FROM } from "@beep/rdf/Vocab/Prov"
+ *
+ * console.log(PROV_WAS_QUOTED_FROM.value) // "http://www.w3.org/ns/prov#wasQuotedFrom"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const PROV_WAS_QUOTED_FROM = makeNamedNode(`${PROV_NAMESPACE}wasQuotedFrom`);
+
+/**
+ * `prov:wasRevisionOf` term.
+ *
+ * **Example** (Inspect Direct revision property)
+ *
+ * ```ts
+ * import { PROV_WAS_REVISION_OF } from "@beep/rdf/Vocab/Prov"
+ *
+ * console.log(PROV_WAS_REVISION_OF.value) // "http://www.w3.org/ns/prov#wasRevisionOf"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const PROV_WAS_REVISION_OF = makeNamedNode(`${PROV_NAMESPACE}wasRevisionOf`);
+
+/**
  * `prov:generatedAtTime` term.
  *
  * **Example** (Inspect Entity generation timestamp property)

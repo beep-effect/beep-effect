@@ -8,7 +8,7 @@
 
 import { $RdfId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { DateTime, Effect } from "effect";
+import { DateTime } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
@@ -601,6 +601,7 @@ const relationMetadata = (canonicalName: string, overview: string, profile: "min
  * import { Usage } from "@beep/rdf/Prov"
  *
  * const usage = S.decodeUnknownSync(Usage)({
+ *   provType: "Usage",
  *   activity: "activity:build",
  *   entity: "entity:source"
  * })
@@ -612,7 +613,7 @@ const relationMetadata = (canonicalName: string, overview: string, profile: "min
  */
 export class Usage extends S.Class<Usage>($I`Usage`)(
   {
-    provType: S.tag("Usage").pipe(S.withDecodingDefaultKey(Effect.succeed("Usage"))),
+    provType: S.tag("Usage"),
     activity: ObjectRef,
     entity: ObjectRef,
     atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
@@ -633,6 +634,7 @@ export class Usage extends S.Class<Usage>($I`Usage`)(
  * import { Generation } from "@beep/rdf/Prov"
  *
  * const generation = S.decodeUnknownSync(Generation)({
+ *   provType: "Generation",
  *   entity: "entity:artifact",
  *   activity: "activity:build"
  * })
@@ -644,7 +646,7 @@ export class Usage extends S.Class<Usage>($I`Usage`)(
  */
 export class Generation extends S.Class<Generation>($I`Generation`)(
   {
-    provType: S.tag("Generation").pipe(S.withDecodingDefaultKey(Effect.succeed("Generation"))),
+    provType: S.tag("Generation"),
     entity: ObjectRef,
     activity: ObjectRef,
     atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
@@ -665,6 +667,7 @@ export class Generation extends S.Class<Generation>($I`Generation`)(
  * import { Association } from "@beep/rdf/Prov"
  *
  * const association = S.decodeUnknownSync(Association)({
+ *   provType: "Association",
  *   activity: "activity:build",
  *   agent: "agent:ci",
  *   hadPlan: "plan:refresh"
@@ -677,7 +680,7 @@ export class Generation extends S.Class<Generation>($I`Generation`)(
  */
 export class Association extends S.Class<Association>($I`Association`)(
   {
-    provType: S.tag("Association").pipe(S.withDecodingDefaultKey(Effect.succeed("Association"))),
+    provType: S.tag("Association"),
     activity: ObjectRef,
     agent: ObjectRef,
     hadPlan: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
@@ -698,6 +701,7 @@ export class Association extends S.Class<Association>($I`Association`)(
  * import { Attribution } from "@beep/rdf/Prov"
  *
  * const attribution = S.decodeUnknownSync(Attribution)({
+ *   provType: "Attribution",
  *   entity: "entity:artifact",
  *   agent: "agent:ci"
  * })
@@ -709,7 +713,7 @@ export class Association extends S.Class<Association>($I`Association`)(
  */
 export class Attribution extends S.Class<Attribution>($I`Attribution`)(
   {
-    provType: S.tag("Attribution").pipe(S.withDecodingDefaultKey(Effect.succeed("Attribution"))),
+    provType: S.tag("Attribution"),
     entity: ObjectRef,
     agent: ObjectRef,
   },
@@ -729,6 +733,7 @@ export class Attribution extends S.Class<Attribution>($I`Attribution`)(
  * import { Delegation } from "@beep/rdf/Prov"
  *
  * const delegation = S.decodeUnknownSync(Delegation)({
+ *   provType: "Delegation",
  *   delegate: "agent:worker",
  *   responsible: "agent:service",
  *   activity: "activity:build"
@@ -741,7 +746,7 @@ export class Attribution extends S.Class<Attribution>($I`Attribution`)(
  */
 export class Delegation extends S.Class<Delegation>($I`Delegation`)(
   {
-    provType: S.tag("Delegation").pipe(S.withDecodingDefaultKey(Effect.succeed("Delegation"))),
+    provType: S.tag("Delegation"),
     delegate: ObjectRef,
     responsible: ObjectRef,
     activity: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
@@ -762,6 +767,7 @@ export class Delegation extends S.Class<Delegation>($I`Delegation`)(
  * import { Derivation } from "@beep/rdf/Prov"
  *
  * const derivation = S.decodeUnknownSync(Derivation)({
+ *   provType: "Derivation",
  *   generatedEntity: "entity:derived",
  *   usedEntity: "entity:source"
  * })
@@ -773,7 +779,7 @@ export class Delegation extends S.Class<Delegation>($I`Delegation`)(
  */
 export class Derivation extends S.Class<Derivation>($I`Derivation`)(
   {
-    provType: S.tag("Derivation").pipe(S.withDecodingDefaultKey(Effect.succeed("Derivation"))),
+    provType: S.tag("Derivation"),
     generatedEntity: ObjectRef,
     usedEntity: ObjectRef,
   },
@@ -793,6 +799,7 @@ export class Derivation extends S.Class<Derivation>($I`Derivation`)(
  * import { PrimarySource } from "@beep/rdf/Prov"
  *
  * const source = S.decodeUnknownSync(PrimarySource)({
+ *   provType: "PrimarySource",
  *   entity: "entity:claim",
  *   source: "entity:record"
  * })
@@ -804,7 +811,7 @@ export class Derivation extends S.Class<Derivation>($I`Derivation`)(
  */
 export class PrimarySource extends S.Class<PrimarySource>($I`PrimarySource`)(
   {
-    provType: S.tag("PrimarySource").pipe(S.withDecodingDefaultKey(Effect.succeed("PrimarySource"))),
+    provType: S.tag("PrimarySource"),
     entity: ObjectRef,
     source: ObjectRef,
   },
@@ -824,6 +831,7 @@ export class PrimarySource extends S.Class<PrimarySource>($I`PrimarySource`)(
  * import { Quotation } from "@beep/rdf/Prov"
  *
  * const quotation = S.decodeUnknownSync(Quotation)({
+ *   provType: "Quotation",
  *   entity: "entity:quote",
  *   source: "entity:transcript"
  * })
@@ -835,7 +843,7 @@ export class PrimarySource extends S.Class<PrimarySource>($I`PrimarySource`)(
  */
 export class Quotation extends S.Class<Quotation>($I`Quotation`)(
   {
-    provType: S.tag("Quotation").pipe(S.withDecodingDefaultKey(Effect.succeed("Quotation"))),
+    provType: S.tag("Quotation"),
     entity: ObjectRef,
     source: ObjectRef,
   },
@@ -855,6 +863,7 @@ export class Quotation extends S.Class<Quotation>($I`Quotation`)(
  * import { Revision } from "@beep/rdf/Prov"
  *
  * const revision = S.decodeUnknownSync(Revision)({
+ *   provType: "Revision",
  *   entity: "entity:v2",
  *   source: "entity:v1"
  * })
@@ -866,7 +875,7 @@ export class Quotation extends S.Class<Quotation>($I`Quotation`)(
  */
 export class Revision extends S.Class<Revision>($I`Revision`)(
   {
-    provType: S.tag("Revision").pipe(S.withDecodingDefaultKey(Effect.succeed("Revision"))),
+    provType: S.tag("Revision"),
     entity: ObjectRef,
     source: ObjectRef,
   },
@@ -886,6 +895,7 @@ export class Revision extends S.Class<Revision>($I`Revision`)(
  * import { Start } from "@beep/rdf/Prov"
  *
  * const start = S.decodeUnknownSync(Start)({
+ *   provType: "Start",
  *   activity: "activity:build",
  *   trigger: "entity:commit",
  *   atTime: "2024-01-02T03:04:05Z"
@@ -898,7 +908,7 @@ export class Revision extends S.Class<Revision>($I`Revision`)(
  */
 export class Start extends S.Class<Start>($I`Start`)(
   {
-    provType: S.tag("Start").pipe(S.withDecodingDefaultKey(Effect.succeed("Start"))),
+    provType: S.tag("Start"),
     activity: ObjectRef,
     trigger: ObjectRef,
     atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
@@ -919,6 +929,7 @@ export class Start extends S.Class<Start>($I`Start`)(
  * import { End } from "@beep/rdf/Prov"
  *
  * const end = S.decodeUnknownSync(End)({
+ *   provType: "End",
  *   activity: "activity:build",
  *   trigger: "entity:artifact",
  *   atTime: "2024-01-02T03:05:06Z"
@@ -931,7 +942,7 @@ export class Start extends S.Class<Start>($I`Start`)(
  */
 export class End extends S.Class<End>($I`End`)(
   {
-    provType: S.tag("End").pipe(S.withDecodingDefaultKey(Effect.succeed("End"))),
+    provType: S.tag("End"),
     activity: ObjectRef,
     trigger: ObjectRef,
     atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
@@ -982,6 +993,7 @@ export const ProvRecord = S.Union([
   Start,
   End,
 ]).pipe(
+  S.toTaggedUnion("provType"),
   $I.annoteSchema("ProvRecord", {
     description: "Public PROV record union for the stable semantic-web surface.",
     semanticSchemaMetadata: makeSemanticSchemaMetadata({
@@ -1048,7 +1060,9 @@ export class ProvBundle extends S.Class<ProvBundle>($I`ProvBundle`)(
       timeSemantics: "Lifecycle fields remain explicit adjuncts instead of being collapsed into activity timestamps.",
     }),
   })
-) {}
+) {
+  static readonly decodeUnknownResult = S.decodeUnknownResult(this);
+}
 
 /**
  * Public provenance entrypoint union.

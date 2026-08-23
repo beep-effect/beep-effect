@@ -790,12 +790,6 @@
         "patterns": [
           "packages/drivers/xai/src/**"
         ]
-      },
-      {
-        "name": "form",
-        "patterns": [
-          "packages/foundation/ui-system/form/src/**"
-        ]
       }
     ],
     "rules": [
@@ -3460,15 +3454,6 @@
           "@beep/test-utils",
           "@beep/utils",
           "@beep/xai"
-        ]
-      },
-      {
-        "from": "form",
-        "allow": [
-          "form"
-        ],
-        "allowTypeOnly": [
-          "form"
         ]
       }
     ]

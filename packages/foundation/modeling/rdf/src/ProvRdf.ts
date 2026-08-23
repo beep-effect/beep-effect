@@ -1,5 +1,5 @@
 /**
- * Lossless core PROV-O projection between provenance bundles and RDF datasets.
+ * Canonical core PROV-O projection between provenance bundles and RDF datasets.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -26,6 +26,7 @@ import {
   ObjectRef as ObjectRefSchema,
   PrimarySource,
   ProvBundle,
+  ProvDateTime,
   SoftwareAgent,
   Usage,
 } from "./Prov.ts";
@@ -47,6 +48,7 @@ import {
   PROV_HAD_PLAN,
   PROV_HAD_PRIMARY_SOURCE,
   PROV_INVALIDATED_AT_TIME,
+  PROV_NAMESPACE,
   PROV_PRIMARY_SOURCE,
   PROV_QUALIFIED_ASSOCIATION,
   PROV_QUALIFIED_ATTRIBUTION,
@@ -63,11 +65,13 @@ import {
   PROV_WAS_ATTRIBUTED_TO,
   PROV_WAS_DERIVED_FROM,
   PROV_WAS_GENERATED_BY,
+  PROV_WAS_QUOTED_FROM,
+  PROV_WAS_REVISION_OF,
 } from "./Vocab/Prov.ts";
 import { RDF_TYPE } from "./Vocab/Rdf.ts";
 import { RDFS_LABEL } from "./Vocab/Rdfs.ts";
 import { XSD_BOOLEAN, XSD_DATE_TIME, XSD_DOUBLE, XSD_STRING } from "./Vocab/Xsd.ts";
-import type { ObjectRef, ProvDateTime, ProvRecord as ProvRecordType } from "./Prov.ts";
+import type { ObjectRef, ProvRecord as ProvRecordType } from "./Prov.ts";
 import type { GraphTerm, ObjectTerm, Subject } from "./Rdf.ts";
 
 const $I = $RdfId.create("prov-rdf");
@@ -139,7 +143,15 @@ const makeNamedNodeResult = (value: string): Result.Result<NamedNode, ProvRdfCod
   );
 
 const refNode = (ref: ObjectRef): Result.Result<NamedNode, ProvRdfCodecError> =>
-  makeNamedNodeResult(`${REF_IRI_PREFIX}${Encoding.encodeBase64Url(ref)}`);
+  pipe(
+    [REF_IRI_PREFIX, RECORD_IRI_PREFIX, RELATION_IRI_PREFIX],
+    A.some((prefix) => Str.startsWith(prefix)(ref))
+  )
+    ? makeNamedNodeResult(`${REF_IRI_PREFIX}${Encoding.encodeBase64Url(ref)}`)
+    : pipe(
+        makeNamedNodeResult(ref),
+        Result.orElse(() => makeNamedNodeResult(`${REF_IRI_PREFIX}${Encoding.encodeBase64Url(ref)}`))
+      );
 
 const recordNode = (index: number): Result.Result<NamedNode, ProvRdfCodecError> =>
   makeNamedNodeResult(`${RECORD_IRI_PREFIX}${index}`);
@@ -213,6 +225,8 @@ const encodeEntity = (record: Entity, index: number, graph: GraphTerm) =>
           optionalLinks(subject, PROV_WAS_GENERATED_BY, record.wasGeneratedBy, graph),
           optionalLinks(subject, PROV_WAS_ATTRIBUTED_TO, record.wasAttributedTo, graph),
           optionalLinks(subject, PROV_HAD_PRIMARY_SOURCE, record.hadPrimarySource, graph),
+          optionalLinks(subject, PROV_WAS_QUOTED_FROM, record.wasQuotedFrom, graph),
+          optionalLinks(subject, PROV_WAS_REVISION_OF, record.wasRevisionOf, graph),
           optionalLinks(subject, PROV_WAS_DERIVED_FROM, record.wasDerivedFrom, graph),
           pipe(
             record.value,
@@ -440,13 +454,37 @@ const encodeRecord = Match.type<ProvRecordType>().pipe(
   Match.orElse((): RecordEncoder => () => Result.fail(codecError("Unsupported extension-tier PROV record")))
 );
 
+const ensureUniqueRecordSubjects = (
+  parts: ReadonlyArray<ReadonlyArray<Quad>>
+): Result.Result<ReadonlyArray<ReadonlyArray<Quad>>, ProvRdfCodecError> =>
+  pipe(
+    parts,
+    A.map((recordQuads) =>
+      pipe(
+        recordQuads,
+        A.findFirst((value) => samePredicate(value.predicate, RDF_TYPE)),
+        O.match({
+          onNone: () => Result.fail(codecError("Encoded PROV record is missing its RDF type")),
+          onSome: (typeQuad) => Result.succeed(serializeTerm(typeQuad.subject)),
+        })
+      )
+    ),
+    Result.all,
+    Result.flatMap((keys) =>
+      A.length(A.dedupe(keys)) === A.length(keys)
+        ? Result.succeed(parts)
+        : Result.fail(codecError("Multiple PROV records encode to the same RDF subject"))
+    )
+  );
+
 /*
  * Projects a supported provenance bundle into deterministic PROV-O quads.
  *
  * **Details**
  *
- * Object references become reversible `urn:beep:rdf:prov:ref:*` nodes. Qualified
- * influence records emit both the PROV-O qualified relation and its direct shortcut.
+ * Valid IRI references remain direct named nodes; local references use reversible
+ * `urn:beep:rdf:prov:ref:*` nodes. Qualified influence records emit both the
+ * PROV-O qualified relation and its direct shortcut.
  *
  * **Gotchas**
  *
@@ -482,6 +520,7 @@ const provBundleToDatasetInternal = (
           bundle.records,
           A.map((record, index) => encodeRecord(record)(index, selectGraph(options))),
           Result.all,
+          Result.flatMap(ensureUniqueRecordSubjects),
           Result.map((parts) => Dataset.make({ quads: A.dedupeWith(A.flatten(parts), sameQuad) }))
         ),
       onSome: () =>
@@ -497,8 +536,9 @@ const isProvBundleDataFirst = (args: IArguments): boolean => S.is(ProvBundle)(ar
  *
  * **Details**
  *
- * Object references become reversible deterministic URNs, while qualified
- * influences also emit their PROV-O direct relation shortcuts.
+ * Valid IRI references remain direct named nodes, while local references use
+ * reversible deterministic URNs. Qualified influences also emit their PROV-O
+ * direct relation shortcuts.
  *
  * **Gotchas**
  *
@@ -544,14 +584,26 @@ const objects = (quads: ReadonlyArray<Quad>, subject: Subject, predicate: NamedN
     A.map((value) => value.object)
   );
 
-const firstObject = (quads: ReadonlyArray<Quad>, subject: Subject, predicate: NamedNode): O.Option<ObjectTerm> =>
-  A.head(objects(quads, subject, predicate));
+const singleValue = <Value>(
+  values: ReadonlyArray<Value>,
+  label: string
+): Result.Result<O.Option<Value>, ProvRdfCodecError> =>
+  A.match(values, {
+    onEmpty: () => Result.succeed(O.none()),
+    onNonEmpty: (nonEmpty) =>
+      A.length(nonEmpty) === 1
+        ? Result.succeed(O.some(A.headNonEmpty(nonEmpty)))
+        : Result.fail(codecError(`Expected at most one ${label}`)),
+  });
 
-const parentSubject = (quads: ReadonlyArray<Quad>, predicate: NamedNode, object: ObjectTerm): O.Option<Subject> =>
+const singleObject = (quads: ReadonlyArray<Quad>, subject: Subject, predicate: NamedNode, label: string) =>
+  singleValue(objects(quads, subject, predicate), label);
+
+const parentSubjects = (quads: ReadonlyArray<Quad>, predicate: NamedNode, object: ObjectTerm): ReadonlyArray<Subject> =>
   pipe(
     quads,
-    A.findFirst((value) => samePredicate(value.predicate, predicate) && sameTerm(value.object, object)),
-    O.map((value) => value.subject)
+    A.filter((value) => samePredicate(value.predicate, predicate) && sameTerm(value.object, object)),
+    A.map((value) => value.subject)
   );
 
 const decodeRefNode = (term: ObjectTerm | Subject): Result.Result<ObjectRef, ProvRdfCodecError> =>
@@ -574,21 +626,22 @@ const decodeRefNode = (term: ObjectTerm | Subject): Result.Result<ObjectRef, Pro
     : Result.fail(codecError("Expected a named node for a PROV object reference"));
 
 const decodeOptionalId = (subject: Subject): Result.Result<O.Option<ObjectRef>, ProvRdfCodecError> =>
-  S.is(NamedNode)(subject) && Str.startsWith(REF_IRI_PREFIX)(subject.value)
-    ? pipe(decodeRefNode(subject), Result.map(O.some))
-    : Result.succeed(O.none());
+  S.is(NamedNode)(subject)
+    ? Str.startsWith(RECORD_IRI_PREFIX)(subject.value)
+      ? Result.succeed(O.none())
+      : pipe(decodeRefNode(subject), Result.map(O.some))
+    : Result.fail(codecError("Expected a named-node subject for a PROV record"));
 
 const decodeRefs: (
   values: ReadonlyArray<ObjectTerm>
 ) => Result.Result<O.Option<ReadonlyArray<ObjectRef>>, ProvRdfCodecError> = flow(
-  A.filter(S.is(NamedNode)),
   A.map(decodeRefNode),
   Result.all,
   Result.map(A.dedupe),
   Result.map(A.match({ onEmpty: O.none, onNonEmpty: O.some }))
 );
 
-const decodeLiteralScalar = Match.type<Literal>().pipe(
+const decodePlainLiteralScalar = Match.type<Literal>().pipe(
   Match.when(
     (term) => term.datatype.value === XSD_STRING.value,
     (term) => Result.succeed<string | number | boolean>(term.value)
@@ -612,6 +665,11 @@ const decodeLiteralScalar = Match.type<Literal>().pipe(
   Match.orElse((term) => Result.fail(codecError(`Unsupported prov:value datatype: ${term.datatype.value}`)))
 );
 
+const decodeLiteralScalar = (term: Literal): Result.Result<string | number | boolean, ProvRdfCodecError> =>
+  O.isNone(term.language)
+    ? decodePlainLiteralScalar(term)
+    : Result.fail(codecError("Language-tagged prov:value literals are not supported"));
+
 const decodeScalar = (
   value: O.Option<ObjectTerm>
 ): Result.Result<O.Option<string | number | boolean>, ProvRdfCodecError> =>
@@ -627,23 +685,36 @@ const decodeTimestamp = (value: O.Option<ObjectTerm>): Result.Result<O.Option<Pr
   O.match(value, {
     onNone: () => Result.succeed(O.none()),
     onSome: (term) =>
-      S.is(Literal)(term)
+      S.is(Literal)(term) && term.datatype.value === XSD_DATE_TIME.value && O.isNone(term.language)
         ? pipe(
-            S.decodeResult(S.DateTimeUtcFromString)(term.value),
+            S.decodeResult(ProvDateTime)(term.value),
             Result.map(O.some),
             Result.mapError(() => codecError(`Invalid PROV timestamp: ${term.value}`))
           )
-        : Result.fail(codecError("Expected an RDF literal for a PROV timestamp")),
+        : Result.fail(
+            codecError(
+              S.is(Literal)(term)
+                ? `Expected an xsd:dateTime literal for a PROV timestamp, received ${term.datatype.value}`
+                : "Expected an RDF literal for a PROV timestamp"
+            )
+          ),
   });
 
-const decodeRequiredRef = (value: O.Option<ObjectTerm | Subject>, label: string) =>
-  O.match(value, { onNone: () => Result.fail(codecError(`Missing ${label}`)), onSome: decodeRefNode });
+const requireValue = <Value>(value: O.Option<Value>, label: string): Result.Result<Value, ProvRdfCodecError> =>
+  O.match(value, { onNone: () => Result.fail(codecError(`Missing ${label}`)), onSome: Result.succeed });
 
-const decodeName = (quads: ReadonlyArray<Quad>, subject: Subject): O.Option<string> =>
+const decodeName = (quads: ReadonlyArray<Quad>, subject: Subject): Result.Result<O.Option<string>, ProvRdfCodecError> =>
   pipe(
-    firstObject(quads, subject, RDFS_LABEL),
-    O.filter(S.is(Literal)),
-    O.map((value) => value.value)
+    singleObject(quads, subject, RDFS_LABEL, "rdfs:label value"),
+    Result.flatMap(
+      O.match({
+        onNone: () => Result.succeed(O.none()),
+        onSome: (term) =>
+          S.is(Literal)(term) && term.datatype.value === XSD_STRING.value && O.isNone(term.language)
+            ? Result.succeed(O.some(term.value))
+            : Result.fail(codecError("Expected a plain xsd:string RDF literal for rdfs:label")),
+      })
+    )
   );
 
 const decodeEntity = (quads: ReadonlyArray<Quad>, subject: Subject): Result.Result<Entity, ProvRdfCodecError> =>
@@ -653,12 +724,20 @@ const decodeEntity = (quads: ReadonlyArray<Quad>, subject: Subject): Result.Resu
       wasGeneratedBy: decodeRefs(objects(quads, subject, PROV_WAS_GENERATED_BY)),
       wasAttributedTo: decodeRefs(objects(quads, subject, PROV_WAS_ATTRIBUTED_TO)),
       hadPrimarySource: decodeRefs(objects(quads, subject, PROV_HAD_PRIMARY_SOURCE)),
+      wasQuotedFrom: decodeRefs(objects(quads, subject, PROV_WAS_QUOTED_FROM)),
+      wasRevisionOf: decodeRefs(objects(quads, subject, PROV_WAS_REVISION_OF)),
       wasDerivedFrom: decodeRefs(objects(quads, subject, PROV_WAS_DERIVED_FROM)),
-      generatedAtTime: decodeTimestamp(firstObject(quads, subject, PROV_GENERATED_AT_TIME)),
-      invalidatedAtTime: decodeTimestamp(firstObject(quads, subject, PROV_INVALIDATED_AT_TIME)),
-      value: decodeScalar(firstObject(quads, subject, PROV_VALUE)),
+      generatedAtTime: pipe(
+        singleObject(quads, subject, PROV_GENERATED_AT_TIME, "prov:generatedAtTime value"),
+        Result.flatMap(decodeTimestamp)
+      ),
+      invalidatedAtTime: pipe(
+        singleObject(quads, subject, PROV_INVALIDATED_AT_TIME, "prov:invalidatedAtTime value"),
+        Result.flatMap(decodeTimestamp)
+      ),
+      value: pipe(singleObject(quads, subject, PROV_VALUE, "prov:value"), Result.flatMap(decodeScalar)),
     }),
-    Result.map((fields) => Entity.make({ provType: "Entity", ...fields }))
+    Result.map((fields) => Entity.make(fields))
   );
 
 const decodeActivity = (quads: ReadonlyArray<Quad>, subject: Subject): Result.Result<Activity, ProvRdfCodecError> =>
@@ -667,38 +746,78 @@ const decodeActivity = (quads: ReadonlyArray<Quad>, subject: Subject): Result.Re
       id: decodeOptionalId(subject),
       used: decodeRefs(objects(quads, subject, PROV_USED)),
       wasAssociatedWith: decodeRefs(objects(quads, subject, PROV_WAS_ASSOCIATED_WITH)),
-      startedAtTime: decodeTimestamp(firstObject(quads, subject, PROV_STARTED_AT_TIME)),
-      endedAtTime: decodeTimestamp(firstObject(quads, subject, PROV_ENDED_AT_TIME)),
+      startedAtTime: pipe(
+        singleObject(quads, subject, PROV_STARTED_AT_TIME, "prov:startedAtTime value"),
+        Result.flatMap(decodeTimestamp)
+      ),
+      endedAtTime: pipe(
+        singleObject(quads, subject, PROV_ENDED_AT_TIME, "prov:endedAtTime value"),
+        Result.flatMap(decodeTimestamp)
+      ),
     }),
-    Result.map((fields) => Activity.make({ provType: "Activity", ...fields }))
+    Result.map((fields) => Activity.make(fields))
   );
 
 const decodeAgent = (quads: ReadonlyArray<Quad>, subject: Subject) =>
   pipe(
-    decodeOptionalId(subject),
-    Result.map((id) => Agent.make({ provType: "Agent", id, name: decodeName(quads, subject) }))
+    Result.all({ id: decodeOptionalId(subject), name: decodeName(quads, subject) }),
+    Result.map((fields) => Agent.make(fields))
   );
 
 const decodeSoftwareAgent = (quads: ReadonlyArray<Quad>, subject: Subject) =>
   pipe(
-    decodeOptionalId(subject),
-    Result.map((id) => SoftwareAgent.make({ provType: "SoftwareAgent", id, name: decodeName(quads, subject) }))
+    Result.all({ id: decodeOptionalId(subject), name: decodeName(quads, subject) }),
+    Result.map((fields) => SoftwareAgent.make(fields))
   );
 
-const decodeQualifiedRefs = (quads: ReadonlyArray<Quad>, node: Subject, qualified: NamedNode, target: NamedNode) =>
-  Result.all({
-    parent: decodeRequiredRef(parentSubject(quads, qualified, node), "qualified relation parent"),
-    target: decodeRequiredRef(firstObject(quads, node, target), "qualified relation target"),
-  });
+const decodeQualifiedRefs = (
+  quads: ReadonlyArray<Quad>,
+  node: Subject,
+  qualified: NamedNode,
+  direct: NamedNode,
+  target: NamedNode
+) =>
+  pipe(
+    Result.all({
+      parentTerm: pipe(
+        singleValue(parentSubjects(quads, qualified, node), "qualified relation parent"),
+        Result.flatMap((value) => requireValue(value, "qualified relation parent"))
+      ),
+      targetTerm: pipe(
+        singleObject(quads, node, target, "qualified relation target"),
+        Result.flatMap((value) => requireValue(value, "qualified relation target"))
+      ),
+    }),
+    Result.flatMap(({ parentTerm, targetTerm }) =>
+      pipe(
+        objects(quads, parentTerm, direct),
+        A.match({
+          onEmpty: () => Result.all({ parent: decodeRefNode(parentTerm), target: decodeRefNode(targetTerm) }),
+          onNonEmpty: (directTargetTerms) =>
+            pipe(
+              directTargetTerms,
+              A.map(decodeRefNode),
+              Result.all,
+              Result.flatMap(() =>
+                A.some(directTargetTerms, (directTargetTerm) => sameTerm(targetTerm, directTargetTerm))
+                  ? Result.all({ parent: decodeRefNode(parentTerm), target: decodeRefNode(targetTerm) })
+                  : Result.fail(codecError("Direct relation shortcuts do not contain the qualified target"))
+              )
+            ),
+        })
+      )
+    )
+  );
 
 type RecordDecoder = (quads: ReadonlyArray<Quad>, subject: Subject) => Result.Result<ProvRecordType, ProvRdfCodecError>;
 
 const decodeUsage: RecordDecoder = (quads, subject) =>
   pipe(
-    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_USAGE, PROV_ENTITY_PROPERTY),
+    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_USAGE, PROV_USED, PROV_ENTITY_PROPERTY),
     Result.flatMap(({ parent, target }) =>
       pipe(
-        decodeTimestamp(firstObject(quads, subject, PROV_AT_TIME)),
+        singleObject(quads, subject, PROV_AT_TIME, "prov:atTime value"),
+        Result.flatMap(decodeTimestamp),
         Result.map((atTime) => Usage.make({ activity: parent, entity: target, atTime }))
       )
     )
@@ -706,10 +825,11 @@ const decodeUsage: RecordDecoder = (quads, subject) =>
 
 const decodeGeneration: RecordDecoder = (quads, subject) =>
   pipe(
-    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_GENERATION, PROV_ACTIVITY_PROPERTY),
+    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_GENERATION, PROV_WAS_GENERATED_BY, PROV_ACTIVITY_PROPERTY),
     Result.flatMap(({ parent, target }) =>
       pipe(
-        decodeTimestamp(firstObject(quads, subject, PROV_AT_TIME)),
+        singleObject(quads, subject, PROV_AT_TIME, "prov:atTime value"),
+        Result.flatMap(decodeTimestamp),
         Result.map((atTime) => Generation.make({ entity: parent, activity: target, atTime }))
       )
     )
@@ -717,14 +837,16 @@ const decodeGeneration: RecordDecoder = (quads, subject) =>
 
 const decodeAssociation: RecordDecoder = (quads, subject) =>
   pipe(
-    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_ASSOCIATION, PROV_AGENT_PROPERTY),
+    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_ASSOCIATION, PROV_WAS_ASSOCIATED_WITH, PROV_AGENT_PROPERTY),
     Result.flatMap(({ parent, target }) =>
       pipe(
-        firstObject(quads, subject, PROV_HAD_PLAN),
-        O.match({
-          onNone: () => Result.succeed(O.none<ObjectRef>()),
-          onSome: (plan) => pipe(decodeRefNode(plan), Result.map(O.some)),
-        }),
+        singleObject(quads, subject, PROV_HAD_PLAN, "prov:hadPlan value"),
+        Result.flatMap(
+          O.match({
+            onNone: () => Result.succeed(O.none<ObjectRef>()),
+            onSome: (plan) => pipe(decodeRefNode(plan), Result.map(O.some)),
+          })
+        ),
         Result.map((hadPlan) => Association.make({ activity: parent, agent: target, hadPlan }))
       )
     )
@@ -732,19 +854,19 @@ const decodeAssociation: RecordDecoder = (quads, subject) =>
 
 const decodeAttribution: RecordDecoder = (quads, subject) =>
   pipe(
-    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_ATTRIBUTION, PROV_AGENT_PROPERTY),
+    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_ATTRIBUTION, PROV_WAS_ATTRIBUTED_TO, PROV_AGENT_PROPERTY),
     Result.map(({ parent, target }) => Attribution.make({ entity: parent, agent: target }))
   );
 
 const decodeDerivation: RecordDecoder = (quads, subject) =>
   pipe(
-    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_DERIVATION, PROV_ENTITY_PROPERTY),
+    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_DERIVATION, PROV_WAS_DERIVED_FROM, PROV_ENTITY_PROPERTY),
     Result.map(({ parent, target }) => Derivation.make({ generatedEntity: parent, usedEntity: target }))
   );
 
 const decodePrimarySource: RecordDecoder = (quads, subject) =>
   pipe(
-    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_PRIMARY_SOURCE, PROV_ENTITY_PROPERTY),
+    decodeQualifiedRefs(quads, subject, PROV_QUALIFIED_PRIMARY_SOURCE, PROV_HAD_PRIMARY_SOURCE, PROV_ENTITY_PROPERTY),
     Result.map(({ parent, target }) => PrimarySource.make({ entity: parent, source: target }))
   );
 
@@ -769,23 +891,15 @@ const decodeRecordByType = Match.type<string>().pipe(
 const decodeRecord = (quads: ReadonlyArray<Quad>, typeQuad: Quad): Result.Result<ProvRecordType, ProvRdfCodecError> =>
   decodeRecordByType(S.is(NamedNode)(typeQuad.object) ? typeQuad.object.value : "")(quads, typeQuad.subject);
 
-const supportedType = (value: ObjectTerm): boolean =>
-  S.is(NamedNode)(value) &&
-  A.contains(
-    [
-      PROV_ENTITY.value,
-      PROV_ACTIVITY.value,
-      PROV_AGENT.value,
-      PROV_SOFTWARE_AGENT.value,
-      PROV_USAGE.value,
-      PROV_GENERATION.value,
-      PROV_ASSOCIATION.value,
-      PROV_ATTRIBUTION.value,
-      PROV_DERIVATION.value,
-      PROV_PRIMARY_SOURCE.value,
-    ],
-    value.value
-  );
+const isProvType = (value: ObjectTerm): boolean =>
+  S.is(NamedNode)(value) && Str.startsWith(PROV_NAMESPACE)(value.value);
+
+const ensureUniqueTypeSubjects = (
+  typeQuads: ReadonlyArray<Quad>
+): Result.Result<ReadonlyArray<Quad>, ProvRdfCodecError> =>
+  A.length(A.dedupe(A.map(typeQuads, (value) => serializeTerm(value.subject)))) === A.length(typeQuads)
+    ? Result.succeed(typeQuads)
+    : Result.fail(codecError("Multiple supported PROV RDF types share one subject"));
 
 /*
  * Reconstructs a supported provenance bundle from one RDF dataset graph.
@@ -809,11 +923,16 @@ const datasetToProvBundleInternal = (
   options: ProvRdfCodecOptions = defaultOptions
 ): Result.Result<ProvBundle, ProvRdfCodecError> => {
   const quads = A.filter(dataset.quads, inSelectedGraph(selectGraph(options)));
-  const typeQuads = A.filter(quads, (value) => samePredicate(value.predicate, RDF_TYPE) && supportedType(value.object));
+  const typeQuads = A.filter(quads, (value) => samePredicate(value.predicate, RDF_TYPE) && isProvType(value.object));
   return pipe(
     typeQuads,
-    A.map((value) => decodeRecord(quads, value)),
-    Result.all,
+    ensureUniqueTypeSubjects,
+    Result.flatMap(
+      flow(
+        A.map((value) => decodeRecord(quads, value)),
+        Result.all
+      )
+    ),
     Result.map((records) => ProvBundle.make({ records }))
   );
 };
