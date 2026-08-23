@@ -26,7 +26,6 @@ import {
   ObjectRef as ObjectRefSchema,
   PrimarySource,
   ProvBundle,
-  ProvRecord,
   SoftwareAgent,
   Usage,
 } from "./Prov.ts";
@@ -815,19 +814,7 @@ const datasetToProvBundleInternal = (
     typeQuads,
     A.map((value) => decodeRecord(quads, value)),
     Result.all,
-    Result.flatMap(
-      flow(
-        A.map((record) => S.encodeResult(ProvRecord)(record)),
-        Result.all,
-        Result.mapError(() => codecError("Unable to encode reconstructed PROV records"))
-      )
-    ),
-    Result.flatMap(
-      flow(
-        (records) => S.decodeResult(ProvBundle)({ records }),
-        Result.mapError(() => codecError("Invalid reconstructed provenance bundle"))
-      )
-    )
+    Result.map((records) => ProvBundle.make({ records }))
   );
 };
 

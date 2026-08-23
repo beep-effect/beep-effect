@@ -1,5 +1,15 @@
 {
   "name": "form",
   "version": "0.0.0",
-  "private": true
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/ui-system/form",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:beep-effect/beep-effect.git",
+    "directory": "packages/foundation/ui-system/form"
+  },
+  "beep": {
+    "family": "foundation",
+    "kind": "ui-system"
+  }
 }

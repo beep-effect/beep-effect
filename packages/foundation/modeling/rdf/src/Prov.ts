@@ -8,7 +8,7 @@
 
 import { $RdfId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
-import { DateTime } from "effect";
+import { DateTime, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
@@ -612,6 +612,7 @@ const relationMetadata = (canonicalName: string, overview: string, profile: "min
  */
 export class Usage extends S.Class<Usage>($I`Usage`)(
   {
+    provType: S.tag("Usage").pipe(S.withDecodingDefaultKey(Effect.succeed("Usage"))),
     activity: ObjectRef,
     entity: ObjectRef,
     atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
@@ -643,6 +644,7 @@ export class Usage extends S.Class<Usage>($I`Usage`)(
  */
 export class Generation extends S.Class<Generation>($I`Generation`)(
   {
+    provType: S.tag("Generation").pipe(S.withDecodingDefaultKey(Effect.succeed("Generation"))),
     entity: ObjectRef,
     activity: ObjectRef,
     atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
@@ -675,6 +677,7 @@ export class Generation extends S.Class<Generation>($I`Generation`)(
  */
 export class Association extends S.Class<Association>($I`Association`)(
   {
+    provType: S.tag("Association").pipe(S.withDecodingDefaultKey(Effect.succeed("Association"))),
     activity: ObjectRef,
     agent: ObjectRef,
     hadPlan: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
@@ -706,6 +709,7 @@ export class Association extends S.Class<Association>($I`Association`)(
  */
 export class Attribution extends S.Class<Attribution>($I`Attribution`)(
   {
+    provType: S.tag("Attribution").pipe(S.withDecodingDefaultKey(Effect.succeed("Attribution"))),
     entity: ObjectRef,
     agent: ObjectRef,
   },
@@ -737,6 +741,7 @@ export class Attribution extends S.Class<Attribution>($I`Attribution`)(
  */
 export class Delegation extends S.Class<Delegation>($I`Delegation`)(
   {
+    provType: S.tag("Delegation").pipe(S.withDecodingDefaultKey(Effect.succeed("Delegation"))),
     delegate: ObjectRef,
     responsible: ObjectRef,
     activity: S.OptionFromOptionalKey(ObjectRef).pipe(SchemaUtils.withNoneDefault),
@@ -768,6 +773,7 @@ export class Delegation extends S.Class<Delegation>($I`Delegation`)(
  */
 export class Derivation extends S.Class<Derivation>($I`Derivation`)(
   {
+    provType: S.tag("Derivation").pipe(S.withDecodingDefaultKey(Effect.succeed("Derivation"))),
     generatedEntity: ObjectRef,
     usedEntity: ObjectRef,
   },
@@ -798,6 +804,7 @@ export class Derivation extends S.Class<Derivation>($I`Derivation`)(
  */
 export class PrimarySource extends S.Class<PrimarySource>($I`PrimarySource`)(
   {
+    provType: S.tag("PrimarySource").pipe(S.withDecodingDefaultKey(Effect.succeed("PrimarySource"))),
     entity: ObjectRef,
     source: ObjectRef,
   },
@@ -828,6 +835,7 @@ export class PrimarySource extends S.Class<PrimarySource>($I`PrimarySource`)(
  */
 export class Quotation extends S.Class<Quotation>($I`Quotation`)(
   {
+    provType: S.tag("Quotation").pipe(S.withDecodingDefaultKey(Effect.succeed("Quotation"))),
     entity: ObjectRef,
     source: ObjectRef,
   },
@@ -858,6 +866,7 @@ export class Quotation extends S.Class<Quotation>($I`Quotation`)(
  */
 export class Revision extends S.Class<Revision>($I`Revision`)(
   {
+    provType: S.tag("Revision").pipe(S.withDecodingDefaultKey(Effect.succeed("Revision"))),
     entity: ObjectRef,
     source: ObjectRef,
   },
@@ -889,6 +898,7 @@ export class Revision extends S.Class<Revision>($I`Revision`)(
  */
 export class Start extends S.Class<Start>($I`Start`)(
   {
+    provType: S.tag("Start").pipe(S.withDecodingDefaultKey(Effect.succeed("Start"))),
     activity: ObjectRef,
     trigger: ObjectRef,
     atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),
@@ -921,6 +931,7 @@ export class Start extends S.Class<Start>($I`Start`)(
  */
 export class End extends S.Class<End>($I`End`)(
   {
+    provType: S.tag("End").pipe(S.withDecodingDefaultKey(Effect.succeed("End"))),
     activity: ObjectRef,
     trigger: ObjectRef,
     atTime: S.OptionFromOptionalKey(ProvDateTime).pipe(SchemaUtils.withNoneDefault),

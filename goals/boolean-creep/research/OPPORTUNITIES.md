@@ -38,3 +38,14 @@ first-class output). Public repo: paths relative, no secrets, no session ids.
   `error: Unexpected *` at the comment line.
 - **Prevention:** never write `*/` inside block comments — spell globs as
   "files under data/sweeps/" or use line comments for path patterns.
+
+## 2026-08-23 — merge commit hook assumed an installed worktree
+
+- **Doing:** merging `origin/main` into the PR branch from a fresh isolated
+  worktree before the mergeability repair loop.
+- **Evidence:** the conflict-free merge paused at `commit-msg` because
+  commitlint could not resolve `@commitlint/config-conventional`; installing
+  the frozen lockfile allowed the unchanged merge commit to complete.
+- **Prevention:** install the locked workspace dependencies before creating a
+  merge commit in a fresh worktree, or make the hook report that prerequisite
+  before invoking commitlint.

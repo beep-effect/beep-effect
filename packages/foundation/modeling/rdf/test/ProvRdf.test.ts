@@ -1,7 +1,15 @@
-import { Entity, ObjectRef, ProvBundle } from "@beep/rdf/Prov";
+import { Agent, Association, Entity, Generation, LifecycleTimes, ObjectRef, ProvBundle } from "@beep/rdf/Prov";
 import { datasetToProvBundle, ProvRdfCodecOptions, provBundleToDataset } from "@beep/rdf/ProvRdf";
-import { areDatasetsEquivalent, makeNamedNode, serializeQuad, sortDatasetQuads } from "@beep/rdf/Rdf";
+import {
+  areDatasetsEquivalent,
+  makeDataset,
+  makeNamedNode,
+  makeQuad,
+  serializeQuad,
+  sortDatasetQuads,
+} from "@beep/rdf/Rdf";
 import * as ProvVocabulary from "@beep/rdf/Vocab/Prov";
+import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DATE_TIME } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
@@ -150,6 +158,40 @@ describe("ProvRdf", () => {
   });
 
   it.effect(
+    "preserves scalar and qualified-relation variants across the RDF boundary",
+    Effect.fnUntraced(function* () {
+      const bundle = ProvBundle.make({
+        records: [
+          Entity.make({ value: O.some(12.5) }),
+          Entity.make({ value: O.some(true) }),
+          Entity.make({ value: O.some(false) }),
+          Entity.make({}),
+          Agent.make({ id: O.some(ObjectRef.make("agent:reviewer")), name: O.none() }),
+          Generation.make({
+            entity: ObjectRef.make("entity:artifact"),
+            activity: ObjectRef.make("activity:build"),
+            atTime: O.none(),
+          }),
+          Association.make({
+            activity: ObjectRef.make("activity:build"),
+            agent: ObjectRef.make("agent:reviewer"),
+            hadPlan: O.none(),
+          }),
+        ],
+      });
+
+      const dataset = yield* Effect.fromResult(provBundleToDataset(bundle));
+      const decoded = yield* Effect.fromResult(datasetToProvBundle(dataset));
+      const reencoded = yield* Effect.fromResult(provBundleToDataset(decoded));
+
+      expect(areDatasetsEquivalent(dataset, reencoded)).toBe(true);
+      expect(A.some(decoded.records, S.is(Agent))).toBe(true);
+      expect(A.some(decoded.records, S.is(Generation))).toBe(true);
+      expect(A.some(decoded.records, S.is(Association))).toBe(true);
+    })
+  );
+
+  it.effect(
     "rejects extension records instead of dropping them",
     Effect.fnUntraced(function* () {
       const bundle = yield* Effect.fromResult(
@@ -161,4 +203,30 @@ describe("ProvRdf", () => {
       expect(Result.match(result, { onFailure: (error) => error._tag, onSuccess: () => "" })).toBe("ProvRdfCodecError");
     })
   );
+
+  it("rejects lifecycle adjuncts instead of projecting them incompletely", () => {
+    const result = provBundleToDataset(ProvBundle.make({ records: [], lifecycle: O.some(LifecycleTimes.make({})) }));
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("rejects a named node used where prov:value requires a literal", () => {
+    const subject = makeNamedNode("urn:example:external-entity");
+    const dataset = makeDataset([
+      makeQuad(subject, RDF_TYPE, ProvVocabulary.PROV_ENTITY),
+      makeQuad(subject, ProvVocabulary.PROV_VALUE, makeNamedNode("urn:example:not-a-literal")),
+    ]);
+
+    expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
+  });
+
+  it("rejects a named node used where a PROV timestamp requires a literal", () => {
+    const subject = makeNamedNode("urn:example:external-timestamped-entity");
+    const dataset = makeDataset([
+      makeQuad(subject, RDF_TYPE, ProvVocabulary.PROV_ENTITY),
+      makeQuad(subject, ProvVocabulary.PROV_GENERATED_AT_TIME, makeNamedNode("urn:example:not-a-timestamp")),
+    ]);
+
+    expect(Result.isFailure(datasetToProvBundle(dataset))).toBe(true);
+  });
 });

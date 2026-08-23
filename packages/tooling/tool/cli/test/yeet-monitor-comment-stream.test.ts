@@ -265,7 +265,10 @@ describe("yeet monitor comment poll failures", () => {
         // Stands in for `gh pr checks --watch`: the effect the operator is
         // actually waiting on. Before this fix, the failing comment poll won
         // the race with an error and took this fiber down with it.
-        const checkWatch = Effect.as(Effect.sleep(Duration.millis(30)), "checks finished");
+        const checkWatch = Effect.as(
+          until(Effect.map(Ref.get(commandsRef), (commands) => A.length(commands) > 0)),
+          "checks finished"
+        );
 
         const winner = yield* Effect.raceFirst(
           checkWatch,
