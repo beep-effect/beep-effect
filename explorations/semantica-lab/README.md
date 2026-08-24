@@ -11,7 +11,7 @@ enters shape by drafting `BRIEF.md`.
 ## Spark
 
 Benjamin deployed the Semantica KG framework (Python, 27 modules) locally, found it valuable and
-buggy in equal measure, and built a Notion atlas to map it — toward an `apps/labs/semantica`
+buggy in equal measure, and built a Notion atlas to map it — toward a future apps/labs/semantica
 Tauri lab that ports the best ideas schema-first, improves them with beep-effect capabilities,
 and opens a neuro-symbolic reasoning work stream.
 

@@ -40,8 +40,8 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ### Active
 
 - [`semantica-lab`](./semantica-lab/README.md) — research
-  (2026-08-24): Semantica (MIT Python KG framework) port atlas + future
-  `apps/labs/semantica` Tauri lab. Rubric v2.0 ratified; five family sheets
+  (2026-08-24): Semantica (MIT Python KG framework) port atlas +
+  future apps/labs/semantica Tauri lab. Rubric v2.0 ratified; five family sheets
   are candidate slates (park-pending-canary); construction-vs-consumption
   charter split with trustgraph-workbench. Notion page `@beep/semantica`
   mirrors facts; the packet owns decisions.

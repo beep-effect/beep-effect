@@ -69,6 +69,16 @@ ratifies.
 
 ## Friction receipts
 
+- **2026-08-24 — Knowledge gates vs future/external paths cost two verify cycles.** The refs
+  gate requires backticked governed-root paths to exist in-tree (a planned lab path fails) and
+  bans live `~/` host anchors in packet-root files, so the hygiene pass's absolute→`~/` rewrite
+  traded one violation for another; external-repo paths under governed roots
+  (`packages/common/...` in an archive checkout) trip the same rule. Working spellings: prose
+  for future paths, `<HOME>/...` and `<clone>/...` placeholders, brace groups. Prevention: run
+  `bun run beep ci lane lint-policy` on a committed docs branch BEFORE the full verify (the
+  gates scan HEAD, not the worktree), and know the gate enforces packet-root files while
+  `research/` classifies archival.
+
 - **2026-08-24 — `op run` auth prompt dismissed mid-agent-run.** The docs-mining agent's first
   `op run` succeeded, a later one died with `authorization prompt dismissed` (1Password desktop
   prompt appeared during an unattended background job); it recovered via `op read` in-process.

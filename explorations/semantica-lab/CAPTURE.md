@@ -13,7 +13,7 @@ Benjamin (session dump, condensed from chat; his words where quoted):
 
 Very interested in the [Semantica](https://github.com/semantica-agi/semantica) project — "its
 capabilities, similarities / adjacencies to beep-effect & its goals, its architecture & more."
-Deployed it on this workstation (`~/YeeBois/workstation-apps/semantica`, branch `danklocal`) and
+Deployed it on this workstation (`<HOME>/YeeBois/workstation-apps/semantica`, branch `danklocal`) and
 "found it quite buggy" — three local fix commits exist there that upstream doesn't have.
 
 Created the `@beep/semantica` Notion page (workspace Todox, Development Todo's / Projects,
@@ -61,8 +61,8 @@ neuro-symbolic ai, Rete networks, forward chaining, etc & I'm just now realizing
 opportunities here."
 
 **v3 prior art:** the old beep-effect v3 had rule-engine & Rete work, archived at
-`~/YeeBois/projects/beep-effect-logos` — `packages/common/rules`,
-`packages/common/rete`, `packages/common/logos`. "Not sure if they add value but might be a
+`<HOME>/YeeBois/projects/beep-effect-logos` — its `packages/common/{rules,rete,logos}`
+trio. "Not sure if they add value but might be a
 good idea to have an agent explore them anyway."
 
 **References:** `scratchpad/effect-ontology` recommended "as both a reference & a potential

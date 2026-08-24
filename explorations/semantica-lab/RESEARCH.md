@@ -6,7 +6,7 @@
 
 ### Semantica upstream ([`research/grounding-semantica-repo.md`](./research/grounding-semantica-repo.md))
 
-Local clone `~/YeeBois/workstation-apps/semantica` @ `add1c006` (`danklocal`). Python 3.8+
+Local clone `<HOME>/YeeBois/workstation-apps/semantica` @ `add1c006` (`danklocal`). Python 3.8+
 setuptools distribution + React/Vite Explorer; ≈184k Python LOC in `semantica/`, 29k TS/TSX in
 `explorer/src/`, 101k test LOC (CI does **not** run pytest). v0.6.6, MIT (Hawksight AI). The
 27-module/six-layer claim verifies exactly. Maturity graded per module in the file: most solid;
@@ -58,7 +58,7 @@ fallback + `LlamaStore` placeholder.
 - **IR pipeline**: LANDED — `scratchpad/semantica-ir/` extracted 6,105 symbol records from 354
   files, zero validation failures ([`research/ir-extraction-report.md`](./research/ir-extraction-report.md)).
 - **Still open:** `scratchpad/effect-ontology` deep read (its PORTING_LEDGER is a template
-  precedent for atlas symbol work); `.claude/skills/semantica/SKILL.md` in the workstation
+  precedent for atlas symbol work); `<clone>/.claude/skills/semantica/SKILL.md` in the workstation
   clone (read during shape per O5).
 - **llms.txt census** — LANDED: [`research/docs-url-census.md`](./research/docs-url-census.md)
   (Grok, all URLs fetch-verified). llms.txt coverage far better than expected (Pinecone,

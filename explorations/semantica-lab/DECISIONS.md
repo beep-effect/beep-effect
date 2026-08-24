@@ -121,7 +121,7 @@ providers), visualization backends (UI decision instead), deploy infra.
 adversarial pass — before any bake-off launches.
 
 ### D12. Lab staging
-**Answer:** Scaffold `apps/labs/semantica` with `--app-kind tauri --lab` from day one (D13 lab-
+**Answer:** Scaffold the future apps/labs/semantica lab with `--app-kind tauri --lab` from day one (D13 lab-
 apps shape, portless shell). Milestone 1 proves the Document→KG chain + evals headlessly
 (tests/CLI/MCP, in-process runtime); sidecar and workbench UI arrive as later milestones when
 persistence and gesture-bearing UI earn them.
@@ -243,7 +243,7 @@ five sheets named winners before rubric §0/§4 prerequisites existed. Full reco
   injection + full Tier-L budgets. A stage failing falsifies its families without blocking the
   spine. (Rejected: monolithic-as-reviewed; C0-only-then-replan.)
 - **G2 (code home).** Graduate fast: BRIEF → MAP (canary = Goal 1) → graduate this week;
-  scaffold `apps/labs/semantica` via create-package (`--app-kind tauri --lab`, headless-first
+  scaffold the future apps/labs/semantica lab via create-package (`--app-kind tauri --lab`, headless-first
   per A5); canary code lives in the lab under the goal packet. (Rejected: scratchpad-first;
   slow shape review.)
 - **G3+G5 (EYE role).** EYE is the **test-time correctness oracle** (defines gold conclusions +
@@ -294,6 +294,6 @@ five sheets named winners before rubric §0/§4 prerequisites existed. Full reco
   inputs). Neither is promised-now; both are re-entry points per the graduation contract.
 - **O5 (defaults, unobjected).** Six docs-drift findings added to the Notion Findings DB
   (operator run 3); IR extractor stays in `scratchpad/semantica-ir/` unless the sync goal
-  activates; `.claude/skills/semantica/SKILL.md` in the clone gets read during shape;
+  activates; `<clone>/.claude/skills/semantica/SKILL.md` gets read during shape;
   `op`-prewarm lesson to machine memory; Notion-pilot workflow lessons to basic-memory at
   session close.
