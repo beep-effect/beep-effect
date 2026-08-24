@@ -969,18 +969,21 @@ const withoutUnusableRemoteCache: {
  */
 export const withoutUnusableRemoteCacheForTesting = withoutUnusableRemoteCache;
 
-const turboSecretSessionStep = (
-  step: QualityTaskStep,
-  environment: Readonly<Record<string, string | undefined>>
-): QualityTaskStep =>
-  QualityTaskStep.make({
-    label: `${step.label} (op run)`,
-    command: "op",
-    args: ["run", "--", step.command, ...step.args],
-    cwd: step.cwd,
-    ...carriedStepProps(step),
-    env: turboCacheSecretSessionEnvironment({ ...environment, ...(step.env ?? {}) }),
-  });
+const turboSecretSessionStep: {
+  (environment: Readonly<Record<string, string | undefined>>): (step: QualityTaskStep) => QualityTaskStep;
+  (step: QualityTaskStep, environment: Readonly<Record<string, string | undefined>>): QualityTaskStep;
+} = dual(
+  2,
+  (step: QualityTaskStep, environment: Readonly<Record<string, string | undefined>>): QualityTaskStep =>
+    QualityTaskStep.make({
+      label: `${step.label} (op run)`,
+      command: "op",
+      args: ["run", "--", step.command, ...step.args],
+      cwd: step.cwd,
+      ...carriedStepProps(step),
+      env: turboCacheSecretSessionEnvironment({ ...environment, ...(step.env ?? {}) }),
+    })
+);
 
 /**
  * Wrap a Turbo step in the least-privilege remote-cache secret session.

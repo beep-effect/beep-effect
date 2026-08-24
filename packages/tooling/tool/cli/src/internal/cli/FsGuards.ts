@@ -17,6 +17,7 @@
  * @since 0.0.0
  */
 
+import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { A, pipe, Str } from "@beep/utils";
@@ -148,14 +149,6 @@ const fsGuardError = (
     target,
   });
 
-const isPathWithinRoot = (path: Path.Path, root: string, candidate: string): boolean => {
-  const relative = path.relative(root, candidate);
-  return (
-    Eq.equals(relative, "") ||
-    (!path.isAbsolute(relative) && !Eq.equals(relative, "..") && !Str.startsWith(`..${path.sep}`)(relative))
-  );
-};
-
 const inspectEntryNoFollow = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
   root: string,
@@ -212,67 +205,74 @@ const requireDirectory = Effect.fnUntraced(function* (
     return yield* failForSymlink(root, target, directory);
   }
   if (O.isNone(kind) || !Eq.equals(kind.value, "Directory")) {
-    return yield* Effect.fail(
-      fsGuardError(
-        root,
-        target,
-        directory,
-        reason,
-        `Required directory "${directory}" is missing or is not a directory.`
-      )
+    return yield* fsGuardError(
+      root,
+      target,
+      directory,
+      reason,
+      `Required directory "${directory}" is missing or is not a directory.`
     );
   }
+});
+
+const ensureParentDirectory = Effect.fnUntraced(function* (
+  fs: FileSystem.FileSystem,
+  prepared: ContainedTarget,
+  directory: string,
+  createMissing: boolean
+): Effect.fn.Return<boolean, FsGuardError> {
+  const kind = yield* inspectEntryNoFollow(fs, prepared.root, prepared.target, directory);
+  if (O.isSome(kind)) {
+    if (Eq.equals(kind.value, "SymbolicLink")) {
+      return yield* failForSymlink(prepared.root, prepared.target, directory);
+    }
+    if (!Eq.equals(kind.value, "Directory")) {
+      return yield* fsGuardError(
+        prepared.root,
+        prepared.target,
+        directory,
+        "parent-not-directory",
+        `Refused filesystem access because parent entry "${directory}" is not a directory.`
+      );
+    }
+    return true;
+  }
+  if (!createMissing) {
+    return false;
+  }
+  yield* fs
+    .makeDirectory(directory)
+    .pipe(
+      Effect.mapError((cause) =>
+        fsGuardError(
+          prepared.root,
+          prepared.target,
+          directory,
+          "filesystem-failure",
+          `Failed to create contained directory "${directory}".`,
+          cause
+        )
+      )
+    );
+  yield* requireDirectory(fs, prepared.root, prepared.target, directory, "parent-not-directory");
+  return true;
 });
 
 const ensureParentDirectories = Effect.fnUntraced(function* (
   fs: FileSystem.FileSystem,
   path: Path.Path,
-  root: string,
-  target: string,
-  parent: string,
+  prepared: ContainedTarget,
   createMissing: boolean
 ): Effect.fn.Return<boolean, FsGuardError> {
-  const relative = path.relative(root, parent);
+  const relative = path.relative(prepared.root, prepared.parent);
   const segments = A.filter(Str.split(relative, path.sep), Str.isNonEmpty);
-  let current = root;
+  let current = prepared.root;
 
   for (const segment of segments) {
     current = path.join(current, segment);
-    const kind = yield* inspectEntryNoFollow(fs, root, target, current);
-    if (O.isSome(kind) && Eq.equals(kind.value, "SymbolicLink")) {
-      return yield* failForSymlink(root, target, current);
-    }
-    if (O.isNone(kind)) {
-      if (!createMissing) {
-        return false;
-      }
-      yield* fs
-        .makeDirectory(current)
-        .pipe(
-          Effect.mapError((cause) =>
-            fsGuardError(
-              root,
-              target,
-              current,
-              "filesystem-failure",
-              `Failed to create contained directory "${current}".`,
-              cause
-            )
-          )
-        );
-      yield* requireDirectory(fs, root, target, current, "parent-not-directory");
-      continue;
-    }
-    if (!Eq.equals(kind.value, "Directory")) {
-      return yield* Effect.fail(
-        fsGuardError(
-          root,
-          target,
-          current,
-          "parent-not-directory",
-          `Refused filesystem access because parent entry "${current}" is not a directory.`
-        )
-      );
+    const ready = yield* ensureParentDirectory(fs, prepared, current, createMissing);
+    if (!ready) {
+      return false;
     }
   }
 
@@ -288,21 +288,20 @@ const prepareContainedTarget = Effect.fnUntraced(function* (
 ): Effect.fn.Return<O.Option<ContainedTarget>, FsGuardError> {
   const root = path.resolve(expectedRoot);
   const target = path.resolve(root, requestedTarget);
-  if (!isPathWithinRoot(path, root, target) || Eq.equals(root, target)) {
-    return yield* Effect.fail(
-      fsGuardError(
-        root,
-        target,
-        target,
-        "outside-root",
-        `Refused filesystem access because "${target}" is not a file path contained by "${root}".`
-      )
+  if (!isResolvedPathWithinRoot(path, { root, candidate: target }) || Eq.equals(root, target)) {
+    return yield* fsGuardError(
+      root,
+      target,
+      target,
+      "outside-root",
+      `Refused filesystem access because "${target}" is not a file path contained by "${root}".`
     );
   }
 
   yield* requireDirectory(fs, root, target, root, "root-not-directory");
   const parent = path.dirname(target);
-  const parentReady = yield* ensureParentDirectories(fs, path, root, target, parent, createParents);
+  const prepared = ContainedTarget.make({ parent, root, target });
+  const parentReady = yield* ensureParentDirectories(fs, path, prepared, createParents);
   if (!parentReady) {
     return O.none();
   }
@@ -328,19 +327,39 @@ const prepareContainedTarget = Effect.fnUntraced(function* (
         )
       )
     );
-  if (!isPathWithinRoot(path, canonicalRoot, canonicalParent)) {
-    return yield* Effect.fail(
-      fsGuardError(
-        root,
-        target,
-        parent,
-        "outside-root",
-        `Refused filesystem access because parent "${canonicalParent}" escapes allowed root "${canonicalRoot}".`
-      )
+  if (!isResolvedPathWithinRoot(path, { root: canonicalRoot, candidate: canonicalParent })) {
+    return yield* fsGuardError(
+      root,
+      target,
+      parent,
+      "outside-root",
+      `Refused filesystem access because parent "${canonicalParent}" escapes allowed root "${canonicalRoot}".`
     );
   }
 
-  return O.some(ContainedTarget.make({ parent, root, target }));
+  return O.some(prepared);
+});
+
+const requirePreparedContainedTarget = Effect.fnUntraced(function* (
+  fs: FileSystem.FileSystem,
+  path: Path.Path,
+  expectedRoot: string,
+  target: string
+): Effect.fn.Return<ContainedTarget, FsGuardError> {
+  const prepared = yield* prepareContainedTarget(fs, path, expectedRoot, target, true);
+  if (O.isSome(prepared)) {
+    return prepared.value;
+  }
+
+  const root = path.resolve(expectedRoot);
+  const resolvedTarget = path.resolve(expectedRoot, target);
+  return yield* fsGuardError(
+    root,
+    resolvedTarget,
+    path.dirname(resolvedTarget),
+    "parent-not-directory",
+    `Target parent for "${target}" could not be prepared.`
+  );
 });
 
 const requireWritableTarget = Effect.fnUntraced(function* (
@@ -354,14 +373,12 @@ const requireWritableTarget = Effect.fnUntraced(function* (
   if (Eq.equals(kind.value, "SymbolicLink")) {
     return yield* failForSymlink(prepared.root, prepared.target, prepared.target);
   }
-  return yield* Effect.fail(
-    fsGuardError(
-      prepared.root,
-      prepared.target,
-      prepared.target,
-      "target-not-file",
-      `Refused filesystem write because target "${prepared.target}" is not a regular file.`
-    )
+  return yield* fsGuardError(
+    prepared.root,
+    prepared.target,
+    prepared.target,
+    "target-not-file",
+    `Refused filesystem write because target "${prepared.target}" is not a regular file.`
   );
 });
 
@@ -406,14 +423,12 @@ const writePreparedFileString = Effect.fnUntraced(function* (
 
       const checked = yield* prepareContainedTarget(fs, path, prepared.root, prepared.target, false);
       if (O.isNone(checked)) {
-        return yield* Effect.fail(
-          fsGuardError(
-            prepared.root,
-            prepared.target,
-            prepared.parent,
-            "parent-not-directory",
-            `Target parent "${prepared.parent}" disappeared before the guarded write could commit.`
-          )
+        return yield* fsGuardError(
+          prepared.root,
+          prepared.target,
+          prepared.parent,
+          "parent-not-directory",
+          `Target parent "${prepared.parent}" disappeared before the guarded write could commit.`
         );
       }
       yield* requireWritableTarget(fs, checked.value);
@@ -435,6 +450,26 @@ const writePreparedFileString = Effect.fnUntraced(function* (
     })
   );
 });
+
+const makeContainedFileStringOperation = (
+  name: string,
+  operation: (
+    fs: FileSystem.FileSystem,
+    path: Path.Path,
+    prepared: ContainedTarget,
+    contents: string
+  ) => Effect.Effect<string, FsGuardError>
+) =>
+  Effect.fn(name)(function* (
+    expectedRoot: string,
+    target: string,
+    contents: string
+  ): Effect.fn.Return<string, FsGuardError, FileSystem.FileSystem | Path.Path> {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const prepared = yield* requirePreparedContainedTarget(fs, path, expectedRoot, target);
+    return yield* operation(fs, path, prepared, contents);
+  });
 
 /**
  * Write text atomically to a symlink-free path contained by an expected root.
@@ -469,26 +504,120 @@ const writePreparedFileString = Effect.fnUntraced(function* (
  * @category filesystem
  * @since 0.0.0
  */
-export const writeContainedFileString = Effect.fn("RepoCli.FsGuards.writeContainedFileString")(function* (
-  expectedRoot: string,
-  target: string,
+export const writeContainedFileString = makeContainedFileStringOperation(
+  "RepoCli.FsGuards.writeContainedFileString",
+  writePreparedFileString
+);
+
+const appendPreparedFileString = Effect.fnUntraced(function* (
+  fs: FileSystem.FileSystem,
+  path: Path.Path,
+  prepared: ContainedTarget,
   contents: string
-): Effect.fn.Return<string, FsGuardError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const prepared = yield* prepareContainedTarget(fs, path, expectedRoot, target, true);
-  if (O.isNone(prepared)) {
-    return yield* Effect.fail(
-      fsGuardError(
-        path.resolve(expectedRoot),
-        path.resolve(expectedRoot, target),
-        path.dirname(path.resolve(expectedRoot, target)),
-        "parent-not-directory",
-        `Target parent for "${target}" could not be prepared.`
-      )
+): Effect.fn.Return<string, FsGuardError> {
+  const kind = yield* inspectEntryNoFollow(fs, prepared.root, prepared.target, prepared.target);
+  if (O.isSome(kind) && Eq.equals(kind.value, "SymbolicLink")) {
+    return yield* failForSymlink(prepared.root, prepared.target, prepared.target);
+  }
+  if (O.isSome(kind) && !Eq.equals(kind.value, "File")) {
+    return yield* fsGuardError(
+      prepared.root,
+      prepared.target,
+      prepared.target,
+      "target-not-file",
+      `Refused filesystem append because target "${prepared.target}" is not a regular file.`
     );
   }
-  return yield* writePreparedFileString(fs, path, prepared.value, contents);
+  if (O.isNone(kind)) {
+    yield* fs
+      .writeFileString(prepared.target, contents, { flag: "ax" })
+      .pipe(
+        Effect.mapError((cause) =>
+          fsGuardError(
+            prepared.root,
+            prepared.target,
+            prepared.target,
+            "filesystem-failure",
+            `Failed to exclusively create append target "${prepared.target}".`,
+            cause
+          )
+        )
+      );
+    return prepared.target;
+  }
+
+  return yield* Effect.scoped(
+    Effect.gen(function* () {
+      const temporaryDirectory = yield* fs
+        .makeTempDirectoryScoped({
+          directory: prepared.parent,
+          prefix: `.${path.basename(prepared.target)}.safe-append-`,
+        })
+        .pipe(
+          Effect.mapError((cause) =>
+            fsGuardError(
+              prepared.root,
+              prepared.target,
+              prepared.parent,
+              "filesystem-failure",
+              `Failed to allocate a temporary directory beneath "${prepared.parent}".`,
+              cause
+            )
+          )
+        );
+      const checked = yield* prepareContainedTarget(fs, path, prepared.root, prepared.target, false);
+      if (O.isNone(checked)) {
+        return yield* fsGuardError(
+          prepared.root,
+          prepared.target,
+          prepared.parent,
+          "parent-not-directory",
+          `Target parent "${prepared.parent}" disappeared before the guarded append could commit.`
+        );
+      }
+      yield* requireWritableTarget(fs, checked.value);
+      const aliasPath = path.join(temporaryDirectory, "target");
+      yield* fs
+        .link(checked.value.target, aliasPath)
+        .pipe(
+          Effect.mapError((cause) =>
+            fsGuardError(
+              checked.value.root,
+              checked.value.target,
+              aliasPath,
+              "filesystem-failure",
+              `Failed to create a no-follow alias for append target "${checked.value.target}".`,
+              cause
+            )
+          )
+        );
+      const aliasKind = yield* inspectEntryNoFollow(fs, checked.value.root, checked.value.target, aliasPath);
+      if (O.isNone(aliasKind) || !Eq.equals(aliasKind.value, "File")) {
+        return yield* fsGuardError(
+          checked.value.root,
+          checked.value.target,
+          aliasPath,
+          O.exists(aliasKind, (entryKind) => Eq.equals(entryKind, "SymbolicLink")) ? "symlink" : "target-not-file",
+          `Refused filesystem append because alias "${aliasPath}" is not a regular file.`
+        );
+      }
+      yield* fs
+        .writeFileString(aliasPath, contents, { flag: "a" })
+        .pipe(
+          Effect.mapError((cause) =>
+            fsGuardError(
+              checked.value.root,
+              checked.value.target,
+              aliasPath,
+              "filesystem-failure",
+              `Failed to append through no-follow alias "${aliasPath}".`,
+              cause
+            )
+          )
+        );
+      return checked.value.target;
+    })
+  );
 });
 
 /**
@@ -525,136 +654,10 @@ export const writeContainedFileString = Effect.fn("RepoCli.FsGuards.writeContain
  * @category filesystem
  * @since 0.0.0
  */
-export const appendContainedFileString = Effect.fn("RepoCli.FsGuards.appendContainedFileString")(function* (
-  expectedRoot: string,
-  target: string,
-  contents: string
-): Effect.fn.Return<string, FsGuardError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const prepared = yield* prepareContainedTarget(fs, path, expectedRoot, target, true);
-  if (O.isNone(prepared)) {
-    return yield* Effect.fail(
-      fsGuardError(
-        path.resolve(expectedRoot),
-        path.resolve(expectedRoot, target),
-        path.dirname(path.resolve(expectedRoot, target)),
-        "parent-not-directory",
-        `Target parent for "${target}" could not be prepared.`
-      )
-    );
-  }
-
-  const kind = yield* inspectEntryNoFollow(fs, prepared.value.root, prepared.value.target, prepared.value.target);
-  if (O.isSome(kind) && Eq.equals(kind.value, "SymbolicLink")) {
-    return yield* failForSymlink(prepared.value.root, prepared.value.target, prepared.value.target);
-  }
-  if (O.isSome(kind) && !Eq.equals(kind.value, "File")) {
-    return yield* Effect.fail(
-      fsGuardError(
-        prepared.value.root,
-        prepared.value.target,
-        prepared.value.target,
-        "target-not-file",
-        `Refused filesystem append because target "${prepared.value.target}" is not a regular file.`
-      )
-    );
-  }
-  if (O.isNone(kind)) {
-    yield* fs
-      .writeFileString(prepared.value.target, contents, { flag: "ax" })
-      .pipe(
-        Effect.mapError((cause) =>
-          fsGuardError(
-            prepared.value.root,
-            prepared.value.target,
-            prepared.value.target,
-            "filesystem-failure",
-            `Failed to exclusively create append target "${prepared.value.target}".`,
-            cause
-          )
-        )
-      );
-    return prepared.value.target;
-  }
-
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const temporaryDirectory = yield* fs
-        .makeTempDirectoryScoped({
-          directory: prepared.value.parent,
-          prefix: `.${path.basename(prepared.value.target)}.safe-append-`,
-        })
-        .pipe(
-          Effect.mapError((cause) =>
-            fsGuardError(
-              prepared.value.root,
-              prepared.value.target,
-              prepared.value.parent,
-              "filesystem-failure",
-              `Failed to allocate a temporary directory beneath "${prepared.value.parent}".`,
-              cause
-            )
-          )
-        );
-      const checked = yield* prepareContainedTarget(fs, path, prepared.value.root, prepared.value.target, false);
-      if (O.isNone(checked)) {
-        return yield* Effect.fail(
-          fsGuardError(
-            prepared.value.root,
-            prepared.value.target,
-            prepared.value.parent,
-            "parent-not-directory",
-            `Target parent "${prepared.value.parent}" disappeared before the guarded append could commit.`
-          )
-        );
-      }
-      yield* requireWritableTarget(fs, checked.value);
-      const aliasPath = path.join(temporaryDirectory, "target");
-      yield* fs
-        .link(checked.value.target, aliasPath)
-        .pipe(
-          Effect.mapError((cause) =>
-            fsGuardError(
-              checked.value.root,
-              checked.value.target,
-              aliasPath,
-              "filesystem-failure",
-              `Failed to create a no-follow alias for append target "${checked.value.target}".`,
-              cause
-            )
-          )
-        );
-      const aliasKind = yield* inspectEntryNoFollow(fs, checked.value.root, checked.value.target, aliasPath);
-      if (O.isNone(aliasKind) || !Eq.equals(aliasKind.value, "File")) {
-        return yield* Effect.fail(
-          fsGuardError(
-            checked.value.root,
-            checked.value.target,
-            aliasPath,
-            O.exists(aliasKind, (entryKind) => Eq.equals(entryKind, "SymbolicLink")) ? "symlink" : "target-not-file",
-            `Refused filesystem append because alias "${aliasPath}" is not a regular file.`
-          )
-        );
-      }
-      yield* fs
-        .writeFileString(aliasPath, contents, { flag: "a" })
-        .pipe(
-          Effect.mapError((cause) =>
-            fsGuardError(
-              checked.value.root,
-              checked.value.target,
-              aliasPath,
-              "filesystem-failure",
-              `Failed to append through no-follow alias "${aliasPath}".`,
-              cause
-            )
-          )
-        );
-      return checked.value.target;
-    })
-  );
-});
+export const appendContainedFileString = makeContainedFileStringOperation(
+  "RepoCli.FsGuards.appendContainedFileString",
+  appendPreparedFileString
+);
 
 /**
  * Read text from a contained path while rejecting symlinked entries.

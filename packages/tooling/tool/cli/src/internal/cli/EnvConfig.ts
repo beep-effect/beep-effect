@@ -311,8 +311,12 @@ const isTurboCacheSecretEnvName = S.is(TurboCacheSecretEnvName);
  */
 export const turboCacheSecretSessionEnvironment = (
   environment: Readonly<Record<string, string | undefined>>
-): Record<string, string | undefined> =>
-  R.filter(environment, (value, name) => !isUnresolvedSecretReference(value) || isTurboCacheSecretEnvName(name));
+): Record<string, string> =>
+  R.filter(
+    environment,
+    (value, name): value is string =>
+      value !== undefined && (!isUnresolvedSecretReference(value) || isTurboCacheSecretEnvName(name))
+  );
 
 /**
  * Decide whether a Turbo spawn may inherit the ambient process environment.
@@ -338,8 +342,10 @@ export const turboCacheSecretSessionEnvironment = (
  * @category configuration
  * @since 0.0.0
  */
-export const turboEnvExtendsAmbient = (command: string, args: ReadonlyArray<string>): boolean =>
-  !isOpRunTurbo(command, args);
+export const turboEnvExtendsAmbient: {
+  (args: ReadonlyArray<string>): (command: string) => boolean;
+  (command: string, args: ReadonlyArray<string>): boolean;
+} = dual(2, (command: string, args: ReadonlyArray<string>): boolean => !isOpRunTurbo(command, args));
 
 /**
  * Compute the environment applied when spawning `turbo`, directly via `bunx`

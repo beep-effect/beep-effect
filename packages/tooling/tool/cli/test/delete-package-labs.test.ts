@@ -296,7 +296,7 @@ describe("delete-package labs doctor semantics", () => {
           Effect.gen(function* () {
             const staleTarget = RegistrationTarget.make({
               ...labTarget,
-              lab: O.some(labFacts(O.some("lab_other"))),
+              lab: O.some("lab_other").pipe(labFacts, O.some),
             });
             const observations = yield* inspectTargetAtRoot(repoRoot, staleTarget);
             const dataResource = O.getOrThrow(

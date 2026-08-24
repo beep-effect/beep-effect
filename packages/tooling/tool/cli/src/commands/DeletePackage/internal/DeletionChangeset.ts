@@ -21,6 +21,8 @@ import { changesetPackageReferencesFromText } from "../../Quality/ChangesetGraph
  * ```
  *
  * @internal
+ * @param packageName - Workspace package name included in the deletion note.
+ * @returns Canonical changeset text with empty frontmatter and a final newline.
  * @category formatting
  * @since 0.0.0
  */
