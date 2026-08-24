@@ -37,6 +37,37 @@ const hardDependentHits = (report: DependentsReport) =>
 const refuseWhen = (condition: boolean, refusal: () => DeletePackageRefusal): O.Option<DeletePackageRefusal> =>
   condition ? O.some(refusal()) : O.none();
 
+const isRepositoryRootTarget = (target: RegistrationTarget): boolean =>
+  Str.isEmpty(target.packagePath) || Str.equivalence(target.packagePath, ".");
+
+const ownedTreeRefusal = (
+  target: RegistrationTarget,
+  workspacePaths: ReadonlyArray<string>
+): O.Option<DeletePackageRefusal> => {
+  if (isRepositoryRootTarget(target)) {
+    return O.some(
+      DeletePackageRefusal.cases.hard.make({
+        kind: "dependent",
+        detail: `${target.packageName} resolves to the repository root; recursive deletion is forbidden.`,
+      })
+    );
+  }
+
+  return pipe(
+    A.findFirst(
+      workspacePaths,
+      (workspacePath) =>
+        !Str.equivalence(workspacePath, target.packagePath) && Str.startsWith(`${target.packagePath}/`)(workspacePath)
+    ),
+    O.map((workspacePath) =>
+      DeletePackageRefusal.cases.hard.make({
+        kind: "dependent",
+        detail: `${target.packageName} contains registered workspace ${workspacePath}; recursive deletion is forbidden.`,
+      })
+    )
+  );
+};
+
 type RefusalRule = (
   target: RegistrationTarget,
   report: DependentsReport,
@@ -118,10 +149,11 @@ const REFUSAL_RULES: ReadonlyArray<RefusalRule> = [
       })
     ),
   (_target, _report, policy) =>
-    refuseWhen(policy.dropData && policy.dataResourceDeclared && !policy.dataOwnershipProven, () =>
+    refuseWhen(policy.dataResourceDeclared && !policy.dataOwnershipProven, () =>
       DeletePackageRefusal.cases.hard.make({
         kind: "data-ownership",
-        detail: "Declared postgres schema is not mechanically derived from the lab slug; refusing the drop.",
+        detail:
+          "Declared postgres schema is not mechanically derived from the package; no database command was emitted.",
       })
     ),
 ];
@@ -169,4 +201,9 @@ const doctorIsClean = (target: RegistrationTarget, observations: ReadonlyArray<R
  * @category utilities
  * @since 0.0.0
  */
-export const DeletePackagePolicyEvaluation = { dependentsCascadeLines, doctorIsClean, refusalReasons };
+export const DeletePackagePolicyEvaluation = {
+  dependentsCascadeLines,
+  doctorIsClean,
+  ownedTreeRefusal,
+  refusalReasons,
+};

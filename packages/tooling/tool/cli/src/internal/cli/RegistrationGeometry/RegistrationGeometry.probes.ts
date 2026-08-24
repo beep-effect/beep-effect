@@ -12,6 +12,8 @@ import { Effect, FileSystem, HashMap, HashSet, Order, Path, pipe } from "effect"
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import { Node, Project, SyntaxKind } from "ts-morph";
+import { DeletePackageDataResource } from "../../../commands/DeletePackage/internal/DataResource.ts";
+import { isCanonicalDeletionChangeset } from "../../../commands/DeletePackage/internal/DeletionChangeset.ts";
 import { isLabsWorkspacePath } from "../Labs/index.ts";
 import { RegistrationGeometryError } from "./RegistrationGeometry.errors.ts";
 import { surfacesForTarget } from "./RegistrationGeometry.plan.ts";
@@ -183,9 +185,17 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
       const deletionNoteFile = `delete-${Str.replace("@beep/", Str.empty)(pending.packageName)}.md`;
       let evidence = A.empty<string>();
       for (const file of files) {
-        if (Str.equivalence(path.basename(file), deletionNoteFile)) continue;
         const content = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => Str.empty));
-        if (Str.includes(pending.packageName)(content))
+        const hasDeletionNoteBasename = Str.equivalence(path.basename(file), deletionNoteFile);
+        const isCanonicalDeletionNote =
+          hasDeletionNoteBasename &&
+          (yield* isCanonicalDeletionChangeset(
+            normalizePath(path.relative(repoRoot, file)),
+            content,
+            pending.packageName
+          ));
+        if (isCanonicalDeletionNote) continue;
+        if (hasDeletionNoteBasename || Str.includes(pending.packageName)(content))
           evidence = A.append(evidence, normalizePath(path.relative(repoRoot, file)));
       }
       return observation(
@@ -211,12 +221,19 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
         A.sort(evidence, Order.String)
       );
     }),
-    "data-resource": (data) =>
-      Effect.succeed(
-        observation(data.id, "consent-required", [
-          `manual cleanup: DROP SCHEMA IF EXISTS "${data.resourceName}" CASCADE; (owner ${data.owner}, consent flag ${data.destructiveConsentFlag})`,
-        ])
-      ),
+    "data-resource": (data) => {
+      const slug = Str.replace("@beep/", Str.empty)(target.packageName);
+      const ownershipProven = DeletePackageDataResource.labSchemaOwnershipProven(slug, data.resourceName);
+      return Effect.succeed(
+        ownershipProven
+          ? observation(data.id, "consent-required", [
+              `manual cleanup: DROP SCHEMA IF EXISTS "${data.resourceName}" CASCADE; (owner ${data.owner}, consent flag ${data.destructiveConsentFlag})`,
+            ])
+          : observation(data.id, "residue", [
+              `refused stale data resource ${data.resourceName}: expected package-owned schema ${DeletePackageDataResource.expectedLabSchemaName(slug)}; no database command emitted`,
+            ])
+      );
+    },
     "historical-record": Effect.fn(function* (historical) {
       const files = yield* collectFiles(repoRoot, [".md", ".json", ".jsonc", ".tsv"]);
       let evidence = A.empty<string>();
@@ -489,6 +506,45 @@ const dedupedSortedHits = (hits: ReadonlyArray<DependentHit>): ReadonlyArray<Dep
   return A.sort(deduped, Order.mapInput(Order.String, hitKey));
 };
 
+/**
+ * Builds the reverse-dependency report that gates deletion of a workspace
+ * package.
+ *
+ * **Details**
+ *
+ * The scan combines workspace manifest edges, their transitive closure,
+ * TypeScript imports, identity-accessor references, authored path mentions,
+ * root scripts, and root policy files. It deduplicates and sorts every hit so
+ * repeated scans of the same checkout return the same report.
+ *
+ * **Gotchas**
+ *
+ * Files inside the target package are omitted because a package's own imports
+ * and path references must not block its removal. The returned Effect requires
+ * filesystem, path, and workspace-discovery services from the caller.
+ *
+ * **Example** (Build a dependency scan)
+ *
+ * ```ts
+ * import { dependentsOfAtRoot, RegistrationTarget } from "@beep/repo-cli/test/DeletePackage"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ * import { Effect } from "effect"
+ *
+ * const target = RegistrationTarget.make({
+ *   packageName: "@beep/example",
+ *   packagePath: PosixPath.make("packages/example"),
+ *   private: true
+ * })
+ * const scan = dependentsOfAtRoot(".", target)
+ *
+ * console.log(Effect.isEffect(scan)) // true
+ * ```
+ *
+ * @effects Reads workspace manifests and authored repository files without
+ * modifying the checkout.
+ * @category queries
+ * @since 0.0.0
+ */
 export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAtRoot")(function* (
   repoRoot: string,
   target: RegistrationTarget
@@ -515,10 +571,28 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
       direct: true,
     });
   };
-  let hits = pipe(
-    edges,
-    A.filter((edge) => Str.equivalence(edge.dependency, target.packageName)),
-    A.map(manifestHitFor)
+  const descendantWorkspaceHits = A.flatMap(workspaces, ([owner, directory]) => {
+    const workspacePath = normalizePath(path.relative(repoRoot, directory));
+    return !Str.equivalence(workspacePath, target.packagePath) &&
+      Str.startsWith(`${target.packagePath}/`)(workspacePath)
+      ? A.of(
+          DependentHit.make({
+            kind: "file-path",
+            owner,
+            file: PosixPath.make(`${workspacePath}/package.json`),
+            line: O.none(),
+            direct: true,
+          })
+        )
+      : A.empty<DependentHit>();
+  });
+  let hits = A.appendAll(
+    pipe(
+      edges,
+      A.filter((edge) => Str.equivalence(edge.dependency, target.packageName)),
+      A.map(manifestHitFor)
+    ),
+    descendantWorkspaceHits
   );
 
   const direct = pipe(HashMap.get(reverse, target.packageName), O.getOrElse(HashSet.empty<string>));

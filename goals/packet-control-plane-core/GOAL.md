@@ -43,7 +43,8 @@ Non-negotiable constraints:
 
 Workflow:
 
-1. Start at `PLAN.md` P1. Make the smallest change satisfying `SPEC.md`.
+1. Start at `PLAN.md` "Current blockers" — the close train. Make the
+   smallest change satisfying `SPEC.md`.
 2. Preserve unrelated worktree changes; never `git add -A`.
 3. Prove with the three fixtures: golden linear stream, deliberate fork,
    stale projection.

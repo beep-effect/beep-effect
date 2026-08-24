@@ -160,6 +160,31 @@ describe("quarantine rerun steps", () => {
     expect(rerun.useLocalEnv).toBe(true);
   });
 
+  it("passes the package filter to a nested beep CI lane instead of its child passthrough", () => {
+    const nestedCiLane = QualityTaskStep.make({
+      label: "quality:check",
+      command: "bun",
+      args: ["run", "beep", "ci", "lane", "check", "--affected", "--base", "origin/main", "--summarize"],
+      cwd: "/repo",
+      flakeQuarantine: "ts2589-no-location",
+    });
+    const rerun = standaloneQuarantineRerunStep(nestedCiLane, task);
+
+    expect(rerun.args).toEqual([
+      "run",
+      "beep",
+      "ci",
+      "lane",
+      "check",
+      "--affected",
+      "--base",
+      "origin/main",
+      "--summarize",
+      "--filter=@beep/box",
+    ]);
+    expect(rerun.args).not.toContain("--");
+  });
+
   it("keeps an inherited TURBO_FORCE on the standalone rerun so cache replay cannot green it", () => {
     const forcedLane = QualityTaskStep.make({ ...laneStep, env: { TURBO_FORCE: "true" } });
     const rerun = standaloneQuarantineRerunStep(forcedLane, task);

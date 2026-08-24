@@ -286,7 +286,7 @@ const ApiSettings = S.Struct({
     S.annotateKey({ description: "Optional redacted comma-separated API keys." })
   ),
   requireAuth: S.Boolean.pipe(
-    SchemaUtils.withKeyDefaults(false),
+    SchemaUtils.withKeyDefaults(true),
     S.annotateKey({ description: "Whether versioned API endpoints require authentication." })
   ),
 });
