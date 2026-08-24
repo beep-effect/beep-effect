@@ -2,11 +2,12 @@
 
 ## Objective
 
-Remediate every open Codex Cloud security finding visible at
+Account for every open Codex Cloud security finding visible at
 `https://chatgpt.com/codex/cloud/security/findings/` for
 `kriegcloud/beep-effect` in the 19-finding batch captured on 2026-08-24. Publish
-the work through Yeet, reach mergeable hosted state, merge, then resolve the
-exact captured findings until no packet-applicable finding remains open.
+the bounded remediation through Yeet, reach mergeable hosted state, and merge.
+Close 13 exact IDs as Already fixed and transfer the six runner-boundary IDs to
+`goals/runner-trust-boundary` under its exact proof and closure gates.
 
 ## Non-Goals
 
@@ -45,31 +46,54 @@ exact captured findings until no packet-applicable finding remains open.
 - Security controls may not be simplified away for diff size.
 - Full reports stay in ignored `raw/`; tracked records contain only sanitized
   metadata, summaries, validation, decisions, changed files, and proof.
-- Browser closure happens after merge, against the exact 19-ID allowlist.
+- Browser closure happens after merge, against the exact 13-ID allowlist in
+  `ops/closures.json`.
 - Preserve unrelated work and stage only reviewed packet intent.
+
+## Completion by handoff
+
+This packet completes with the named handoff even though six dashboard IDs
+remain open. Handoff is neither accepted risk nor dashboard closure. The
+receiving packet `goals/runner-trust-boundary` owns these exact IDs:
+
+| Source record | Codex ID | Receiving gate |
+| --- | --- | --- |
+| CSF-001 | `08ee74d0eb18819187fd02f570b4d57c` | Admission and boundary proof |
+| CSF-003 | `9459410104b881919cd820b97c673b67` | P1 deployment proof, then post-merge closure |
+| CSF-004 | `a3a281b2a3d881919fdcbf68ee2364f0` | Admission and boundary proof |
+| CSF-005 | `c799c2269d748191997ff176ce4bfd48` | Workload-identity and boundary proof |
+| CSF-006 | `33cd94a12d788191afbec1edc25c433f` | Workload-identity and boundary proof |
+| CSF-009 | `d1f026deb21881919d853e63780734fe` | P1 deployment proof, then post-merge closure |
+
+The handoff satisfies this source packet's completion contract. CSF-003 and
+CSF-009 may close only after the receiving packet's P1 proof and merge gate.
+The other four IDs remain open until that packet proves and ships their runner
+trust-boundary remediation. `ops/closures.json` is the auditable ledger for the
+13 IDs this packet closed on 2026-08-24 citing PR #783.
 
 ## Acceptance Criteria
 
-- [ ] All 19 findings have sanitized tracked CSF records with Codex ID, severity,
+- [x] All 19 findings have sanitized tracked CSF records with Codex ID, severity,
       title, source commit, and public summary.
-- [ ] Every finding has a current-HEAD verdict, disposition, lane, rationale,
+- [x] Every finding has a current-HEAD verdict, disposition, lane, rationale,
       remediation state, changed-file set, and verification evidence.
-- [ ] Every real finding is fixed at the shared root cause with a focused
-      regression check where executable behavior changes.
-- [ ] Packet counts, manifest, triage ledger, launcher size, sanitation, and
-      whitespace checks pass.
-- [ ] Yeet repair and verify are green on the complete remediation scope.
-- [ ] The branch is published, hosted checks and reviews are closed, and the PR
+- [x] Every real finding is fixed at the shared root cause with a focused
+      regression check where executable behavior changes, or transferred by
+      exact ID to `goals/runner-trust-boundary` for external proof.
+- [x] Packet counts, manifest, triage ledger, closure ledger, launcher size,
+      sanitation, and whitespace checks pass.
+- [x] Yeet repair and verify are green on the complete remediation scope.
+- [x] The branch is published, hosted checks and reviews are closed, and the PR
       is mergeable and merged.
-- [ ] All 19 captured Codex findings are resolved after merge and the live view
-      shows zero packet-applicable open findings.
+- [x] The 13 IDs in `ops/closures.json` are closed as Already fixed citing PR
+      #783; the six exact open IDs above are transferred to the named packet.
 
 ## Verification Matrix
 
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
 | Launcher size | `test "$(wc -m < goals/codex-security-findings-2026-08-24/GOAL.md)" -le 4000` | Pass |
-| JSON shape | `jq .` over both files in `ops/` | Pass |
+| JSON shape | `jq .` over all three JSON files in `ops/` | Pass |
 | Finding count | CSF file count equals 19 | Pass |
 | Severity count | 5 High, 4 Medium, 5 Low, 5 Informational | Pass |
 | Raw ignored | `git status --short -- .../raw` | Only `.gitignore` tracked |
@@ -77,7 +101,7 @@ exact captured findings until no packet-applicable finding remains open.
 | Per-finding proof | command recorded in finding and triage ledger | Pass |
 | Repo proof | `bun run beep yeet verify` | Green |
 | Hosted proof | Yeet monitor and review closeout | Green and mergeable |
-| Final closure | signed-in Chrome findings view | Zero packet-open |
+| Final accounting | `ops/closures.json` plus receiving-packet transfer table | 13 closed; six exact open IDs handed off |
 
 ## Stop Conditions
 

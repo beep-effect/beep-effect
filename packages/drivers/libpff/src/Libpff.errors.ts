@@ -82,6 +82,26 @@ export class LibpffErrorOptions extends S.Class<LibpffErrorOptions>($I`LibpffErr
   })
 ) {}
 
+const LibpffErrorFields = {
+  cause: S.OptionFromOptionalKey(S.String).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "Sanitized technical cause string when one is safe to retain.",
+    })
+  ),
+  exitCode: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "Process exit status associated with the libpff failure when one was available.",
+    })
+  ),
+  reason: LibpffErrorReason.annotateKey({
+    description: "Redacted technical error reason.",
+  }),
+} satisfies S.Struct.Fields;
+const sameLibpffErrorFields = S.toEquivalence(S.TaggedStruct("LibpffError", LibpffErrorFields));
+const sameLibpffError = (self: LibpffError, that: LibpffError): boolean => sameLibpffErrorFields(self, that);
+
 /**
  * Technical failure raised inside the libpff driver boundary.
  *
@@ -99,26 +119,14 @@ export class LibpffErrorOptions extends S.Class<LibpffErrorOptions>($I`LibpffErr
  */
 export class LibpffError extends S.TaggedError<LibpffError>($I`LibpffError`)(
   "LibpffError",
-  {
-    cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Sanitized technical cause string when one is safe to retain.",
-      })
-    ),
-    exitCode: S.OptionFromOptionalKey(NonNegativeInt).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Process exit status associated with the libpff failure when one was available.",
-      })
-    ),
-    reason: LibpffErrorReason.annotateKey({
-      description: "Redacted technical error reason.",
-    }),
-  },
-  $I.annote("LibpffError", {
-    description: "Redacted technical failure raised inside the libpff driver boundary.",
-  })
+  LibpffErrorFields,
+  $I.annoteClass<S.declare<LibpffError>, readonly [S.TaggedStruct<"LibpffError", typeof LibpffErrorFields>]>(
+    "LibpffError",
+    {
+      description: "Redacted technical failure raised inside the libpff driver boundary.",
+      toEquivalence: () => sameLibpffError,
+    }
+  )
 ) {
   /**
    * Create a libpff technical error with sanitized context.

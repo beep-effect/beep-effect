@@ -183,6 +183,18 @@ export class ToolNameCollisionReport extends S.Class<ToolNameCollisionReport>($I
   })
 ) {}
 
+const ToolNameNormalizationErrorFields = {
+  candidate: S.String,
+  message: S.NonEmptyString,
+  normalized: S.String,
+  reason: NormalizationFailureReason,
+} satisfies S.Struct.Fields;
+const sameToolNameNormalizationErrorFields = S.toEquivalence(
+  S.TaggedStruct("ToolNameNormalizationError", ToolNameNormalizationErrorFields)
+);
+const sameToolNameNormalizationError = (self: ToolNameNormalizationError, that: ToolNameNormalizationError): boolean =>
+  sameToolNameNormalizationErrorFields(self, that);
+
 /**
  * Typed rejection of an empty or unsafe normalized candidate.
  *
@@ -205,16 +217,27 @@ export class ToolNameNormalizationError extends S.TaggedError<ToolNameNormalizat
   $I`ToolNameNormalizationError`
 )(
   "ToolNameNormalizationError",
-  {
-    candidate: S.String,
-    message: S.NonEmptyString,
-    normalized: S.String,
-    reason: NormalizationFailureReason,
-  },
-  $I.annote("ToolNameNormalizationError", {
+  ToolNameNormalizationErrorFields,
+  $I.annoteClass<
+    S.declare<ToolNameNormalizationError>,
+    readonly [S.TaggedStruct<"ToolNameNormalizationError", typeof ToolNameNormalizationErrorFields>]
+  >("ToolNameNormalizationError", {
     description: "Typed rejection of a candidate whose deterministic normalization is empty or unsafe.",
+    toEquivalence: () => sameToolNameNormalizationError,
   })
 ) {}
+
+const ToolNameCollisionErrorFields = {
+  collisionKeys: S.Array(S.String),
+  message: S.NonEmptyString,
+  reason: CollisionFailureReason,
+  report: ToolNameCollisionReport,
+} satisfies S.Struct.Fields;
+const sameToolNameCollisionErrorFields = S.toEquivalence(
+  S.TaggedStruct("ToolNameCollisionError", ToolNameCollisionErrorFields)
+);
+const sameToolNameCollisionError = (self: ToolNameCollisionError, that: ToolNameCollisionError): boolean =>
+  sameToolNameCollisionErrorFields(self, that);
 
 /**
  * Typed hard failure carrying the complete in-memory duplicate report.
@@ -243,16 +266,27 @@ export class ToolNameNormalizationError extends S.TaggedError<ToolNameNormalizat
  */
 export class ToolNameCollisionError extends S.TaggedError<ToolNameCollisionError>($I`ToolNameCollisionError`)(
   "ToolNameCollisionError",
-  {
-    collisionKeys: S.Array(S.String),
-    message: S.NonEmptyString,
-    reason: CollisionFailureReason,
-    report: ToolNameCollisionReport,
-  },
-  $I.annote("ToolNameCollisionError", {
+  ToolNameCollisionErrorFields,
+  $I.annoteClass<
+    S.declare<ToolNameCollisionError>,
+    readonly [S.TaggedStruct<"ToolNameCollisionError", typeof ToolNameCollisionErrorFields>]
+  >("ToolNameCollisionError", {
     description: "Typed hard failure carrying the complete duplicate tool-name report and colliding keys.",
+    toEquivalence: () => sameToolNameCollisionError,
   })
 ) {}
+
+const ToolNameRegistrationErrorFields = {
+  candidate: ToolNameCandidate,
+  expectedWireName: NormalizedWireName,
+  message: S.NonEmptyString,
+  reason: RegistrationFailureReason,
+} satisfies S.Struct.Fields;
+const sameToolNameRegistrationErrorFields = S.toEquivalence(
+  S.TaggedStruct("ToolNameRegistrationError", ToolNameRegistrationErrorFields)
+);
+const sameToolNameRegistrationError = (self: ToolNameRegistrationError, that: ToolNameRegistrationError): boolean =>
+  sameToolNameRegistrationErrorFields(self, that);
 
 /**
  * Typed rejection of a tool declaration absent from or drifted against the
@@ -281,14 +315,13 @@ export class ToolNameCollisionError extends S.TaggedError<ToolNameCollisionError
  */
 export class ToolNameRegistrationError extends S.TaggedError<ToolNameRegistrationError>($I`ToolNameRegistrationError`)(
   "ToolNameRegistrationError",
-  {
-    candidate: ToolNameCandidate,
-    expectedWireName: NormalizedWireName,
-    message: S.NonEmptyString,
-    reason: RegistrationFailureReason,
-  },
-  $I.annote("ToolNameRegistrationError", {
+  ToolNameRegistrationErrorFields,
+  $I.annoteClass<
+    S.declare<ToolNameRegistrationError>,
+    readonly [S.TaggedStruct<"ToolNameRegistrationError", typeof ToolNameRegistrationErrorFields>]
+  >("ToolNameRegistrationError", {
     description: "Typed fail-closed rejection of a tool declaration that disagrees with the production report.",
+    toEquivalence: () => sameToolNameRegistrationError,
   })
 ) {}
 

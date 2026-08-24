@@ -6,6 +6,13 @@
  */
 
 /**
+ * Typed fail-closed gate for cited QA artifacts.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./CitedArtifactExistsGate.ts";
+/**
  * Live-session control for `qa stop` and `qa mark`.
  *
  * @category use-cases
@@ -96,6 +103,13 @@ export * from "./Qa.schemas.ts";
  * @since 0.0.0
  */
 export * from "./Qa.session.ts";
+/**
+ * Central finite gate-id domain for the QA judge contract.
+ *
+ * @category identifiers
+ * @since 0.0.0
+ */
+export * from "./QaJudgeGateId.ts";
 /**
  * The `qa record` lane orchestration.
  *

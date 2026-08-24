@@ -289,6 +289,9 @@
       "path": "packages/foundation/modeling/schema"
     },
     {
+      "path": "packages/foundation/modeling/skill-contract"
+    },
+    {
       "path": "packages/foundation/modeling/utils"
     },
     {

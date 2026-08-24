@@ -1,0 +1,26 @@
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"setting.table-cell-background","outcome":"pass","step":1}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false,\"tableCellBackgroundColor\":true}","entryId":"setting.table-cell-background","outcome":"pass","step":2}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"setting.table-cell-background","outcome":"pass","step":3}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"setting.table-cell-background","outcome":"pass","step":4}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"setting.table-cell-background","outcome":"pass","step":5}
+{"action":"type","detail":"insert \"Table cell backgrounds evidence\" in css=.ContentEditable__root","entryId":"setting.table-cell-background","outcome":"pass","step":6}
+{"action":"click","detail":"role=button name=\"Export editor state to JSON\"","entryId":"setting.table-cell-background","outcome":"pass","step":7}
+{"action":"screenshot","detail":"query-enabled-and-serialized","entryId":"setting.table-cell-background","outcome":"pass","step":8}
+{"action":"set-viewport","detail":"480x900","entryId":"setting.table-cell-background","outcome":"pass","step":9}
+{"action":"keyboard","detail":"Tab","entryId":"setting.table-cell-background","outcome":"pass","step":10}
+{"action":"screenshot","detail":"query-enabled-narrow-keyboard","entryId":"setting.table-cell-background","outcome":"pass","step":11}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://fonts.googleapis.com/css?family=Reenie+Beanie","entryId":"setting.table-cell-background","outcome":"pass","step":12}
+{"action":"goto","detail":"/ {\"emptyEditor\":true,\"isRichText\":true,\"showTreeView\":false,\"tableCellBackgroundColor\":false}","entryId":"setting.table-cell-background","outcome":"pass","step":13}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/script.debug.js","entryId":"setting.table-cell-background","outcome":"pass","step":14}
+{"action":"baseline-egress","detail":"expected Playground default egress (D9/D14): GET https://va.vercel-scripts.com/v1/speed-insights/script.debug.js","entryId":"setting.table-cell-background","outcome":"pass","step":15}
+{"action":"expect-selector","detail":"css=.ContentEditable__root is visible","entryId":"setting.table-cell-background","outcome":"pass","step":16}
+{"action":"screenshot","detail":"query-reset","entryId":"setting.table-cell-background","outcome":"pass","step":17}
+{"action":"clipboard-copy","detail":"css=.ContentEditable__root","entryId":"setting.table-cell-background","outcome":"pass","step":18}
+{"action":"keyboard","detail":"End on css=.ContentEditable__root","entryId":"setting.table-cell-background","outcome":"pass","step":19}
+{"action":"keyboard","detail":"Enter on css=.ContentEditable__root","entryId":"setting.table-cell-background","outcome":"pass","step":20}
+{"action":"clipboard-paste","detail":"css=.ContentEditable__root system clipboard","entryId":"setting.table-cell-background","outcome":"pass","step":21}
+{"action":"keyboard","detail":"Control+Z on css=.ContentEditable__root","entryId":"setting.table-cell-background","outcome":"pass","step":22}
+{"action":"keyboard","detail":"Control+Y on css=.ContentEditable__root","entryId":"setting.table-cell-background","outcome":"pass","step":23}
+{"action":"keyboard","detail":"Control+A on css=.ContentEditable__root","entryId":"setting.table-cell-background","outcome":"pass","step":24}
+{"action":"keyboard","detail":"Backspace on css=.ContentEditable__root","entryId":"setting.table-cell-background","outcome":"pass","step":25}
+{"action":"network-summary","detail":"none: 0 capability request(s); 6 baseline egress request(s)","entryId":"setting.table-cell-background","outcome":"pass","step":26}
