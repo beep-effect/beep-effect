@@ -2,10 +2,11 @@
 
 Date: 2026-08-24
 
-Status: in progress. Live canaries and throwaway-role probes corrected the IAM
-condition-key model to current-state semantics. Boundary v4 deployment, drain,
-live red-team proof (including Gate L), and the P4 JIT replay probe remain
-operator work.
+Status: complete 2026-08-24 (closure-ready evidence retained). Live canaries
+and throwaway-role probes corrected the IAM condition-key model to
+current-state semantics. Boundary v4, launch-template v13, the live red-team
+proof, and lane proof are recorded in [`P2-EVIDENCE.md`](./P2-EVIDENCE.md).
+The P4 JIT replay probe remains operator work.
 
 ## Decision realized
 
@@ -322,13 +323,14 @@ The P2 code narrows the claims for the two transferred findings as follows:
 
 - `c799c2269d748191997ff176ce4bfd48` (CSF-005) needs the boundary simulation,
   live `METADATA_DISABLED`, Gates A, B, D, F, G, H, I, and L, plus teardown and
-  P4 replay proof.
+  scoped teardown.
 - `33cd94a12d788191afbec1edc25c433f` (CSF-006) needs the same primary endpoint
   proof, with Gates F and I carrying the missed sudo/root path, Gate J proving
   Gate E did not silently disappear, and Gate L proving the live one-way IAM
   edges before disable.
 
-Neither ID is closure-ready from source changes alone.
+Source changes alone did not make either ID closure-ready. The deployed proof
+in `P2-EVIDENCE.md` now does; both IDs remain open through the P5 merge gate.
 
 ## Rollout and rollback
 

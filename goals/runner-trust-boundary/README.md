@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`; P1 complete 2026-08-24, P2 in progress
+Lifecycle: `active`; P2 complete 2026-08-24, P3 next
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -66,32 +66,33 @@ Use this command for execution-capable sessions:
    deployment, red-team, fast-path, teardown, and closure-ready proof.
 8. [`research/P2-DESIGN.md`](./research/P2-DESIGN.md) - workload identity
    realization, IAM edges, boot handoff, proof plan, and operator steps.
-9. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - P1 friction
-   receipts and prevention notes.
-10. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
+9. [`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md) - rollout incident,
+   canaries, IAM semantics, deployed proof, residuals, and closure-ready maps.
+10. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - P1 and P2
+   friction receipts and prevention notes.
+11. [`research/SOURCES.md`](./research/SOURCES.md) - source and fact-check
    ledger.
-11. The three source packets named in the transfer table.
-12. The fleet packet evidence named above.
+12. The three source packets named in the transfer table.
+13. The fleet packet evidence named above.
 
 ## Current Phase
 
-`P1 08-24 CSF-003/CSF-009 deployment proof` completed on 2026-08-24 with
-closure-ready evidence retained in
-[`research/P1-EVIDENCE.md`](./research/P1-EVIDENCE.md). P2 Workload identity
-source work is in progress under
-[`research/P2-DESIGN.md`](./research/P2-DESIGN.md). Policy simulation,
-deployment, live red-team proof, and the P4 replay probe remain outstanding.
-P3 Admission defense in depth follows workload identity proof.
+P2 Workload identity boundary completed on 2026-08-24 with closure-ready
+evidence retained in
+[`research/P2-EVIDENCE.md`](./research/P2-EVIDENCE.md). Launch-template v13
+remains the fleet default after a clean canary and deployed red-team proof. P3
+Admission defense in depth is next. P4 still owns the operator-controlled JIT
+replay probe; informational probe K found visible argv residue.
 
 ## Latest Evidence
 
-On 2026-08-24, bake #3 produced a sealed Bun `1.4.0` image keyed to `main`'s
-`f81ab29f…` lockfile digest. SSM AMI-pin version 7 serves that image. Final
-red-team run `32763957629` passed Gates A through E, `AMI_PIN`, scoped
-deregistration, and EC2 termination. Lane probe `32763957329` admitted the
-baked fast path only after the digest, owner, mode, and symlink checks passed.
-The two held findings are closure-ready and remain open until the P5 merge
-gate.
+On 2026-08-24, red-team run `32786883010` passed Gates A through J and L
+exactly once, `AMI_PIN`, live `METADATA_DISABLED (disabled applied)`, scoped
+deregistration, and EC2 termination after 1 second. The sample stream captured
+`disabled applied running` before guest poweroff. The test-integration lane
+probe kept the sealed Bun `1.4.0` fast path keyed to lockfile digest
+`f81ab29f…`. The two P2 workload-identity findings are closure-ready and remain
+open until the P5 merge gate; P6 owns dashboard closure.
 
 ## Notes
 

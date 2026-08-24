@@ -1,7 +1,7 @@
 # Runner trust-boundary friction receipts
 
-These receipts were captured during P1 on 2026-08-24. They record operational
-friction without expanding this packet's ownership.
+These receipts were captured during P1 and P2 on 2026-08-24. They record
+operational friction without expanding this packet's ownership.
 
 ## Bake identity was not discoverable
 
@@ -112,9 +112,67 @@ target resource's current state, so the Allow could not authorize disable and
 the boundary denied it.
 
 **Evidence.** Two canaries failed own-disable with `UnauthorizedOperation`.
-A throwaway role conditioned on current `enabled` authorized both requested
-endpoint values; the same role conditioned on `disabled` authorized neither.
+A throwaway role conditioned on current `enabled` authorized dry-runs for both
+requested endpoint values; the same role conditioned on `disabled` authorized
+neither. Access Analyzer separately rejected the module-style `aws:ARN`
+condition key and a bare `${ec2:SourceInstanceARN}` resource while accepting
+the `ArnEquals` shape.
 
-**What would have prevented it.** Probe ambiguous condition-key semantics with
-a throwaway role against a disposable target before deploying any `Modify*`
-policy or boundary.
+**What would have prevented it.** Run Access Analyzer first for policy shape,
+then probe ambiguous condition-key semantics with a throwaway role against a
+disposable target before deploying any `Modify*` policy or boundary. The first
+probe should vary requested values while holding resource state fixed.
+
+## P2 fleet rollout lacked a canary boundary
+
+**What.** Launch-template v10 made the fail-closed shim the fleet default at
+`21:21:15Z`. The IAM edge was wrong, so every new worker powered off before
+runner startup. At least 25 instances churned between `21:39Z` and `21:47Z`,
+none of 51 registered runners was online, and Check runs for three unrelated
+pull requests queued.
+
+**Evidence.** Console capture showed the module reach "Starting the runner in
+ephemeral mode" followed by `runner-start-failed with exit code 1` and guest
+poweroff. The operator authorized a return to launch-template v9 under the
+ratified posture; the default changed at `21:57:28Z`, and runners were online
+again by `22:00Z`.
+
+**What would have prevented it.** Give security-sensitive launch-template
+changes a true canary runner class. Until that exists, use a short controlled
+window: announce, deploy, dispatch one probe, capture `/dev/console`, and
+restore the prior default unless the probe is clean. A scale-up tripwire should
+also stop admission after repeated instance-initiated shutdowns soon after
+launch.
+
+## Terminated instances lose the applied metadata state
+
+**What.** The first P2 verifier read metadata options after its worker had
+terminated. EC2 returned endpoint `disabled` with state `pending`, so the
+wrapper could not prove the one-way lock had reached `applied`.
+
+**Evidence.** Every required red-team gate and `AMI_PIN` passed, but
+`METADATA_DISABLED` failed on `disabled pending`. The next verifier resolved
+the jobs-API runner name while the worker was alive and sampled
+`disabled applied running`, followed by `disabled pending shutting-down` after
+guest poweroff.
+
+**What would have prevented it.** Resolve the executing instance from the
+jobs API and sample image plus metadata state throughout the live run. Retain
+an `applied` sample before teardown; never treat a terminated instance's
+`pending` state as deployment evidence.
+
+## The module's self-terminate policy has never matched
+
+**What.** The pinned module's inline self-terminate statement uses `aws:ARN`,
+which is not a supported condition key. The guest role cannot authorize its
+`ec2:TerminateInstances` call through that statement.
+
+**Evidence.** Access Analyzer flagged `aws:ARN`, and both canary work and the
+module policy review confirmed the same condition shape. Observed termination
+has come from controller scale-down and, after P2, guest poweroff with
+instance-initiated shutdown behavior set to `terminate`.
+
+**What would have prevented it.** Validate every generated inline policy with
+Access Analyzer and add a live dry-run for intended self-scoped actions. The
+module should replace the unsupported key or remove the dead statement if
+external teardown remains authoritative.
