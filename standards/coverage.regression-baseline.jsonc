@@ -19995,10 +19995,10 @@
     },
     "@beep/repo-cli": {
       "path": "packages/tooling/tool/cli",
-      "lines": 73.75,
+      "lines": 73.74,
       "statements": 73.5,
       "branches": 60.36,
-      "functions": 66.65,
+      "functions": 66.64,
       "uncovered": {
         "lines": 8299,
         "statements": 8725,
