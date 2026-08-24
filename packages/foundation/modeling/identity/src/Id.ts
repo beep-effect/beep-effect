@@ -109,14 +109,6 @@ const $I = {
     identifier,
     ...extras,
   }),
-  annoteClass: <Schema extends S.Top, TP extends ReadonlyArray<S.Top>>(
-    identifier: string,
-    extras: S.Annotations.Declaration<Schema["Type"], TP>
-  ) => ({
-    schemaId: Symbol.for(identifier),
-    identifier,
-    ...extras,
-  }),
 };
 
 const IdentityInterpolationErrorFields = {} satisfies S.Struct.Fields;
