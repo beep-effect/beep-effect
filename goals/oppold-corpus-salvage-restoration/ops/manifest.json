@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "oppold-corpus-salvage-restoration",
+    "title": "Oppold Corpus Salvage Restoration",
+    "status": "active",
+    "created": "2026-08-24",
+    "updated": "2026-08-24",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/oppold-corpus-salvage-restoration",
+  "lifecycle": "active",
+  "mission": "Preserve and verify the current T7 salvage state, then restore mail, reconcile all three recycle volumes, and convert distinct legacy-Word digests with originals retained.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/oppold-corpus-overhaul",
+    "graduated": "2026-08-24"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/oppold-corpus-salvage-restoration/README.md",
+    "goals/oppold-corpus-salvage-restoration/SPEC.md",
+    "goals/oppold-corpus-salvage-restoration/PLAN.md",
+    "goals/oppold-corpus-salvage-restoration/GOAL.md",
+    "goals/oppold-corpus-salvage-restoration/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/oppold-corpus-salvage-restoration/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Preservation gate",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Mail vertical slice",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Full transformation wave",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/oppold-corpus-salvage-restoration/GOAL.md)\" -le 4000",
+    "jq . goals/oppold-corpus-salvage-restoration/ops/manifest.json",
+    "rg -n \"oppold-corpus-salvage-restoration|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/oppold-corpus-salvage-restoration",
+    "bun run beep goals doctor",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "P0 records an unapproved terminal ledger row.",
+    "P1 records an unaccounted child.",
+    "Capacity or transformation preflight exceeds the approved disk/time ceiling.",
+    "The work requires destructive original mutation or a gated parent-MAP candidate.",
+    "Required source files are missing or materially contradictory."
+  ]
+}
