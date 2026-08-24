@@ -5,9 +5,12 @@ set -euo pipefail
 #   redteam-verify.sh [ref] [expected-ami]
 #
 # ref defaults to REDTEAM_REF, then the current branch, then main. expected-ami
-# defaults to REDTEAM_EXPECTED_AMI. When the run log exposes an instance id,
-# teardown waits only for beep-ci-<instance-id>; otherwise it falls back to all
-# controller runners observed during the run.
+# defaults to REDTEAM_EXPECTED_AMI, and when both are absent it is resolved from
+# the serving SSM pin (/beep-ci/controller/runner-ami-id) so the AMI_PIN gate is
+# always evaluated whenever AWS is reachable; an unreadable pin fails the gate.
+# When the run log exposes an instance id, teardown waits only for
+# beep-ci-<instance-id>; otherwise it falls back to all controller runners
+# observed during the run.
 
 readonly repo="beep-effect/beep-effect"
 readonly workflow="fleet-shadow-check.yml"
@@ -27,7 +30,8 @@ if [[ -z "${branch}" ]]; then
   branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
 fi
 readonly branch="${branch:-main}"
-readonly expected_ami="${2:-${REDTEAM_EXPECTED_AMI:-}}"
+expected_ami="${2:-${REDTEAM_EXPECTED_AMI:-}}"
+readonly serving_pin_parameter="/beep-ci/controller/runner-ami-id"
 
 work_dir="$(mktemp -d "${TMPDIR:-/tmp}/ci-fleet-redteam.XXXXXX")"
 readonly work_dir
@@ -166,8 +170,27 @@ else
   echo "AWS credentials unavailable; EC2 termination assertion skipped"
 fi
 
-if [[ -z "${expected_ami}" ]]; then
-  echo "AMI pin assertion skipped (REDTEAM_EXPECTED_AMI unset)"
+# Without an operator-supplied expectation the gate binds the worker to the
+# serving pin itself; a PASS must never certify an image nobody compared.
+ami_pin_unresolved=0
+if [[ -z "${expected_ami}" ]] && (( aws_available == 1 )); then
+  pin_error="${work_dir}/ssm-serving-pin.error"
+  if expected_ami="$(aws ssm get-parameter --region us-east-1 \
+    --name "${serving_pin_parameter}" \
+    --query 'Parameter.Value' --output text 2>"${pin_error}")" \
+    && [[ "${expected_ami}" == ami-* ]]; then
+    echo "AMI pin expectation resolved from ${serving_pin_parameter}: ${expected_ami}"
+  else
+    expected_ami=""
+    ami_pin_unresolved=1
+    echo "GATE AMI_PIN: FAIL (no expected AMI given and ${serving_pin_parameter} could not be read)"
+    sed -n '1,8p' "${pin_error}"
+    gate_failed=1
+  fi
+fi
+
+if (( ami_pin_unresolved == 1 )); then
+  :
 elif (( aws_available == 0 )); then
   echo "AMI pin assertion skipped (AWS credentials unavailable)"
 elif [[ -z "${instance_id}" ]]; then
