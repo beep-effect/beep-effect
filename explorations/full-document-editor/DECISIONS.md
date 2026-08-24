@@ -236,3 +236,16 @@ and stakeholder context. Repository exploration and goal packets are the
 normative execution contracts.
 
 **Rejected:** maintaining two independent normative specifications.
+
+## 2026-08-24 — D28: Graduation completion and Goal B pause semantics
+
+**Decision:** Goal B, `configurable-full-document-editor`, scaffolds now as
+`paused`. Resume requires Goal A to satisfy its completion gate and deliver the
+ratified atlas/profile contract. Creating the paused packet satisfies D8's
+promised-now set, so the exploration flips to `graduated`.
+
+**Rationale:** the prior README framing, "evaluate graduation after Goal A
+establishes the contract," governed execution order, not packet existence.
+
+**Rejected:** reclassifying Goal B as a gated candidate, which contradicts D8;
+or holding the exploration open until Goal A executes.

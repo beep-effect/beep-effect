@@ -1,0 +1,23 @@
+{
+  "annotations": [
+    {
+      "level": "failure",
+      "message": "Failed to download archive 'https://codeload.github.com/actions-rust-lang/setup-rust-toolchain/tar.gz/166cdcfd11aee3cb47222f9ddb555ce30ddb9659' after 3 attempts."
+    },
+    {
+      "level": "failure",
+      "message": "Response status code does not indicate success: 429 (Too Many Requests)."
+    },
+    { "level": "warning", "message": "Back off 27.071 seconds before retry." },
+    {
+      "level": "warning",
+      "message": "Failed to download action 'https://codeload.github.com/actions-rust-lang/setup-rust-toolchain/tar.gz/166cdcfd11aee3cb47222f9ddb555ce30ddb9659'. Error: Response status code does not indicate success: 429 (Too Many Requests). DC10:3BB97E:5F7EDDC:5F9061E:6A832DEA"
+    },
+    { "level": "warning", "message": "Back off 14.606 seconds before retry." },
+    {
+      "level": "warning",
+      "message": "Failed to download action 'https://codeload.github.com/actions-rust-lang/setup-rust-toolchain/tar.gz/166cdcfd11aee3cb47222f9ddb555ce30ddb9659'. Error: Response status code does not indicate success: 429 (Too Many Requests). DC10:3BB97E:5E253F2:5E37649:6A832DD1"
+    }
+  ],
+  "job_id": 95426825024
+}

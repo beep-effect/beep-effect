@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "per-module-imports",
+    "title": "Per-Module Imports",
+    "status": "active",
+    "created": "2026-08-23",
+    "updated": "2026-08-23",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/per-module-imports",
+  "lifecycle": "active",
+  "mission": "Migrate effect + @beep foundation barrel imports to per-module form, enforced by a Biome warn-to-error ratchet and an inverted effect-imports law, gated on a measured pilot.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "note": "Authored directly (no exploration) from a 2026-08-23 grilled session: /grilling decision tree plus a six-lane research fan-out (4x codex gpt-5.6-sol xhigh, 2x grok CLI web lanes); decisions recorded in SPEC.md Decision Log, reports under research/.",
+    "graduated": "2026-08-23"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/per-module-imports/README.md",
+    "goals/per-module-imports/SPEC.md",
+    "goals/per-module-imports/PLAN.md",
+    "goals/per-module-imports/GOAL.md",
+    "goals/per-module-imports/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/enforcement-census.md",
+    "research/import-census.md",
+    "research/tooling-autofix-eval.md",
+    "research/pilot-and-measurement.md",
+    "research/effect-community-guidance.md",
+    "research/lint-tool-landscape.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/per-module-imports/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Vehicle & unblocks",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Pilot gate",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Batches & ratchet",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/per-module-imports/GOAL.md)\" -le 4000",
+    "jq . goals/per-module-imports/ops/manifest.json",
+    "rg -n \"per-module-imports|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/per-module-imports",
+    "git diff --check -- goals/per-module-imports",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The pilot gate returns no-win, unresolved variance, or a material regression.",
+    "A foundation batch's CI wave materially exceeds its recorded dry-run budget without attribution.",
+    "Leaf bypass exposes cycles that require design work rather than import edits.",
+    "Required source files are missing or materially contradictory.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

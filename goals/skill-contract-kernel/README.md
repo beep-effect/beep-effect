@@ -49,7 +49,13 @@ Not started.
   the exploration's `DECISIONS.md` carries the full locked decision log (home, name, scope,
   ACS posture, receipt shape, retrofit choice, projection scope) and its
   `research/` carries the verified inventory + landscape reports.
-- The exploration stays `active` as the home of the later-wave candidates
+- The exploration is `graduated` (status flipped 2026-08-24). The later-wave candidates
   (KG ingestion contracts, ops evidence ladder, browser leases, memory routing, fleet
-  protocols) mapped in its
-  [`MAP.md`](../../explorations/typed-agent-skill-contracts/MAP.md).
+  protocols) remain gated re-entry points in its
+  [`MAP.md`](../../explorations/typed-agent-skill-contracts/MAP.md); a fired gate reopens
+  the exploration at `decompose`. Its `MAP.md` §Cross-packet coordination records the
+  protocol-as-value overlap that waves 2/3/4/6 must respect.
+- 2026-08-24 drift corrections (exploration `DECISIONS.md`): `S.TaggedError` replaces the
+  retired `TaggedErrorClass`; the projection renders via `@beep/md` `render`/`renderUnsafe`
+  (`DocumentToMarkdown` deprecated); `ClaimGateResult` lives in `@beep/epistemic-domain`;
+  receipts use today's digest types with an explicit protocol-as-value migration seam.

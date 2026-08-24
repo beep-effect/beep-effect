@@ -1,0 +1,27 @@
+{
+  "annotations": [
+    {
+      "level": "warning",
+      "message": "Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@11d5960a326750d5838078e36cf38b85af677262. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/"
+    },
+    {
+      "level": "failure",
+      "message": "Failed to download archive 'https://codeload.github.com/oven-sh/setup-bun/tar.gz/0c5077e51419868618aeaa5fe8019c62421857d6' after 3 attempts."
+    },
+    {
+      "level": "failure",
+      "message": "Response status code does not indicate success: 429 (Too Many Requests)."
+    },
+    { "level": "warning", "message": "Back off 24.611 seconds before retry." },
+    {
+      "level": "warning",
+      "message": "Failed to download action 'https://codeload.github.com/oven-sh/setup-bun/tar.gz/0c5077e51419868618aeaa5fe8019c62421857d6'. Error: Response status code does not indicate success: 429 (Too Many Requests). 4400:2EE3AA:937E:25729:6A8315AE"
+    },
+    { "level": "warning", "message": "Back off 13.861 seconds before retry." },
+    {
+      "level": "warning",
+      "message": "Failed to download action 'https://codeload.github.com/oven-sh/setup-bun/tar.gz/0c5077e51419868618aeaa5fe8019c62421857d6'. Error: Response status code does not indicate success: 429 (Too Many Requests). 4400:2EE3AA:92F8:25544:6A83159F"
+    }
+  ],
+  "job_id": 95411859610
+}

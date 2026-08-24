@@ -285,16 +285,21 @@ describe("ciLaneStepsForTesting", () => {
     expect([...full.args]).toEqual(["run", "docgen"]);
   });
 
-  it("appends the changeset status step to repo-sanity on request", () => {
+  it("always runs the changeset graph and appends changeset status on request", () => {
     const withoutFlag = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", baseOptions);
-    expect(A.map(withoutFlag, (step) => step.label)).toEqual(["ci:repo-sanity"]);
+    expect(A.map(withoutFlag, (step) => step.label)).toEqual(["ci:repo-sanity:changeset-graph", "ci:repo-sanity"]);
+    expect([...firstOf(withoutFlag).args]).toEqual(["run", "beep", "quality", "changeset-graph"]);
 
     const withFlag = ciLaneStepsForTesting(
       REPO_ROOT,
       "repo-sanity",
       CiLaneRunOptions.make({ ...baseOptions, changesetStatus: true })
     );
-    expect(A.map(withFlag, (step) => step.label)).toEqual(["ci:repo-sanity", "ci:repo-sanity:changeset-status"]);
+    expect(A.map(withFlag, (step) => step.label)).toEqual([
+      "ci:repo-sanity:changeset-graph",
+      "ci:repo-sanity",
+      "ci:repo-sanity:changeset-status",
+    ]);
     // lab-apps-lifecycle P2 (ratified row 8): CI's changeset gate routes
     // through the path-aware wrapper so lab-only changes are ceremony-exempt.
     expect([...lastOf(withFlag).args]).toEqual([

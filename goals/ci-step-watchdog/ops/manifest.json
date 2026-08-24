@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "ci-step-watchdog",
+    "title": "CI Step Watchdog",
+    "status": "paused",
+    "created": "2026-08-23",
+    "updated": "2026-08-23",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/ci-step-watchdog",
+  "lifecycle": "paused",
+  "mission": "Bound every captured CI step with a per-step watchdog that converts runtime hangs (the bun#27766/#34069 busy-spin class) into a forensic dump plus one retried step, so no lane ever again burns a 50-minute timeout blind.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/ci-hang-observability",
+    "graduated": "2026-08-23"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/ci-step-watchdog/README.md",
+    "goals/ci-step-watchdog/SPEC.md",
+    "goals/ci-step-watchdog/PLAN.md",
+    "goals/ci-step-watchdog/GOAL.md",
+    "goals/ci-step-watchdog/research/SOURCES.md",
+    "explorations/ci-hang-observability/BRIEF.md",
+    "explorations/ci-hang-observability/MAP.md",
+    "explorations/ci-hang-observability/DECISIONS.md",
+    "explorations/ci-hang-observability/RESEARCH.md",
+    "explorations/ci-hang-observability/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/ci-hang-observability/RESEARCH.md",
+    "../../explorations/ci-hang-observability/research/SOURCES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/ci-step-watchdog/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research inheritance",
+      "status": "complete"
+    },
+    {
+      "id": "W1",
+      "name": "Split-await lifecycle events",
+      "status": "pending"
+    },
+    {
+      "id": "W2",
+      "name": "Per-step watchdog with dump-kill-retry-once",
+      "status": "pending"
+    },
+    {
+      "id": "W3",
+      "name": "Forensic dump and always artifact upload",
+      "status": "pending"
+    },
+    {
+      "id": "W4",
+      "name": "Trigger-surface reduction",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "bunx --bun vitest run packages/tooling/tool/cli/test/step-capture-lifecycle.test.ts packages/tooling/tool/cli/test/quality-tasks.test.ts",
+    "bun run --cwd packages/tooling/tool/cli check",
+    "bun run beep lint policy --full",
+    "test \"$(wc -m < goals/ci-step-watchdog/GOAL.md)\" -le 4000",
+    "jq . goals/ci-step-watchdog/ops/manifest.json",
+    "bun run beep goals doctor",
+    "bun run beep goals index --check",
+    "git diff --check -- goals/ci-step-watchdog goals/INDEX.md",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "The watchdog cannot terminate the captured step's process group without leaving descendants alive.",
+    "Safe timing values cannot clear known legitimate LPT durations with enough false-positive margin.",
+    "The implementation needs broader check.yml restructuring, hosted observability, new dependencies, or fleet changes beyond the noted fleet-AMI Bun rebake housekeeping.",
+    "Target-file ownership overlaps and coordination has not resolved it.",
+    "The Bun 1.4.0 soak records a hang recurrence or incompatible runtime behavior on the already-landed pin.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

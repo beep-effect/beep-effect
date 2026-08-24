@@ -389,9 +389,12 @@ turbo work, so they are cheap to run mid-loop.
   replacing the latest verdict.
 - Failure packets land under `.beep/yeet/packets/` with the quality-issue
   index at `.beep/yeet/quality-issue-index.json`.
-- The local pre-push proof includes `changeset status --since=origin/main`
-  (parity with hosted Repo Sanity). For intentionally version-neutral changes,
-  run `bunx changeset add --empty` and commit the empty changeset.
+- The local pre-push proof includes `beep quality changeset-status --since
+  origin/main` (parity with hosted Repo Sanity). It enforces in-process: every
+  changed, versioned, non-ignored product workspace must be named by a
+  changeset **added in-branch** (the base backlog never counts, and empty
+  changesets satisfy nothing). Write real `"@pkg": patch` frontmatter for each
+  changed package; lab-only change sets are ceremony-exempt.
 
 ## Failure Handling
 

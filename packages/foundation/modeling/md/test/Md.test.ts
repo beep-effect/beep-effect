@@ -29,14 +29,19 @@ import {
 import { renderSafeHtml, safeHtmlValue } from "@beep/md/Md.html";
 import {
   Block,
+  BlockChildren,
   CodeFenceLanguage,
   Document,
   FootnoteIdentifier,
   Inline,
+  InlineChildren,
+  ListChildren,
+  ListItemChildren,
   Pre,
   Table,
   TableCell,
   TableRow,
+  TaskItemChildren,
   Text,
 } from "@beep/md/Md.model";
 import {
@@ -414,6 +419,26 @@ https://www.youtube.com/watch?v=M7lc1UVf-VE
       }),
       fcRuns(50)
     ));
+
+  it("bounds derived child-list arbitraries without constraining Markdown documents", () => {
+    const childListArbitrary = fc.oneof(
+      S.toArbitrary(InlineChildren)(fc),
+      S.toArbitrary(BlockChildren)(fc),
+      S.toArbitrary(ListItemChildren)(fc),
+      S.toArbitrary(ListChildren)(fc),
+      S.toArbitrary(TaskItemChildren)(fc)
+    );
+
+    fc.assert(
+      fc.property(childListArbitrary, (children) => {
+        expect(children.length).toBeLessThanOrEqual(2);
+      }),
+      fcRuns(100)
+    );
+
+    const text = Text.make({ value: "unbounded domain" });
+    expect(Result.isSuccess(S.decodeResult(InlineChildren)([text, text, text]))).toBe(true);
+  });
 
   it("encoded documents survive a JSON boundary (jsonb columns, rpc/ndjson wire)", () => {
     // Regression: a real Option in an encoded node must survive a JSON string

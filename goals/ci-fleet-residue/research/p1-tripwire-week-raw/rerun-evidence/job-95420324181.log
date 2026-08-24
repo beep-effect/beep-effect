@@ -1,0 +1,30 @@
+﻿2026-08-17T14:50:09.9814683Z Current runner version: '2.336.0'
+2026-08-17T14:50:09.9819898Z Runner name: 'beep-ci-i-0f1777d1ec0633cf0'
+2026-08-17T14:50:09.9820631Z Runner group name: 'Default'
+2026-08-17T14:50:09.9821345Z Machine name: 'ip-10-88-6-149'
+2026-08-17T14:50:09.9836827Z ##[group]Operating System
+2026-08-17T14:50:09.9837636Z Distribution: Amazon Linux release 2023.12.20260803 (Amazon Linux)
+2026-08-17T14:50:09.9838305Z Architecture: x86_64
+2026-08-17T14:50:09.9838791Z ##[endgroup]
+2026-08-17T14:50:09.9839451Z ##[group]Runner Image
+2026-08-17T14:50:09.9839974Z AMI id: ami-07fb13d84a42d3584
+2026-08-17T14:50:09.9840473Z ##[endgroup]
+2026-08-17T14:50:09.9840990Z ##[group]EC2
+2026-08-17T14:50:09.9841492Z Instance type: m7a.4xlarge
+2026-08-17T14:50:09.9842061Z Availability zone: us-east-1a
+2026-08-17T14:50:09.9842560Z ##[endgroup]
+2026-08-17T14:50:09.9843592Z ##[group]GITHUB_TOKEN Permissions
+2026-08-17T14:50:09.9845133Z Contents: read
+2026-08-17T14:50:09.9845687Z Metadata: read
+2026-08-17T14:50:09.9846280Z ##[endgroup]
+2026-08-17T14:50:09.9848058Z Secret source: Actions
+2026-08-17T14:50:09.9849002Z Prepare workflow directory
+2026-08-17T14:50:10.0266609Z Prepare all required actions
+2026-08-17T14:50:10.0303600Z Getting action download info
+2026-08-17T14:50:10.2101456Z Download action repository 'actions/checkout@11d5960a326750d5838078e36cf38b85af677262' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-08-17T14:50:26.0663209Z ##[warning]Failed to download action 'https://codeload.github.com/actions/checkout/tar.gz/11d5960a326750d5838078e36cf38b85af677262'. Error: Response status code does not indicate success: 429 (Too Many Requests). C2B2:8FA7C:33621A:3397EB:6A831FA2
+2026-08-17T14:50:26.0678949Z ##[warning]Back off 22.537 seconds before retry.
+2026-08-17T14:51:03.7697749Z ##[warning]Failed to download action 'https://codeload.github.com/actions/checkout/tar.gz/11d5960a326750d5838078e36cf38b85af677262'. Error: Response status code does not indicate success: 502 (Bad Gateway). 
+2026-08-17T14:51:03.7699943Z ##[warning]Back off 17.331 seconds before retry.
+2026-08-17T14:51:29.0420344Z ##[error]Response status code does not indicate success: 429 (Too Many Requests).
+2026-08-17T14:51:29.0434317Z ##[error]Failed to download archive 'https://codeload.github.com/actions/checkout/tar.gz/11d5960a326750d5838078e36cf38b85af677262' after 3 attempts.

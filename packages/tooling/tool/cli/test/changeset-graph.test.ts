@@ -141,6 +141,42 @@ Record a private workspace change.
     })
   );
 
+  it.effect(
+    "rejects frontmatter whose bump value is outside the major | minor | patch domain",
+    Effect.fnUntraced(function* () {
+      const error = yield* changesetPackageReferencesFromText(
+        ".changeset/typo.md",
+        `---
+"@beep/schema": typo
+---
+
+Record a mistyped bump.
+`
+      ).pipe(Effect.flip);
+
+      expect(error.file).toBe(".changeset/typo.md");
+      expect(error.message).toContain("must map package names to major | minor | patch bumps");
+    })
+  );
+
+  it.effect(
+    "rejects frontmatter whose bump value is null",
+    Effect.fnUntraced(function* () {
+      const error = yield* changesetPackageReferencesFromText(
+        ".changeset/null-bump.md",
+        `---
+"@beep/schema": null
+---
+
+Record a null bump.
+`
+      ).pipe(Effect.flip);
+
+      expect(error.file).toBe(".changeset/null-bump.md");
+      expect(error.message).toContain("must map package names to major | minor | patch bumps");
+    })
+  );
+
   it("reports only package references outside the workspace graph", () => {
     const missing = findMissingChangesetPackageReferences(
       ["@beep/schema"],

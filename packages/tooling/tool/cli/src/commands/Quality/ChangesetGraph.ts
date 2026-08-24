@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -135,8 +136,10 @@ export class ChangesetGraphSummary extends S.Class<ChangesetGraphSummary>($I`Cha
   })
 ) {}
 
+const ChangesetBumpKind = LiteralKit(["major", "minor", "patch"]);
+
 const decodePackageJson = S.decodeUnknownEffect(S.fromJsonString(ChangesetGraphPackageJson));
-const decodeChangesetFrontmatter = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
+const decodeChangesetFrontmatter = S.decodeUnknownEffect(S.Record(S.String, ChangesetBumpKind));
 const decodeRetiredChangesetPackages = S.decodeUnknownEffect(S.fromJsonString(RetiredChangesetPackages));
 
 const byReferenceKeyAscending: Order.Order<ChangesetGraphPackageReference> = Order.mapInput(
@@ -416,7 +419,10 @@ export const changesetPackageReferencesFromText = Effect.fn("ChangesetGraph.chan
     }
 
     const decoded = yield* decodeChangesetFrontmatter(value).pipe(
-      ChangesetGraphError.mapError(`Changeset frontmatter in ${file} must be a package bump mapping.`, file)
+      ChangesetGraphError.mapError(
+        `Changeset frontmatter in ${file} must map package names to major | minor | patch bumps.`,
+        file
+      )
     );
 
     return pipe(

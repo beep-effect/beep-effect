@@ -173,3 +173,44 @@ as their home per the graduation contract's "keep active if candidates remain".
 **Rationale:** Goals should be born ready to work; the four later waves have no briefs yet —
 scaffolding them now would create empty shells violating the per-candidate definition-of-
 ready. Rejected: graduating all five waves (names the program but ships four unready shells).
+
+## 2026-08-24 — status flip to `graduated` (grill-with-docs)
+
+**Question:** The packet stayed `active` after the spine graduated, citing the graduation
+contract's "keep active if candidates remain" — does the contract actually say that?
+
+**Answer:** No — flip to `graduated`. The graduation contract
+(`explorations/README.md` §Graduation Contract, ratified 2026-08-13 via PR #693) says the
+opposite: once all promised-now goals exist, flip the status; gated candidates remain in
+`MAP.md` as re-entry points, and a fired gate reopens the exploration at `decompose`.
+
+**Rationale:** The 2026-08-13 §graduation-shape entry above misquoted the contract in a
+same-day race with its ratification. Repo precedent is 44-of-46 graduate-stage packets at
+`graduated`. The deliberate hold recorded that day ("another clone is finishing it") expired
+when PR #694 merged; no open PR touches the packet. Flipped at operator request, 2026-08-24.
+The sole promised-now goal (`goals/skill-contract-kernel`) exists and remains unexecuted —
+graduation records shape completion, not implementation.
+
+## 2026-08-24 — kernel-goal drift corrections + receipt digest seam (grill-with-docs)
+
+**Question:** Eleven days after scaffolding, do the kernel goal's premises still hold against
+the repo, and how do its receipts sequence against `explorations/protocol-as-value`'s proposed
+canonical-encoding/versioned-digest substrate?
+
+**Answer:** Three citation drifts corrected in the goal `SPEC.md`: boundary failures use
+`S.TaggedError` (the repo retired its `TaggedErrorClass` helper, commit `ec3bc91e63`); the
+SKILL.md projection renders via `@beep/md` `render`/`renderUnsafe` (`DocumentToMarkdown` is
+deprecated in their favor; still one-way, so the re-extraction scoping stands);
+`ClaimGateResult` lives in `@beep/epistemic-domain` (the use-cases service returns it) — both
+verdict precedents are read-only patterns, never dependencies. Acceptance parity now
+enumerates the judge invariants (missing-event IDs, canonical-root/path-escape refusal,
+file-only evidence refs, declared-round coherence, nonempty evidence per finding, P0/P1
+`requiredCount` coherence). Digest seam: receipts bind subjects with today's digest types
+plus an explicit migration seam; the kernel must not mint a competing canonical encoding.
+P0 gains Effect rc.108→rc.111 `Tool`/`Toolkit` revalidation against `.repos/effect`.
+
+**Rationale:** Keeps the goal born-ready instead of advertising retired APIs to its
+implementer. Waiting for protocol-as-value was rejected (it is at `shape` with no MAP — an
+unbounded block); leaving the digest question to P1 was rejected (invites exactly the
+competing-encoding drift the premise check warned about). Waves 2/3/4/6 coordination with
+protocol-as-value is recorded in `MAP.md` §Cross-packet coordination.
