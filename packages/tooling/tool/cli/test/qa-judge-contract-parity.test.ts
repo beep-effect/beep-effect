@@ -14,6 +14,7 @@ import {
   raiseCrossCheckFailure,
   renderCrossCheckFailure,
 } from "@beep/repo-cli/commands/Qa";
+import { ISOStr } from "@beep/schema/Timestamp";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -187,7 +188,7 @@ describe("commands/Qa cited-artifact typed gate parity", () => {
         detail: { checkedPaths: ["frames/real.png"] },
         evaluator: "qa",
         gateId,
-        occurredAt: "2026-08-24T00:00:00.000Z",
+        occurredAt: ISOStr.make("2026-08-24T00:00:00.000Z"),
         outcome: "allowed",
         reason: "The artifact exists.",
       },
@@ -197,7 +198,7 @@ describe("commands/Qa cited-artifact typed gate parity", () => {
         detail: { checkedPaths: ["frames/ghost.png"], missingPaths: ["frames/ghost.png"] },
         evaluator: "qa",
         gateId,
-        occurredAt: "2026-08-24T00:00:00.000Z",
+        occurredAt: ISOStr.make("2026-08-24T00:00:00.000Z"),
         outcome: "denied",
         reason: "The artifact is missing.",
       },

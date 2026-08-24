@@ -104,6 +104,13 @@ export * from "./Qa.schemas.ts";
  */
 export * from "./Qa.session.ts";
 /**
+ * Central finite gate-id domain for the QA judge contract.
+ *
+ * @category identifiers
+ * @since 0.0.0
+ */
+export * from "./QaJudgeGateId.ts";
+/**
  * The `qa record` lane orchestration.
  *
  * @category use-cases

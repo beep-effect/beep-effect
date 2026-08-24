@@ -1,14 +1,21 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { ISOStr } from "@beep/schema/Timestamp";
 import {
+  AlwaysGateApplicability,
+  ConditionalGateApplicability,
   EvidencePredicateType,
   GateApplicability,
+  GateApplicabilityKind,
   GateAuditRecord,
   GateDeclaration,
   GateEvidenceRequirement,
   GateId,
+  GateRegistry,
   GateSeverity,
   GateVerdict,
   makeGateId,
+  SchemaReference,
+  SchemaReferenceId,
 } from "@beep/skill-contract";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -20,7 +27,7 @@ import type { GateEvaluator } from "@beep/skill-contract";
 const ConsumerGateId = makeGateId(LiteralKit(["artifact-exists", "event-exists"]));
 const predicateType = EvidencePredicateType.make("https://beep.dev/evidence/artifact-exists/v1");
 const declaration = GateDeclaration.make({
-  applicability: "always",
+  applicability: AlwaysGateApplicability.make({}),
   evidence: GateEvidenceRequirement.make({ predicateType }),
   id: ConsumerGateId.make("artifact-exists"),
   remediationOwner: "qa",
@@ -28,11 +35,13 @@ const declaration = GateDeclaration.make({
 });
 
 describe("@beep/skill-contract Gate", () => {
-  it("brands the wire id while retaining a consumer-local literal domain", () => {
+  it("brands the wire id while retaining a consumer-local literal domain and distinct identity", () => {
+    const OtherGateId = makeGateId(LiteralKit(["other-gate"]));
     expect(S.is(GateId)("artifact-exists")).toBe(true);
     expect(S.is(ConsumerGateId)("artifact-exists")).toBe(true);
     expect(S.is(ConsumerGateId)("unknown-gate")).toBe(false);
     expect(S.is(GateId)("")).toBe(false);
+    expect(S.resolveAnnotations(ConsumerGateId)?.identifier).not.toBe(S.resolveAnnotations(OtherGateId)?.identifier);
   });
 
   it("keeps the base nonempty validation even when a consumer domain declares an empty literal", () => {
@@ -40,11 +49,20 @@ describe("@beep/skill-contract Gate", () => {
     expect(S.is(Sloppy)("")).toBe(false);
   });
 
-  it("exposes severity and the reserved conditional applicability value", () => {
+  it("models unconditional and referenced conditional applicability without invalid combinations", () => {
+    const conditional = ConditionalGateApplicability.make({
+      condition: SchemaReference.make({ schemaId: SchemaReferenceId.make("qa.condition/v1") }),
+    });
     expect(GateSeverity.Options).toEqual(["blocking", "advisory"]);
-    expect(GateApplicability.Options).toEqual(["always", "conditional"]);
-    expect(declaration.applicability).toBe("always");
+    expect(GateApplicabilityKind.Options).toEqual(["always", "conditional"]);
+    expect(declaration.applicability.kind).toBe("always");
     expect(declaration.evidence.predicateType).toBe(predicateType);
+    expect(
+      GateApplicability.match(conditional, {
+        always: () => "always",
+        conditional: ({ condition }) => condition.schemaId,
+      })
+    ).toBe("qa.condition/v1");
   });
 
   it.effect("round-trips a gate declaration through its schema", () =>
@@ -56,18 +74,43 @@ describe("@beep/skill-contract Gate", () => {
     })
   );
 
+  it.effect("rejects duplicate registry ids and malformed audit timestamps at decode", () =>
+    Effect.gen(function* () {
+      const encodedDeclaration = yield* S.encodeUnknownEffect(GateDeclaration)(declaration);
+      const duplicateRegistryInput: unknown = {
+        declarations: [encodedDeclaration, encodedDeclaration],
+      };
+      const Detail = S.Struct({ paths: S.Array(S.String) });
+      const Audit = GateAuditRecord("TimestampAudit", "allowed", Detail);
+      const malformedTimestampInput: unknown = {
+        detail: { paths: [] },
+        evaluator: "qa",
+        gateId: "artifact-exists",
+        occurredAt: "not-a-timestamp",
+        outcome: "allowed",
+        reason: "Checked.",
+      };
+      const duplicateRegistry = yield* S.decodeUnknownEffect(GateRegistry)(duplicateRegistryInput).pipe(Effect.flip);
+      const malformedTimestamp = yield* S.decodeUnknownEffect(Audit)(malformedTimestampInput).pipe(Effect.flip);
+
+      expect(duplicateRegistry.message).toContain("unique gate ids");
+      expect(malformedTimestamp.message).toContain('["occurredAt"]');
+    })
+  );
+
   it.effect("keeps allowed and denied outcomes as coherent audited values", () =>
     Effect.gen(function* () {
       const AllowedDetail = S.Struct({ checkedPaths: S.Array(S.String) });
       const DeniedDetail = S.Struct({ missingPaths: S.NonEmptyArray(S.String) });
-      const Verdict = GateVerdict(AllowedDetail, DeniedDetail);
+      const Verdict = GateVerdict("ArtifactExistsVerdict", AllowedDetail, DeniedDetail);
       const gateId = ConsumerGateId.make("artifact-exists");
+      const occurredAt = ISOStr.make("2026-08-24T00:00:00.000Z");
       const allowed = Verdict.cases.allowed.make({
         audit: {
           detail: { checkedPaths: ["frames/drag.png"] },
           evaluator: "qa",
           gateId,
-          occurredAt: "2026-08-24T00:00:00.000Z",
+          occurredAt,
           outcome: "allowed",
           reason: "The artifact exists.",
         },
@@ -77,7 +120,7 @@ describe("@beep/skill-contract Gate", () => {
           detail: { missingPaths: ["frames/ghost.png"] },
           evaluator: "qa",
           gateId,
-          occurredAt: "2026-08-24T00:00:00.000Z",
+          occurredAt,
           outcome: "denied",
           reason: "The artifact is missing.",
         },
@@ -107,12 +150,14 @@ describe("@beep/skill-contract Gate", () => {
       fcRuns(25)
     ));
 
-  it("supports curried audit and verdict schema factories", () => {
+  it("supports curried distinctly identified audit and verdict schema factories", () => {
     const Detail = S.Struct({ paths: S.Array(S.String) });
-    const DeniedAudit = GateAuditRecord(Detail)("denied");
-    const Verdict = GateVerdict(Detail)(Detail);
+    const DeniedAudit = GateAuditRecord("denied", Detail)("CurriedDeniedAudit");
+    const Verdict = GateVerdict(Detail, Detail)("CurriedVerdict");
+    const OtherVerdict = GateVerdict("OtherVerdict", Detail, Detail);
 
     expect(DeniedAudit.ast).toBeDefined();
     expect(Verdict.discriminants).toEqual(["allowed", "denied"]);
+    expect(S.resolveAnnotations(Verdict)?.identifier).not.toBe(S.resolveAnnotations(OtherVerdict)?.identifier);
   });
 });
