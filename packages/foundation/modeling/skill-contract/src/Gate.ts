@@ -8,11 +8,10 @@
 import { $SkillContractId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { ISOStr } from "@beep/schema/Timestamp";
-import { Tuple } from "effect";
+import { HashSet, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
-import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { SchemaReference } from "./SchemaReference.ts";
 import type { LiteralKit as LiteralKitSchema } from "@beep/schema/LiteralKit";

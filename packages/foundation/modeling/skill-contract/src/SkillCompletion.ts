@@ -8,10 +8,9 @@
 import { $SkillContractId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
-import { Effect, Tuple } from "effect";
+import { Effect, HashSet, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
-import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Delivered, EvidenceLadderState, evidenceLadderFor, SemanticallyApplied } from "./EvidenceLadder.ts";
