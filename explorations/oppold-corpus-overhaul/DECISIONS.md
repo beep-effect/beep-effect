@@ -1,5 +1,85 @@
 # Decisions
 
+## 2026-08-24 — MAP ratified; privacy-gate language dropped; one-PR ceremony
+
+Grilled round three (operator-ratified):
+
+1. **No privilege/PII/secret gate language in this packet.** The graduation
+   dossier proposed a hosted-model policy gate; the operator's revised
+   corpus-handling doctrine (2026-08-17) directs that packets not carry
+   confidentiality/compliance language — hosted providers are welcome,
+   provider choice is ordinary config. The langextract default-deny posture
+   already in code stays as-is. Dropped from BRIEF no-gos.
+2. **MAP candidate set ratified as proposed:** promised-now
+   `goals/oppold-corpus-salvage-restoration` (G1); gated re-entry
+   `oppold-corpus-pipeline-v2` (G2), `oppold-corpus-semantic-ingestion-v2`
+   (G3), `oppold-corpus-enrichment-v2` (G4), then the `practice-kg-bundle-v2`
+   gate; deferred `solo-practice-corpus-kit` (productization explicitly
+   outside this appetite).
+3. **Ceremony:** one docs-only PR — packet updates, BRIEF, MAP, drift fixes,
+   G1 scaffold, status flip to `graduated`, ATLAS sync — published via yeet.
+4. **Drift fixes in scope:** packet README next-open-question rewrite;
+   `research/SOURCES.md` gains the binding `goals/oppold-corpus-pipeline`
+   predecessor; `explorations/README.md`'s citation of the retired
+   repo-exports catalog (removed from `standards/`) is replaced with
+   live-source/package-barrel language. `CAPTURE.md` stays untouched
+   (append-only).
+
+## 2026-08-24 — Four stop conditions ratified (align closed)
+
+The four unbounded capture bullets each got a stop condition (grilled round;
+candidates drawn from the adversarial residue distillation, GPT-5.6 Sol
+xhigh, 2026-08-24):
+
+1. **Pipeline re-eval "from scratch" stops** when a versioned decision matrix
+   covers the current-T7 archive plus the existing governed-corpus run union,
+   and every observed format, container, and pipeline stage has one
+   `keep | replace | add | defer` decision with an owner, acceptance check,
+   and unsupported/quarantine outcome. "From scratch" audits the completed
+   June pipeline (it ran; its debt binds) — it never erases it.
+2. **Capability incorporation "and more" stops** when every capability named
+   in `CAPTURE.md`, plus only capabilities required to close a matrix gap
+   from (1), has a written input/output, precedence, fallback, cost, and
+   acceptance contract — or an explicit defer. Package discovery alone never
+   adds scope.
+3. **Per-step self-improvement** = one immutable pipeline version per run;
+   each stage evaluated against a fixed metadata-safe regression set in
+   shadow mode; stop when no candidate clears its predeclared quality-gain
+   and cost/regression thresholds; accepted changes apply only to the next
+   run. No same-run mutation of rules, prompts, schemas, engines, or
+   ontology version.
+4. **Enrichment "every avenue" stops** at a closed register of authority
+   sources tied to the approved v2 competency questions; each source either
+   meets its declared quality target or fails a
+   license/authority/contradiction/cost/marginal-gain gate. External
+   assertions are stored beside restored evidence, never over it.
+
+With these, the manifest's open question is answered; the packet moves to
+`shape` (BRIEF drafting).
+
+## 2026-08-24 — Graduation shape, preservation timing, archive home, appetite (operator-ratified)
+
+Grilled round (grill-with-docs session; the T7 salvage drive was mounted
+(volume `T7XFER`) during the session — census layout confirmed on disk):
+
+1. **Graduation shape:** one promised-now goal — salvage preservation +
+   mail-first restoration. Pipeline re-eval, T-Box-guided ingestion, and
+   enrichment stay in `MAP.md` as **gated candidates** that reopen this packet
+   at decompose when their gate fires.
+2. **Preservation timing:** preservation is the goal's **P0, run ASAP** —
+   build the minimal streaming copy-while-hashing tool first and run the
+   archive op as soon as it exists, before any transformation work. The
+   removable-drive exposure window closes on bar-v2 semantics, not ad hoc.
+3. **Archive destination:** the corpus home's `raw/t7-salvage-2026-08-10/`,
+   beside the existing `raw/` trees; `oppold-corpus.zip` archived verbatim as
+   its own object; `raw/provenance.jsonl` extended. T7 remains the redundant
+   second copy; the old PC carries forward as the third until verification
+   (bar v2 clause 2).
+4. **Appetite (BRIEF input):** split — the preservation gate lands **this
+   week, no negotiation**; the transformation gates (mail estate, recycle
+   re-pairing, doc conversion) get one **~3-week wave**. Mirrors the ratified
+   preservation/transformation gate separation.
+
 ## 2026-08-17 — Restoration bar v2 (adversarially reviewed, re-ratified)
 
 Eight adversarial lanes (grok xhigh + codex medium over the bar and the

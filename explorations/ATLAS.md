@@ -49,12 +49,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   with PacketCore + ExecutionRecord proof migrations; wave 2 (protocol kit)
   gated; `$I` stays static; decoupled from identity-iri-fibered. Next:
   Benjamin's BRIEF review, then decompose.
-- [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — align
-  (2026-08-17): restoration bar **v2** ratified after an 8-lane adversarial
-  review corrected the census (three recycle volumes, raw f-recyclebin
-  trees, the collector's 5,986-error ledger, exFAT reality, mail-first
-  ordering, one-pass copy-while-hashing). Gates practice-kg bundle v2. Next:
-  bound the remaining capture bullets, then the BRIEF.
 - [`packet-system-redesign`](./packet-system-redesign/README.md) —
   graduated 2026-08-17: MAP ratified with amendments (live index-guard
   capability cited; apps/labs as the React candidate's presumptive home).
@@ -63,16 +57,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   migration gate on the core fold contract stabilizing, evidence closure on
   observed self-hosting friction, React v2 on KSA static-v1 daily-use
   evidence. Fired gates reopen the packet at decompose.
-- [`full-document-editor`](./full-document-editor/README.md) — graduate-stage
-  initiative for a configurable full-document substrate and eventual
-  Professional Desktop document Portal. A live Lexical Playground `0.49.0`
-  audit captured 17 screenshots, keybindings, highlighting, inserts, settings,
-  and accessibility gaps; a pinned source audit reconciled the node/plugin
-  registration graph at commit `a933222`. Architecture grill D1-D27 keeps
-  `@beep/md` canonical, Lexical/Pandoc as projections, product profiles
-  app-owned, and collaboration/redlining/DOCX/PDF/Portal work sequenced after
-  single-user parity. First goal graduated:
-  [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md).
+- [`full-document-editor`](./full-document-editor/README.md) — graduated
+  2026-08-24 with its two promised-now packets:
+  [`lexical-playground-capability-atlas`](../goals/lexical-playground-capability-atlas/README.md)
+  establishes the versioned atlas/profile contract, and
+  [`configurable-full-document-editor`](../goals/configurable-full-document-editor/README.md)
+  implements production-eligible single-user parity behind that contract. The
+  seven remaining MAP candidates stay gated re-entry points; a fired gate
+  reopens the exploration at `decompose`.
 - [`model-artifact-admission`](./model-artifact-admission/README.md) —
   graduated 2026-08-17: MAP ratified with five adversarial amendments
   (restricted fixture; closed chat-arrangement component set with repair and
@@ -238,6 +230,13 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`oppold-corpus-overhaul`](./oppold-corpus-overhaul/README.md) — graduated
+  2026-08-24 with
+  [`goals/oppold-corpus-salvage-restoration`](../goals/oppold-corpus-salvage-restoration/README.md)
+  as the only promised-now goal. Gated re-entries: `oppold-corpus-pipeline-v2`,
+  `oppold-corpus-semantic-ingestion-v2`, `oppold-corpus-enrichment-v2`,
+  `practice-kg-bundle-v2`, and deferred `solo-practice-corpus-kit`. A fired
+  gate reopens the packet at `decompose`.
 - [`typed-agent-skill-contracts`](./typed-agent-skill-contracts/README.md) —
   graduated 2026-08-24 (spine 2026-08-13) into
   [`skill-contract-kernel`](../goals/skill-contract-kernel/README.md):
