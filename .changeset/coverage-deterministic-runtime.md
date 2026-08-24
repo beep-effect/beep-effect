@@ -4,7 +4,9 @@
 
 Pin the hosted pull-request Turbo cache posture into the coverage runtime so local, PR, and
 main-push coverage measure the same arms of `internal/cli/EnvConfig.ts`: `coverageEnvironment()`
-spreads the new `turboCachePullRequestPosture` (credentials scrubbed, `TURBO_CACHE=local:rw`),
+spreads the new `turboCachePullRequestPosture` (credentials scrubbed, `TURBO_CACHE=local:rw`)
+and coverage turbo invocations downgrade any generated remote-read `--cache` argument to
+local-only (caller-owned cache arguments stay caller-owned),
 the ambient Turbo reader becomes the pure `readTurboCacheEnvironment(environment)` with every
 classification arm unit-tested, and `canUseTurboCacheSecretSession` gains stubbed-spawner tests
 for its CI, `op whoami`, and spawn-failure arms. Records ship-velocity B9 and the 150-run

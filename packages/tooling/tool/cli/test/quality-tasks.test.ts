@@ -82,6 +82,8 @@ import {
   writeCoverageRegressionBaseline,
 } from "@beep/repo-cli/test/Quality";
 import {
+  hasRemoteTurboCacheArgs,
+  localOnlyTurboCacheArgs,
   readTurboCacheEnvironmentSync,
   resolveTurboCachePlan,
   turboCachePlanArgs,
@@ -1442,7 +1444,7 @@ describe("quality task adapter", () => {
     expect(steps[0]).toMatchObject({
       label: "lint:fix",
       command: "bunx",
-      args: expectedRootTurboArgs("lint:fix", passthroughTasks),
+      args: localOnlyTurboCacheArgs(expectedRootTurboArgs("lint:fix", passthroughTasks)),
       env: {
         BEEP_FC_SEED: "20260708",
         CI: "true",
@@ -1469,7 +1471,7 @@ describe("quality task adapter", () => {
     expect(steps[0]).toMatchObject({
       label: "coverage:ratchet",
       command: "bunx",
-      args: expectedRootTurboArgs("coverage", []),
+      args: localOnlyTurboCacheArgs(expectedRootTurboArgs("coverage", [])),
       env: {
         BEEP_FC_SEED: "20260708",
         CI: "true",
@@ -1510,6 +1512,27 @@ describe("quality task adapter", () => {
     expect(env.TURBO_CACHE).toBe("local:rw");
   });
 
+  it("never hands a coverage turbo run a generated remote cache argument", () => {
+    // A generated `--cache=local:rw,remote:r` outranks the TURBO_CACHE the
+    // coverage environment pins, and the credentials it would need were just
+    // scrubbed from that environment. Whatever the ambient plan resolves to
+    // (this checkout may be configured for remote reads), coverage invocations
+    // carry no remote posture while the caller-owned passthrough survives.
+    const ambientPlanArgs = expectedTurboCacheArgs([]);
+    const coverage = rootQualityStepsForTesting("/repo", getInvocation(["coverage"]));
+    const fullSteps = coverageFullStepsForTesting("/repo", ["@beep/schema"], []);
+    const callerOwned = coverageFullStepsForTesting("/repo", ["@beep/schema"], ["--remote-only"]);
+
+    expect(A.every(coverage, (step) => !hasRemoteTurboCacheArgs(step.args))).toBe(true);
+    expect(A.every(A.drop(fullSteps, 1), (step) => !hasRemoteTurboCacheArgs(step.args))).toBe(true);
+    expect(
+      A.every(coverage, (step) => A.isReadonlyArrayEmpty(ambientPlanArgs) || A.contains(step.args, "--cache=local:rw"))
+    ).toBe(true);
+    // The prebuild is a plain build invocation and keeps the ambient plan.
+    expect(fullSteps[0]?.args).toEqual(expect.arrayContaining([...ambientPlanArgs]));
+    expect(A.every(A.drop(callerOwned, 1), (step) => A.contains(step.args, "--remote-only"))).toBe(true);
+  });
+
   it("preserves existing Node options when disabling experimental Web Storage for coverage", () => {
     const steps = withEnvVar("BEEP_FC_SEED", undefined, () =>
       withEnvVar("NODE_OPTIONS", "--max-old-space-size=4096", () =>
@@ -1548,13 +1571,9 @@ describe("quality task adapter", () => {
     expect(steps[0]).toMatchObject({
       label: "coverage:baseline",
       command: "bunx",
-      args: expectedTurboArgs("coverage", [
-        "--concurrency=1",
-        "--force",
-        "--",
-        "--fileParallelism=true",
-        "--maxWorkers=2",
-      ]),
+      args: localOnlyTurboCacheArgs(
+        expectedTurboArgs("coverage", ["--concurrency=1", "--force", "--", "--fileParallelism=true", "--maxWorkers=2"])
+      ),
       env: {
         BEEP_FC_SEED: "20260708",
         CI: "true",

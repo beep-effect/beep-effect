@@ -819,13 +819,23 @@ const splitAtTurboPassthrough = (
     })
   );
 
+// Coverage children receive the pull-request posture in their environment,
+// but a generated `--cache=local:rw,remote:r` argument outranks TURBO_CACHE and
+// would have turbo read a remote cache whose credentials that posture just
+// scrubbed. Downgrade the generated plan to local-only for coverage runs; a
+// caller-owned cache argument stays caller-owned (standards/turbo-remote-cache.md).
+const turboCacheArgsFor = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  includesTurboCoverageTask(tasks, args)
+    ? localOnlyTurboCacheArgs(localTurboCacheArgs(args))
+    : localTurboCacheArgs(args);
+
 const turboRunArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> => {
   const [optionArgs, passthroughArgs] = splitAtTurboPassthrough(args);
   return [
     "turbo",
     "run",
     ...tasks,
-    ...localTurboCacheArgs(args),
+    ...turboCacheArgsFor(tasks, args),
     ...optionArgs,
     ...labsExcludeFilterArgs(tasks, optionArgs),
     ...passthroughArgs,
