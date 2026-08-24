@@ -47,6 +47,7 @@ import {
   turboCacheEnvironmentNeedsSecretSession,
   turboCachePlanArgs,
   turboCachePlanNeedsSecretSession,
+  turboCachePullRequestPosture,
 } from "../../internal/cli/TurboCache.ts";
 import {
   CapturedStep,
@@ -818,13 +819,23 @@ const splitAtTurboPassthrough = (
     })
   );
 
+// Coverage children receive the pull-request posture in their environment,
+// but a generated `--cache=local:rw,remote:r` argument outranks TURBO_CACHE and
+// would have turbo read a remote cache whose credentials that posture just
+// scrubbed. Downgrade the generated plan to local-only for coverage runs; a
+// caller-owned cache argument stays caller-owned (standards/turbo-remote-cache.md).
+const turboCacheArgsFor = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  includesTurboCoverageTask(tasks, args)
+    ? localOnlyTurboCacheArgs(localTurboCacheArgs(args))
+    : localTurboCacheArgs(args);
+
 const turboRunArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> => {
   const [optionArgs, passthroughArgs] = splitAtTurboPassthrough(args);
   return [
     "turbo",
     "run",
     ...tasks,
-    ...localTurboCacheArgs(args),
+    ...turboCacheArgsFor(tasks, args),
     ...optionArgs,
     ...labsExcludeFilterArgs(tasks, optionArgs),
     ...passthroughArgs,
@@ -863,8 +874,14 @@ const coverageFastCheckSeed = (): string =>
     O.getOrElse(() => DEFAULT_COVERAGE_FAST_CHECK_SEED)
   );
 
-// Coverage is a hosted ratchet. Pin its CI identity and remove desktop terminal
-// metadata so local baseline generation exercises the same branches as GitHub.
+// Coverage is a hosted ratchet. Pin its CI identity, remove desktop terminal
+// metadata, and reduce the Turbo remote-cache quad to the pull-request posture
+// so local baseline generation, PR jobs, and main pushes all exercise the same
+// branches: a workstation's 1Password-backed TURBO_TOKEN and a main push's
+// literal token each reach arms of internal/cli/EnvConfig.ts that a PR job's
+// blank quad never does (ship-velocity B9). Step env wins over
+// turboEnvOverrides at spawn time, and the prebuild step never receives this
+// record, so main pushes keep their remote-cache reads for the build graph.
 const coverageEnvironment = (): Record<string, string | undefined> => ({
   BEEP_FC_SEED: coverageFastCheckSeed(),
   CI: "true",
@@ -872,6 +889,7 @@ const coverageEnvironment = (): Record<string, string | undefined> => ({
   NODE_OPTIONS: coverageNodeOptions(),
   TERM_PROGRAM: undefined,
   TERM_PROGRAM_VERSION: undefined,
+  ...turboCachePullRequestPosture,
   VITEST_COVERAGE_RATCHET: "1",
 });
 
