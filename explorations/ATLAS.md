@@ -39,6 +39,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Active
 
+- [`semantica-lab`](./semantica-lab/README.md) — research
+  (2026-08-24): Semantica (MIT Python KG framework, 27 modules) port atlas +
+  future `apps/labs/semantica` Tauri lab. Grounded 3-ways (upstream repo, labs
+  doctrine, Notion atlas); grilling locked 18 decisions (hybrid embedded-first
+  envelope, 4 bake-offs incl. elevated reasoning engines, construction-vs-
+  consumption charter split with trustgraph-workbench, Tauri headless-first,
+  academia+synthetic eval corpus, provenance-first + pipeline-as-data design
+  laws). Notion page `@beep/semantica` mirrors facts; packet owns decisions.
+  Next: ratify bake-off criteria rubric after adversarial pass.
 - [`protocol-as-value`](./protocol-as-value/README.md) — shape
   (2026-08-23): Mepuka-thread synthesis packet. Research: novelty claim
   (digest-named global protocol type + projections + journal-audited
