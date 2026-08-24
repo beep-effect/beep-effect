@@ -341,6 +341,29 @@ export class DatasetLoadJsonOptions extends S.Class<DatasetLoadJsonOptions>($I`D
  */
 export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.Schema<A>>>>;
 
+const DatasetLoadErrorFields = {
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    .pipe(SchemaUtils.withNoneDefault)
+    .annotateKey({
+      description: "Underlying platform, HTTP, timeout, or schema failure when available.",
+    }),
+  message: S.String.annotateKey({
+    description: "Safe diagnostic message for the dataset load failure.",
+  }),
+  location: S.String.annotateKey({
+    description: "File path or URL that failed to load or decode.",
+  }),
+} satisfies S.Struct.Fields;
+const sameDatasetLoadErrorFields = S.toEquivalence(
+  S.TaggedStruct("DatasetLoadError", {
+    // cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+    message: DatasetLoadErrorFields.message,
+    location: DatasetLoadErrorFields.location,
+  })
+);
+const sameDatasetLoadError = (self: DatasetLoadError, that: DatasetLoadError): boolean =>
+  sameDatasetLoadErrorFields(self, that);
+
 /**
  * Structured failure raised when a remote fetch or JSON decode fails.
  *
@@ -358,21 +381,13 @@ export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.S
  */
 export class DatasetLoadError extends S.TaggedError<DatasetLoadError>($I`DatasetLoadError`)(
   "DatasetLoadError",
-  {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
-      .pipe(SchemaUtils.withNoneDefault)
-      .annotateKey({
-        description: "Underlying platform, HTTP, timeout, or schema failure when available.",
-      }),
-    message: S.String.annotateKey({
-      description: "Safe diagnostic message for the dataset load failure.",
-    }),
-    location: S.String.annotateKey({
-      description: "File path or URL that failed to load or decode.",
-    }),
-  },
-  $I.annote("DatasetLoadError", {
+  DatasetLoadErrorFields,
+  $I.annoteClass<
+    S.declare<DatasetLoadError>,
+    readonly [S.TaggedStruct<"DatasetLoadError", typeof DatasetLoadErrorFields>]
+  >("DatasetLoadError", {
     description: "Structured failure raised when a remote fetch or JSON decode fails.",
+    toEquivalence: () => sameDatasetLoadError,
   })
 ) {}
 

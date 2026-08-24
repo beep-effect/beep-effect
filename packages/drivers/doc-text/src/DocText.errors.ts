@@ -85,6 +85,20 @@ export class DocTextErrorOptions extends S.Class<DocTextErrorOptions>($I`DocText
   })
 ) {}
 
+const DocTextErrorFields = {
+  cause: S.OptionFromOptionalKey(S.String).pipe(
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({
+      description: "Sanitized technical cause string when one is safe to retain.",
+    })
+  ),
+  reason: DocTextErrorReason.annotateKey({
+    description: "Redacted technical error reason.",
+  }),
+} satisfies S.Struct.Fields;
+const sameDocTextErrorFields = S.toEquivalence(S.TaggedStruct("DocTextError", DocTextErrorFields));
+const sameDocTextError = (self: DocTextError, that: DocTextError): boolean => sameDocTextErrorFields(self, that);
+
 /**
  * Technical failure raised inside the document text driver boundary.
  *
@@ -102,20 +116,14 @@ export class DocTextErrorOptions extends S.Class<DocTextErrorOptions>($I`DocText
  */
 export class DocTextError extends S.TaggedError<DocTextError>($I`DocTextError`)(
   "DocTextError",
-  {
-    cause: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Sanitized technical cause string when one is safe to retain.",
-      })
-    ),
-    reason: DocTextErrorReason.annotateKey({
-      description: "Redacted technical error reason.",
-    }),
-  },
-  $I.annote("DocTextError", {
-    description: "Redacted technical failure raised inside the JS-native document text driver boundary.",
-  })
+  DocTextErrorFields,
+  $I.annoteClass<S.declare<DocTextError>, readonly [S.TaggedStruct<"DocTextError", typeof DocTextErrorFields>]>(
+    "DocTextError",
+    {
+      description: "Redacted technical failure raised inside the JS-native document text driver boundary.",
+      toEquivalence: () => sameDocTextError,
+    }
+  )
 ) {
   /**
    * Create a document text driver error with sanitized context.

@@ -90,6 +90,9 @@
     // codex-companion materializes full repo worktrees here at runtime; they are
     // sibling checkouts, not source, and scanning one doubles every finding.
     ".codex/**",
+    // Claude Code worktree-isolated sessions materialize checkouts under
+    // .claude/worktrees/ the same way; a live one floods knip with its exports.
+    ".claude/**",
     "goals/**",
     // explorations/ is the fuzzy front end of the goals/ pipeline (capture -> graduate, see
     // explorations/CLAUDE.md); prototype code there (e.g. identity-as-iri/assets/ontology-prototype)

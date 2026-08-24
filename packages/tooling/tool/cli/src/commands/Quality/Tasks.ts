@@ -1896,7 +1896,10 @@ const rootRepoLintPolicySteps = (repoRoot: string, files?: ReadonlyArray<string>
       repoCliStep(repoRoot, "lint:tsgo-rules", ["quality", "tsgo-rules"]),
       // Gate on mandatory (error) oxlint rules; --quiet suppresses the large advisory (warn)
       // backlog so the policy lane stays readable. `bun run lint:oxlint` stays verbose.
-      bunxStep(repoRoot, "lint:oxlint", ["oxlint", "--quiet"]),
+      // --disable-nested-config: the root config is the only real one; a live agent
+      // worktree under .claude/worktrees/ carries a copy whose same-named `beep`
+      // jsPlugin otherwise double-registers and aborts the run.
+      bunxStep(repoRoot, "lint:oxlint", ["oxlint", "--quiet", "--disable-nested-config"]),
       ...scopedRepoCliStep(
         repoRoot,
         "lint:ecosystem-polarity",

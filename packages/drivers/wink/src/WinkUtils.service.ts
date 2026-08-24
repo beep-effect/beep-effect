@@ -141,6 +141,20 @@ const sanitizeNGramResult = (
   };
 };
 
+const WinkUtilsErrorFields = {
+  cause: S.Defect({ includeStack: true }),
+  message: S.String,
+  operation: S.String,
+} satisfies S.Struct.Fields;
+const WinkUtilsErrorEquivalenceFields = {
+  message: WinkUtilsErrorFields.message,
+  operation: WinkUtilsErrorFields.operation,
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const sameWinkUtilsErrorFields = S.toEquivalence(S.TaggedStruct("WinkUtilsError", WinkUtilsErrorEquivalenceFields));
+const sameWinkUtilsError = (self: WinkUtilsError, that: WinkUtilsError): boolean =>
+  sameWinkUtilsErrorFields(self, that);
+
 /**
  * Typed failure for `wink-nlp-utils` string, token, and n-gram helpers.
  *
@@ -158,14 +172,14 @@ const sanitizeNGramResult = (
  */
 export class WinkUtilsError extends S.TaggedError<WinkUtilsError>($I`WinkUtilsError`)(
   "WinkUtilsError",
-  {
-    cause: S.Defect({ includeStack: true }),
-    message: S.String,
-    operation: S.String,
-  },
-  $I.annote("WinkUtilsError", {
-    description: "Failure raised while calling wink-nlp-utils helpers.",
-  })
+  WinkUtilsErrorFields,
+  $I.annoteClass<S.declare<WinkUtilsError>, readonly [S.TaggedStruct<"WinkUtilsError", typeof WinkUtilsErrorFields>]>(
+    "WinkUtilsError",
+    {
+      description: "Failure raised while calling wink-nlp-utils helpers.",
+      toEquivalence: () => sameWinkUtilsError,
+    }
+  )
 ) {
   /**
    * Convert an unknown cause into a typed wink-utils error.

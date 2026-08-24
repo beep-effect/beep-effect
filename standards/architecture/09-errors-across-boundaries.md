@@ -33,6 +33,21 @@ wanted. When no distinct identifier is needed, omit it with
 the tag. Cause-carrying errors declare
 `cause: S.Defect({ includeStack: true })` explicitly.
 
+### Declared field equivalence
+
+Every `S.TaggedError` declaration carries a fields-only `toEquivalence`
+annotation. The comparator covers declared diagnostic identity and ignores the
+`Error` runtime metadata inherited by the class. The direct schema-derived
+form lives in `packages/drivers/tika/src/Tika.errors.ts`; fields that need typed
+projections use the hand-composed form in
+`packages/drivers/m365/src/M365.errors.ts`.
+
+Opaque fields modeled with `S.Defect(...)`, including optional defect fields,
+remain payload but stay out of the comparator. Two errors may therefore be
+equivalent even when their opaque defects differ. The comparator and its
+annotation live beside the class declaration. Tests consume
+`S.toEquivalence(ErrorClass)` and never install test-local overrides.
+
 ## 2. Translation contract
 
 Three rules, one per boundary.

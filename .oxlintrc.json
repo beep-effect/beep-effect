@@ -29,6 +29,8 @@
     "**/generated/**",
     "**/*.gen.*",
     ".repos/**",
+    ".codex/**",
+    ".claude/**",
     "docs/generated/**",
     "**/scripts/**",
     "goals/**",

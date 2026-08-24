@@ -197,6 +197,60 @@ export class ExiftoolErrorFromUnknownOptions extends S.Class<ExiftoolErrorFromUn
   })
 ) {}
 
+const ExiftoolErrorFields = {
+  command: S.OptionFromOptionalKey(S.String).pipe(
+    SchemaUtils.withNoneDefault,
+    $I.annoteKey("ExiftoolError.command", {
+      description: "Native executable path or command name involved in the failure, when available.",
+    })
+  ),
+  cause: S.OptionFromOptionalKey(ExiftoolDefect).pipe(
+    SchemaUtils.withNoneDefault,
+    $I.annoteKey("ExiftoolError.cause", {
+      description: "Inspectable originating defect, when available.",
+    })
+  ),
+  exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
+    SchemaUtils.withNoneDefault,
+    $I.annoteKey("ExiftoolError.exitCode", {
+      description: "Native process exit status, when the process returned one.",
+    })
+  ),
+  message: S.String.pipe(
+    $I.annoteKey("ExiftoolError.message", {
+      description: "Human-readable ExifTool driver failure summary.",
+    })
+  ),
+  operation: S.String.pipe(
+    $I.annoteKey("ExiftoolError.operation", {
+      description: "Driver operation that emitted the failure.",
+    })
+  ),
+  stderr: S.OptionFromOptionalKey(S.String).pipe(
+    SchemaUtils.withNoneDefault,
+    $I.annoteKey("ExiftoolError.stderr", {
+      description: "Captured standard error text, when available.",
+    })
+  ),
+  stdout: S.OptionFromOptionalKey(S.String).pipe(
+    SchemaUtils.withNoneDefault,
+    $I.annoteKey("ExiftoolError.stdout", {
+      description: "Captured standard output text, when available.",
+    })
+  ),
+} satisfies S.Struct.Fields;
+// cause is an opaque defect: equivalence is declared diagnostic identity, cause stays payload.
+const ExiftoolErrorEquivalenceFields = {
+  command: ExiftoolErrorFields.command,
+  exitCode: ExiftoolErrorFields.exitCode,
+  message: ExiftoolErrorFields.message,
+  operation: ExiftoolErrorFields.operation,
+  stderr: ExiftoolErrorFields.stderr,
+  stdout: ExiftoolErrorFields.stdout,
+} satisfies S.Struct.Fields;
+const sameExiftoolErrorFields = S.toEquivalence(S.TaggedStruct("ExiftoolError", ExiftoolErrorEquivalenceFields));
+const sameExiftoolError = (self: ExiftoolError, that: ExiftoolError): boolean => sameExiftoolErrorFields(self, that);
+
 /**
  * Technical failure raised by the `@beep/exiftool` driver boundary.
  *
@@ -214,51 +268,14 @@ export class ExiftoolErrorFromUnknownOptions extends S.Class<ExiftoolErrorFromUn
  */
 export class ExiftoolError extends S.TaggedError<ExiftoolError>($I`ExiftoolError`)(
   "ExiftoolError",
-  {
-    command: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      $I.annoteKey("ExiftoolError.command", {
-        description: "Native executable path or command name involved in the failure, when available.",
-      })
-    ),
-    cause: S.OptionFromOptionalKey(ExiftoolDefect).pipe(
-      SchemaUtils.withNoneDefault,
-      $I.annoteKey("ExiftoolError.cause", {
-        description: "Inspectable originating defect, when available.",
-      })
-    ),
-    exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
-      SchemaUtils.withNoneDefault,
-      $I.annoteKey("ExiftoolError.exitCode", {
-        description: "Native process exit status, when the process returned one.",
-      })
-    ),
-    message: S.String.pipe(
-      $I.annoteKey("ExiftoolError.message", {
-        description: "Human-readable ExifTool driver failure summary.",
-      })
-    ),
-    operation: S.String.pipe(
-      $I.annoteKey("ExiftoolError.operation", {
-        description: "Driver operation that emitted the failure.",
-      })
-    ),
-    stderr: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      $I.annoteKey("ExiftoolError.stderr", {
-        description: "Captured standard error text, when available.",
-      })
-    ),
-    stdout: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      $I.annoteKey("ExiftoolError.stdout", {
-        description: "Captured standard output text, when available.",
-      })
-    ),
-  },
-  $I.annote("ExiftoolError", {
-    description: "Technical ExifTool driver failure scoped to a driver operation.",
-  })
+  ExiftoolErrorFields,
+  $I.annoteClass<S.declare<ExiftoolError>, readonly [S.TaggedStruct<"ExiftoolError", typeof ExiftoolErrorFields>]>(
+    "ExiftoolError",
+    {
+      description: "Technical ExifTool driver failure scoped to a driver operation.",
+      toEquivalence: () => sameExiftoolError,
+    }
+  )
 ) {
   static readonly is = S.is(ExiftoolError);
 

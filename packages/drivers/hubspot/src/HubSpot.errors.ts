@@ -67,6 +67,29 @@ export const HubSpotErrorReason = LiteralKit([
  */
 export type HubSpotErrorReason = typeof HubSpotErrorReason.Type;
 
+const HubSpotErrorFields = {
+  cause: S.optionalKey(S.String).annotateKey({
+    description: "Redacted cause label derived from a native or HTTP client error.",
+  }),
+  email: S.optionalKey(S.String).annotateKey({
+    description: "Submitted email text preserved for diagnostic context.",
+  }),
+  formGuid: S.optionalKey(S.NonEmptyString).annotateKey({
+    description: "HubSpot form GUID associated with the failed request.",
+  }),
+  reason: HubSpotErrorReason.annotateKey({
+    description: "Redacted technical error reason.",
+  }),
+  status: S.optionalKey(HubSpotHttpStatus).annotateKey({
+    description: "HTTP response status code associated with the failure.",
+  }),
+  url: S.optionalKey(HubSpotUrl).annotateKey({
+    description: "HubSpot API URL associated with the failed request.",
+  }),
+} satisfies S.Struct.Fields;
+const sameHubSpotErrorFields = S.toEquivalence(S.TaggedStruct("HubSpotError", HubSpotErrorFields));
+const sameHubSpotError = (self: HubSpotError, that: HubSpotError): boolean => sameHubSpotErrorFields(self, that);
+
 /**
  * Technical failure raised by the HubSpot driver boundary.
  *
@@ -88,29 +111,14 @@ export type HubSpotErrorReason = typeof HubSpotErrorReason.Type;
  */
 export class HubSpotError extends S.TaggedError<HubSpotError>($I`HubSpotError`)(
   "HubSpotError",
-  {
-    cause: S.optionalKey(S.String).annotateKey({
-      description: "Redacted cause label derived from a native or HTTP client error.",
-    }),
-    email: S.optionalKey(S.String).annotateKey({
-      description: "Submitted email text preserved for diagnostic context.",
-    }),
-    formGuid: S.optionalKey(S.NonEmptyString).annotateKey({
-      description: "HubSpot form GUID associated with the failed request.",
-    }),
-    reason: HubSpotErrorReason.annotateKey({
-      description: "Redacted technical error reason.",
-    }),
-    status: S.optionalKey(HubSpotHttpStatus).annotateKey({
-      description: "HTTP response status code associated with the failure.",
-    }),
-    url: S.optionalKey(HubSpotUrl).annotateKey({
-      description: "HubSpot API URL associated with the failed request.",
-    }),
-  },
-  $I.annote("HubSpotError", {
-    description: "Redacted technical failure raised by the HubSpot API driver boundary.",
-  })
+  HubSpotErrorFields,
+  $I.annoteClass<S.declare<HubSpotError>, readonly [S.TaggedStruct<"HubSpotError", typeof HubSpotErrorFields>]>(
+    "HubSpotError",
+    {
+      description: "Redacted technical failure raised by the HubSpot API driver boundary.",
+      toEquivalence: () => sameHubSpotError,
+    }
+  )
 ) {
   /**
    * Create a HubSpot driver error.

@@ -10,7 +10,7 @@ import { flow, pipe } from "effect";
 import * as O from "effect/Option";
 import { Node, SyntaxKind } from "ts-morph";
 import { SchemaFirstInventoryEntry } from "../Lint.schemas.ts";
-import type { InterfaceDeclaration, Type, TypeAliasDeclaration, TypeElementTypes } from "ts-morph";
+import type { ClassDeclaration, InterfaceDeclaration, Type, TypeAliasDeclaration, TypeElementTypes } from "ts-morph";
 
 const IDENTIFIER_PROPERTY_PATTERN = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 const RUNTIME_HANDLE_TYPE_PATTERN =
@@ -34,6 +34,7 @@ const DEFAULTS_SCHEMA_SIGNAL_PATTERN =
   /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError)|[A-Za-z_$][\w$]*Entity\.Entity|withConstructorDefault|withDecodingDefault|SchemaUtils\.withKeyDefaults)\b/;
 const EQUIVALENCE_SCHEMA_SIGNAL_PATTERN =
   /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|Error|TaggedError|toEquivalence|overrideToEquivalence)|[A-Za-z_$][\w$]*Entity\.Entity|SchemaUtils\.toEquivalence)\b/;
+const TAGGED_ERROR_SIGNAL_PATTERN = /\b(?:S|Schema)\.TaggedError\b/;
 const FN_CALL_SIGNAL_PATTERN = /\bFn\s*\(/;
 const NORMALIZATION_METHOD_NAMES = ["trim", "toUpperCase", "toLowerCase"] as const;
 const NORMALIZATION_CALL_SIGNAL_PATTERN = /\.(?:trim|toUpperCase|toLowerCase)\(/;
@@ -1047,6 +1048,78 @@ const equivalenceEntryFromVariableDeclaration = (
   );
 };
 
+const sourceHasTaggedErrorSignal = (sourceFile: import("ts-morph").SourceFile): boolean =>
+  TAGGED_ERROR_SIGNAL_PATTERN.test(sourceFile.getFullText());
+
+const taggedErrorDeclarationCall = (declaration: ClassDeclaration): O.Option<import("ts-morph").CallExpression> => {
+  const outerCall = declaration.getExtends()?.getExpression();
+  if (!Node.isCallExpression(outerCall)) {
+    return O.none();
+  }
+
+  const factoryCall = outerCall.getExpression();
+  if (!Node.isCallExpression(factoryCall)) {
+    return O.none();
+  }
+
+  const factory = factoryCall.getExpression();
+  if (!Node.isPropertyAccessExpression(factory) || factory.getName() !== "TaggedError") {
+    return O.none();
+  }
+
+  const namespace = factory.getExpression().getText();
+  return namespace === "S" || namespace === "Schema" ? O.some(outerCall) : O.none();
+};
+
+const isToEquivalenceAnnotationProperty = (node: Node): boolean =>
+  (Node.isPropertyAssignment(node) || Node.isShorthandPropertyAssignment(node) || Node.isMethodDeclaration(node)) &&
+  node.getName() === "toEquivalence";
+
+const annotationCarriesToEquivalence = (annotation: Node, depth = 0): boolean => {
+  if (A.some(annotation.getDescendants(), isToEquivalenceAnnotationProperty)) {
+    return true;
+  }
+  if (depth >= 3) {
+    return false;
+  }
+
+  const referencedInitializers = pipe(
+    [annotation, ...annotation.getDescendants()],
+    A.filter(Node.isIdentifier),
+    A.flatMap((identifier) => identifier.getSymbol()?.getDeclarations() ?? A.empty<Node>()),
+    A.filter(Node.isVariableDeclaration),
+    A.map((declaration) => O.fromUndefinedOr(declaration.getInitializer())),
+    A.getSomes
+  );
+  return A.some(referencedInitializers, (initializer) => annotationCarriesToEquivalence(initializer, depth + 1));
+};
+
+const taggedErrorEquivalenceEntryFromClassDeclaration = (
+  declaration: ClassDeclaration,
+  file: string,
+  owner: string
+): O.Option<SchemaFirstInventoryEntry> =>
+  pipe(
+    taggedErrorDeclarationCall(declaration),
+    O.filter((call) => {
+      const annotation = call.getArguments()[2];
+      return annotation === undefined || !annotationCarriesToEquivalence(annotation);
+    }),
+    O.map(() => {
+      const symbol = declarationSymbol(declaration, declaration.getName());
+      return SchemaFirstInventoryEntry.make({
+        file,
+        symbol,
+        kind: "schema-policy-advisory",
+        status: "advisory",
+        ruleId: "SFV4-tagged-error-equivalence",
+        line: declaration.getSourceFile().getLineAndColumnAtPos(declaration.getStart()).line,
+        owner,
+        reason: `S.TaggedError declaration "${symbol}" must declare a fields-only toEquivalence annotation at the class declaration; follow packages/drivers/tika/src/Tika.errors.ts. Otherwise declaration equivalence falls back to Equal.equals over Error runtime metadata, causing seed-dependent property flakes.`,
+      });
+    })
+  );
+
 /**
  * Grouped schema-first AST detectors consumed by the scan orchestrator.
  *
@@ -1092,5 +1165,7 @@ export const SchemaFirstDetectors = {
   sourceHasGetSomesSignal,
   sourceHasNormalizationSignal,
   sourceHasStaticApiSchemaSignal,
+  sourceHasTaggedErrorSignal,
   staticApiEntryFromSwitch,
+  taggedErrorEquivalenceEntryFromClassDeclaration,
 } as const;

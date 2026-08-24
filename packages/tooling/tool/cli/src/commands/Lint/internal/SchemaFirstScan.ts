@@ -44,6 +44,7 @@ import type {
   SchemaFirstLintOptions,
   SchemaFirstPolicyRuleId,
 } from "../Lint.schemas.ts";
+import type { SchemaFirstLintFindings } from "../SchemaFirst.render.ts";
 import type { FunctionLikeDeclarationNode } from "./SchemaFirstDetectors.ts";
 
 const isLiteralKitConstAssertionArgument = (argument: Node): boolean =>
@@ -134,6 +135,19 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
     }
     if (isSchemaFirstExcludedFile(filePath)) {
       continue;
+    }
+
+    if (SchemaFirstDetectors.sourceHasTaggedErrorSignal(sourceFile)) {
+      for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
+        const entry = SchemaFirstDetectors.taggedErrorEquivalenceEntryFromClassDeclaration(
+          declaration,
+          filePath,
+          owner
+        );
+        if (O.isSome(entry)) {
+          A.appendInPlace(entries, entry.value);
+        }
+      }
     }
 
     for (const declaration of sourceFile.getInterfaces()) {
@@ -301,7 +315,8 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
 
 const mergeInventory = (
   liveDocument: SchemaFirstInventoryDocument,
-  existingDocument: O.Option<SchemaFirstInventoryDocument>
+  existingDocument: O.Option<SchemaFirstInventoryDocument>,
+  write: boolean
 ): SchemaFirstInventoryDocument => {
   const existingByKey = pipe(
     existingDocument,
@@ -318,7 +333,12 @@ const mergeInventory = (
 
   const mergedEntries = pipe(
     liveDocument.entries,
-    A.map((entry) => O.getOrElse(HashMap.get(existingByKey, makeSchemaFirstEntryKey(entry)), () => entry))
+    A.map((entry) => O.getOrElse(HashMap.get(existingByKey, makeSchemaFirstEntryKey(entry)), () => entry)),
+    A.map((entry) =>
+      write && entry.ruleId === "SFV4-tagged-error-equivalence"
+        ? SchemaFirstInventoryEntry.make({ ...entry, status: "exception" })
+        : entry
+    )
   );
 
   return SchemaFirstInventoryDocument.make({
@@ -327,25 +347,6 @@ const mergeInventory = (
     scope: liveDocument.scope,
     entries: sortSchemaFirstEntries(mergedEntries),
   });
-};
-
-type SchemaFirstLintFindings = {
-  readonly missingEntries: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly staleEntries: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly enforcedCandidates: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly boundaryCodecAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly defaultsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly staticApiAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly equivalenceAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly precisionAuditAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly arbitraryTestsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly numericDomainAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly fnSchemaAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly normalizationAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly nullReturnAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly getsomesStructAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly activeAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
-  readonly policyExemptCount: number;
 };
 
 const collectSchemaFirstLintFindings = (
@@ -376,6 +377,10 @@ const collectSchemaFirstLintFindings = (
   const defaultsAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-defaults"));
   const staticApiAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-static-api"));
   const equivalenceAdvisories = A.filter(policyFilteredEntries, isActiveSchemaFirstRuleAdvisory("SFV4-equivalence"));
+  const taggedErrorEquivalenceAdvisories = A.filter(
+    policyFilteredEntries,
+    isActiveSchemaFirstRuleAdvisory("SFV4-tagged-error-equivalence")
+  );
   const precisionAuditAdvisories = A.filter(
     policyFilteredEntries,
     isActiveSchemaFirstRuleAdvisory("SFV4-precision-audit")
@@ -407,6 +412,7 @@ const collectSchemaFirstLintFindings = (
     defaultsAdvisories,
     staticApiAdvisories,
     equivalenceAdvisories,
+    taggedErrorEquivalenceAdvisories,
     precisionAuditAdvisories,
     arbitraryTestsAdvisories,
     numericDomainAdvisories,
@@ -419,6 +425,7 @@ const collectSchemaFirstLintFindings = (
       ...defaultsAdvisories,
       ...staticApiAdvisories,
       ...equivalenceAdvisories,
+      ...taggedErrorEquivalenceAdvisories,
       ...precisionAuditAdvisories,
       ...arbitraryTestsAdvisories,
       ...numericDomainAdvisories,
@@ -462,7 +469,7 @@ export const runSchemaFirstLint = Effect.fn("runSchemaFirstLint")(function* (opt
   const liveDocument = yield* scanSchemaFirstInventory();
   const literalKitConstAssertionViolations = yield* collectLiteralKitConstAssertionViolations();
   const existingDocument = yield* readSchemaFirstInventoryDocument();
-  const mergedDocument = mergeInventory(liveDocument, existingDocument);
+  const mergedDocument = mergeInventory(liveDocument, existingDocument, options.write);
   const policyDocument = yield* readCrispeningPolicyDocument();
   const findings = collectSchemaFirstLintFindings(liveDocument, existingDocument, mergedDocument, policyDocument);
   const summary = SchemaFirstRender.makeSchemaFirstLintSummary({
