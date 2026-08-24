@@ -236,6 +236,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`ci-hang-observability`](./ci-hang-observability/README.md) — graduated
+  2026-08-23 into
+  [`ci-step-watchdog`](../goals/ci-step-watchdog/README.md): per-step
+  watchdog with dump-kill-retry-once over all captured step groups,
+  split-await lifecycle events, in-job forensic dump artifact, Bun 1.4.0
+  shadow canary + wrapper drop. Root cause proven to class level in one
+  session: SIGTERM-immune bun busy-spin (bun#27766/#34069, open on 1.3.14)
+  at a schedule-determined victim step, ~2% of Lint Policy runs. Hosted
+  observability (CW agent / OTel) remains a reopen-at-`decompose` MAP point.
 - [`patent-drafting-episode-ledger`](./patent-drafting-episode-ledger/README.md)
   — graduated 2026-08-13 into
   [`patent-drafting-episode-ledger`](../goals/patent-drafting-episode-ledger/README.md):
