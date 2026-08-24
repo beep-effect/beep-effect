@@ -3,18 +3,14 @@
   "initiative": {
     "id": "codex-security-findings-2026-08-13",
     "title": "Codex Security Findings (2026-08-13)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-13",
-    "updated": "2026-08-13",
+    "updated": "2026-08-24",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-08-13",
-  "lifecycle": "active",
-  "statusNote": "P2 and P3 are complete for all 19 findings. CSF-002, CSF-007, CSF-009, CSF-010, CSF-013, and CSF-014 are merged; CSF-011 was already fixed. CSF-012, CSF-015, CSF-016, CSF-017, CSF-018, and CSF-019 have focused local proof and are being consolidated into PR #712; merged-tree full proof and publication remain pending. Six runner findings lack external evidence.",
-  "blockedBy": [
-    "Runner admission and workload-identity architecture for CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008.",
-    "External GitHub organization runner-group/AWS deployment proof must pass before runner-finding closeout; prepared but unmerged findings require their remaining publication proof."
-  ],
+  "lifecycle": "completed-retained",
+  "statusNote": "Completed-retained after repository-local findings landed through PRs #650, #655, #673, #681, #688, #696, #697, and #712; PR #712 merged on 2026-08-14 with CSF-012, CSF-015, CSF-016, CSF-017, CSF-018, and CSF-019. CSF-001, CSF-003, CSF-004, CSF-005, CSF-006, and CSF-008 remain an explicit handoff to the runner-admission/workload-identity arc for external GitHub runner-group and AWS deployment proof; this packet does not claim dashboard closure for those findings.",
   "mission": "Remediate and close the 19 Codex Cloud security findings captured on 2026-08-13.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -76,7 +72,7 @@
       "out-of-scope": 0,
       "untriaged": 0
     },
-    "note": "All 19 findings are validated and lane-assigned: 18 remediate and 1 already-fixed. Six remediation findings are merged, one finding was already fixed, six repository-fixable findings are being consolidated into PR #712, and six CI trust-boundary findings remain held for external evidence."
+    "note": "All repository-local findings are merged, including CSF-012 and CSF-015 through CSF-019 in PR #712. Six CI trust-boundary findings remain assigned to the runner-admission/workload-identity arc for external organization and deployment proof."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -122,32 +118,34 @@
     {
       "id": "P4",
       "name": "Remediate",
-      "status": "in-progress"
+      "status": "complete",
+      "statusNote": "Repository-local remediations merged; six runner findings transferred to the named architecture arc."
     },
     {
       "id": "P5",
       "name": "Repo proof",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Publish",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Merge and close findings",
-      "status": "pending"
+      "status": "complete",
+      "statusNote": "PR #712 merged on 2026-08-14. Runner findings remain with the receiving arc; no dashboard closure is claimed here."
     },
     {
       "id": "P9",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

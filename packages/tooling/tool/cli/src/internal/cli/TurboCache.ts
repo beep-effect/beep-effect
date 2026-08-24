@@ -100,6 +100,39 @@ export const TurboCacheEnvName = LiteralKit(["TURBO_API", "TURBO_TOKEN", "TURBO_
 export type TurboCacheEnvName = typeof TurboCacheEnvName.Type;
 
 /**
+ * Turbo credential environment variables whose `op://` references a secret session may resolve.
+ *
+ * **Details**
+ *
+ * `TURBO_CACHE` is deliberately absent because it is a non-secret posture, not
+ * a remote-cache credential.
+ *
+ * **Example** (List the secret-session allowlist)
+ *
+ * ```ts
+ * import { TurboCacheSecretEnvName } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * console.log(TurboCacheSecretEnvName.Options)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const TurboCacheSecretEnvName = LiteralKit(TurboCacheEnvName.omitOptions(["TURBO_CACHE"])).pipe(
+  $I.annoteSchema("TurboCacheSecretEnvName", {
+    description: "Turbo credential environment variables whose references a secret session may resolve.",
+  })
+);
+
+/**
+ * Turbo credential environment variables whose `op://` references a secret session may resolve.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TurboCacheSecretEnvName = typeof TurboCacheSecretEnvName.Type;
+
+/**
  * Whether a configured value is already usable or is still a 1Password
  * reference that only `op run` can resolve.
  *

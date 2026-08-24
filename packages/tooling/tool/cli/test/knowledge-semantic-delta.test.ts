@@ -882,6 +882,38 @@ describe("knowledge semantic-delta current-checkout probes", () => {
   const PORTFOLIO_MODULE_PATH = "packages/tooling/tool/cli/src/commands/Goals/PortfolioIndex.ts";
   const ROOT_MARKER = "archive-root-module-executed";
   const PORTFOLIO_MARKER = "archive-portfolio-module-executed";
+  const POSIX_PATH_PUNCTUATION_DELIMITERS: ReadonlyArray<readonly [string, string]> = [
+    ["!", "bang"],
+    ['"', "double-quote"],
+    ["#", "hash"],
+    ["$", "dollar"],
+    ["%", "percent"],
+    ["&", "ampersand"],
+    ["'", "single-quote"],
+    ["(", "left-paren"],
+    [")", "right-paren"],
+    ["*", "asterisk"],
+    ["+", "plus"],
+    [",", "comma"],
+    ["-", "hyphen"],
+    [".", "period"],
+    [":", "colon"],
+    [";", "semicolon"],
+    ["<", "left-angle"],
+    ["=", "equals"],
+    [">", "right-angle"],
+    ["?", "question"],
+    ["@", "at"],
+    ["[", "left-bracket"],
+    ["\\", "backslash"],
+    ["]", "right-bracket"],
+    ["^", "caret"],
+    ["`", "backtick"],
+    ["{", "left-brace"],
+    ["|", "pipe"],
+    ["}", "right-brace"],
+    ["~", "tilde"],
+  ];
 
   const makeProbeRuntime = Effect.fn("KnowledgeTest.makeProbeRuntime")(function* (
     root: string,
@@ -1370,6 +1402,49 @@ describe("knowledge semantic-delta current-checkout probes", () => {
         assert.notInclude(error.message, "\r");
         assert.notInclude(error.message, "\u001B");
         assert.notInclude(error.message, "\u0001");
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("redacts absolute POSIX paths after the punctuation delimiter table", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const stderr = A.join(
+          A.map(
+            POSIX_PATH_PUNCTUATION_DELIMITERS,
+            ([delimiter, label]) => `${delimiter}/private/${label}/secret.ts:3:7`
+          ),
+          "\n"
+        );
+        const harness = yield* makeProbeHarness("", stderr, 1);
+        const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
+
+        for (const [delimiter, label] of POSIX_PATH_PUNCTUATION_DELIMITERS) {
+          assert.include(error.message, `${delimiter}<absolute-path>`, label);
+          assert.notInclude(error.message, `/private/${label}`, label);
+        }
+      })
+    ).pipe(provideScopedLayer(testLayer))
+  );
+
+  it.effect("preserves URLs and word-adjacent slash fragments", () =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const preserved = [
+          "https://example.com/private/source.ts",
+          "http://localhost:3000/private/source.ts",
+          "word/private/source.ts",
+          "naïve/private/source.ts",
+          "字/private/source.ts",
+          "7/private/source.ts",
+          "under_score/private/source.ts",
+        ];
+        const harness = yield* makeProbeHarness("", A.join(preserved, "\n"), 1);
+        const error = yield* Effect.flip(harness.oracle.probeCommands([["goals", "doctor"]]));
+
+        for (const value of preserved) {
+          assert.include(error.message, value);
+        }
       })
     ).pipe(provideScopedLayer(testLayer))
   );

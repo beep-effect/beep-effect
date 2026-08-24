@@ -285,12 +285,42 @@ describe("knowledge refs golden fixture matrix", () => {
     })
   );
 
-  it.effect("a packet data directory is an archival segment", () =>
+  it.effect("a packet-owned data root is archival", () =>
     Effect.gen(function* () {
       const report = yield* scanFixture({
         "goals/example/data/extract.jsonl": '{"blockText":"see /home/user/knowledge for the vault"}\n',
       });
       expect(verdicts(report.observations)).toEqual(["archival-provenance/not-applicable"]);
+    })
+  );
+
+  it.effect("nested data directories under every live knowledge root remain gated", () =>
+    Effect.gen(function* () {
+      const liveDataPaths: ReadonlyArray<string> = [
+        "goals/example/guidance/data/README.md",
+        "explorations/example/data/NOTES.md",
+        "docs/data/GUIDE.md",
+        ".claude/skills/data/SKILL.md",
+        ".agents/skills/data/SKILL.md",
+        ".codex/rules/data/README.md",
+        "standards/data/RULE.md",
+        ".github/guidance/data/README.md",
+      ];
+      const report = yield* scanFixture({
+        "goals/example/guidance/data/README.md": "Run it from /home/example/checkouts/beep-effect.\n",
+        "explorations/example/data/NOTES.md": "Run it from /home/example/checkouts/beep-effect.\n",
+        "docs/data/GUIDE.md": "Run it from /home/example/checkouts/beep-effect.\n",
+        ".claude/skills/data/SKILL.md": "Run it from /home/example/checkouts/beep-effect.\n",
+        ".agents/skills/data/SKILL.md": "Run it from /home/example/checkouts/beep-effect.\n",
+        ".codex/rules/data/README.md": "Run it from /home/example/checkouts/beep-effect.\n",
+        "standards/data/RULE.md": "Run it from /home/example/checkouts/beep-effect.\n",
+        ".github/guidance/data/README.md": "Run it from /home/example/checkouts/beep-effect.\n",
+      });
+
+      for (const path of liveDataPaths) {
+        expect(verdicts(inDocument(report, path))).toEqual(["actionable-host-path/not-applicable"]);
+      }
+      expect(A.length(knowledgeRefsLiveDebt(report))).toBe(A.length(liveDataPaths));
     })
   );
 

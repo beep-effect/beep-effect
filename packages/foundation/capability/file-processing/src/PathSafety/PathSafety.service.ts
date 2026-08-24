@@ -8,21 +8,55 @@
 import { Effect, Exit, FileSystem, Path } from "effect";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { PathSafetyError } from "./PathSafety.errors.ts";
 import type { PlatformError } from "effect/PlatformError";
 
 /**
- * Platform-aware containment for canonical absolute filesystem paths.
+ * Check resolved absolute paths for containment with the active platform's path semantics.
+ *
+ * **Details**
+ *
+ * The caller must resolve both paths before comparison. This predicate uses
+ * `Path.relative`, so separator, drive, and case behavior comes from the active
+ * platform instead of string-style inference.
+ *
+ * **Example** (Check a resolved descendant)
+ *
+ * ```ts
+ * import * as BunPath from "@effect/platform-bun/BunPath"
+ * import { isResolvedPathWithinRoot } from "@beep/file-processing/PathSafety"
+ * import { Effect, Path } from "effect"
+ *
+ * const program = Effect.gen(function* () {
+ *   const path = yield* Path.Path
+ *   return isResolvedPathWithinRoot(path, {
+ *     root: "/srv/data",
+ *     candidate: "/srv/data/file.txt"
+ *   })
+ * }).pipe(Effect.provide(BunPath.layer))
+ *
+ * Effect.runPromise(program).then(console.log) // true
+ * ```
+ *
+ * @param path - Platform path service used for the comparison.
+ * @param options - Canonical root and candidate paths to compare.
+ * @returns `true` when the candidate is the root or one of its descendants.
+ * @category predicates
+ * @since 0.0.0
  */
-const isResolvedPathWithinRoot = (path: Path.Path, root: string, candidate: string): boolean => {
-  const relative = path.relative(root, candidate);
+export const isResolvedPathWithinRoot: {
+  (options: { readonly root: string; readonly candidate: string }): (path: Path.Path) => boolean;
+  (path: Path.Path, options: { readonly root: string; readonly candidate: string }): boolean;
+} = dual(2, (path: Path.Path, options: { readonly root: string; readonly candidate: string }): boolean => {
+  const relative = path.relative(options.root, options.candidate);
   return (
     Eq.equals(relative, "") ||
     (!path.isAbsolute(relative) && !Eq.equals(relative, "..") && !Str.startsWith(`..${path.sep}`)(relative))
   );
-};
+});
 
 /** Canonicalize the configured authority root for a candidate operation. */
 const canonicalizeRoot = (fs: FileSystem.FileSystem, root: string, candidate: string) =>
@@ -142,7 +176,7 @@ const resolveCandidateWithinCanonicalRoot: (
     Effect.mapError((cause) => PathSafetyError.candidateNotResolvable({ root: canonicalRoot, candidate, cause }))
   );
 
-  if (!isResolvedPathWithinRoot(path, canonicalRoot, canonicalCandidate)) {
+  if (!isResolvedPathWithinRoot(path, { root: canonicalRoot, candidate: canonicalCandidate })) {
     return yield* PathSafetyError.escapesRoot({
       root: canonicalRoot,
       candidate,

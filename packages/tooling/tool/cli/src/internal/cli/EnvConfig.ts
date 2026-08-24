@@ -4,8 +4,8 @@
  * Several command groups read optional configuration through Effect's
  * `Config`/`ConfigProvider` and fall back to defaults, and more than one of them
  * carried verbatim copies of the same synchronous readers. This module owns
- * those readers, the turbo env/token policy, and the 1Password `op run`
- * local-env wrapper once.
+ * those readers and the Turbo cache environment policy, including the
+ * least-privilege environment passed to 1Password `op run`.
  *
  * All readers evaluate the environment lazily at call time (they are plain
  * functions that read through the ambient `ConfigProvider` when invoked), never
@@ -18,20 +18,22 @@
  * @since 0.0.0
  */
 
-import { $RepoCliId } from "@beep/identity/packages";
-import { thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Config, ConfigProvider, Effect, FileSystem, pipe } from "effect";
+import { Config, ConfigProvider, Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runToExit } from "../process/StepExec.ts";
-import { TurboCacheEnvironment, TurboCacheMode, turboCacheValueSourceFor } from "./TurboCache.ts";
+import {
+  TurboCacheEnvironment,
+  TurboCacheMode,
+  TurboCacheSecretEnvName,
+  turboCacheValueSourceFor,
+} from "./TurboCache.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { TurboCacheValueSource } from "./TurboCache.ts";
-
-const $I = $RepoCliId.create("internal/cli/EnvConfig");
 
 /**
  * Synchronously read an optional string config value from the ambient provider.
@@ -262,7 +264,7 @@ const isBunxTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
     O.exists((arg) => arg === "turbo")
   );
 
-// `op run --env-file=.env -- bunx turbo ...` is still a turbo spawn: the
+// `op run -- bunx turbo ...` is still a turbo spawn: the
 // overrides below must reach it, or an op-wrapped lane silently loses the
 // mouse-capture guard and the fail-closed cache posture.
 const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
@@ -278,16 +280,85 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
     )
   );
 
+const isTurboCacheSecretEnvName = S.is(TurboCacheSecretEnvName);
+
 /**
- * Compute the environment overrides applied when spawning `turbo`, directly via
- * `bunx` or wrapped in `op run`.
+ * Remove unrelated `op://` references from a Turbo secret-session environment.
+ *
+ * **Details**
+ *
+ * Ordinary ambient values remain available so the 1Password CLI and Turbo can
+ * find their runtime configuration. Only `TURBO_API`, `TURBO_TOKEN`, and
+ * `TURBO_TEAM` may retain unresolved references for `op run` to resolve.
+ *
+ * **Example** (Drop an unrelated reference)
+ *
+ * ```ts
+ * import { turboCacheSecretSessionEnvironment } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const env = turboCacheSecretSessionEnvironment({
+ *   PATH: "/usr/bin",
+ *   TURBO_TOKEN: "op://fixture-vault/turbo/token",
+ *   OTHER_TOKEN: "op://fixture-vault/other/token"
+ * })
+ * console.log(env.OTHER_TOKEN) // undefined
+ * ```
+ *
+ * @param environment - Complete ambient environment before secret resolution.
+ * @returns An environment with only Turbo credential references retained.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const turboCacheSecretSessionEnvironment = (
+  environment: Readonly<Record<string, string | undefined>>
+): Record<string, string> =>
+  R.filter(
+    environment,
+    (value, name): value is string =>
+      value !== undefined && (!isUnresolvedSecretReference(value) || isTurboCacheSecretEnvName(name))
+  );
+
+/**
+ * Decide whether a Turbo spawn may inherit the ambient process environment.
+ *
+ * **Details**
+ *
+ * A direct Turbo spawn extends the ambient environment. A Turbo invocation
+ * wrapped in `op run` receives the complete sanitized environment from
+ * {@link turboCacheSecretSessionEnvironment}, so extending it would restore the
+ * unrelated references that the sanitizer removed.
+ *
+ * **Example** (Isolate a wrapped Turbo spawn)
+ *
+ * ```ts
+ * import { turboEnvExtendsAmbient } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * console.log(turboEnvExtendsAmbient("op", ["run", "--", "bunx", "turbo", "run", "check"])) // false
+ * ```
+ *
+ * @param command - The command being spawned.
+ * @param args - The command arguments.
+ * @returns Whether the child should extend the ambient environment.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const turboEnvExtendsAmbient: {
+  (args: ReadonlyArray<string>): (command: string) => boolean;
+  (command: string, args: ReadonlyArray<string>): boolean;
+} = dual(2, (command: string, args: ReadonlyArray<string>): boolean => !isOpRunTurbo(command, args));
+
+/**
+ * Compute the environment applied when spawning `turbo`, directly via `bunx`
+ * or wrapped in `op run`.
  *
  * **Details**
  *
  * Forces `TURBO_UI=false` so the child never enables its interactive TUI (which
  * can leave the terminal in mouse-capture mode when a task tears down), and
  * scrubs `TURBO_API`/`TURBO_TOKEN`/`TURBO_TEAM` when they are unresolved
- * `op://` references. Returns an empty object for any non-turbo command.
+ * `op://` references. A wrapped spawn receives a complete sanitized environment
+ * for use with `extendEnv: false`. Returns an empty object for any non-turbo
+ * command.
  *
  * **Gotchas**
  *
@@ -297,11 +368,9 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
  * closed; the argument half is `localOnlyTurboCacheArgs`, because a `--cache`
  * flag outranks the environment variable.
  *
- * The scrub applies to a *direct* turbo spawn only. `op run` resolves `op://`
- * references out of the environment it is handed — not just out of its
- * `--env-file` — so scrubbing them from a wrapped spawn would delete the very
- * references it exists to resolve, leaving the wrapped turbo with no
- * credential at all.
+ * A wrapped spawn retains only the three Turbo credential references. Callers
+ * must pair its result with {@link turboEnvExtendsAmbient}; otherwise the child
+ * process merge would restore unrelated references from the parent.
  *
  * **Example** (Turbo and non-turbo overrides)
  *
@@ -309,30 +378,32 @@ const isOpRunTurbo = (command: string, args: ReadonlyArray<string>): boolean =>
  * import { turboEnvOverrides } from "@beep/repo-cli/internal/cli/EnvConfig"
  * import { Effect } from "effect"
  *
- * console.log(Effect.runSync(turboEnvOverrides("bunx", ["turbo", "run", "check"])).TURBO_UI)
- * console.log(Effect.runSync(turboEnvOverrides("git", ["status"])))
+ * console.log(Effect.runSync(turboEnvOverrides("bunx", ["turbo", "run", "check"], {})).TURBO_UI)
+ * console.log(Effect.runSync(turboEnvOverrides("git", ["status"], {})))
  * ```
  *
  * @param command - The command being spawned.
  * @param args - The command arguments.
- * @returns The environment overrides to merge into the child environment.
+ * @param environment - Complete ambient environment to sanitize for a wrapped spawn.
+ * @returns The direct-spawn overrides or complete wrapped-spawn environment.
  * @category configuration
  * @since 0.0.0
  */
 export const turboEnvOverrides = Effect.fn("EnvConfig.turboEnvOverrides")(function* (
   command: string,
-  args: ReadonlyArray<string>
+  args: ReadonlyArray<string>,
+  environment: Readonly<Record<string, string | undefined>>
 ) {
   const directTurbo = isBunxTurbo(command, args);
   if (!directTurbo && !isOpRunTurbo(command, args)) {
     return {};
   }
 
-  // A wrapped spawn hands its environment to `op run`, which resolves the
-  // `op://` references in it. Scrubbing them here would strip the credential
-  // before it can be resolved, so a wrapped spawn takes the TUI guard only.
+  // A wrapped spawn hands this complete environment to `op run` with ambient
+  // extension disabled. The three Turbo references survive for resolution;
+  // every unrelated reference is absent from both `op` and its task child.
   if (!directTurbo) {
-    return { TURBO_UI: "false" };
+    return { ...turboCacheSecretSessionEnvironment(environment), TURBO_UI: "false" };
   }
 
   const turboApi = yield* configStringOption("TURBO_API");
@@ -397,58 +468,31 @@ export const readTurboCacheEnvironmentSync = (): TurboCacheEnvironment =>
   );
 
 /**
- * A subprocess step shape recognized by the local-env wrapper.
- *
- * **Example** (Make LocalEnvStep instance)
- *
- * ```ts
- * import { LocalEnvStep } from "@beep/repo-cli/internal/cli/EnvConfig"
- *
- * const step = LocalEnvStep.make({ label: "test", command: "bun", args: ["test"], cwd: "/repo" })
- * console.log(step.command)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class LocalEnvStep extends S.Class<LocalEnvStep>($I`LocalEnvStep`)(
-  {
-    label: S.String,
-    command: S.String,
-    args: S.Array(S.String),
-    cwd: S.String,
-    useLocalEnv: S.optionalKey(S.Boolean),
-  },
-  $I.annote("LocalEnvStep", {
-    description: "A subprocess step recognized by the local-env op-run wrapper.",
-  })
-) {}
-
-/**
- * Whether the local `op run --env-file=.env` wrapper can be used at `repoRoot`.
+ * Whether a local Turbo secret session can be used at `repoRoot`.
  *
  * **Details**
  *
- * Returns `false` under CI, when no `.env` file is present, or when
- * `op whoami` does not succeed.
+ * Returns `false` under CI or when `op whoami` does not succeed. The caller has
+ * already established that the ambient Turbo configuration contains an
+ * unresolved reference.
  *
  * **Example** (Check local env Effect)
  *
  * ```ts
- * import { canUseLocalEnv } from "@beep/repo-cli/internal/cli/EnvConfig"
+ * import { canUseTurboCacheSecretSession } from "@beep/repo-cli/internal/cli/EnvConfig"
  * import { Effect } from "effect"
  *
- * console.log(Effect.isEffect(canUseLocalEnv(process.cwd())))
+ * console.log(Effect.isEffect(canUseTurboCacheSecretSession("/repo")))
  * ```
  *
- * @param repoRoot - Directory that should contain the `.env` file.
- * @returns Whether local 1Password env injection is available.
+ * @param repoRoot - Working directory used for the 1Password identity check.
+ * @returns Whether local 1Password reference resolution is available.
  * @category execution
  * @since 0.0.0
  */
-export const canUseLocalEnv = Effect.fn("EnvConfig.canUseLocalEnv")(function* (
+export const canUseTurboCacheSecretSession = Effect.fn("EnvConfig.canUseTurboCacheSecretSession")(function* (
   repoRoot: string
-): Effect.fn.Return<boolean, never, FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<boolean, never, ChildProcessSpawner.ChildProcessSpawner> {
   const ci = yield* configStringOption("CI");
   if (
     pipe(
@@ -459,77 +503,8 @@ export const canUseLocalEnv = Effect.fn("EnvConfig.canUseLocalEnv")(function* (
     return false;
   }
 
-  const fs = yield* FileSystem.FileSystem;
-  const hasEnv = yield* fs.exists(`${repoRoot}/.env`).pipe(Effect.orElseSucceed(thunkFalse));
-  if (!hasEnv) {
-    return false;
-  }
-
   const exitCode = yield* runToExit({ command: "op", args: ["whoami"], cwd: repoRoot, stdio: "ignore" }).pipe(
     Effect.orElseSucceed(() => 1)
   );
   return exitCode === 0;
-});
-
-/**
- * Rewrite a step to run under `op run --env-file=.env`.
- *
- * **Details**
- *
- * A pure transformation; use {@link withLocalEnv} to apply it only when local
- * env injection is both requested and available.
- *
- * **Example** (Rewrite step via op run)
- *
- * ```ts
- * import { localEnvOpRunStep } from "@beep/repo-cli/internal/cli/EnvConfig"
- *
- * const wrapped = localEnvOpRunStep({ label: "test", command: "bun", args: ["test"], cwd: "/repo" })
- * console.log(wrapped.command)
- * ```
- *
- * @param step - The step to wrap.
- * @returns The step rewritten to invoke `op run`.
- * @category execution
- * @since 0.0.0
- */
-export const localEnvOpRunStep = (step: LocalEnvStep): LocalEnvStep => ({
-  label: `${step.label} (op run)`,
-  command: "op",
-  args: ["run", "--env-file=.env", "--", step.command, ...step.args],
-  cwd: step.cwd,
-});
-
-/**
- * Wrap a step with 1Password `op run` local env injection when the step opts in
- * (`useLocalEnv === true`) and local env is available at its `cwd`; otherwise
- * return the step unchanged.
- *
- * **Example** (Conditionally wrap step Effect)
- *
- * ```ts
- * import { withLocalEnv } from "@beep/repo-cli/internal/cli/EnvConfig"
- * import { Effect } from "effect"
- *
- * console.log(Effect.isEffect(withLocalEnv({ label: "x", command: "bun", args: [], cwd: "/repo" })))
- * ```
- *
- * @param step - The step to conditionally wrap.
- * @returns The original or `op run`-wrapped step.
- * @category execution
- * @since 0.0.0
- */
-export const withLocalEnv = Effect.fn("EnvConfig.withLocalEnv")(function* (
-  step: LocalEnvStep
-): Effect.fn.Return<LocalEnvStep, never, FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner> {
-  if (step.useLocalEnv !== true) {
-    return step;
-  }
-
-  const shouldUseLocalEnv = yield* canUseLocalEnv(step.cwd);
-  if (!shouldUseLocalEnv) {
-    return step;
-  }
-
-  return localEnvOpRunStep(step);
 });

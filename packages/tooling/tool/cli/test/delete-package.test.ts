@@ -17,7 +17,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { provideScopedLayer } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { Cause, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
+import { Cause, ConfigProvider, Effect, FileSystem, Layer, Path, pipe, Sink, Stream } from "effect";
 import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -58,6 +58,10 @@ const commandLayer = Layer.mergeAll(
   TestConsole.layer,
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
   TSMorphServiceLive.pipe(Layer.provide(NodeServices.layer))
+);
+const nonCiCommandLayer = Layer.mergeAll(
+  commandLayer,
+  ConfigProvider.layer(ConfigProvider.fromUnknown({ CI: "false" }))
 );
 const runDeletePackage = Command.runWith(deletePackageCommand, { version: "0.0.0" });
 
@@ -109,6 +113,34 @@ describe("delete-package registration geometry", () => {
             expect(pendingChangesets.evidence).not.toContain(".changeset/delete-courtlistener.md");
             expect(O.getOrThrow(byId("identity-segment")).status).toBe("residue");
             expect(O.getOrThrow(byId("runtime-artifacts")).status).toBe("residue");
+          })
+        )
+      )
+    ));
+
+  it("rejects tampered and mismatched deletion notes that reuse the canonical basename", () =>
+    Effect.runPromise(
+      provideNode(
+        withTempDirectory((repoRoot) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const deletionNote = path.join(repoRoot, ".changeset", "delete-courtlistener.md");
+            yield* fs.makeDirectory(path.join(repoRoot, ".changeset"), { recursive: true });
+
+            for (const content of [
+              "---\n{}\n---\n\nNo release: remove `@beep/courtlistener` from the workspace. Tampered.\n",
+              "---\n{}\n---\n\nNo release: remove `@beep/other` from the workspace.\n",
+              '---\n"@beep/courtlistener": patch\n---\n\nNo release: remove `@beep/courtlistener` from the workspace.\n',
+            ]) {
+              yield* fs.writeFileString(deletionNote, content);
+              const observations = yield* inspectTargetAtRoot(repoRoot, target);
+              const pendingChangesets = O.getOrThrow(
+                A.findFirst(observations, (item) => item.surfaceId === "pending-changesets")
+              );
+              expect(pendingChangesets.status).toBe("residue");
+              expect(pendingChangesets.evidence).toContain(".changeset/delete-courtlistener.md");
+            }
           })
         )
       )
@@ -182,6 +214,41 @@ describe("delete-package registration geometry", () => {
 
           const report = yield* dependentsOfAtRoot(repoRoot, target);
           expect(A.some(report.hits, (hit) => hit.kind === "import-prod" && hit.owner === "@beep/consumer")).toBe(true);
+        })
+      ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("classifies a nested resolved workspace as a hard path dependent of its ancestor", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const repoRoot = yield* fs.realPath(".");
+          yield* fs.writeFileString(
+            "package.json",
+            '{ "name": "fixture", "private": true, "workspaces": ["packages/container", "packages/container/child"] }\n'
+          );
+          yield* fs.writeFileString("bun.lock", "");
+          yield* fs.makeDirectory(path.join("packages", "container", "child"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join("packages", "container", "package.json"),
+            '{ "name": "@beep/container", "private": true }\n'
+          );
+          yield* fs.writeFileString(
+            path.join("packages", "container", "child", "package.json"),
+            '{ "name": "@beep/container-child", "private": true }\n'
+          );
+          const ancestor = RegistrationTarget.make({
+            packageName: "@beep/container",
+            packagePath: PosixPath.make("packages/container"),
+            private: true,
+          });
+
+          const report = yield* dependentsOfAtRoot(repoRoot, ancestor);
+          expect(A.map(report.hits, (hit) => `${hit.kind}|${hit.owner}|${hit.file}`)).toContain(
+            "file-path|@beep/container-child|packages/container/child/package.json"
+          );
         })
       ).pipe(provideScopedLayer(commandLayer))
     ));
@@ -284,6 +351,140 @@ describe("delete-package registration geometry", () => {
           expect(A.some(errors, (line) => P.isString(line) && Str.includes("promotion-record")(line))).toBe(true);
         })
       ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("refuses a repository-root workspace target before planning recursive removal", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.writeFileString("bun.lock", "");
+          yield* fs.writeFileString(
+            "package.json",
+            '{ "name": "@beep/root-target", "private": true, "workspaces": ["root-link"] }\n'
+          );
+          yield* fs.symlink(".", "root-link");
+
+          const exit = yield* Effect.exit(runDeletePackage(["root-target", "--dry-run"]));
+          expectReportedExit(exit);
+          const errors = yield* TestConsole.errorLines;
+          expect(A.some(errors, (line) => P.isString(line) && Str.includes("repository root")(line))).toBe(true);
+          const lines = yield* TestConsole.logLines;
+          expect(A.some(lines, (line) => P.isString(line) && Str.includes("Inverse plan")(line))).toBe(false);
+        })
+      ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("refuses a workspace target that contains another resolved workspace", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.writeFileString("bun.lock", "");
+          yield* fs.writeFileString(
+            "package.json",
+            '{ "name": "fixture", "private": true, "workspaces": ["packages/container", "packages/container/child"] }\n'
+          );
+          yield* fs.makeDirectory(path.join("packages", "container", "child"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join("packages", "container", "package.json"),
+            '{ "name": "@beep/container", "private": true }\n'
+          );
+          yield* fs.writeFileString(
+            path.join("packages", "container", "child", "package.json"),
+            '{ "name": "@beep/container-child", "private": true }\n'
+          );
+
+          const exit = yield* Effect.exit(runDeletePackage(["container", "--dry-run"]));
+          expectReportedExit(exit);
+          const errors = yield* TestConsole.errorLines;
+          expect(
+            A.some(
+              errors,
+              (line) => P.isString(line) && Str.includes("contains registered workspace packages/container/child")(line)
+            )
+          ).toBe(true);
+        })
+      ).pipe(provideScopedLayer(commandLayer))
+    ));
+
+  it("revalidates the owned tree before applying a leaf deletion", () =>
+    Effect.runPromise(
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.writeFileString("bun.lock", "");
+          yield* fs.writeFileString(
+            "package.json",
+            '{ "name": "fixture", "private": true, "workspaces": ["packages/drivers/courtlistener"] }\n'
+          );
+          yield* fs.writeFileString(
+            "tsconfig.json",
+            '{ "compilerOptions": { "paths": { "@beep/courtlistener": ["./packages/drivers/courtlistener/src/index.ts"] } } }\n'
+          );
+          yield* fs.writeFileString(
+            "tsconfig.packages.json",
+            '{ "references": [{ "path": "packages/drivers/courtlistener" }] }\n'
+          );
+          yield* fs.writeFileString(
+            "syncpack.config.ts",
+            [
+              'import type { RcFile } from "syncpack";',
+              "",
+              "const config = {",
+              "  source: [",
+              '    "package.json",',
+              '    "packages/drivers/courtlistener/package.json",',
+              "  ],",
+              "  customTypes: {},",
+              "  versionGroups: [],",
+              "} satisfies RcFile;",
+              "",
+              "export default config;",
+              "",
+            ].join("\n")
+          );
+
+          const packageDir = path.join("packages", "drivers", "courtlistener");
+          yield* fs.makeDirectory(path.join(packageDir, "src"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(packageDir, "package.json"),
+            '{ "name": "@beep/courtlistener", "private": true }\n'
+          );
+          yield* fs.writeFileString(path.join(packageDir, "src", "index.ts"), "export const alive = true;\n");
+
+          const identityDir = path.join("packages", "foundation", "modeling", "identity", "src");
+          yield* fs.makeDirectory(identityDir, { recursive: true });
+          yield* fs.writeFileString(
+            path.join(identityDir, "packages.ts"),
+            [
+              'const composers = $I.compose("courtlistener");',
+              "export const $CourtlistenerId = composers.$CourtlistenerId;",
+              "",
+            ].join("\n")
+          );
+
+          const exit = yield* Effect.exit(
+            runDeletePackage([
+              "courtlistener",
+              "--force",
+              "--allow-stale-packets",
+              "--skip-lockfile",
+              "--skip-baselines",
+            ])
+          );
+          expect(Exit.isSuccess(exit), Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined).toBe(true);
+
+          expect(yield* fs.exists(packageDir)).toBe(false);
+          expect(yield* fs.readFileString("package.json")).not.toContain("packages/drivers/courtlistener");
+          const lines = yield* TestConsole.logLines;
+          expect(
+            A.some(lines, (line) => P.isString(line) && Str.includes("removed with zero declared residue")(line))
+          ).toBe(true);
+        })
+      ).pipe(provideScopedLayer(nonCiCommandLayer))
     ));
 
   it("emits a schema-versioned inverse plan containing every destructive surface before apply", () => {

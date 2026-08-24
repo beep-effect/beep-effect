@@ -11,14 +11,15 @@ import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { Unknown } from "@beep/schema/Unknown";
 import { A, Str } from "@beep/utils";
-import { Console, Duration, Effect, flow, Order, pipe } from "effect";
+import { Console, Duration, Effect, flow, HashSet, Order, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as ChildProcess from "effect/unstable/process/ChildProcess";
 import { failWithReportedExit } from "../../../internal/cli/ExitCodeError.ts";
 import { printLines } from "../../../internal/cli/Printer.ts";
-import { runCapturedStreams, runToExit } from "../../../internal/process/StepExec.ts";
+import { runCapturedStreams } from "../../../internal/process/StepExec.ts";
 import { collectChangedFiles } from "../../../internal/repo-run/ChangedFiles.ts";
 import {
   aggregateGeneratedDocs,
@@ -92,7 +93,21 @@ class TurboDryRunDocument extends S.Class<TurboDryRunDocument>($I`TurboDryRunDoc
   })
 ) {}
 
+class DocgenProcessDiagnostic extends S.Class<DocgenProcessDiagnostic>($I`DocgenProcessDiagnostic`)(
+  {
+    pid: S.FiniteFromString.check(S.isInt(), S.isGreaterThan(0)),
+    parentPid: S.FiniteFromString.check(S.isInt(), S.isGreaterThanOrEqualTo(0)),
+    elapsedSeconds: S.FiniteFromString.check(S.isInt(), S.isGreaterThanOrEqualTo(0)),
+    state: S.NonEmptyString,
+    executable: S.NonEmptyString,
+  },
+  $I.annote("DocgenProcessDiagnostic", {
+    description: "Sanitized process identity and state for one member of a stalled docgen child tree.",
+  })
+) {}
+
 const decodeTurboDryRunDocument = S.decodeUnknownEffect(S.fromJsonString(TurboDryRunDocument));
+const decodeDocgenProcessDiagnostic = S.decodeUnknownOption(DocgenProcessDiagnostic);
 const encodeJson = Unknown.encodeUnknownEffectFromJsonString;
 
 type DocgenLocalEnvironment = FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner;
@@ -477,57 +492,171 @@ const buildPlanFromPackage = Effect.fn("DocgenLocal.buildPlanFromPackage")(funct
 
 const commandText = (command: string, args: ReadonlyArray<string>): string => A.join([command, ...args], " ");
 
+const DOCGEN_PROCESS_DIAGNOSTIC_LIMIT = 40;
+const DOCGEN_PROCESS_DIAGNOSTIC_LINE = /^\s*(\d+)\s+(\d+)\s+(\d+)\s+(\S+)\s+(.+?)\s*$/u;
+const byDocgenProcessPidAscending: Order.Order<DocgenProcessDiagnostic> = Order.mapInput(
+  Order.Number,
+  (diagnostic: DocgenProcessDiagnostic) => diagnostic.pid
+);
+
+const parseDocgenProcessDiagnostics = (output: string): ReadonlyArray<DocgenProcessDiagnostic> =>
+  pipe(
+    A.fromIterable(Str.linesIterator(output)),
+    A.map(
+      flow(
+        Str.match(DOCGEN_PROCESS_DIAGNOSTIC_LINE),
+        O.flatMap((match) =>
+          pipe(
+            O.all({
+              pid: O.fromUndefinedOr(match[1]),
+              parentPid: O.fromUndefinedOr(match[2]),
+              elapsedSeconds: O.fromUndefinedOr(match[3]),
+              state: O.fromUndefinedOr(match[4]),
+              executable: O.fromUndefinedOr(match[5]),
+            }),
+            O.flatMap(decodeDocgenProcessDiagnostic)
+          )
+        )
+      )
+    ),
+    A.getSomes,
+    A.sort(byDocgenProcessPidAscending)
+  );
+
+const queryDocgenProcesses = Effect.fn("DocgenLocal.queryDocgenProcesses")(function* (
+  repoRoot: string,
+  processIds: ReadonlyArray<number>,
+  selectChildren: boolean
+) {
+  if (A.isReadonlyArrayEmpty(processIds)) {
+    return O.some(A.empty<DocgenProcessDiagnostic>());
+  }
+
+  const result = yield* runCapturedStreams({
+    command: "ps",
+    args: [
+      "-ww",
+      "-o",
+      "pid=,ppid=,etimes=,stat=,comm=",
+      selectChildren ? "--ppid" : "-p",
+      A.join(
+        A.map(processIds, (processId) => `${processId}`),
+        ","
+      ),
+    ],
+    cwd: repoRoot,
+  }).pipe(Effect.option);
+
+  return pipe(
+    result,
+    O.map((captured) =>
+      captured.exitCode === 0 ? parseDocgenProcessDiagnostics(captured.stdout) : A.empty<DocgenProcessDiagnostic>()
+    )
+  );
+});
+
+const collectDocgenProcessTree = Effect.fn("DocgenLocal.collectDocgenProcessTree")(function* (
+  repoRoot: string,
+  rootProcessId: number
+) {
+  const root = yield* queryDocgenProcesses(repoRoot, [rootProcessId], false);
+  if (O.isNone(root)) {
+    return O.none<ReadonlyArray<DocgenProcessDiagnostic>>();
+  }
+
+  let diagnostics = A.take(root.value, DOCGEN_PROCESS_DIAGNOSTIC_LIMIT);
+  let frontier = A.map(diagnostics, (diagnostic) => diagnostic.pid);
+  let seenProcessIds = HashSet.fromIterable(frontier);
+
+  while (A.isReadonlyArrayNonEmpty(frontier) && A.length(diagnostics) < DOCGEN_PROCESS_DIAGNOSTIC_LIMIT) {
+    const children = yield* queryDocgenProcesses(repoRoot, frontier, true);
+    if (O.isNone(children)) {
+      return O.none<ReadonlyArray<DocgenProcessDiagnostic>>();
+    }
+
+    const remaining = DOCGEN_PROCESS_DIAGNOSTIC_LIMIT - A.length(diagnostics);
+    const discovered = pipe(
+      children.value,
+      A.filter((diagnostic) => !HashSet.has(seenProcessIds, diagnostic.pid)),
+      A.take(remaining)
+    );
+    diagnostics = A.appendAll(diagnostics, discovered);
+    seenProcessIds = A.reduce(discovered, seenProcessIds, (seen, diagnostic) => HashSet.add(seen, diagnostic.pid));
+    frontier = A.map(discovered, (diagnostic) => diagnostic.pid);
+  }
+
+  return O.some(A.sort(diagnostics, byDocgenProcessPidAscending));
+});
+
+const renderDocgenProcessTree = (diagnostics: ReadonlyArray<DocgenProcessDiagnostic>): string =>
+  A.isReadonlyArrayEmpty(diagnostics)
+    ? "(none)"
+    : A.join(
+        A.map(
+          diagnostics,
+          (diagnostic) =>
+            `pid=${diagnostic.pid} ppid=${diagnostic.parentPid} executable=${diagnostic.executable} state=${diagnostic.state} elapsed=${diagnostic.elapsedSeconds}s`
+        ),
+        "\n"
+      );
+
+// Inspect only the process tree rooted at the docgen child. Each ps invocation
+// selects known PIDs or their direct children, and `comm` deliberately exposes
+// executable identity without the raw argument values carried by `args`.
+const logDocgenProcessTree = Effect.fn("DocgenLocal.logDocgenProcessTree")(function* (
+  reason: string,
+  repoRoot: string,
+  rootProcessId: number
+) {
+  const diagnostics = yield* collectDocgenProcessTree(repoRoot, rootProcessId);
+  yield* pipe(
+    diagnostics,
+    O.match({
+      onNone: () => Console.log(`docgen:local: ${reason}: child process-tree diagnostics unavailable`),
+      onSome: (rows) => Console.log(`docgen:local: ${reason}: child process tree:\n${renderDocgenProcessTree(rows)}`),
+    })
+  );
+});
+
 const runStep = Effect.fn("DocgenLocal.runStep")(function* (
   label: string,
   command: string,
   args: ReadonlyArray<string>,
   cwd: string,
-  options?: { readonly forceKillAfter?: Duration.Input | undefined }
+  options: {
+    readonly forceKillAfter: Duration.Duration;
+    readonly timeout: Duration.Duration;
+    readonly timeoutReason: string;
+  }
 ) {
   const cmdTxt = commandText(command, args);
-  const forceKillAfter = options?.forceKillAfter;
-  yield* Console.log(`[docgen:local] ${label}: started: ${cmdTxt}`);
-  // Log the return, not just the start. A step that prints a start line and
-  // then goes quiet is indistinguishable from a slow one in a CI log, which is
-  // exactly how the hosted Docgen lane's post-turbo stall read for an hour
-  // (run 31991634069: 2m8s of real work, then 56 minutes of silence).
-  const [elapsed, exitCode] = yield* Effect.timed(
-    runToExit({
-      command,
-      args,
-      cwd,
-      stdio: "inherit",
-      ...(P.isUndefined(forceKillAfter) ? {} : { forceKillAfter }),
-    })
-  ).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn ${cmdTxt}.`)));
-  yield* Console.log(`[docgen:local] ${label}: exited ${exitCode} after ${Duration.format(elapsed)}`);
+  return yield* Effect.scoped(
+    Effect.gen(function* () {
+      yield* Console.log(`[docgen:local] ${label}: started: ${cmdTxt}`);
+      const handle = yield* ChildProcess.make(command, args, {
+        cwd,
+        stdin: "inherit",
+        stdout: "inherit",
+        stderr: "inherit",
+        forceKillAfter: options.forceKillAfter,
+      }).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn ${cmdTxt}.`)));
+      const outcome = yield* Effect.timeoutOption(
+        Effect.timed(handle.exitCode).pipe(Effect.mapError(DomainError.newCause(`Failed to await ${cmdTxt}.`))),
+        options.timeout
+      );
+      if (O.isNone(outcome)) {
+        yield* logDocgenProcessTree(options.timeoutReason, cwd, handle.pid);
+        return false;
+      }
 
-  if (exitCode !== 0) {
-    return yield* DomainError.make({
-      message: `${label} failed with exit code ${exitCode}.`,
-    });
-  }
-});
-
-// Dump the processes that outlived a step we had to abandon. Without this a
-// stall reports only "it hung"; with it the next occurrence says whether turbo
-// itself is wedged, whether docgen children survived, or whether the tree is
-// already gone and the parent simply never observed the exit.
-const logSurvivingProcesses = Effect.fn("DocgenLocal.logSurvivingProcesses")(function* (
-  reason: string,
-  repoRoot: string
-) {
-  const dump = yield* runCapturedStreams({
-    command: "sh",
-    args: ["-c", "ps -eo pid,ppid,etimes,stat,args | grep -E '(turbo|bun|node)' | grep -v grep | head -40"],
-    cwd: repoRoot,
-  }).pipe(Effect.option);
-
-  yield* pipe(
-    dump,
-    O.match({
-      onNone: () => Console.log(`docgen:local: ${reason}: surviving-process dump unavailable`),
-      onSome: (result) => Console.log(`docgen:local: ${reason}: surviving processes:\n${Str.trim(result.stdout)}`),
+      const [elapsed, exitCode] = outcome.value;
+      yield* Console.log(`[docgen:local] ${label}: exited ${exitCode} after ${Duration.format(elapsed)}`);
+      if (exitCode !== 0) {
+        return yield* DomainError.make({
+          message: `${label} failed with exit code ${exitCode}.`,
+        });
+      }
+      return true;
     })
   );
 });
@@ -785,24 +914,26 @@ const runStepWithStallWatchdog = Effect.fn("DocgenLocal.runStepWithStallWatchdog
   repoRoot: string,
   budget: DocgenStepBudget
 ) {
-  const attempt = (attemptLabel: string) =>
-    runStep(attemptLabel, command, args, repoRoot, { forceKillAfter: docgenStepForceKillAfter });
+  const attempt = (attemptLabel: string, timeout: Duration.Duration, timeoutReason: string) =>
+    runStep(attemptLabel, command, args, repoRoot, {
+      forceKillAfter: docgenStepForceKillAfter,
+      timeout,
+      timeoutReason,
+    });
 
-  const first = yield* Effect.timeoutOption(attempt(label), budget.first);
-  if (O.isSome(first)) {
+  const firstSucceeded = yield* attempt(label, budget.first, `after abandoning ${label}`);
+  if (firstSucceeded) {
     return;
   }
 
   yield* Console.log(
     `docgen:local: ${label} never returned within ${Duration.format(budget.first)}; abandoning it and retrying once against the warm cache.`
   );
-  yield* logSurvivingProcesses(`after abandoning ${label}`, repoRoot);
 
-  const retry = yield* Effect.timeoutOption(attempt(`${label} (retry)`), budget.retry);
-  if (O.isNone(retry)) {
-    yield* logSurvivingProcesses(`after the ${label} retry also stalled`, repoRoot);
+  const retrySucceeded = yield* attempt(`${label} (retry)`, budget.retry, `after the ${label} retry also stalled`);
+  if (!retrySucceeded) {
     return yield* DomainError.make({
-      message: `${label} never returned within ${Duration.format(budget.retry)} on retry; see the surviving-process dump above.`,
+      message: `${label} never returned within ${Duration.format(budget.retry)} on retry; see the child process-tree diagnostics above.`,
     });
   }
 

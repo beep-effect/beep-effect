@@ -3,13 +3,14 @@
   "initiative": {
     "id": "codex-security-findings-2026-08-10",
     "title": "Codex Security Findings (2026-08-10)",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-08-10",
-    "updated": "2026-08-10",
+    "updated": "2026-08-24",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/codex-security-findings-2026-08-10",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
+  "statusNote": "Completed-retained after the bounded fixes merged in PR #655, with earlier current-HEAD fixes verified in PRs #649 and #650. Deferred duplicates CSF-011, CSF-012, and CSF-018 later landed through PRs #697, #688, and #712. CSF-001 through CSF-004 remain an explicit handoff to the runner-admission/workload-identity arc for external GitHub runner-group and AWS deployment proof; this packet does not claim dashboard closure for handed-off findings.",
   "mission": "Remediate and close the 18 Codex Cloud security findings captured on 2026-08-10.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -66,7 +67,7 @@
       "false-positive": 0,
       "untriaged": 0
     },
-    "note": "P2 triage complete. Five bounded findings are fixed in this PR; seven architecture or policy findings are deferred with recorded reasons."
+    "note": "Packet-local work is complete and retained. PR #655 merged the five bounded fixes; three deferred duplicate findings later landed in PRs #697, #688, and #712. Four CI fleet findings remain with the runner-admission/workload-identity arc for external proof."
   },
   "closeoutPolicy": {
     "fixed": "Already fixed",
@@ -117,27 +118,28 @@
     {
       "id": "P5",
       "name": "Repo proof",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Publish",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Monitor",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P8",
       "name": "Merge and close findings",
-      "status": "pending"
+      "status": "complete",
+      "statusNote": "PR #655 is merged. Residual findings were transferred to named follow-up arcs; no dashboard closure is claimed here."
     },
     {
       "id": "P9",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
